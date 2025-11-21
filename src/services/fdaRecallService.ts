@@ -43,26 +43,37 @@ interface FDAResponse {
 
 /**
  * Check for FDA food recalls by product name or brand
- * Uses fuzzy matching to find relevant recalls
+ * Uses fuzzy matching to find relevant recalls, with improved filtering for product-specific matches
+ * CRITICAL: Now uses barcode for more precise matching when available
  */
 export async function checkFDARecalls(
   productName?: string,
   brand?: string,
   barcode?: string
 ): Promise<FoodRecall[]> {
-  if (!productName && !brand) {
+  if (!productName && !brand && !barcode) {
     return [];
   }
 
   try {
     // Try to get from cache first
-    const cacheKey = `${CACHE_KEY_PREFIX}${productName || brand || barcode || 'unknown'}`;
+    const cacheKey = `${CACHE_KEY_PREFIX}${barcode || productName || brand || 'unknown'}`;
     const cached = await getCachedRecall(cacheKey);
     if (cached) {
-      return cached;
+      // Filter cached results to be more product-specific (now includes barcode)
+      return filterProductSpecificRecalls(cached, productName, brand, barcode);
     }
 
     const recalls: FoodRecall[] = [];
+
+    // CRITICAL: If barcode is available, search for exact product matches first
+    // This helps find recalls for the specific product rather than similar products
+    if (barcode) {
+      // Search using barcode + product name for more specific results
+      const barcodeSearchTerm = productName ? `${productName} ${barcode}` : barcode;
+      const barcodeRecalls = await searchFDARecalls(barcodeSearchTerm);
+      recalls.push(...barcodeRecalls);
+    }
 
     // Search by product description
     if (productName) {
@@ -81,16 +92,87 @@ export async function checkFDARecalls(
       new Map(recalls.map(r => [r.recallId, r])).values()
     );
 
+    // Filter to be more product-specific (now includes barcode matching)
+    const filteredRecalls = filterProductSpecificRecalls(uniqueRecalls, productName, brand, barcode);
+
     // Cache the results
-    if (uniqueRecalls.length > 0) {
-      await cacheRecall(cacheKey, uniqueRecalls);
+    if (filteredRecalls.length > 0) {
+      await cacheRecall(cacheKey, filteredRecalls);
     }
 
-    return uniqueRecalls;
+    return filteredRecalls;
   } catch (error) {
     console.error('Error checking FDA recalls:', error);
     return [];
   }
+}
+
+/**
+ * Filter recalls to be more product-specific
+ * Removes generic/too-broad recalls that match on manufacturer only
+ * CRITICAL: Now uses barcode for more precise filtering
+ */
+function filterProductSpecificRecalls(
+  recalls: FoodRecall[],
+  productName?: string,
+  brand?: string,
+  barcode?: string
+): FoodRecall[] {
+  if (!productName && !brand && !barcode) {
+    return recalls;
+  }
+
+  const productWords = productName?.toLowerCase().split(/\s+/).filter(w => w.length > 2) || [];
+  const brandLower = brand?.toLowerCase() || '';
+
+  return recalls.filter(recall => {
+    const recallProduct = recall.productName.toLowerCase();
+    const recallBrand = recall.brand?.toLowerCase() || '';
+
+    // CRITICAL: If barcode is available, prioritize exact product matches
+    // Check if recall product description contains the barcode (exact product match)
+    if (barcode && recallProduct.includes(barcode)) {
+      return true; // Exact barcode match - definitely relevant
+    }
+
+    // If brand matches but product name doesn't contain any product words, it's likely too generic
+    if (brandLower && recallBrand.includes(brandLower)) {
+      // Check if product name has at least 2 matching words (more specific)
+      if (productWords.length > 0) {
+        const matchingWords = productWords.filter(word => recallProduct.includes(word));
+        // STRICTER: Require at least 2 matching words AND 60% match for product-specific recall
+        const matchRatio = matchingWords.length / productWords.length;
+        if (matchingWords.length < 2 || matchRatio < 0.6) {
+          return false; // Too generic, filter it out
+        }
+      } else {
+        // No product name to match, but brand matches - filter out manufacturer-only matches
+        // Only keep if recall product description is very specific (contains numbers, sizes, etc.)
+        const hasSpecificDetails = /\d+|oz|ml|g|kg|lb|pack|size|count/i.test(recallProduct);
+        if (!hasSpecificDetails) {
+          return false; // Too generic manufacturer-only match
+        }
+      }
+    }
+
+    // Keep recalls that match product name significantly (STRICTER)
+    if (productWords.length > 0) {
+      const matchingWords = productWords.filter(word => recallProduct.includes(word));
+      const matchRatio = matchingWords.length / productWords.length;
+      // Require at least 2 matching words AND 60% match ratio
+      if (matchingWords.length >= 2 && matchRatio >= 0.6) {
+        return true;
+      }
+    }
+
+    // Keep recalls that match brand
+    if (brandLower && recallBrand.includes(brandLower)) {
+      return true;
+    }
+
+    // Filter out if no meaningful match
+    return false;
+  });
 }
 
 /**

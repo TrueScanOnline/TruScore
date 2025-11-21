@@ -185,6 +185,10 @@
     "minimalDataNoticeText": "We couldn't find detailed information about this product in our databases (Open Food Facts, Open Beauty Facts, UPCitemdb, etc.). Basic information may be available from web search. You can help improve our databases by contributing product information to Open Food Facts.",
     "searchWeb": "Search Web",
     "trustScore": "Trust Score",
+    "scoreBasedOnAvailableData": "Score Based on Available Data Only",
+    "nutriEcoMissing": "Nutri-Score and Eco-Score not available - score calculated from other available data",
+    "nutriMissing": "Nutri-Score not available - Body score calculated from available nutrition data",
+    "ecoMissing": "Eco-Score not available - Planet score calculated from available sustainability data",
     "sustainability": "Sustainability",
     "planet": "Planet",
     "ethics": "Ethics",
@@ -429,7 +433,7 @@
       "goodDesc": "Above-average quality with strong performance in most categories. Good choice for conscious consumers.",
       "fairDesc": "Moderate quality with room for improvement. Acceptable but not exceptional in key areas.",
       "poorDesc": "Below-average quality. These products may have significant issues in Body safety, Planet sustainability, Care ethics, or Open transparency.",
-      "note": "TruScore is calculated based on available product data from Open Food Facts, Open Beauty Facts, and UPCitemdb. The score is only displayed when sufficient verified data is available. 100% of scoring comes from recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) - no proprietary formulas. Each pillar uses direct conversions from official systems (A=25, B=20, etc.).",
+      "note": "TruScore v1.3 is calculated based on available product data from Open Food Facts, Open Beauty Facts, and UPCitemdb. The score is only displayed when sufficient verified data is available. 100% of scoring comes from recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) - no proprietary formulas. Each pillar uses direct conversions from official systems (A=25, B=20, etc.). When Nutri-Score or Eco-Score are missing, scores are calculated from available data with appropriate baselines (12 points instead of 25).",
       "transparencyTitle": "100% Transparent Methodology",
       "dataSourceNote": "Data Sources: Open Food Facts (world.openfoodfacts.org), Open Beauty Facts (world.openbeautyfacts.org), UPCitemdb (api.upcitemdb.com), Barcode Spider, FDA Food Recall API (fda.gov/food/recalls). All calculations are transparent and verifiable.",
       "scoringDescription": "TruScore ranges from 0-100, with each of the 4 pillars contributing 0-25 points. Higher scores indicate better overall product quality across all dimensions.",
@@ -605,6 +609,8 @@
     "dataSources": "Data Sources",
     "priceCount": "{{count}} price found",
     "priceCount_plural": "{{count}} prices found",
+    "priceCount_zero": "No prices found",
+    "noRetailerPrices": "No retailer prices available",
     "lastUpdated": "Last updated: {{date}}",
     "submitPriceMessage": "Price submission feature coming soon!"
   }

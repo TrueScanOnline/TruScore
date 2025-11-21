@@ -712,7 +712,7 @@ export default function TrustScoreInfoModal({ visible, onClose, product }: Trust
             {t('infoModal.trustScore.transparencyTitle') || '100% Transparent Methodology'}
           </Text>
           <Text style={[styles.noteText, { color: colors.textSecondary }]}>
-            {t('infoModal.trustScore.note') || 'TruScore is calculated based on available product data from Open Food Facts, Open Beauty Facts, and UPCitemdb. The score is only displayed when sufficient verified data is available. 100% of scoring comes from recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) - no proprietary formulas. Each pillar uses direct conversions from official systems (A=25, B=20, etc.).'}
+            {t('infoModal.trustScore.note') || 'TruScore v1.3 is calculated based on available product data from Open Food Facts, Open Beauty Facts, and UPCitemdb. The score is only displayed when sufficient verified data is available. 100% of scoring comes from recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) - no proprietary formulas. Each pillar uses direct conversions from official systems (A=25, B=20, etc.). When Nutri-Score or Eco-Score are missing, scores are calculated from available data with appropriate baselines (12 points instead of 25).'}
           </Text>
           <Text style={[styles.noteText, { color: colors.textSecondary, marginTop: 8 }]}>
             {t('infoModal.trustScore.dataSourceNote') || 'Data Sources: Open Food Facts (world.openfoodfacts.org), Open Beauty Facts (world.openbeautyfacts.org), UPCitemdb (api.upcitemdb.com), Barcode Spider, FDA Food Recall API (fda.gov/food/recalls). All calculations are transparent and verifiable.'}

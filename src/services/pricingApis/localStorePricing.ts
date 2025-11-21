@@ -1,6 +1,7 @@
 // Local store pricing - fetches prices from nearby stores/supermarkets
 // Uses geolocation to find stores within radius and get their prices
 import { PriceEntry } from '../../types/pricing';
+import { getStoreChainsForCountry, matchStoreToChain, buildStoreSearchUrl, StoreChain } from './countryStores';
 
 export interface StoreLocation {
   name: string;
@@ -45,47 +46,47 @@ function calculateDistance(
 
 /**
  * Find nearby stores/supermarkets within radius
+ * STRICTLY filters by country code - only returns stores matching country-specific chains
  * Uses multiple APIs: Google Places, Geoapify, etc.
  */
 export async function findNearbyStores(
   latitude: number,
   longitude: number,
-  radiusMiles: number = STORE_SEARCH_RADIUS_MILES
+  radiusMiles: number = STORE_SEARCH_RADIUS_MILES,
+  countryCode?: string
 ): Promise<StoreLocation[]> {
   const stores: StoreLocation[] = [];
   const radiusMeters = Math.round(radiusMiles * MILES_TO_METERS);
 
+  // CRITICAL: Must have country code to filter stores
+  if (!countryCode) {
+    console.warn('[LocalStorePricing] Country code required for store filtering');
+    return stores;
+  }
+
   try {
-    // Common supermarket chains to search for
-    const storeChains = [
-      'supermarket',
-      'grocery store',
-      'Walmart',
-      'Target',
-      'Kroger',
-      'Safeway',
-      'Albertsons',
-      'Publix',
-      'Whole Foods',
-      'Costco',
-      'Food Lion',
-      'Stop & Shop',
-      'Giant Eagle',
-      'ShopRite',
-      'Meijer',
-      'H-E-B',
-      'Hy-Vee',
-      'Vons',
-    ];
+    // Get country-specific store chains - ONLY search for these stores
+    const countryChains = getStoreChainsForCountry(countryCode);
+    if (countryChains.length === 0) {
+      console.warn(`[LocalStorePricing] No store chains configured for country: ${countryCode}`);
+      return stores;
+    }
+
+    // Build search keywords from country-specific store names
+    const storeKeywords = countryChains
+      .map(chain => chain.name)
+      .filter(name => name.length > 0);
+
+    console.log(`[LocalStorePricing] Searching for ${storeKeywords.length} country-specific stores in ${countryCode}`);
 
     // Try Google Places API first (if API key available)
     const GOOGLE_PLACES_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || '';
     
     if (GOOGLE_PLACES_API_KEY) {
       try {
-        // Search for supermarkets and grocery stores
-        for (const query of ['supermarket', 'grocery store', 'convenience store']) {
-          const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radiusMeters}&type=grocery_or_supermarket&keyword=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
+        // Search for country-specific store chains ONLY
+        for (const storeName of storeKeywords.slice(0, 10)) { // Limit to first 10 to avoid too many requests
+          const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radiusMeters}&type=grocery_or_supermarket&keyword=${encodeURIComponent(storeName)}&key=${GOOGLE_PLACES_API_KEY}`;
           
           const response = await fetch(url);
           if (response.ok) {
@@ -97,24 +98,36 @@ export async function findNearbyStores(
                   const placeLng = place.geometry.location.lng;
                   const distance = calculateDistance(latitude, longitude, placeLat, placeLng);
                   
-                  if (distance <= radiusMiles) {
-                    stores.push({
-                      name: place.name,
-                      address: place.vicinity || place.formatted_address || '',
-                      latitude: placeLat,
-                      longitude: placeLng,
-                      distance,
-                      chain: place.name, // Could parse chain name from name
-                      phone: place.formatted_phone_number,
-                      hours: place.opening_hours?.weekday_text?.join(', '),
-                    });
+    if (distance <= radiusMiles) {
+                  // CRITICAL: Verify store name matches a country-specific chain
+                  const placeName = (place.name || '').toLowerCase();
+                  const matchesChain = countryChains.some(chain => 
+                    chain.patterns.some(pattern => placeName.includes(pattern.toLowerCase()))
+                  );
+                  
+                  // CRITICAL: Also verify the place is in the correct country
+                  const placeCountry = place.plus_code?.compound_code?.split(' ').pop() || '';
+                  const isCorrectCountry = !placeCountry || placeCountry.toLowerCase().includes(countryCode.toLowerCase());
+                  
+                  if (matchesChain && isCorrectCountry) {
+                      stores.push({
+                        name: place.name,
+                        address: place.vicinity || place.formatted_address || '',
+                        latitude: placeLat,
+                        longitude: placeLng,
+                        distance,
+                        chain: place.name,
+                        phone: place.formatted_phone_number,
+                        hours: place.opening_hours?.weekday_text?.join(', '),
+                      });
+                    }
                   }
                 }
               });
             }
           }
         }
-        console.log(`[LocalStorePricing] Google Places found ${stores.length} stores`);
+        console.log(`[LocalStorePricing] Google Places found ${stores.length} stores matching ${countryCode} chains`);
       } catch (error) {
         console.warn('[LocalStorePricing] Google Places API error:', error);
       }
@@ -125,7 +138,7 @@ export async function findNearbyStores(
     
     if (GEOAPIFY_API_KEY && stores.length < 10) {
       try {
-        // Geoapify Places API
+        // Geoapify Places API - search for country-specific stores
         const url = `https://api.geoapify.com/v2/places?categories=commercial.supermarket,commercial.grocery&filter=circle:${longitude},${latitude},${radiusMeters}&bias=proximity:${longitude},${latitude}&limit=20&apiKey=${GEOAPIFY_API_KEY}`;
         
         const response = await fetch(url);
@@ -142,27 +155,39 @@ export async function findNearbyStores(
                 const distance = calculateDistance(latitude, longitude, placeLat, placeLng);
                 
                 if (distance <= radiusMiles) {
-                  // Check if we already have this store
-                  const existing = stores.find(s => 
-                    s.latitude === placeLat && s.longitude === placeLng
+                  // CRITICAL: Verify store name matches a country-specific chain
+                  const placeName = (props.name || '').toLowerCase();
+                  const matchesChain = countryChains.some(chain => 
+                    chain.patterns.some(pattern => placeName.includes(pattern.toLowerCase()))
                   );
                   
-                  if (!existing) {
-                    stores.push({
-                      name: props.name || 'Store',
-                      address: props.address_line2 || props.address_line1 || '',
-                      latitude: placeLat,
-                      longitude: placeLng,
-                      distance,
-                      chain: props.name, // Could parse chain name
-                    });
+                  // CRITICAL: Verify country matches (Geoapify provides country code)
+                  const placeCountryCode = props.country_code?.toUpperCase();
+                  const isCorrectCountry = !placeCountryCode || placeCountryCode === countryCode.toUpperCase();
+                  
+                  if (matchesChain && isCorrectCountry) {
+                    // Check if we already have this store
+                    const existing = stores.find(s => 
+                      s.latitude === placeLat && s.longitude === placeLng
+                    );
+                    
+                    if (!existing) {
+                      stores.push({
+                        name: props.name || 'Store',
+                        address: props.address_line2 || props.address_line1 || '',
+                        latitude: placeLat,
+                        longitude: placeLng,
+                        distance,
+                        chain: props.name,
+                      });
+                    }
                   }
                 }
               }
             });
           }
         }
-        console.log(`[LocalStorePricing] Geoapify found ${stores.length} total stores`);
+        console.log(`[LocalStorePricing] Geoapify found ${stores.length} total stores matching ${countryCode} chains`);
       } catch (error) {
         console.warn('[LocalStorePricing] Geoapify API error:', error);
       }
@@ -173,7 +198,7 @@ export async function findNearbyStores(
       new Map(stores.map(store => [`${store.latitude},${store.longitude}`, store])).values()
     ).sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
-    console.log(`[LocalStorePricing] Found ${uniqueStores.length} unique stores within ${radiusMiles} miles`);
+    console.log(`[LocalStorePricing] Found ${uniqueStores.length} unique ${countryCode} stores within ${radiusMiles} miles`);
     return uniqueStores.slice(0, 20); // Limit to 20 closest stores
   } catch (error) {
     console.error('[LocalStorePricing] Error finding nearby stores:', error);
@@ -190,20 +215,27 @@ export async function fetchLocalStorePrices(
   productName: string,
   latitude: number,
   longitude: number,
-  radiusMiles: number = STORE_SEARCH_RADIUS_MILES
+  radiusMiles: number = STORE_SEARCH_RADIUS_MILES,
+  countryCode?: string
 ): Promise<LocalStorePrice[]> {
   const prices: LocalStorePrice[] = [];
 
   try {
-    // Step 1: Find nearby stores
-    const nearbyStores = await findNearbyStores(latitude, longitude, radiusMiles);
-    
-    if (nearbyStores.length === 0) {
-      console.log('[LocalStorePricing] No nearby stores found');
+    // CRITICAL: Must have country code to filter stores
+    if (!countryCode) {
+      console.warn('[LocalStorePricing] Country code required for local store pricing');
       return prices;
     }
 
-    console.log(`[LocalStorePricing] Found ${nearbyStores.length} nearby stores`);
+    // Step 1: Find nearby stores - STRICTLY filtered by country code
+    const nearbyStores = await findNearbyStores(latitude, longitude, radiusMiles, countryCode);
+    
+    if (nearbyStores.length === 0) {
+      console.log(`[LocalStorePricing] No nearby ${countryCode} stores found`);
+      return prices;
+    }
+
+    console.log(`[LocalStorePricing] Found ${nearbyStores.length} nearby ${countryCode} stores`);
 
     // Step 2: Real-time web scraping from store websites
     // This uses the user's internet connection to scrape prices directly
@@ -223,7 +255,7 @@ export async function fetchLocalStorePrices(
     // Process batches sequentially to avoid overwhelming stores
     for (const batch of batches) {
       const batchPromises = batch.map(store =>
-        fetchPriceFromStore(barcode, productName, store)
+        fetchPriceFromStore(barcode, productName, store, countryCode)
           .catch(error => {
             console.warn(`[LocalStorePricing] Error fetching from ${store.name}:`, error);
             return [];
@@ -266,16 +298,35 @@ export async function fetchLocalStorePrices(
 async function fetchPriceFromStore(
   barcode: string,
   productName: string,
-  store: StoreLocation
+  store: StoreLocation,
+  countryCode?: string
 ): Promise<LocalStorePrice[]> {
   const prices: LocalStorePrice[] = [];
 
+  // CRITICAL: Must have country code
+  if (!countryCode) {
+    console.warn(`[LocalStorePricing] Country code required for ${store.name}`);
+    return prices;
+  }
+
   try {
+    // CRITICAL: Verify store matches country-specific chain
+    const storeNameLower = (store.chain || store.name || '').toLowerCase();
+    const countryChains = getStoreChainsForCountry(countryCode);
+    const matchesChain = countryChains.some(chain => 
+      chain.patterns.some(pattern => storeNameLower.includes(pattern.toLowerCase()))
+    );
+
+    if (!matchesChain) {
+      console.log(`[LocalStorePricing] Skipping ${store.name} - does not match ${countryCode} store chains`);
+      return prices;
+    }
+
     // Try store-specific APIs first (if available)
-    const storeChain = (store.chain || store.name || '').toLowerCase();
+    const storeChain = storeNameLower;
     
-    // Walmart - try Walmart Open API
-    if (storeChain.includes('walmart')) {
+    // Walmart - try Walmart Open API (US/CA only)
+    if (storeChain.includes('walmart') && (countryCode === 'US' || countryCode === 'CA')) {
       try {
         const WALMART_API_KEY = process.env.EXPO_PUBLIC_WALMART_API_KEY || '';
         if (WALMART_API_KEY) {
@@ -286,7 +337,7 @@ async function fetchPriceFromStore(
             if (data.items && data.items.length > 0 && data.items[0].salePrice) {
               prices.push({
                 price: data.items[0].salePrice,
-                currency: data.items[0].currency || 'USD',
+                currency: data.items[0].currency || (countryCode === 'CA' ? 'CAD' : 'USD'),
                 retailer: store.name,
                 timestamp: Date.now(),
                 source: 'api',
@@ -309,7 +360,9 @@ async function fetchPriceFromStore(
       try {
         // Import web scraping function
         const { scrapeStoreWebsite } = await import('./storeWebScraping');
-        const scrapedPrice = await scrapeStoreWebsite(barcode, productName, store);
+        
+        // Use provided country code (already validated)
+        const scrapedPrice = await scrapeStoreWebsite(barcode, productName, store, countryCode);
         
         if (scrapedPrice) {
           prices.push({
@@ -317,7 +370,7 @@ async function fetchPriceFromStore(
             storeLocation: store,
             inStoreOnly: true,
           });
-          console.log(`[LocalStorePricing] ✅ Successfully scraped price $${scrapedPrice.price} from ${store.name}`);
+          console.log(`[LocalStorePricing] ✅ Successfully scraped price ${scrapedPrice.currency}${scrapedPrice.price} from ${store.name}`);
         } else {
           console.log(`[LocalStorePricing] No price found via scraping for ${barcode} at ${store.name}`);
         }

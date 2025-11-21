@@ -46,8 +46,11 @@ import * as Linking from 'expo-linking';
 import { submitManufacturingCountry, getManufacturingCountry, hasUserSubmitted } from '../../src/services/manufacturingCountryService';
 import ManufacturingCountryModal from '../../src/components/ManufacturingCountryModal';
 import RecallAlertModal from '../../src/components/RecallAlertModal';
+import PalmOilInfoModal from '../../src/components/PalmOilInfoModal';
 import PricingCard from '../../src/components/PricingCard';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
+import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
+import { saveManualProduct, ManualProductData, getManualProduct, isManualProduct } from '../../src/services/manualProductService';
 
 type ResultScreenRouteProp = RouteProp<RootStackParamList, 'Result'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -99,8 +102,11 @@ function ResultScreenContent() {
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [manufacturingCountryModalVisible, setManufacturingCountryModalVisible] = useState(false);
   const [recallAlertModalVisible, setRecallAlertModalVisible] = useState(false);
+  const [palmOilInfoModalVisible, setPalmOilInfoModalVisible] = useState(false);
+  const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [isUserContributed, setIsUserContributed] = useState(false);
 
   useEffect(() => {
     loadProduct();
@@ -140,10 +146,37 @@ function ResultScreenContent() {
     }
   }, [barcode, product]);
 
+  // Check if product is user-contributed (manual entry)
+  useEffect(() => {
+    const checkUserContributed = async () => {
+      if (product) {
+        const isManual = await isManualProduct(barcode);
+        setIsUserContributed(isManual);
+      } else {
+        setIsUserContributed(false);
+      }
+    };
+    checkUserContributed();
+  }, [barcode, product]);
+
   const loadProduct = async () => {
     setLoading(true);
     setError(null);
     try {
+      // First check if this is a manually added product
+      const manualProduct = await getManualProduct(barcode);
+      if (manualProduct) {
+        setProduct(manualProduct);
+        addScan({
+          barcode,
+          timestamp: Date.now(),
+          productName: manualProduct.product_name || manualProduct.product_name_en || null,
+        });
+        setLoading(false);
+        return;
+      }
+
+      // If not manual, try fetching from APIs
       const productData = await fetchProduct(barcode, true, isPremium, isOffline);
       if (productData) {
         setProduct(productData);
@@ -255,10 +288,21 @@ function ResultScreenContent() {
         </Text>
         <TouchableOpacity
           style={[styles.contributeButton, { backgroundColor: colors.primary }]}
-          onPress={handleContribute}
+          onPress={() => setManualProductModalVisible(true)}
         >
           <Ionicons name="add-circle-outline" size={20} color="#fff" />
-          <Text style={styles.contributeButtonText}>{t('result.contribute')}</Text>
+          <Text style={styles.contributeButtonText}>
+            {t('manualProduct.addProduct') || 'Add Product Information'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.contributeButton, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, marginTop: 12 }]}
+          onPress={handleContribute}
+        >
+          <Ionicons name="globe-outline" size={20} color={colors.primary} />
+          <Text style={[styles.contributeButtonText, { color: colors.primary }]}>
+            {t('result.contributeToOpenFoodFacts') || 'Contribute to Open Food Facts'}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={[styles.backButtonText, { color: colors.primary }]}>
@@ -327,6 +371,12 @@ function ResultScreenContent() {
     }
   };
 
+  const handleManualProductSave = async (productData: ManualProductData) => {
+    // Reload product data - it should now be available from cache
+    await loadProduct();
+    setManualProductModalVisible(false);
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
@@ -356,9 +406,19 @@ function ResultScreenContent() {
               </Text>
             </TouchableOpacity>
           )}
-          <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>
-            {product.product_name || product.product_name_en || 'Unknown Product'}
-          </Text>
+          <View style={styles.productNameContainer}>
+            <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>
+              {product.product_name || product.product_name_en || 'Unknown Product'}
+            </Text>
+            {isUserContributed && (
+              <View style={[styles.userContributedBadge, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}>
+                <Ionicons name="person-circle-outline" size={14} color={colors.primary} />
+                <Text style={[styles.userContributedText, { color: colors.primary }]}>
+                  {t('manualProduct.userContributed') || 'User Contributed'}
+                </Text>
+              </View>
+            )}
+          </View>
           {product.brands && (
             <Text style={[styles.brand, { color: colors.textSecondary }]}>{product.brands}</Text>
           )}
@@ -389,12 +449,23 @@ function ResultScreenContent() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.contributeButton, { backgroundColor: colors.primary, flex: 1, marginLeft: 8 }]}
-                  onPress={handleContribute}
+                  onPress={() => setManualProductModalVisible(true)}
                 >
                   <Ionicons name="add-circle-outline" size={20} color="#fff" />
-                  <Text style={styles.contributeButtonText}>{t('result.contribute')}</Text>
+                  <Text style={styles.contributeButtonText}>
+                    {t('manualProduct.addProduct') || 'Add Product'}
+                  </Text>
                 </TouchableOpacity>
               </View>
+              <TouchableOpacity
+                style={[styles.contributeButton, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, marginTop: 8 }]}
+                onPress={handleContribute}
+              >
+                <Ionicons name="globe-outline" size={20} color={colors.primary} />
+                <Text style={[styles.contributeButtonText, { color: colors.primary }]}>
+                  {t('result.contributeToOpenFoodFacts') || 'Contribute to Open Food Facts'}
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -431,7 +502,11 @@ function ResultScreenContent() {
         {/* Trust Score Card - Only show if we have sufficient data */}
         {product.trust_score !== null && product.trust_score_breakdown ? (
           <TouchableOpacity
-            style={[styles.card, { backgroundColor: colors.card }]}
+            style={[styles.card, { 
+              backgroundColor: colors.card,
+              borderColor: getTrustScoreColor(product.trust_score),
+              borderWidth: 2,
+            }]}
             onPress={() => setTrustScoreModalVisible(true)}
             activeOpacity={0.7}
           >
@@ -474,12 +549,38 @@ function ResultScreenContent() {
           
           {/* Trust Score Layout - 4 Quadrants */}
           <View style={styles.trustScoreContainer}>
+            {/* Transparency Warning - v1.3 */}
+            {product._truscore_metadata && (!product._truscore_metadata.hasNutriScore || !product._truscore_metadata.hasEcoScore) && (
+              <View style={[styles.transparencyWarning, { backgroundColor: (colors.warning || '#ff9800') + '15', borderColor: colors.warning || '#ff9800', borderWidth: 1, borderRadius: 8, padding: 12, marginBottom: 12 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+                  <Ionicons name="information-circle" size={18} color={colors.warning || '#ff9800'} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.warningTitle, { color: colors.warning || '#ff9800', fontWeight: '600', marginBottom: 4 }]}>
+                      {t('result.scoreBasedOnAvailableData', 'Score Based on Available Data Only')}
+                    </Text>
+                    <Text style={[styles.warningText, { color: colors.textSecondary, fontSize: 12, lineHeight: 18 }]}>
+                      {!product._truscore_metadata.hasNutriScore && !product._truscore_metadata.hasEcoScore
+                        ? t('result.nutriEcoMissing', 'Nutri-Score and Eco-Score not available - score calculated from other available data')
+                        : !product._truscore_metadata.hasNutriScore
+                        ? t('result.nutriMissing', 'Nutri-Score not available - Body score calculated from available nutrition data')
+                        : t('result.ecoMissing', 'Eco-Score not available - Planet score calculated from available sustainability data')}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+            
             <View style={styles.quadrantContainer}>
               {/* Center Score */}
               <View style={[styles.scoreCircle, { borderColor: getTrustScoreColor(product.trust_score) }]}>
-                <Text style={[styles.centerScoreText, { color: getTrustScoreColor(product.trust_score) }]}>
-                  {product.trust_score}
-                </Text>
+                <View style={styles.centerScoreContainer}>
+                  <Text style={[styles.centerScoreText, { color: getTrustScoreColor(product.trust_score) }]}>
+                    {product.trust_score}
+                  </Text>
+                  <Text style={[styles.centerScoreDenominator, { color: getTrustScoreColor(product.trust_score) }]}>
+                    100
+                  </Text>
+                </View>
               </View>
               <Text style={[styles.scoreLabel, { color: getTrustScoreColor(product.trust_score) }]}>
                 {getTrustScoreLabel(product.trust_score)}
@@ -505,9 +606,14 @@ function ResultScreenContent() {
                 <Text style={[styles.quadrantLabel, { color: colors.textSecondary }]}>
                   {t('result.body')}
                 </Text>
-                <Text style={[styles.quadrantValue, { color: colors.text }]}>
-                  {product.trust_score_breakdown.body || product.trust_score_breakdown.bodySafety || 0}
-                </Text>
+                <View style={styles.quadrantValueContainer}>
+                  <Text style={[styles.quadrantValue, { color: colors.text }]}>
+                    {product.trust_score_breakdown.body || product.trust_score_breakdown.bodySafety || 0}
+                  </Text>
+                  <Text style={[styles.quadrantValueDenominator, { color: colors.textSecondary }]}>
+                    /25
+                  </Text>
+                </View>
               </View>
               
               {/* Quadrant 2: Planet (Top Right) - TruScore Pillar #2 */}
@@ -516,9 +622,14 @@ function ResultScreenContent() {
                 <Text style={[styles.quadrantLabel, { color: colors.textSecondary }]}>
                   {t('result.planet')}
                 </Text>
-                <Text style={[styles.quadrantValue, { color: colors.text }]}>
-                  {product.trust_score_breakdown.planet || product.trust_score_breakdown.sustainability || 0}
-                </Text>
+                <View style={styles.quadrantValueContainer}>
+                  <Text style={[styles.quadrantValue, { color: colors.text }]}>
+                    {product.trust_score_breakdown.planet || product.trust_score_breakdown.sustainability || 0}
+                  </Text>
+                  <Text style={[styles.quadrantValueDenominator, { color: colors.textSecondary }]}>
+                    /25
+                  </Text>
+                </View>
               </View>
               
               {/* Quadrant 3: Care (Bottom Left) - TruScore Pillar #3 */}
@@ -527,9 +638,14 @@ function ResultScreenContent() {
                 <Text style={[styles.quadrantLabel, { color: colors.textSecondary }]}>
                   {t('result.care')}
                 </Text>
-                <Text style={[styles.quadrantValue, { color: colors.text }]}>
-                  {product.trust_score_breakdown.care || product.trust_score_breakdown.ethics || 0}
-                </Text>
+                <View style={styles.quadrantValueContainer}>
+                  <Text style={[styles.quadrantValue, { color: colors.text }]}>
+                    {product.trust_score_breakdown.care || product.trust_score_breakdown.ethics || 0}
+                  </Text>
+                  <Text style={[styles.quadrantValueDenominator, { color: colors.textSecondary }]}>
+                    /25
+                  </Text>
+                </View>
               </View>
               
               {/* Quadrant 4: Open (Bottom Right) - TruScore Pillar #4 */}
@@ -538,9 +654,14 @@ function ResultScreenContent() {
                 <Text style={[styles.quadrantLabel, { color: colors.textSecondary }]}>
                   {t('result.open')}
                 </Text>
-                <Text style={[styles.quadrantValue, { color: colors.text }]}>
-                  {product.trust_score_breakdown.open || product.trust_score_breakdown.transparency || 0}
-                </Text>
+                <View style={styles.quadrantValueContainer}>
+                  <Text style={[styles.quadrantValue, { color: colors.text }]}>
+                    {product.trust_score_breakdown.open || product.trust_score_breakdown.transparency || 0}
+                  </Text>
+                  <Text style={[styles.quadrantValueDenominator, { color: colors.textSecondary }]}>
+                    /25
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
@@ -555,7 +676,7 @@ function ResultScreenContent() {
             
             return (
               <View style={[styles.reasonsContainer, { borderTopColor: colors.border }]}>
-                <Text style={[styles.reasonsTitle, { color: colors.text }]}>{t('result.whyThisScore')}</Text>
+                <Text style={[styles.reasonsTitle, { color: colors.text }]}>Score highlights:</Text>
                 
                 {/* Green Flags (Positive) */}
                 {greenFlags.length > 0 && (
@@ -884,41 +1005,53 @@ function ResultScreenContent() {
           );
         })()}
 
-        {/* Sustainability Card - Always display for all products */}
-        <TouchableOpacity
-          style={[styles.card, { backgroundColor: colors.card }]}
-          onPress={() => setEcoScoreModalVisible(true)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.ecoScoreHeader}>
-            <View style={styles.ecoScoreHeaderLeft}>
-              <Text style={[styles.ecoScoreTitle, { color: colors.text }]}>
-                {t('result.ecoScore', 'Eco-Score')}
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => {
-                setEcoScoreModalVisible(true);
-              }}
-              style={[styles.infoButtonAbsolute, { backgroundColor: colors.background }]}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.ecoScoreContent}>
-            {calculatedEcoScore && calculatedEcoScore.score !== undefined && calculatedEcoScore.score > 0 ? (
-              <EcoScore ecoScore={calculatedEcoScore} />
-            ) : (
-              <View style={styles.ecoScorePlaceholder}>
-                <Ionicons name="leaf-outline" size={48} color={colors.textSecondary} />
-                <Text style={[styles.ecoScorePlaceholderText, { color: colors.textSecondary }]}>
-                  {t('result.ecoScoreNotAvailable', 'Eco-Score not available')}
+        {/* Sustainability Card - Only display if Eco-Score data is available */}
+        {calculatedEcoScore && calculatedEcoScore.score !== undefined && calculatedEcoScore.score > 0 && (() => {
+          // Calculate grade from score if missing
+          const grade = calculatedEcoScore.grade || 
+            (calculatedEcoScore.score >= 80 ? 'a' :
+             calculatedEcoScore.score >= 70 ? 'b' :
+             calculatedEcoScore.score >= 55 ? 'c' :
+             calculatedEcoScore.score >= 40 ? 'd' : 'e');
+          
+          // Get border color matching grade
+          const gradeColors: Record<string, string> = {
+            a: '#16a085', // Green
+            b: '#4dd09f', // Light green
+            c: '#ffd93d', // Yellow
+            d: '#ff9800', // Orange
+            e: '#ff6b6b', // Red
+          };
+          const borderColor = gradeColors[grade] || '#95a5a6';
+          
+          return (
+          <TouchableOpacity
+            style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor }]}
+            onPress={() => setEcoScoreModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.ecoScoreHeader}>
+              <View style={styles.ecoScoreHeaderLeft}>
+                <Text style={[styles.ecoScoreTitle, { color: colors.text }]}>
+                  {t('result.ecoScore', 'Eco-Score')}
                 </Text>
               </View>
-            )}
-          </View>
-        </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setEcoScoreModalVisible(true);
+                }}
+                style={[styles.infoButtonAbsolute, { backgroundColor: colors.background }]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.ecoScoreContent}>
+              <EcoScore ecoScore={calculatedEcoScore} />
+            </View>
+          </TouchableOpacity>
+          );
+        })()}
 
         {/* Pricing Information - Always display */}
         <ErrorBoundary>
@@ -927,8 +1060,12 @@ function ResultScreenContent() {
 
         {/* Palm Oil Analysis */}
         {product.palm_oil_analysis && (
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <View style={styles.cardHeader}>
+          <TouchableOpacity
+            style={[styles.card, { backgroundColor: colors.card }]}
+            onPress={() => setPalmOilInfoModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.cardHeaderLeft}>
               <Ionicons 
                 name={product.palm_oil_analysis.isPalmOilFree ? "checkmark-circle" : product.palm_oil_analysis.isNonSustainable ? "warning" : "information-circle"} 
                 size={24} 
@@ -962,7 +1099,7 @@ function ResultScreenContent() {
                 </View>
               ) : null}
             </View>
-          </View>
+          </TouchableOpacity>
         )}
 
         {/* Packaging Sustainability */}
@@ -1035,10 +1172,36 @@ function ResultScreenContent() {
         />
 
         {/* Ingredients */}
-        {product.ingredients_text && (
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
-            <Text style={[styles.ingredientsText, { color: colors.text }]}>{product.ingredients_text}</Text>
+        {product.ingredients_text && (() => {
+          // Filter out barcode patterns (8-14 digits) from ingredients_text
+          let ingredientsText = product.ingredients_text.trim();
+          
+          // Check if entire text is just a barcode pattern
+          const isBarcodePattern = /^\d{8,14}$/.test(ingredientsText.replace(/\s/g, ''));
+          if (isBarcodePattern) {
+            return null; // Don't display barcode as ingredients
+          }
+          
+          // CRITICAL: Remove barcode from ingredients text if it appears within the text
+          // This handles cases where barcode is embedded in ingredients_text
+          const barcodePattern = new RegExp(`\\b${barcode}\\b`, 'gi');
+          ingredientsText = ingredientsText.replace(barcodePattern, '').trim();
+          
+          // Also remove any standalone 8-14 digit sequences that might be barcodes
+          ingredientsText = ingredientsText.replace(/\b\d{8,14}\b/g, '').trim();
+          
+          // Clean up extra spaces and commas
+          ingredientsText = ingredientsText.replace(/[,\s]+/g, ' ').trim();
+          
+          // If after filtering, we have no meaningful content, don't display
+          if (!ingredientsText || ingredientsText.length < 3) {
+            return null;
+          }
+          
+          return (
+            <View style={[styles.card, { backgroundColor: colors.card }]}>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
+              <Text style={[styles.ingredientsText, { color: colors.text }]}>{ingredientsText}</Text>
             {product.nova_group && (
               <TouchableOpacity
                 style={[styles.novaContainer, { borderTopColor: colors.border }]}
@@ -1055,7 +1218,8 @@ function ResultScreenContent() {
               </TouchableOpacity>
             )}
           </View>
-        )}
+          );
+        })()}
 
         {/* Allergens & Additives */}
         {(product.allergens_tags || product.additives_tags) && (
@@ -1195,6 +1359,23 @@ function ResultScreenContent() {
           recalls={product.recalls}
         />
       )}
+
+      {/* Palm Oil Info Modal */}
+      {product && product.palm_oil_analysis && (
+        <PalmOilInfoModal
+          visible={palmOilInfoModalVisible}
+          onClose={() => setPalmOilInfoModalVisible(false)}
+          product={product}
+        />
+      )}
+
+      {/* Manual Product Entry Modal */}
+      <ManualProductEntryModal
+        visible={manualProductModalVisible}
+        onClose={() => setManualProductModalVisible(false)}
+        onSave={handleManualProductSave}
+        barcode={barcode}
+      />
     </View>
   );
 }
@@ -1290,11 +1471,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
+  productNameContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   productName: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
+  },
+  userContributedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 4,
+    marginTop: 4,
+  },
+  userContributedText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   brand: {
     fontSize: 16,
@@ -1407,9 +1606,22 @@ const styles = StyleSheet.create({
     marginLeft: -50,
     zIndex: 10,
   },
+  centerScoreContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   centerScoreText: {
-    fontSize: 42,
+    fontSize: 36,
     fontWeight: 'bold',
+    lineHeight: 36,
+  },
+  centerScoreDenominator: {
+    fontSize: 14,
+    fontWeight: '500',
+    opacity: 0.7,
+    marginTop: 2,
+    lineHeight: 14,
   },
   scoreLabel: {
     position: 'absolute',
@@ -1418,8 +1630,8 @@ const styles = StyleSheet.create({
     marginTop: 60,
     marginLeft: -40,
     width: 80,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     textTransform: 'capitalize',
     textAlign: 'center',
     zIndex: 10,
@@ -1500,10 +1712,23 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  quadrantValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+  },
   quadrantValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
+    lineHeight: 20,
+  },
+  quadrantValueDenominator: {
+    fontSize: 10,
+    fontWeight: '500',
+    opacity: 0.6,
+    marginLeft: 1,
+    lineHeight: 10,
   },
   dimensionItem: {
     flex: 1,
@@ -1840,6 +2065,12 @@ const styles = StyleSheet.create({
   warningText: {
     fontSize: 14,
     flex: 1,
+  },
+  transparencyWarning: {
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
   },
   additivesSection: {
     marginTop: 12,

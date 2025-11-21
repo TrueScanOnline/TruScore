@@ -255,5 +255,11 @@ export interface FoodRecall {
 export interface ProductWithTrustScore extends Product {
   trust_score: number | null; // 0-100, or null if insufficient data
   trust_score_breakdown: TrustScoreBreakdown | null;
+  // v1.3 metadata for UI transparency warnings
+  _truscore_metadata?: {
+    hasNutriScore?: boolean;
+    hasEcoScore?: boolean;
+    hasOrigin?: boolean;
+  };
 }
 

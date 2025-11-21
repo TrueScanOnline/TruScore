@@ -1,4 +1,7 @@
-// Pricing Card Component - Displays product pricing information
+// Pricing Card Component - LOCAL STORES ONLY
+// Displays prices from local supermarkets/stores based on user's geo-location
+// Shows price comparison from different local stores
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -8,13 +11,15 @@ import {
   ActivityIndicator,
   ScrollView,
   Modal,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { ProductPricing } from '../types/pricing';
+import { ProductPricing, PriceEntry } from '../types/pricing';
 import { pricingService } from '../services/pricingService';
 import { currencyService } from '../services/currencyService';
 import { useTheme } from '../theme';
+import * as Location from 'expo-location';
 
 interface PricingCardProps {
   barcode: string;
@@ -22,19 +27,17 @@ interface PricingCardProps {
 }
 
 export default function PricingCard({ barcode, productName }: PricingCardProps) {
-  console.log('[PricingCard] Component rendering with barcode:', barcode);
-  
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [pricing, setPricing] = useState<ProductPricing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [priceInputVisible, setPriceInputVisible] = useState(false);
 
   const loadPricing = async () => {
     if (!barcode) {
-      console.warn('[PricingCard] No barcode provided');
       setError('No barcode provided');
       setLoading(false);
       return;
@@ -42,79 +45,41 @@ export default function PricingCard({ barcode, productName }: PricingCardProps) 
 
     setLoading(true);
     setError(null);
+    setLocationError(null);
+
     try {
-      console.log('[PricingCard] Fetching pricing data...');
-      const pricingData = await pricingService.getProductPricing(barcode);
-      console.log('[PricingCard] Pricing data received:', pricingData ? 'Yes' : 'No');
+      // Check location permission first
+      const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
+      if (locationStatus !== 'granted') {
+        setLocationError('Location permission required for local pricing');
+        setLoading(false);
+        return;
+      }
+
+      // Fetch pricing data (now ONLY from local stores)
+      const pricingData = await pricingService.getProductPricing(barcode, undefined, false, productName);
+      
       if (pricingData) {
         setPricing(pricingData);
-        console.log('[PricingCard] Pricing set successfully');
+        setError(null);
       } else {
-        console.log('[PricingCard] No pricing data available');
-        setError('No pricing data available');
+        setError('No local prices found. Enable location services to see prices from nearby stores.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('[PricingCard] Error loading pricing:', err);
-      setError('Failed to load pricing');
+      setError(err.message || 'Failed to load pricing');
     } finally {
       setLoading(false);
-      console.log('[PricingCard] Loading complete');
     }
   };
 
   useEffect(() => {
     if (barcode) {
-      console.log('[PricingCard] Component mounted, loading pricing for barcode:', barcode);
       loadPricing();
-    } else {
-      console.warn('[PricingCard] No barcode provided');
-      setLoading(false);
-      setError('No barcode provided');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [barcode]);
 
-  const getTrendIcon = (direction: 'up' | 'down' | 'stable') => {
-    switch (direction) {
-      case 'up':
-        return { name: 'trending-up' as const, color: '#ff6b6b' };
-      case 'down':
-        return { name: 'trending-down' as const, color: '#16a085' };
-      default:
-        return { name: 'remove' as const, color: colors.textSecondary };
-    }
-  };
-
-  const getTrendText = (direction: 'up' | 'down' | 'stable', change?: number) => {
-    if (!change) return t('pricing.stable', 'Price is stable');
-    
-    const absChange = Math.abs(change);
-    if (direction === 'up') {
-      return t('pricing.priceUp', `Price up ${absChange.toFixed(1)}% from last month`);
-    } else if (direction === 'down') {
-      return t('pricing.priceDown', `Price down ${absChange.toFixed(1)}% from last month`);
-    }
-    return t('pricing.stable', 'Price is stable');
-  };
-
-  const getDataQualityColor = (quality: ProductPricing['dataQuality']) => {
-    switch (quality) {
-      case 'high':
-        return '#16a085';
-      case 'medium':
-        return '#ffd93d';
-      case 'low':
-        return '#ff9800';
-      default:
-        return colors.textSecondary;
-    }
-  };
-
-  // Always render something - never return null
-  console.log('[PricingCard] Rendering - loading:', loading, 'error:', error, 'pricing:', !!pricing);
-
   if (loading) {
-    console.log('[PricingCard] Rendering loading state');
     return (
       <View style={[styles.card, { backgroundColor: colors.card }]}>
         <View style={styles.cardHeader}>
@@ -126,14 +91,15 @@ export default function PricingCard({ barcode, productName }: PricingCardProps) 
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.textSecondary, marginLeft: 12 }]}>
-            {t('pricing.loading', 'Loading pricing...')}
+            {t('pricing.loading', 'Loading local prices...')}
           </Text>
         </View>
       </View>
     );
   }
 
-  if (error || !pricing) {
+  // No location or no pricing data
+  if (locationError || error || !pricing) {
     return (
       <View style={[styles.card, { backgroundColor: colors.card }]}>
         <View style={styles.cardHeader}>
@@ -143,19 +109,30 @@ export default function PricingCard({ barcode, productName }: PricingCardProps) 
           </Text>
         </View>
         <View style={styles.noDataContainer}>
-          <Ionicons name="information-circle-outline" size={48} color={colors.textSecondary} />
-          <Text style={[styles.noDataText, { color: colors.textSecondary, marginTop: 12, marginBottom: 8 }]}>
-            {t('pricing.notAvailable', 'Pricing not available for this product')}
+          <Ionicons name="location-outline" size={48} color={colors.textSecondary} />
+          <Text style={[styles.noDataTitle, { color: colors.text, marginTop: 12, marginBottom: 8 }]}>
+            {locationError || 'Location Required'}
           </Text>
-          <Text style={[styles.noDataText, { color: colors.textSecondary, fontSize: 12, marginBottom: 12 }]}>
-            {t('pricing.enableLocation', 'Enable location services to see prices from nearby stores')}
+          <Text style={[styles.noDataText, { color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginBottom: 16 }]}>
+            {locationError 
+              ? 'Please enable location services in your device settings to see prices from nearby stores.'
+              : 'Enable location services to see prices from local supermarkets and stores in your area.'}
           </Text>
           <TouchableOpacity
-            style={[styles.contributeButton, { backgroundColor: colors.primary }]}
+            style={[styles.enableLocationButton, { backgroundColor: colors.primary }]}
+            onPress={loadPricing}
+          >
+            <Ionicons name="location" size={20} color="#fff" />
+            <Text style={[styles.enableLocationButtonText, { marginLeft: 8 }]}>
+              {t('pricing.enableLocation', 'Enable Location')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.contributeButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1, marginTop: 12 }]}
             onPress={() => setPriceInputVisible(true)}
           >
-            <Ionicons name="add-circle-outline" size={20} color="#fff" />
-            <Text style={[styles.contributeButtonText, { marginLeft: 8 }]}>
+            <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+            <Text style={[styles.contributeButtonText, { color: colors.primary, marginLeft: 8 }]}>
               {t('pricing.submitPrice', 'Submit Store Price')}
             </Text>
           </TouchableOpacity>
@@ -164,11 +141,36 @@ export default function PricingCard({ barcode, productName }: PricingCardProps) 
     );
   }
 
-  // Format prices using currency service
+  // Format prices
   const formattedAverage = currencyService.formatPrice(pricing.priceRange.average, pricing.currency);
   const formattedMin = currencyService.formatPrice(pricing.priceRange.min, pricing.currency);
   const formattedMax = currencyService.formatPrice(pricing.priceRange.max, pricing.currency);
-  const trend = getTrendIcon(pricing.trends?.priceChangeDirection || 'stable');
+
+  // Group prices by retailer (for comparison view)
+  const retailerPrices = new Map<string, { price: number; currency: string; location?: string; count: number }>();
+  
+  pricing.prices.forEach(price => {
+    if (price.retailer) {
+      const key = price.retailer.toLowerCase();
+      const existing = retailerPrices.get(key);
+      if (!existing || price.price < existing.price) {
+        retailerPrices.set(key, {
+          price: price.price,
+          currency: price.currency,
+          location: price.location,
+          count: (existing?.count || 0) + 1,
+        });
+      }
+    }
+  });
+
+  // Sort retailers by price (lowest first)
+  const sortedRetailers = Array.from(retailerPrices.entries())
+    .map(([retailer, data]) => ({
+      retailer,
+      ...data,
+    }))
+    .sort((a, b) => a.price - b.price);
 
   return (
     <>
@@ -188,41 +190,7 @@ export default function PricingCard({ barcode, productName }: PricingCardProps) 
           </TouchableOpacity>
         </View>
 
-        {/* Average Price */}
-        <View style={[styles.averagePriceContainer, { borderBottomColor: colors.border }]}>
-          <Text style={[styles.averagePriceLabel, { color: colors.textSecondary }]}>
-            {t('pricing.averagePrice', 'Average Price')}
-          </Text>
-          <Text style={[styles.averagePriceValue, { color: colors.text }]}>
-            {formattedAverage}
-          </Text>
-        </View>
-
-        {/* Price Range */}
-        <View style={styles.priceRangeContainer}>
-          <View style={styles.priceRangeRow}>
-            <View style={[styles.priceRangeItem, { marginRight: 8 }]}>
-              <Ionicons name="arrow-down-circle" size={16} color="#16a085" />
-              <Text style={[styles.priceRangeLabel, { color: colors.textSecondary, marginTop: 4 }]}>
-                {t('pricing.lowest', 'Lowest')}
-              </Text>
-              <Text style={[styles.priceRangeValue, { color: '#16a085', marginTop: 4 }]}>
-                {formattedMin}
-              </Text>
-            </View>
-            <View style={[styles.priceRangeItem, { marginLeft: 8 }]}>
-              <Ionicons name="arrow-up-circle" size={16} color="#ff6b6b" />
-              <Text style={[styles.priceRangeLabel, { color: colors.textSecondary, marginTop: 4 }]}>
-                {t('pricing.highest', 'Highest')}
-              </Text>
-              <Text style={[styles.priceRangeValue, { color: '#ff6b6b', marginTop: 4 }]}>
-                {formattedMax}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Location Info - Always show if location available */}
+        {/* Location Info */}
         {pricing.location && (
           <View style={styles.locationInfo}>
             <Ionicons name="location" size={16} color={colors.primary} />
@@ -230,54 +198,100 @@ export default function PricingCard({ barcode, productName }: PricingCardProps) 
               {t('pricing.localPrices', 'Local Prices')}
               {pricing.location.city ? ` - ${pricing.location.city}` : ''}
               {pricing.location.region ? `, ${pricing.location.region}` : ''}
-              {!pricing.location.city && pricing.location.country ? ` - ${pricing.location.country}` : ''}
-            </Text>
-          </View>
-        )}
-        
-        {/* Show warning if no location */}
-        {!pricing.location && (
-          <View style={[styles.locationInfo, { backgroundColor: colors.warning + '15', borderRadius: 8, padding: 8, marginTop: 8 }]}>
-            <Ionicons name="location-outline" size={14} color={colors.warning || '#ffa500'} />
-            <Text style={[styles.locationText, { color: colors.warning || '#ffa500', marginLeft: 6, fontSize: 12 }]}>
-              {t('pricing.enableLocationForLocal', 'Enable location to see prices from nearby stores (within 20 miles)')}
+              {pricing.location.country ? ` - ${pricing.location.country}` : ''}
             </Text>
           </View>
         )}
 
-        {/* Trend Indicator */}
-        {pricing.trends && pricing.trends.priceChangeDirection !== 'stable' && (
-          <View style={styles.trendContainer}>
-            <View style={[styles.trendRow, { backgroundColor: trend.color + '15' }]}>
-              <Ionicons name={trend.name} size={20} color={trend.color} />
-              <Text style={[styles.trendText, { color: trend.color, marginLeft: 8 }]}>
-                {getTrendText(
-                  pricing.trends.priceChangeDirection,
-                  pricing.trends.priceChange
-                )}
-              </Text>
+        {/* Average Price */}
+        {pricing.priceRange.average > 0 && (
+          <View style={[styles.averagePriceContainer, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.averagePriceLabel, { color: colors.textSecondary }]}>
+              {t('pricing.averagePrice', 'Average Price')}
+            </Text>
+            <Text style={[styles.averagePriceValue, { color: colors.text }]}>
+              {formattedAverage}
+            </Text>
+          </View>
+        )}
+
+        {/* Price Range */}
+        {sortedRetailers.length > 1 && (
+          <View style={styles.priceRangeContainer}>
+            <View style={styles.priceRangeRow}>
+              <View style={[styles.priceRangeItem, { marginRight: 8 }]}>
+                <Ionicons name="arrow-down-circle" size={16} color="#16a085" />
+                <Text style={[styles.priceRangeLabel, { color: colors.textSecondary, marginTop: 4 }]}>
+                  {t('pricing.lowest', 'Lowest')}
+                </Text>
+                <Text style={[styles.priceRangeValue, { color: '#16a085', marginTop: 4 }]}>
+                  {formattedMin}
+                </Text>
+              </View>
+              <View style={[styles.priceRangeItem, { marginLeft: 8 }]}>
+                <Ionicons name="arrow-up-circle" size={16} color="#ff6b6b" />
+                <Text style={[styles.priceRangeLabel, { color: colors.textSecondary, marginTop: 4 }]}>
+                  {t('pricing.highest', 'Highest')}
+                </Text>
+                <Text style={[styles.priceRangeValue, { color: '#ff6b6b', marginTop: 4 }]}>
+                  {formattedMax}
+                </Text>
+              </View>
             </View>
           </View>
         )}
 
-        {/* Data Quality Indicator */}
-        <View style={styles.dataQualityContainer}>
-          <View
-            style={[
-              styles.dataQualityDot,
-              { backgroundColor: getDataQualityColor(pricing.dataQuality) },
-            ]}
-          />
-          <Text style={[styles.dataQualityText, { color: colors.textSecondary, marginLeft: 6 }]}>
-            {pricing.dataQuality === 'high'
-              ? t('pricing.dataQualityHigh', 'High confidence')
-              : pricing.dataQuality === 'medium'
-              ? t('pricing.dataQualityMedium', 'Medium confidence')
-              : pricing.dataQuality === 'low'
-              ? t('pricing.dataQualityLow', 'Low confidence')
-              : t('pricing.dataQualityInsufficient', 'Limited data')}
-          </Text>
-        </View>
+        {/* Store Price Comparison - Main Feature */}
+        {sortedRetailers.length > 0 && (
+          <View style={styles.storeComparisonContainer}>
+            <Text style={[styles.storeComparisonTitle, { color: colors.text, marginBottom: 12 }]}>
+              {t('pricing.compareStores', 'Compare Prices')}
+            </Text>
+            {sortedRetailers.map((retailer, index) => {
+              const isLowest = index === 0 && sortedRetailers.length > 1;
+              const isHighest = index === sortedRetailers.length - 1 && sortedRetailers.length > 1;
+              
+              return (
+                <View 
+                  key={index} 
+                  style={[
+                    styles.storeRow, 
+                    { 
+                      backgroundColor: isLowest ? '#16a08515' : isHighest ? '#ff6b6b15' : colors.background,
+                      borderColor: colors.border,
+                    },
+                    index === sortedRetailers.length - 1 && { borderBottomWidth: 0 }
+                  ]}
+                >
+                  <View style={styles.storeRowLeft}>
+                    <Text style={[styles.storeName, { color: colors.text }]}>
+                      {retailer.retailer}
+                    </Text>
+                    {retailer.location && (
+                      <Text style={[styles.storeLocation, { color: colors.textSecondary }]}>
+                        {retailer.location}
+                      </Text>
+                    )}
+                  </View>
+                  <View style={styles.storeRowRight}>
+                    {isLowest && (
+                      <Ionicons name="checkmark-circle" size={16} color="#16a085" style={{ marginRight: 6 }} />
+                    )}
+                    <Text style={[
+                      styles.storePrice, 
+                      { 
+                        color: isLowest ? '#16a085' : isHighest ? '#ff6b6b' : colors.text,
+                        fontWeight: isLowest || isHighest ? 'bold' : '600',
+                      }
+                    ]}>
+                      {currencyService.formatPrice(retailer.price, retailer.currency)}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
@@ -360,18 +374,32 @@ export default function PricingCard({ barcode, productName }: PricingCardProps) 
                 </View>
               </View>
 
-              {/* Retailer Prices */}
-              {pricing.retailers && pricing.retailers.length > 0 && (
+              {/* Local Stores */}
+              {sortedRetailers.length > 0 && (
                 <View style={[styles.detailSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
                   <Text style={[styles.detailSectionTitle, { color: colors.text }]}>
-                    {t('pricing.retailerPrices', 'Retailer Prices')}
+                    {t('pricing.localStores', 'Local Stores')}
                   </Text>
-                  {pricing.retailers.map((retailer, index) => (
-                    <View key={index} style={styles.retailerRow}>
-                      <Text style={[styles.retailerName, { color: colors.text }]}>
-                        {retailer.retailerName}
-                      </Text>
-                      <Text style={[styles.retailerPrice, { color: colors.text }]}>
+                  {sortedRetailers.map((retailer, index) => (
+                    <View 
+                      key={index} 
+                      style={[
+                        styles.retailerRow, 
+                        { borderBottomColor: colors.border },
+                        index === sortedRetailers.length - 1 && { borderBottomWidth: 0 }
+                      ]}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.retailerName, { color: colors.text }]}>
+                          {retailer.retailer}
+                        </Text>
+                        {retailer.location && (
+                          <Text style={[styles.retailerLocation, { color: colors.textSecondary, fontSize: 11, marginTop: 2 }]}>
+                            {retailer.location}
+                          </Text>
+                        )}
+                      </View>
+                      <Text style={[styles.retailerPrice, { color: colors.text, fontWeight: '600' }]}>
                         {currencyService.formatPrice(retailer.price, retailer.currency)}
                       </Text>
                     </View>
@@ -379,13 +407,13 @@ export default function PricingCard({ barcode, productName }: PricingCardProps) 
                 </View>
               )}
 
-              {/* Price Count */}
+              {/* Data Sources */}
               <View style={[styles.detailSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <Text style={[styles.detailSectionTitle, { color: colors.text }]}>
                   {t('pricing.dataSources', 'Data Sources')}
                 </Text>
                 <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-                  {t('pricing.priceCount', `${pricing.prices.length} price${pricing.prices.length !== 1 ? 's' : ''} found`)}
+                  {t('pricing.priceCount', { count: sortedRetailers.length })}
                 </Text>
                 <Text style={[styles.detailText, { color: colors.textSecondary }]}>
                   {t('pricing.lastUpdated', 'Last updated: {{date}}', {
@@ -398,7 +426,7 @@ export default function PricingCard({ barcode, productName }: PricingCardProps) 
         </View>
       </Modal>
 
-      {/* Price Input Modal - Placeholder for future implementation */}
+      {/* Price Input Modal */}
       {priceInputVisible && (
         <Modal
           visible={priceInputVisible}
@@ -469,10 +497,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 24,
   },
+  noDataTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   noDataText: {
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 8,
+  },
+  enableLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  enableLocationButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   contributeButton: {
     flexDirection: 'row',
@@ -483,9 +529,22 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   contributeButtonText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  locationInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  locationText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
   averagePriceContainer: {
     alignItems: 'center',
@@ -519,43 +578,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  locationInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  locationText: {
-    fontSize: 12,
-  },
-  trendContainer: {
+  storeComparisonContainer: {
     marginBottom: 16,
   },
-  trendRow: {
+  storeComparisonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  storeRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
   },
-  trendText: {
-    fontSize: 13,
-    fontWeight: '500',
+  storeRowLeft: {
     flex: 1,
   },
-  dataQualityContainer: {
+  storeRowRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
   },
-  dataQualityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  storeName: {
+    fontSize: 15,
+    fontWeight: '600',
   },
-  dataQualityText: {
+  storeLocation: {
     fontSize: 12,
+    marginTop: 2,
+  },
+  storePrice: {
+    fontSize: 16,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -647,9 +703,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   retailerName: {
     fontSize: 14,
@@ -657,7 +712,8 @@ const styles = StyleSheet.create({
   },
   retailerPrice: {
     fontSize: 14,
-    fontWeight: '600',
+  },
+  retailerLocation: {
+    fontSize: 11,
   },
 });
-

@@ -53,16 +53,23 @@ export default function ScanScreen() {
         remountTimerRef.current = null;
       }
 
-      // Reset scanner state immediately (no delay needed)
+      // Reset scanner state immediately
       setScanned(false);
-      setCameraActive(true);
+      
+      // Ensure camera is active if permission is granted
+      if (permission?.granted) {
+        setCameraActive(true);
+      }
 
-      // Debounce camera remounting (wait 300ms after focus before remounting)
+      // Debounce camera remounting (wait 100ms after focus before remounting)
       // This prevents excessive remounting when user rapidly switches tabs
       remountTimerRef.current = setTimeout(() => {
-        setCameraKey(prev => prev + 1); // Force remount camera component
+        if (permission?.granted) {
+          setCameraKey(prev => prev + 1); // Force remount camera component
+          setCameraActive(true);
+        }
         remountTimerRef.current = null;
-      }, 300);
+      }, 100);
 
       return () => {
         // Cleanup: clear timer if component unmounts or loses focus
@@ -71,7 +78,7 @@ export default function ScanScreen() {
           remountTimerRef.current = null;
         }
       };
-    }, [])
+    }, [permission?.granted])
   );
 
   useEffect(() => {
@@ -79,7 +86,19 @@ export default function ScanScreen() {
     if (!permission?.granted && permission?.canAskAgain) {
       requestPermission();
     }
-  }, [permission]);
+    
+    // Ensure camera is active when permission is granted
+    if (permission?.granted) {
+      // Reset camera state and force remount to ensure proper initialization
+      setCameraActive(false); // Start inactive, will be set to true when ready
+      setTimeout(() => {
+        setCameraKey(prev => prev + 1);
+        setCameraActive(true);
+      }, 200); // Slightly longer delay to ensure proper initialization
+    } else if (!permission?.granted) {
+      setCameraActive(false);
+    }
+  }, [permission?.granted]);
 
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     if (scanned) return;
@@ -187,17 +206,60 @@ export default function ScanScreen() {
   return (
     <View style={styles.container}>
       {/* Camera View */}
-      {cameraActive && (
+      {permission?.granted && (
         <>
-          <CameraView
-            key={cameraKey} // Force remount on focus
-            style={styles.camera}
-            facing="back"
-            barcodeScannerSettings={{
-              barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'],
-            }}
-            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-          />
+          {cameraActive ? (
+            <CameraView
+              key={cameraKey} // Force remount on focus
+              style={styles.camera}
+              facing="back"
+              barcodeScannerSettings={{
+                barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'],
+              }}
+              onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+              onCameraReady={() => {
+                console.log('[ScanScreen] Camera ready');
+                setCameraActive(true);
+              }}
+              onMountError={(error) => {
+                console.error('[ScanScreen] Camera mount error:', error);
+                setCameraActive(false);
+                Alert.alert(
+                  t('scan.cameraError') || 'Camera Error',
+                  t('scan.cameraErrorMessage') || 'Failed to initialize camera. Please try again.',
+                  [
+                    {
+                      text: t('common.retry') || 'Retry',
+                      onPress: () => {
+                        setCameraKey(prev => prev + 1);
+                        setTimeout(() => setCameraActive(true), 500);
+                      },
+                    },
+                    {
+                      text: t('common.cancel') || 'Cancel',
+                      style: 'cancel',
+                    },
+                  ]
+                );
+              }}
+            />
+          ) : (
+            <View style={[styles.camera, styles.cameraPlaceholder, { backgroundColor: '#000' }]}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.cameraPlaceholderText, { color: colors.textSecondary }]}>
+                {t('scan.initializingCamera') || 'Initializing camera...'}
+              </Text>
+              <TouchableOpacity
+                style={[styles.retryButton, { backgroundColor: colors.primary, marginTop: 16 }]}
+                onPress={() => {
+                  setCameraKey(prev => prev + 1);
+                  setCameraActive(true);
+                }}
+              >
+                <Text style={styles.retryButtonText}>Retry Camera</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           {/* Scanner Overlay - Absolutely positioned on top */}
           <View style={styles.overlay}>
             {/* Top Bar */}
@@ -322,6 +384,16 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+  },
+  cameraPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+  },
+  cameraPlaceholderText: {
+    marginTop: 16,
+    fontSize: 16,
   },
   overlay: {
     position: 'absolute',
@@ -469,6 +541,16 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
+  },
+  retryButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   modalContainer: {
     flex: 1,

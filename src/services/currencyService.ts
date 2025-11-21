@@ -97,35 +97,21 @@ class CurrencyService {
   }
 
   /**
-   * Format price with currency symbol
+   * Format price with currency symbol (symbol before number, e.g., NZ$1.79)
    */
   formatPrice(price: number, currencyCode: string, includeSymbol: boolean = true): string {
     const currency = currencyCode.toUpperCase();
     const symbol = CURRENCY_SYMBOLS[currency] || `${currency} `;
     
-    // Use Intl.NumberFormat for proper locale formatting
-    try {
-      const locale = Localization.getLocales()[0]?.languageTag || 'en-US';
-      const formatter = new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-      
-      // Format the number
-      const formatted = formatter.format(price);
-      
-      // If custom symbol needed, replace default
-      if (includeSymbol && CURRENCY_SYMBOLS[currency]) {
-        return formatted.replace(/[^\d,.-]/g, '').replace(',', '.') + ' ' + symbol.trim();
-      }
-      
-      return formatted;
-    } catch (error) {
-      // Fallback formatting
-      return `${includeSymbol ? symbol : ''}${price.toFixed(2)}`;
+    // Format the number with 2 decimal places
+    const formattedNumber = price.toFixed(2);
+    
+    // Always put symbol before number (e.g., NZ$1.79, $1.79, €1.79)
+    if (includeSymbol) {
+      return `${symbol.trim()}${formattedNumber}`;
     }
+    
+    return formattedNumber;
   }
 
   /**

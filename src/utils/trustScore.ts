@@ -1,6 +1,7 @@
 // Trust score calculation
 import { Product, ProductWithTrustScore, TrustScoreBreakdown } from '../types/product';
 import { extractManufacturingCountry, calculateEcoScore, formatCertifications } from '../services/openFoodFacts';
+import { calculateTruScore } from '../lib/scoringEngine';
 
 /**
  * Check if we have sufficient real data to calculate a meaningful Trust Score
@@ -49,12 +50,15 @@ export function calculateTrustScore(product: Product): ProductWithTrustScore {
     };
   }
 
-  // TruScore: 4 equal pillars (25 points each = 100 total)
+  // TruScore v1.3: 4 equal pillars (25 points each = 100 total)
   // 100% based on recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels)
-  const body = calculateBodyScore(product);      // 0-25
-  const planet = calculatePlanetScore(product);  // 0-25
-  const care = calculateCareScore(product);      // 0-25
-  const open = calculateOpenScore(product);      // 0-25
+  // Use v1.3 scoring engine
+  const truScoreResult = calculateTruScore(product, product.source || 'unknown');
+  
+  const body = truScoreResult.breakdown.Body;
+  const planet = truScoreResult.breakdown.Planet;
+  const care = truScoreResult.breakdown.Care;
+  const open = truScoreResult.breakdown.Open;
 
   const breakdown: TrustScoreBreakdown = {
     body,
@@ -72,15 +76,25 @@ export function calculateTrustScore(product: Product): ProductWithTrustScore {
 
   // TruScore: Sum of 4 equal pillars (0-100 total)
   // Each pillar is 25 points maximum
-  const truScore = Math.round(body + planet + care + open);
+  const truScore = truScoreResult.truscore;
 
-  // Generate reasons
-  breakdown.reasons = generateTrustReasons(breakdown, product);
+  // Generate reasons (use v1.3 metadata)
+  breakdown.reasons = generateTrustReasons(breakdown, product, {
+    hasNutriScore: truScoreResult.hasNutriScore,
+    hasEcoScore: truScoreResult.hasEcoScore,
+    hasOrigin: truScoreResult.hasOrigin,
+  });
 
   return {
     ...product,
     trust_score: truScore,
     trust_score_breakdown: breakdown,
+    // Add v1.3 metadata for UI transparency warnings
+    _truscore_metadata: {
+      hasNutriScore: truScoreResult.hasNutriScore,
+      hasEcoScore: truScoreResult.hasEcoScore,
+      hasOrigin: truScoreResult.hasOrigin,
+    },
   };
 }
 
@@ -403,13 +417,20 @@ function calculateBodySafetyScore(product: Product): number {
 
 /**
  * Generate human-readable reasons for trust score
- * Updated for TruScore 4-pillar system
+ * Updated for TruScore v1.3 4-pillar system
  */
-function generateTrustReasons(breakdown: TrustScoreBreakdown, product: Product): string[] {
+function generateTrustReasons(
+  breakdown: TrustScoreBreakdown, 
+  product: Product,
+  metadata?: { hasNutriScore?: boolean; hasEcoScore?: boolean; hasOrigin?: boolean }
+): string[] {
   const reasons: string[] = [];
 
   // Planet (Eco-Score)
   const ecoScore = calculateEcoScore(product);
+  if (metadata && metadata.hasEcoScore === false) {
+    reasons.push('Eco-Score not available - score based on available data only');
+  }
   if (ecoScore?.grade === 'a' || ecoScore?.grade === 'b') {
     reasons.push(`Excellent Eco-Score (${ecoScore.grade.toUpperCase()}) - minimal environmental impact`);
   } else if (ecoScore?.grade === 'e' || ecoScore?.grade === 'd') {
@@ -431,6 +452,9 @@ function generateTrustReasons(breakdown: TrustScoreBreakdown, product: Product):
   }
 
   // Body (Nutri-Score + NOVA)
+  if (metadata && metadata.hasNutriScore === false) {
+    reasons.push('Nutri-Score not available - score based on available data only');
+  }
   if (product.nutriscore_grade) {
     const grade = product.nutriscore_grade.toUpperCase();
     if (grade === 'A' || grade === 'B') {

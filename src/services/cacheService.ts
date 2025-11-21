@@ -123,17 +123,58 @@ async function cacheImage(barcode: string, imageUrl: string): Promise<void> {
   try {
     if (!imageUrl) return;
 
+    // Handle local file:// URIs - copy to cache directory instead of downloading
+    if (imageUrl.startsWith('file://')) {
+      console.log(`Image is already local file: ${imageUrl} - copying to cache`);
+      try {
+        const imagePath = `${CACHE_DIR}${barcode}.jpg`;
+        const fileInfo = await FileSystem.getInfoAsync(imagePath);
+        
+        if (!fileInfo.exists) {
+          // Copy the local file to cache directory
+          await FileSystem.copyAsync({
+            from: imageUrl,
+            to: imagePath,
+          });
+          console.log(`Copied local image to cache for ${barcode}`);
+        } else {
+          console.log(`Image already cached for ${barcode}`);
+        }
+      } catch (error) {
+        console.error('Error copying local image to cache:', error);
+      }
+      return;
+    }
+
+    // Skip if it's not an http/https URL
+    if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+      console.warn(`Invalid image URL format (not http/https/file): ${imageUrl}`);
+      return;
+    }
+
     const imagePath = `${CACHE_DIR}${barcode}.jpg`;
     const fileInfo = await FileSystem.getInfoAsync(imagePath);
 
     if (!fileInfo.exists) {
-      const downloadResult = await FileSystem.downloadAsync(imageUrl, imagePath);
-      if (downloadResult.status === 200) {
-        console.log(`Cached image for ${barcode}`);
+      // CRITICAL: Only use downloadAsync for http/https URLs
+      // For file:// URLs, use copyAsync instead (but we already return early above)
+      try {
+        const downloadResult = await FileSystem.downloadAsync(imageUrl, imagePath);
+        if (downloadResult.status === 200) {
+          console.log(`Cached image for ${barcode}`);
+        }
+      } catch (downloadError: any) {
+        // If download fails with file:// error, it means URL was incorrectly formatted
+        if (downloadError.message?.includes('file://') || downloadError.message?.includes('Expected URL scheme')) {
+          console.warn(`[cacheService] Image URL appears to be file:// but wasn't detected: ${imageUrl}`);
+          return; // Skip caching for invalid URLs
+        }
+        throw downloadError; // Re-throw other errors
       }
     }
   } catch (error) {
     console.error('Error caching image:', error);
+    // Don't throw - image caching failure shouldn't break the app
   }
 }
 

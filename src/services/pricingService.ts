@@ -1,58 +1,28 @@
-// Main pricing service - aggregates pricing data from multiple sources
+// Pricing Service - LOCAL STORES ONLY
+// Fetches prices ONLY from local supermarkets/stores based on user's geo-location
+// No international pricing - only local prices in local currency
+
 import * as Location from 'expo-location';
 import { ProductPricing, PriceEntry, RetailerPrice, LocationInfo } from '../types/pricing';
 import { currencyService } from './currencyService';
 import { priceStorageService } from './priceStorageService';
-import { fetchProductFromUPCitemdb, UPCitemdbResponse } from './upcitemdb';
-import { fetchProductFromBarcodeSpider, BarcodeSpiderResponse } from './barcodeSpider';
-// Additional pricing APIs
-import { fetchWalmartPrices } from './pricingApis/walmartPricing';
-import { fetchEbayPrices } from './pricingApis/ebayPricing';
+import { fetchLocalStorePrices } from './pricingApis/localStorePricing';
+import { scrapeStoreWebsite } from './pricingApis/storeWebScraping';
+import { scrapeStoreWebsiteEnhanced } from './pricingApis/enhancedStoreScraping';
+import { getStoreChainsForCountry, StoreChain, buildStoreSearchUrl } from './pricingApis/countryStores';
 import { fetchGoogleShoppingPrices } from './pricingApis/googleShoppingPricing';
-import { fetchPriceComPrices } from './pricingApis/priceComApi';
-import { fetchOpenFoodFactsPrices } from './pricingApis/openFoodFactsPricing';
-import { fetchAmazonPrices } from './pricingApis/amazonPricing';
-import { fetchLocalStorePrices, LocalStorePrice } from './pricingApis/localStorePricing';
 
 class PricingService {
-  private locationCache: LocationInfo | null = null;
-  private locationTimestamp: number = 0;
-  private readonly LOCATION_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
-
   /**
-   * Deduplicate prices - remove similar prices from same retailer
+   * Get user's current location
+   * REQUIRED for local pricing
    */
-  private deduplicatePrices(prices: PriceEntry[]): PriceEntry[] {
-    const seen = new Map<string, PriceEntry>();
-    
-    prices.forEach(price => {
-      const key = `${price.retailer || 'unknown'}_${price.currency}`;
-      const existing = seen.get(key);
-      
-      // Keep the lowest price from each retailer
-      if (!existing || price.price < existing.price) {
-        seen.set(key, price);
-      }
-    });
-    
-    return Array.from(seen.values());
-  }
-
-  /**
-   * Get user's current location - REQUIRED for local store pricing
-   */
-  async getUserLocation(): Promise<LocationInfo | null> {
-    // Check cache first
-    const now = Date.now();
-    if (this.locationCache && now - this.locationTimestamp < this.LOCATION_CACHE_TTL) {
-      return this.locationCache;
-    }
-
+  private async getUserLocation(): Promise<LocationInfo | null> {
     try {
-      // Request location permission
+      // Request location permissions
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        console.log('Location permission denied');
+        console.warn('[pricingService] Location permission denied');
         return null;
       }
 
@@ -61,331 +31,179 @@ class PricingService {
         accuracy: Location.Accuracy.Balanced,
       });
 
-      // Reverse geocode to get address
-      const addresses = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
+      // Reverse geocode to get address/country info
+      try {
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
 
-      const address = addresses[0];
-      if (address) {
-        const locationInfo: LocationInfo = {
-          country: address.country || undefined,
-          countryCode: address.isoCountryCode || undefined,
-          region: address.region || undefined,
-          city: address.city || address.subregion || undefined,
-          coordinates: {
-            lat: location.coords.latitude,
-            lng: location.coords.longitude,
-          },
-        };
-
-        // Cache the location
-        this.locationCache = locationInfo;
-        this.locationTimestamp = now;
-
-        return locationInfo;
+        if (reverseGeocode && reverseGeocode.length > 0) {
+          const address = reverseGeocode[0];
+          return {
+            country: address.country || undefined,
+            countryCode: address.isoCountryCode || undefined,
+            region: address.region || undefined,
+            city: address.city || address.district || undefined,
+            coordinates: {
+              lat: location.coords.latitude,
+              lng: location.coords.longitude,
+            },
+          };
+        }
+      } catch (geocodeError) {
+        console.warn('[pricingService] Reverse geocoding failed:', geocodeError);
       }
 
-      return null;
+      // Fallback: return location with coordinates only
+      return {
+        coordinates: {
+          lat: location.coords.latitude,
+          lng: location.coords.longitude,
+        },
+      };
     } catch (error) {
-      console.error('Error getting user location:', error);
+      console.error('[pricingService] Error getting user location:', error);
       return null;
     }
   }
 
   /**
-   * Extract pricing data from UPCitemdb response
+   * Fetch prices from local supermarket websites ONLY
+   * Uses country-specific store chains based on user location
    */
-  private extractPricingFromUPCitemdb(
+  private async fetchLocalStorePricesOnly(
     barcode: string,
-    data: UPCitemdbResponse
-  ): PriceEntry[] {
-    const prices: PriceEntry[] = [];
-
-    if (!data.items || data.items.length === 0) {
-      return prices;
-    }
-
-    const item = data.items[0];
-
-    // Extract from price range
-    if (item.lowest_recorded_price && item.currency) {
-      prices.push({
-        price: item.lowest_recorded_price,
-        currency: item.currency.toUpperCase(),
-        timestamp: Date.now(),
-        source: 'api',
-        verified: false,
-      });
-    }
-
-    if (item.highest_recorded_price && item.currency) {
-      prices.push({
-        price: item.highest_recorded_price,
-        currency: item.currency.toUpperCase(),
-        timestamp: Date.now(),
-        source: 'api',
-        verified: false,
-      });
-    }
-
-    // Extract from offers (most reliable source of pricing data)
-    if (item.offers && item.offers.length > 0) {
-      item.offers.forEach(offer => {
-        if (offer.price && item.currency) {
-          const currency = item.currency.toUpperCase();
-          const price = typeof offer.price === 'string' ? parseFloat(offer.price) : offer.price;
-          
-          if (!isNaN(price) && price > 0) {
-            prices.push({
-              price,
-              currency,
-              retailer: offer.merchant || 'Unknown Retailer',
-              timestamp: offer.updated_t ? offer.updated_t * 1000 : Date.now(),
-              source: 'api',
-              verified: true, // UPCitemdb offers are generally reliable
-            });
-          }
-        }
-      });
-    }
-    
-    // Also check for lowest/highest recorded prices if offers are empty
-    if (prices.length === 0) {
-      if (item.lowest_recorded_price && item.currency) {
-        const price = typeof item.lowest_recorded_price === 'string' 
-          ? parseFloat(item.lowest_recorded_price) 
-          : item.lowest_recorded_price;
-        
-        if (!isNaN(price) && price > 0) {
-          prices.push({
-            price,
-            currency: item.currency.toUpperCase(),
-            retailer: 'Lowest Recorded Price',
-            timestamp: Date.now(),
-            source: 'api',
-            verified: false,
-          });
-        }
-      }
-      
-      if (item.highest_recorded_price && item.currency) {
-        const price = typeof item.highest_recorded_price === 'string' 
-          ? parseFloat(item.highest_recorded_price) 
-          : item.highest_recorded_price;
-        
-        if (!isNaN(price) && price > 0) {
-          prices.push({
-            price,
-            currency: item.currency.toUpperCase(),
-            retailer: 'Highest Recorded Price',
-            timestamp: Date.now(),
-            source: 'api',
-            verified: false,
-          });
-        }
-      }
-    }
-
-    return prices;
-  }
-
-  /**
-   * Extract pricing data from BarcodeSpider response
-   */
-  private extractPricingFromBarcodeSpider(
-    barcode: string,
-    data: BarcodeSpiderResponse
-  ): PriceEntry[] {
-    const prices: PriceEntry[] = [];
-
-    if (!data.item_response.item) {
-      return prices;
-    }
-
-    const item = data.item_response.item;
-
-    // Extract from price range
-    if (item.lowest_recorded_price && item.currency) {
-      prices.push({
-        price: item.lowest_recorded_price,
-        currency: item.currency.toUpperCase(),
-        timestamp: Date.now(),
-        source: 'api',
-        verified: false,
-      });
-    }
-
-    if (item.highest_recorded_price && item.currency) {
-      prices.push({
-        price: item.highest_recorded_price,
-        currency: item.currency.toUpperCase(),
-        timestamp: Date.now(),
-        source: 'api',
-        verified: false,
-      });
-    }
-
-    // Extract from stores (BarcodeSpider store listings)
-    if (item.stores && item.stores.length > 0) {
-      item.stores.forEach(store => {
-        if (store.price && store.currency) {
-          const priceValue = typeof store.price === 'string' 
-            ? parseFloat(store.price) 
-            : store.price;
-          
-          if (!isNaN(priceValue) && priceValue > 0) {
-            prices.push({
-              price: priceValue,
-              currency: store.currency.toUpperCase(),
-              retailer: store.name || 'Unknown Store',
-              location: store.availability,
-              timestamp: Date.now(),
-              source: 'api',
-              verified: false,
-            });
-          }
-        }
-      });
-    }
-    
-    // Also check for lowest/highest recorded prices if stores are empty
-    if (prices.length === 0) {
-      if (item.lowest_recorded_price && item.currency) {
-        const price = typeof item.lowest_recorded_price === 'string' 
-          ? parseFloat(item.lowest_recorded_price) 
-          : item.lowest_recorded_price;
-        
-        if (!isNaN(price) && price > 0) {
-          prices.push({
-            price,
-            currency: item.currency.toUpperCase(),
-            retailer: 'Lowest Recorded Price',
-            timestamp: Date.now(),
-            source: 'api',
-            verified: false,
-          });
-        }
-      }
-      
-      if (item.highest_recorded_price && item.currency) {
-        const price = typeof item.highest_recorded_price === 'string' 
-          ? parseFloat(item.highest_recorded_price) 
-          : item.highest_recorded_price;
-        
-        if (!isNaN(price) && price > 0) {
-          prices.push({
-            price,
-            currency: item.currency.toUpperCase(),
-            retailer: 'Highest Recorded Price',
-            timestamp: Date.now(),
-            source: 'api',
-            verified: false,
-          });
-        }
-      }
-    }
-
-    return prices;
-  }
-
-  /**
-   * Fetch pricing data from all available sources
-   * Aggregates data from multiple APIs in parallel for maximum coverage
-   */
-  private async fetchPricingFromAPIs(barcode: string, productName?: string): Promise<PriceEntry[]> {
+    productName: string,
+    location: LocationInfo,
+    countryCode: string
+  ): Promise<PriceEntry[]> {
     const allPrices: PriceEntry[] = [];
 
-    // Fetch from all APIs in parallel for maximum speed and coverage
-    console.log(`[pricingService] Fetching from ${8} pricing sources for barcode: ${barcode}`);
-    
-    const apiResults = await Promise.allSettled([
-      // Primary APIs (free tier available)
-      this.fetchFromUPCitemdb(barcode),
-      this.fetchFromBarcodeSpider(barcode),
-      fetchOpenFoodFactsPrices(barcode),
-      
-      // Major retailer APIs (require API keys)
-      fetchWalmartPrices(barcode),
-      fetchEbayPrices(barcode),
-      fetchAmazonPrices(barcode),
-      
-      // Web scraping sources (fallback)
-      fetchGoogleShoppingPrices(barcode, productName),
-      fetchPriceComPrices(barcode, productName),
-    ]);
-
-    // Aggregate results from all APIs
-    apiResults.forEach((result, index) => {
-      const apiNames = [
-        'UPCitemdb',
-        'BarcodeSpider',
-        'OpenFoodFacts',
-        'Walmart',
-        'eBay',
-        'Amazon',
-        'GoogleShopping',
-        'Price.com',
-      ];
-      
-      if (result.status === 'fulfilled' && result.value) {
-        const prices = result.value;
-        console.log(`[pricingService] ${apiNames[index]} returned ${prices.length} prices`);
-        allPrices.push(...prices);
-      } else if (result.status === 'rejected') {
-        console.warn(`[pricingService] ${apiNames[index]} failed:`, result.reason);
-      }
-    });
-
-    console.log(`[pricingService] Total prices from all APIs: ${allPrices.length}`);
-    return allPrices;
-  }
-
-  /**
-   * Fetch pricing from UPCitemdb (extracted for parallel execution)
-   */
-  private async fetchFromUPCitemdb(barcode: string): Promise<PriceEntry[]> {
-    try {
-      const response = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`);
-      console.log(`[pricingService] UPCitemdb response status: ${response.status}`);
-      if (response.ok) {
-        const data: UPCitemdbResponse = await response.json();
-        const prices = this.extractPricingFromUPCitemdb(barcode, data);
-        console.log(`[pricingService] UPCitemdb extracted ${prices.length} prices`);
-        return prices;
-      } else {
-        console.warn(`[pricingService] UPCitemdb returned status ${response.status}`);
-      }
-    } catch (error) {
-      console.error('[pricingService] Error fetching pricing from UPCitemdb:', error);
+    if (!location.coordinates) {
+      console.warn('[pricingService] No coordinates available for local store pricing');
+      return allPrices;
     }
-    return [];
-  }
 
-  /**
-   * Fetch pricing from BarcodeSpider (extracted for parallel execution)
-   */
-  private async fetchFromBarcodeSpider(barcode: string): Promise<PriceEntry[]> {
     try {
-      const response = await fetch(`https://api.barcodespider.com/v1/lookup?token=&upc=${barcode}`);
-      console.log(`[pricingService] BarcodeSpider response status: ${response.status}`);
-      if (response.ok) {
-        const data: BarcodeSpiderResponse = await response.json();
-        const prices = this.extractPricingFromBarcodeSpider(barcode, data);
-        console.log(`[pricingService] BarcodeSpider extracted ${prices.length} prices`);
-        return prices;
-      } else {
-        console.warn(`[pricingService] BarcodeSpider returned status ${response.status}`);
+      // Get country-specific store chains
+      const storeChains = getStoreChainsForCountry(countryCode);
+      
+      if (storeChains.length === 0) {
+        console.warn(`[pricingService] No store chains configured for country: ${countryCode}`);
+        return allPrices;
       }
+
+      console.log(`[pricingService] Found ${storeChains.length} store chains for ${countryCode}`);
+
+      // Fetch prices from each local store chain in parallel
+      const pricePromises = storeChains
+        .filter(chain => chain.searchUrl) // Only chains with search URLs
+        .map(async (chain: StoreChain) => {
+          try {
+            const searchUrl = buildStoreSearchUrl(chain, barcode, productName);
+            if (!searchUrl) return [];
+
+            console.log(`[pricingService] Scraping ${chain.name} for: ${productName}`);
+
+            // Create a mock store location for scraping
+            const storeLocation = {
+              name: chain.name,
+              address: location.city || location.region || location.country || '',
+              latitude: location.coordinates!.lat,
+              longitude: location.coordinates!.lng,
+              chain: chain.name,
+            };
+
+            // Try enhanced scraping first, fallback to regular scraping
+            let price = await scrapeStoreWebsiteEnhanced(barcode, productName, storeLocation, countryCode);
+            if (!price) {
+              price = await scrapeStoreWebsite(barcode, productName, storeLocation, countryCode);
+            }
+            
+            if (price && price.price > 0) {
+              return [{
+                price: price.price,
+                currency: price.currency,
+                retailer: chain.name,
+                location: `${location.city || ''} ${location.region || ''}`.trim() || undefined,
+                timestamp: Date.now(),
+                source: 'api' as const,
+                verified: true, // Scraped from official store websites
+              }];
+            }
+            return [];
+          } catch (error) {
+            console.warn(`[pricingService] Failed to scrape ${chain.name}:`, error);
+            return [];
+          }
+        });
+
+      // Wait for all store scrapes to complete
+      const results = await Promise.allSettled(pricePromises);
+      
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+          allPrices.push(...result.value);
+          if (result.value.length > 0) {
+            console.log(`[pricingService] ✅ ${storeChains[index].name}: Found price`);
+          }
+        }
+      });
+
+      // Also try finding nearby physical stores and scraping their websites
+      try {
+        const nearbyStorePrices = await fetchLocalStorePrices(
+          barcode,
+          productName,
+          location.coordinates.lat,
+          location.coordinates.lng,
+          20, // 20 miles radius
+          countryCode
+        );
+
+        if (nearbyStorePrices.length > 0) {
+          console.log(`[pricingService] ✅ Found ${nearbyStorePrices.length} prices from nearby stores`);
+          nearbyStorePrices.forEach(localPrice => {
+            // CRITICAL: Verify store matches country-specific chain before adding
+            const storeNameLower = (localPrice.storeLocation.chain || localPrice.storeLocation.name || '').toLowerCase();
+            const countryChains = getStoreChainsForCountry(countryCode);
+            const matchesChain = countryChains.some(chain => 
+              chain.patterns.some(pattern => storeNameLower.includes(pattern.toLowerCase()))
+            );
+            
+            if (matchesChain) {
+              allPrices.push({
+                price: localPrice.price,
+                currency: localPrice.currency,
+                retailer: localPrice.storeLocation.name,
+                location: localPrice.storeLocation.address,
+                timestamp: localPrice.timestamp,
+                source: 'api' as const,
+                verified: true,
+              });
+            } else {
+              console.warn(`[pricingService] ⚠️ Skipping ${localPrice.storeLocation.name} - does not match ${countryCode} store chains`);
+            }
+          });
+        }
+      } catch (error) {
+        console.warn('[pricingService] Nearby store search failed:', error);
+      }
+
+      // Google Shopping removed - unreliable source
+      // Prices should come only from official store websites
+
+      console.log(`[pricingService] Total local prices found: ${allPrices.length}`);
+      return allPrices;
     } catch (error) {
-      console.error('[pricingService] Error fetching pricing from BarcodeSpider:', error);
+      console.error('[pricingService] Error fetching local store prices:', error);
+      return allPrices;
     }
-    return [];
   }
 
   /**
-   * Calculate price range and statistics
+   * Calculate price range and statistics (with outlier filtering)
    */
   private calculatePriceRange(prices: number[]): {
     min: number;
@@ -398,120 +216,36 @@ class PricingService {
     }
 
     const sorted = [...prices].sort((a, b) => a - b);
-    const min = sorted[0];
-    const max = sorted[sorted.length - 1];
-    const sum = sorted.reduce((acc, val) => acc + val, 0);
-    const average = sum / sorted.length;
+    
+    // Simple outlier filtering: Remove prices more than 2x the median
     const median = sorted.length % 2 === 0
       ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
       : sorted[Math.floor(sorted.length / 2)];
 
-    return { min, max, average, median };
-  }
-
-  /**
-   * Calculate price trends from history
-   */
-  private calculateTrends(
-    currentAverage: number,
-    history: Array<{ price: number; timestamp: number }>
-  ): ProductPricing['trends'] {
-    if (history.length < 2) {
-      return {
-        currentPrice: currentAverage,
-        priceChangeDirection: 'stable',
-        volatility: 'low',
-      };
-    }
-
-    // Get price from 30 days ago (or oldest available)
-    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-    const oldPrices = history.filter(entry => entry.timestamp <= thirtyDaysAgo);
-    
-    let price30DaysAgo: number | undefined;
-    if (oldPrices.length > 0) {
-      const sorted = oldPrices.sort((a, b) => b.timestamp - a.timestamp);
-      price30DaysAgo = sorted[0].price;
-    } else if (history.length > 0) {
-      // If no 30-day old data, use oldest available
-      const sorted = history.sort((a, b) => a.timestamp - b.timestamp);
-      price30DaysAgo = sorted[0].price;
-    }
-
-    let priceChange: number | undefined;
-    let priceChangeDirection: 'up' | 'down' | 'stable' = 'stable';
-
-    if (price30DaysAgo && price30DaysAgo > 0) {
-      priceChange = ((currentAverage - price30DaysAgo) / price30DaysAgo) * 100;
-      
-      if (Math.abs(priceChange) < 2) {
-        priceChangeDirection = 'stable';
-      } else if (priceChange > 0) {
-        priceChangeDirection = 'up';
-      } else {
-        priceChangeDirection = 'down';
-      }
-    }
-
-    // Calculate volatility (standard deviation)
-    const prices = history.map(h => h.price);
-    const avg = prices.reduce((sum, p) => sum + p, 0) / prices.length;
-    const variance = prices.reduce((sum, p) => sum + Math.pow(p - avg, 2), 0) / prices.length;
-    const stdDev = Math.sqrt(variance);
-    const volatilityPercent = (stdDev / avg) * 100;
-
-    let volatility: 'low' | 'medium' | 'high' = 'low';
-    if (volatilityPercent > 15) {
-      volatility = 'high';
-    } else if (volatilityPercent > 5) {
-      volatility = 'medium';
-    }
-
-    return {
-      currentPrice: currentAverage,
-      price30DaysAgo,
-      priceChange,
-      priceChangeDirection,
-      volatility,
-    };
-  }
-
-  /**
-   * Aggregate prices from multiple sources
-   */
-  private aggregatePrices(prices: PriceEntry[]): {
-    retailerPrices: RetailerPrice[];
-    priceEntries: PriceEntry[];
-  } {
-    const retailerMap = new Map<string, RetailerPrice>();
-    const priceEntries: PriceEntry[] = [];
-
-    prices.forEach(price => {
-      priceEntries.push(price);
-
-      if (price.retailer) {
-        const key = `${price.retailer}_${price.currency}`;
-        if (!retailerMap.has(key) || retailerMap.get(key)!.price > price.price) {
-          retailerMap.set(key, {
-            retailerName: price.retailer,
-            price: price.price,
-            currency: price.currency,
-            inStock: true,
-            location: price.location,
-          });
-        }
-      }
+    // Filter out extreme outliers (likely wrong products or bulk pricing)
+    const filtered = sorted.filter(price => {
+      if (median === 0) return true;
+      const ratio = price / median;
+      return ratio >= 0.3 && ratio <= 3.0; // Keep prices within 30%-300% of median
     });
 
-    return {
-      retailerPrices: Array.from(retailerMap.values()),
-      priceEntries,
-    };
+    // Use filtered prices if we have enough, otherwise use all
+    const pricesToUse = filtered.length >= 2 ? filtered : sorted;
+    
+    const min = pricesToUse[0];
+    const max = pricesToUse[pricesToUse.length - 1];
+    const sum = pricesToUse.reduce((acc, val) => acc + val, 0);
+    const average = sum / pricesToUse.length;
+    const finalMedian = pricesToUse.length % 2 === 0
+      ? (pricesToUse[pricesToUse.length / 2 - 1] + pricesToUse[pricesToUse.length / 2]) / 2
+      : pricesToUse[Math.floor(pricesToUse.length / 2)];
+
+    return { min, max, average, median: finalMedian };
   }
 
   /**
-   * Get pricing data for a product - location-aware with local store prices
-   * Prioritizes prices from nearby stores within 20 miles
+   * Get pricing data for a product - LOCAL STORES ONLY
+   * REQUIRES location - returns null if location not available
    */
   async getProductPricing(
     barcode: string,
@@ -520,7 +254,20 @@ class PricingService {
     productName?: string
   ): Promise<ProductPricing | null> {
     try {
-      // Determine target currency
+      // REQUIRED: Get user location first
+      let location = await this.getUserLocation();
+      
+      if (!location || !location.coordinates) {
+        console.warn('[pricingService] Location required for local pricing - returning null');
+        return null;
+      }
+
+      if (!location.countryCode) {
+        console.warn('[pricingService] Country code not available - cannot fetch local prices');
+        return null;
+      }
+
+      // Determine target currency from location
       let currency = targetCurrency;
       if (!currency) {
         currency = currencyService.getLocalCurrency();
@@ -534,124 +281,91 @@ class PricingService {
         }
       }
 
-      // CRITICAL: Get user location - required for accurate local pricing
-      let location = null;
-      try {
-        location = await this.getUserLocation();
-        if (!location) {
-          console.warn('[pricingService] Location not available - local store prices will not be fetched');
-        } else {
-          console.log(`[pricingService] Location obtained: ${location.city || location.region || location.country || 'Unknown'}`);
-        }
-      } catch (error) {
-        console.warn('[pricingService] Location not available, continuing without location data:', error);
-        // Continue without location - online pricing will still work
-      }
+      console.log(`[pricingService] Fetching LOCAL prices for: ${productName || barcode}`);
+      console.log(`[pricingService] Location: ${location.city || location.region || location.country} (${location.countryCode})`);
 
-      // Fetch pricing from APIs (parallel) - prioritize local stores if location available
-      console.log(`[pricingService] Fetching pricing for barcode: ${barcode}`);
-      
-      const pricingPromises: Promise<PriceEntry[]>[] = [
-        this.fetchPricingFromAPIs(barcode, productName),
-        priceStorageService.getUserSubmittedPrices(barcode).then(prices => prices.map(up => ({
-          price: up.price,
-          currency: up.currency.toUpperCase(),
-          retailer: up.retailer,
-          timestamp: up.timestamp,
-          source: 'user' as const,
-          verified: false,
-        }))),
-      ];
-      
-      // Add local store pricing if location is available
-      // This uses REAL-TIME WEB SCRAPING from store websites
-      if (location && location.coordinates) {
-        console.log(`[pricingService] Fetching local store prices via real-time web scraping`);
-        pricingPromises.push(
-          fetchLocalStorePrices(
-            barcode,
-            productName || `Product ${barcode}`,
-            location.coordinates.lat,
-            location.coordinates.lng,
-            20 // 20 miles radius
-          ).then(localPrices => {
-            console.log(`[pricingService] ✅ Real-time scraping found ${localPrices.length} local store prices`);
-            return localPrices.map(lp => ({
-              price: lp.price,
-              currency: lp.currency,
-              retailer: lp.storeLocation.name,
-              location: lp.storeLocation.address,
-              timestamp: lp.timestamp,
-              source: 'api' as const, // Scraped from official websites
-              verified: true, // Real-time data is always verified
-            }));
-          }).catch(error => {
-            console.error('[pricingService] Error in real-time web scraping:', error);
-            return [];
-          })
-        );
-      } else {
-        console.warn('[pricingService] ⚠️ No location - cannot perform real-time web scraping. Enable location services to see local store prices.');
-      }
-      
-      const pricingResults = await Promise.all(pricingPromises);
-      const apiPrices = pricingResults[0] || [];
-      const userPrices = pricingResults[1] || [];
-      const localStorePrices = pricingResults[2] || [];
-      
-      console.log(`[pricingService] API prices: ${apiPrices.length}, User prices: ${userPrices.length}, Local store prices: ${localStorePrices.length}`);
+      // ONLY fetch from local stores - no international APIs
+      const localPrices = await this.fetchLocalStorePricesOnly(
+        barcode,
+        productName || `Product ${barcode}`,
+        location,
+        location.countryCode
+      );
 
-      // Combine all prices - prioritize local store prices
-      // Order: Local stores (most relevant) > API prices > User submitted prices
-      const allPrices = [
-        ...localStorePrices, // Local stores first (most relevant to user)
-        ...apiPrices,        // Online API prices
-        ...userPrices,       // User submitted prices
-      ];
-      
-      // Filter out duplicates (same retailer, same currency, similar price)
-      const uniquePrices = this.deduplicatePrices(allPrices);
-
-      console.log(`[pricingService] Total prices found: ${uniquePrices.length} (${localStorePrices.length} local, ${apiPrices.length} online, ${userPrices.length} user)`);
-      if (uniquePrices.length === 0) {
-        console.log(`[pricingService] No pricing data available for barcode: ${barcode}`);
-        if (!location || !location.coordinates) {
-          console.warn(`[pricingService] No location - enable location services to see local store prices`);
-        }
+      if (localPrices.length === 0) {
+        console.log(`[pricingService] No local prices found for barcode: ${barcode}`);
         return null;
       }
 
-      // Normalize prices to local currency (user's currency based on location)
+      console.log(`[pricingService] Found ${localPrices.length} local prices from ${location.countryCode} stores`);
+
+      // All prices should already be in local currency, but normalize just in case
       const normalized = await currencyService.normalizePrices(
-        uniquePrices.map(p => ({ price: p.price, currency: p.currency })),
+        localPrices.map(p => ({ price: p.price, currency: p.currency })),
         currency
       );
 
       // Map normalized prices back to PriceEntry format
       const normalizedPrices: PriceEntry[] = normalized.map((np, index) => ({
-        ...allPrices[index],
+        ...localPrices[index],
         price: np.price,
         currency: np.currency,
       }));
 
-      // Calculate price range
+      // Calculate price range (with outlier filtering)
       const priceValues = normalizedPrices.map(p => p.price);
       const priceRange = this.calculatePriceRange(priceValues);
 
-      // Aggregate retailer prices
-      const { retailerPrices, priceEntries } = this.aggregatePrices(normalizedPrices);
+      // Aggregate by retailer (show lowest price per store)
+      // CRITICAL: Filter out any retailers that don't match country-specific chains
+      // For New Zealand: Allow curated stores + Google Shopping
+      const countryChains = getStoreChainsForCountry(location.countryCode);
+      const retailerMap = new Map<string, RetailerPrice>();
+      normalizedPrices.forEach(price => {
+        if (price.retailer) {
+          const retailerLower = price.retailer.toLowerCase();
+          
+          // Google Shopping removed - no longer used as pricing source
+          
+          // Verify retailer matches a country-specific chain
+          const matchesChain = countryChains.some(chain => 
+            chain.patterns.some(pattern => retailerLower.includes(pattern.toLowerCase()))
+          );
+          
+          // Also reject common international stores that shouldn't appear
+          const isInternationalStore = retailerLower.includes('home depot') ||
+                                      retailerLower.includes('b&h photo') ||
+                                      retailerLower.includes('overstock') ||
+                                      (retailerLower.includes('kroger') && location.countryCode !== 'US') ||
+                                      (retailerLower.includes('target') && location.countryCode !== 'US');
+          
+          if (matchesChain && !isInternationalStore) {
+            const key = retailerLower;
+            const existing = retailerMap.get(key);
+            if (!existing || price.price < existing.price) {
+              retailerMap.set(key, {
+                retailerName: price.retailer,
+                price: price.price,
+                currency: price.currency,
+                inStock: true,
+                location: price.location,
+              });
+            }
+          } else {
+            console.warn(`[pricingService] ⚠️ Filtering out retailer "${price.retailer}" - does not match ${location.countryCode} stores`);
+          }
+        }
+      });
 
-      // Get price history for trends
-      const history = await priceStorageService.getPriceHistory(barcode, 30);
-      const trends = this.calculateTrends(priceRange.average, history);
+      const retailerPrices = Array.from(retailerMap.values());
 
-      // Determine data quality
+      // Determine data quality based on number of stores found
       let dataQuality: ProductPricing['dataQuality'] = 'insufficient';
-      if (normalizedPrices.length >= 5) {
+      if (retailerPrices.length >= 5) {
         dataQuality = 'high';
-      } else if (normalizedPrices.length >= 3) {
+      } else if (retailerPrices.length >= 3) {
         dataQuality = 'medium';
-      } else if (normalizedPrices.length >= 1) {
+      } else if (retailerPrices.length >= 1) {
         dataQuality = 'low';
       }
 
@@ -659,16 +373,20 @@ class PricingService {
       const pricing: ProductPricing = {
         barcode,
         currency: currency.toUpperCase(),
-        location: location ? {
+        location: {
           country: location.country,
           region: location.region,
           city: location.city,
           coordinates: location.coordinates,
-        } : undefined,
+        },
         prices: normalizedPrices,
         priceRange,
-        trends,
-        retailers: retailerPrices.length > 0 ? retailerPrices : undefined,
+        trends: {
+          currentPrice: priceRange.average,
+          priceChangeDirection: 'stable', // No historical data for now
+          volatility: 'low',
+        },
+        retailers: retailerPrices,
         lastUpdated: Date.now(),
         dataQuality,
       };
@@ -678,13 +396,13 @@ class PricingService {
 
       return pricing;
     } catch (error) {
-      console.error('Error getting product pricing:', error);
+      console.error('[pricingService] Error getting product pricing:', error);
       return null;
     }
   }
 
   /**
-   * Submit user price
+   * Submit user price (for local store they're currently in)
    */
   async submitUserPrice(
     barcode: string,
@@ -707,4 +425,3 @@ class PricingService {
 }
 
 export const pricingService = new PricingService();
-
