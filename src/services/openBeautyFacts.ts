@@ -27,7 +27,12 @@ export async function fetchProductFromOBF(barcode: string): Promise<Product | nu
     });
 
     if (!response.ok) {
-      console.warn(`OBF API error: ${response.status} ${response.statusText}`);
+      // 404 is expected when product not in beauty database - use debug level
+      if (response.status === 404) {
+        console.log(`[OBF] Product not found in beauty database (expected)`);
+      } else {
+        console.warn(`OBF API error: ${response.status} ${response.statusText}`);
+      }
       return null;
     }
 

@@ -26,7 +26,12 @@ export async function fetchProductFromOPFF(barcode: string): Promise<Product | n
     });
 
     if (!response.ok) {
-      console.warn(`OPFF API error: ${response.status} ${response.statusText}`);
+      // 404 is expected when product not in pet food database - use debug level
+      if (response.status === 404) {
+        console.log(`[OPFF] Product not found in pet food database (expected)`);
+      } else {
+        console.warn(`OPFF API error: ${response.status} ${response.statusText}`);
+      }
       return null;
     }
 

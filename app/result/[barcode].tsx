@@ -717,8 +717,8 @@ function ResultScreenContent() {
                 <View style={[styles.card, { backgroundColor: colors.card }]}>
                   <View style={styles.cardHeaderRow}>
                     <View style={styles.cardHeaderLeft}>
-                      <Ionicons name="flag" size={24} color={colors.primary} />
-                      <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.countryOfManufacture')}</Text>
+                      <Ionicons name="globe-outline" size={24} color={colors.text} />
+                      <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.countryOfManufacture', 'Country of Manufacture')}</Text>
                     </View>
                     <View style={styles.confidenceBadge}>
                       {manufacturingCountry ? (
@@ -882,13 +882,18 @@ function ResultScreenContent() {
                 </View>
               ) : (
                 <TouchableOpacity
-                  style={[styles.card, styles.countryNotDisclosedCard]}
+                  style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#d32f2f' }]}
                   onPress={() => setManufacturingCountryModalVisible(true)}
                   activeOpacity={0.7}
                 >
+                  <View style={styles.cardHeaderLeft}>
+                    <Ionicons name="globe-outline" size={24} color={colors.text} />
+                    <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
+                      {t('result.countryOfManufacture', 'Country of Manufacture')}
+                    </Text>
+                  </View>
                   <View style={styles.contributeContainer}>
-                    <Ionicons name="flag" size={40} color="#d32f2f" />
-                    <Text style={[styles.countryNotDisclosedTitle, { color: '#d32f2f' }]}>
+                    <Text style={[styles.countryNotDisclosedTitle, { color: '#d32f2f', marginTop: 0 }]}>
                       {t('manufacturingCountry.notDisclosed', 'Country of manufacture is not disclosed by the brand!')}
                     </Text>
                     <View>
@@ -970,17 +975,31 @@ function ResultScreenContent() {
         })(        )}
 
         {/* Palm Oil Analysis */}
-        {product.palm_oil_analysis && (
-          <TouchableOpacity
-            style={[styles.card, { backgroundColor: colors.card }]}
-            onPress={() => setPalmOilInfoModalVisible(true)}
-            activeOpacity={0.7}
-          >
+        {product.palm_oil_analysis && (() => {
+          const palmOilFlagColor = product.palm_oil_analysis.isPalmOilFree 
+            ? '#16a085' 
+            : product.palm_oil_analysis.isNonSustainable 
+            ? '#ff6b6b' 
+            : '#ff9500';
+          return (
+            <TouchableOpacity
+              style={[
+                styles.card, 
+                { 
+                  backgroundColor: colors.card,
+                  borderWidth: 2,
+                  borderColor: palmOilFlagColor,
+                  marginBottom: 16
+                }
+              ]}
+              onPress={() => setPalmOilInfoModalVisible(true)}
+              activeOpacity={0.7}
+            >
             <View style={styles.cardHeaderLeft}>
               <Ionicons 
-                name={product.palm_oil_analysis.isPalmOilFree ? "checkmark-circle" : product.palm_oil_analysis.isNonSustainable ? "warning" : "information-circle"} 
+                name={product.palm_oil_analysis.isPalmOilFree ? "flag" : product.palm_oil_analysis.isNonSustainable ? "flag" : "flag"} 
                 size={24} 
-                color={product.palm_oil_analysis.isPalmOilFree ? '#16a085' : product.palm_oil_analysis.isNonSustainable ? '#ff6b6b' : '#ffd93d'} 
+                color={product.palm_oil_analysis.isPalmOilFree ? '#16a085' : product.palm_oil_analysis.isNonSustainable ? '#ff6b6b' : '#ff9500'} 
               />
               <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
                 {t('result.palmOil')}
@@ -988,30 +1007,31 @@ function ResultScreenContent() {
             </View>
             <View style={styles.palmOilContent}>
               {product.palm_oil_analysis.isPalmOilFree ? (
-                <View style={[styles.palmOilStatus, { backgroundColor: '#16a085' + '20' }]}>
-                  <Ionicons name="checkmark-circle" size={20} color="#16a085" />
+                <View style={[styles.palmOilStatus, { backgroundColor: '#16a085' + '20', borderLeftWidth: 4, borderLeftColor: '#16a085' }]}>
+                  <Text style={[styles.palmOilFlag, { color: '#16a085' }]}>🟢</Text>
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
-                    {t('result.palmOilFree')}
+                    {t('result.greenFlag')} - {t('result.palmOilFree')}
                   </Text>
                 </View>
               ) : product.palm_oil_analysis.isNonSustainable ? (
-                <View style={[styles.palmOilStatus, { backgroundColor: '#ff6b6b' + '20' }]}>
-                  <Ionicons name="warning" size={20} color="#ff6b6b" />
+                <View style={[styles.palmOilStatus, { backgroundColor: '#ff6b6b' + '20', borderLeftWidth: 4, borderLeftColor: '#ff6b6b' }]}>
+                  <Text style={[styles.palmOilFlag, { color: '#ff6b6b' }]}>🔴</Text>
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
-                    {t('result.nonSustainablePalmOil')}
+                    {t('result.redFlag')} - {t('result.nonSustainablePalmOil')}
                   </Text>
                 </View>
               ) : product.palm_oil_analysis.containsPalmOil ? (
-                <View style={[styles.palmOilStatus, { backgroundColor: '#ffd93d' + '20' }]}>
-                  <Ionicons name="information-circle" size={20} color="#ffd93d" />
+                <View style={[styles.palmOilStatus, { backgroundColor: '#ff9500' + '20', borderLeftWidth: 4, borderLeftColor: '#ff9500' }]}>
+                  <Text style={[styles.palmOilFlag, { color: '#ff9500' }]}>🟠</Text>
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
-                    {t('result.containsPalmOil')}
+                    {t('result.orangeFlag')} - {t('result.containsPalmOil')}
                   </Text>
                 </View>
               ) : null}
             </View>
           </TouchableOpacity>
-        )}
+          );
+        })()}
 
         {/* Packaging Sustainability */}
         {product.packaging_data && product.packaging_data.items.length > 0 && (
@@ -1119,39 +1139,61 @@ function ResultScreenContent() {
                 <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.ingredients')}</Text>
               </View>
               <Text style={[styles.ingredientsText, { color: colors.text }]}>{ingredientsText}</Text>
-            {product.nova_group && (
-              <TouchableOpacity
-                style={[styles.novaContainer, { borderTopColor: colors.border }]}
-                onPress={() => setProcessingLevelModalVisible(true)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.novaHeader}>
-                  <Text style={[styles.novaLabel, { color: colors.text }]}>{t('result.processingLevel')}:</Text>
-                  <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-                </View>
-                <Text style={[styles.novaValue, { color: colors.textSecondary }]}>
-                  NOVA {product.nova_group} ({t(`nova.${product.nova_group}`)})
-                </Text>
-              </TouchableOpacity>
-            )}
+            {product.nova_group && (() => {
+              // Determine color based on NOVA score
+              const novaColor = product.nova_group === 1 || product.nova_group === 2
+                ? '#16a085'  // Green for NOVA 1 or 2
+                : product.nova_group === 3
+                ? '#ff9500'  // Orange for NOVA 3
+                : '#ff6b6b'; // Red for NOVA 4
+              
+              return (
+                <TouchableOpacity
+                  style={[styles.novaContainer, { borderTopColor: colors.border }]}
+                  onPress={() => setProcessingLevelModalVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.novaHeader}>
+                    <Text style={[styles.novaLabel, { color: colors.text }]}>{t('result.processingLevel')}:</Text>
+                    <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+                  </View>
+                  <Text style={[styles.novaValue, { color: novaColor }]}>
+                    NOVA {product.nova_group} ({t(`nova.${product.nova_group}`)})
+                  </Text>
+                </TouchableOpacity>
+              );
+            })()}
           </View>
           );
         })()}
 
         {/* Allergens & Additives */}
-        {(product.allergens_tags || product.additives_tags) && (
-          <TouchableOpacity
-            style={[styles.card, { backgroundColor: colors.card }]}
-            onPress={() => setAllergensAdditivesModalVisible(true)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardHeaderLeft}>
-                <Ionicons name="warning" size={24} color={colors.primary} />
-                <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.allergensAdditives')}</Text>
+        {(product.allergens_tags || product.additives_tags) && (() => {
+          const hasAllergens = product.allergens_tags && product.allergens_tags.length > 0;
+          const hasAdditives = product.additives_tags && product.additives_tags.length > 0;
+          const hasDetected = hasAllergens || hasAdditives;
+          const redColor = '#ff6b6b';
+          
+          return (
+            <TouchableOpacity
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.card,
+                  borderWidth: hasDetected ? 2 : 0,
+                  borderColor: hasDetected ? redColor : 'transparent',
+                }
+              ]}
+              onPress={() => setAllergensAdditivesModalVisible(true)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <Ionicons name="warning" size={24} color={hasDetected ? redColor : colors.primary} />
+                  <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.allergensAdditives')}</Text>
+                </View>
+                <Ionicons name="information-circle-outline" size={20} color={hasDetected ? redColor : colors.primary} />
               </View>
-              <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-            </View>
             {product.allergens_tags && product.allergens_tags.length > 0 && (
               <View style={[styles.warningSection, { backgroundColor: colors.error + '20' }]}>
                 <Ionicons name="warning" size={20} color={colors.error} />
@@ -1175,8 +1217,9 @@ function ResultScreenContent() {
                 </Text>
               </View>
             )}
-          </TouchableOpacity>
-        )}
+            </TouchableOpacity>
+          );
+        })()}
 
         {/* Bottom spacing */}
         <View style={styles.bottomSpacer} />
@@ -1903,12 +1946,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 12,
   },
-  countryNotDisclosedCard: {
-    backgroundColor: '#ffebee',
-    borderWidth: 2,
-    borderColor: '#d32f2f',
-    borderStyle: 'solid',
-  },
   countryNotDisclosedTitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -2061,6 +2098,9 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     gap: 8,
+  },
+  palmOilFlag: {
+    fontSize: 18,
   },
   palmOilText: {
     fontSize: 14,

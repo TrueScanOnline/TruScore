@@ -5,55 +5,13 @@ import { useTranslation } from 'react-i18next';
 import InfoModal from './InfoModal';
 import { useTheme } from '../theme';
 import { Product } from '../types/product';
+import { getAdditiveInfo, AdditiveInfo } from '../services/additiveDatabase';
 
 interface AllergensAdditivesModalProps {
   visible: boolean;
   onClose: () => void;
   product: Product | null;
 }
-
-// Common E-number additives database
-const E_NUMBER_DATABASE: Record<string, { name: string; category: string; description: string; safety: 'safe' | 'caution' | 'avoid' }> = {
-  'e100': { name: 'Curcumin (Turmeric)', category: 'Color', description: 'Natural yellow-orange color derived from turmeric. Generally safe.', safety: 'safe' },
-  'e101': { name: 'Riboflavin (Vitamin B2)', category: 'Color', description: 'Yellow color and vitamin supplement. Natural and safe.', safety: 'safe' },
-  'e102': { name: 'Tartrazine', category: 'Color', description: 'Artificial yellow color. May cause allergic reactions in sensitive individuals.', safety: 'caution' },
-  'e104': { name: 'Quinoline Yellow', category: 'Color', description: 'Yellow-green artificial color. May cause hyperactivity in children.', safety: 'caution' },
-  'e110': { name: 'Sunset Yellow FCF', category: 'Color', description: 'Orange artificial color. May cause allergic reactions and hyperactivity.', safety: 'caution' },
-  'e120': { name: 'Cochineal / Carmine', category: 'Color', description: 'Red color from insects. May cause allergic reactions, especially in asthmatics.', safety: 'caution' },
-  'e122': { name: 'Azorubine / Carmoisine', category: 'Color', description: 'Red artificial color. May cause allergic reactions and hyperactivity.', safety: 'caution' },
-  'e124': { name: 'Ponceau 4R', category: 'Color', description: 'Red artificial color. May cause allergic reactions and hyperactivity in children.', safety: 'caution' },
-  'e129': { name: 'Allura Red AC', category: 'Color', description: 'Red artificial color. May cause hyperactivity in children and allergic reactions.', safety: 'caution' },
-  'e200': { name: 'Sorbic Acid', category: 'Preservative', description: 'Natural preservative from berries. Generally safe in small amounts.', safety: 'safe' },
-  'e202': { name: 'Potassium Sorbate', category: 'Preservative', description: 'Salt of sorbic acid. Prevents mold and yeast growth. Generally safe.', safety: 'safe' },
-  'e211': { name: 'Sodium Benzoate', category: 'Preservative', description: 'Common preservative. May cause hyperactivity in children when combined with colors.', safety: 'caution' },
-  'e220': { name: 'Sulfur Dioxide', category: 'Preservative', description: 'Preservative that may trigger asthma in sensitive individuals.', safety: 'caution' },
-  'e250': { name: 'Sodium Nitrite', category: 'Preservative', description: 'Prevents botulism in cured meats. May form carcinogens when heated. Use in moderation.', safety: 'caution' },
-  'e251': { name: 'Sodium Nitrate', category: 'Preservative', description: 'Used in cured meats. Similar concerns to nitrites.', safety: 'caution' },
-  'e300': { name: 'Ascorbic Acid (Vitamin C)', category: 'Antioxidant', description: 'Natural vitamin and antioxidant. Completely safe.', safety: 'safe' },
-  'e330': { name: 'Citric Acid', category: 'Acid / Antioxidant', description: 'Natural acid from citrus fruits. Very common and safe.', safety: 'safe' },
-  'e400': { name: 'Alginic Acid', category: 'Thickener', description: 'Natural thickener from seaweed. Generally safe.', safety: 'safe' },
-  'e407': { name: 'Carrageenan', category: 'Thickener', description: 'Thickener from seaweed. Some concerns about inflammation, but generally considered safe.', safety: 'caution' },
-  'e410': { name: 'Locust Bean Gum', category: 'Thickener', description: 'Natural thickener from carob seeds. Generally safe.', safety: 'safe' },
-  'e415': { name: 'Xanthan Gum', category: 'Thickener', description: 'Fermented sugar thickener. Generally safe in normal amounts.', safety: 'safe' },
-  'e420': { name: 'Sorbitol', category: 'Sweetener / Humectant', description: 'Sugar alcohol. May cause digestive issues in large amounts.', safety: 'caution' },
-  'e421': { name: 'Mannitol', category: 'Sweetener', description: 'Sugar alcohol. May cause digestive issues in large amounts.', safety: 'caution' },
-  'e422': { name: 'Glycerol / Glycerin', category: 'Humectant', description: 'Natural compound that retains moisture. Generally safe.', safety: 'safe' },
-  'e432': { name: 'Polysorbate 20', category: 'Emulsifier', description: 'Emulsifier that helps mix ingredients. Generally safe in small amounts.', safety: 'safe' },
-  'e500': { name: 'Sodium Carbonate', category: 'Acid Regulator', description: 'Natural compound used as raising agent. Generally safe.', safety: 'safe' },
-  'e551': { name: 'Silicon Dioxide', category: 'Anti-caking Agent', description: 'Natural anti-caking agent (sand). Prevents clumping. Generally safe and inert.', safety: 'safe' },
-  'e621': { name: 'Monosodium Glutamate (MSG)', category: 'Flavor Enhancer', description: 'Enhances flavor. Some people may be sensitive, causing headaches. Generally safe for most people.', safety: 'caution' },
-  'e627': { name: 'Disodium Guanylate', category: 'Flavor Enhancer', description: 'Flavor enhancer, often used with MSG. Generally safe.', safety: 'safe' },
-  'e631': { name: 'Disodium Inosinate', category: 'Flavor Enhancer', description: 'Flavor enhancer, often used with MSG. Generally safe.', safety: 'safe' },
-  'e635': { name: 'Disodium 5-Ribonucleotides', category: 'Flavor Enhancer', description: 'Flavor enhancer combination. Generally safe.', safety: 'safe' },
-  'e900': { name: 'Dimethylpolysiloxane', category: 'Anti-foaming Agent', description: 'Prevents foam formation. Generally considered safe.', safety: 'safe' },
-  'e950': { name: 'Acesulfame K / Acesulfame Potassium', category: 'Sweetener', description: 'Artificial sweetener. Very sweet, used in small amounts. Generally safe.', safety: 'safe' },
-  'e951': { name: 'Aspartame', category: 'Sweetener', description: 'Artificial sweetener. Safe for most people, but avoid if you have phenylketonuria (PKU).', safety: 'caution' },
-  'e952': { name: 'Cyclamic Acid / Cyclamate', category: 'Sweetener', description: 'Artificial sweetener. Banned in some countries. Use in moderation.', safety: 'caution' },
-  'e955': { name: 'Sucralose', category: 'Sweetener', description: 'Artificial sweetener derived from sugar. Generally safe.', safety: 'safe' },
-  'e960': { name: 'Steviol Glycosides (Stevia)', category: 'Sweetener', description: 'Natural sweetener from stevia plant. Generally safe.', safety: 'safe' },
-  'e967': { name: 'Xylitol', category: 'Sweetener', description: 'Natural sugar alcohol. Safe for humans but toxic to dogs. May cause digestive issues in large amounts.', safety: 'caution' },
-  'e999': { name: 'Quillaia Extract', category: 'Foaming Agent', description: 'Natural foaming agent from tree bark. Generally safe in small amounts.', safety: 'safe' },
-};
 
 export default function AllergensAdditivesModal({ visible, onClose, product }: AllergensAdditivesModalProps) {
   const { t } = useTranslation();
@@ -64,15 +22,16 @@ export default function AllergensAdditivesModal({ visible, onClose, product }: A
   const allergens = product.allergens_tags || [];
   const additives = product.additives_tags || [];
 
-  // Extract E-numbers from additives tags
+  // Extract E-numbers from additives tags (handles both "en:e412" and "e412" formats)
   const eNumbers = additives
-    .map(tag => tag.replace(/^en:/, '').toLowerCase())
-    .filter(tag => tag.match(/^e\d+$/));
-
-  const getAdditiveInfo = (eNumber: string) => {
-    const key = eNumber.toLowerCase();
-    return E_NUMBER_DATABASE[key] || null;
-  };
+    .map(tag => {
+      // Remove "en:" prefix if present and convert to lowercase
+      const cleaned = tag.replace(/^en:/, '').toLowerCase();
+      // Extract E-number (handles formats like "e412", "e-412", "e 412")
+      const match = cleaned.match(/^e-?(\d+[a-z]?)$/i);
+      return match ? `e${match[1].toLowerCase()}` : null;
+    })
+    .filter((eNum): eNum is string => eNum !== null && !!eNum.match(/^e\d+[a-z]?$/));
 
   const getSafetyColor = (safety: string) => {
     switch (safety) {
@@ -186,6 +145,65 @@ export default function AllergensAdditivesModal({ visible, onClose, product }: A
                     <Text style={[styles.additiveDescription, { color: colors.textSecondary }]}>
                       {info.description}
                     </Text>
+                    
+                    {/* Uses */}
+                    {info.uses && info.uses.length > 0 && (
+                      <View style={styles.infoSection}>
+                        <View style={styles.infoSectionHeader}>
+                          <Ionicons name="restaurant-outline" size={16} color={colors.primary} />
+                          <Text style={[styles.infoSectionTitle, { color: colors.text }]}>
+                            Common Uses:
+                          </Text>
+                        </View>
+                        <View style={styles.usesList}>
+                          {info.uses.map((use, idx) => (
+                            <View key={idx} style={styles.useItem}>
+                              <Ionicons name="checkmark-circle" size={14} color={colors.primary} />
+                              <Text style={[styles.useText, { color: colors.textSecondary }]}>
+                                {use}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+                    
+                    {/* Concerns */}
+                    {info.concerns && info.concerns.length > 0 && (
+                      <View style={[styles.infoSection, styles.concernsSection]}>
+                        <View style={styles.infoSectionHeader}>
+                          <Ionicons name="warning-outline" size={16} color="#ff6b6b" />
+                          <Text style={[styles.infoSectionTitle, { color: colors.text }]}>
+                            Concerns:
+                          </Text>
+                        </View>
+                        <View style={styles.concernsList}>
+                          {info.concerns.map((concern, idx) => (
+                            <View key={idx} style={styles.concernItem}>
+                              <Ionicons name="alert-circle" size={14} color="#ff6b6b" />
+                              <Text style={[styles.concernText, { color: colors.textSecondary }]}>
+                                {concern}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+                    
+                    {/* Alternatives */}
+                    {info.alternatives && (
+                      <View style={[styles.infoSection, styles.alternativesSection]}>
+                        <View style={styles.infoSectionHeader}>
+                          <Ionicons name="leaf-outline" size={16} color="#16a085" />
+                          <Text style={[styles.infoSectionTitle, { color: colors.text }]}>
+                            Alternatives:
+                          </Text>
+                        </View>
+                        <Text style={[styles.alternativeText, { color: colors.textSecondary }]}>
+                          {info.alternatives}
+                        </Text>
+                      </View>
+                    )}
                   </>
                 ) : (
                   <>
@@ -194,6 +212,9 @@ export default function AllergensAdditivesModal({ visible, onClose, product }: A
                     </Text>
                     <Text style={[styles.additiveDescription, { color: colors.textSecondary }]}>
                       {t('additive.noInformation')}
+                    </Text>
+                    <Text style={[styles.noInfoNote, { color: colors.textSecondary }]}>
+                      This additive code is not yet in our database. We're continuously updating our information.
                     </Text>
                   </>
                 )}
@@ -316,6 +337,65 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     lineHeight: 18,
+  },
+  infoSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  concernsSection: {
+    borderTopColor: '#ff6b6b30',
+  },
+  alternativesSection: {
+    borderTopColor: '#16a08530',
+  },
+  infoSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  infoSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  usesList: {
+    gap: 6,
+  },
+  useItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  useText: {
+    fontSize: 13,
+    lineHeight: 18,
+    flex: 1,
+  },
+  concernsList: {
+    gap: 6,
+  },
+  concernItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  concernText: {
+    fontSize: 13,
+    lineHeight: 18,
+    flex: 1,
+  },
+  alternativeText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontStyle: 'italic',
+  },
+  noInfoNote: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 });
 

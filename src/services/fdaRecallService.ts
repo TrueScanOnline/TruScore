@@ -198,7 +198,12 @@ async function searchFDARecalls(searchTerm: string): Promise<FoodRecall[]> {
     });
 
     if (!response.ok) {
-      console.warn(`FDA API error: ${response.status}`);
+      // 404 is expected when no recalls found - use debug level
+      if (response.status === 404) {
+        console.log(`[FDA] No recalls found for product (expected)`);
+      } else {
+        console.warn(`FDA API error: ${response.status}`);
+      }
       return [];
     }
 

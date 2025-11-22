@@ -26,7 +26,12 @@ export async function fetchProductFromOPF(barcode: string): Promise<Product | nu
     });
 
     if (!response.ok) {
-      console.warn(`OPF API error: ${response.status} ${response.statusText}`);
+      // 404 is expected when product not in general products database - use debug level
+      if (response.status === 404) {
+        console.log(`[OPF] Product not found in general products database (expected)`);
+      } else {
+        console.warn(`OPF API error: ${response.status} ${response.statusText}`);
+      }
       return null;
     }
 
