@@ -26,7 +26,7 @@ import { useScanStore } from '../../src/store/useScanStore';
 import { useFavoritesStore } from '../../src/store/useFavoritesStore';
 import { useSubscriptionStore } from '../../src/store/useSubscriptionStore';
 import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import TrustScore from '../../src/components/TrustScore';
 import TruScore from '../../src/components/TruScore';
 import CountryFlag from '../../src/components/CountryFlag';
@@ -48,6 +48,7 @@ import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/util
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
 import { useTheme } from '../../src/theme';
 import * as Linking from 'expo-linking';
+import Toast from 'react-native-toast-message';
 import { submitManufacturingCountry, getManufacturingCountry, hasUserSubmitted } from '../../src/services/manufacturingCountryService';
 import ManufacturingCountryModal from '../../src/components/ManufacturingCountryModal';
 import RecallAlertModal from '../../src/components/RecallAlertModal';
@@ -418,10 +419,11 @@ function ResultScreenContent() {
     // Reload product data - it should now be available from cache
     await loadProduct();
     setManualProductModalVisible(false);
+    Toast.show({ type: 'success', text1: 'Updated', text2: 'Product information saved' });
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
@@ -450,7 +452,11 @@ function ResultScreenContent() {
             </TouchableOpacity>
           )}
           <View style={styles.productNameContainer}>
-            <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>
+            <Text 
+              style={[styles.productName, { color: colors.text }]} 
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {product.product_name || product.product_name_en || 'Unknown Product'}
             </Text>
             {isUserContributed && (
@@ -740,13 +746,13 @@ function ResultScreenContent() {
             <View style={styles.cardHeaderLeft}>
               <Ionicons name="heart-outline" size={24} color={colors.primary} />
               <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-                Your Values
+                Values Preferences
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Set your preferences for geopolitical, ethical, and environmental insights
+            Set preferences for geopolitical, ethical, and environmental insights – These insights do not affect the TruScore
           </Text>
           {(() => {
             const activeCount = [
@@ -1316,9 +1322,9 @@ function ResultScreenContent() {
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      {/* Share My Choices FAB */}
+      {/* Share Choices FAB */}
       <View style={[styles.fabContainer, { bottom: tabBarHeight + 16 }]}>
-        <ShareValuesCard />
+        <ShareValuesCard truScore={truScore?.truscore} />
       </View>
 
       {/* Trust Score Info Modal - Only show if we have data */}
@@ -1435,7 +1441,7 @@ function ResultScreenContent() {
         onSave={handleManualProductSave}
         barcode={barcode}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

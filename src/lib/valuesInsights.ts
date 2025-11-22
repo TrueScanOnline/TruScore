@@ -53,7 +53,7 @@ export function generateInsights(
       if (isIsraelLinked) {
         insights.push({
           type: 'geopolitical',
-          reason: 'Geopolitical Insight: Matches your Avoid Israel-linked preference',
+          reason: 'Geopolitical Insight: Matches Avoid Israel-linked preference',
           source: 'Product origin/brand analysis',
           color: '#ff6b6b', // Red
         });
@@ -64,7 +64,7 @@ export function generateInsights(
       if (isPalestineLinked) {
         insights.push({
           type: 'geopolitical',
-          reason: 'Geopolitical Insight: Matches your Avoid Palestine-linked preference',
+          reason: 'Geopolitical Insight: Matches Avoid Palestine-linked preference',
           source: 'Product origin/brand analysis',
           color: '#ff6b6b', // Red
         });
@@ -78,7 +78,7 @@ export function generateInsights(
       if (isChinaLinked) {
         insights.push({
           type: 'geopolitical',
-          reason: 'Geopolitical Insight: Matches your Avoid China-linked preference',
+          reason: 'Geopolitical Insight: Matches Avoid China-linked preference',
           source: 'Product origin/brand analysis',
           color: '#ff6b6b', // Red
         });
@@ -89,7 +89,7 @@ export function generateInsights(
       if (isIndiaLinked) {
         insights.push({
           type: 'geopolitical',
-          reason: 'Geopolitical Insight: Matches your Avoid India-linked preference',
+          reason: 'Geopolitical Insight: Matches Avoid India-linked preference',
           source: 'Product origin/brand analysis',
           color: '#ff6b6b', // Red
         });

@@ -143,8 +143,8 @@ export default function ScanScreen() {
       if (gtinMatch && gtinMatch[1]) {
         barcode = gtinMatch[1];
         // Show toast notification for QR fallback
-        // Note: In a real implementation, you'd use a toast library like react-native-toast-message
-        console.log('QR fallback – scan complete');
+        const Toast = require('react-native-toast-message').default;
+        Toast.show({ type: 'info', text1: 'Scan complete', text2: 'QR fallback – scan complete' });
       } else {
         // QR code doesn't contain a valid GTIN
         Alert.alert(

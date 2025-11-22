@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { useValuesStore } from '../../store/useValuesStore';
+import Toast from 'react-native-toast-message';
 
 type TabType = 'geopolitical' | 'ethical' | 'environmental';
 
@@ -112,10 +113,10 @@ export default function ValuesHome() {
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>
-          Your Values, Your Choice
+          Values Preferences
         </Text>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          Additional Insights for your Scans
+          Additional Insights for Scans – These insights do not affect the TruScore
         </Text>
       </View>
 
@@ -219,7 +220,10 @@ export default function ValuesHome() {
                     { value: 'avoid_china', label: 'Avoid China-linked' },
                     { value: 'avoid_india', label: 'Avoid India-linked' },
                   ],
-                  (val) => setIndiaChina(val as 'neutral' | 'avoid_china' | 'avoid_india'),
+                  async (val) => {
+                    await setIndiaChina(val as 'neutral' | 'avoid_china' | 'avoid_india');
+                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Preference saved' });
+                  },
                   geopoliticalEnabled
                 )}
               </>
@@ -251,7 +255,10 @@ export default function ValuesHome() {
                   'Animal Testing / Cruelty',
                   'Avoid products from companies that test on animals or engage in animal cruelty',
                   avoidAnimalTesting,
-                  setAvoidAnimalTesting,
+                  async (val) => {
+                    await setAvoidAnimalTesting(val);
+                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Preference saved' });
+                  },
                   ethicalEnabled
                 )}
 
@@ -259,7 +266,10 @@ export default function ValuesHome() {
                   'Forced / Child Labour',
                   'Avoid products from companies linked to forced or child labor',
                   avoidForcedLabour,
-                  setAvoidForcedLabour,
+                  async (val) => {
+                    await setAvoidForcedLabour(val);
+                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Preference saved' });
+                  },
                   ethicalEnabled
                 )}
               </>
@@ -291,7 +301,10 @@ export default function ValuesHome() {
                   'Unsustainable Palm Oil',
                   'Avoid products containing unsustainable palm oil',
                   avoidPalmOil,
-                  setAvoidPalmOil,
+                  async (val) => {
+                    await setAvoidPalmOil(val);
+                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Preference saved' });
+                  },
                   environmentalEnabled
                 )}
               </>

@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View, useColorScheme } from 'react-native';
 import * as Linking from 'expo-linking';
+import Toast from 'react-native-toast-message';
 import '../src/i18n'; // Initialize i18n
 import { linking, parseBarcodeFromUrl } from '../src/utils/linking';
 import ErrorBoundary from '../src/components/ErrorBoundary';
@@ -221,13 +222,14 @@ function RootLayout() {
                   options={{
                     presentation: 'modal',
                     headerShown: true,
-                    title: 'Your Values',
+                    title: 'Values Preferences',
                   }}
                 />
               </Stack.Navigator>
             </ErrorBoundary>
             <StatusBar style={isDarkMode ? 'light' : 'dark'} />
           </NavigationContainer>
+          <Toast />
         </SafeAreaProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>

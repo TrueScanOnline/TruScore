@@ -158,7 +158,11 @@ export default function InsightsCarousel({ insights, productName }: InsightsCaro
                 <Text style={[styles.insightTypeLabel, { color: insight.color }]}>
                   {insight.type.charAt(0).toUpperCase() + insight.type.slice(1)}
                 </Text>
-                <Text style={[styles.insightReasonText, { color: colors.text }]} numberOfLines={2}>
+                <Text 
+                  style={[styles.insightReasonText, { color: colors.text }]} 
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {insight.reason}
                 </Text>
               </View>

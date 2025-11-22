@@ -10,7 +10,7 @@ export default function ValuesScreen() {
   const { colors } = useTheme();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ValuesHome />
       <View style={styles.shareContainer}>
         <ShareValuesCard />

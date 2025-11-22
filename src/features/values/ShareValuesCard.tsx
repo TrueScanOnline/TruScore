@@ -18,7 +18,11 @@ import { RootStackParamList } from '../../../app/_layout';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-export default function ShareValuesCard() {
+interface ShareValuesCardProps {
+  truScore?: number;
+}
+
+export default function ShareValuesCard({ truScore }: ShareValuesCardProps = {}) {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const [sharing, setSharing] = useState(false);
@@ -81,7 +85,7 @@ export default function ShareValuesCard() {
         setSharing(false);
         Alert.alert(
           'No Active Preferences',
-          'Please enable at least one value preference to share. Would you like to set up your preferences now?',
+          'Please enable at least one value preference to share. Would you like to set up preferences now?',
           [
             {
               text: 'Cancel',
@@ -99,7 +103,19 @@ export default function ShareValuesCard() {
       }
 
       // Build share message
-      let message = 'My TruScore choices – scanning smarter\n\n';
+      const score = truScore || 0;
+      const hasInsights = activeToggles.length > 0;
+      
+      let message = '';
+      if (hasInsights) {
+        const insightTypes = activeToggles.filter(t => t.includes('cruelty') || t.includes('Cruelty')).length > 0 ? 'cruelty' : '';
+        const bdsTypes = activeToggles.filter(t => t.includes('Israel') || t.includes('Palestine')).length > 0 ? 'BDS' : '';
+        const flags = [insightTypes, bdsTypes].filter(Boolean).join(' & ');
+        message = `TruScore ${score} + insights flagged ${flags}\n\n`;
+      } else {
+        message = `TruScore ${score} – independent breakdown\n\n`;
+      }
+      
       message += 'Active Preferences:\n';
       activeToggles.forEach((toggle, index) => {
         message += `${index + 1}. ${toggle}\n`;
@@ -117,7 +133,7 @@ export default function ShareValuesCard() {
 
       await Share.share({
         message,
-        title: 'My TruScore Choices',
+        title: 'TruScore Choices',
       });
     } catch (error) {
       console.error('Error sharing values:', error);
@@ -139,7 +155,7 @@ export default function ShareValuesCard() {
       ) : (
         <>
           <Ionicons name="share-outline" size={20} color="#fff" />
-          <Text style={styles.shareButtonText}>Share My Choices</Text>
+          <Text style={styles.shareButtonText}>Share Choices</Text>
         </>
       )}
     </TouchableOpacity>
