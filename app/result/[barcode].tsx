@@ -34,6 +34,9 @@ import CertBadge from '../../src/components/CertBadge';
 import EcoScore from '../../src/components/EcoScore';
 import NutritionTable from '../../src/components/NutritionTable';
 import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
+import { useValuesStore } from '../../src/store/useValuesStore';
+import InsightsCarousel from '../../src/components/InsightsCarousel';
+import ShareValuesCard from '../../src/features/values/ShareValuesCard';
 import TrustScoreInfoModal from '../../src/components/TrustScoreInfoModal';
 import EcoScoreInfoModal from '../../src/components/EcoScoreInfoModal';
 import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModal';
@@ -67,6 +70,7 @@ function ResultScreenContent() {
   const { subscriptionInfo } = useSubscriptionStore();
   const { isOffline } = useNetworkStatus();
   const insets = useSafeAreaInsets();
+  const valuesPreferences = useValuesStore();
   
   const isPremium = subscriptionInfo.isPremium && 
     (subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial' || subscriptionInfo.status === 'grace_period');
@@ -109,6 +113,7 @@ function ResultScreenContent() {
   const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isUserContributed, setIsUserContributed] = useState(false);
+  const [insightsExpanded, setInsightsExpanded] = useState(true);
 
   useEffect(() => {
     loadProduct();
@@ -161,11 +166,27 @@ function ResultScreenContent() {
     checkUserContributed();
   }, [barcode, product]);
 
+  // Initialize values store
+  useEffect(() => {
+    valuesPreferences.initializeStore();
+  }, []);
+
   // Calculate TruScore when product data is available
   useEffect(() => {
     if (product) {
       try {
-        const score = calculateTruScore(product);
+        // Get current preferences for insights generation
+        const prefs = {
+          israelPalestine: valuesPreferences.israelPalestine,
+          indiaChina: valuesPreferences.indiaChina,
+          avoidAnimalTesting: valuesPreferences.avoidAnimalTesting,
+          avoidForcedLabour: valuesPreferences.avoidForcedLabour,
+          avoidPalmOil: valuesPreferences.avoidPalmOil,
+          geopoliticalEnabled: valuesPreferences.geopoliticalEnabled,
+          ethicalEnabled: valuesPreferences.ethicalEnabled,
+          environmentalEnabled: valuesPreferences.environmentalEnabled,
+        };
+        const score = calculateTruScore(product, prefs);
         setTruScore(score);
         console.log('[TruScore] Calculated:', score);
       } catch (error) {
@@ -179,7 +200,7 @@ function ResultScreenContent() {
     } else {
       setTruScore(null);
     }
-  }, [product]);
+  }, [product, valuesPreferences]);
 
   const loadProduct = async () => {
     setLoading(true);
@@ -674,6 +695,38 @@ function ResultScreenContent() {
             <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
               {t('result.insufficientDataMessage')}
             </Text>
+          </View>
+        )}
+
+        {/* Insights Carousel - Values v1.1 (Collapsible) */}
+        {truScore && truScore.insights && truScore.insights.length > 0 && (
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
+            <TouchableOpacity
+              style={[styles.insightsHeader, { borderBottomColor: colors.border }]}
+              onPress={() => setInsightsExpanded(!insightsExpanded)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.insightsHeaderLeft}>
+                <Ionicons name="bulb" size={20} color={colors.primary} />
+                <Text style={[styles.insightsHeaderTitle, { color: colors.text }]}>
+                  Insights
+                </Text>
+                <Text style={[styles.insightsHeaderCount, { color: colors.textSecondary }]}>
+                  ({truScore.insights.length})
+                </Text>
+              </View>
+              <Ionicons
+                name={insightsExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+            {insightsExpanded && (
+              <InsightsCarousel
+                insights={truScore.insights}
+                productName={product?.product_name || product?.product_name_en}
+              />
+            )}
           </View>
         )}
 
@@ -1224,6 +1277,11 @@ function ResultScreenContent() {
         {/* Bottom spacing */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* Share My Choices FAB */}
+      <View style={[styles.fabContainer, { bottom: tabBarHeight + 16 }]}>
+        <ShareValuesCard />
+      </View>
 
       {/* Trust Score Info Modal - Only show if we have data */}
       {product && product.trust_score !== null && product.trust_score_breakdown && (
@@ -2043,6 +2101,31 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 32,
+  },
+  insightsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  insightsHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  insightsHeaderTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  insightsHeaderCount: {
+    fontSize: 14,
+  },
+  fabContainer: {
+    position: 'absolute',
+    right: 16,
+    left: 16,
+    zIndex: 1000,
   },
   insufficientDataText: {
     fontSize: 14,

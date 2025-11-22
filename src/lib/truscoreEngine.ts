@@ -3,6 +3,15 @@
 // Ported from Python v1.4 spec exactly
 
 import { Product } from '../types/product';
+import { ValuesPreferences } from '../store/useValuesStore';
+import { generateInsights } from './valuesInsights';
+
+export interface Insight {
+  type: 'geopolitical' | 'ethical' | 'environmental';
+  reason: string;
+  source?: string;
+  color: string;
+}
 
 export interface TruScoreResult {
   truscore: number;
@@ -15,6 +24,7 @@ export interface TruScoreResult {
   hasNutriScore?: boolean;
   hasEcoScore?: boolean;
   hasOrigin?: boolean;
+  insights?: Insight[];
 }
 
 // Cruel list: 21 parent companies (hardcoded)
@@ -77,8 +87,14 @@ const IRRITANTS = [
  * Calculate TruScore v1.4 - Full spec implementation
  * 4 pillars × 25pts = 100 total
  * Offline-first, <150ms execution
+ * 
+ * @param product - Product data
+ * @param preferences - Optional user values preferences for insights generation
  */
-export function calculateTruScore(product: Product): TruScoreResult {
+export function calculateTruScore(
+  product: Product,
+  preferences?: ValuesPreferences
+): TruScoreResult {
   const text = (product.ingredients_text || '').toLowerCase();
   const labels = (product.labels_tags || []).map((l: string) => l.toLowerCase());
   const analysisTags = product.ingredients_analysis_tags || [];
@@ -241,6 +257,9 @@ export function calculateTruScore(product: Product): TruScoreResult {
   // Total
   const truscore = body + planet + care + open;
 
+  // Generate insights if preferences provided
+  const insights = preferences ? generateInsights(product, preferences) : [];
+
   return {
     truscore,
     breakdown: {
@@ -252,6 +271,7 @@ export function calculateTruScore(product: Product): TruScoreResult {
     hasNutriScore,
     hasEcoScore,
     hasOrigin: !!hasOrigin && !String(hasOrigin).toLowerCase().includes('unknown'),
+    insights: insights.length > 0 ? insights : undefined,
   };
 }
 

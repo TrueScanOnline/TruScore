@@ -16,6 +16,7 @@ import ResultScreen from './result/[barcode]';
 import SettingsScreen from './settings';
 import OnboardingScreen from './onboarding';
 import SubscriptionScreen from './subscription';
+import ValuesScreen from './values';
 import AppTabs from '../src/navigation/AppTabs';
 
 // Import stores
@@ -42,6 +43,7 @@ export type RootStackParamList = {
   Result: { barcode: string };
   Settings: undefined;
   Subscription: undefined;
+  Values: undefined;
   Favourites: undefined;
   Search: undefined;
 };
@@ -211,6 +213,15 @@ function RootLayout() {
                   component={SubscriptionScreen}
                   options={{
                     presentation: 'modal',
+                  }}
+                />
+                <Stack.Screen 
+                  name="Values" 
+                  component={ValuesScreen}
+                  options={{
+                    presentation: 'modal',
+                    headerShown: true,
+                    title: 'Your Values',
                   }}
                 />
               </Stack.Navigator>
