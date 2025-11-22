@@ -1,5 +1,5 @@
 // ShareValuesCard.tsx - Generate and share values preferences card
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,29 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../theme';
 import { useValuesStore, TOP_BOYCOUTS } from '../../store/useValuesStore';
+import { RootStackParamList } from '../../../app/_layout';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function ShareValuesCard() {
   const { colors } = useTheme();
+  const navigation = useNavigation<NavigationProp>();
   const [sharing, setSharing] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const preferences = useValuesStore();
+
+  // Initialize store on mount and ensure it's loaded
+  useEffect(() => {
+    const init = async () => {
+      await preferences.initializeStore();
+      setInitialized(true);
+    };
+    init();
+  }, []);
 
   const getActiveToggles = (): string[] => {
     const active: string[] = [];
@@ -51,13 +67,34 @@ export default function ShareValuesCard() {
   };
 
   const handleShare = async () => {
+    // Ensure store is initialized first
+    if (!initialized) {
+      await preferences.initializeStore();
+      setInitialized(true);
+    }
+
     setSharing(true);
     try {
       const activeToggles = getActiveToggles();
       
       if (activeToggles.length === 0) {
-        Alert.alert('No Active Preferences', 'Please enable at least one value preference to share.');
         setSharing(false);
+        Alert.alert(
+          'No Active Preferences',
+          'Please enable at least one value preference to share. Would you like to set up your preferences now?',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Set Preferences',
+              onPress: () => {
+                navigation.navigate('Values');
+              },
+            },
+          ]
+        );
         return;
       }
 

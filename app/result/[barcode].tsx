@@ -730,6 +730,44 @@ function ResultScreenContent() {
           </View>
         )}
 
+        {/* Values Preferences Card - Link to Values Screen */}
+        <TouchableOpacity
+          style={[styles.card, { backgroundColor: colors.card }]}
+          onPress={() => navigation.navigate('Values')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderLeft}>
+              <Ionicons name="heart-outline" size={24} color={colors.primary} />
+              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
+                Your Values
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+          </View>
+          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+            Set your preferences for geopolitical, ethical, and environmental insights
+          </Text>
+          {(() => {
+            const activeCount = [
+              valuesPreferences.geopoliticalEnabled,
+              valuesPreferences.ethicalEnabled,
+              valuesPreferences.environmentalEnabled,
+            ].filter(Boolean).length;
+            if (activeCount > 0) {
+              return (
+                <View style={[styles.activeBadge, { backgroundColor: colors.primary + '20' }]}>
+                  <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+                  <Text style={[styles.activeBadgeText, { color: colors.primary }]}>
+                    {activeCount} preference{activeCount !== 1 ? 's' : ''} active
+                  </Text>
+                </View>
+              );
+            }
+            return null;
+          })()}
+        </TouchableOpacity>
+
         {/* Country of Manufacture */}
         {(() => {
           // Helper function to determine if verify button should be shown
@@ -2126,6 +2164,25 @@ const styles = StyleSheet.create({
     right: 16,
     left: 16,
     zIndex: 1000,
+  },
+  cardDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
+  },
+  activeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginTop: 12,
+    alignSelf: 'flex-start',
+  },
+  activeBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   insufficientDataText: {
     fontSize: 14,
