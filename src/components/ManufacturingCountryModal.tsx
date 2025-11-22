@@ -256,7 +256,7 @@ export default function ManufacturingCountryModal({
                   </Text>
                 </View>
 
-                <View style={styles.exampleCard}>
+                <View style={[styles.exampleCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                   <Text style={[styles.exampleTitle, { color: colors.text }]}>
                     {getTranslation('manufacturingCountry.exampleTitle', 'Examples:')}
                   </Text>
@@ -281,7 +281,7 @@ export default function ManufacturingCountryModal({
                 </View>
 
                 {productName && (
-                  <View style={styles.productInfoCard}>
+                  <View style={[styles.productInfoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <Text style={[styles.productLabel, { color: colors.textSecondary }]}>
                       {getTranslation('manufacturingCountry.productLabel', 'Product:')}
                     </Text>
@@ -289,7 +289,7 @@ export default function ManufacturingCountryModal({
                   </View>
                 )}
 
-                <View style={styles.hintCard}>
+                <View style={[styles.hintCard, { backgroundColor: colors.warning ? colors.warning + '20' : '#ffd93d20' }]}>
                   <Ionicons name="bulb-outline" size={20} color="#ffd93d" />
                   <Text style={[styles.hintText, { color: colors.textSecondary }]}>
                     {getTranslation('manufacturingCountry.hint',
@@ -519,11 +519,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   exampleCard: {
-    backgroundColor: '#fff',
+    // backgroundColor will be set dynamically via theme
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    // borderColor will be set dynamically via theme
     gap: 12,
   },
   exampleTitle: {
@@ -540,11 +540,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   productInfoCard: {
-    backgroundColor: '#fff',
+    // backgroundColor will be set dynamically via theme
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    // borderColor will be set dynamically via theme
   },
   productLabel: {
     fontSize: 12,
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
   hintCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#fffbe6',
+    // backgroundColor will be set dynamically via theme
     borderRadius: 12,
     padding: 16,
     gap: 12,

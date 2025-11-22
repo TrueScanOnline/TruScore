@@ -112,3 +112,4 @@
 - ✅ Product detail pages work better than search results
 - ✅ User can submit prices when scraping fails
 
+

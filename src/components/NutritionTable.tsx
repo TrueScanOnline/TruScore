@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ProductNutriments, ProductNutrientLevels } from '../types/product';
 import { useSettingsStore } from '../store/useSettingsStore';
@@ -79,7 +80,10 @@ export default function NutritionTable({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
-      <Text style={[styles.title, { color: colors.text }]}>{t('result.nutritionFacts')}</Text>
+      <View style={styles.titleContainer}>
+        <Ionicons name="nutrition" size={24} color={colors.primary} />
+        <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{t('result.nutritionFacts')}</Text>
+      </View>
       {servingSize && (
         <Text style={[styles.servingSize, { color: colors.textSecondary }]}>
           {t('result.servingSize')}: {formatServingSize(servingSize, units)}
@@ -135,10 +139,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 8,
   },
   servingSize: {
     fontSize: 14,

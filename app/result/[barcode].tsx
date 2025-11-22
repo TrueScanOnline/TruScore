@@ -28,10 +28,12 @@ import { useSubscriptionStore } from '../../src/store/useSubscriptionStore';
 import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TrustScore from '../../src/components/TrustScore';
+import TruScore from '../../src/components/TruScore';
 import CountryFlag from '../../src/components/CountryFlag';
 import CertBadge from '../../src/components/CertBadge';
 import EcoScore from '../../src/components/EcoScore';
 import NutritionTable from '../../src/components/NutritionTable';
+import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
 import TrustScoreInfoModal from '../../src/components/TrustScoreInfoModal';
 import EcoScoreInfoModal from '../../src/components/EcoScoreInfoModal';
 import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModal';
@@ -91,6 +93,7 @@ function ResultScreenContent() {
   };
 
   const [product, setProduct] = useState<ProductWithTrustScore | null>(null);
+  const [truScore, setTruScore] = useState<TruScoreResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -157,6 +160,26 @@ function ResultScreenContent() {
     };
     checkUserContributed();
   }, [barcode, product]);
+
+  // Calculate TruScore when product data is available
+  useEffect(() => {
+    if (product) {
+      try {
+        const score = calculateTruScore(product);
+        setTruScore(score);
+        console.log('[TruScore] Calculated:', score);
+      } catch (error) {
+        console.error('[TruScore] Calculation error:', error);
+        // Still set a default score even on error
+        setTruScore({
+          truscore: 0,
+          breakdown: { Body: 0, Planet: 0, Care: 0, Open: 0 },
+        });
+      }
+    } else {
+      setTruScore(null);
+    }
+  }, [product]);
 
   const loadProduct = async () => {
     setLoading(true);
@@ -498,12 +521,12 @@ function ResultScreenContent() {
           </TouchableOpacity>
         )}
 
-        {/* Trust Score Card - Only show if we have sufficient data */}
-        {product.trust_score !== null && product.trust_score_breakdown ? (
+        {/* TruScore Card - v1.4 */}
+        {truScore ? (
           <TouchableOpacity
             style={[styles.card, { 
               backgroundColor: colors.card,
-              borderColor: getTrustScoreColor(product.trust_score),
+              borderColor: getTrustScoreColor(truScore.truscore),
               borderWidth: 2,
             }]}
             onPress={() => setTrustScoreModalVisible(true)}
@@ -511,7 +534,8 @@ function ResultScreenContent() {
           >
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderLeft}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.trustScore')}</Text>
+              <Ionicons name="shield" size={24} color={colors.primary} />
+              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>TruScore</Text>
               <TouchableOpacity
                 onPress={() => {
                   setTrustScoreModalVisible(true);
@@ -546,124 +570,8 @@ function ResultScreenContent() {
             </View>
           </View>
           
-          {/* Trust Score Layout - 4 Quadrants */}
-          <View style={styles.trustScoreContainer}>
-            {/* Transparency Warning - v1.3 */}
-            {product._truscore_metadata && (!product._truscore_metadata.hasNutriScore || !product._truscore_metadata.hasEcoScore) && (
-              <View style={[styles.transparencyWarning, { backgroundColor: (colors.warning || '#ff9800') + '15', borderColor: colors.warning || '#ff9800', borderWidth: 1, borderRadius: 8, padding: 12, marginBottom: 12 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-                  <Ionicons name="information-circle" size={18} color={colors.warning || '#ff9800'} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.warningTitle, { color: colors.warning || '#ff9800', fontWeight: '600', marginBottom: 4 }]}>
-                      {t('result.scoreBasedOnAvailableData', 'Score Based on Available Data Only')}
-                    </Text>
-                    <Text style={[styles.warningText, { color: colors.textSecondary, fontSize: 12, lineHeight: 18 }]}>
-                      {!product._truscore_metadata.hasNutriScore && !product._truscore_metadata.hasEcoScore
-                        ? t('result.nutriEcoMissing', 'Nutri-Score and Eco-Score not available - score calculated from other available data')
-                        : !product._truscore_metadata.hasNutriScore
-                        ? t('result.nutriMissing', 'Nutri-Score not available - Body score calculated from available nutrition data')
-                        : t('result.ecoMissing', 'Eco-Score not available - Planet score calculated from available sustainability data')}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
-            
-            <View style={styles.quadrantContainer}>
-              {/* Center Score */}
-              <View style={[styles.scoreCircle, { borderColor: getTrustScoreColor(product.trust_score) }]}>
-                <View style={styles.centerScoreContainer}>
-                  <Text style={[styles.centerScoreText, { color: getTrustScoreColor(product.trust_score) }]}>
-                    {product.trust_score}
-                  </Text>
-                  <Text style={[styles.centerScoreDenominator, { color: getTrustScoreColor(product.trust_score) }]}>
-                    100
-                  </Text>
-                </View>
-              </View>
-              <Text style={[styles.scoreLabel, { color: getTrustScoreColor(product.trust_score) }]}>
-                {getTrustScoreLabel(product.trust_score)}
-              </Text>
-              
-              {/* Vertical divider line (dashed) */}
-              <View style={styles.dividerVertical}>
-                {Array.from({ length: 15 }).map((_, i) => (
-                  <View key={i} style={styles.dashSegmentVertical} />
-                ))}
-              </View>
-              
-              {/* Horizontal divider line (dashed) */}
-              <View style={styles.dividerHorizontal}>
-                {Array.from({ length: 20 }).map((_, i) => (
-                  <View key={i} style={styles.dashSegmentHorizontal} />
-                ))}
-              </View>
-              
-              {/* Quadrant 1: Body (Top Left) - TruScore Pillar #1 */}
-              <View style={[styles.quadrant, styles.quadrantTopLeft]}>
-                <Ionicons name="shield-outline" size={24} color="#4dd09f" style={styles.quadrantIcon} />
-                <Text style={[styles.quadrantLabel, { color: colors.textSecondary }]}>
-                  {t('result.body')}
-                </Text>
-                <View style={styles.quadrantValueContainer}>
-                  <Text style={[styles.quadrantValue, { color: colors.text }]}>
-                    {product.trust_score_breakdown.body || product.trust_score_breakdown.bodySafety || 0}
-                  </Text>
-                  <Text style={[styles.quadrantValueDenominator, { color: colors.textSecondary }]}>
-                    /25
-                  </Text>
-                </View>
-              </View>
-              
-              {/* Quadrant 2: Planet (Top Right) - TruScore Pillar #2 */}
-              <View style={[styles.quadrant, styles.quadrantTopRight]}>
-                <Ionicons name="leaf-outline" size={24} color="#16a085" style={styles.quadrantIcon} />
-                <Text style={[styles.quadrantLabel, { color: colors.textSecondary }]}>
-                  {t('result.planet')}
-                </Text>
-                <View style={styles.quadrantValueContainer}>
-                  <Text style={[styles.quadrantValue, { color: colors.text }]}>
-                    {product.trust_score_breakdown.planet || product.trust_score_breakdown.sustainability || 0}
-                  </Text>
-                  <Text style={[styles.quadrantValueDenominator, { color: colors.textSecondary }]}>
-                    /25
-                  </Text>
-                </View>
-              </View>
-              
-              {/* Quadrant 3: Care (Bottom Left) - TruScore Pillar #3 */}
-              <View style={[styles.quadrant, styles.quadrantBottomLeft]}>
-                <Ionicons name="heart-outline" size={24} color="#ff6b6b" style={styles.quadrantIcon} />
-                <Text style={[styles.quadrantLabel, { color: colors.textSecondary }]}>
-                  {t('result.care')}
-                </Text>
-                <View style={styles.quadrantValueContainer}>
-                  <Text style={[styles.quadrantValue, { color: colors.text }]}>
-                    {product.trust_score_breakdown.care || product.trust_score_breakdown.ethics || 0}
-                  </Text>
-                  <Text style={[styles.quadrantValueDenominator, { color: colors.textSecondary }]}>
-                    /25
-                  </Text>
-                </View>
-              </View>
-              
-              {/* Quadrant 4: Open (Bottom Right) - TruScore Pillar #4 */}
-              <View style={[styles.quadrant, styles.quadrantBottomRight]}>
-                <Ionicons name="eye-outline" size={24} color="#9b59b6" style={styles.quadrantIcon} />
-                <Text style={[styles.quadrantLabel, { color: colors.textSecondary }]}>
-                  {t('result.open')}
-                </Text>
-                <View style={styles.quadrantValueContainer}>
-                  <Text style={[styles.quadrantValue, { color: colors.text }]}>
-                    {product.trust_score_breakdown.open || product.trust_score_breakdown.transparency || 0}
-                  </Text>
-                  <Text style={[styles.quadrantValueDenominator, { color: colors.textSecondary }]}>
-                    /25
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
+          {/* TruScore Display - v1.4 */}
+          <TruScore truScore={truScore} size="medium" />
 
           {/* Why this score - Green/Red Flags */}
           {(() => {
@@ -808,7 +716,10 @@ function ResultScreenContent() {
               {displayManufacturingCountry ? (
                 <View style={[styles.card, { backgroundColor: colors.card }]}>
                   <View style={styles.cardHeaderRow}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.countryOfManufacture')}</Text>
+                    <View style={styles.cardHeaderLeft}>
+                      <Ionicons name="flag" size={24} color={colors.primary} />
+                      <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.countryOfManufacture')}</Text>
+                    </View>
                     <View style={styles.confidenceBadge}>
                       {manufacturingCountry ? (
                         // Open Food Facts data - verified source
@@ -980,9 +891,14 @@ function ResultScreenContent() {
                     <Text style={[styles.countryNotDisclosedTitle, { color: '#d32f2f' }]}>
                       {t('manufacturingCountry.notDisclosed', 'Country of manufacture is not disclosed by the brand!')}
                     </Text>
-                    <Text style={[styles.countryNotDisclosedSubtitle, { color: '#16a085' }]}>
-                      {t('manufacturingCountry.contributeDescription', 'Is it on the packaging? Click here to add .... ')}
-                    </Text>
+                    <View>
+                      <Text style={[styles.countryNotDisclosedSubtitle, { color: '#16a085' }]}>
+                        {t('manufacturingCountry.contributeDescriptionLine1', 'Is it on the packaging?')}
+                      </Text>
+                      <Text style={[styles.countryNotDisclosedSubtitle, { color: '#16a085' }]}>
+                        {t('manufacturingCountry.contributeDescriptionLine2', 'Click here to add ...')}
+                      </Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
               )}
@@ -1031,7 +947,8 @@ function ResultScreenContent() {
           >
             <View style={styles.ecoScoreHeader}>
               <View style={styles.ecoScoreHeaderLeft}>
-                <Text style={[styles.ecoScoreTitle, { color: colors.text }]}>
+                <Ionicons name="leaf" size={24} color={colors.primary} />
+                <Text style={[styles.ecoScoreTitle, { color: colors.text, marginLeft: 8 }]}>
                   {t('result.ecoScore', 'Eco-Score')}
                 </Text>
               </View>
@@ -1149,7 +1066,10 @@ function ResultScreenContent() {
         {/* Ethics / Certifications */}
         {product.certifications && product.certifications.length > 0 && (
           <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.certifications')}</Text>
+            <View style={styles.cardHeaderLeft}>
+              <Ionicons name="shield-checkmark" size={24} color={colors.primary} />
+              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.certifications')}</Text>
+            </View>
             <View style={styles.certificationsContainer}>
               {product.certifications.map((cert) => (
                 <CertBadge key={cert.id} certification={cert} />
@@ -1194,7 +1114,10 @@ function ResultScreenContent() {
           
           return (
             <View style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
+              <View style={styles.cardHeaderLeft}>
+                <Ionicons name="flask" size={24} color={colors.primary} />
+                <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.ingredients')}</Text>
+              </View>
               <Text style={[styles.ingredientsText, { color: colors.text }]}>{ingredientsText}</Text>
             {product.nova_group && (
               <TouchableOpacity
@@ -1223,7 +1146,10 @@ function ResultScreenContent() {
             activeOpacity={0.7}
           >
             <View style={styles.cardHeader}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.allergensAdditives')}</Text>
+              <View style={styles.cardHeaderLeft}>
+                <Ionicons name="warning" size={24} color={colors.primary} />
+                <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.allergensAdditives')}</Text>
+              </View>
               <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
             </View>
             {product.allergens_tags && product.allergens_tags.length > 0 && (

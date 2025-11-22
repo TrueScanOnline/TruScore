@@ -115,3 +115,4 @@ const BACKEND_URL = 'https://your-actual-vercel-url.vercel.app';
 **Last Updated:** December 2024  
 **Approach:** Playwright-based scraping (same as Grocer.nz, Grosave)
 
+

@@ -11,6 +11,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -82,10 +83,36 @@ export default function ScanScreen() {
   );
 
   useEffect(() => {
-    // Request camera permission on mount
-    if (!permission?.granted && permission?.canAskAgain) {
-      requestPermission();
-    }
+    // Request camera permission on mount with try/catch for Android
+    const requestCameraPermission = async () => {
+      try {
+        if (!permission?.granted && permission?.canAskAgain) {
+          await requestPermission();
+        }
+      } catch (error: any) {
+        console.error('[ScanScreen] Camera permission error:', error);
+        // Show fallback toast for Android
+        if (Platform.OS === 'android') {
+          Alert.alert(
+            t('scan.cameraPermissionError') || 'Camera Access Needed',
+            t('scan.cameraPermissionErrorMessage') || 'Camera access needed – enable in settings',
+            [
+              {
+                text: t('common.ok') || 'OK',
+                onPress: () => {
+                  // Optionally open settings
+                  if (Platform.OS === 'android') {
+                    Linking.openSettings?.();
+                  }
+                },
+              },
+            ]
+          );
+        }
+      }
+    };
+
+    requestCameraPermission();
     
     // Ensure camera is active when permission is granted
     if (permission?.granted) {
@@ -106,8 +133,38 @@ export default function ScanScreen() {
     setScanned(true);
     setCameraActive(false);
 
+    let barcode = data.trim();
+    
+    // Handle QR/DataMatrix codes - extract GTIN if present
+    if (type === 'qr' || type === 'datamatrix') {
+      // Try to extract GTIN from QR code data
+      // QR codes may contain GTIN in various formats: GTIN:1234567890123, 1234567890123, etc.
+      const gtinMatch = barcode.match(/(?:gtin|ean|upc)[:\s]*(\d{8,14})/i) || barcode.match(/(\d{8,14})/);
+      if (gtinMatch && gtinMatch[1]) {
+        barcode = gtinMatch[1];
+        // Show toast notification for QR fallback
+        // Note: In a real implementation, you'd use a toast library like react-native-toast-message
+        console.log('QR fallback – scan complete');
+      } else {
+        // QR code doesn't contain a valid GTIN
+        Alert.alert(
+          t('scan.invalidBarcode') || 'Invalid Barcode',
+          t('scan.qrNoGtin') || 'QR code does not contain a valid product barcode (GTIN).',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setScanned(false);
+                setCameraActive(true);
+              },
+            },
+          ]
+        );
+        return;
+      }
+    }
+
     // Validate barcode (UPC/EAN should be 8-14 digits)
-    const barcode = data.trim();
     if (!/^\d{8,14}$/.test(barcode)) {
       Alert.alert(
         t('scan.invalidBarcode'),
@@ -214,7 +271,7 @@ export default function ScanScreen() {
               style={styles.camera}
               facing="back"
               barcodeScannerSettings={{
-                barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'],
+                barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'qr', 'datamatrix'],
               }}
               onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
               onCameraReady={() => {
