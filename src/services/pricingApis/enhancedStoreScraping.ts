@@ -293,9 +293,24 @@ function extractPricesWithEnhancedPatterns(
   // Enhanced patterns for NZ supermarkets based on common e-commerce structures
   const patterns = getStoreSpecificPatterns(storeNameLower);
 
+  // Debug: Log sample HTML snippets to understand structure
+  if (html.length > 0) {
+    // Find first occurrence of common price-related terms
+    const priceIndicators = ['price', '$', 'nz$', 'cost'];
+    for (const indicator of priceIndicators) {
+      const index = html.toLowerCase().indexOf(indicator);
+      if (index !== -1) {
+        const snippet = html.substring(Math.max(0, index - 100), Math.min(html.length, index + 200));
+        console.log(`[EnhancedScraping] HTML snippet near "${indicator}" for ${storeName}: ${snippet.substring(0, 150)}...`);
+        break; // Only log first occurrence
+      }
+    }
+  }
+
   for (const { pattern, baseConfidence, extractValue } of patterns) {
     const matches = html.match(pattern);
     if (matches) {
+      console.log(`[EnhancedScraping] Pattern matched ${matches.length} times for ${storeName}`);
       for (const match of matches) {
         const priceStr = extractValue ? extractValue(match) : match.replace(/[^\d.]/g, '');
         const price = parseFloat(priceStr);
@@ -327,7 +342,39 @@ function extractPricesWithEnhancedPatterns(
     }
   }
 
-  return prices.sort((a, b) => b.confidence - a.confidence);
+  const sorted = prices.sort((a, b) => b.confidence - a.confidence);
+  
+  // Log what we found for debugging
+  if (sorted.length > 0) {
+    console.log(`[EnhancedScraping] Extracted ${sorted.length} price candidates for ${storeName}:`, 
+      sorted.slice(0, 5).map(p => `$${p.price} (conf: ${p.confidence})`).join(', '));
+  } else {
+    console.log(`[EnhancedScraping] No prices extracted from HTML for ${storeName} - trying to find any price-like numbers`);
+    // Last resort: look for any number that looks like a price (between $1 and $1000)
+    const anyPricePattern = /\$?\s*([\d,]+\.?\d{2})/g;
+    const anyMatches = html.match(anyPricePattern);
+    if (anyMatches) {
+      console.log(`[EnhancedScraping] Found ${anyMatches.length} price-like numbers in HTML for ${storeName}`);
+      // Try to extract reasonable prices
+      for (const match of anyMatches.slice(0, 20)) { // Limit to first 20
+        const priceStr = match.replace(/[^\d.]/g, '');
+        const price = parseFloat(priceStr);
+        if (!isNaN(price) && price >= 1 && price <= 1000) {
+          const matchIndex = html.indexOf(match);
+          const context = html.substring(Math.max(0, matchIndex - 100), Math.min(html.length, matchIndex + 100)).toLowerCase();
+          // Only add if it's not clearly a date, quantity, or other non-price number
+          if (!context.includes('quantity') && !context.includes('stock') && !context.includes('sku') && 
+              !context.includes('weight') && !context.includes('kg') && !context.includes('g') &&
+              (context.includes('price') || context.includes('$') || context.includes('cost'))) {
+            sorted.push({ price, confidence: 3 });
+            console.log(`[EnhancedScraping] Added fallback price: $${price} for ${storeName}`);
+          }
+        }
+      }
+    }
+  }
+  
+  return sorted.sort((a, b) => b.confidence - a.confidence);
 }
 
 /**
@@ -395,11 +442,25 @@ function getStoreSpecificPatterns(storeNameLower: string): Array<{
   }
 
   // Generic patterns (lower confidence, used as fallback)
+  // These should catch most common price formats
   patterns.push(
+    // Currency symbols with numbers
     { pattern: /(NZ|US|AU|CA|GB|EU)\$[\d,]+\.?\d{0,2}/gi, baseConfidence: 6 },
     { pattern: /\$[\d,]+\.?\d{0,2}/g, baseConfidence: 5 },
+    // JSON patterns
     { pattern: /"price"\s*:\s*["']?([\d.]+)/gi, baseConfidence: 7 },
-    { pattern: /data-price=["']([\d.]+)["']/gi, baseConfidence: 7 }
+    { pattern: /"price"\s*:\s*([\d.]+)/gi, baseConfidence: 7 },
+    // Data attributes
+    { pattern: /data-price=["']([\d.]+)["']/gi, baseConfidence: 7 },
+    { pattern: /data-price=([\d.]+)/gi, baseConfidence: 6 },
+    // More flexible patterns for common e-commerce structures
+    { pattern: /price["']?\s*[:=]\s*["']?([\d.]+)/gi, baseConfidence: 6 },
+    { pattern: /price\s*:\s*([\d.]+)/gi, baseConfidence: 6 },
+    // Look for numbers near price-related text
+    { pattern: /(?:price|cost|amount)[^>]*>[\s\S]{0,50}?([\d,]+\.?\d{0,2})/gi, baseConfidence: 5 },
+    // Generic dollar sign patterns (most flexible)
+    { pattern: /\$\s*([\d,]+\.?\d{0,2})/g, baseConfidence: 4 },
+    { pattern: /([\d,]+\.?\d{2})\s*(?:NZD|USD|AUD|CAD|GBP|EUR)/gi, baseConfidence: 5 }
   );
 
   return patterns;

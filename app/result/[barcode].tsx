@@ -47,7 +47,6 @@ import { submitManufacturingCountry, getManufacturingCountry, hasUserSubmitted }
 import ManufacturingCountryModal from '../../src/components/ManufacturingCountryModal';
 import RecallAlertModal from '../../src/components/RecallAlertModal';
 import PalmOilInfoModal from '../../src/components/PalmOilInfoModal';
-import PricingCard from '../../src/components/PricingCard';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import { saveManualProduct, ManualProductData, getManualProduct, isManualProduct } from '../../src/services/manualProductService';
@@ -1051,12 +1050,7 @@ function ResultScreenContent() {
             </View>
           </TouchableOpacity>
           );
-        })()}
-
-        {/* Pricing Information - Always display */}
-        <ErrorBoundary>
-          <PricingCard barcode={barcode} productName={product?.product_name} />
-        </ErrorBoundary>
+        })(        )}
 
         {/* Palm Oil Analysis */}
         {product.palm_oil_analysis && (

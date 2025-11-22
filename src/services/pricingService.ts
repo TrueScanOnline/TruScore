@@ -9,6 +9,7 @@ import { priceStorageService } from './priceStorageService';
 import { fetchLocalStorePrices } from './pricingApis/localStorePricing';
 import { scrapeStoreWebsite } from './pricingApis/storeWebScraping';
 import { scrapeStoreWebsiteEnhanced } from './pricingApis/enhancedStoreScraping';
+import { scrapeProductSpecificPrice } from './pricingApis/productSpecificScraping';
 import { getStoreChainsForCountry, StoreChain, buildStoreSearchUrl } from './pricingApis/countryStores';
 import { fetchGoogleShoppingPrices } from './pricingApis/googleShoppingPricing';
 
@@ -101,7 +102,12 @@ class PricingService {
         .filter(chain => chain.searchUrl) // Only chains with search URLs
         .map(async (chain: StoreChain) => {
           try {
-            const searchUrl = buildStoreSearchUrl(chain, barcode, productName);
+            // Use barcode only if product name is generic/fallback
+            const searchQuery = (productName && !productName.toLowerCase().startsWith('product ')) 
+              ? productName 
+              : barcode;
+            
+            const searchUrl = buildStoreSearchUrl(chain, barcode, searchQuery);
             if (!searchUrl) return [];
 
             console.log(`[pricingService] Scraping ${chain.name} for: ${productName}`);
@@ -115,13 +121,17 @@ class PricingService {
               chain: chain.name,
             };
 
-            // Try enhanced scraping first, fallback to regular scraping
-            let price = await scrapeStoreWebsiteEnhanced(barcode, productName, storeLocation, countryCode);
-            if (!price) {
-              price = await scrapeStoreWebsite(barcode, productName, storeLocation, countryCode);
-            }
+            // CRITICAL: Only use product-specific scraping
+            // This finds the exact product first, then extracts its price
+            // We do NOT use fallback scraping methods because they extract wrong prices
+            const price = await scrapeProductSpecificPrice(barcode, productName, storeLocation, countryCode);
             
-            if (price && price.price > 0) {
+            // Only return price if:
+            // 1. Price was found
+            // 2. Product was verified (matched by name/barcode)
+            // 3. Price is reasonable (> 0)
+            if (price && price.price > 0 && price.verified) {
+              console.log(`[pricingService] ✅ ${chain.name}: Found VERIFIED price $${price.price}`);
               return [{
                 price: price.price,
                 currency: price.currency,
@@ -129,8 +139,12 @@ class PricingService {
                 location: `${location.city || ''} ${location.region || ''}`.trim() || undefined,
                 timestamp: Date.now(),
                 source: 'api' as const,
-                verified: true, // Scraped from official store websites
+                verified: true, // Verified - product was matched
               }];
+            } else if (price && !price.verified) {
+              console.log(`[pricingService] ⚠️ ${chain.name}: Found price but product not verified - skipping to avoid wrong data`);
+            } else {
+              console.log(`[pricingService] ❌ ${chain.name}: No price found (product may not be available)`);
             }
             return [];
           } catch (error) {

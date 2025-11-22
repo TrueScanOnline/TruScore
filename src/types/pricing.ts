@@ -72,3 +72,16 @@ export interface LocationInfo {
   };
 }
 
+// New Zealand pricing types for Vercel backend
+export interface ProductPrice {
+  store: string;
+  chain: string;
+  price: number;
+  unitPrice?: string;
+  special: boolean;
+  name: string;
+  size?: string;
+  url: string;
+  updatedAt: string;
+}
+

@@ -1,459 +1,123 @@
-// Pricing Card Component - LOCAL STORES ONLY
-// Displays prices from local supermarkets/stores based on user's geo-location
-// Shows price comparison from different local stores
+// src/components/PricingCard.tsx
 
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-  Modal,
-  Alert,
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, Linking, ActivityIndicator, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
-import { ProductPricing, PriceEntry } from '../types/pricing';
-import { pricingService } from '../services/pricingService';
-import { currencyService } from '../services/currencyService';
+import { useNZPricesStore } from '../store/useNZPricesStore';
+import { ProductPrice } from '../types/pricing';
 import { useTheme } from '../theme';
-import * as Location from 'expo-location';
 
 interface PricingCardProps {
   barcode: string;
-  productName?: string;
 }
 
-export default function PricingCard({ barcode, productName }: PricingCardProps) {
-  const { t } = useTranslation();
+// Simple date formatting function (lightweight alternative to date-fns)
+function formatDistanceToNow(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  return date.toLocaleDateString();
+}
+
+export default function PricingCard({ barcode }: PricingCardProps) {
+  const { prices, loading, error, fetchPrices } = useNZPricesStore();
   const { colors } = useTheme();
-  const [pricing, setPricing] = useState<ProductPricing | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
-  const [priceInputVisible, setPriceInputVisible] = useState(false);
 
-  const loadPricing = async () => {
-    if (!barcode) {
-      setError('No barcode provided');
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setLocationError(null);
-
-    try {
-      // Check location permission first
-      const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
-      if (locationStatus !== 'granted') {
-        setLocationError('Location permission required for local pricing');
-        setLoading(false);
-        return;
-      }
-
-      // Fetch pricing data (now ONLY from local stores)
-      const pricingData = await pricingService.getProductPricing(barcode, undefined, false, productName);
-      
-      if (pricingData) {
-        setPricing(pricingData);
-        setError(null);
-      } else {
-        setError('No local prices found. Enable location services to see prices from nearby stores.');
-      }
-    } catch (err: any) {
-      console.error('[PricingCard] Error loading pricing:', err);
-      setError(err.message || 'Failed to load pricing');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Auto-fetch on mount
   useEffect(() => {
     if (barcode) {
-      loadPricing();
+      fetchPrices(barcode);
     }
   }, [barcode]);
 
   if (loading) {
     return (
       <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <View style={styles.cardHeader}>
-          <Ionicons name="pricetag-outline" size={24} color={colors.primary} />
-          <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-            {t('pricing.title', 'Price Information')}
-          </Text>
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary, marginLeft: 12 }]}>
-            {t('pricing.loading', 'Loading local prices...')}
-          </Text>
-        </View>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary, marginTop: 12 }]}>
+          Finding best NZ prices...
+        </Text>
       </View>
     );
   }
 
-  // No location or no pricing data
-  if (locationError || error || !pricing) {
+  if (error || prices.length === 0) {
     return (
       <View style={[styles.card, { backgroundColor: colors.card }]}>
         <View style={styles.cardHeader}>
           <Ionicons name="pricetag-outline" size={24} color={colors.primary} />
           <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-            {t('pricing.title', 'Price Information')}
+            Local Prices (NZ)
           </Text>
         </View>
-        <View style={styles.noDataContainer}>
-          <Ionicons name="location-outline" size={48} color={colors.textSecondary} />
-          <Text style={[styles.noDataTitle, { color: colors.text, marginTop: 12, marginBottom: 8 }]}>
-            {locationError || 'Location Required'}
-          </Text>
-          <Text style={[styles.noDataText, { color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginBottom: 16 }]}>
-            {locationError 
-              ? 'Please enable location services in your device settings to see prices from nearby stores.'
-              : 'Enable location services to see prices from local supermarkets and stores in your area.'}
-          </Text>
-          <TouchableOpacity
-            style={[styles.enableLocationButton, { backgroundColor: colors.primary }]}
-            onPress={loadPricing}
-          >
-            <Ionicons name="location" size={20} color="#fff" />
-            <Text style={[styles.enableLocationButtonText, { marginLeft: 8 }]}>
-              {t('pricing.enableLocation', 'Enable Location')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.contributeButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1, marginTop: 12 }]}
-            onPress={() => setPriceInputVisible(true)}
-          >
-            <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
-            <Text style={[styles.contributeButtonText, { color: colors.primary, marginLeft: 8 }]}>
-              {t('pricing.submitPrice', 'Submit Store Price')}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+          {error || 'No prices found yet. Be the first to add this price!'}
+        </Text>
       </View>
     );
   }
 
-  // Format prices
-  const formattedAverage = currencyService.formatPrice(pricing.priceRange.average, pricing.currency);
-  const formattedMin = currencyService.formatPrice(pricing.priceRange.min, pricing.currency);
-  const formattedMax = currencyService.formatPrice(pricing.priceRange.max, pricing.currency);
-
-  // Group prices by retailer (for comparison view)
-  const retailerPrices = new Map<string, { price: number; currency: string; location?: string; count: number }>();
-  
-  pricing.prices.forEach(price => {
-    if (price.retailer) {
-      const key = price.retailer.toLowerCase();
-      const existing = retailerPrices.get(key);
-      if (!existing || price.price < existing.price) {
-        retailerPrices.set(key, {
-          price: price.price,
-          currency: price.currency,
-          location: price.location,
-          count: (existing?.count || 0) + 1,
-        });
-      }
-    }
-  });
-
-  // Sort retailers by price (lowest first)
-  const sortedRetailers = Array.from(retailerPrices.entries())
-    .map(([retailer, data]) => ({
-      retailer,
-      ...data,
-    }))
-    .sort((a, b) => a.price - b.price);
+  const cheapest = prices[0];
 
   return (
-    <>
-      <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <View style={styles.cardHeader}>
-          <View style={styles.cardHeaderLeft}>
-            <Ionicons name="pricetag" size={24} color={colors.primary} />
-            <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-              {t('pricing.title', 'Price Information')}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => setDetailsModalVisible(true)}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Location Info */}
-        {pricing.location && (
-          <View style={styles.locationInfo}>
-            <Ionicons name="location" size={16} color={colors.primary} />
-            <Text style={[styles.locationText, { color: colors.text, marginLeft: 6, fontWeight: '600' }]}>
-              {t('pricing.localPrices', 'Local Prices')}
-              {pricing.location.city ? ` - ${pricing.location.city}` : ''}
-              {pricing.location.region ? `, ${pricing.location.region}` : ''}
-              {pricing.location.country ? ` - ${pricing.location.country}` : ''}
-            </Text>
-          </View>
-        )}
-
-        {/* Average Price */}
-        {pricing.priceRange.average > 0 && (
-          <View style={[styles.averagePriceContainer, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.averagePriceLabel, { color: colors.textSecondary }]}>
-              {t('pricing.averagePrice', 'Average Price')}
-            </Text>
-            <Text style={[styles.averagePriceValue, { color: colors.text }]}>
-              {formattedAverage}
-            </Text>
-          </View>
-        )}
-
-        {/* Price Range */}
-        {sortedRetailers.length > 1 && (
-          <View style={styles.priceRangeContainer}>
-            <View style={styles.priceRangeRow}>
-              <View style={[styles.priceRangeItem, { marginRight: 8 }]}>
-                <Ionicons name="arrow-down-circle" size={16} color="#16a085" />
-                <Text style={[styles.priceRangeLabel, { color: colors.textSecondary, marginTop: 4 }]}>
-                  {t('pricing.lowest', 'Lowest')}
-                </Text>
-                <Text style={[styles.priceRangeValue, { color: '#16a085', marginTop: 4 }]}>
-                  {formattedMin}
-                </Text>
-              </View>
-              <View style={[styles.priceRangeItem, { marginLeft: 8 }]}>
-                <Ionicons name="arrow-up-circle" size={16} color="#ff6b6b" />
-                <Text style={[styles.priceRangeLabel, { color: colors.textSecondary, marginTop: 4 }]}>
-                  {t('pricing.highest', 'Highest')}
-                </Text>
-                <Text style={[styles.priceRangeValue, { color: '#ff6b6b', marginTop: 4 }]}>
-                  {formattedMax}
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Store Price Comparison - Main Feature */}
-        {sortedRetailers.length > 0 && (
-          <View style={styles.storeComparisonContainer}>
-            <Text style={[styles.storeComparisonTitle, { color: colors.text, marginBottom: 12 }]}>
-              {t('pricing.compareStores', 'Compare Prices')}
-            </Text>
-            {sortedRetailers.map((retailer, index) => {
-              const isLowest = index === 0 && sortedRetailers.length > 1;
-              const isHighest = index === sortedRetailers.length - 1 && sortedRetailers.length > 1;
-              
-              return (
-                <View 
-                  key={index} 
-                  style={[
-                    styles.storeRow, 
-                    { 
-                      backgroundColor: isLowest ? '#16a08515' : isHighest ? '#ff6b6b15' : colors.background,
-                      borderColor: colors.border,
-                    },
-                    index === sortedRetailers.length - 1 && { borderBottomWidth: 0 }
-                  ]}
-                >
-                  <View style={styles.storeRowLeft}>
-                    <Text style={[styles.storeName, { color: colors.text }]}>
-                      {retailer.retailer}
-                    </Text>
-                    {retailer.location && (
-                      <Text style={[styles.storeLocation, { color: colors.textSecondary }]}>
-                        {retailer.location}
-                      </Text>
-                    )}
-                  </View>
-                  <View style={styles.storeRowRight}>
-                    {isLowest && (
-                      <Ionicons name="checkmark-circle" size={16} color="#16a085" style={{ marginRight: 6 }} />
-                    )}
-                    <Text style={[
-                      styles.storePrice, 
-                      { 
-                        color: isLowest ? '#16a085' : isHighest ? '#ff6b6b' : colors.text,
-                        fontWeight: isLowest || isHighest ? 'bold' : '600',
-                      }
-                    ]}>
-                      {currencyService.formatPrice(retailer.price, retailer.currency)}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        )}
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.background, borderColor: colors.border, marginRight: 6 }]}
-            onPress={() => setDetailsModalVisible(true)}
-          >
-            <Ionicons name="eye-outline" size={18} color={colors.primary} />
-            <Text style={[styles.actionButtonText, { color: colors.primary, marginLeft: 6 }]}>
-              {t('pricing.viewDetails', 'View Details')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.primary, marginLeft: 6 }]}
-            onPress={() => setPriceInputVisible(true)}
-          >
-            <Ionicons name="add-circle-outline" size={18} color="#fff" />
-            <Text style={[styles.actionButtonTextWhite, { marginLeft: 6 }]}>
-              {t('pricing.submitPrice', 'Submit Price')}
-            </Text>
-          </TouchableOpacity>
-        </View>
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
+      <View style={styles.cardHeader}>
+        <Ionicons name="pricetag" size={24} color={colors.primary} />
+        <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
+          Best Prices Near You 🇳🇿
+        </Text>
       </View>
 
-      {/* Details Modal */}
-      <Modal
-        visible={detailsModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setDetailsModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>
-                {t('pricing.details', 'Price Details')}
-              </Text>
-              <TouchableOpacity onPress={() => setDetailsModalVisible(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
+      {/* Cheapest Price Highlight */}
+      <View style={[styles.cheapestContainer, { backgroundColor: '#10b98115', borderColor: '#10b981' }]}>
+        <Text style={[styles.cheapestPrice, { color: '#10b981' }]}>
+          ${cheapest.price.toFixed(2)}
+        </Text>
+        <Text style={[styles.cheapestStore, { color: colors.text }]}>
+          {cheapest.store} • Cheapest right now!
+        </Text>
+        {cheapest.special && (
+          <View style={styles.specialBadge}>
+            <Ionicons name="flame" size={16} color="#f97316" />
+            <Text style={styles.specialText}>On Special</Text>
+          </View>
+        )}
+      </View>
 
-            <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent}>
-              {/* Price Range Details */}
-              <View style={[styles.detailSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <Text style={[styles.detailSectionTitle, { color: colors.text }]}>
-                  {t('pricing.priceRange', 'Price Range')}
-                </Text>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                    {t('pricing.average', 'Average')}:
-                  </Text>
-                  <Text style={[styles.detailValue, { color: colors.text }]}>
-                    {formattedAverage}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                    {t('pricing.minimum', 'Minimum')}:
-                  </Text>
-                  <Text style={[styles.detailValue, { color: '#16a085' }]}>
-                    {formattedMin}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                    {t('pricing.maximum', 'Maximum')}:
-                  </Text>
-                  <Text style={[styles.detailValue, { color: '#ff6b6b' }]}>
-                    {formattedMax}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                    {t('pricing.median', 'Median')}:
-                  </Text>
-                  <Text style={[styles.detailValue, { color: colors.text }]}>
-                    {currencyService.formatPrice(pricing.priceRange.median, pricing.currency)}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Local Stores */}
-              {sortedRetailers.length > 0 && (
-                <View style={[styles.detailSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <Text style={[styles.detailSectionTitle, { color: colors.text }]}>
-                    {t('pricing.localStores', 'Local Stores')}
-                  </Text>
-                  {sortedRetailers.map((retailer, index) => (
-                    <View 
-                      key={index} 
-                      style={[
-                        styles.retailerRow, 
-                        { borderBottomColor: colors.border },
-                        index === sortedRetailers.length - 1 && { borderBottomWidth: 0 }
-                      ]}
-                    >
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.retailerName, { color: colors.text }]}>
-                          {retailer.retailer}
-                        </Text>
-                        {retailer.location && (
-                          <Text style={[styles.retailerLocation, { color: colors.textSecondary, fontSize: 11, marginTop: 2 }]}>
-                            {retailer.location}
-                          </Text>
-                        )}
-                      </View>
-                      <Text style={[styles.retailerPrice, { color: colors.text, fontWeight: '600' }]}>
-                        {currencyService.formatPrice(retailer.price, retailer.currency)}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              {/* Data Sources */}
-              <View style={[styles.detailSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <Text style={[styles.detailSectionTitle, { color: colors.text }]}>
-                  {t('pricing.dataSources', 'Data Sources')}
-                </Text>
-                <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-                  {t('pricing.priceCount', { count: sortedRetailers.length })}
-                </Text>
-                <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-                  {t('pricing.lastUpdated', 'Last updated: {{date}}', {
-                    date: new Date(pricing.lastUpdated).toLocaleDateString(),
-                  })}
-                </Text>
-              </View>
-            </ScrollView>
+      {/* Other Prices */}
+      {prices.slice(1, 4).map((p: ProductPrice, i: number) => (
+        <View key={i} style={[styles.priceRow, { borderBottomColor: colors.border }]}>
+          <View style={styles.priceRowLeft}>
+            <Text style={[styles.storeName, { color: colors.text }]}>{p.store}</Text>
+            <Text style={[styles.timeText, { color: colors.textSecondary }]}>
+              {formatDistanceToNow(new Date(p.updatedAt))}
+            </Text>
+          </View>
+          <View style={styles.priceRowRight}>
+            {p.special && <Ionicons name="flame" size={16} color="#f97316" style={{ marginRight: 4 }} />}
+            <Text style={[styles.priceText, { color: p.special ? '#f97316' : colors.text }]}>
+              ${p.price.toFixed(2)}
+            </Text>
           </View>
         </View>
-      </Modal>
+      ))}
 
-      {/* Price Input Modal */}
-      {priceInputVisible && (
-        <Modal
-          visible={priceInputVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setPriceInputVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-              <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-                <Text style={[styles.modalTitle, { color: colors.text }]}>
-                  {t('pricing.submitPrice', 'Submit Store Price')}
-                </Text>
-                <TouchableOpacity onPress={() => setPriceInputVisible(false)}>
-                  <Ionicons name="close" size={24} color={colors.text} />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.modalBody}>
-                <Text style={[styles.modalMessage, { color: colors.textSecondary }]}>
-                  {t('pricing.submitPriceMessage', 'Price submission feature coming soon!')}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
-    </>
+      {/* Shop Button */}
+      <TouchableOpacity
+        style={[styles.shopButton, { backgroundColor: colors.primary }]}
+        onPress={() => Linking.openURL(cheapest.url)}
+      >
+        <Ionicons name="cart" size={20} color="#fff" />
+        <Text style={styles.shopButtonText}>Shop at {cheapest.store}</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -471,249 +135,93 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-  },
-  cardHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
   },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 24,
-  },
   loadingText: {
     fontSize: 14,
-  },
-  noDataContainer: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  noDataTitle: {
-    fontSize: 16,
-    fontWeight: '600',
     textAlign: 'center',
   },
-  noDataText: {
+  emptyText: {
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 8,
-  },
-  enableLocationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
     marginTop: 8,
   },
-  enableLocationButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  contributeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  contributeButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  locationInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  cheapestContainer: {
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
+    borderWidth: 2,
   },
-  locationText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  averagePriceContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-  },
-  averagePriceLabel: {
-    fontSize: 13,
-    marginBottom: 4,
-  },
-  averagePriceValue: {
+  cheapestPrice: {
     fontSize: 32,
     fontWeight: 'bold',
+    marginBottom: 4,
   },
-  priceRangeContainer: {
-    marginBottom: 16,
+  cheapestStore: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
-  priceRangeRow: {
+  specialBadge: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  priceRangeItem: {
-    flex: 1,
     alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#f9731615',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 4,
   },
-  priceRangeLabel: {
+  specialText: {
+    color: '#f97316',
     fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: 4,
   },
-  priceRangeValue: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  storeComparisonContainer: {
-    marginBottom: 16,
-  },
-  storeComparisonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  storeRow: {
+  priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
+    borderBottomWidth: 1,
   },
-  storeRowLeft: {
+  priceRowLeft: {
     flex: 1,
   },
-  storeRowRight: {
+  priceRowRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   storeName: {
     fontSize: 15,
     fontWeight: '600',
+    marginBottom: 4,
   },
-  storeLocation: {
+  timeText: {
     fontSize: 12,
-    marginTop: 2,
   },
-  storePrice: {
+  priceText: {
     fontSize: 16,
+    fontWeight: 'bold',
   },
-  actionButtons: {
-    flexDirection: 'row',
-    marginTop: 8,
-  },
-  actionButton: {
-    flex: 1,
+  shopButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  actionButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  actionButtonTextWhite: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
-    minHeight: 400,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  modalBody: {
-    flex: 1,
-  },
-  modalBodyContent: {
-    padding: 20,
-    paddingTop: 16,
-    paddingBottom: 20,
-  },
-  modalMessage: {
-    fontSize: 14,
-    textAlign: 'center',
-    padding: 20,
-  },
-  detailSection: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
+    marginTop: 16,
   },
-  detailSectionTitle: {
+  shopButtonText: {
+    color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  detailLabel: {
-    fontSize: 14,
-  },
-  detailValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  detailText: {
-    fontSize: 13,
-    marginBottom: 4,
-  },
-  retailerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  retailerName: {
-    fontSize: 14,
-    flex: 1,
-  },
-  retailerPrice: {
-    fontSize: 14,
-  },
-  retailerLocation: {
-    fontSize: 11,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
 });
