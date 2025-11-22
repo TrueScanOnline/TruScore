@@ -272,13 +272,13 @@ export default function TrustScoreInfoModal({ visible, onClose, product }: Trust
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#4dd09f" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  NOVA Classification (1=+3, 3=-3, 4=-8)
+                  NOVA Classification (1=+3, 3=-5, 4=-10)
                 </Text>
               </View>
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#4dd09f" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  {t('infoModal.trustScore.highRiskAdditives')} (-3 to -10)
+                  Additives (weighted: safe -0.5, caution -1.5, avoid -3, cap 15)
                 </Text>
               </View>
               <View style={styles.factorTag}>
@@ -349,9 +349,13 @@ export default function TrustScoreInfoModal({ visible, onClose, product }: Trust
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
             • Nutri-Score (official EU/UK/FR/BE/ES system) - Direct conversion: A=25, B=20, C=15, D=10, E=5{'\n'}
-            • NOVA Classification (São Paulo University system) - Merged into Body: NOVA 1=+3, NOVA 3=-3, NOVA 4=-8{'\n'}
-            • Additives & Allergens (Open Food Facts analysis) - Risky additives: -3 to -10 points{'\n'}
-            • Source: Open Food Facts API (world.openfoodfacts.org)
+            • NOVA Classification (São Paulo University system) - Merged into Body: NOVA 1=+3, NOVA 3=-5, NOVA 4=-10{'\n'}
+            • Additives (weighted by safety rating) - Safe: -0.5 each, Caution: -1.5 each, Avoid: -3 each (cap 15 total){'\n'}
+            • Comprehensive E-number database (400+ additives) with detailed safety ratings{'\n'}
+            • Risky tags (carcinogenic, endocrine, palm, allergen, irritant): -4 each{'\n'}
+            • Irritants (parabens, phthalates, sulfates, etc.): -10 block penalty{'\n'}
+            • Fragrance/Parfum: -10 penalty{'\n'}
+            • Source: Open Food Facts API + Comprehensive additive database
           </Text>
         </View>
 
@@ -373,9 +377,11 @@ export default function TrustScoreInfoModal({ visible, onClose, product }: Trust
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
             • Certifications (Open Food Facts labels_tags) - 1,000+ recognized certifications{'\n'}
-            • Bonus Structure: Fairtrade +8, EU Organic +7, MSC/ASC +6, Rainforest Alliance +6, etc.{'\n'}
+            • Bonus Structure: Fairtrade +8, Organic +8, Rainforest Alliance +7, MSC/ASC +8, RSPCA +6, Vegan/Cruelty-free +10, UTZ +7{'\n'}
             • Multiple labels can stack up to +25 points maximum{'\n'}
-            • Source: Open Food Facts API (world.openfoodfacts.org)
+            • Cruel Parent Detection: -30 penalty for products from companies known for animal testing{'\n'}
+            • Comprehensive brand database (500+ companies) with parent-subsidiary relationships{'\n'}
+            • Source: Open Food Facts API + Brand database with ethical ratings
           </Text>
         </View>
 
@@ -712,7 +718,7 @@ export default function TrustScoreInfoModal({ visible, onClose, product }: Trust
             {t('infoModal.trustScore.transparencyTitle') || '100% Transparent Methodology'}
           </Text>
           <Text style={[styles.noteText, { color: colors.textSecondary }]}>
-            {t('infoModal.trustScore.note') || 'TruScore v1.3 is calculated based on available product data from Open Food Facts, Open Beauty Facts, and UPCitemdb. The score is only displayed when sufficient verified data is available. 100% of scoring comes from recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) - no proprietary formulas. Each pillar uses direct conversions from official systems (A=25, B=20, etc.). When Nutri-Score or Eco-Score are missing, scores are calculated from available data with appropriate baselines (12 points instead of 25).'}
+            {t('infoModal.trustScore.note') || 'TruScore v1.4 is calculated based on available product data from Open Food Facts, Open Beauty Facts, and UPCitemdb. The score uses recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) combined with comprehensive databases (400+ E-number additives, 500+ brand/company database). Additive penalties are weighted by safety rating (safe: -0.5, caution: -1.5, avoid: -3). Brand detection uses parent-subsidiary relationships for accurate cruel parent identification. When Nutri-Score or Eco-Score are missing, scores are calculated from available data with appropriate baselines (25 points base).'}
           </Text>
           <Text style={[styles.noteText, { color: colors.textSecondary, marginTop: 8 }]}>
             {t('infoModal.trustScore.dataSourceNote') || 'Data Sources: Open Food Facts (world.openfoodfacts.org), Open Beauty Facts (world.openbeautyfacts.org), UPCitemdb (api.upcitemdb.com), Barcode Spider, FDA Food Recall API (fda.gov/food/recalls). All calculations are transparent and verifiable.'}

@@ -2,9 +2,11 @@
 // Full client-side TS scoring engine - offline-first, <150ms
 // Ported from Python v1.4 spec exactly
 
-import { Product } from '../types/product';
+import { Product, PackagingItem } from '../types/product';
 import { ValuesPreferences } from '../store/useValuesStore';
 import { generateInsights } from './valuesInsights';
+import { getAdditiveInfo } from '../services/additiveDatabase';
+import { getCruelParents, isCruelParent } from '../data/brandDatabase';
 
 export interface Insight {
   type: 'geopolitical' | 'ethical' | 'environmental';
@@ -27,38 +29,8 @@ export interface TruScoreResult {
   insights?: Insight[];
 }
 
-// Cruel list: 21 parent companies (hardcoded)
-const CRUEL_PARENTS = [
-  'unilever',
-  'procter & gamble',
-  'p&g',
-  "l'oreal",
-  'loreal',
-  'estee lauder',
-  'estée lauder',
-  'colgate-palmolive',
-  'johnson & johnson',
-  'j&j',
-  'reckitt',
-  'reckitt benckiser',
-  'rb',
-  'henkel',
-  'beiersdorf',
-  'shiseido',
-  'kao',
-  'sc johnson',
-  's.c. johnson',
-  'clorox',
-  'church & dwight',
-  'coty',
-  'revlon',
-  'nestle',
-  'nestlé',
-  'mars',
-  'mondelez',
-  'danone',
-  'kimberly-clark',
-];
+// Get cruel parents list dynamically from brand database
+const CRUEL_PARENTS = getCruelParents();
 
 // Hidden terms for Open pillar
 const HIDDEN_TERMS = [
@@ -92,15 +64,31 @@ const IRRITANTS = [
  * @param preferences - Optional user values preferences for insights generation
  */
 export function calculateTruScore(
-  product: Product,
+  product: Product | null | undefined,
   preferences?: ValuesPreferences
 ): TruScoreResult {
-  const text = (product.ingredients_text || '').toLowerCase();
-  const labels = (product.labels_tags || []).map((l: string) => l.toLowerCase());
-  const analysisTags = product.ingredients_analysis_tags || [];
-  const packagings = product.packagings || [];
-  const brands = (product.brands || '').toLowerCase();
-  const additivesCount = product.additives_tags?.length || 0;
+  // Input validation
+  if (!product || typeof product !== 'object') {
+    return {
+      truscore: 0,
+      breakdown: { Body: 0, Planet: 0, Care: 0, Open: 0 },
+      hasNutriScore: false,
+      hasEcoScore: false,
+      hasOrigin: false,
+    };
+  }
+
+  try {
+    const text = (product.ingredients_text || '').toLowerCase();
+    const labels = (product.labels_tags || []).map((l: unknown) => 
+      typeof l === 'string' ? l.toLowerCase() : ''
+    ).filter(Boolean) as string[];
+    const analysisTags = (product.ingredients_analysis_tags || []).filter((tag: unknown) => 
+      typeof tag === 'string'
+    ) as string[];
+    const packagings = product.packagings || [];
+    const brands = (product.brands || '').toLowerCase();
+    const additivesCount = (product.additives_tags?.length || 0);
 
   // Helper: word boundary matching
   const hasTerm = (term: string): boolean => {
@@ -126,8 +114,34 @@ export function calculateTruScore(
   }
 
   // Penalties
-  // Additives: −1.5 each (cap 15)
-  body -= Math.min(additivesCount * 1.5, 15);
+  // Additives: Weighted by safety rating (safe: -0.5, caution: -1.5, avoid: -3, cap 15)
+  let additivePenalty = 0;
+  if (product.additives_tags && product.additives_tags.length > 0) {
+    for (const tag of product.additives_tags) {
+      // Extract E-number from tag (handles "en:e412" and "e412" formats)
+      const eNumMatch = tag.toLowerCase().match(/^en:?(e\d+[a-z]?)$/);
+      const eNum = eNumMatch ? eNumMatch[1] : tag.toLowerCase().replace(/^en:/, '');
+      
+      const additiveInfo = getAdditiveInfo(eNum);
+      if (additiveInfo) {
+        // Weight penalty by safety rating
+        if (additiveInfo.safety === 'avoid') {
+          additivePenalty += 3;
+        } else if (additiveInfo.safety === 'caution') {
+          additivePenalty += 1.5;
+        } else if (additiveInfo.safety === 'safe') {
+          additivePenalty += 0.5;
+        } else {
+          // Unknown safety - use default
+          additivePenalty += 1.5;
+        }
+      } else {
+        // Additive not in database - use default penalty
+        additivePenalty += 1.5;
+      }
+    }
+  }
+  body -= Math.min(additivePenalty, 15);
 
   // Risky tags: −4 each
   const riskyCount = analysisTags.filter((t: string) =>
@@ -177,7 +191,7 @@ export function calculateTruScore(
 
   // Recyclable: full +5, partial +2
   const recyclableCount = packagings.filter(
-    (p: any) =>
+    (p: PackagingItem) =>
       p.recycling &&
       ['recycle', 'widely recycled'].includes(p.recycling.toLowerCase())
   ).length;
@@ -205,8 +219,8 @@ export function calculateTruScore(
   }
   if (hasLabel('utz')) care += 7;
 
-  // Cruel parent: −30
-  if (CRUEL_PARENTS.some((cruel) => brands.includes(cruel))) {
+  // Cruel parent: −30 (using brand database for accurate detection)
+  if (isCruelParent(brands)) {
     care -= 30;
   }
 
@@ -254,24 +268,35 @@ export function calculateTruScore(
 
   open = Math.max(0, Math.min(25, Math.round(open)));
 
-  // Total
-  const truscore = body + planet + care + open;
+  // Total with bounds checking (0-100)
+  const truscore = Math.max(0, Math.min(100, Math.round(body + planet + care + open)));
 
-  // Generate insights if preferences provided
-  const insights = preferences ? generateInsights(product, preferences) : [];
+    // Generate insights if preferences provided
+    const insights = preferences ? generateInsights(product, preferences) : [];
 
-  return {
-    truscore,
-    breakdown: {
-      Body: body,
-      Planet: planet,
-      Care: care,
-      Open: open,
-    },
-    hasNutriScore,
-    hasEcoScore,
-    hasOrigin: !!hasOrigin && !String(hasOrigin).toLowerCase().includes('unknown'),
-    insights: insights.length > 0 ? insights : undefined,
-  };
+    return {
+      truscore,
+      breakdown: {
+        Body: Math.max(0, Math.min(25, Math.round(body))),
+        Planet: Math.max(0, Math.min(25, Math.round(planet))),
+        Care: Math.max(0, Math.min(25, Math.round(care))),
+        Open: Math.max(0, Math.min(25, Math.round(open))),
+      },
+      hasNutriScore,
+      hasEcoScore,
+      hasOrigin: !!hasOrigin && !String(hasOrigin).toLowerCase().includes('unknown'),
+      insights: insights.length > 0 ? insights : undefined,
+    };
+  } catch (error) {
+    // Error handling - return safe default
+    console.error('[truscoreEngine] Error calculating TruScore:', error);
+    return {
+      truscore: 0,
+      breakdown: { Body: 0, Planet: 0, Care: 0, Open: 0 },
+      hasNutriScore: false,
+      hasEcoScore: false,
+      hasOrigin: false,
+    };
+  }
 }
 
