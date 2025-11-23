@@ -25,6 +25,8 @@ import { useScanStore } from '../src/store/useScanStore';
 import { useSettingsStore } from '../src/store/useSettingsStore';
 import { useFavoritesStore } from '../src/store/useFavoritesStore';
 import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
+import { initializeAutoUpdate, setupPeriodicUpdates } from '../src/services/fsanDatabaseAutoUpdate';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import TabParamList for nested Main navigation
 import type { TabParamList } from '../src/navigation/AppTabs';
@@ -109,6 +111,28 @@ function RootLayout() {
         
         // Initialize subscription store
         await initSubscription();
+        
+        // Initialize FSANZ automatic database updates (runs in background)
+        // This will check for updates periodically and download them automatically
+        // Auto-update is enabled by default - users can disable in settings if they prefer
+        if (!shouldShowOnboarding) {
+          // Only initialize auto-update after onboarding is complete
+          // Check if this is first launch and enable auto-update by default
+          const { isAutoUpdateEnabled, setAutoUpdateEnabled } = await import('../src/services/fsanDatabaseAutoUpdate');
+          const isFirstLaunch = !(await AsyncStorage.getItem('@truescan_fsanz_auto_update_initialized'));
+          if (isFirstLaunch) {
+            // First launch - enable auto-update by default
+            await setAutoUpdateEnabled(true);
+            await AsyncStorage.setItem('@truescan_fsanz_auto_update_initialized', 'true');
+            console.log('[RootLayout] FSANZ auto-update enabled by default on first launch');
+          }
+          
+          initializeAutoUpdate().catch((error) => {
+            console.error('[RootLayout] Error initializing FSANZ auto-update:', error);
+          });
+          // Set up periodic checks (every 7 days)
+          setupPeriodicUpdates(60 * 24 * 7); // 7 days in minutes
+        }
         
         // Check for initial deep link (but don't let it override onboarding)
         const url = await Linking.getInitialURL();

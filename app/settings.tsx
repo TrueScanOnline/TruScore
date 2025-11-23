@@ -20,6 +20,7 @@ import { useTheme } from '../src/theme';
 import { useScanStore } from '../src/store/useScanStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { clearCache, getCacheSize } from '../src/services/cacheService';
+import FSANZDatabaseImportModal from '../src/components/FSANZDatabaseImportModal';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -42,6 +43,7 @@ export default function SettingsScreen() {
   } = useSettingsStore();
   const { recentScans, clearHistory } = useScanStore();
   const [cacheSize, setCacheSize] = React.useState<number>(0);
+  const [showFSANZModal, setShowFSANZModal] = React.useState(false);
 
   React.useEffect(() => {
     loadCacheSize();
@@ -277,6 +279,12 @@ export default function SettingsScreen() {
             label={t('settings.clearCache')}
             onPress={handleClearCache}
           />
+          <SettingRow
+            icon="cloud-download-outline"
+            label="FSANZ Database Import"
+            value="Improve product recognition"
+            onPress={() => setShowFSANZModal(true)}
+          />
         </SettingSection>
 
         {/* About */}
@@ -364,6 +372,12 @@ export default function SettingsScreen() {
           <Text style={[styles.footerSubtext, { color: colors.textTertiary }]}>{t('settings.footerSubtext')}</Text>
         </View>
       </ScrollView>
+
+      {/* FSANZ Database Import Modal */}
+      <FSANZDatabaseImportModal
+        visible={showFSANZModal}
+        onClose={() => setShowFSANZModal(false)}
+      />
     </View>
   );
 }

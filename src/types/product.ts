@@ -223,7 +223,7 @@ export interface Product {
   quality?: number; // 0-100
   
   // API source
-  source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'web_search';
+  source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'web_search' | 'woolworths_nz' | 'paknsave' | 'newworld' | 'barcode_lookup' | 'go_upc' | 'buycott' | 'open_gtin' | 'barcode_monster' | 'woolworths_au' | 'coles_au' | 'iga_au' | 'fsanz_au' | 'fsanz_nz' | 'nz_store_api';
 }
 
 export interface TrustScoreBreakdown {

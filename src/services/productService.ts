@@ -10,10 +10,20 @@ import { fetchProductFromUSDA } from './usdaFoodData';
 import { fetchProductFromGS1 } from './gs1DataSource';
 import { fetchProductFromBarcodeSpider } from './barcodeSpider';
 import { fetchProductFromUPCitemdb } from './upcitemdb';
+import { fetchProductFromBarcodeLookup } from './barcodeLookup';
+import { fetchProductFromGoUPC } from './goUpcApi';
+import { fetchProductFromBuycott } from './buycottApi';
+import { fetchProductFromOpenGTIN } from './openGtindbApi';
+import { fetchProductFromBarcodeMonster } from './barcodeMonsterApi';
 import { fetchProductFromWebSearch, isWebSearchFallback } from './webSearchFallback';
 import { getCachedProduct, cacheProduct } from './cacheService';
 import { calculateTrustScore } from '../utils/trustScore';
 import { checkFDARecalls } from './fdaRecallService';
+import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
+import { getUserCountryCode } from '../utils/countryDetection';
+import { fetchProductFromNZStores } from './nzStoreApi';
+import { fetchProductFromAURetailers } from './auRetailerScraping';
+import { fetchProductFromFSANZ } from './fsanDatabase';
 
 /**
  * Fetch product data with comprehensive fallback strategy:
@@ -53,23 +63,32 @@ import { checkFDARecalls } from './fdaRecallService';
  * Expected Coverage: ~85-90% of all scanned products (up from ~60-65%)
  */
 export async function fetchProduct(barcode: string, useCache = true, isPremium = false, isOffline = false): Promise<ProductWithTrustScore | null> {
-  // Check cache first
+  // Normalize barcode - try multiple variants (EAN-8 -> EAN-13, etc.)
+  const barcodeVariants = normalizeBarcode(barcode);
+  const primaryBarcode = getPrimaryBarcode(barcode);
+  logger.debug(`Barcode variants to try: ${barcodeVariants.join(', ')} (primary: ${primaryBarcode})`);
+
+  try {
+
+  // Check cache first - try all variants
   if (useCache) {
-    const cached = await getCachedProduct(barcode, isPremium);
-    if (cached) {
-      // Check if cached product is a low-quality web search result
-      // If so, retry web search to see if we can get better data
-      const isLowQualityWebSearch = (cached.source === 'web_search' || isWebSearchFallback(cached)) && 
-                                    ((cached.quality && cached.quality < 50) || 
-                                     (cached.completion && cached.completion < 50) ||
-                                     (!cached.image_url && !cached.nutriments && !cached.ingredients_text));
-      
-      if (isLowQualityWebSearch && !isOffline) {
-        logger.debug(`Cached product ${barcode} is low-quality web search result, retrying web search...`);
-        // Don't return cached - continue to retry web search
-      } else {
-        logger.debug(`Using cached product: ${barcode}${isPremium ? ' (premium cache)' : ''}`);
-        return calculateTrustScore(cached);
+    for (const variant of barcodeVariants) {
+      const cached = await getCachedProduct(variant, isPremium);
+      if (cached) {
+        // Check if cached product is a low-quality web search result
+        // If so, retry web search to see if we can get better data
+        const isLowQualityWebSearch = (cached.source === 'web_search' || isWebSearchFallback(cached)) && 
+                                      ((cached.quality && cached.quality < 50) || 
+                                       (cached.completion && cached.completion < 50) ||
+                                       (!cached.image_url && !cached.nutriments && !cached.ingredients_text));
+        
+        if (isLowQualityWebSearch && !isOffline) {
+          logger.debug(`Cached product ${variant} is low-quality web search result, retrying web search...`);
+          // Don't return cached - continue to retry web search
+        } else {
+          logger.debug(`Using cached product: ${variant}${isPremium ? ' (premium cache)' : ''}`);
+          return calculateTrustScore(cached);
+        }
       }
     }
   }
@@ -82,100 +101,383 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
 
   // OPTIMIZED: Parallelize API calls for faster product fetching
   // Tier 1: Open Facts databases (parallel - independent sources)
-  // Try Open Facts databases in parallel since they're independent
-  logger.debug(`Fetching from Open Facts databases in parallel: ${barcode}`);
+  // Try all barcode variants in parallel across all Open Facts databases
+  logger.debug(`Fetching from Open Facts databases in parallel: ${barcodeVariants.join(', ')}`);
   let product: Product | null = null;
   
-  // Parallel fetch from Open Facts databases
-  const [offProduct, obfProduct, opffProduct, opfProduct] = await Promise.allSettled([
-    fetchProductFromOFF(barcode).catch(err => {
-      logger.debug(`OFF fetch error for ${barcode}:`, err.message);
+  // Try all barcode variants in parallel across all Open Facts databases
+  const offPromises = barcodeVariants.map(variant => 
+    fetchProductFromOFF(variant).catch(err => {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.debug(`OFF fetch error for ${variant}:`, errorMessage);
       return null;
-    }),
-    fetchProductFromOBF(barcode).catch(err => {
-      logger.debug(`OBF fetch error for ${barcode}:`, err.message);
+    })
+  );
+  
+  const obfPromises = barcodeVariants.map(variant => 
+    fetchProductFromOBF(variant).catch(err => {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.debug(`OBF fetch error for ${variant}:`, errorMessage);
       return null;
-    }),
-    fetchProductFromOPFF(barcode).catch(err => {
-      logger.debug(`OPFF fetch error for ${barcode}:`, err.message);
+    })
+  );
+  
+  const opffPromises = barcodeVariants.map(variant => 
+    fetchProductFromOPFF(variant).catch(err => {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.debug(`OPFF fetch error for ${variant}:`, errorMessage);
       return null;
-    }),
-    fetchProductFromOPF(barcode).catch(err => {
-      logger.debug(`OPF fetch error for ${barcode}:`, err.message);
+    })
+  );
+  
+  const opfPromises = barcodeVariants.map(variant => 
+    fetchProductFromOPF(variant).catch(err => {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.debug(`OPF fetch error for ${variant}:`, errorMessage);
       return null;
-    }),
+    })
+  );
+  
+  // Execute all searches in parallel
+  const [offResults, obfResults, opffResults, opfResults] = await Promise.allSettled([
+    Promise.all(offPromises),
+    Promise.all(obfPromises),
+    Promise.all(opffPromises),
+    Promise.all(opfPromises),
   ]);
+  
+  // Find first successful result from any variant
+  const allOffResults = offResults.status === 'fulfilled' ? offResults.value : [];
+  const allObfResults = obfResults.status === 'fulfilled' ? obfResults.value : [];
+  const allOpffResults = opffResults.status === 'fulfilled' ? opffResults.value : [];
+  const allOpfResults = opfResults.status === 'fulfilled' ? opfResults.value : [];
+  
+  // Check OFF first (highest priority)
+  for (const result of allOffResults) {
+    if (result) {
+      product = result;
+      logger.debug(`Found product in Open Food Facts: ${barcode}`);
+      break;
+    }
+  }
+  
+  // Then check other Open Facts databases
+  if (!product) {
+    for (const result of allObfResults) {
+      if (result) {
+        product = result;
+        logger.debug(`Found product in Open Beauty Facts: ${barcode}`);
+        break;
+      }
+    }
+  }
+  
+  if (!product) {
+    for (const result of allOpffResults) {
+      if (result) {
+        product = result;
+        logger.debug(`Found product in Open Pet Food Facts: ${barcode}`);
+        break;
+      }
+    }
+  }
+  
+  if (!product) {
+    for (const result of allOpfResults) {
+      if (result) {
+        product = result;
+        logger.debug(`Found product in Open Products Facts: ${barcode}`);
+        break;
+      }
+    }
+  }
 
-  // Use first successful result from Open Facts databases (prioritize OFF > OBF > OPFF > OPF)
-  if (offProduct.status === 'fulfilled' && offProduct.value) {
-    product = offProduct.value;
-    logger.debug(`Found product in Open Food Facts: ${barcode}`);
-  } else if (obfProduct.status === 'fulfilled' && obfProduct.value) {
-    product = obfProduct.value;
-    logger.debug(`Found product in Open Beauty Facts: ${barcode}`);
-  } else if (opffProduct.status === 'fulfilled' && opffProduct.value) {
-    product = opffProduct.value;
-    logger.debug(`Found product in Open Pet Food Facts: ${barcode}`);
-  } else if (opfProduct.status === 'fulfilled' && opfProduct.value) {
-    product = opfProduct.value;
-    logger.debug(`Found product in Open Products Facts: ${barcode}`);
+  // Tier 1.5: Country-specific store APIs and government databases (for NZ, AU, etc.)
+  // Try country-specific sources if user is in that country and product not found yet
+  if (!product) {
+    const userCountry = getUserCountryCode();
+    
+    // Try NZ store APIs if user is in NZ
+    if (userCountry === 'NZ') {
+      logger.debug(`Trying NZ store APIs for barcode variants: ${barcodeVariants.join(', ')}`);
+      const nzStorePromises = barcodeVariants.map(variant => 
+        fetchProductFromNZStores(variant).catch(err => {
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          logger.debug(`NZ store fetch error for ${variant}:`, errorMessage);
+          return null;
+        })
+      );
+      
+      const nzStoreResults = await Promise.allSettled(nzStorePromises);
+      for (const result of nzStoreResults) {
+        if (result.status === 'fulfilled' && result.value) {
+          product = result.value;
+          logger.debug(`Found product in NZ store API: ${barcode}`);
+          break;
+        }
+      }
+      
+      // Try FSANZ NZ database if store APIs didn't find product
+      if (!product) {
+        logger.debug(`Trying FSANZ NZ database for barcode variants: ${barcodeVariants.join(', ')}`);
+        for (const variant of barcodeVariants) {
+          const fsanzProduct = await fetchProductFromFSANZ(variant);
+          if (fsanzProduct) {
+            product = fsanzProduct;
+            logger.debug(`Found product in FSANZ NZ: ${variant}`);
+            break;
+          }
+        }
+      }
+    }
+    
+    // Try AU retailer APIs if user is in Australia
+    if (!product && userCountry === 'AU') {
+      logger.debug(`Trying AU retailer APIs for barcode variants: ${barcodeVariants.join(', ')}`);
+      const auRetailerPromises = barcodeVariants.map(variant => 
+        fetchProductFromAURetailers(variant).catch(err => {
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          logger.debug(`AU retailer fetch error for ${variant}:`, errorMessage);
+          return null;
+        })
+      );
+      
+      const auRetailerResults = await Promise.allSettled(auRetailerPromises);
+      for (const result of auRetailerResults) {
+        if (result.status === 'fulfilled' && result.value) {
+          product = result.value;
+          logger.debug(`Found product in AU retailer API: ${barcode}`);
+          break;
+        }
+      }
+      
+      // Try FSANZ AU database if retailer APIs didn't find product
+      if (!product) {
+        logger.debug(`Trying FSANZ AU database for barcode variants: ${barcodeVariants.join(', ')}`);
+        for (const variant of barcodeVariants) {
+          const fsanzProduct = await fetchProductFromFSANZ(variant);
+          if (fsanzProduct) {
+            product = fsanzProduct;
+            logger.debug(`Found product in FSANZ AU: ${variant}`);
+            break;
+          }
+        }
+      }
+    }
   }
 
   // Tier 2: Official sources (parallel - independent sources)
   // If Open Facts didn't return a product, try official sources in parallel
   if (!product) {
-    logger.debug(`Open Facts databases not found, trying official sources in parallel: ${barcode}`);
-    const [usdaProduct, gs1Product] = await Promise.allSettled([
-      fetchProductFromUSDA(barcode).catch(err => {
-        logger.debug(`USDA fetch error for ${barcode}:`, err.message);
+    logger.debug(`Open Facts databases not found, trying official sources in parallel: ${primaryBarcode}`);
+    // Try all variants for official sources too
+    const usdaPromises = barcodeVariants.map(variant => 
+      fetchProductFromUSDA(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`USDA fetch error for ${variant}:`, errorMessage);
         return null;
-      }),
-      fetchProductFromGS1(barcode).catch(err => {
-        console.log(`GS1 fetch error for ${barcode}:`, err.message);
+      })
+    );
+    
+    const gs1Promises = barcodeVariants.map(variant => 
+      fetchProductFromGS1(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`GS1 fetch error for ${variant}:`, errorMessage);
         return null;
-      }),
+      })
+    );
+    
+    const [usdaResults, gs1Results] = await Promise.allSettled([
+      Promise.all(usdaPromises),
+      Promise.all(gs1Promises),
     ]);
-
-    // Prioritize USDA over GS1 (more reliable for food products)
-    if (usdaProduct.status === 'fulfilled' && usdaProduct.value) {
-      product = usdaProduct.value;
-      logger.debug(`Found product in USDA FoodData Central: ${barcode}`);
-    } else if (gs1Product.status === 'fulfilled' && gs1Product.value) {
-      product = gs1Product.value;
-      logger.debug(`Found product in GS1 Data Source: ${barcode}`);
+    
+    // Check USDA results
+    if (usdaResults.status === 'fulfilled') {
+      for (const result of usdaResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in USDA: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check GS1 results
+    if (!product && gs1Results.status === 'fulfilled') {
+      for (const result of gs1Results.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in GS1: ${barcode}`);
+          break;
+        }
+      }
     }
   }
 
   // Tier 3: Fallback sources (parallel - independent sources)
   // If official sources didn't return a product, try fallback sources in parallel
   if (!product) {
-    logger.debug(`Official sources not found, trying fallback sources in parallel: ${barcode}`);
-    const [upcitemdbProduct, barcodeSpiderProduct] = await Promise.allSettled([
-      fetchProductFromUPCitemdb(barcode).catch(err => {
-        logger.debug(`UPCitemdb fetch error for ${barcode}:`, err.message);
+    logger.debug(`Official sources not found, trying fallback sources in parallel: ${primaryBarcode}`);
+    // Try all variants for fallback sources
+    const upcitemdbPromises = barcodeVariants.map(variant => 
+      fetchProductFromUPCitemdb(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`UPCitemdb fetch error for ${variant}:`, errorMessage);
         return null;
-      }),
-      fetchProductFromBarcodeSpider(barcode).catch(err => {
-        logger.debug(`Barcode Spider fetch error for ${barcode}:`, err.message);
+      })
+    );
+    
+    const barcodeSpiderPromises = barcodeVariants.map(variant => 
+      fetchProductFromBarcodeSpider(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Barcode Spider fetch error for ${variant}:`, errorMessage);
         return null;
-      }),
+      })
+    );
+    
+    // NEW: Add Barcode Lookup API (free tier: 50/day)
+    const barcodeLookupPromises = barcodeVariants.map(variant => 
+      fetchProductFromBarcodeLookup(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Barcode Lookup fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const goUpcPromises = barcodeVariants.map(variant => 
+      fetchProductFromGoUPC(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Go-UPC fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const buycottPromises = barcodeVariants.map(variant => 
+      fetchProductFromBuycott(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Buycott fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const openGtinPromises = barcodeVariants.map(variant => 
+      fetchProductFromOpenGTIN(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Open GTIN fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const barcodeMonsterPromises = barcodeVariants.map(variant => 
+      fetchProductFromBarcodeMonster(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Barcode Monster fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const [upcitemdbResults, barcodeSpiderResults, barcodeLookupResults, goUpcResults, buycottResults, openGtinResults, barcodeMonsterResults] = await Promise.allSettled([
+      Promise.all(upcitemdbPromises),
+      Promise.all(barcodeSpiderPromises),
+      Promise.all(barcodeLookupPromises),
+      Promise.all(goUpcPromises),
+      Promise.all(buycottPromises),
+      Promise.all(openGtinPromises),
+      Promise.all(barcodeMonsterPromises),
     ]);
-
-    // Prioritize UPCitemdb over Barcode Spider (more reliable)
-    if (upcitemdbProduct.status === 'fulfilled' && upcitemdbProduct.value) {
-      product = upcitemdbProduct.value;
-      logger.debug(`Found product in UPCitemdb: ${barcode}`);
-    } else if (barcodeSpiderProduct.status === 'fulfilled' && barcodeSpiderProduct.value) {
-      product = barcodeSpiderProduct.value;
-      logger.debug(`Found product in Barcode Spider: ${barcode}`);
+    
+    // Check UPCitemdb results
+    if (upcitemdbResults.status === 'fulfilled') {
+      for (const result of upcitemdbResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in UPCitemdb: ${barcode}`);
+          break;
+        }
+      }
     }
+    
+    // Check Barcode Spider results
+    if (!product && barcodeSpiderResults.status === 'fulfilled') {
+      for (const result of barcodeSpiderResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Barcode Spider: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check Barcode Lookup results
+    if (!product && barcodeLookupResults.status === 'fulfilled') {
+      for (const result of barcodeLookupResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Barcode Lookup: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check Go-UPC results (500M+ products)
+    if (!product && goUpcResults.status === 'fulfilled') {
+      for (const result of goUpcResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Go-UPC: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check Buycott results (150M+ products)
+    if (!product && buycottResults.status === 'fulfilled') {
+      for (const result of buycottResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Buycott: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check Open GTIN results (free, no API key required)
+    if (!product && openGtinResults.status === 'fulfilled') {
+      for (const result of openGtinResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Open GTIN: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check Barcode Monster results (free, no API key required)
+    if (!product && barcodeMonsterResults.status === 'fulfilled') {
+      for (const result of barcodeMonsterResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Barcode Monster: ${barcode}`);
+          break;
+        }
+      }
+    }
+
   }
 
   // FINAL FALLBACK: Web Search - ensures we ALWAYS return a result
   // This guarantees that every scanned barcode returns SOME product data
+  // Try primary barcode first, then fall back to original if different
   if (!product) {
-    logger.warn(`All databases failed, using web search fallback: ${barcode}`);
-    product = await fetchProductFromWebSearch(barcode);
+    logger.warn(`All databases failed, using web search fallback: ${primaryBarcode}`);
+    product = await fetchProductFromWebSearch(primaryBarcode);
+    
+    // If primary barcode didn't work and it's different from original, try original
+    if (!product && primaryBarcode !== barcode) {
+      logger.debug(`Trying web search with original barcode: ${barcode}`);
+      product = await fetchProductFromWebSearch(barcode);
+    }
     // Web search fallback will always return a product (even if minimal)
     logger.debug(`Web search fallback provided result for: ${barcode}`);
   } else if (isWebSearchFallback(product)) {
@@ -281,8 +583,17 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
 
   // Cache the product (premium users get larger cache)
   // Note: We cache even web search results so users don't re-search the same barcode
-  if (useCache) {
+  // Cache with primary barcode for consistency, and also with original if different
+  if (useCache && product) {
+    // Update barcode to primary for consistency
+    product.barcode = primaryBarcode;
     await cacheProduct(product, isPremium);
+    
+    // Also cache with original barcode for faster lookup next time
+    if (primaryBarcode !== barcode) {
+      const cachedProduct = { ...product, barcode };
+      await cacheProduct(cachedProduct, isPremium);
+    }
   }
 
   // Calculate trust score (works even for minimal web search products)
@@ -315,6 +626,22 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
   }
   
   return productWithTrustScore;
+  } catch (error) {
+    // Log error and return fallback product
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Error fetching product ${barcode}:`, errorMessage);
+    
+    // Return a minimal fallback product so the UI doesn't break
+    const fallbackProduct: Product = {
+      barcode: primaryBarcode,
+      product_name: `Product ${barcode}`,
+      source: 'web_search',
+      quality: 5,
+      completion: 10,
+    };
+    
+    return calculateTrustScore(fallbackProduct);
+  }
 }
 
 /**

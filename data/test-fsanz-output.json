@@ -1,0 +1,40 @@
+{
+  "94148152": {
+    "productName": "Test Product 2",
+    "brand": "Another Brand",
+    "energyKcal": 0,
+    "fat": 8,
+    "saturatedFat": 4,
+    "carbohydrates": 25,
+    "sugars": 12,
+    "protein": 6,
+    "salt": 0.8,
+    "sodium": 320,
+    "dietaryFiber": 2,
+    "ingredients": "Milk, Cocoa, Vanilla",
+    "packageSize": "1L",
+    "servingSize": "",
+    "categories": [
+      "Dairy"
+    ]
+  },
+  "9300657003425": {
+    "productName": "Test Product 1",
+    "brand": "Test Brand",
+    "energyKcal": 0,
+    "fat": 10.5,
+    "saturatedFat": 5.2,
+    "carbohydrates": 30.2,
+    "sugars": 15,
+    "protein": 8.5,
+    "salt": 1.2,
+    "sodium": 480,
+    "dietaryFiber": 3.5,
+    "ingredients": "Water, Sugar, Salt",
+    "packageSize": "500ml",
+    "servingSize": "",
+    "categories": [
+      "Beverages"
+    ]
+  }
+}

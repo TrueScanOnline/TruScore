@@ -21,6 +21,7 @@ export interface ManualProductData {
   manufacturing_places?: string;
   countries?: string;
   categories?: string;
+  additives_tags?: string[]; // E-number codes in format "en:e509", "en:e412", etc.
   notes?: string; // User notes
   timestamp: number;
   userId?: string; // For future multi-user support
@@ -50,6 +51,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
       manufacturing_places: data.manufacturing_places,
       countries: data.countries,
       categories: data.categories,
+      additives_tags: data.additives_tags, // E-number codes
       source: 'user_contributed' as Product['source'],
       created_t: Math.floor(data.timestamp / 1000),
       last_modified_t: Math.floor(data.timestamp / 1000),

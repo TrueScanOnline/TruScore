@@ -59,16 +59,17 @@ async function fetchProductFromOFFInstance(barcode: string, instance: string): P
 /**
  * Fetch product data from Open Food Facts API
  * Tries country-specific instances first, then falls back to global
+ * Enhanced to query 20+ country instances in parallel for maximum coverage
  * This significantly improves success rate for country-specific products
  */
 export async function fetchProductFromOFF(barcode: string): Promise<Product | null> {
   // Get country codes to try (user's country first, then common countries)
   const countriesToTry = getCountryCodesToTry();
   
-  // Build list of instances to try
+  // Build list of instances to try - expanded for maximum coverage
   const instancesToTry: string[] = [];
   
-  // Add country-specific instances first
+  // Add country-specific instances first (prioritized)
   for (const countryCode of countriesToTry) {
     const instance = getOFFCountryInstance(countryCode);
     if (instance && !instancesToTry.includes(instance)) {
@@ -76,20 +77,38 @@ export async function fetchProductFromOFF(barcode: string): Promise<Product | nu
     }
   }
   
+  // Add additional high-coverage countries that might have the product
+  // These are countries with large product databases
+  const additionalCountries = ['FR', 'DE', 'IT', 'ES', 'NL', 'BE', 'PL', 'CZ', 'US', 'CA', 'GB'];
+  for (const countryCode of additionalCountries) {
+    const instance = getOFFCountryInstance(countryCode);
+    if (instance && !instancesToTry.includes(instance)) {
+      instancesToTry.push(instance);
+    }
+  }
+  
   // Always try global instance as fallback
-  instancesToTry.push('world.openfoodfacts.org');
+  if (!instancesToTry.includes('world.openfoodfacts.org')) {
+    instancesToTry.push('world.openfoodfacts.org');
+  }
   
   // Try instances in parallel for faster lookup
   // User's country instance will likely respond first if product exists there
+  // Limit to 25 parallel requests to avoid overwhelming the API
+  const maxParallel = 25;
+  const instancesToQuery = instancesToTry.slice(0, maxParallel);
+  
+  logger.debug(`Querying ${instancesToQuery.length} OFF instances in parallel for ${barcode}`);
+  
   const results = await Promise.allSettled(
-    instancesToTry.map(instance => fetchProductFromOFFInstance(barcode, instance))
+    instancesToQuery.map(instance => fetchProductFromOFFInstance(barcode, instance))
   );
   
   // Return first successful result
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
     if (result.status === 'fulfilled' && result.value) {
-      const instance = instancesToTry[i];
+      const instance = instancesToQuery[i];
       logger.debug(`Found product in OFF (${instance}): ${barcode}`);
       return result.value;
     }

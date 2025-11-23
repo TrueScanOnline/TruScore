@@ -1,0 +1,40 @@
+Hi! Here's how to test the TrueScan app - NO LOGIN NEEDED!
+
+📱 Step 1: Install Expo Go
+   - Open App Store on your iPhone
+   - Search for "Expo Go"
+   - Install (it's free)
+   - NO ACCOUNT NEEDED!
+
+📱 Step 2: Open Expo Go App
+   - Tap to open Expo Go
+   - If you see a welcome screen, tap "Get Started" or "Skip"
+   - DON'T create an account or login - it's not needed!
+
+📱 Step 3: Connect to the App
+   - Look for "Enter URL manually" button
+     * Usually at the bottom of the screen
+     * Or tap menu icon (three lines) at top-left
+     * Or go to "Home" tab
+   
+   - Tap "Enter URL manually"
+   
+   - Paste this URL:
+   
+     https://sixth-writers-medicines-quote.trycloudflare.com
+   
+   - Tap "Connect"
+
+📱 Step 4: Wait for App to Load
+   - Takes about 10-30 seconds
+   - You'll see TrueScan app appear
+   - Start testing!
+
+✨ IMPORTANT NOTES:
+
+- NO LOGIN REQUIRED - If you see any "Sign in" or "Login" prompts, just tap "Skip" or "Get Started"
+- NO ACCOUNT NEEDED - Expo Go works without any account
+- When I update code, your app will automatically reload - no need to reconnect!
+- If you have any issues, just let me know!
+
+Thanks for testing! 🚀

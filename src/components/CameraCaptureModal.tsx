@@ -13,7 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 interface CameraCaptureModalProps {
   visible: boolean;
@@ -101,7 +101,8 @@ export default function CameraCaptureModal({ visible, onClose, onCapture, barcod
       setLoading(true);
       try {
         // Save image to cache directory
-        const imageDir = `${FileSystem.cacheDirectory}truescan/`;
+        const { getCachePath } = await import('../utils/fileSystemHelper');
+        const imageDir = getCachePath('truescan/');
         await FileSystem.makeDirectoryAsync(imageDir, { intermediates: true });
         const imagePath = `${imageDir}${barcode || 'product'}_${Date.now()}.jpg`;
         
