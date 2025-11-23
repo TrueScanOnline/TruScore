@@ -228,7 +228,7 @@ function findProductInSearchResults(
         if (!jsonMatch) continue;
 
         const jsonStr = jsonMatch[1].trim();
-        let jsonData: any;
+        let jsonData: unknown;
 
         if (jsonStr.startsWith('[')) {
           jsonData = JSON.parse(jsonStr);

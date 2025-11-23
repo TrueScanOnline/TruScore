@@ -69,13 +69,15 @@ async function fetchWithCorsProxy(url: string, retries = 3): Promise<string | nu
         }
         return text;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Clean up timeout on error
       cleanup();
       
       // Only log detailed error if it's not a timeout or network error
-      if (error.name !== 'AbortError' && error.message !== 'Network request failed' && !error.message?.includes('AbortSignal.timeout')) {
-        console.warn(`[WebScraping] CORS proxy ${proxy} failed:`, error.message);
+      const errorName = error instanceof Error ? error.name : 'Unknown';
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorName !== 'AbortError' && errorMessage !== 'Network request failed' && !errorMessage?.includes('AbortSignal.timeout')) {
+        console.warn(`[WebScraping] CORS proxy ${proxy} failed:`, errorMessage);
       }
       continue;
     }
@@ -86,7 +88,17 @@ async function fetchWithCorsProxy(url: string, retries = 3): Promise<string | nu
 /**
  * Extract JSON-LD structured data from HTML
  */
-function extractStructuredData(html: string): any {
+interface StructuredData {
+  '@context'?: string;
+  '@type'?: string;
+  name?: string;
+  description?: string;
+  nutrition?: Record<string, unknown>;
+  ingredients?: string[];
+  [key: string]: unknown;
+}
+
+function extractStructuredData(html: string): StructuredData | null {
   try {
     // Extract JSON-LD scripts
     const jsonLdRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>(.*?)<\/script>/gis;

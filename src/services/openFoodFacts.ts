@@ -1,5 +1,7 @@
 // Open Food Facts API client
 import { Product, PalmOilAnalysis, PackagingData, PackagingItem, AgribalyseData } from '../types/product';
+import { logger } from '../utils/logger';
+import { getUserCountryCode, getCountryCodesToTry, getOFFCountryInstance } from '../utils/countryDetection';
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org/api/v2/product';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -12,11 +14,11 @@ export interface OFFResponse {
 }
 
 /**
- * Fetch product data from Open Food Facts API
+ * Fetch product data from a specific Open Food Facts instance
  */
-export async function fetchProductFromOFF(barcode: string): Promise<Product | null> {
+async function fetchProductFromOFFInstance(barcode: string, instance: string): Promise<Product | null> {
   try {
-    const url = `${OFF_API_BASE}/${barcode}.json`;
+    const url = `https://${instance}/api/v2/product/${barcode}.json`;
     
     const response = await fetch(url, {
       headers: {
@@ -25,14 +27,15 @@ export async function fetchProductFromOFF(barcode: string): Promise<Product | nu
     });
 
     if (!response.ok) {
-      console.warn(`OFF API error: ${response.status} ${response.statusText}`);
+      if (response.status !== 404) {
+        logger.debug(`OFF API error (${instance}): ${response.status} ${response.statusText}`);
+      }
       return null;
     }
 
     const data: OFFResponse = await response.json();
 
     if (data.status === 0 || !data.product) {
-      console.warn(`Product not found in OFF: ${barcode}`);
       return null;
     }
 
@@ -48,9 +51,53 @@ export async function fetchProductFromOFF(barcode: string): Promise<Product | nu
 
     return product;
   } catch (error) {
-    console.error('Error fetching from Open Food Facts:', error);
+    logger.debug(`Error fetching from ${instance}:`, error);
     return null;
   }
+}
+
+/**
+ * Fetch product data from Open Food Facts API
+ * Tries country-specific instances first, then falls back to global
+ * This significantly improves success rate for country-specific products
+ */
+export async function fetchProductFromOFF(barcode: string): Promise<Product | null> {
+  // Get country codes to try (user's country first, then common countries)
+  const countriesToTry = getCountryCodesToTry();
+  
+  // Build list of instances to try
+  const instancesToTry: string[] = [];
+  
+  // Add country-specific instances first
+  for (const countryCode of countriesToTry) {
+    const instance = getOFFCountryInstance(countryCode);
+    if (instance && !instancesToTry.includes(instance)) {
+      instancesToTry.push(instance);
+    }
+  }
+  
+  // Always try global instance as fallback
+  instancesToTry.push('world.openfoodfacts.org');
+  
+  // Try instances in parallel for faster lookup
+  // User's country instance will likely respond first if product exists there
+  const results = await Promise.allSettled(
+    instancesToTry.map(instance => fetchProductFromOFFInstance(barcode, instance))
+  );
+  
+  // Return first successful result
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === 'fulfilled' && result.value) {
+      const instance = instancesToTry[i];
+      logger.debug(`Found product in OFF (${instance}): ${barcode}`);
+      return result.value;
+    }
+  }
+  
+  // No product found in any instance
+  logger.debug(`Product not found in any OFF instance: ${barcode}`);
+  return null;
 }
 
 /**
@@ -245,7 +292,9 @@ function enhanceEcoScoreData(product: Product): void {
   if (!product.ecoscore_data) return;
 
   const ecoscore = product.ecoscore_data;
-  const agribalyse = (ecoscore as any).agribalyse as AgribalyseData | undefined;
+  // Type-safe access to agribalyse data
+  const ecoscoreData = ecoscore as { agribalyse?: AgribalyseData } | null | undefined;
+  const agribalyse = ecoscoreData?.agribalyse;
 
   // Extract Agribalyse LCA data
   if (agribalyse) {

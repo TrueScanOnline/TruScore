@@ -75,15 +75,34 @@ module.exports = {
       // Secret Key is for server-side use only (webhooks, backend API)
       // Get keys from: https://dashboard.qonversion.io/settings
       qonversion: {
-        projectKey: process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY || 'Bdh8Y7krabWxjf_alA0bSRUlHn8W3W0_',
+        projectKey: (() => {
+          const key = process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY;
+          if (!key || key.length < 10) {
+            if (process.env.EAS_BUILD === 'true' || process.env.NODE_ENV === 'production') {
+              throw new Error('[BUILD] EXPO_PUBLIC_QONVERSION_PROJECT_KEY is required in production');
+            }
+            console.warn('[DEV] EXPO_PUBLIC_QONVERSION_PROJECT_KEY not set - subscription features will not work');
+            return '';
+          }
+          return key;
+        })(),
         // Legacy support for separate iOS/Android keys if needed
-        iosKey: process.env.EXPO_PUBLIC_QONVERSION_IOS_KEY || process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY || 'Bdh8Y7krabWxjf_alA0bSRUlHn8W3W0_',
-        androidKey: process.env.EXPO_PUBLIC_QONVERSION_ANDROID_KEY || process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY || 'Bdh8Y7krabWxjf_alA0bSRUlHn8W3W0_',
+        iosKey: process.env.EXPO_PUBLIC_QONVERSION_IOS_KEY || process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY || '',
+        androidKey: process.env.EXPO_PUBLIC_QONVERSION_ANDROID_KEY || process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY || '',
       },
       // USDA FoodData Central API Key
       // Get free API key at: https://fdc.nal.usda.gov/api-guide.html
       // Register at: https://fdc.nal.usda.gov/
-      EXPO_PUBLIC_USDA_API_KEY: process.env.EXPO_PUBLIC_USDA_API_KEY || 'x0LhtQno5hZtVHfF8SasJqHyeE3oSSi2fJAyqpbU',
+      EXPO_PUBLIC_USDA_API_KEY: (() => {
+        const key = process.env.EXPO_PUBLIC_USDA_API_KEY;
+        if (!key || key.length < 10) {
+          if (process.env.EAS_BUILD === 'true' || process.env.NODE_ENV === 'production') {
+            console.warn('[BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available');
+          }
+          return '';
+        }
+        return key;
+      })(),
       // GS1 Data Source API Key (Optional - requires subscription or 60-day trial)
       // Note: GS1 requires a paid subscription or 60-day trial, not a free API key
       // Trial registration: https://store.gs1us.org/view-use-api-trial/p

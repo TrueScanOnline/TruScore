@@ -163,9 +163,10 @@ async function cacheImage(barcode: string, imageUrl: string): Promise<void> {
         if (downloadResult.status === 200) {
           console.log(`Cached image for ${barcode}`);
         }
-      } catch (downloadError: any) {
+      } catch (downloadError: unknown) {
         // If download fails with file:// error, it means URL was incorrectly formatted
-        if (downloadError.message?.includes('file://') || downloadError.message?.includes('Expected URL scheme')) {
+        const errorMessage = downloadError instanceof Error ? downloadError.message : String(downloadError);
+        if (errorMessage?.includes('file://') || errorMessage?.includes('Expected URL scheme')) {
           console.warn(`[cacheService] Image URL appears to be file:// but wasn't detected: ${imageUrl}`);
           return; // Skip caching for invalid URLs
         }

@@ -1,6 +1,6 @@
-// Values preferences store - persisted to AsyncStorage
+// Values preferences store - persisted to SecureStore (encrypted)
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 export type GeopoliticalPreference = 'neutral' | 'avoid_israel' | 'avoid_palestine' | 'avoid_china' | 'avoid_india';
 
@@ -50,9 +50,18 @@ interface ValuesStore extends ValuesPreferences {
 
 const savePreferences = async (prefs: ValuesPreferences) => {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+    // Use SecureStore for encrypted storage
+    const serialized = JSON.stringify(prefs);
+    await SecureStore.setItemAsync(STORAGE_KEY, serialized);
   } catch (error) {
-    console.error('[ValuesStore] Error saving preferences:', error);
+    // Fallback to AsyncStorage if SecureStore fails (e.g., on web)
+    try {
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+    } catch (fallbackError) {
+      console.error('[ValuesStore] Error saving preferences:', error);
+      throw error; // Don't silently fail
+    }
   }
 };
 
@@ -110,13 +119,30 @@ export const useValuesStore = create<ValuesStore>((set, get) => ({
 
   initializeStore: async () => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      // Try SecureStore first
+      let stored: string | null = null;
+      try {
+        stored = await SecureStore.getItemAsync(STORAGE_KEY);
+      } catch (secureError) {
+        // Fallback to AsyncStorage if SecureStore fails
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        stored = await AsyncStorage.getItem(STORAGE_KEY);
+      }
+      
       if (stored) {
         const parsed = JSON.parse(stored);
-        set({ ...defaultPreferences, ...parsed });
+        // Validate parsed data structure
+        if (typeof parsed === 'object' && parsed !== null) {
+          set({ ...defaultPreferences, ...parsed });
+        } else {
+          // Invalid data, reset to defaults
+          await savePreferences(defaultPreferences);
+        }
       }
     } catch (error) {
       console.error('[ValuesStore] Error loading preferences:', error);
+      // Reset to defaults on error
+      set(defaultPreferences);
     }
   },
 

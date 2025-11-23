@@ -117,7 +117,7 @@ export default function ManualProductEntryModal({
     setLoading(true);
     try {
       // Build nutriments object if nutrition data provided
-      const nutriments: any = {};
+      const nutriments: Record<string, number> = {};
       if (energy) nutriments.energy = parseFloat(energy) || 0;
       if (fat) nutriments.fat = parseFloat(fat) || 0;
       if (saturatedFat) nutriments['saturated-fat'] = parseFloat(saturatedFat) || 0;

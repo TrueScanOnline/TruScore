@@ -6,6 +6,7 @@ import InfoModal from './InfoModal';
 import { useTheme } from '../theme';
 import { Product } from '../types/product';
 import { getAdditiveInfo, AdditiveInfo } from '../services/additiveDatabase';
+import { sanitizeText } from '../utils/validation';
 
 interface AllergensAdditivesModalProps {
   visible: boolean;
@@ -86,7 +87,7 @@ export default function AllergensAdditivesModal({ visible, onClose, product }: A
                 <View key={index} style={[styles.allergenItem, { borderColor: '#ff6b6b' }]}>
                   <Ionicons name="warning" size={20} color="#ff6b6b" />
                   <Text style={[styles.allergenText, { color: colors.text }]}>
-                    {allergenName.charAt(0).toUpperCase() + allergenName.slice(1)}
+                    {sanitizeText(allergenName.charAt(0).toUpperCase() + allergenName.slice(1), 100)}
                   </Text>
                 </View>
               );

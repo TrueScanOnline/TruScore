@@ -3,6 +3,12 @@
 // Implements validation system for reliable data
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { validateCountrySubmission, RateLimiter } from '../utils/validation';
+import { logger } from '../utils/logger';
+
+// Rate limiter: max 1 submission per barcode per user (enforced by userId check)
+// Additional rate limit: max 10 submissions per hour per user
+const submissionRateLimiter = new RateLimiter(10, 60 * 60 * 1000); // 10 per hour
 
 export interface ManufacturingCountrySubmission {
   barcode: string;
@@ -35,7 +41,7 @@ async function getUserId(): Promise<string> {
     await AsyncStorage.setItem(USER_ID_KEY, newUserId);
     return newUserId;
   } catch (error) {
-    console.error('Error getting/storing user ID:', error);
+    logger.error('Error getting/storing user ID:', error);
     // Fallback to a session-based ID if storage fails
     return `user_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   }
@@ -66,17 +72,27 @@ export async function submitManufacturingCountry(
   photoUrl?: string
 ): Promise<{ success: boolean; verified: boolean; message: string; alreadySubmitted?: boolean }> {
   try {
-    // Validate country name (basic validation)
-    const normalizedCountry = country.trim().toUpperCase();
-    if (!normalizedCountry || normalizedCountry.length < 2) {
+    // Validate input using validation utility
+    const validation = validateCountrySubmission(barcode, country, photoUrl);
+    if (!validation.valid || !validation.data) {
       return {
         success: false,
         verified: false,
-        message: 'Please enter a valid country name',
+        message: validation.error || 'Invalid input data',
       };
     }
 
+    const { country: validatedCountry, photoUrl: validatedPhotoUrl } = validation.data;
     const userId = await getUserId();
+    
+    // Rate limiting check
+    if (!submissionRateLimiter.isAllowed(userId)) {
+      return {
+        success: false,
+        verified: false,
+        message: 'Too many submissions. Please try again later.',
+      };
+    }
     const timestamp = Date.now();
 
     // Get existing submissions for this barcode
@@ -104,19 +120,19 @@ export async function submitManufacturingCountry(
     // New submission (user hasn't submitted before)
     const newSubmission: ManufacturingCountrySubmission = {
       barcode,
-      country: normalizedCountry,
+      country: validatedCountry,
       userId,
       timestamp,
       verified: false,
       verifiedCount: 1,
       disputed: false,
-      photoUrl,
+      photoUrl: validatedPhotoUrl || undefined,
     };
     existingSubmissions.push(newSubmission);
 
     // Count matching submissions (same country)
     const matchingSubmissions = existingSubmissions.filter(
-      s => s.country.toUpperCase() === normalizedCountry.toUpperCase()
+      s => s.country.toUpperCase() === validatedCountry.toUpperCase()
     );
     const verifiedCount = matchingSubmissions.length;
 
@@ -136,7 +152,7 @@ export async function submitManufacturingCountry(
 
     // Update non-matching submissions
     existingSubmissions
-      .filter(s => s.country.toUpperCase() !== normalizedCountry.toUpperCase())
+      .filter(s => s.country.toUpperCase() !== validatedCountry.toUpperCase())
       .forEach(submission => {
         submission.disputed = isDisputed;
         submission.verified = false;

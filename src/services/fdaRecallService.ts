@@ -37,7 +37,7 @@ interface FDAResponse {
     product_type?: string;
     event_id?: string;
     recalling_firm?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
 }
 

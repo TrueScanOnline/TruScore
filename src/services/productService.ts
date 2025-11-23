@@ -1,6 +1,8 @@
 // Main product service - orchestrates API calls and caching
 import { Product, ProductWithTrustScore } from '../types/product';
 import { fetchProductFromOFF, extractOriginCountry, calculateEcoScore, formatCertifications, formatIngredients } from './openFoodFacts';
+import { validateProduct, getSafeProduct } from '../utils/productValidation';
+import { logger } from '../utils/logger';
 import { fetchProductFromOBF } from './openBeautyFacts';
 import { fetchProductFromOPF } from './openProductsFacts';
 import { fetchProductFromOPFF } from './openPetFoodFacts';
@@ -63,10 +65,10 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
                                      (!cached.image_url && !cached.nutriments && !cached.ingredients_text));
       
       if (isLowQualityWebSearch && !isOffline) {
-        console.log(`Cached product ${barcode} is low-quality web search result, retrying web search...`);
+        logger.debug(`Cached product ${barcode} is low-quality web search result, retrying web search...`);
         // Don't return cached - continue to retry web search
       } else {
-        console.log(`Using cached product: ${barcode}${isPremium ? ' (premium cache)' : ''}`);
+        logger.debug(`Using cached product: ${barcode}${isPremium ? ' (premium cache)' : ''}`);
         return calculateTrustScore(cached);
       }
     }
@@ -74,32 +76,32 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
 
   // If offline and no cache, return null (premium users should have cache)
   if (isOffline) {
-    console.warn(`Product not in cache (offline mode): ${barcode}`);
+    logger.warn(`Product not in cache (offline mode): ${barcode}`);
     return null;
   }
 
   // OPTIMIZED: Parallelize API calls for faster product fetching
   // Tier 1: Open Facts databases (parallel - independent sources)
   // Try Open Facts databases in parallel since they're independent
-  console.log(`Fetching from Open Facts databases in parallel: ${barcode}`);
+  logger.debug(`Fetching from Open Facts databases in parallel: ${barcode}`);
   let product: Product | null = null;
   
   // Parallel fetch from Open Facts databases
   const [offProduct, obfProduct, opffProduct, opfProduct] = await Promise.allSettled([
     fetchProductFromOFF(barcode).catch(err => {
-      console.log(`OFF fetch error for ${barcode}:`, err.message);
+      logger.debug(`OFF fetch error for ${barcode}:`, err.message);
       return null;
     }),
     fetchProductFromOBF(barcode).catch(err => {
-      console.log(`OBF fetch error for ${barcode}:`, err.message);
+      logger.debug(`OBF fetch error for ${barcode}:`, err.message);
       return null;
     }),
     fetchProductFromOPFF(barcode).catch(err => {
-      console.log(`OPFF fetch error for ${barcode}:`, err.message);
+      logger.debug(`OPFF fetch error for ${barcode}:`, err.message);
       return null;
     }),
     fetchProductFromOPF(barcode).catch(err => {
-      console.log(`OPF fetch error for ${barcode}:`, err.message);
+      logger.debug(`OPF fetch error for ${barcode}:`, err.message);
       return null;
     }),
   ]);
@@ -107,25 +109,25 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
   // Use first successful result from Open Facts databases (prioritize OFF > OBF > OPFF > OPF)
   if (offProduct.status === 'fulfilled' && offProduct.value) {
     product = offProduct.value;
-    console.log(`Found product in Open Food Facts: ${barcode}`);
+    logger.debug(`Found product in Open Food Facts: ${barcode}`);
   } else if (obfProduct.status === 'fulfilled' && obfProduct.value) {
     product = obfProduct.value;
-    console.log(`Found product in Open Beauty Facts: ${barcode}`);
+    logger.debug(`Found product in Open Beauty Facts: ${barcode}`);
   } else if (opffProduct.status === 'fulfilled' && opffProduct.value) {
     product = opffProduct.value;
-    console.log(`Found product in Open Pet Food Facts: ${barcode}`);
+    logger.debug(`Found product in Open Pet Food Facts: ${barcode}`);
   } else if (opfProduct.status === 'fulfilled' && opfProduct.value) {
     product = opfProduct.value;
-    console.log(`Found product in Open Products Facts: ${barcode}`);
+    logger.debug(`Found product in Open Products Facts: ${barcode}`);
   }
 
   // Tier 2: Official sources (parallel - independent sources)
   // If Open Facts didn't return a product, try official sources in parallel
   if (!product) {
-    console.log(`Open Facts databases not found, trying official sources in parallel: ${barcode}`);
+    logger.debug(`Open Facts databases not found, trying official sources in parallel: ${barcode}`);
     const [usdaProduct, gs1Product] = await Promise.allSettled([
       fetchProductFromUSDA(barcode).catch(err => {
-        console.log(`USDA fetch error for ${barcode}:`, err.message);
+        logger.debug(`USDA fetch error for ${barcode}:`, err.message);
         return null;
       }),
       fetchProductFromGS1(barcode).catch(err => {
@@ -137,24 +139,24 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     // Prioritize USDA over GS1 (more reliable for food products)
     if (usdaProduct.status === 'fulfilled' && usdaProduct.value) {
       product = usdaProduct.value;
-      console.log(`Found product in USDA FoodData Central: ${barcode}`);
+      logger.debug(`Found product in USDA FoodData Central: ${barcode}`);
     } else if (gs1Product.status === 'fulfilled' && gs1Product.value) {
       product = gs1Product.value;
-      console.log(`Found product in GS1 Data Source: ${barcode}`);
+      logger.debug(`Found product in GS1 Data Source: ${barcode}`);
     }
   }
 
   // Tier 3: Fallback sources (parallel - independent sources)
   // If official sources didn't return a product, try fallback sources in parallel
   if (!product) {
-    console.log(`Official sources not found, trying fallback sources in parallel: ${barcode}`);
+    logger.debug(`Official sources not found, trying fallback sources in parallel: ${barcode}`);
     const [upcitemdbProduct, barcodeSpiderProduct] = await Promise.allSettled([
       fetchProductFromUPCitemdb(barcode).catch(err => {
-        console.log(`UPCitemdb fetch error for ${barcode}:`, err.message);
+        logger.debug(`UPCitemdb fetch error for ${barcode}:`, err.message);
         return null;
       }),
       fetchProductFromBarcodeSpider(barcode).catch(err => {
-        console.log(`Barcode Spider fetch error for ${barcode}:`, err.message);
+        logger.debug(`Barcode Spider fetch error for ${barcode}:`, err.message);
         return null;
       }),
     ]);
@@ -162,23 +164,23 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     // Prioritize UPCitemdb over Barcode Spider (more reliable)
     if (upcitemdbProduct.status === 'fulfilled' && upcitemdbProduct.value) {
       product = upcitemdbProduct.value;
-      console.log(`Found product in UPCitemdb: ${barcode}`);
+      logger.debug(`Found product in UPCitemdb: ${barcode}`);
     } else if (barcodeSpiderProduct.status === 'fulfilled' && barcodeSpiderProduct.value) {
       product = barcodeSpiderProduct.value;
-      console.log(`Found product in Barcode Spider: ${barcode}`);
+      logger.debug(`Found product in Barcode Spider: ${barcode}`);
     }
   }
 
   // FINAL FALLBACK: Web Search - ensures we ALWAYS return a result
   // This guarantees that every scanned barcode returns SOME product data
   if (!product) {
-    console.log(`All databases failed, using web search fallback: ${barcode}`);
+    logger.warn(`All databases failed, using web search fallback: ${barcode}`);
     product = await fetchProductFromWebSearch(barcode);
     // Web search fallback will always return a product (even if minimal)
-    console.log(`Web search fallback provided result for: ${barcode}`);
+    logger.debug(`Web search fallback provided result for: ${barcode}`);
   } else if (isWebSearchFallback(product)) {
     // Even if we found a product from a database, if it's low quality, try web search too
-    console.log(`Found low-quality product from database, also trying web search for: ${barcode}`);
+    logger.debug(`Found low-quality product from database, also trying web search for: ${barcode}`);
     const webSearchProduct = await fetchProductFromWebSearch(barcode);
     
     // Merge web search data if it's better
@@ -211,7 +213,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       }
       
       if (improved) {
-        console.log(`Web search improved product data for: ${barcode}`);
+        logger.debug(`Web search improved product data for: ${barcode}`);
         product = mergedProduct;
       }
     }
@@ -219,7 +221,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
 
   // Ensure we have a product (should always be true now with web search fallback)
   if (!product) {
-    console.error(`CRITICAL: All sources including web search failed for barcode: ${barcode}`);
+    logger.error(`CRITICAL: All sources including web search failed for barcode: ${barcode}`);
     // This should never happen, but if it does, create absolute fallback
     product = {
       barcode,
@@ -269,11 +271,11 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
           // Store recalls in product (will be used when displaying)
           product.recalls = recalls;
           // Update cache with recalls
-          cacheProduct(product, isPremium).catch(console.error);
+          cacheProduct(product, isPremium).catch((err) => logger.error('Error caching product:', err));
         }
       })
       .catch(error => {
-        console.error('Error checking recalls (non-blocking):', error);
+        logger.error('Error checking recalls (non-blocking):', error);
       });
   }
 
@@ -308,7 +310,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       }
     } catch (error) {
       // Non-blocking - recalls will be checked in background
-      console.log('Recall check timed out or failed (non-critical):', error);
+      logger.debug('Recall check timed out or failed (non-critical):', error);
     }
   }
   

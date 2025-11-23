@@ -30,17 +30,34 @@ const TOP_BOYCOUTS = [
 
 /**
  * Generate insights based on user preferences and product data
+ * Includes input validation and error handling
  */
 export function generateInsights(
-  product: Product,
-  preferences: ValuesPreferences
+  product: Product | null | undefined,
+  preferences: ValuesPreferences | null | undefined
 ): Insight[] {
-  const insights: Insight[] = [];
-  const brands = (product.brands || '').toLowerCase();
-  const origins = (product.origins_tags || []).map((o: string) => o.toLowerCase());
-  const manufacturingPlaces = (product.manufacturing_places_tags || []).map((m: string) => m.toLowerCase());
-  const allOrigins = [...origins, ...manufacturingPlaces].join(' ');
-  const analysisTags = product.ingredients_analysis_tags || [];
+  // Input validation
+  if (!product || typeof product !== 'object') {
+    return [];
+  }
+  
+  if (!preferences || typeof preferences !== 'object') {
+    return [];
+  }
+
+  try {
+    const insights: Insight[] = [];
+    const brands = (product.brands || '').toLowerCase();
+    const origins = (product.origins_tags || []).map((o: string) => 
+      typeof o === 'string' ? o.toLowerCase() : ''
+    ).filter(Boolean);
+    const manufacturingPlaces = (product.manufacturing_places_tags || []).map((m: string) => 
+      typeof m === 'string' ? m.toLowerCase() : ''
+    ).filter(Boolean);
+    const allOrigins = [...origins, ...manufacturingPlaces].join(' ');
+    const analysisTags = (product.ingredients_analysis_tags || []).filter((tag: unknown) => 
+      typeof tag === 'string'
+    ) as string[];
 
   // Geopolitical insights
   if (preferences.geopoliticalEnabled) {
@@ -147,7 +164,11 @@ export function generateInsights(
     }
   }
 
-  return insights;
+    return insights;
+  } catch (error) {
+    console.error('[valuesInsights] Error generating insights:', error);
+    return []; // Safe fallback
+  }
 }
 
 export { TOP_BOYCOUTS };

@@ -1,7 +1,7 @@
 // src/lib/scoringEngine.ts – TruScore v1.3 Final Launch Engine (Jan 2026)
 // 100% public data, zero proprietary → untouchable
 
-import { Product, ProductWithTrustScore, TrustScoreBreakdown } from '../types/product';
+import { Product, ProductWithTrustScore, TrustScoreBreakdown, PackagingItem } from '../types/product';
 
 export interface TruScoreResult {
   truscore: number;
@@ -14,7 +14,7 @@ export interface TruScoreResult {
   hasNutriScore?: boolean;
   hasEcoScore?: boolean;
   hasOrigin?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -88,7 +88,7 @@ export const calculateTruScore = (product: Product, source_used: string): TruSco
 
   if (has_palm && !palm_free) planet -= 10;
 
-  const recyclable = packagings.filter((p: any) => 
+  const recyclable = packagings.filter((p: PackagingItem) => 
     p.recycling && ['recycle', 'widely recycled'].includes(p.recycling.toLowerCase())
   ).length;
 

@@ -1,5 +1,6 @@
 // CORS Proxy utilities for web scraping
 // Allows React Native apps to scrape websites that block direct requests
+import { logger } from '../../utils/logger';
 
 /**
  * Get CORS proxy URL for a given target URL
@@ -61,14 +62,14 @@ export async function fetchWithCorsProxy(
         // Note: React Native fetch doesn't automatically decompress, but some servers
         // may send compressed data even when we request 'identity'
         if (contentEncoding.includes('gzip') || contentEncoding.includes('deflate') || contentEncoding.includes('br')) {
-          console.warn(`[CORSProxy] Response is compressed (${contentEncoding}) but we can't decompress in React Native`);
+          logger.warn(`[CORSProxy] Response is compressed (${contentEncoding}) but we can't decompress in React Native`);
           // Try to get as text anyway - may fail
           html = await directResponse.text();
           
           // Check if HTML is actually binary/garbled
           const isBinary = /[\x00-\x08\x0E-\x1F]/.test(html.substring(0, 1000));
           if (isBinary) {
-            console.warn(`[CORSProxy] HTML appears to be compressed/binary - cannot decompress in React Native`);
+            logger.warn(`[CORSProxy] HTML appears to be compressed/binary - cannot decompress in React Native`);
             // Skip this response, will try proxy
             continue;
           }
@@ -80,10 +81,10 @@ export async function fetchWithCorsProxy(
           // Check if HTML is readable (not binary)
           const isReadable = /<html|<body|<div|<script/i.test(html.substring(0, 500));
           if (isReadable) {
-            console.log(`[CORSProxy] Direct fetch succeeded for ${url.substring(0, 50)}...`);
+            logger.debug(`[CORSProxy] Direct fetch succeeded for ${url.substring(0, 50)}...`);
             return html;
           } else {
-            console.warn(`[CORSProxy] HTML appears to be binary/unreadable`);
+            logger.warn(`[CORSProxy] HTML appears to be binary/unreadable`);
             // Try proxy instead
             continue;
           }
@@ -91,13 +92,13 @@ export async function fetchWithCorsProxy(
       }
     } catch (error) {
       // Direct fetch failed, will try proxy
-      console.log(`[CORSProxy] Direct fetch failed, trying proxy...`);
+      logger.debug(`[CORSProxy] Direct fetch failed, trying proxy...`);
     }
     
     // Try CORS proxy
     try {
       const proxyUrl = getCorsProxyUrl(url);
-      console.log(`[CORSProxy] Fetching through proxy (attempt ${attempt + 1}/${maxRetries})...`);
+      logger.debug(`[CORSProxy] Fetching through proxy (attempt ${attempt + 1}/${maxRetries})...`);
       
       const proxyResponse = await fetch(proxyUrl, {
         ...options,
@@ -115,7 +116,7 @@ export async function fetchWithCorsProxy(
           try {
             const json = JSON.parse(data);
             if (json.contents) {
-              console.log(`[CORSProxy] ✅ Proxy fetch succeeded (AllOrigins)`);
+              logger.debug(`[CORSProxy] ✅ Proxy fetch succeeded (AllOrigins)`);
               return json.contents;
             }
           } catch (e) {
@@ -126,13 +127,13 @@ export async function fetchWithCorsProxy(
         
         // Other proxies may return HTML directly
         if (data && data.length > 100) {
-          console.log(`[CORSProxy] ✅ Proxy fetch succeeded`);
+          logger.debug(`[CORSProxy] ✅ Proxy fetch succeeded`);
           return data;
         }
       }
     } catch (error) {
       lastError = error as Error;
-      console.warn(`[CORSProxy] Proxy attempt ${attempt + 1} failed:`, error);
+      logger.warn(`[CORSProxy] Proxy attempt ${attempt + 1} failed:`, error);
       
       // Wait before retry
       if (attempt < maxRetries - 1) {
@@ -143,7 +144,7 @@ export async function fetchWithCorsProxy(
   
   // Only log as warning for expected failures (some sites block scraping)
   // Don't log full error to reduce noise - failures are handled gracefully by calling code
-  console.log(`[CORSProxy] ⚠️ Could not fetch ${url.substring(0, 50)}... (site may block scraping)`);
+  logger.warn(`[CORSProxy] ⚠️ Could not fetch ${url.substring(0, 50)}... (site may block scraping)`);
   return null;
 }
 

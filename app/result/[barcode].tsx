@@ -36,7 +36,6 @@ import NutritionTable from '../../src/components/NutritionTable';
 import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
 import { useValuesStore } from '../../src/store/useValuesStore';
 import InsightsCarousel from '../../src/components/InsightsCarousel';
-import ShareValuesCard from '../../src/features/values/ShareValuesCard';
 import TrustScoreInfoModal from '../../src/components/TrustScoreInfoModal';
 import EcoScoreInfoModal from '../../src/components/EcoScoreInfoModal';
 import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModal';
@@ -54,6 +53,8 @@ import ManufacturingCountryModal from '../../src/components/ManufacturingCountry
 import RecallAlertModal from '../../src/components/RecallAlertModal';
 import PalmOilInfoModal from '../../src/components/PalmOilInfoModal';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
+import { sanitizeText } from '../../src/utils/validation';
+import { logger } from '../../src/utils/logger';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import { saveManualProduct, ManualProductData, getManualProduct, isManualProduct } from '../../src/services/manualProductService';
 
@@ -469,7 +470,9 @@ function ResultScreenContent() {
             )}
           </View>
           {product.brands && (
-            <Text style={[styles.brand, { color: colors.textSecondary }]}>{product.brands}</Text>
+            <Text style={[styles.brand, { color: colors.textSecondary }]}>
+              {sanitizeText(product.brands, 200)}
+            </Text>
           )}
           
           {/* Web Search Notice & Button (shown when product is from web search fallback or has minimal data) */}
@@ -1322,10 +1325,6 @@ function ResultScreenContent() {
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      {/* Share Choices FAB */}
-      <View style={[styles.fabContainer, { bottom: tabBarHeight + 16 }]}>
-        <ShareValuesCard truScore={truScore?.truscore} />
-      </View>
 
       {/* Trust Score Info Modal - Only show if we have data */}
       {product && product.trust_score !== null && product.trust_score_breakdown && (
@@ -1448,7 +1447,7 @@ function ResultScreenContent() {
 // Export with Error Boundary wrapper
 export default function ResultScreen() {
   return (
-    <ErrorBoundary>
+    <ErrorBoundary feature="ResultScreen">
       <ResultScreenContent />
     </ErrorBoundary>
   );
@@ -2164,12 +2163,6 @@ const styles = StyleSheet.create({
   },
   insightsHeaderCount: {
     fontSize: 14,
-  },
-  fabContainer: {
-    position: 'absolute',
-    right: 16,
-    left: 16,
-    zIndex: 1000,
   },
   cardDescription: {
     fontSize: 14,

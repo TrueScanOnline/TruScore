@@ -92,33 +92,48 @@ export async function findNearbyStores(
           if (response.ok) {
             const data = await response.json();
             if (data.results && Array.isArray(data.results)) {
-              data.results.forEach((place: any) => {
-                if (place.geometry && place.geometry.location) {
+              interface GooglePlace {
+                place_id?: string;
+                name?: string;
+                formatted_address?: string;
+                geometry?: {
+                  location?: {
+                    lat?: number;
+                    lng?: number;
+                  };
+                };
+                [key: string]: unknown;
+              }
+              
+              (data.results as GooglePlace[]).forEach((place) => {
+                if (place.geometry?.location?.lat !== undefined && place.geometry?.location?.lng !== undefined) {
                   const placeLat = place.geometry.location.lat;
                   const placeLng = place.geometry.location.lng;
                   const distance = calculateDistance(latitude, longitude, placeLat, placeLng);
                   
-    if (distance <= radiusMiles) {
-                  // CRITICAL: Verify store name matches a country-specific chain
-                  const placeName = (place.name || '').toLowerCase();
-                  const matchesChain = countryChains.some(chain => 
-                    chain.patterns.some(pattern => placeName.includes(pattern.toLowerCase()))
-                  );
-                  
-                  // CRITICAL: Also verify the place is in the correct country
-                  const placeCountry = place.plus_code?.compound_code?.split(' ').pop() || '';
-                  const isCorrectCountry = !placeCountry || placeCountry.toLowerCase().includes(countryCode.toLowerCase());
-                  
-                  if (matchesChain && isCorrectCountry) {
+                  if (distance <= radiusMiles) {
+                    // CRITICAL: Verify store name matches a country-specific chain
+                    const placeName = (place.name || '').toLowerCase();
+                    const matchesChain = countryChains.some(chain => 
+                      chain.patterns.some(pattern => placeName.includes(pattern.toLowerCase()))
+                    );
+                    
+                    // CRITICAL: Also verify the place is in the correct country
+                    const plusCode = place.plus_code as { compound_code?: string } | undefined;
+                    const placeCountry = plusCode?.compound_code?.split(' ').pop() || '';
+                    const isCorrectCountry = !placeCountry || placeCountry.toLowerCase().includes(countryCode.toLowerCase());
+                    
+                    if (matchesChain && isCorrectCountry) {
+                      const openingHours = place.opening_hours as { weekday_text?: string[] } | undefined;
                       stores.push({
-                        name: place.name,
-                        address: place.vicinity || place.formatted_address || '',
+                        name: place.name || '',
+                        address: (place.vicinity as string | undefined) || place.formatted_address || '',
                         latitude: placeLat,
                         longitude: placeLng,
                         distance,
-                        chain: place.name,
-                        phone: place.formatted_phone_number,
-                        hours: place.opening_hours?.weekday_text?.join(', '),
+                        chain: place.name || '',
+                        phone: place.formatted_phone_number as string | undefined,
+                        hours: openingHours?.weekday_text?.join(', '),
                       });
                     }
                   }
@@ -145,24 +160,36 @@ export async function findNearbyStores(
         if (response.ok) {
           const data = await response.json();
           if (data.features && Array.isArray(data.features)) {
-            data.features.forEach((feature: any) => {
+            interface GeoJSONFeature {
+              properties?: {
+                name?: string;
+                [key: string]: unknown;
+              };
+              geometry?: {
+                coordinates?: [number, number];
+                [key: string]: unknown;
+              };
+              [key: string]: unknown;
+            }
+            
+            (data.features as GeoJSONFeature[]).forEach((feature) => {
               const props = feature.properties;
-              const coords = feature.geometry.coordinates;
+              const coords = feature.geometry?.coordinates;
               
               if (coords && coords.length >= 2) {
                 const placeLng = coords[0];
                 const placeLat = coords[1];
                 const distance = calculateDistance(latitude, longitude, placeLat, placeLng);
                 
-                if (distance <= radiusMiles) {
+                if (distance <= radiusMiles && props) {
                   // CRITICAL: Verify store name matches a country-specific chain
-                  const placeName = (props.name || '').toLowerCase();
+                  const placeName = (props.name as string | undefined || '').toLowerCase();
                   const matchesChain = countryChains.some(chain => 
                     chain.patterns.some(pattern => placeName.includes(pattern.toLowerCase()))
                   );
                   
                   // CRITICAL: Verify country matches (Geoapify provides country code)
-                  const placeCountryCode = props.country_code?.toUpperCase();
+                  const placeCountryCode = (props.country_code as string | undefined)?.toUpperCase();
                   const isCorrectCountry = !placeCountryCode || placeCountryCode === countryCode.toUpperCase();
                   
                   if (matchesChain && isCorrectCountry) {
@@ -173,12 +200,12 @@ export async function findNearbyStores(
                     
                     if (!existing) {
                       stores.push({
-                        name: props.name || 'Store',
-                        address: props.address_line2 || props.address_line1 || '',
+                        name: (props.name as string | undefined) || 'Store',
+                        address: (props.address_line2 as string | undefined) || (props.address_line1 as string | undefined) || '',
                         latitude: placeLat,
                         longitude: placeLng,
                         distance,
-                        chain: props.name,
+                        chain: (props.name as string | undefined) || 'Store',
                       });
                     }
                   }

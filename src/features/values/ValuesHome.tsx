@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { useValuesStore } from '../../store/useValuesStore';
 import Toast from 'react-native-toast-message';
+import ShareValuesCard from './ShareValuesCard';
 
 type TabType = 'geopolitical' | 'ethical' | 'environmental';
 
@@ -311,6 +312,11 @@ export default function ValuesHome() {
             )}
           </View>
         )}
+
+        {/* Share Choices Button */}
+        <View style={styles.shareContainer}>
+          <ShareValuesCard />
+        </View>
       </ScrollView>
     </View>
   );
@@ -440,6 +446,11 @@ const styles = StyleSheet.create({
   switchDescription: {
     fontSize: 13,
     lineHeight: 18,
+  },
+  shareContainer: {
+    marginTop: 24,
+    marginBottom: 16,
+    paddingHorizontal: 0,
   },
 });
 
