@@ -76,19 +76,7 @@ module.exports = {
       // Secret Key is for server-side use only (webhooks, backend API)
       // Get keys from: https://dashboard.qonversion.io/settings
       qonversion: {
-        projectKey: (() => {
-          const key = process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY;
-          if (!key || key.length < 10) {
-            // Don't fail builds - subscription features just won't work
-            if (process.env.EAS_BUILD === 'true' || process.env.NODE_ENV === 'production') {
-              console.warn('[BUILD] EXPO_PUBLIC_QONVERSION_PROJECT_KEY not set - subscription features will not work');
-            } else {
-              console.warn('[DEV] EXPO_PUBLIC_QONVERSION_PROJECT_KEY not set - subscription features will not work');
-            }
-            return '';
-          }
-          return key;
-        })(),
+        projectKey: process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY || '',
         // Legacy support for separate iOS/Android keys if needed
         iosKey: process.env.EXPO_PUBLIC_QONVERSION_IOS_KEY || process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY || '',
         androidKey: process.env.EXPO_PUBLIC_QONVERSION_ANDROID_KEY || process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY || '',
