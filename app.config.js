@@ -70,7 +70,7 @@ module.exports = {
     ],
     extra: {
       eas: {
-        projectId: 'your-project-id-here',
+        projectId: '1ac14572-9608-42fa-aceb-c0e2a2f60687',
       },
       // Qonversion Project Key - same for both iOS and Android
       // Secret Key is for server-side use only (webhooks, backend API)
