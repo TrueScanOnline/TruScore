@@ -43,7 +43,7 @@ export default function SettingsScreen() {
   } = useSettingsStore();
   const { recentScans, clearHistory } = useScanStore();
   const [cacheSize, setCacheSize] = React.useState<number>(0);
-  const [showFSANZModal, setShowFSANZModal] = React.useState(false);
+  const [fsanzImportModalVisible, setFsanzImportModalVisible] = React.useState(false);
 
   React.useEffect(() => {
     loadCacheSize();
@@ -281,9 +281,8 @@ export default function SettingsScreen() {
           />
           <SettingRow
             icon="cloud-download-outline"
-            label="FSANZ Database Import"
-            value="Improve product recognition"
-            onPress={() => setShowFSANZModal(true)}
+            label={t('settings.fsanzDatabaseImport') || 'FSANZ Database Import'}
+            onPress={() => setFsanzImportModalVisible(true)}
           />
         </SettingSection>
 
@@ -372,11 +371,11 @@ export default function SettingsScreen() {
           <Text style={[styles.footerSubtext, { color: colors.textTertiary }]}>{t('settings.footerSubtext')}</Text>
         </View>
       </ScrollView>
-
+      
       {/* FSANZ Database Import Modal */}
       <FSANZDatabaseImportModal
-        visible={showFSANZModal}
-        onClose={() => setShowFSANZModal(false)}
+        visible={fsanzImportModalVisible}
+        onClose={() => setFsanzImportModalVisible(false)}
       />
     </View>
   );

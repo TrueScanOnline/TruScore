@@ -1,68 +1,73 @@
-// Barcode Monster API Integration
-// Free barcode lookup - no API key required for basic usage
-// https://www.barcodemonster.com/
-
+// Barcode Monster API client (free tier available)
+// Good for general products, returns product name, brand, image
 import { Product } from '../types/product';
-import { logger } from '../utils/logger';
-import { createTimeoutSignal } from '../utils/timeoutHelper';
+import { createTimeoutSignal, fetchWithRateLimit } from '../utils/timeoutHelper';
 
-// Note: Barcode Monster API endpoint may vary or require authentication
-// If this fails, we'll gracefully skip it
-const BARCODE_MONSTER_API = 'https://www.barcodemonster.com/api';
+const BARCODE_MONSTER_API = 'https://api.barcodemonster.com/v1/lookup';
+const API_KEY = process.env.EXPO_PUBLIC_BARCODE_MONSTER_API_KEY || ''; // Optional - free tier works without key
+
+export interface BarcodeMonsterResponse {
+  barcode?: string;
+  product?: {
+    name?: string;
+    brand?: string;
+    description?: string;
+    category?: string;
+    image?: string;
+  };
+  status?: string;
+}
 
 /**
- * Fetch product data from Barcode Monster
- * Free tier available, no API key required for basic lookups
+ * Fetch product data from Barcode Monster API
  */
 export async function fetchProductFromBarcodeMonster(barcode: string): Promise<Product | null> {
   try {
-    const url = `${BARCODE_MONSTER_API}/product/${barcode}`;
-    const response = await fetch(url, {
+    const url = API_KEY
+      ? `${BARCODE_MONSTER_API}?barcode=${barcode}&api_key=${API_KEY}`
+      : `${BARCODE_MONSTER_API}?barcode=${barcode}`;
+    
+    const signal = createTimeoutSignal(5000); // 5 second timeout
+    
+    const response = await fetchWithRateLimit(url, {
       headers: {
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
         'Accept': 'application/json',
+        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
       },
-      signal: createTimeoutSignal(10000), // 10 second timeout
-    });
+      signal,
+    }, 'barcode_monster');
 
     if (!response.ok) {
-      if (response.status === 404) {
-        logger.debug(`Product not found in Barcode Monster: ${barcode}`);
-      } else {
-        logger.debug(`Barcode Monster API error: ${response.status} ${response.statusText}`);
+      if (response.status !== 404) {
+        console.log(`[DEBUG] Barcode Monster API error: ${response.status}`);
       }
       return null;
     }
 
-    const data = await response.json();
+    const data: BarcodeMonsterResponse = await response.json();
 
-    if (!data || !data.name) {
-      logger.debug(`Product not found in Barcode Monster: ${barcode}`);
+    if (!data.product || (!data.product.name && !data.product.brand)) {
       return null;
     }
 
+    const product = data.product;
+
     // Convert to our Product format
-    const convertedProduct: Product = {
+    const result: Product = {
       barcode: data.barcode || barcode,
-      product_name: data.name,
-      brands: data.brand || data.manufacturer,
-      generic_name: data.description,
-      categories_tags: data.category ? (Array.isArray(data.category) ? data.category : [data.category]) : undefined,
-      image_url: data.image || data.imageUrl,
+      product_name: product.name,
+      brands: product.brand,
+      generic_name: product.description,
+      categories: product.category,
+      image_url: product.image,
       source: 'barcode_monster',
     };
 
-    logger.debug(`Found product in Barcode Monster: ${barcode}`);
-    return convertedProduct;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    // Don't log network errors as errors - they're expected if the service is unavailable
-    if (errorMessage.includes('Network request failed') || errorMessage.includes('Failed to fetch')) {
-      logger.debug(`Barcode Monster service unavailable for ${barcode}`);
-    } else if (!errorMessage.includes('aborted') && !errorMessage.includes('timeout')) {
-      logger.debug(`Barcode Monster API error for ${barcode}:`, errorMessage);
-    } else {
-      logger.debug(`Barcode Monster timeout for ${barcode}`);
+    return result;
+  } catch (error: any) {
+    // Don't log network errors as warnings - they're expected
+    if (error.name !== 'AbortError' && error.message && !error.message.includes('timeout')) {
+      console.log(`[DEBUG] Barcode Monster API error for ${barcode}:`, error.message);
     }
     return null;
   }

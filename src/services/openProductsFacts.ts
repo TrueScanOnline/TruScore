@@ -1,5 +1,6 @@
 // Open Products Facts API client
 import { Product } from '../types/product';
+import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const OPF_API_BASE = 'https://world.openproductsfacts.org/api/v2/product';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -19,11 +20,11 @@ export async function fetchProductFromOPF(barcode: string): Promise<Product | nu
   try {
     const url = `${OPF_API_BASE}/${barcode}.json`;
     
-    const response = await fetch(url, {
+    const response = await fetchWithRateLimit(url, {
       headers: {
         'User-Agent': USER_AGENT,
       },
-    });
+    }, 'openproductsfacts');
 
     if (!response.ok) {
       // 404 is expected when product not in general products database - use debug level

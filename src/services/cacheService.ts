@@ -2,9 +2,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Product } from '../types/product';
-import { getCachePath } from '../utils/fileSystemHelper';
 
-const CACHE_DIR = getCachePath('truescan/');
+const CACHE_DIR = `${FileSystem.cacheDirectory}truescan/`;
 const CACHE_STORAGE_KEY = '@truescan_product_cache';
 const MAX_CACHE_SIZE = 100; // Maximum number of cached products for free users
 const MAX_CACHE_SIZE_PREMIUM = 500; // Maximum number of cached products for premium users
@@ -23,19 +22,12 @@ interface CachedProduct {
  */
 export async function initializeCache(): Promise<void> {
   try {
-    // Use legacy API (getInfoAsync is deprecated but still works)
-    // New API requires different import structure, so we'll use legacy for now
-    const dirInfo = await (FileSystem as any).getInfoAsync?.(CACHE_DIR) || { exists: false };
+    const dirInfo = await FileSystem.getInfoAsync(CACHE_DIR);
     if (!dirInfo.exists) {
       await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
     }
   } catch (error) {
-    // If getInfoAsync fails, just try to create the directory
-    try {
-      await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
-    } catch (createError) {
-      console.error('Error initializing cache directory:', createError);
-    }
+    console.error('Error initializing cache directory:', error);
   }
 }
 
@@ -136,8 +128,7 @@ async function cacheImage(barcode: string, imageUrl: string): Promise<void> {
       console.log(`Image is already local file: ${imageUrl} - copying to cache`);
       try {
         const imagePath = `${CACHE_DIR}${barcode}.jpg`;
-        // Use legacy API (getInfoAsync is deprecated but still works)
-        const fileInfo = await (FileSystem as any).getInfoAsync?.(imagePath) || { exists: false };
+        const fileInfo = await FileSystem.getInfoAsync(imagePath);
         
         if (!fileInfo.exists) {
           // Copy the local file to cache directory

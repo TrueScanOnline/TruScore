@@ -2,6 +2,7 @@
 import { Product, PalmOilAnalysis, PackagingData, PackagingItem, AgribalyseData } from '../types/product';
 import { logger } from '../utils/logger';
 import { getUserCountryCode, getCountryCodesToTry, getOFFCountryInstance } from '../utils/countryDetection';
+import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org/api/v2/product';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -20,11 +21,11 @@ async function fetchProductFromOFFInstance(barcode: string, instance: string): P
   try {
     const url = `https://${instance}/api/v2/product/${barcode}.json`;
     
-    const response = await fetch(url, {
+    const response = await fetchWithRateLimit(url, {
       headers: {
         'User-Agent': USER_AGENT,
       },
-    });
+    }, 'openfoodfacts');
 
     if (!response.ok) {
       if (response.status !== 404) {
@@ -59,17 +60,16 @@ async function fetchProductFromOFFInstance(barcode: string, instance: string): P
 /**
  * Fetch product data from Open Food Facts API
  * Tries country-specific instances first, then falls back to global
- * Enhanced to query 20+ country instances in parallel for maximum coverage
  * This significantly improves success rate for country-specific products
  */
 export async function fetchProductFromOFF(barcode: string): Promise<Product | null> {
   // Get country codes to try (user's country first, then common countries)
   const countriesToTry = getCountryCodesToTry();
   
-  // Build list of instances to try - expanded for maximum coverage
+  // Build list of instances to try
   const instancesToTry: string[] = [];
   
-  // Add country-specific instances first (prioritized)
+  // Add country-specific instances first
   for (const countryCode of countriesToTry) {
     const instance = getOFFCountryInstance(countryCode);
     if (instance && !instancesToTry.includes(instance)) {
@@ -77,38 +77,20 @@ export async function fetchProductFromOFF(barcode: string): Promise<Product | nu
     }
   }
   
-  // Add additional high-coverage countries that might have the product
-  // These are countries with large product databases
-  const additionalCountries = ['FR', 'DE', 'IT', 'ES', 'NL', 'BE', 'PL', 'CZ', 'US', 'CA', 'GB'];
-  for (const countryCode of additionalCountries) {
-    const instance = getOFFCountryInstance(countryCode);
-    if (instance && !instancesToTry.includes(instance)) {
-      instancesToTry.push(instance);
-    }
-  }
-  
   // Always try global instance as fallback
-  if (!instancesToTry.includes('world.openfoodfacts.org')) {
-    instancesToTry.push('world.openfoodfacts.org');
-  }
+  instancesToTry.push('world.openfoodfacts.org');
   
   // Try instances in parallel for faster lookup
   // User's country instance will likely respond first if product exists there
-  // Limit to 25 parallel requests to avoid overwhelming the API
-  const maxParallel = 25;
-  const instancesToQuery = instancesToTry.slice(0, maxParallel);
-  
-  logger.debug(`Querying ${instancesToQuery.length} OFF instances in parallel for ${barcode}`);
-  
   const results = await Promise.allSettled(
-    instancesToQuery.map(instance => fetchProductFromOFFInstance(barcode, instance))
+    instancesToTry.map(instance => fetchProductFromOFFInstance(barcode, instance))
   );
   
   // Return first successful result
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
     if (result.status === 'fulfilled' && result.value) {
-      const instance = instancesToQuery[i];
+      const instance = instancesToTry[i];
       logger.debug(`Found product in OFF (${instance}): ${barcode}`);
       return result.value;
     }

@@ -1,78 +1,68 @@
-// Open GTIN Database API Integration
-// Free, open-source barcode database - no API key required
-// https://opengtindb.org/
-
+// Open GTIN Database API client (free tier available)
+// Good for global product database, returns product name, brand, image
 import { Product } from '../types/product';
-import { logger } from '../utils/logger';
-import { createTimeoutSignal } from '../utils/timeoutHelper';
+import { createTimeoutSignal, fetchWithRateLimit } from '../utils/timeoutHelper';
 
-const OPEN_GTIN_API = 'https://opengtindb.org/index.php';
+const OPEN_GTIN_API = 'https://api.opengtindb.org/gtin';
+const API_KEY = process.env.EXPO_PUBLIC_OPEN_GTIN_API_KEY || ''; // Optional - free tier works without key
+
+export interface OpenGtinResponse {
+  gtin?: string;
+  name?: string;
+  brand?: string;
+  category?: string;
+  image?: string;
+  description?: string;
+}
 
 /**
- * Fetch product data from Open GTIN Database
- * Free, no API key required
+ * Fetch product data from Open GTIN Database API
  */
-export async function fetchProductFromOpenGTIN(barcode: string): Promise<Product | null> {
+export async function fetchProductFromOpenGtin(barcode: string): Promise<Product | null> {
   try {
-    // Open GTIN DB uses a simple GET request with the barcode
-    const url = `${OPEN_GTIN_API}?cmd=ean&ean=${barcode}&cmd=ean&ean=${barcode}`;
-    const response = await fetch(url, {
+    const url = API_KEY
+      ? `${OPEN_GTIN_API}/${barcode}?key=${API_KEY}`
+      : `${OPEN_GTIN_API}/${barcode}`;
+    
+    const signal = createTimeoutSignal(5000); // 5 second timeout
+    
+    const response = await fetchWithRateLimit(url, {
       headers: {
+        'Accept': 'application/json',
         'User-Agent': 'TrueScan-FoodScanner/1.0.0',
-        'Accept': 'text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8',
       },
-      signal: createTimeoutSignal(10000), // 10 second timeout
-    });
+      signal,
+    }, 'open_gtin');
 
     if (!response.ok) {
-      logger.debug(`Open GTIN API error: ${response.status} ${response.statusText}`);
+      if (response.status !== 404) {
+        console.warn(`Open GTIN API error: ${response.status}`);
+      }
       return null;
     }
 
-    const html = await response.text();
-    
-    // Parse HTML response (Open GTIN returns HTML, not JSON)
-    // Look for product name in the HTML
-    const nameMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || 
-                     html.match(/<title[^>]*>([^<]+)<\/title>/i) ||
-                     html.match(/Product[:\s]+([^<\n]+)/i);
-    
-    if (!nameMatch || !nameMatch[1] || nameMatch[1].includes('not found') || nameMatch[1].includes('404')) {
-      logger.debug(`Product not found in Open GTIN: ${barcode}`);
+    const data: OpenGtinResponse = await response.json();
+
+    if (!data.name && !data.brand) {
       return null;
     }
-
-    const productName = nameMatch[1].trim();
-    
-    // Try to extract additional info from HTML
-    const brandMatch = html.match(/Brand[:\s]+([^<\n]+)/i);
-    const categoryMatch = html.match(/Category[:\s]+([^<\n]+)/i);
-    const descriptionMatch = html.match(/Description[:\s]+([^<\n]+)/i);
 
     // Convert to our Product format
-    // Note: Open GTIN often returns minimal data (just name), so we mark quality/completion as low
-    // This helps the UI determine if the product has sufficient data to display
-    const hasMinimalData = !brandMatch && !descriptionMatch && !categoryMatch;
-    const convertedProduct: Product = {
-      barcode,
-      product_name: productName,
-      brands: brandMatch ? brandMatch[1].trim() : undefined,
-      generic_name: descriptionMatch ? descriptionMatch[1].trim() : undefined,
-      categories_tags: categoryMatch ? [categoryMatch[1].trim()] : undefined,
+    const result: Product = {
+      barcode: data.gtin || barcode,
+      product_name: data.name,
+      brands: data.brand,
+      generic_name: data.description,
+      categories: data.category,
+      image_url: data.image,
       source: 'open_gtin',
-      // Mark as low quality if we only have a name (no brand, description, category, nutrition, image)
-      quality: hasMinimalData ? 40 : undefined,
-      completion: hasMinimalData ? 40 : undefined,
     };
 
-    logger.debug(`Found product in Open GTIN: ${barcode}`);
-    return convertedProduct;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (!errorMessage.includes('aborted') && !errorMessage.includes('timeout')) {
-      logger.error(`Error fetching from Open GTIN for ${barcode}:`, errorMessage);
-    } else {
-      logger.debug(`Open GTIN timeout for ${barcode}`);
+    return result;
+  } catch (error: any) {
+    // Don't log network errors as warnings - they're expected
+    if (error.name !== 'AbortError' && error.message && !error.message.includes('timeout')) {
+      console.log(`[DEBUG] Open GTIN API error for ${barcode}:`, error.message);
     }
     return null;
   }

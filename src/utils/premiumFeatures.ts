@@ -2,15 +2,29 @@ import { useSubscriptionStore, SubscriptionInfo } from '../store/useSubscription
 
 /**
  * Premium feature definitions
+ * Updated based on competitive analysis and user value assessment
  */
 export enum PremiumFeature {
+  // Tier 1: Core Premium Features (High Value, High Demand)
   OFFLINE_MODE = 'offline_mode',
+  UNLIMITED_HISTORY = 'unlimited_history',
   ADVANCED_SEARCH = 'advanced_search',
+  EXPORT_DATA = 'export_data',
+  
+  // Tier 2: Enhanced Features (Medium Value)
+  ENHANCED_INSIGHTS = 'enhanced_insights',
   AD_FREE = 'ad_free',
-  PRICING_TRENDS = 'pricing_trends',
-  ADDITIONAL_PRODUCT_INFO = 'additional_product_info',
-  PRODUCT_FILTERS = 'product_filters',
-  BETTER_TRUST_SCORE = 'better_trust_score',
+  
+  // Tier 3: Future Features (To Be Implemented)
+  PRODUCT_COMPARISONS = 'product_comparisons',
+  PERSONALIZED_RECOMMENDATIONS = 'personalized_recommendations',
+  HISTORICAL_TRENDS = 'historical_trends',
+  
+  // Legacy/Deprecated (Keep for backward compatibility)
+  PRICING_TRENDS = 'pricing_trends', // Deprecated - pricing card removed
+  ADDITIONAL_PRODUCT_INFO = 'additional_product_info', // Merged into ENHANCED_INSIGHTS
+  PRODUCT_FILTERS = 'product_filters', // Merged into ADVANCED_SEARCH
+  BETTER_TRUST_SCORE = 'better_trust_score', // Merged into ENHANCED_INSIGHTS
 }
 
 /**
@@ -21,73 +35,126 @@ export const PremiumFeatureDescriptions: Record<PremiumFeature, {
   description: string;
   icon: string;
 }> = {
+  // Tier 1: Core Premium Features
   [PremiumFeature.OFFLINE_MODE]: {
     title: 'Offline Mode',
-    description: 'Access cached product data without internet connection',
+    description: 'Scan products and access cached data without internet connection',
     icon: 'cloud-offline-outline',
   },
+  [PremiumFeature.UNLIMITED_HISTORY]: {
+    title: 'Unlimited History',
+    description: 'Save unlimited scan history (free users limited to 100 scans)',
+    icon: 'infinite-outline',
+  },
   [PremiumFeature.ADVANCED_SEARCH]: {
-    title: 'Advanced Search',
-    description: 'Filter by multiple criteria, save searches, and more',
+    title: 'Advanced Search & Filters',
+    description: 'Filter by Trust Score, Eco-Score, NOVA, certifications, and more',
     icon: 'search-outline',
+  },
+  [PremiumFeature.EXPORT_DATA]: {
+    title: 'Export Scan History',
+    description: 'Export your scan history to CSV or JSON format',
+    icon: 'download-outline',
+  },
+  
+  // Tier 2: Enhanced Features
+  [PremiumFeature.ENHANCED_INSIGHTS]: {
+    title: 'Enhanced Insights',
+    description: 'Detailed TruScore breakdown, advanced nutrition analytics, and personalized recommendations',
+    icon: 'analytics-outline',
   },
   [PremiumFeature.AD_FREE]: {
     title: 'Ad-Free Experience',
     description: 'Enjoy TrueScan without advertisements',
     icon: 'close-circle-outline',
   },
+  
+  // Tier 3: Future Features
+  [PremiumFeature.PRODUCT_COMPARISONS]: {
+    title: 'Product Comparisons',
+    description: 'Compare multiple products side-by-side',
+    icon: 'git-compare-outline',
+  },
+  [PremiumFeature.PERSONALIZED_RECOMMENDATIONS]: {
+    title: 'Personalized Recommendations',
+    description: 'Get product recommendations based on your preferences',
+    icon: 'bulb-outline',
+  },
+  [PremiumFeature.HISTORICAL_TRENDS]: {
+    title: 'Historical Trends',
+    description: 'Track product changes and trends over time',
+    icon: 'trending-up-outline',
+  },
+  
+  // Legacy/Deprecated (for backward compatibility)
   [PremiumFeature.PRICING_TRENDS]: {
     title: 'Pricing & Trends',
-    description: 'View historical pricing data and trends',
+    description: 'View historical pricing data and trends (deprecated)',
     icon: 'trending-up-outline',
   },
   [PremiumFeature.ADDITIONAL_PRODUCT_INFO]: {
     title: 'Additional Product Info',
-    description: 'Access extended product details and insights',
+    description: 'Access extended product details and insights (merged into Enhanced Insights)',
     icon: 'information-circle-outline',
   },
   [PremiumFeature.PRODUCT_FILTERS]: {
     title: 'Product Filters',
-    description: 'Advanced filtering and sorting options',
+    description: 'Advanced filtering and sorting options (merged into Advanced Search)',
     icon: 'options-outline',
   },
   [PremiumFeature.BETTER_TRUST_SCORE]: {
     title: 'Enhanced Trust Score',
-    description: 'Detailed trust score breakdown and analysis',
+    description: 'Detailed trust score breakdown and analysis (merged into Enhanced Insights)',
     icon: 'shield-checkmark-outline',
   },
 };
 
 /**
  * Check if a premium feature is enabled
- * TEMPORARILY DISABLED: All features are available for testing
- * TODO: Re-enable premium gating when ready
+ * 
+ * Premium features require an active subscription or trial.
+ * Grace period users retain access to most features.
+ * 
+ * @param feature - The premium feature to check
+ * @param subscriptionInfo - Current subscription status
+ * @returns true if feature is enabled, false otherwise
  */
 export function isPremiumFeatureEnabled(
   feature: PremiumFeature,
   subscriptionInfo: SubscriptionInfo
 ): boolean {
+  // TODO: Remove this temporary override when ready to launch premium features
   // TEMPORARY: Always return true to enable all features for testing
+  // Set to false when ready to enable premium gating
+  const ENABLE_PREMIUM_GATING = false; // Change to true to enable premium gating
+  
+  if (!ENABLE_PREMIUM_GATING) {
+    return true; // Testing mode - all features enabled
+  }
+
+  // All premium features require active subscription
+  if (!subscriptionInfo.isPremium) {
+    return false;
+  }
+
+  // Check subscription status
+  if (subscriptionInfo.status !== 'active' && subscriptionInfo.status !== 'trial') {
+    // Allow grace period access for most features
+    if (subscriptionInfo.status === 'grace_period') {
+      // Grace period allows access to core features
+      // Exclude newest/future features during grace period
+      const gracePeriodExcludedFeatures = [
+        PremiumFeature.PRODUCT_COMPARISONS,
+        PremiumFeature.PERSONALIZED_RECOMMENDATIONS,
+        PremiumFeature.HISTORICAL_TRENDS,
+      ];
+      return !gracePeriodExcludedFeatures.includes(feature);
+    }
+    return false;
+  }
+
+  // All features available for active/trial subscriptions
   return true;
-
-  // Original premium gating (disabled for testing):
-  // // All premium features require active subscription
-  // if (!subscriptionInfo.isPremium) {
-  //   return false;
-  // }
-
-  // // Check subscription status
-  // if (subscriptionInfo.status !== 'active' && subscriptionInfo.status !== 'trial') {
-  //   // Allow grace period access for some features
-  //   if (subscriptionInfo.status === 'grace_period') {
-  //     // Grace period allows access to most features except new features
-  //     return feature !== PremiumFeature.PRICING_TRENDS; // Example: exclude newest features during grace
-  //   }
-  //   return false;
-  // }
-
-  // // All features available for active/trial subscriptions
-  // return true;
 }
 
 /**

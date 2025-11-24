@@ -1,85 +1,71 @@
 // FSANZ Database Import Modal
-// Allows users to import pre-converted FSANZ database JSON files
+// Allows users to import FSANZ database JSON files into the app
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   Modal,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
-  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  importFSANZDatabaseFromFile,
-  getFSANZDatabaseMetadata,
-  isFSANZDatabaseImported,
-  clearFSANZDatabase,
-} from '../services/fsanDatabaseImport';
-import {
-  isAutoUpdateEnabled,
-  setAutoUpdateEnabled,
-  forceUpdateCheck,
-} from '../services/fsanDatabaseAutoUpdate';
-import { updateFromCDNIfNeeded } from '../services/fsanDatabaseCDN';
-import { logger } from '../utils/logger';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
+import * as DocumentPicker from 'expo-document-picker';
+import { 
+  importFSANZDatabaseFromFile, 
+  getFSANZImportStatus,
+  clearFSANZDatabase,
+  isFSANZDatabaseImported,
+} from '../services/fsanDatabaseImport';
+import { getUserCountryCode } from '../utils/countryDetection';
 
 interface FSANZDatabaseImportModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
+type ImportStatus = 'idle' | 'importing' | 'success' | 'error';
+
 export default function FSANZDatabaseImportModal({
   visible,
   onClose,
 }: FSANZDatabaseImportModalProps) {
+  const { t } = useTranslation();
   const { colors } = useTheme();
-  const [importing, setImporting] = useState(false);
-  const [importStatus, setImportStatus] = useState<string | null>(null);
-  const [autoUpdateEnabled, setAutoUpdateEnabledState] = useState(true); // Default to enabled
-  const [auMetadata, setAuMetadata] = useState<{
-    productCount: number;
-    importDate: string;
-    dataSize: number;
-  } | null>(null);
-  const [nzMetadata, setNzMetadata] = useState<{
-    productCount: number;
-    importDate: string;
-    dataSize: number;
-  } | null>(null);
+  const userCountry = getUserCountryCode();
+  
+  const [importStatus, setImportStatus] = useState<ImportStatus>('idle');
+  const [selectedCountry, setSelectedCountry] = useState<'AU' | 'NZ'>(userCountry === 'AU' ? 'AU' : 'NZ');
+  const [importResult, setImportResult] = useState<{ productCount: number; error?: string } | null>(null);
+  const [databaseStatus, setDatabaseStatus] = useState<{ imported: boolean; productCount?: number; importDate?: number } | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Load metadata and auto-update status on mount
-  React.useEffect(() => {
+  // Load database status when modal opens
+  useEffect(() => {
     if (visible) {
-      loadMetadata();
-      loadAutoUpdateStatus();
+      loadDatabaseStatus();
     }
-  }, [visible]);
+  }, [visible, selectedCountry]);
 
-  const loadAutoUpdateStatus = async () => {
-    const enabled = await isAutoUpdateEnabled();
-    setAutoUpdateEnabledState(enabled);
-  };
-
-  const loadMetadata = async () => {
-    const [auMeta, nzMeta] = await Promise.all([
-      getFSANZDatabaseMetadata('AU'),
-      getFSANZDatabaseMetadata('NZ'),
-    ]);
-    setAuMetadata(auMeta);
-    setNzMetadata(nzMeta);
-  };
-
-  const handleImportFile = async (country: 'AU' | 'NZ') => {
+  const loadDatabaseStatus = async () => {
     try {
-      setImporting(true);
-      setImportStatus(`Selecting ${country === 'AU' ? 'Australian' : 'New Zealand'} database file...`);
+      const status = await getFSANZImportStatus(selectedCountry);
+      setDatabaseStatus(status);
+    } catch (error) {
+      console.error('Error loading database status:', error);
+    }
+  };
+
+  const handleSelectFile = async () => {
+    try {
+      setLoading(true);
+      setImportStatus('idle');
+      setImportResult(null);
 
       // Pick JSON file
       const result = await DocumentPicker.getDocumentAsync({
@@ -87,297 +73,274 @@ export default function FSANZDatabaseImportModal({
         copyToCacheDirectory: true,
       });
 
-      if (result.canceled || !result.assets || result.assets.length === 0) {
-        setImporting(false);
-        setImportStatus(null);
+      if (result.canceled) {
+        setLoading(false);
+        return;
+      }
+
+      if (!result.assets || result.assets.length === 0) {
+        Alert.alert(
+          t('fsanzImport.error') || 'Error',
+          t('fsanzImport.noFileSelected') || 'No file selected'
+        );
+        setLoading(false);
         return;
       }
 
       const fileUri = result.assets[0].uri;
-      setImportStatus(`Importing ${country === 'AU' ? 'Australian' : 'New Zealand'} database...`);
-
-      // Import database
-      const importResult = await importFSANZDatabaseFromFile(fileUri, country);
-
+      
+      // Start import
+      setImportStatus('importing');
+      const importResult = await importFSANZDatabaseFromFile(fileUri, selectedCountry);
+      
       if (importResult.success) {
-        setImportStatus(
-          `✅ Successfully imported ${importResult.productCount.toLocaleString()} products!`
-        );
+        setImportStatus('success');
+        setImportResult({ productCount: importResult.productCount });
+        await loadDatabaseStatus();
+        
         Alert.alert(
-          'Import Successful',
-          `Successfully imported ${importResult.productCount.toLocaleString()} products from FSANZ ${country === 'AU' ? 'Australian' : 'New Zealand'} database.`,
-          [{ text: 'OK', onPress: () => loadMetadata() }]
+          t('fsanzImport.success') || 'Success',
+          t('fsanzImport.importSuccess', { count: importResult.productCount }) || 
+          `Successfully imported ${importResult.productCount} products`
         );
       } else {
-        setImportStatus(`❌ Import failed: ${importResult.error}`);
-        Alert.alert('Import Failed', importResult.error || 'Unknown error occurred');
+        setImportStatus('error');
+        setImportResult({ productCount: 0, error: importResult.error });
+        
+        Alert.alert(
+          t('fsanzImport.error') || 'Error',
+          importResult.error || t('fsanzImport.importFailed') || 'Import failed'
+        );
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('FSANZ import error:', errorMessage);
-      setImportStatus(`❌ Error: ${errorMessage}`);
-      Alert.alert('Import Error', errorMessage);
+      setImportStatus('error');
+      setImportResult({ productCount: 0, error: errorMessage });
+      
+      Alert.alert(
+        t('fsanzImport.error') || 'Error',
+        errorMessage
+      );
     } finally {
-      setImporting(false);
-      setTimeout(() => setImportStatus(null), 5000);
+      setLoading(false);
     }
   };
 
-  const handleClearDatabase = async (country: 'AU' | 'NZ') => {
+  const handleClearDatabase = async () => {
     Alert.alert(
-      'Clear Database',
-      `Are you sure you want to clear the ${country === 'AU' ? 'Australian' : 'New Zealand'} FSANZ database? This cannot be undone.`,
+      t('fsanzImport.clearConfirm') || 'Clear Database',
+      t('fsanzImport.clearConfirmMessage') || 'Are you sure you want to clear the imported database? This cannot be undone.',
       [
-        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Clear',
+          text: t('common.cancel') || 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: t('common.clear') || 'Clear',
           style: 'destructive',
           onPress: async () => {
-            await clearFSANZDatabase(country);
-            await loadMetadata();
-            Alert.alert('Database Cleared', 'The database has been cleared successfully.');
+            try {
+              await clearFSANZDatabase(selectedCountry);
+              await loadDatabaseStatus();
+              Alert.alert(
+                t('fsanzImport.cleared') || 'Cleared',
+                t('fsanzImport.databaseCleared') || 'Database cleared successfully'
+              );
+            } catch (error) {
+              Alert.alert(
+                t('fsanzImport.error') || 'Error',
+                error instanceof Error ? error.message : String(error)
+              );
+            }
           },
         },
       ]
     );
   };
 
-  const handleToggleAutoUpdate = async (enabled: boolean) => {
-    await setAutoUpdateEnabled(enabled);
-    setAutoUpdateEnabledState(enabled);
-    // Don't show alert - the toggle itself provides visual feedback
-    // Users can see the status change immediately
-    logger.info(`FSANZ auto-update ${enabled ? 'enabled' : 'disabled'} by user`);
+  const formatDate = (timestamp?: number) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
-
-  const handleForceUpdate = async () => {
-    try {
-      setImporting(true);
-      setImportStatus('Checking for updates...');
-      
-      const result = await forceUpdateCheck();
-      
-      if (result.success && result.countries.some((c) => c.success)) {
-        const successCount = result.countries.filter((c) => c.success).length;
-        setImportStatus(`✅ Updated ${successCount} database(s) successfully!`);
-        await loadMetadata();
-        Alert.alert(
-          'Update Complete',
-          `Successfully updated ${successCount} database(s).`
-        );
-      } else {
-        const errors = result.countries
-          .filter((c) => !c.success)
-          .map((c) => `${c.country}: ${c.error || 'Unknown error'}`)
-          .join('\n');
-        setImportStatus('❌ Update failed. Check CDN configuration.');
-        Alert.alert('Update Failed', errors || 'No updates available or CDN not configured.');
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      setImportStatus(`❌ Error: ${errorMessage}`);
-      Alert.alert('Update Error', errorMessage);
-    } finally {
-      setImporting(false);
-      setTimeout(() => setImportStatus(null), 5000);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch {
-      return dateString;
-    }
-  };
-
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
-    return (bytes / 1024 / 1024).toFixed(2) + ' MB';
-  };
-
-  const modalStyles = styles(colors);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
-      <View style={modalStyles.overlay}>
-        <View style={modalStyles.modalContainer}>
-          <View style={modalStyles.header}>
-            <Text style={modalStyles.title}>FSANZ Database Import</Text>
-            <TouchableOpacity onPress={onClose} style={modalStyles.closeButton}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <View style={[styles.modalContainer, { backgroundColor: colors.card }]}>
+          {/* Header */}
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <View style={styles.headerLeft}>
+              <Ionicons name="cloud-download-outline" size={24} color={colors.primary} />
+              <Text style={[styles.title, { color: colors.text }]}>
+                {t('fsanzImport.title') || 'FSANZ Database Import'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={modalStyles.content}>
-            <Text style={modalStyles.description}>
-              Import official FSANZ (Food Standards Australia New Zealand) databases to improve
-              product recognition. Download databases from official websites, convert to JSON using
-              the provided script, then import here.
-            </Text>
+          {/* Content */}
+          <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+            {/* Instructions */}
+            <View style={[styles.section, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {t('fsanzImport.instructions') || 'Instructions'}
+              </Text>
+              <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
+                {t('fsanzImport.instructionsText') || 
+                  '1. Download FSANZ database from the official website\n' +
+                  '2. Convert to JSON using the import script\n' +
+                  '3. Select the JSON file to import'}
+              </Text>
+            </View>
 
-            {importStatus && (
-              <View style={modalStyles.statusContainer}>
-                <Text style={modalStyles.statusText}>{importStatus}</Text>
-                {importing && <ActivityIndicator size="small" color={colors.primary} style={modalStyles.loader} />}
+            {/* Country Selection */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {t('fsanzImport.selectCountry') || 'Select Country'}
+              </Text>
+              <View style={styles.countryButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.countryButton,
+                    selectedCountry === 'AU' && { backgroundColor: colors.primary, borderColor: colors.primary },
+                    { borderColor: colors.border },
+                  ]}
+                  onPress={() => {
+                    setSelectedCountry('AU');
+                    setImportStatus('idle');
+                    setImportResult(null);
+                  }}
+                >
+                  <Text style={[
+                    styles.countryButtonText,
+                    selectedCountry === 'AU' && { color: '#fff' },
+                    { color: colors.text },
+                  ]}>
+                    Australia (AU)
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.countryButton,
+                    selectedCountry === 'NZ' && { backgroundColor: colors.primary, borderColor: colors.primary },
+                    { borderColor: colors.border },
+                  ]}
+                  onPress={() => {
+                    setSelectedCountry('NZ');
+                    setImportStatus('idle');
+                    setImportResult(null);
+                  }}
+                >
+                  <Text style={[
+                    styles.countryButtonText,
+                    selectedCountry === 'NZ' && { color: '#fff' },
+                    { color: colors.text },
+                  ]}>
+                    New Zealand (NZ)
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Database Status */}
+            {databaseStatus && (
+              <View style={[styles.section, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {t('fsanzImport.currentStatus') || 'Current Status'}
+                </Text>
+                {databaseStatus.imported ? (
+                  <View>
+                    <View style={styles.statusRow}>
+                      <Ionicons name="checkmark-circle" size={20} color="#16a085" />
+                      <Text style={[styles.statusText, { color: colors.text }]}>
+                        {t('fsanzImport.imported') || 'Database imported'}
+                      </Text>
+                    </View>
+                    {databaseStatus.productCount !== undefined && (
+                      <Text style={[styles.statusDetail, { color: colors.textSecondary }]}>
+                        {t('fsanzImport.productCount', { count: databaseStatus.productCount }) || 
+                          `${databaseStatus.productCount} products`}
+                      </Text>
+                    )}
+                    {databaseStatus.importDate && (
+                      <Text style={[styles.statusDetail, { color: colors.textSecondary }]}>
+                        {t('fsanzImport.importedAt') || 'Imported:'} {formatDate(databaseStatus.importDate)}
+                      </Text>
+                    )}
+                    <TouchableOpacity
+                      style={[styles.clearButton, { borderColor: colors.error || '#ff6b6b' }]}
+                      onPress={handleClearDatabase}
+                    >
+                      <Ionicons name="trash-outline" size={16} color={colors.error || '#ff6b6b'} />
+                      <Text style={[styles.clearButtonText, { color: colors.error || '#ff6b6b' }]}>
+                        {t('fsanzImport.clearDatabase') || 'Clear Database'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.statusRow}>
+                    <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
+                    <Text style={[styles.statusText, { color: colors.textSecondary }]}>
+                      {t('fsanzImport.notImported') || 'No database imported'}
+                    </Text>
+                  </View>
+                )}
               </View>
             )}
 
-            {/* Australian Database */}
-            <View style={modalStyles.databaseSection}>
-              <View style={modalStyles.databaseHeader}>
-                <Ionicons name="flag" size={20} color={colors.primary} />
-                <Text style={modalStyles.databaseTitle}>Australian Database</Text>
-              </View>
-
-              {auMetadata ? (
-                <View style={modalStyles.metadataContainer}>
-                  <Text style={modalStyles.metadataText}>
-                    ✅ Imported: {auMetadata.productCount.toLocaleString()} products
-                  </Text>
-                  <Text style={modalStyles.metadataText}>
-                    📅 Date: {formatDate(auMetadata.importDate)}
-                  </Text>
-                  <Text style={modalStyles.metadataText}>
-                    📦 Size: {formatSize(auMetadata.dataSize)}
-                  </Text>
-                  <View style={modalStyles.buttonRow}>
-                    <TouchableOpacity
-                      style={[modalStyles.button, modalStyles.updateButton]}
-                      onPress={() => handleImportFile('AU')}
-                      disabled={importing}
-                    >
-                      <Ionicons name="refresh" size={16} color="#fff" />
-                      <Text style={modalStyles.buttonText}>Update</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[modalStyles.button, modalStyles.clearButton]}
-                      onPress={() => handleClearDatabase('AU')}
-                      disabled={importing}
-                    >
-                      <Ionicons name="trash" size={16} color="#fff" />
-                      <Text style={modalStyles.buttonText}>Clear</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
+            {/* Import Button */}
+            <TouchableOpacity
+              style={[
+                styles.importButton,
+                { backgroundColor: colors.primary },
+                loading && styles.importButtonDisabled,
+              ]}
+              onPress={handleSelectFile}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
               ) : (
-                <View style={modalStyles.emptyContainer}>
-                  <Text style={modalStyles.emptyText}>No database imported</Text>
-                  <TouchableOpacity
-                    style={[modalStyles.button, modalStyles.importButton]}
-                    onPress={() => handleImportFile('AU')}
-                    disabled={importing}
-                  >
-                    <Ionicons name="cloud-download" size={16} color="#fff" />
-                    <Text style={modalStyles.buttonText}>Import Database</Text>
-                  </TouchableOpacity>
-                </View>
+                <>
+                  <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+                  <Text style={styles.importButtonText}>
+                    {t('fsanzImport.selectFile') || 'Select JSON File to Import'}
+                  </Text>
+                </>
               )}
-            </View>
+            </TouchableOpacity>
 
-            {/* New Zealand Database */}
-            <View style={modalStyles.databaseSection}>
-              <View style={modalStyles.databaseHeader}>
-                <Ionicons name="flag" size={20} color={colors.primary} />
-                <Text style={modalStyles.databaseTitle}>New Zealand Database</Text>
-              </View>
-
-              {nzMetadata ? (
-                <View style={modalStyles.metadataContainer}>
-                  <Text style={modalStyles.metadataText}>
-                    ✅ Imported: {nzMetadata.productCount.toLocaleString()} products
-                  </Text>
-                  <Text style={modalStyles.metadataText}>
-                    📅 Date: {formatDate(nzMetadata.importDate)}
-                  </Text>
-                  <Text style={modalStyles.metadataText}>
-                    📦 Size: {formatSize(nzMetadata.dataSize)}
-                  </Text>
-                  <View style={modalStyles.buttonRow}>
-                    <TouchableOpacity
-                      style={[modalStyles.button, modalStyles.updateButton]}
-                      onPress={() => handleImportFile('NZ')}
-                      disabled={importing}
-                    >
-                      <Ionicons name="refresh" size={16} color="#fff" />
-                      <Text style={modalStyles.buttonText}>Update</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[modalStyles.button, modalStyles.clearButton]}
-                      onPress={() => handleClearDatabase('NZ')}
-                      disabled={importing}
-                    >
-                      <Ionicons name="trash" size={16} color="#fff" />
-                      <Text style={modalStyles.buttonText}>Clear</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <View style={modalStyles.emptyContainer}>
-                  <Text style={modalStyles.emptyText}>No database imported</Text>
-                  <TouchableOpacity
-                    style={[modalStyles.button, modalStyles.importButton]}
-                    onPress={() => handleImportFile('NZ')}
-                    disabled={importing}
-                  >
-                    <Ionicons name="cloud-download" size={16} color="#fff" />
-                    <Text style={modalStyles.buttonText}>Import Database</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-
-            {/* Auto-Update Settings */}
-            <View style={modalStyles.databaseSection}>
-              <View style={modalStyles.databaseHeader}>
-                <Ionicons name="sync-outline" size={20} color={colors.primary} />
-                <Text style={modalStyles.databaseTitle}>Automatic Updates</Text>
-              </View>
-              <View style={modalStyles.metadataContainer}>
-                <View style={modalStyles.buttonRow}>
-                  <Text style={modalStyles.metadataText}>
-                    {autoUpdateEnabled
-                      ? '✅ Automatic updates enabled (checks every 7 days)'
-                      : '❌ Automatic updates disabled'}
-                  </Text>
-                  <TouchableOpacity
-                    style={[modalStyles.button, autoUpdateEnabled ? modalStyles.updateButton : modalStyles.importButton]}
-                    onPress={() => handleToggleAutoUpdate(!autoUpdateEnabled)}
-                    disabled={importing}
-                  >
-                    <Ionicons name={autoUpdateEnabled ? 'toggle' : 'toggle-outline'} size={16} color="#fff" />
-                    <Text style={modalStyles.buttonText}>
-                      {autoUpdateEnabled ? 'Disable' : 'Enable'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  style={[modalStyles.button, modalStyles.updateButton]}
-                  onPress={handleForceUpdate}
-                  disabled={importing || !autoUpdateEnabled}
-                >
-                  <Ionicons name="refresh" size={16} color="#fff" />
-                  <Text style={modalStyles.buttonText}>Check for Updates Now</Text>
-                </TouchableOpacity>
-                <Text style={[modalStyles.metadataText, { fontSize: 12, marginTop: 8 }]}>
-                  Note: Automatic updates require CDN configuration. See documentation for setup.
+            {/* Import Result */}
+            {importStatus === 'success' && importResult && (
+              <View style={[styles.resultBox, { backgroundColor: '#16a085' + '20', borderColor: '#16a085' }]}>
+                <Ionicons name="checkmark-circle" size={24} color="#16a085" />
+                <Text style={[styles.resultText, { color: '#16a085' }]}>
+                  {t('fsanzImport.importSuccess', { count: importResult.productCount }) || 
+                    `Successfully imported ${importResult.productCount} products`}
                 </Text>
               </View>
-            </View>
+            )}
 
-            {/* Instructions */}
-            <View style={modalStyles.instructionsContainer}>
-              <Text style={modalStyles.instructionsTitle}>How to Import:</Text>
-              <Text style={modalStyles.instructionsText}>
-                1. Download FSANZ database exports from official websites{'\n'}
-                2. Convert to JSON using: npm run import-fsanz{'\n'}
-                3. Select the JSON file using the Import button above{'\n'}
-                {'\n'}
-                Or enable automatic updates to download from CDN automatically.
-              </Text>
-            </View>
+            {importStatus === 'error' && importResult?.error && (
+              <View style={[styles.resultBox, { backgroundColor: '#ff6b6b' + '20', borderColor: '#ff6b6b' }]}>
+                <Ionicons name="alert-circle" size={24} color="#ff6b6b" />
+                <Text style={[styles.resultText, { color: '#ff6b6b' }]}>
+                  {importResult.error}
+                </Text>
+              </View>
+            )}
           </ScrollView>
         </View>
       </View>
@@ -385,141 +348,129 @@ export default function FSANZDatabaseImportModal({
   );
 }
 
-const createStyles = (colors: any) => StyleSheet.create({
+const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: colors.card,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
-    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    justifyContent: 'space-between',
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text,
   },
   closeButton: {
-    padding: 5,
+    padding: 4,
   },
   content: {
-    padding: 20,
+    flex: 1,
   },
-  description: {
+  contentContainer: {
+    padding: 16,
+    gap: 16,
+  },
+  section: {
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  sectionText: {
     fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 20,
     lineHeight: 20,
   },
-  statusContainer: {
-    backgroundColor: colors.warningBackground,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 20,
+  countryButtons: {
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusText: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.text,
-  },
-  loader: {
-    marginLeft: 10,
-  },
-  databaseSection: {
-    marginBottom: 24,
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    padding: 16,
-  },
-  databaseHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  databaseTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginLeft: 8,
-  },
-  metadataContainer: {
-    marginTop: 8,
-  },
-  metadataText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 6,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 12,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    marginTop: 12,
     gap: 12,
   },
-  button: {
+  countryButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  countryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  statusDetail: {
+    fontSize: 12,
+    marginLeft: 28,
+    marginTop: 4,
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 12,
+    alignSelf: 'flex-start',
+  },
+  clearButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  importButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     gap: 8,
   },
-  importButton: {
-    backgroundColor: colors.primary,
+  importButtonDisabled: {
+    opacity: 0.6,
   },
-  updateButton: {
-    flex: 1,
-    backgroundColor: colors.primary,
-  },
-  clearButton: {
-    flex: 1,
-    backgroundColor: '#dc3545',
-  },
-  buttonText: {
+  importButtonText: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  instructionsContainer: {
-    backgroundColor: colors.warningBackground,
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  instructionsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
   },
-  instructionsText: {
+  resultBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 12,
+  },
+  resultText: {
+    flex: 1,
     fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
+    fontWeight: '500',
   },
 });
-
-const styles = (colors: any) => createStyles(colors);

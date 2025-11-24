@@ -1,5 +1,6 @@
 // Barcode Spider API client (fallback)
 import { Product } from '../types/product';
+import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const BARCODE_SPIDER_API = 'https://api.barcodespider.com/v1/lookup';
 const API_KEY = ''; // Free tier - no key needed for basic lookup
@@ -43,7 +44,7 @@ export async function fetchProductFromBarcodeSpider(barcode: string): Promise<Pr
   try {
     const url = `${BARCODE_SPIDER_API}?token=${API_KEY}&upc=${barcode}`;
     
-    const response = await fetch(url);
+    const response = await fetchWithRateLimit(url, {}, 'barcode_spider');
 
     if (!response.ok) {
       console.warn(`Barcode Spider API error: ${response.status}`);

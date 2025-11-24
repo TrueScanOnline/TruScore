@@ -160,6 +160,56 @@ export default function TrustScoreInfoModal({ visible, onClose, product }: Trust
         </View>
       </View>
 
+      {/* Data Quality / Confidence Section */}
+      {product && (product.confidence !== undefined || product.sourceReliability) && (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {t('infoModal.trustScore.dataQuality') || 'Data Quality'}
+          </Text>
+          <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
+            {t('infoModal.trustScore.dataQualityDescription') || 'The confidence badge shows how reliable the product data is based on its source:'}
+          </Text>
+          
+          <View style={[styles.confidenceBox, { backgroundColor: colors.surface }]}>
+            <View style={styles.confidenceItem}>
+              <View style={[styles.confidenceBadge, { backgroundColor: '#16a085' + '20', borderColor: '#16a085' }]}>
+                <Ionicons name="checkmark-circle" size={16} color="#16a085" />
+                <Text style={[styles.confidenceLabel, { color: '#16a085' }]}>
+                  {t('dataQuality.high') || 'High confidence'}
+                </Text>
+              </View>
+              <Text style={[styles.confidenceDesc, { color: colors.textSecondary }]}>
+                {t('infoModal.trustScore.highConfidenceDesc') || 'Data from official government or verified sources (FSANZ, USDA, GS1, Open Food Facts)'}
+              </Text>
+            </View>
+            
+            <View style={styles.confidenceItem}>
+              <View style={[styles.confidenceBadge, { backgroundColor: '#ffd93d' + '20', borderColor: '#ffd93d' }]}>
+                <Ionicons name="information-circle" size={16} color="#ffd93d" />
+                <Text style={[styles.confidenceLabel, { color: '#ffd93d' }]}>
+                  {t('dataQuality.medium') || 'Medium confidence'}
+                </Text>
+              </View>
+              <Text style={[styles.confidenceDesc, { color: colors.textSecondary }]}>
+                {t('infoModal.trustScore.mediumConfidenceDesc') || 'Data from store APIs or community-verified sources (Woolworths, Coles, Open Beauty Facts)'}
+              </Text>
+            </View>
+            
+            <View style={styles.confidenceItem}>
+              <View style={[styles.confidenceBadge, { backgroundColor: '#ffa500' + '20', borderColor: '#ffa500' }]}>
+                <Ionicons name="alert-circle" size={16} color="#ffa500" />
+                <Text style={[styles.confidenceLabel, { color: '#ffa500' }]}>
+                  {t('dataQuality.low') || 'Low confidence'}
+                </Text>
+              </View>
+              <Text style={[styles.confidenceDesc, { color: colors.textSecondary }]}>
+                {t('infoModal.trustScore.lowConfidenceDesc') || 'Data from free APIs or web search - may be incomplete or less accurate'}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           {t('infoModal.trustScore.categories')}
@@ -876,6 +926,34 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
+  },
+  confidenceBox: {
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12,
+    gap: 12,
+  },
+  confidenceItem: {
+    marginBottom: 12,
+  },
+  confidenceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 6,
+    marginBottom: 6,
+  },
+  confidenceLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  confidenceDesc: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginLeft: 2,
   },
   stepsTitle: {
     fontSize: 15,

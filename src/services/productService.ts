@@ -10,10 +10,9 @@ import { fetchProductFromUSDA } from './usdaFoodData';
 import { fetchProductFromGS1 } from './gs1DataSource';
 import { fetchProductFromBarcodeSpider } from './barcodeSpider';
 import { fetchProductFromUPCitemdb } from './upcitemdb';
-import { fetchProductFromBarcodeLookup } from './barcodeLookup';
-import { fetchProductFromGoUPC } from './goUpcApi';
+import { fetchProductFromGoUpc } from './goUpcApi';
 import { fetchProductFromBuycott } from './buycottApi';
-import { fetchProductFromOpenGTIN } from './openGtindbApi';
+import { fetchProductFromOpenGtin } from './openGtindbApi';
 import { fetchProductFromBarcodeMonster } from './barcodeMonsterApi';
 import { fetchProductFromWebSearch, isWebSearchFallback } from './webSearchFallback';
 import { getCachedProduct, cacheProduct } from './cacheService';
@@ -22,8 +21,10 @@ import { checkFDARecalls } from './fdaRecallService';
 import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
 import { getUserCountryCode } from '../utils/countryDetection';
 import { fetchProductFromNZStores } from './nzStoreApi';
-import { fetchProductFromAURetailers } from './auRetailerScraping';
 import { fetchProductFromFSANZ } from './fsanDatabase';
+import { fetchProductFromAURetailers } from './auRetailerScraping';
+import { applyConfidenceScore } from '../utils/confidenceScoring';
+import { mergeProducts } from './productDataMerger';
 
 /**
  * Fetch product data with comprehensive fallback strategy:
@@ -87,7 +88,9 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
           // Don't return cached - continue to retry web search
         } else {
           logger.debug(`Using cached product: ${variant}${isPremium ? ' (premium cache)' : ''}`);
-          return calculateTrustScore(cached);
+          // Apply confidence score to cached product
+          const productWithConfidence = applyConfidenceScore(cached);
+          return calculateTrustScore(productWithConfidence);
         }
       }
     }
@@ -146,49 +149,37 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     Promise.all(opfPromises),
   ]);
   
-  // Find first successful result from any variant
+  // Collect all successful results from any variant
   const allOffResults = offResults.status === 'fulfilled' ? offResults.value : [];
   const allObfResults = obfResults.status === 'fulfilled' ? obfResults.value : [];
   const allOpffResults = opffResults.status === 'fulfilled' ? opffResults.value : [];
   const allOpfResults = opfResults.status === 'fulfilled' ? opfResults.value : [];
   
-  // Check OFF first (highest priority)
+  // Collect all products found (for merging)
+  const foundProducts: Product[] = [];
+  
+  // Collect from all Open Facts databases
   for (const result of allOffResults) {
-    if (result) {
-      product = result;
-      logger.debug(`Found product in Open Food Facts: ${barcode}`);
-      break;
-    }
+    if (result) foundProducts.push(result);
+  }
+  for (const result of allObfResults) {
+    if (result) foundProducts.push(result);
+  }
+  for (const result of allOpffResults) {
+    if (result) foundProducts.push(result);
+  }
+  for (const result of allOpfResults) {
+    if (result) foundProducts.push(result);
   }
   
-  // Then check other Open Facts databases
-  if (!product) {
-    for (const result of allObfResults) {
-      if (result) {
-        product = result;
-        logger.debug(`Found product in Open Beauty Facts: ${barcode}`);
-        break;
-      }
-    }
-  }
-  
-  if (!product) {
-    for (const result of allOpffResults) {
-      if (result) {
-        product = result;
-        logger.debug(`Found product in Open Pet Food Facts: ${barcode}`);
-        break;
-      }
-    }
-  }
-  
-  if (!product) {
-    for (const result of allOpfResults) {
-      if (result) {
-        product = result;
-        logger.debug(`Found product in Open Products Facts: ${barcode}`);
-        break;
-      }
+  // Merge products if multiple found, otherwise use first
+  if (foundProducts.length > 0) {
+    if (foundProducts.length > 1) {
+      product = mergeProducts(foundProducts);
+      logger.debug(`Merged ${foundProducts.length} products from Open Facts databases: ${barcode}`);
+    } else {
+      product = foundProducts[0];
+      logger.debug(`Found product in Open Facts: ${barcode}`);
     }
   }
 
@@ -200,67 +191,38 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     // Try NZ store APIs if user is in NZ
     if (userCountry === 'NZ') {
       logger.debug(`Trying NZ store APIs for barcode variants: ${barcodeVariants.join(', ')}`);
-      const nzStorePromises = barcodeVariants.map(variant => 
-        fetchProductFromNZStores(variant).catch(err => {
-          const errorMessage = err instanceof Error ? err.message : String(err);
-          logger.debug(`NZ store fetch error for ${variant}:`, errorMessage);
-          return null;
-        })
-      );
-      
-      const nzStoreResults = await Promise.allSettled(nzStorePromises);
-      for (const result of nzStoreResults) {
-        if (result.status === 'fulfilled' && result.value) {
-          product = result.value;
-          logger.debug(`Found product in NZ store API: ${barcode}`);
+      for (const variant of barcodeVariants) {
+        const nzStoreProduct = await fetchProductFromNZStores(variant);
+        if (nzStoreProduct) {
+          product = nzStoreProduct;
+          logger.debug(`Found product in NZ store API: ${variant}`);
           break;
-        }
-      }
-      
-      // Try FSANZ NZ database if store APIs didn't find product
-      if (!product) {
-        logger.debug(`Trying FSANZ NZ database for barcode variants: ${barcodeVariants.join(', ')}`);
-        for (const variant of barcodeVariants) {
-          const fsanzProduct = await fetchProductFromFSANZ(variant);
-          if (fsanzProduct) {
-            product = fsanzProduct;
-            logger.debug(`Found product in FSANZ NZ: ${variant}`);
-            break;
-          }
         }
       }
     }
     
-    // Try AU retailer APIs if user is in Australia
-    if (!product && userCountry === 'AU') {
-      logger.debug(`Trying AU retailer APIs for barcode variants: ${barcodeVariants.join(', ')}`);
-      const auRetailerPromises = barcodeVariants.map(variant => 
-        fetchProductFromAURetailers(variant).catch(err => {
-          const errorMessage = err instanceof Error ? err.message : String(err);
-          logger.debug(`AU retailer fetch error for ${variant}:`, errorMessage);
-          return null;
-        })
-      );
-      
-      const auRetailerResults = await Promise.allSettled(auRetailerPromises);
-      for (const result of auRetailerResults) {
-        if (result.status === 'fulfilled' && result.value) {
-          product = result.value;
-          logger.debug(`Found product in AU retailer API: ${barcode}`);
+    // Try AU retailer APIs if user is in AU
+    if (userCountry === 'AU') {
+      logger.debug(`Trying AU store APIs for barcode variants: ${barcodeVariants.join(', ')}`);
+      for (const variant of barcodeVariants) {
+        const auRetailerProduct = await fetchProductFromAURetailers(variant);
+        if (auRetailerProduct) {
+          product = auRetailerProduct;
+          logger.debug(`Found product in AU retailer API: ${variant}`);
           break;
         }
       }
-      
-      // Try FSANZ AU database if retailer APIs didn't find product
-      if (!product) {
-        logger.debug(`Trying FSANZ AU database for barcode variants: ${barcodeVariants.join(', ')}`);
-        for (const variant of barcodeVariants) {
-          const fsanzProduct = await fetchProductFromFSANZ(variant);
-          if (fsanzProduct) {
-            product = fsanzProduct;
-            logger.debug(`Found product in FSANZ AU: ${variant}`);
-            break;
-          }
+    }
+    
+    // Try FSANZ databases if user is in NZ or AU
+    if (userCountry === 'NZ' || userCountry === 'AU') {
+      logger.debug(`Trying FSANZ ${userCountry} database for barcode variants: ${barcodeVariants.join(', ')}`);
+      for (const variant of barcodeVariants) {
+        const fsanzProduct = await fetchProductFromFSANZ(variant, userCountry);
+        if (fsanzProduct) {
+          product = fsanzProduct;
+          logger.debug(`Found product in FSANZ ${userCountry} database: ${variant}`);
+          break;
         }
       }
     }
@@ -336,17 +298,8 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       })
     );
     
-    // NEW: Add Barcode Lookup API (free tier: 50/day)
-    const barcodeLookupPromises = barcodeVariants.map(variant => 
-      fetchProductFromBarcodeLookup(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Barcode Lookup fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
     const goUpcPromises = barcodeVariants.map(variant => 
-      fetchProductFromGoUPC(variant).catch(err => {
+      fetchProductFromGoUpc(variant).catch(err => {
         const errorMessage = err instanceof Error ? err.message : String(err);
         logger.debug(`Go-UPC fetch error for ${variant}:`, errorMessage);
         return null;
@@ -362,7 +315,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     );
     
     const openGtinPromises = barcodeVariants.map(variant => 
-      fetchProductFromOpenGTIN(variant).catch(err => {
+      fetchProductFromOpenGtin(variant).catch(err => {
         const errorMessage = err instanceof Error ? err.message : String(err);
         logger.debug(`Open GTIN fetch error for ${variant}:`, errorMessage);
         return null;
@@ -377,10 +330,9 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       })
     );
     
-    const [upcitemdbResults, barcodeSpiderResults, barcodeLookupResults, goUpcResults, buycottResults, openGtinResults, barcodeMonsterResults] = await Promise.allSettled([
+    const [upcitemdbResults, barcodeSpiderResults, goUpcResults, buycottResults, openGtinResults, barcodeMonsterResults] = await Promise.allSettled([
       Promise.all(upcitemdbPromises),
       Promise.all(barcodeSpiderPromises),
-      Promise.all(barcodeLookupPromises),
       Promise.all(goUpcPromises),
       Promise.all(buycottPromises),
       Promise.all(openGtinPromises),
@@ -409,18 +361,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       }
     }
     
-    // Check Barcode Lookup results
-    if (!product && barcodeLookupResults.status === 'fulfilled') {
-      for (const result of barcodeLookupResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Barcode Lookup: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Go-UPC results (500M+ products)
+    // Check Go-UPC results
     if (!product && goUpcResults.status === 'fulfilled') {
       for (const result of goUpcResults.value) {
         if (result) {
@@ -431,7 +372,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       }
     }
     
-    // Check Buycott results (150M+ products)
+    // Check Buycott results
     if (!product && buycottResults.status === 'fulfilled') {
       for (const result of buycottResults.value) {
         if (result) {
@@ -442,7 +383,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       }
     }
     
-    // Check Open GTIN results (free, no API key required)
+    // Check Open GTIN results
     if (!product && openGtinResults.status === 'fulfilled') {
       for (const result of openGtinResults.value) {
         if (result) {
@@ -453,7 +394,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       }
     }
     
-    // Check Barcode Monster results (free, no API key required)
+    // Check Barcode Monster results
     if (!product && barcodeMonsterResults.status === 'fulfilled') {
       for (const result of barcodeMonsterResults.value) {
         if (result) {
@@ -596,8 +537,11 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     }
   }
 
+  // Apply confidence scoring to product
+  const productWithConfidence = applyConfidenceScore(product);
+  
   // Calculate trust score (works even for minimal web search products)
-  const productWithTrustScore = calculateTrustScore(product);
+  const productWithTrustScore = calculateTrustScore(productWithConfidence);
   
   // Check recalls synchronously if we have product name (for immediate display)
   // This is a quick check that won't block too long
@@ -640,7 +584,9 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       completion: 10,
     };
     
-    return calculateTrustScore(fallbackProduct);
+    // Apply confidence score to fallback product
+    const fallbackWithConfidence = applyConfidenceScore(fallbackProduct);
+    return calculateTrustScore(fallbackWithConfidence);
   }
 }
 

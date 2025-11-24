@@ -26,3 +26,6 @@ Hi! Here's how to test the TrueScan app:
 Note: Both of us can connect at the same time!
 
 If you have any issues, let me know!
+
+
+

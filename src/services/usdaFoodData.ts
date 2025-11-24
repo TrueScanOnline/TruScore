@@ -1,6 +1,7 @@
 // USDA FoodData Central API client
 // Official US nutritional data for branded products
 import { Product } from '../types/product';
+import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const USDA_API_BASE = 'https://api.nal.usda.gov/fdc/v1';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -54,11 +55,11 @@ export async function fetchProductFromUSDA(barcode: string): Promise<Product | n
     // This is a search-based approach, not direct lookup
     const searchUrl = `${USDA_API_BASE}/foods/search?api_key=${USDA_API_KEY}&query=${encodeURIComponent(barcode)}&dataType=Branded&pageSize=10`;
     
-    const response = await fetch(searchUrl, {
+    const response = await fetchWithRateLimit(searchUrl, {
       headers: {
         'User-Agent': USER_AGENT,
       },
-    });
+    }, 'usda_fooddata');
 
     if (!response.ok) {
       console.warn(`USDA API error: ${response.status} ${response.statusText}`);

@@ -31,3 +31,6 @@ Write-Host "4. They open Expo Go and enter the URL" -ForegroundColor White
 Write-Host ""
 Write-Host "Note: Keep both terminals open while testing!" -ForegroundColor Cyan
 Write-Host ""
+
+
+

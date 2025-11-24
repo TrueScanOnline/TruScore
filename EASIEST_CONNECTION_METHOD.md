@@ -124,3 +124,6 @@ Ask them:
 3. "Does Safari ask to open in Expo Go?"
 
 This will help us figure out the best method!
+
+
+

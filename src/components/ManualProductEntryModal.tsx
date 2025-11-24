@@ -50,7 +50,6 @@ export default function ManualProductEntryModal({
   const [quantity, setQuantity] = useState('');
   const [manufacturingCountry, setManufacturingCountry] = useState('');
   const [categories, setCategories] = useState('');
-  const [additives, setAdditives] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
 
   // Nutrition fields (basic)
@@ -88,8 +87,7 @@ export default function ManualProductEntryModal({
 
       if (!result.canceled && result.assets[0]) {
         // Copy image to cache directory
-        const { getCachePath } = await import('../utils/fileSystemHelper');
-        const imageDir = getCachePath('truescan/');
+        const imageDir = `${FileSystem.cacheDirectory}truescan/`;
         await FileSystem.makeDirectoryAsync(imageDir, { intermediates: true });
         const imagePath = `${imageDir}${barcode}_${Date.now()}.jpg`;
         
@@ -102,7 +100,7 @@ export default function ManualProductEntryModal({
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image');
+      Alert.alert(t('common.error') || 'Error', 'Failed to pick image');
     }
   };
 
@@ -110,8 +108,8 @@ export default function ManualProductEntryModal({
     // Validate required fields
     if (!productName.trim()) {
       Alert.alert(
-        'Validation Error',
-        'Product name is required'
+        t('manualProduct.validationError') || 'Validation Error',
+        t('manualProduct.productNameRequired') || 'Product name is required'
       );
       return;
     }
@@ -129,22 +127,6 @@ export default function ManualProductEntryModal({
       if (protein) nutriments.proteins = parseFloat(protein) || 0;
       if (salt) nutriments.salt = parseFloat(salt) || 0;
 
-      // Parse additives string into array format (e.g., "E509, E412" -> ["en:e509", "en:e412"])
-      const additivesTags: string[] = [];
-      if (additives.trim()) {
-        additives.trim()
-          .split(',')
-          .map(code => code.trim().toLowerCase())
-          .filter(code => code.length > 0)
-          .forEach(code => {
-            // Normalize format: "e509" or "E509" -> "en:e509"
-            const normalizedCode = code.startsWith('e') ? `en:${code}` : code;
-            if (!additivesTags.includes(normalizedCode)) {
-              additivesTags.push(normalizedCode);
-            }
-          });
-      }
-
       const productData: ManualProductData = {
         barcode,
         product_name: productName.trim(),
@@ -157,7 +139,6 @@ export default function ManualProductEntryModal({
         manufacturing_places: manufacturingCountry.trim() || undefined,
         countries: manufacturingCountry.trim() || undefined,
         categories: categories.trim() || undefined,
-        additives_tags: additivesTags.length > 0 ? additivesTags : undefined,
         timestamp: Date.now(),
       };
 
@@ -166,11 +147,11 @@ export default function ManualProductEntryModal({
       if (success) {
         onSave(productData);
         Alert.alert(
-          'Success',
-          'Product information saved successfully!',
+          t('manualProduct.success') || 'Success',
+          t('manualProduct.savedSuccessfully') || 'Product information saved successfully!',
           [
             {
-              text: 'OK',
+              text: t('common.ok') || 'OK',
               onPress: () => {
                 handleClose();
               },
@@ -183,8 +164,8 @@ export default function ManualProductEntryModal({
     } catch (error) {
       console.error('Error saving manual product:', error);
       Alert.alert(
-        'Error',
-        'Failed to save product information. Please try again.'
+        t('common.error') || 'Error',
+        t('manualProduct.saveError') || 'Failed to save product information. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -230,7 +211,7 @@ export default function ManualProductEntryModal({
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
             <Text style={[styles.title, { color: colors.text }]}>
-              Add Product Information
+              {t('manualProduct.title') || 'Add Product Information'}
             </Text>
             <View style={styles.placeholder} />
           </View>
@@ -244,14 +225,14 @@ export default function ManualProductEntryModal({
             <View style={[styles.barcodeContainer, { backgroundColor: colors.surface }]}>
               <Ionicons name="barcode-outline" size={20} color={colors.primary} />
               <Text style={[styles.barcodeText, { color: colors.text }]}>
-                Barcode: {barcode}
+                {t('manualProduct.barcode') || 'Barcode'}: {barcode}
               </Text>
             </View>
 
             {/* Product Image */}
             <View style={styles.imageSection}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Product Image
+                {t('manualProduct.productImage') || 'Product Image'}
               </Text>
               {imageUri ? (
                 <View style={styles.imagePreviewContainer}>
@@ -271,7 +252,7 @@ export default function ManualProductEntryModal({
                   >
                     <Ionicons name="camera" size={24} color="#fff" />
                     <Text style={styles.imageButtonText}>
-                      Take Photo
+                      {t('manualProduct.takePhoto') || 'Take Photo'}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -280,7 +261,7 @@ export default function ManualProductEntryModal({
                   >
                     <Ionicons name="images-outline" size={24} color={colors.primary} />
                     <Text style={[styles.imageButtonText, { color: colors.primary }]}>
-                      Choose from Gallery
+                      {t('manualProduct.chooseFromGallery') || 'Choose from Gallery'}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -290,16 +271,16 @@ export default function ManualProductEntryModal({
             {/* Required Fields */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Required Information
+                {t('manualProduct.requiredInformation') || 'Required Information'}
               </Text>
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.text }]}>
-                  Product Name <Text style={styles.required}>*</Text>
+                  {t('manualProduct.productName') || 'Product Name'} <Text style={styles.required}>*</Text>
                 </Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                  placeholder="Enter product name"
+                  placeholder={t('manualProduct.productNamePlaceholder') || 'Enter product name'}
                   placeholderTextColor={colors.textSecondary}
                   value={productName}
                   onChangeText={setProductName}
@@ -311,16 +292,16 @@ export default function ManualProductEntryModal({
             {/* Optional Basic Information */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Basic Information
+                {t('manualProduct.basicInformation') || 'Basic Information'}
               </Text>
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.text }]}>
-                  Brand
+                  {t('manualProduct.brand') || 'Brand'}
                 </Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                  placeholder="Enter brand name"
+                  placeholder={t('manualProduct.brandPlaceholder') || 'Enter brand name'}
                   placeholderTextColor={colors.textSecondary}
                   value={brand}
                   onChangeText={setBrand}
@@ -330,11 +311,11 @@ export default function ManualProductEntryModal({
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.text }]}>
-                  Ingredients
+                  {t('manualProduct.ingredients') || 'Ingredients'}
                 </Text>
                 <TextInput
                   style={[styles.textArea, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                  placeholder="Enter ingredients (as listed on packaging)"
+                  placeholder={t('manualProduct.ingredientsPlaceholder') || 'Enter ingredients (as listed on packaging)'}
                   placeholderTextColor={colors.textSecondary}
                   value={ingredients}
                   onChangeText={setIngredients}
@@ -344,30 +325,10 @@ export default function ManualProductEntryModal({
                 />
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>
-                  Additives and Preservatives
-                </Text>
-                <View style={[styles.helpContainer, { backgroundColor: colors.surface, padding: 12, borderRadius: 8, marginBottom: 8 }]}>
-                  <Ionicons name="information-circle-outline" size={16} color={colors.primary} style={{ marginRight: 8 }} />
-                  <Text style={[styles.helpText, { color: colors.textSecondary, fontSize: 12, flex: 1 }]}>
-                    Enter E-number codes (like E509, E412, E211) separated by commas. These codes appear in brackets on product packaging (e.g., "Calcium chloride (E509)"). Our database will provide detailed information about each additive.
-                  </Text>
-                </View>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                  placeholder="E509, E412, E211"
-                  placeholderTextColor={colors.textSecondary}
-                  value={additives}
-                  onChangeText={setAdditives}
-                  autoCapitalize="characters"
-                />
-              </View>
-
               <View style={styles.row}>
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                   <Text style={[styles.label, { color: colors.text }]}>
-                    Quantity
+                    {t('manualProduct.quantity') || 'Quantity'}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -380,7 +341,7 @@ export default function ManualProductEntryModal({
 
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                   <Text style={[styles.label, { color: colors.text }]}>
-                    Serving Size
+                    {t('manualProduct.servingSize') || 'Serving Size'}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -394,11 +355,11 @@ export default function ManualProductEntryModal({
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.text }]}>
-                  Country of Manufacture
+                  {t('manualProduct.manufacturingCountry') || 'Country of Manufacture'}
                 </Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                  placeholder="Enter country name"
+                  placeholder={t('manualProduct.manufacturingCountryPlaceholder') || 'Enter country name'}
                   placeholderTextColor={colors.textSecondary}
                   value={manufacturingCountry}
                   onChangeText={setManufacturingCountry}
@@ -408,11 +369,11 @@ export default function ManualProductEntryModal({
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.text }]}>
-                  Categories
+                  {t('manualProduct.categories') || 'Categories'}
                 </Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                  placeholder="e.g., Beverages, Snacks, Dairy"
+                  placeholder={t('manualProduct.categoriesPlaceholder') || 'e.g., Beverages, Snacks, Dairy'}
                   placeholderTextColor={colors.textSecondary}
                   value={categories}
                   onChangeText={setCategories}
@@ -423,16 +384,16 @@ export default function ManualProductEntryModal({
             {/* Nutrition Facts (Optional) */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Nutrition Facts (Optional)
+                {t('manualProduct.nutritionFacts') || 'Nutrition Facts (Optional)'}
               </Text>
               <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-                Enter values per 100g or per serving as shown on packaging
+                {t('manualProduct.nutritionFactsNote') || 'Enter values per 100g or per serving as shown on packaging'}
               </Text>
 
               <View style={styles.row}>
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                   <Text style={[styles.label, { color: colors.text }]}>
-                    Energy (kcal)
+                    {t('manualProduct.energy') || 'Energy (kcal)'}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -446,7 +407,7 @@ export default function ManualProductEntryModal({
 
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                   <Text style={[styles.label, { color: colors.text }]}>
-                    Protein (g)
+                    {t('manualProduct.protein') || 'Protein (g)'}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -462,7 +423,7 @@ export default function ManualProductEntryModal({
               <View style={styles.row}>
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                   <Text style={[styles.label, { color: colors.text }]}>
-                    Fat (g)
+                    {t('manualProduct.fat') || 'Fat (g)'}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -476,7 +437,7 @@ export default function ManualProductEntryModal({
 
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                   <Text style={[styles.label, { color: colors.text }]}>
-                    Saturated Fat (g)
+                    {t('manualProduct.saturatedFat') || 'Saturated Fat (g)'}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -492,7 +453,7 @@ export default function ManualProductEntryModal({
               <View style={styles.row}>
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                   <Text style={[styles.label, { color: colors.text }]}>
-                    Carbohydrates (g)
+                    {t('manualProduct.carbohydrates') || 'Carbohydrates (g)'}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -506,7 +467,7 @@ export default function ManualProductEntryModal({
 
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                   <Text style={[styles.label, { color: colors.text }]}>
-                    Sugars (g)
+                    {t('manualProduct.sugars') || 'Sugars (g)'}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -522,7 +483,7 @@ export default function ManualProductEntryModal({
               <View style={styles.row}>
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                   <Text style={[styles.label, { color: colors.text }]}>
-                    Fiber (g)
+                    {t('manualProduct.fiber') || 'Fiber (g)'}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -536,7 +497,7 @@ export default function ManualProductEntryModal({
 
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                   <Text style={[styles.label, { color: colors.text }]}>
-                    Salt (g)
+                    {t('manualProduct.salt') || 'Salt (g)'}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -554,7 +515,7 @@ export default function ManualProductEntryModal({
             <View style={[styles.helpContainer, { backgroundColor: colors.surface }]}>
               <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
               <Text style={[styles.helpText, { color: colors.textSecondary }]}>
-                You can fill in as much or as little information as available on the product packaging. At minimum, please provide the product name.
+                {t('manualProduct.helpText') || 'You can fill in as much or as little information as available on the product packaging. At minimum, please provide the product name.'}
               </Text>
             </View>
           </ScrollView>
@@ -567,7 +528,7 @@ export default function ManualProductEntryModal({
               disabled={loading}
             >
               <Text style={[styles.cancelButtonText, { color: colors.text }]}>
-                Cancel
+                {t('common.cancel') || 'Cancel'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -581,7 +542,7 @@ export default function ManualProductEntryModal({
                 <>
                   <Ionicons name="checkmark-circle" size={20} color="#fff" />
                   <Text style={styles.saveButtonText}>
-                    Save Product
+                    {t('manualProduct.save') || 'Save Product'}
                   </Text>
                 </>
               )}

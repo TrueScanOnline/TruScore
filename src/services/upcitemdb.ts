@@ -1,6 +1,7 @@
 // UPCitemdb API client (additional data source for broader product coverage)
 // Covers: food, drinks, alcohol, cosmetics, household products, pet food, etc.
 import { Product } from '../types/product';
+import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const UPCITEMDB_API = 'https://api.upcitemdb.com/prod/trial/lookup';
 
@@ -45,12 +46,12 @@ export async function fetchProductFromUPCitemdb(barcode: string): Promise<Produc
   try {
     const url = `${UPCITEMDB_API}?upc=${barcode}`;
     
-    const response = await fetch(url, {
+    const response = await fetchWithRateLimit(url, {
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'TrueScan-FoodScanner/1.0.0',
       },
-    });
+    }, 'upcitemdb');
 
     if (!response.ok) {
       console.warn(`UPCitemdb API error: ${response.status}`);

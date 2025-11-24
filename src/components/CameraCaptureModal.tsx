@@ -101,8 +101,7 @@ export default function CameraCaptureModal({ visible, onClose, onCapture, barcod
       setLoading(true);
       try {
         // Save image to cache directory
-        const { getCachePath } = await import('../utils/fileSystemHelper');
-        const imageDir = getCachePath('truescan/');
+        const imageDir = `${FileSystem.cacheDirectory}truescan/`;
         await FileSystem.makeDirectoryAsync(imageDir, { intermediates: true });
         const imagePath = `${imageDir}${barcode || 'product'}_${Date.now()}.jpg`;
         

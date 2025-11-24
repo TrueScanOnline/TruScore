@@ -1,6 +1,7 @@
 // GS1 Data Source API client
 // Official GS1 barcode registry (Global Trade Item Number)
 import { Product } from '../types/product';
+import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const GS1_API_BASE = 'https://api.gs1.org/v1';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -44,13 +45,13 @@ export async function fetchProductFromGS1(barcode: string): Promise<Product | nu
     // GS1 API endpoint for product lookup by GTIN
     const url = `${GS1_API_BASE}/product/gtin/${barcode}`;
     
-    const response = await fetch(url, {
+    const response = await fetchWithRateLimit(url, {
       headers: {
         'User-Agent': USER_AGENT,
         'Authorization': `Bearer ${GS1_API_KEY}`,
         'Accept': 'application/json',
       },
-    });
+    }, 'gs1_datasource');
 
     if (!response.ok) {
       if (response.status === 404) {

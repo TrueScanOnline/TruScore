@@ -207,3 +207,6 @@ Once connected:
 ---
 
 **Check Terminal 1 now - do you see the `exp://` URL? If yes, copy it and send to both testers!** ✅
+
+
+

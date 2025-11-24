@@ -206,3 +206,6 @@ EAS Build is easier for most people!
 - ✅ Both installed, no switching needed!
 
 **Want me to help you set up the development build for your other app?** 🚀
+
+
+

@@ -216,3 +216,6 @@ This works from:
 ---
 
 Let me know what your tester sees when they open Expo Go, and I'll give you exact steps!
+
+
+

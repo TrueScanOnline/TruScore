@@ -29,6 +29,7 @@ import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import TrustScore from '../../src/components/TrustScore';
 import TruScore from '../../src/components/TruScore';
+import ConfidenceBadge from '../../src/components/ConfidenceBadge';
 import CountryFlag from '../../src/components/CountryFlag';
 import CertBadge from '../../src/components/CertBadge';
 import EcoScore from '../../src/components/EcoScore';
@@ -309,13 +310,6 @@ function ResultScreenContent() {
     });
   };
 
-  const handleManualProductSave = async (productData: ManualProductData) => {
-    // Reload product data - it should now be available from cache
-    await loadProduct();
-    setManualProductModalVisible(false);
-    Toast.show({ type: 'success', text1: 'Updated', text2: 'Product information saved' });
-  };
-
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
@@ -329,148 +323,45 @@ function ResultScreenContent() {
 
   if (error || !product) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.unknownProductContainer}
-          showsVerticalScrollIndicator={false}
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Ionicons name="barcode-outline" size={64} color={colors.textTertiary} />
+        <Text style={[styles.errorTitle, { color: colors.text }]}>{t('result.notFound')}</Text>
+        <Text style={[styles.errorText, { color: colors.textSecondary }]}>
+          {t('result.notFoundMessage')}
+        </Text>
+        <Text style={[styles.barcodeText, { color: colors.textTertiary }]}>
+          Barcode: {barcode}
+        </Text>
+        <TouchableOpacity
+          style={[styles.contributeButton, { backgroundColor: colors.primary }]}
+          onPress={() => setManualProductModalVisible(true)}
         >
-          {/* Hero Illustration */}
-          <View style={styles.unknownProductHero}>
-            <View style={[styles.illustrationContainer, { backgroundColor: colors.primary + '15' }]}>
-              <Ionicons name="search-outline" size={80} color={colors.primary} />
-            </View>
-            <View style={[styles.unknownProductBadge, { borderColor: colors.primary }]}>
-              <Ionicons name="barcode-outline" size={16} color={colors.primary} />
-              <Text style={[styles.unknownProductBadgeText, { color: colors.primary }]}>
-                {barcode}
-              </Text>
-            </View>
-          </View>
-
-          {/* Main Message */}
-          <View style={styles.unknownProductContent}>
-            <Text style={[styles.unknownProductTitle, { color: colors.text }]}>
-              {t('result.notFound') || 'Product Not Found'}
-            </Text>
-            <Text style={[styles.unknownProductDescription, { color: colors.textSecondary }]}>
-              {t('result.notFoundMessage') || "We couldn't find this product in our database. Help us build a better food transparency platform by adding it!"}
-            </Text>
-
-            {/* Helpful Actions */}
-            <View style={styles.unknownProductActions}>
-              {/* Primary Action: Add Product */}
-              <TouchableOpacity
-                style={[styles.unknownProductPrimaryButton, { backgroundColor: colors.primary }]}
-                onPress={() => setManualProductModalVisible(true)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.unknownProductButtonContent}>
-                  <View style={[styles.unknownProductButtonIcon, { backgroundColor: '#fff' + '20' }]}>
-                    <Ionicons name="add-circle" size={24} color="#fff" />
-                  </View>
-                  <View style={styles.unknownProductButtonTextContainer}>
-                    <Text style={styles.unknownProductPrimaryButtonText}>
-                      Add product details
-                    </Text>
-                    <Text style={styles.unknownProductPrimaryButtonSubtext}>
-                      Share what you know about this product
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#fff" />
-                </View>
-              </TouchableOpacity>
-
-              {/* Secondary Actions */}
-              <TouchableOpacity
-                style={[styles.unknownProductSecondaryButton, { backgroundColor: colors.card, borderColor: colors.border }]}
-                onPress={handleContribute}
-                activeOpacity={0.7}
-              >
-                <View style={styles.unknownProductButtonContent}>
-                  <View style={[styles.unknownProductButtonIcon, { backgroundColor: colors.primary + '15' }]}>
-                    <Ionicons name="globe" size={20} color={colors.primary} />
-                  </View>
-                  <View style={styles.unknownProductButtonTextContainer}>
-                    <Text style={[styles.unknownProductSecondaryButtonText, { color: colors.text }]}>
-                      Open Food Facts website
-                    </Text>
-                    <Text style={[styles.unknownProductSecondaryButtonSubtext, { color: colors.textSecondary }]}>
-                      Help millions of users worldwide
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-                </View>
-              </TouchableOpacity>
-
-              {/* Search Web Action */}
-              <TouchableOpacity
-                style={[styles.unknownProductSecondaryButton, { backgroundColor: colors.card, borderColor: colors.border }]}
-                onPress={() => {
-                  const searchQuery = barcode;
-                  const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
-                  Linking.openURL(searchUrl).catch(console.error);
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={styles.unknownProductButtonContent}>
-                  <View style={[styles.unknownProductButtonIcon, { backgroundColor: '#4CAF50' + '15' }]}>
-                    <Ionicons name="search" size={20} color="#4CAF50" />
-                  </View>
-                  <View style={styles.unknownProductButtonTextContainer}>
-                    <Text style={[styles.unknownProductSecondaryButtonText, { color: colors.text }]}>
-                      Search Online
-                    </Text>
-                    <Text style={[styles.unknownProductSecondaryButtonSubtext, { color: colors.textSecondary }]}>
-                      Find this product on the web
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-                </View>
-              </TouchableOpacity>
-            </View>
-
-            {/* Helpful Info Card */}
-            <View style={[styles.unknownProductInfoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={styles.unknownProductInfoHeader}>
-                <Ionicons name="information-circle" size={20} color={colors.primary} />
-                <Text style={[styles.unknownProductInfoTitle, { color: colors.text }]}>
-                  Why is this product missing?
-                </Text>
-              </View>
-              <Text style={[styles.unknownProductInfoText, { color: colors.textSecondary }]}>
-                Our database is constantly growing thanks to community contributions. New products, regional items, or recently launched products may not be in our system yet. Your contribution helps everyone!
-              </Text>
-            </View>
-
-            {/* Back Button */}
-            <TouchableOpacity
-              style={[styles.unknownProductBackButton, { borderColor: colors.border }]}
-              onPress={() => navigation.goBack()}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="arrow-back" size={20} color={colors.primary} />
-              <Text style={[styles.unknownProductBackButtonText, { color: colors.primary }]}>
-                {t('result.scanAnother') || 'Scan Another Product'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-
-        {/* Manual Product Entry Modal */}
-        <ManualProductEntryModal
-          visible={manualProductModalVisible}
-          onClose={() => setManualProductModalVisible(false)}
-          onSave={handleManualProductSave}
-          barcode={barcode}
-        />
-      </SafeAreaView>
+          <Ionicons name="add-circle-outline" size={20} color="#fff" />
+          <Text style={styles.contributeButtonText}>
+            {t('manualProduct.addProduct') || 'Add Product Information'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.contributeButton, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, marginTop: 12 }]}
+          onPress={handleContribute}
+        >
+          <Ionicons name="globe-outline" size={20} color={colors.primary} />
+          <Text style={[styles.contributeButtonText, { color: colors.primary }]}>
+            {t('result.contributeToOpenFoodFacts') || 'Contribute to Open Food Facts'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={[styles.backButtonText, { color: colors.primary }]}>
+            {t('result.scanAnother')}
+          </Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
   const manufacturingCountry = extractManufacturingCountry(product);
   const imageUrl = product.image_url || product.image_front_url || product.image_front_small_url;
-  const isWebSearchProduct = product ? isWebSearchFallback(product) : false;
+  const isWebSearchProduct = isWebSearchFallback(product);
 
   // Combine Open Food Facts data with user contributions (user contributions as fallback)
   const displayManufacturingCountry = manufacturingCountry || userContributedCountry?.country || null;
@@ -478,186 +369,12 @@ function ResultScreenContent() {
   // Calculate Eco-Score using the proper function to ensure grade is calculated from score if missing
   const calculatedEcoScore = product ? calculateEcoScore(product) : null;
   
-  // Check if product has minimal/no useful data - show unknown product screen for these
-  
-  // A product is considered "minimal" if:
-  // 1. It's from web search fallback with low quality/completion AND missing critical data, OR
-  // 2. It has insufficient data from ANY source (no nutrition, no image, no ingredients, just a name)
-  const hasInsufficientData = product && (
-    // No nutrition data
-    (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
-    // No image
-    !imageUrl &&
-    // No ingredients
-    !product.ingredients_text &&
-    // No brand (or just generic/empty)
-    (!product.brands || product.brands.trim().length === 0) &&
-    // No categories
-    (!product.categories_tags || product.categories_tags.length === 0)
-  );
-  
-  const isLowQualityWebSearch = isWebSearchProduct && product && (
-    (product.quality !== undefined && product.quality < 50) ||
-    (product.completion !== undefined && product.completion < 50)
-  ) && (
-    !imageUrl && 
-    (!product.nutriments || Object.keys(product.nutriments).length === 0)
-  );
-  
-  // Product is minimal if it's low-quality web search OR has insufficient data from any source
-  const isMinimalProduct = isLowQualityWebSearch || (hasInsufficientData && !isWebSearchProduct);
-  
-  // Show unknown product screen for minimal products or when product is null/error
-  // This includes: low-quality web search results, products with insufficient data, or actual errors
-  if (error || !product || isMinimalProduct) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.unknownProductContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Hero Illustration */}
-          <View style={styles.unknownProductHero}>
-            <View style={[styles.illustrationContainer, { backgroundColor: colors.primary + '15' }]}>
-              <Ionicons name="search-outline" size={80} color={colors.primary} />
-            </View>
-            <View style={[styles.unknownProductBadge, { borderColor: colors.primary }]}>
-              <Ionicons name="barcode-outline" size={16} color={colors.primary} />
-              <Text style={[styles.unknownProductBadgeText, { color: colors.primary }]}>
-                {barcode}
-              </Text>
-            </View>
-          </View>
-
-          {/* Main Message */}
-          <View style={styles.unknownProductContent}>
-            <Text style={[styles.unknownProductTitle, { color: colors.text }]}>
-              {t('result.notFound') || 'Product Not Found'}
-            </Text>
-            <Text style={[styles.unknownProductDescription, { color: colors.textSecondary }]}>
-              {t('result.notFoundMessage') || "We couldn't find this product in our database. Help us build a better food transparency platform by adding it!"}
-            </Text>
-
-            {/* Helpful Actions */}
-            <View style={styles.unknownProductActions}>
-              {/* Primary Action: Add Product */}
-              <TouchableOpacity
-                style={[styles.unknownProductPrimaryButton, { backgroundColor: colors.primary }]}
-                onPress={() => setManualProductModalVisible(true)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.unknownProductButtonContent}>
-                  <View style={[styles.unknownProductButtonIcon, { backgroundColor: '#fff' + '20' }]}>
-                    <Ionicons name="add-circle" size={24} color="#fff" />
-                  </View>
-                  <View style={styles.unknownProductButtonTextContainer}>
-                    <Text style={styles.unknownProductPrimaryButtonText}>
-                      Add product details
-                    </Text>
-                    <Text style={styles.unknownProductPrimaryButtonSubtext}>
-                      Share what you know about this product
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#fff" />
-                </View>
-              </TouchableOpacity>
-
-              {/* Secondary Actions */}
-              <TouchableOpacity
-                style={[styles.unknownProductSecondaryButton, { backgroundColor: colors.card, borderColor: colors.border }]}
-                onPress={handleContribute}
-                activeOpacity={0.7}
-              >
-                <View style={styles.unknownProductButtonContent}>
-                  <View style={[styles.unknownProductButtonIcon, { backgroundColor: colors.primary + '15' }]}>
-                    <Ionicons name="globe" size={20} color={colors.primary} />
-                  </View>
-                  <View style={styles.unknownProductButtonTextContainer}>
-                    <Text style={[styles.unknownProductSecondaryButtonText, { color: colors.text }]}>
-                      Open Food Facts website
-                    </Text>
-                    <Text style={[styles.unknownProductSecondaryButtonSubtext, { color: colors.textSecondary }]}>
-                      Help millions of users worldwide
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-                </View>
-              </TouchableOpacity>
-
-              {/* Search Web Action */}
-              <TouchableOpacity
-                style={[styles.unknownProductSecondaryButton, { backgroundColor: colors.card, borderColor: colors.border }]}
-                onPress={() => {
-                  const searchQuery = barcode;
-                  const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
-                  Linking.openURL(searchUrl).catch(console.error);
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={styles.unknownProductButtonContent}>
-                  <View style={[styles.unknownProductButtonIcon, { backgroundColor: '#4CAF50' + '15' }]}>
-                    <Ionicons name="search" size={20} color="#4CAF50" />
-                  </View>
-                  <View style={styles.unknownProductButtonTextContainer}>
-                    <Text style={[styles.unknownProductSecondaryButtonText, { color: colors.text }]}>
-                      Search Online
-                    </Text>
-                    <Text style={[styles.unknownProductSecondaryButtonSubtext, { color: colors.textSecondary }]}>
-                      Find this product on the web
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-                </View>
-              </TouchableOpacity>
-            </View>
-
-            {/* Helpful Info Card */}
-            <View style={[styles.unknownProductInfoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={styles.unknownProductInfoHeader}>
-                <Ionicons name="information-circle" size={20} color={colors.primary} />
-                <Text style={[styles.unknownProductInfoTitle, { color: colors.text }]}>
-                  Why is this product missing?
-                </Text>
-              </View>
-              <Text style={[styles.unknownProductInfoText, { color: colors.textSecondary }]}>
-                Our database is constantly growing thanks to community contributions. New products, regional items, or recently launched products may not be in our system yet. Your contribution helps everyone!
-              </Text>
-            </View>
-
-            {/* Back Button */}
-            <TouchableOpacity
-              style={[styles.unknownProductBackButton, { borderColor: colors.border }]}
-              onPress={() => navigation.goBack()}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="arrow-back" size={20} color={colors.primary} />
-              <Text style={[styles.unknownProductBackButtonText, { color: colors.primary }]}>
-                {t('result.scanAnother') || 'Scan Another Product'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-
-        {/* Manual Product Entry Modal */}
-        <ManualProductEntryModal
-          visible={manualProductModalVisible}
-          onClose={() => setManualProductModalVisible(false)}
-          onSave={handleManualProductSave}
-          barcode={barcode}
-        />
-      </SafeAreaView>
-    );
-  }
-  
-  // Legacy check for hasMinimalData (for products that do have some data but are still minimal)
-  const hasMinimalData = isWebSearchProduct && (
-    !imageUrl && 
-    (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
-    !product.ingredients_text &&
-    (!product.product_name || product.product_name.startsWith('Product ')) &&
-    (!product.generic_name || product.generic_name.length < 20)
-  );
+  // Check if product has minimal/no useful data
+  const hasMinimalData = !imageUrl && 
+                         (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
+                         !product.ingredients_text &&
+                         (!product.product_name || product.product_name.startsWith('Product ')) &&
+                         (!product.generic_name || product.generic_name.length < 20);
 
   const handleSearchWeb = () => {
     if (!product) return;
@@ -698,6 +415,13 @@ function ResultScreenContent() {
     } catch (error) {
       console.error('Error caching product with image:', error);
     }
+  };
+
+  const handleManualProductSave = async (productData: ManualProductData) => {
+    // Reload product data - it should now be available from cache
+    await loadProduct();
+    setManualProductModalVisible(false);
+    Toast.show({ type: 'success', text1: 'Updated', text2: 'Product information saved' });
   };
 
   return (
@@ -782,7 +506,7 @@ function ResultScreenContent() {
                 >
                   <Ionicons name="add-circle-outline" size={20} color="#fff" />
                   <Text style={styles.contributeButtonText}>
-                    Add product details
+                    {t('manualProduct.addProduct') || 'Add Product'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -828,9 +552,8 @@ function ResultScreenContent() {
           </TouchableOpacity>
         )}
 
-        {/* TruScore Card - v1.4 - Only show if product has real data (not minimal web search fallback) */}
-        {/* Note: Minimal products already show unknown product screen above, so this should always have data */}
-        {truScore && !isMinimalProduct ? (
+        {/* TruScore Card - v1.4 */}
+        {truScore ? (
           <TouchableOpacity
             style={[styles.card, { 
               backgroundColor: colors.card,
@@ -880,6 +603,13 @@ function ResultScreenContent() {
           
           {/* TruScore Display - v1.4 */}
           <TruScore truScore={truScore} size="medium" />
+          
+          {/* Confidence Badge - Data Quality Indicator */}
+          {product && product.confidence !== undefined && (
+            <View style={styles.confidenceBadgeContainer}>
+              <ConfidenceBadge product={product} size="small" />
+            </View>
+          )}
 
           {/* Why this score - Green/Red Flags */}
           {(() => {
@@ -1354,11 +1084,18 @@ function ResultScreenContent() {
 
         {/* Palm Oil Analysis */}
         {product.palm_oil_analysis && (() => {
-          const palmOilFlagColor = product.palm_oil_analysis.isPalmOilFree 
-            ? '#16a085' 
-            : product.palm_oil_analysis.isNonSustainable 
-            ? '#ff6b6b' 
-            : '#ff9500';
+          // Determine palm oil card color:
+          // GREEN if palm oil free OR unknown/undetected (default)
+          // RED if non-sustainable palm oil detected
+          // ORANGE only if palm oil is actually detected (containsPalmOil = true)
+          const palmOilAnalysis = product.palm_oil_analysis;
+          const palmOilFlagColor = palmOilAnalysis.isPalmOilFree 
+            ? '#16a085' // Green: Palm oil free
+            : palmOilAnalysis.isNonSustainable 
+            ? '#ff6b6b' // Red: Non-sustainable palm oil
+            : palmOilAnalysis.containsPalmOil 
+            ? '#ff9500' // Orange: Contains palm oil (detected)
+            : '#16a085'; // Green: Unknown/undetected (default to green)
           return (
             <TouchableOpacity
               style={[
@@ -1375,37 +1112,44 @@ function ResultScreenContent() {
             >
             <View style={styles.cardHeaderLeft}>
               <Ionicons 
-                name={product.palm_oil_analysis.isPalmOilFree ? "flag" : product.palm_oil_analysis.isNonSustainable ? "flag" : "flag"} 
+                name="flag" 
                 size={24} 
-                color={product.palm_oil_analysis.isPalmOilFree ? '#16a085' : product.palm_oil_analysis.isNonSustainable ? '#ff6b6b' : '#ff9500'} 
+                color={palmOilFlagColor} 
               />
               <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
                 {t('result.palmOil')}
               </Text>
             </View>
             <View style={styles.palmOilContent}>
-              {product.palm_oil_analysis.isPalmOilFree ? (
+              {palmOilAnalysis.isPalmOilFree ? (
                 <View style={[styles.palmOilStatus, { backgroundColor: '#16a085' + '20', borderLeftWidth: 4, borderLeftColor: '#16a085' }]}>
                   <Text style={[styles.palmOilFlag, { color: '#16a085' }]}>🟢</Text>
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
                     {t('result.greenFlag')} - {t('result.palmOilFree')}
                   </Text>
                 </View>
-              ) : product.palm_oil_analysis.isNonSustainable ? (
+              ) : palmOilAnalysis.isNonSustainable ? (
                 <View style={[styles.palmOilStatus, { backgroundColor: '#ff6b6b' + '20', borderLeftWidth: 4, borderLeftColor: '#ff6b6b' }]}>
                   <Text style={[styles.palmOilFlag, { color: '#ff6b6b' }]}>🔴</Text>
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
                     {t('result.redFlag')} - {t('result.nonSustainablePalmOil')}
                   </Text>
                 </View>
-              ) : product.palm_oil_analysis.containsPalmOil ? (
+              ) : palmOilAnalysis.containsPalmOil ? (
                 <View style={[styles.palmOilStatus, { backgroundColor: '#ff9500' + '20', borderLeftWidth: 4, borderLeftColor: '#ff9500' }]}>
                   <Text style={[styles.palmOilFlag, { color: '#ff9500' }]}>🟠</Text>
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
                     {t('result.orangeFlag')} - {t('result.containsPalmOil')}
                   </Text>
                 </View>
-              ) : null}
+              ) : (
+                <View style={[styles.palmOilStatus, { backgroundColor: '#16a085' + '20', borderLeftWidth: 4, borderLeftColor: '#16a085' }]}>
+                  <Text style={[styles.palmOilFlag, { color: '#16a085' }]}>🟢</Text>
+                  <Text style={[styles.palmOilText, { color: colors.text }]}>
+                    {t('result.palmOilUnknown', 'Palm Oil Status Unknown')}
+                  </Text>
+                </View>
+              )}
             </View>
           </TouchableOpacity>
           );
@@ -1747,135 +1491,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
   },
-  // Unknown Product Styles
-  unknownProductContainer: {
-    flexGrow: 1,
-    padding: 24,
-    paddingTop: 40,
-  },
-  unknownProductHero: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  illustrationContainer: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  unknownProductBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-  },
-  unknownProductBadgeText: {
-    marginLeft: 6,
-    fontSize: 14,
-    fontWeight: '600',
-    fontFamily: 'monospace',
-  },
-  unknownProductContent: {
-    width: '100%',
-  },
-  unknownProductTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  unknownProductDescription: {
-    fontSize: 16,
-    lineHeight: 24,
-    textAlign: 'center',
-    marginBottom: 32,
-  },
-  unknownProductActions: {
-    gap: 12,
-    marginBottom: 24,
-  },
-  unknownProductPrimaryButton: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 4,
-  },
-  unknownProductSecondaryButton: {
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-  },
-  unknownProductButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  unknownProductButtonIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  unknownProductButtonTextContainer: {
-    flex: 1,
-  },
-  unknownProductPrimaryButtonText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  unknownProductPrimaryButtonSubtext: {
-    color: '#fff',
-    fontSize: 13,
-    opacity: 0.9,
-  },
-  unknownProductSecondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  unknownProductSecondaryButtonSubtext: {
-    fontSize: 13,
-  },
-  unknownProductInfoCard: {
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    marginBottom: 24,
-  },
-  unknownProductInfoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  unknownProductInfoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  unknownProductInfoText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  unknownProductBackButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 8,
-  },
-  unknownProductBackButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -1951,6 +1566,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 4,
+  },
+  confidenceBadgeContainer: {
+    marginTop: 8,
+    alignItems: 'center',
   },
   userContributedBadge: {
     flexDirection: 'row',

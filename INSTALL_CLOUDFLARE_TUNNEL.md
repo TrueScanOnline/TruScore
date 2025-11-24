@@ -102,3 +102,6 @@ C:\cloudflared\cloudflared.exe tunnel --url http://localhost:8081
 ## 🎯 Recommended: Simple Setup Script
 
 I'll create a script that downloads and sets it up for you automatically!
+
+
+

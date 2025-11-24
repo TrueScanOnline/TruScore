@@ -29,3 +29,6 @@ Write-Host "If you see connection errors, try:" -ForegroundColor Yellow
 Write-Host "1. Make sure Expo is running on Terminal 1" -ForegroundColor White
 Write-Host "2. Check firewall/antivirus isn't blocking" -ForegroundColor White
 Write-Host "3. Try LocalTunnel instead (npm install -g localtunnel)" -ForegroundColor White
+
+
+

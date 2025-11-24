@@ -1,92 +1,79 @@
-// Go-UPC API Integration
-// Provides access to 500M+ products globally
-// Free tier: 100 requests/day
-// https://go-upc.com/plans/api
-
+// Go-UPC API client (free tier available)
+// Good for general products, returns product name, brand, image, stores
 import { Product } from '../types/product';
-import { logger } from '../utils/logger';
-import { createTimeoutSignal } from '../utils/timeoutHelper';
+import { createTimeoutSignal, fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const GO_UPC_API = 'https://go-upc.com/api/v1/code';
-// NOTE: Free tier is limited to 100 lookups per day.
-// For higher limits, a paid API key is required.
-const API_KEY = process.env.EXPO_PUBLIC_GO_UPC_API_KEY || '';
+const API_KEY = process.env.EXPO_PUBLIC_GO_UPC_API_KEY || ''; // Optional - free tier works without key
 
-export interface GoUPCResponse {
+export interface GoUpcResponse {
   code: string;
-  product: {
-    name: string;
+  product?: {
+    name?: string;
     description?: string;
     brand?: string;
     category?: string;
     image?: string;
-    barcode?: string;
-    manufacturer?: string;
+    stores?: Array<{
+      name?: string;
+      price?: string;
+      currency?: string;
+      availability?: string;
+      link?: string;
+    }>;
   };
-  stores?: Array<{
-    name: string;
-    price: string;
-    currency: string;
-    availability: string;
-  }>;
 }
 
 /**
  * Fetch product data from Go-UPC API
- * Free tier is limited to 100 lookups per day.
  */
-export async function fetchProductFromGoUPC(barcode: string): Promise<Product | null> {
-  if (!API_KEY) {
-    logger.debug('Go-UPC API key not configured, skipping Go-UPC lookup.');
-    return null;
-  }
-
+export async function fetchProductFromGoUpc(barcode: string): Promise<Product | null> {
   try {
-    const url = `${GO_UPC_API}/${barcode}?key=${API_KEY}`;
-    const response = await fetch(url, {
+    const url = API_KEY 
+      ? `${GO_UPC_API}/${barcode}?key=${API_KEY}`
+      : `${GO_UPC_API}/${barcode}`;
+    
+    const signal = createTimeoutSignal(5000); // 5 second timeout
+    
+    const response = await fetchWithRateLimit(url, {
       headers: {
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
         'Accept': 'application/json',
+        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
       },
-      signal: createTimeoutSignal(10000), // 10 second timeout
-    });
+      signal,
+    }, 'go_upc');
 
     if (!response.ok) {
-      if (response.status === 429) {
-        logger.warn('Go-UPC API rate limit reached (100/day free tier)');
-      } else {
-        logger.debug(`Go-UPC API error: ${response.status} ${response.statusText}`);
+      if (response.status !== 404) {
+        console.warn(`Go-UPC API error: ${response.status}`);
       }
       return null;
     }
 
-    const data: GoUPCResponse = await response.json();
+    const data: GoUpcResponse = await response.json();
 
-    if (!data.product) {
-      logger.debug(`Product not found in Go-UPC: ${barcode}`);
+    if (!data.product || !data.product.name) {
       return null;
     }
 
+    const product = data.product;
+
     // Convert to our Product format
-    const convertedProduct: Product = {
+    const result: Product = {
       barcode: data.code || barcode,
-      product_name: data.product.name,
-      brands: data.product.brand || data.product.manufacturer,
-      generic_name: data.product.description,
-      categories_tags: data.product.category ? (Array.isArray(data.product.category) ? data.product.category : [data.product.category]) : undefined,
-      image_url: data.product.image,
+      product_name: product.name,
+      brands: product.brand,
+      generic_name: product.description,
+      categories: product.category,
+      image_url: product.image,
       source: 'go_upc',
     };
 
-    logger.debug(`Found product in Go-UPC: ${barcode}`);
-    return convertedProduct;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    // Don't log timeout errors as warnings
-    if (!errorMessage.includes('aborted') && !errorMessage.includes('timeout')) {
-      logger.error(`Error fetching from Go-UPC for ${barcode}:`, errorMessage);
-    } else {
-      logger.debug(`Go-UPC timeout for ${barcode}`);
+    return result;
+  } catch (error: any) {
+    // Don't log network errors as warnings - they're expected
+    if (error.name !== 'AbortError' && error.message && !error.message.includes('timeout')) {
+      console.log(`[DEBUG] Go-UPC API error for ${barcode}:`, error.message);
     }
     return null;
   }

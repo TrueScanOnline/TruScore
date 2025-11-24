@@ -37,12 +37,7 @@ export function getCountryCodesToTry(): string[] {
   
   // Add common countries that have active Open Food Facts instances
   // These are countries with high product coverage
-  // Expanded list for better product recognition
-  const commonCountries = [
-    'NZ', 'AU', 'GB', 'US', 'CA', 'FR', 'DE', 'IT', 'ES', 'NL', 'BE', 'TR',
-    'PL', 'CZ', 'IE', 'PT', 'GR', 'HU', 'RO', 'BG', 'HR', 'SK', 'SI',
-    'JP', 'CN', 'KR', 'IN', 'SG', 'MY', 'TH', 'MX', 'BR', 'AR', 'CL'
-  ];
+  const commonCountries = ['NZ', 'AU', 'GB', 'US', 'CA', 'FR', 'DE', 'IT', 'ES', 'NL', 'BE', 'TR'];
   
   for (const country of commonCountries) {
     if (country !== userCountry) {

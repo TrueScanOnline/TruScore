@@ -1,5 +1,6 @@
 // Open Pet Food Facts API client
 import { Product } from '../types/product';
+import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const OPFF_API_BASE = 'https://world.openpetfoodfacts.org/api/v2/product';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -19,11 +20,11 @@ export async function fetchProductFromOPFF(barcode: string): Promise<Product | n
   try {
     const url = `${OPFF_API_BASE}/${barcode}.json`;
     
-    const response = await fetch(url, {
+    const response = await fetchWithRateLimit(url, {
       headers: {
         'User-Agent': USER_AGENT,
       },
-    });
+    }, 'openpetfoodfacts');
 
     if (!response.ok) {
       // 404 is expected when product not in pet food database - use debug level

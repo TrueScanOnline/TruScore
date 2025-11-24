@@ -103,3 +103,6 @@ exp://ghago_g-crwmlw-8081.exp.direct
 ---
 
 **You're all set! Install Expo Go from App Store and connect using the URL!** 🎉
+
+
+

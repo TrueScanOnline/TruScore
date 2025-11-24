@@ -222,8 +222,12 @@ export interface Product {
   completion?: number; // 0-100
   quality?: number; // 0-100
   
+  // Confidence scoring (0-1, where 1 = highest confidence)
+  confidence?: number; // 0-1 score based on source reliability
+  sourceReliability?: 'high' | 'medium' | 'low'; // Human-readable reliability level
+  
   // API source
-  source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'web_search' | 'woolworths_nz' | 'paknsave' | 'newworld' | 'barcode_lookup' | 'go_upc' | 'buycott' | 'open_gtin' | 'barcode_monster' | 'woolworths_au' | 'coles_au' | 'iga_au' | 'fsanz_au' | 'fsanz_nz' | 'nz_store_api';
+  source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'go_upc' | 'buycott' | 'open_gtin' | 'barcode_monster' | 'web_search' | 'woolworths_nz' | 'paknsave' | 'newworld' | 'woolworths_au' | 'coles_au' | 'iga_au' | 'fsanz_au' | 'fsanz_nz' | 'nz_store_api';
 }
 
 export interface TrustScoreBreakdown {

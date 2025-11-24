@@ -1,6 +1,7 @@
 // Open Beauty Facts API client
 // Similar structure to Open Food Facts but for cosmetics and personal care products
 import { Product, PalmOilAnalysis, PackagingData, PackagingItem, AgribalyseData } from '../types/product';
+import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const OBF_API_BASE = 'https://world.openbeautyfacts.org/api/v2/product';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -20,11 +21,11 @@ export async function fetchProductFromOBF(barcode: string): Promise<Product | nu
   try {
     const url = `${OBF_API_BASE}/${barcode}.json`;
     
-    const response = await fetch(url, {
+    const response = await fetchWithRateLimit(url, {
       headers: {
         'User-Agent': USER_AGENT,
       },
-    });
+    }, 'openbeautyfacts');
 
     if (!response.ok) {
       // 404 is expected when product not in beauty database - use debug level
