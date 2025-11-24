@@ -79,10 +79,12 @@ module.exports = {
         projectKey: (() => {
           const key = process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY;
           if (!key || key.length < 10) {
+            // Don't fail builds - subscription features just won't work
             if (process.env.EAS_BUILD === 'true' || process.env.NODE_ENV === 'production') {
-              throw new Error('[BUILD] EXPO_PUBLIC_QONVERSION_PROJECT_KEY is required in production');
+              console.warn('[BUILD] EXPO_PUBLIC_QONVERSION_PROJECT_KEY not set - subscription features will not work');
+            } else {
+              console.warn('[DEV] EXPO_PUBLIC_QONVERSION_PROJECT_KEY not set - subscription features will not work');
             }
-            console.warn('[DEV] EXPO_PUBLIC_QONVERSION_PROJECT_KEY not set - subscription features will not work');
             return '';
           }
           return key;
