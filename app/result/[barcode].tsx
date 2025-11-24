@@ -53,11 +53,13 @@ import { submitManufacturingCountry, getManufacturingCountry, hasUserSubmitted }
 import ManufacturingCountryModal from '../../src/components/ManufacturingCountryModal';
 import RecallAlertModal from '../../src/components/RecallAlertModal';
 import PalmOilInfoModal from '../../src/components/PalmOilInfoModal';
+import PackagingInfoModal from '../../src/components/PackagingInfoModal';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
 import { sanitizeText } from '../../src/utils/validation';
 import { logger } from '../../src/utils/logger';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import { saveManualProduct, ManualProductData, getManualProduct, isManualProduct } from '../../src/services/manualProductService';
+import { meetsLocalRecyclingRequirements } from '../../src/utils/packagingRecyclability';
 
 type ResultScreenRouteProp = RouteProp<RootStackParamList, 'Result'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -112,6 +114,7 @@ function ResultScreenContent() {
   const [manufacturingCountryModalVisible, setManufacturingCountryModalVisible] = useState(false);
   const [recallAlertModalVisible, setRecallAlertModalVisible] = useState(false);
   const [palmOilInfoModalVisible, setPalmOilInfoModalVisible] = useState(false);
+  const [packagingInfoModalVisible, setPackagingInfoModalVisible] = useState(false);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -1156,13 +1159,41 @@ function ResultScreenContent() {
         })()}
 
         {/* Packaging Sustainability */}
-        {product.packaging_data && product.packaging_data.items.length > 0 && (
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
+        {product.packaging_data && product.packaging_data.items.length > 0 && (() => {
+          // Determine border color based on local recycling requirements
+          // Check if packaging meets local recycling laws (country-specific)
+          const meetsLocalRequirements = meetsLocalRecyclingRequirements(
+            product.packaging_data.items
+          );
+          
+          // Green if recyclable according to local laws, Red if not recyclable
+          const packagingBorderColor = meetsLocalRequirements
+            ? '#16a085' // Green: Meets local recycling requirements
+            : '#ff6b6b'; // Red: Does not meet local recycling requirements
+          
+          return (
+            <TouchableOpacity 
+              style={[
+                styles.card, 
+                { 
+                  backgroundColor: colors.card,
+                  borderWidth: 2,
+                  borderColor: packagingBorderColor,
+                  marginTop: 16,
+                  marginBottom: 16,
+                }
+              ]}
+              onPress={() => setPackagingInfoModalVisible(true)}
+              activeOpacity={0.7}
+            >
             <View style={styles.cardHeader}>
-              <Ionicons name="cube-outline" size={24} color={colors.primary} />
-              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-                {t('result.packaging')}
-              </Text>
+              <View style={styles.cardHeaderLeft}>
+                <Ionicons name="cube-outline" size={24} color={colors.primary} />
+                <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
+                  {t('result.packaging')}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </View>
             <View style={styles.packagingContent}>
               <View style={styles.packagingStatusRow}>
@@ -1202,8 +1233,9 @@ function ResultScreenContent() {
                 </View>
               )}
             </View>
-          </View>
-        )}
+          </TouchableOpacity>
+          );
+        })()}
 
         {/* Ethics / Certifications */}
         {product.certifications && product.certifications.length > 0 && (
@@ -1451,6 +1483,15 @@ function ResultScreenContent() {
         <PalmOilInfoModal
           visible={palmOilInfoModalVisible}
           onClose={() => setPalmOilInfoModalVisible(false)}
+          product={product}
+        />
+      )}
+
+      {/* Packaging Info Modal */}
+      {product && product.packaging_data && (
+        <PackagingInfoModal
+          visible={packagingInfoModalVisible}
+          onClose={() => setPackagingInfoModalVisible(false)}
           product={product}
         />
       )}

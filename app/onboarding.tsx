@@ -94,14 +94,15 @@ export default function OnboardingScreen() {
       const current = useSettingsStore.getState();
       console.log('[Onboarding] After save, hasCompletedOnboarding:', current.hasCompletedOnboarding);
       
-      // Navigate to Scan screen using reset to clear the navigation stack
-      console.log('[Onboarding] Navigating to Scan screen...');
+      // Navigate to Main (AppTabs) with Scan screen selected
+      // Scan is nested under Main, so we reset to Main and specify the Scan tab
+      console.log('[Onboarding] Navigating to Main screen (Scan tab)...');
       
-      // Use reset to properly clear the stack and navigate to Scan
+      // Use reset to properly clear the stack and navigate to Main with Scan tab
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: 'Scan' }],
+          routes: [{ name: 'Main', params: { screen: 'Scan' } }],
         })
       );
       
@@ -113,7 +114,7 @@ export default function OnboardingScreen() {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: 'Scan' }],
+            routes: [{ name: 'Main', params: { screen: 'Scan' } }],
           })
         );
       } catch (navError) {
