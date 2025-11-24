@@ -13,7 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 
 interface CameraCaptureModalProps {
   visible: boolean;

@@ -20,7 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import { saveManualProduct, ManualProductData } from '../services/manualProductService';
 import CameraCaptureModal from './CameraCaptureModal';
 

@@ -1,6 +1,6 @@
 // Offline caching service for product data
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import { Product } from '../types/product';
 
 const CACHE_DIR = `${FileSystem.cacheDirectory}truescan/`;
