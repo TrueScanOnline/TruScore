@@ -49,6 +49,9 @@ module.exports = {
       supportsTablet: true,
       bundleIdentifier: 'com.truescan.foodscanner',
       associatedDomains: ['applinks:truescan.app'],
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     scheme: 'truescan',
     web: {
