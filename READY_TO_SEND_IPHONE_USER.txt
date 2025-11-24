@@ -1,0 +1,40 @@
+Hi! Here's how to test the TrueScan app:
+
+1. Make sure Expo Go is installed from App Store
+   (If not: App Store → Search "Expo Go" → Install - latest version)
+
+2. Connect using ONE of these methods:
+
+   METHOD A - Tap the Link (Easiest!):
+   - Just tap this link: exp://ghago_g-crwmlw-8081.exp.direct
+   - Safari will open automatically
+   - Tap "Open in Expo Go?" when prompted
+   - Wait 10-30 seconds
+   - Done! ✅
+
+   METHOD B - Copy & Paste in Safari:
+   - Copy this URL: exp://ghago_g-crwmlw-8081.exp.direct
+   - Open Safari app on your iPhone
+   - Tap the address bar at the top
+   - Paste the URL
+   - Tap "Go"
+   - Tap "Open in Expo Go?" when prompted
+   - Wait 10-30 seconds
+   - Done! ✅
+
+   METHOD C - Notes App:
+   - Copy this URL: exp://ghago_g-crwmlw-8081.exp.direct
+   - Open Notes app on iPhone
+   - Create a new note
+   - Paste the URL in the note
+   - Tap the URL (it becomes blue)
+   - Tap "Open in Expo Go?" when prompted
+   - Wait 10-30 seconds
+   - Done! ✅
+
+IMPORTANT: You don't need to open Expo Go first or find any buttons!
+Just tap the link above (exp://ghago_g-crwmlw-8081.exp.direct) or paste it in Safari - that's it!
+
+Note: Both of us can connect at the same time!
+
+If you have any issues, let me know!

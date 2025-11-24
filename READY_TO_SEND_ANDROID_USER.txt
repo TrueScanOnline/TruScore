@@ -1,0 +1,28 @@
+Hi! Here's how to test the TrueScan app:
+
+1. Make sure Expo Go is installed from Play Store
+   (If not: Play Store → Search "Expo Go" → Install)
+
+2. Open Expo Go app
+
+3. Connect using ONE of these methods:
+
+   METHOD A - Scan QR Code (Easiest):
+   - Tap "Scan QR code" button
+   - Scan the QR code I'll send (or from developer's terminal)
+   - Done!
+
+   METHOD B - Enter URL Manually:
+   - Tap "Enter URL manually" button (or text field)
+   - Paste this URL:
+     exp://ghago_g-crwmlw-8081.exp.direct
+   - Tap "Connect"
+   - Done!
+
+4. Wait 10-30 seconds for app to load
+
+5. You can now test the app!
+
+Note: Both of us can connect at the same time!
+
+If you have any issues, let me know!

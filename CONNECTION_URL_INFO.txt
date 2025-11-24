@@ -1,0 +1,51 @@
+========================================
+  CONNECTION URL - READY TO SHARE
+========================================
+
+Connection URL:
+exp://ghago_g-crwmlw-8081.exp.direct
+
+QR Code: Available in Terminal 1
+
+Status: ✅ Tunnel Connected and Ready
+
+========================================
+  QUICK INSTRUCTIONS
+========================================
+
+FOR ANDROID USER (New Zealand):
+- Open Expo Go
+- Scan QR code OR enter URL manually
+- Paste: exp://ghago_g-crwmlw-8081.exp.direct
+
+FOR IPHONE USER (Australia):
+- Tap this link: exp://ghago_g-crwmlw-8081.exp.direct
+- OR paste in Safari
+- Tap "Open in Expo Go?" when prompted
+
+BOTH CAN CONNECT SIMULTANEOUSLY! ✅
+
+========================================
+  READY-TO-SEND MESSAGES
+========================================
+
+I've created two files with ready-to-send messages:
+
+1. READY_TO_SEND_ANDROID_USER.txt
+   - Copy and send to Android user (New Zealand)
+
+2. READY_TO_SEND_IPHONE_USER.txt
+   - Copy and send to iPhone user (Australia)
+
+Both messages include the connection URL!
+
+========================================
+  IMPORTANT NOTES
+========================================
+
+1. Keep Terminal 1 open - Tunnel only works while running
+2. Both users can connect at the same time - No limits!
+3. URL stays the same - Unless you restart tunnel
+4. If tunnel stops - Restart and share new URL
+
+========================================
