@@ -647,6 +647,12 @@
     "dataQualityMedium": "Medium confidence",
     "dataQualityLow": "Low confidence",
     "dataQualityInsufficient": "Limited data",
+    "dataQuality": {
+      "high": "High confidence",
+      "medium": "Medium confidence",
+      "low": "Low confidence",
+      "unknown": "Unknown"
+    },
     "viewDetails": "View Details",
     "submitPrice": "Submit Store Price",
     "details": "Price Details",

@@ -164,11 +164,24 @@ export default function TrustScoreInfoModal({ visible, onClose, product }: Trust
       {product && (product.confidence !== undefined || product.sourceReliability) && (
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t('infoModal.trustScore.dataQuality') || 'Data Quality'}
+            {t('infoModal.trustScore.dataQuality') || 'Data Quality & Confidence Score'}
           </Text>
-          <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
-            {t('infoModal.trustScore.dataQualityDescription') || 'The confidence badge shows how reliable the product data is based on its source:'}
+          <Text style={[styles.sectionText, { color: colors.textSecondary, marginBottom: 16 }]}>
+            {t('infoModal.trustScore.dataQualityDescription') || 'The confidence badge shows how reliable the product data is based on its source. This score (0-1) indicates the trustworthiness of the information displayed:'}
           </Text>
+          
+          {/* How Confidence Scores Are Calculated */}
+          <View style={[styles.infoBox, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }]}>
+            <View style={styles.infoHeader}>
+              <Ionicons name="calculator-outline" size={20} color={colors.primary} />
+              <Text style={[styles.infoTitle, { color: colors.text }]}>
+                {t('infoModal.trustScore.confidenceScoreCalculation') || 'How Confidence Scores Are Calculated'}
+              </Text>
+            </View>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+              {t('infoModal.trustScore.confidenceScoreCalculationDesc') || 'Confidence scores are automatically assigned based on the data source used to fetch product information. Each source is mapped to a confidence level (0-1) and reliability category (high/medium/low) based on its verification status and data quality:'}
+            </Text>
+          </View>
           
           <View style={[styles.confidenceBox, { backgroundColor: colors.surface }]}>
             <View style={styles.confidenceItem}>
@@ -178,9 +191,23 @@ export default function TrustScoreInfoModal({ visible, onClose, product }: Trust
                   {t('dataQuality.high') || 'High confidence'}
                 </Text>
               </View>
-              <Text style={[styles.confidenceDesc, { color: colors.textSecondary }]}>
-                {t('infoModal.trustScore.highConfidenceDesc') || 'Data from official government or verified sources (FSANZ, USDA, GS1, Open Food Facts)'}
+              <Text style={[styles.confidenceScoreRange, { color: colors.textSecondary, fontSize: 12, marginBottom: 4 }]}>
+                Confidence Score: 0.8 - 1.0
               </Text>
+              <Text style={[styles.confidenceDesc, { color: colors.textSecondary }]}>
+                {t('infoModal.trustScore.highConfidenceDesc') || 'High Confidence (0.8-1.0): Data from official government databases or highly verified sources. Examples: FSANZ (Food Standards Australia New Zealand), USDA FoodData Central, GS1 Data Source (official barcode verification), Open Food Facts (community-verified with quality checks). These sources provide the most accurate and complete product information.'}
+              </Text>
+              <View style={[styles.sourceList, { marginTop: 8 }]}>
+                <Text style={[styles.sourceListTitle, { color: colors.text, fontSize: 12, fontWeight: '600', marginBottom: 4 }]}>
+                  High Confidence Sources:
+                </Text>
+                <Text style={[styles.sourceListItem, { color: colors.textSecondary, fontSize: 11 }]}>
+                  • FSANZ Database: 0.95 (Official Australian/New Zealand food standards){'\n'}
+                  • USDA FoodData Central: 0.90 (Official US government nutrition database){'\n'}
+                  • GS1 Data Source: 0.90 (Official barcode verification system){'\n'}
+                  • Open Food Facts: 0.85 (Community-verified with quality checks)
+                </Text>
+              </View>
             </View>
             
             <View style={styles.confidenceItem}>
@@ -190,9 +217,23 @@ export default function TrustScoreInfoModal({ visible, onClose, product }: Trust
                   {t('dataQuality.medium') || 'Medium confidence'}
                 </Text>
               </View>
-              <Text style={[styles.confidenceDesc, { color: colors.textSecondary }]}>
-                {t('infoModal.trustScore.mediumConfidenceDesc') || 'Data from store APIs or community-verified sources (Woolworths, Coles, Open Beauty Facts)'}
+              <Text style={[styles.confidenceScoreRange, { color: colors.textSecondary, fontSize: 12, marginBottom: 4 }]}>
+                Confidence Score: 0.5 - 0.7
               </Text>
+              <Text style={[styles.confidenceDesc, { color: colors.textSecondary }]}>
+                {t('infoModal.trustScore.mediumConfidenceDesc') || 'Medium Confidence (0.5-0.7): Data from store APIs or community-verified sources. Examples: Woolworths AU/NZ, Coles AU, IGA, Pak\'nSave, New World, Open Beauty Facts, Open Pet Food Facts, Open Products Facts. These sources are generally reliable but may have occasional gaps or less comprehensive data than official sources.'}
+              </Text>
+              <View style={[styles.sourceList, { marginTop: 8 }]}>
+                <Text style={[styles.sourceListTitle, { color: colors.text, fontSize: 12, fontWeight: '600', marginBottom: 4 }]}>
+                  Medium Confidence Sources:
+                </Text>
+                <Text style={[styles.sourceListItem, { color: colors.textSecondary, fontSize: 11 }]}>
+                  • Store APIs (Woolworths, Coles, etc.): 0.65-0.70{'\n'}
+                  • Open Beauty/Pet/Products Facts: 0.75{'\n'}
+                  • Go-UPC API: 0.60{'\n'}
+                  • Buycott API: 0.60
+                </Text>
+              </View>
             </View>
             
             <View style={styles.confidenceItem}>
@@ -202,10 +243,33 @@ export default function TrustScoreInfoModal({ visible, onClose, product }: Trust
                   {t('dataQuality.low') || 'Low confidence'}
                 </Text>
               </View>
-              <Text style={[styles.confidenceDesc, { color: colors.textSecondary }]}>
-                {t('infoModal.trustScore.lowConfidenceDesc') || 'Data from free APIs or web search - may be incomplete or less accurate'}
+              <Text style={[styles.confidenceScoreRange, { color: colors.textSecondary, fontSize: 12, marginBottom: 4 }]}>
+                Confidence Score: 0.3 - 0.5
               </Text>
+              <Text style={[styles.confidenceDesc, { color: colors.textSecondary }]}>
+                {t('infoModal.trustScore.lowConfidenceDesc') || 'Low Confidence (0.3-0.5): Data from free APIs or web search fallback. Examples: Open GTIN Database, Barcode Monster, UPCitemdb, Barcode Spider, Web Search (DuckDuckGo). These sources may be incomplete, less accurate, or contain minimal information. Use with caution and verify critical information when possible.'}
+              </Text>
+              <View style={[styles.sourceList, { marginTop: 8 }]}>
+                <Text style={[styles.sourceListTitle, { color: colors.text, fontSize: 12, fontWeight: '600', marginBottom: 4 }]}>
+                  Low Confidence Sources:
+                </Text>
+                <Text style={[styles.sourceListItem, { color: colors.textSecondary, fontSize: 11 }]}>
+                  • Open GTIN Database: 0.45{'\n'}
+                  • Barcode Monster: 0.40{'\n'}
+                  • UPCitemdb: 0.50{'\n'}
+                  • Barcode Spider: 0.45{'\n'}
+                  • Web Search Fallback: 0.30
+                </Text>
+              </View>
             </View>
+          </View>
+          
+          {/* Note about confidence score */}
+          <View style={[styles.noteBox, { backgroundColor: colors.surface, marginTop: 12 }]}>
+            <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
+            <Text style={[styles.noteText, { color: colors.textSecondary, fontSize: 12 }]}>
+              {t('infoModal.trustScore.confidenceScoreNote') || 'The confidence score is displayed as a badge next to the TruScore on the product information page. It helps you understand how reliable the product data is. Higher confidence scores indicate more trustworthy and complete information.'}
+            </Text>
           </View>
         </View>
       )}
@@ -954,6 +1018,51 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     marginLeft: 2,
+  },
+  confidenceScoreRange: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  infoBox: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  infoTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  infoText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  sourceList: {
+    marginTop: 8,
+    paddingLeft: 8,
+  },
+  sourceListTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  sourceListItem: {
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  noteBox: {
+    flexDirection: 'row',
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    alignItems: 'flex-start',
   },
   stepsTitle: {
     fontSize: 15,
