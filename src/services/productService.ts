@@ -14,6 +14,14 @@ import { fetchProductFromGoUpc } from './goUpcApi';
 import { fetchProductFromBuycott } from './buycottApi';
 import { fetchProductFromOpenGtin } from './openGtindbApi';
 import { fetchProductFromBarcodeMonster } from './barcodeMonsterApi';
+import { fetchProductFromEANSearch } from './eanSearchApi';
+import { fetchProductFromUPCDatabase } from './upcDatabaseApi';
+import { fetchProductFromEdamam } from './edamamApi';
+import { fetchProductFromBarcodeLookup } from './barcodeLookupApi';
+import { fetchProductFromNutritionix } from './nutritionixApi';
+import { fetchProductFromSpoonacular } from './spoonacularApi';
+import { fetchProductFromBestBuy } from './bestBuyApi';
+import { fetchProductFromEANData } from './eanDataApi';
 import { fetchProductFromWebSearch, isWebSearchFallback } from './webSearchFallback';
 import { getCachedProduct, cacheProduct } from './cacheService';
 import { calculateTrustScore } from '../utils/trustScore';
@@ -23,11 +31,15 @@ import { getUserCountryCode } from '../utils/countryDetection';
 import { fetchProductFromNZStores } from './nzStoreApi';
 import { fetchProductFromFSANZ } from './fsanDatabase';
 import { fetchProductFromAURetailers } from './auRetailerScraping';
+import { enhanceProductWithNZFCD } from './nzfcdDatabase';
+import { enhanceProductWithAFCD } from './afcdDatabase';
 import { applyConfidenceScore } from '../utils/confidenceScoring';
 import { mergeProducts } from './productDataMerger';
+import { lookupProductInSQLite, saveProductToSQLite } from './sqliteProductDatabase';
 
 /**
  * Fetch product data with comprehensive fallback strategy:
+ * 0. Check SQLite database (offline-first, country-specific)
  * 1. Check cache (with premium support)
  * 2. Try Open Food Facts (covers food, drinks)
  * 3. Try Open Beauty Facts (covers cosmetics, personal care products)
@@ -37,9 +49,17 @@ import { mergeProducts } from './productDataMerger';
  * 7. Try GS1 Data Source (official barcode verification - requires API key)
  * 8. Try UPCitemdb (covers alcohol, household products, electronics, general products)
  * 9. Try Barcode Spider (fallback for general products)
- * 10. Try Web Search (DuckDuckGo Instant Answer - ensures we ALWAYS return something)
- * 11. Check for food recalls (FDA API - non-blocking, for food products only)
- * 12. Cache result (with premium support)
+ * 10. Try EAN-Search.org (1B+ products, good for regional/obscure products)
+ * 11. Try UPC Database API (4.3M+ products, different database than UPCitemdb)
+ * 12. Try Edamam Food Database (10K requests/month, strong nutrition data)
+ * 13. Try Barcode Lookup API (100/day, additional product source)
+ * 14. Try Nutritionix API (100/day, nutrition-focused)
+ * 15. Try Spoonacular API (150 points/day, food-focused)
+ * 16. Try Best Buy API (5K/day, electronics focus)
+ * 17. Try EANData API (100/day, basic but reliable validation)
+ * 18. Try Web Search (DuckDuckGo Instant Answer - ensures we ALWAYS return something)
+ * 19. Check for food recalls (FDA API - non-blocking, for food products only)
+ * 20. Cache result (with premium support)
  * 
  * GUARANTEE: This function will ALWAYS return a Product (never null) unless offline without cache.
  * Even if all databases fail, web search fallback creates a minimal product result.
@@ -48,11 +68,13 @@ import { mergeProducts } from './productDataMerger';
  * - Food & Drinks (Open Food Facts, USDA FoodData Central)
  * - Cosmetics & Beauty (Open Beauty Facts, Open Food Facts)
  * - Pet Food (Open Pet Food Facts, Open Food Facts)
- * - General Products (Open Products Facts, UPCitemdb, Barcode Spider, GS1)
- * - Alcohol (UPCitemdb, Open Products Facts)
- * - Household Products (Open Products Facts, UPCitemdb)
- * - Electronics (Open Products Facts, GS1)
- * - Tools & Hardware (Open Products Facts, GS1)
+ * - General Products (Open Products Facts, UPCitemdb, Barcode Spider, EAN-Search, UPC Database, Barcode Lookup, EANData, GS1)
+ * - Alcohol (UPCitemdb, Open Products Facts, EAN-Search, UPC Database, EANData)
+ * - Household Products (Open Products Facts, UPCitemdb, EAN-Search, UPC Database, Barcode Lookup, EANData)
+ * - Electronics (Open Products Facts, GS1, EAN-Search, Best Buy, UPC Database, Barcode Lookup, EANData)
+ * - Tools & Hardware (Open Products Facts, GS1, EAN-Search, Best Buy, UPC Database, EANData)
+ * - Food & Nutrition (Edamam, Nutritionix, Spoonacular, USDA, Open Food Facts)
+ * - Regional/Obscure Products (EAN-Search - 1B+ products, strong EU/AU coverage)
  * - US Branded Foods (USDA FoodData Central - official data)
  * - Official Barcode Verification (GS1 Data Source)
  * - ANY Product (Web Search Fallback - last resort, ensures result)
@@ -70,8 +92,18 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
   logger.debug(`Barcode variants to try: ${barcodeVariants.join(', ')} (primary: ${primaryBarcode})`);
 
   try {
+  // Check SQLite database first (offline-first, country-specific)
+  // This provides instant lookups for products in the local database
+  const userCountry = getUserCountryCode();
+  const sqliteProduct = await lookupProductInSQLite(primaryBarcode, userCountry);
+  if (sqliteProduct) {
+    logger.debug(`Found product in SQLite database: ${primaryBarcode}`);
+    // Apply confidence score and calculate trust score
+    const productWithConfidence = applyConfidenceScore(sqliteProduct);
+    return calculateTrustScore(productWithConfidence);
+  }
 
-  // Check cache first - try all variants
+  // Check cache - try all variants
   if (useCache) {
     for (const variant of barcodeVariants) {
       const cached = await getCachedProduct(variant, isPremium);
@@ -330,13 +362,85 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       })
     );
     
-    const [upcitemdbResults, barcodeSpiderResults, goUpcResults, buycottResults, openGtinResults, barcodeMonsterResults] = await Promise.allSettled([
+    const eanSearchPromises = barcodeVariants.map(variant => 
+      fetchProductFromEANSearch(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`EAN-Search fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const upcDatabasePromises = barcodeVariants.map(variant => 
+      fetchProductFromUPCDatabase(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`UPC Database fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const edamamPromises = barcodeVariants.map(variant => 
+      fetchProductFromEdamam(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Edamam fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const barcodeLookupPromises = barcodeVariants.map(variant => 
+      fetchProductFromBarcodeLookup(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Barcode Lookup fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const nutritionixPromises = barcodeVariants.map(variant => 
+      fetchProductFromNutritionix(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Nutritionix fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const spoonacularPromises = barcodeVariants.map(variant => 
+      fetchProductFromSpoonacular(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Spoonacular fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const bestBuyPromises = barcodeVariants.map(variant => 
+      fetchProductFromBestBuy(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`Best Buy fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const eanDataPromises = barcodeVariants.map(variant => 
+      fetchProductFromEANData(variant).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.debug(`EANData fetch error for ${variant}:`, errorMessage);
+        return null;
+      })
+    );
+    
+    const [upcitemdbResults, barcodeSpiderResults, goUpcResults, buycottResults, openGtinResults, barcodeMonsterResults, eanSearchResults, upcDatabaseResults, edamamResults, barcodeLookupResults, nutritionixResults, spoonacularResults, bestBuyResults, eanDataResults] = await Promise.allSettled([
       Promise.all(upcitemdbPromises),
       Promise.all(barcodeSpiderPromises),
       Promise.all(goUpcPromises),
       Promise.all(buycottPromises),
       Promise.all(openGtinPromises),
       Promise.all(barcodeMonsterPromises),
+      Promise.all(eanSearchPromises),
+      Promise.all(upcDatabasePromises),
+      Promise.all(edamamPromises),
+      Promise.all(barcodeLookupPromises),
+      Promise.all(nutritionixPromises),
+      Promise.all(spoonacularPromises),
+      Promise.all(bestBuyPromises),
+      Promise.all(eanDataPromises),
     ]);
     
     // Check UPCitemdb results
@@ -404,7 +508,94 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
         }
       }
     }
-
+    
+    // Check EAN-Search results
+    if (!product && eanSearchResults.status === 'fulfilled') {
+      for (const result of eanSearchResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in EAN-Search: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check UPC Database results
+    if (!product && upcDatabaseResults.status === 'fulfilled') {
+      for (const result of upcDatabaseResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in UPC Database: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check Edamam results
+    if (!product && edamamResults.status === 'fulfilled') {
+      for (const result of edamamResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Edamam: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check Barcode Lookup results
+    if (!product && barcodeLookupResults.status === 'fulfilled') {
+      for (const result of barcodeLookupResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Barcode Lookup: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check Nutritionix results
+    if (!product && nutritionixResults.status === 'fulfilled') {
+      for (const result of nutritionixResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Nutritionix: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check Spoonacular results
+    if (!product && spoonacularResults.status === 'fulfilled') {
+      for (const result of spoonacularResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Spoonacular: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check Best Buy results
+    if (!product && bestBuyResults.status === 'fulfilled') {
+      for (const result of bestBuyResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in Best Buy: ${barcode}`);
+          break;
+        }
+      }
+    }
+    
+    // Check EANData results
+    if (!product && eanDataResults.status === 'fulfilled') {
+      for (const result of eanDataResults.value) {
+        if (result) {
+          product = result;
+          logger.debug(`Found product in EANData: ${barcode}`);
+          break;
+        }
+      }
+    }
   }
 
   // FINAL FALLBACK: Web Search - ensures we ALWAYS return a result
@@ -475,6 +666,20 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     };
   }
 
+  // Enhance product with NZFCD or AFCD nutrition data if available
+  // This supplements products that may lack comprehensive nutrition data
+  try {
+    const userCountry = getUserCountryCode();
+    if (userCountry === 'NZ') {
+      product = await enhanceProductWithNZFCD(product);
+    } else if (userCountry === 'AU') {
+      product = await enhanceProductWithAFCD(product);
+    }
+  } catch (error) {
+    logger.debug('Error enhancing product with NZFCD/AFCD:', error);
+    // Continue without enhancement if it fails
+  }
+
   // Format and enrich product data (for Open Facts family)
   if (product.source === 'openfoodfacts' || 
       product.source === 'openbeautyfacts' || 
@@ -535,6 +740,12 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       const cachedProduct = { ...product, barcode };
       await cacheProduct(cachedProduct, isPremium);
     }
+    
+    // Also save to SQLite for offline-first lookups
+    const userCountry = getUserCountryCode();
+    await saveProductToSQLite(product, userCountry).catch(err => {
+      logger.debug('Error saving to SQLite (non-critical):', err);
+    });
   }
 
   // Apply confidence scoring to product

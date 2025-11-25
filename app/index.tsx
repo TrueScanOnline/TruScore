@@ -57,20 +57,25 @@ export default function ScanScreen() {
       // Reset scanner state immediately
       setScanned(false);
       
-      // Ensure camera is active if permission is granted
+      // On iOS, ensure camera is active immediately when permission is granted
       if (permission?.granted) {
-        setCameraActive(true);
-      }
-
-      // Debounce camera remounting (wait 100ms after focus before remounting)
-      // This prevents excessive remounting when user rapidly switches tabs
-      remountTimerRef.current = setTimeout(() => {
-        if (permission?.granted) {
-          setCameraKey(prev => prev + 1); // Force remount camera component
+        // For iOS: Activate camera immediately without delay
+        if (Platform.OS === 'ios') {
           setCameraActive(true);
+          // Force remount to ensure camera initializes properly
+          setCameraKey(prev => prev + 1);
+        } else {
+          // For Android: Use debounced remount
+          setCameraActive(true);
+          remountTimerRef.current = setTimeout(() => {
+            if (permission?.granted) {
+              setCameraKey(prev => prev + 1);
+              setCameraActive(true);
+            }
+            remountTimerRef.current = null;
+          }, 100);
         }
-        remountTimerRef.current = null;
-      }, 100);
+      }
 
       return () => {
         // Cleanup: clear timer if component unmounts or loses focus
@@ -83,46 +88,57 @@ export default function ScanScreen() {
   );
 
   useEffect(() => {
-    // Request camera permission on mount with try/catch for Android
+    // Request camera permission on mount
     const requestCameraPermission = async () => {
       try {
         if (!permission?.granted && permission?.canAskAgain) {
-          await requestPermission();
+          console.log('[ScanScreen] Requesting camera permission...');
+          const result = await requestPermission();
+          console.log('[ScanScreen] Camera permission result:', result);
         }
       } catch (error: any) {
         console.error('[ScanScreen] Camera permission error:', error);
-        // Show fallback toast for Android
-        if (Platform.OS === 'android') {
-          Alert.alert(
-            t('scan.cameraPermissionError') || 'Camera Access Needed',
-            t('scan.cameraPermissionErrorMessage') || 'Camera access needed – enable in settings',
-            [
-              {
-                text: t('common.ok') || 'OK',
-                onPress: () => {
-                  // Optionally open settings
-                  if (Platform.OS === 'android') {
-                    Linking.openSettings?.();
-                  }
-                },
+        // Show alert for both iOS and Android
+        Alert.alert(
+          t('scan.cameraPermissionError') || 'Camera Access Needed',
+          t('scan.cameraPermissionErrorMessage') || 'Camera access needed – enable in settings',
+          [
+            {
+              text: t('common.settings') || 'Settings',
+              onPress: () => {
+                Linking.openSettings?.();
               },
-            ]
-          );
-        }
+            },
+            {
+              text: t('common.cancel') || 'Cancel',
+              style: 'cancel',
+            },
+          ]
+        );
       }
     };
 
     requestCameraPermission();
-    
-    // Ensure camera is active when permission is granted
+  }, [permission?.granted, requestPermission]);
+
+  // Separate effect to handle camera activation when permission is granted
+  useEffect(() => {
     if (permission?.granted) {
-      // Reset camera state and force remount to ensure proper initialization
-      setCameraActive(false); // Start inactive, will be set to true when ready
-      setTimeout(() => {
-        setCameraKey(prev => prev + 1);
+      console.log('[ScanScreen] Camera permission granted, activating camera...');
+      // On iOS, activate immediately; on Android, use a small delay
+      if (Platform.OS === 'ios') {
         setCameraActive(true);
-      }, 200); // Slightly longer delay to ensure proper initialization
-    } else if (!permission?.granted) {
+        // Force remount to ensure proper initialization
+        setCameraKey(prev => prev + 1);
+      } else {
+        // Android: Small delay to ensure proper initialization
+        setCameraActive(false);
+        setTimeout(() => {
+          setCameraKey(prev => prev + 1);
+          setCameraActive(true);
+        }, 100);
+      }
+    } else {
       setCameraActive(false);
     }
   }, [permission?.granted]);
@@ -270,26 +286,41 @@ export default function ScanScreen() {
               key={cameraKey} // Force remount on focus
               style={styles.camera}
               facing="back"
+              enableTorch={false}
               barcodeScannerSettings={{
                 barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'qr', 'datamatrix'],
               }}
               onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
               onCameraReady={() => {
-                console.log('[ScanScreen] Camera ready');
+                console.log('[ScanScreen] Camera ready on', Platform.OS);
                 setCameraActive(true);
               }}
               onMountError={(error) => {
                 console.error('[ScanScreen] Camera mount error:', error);
+                console.error('[ScanScreen] Error details:', JSON.stringify(error, null, 2));
                 setCameraActive(false);
+                
+                // More helpful error message for iOS
+                const errorMessage = Platform.OS === 'ios' 
+                  ? 'Failed to initialize camera. Please check Settings > TrueScan > Camera and ensure it is enabled. Then restart the app.'
+                  : t('scan.cameraErrorMessage') || 'Failed to initialize camera. Please try again.';
+                
                 Alert.alert(
                   t('scan.cameraError') || 'Camera Error',
-                  t('scan.cameraErrorMessage') || 'Failed to initialize camera. Please try again.',
+                  errorMessage,
                   [
+                    {
+                      text: t('common.settings') || 'Settings',
+                      onPress: () => {
+                        Linking.openSettings?.();
+                      },
+                    },
                     {
                       text: t('common.retry') || 'Retry',
                       onPress: () => {
+                        console.log('[ScanScreen] Retrying camera mount...');
                         setCameraKey(prev => prev + 1);
-                        setTimeout(() => setCameraActive(true), 500);
+                        setTimeout(() => setCameraActive(true), 300);
                       },
                     },
                     {

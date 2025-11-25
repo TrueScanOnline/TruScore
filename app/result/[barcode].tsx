@@ -333,6 +333,7 @@ function ResultScreenContent() {
   };
 
   // Check if product has minimal/no useful data (only if product exists)
+  // Show unknown product page for: no product, errors, minimal data, web search products with minimal data
   let shouldShowUnknownProductPage = false;
   if (product) {
     const imageUrl = product.image_url || product.image_front_url || product.image_front_small_url;
@@ -343,7 +344,11 @@ function ResultScreenContent() {
                            (!product.generic_name || product.generic_name.length < 20) &&
                            (!product.brands || product.brands.trim().length === 0);
     
+    // Show unknown product page for minimal data OR web search products (always show clean page)
+    const isWebSearchProduct = isWebSearchFallback(product);
+    
     shouldShowUnknownProductPage = hasMinimalData || 
+                                   isWebSearchProduct ||
                                    (product.product_name === 'Unknown Product') ||
                                    !!(product.product_name && product.product_name.startsWith('Product '));
   }
@@ -430,35 +435,6 @@ function ResultScreenContent() {
   // Calculate Eco-Score using the proper function to ensure grade is calculated from score if missing
   const calculatedEcoScore = product ? calculateEcoScore(product) : null;
   
-  // Check if product has minimal/no useful data (for web search notice, not for unknown page - that's already handled above)
-  const hasMinimalData = !imageUrl && 
-                         (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
-                         !product.ingredients_text &&
-                         (!product.product_name || product.product_name.startsWith('Product ') || product.product_name === 'Unknown Product') &&
-                         (!product.generic_name || product.generic_name.length < 20) &&
-                         (!product.brands || product.brands.trim().length === 0);
-
-  const handleSearchWeb = () => {
-    if (!product) return;
-    
-    // Use product name if available, otherwise use barcode
-    const searchQuery = product.product_name || product.product_name_en || product.brands || barcode;
-    
-    // Try multiple shopping sites in order of preference
-    const shoppingUrls = [
-      `https://www.amazon.com/s?k=${encodeURIComponent(searchQuery)}`,
-      `https://www.walmart.com/search?q=${encodeURIComponent(searchQuery)}`,
-      `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(searchQuery)}`,
-      `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`,
-    ];
-    
-    // Open the first URL (Amazon search with product name)
-    Linking.openURL(shoppingUrls[0]).catch((error) => {
-      console.error('Error opening search URL:', error);
-      // Fallback to Google search
-      Linking.openURL(shoppingUrls[shoppingUrls.length - 1]).catch(console.error);
-    });
-  };
 
   const handleCaptureImage = async (imageUri: string) => {
     if (!product) return;
@@ -531,40 +507,6 @@ function ResultScreenContent() {
             </Text>
           )}
           
-          {/* Web Search Notice (only shown for products with SOME data, not minimal) */}
-          {isWebSearchProduct && !hasMinimalData && (
-            <View style={[styles.webSearchNotice, { backgroundColor: '#ffa500' + '20', borderColor: '#ffa500' }]}>
-              <View style={styles.webSearchNoticeHeader}>
-                <Ionicons name="information-circle" size={20} color="#ffa500" />
-                <Text style={[styles.webSearchNoticeTitle, { color: colors.text }]}>
-                  {t('result.webSearchNotice')}
-                </Text>
-              </View>
-              <Text style={[styles.webSearchNoticeText, { color: colors.textSecondary }]}>
-                {t('result.webSearchNoticeText')}
-              </Text>
-              <View style={styles.webSearchButtonContainer}>
-                <TouchableOpacity
-                  style={[styles.webSearchButton, { backgroundColor: '#ffa500', flex: 1 }]}
-                  onPress={handleSearchWeb}
-                >
-                  <Ionicons name="search" size={20} color="#fff" />
-                  <Text style={styles.webSearchButtonText}>
-                    {t('result.searchWeb')}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.contributeButton, { backgroundColor: colors.primary, flex: 1, marginLeft: 8 }]}
-                  onPress={() => setManualProductModalVisible(true)}
-                >
-                  <Ionicons name="add-circle-outline" size={20} color="#fff" />
-                  <Text style={styles.contributeButtonText}>
-                    {t('manualProduct.addProduct') || 'Add Product'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
         </View>
 
         {/* Food Recall Alert - Compact banner that opens modal */}
@@ -1652,20 +1594,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 24,
   },
-  contributeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-    gap: 8,
-    marginBottom: 16,
-  },
-  contributeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   backButton: {
     paddingVertical: 12,
   },
@@ -2354,45 +2282,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 12,
     paddingHorizontal: 4,
-  },
-  webSearchNotice: {
-    marginTop: 16,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    gap: 12,
-  },
-  webSearchNoticeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  webSearchNoticeTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  webSearchNoticeText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  webSearchButtonContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
-  },
-  webSearchButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    gap: 8,
-  },
-  webSearchButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
   palmOilContent: {
     marginTop: 12,

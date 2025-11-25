@@ -51,7 +51,8 @@ module.exports = {
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        NSCameraUsageDescription: 'TrueScan needs access to your camera to scan product barcodes and capture product images for identification and information lookup.',
+        NSCameraUsageDescription: 'TrueScan needs access to your camera to scan product barcodes for transparency info.',
+        // Note: NSMicrophoneUsageDescription not needed since we're not using video recording
       },
     },
     scheme: 'truescan',
@@ -60,6 +61,16 @@ module.exports = {
     },
     plugins: [
       'expo-font',
+      'expo-sqlite',
+      [
+        'expo-camera',
+        {
+          cameraPermission: 'TrueScan needs access to your camera to scan product barcodes for transparency info.',
+          // Note: Microphone permission is optional - only needed if using video recording
+          // Setting to false prevents microphone permission request
+          microphonePermission: false,
+        },
+      ],
       [
         'expo-build-properties',
         {
@@ -104,6 +115,41 @@ module.exports = {
       // Subscription: https://www.gs1us.org/tools/gs1-us-data-hub/gs1-us-apis
       // If you have a GS1 API key, add it here: EXPO_PUBLIC_GS1_API_KEY
       EXPO_PUBLIC_GS1_API_KEY: process.env.EXPO_PUBLIC_GS1_API_KEY || '',
+      // EAN-Search.org API Key (Optional - free tier available)
+      // Register at: https://www.ean-search.org/ean-database-api.html
+      // Free tier: Requires registration, unlimited light use
+      // If you have an EAN-Search API key, add it here: EXPO_PUBLIC_EAN_SEARCH_API_KEY
+      EXPO_PUBLIC_EAN_SEARCH_API_KEY: process.env.EXPO_PUBLIC_EAN_SEARCH_API_KEY || '',
+      // UPC Database API Key (Optional - free tier: 100 lookups/day)
+      // Register at: https://www.upcdatabase.com/api
+      // If you have a UPC Database API key, add it here: EXPO_PUBLIC_UPC_DATABASE_API_KEY
+      EXPO_PUBLIC_UPC_DATABASE_API_KEY: process.env.EXPO_PUBLIC_UPC_DATABASE_API_KEY || '',
+      // Edamam Food Database API (Optional - free tier: 10,000 requests/month)
+      // Register at: https://developer.edamam.com/
+      // Requires: App ID + App Key
+      EXPO_PUBLIC_EDAMAM_APP_ID: process.env.EXPO_PUBLIC_EDAMAM_APP_ID || '',
+      EXPO_PUBLIC_EDAMAM_APP_KEY: process.env.EXPO_PUBLIC_EDAMAM_APP_KEY || '',
+      // Barcode Lookup API Key (Optional - free tier: 100 lookups/day)
+      // Register at: https://www.barcodelookup.com/api
+      // If you have a Barcode Lookup API key, add it here: EXPO_PUBLIC_BARCODE_LOOKUP_API_KEY
+      EXPO_PUBLIC_BARCODE_LOOKUP_API_KEY: process.env.EXPO_PUBLIC_BARCODE_LOOKUP_API_KEY || '',
+      // Nutritionix API (Optional - free tier: 100 requests/day)
+      // Register at: https://www.nutritionix.com/business/api
+      // Requires: App ID + API Key
+      EXPO_PUBLIC_NUTRITIONIX_APP_ID: process.env.EXPO_PUBLIC_NUTRITIONIX_APP_ID || '',
+      EXPO_PUBLIC_NUTRITIONIX_API_KEY: process.env.EXPO_PUBLIC_NUTRITIONIX_API_KEY || '',
+      // Spoonacular API Key (Optional - free tier: 150 points/day)
+      // Register at: https://spoonacular.com/food-api
+      // If you have a Spoonacular API key, add it here: EXPO_PUBLIC_SPOONACULAR_API_KEY
+      EXPO_PUBLIC_SPOONACULAR_API_KEY: process.env.EXPO_PUBLIC_SPOONACULAR_API_KEY || '',
+      // Best Buy API Key (Optional - free tier: 5,000 requests/day)
+      // Register at: https://developer.bestbuy.com/
+      // If you have a Best Buy API key, add it here: EXPO_PUBLIC_BESTBUY_API_KEY
+      EXPO_PUBLIC_BESTBUY_API_KEY: process.env.EXPO_PUBLIC_BESTBUY_API_KEY || '',
+      // EANData API Key (Optional - free tier: Light use, e.g., 100/day)
+      // Register at: https://eandata.com/feed/
+      // If you have an EANData API key, add it here: EXPO_PUBLIC_EANDATA_API_KEY
+      EXPO_PUBLIC_EANDATA_API_KEY: process.env.EXPO_PUBLIC_EANDATA_API_KEY || '',
     },
   },
 };
