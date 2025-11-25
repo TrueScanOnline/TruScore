@@ -62,6 +62,12 @@ export default function ManualProductEntryModal({
   const [protein, setProtein] = useState('');
   const [salt, setSalt] = useState('');
 
+  // Allergens & Additives
+  const [allergensAdditives, setAllergensAdditives] = useState('');
+
+  // Recycling/Packaging Information
+  const [recyclingInfo, setRecyclingInfo] = useState('');
+
   const handleImageCapture = async (uri: string) => {
     setImageUri(uri);
     setCameraModalVisible(false);
@@ -190,6 +196,8 @@ export default function ManualProductEntryModal({
     setFiber('');
     setProtein('');
     setSalt('');
+    setAllergensAdditives('');
+    setRecyclingInfo('');
     onClose();
   };
 
@@ -509,6 +517,46 @@ export default function ManualProductEntryModal({
                   />
                 </View>
               </View>
+            </View>
+
+            {/* Allergens & Additives */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {t('manualProduct.allergensAdditives') || 'Allergens & Additives (Optional)'}
+              </Text>
+              <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+                {t('manualProduct.allergensAdditivesNote') || 'Enter E-numbers (e.g., E260, E300) and allergens (e.g., Contains: Milk, Eggs) as listed on packaging'}
+              </Text>
+              <TextInput
+                style={[styles.textArea, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+                placeholder={t('manualProduct.allergensAdditivesPlaceholder') || 'e.g., E260, E300, Contains: Milk, Eggs'}
+                placeholderTextColor={colors.textSecondary}
+                value={allergensAdditives}
+                onChangeText={setAllergensAdditives}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+              />
+            </View>
+
+            {/* Recycling/Packaging Information */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {t('manualProduct.recyclingInfo') || 'Recycling/Packaging Information (Optional)'}
+              </Text>
+              <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+                {t('manualProduct.recyclingInfoNote') || 'Enter packaging type and recyclability (e.g., Plastic bottle - recyclable, Cardboard box - recyclable)'}
+              </Text>
+              <TextInput
+                style={[styles.textArea, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+                placeholder={t('manualProduct.recyclingInfoPlaceholder') || 'e.g., Plastic bottle - recyclable'}
+                placeholderTextColor={colors.textSecondary}
+                value={recyclingInfo}
+                onChangeText={setRecyclingInfo}
+                multiline
+                numberOfLines={2}
+                textAlignVertical="top"
+              />
             </View>
 
             {/* Help Text */}

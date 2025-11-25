@@ -21,6 +21,9 @@ export interface ManualProductData {
   manufacturing_places?: string;
   countries?: string;
   categories?: string;
+  allergens_tags?: string[];
+  additives_tags?: string[];
+  packaging_data?: Product['packaging_data'];
   notes?: string; // User notes
   timestamp: number;
   userId?: string; // For future multi-user support
@@ -50,6 +53,9 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
       manufacturing_places: data.manufacturing_places,
       countries: data.countries,
       categories: data.categories,
+      allergens_tags: data.allergens_tags,
+      additives_tags: data.additives_tags,
+      packaging_data: data.packaging_data,
       source: 'user_contributed' as Product['source'],
       created_t: Math.floor(data.timestamp / 1000),
       last_modified_t: Math.floor(data.timestamp / 1000),

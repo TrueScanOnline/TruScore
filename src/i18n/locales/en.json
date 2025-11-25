@@ -660,6 +660,12 @@
     "submitPriceMessage": "Price submission feature coming soon!"
   },
   "manualProduct": {
+    "allergensAdditives": "Allergens & Additives (Optional)",
+    "allergensAdditivesNote": "Enter E-numbers (e.g., E260, E300) and allergens (e.g., Contains: Milk, Eggs) as listed on packaging",
+    "allergensAdditivesPlaceholder": "e.g., E260, E300, Contains: Milk, Eggs",
+    "recyclingInfo": "Recycling/Packaging Information (Optional)",
+    "recyclingInfoNote": "Enter packaging type and recyclability (e.g., Plastic bottle - recyclable, Cardboard box - recyclable)",
+    "recyclingInfoPlaceholder": "e.g., Plastic bottle - recyclable",
     "title": "Add Product Information",
     "barcode": "Barcode",
     "productImage": "Product Image",
