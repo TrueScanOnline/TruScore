@@ -65,8 +65,14 @@ export async function fetchProductFromBuycott(barcode: string): Promise<Product 
 
     return result;
   } catch (error: any) {
-    // Don't log network errors as warnings - they're expected
-    if (error.name !== 'AbortError' && error.message && !error.message.includes('timeout')) {
+    // Suppress network errors and timeouts - they're expected and not actionable
+    // Only log unexpected errors that might indicate a code issue
+    if (error.name !== 'AbortError' && 
+        error.message && 
+        !error.message.includes('timeout') && 
+        !error.message.includes('Network request failed') &&
+        !error.message.includes('Failed to fetch')) {
+      // Only log non-network errors that might be actionable
       console.log(`[DEBUG] Buycott API error for ${barcode}:`, error.message);
     }
     return null;

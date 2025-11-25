@@ -329,7 +329,7 @@ export async function scrapeProductInfo(barcode: string, productName?: string): 
   nutrition?: ProductNutriments;
   productName?: string;
 }> {
-  console.log(`[WebScraping] Starting comprehensive web scraping for barcode: ${barcode}`);
+  // Suppress verbose logging - expected behavior
   
   const results = {
     image: undefined as string | undefined,
@@ -509,7 +509,7 @@ export async function scrapeProductInfo(barcode: string, productName?: string): 
     }
   }
 
-  console.log(`[WebScraping] Results - Image: ${results.image ? 'Found' : 'Not found'}, Ingredients: ${results.ingredients ? 'Found' : 'Not found'}, Nutrition: ${results.nutrition ? Object.keys(results.nutrition).length + ' fields' : 'Not found'}`);
+  // Suppress verbose logging - only log errors
   
   return results;
 }

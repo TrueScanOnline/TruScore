@@ -390,7 +390,7 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
         });
         if (response.ok) {
           const data = await response.json();
-          console.log(`[WebSearch] Strategy 1 - DuckDuckGo response:`, JSON.stringify(data).substring(0, 200));
+          // Suppress verbose response logging - only log if we found something useful
           
           if (data.Heading && data.Heading !== barcode && data.Heading.length > 2) {
             return data.Heading;
@@ -424,7 +424,7 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
         });
         if (response.ok) {
           const data = await response.json();
-          console.log(`[WebSearch] Strategy 2 - DuckDuckGo "barcode" response:`, JSON.stringify(data).substring(0, 200));
+          // Suppress verbose response logging - only log if we found something useful
           
           if (data.Heading && !data.Heading.includes('Barcode') && data.Heading.length > 2) {
             return data.Heading;
@@ -467,7 +467,7 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
         });
         if (response.ok) {
           const data = await response.json();
-          console.log(`[WebSearch] Strategy 3 - DuckDuckGo "UPC" response:`, JSON.stringify(data).substring(0, 200));
+          // Suppress verbose response logging - only log if we found something useful
           
           if (data.Heading && !data.Heading.includes('UPC') && !data.Heading.includes('Barcode') && data.Heading.length > 2) {
             return data.Heading;
@@ -518,7 +518,7 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
     }
   }
 
-  console.log(`[WebSearch] All strategies failed to find product name for barcode: ${barcode}`);
+  // Suppress - expected when product not found in search
   return null;
 }
 
@@ -528,7 +528,7 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
  * This is free and doesn't require an API key
  */
 export async function fetchProductFromWebSearch(barcode: string): Promise<Product | null> {
-  console.log(`[WebSearch] Starting web search fallback for barcode: ${barcode}`);
+  // Suppress - expected fallback behavior
   
   try {
     // CRITICAL: First, try to get the product name from the barcode
@@ -539,7 +539,7 @@ export async function fetchProductFromWebSearch(barcode: string): Promise<Produc
     
     // If we couldn't get a product name, try one more strategy: search DuckDuckGo directly
     if (!productName) {
-      console.log(`[WebSearch] Product name not found, trying direct DuckDuckGo search...`);
+      // Suppress - expected fallback behavior
       try {
         const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(barcode)}&format=json&no_html=1&skip_disambig=1`;
         const response = await fetch(ddgUrl, {
@@ -580,10 +580,9 @@ export async function fetchProductFromWebSearch(barcode: string): Promise<Produc
     // If we still don't have a product name, try searching with the barcode directly
     // This is important because sometimes we can still find data even without a product name
     if (!productName) {
-      console.log(`[WebSearch] No product name found, trying to fetch data using barcode directly...`);
+      // Suppress - expected fallback behavior
       
       // Try comprehensive web scraping with barcode directly
-      console.log(`[WebSearch] Trying comprehensive web scraping with barcode: ${barcode}`);
       
       const scrapedData = await scrapeProductInfo(barcode);
       
@@ -598,7 +597,7 @@ export async function fetchProductFromWebSearch(barcode: string): Promise<Produc
       const nutriments = scrapedData.nutrition || nutrimentsOld;
       const ingredientsText = scrapedData.ingredients || ingredientsTextOld;
 
-      console.log(`[WebSearch] Barcode direct results - Image: ${imageUrl ? 'Found' : 'Not found'}, Nutrition: ${nutriments ? Object.keys(nutriments).length + ' fields' : 'Not found'}, Ingredients: ${ingredientsText ? 'Found' : 'Not found'}`);
+      // Suppress - expected fallback behavior
 
       // If we found anything, use it even without a product name
       if (imageUrl || nutriments || ingredientsText) {
@@ -631,11 +630,11 @@ export async function fetchProductFromWebSearch(barcode: string): Promise<Produc
       // Still no luck, use generic name
       productName = `Product ${barcode}`;
     } else {
-      console.log(`[WebSearch] Using product name: ${productName}`);
+      // Suppress - expected fallback behavior
     }
 
     // Now fetch image, nutrition, and ingredients using comprehensive web scraping
-    console.log(`[WebSearch] Starting comprehensive web scraping for: ${productName || barcode}`);
+    // Suppress verbose logging
     
     // Use comprehensive web scraping service
     const scrapedData = await scrapeProductInfo(barcode, productName);
@@ -653,7 +652,7 @@ export async function fetchProductFromWebSearch(barcode: string): Promise<Produc
     const ingredientsText = scrapedData.ingredients || ingredientsTextOld;
     const finalProductName = scrapedData.productName || productName;
 
-    console.log(`[WebSearch] Results - Image: ${imageUrl ? 'Found' : 'Not found'}, Nutrition: ${nutriments ? Object.keys(nutriments).length + ' fields' : 'Not found'}, Ingredients: ${ingredientsText ? 'Found' : 'Not found'}`);
+    // Suppress verbose logging - only log errors
 
     // Calculate quality and completion based on available data
     let quality = 30; // Base quality
@@ -661,23 +660,20 @@ export async function fetchProductFromWebSearch(barcode: string): Promise<Produc
     
     if (imageUrl) {
       quality += 20;
-      console.log(`[WebSearch] +20 quality for image`);
     }
     if (nutriments && Object.keys(nutriments).length > 0) {
       quality += 15;
       completion += 20;
-      console.log(`[WebSearch] +15 quality, +20 completion for nutrition (${Object.keys(nutriments).length} fields)`);
     }
     if (ingredientsText) {
       quality += 10;
       completion += 20;
-      console.log(`[WebSearch] +10 quality, +20 completion for ingredients`);
     }
 
     const finalQuality = Math.min(quality, 70);
     const finalCompletion = Math.min(completion, 70);
     
-    console.log(`[WebSearch] Final quality: ${finalQuality}, completion: ${finalCompletion}`);
+    // Suppress verbose logging
 
     const product: Product = {
       barcode,
@@ -705,10 +701,9 @@ export async function fetchProductFromWebSearch(barcode: string): Promise<Produc
  * Enhanced to try fetching an image even for minimal products
  */
 async function createFallbackProduct(barcode: string): Promise<Product> {
-  console.log(`[WebSearch] Creating fallback product for barcode: ${barcode}`);
+  // Suppress verbose logging - expected fallback behavior
   
   // Try comprehensive web scraping first
-  console.log(`[WebSearch] Trying comprehensive web scraping for fallback product`);
   const scrapedData = await scrapeProductInfo(barcode);
   
   // Try to get product name from scraping or other methods
@@ -720,7 +715,7 @@ async function createFallbackProduct(barcode: string): Promise<Product> {
     productName = `Product ${barcode}`;
   }
   
-  console.log(`[WebSearch] Fallback product name: ${productName}`);
+  // Suppress verbose logging
   
   // If scraping didn't find everything, try old methods
   const [imageUrlOld, nutrimentsOld, ingredientsTextOld] = await Promise.all([
@@ -734,7 +729,7 @@ async function createFallbackProduct(barcode: string): Promise<Product> {
   const nutriments = scrapedData.nutrition || nutrimentsOld;
   const ingredientsText = scrapedData.ingredients || ingredientsTextOld;
 
-  console.log(`[WebSearch] Fallback results - Image: ${imageUrl ? 'Found' : 'Not found'}, Nutrition: ${nutriments ? Object.keys(nutriments).length + ' fields' : 'Not found'}, Ingredients: ${ingredientsText ? 'Found' : 'Not found'}`);
+  // Suppress verbose logging
 
   // Calculate quality and completion based on available data
   let quality = 10;

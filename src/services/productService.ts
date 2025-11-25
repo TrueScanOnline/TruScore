@@ -411,7 +411,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
   // This guarantees that every scanned barcode returns SOME product data
   // Try primary barcode first, then fall back to original if different
   if (!product) {
-    logger.warn(`All databases failed, using web search fallback: ${primaryBarcode}`);
+    // Suppress - expected fallback behavior when product not in databases
     product = await fetchProductFromWebSearch(primaryBarcode);
     
     // If primary barcode didn't work and it's different from original, try original

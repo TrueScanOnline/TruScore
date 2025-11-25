@@ -54,7 +54,11 @@ export async function fetchProductFromUPCitemdb(barcode: string): Promise<Produc
     }, 'upcitemdb');
 
     if (!response.ok) {
-      console.warn(`UPCitemdb API error: ${response.status}`);
+      // Suppress 400 (rate limit/bad request) and 404 (not found) - they're expected
+      // Only log unexpected server errors (5xx)
+      if (response.status >= 500) {
+        console.warn(`UPCitemdb API error: ${response.status}`);
+      }
       return null;
     }
 
@@ -82,7 +86,16 @@ export async function fetchProductFromUPCitemdb(barcode: string): Promise<Produc
     };
 
     return product;
-  } catch (error) {
+  } catch (error: any) {
+    // Suppress rate limit errors and network errors - they're expected
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('Rate limit exceeded') || 
+        errorMessage.includes('Network request failed') ||
+        errorMessage.includes('Failed to fetch')) {
+      // These are expected and not actionable - suppress
+      return null;
+    }
+    // Only log unexpected errors
     console.error('Error fetching from UPCitemdb:', error);
     return null;
   }

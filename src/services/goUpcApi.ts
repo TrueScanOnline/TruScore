@@ -44,7 +44,9 @@ export async function fetchProductFromGoUpc(barcode: string): Promise<Product | 
     }, 'go_upc');
 
     if (!response.ok) {
-      if (response.status !== 404) {
+      // Suppress 401 (unauthorized) and 404 (not found) - they're expected
+      // Only log unexpected server errors (5xx)
+      if (response.status >= 500) {
         console.warn(`Go-UPC API error: ${response.status}`);
       }
       return null;
@@ -71,8 +73,14 @@ export async function fetchProductFromGoUpc(barcode: string): Promise<Product | 
 
     return result;
   } catch (error: any) {
-    // Don't log network errors as warnings - they're expected
-    if (error.name !== 'AbortError' && error.message && !error.message.includes('timeout')) {
+    // Suppress network errors and timeouts - they're expected and not actionable
+    // Only log unexpected errors that might indicate a code issue
+    if (error.name !== 'AbortError' && 
+        error.message && 
+        !error.message.includes('timeout') && 
+        !error.message.includes('Network request failed') &&
+        !error.message.includes('Failed to fetch')) {
+      // Only log non-network errors that might be actionable
       console.log(`[DEBUG] Go-UPC API error for ${barcode}:`, error.message);
     }
     return null;

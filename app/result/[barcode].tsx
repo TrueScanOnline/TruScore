@@ -382,14 +382,14 @@ function ResultScreenContent() {
               </Text>
             </TouchableOpacity>
             
-            {/* Secondary Action: Contribute to Open Food Facts */}
+            {/* Secondary Action: View Open Food Facts website */}
             <TouchableOpacity
               style={[styles.secondaryActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={handleContribute}
             >
               <Ionicons name="globe-outline" size={20} color={colors.primary} />
               <Text style={[styles.secondaryActionButtonText, { color: colors.primary }]}>
-                {t('result.contributeToOpenFoodFacts') || 'Contribute to Open Food Facts'}
+                View Open Food Facts website
               </Text>
             </TouchableOpacity>
             
