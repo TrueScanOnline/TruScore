@@ -324,6 +324,30 @@ function ResultScreenContent() {
     );
   }
 
+  // Helper function for manual product save
+  const handleManualProductSave = async (productData: ManualProductData) => {
+    // Reload product data - it should now be available from cache
+    await loadProduct();
+    setManualProductModalVisible(false);
+    Toast.show({ type: 'success', text1: 'Updated', text2: 'Product information saved' });
+  };
+
+  // Check if product has minimal/no useful data (only if product exists)
+  let shouldShowUnknownProductPage = false;
+  if (product) {
+    const imageUrl = product.image_url || product.image_front_url || product.image_front_small_url;
+    const hasMinimalData = !imageUrl && 
+                           (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
+                           !product.ingredients_text &&
+                           (!product.product_name || product.product_name.startsWith('Product ') || product.product_name === 'Unknown Product') &&
+                           (!product.generic_name || product.generic_name.length < 20) &&
+                           (!product.brands || product.brands.trim().length === 0);
+    
+    shouldShowUnknownProductPage = hasMinimalData || 
+                                   (product.product_name === 'Unknown Product') ||
+                                   !!(product.product_name && product.product_name.startsWith('Product '));
+  }
+
   // Show "Unknown Product" page if product not found OR has minimal/no useful data
   if (error || !product || shouldShowUnknownProductPage) {
     return (
@@ -406,18 +430,13 @@ function ResultScreenContent() {
   // Calculate Eco-Score using the proper function to ensure grade is calculated from score if missing
   const calculatedEcoScore = product ? calculateEcoScore(product) : null;
   
-  // Check if product has minimal/no useful data - treat as "Unknown Product"
+  // Check if product has minimal/no useful data (for web search notice, not for unknown page - that's already handled above)
   const hasMinimalData = !imageUrl && 
                          (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
                          !product.ingredients_text &&
                          (!product.product_name || product.product_name.startsWith('Product ') || product.product_name === 'Unknown Product') &&
                          (!product.generic_name || product.generic_name.length < 20) &&
                          (!product.brands || product.brands.trim().length === 0);
-  
-  // If product has minimal data, show "Unknown Product" page instead of full product page
-  const shouldShowUnknownProductPage = hasMinimalData || 
-                                       (product.product_name === 'Unknown Product') ||
-                                       (product.product_name && product.product_name.startsWith('Product '));
 
   const handleSearchWeb = () => {
     if (!product) return;
@@ -458,13 +477,6 @@ function ResultScreenContent() {
     } catch (error) {
       console.error('Error caching product with image:', error);
     }
-  };
-
-  const handleManualProductSave = async (productData: ManualProductData) => {
-    // Reload product data - it should now be available from cache
-    await loadProduct();
-    setManualProductModalVisible(false);
-    Toast.show({ type: 'success', text1: 'Updated', text2: 'Product information saved' });
   };
 
   return (
