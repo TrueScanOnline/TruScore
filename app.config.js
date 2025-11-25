@@ -51,6 +51,7 @@ module.exports = {
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSCameraUsageDescription: 'TrueScan needs access to your camera to scan product barcodes and capture product images for identification and information lookup.',
       },
     },
     scheme: 'truescan',
