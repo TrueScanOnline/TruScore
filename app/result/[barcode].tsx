@@ -324,41 +324,75 @@ function ResultScreenContent() {
     );
   }
 
-  if (error || !product) {
+  // Show "Unknown Product" page if product not found OR has minimal/no useful data
+  if (error || !product || shouldShowUnknownProductPage) {
     return (
-      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
-        <Ionicons name="barcode-outline" size={64} color={colors.textTertiary} />
-        <Text style={[styles.errorTitle, { color: colors.text }]}>{t('result.notFound')}</Text>
-        <Text style={[styles.errorText, { color: colors.textSecondary }]}>
-          {t('result.notFoundMessage')}
-        </Text>
-        <Text style={[styles.barcodeText, { color: colors.textTertiary }]}>
-          Barcode: {barcode}
-        </Text>
-        <TouchableOpacity
-          style={[styles.contributeButton, { backgroundColor: colors.primary }]}
-          onPress={() => setManualProductModalVisible(true)}
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.unknownProductContainer}
         >
-          <Ionicons name="add-circle-outline" size={20} color="#fff" />
-          <Text style={styles.contributeButtonText}>
-            {t('manualProduct.addProduct') || 'Add Product Information'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.contributeButton, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, marginTop: 12 }]}
-          onPress={handleContribute}
-        >
-          <Ionicons name="globe-outline" size={20} color={colors.primary} />
-          <Text style={[styles.contributeButtonText, { color: colors.primary }]}>
-            {t('result.contributeToOpenFoodFacts') || 'Contribute to Open Food Facts'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backButtonText, { color: colors.primary }]}>
-            {t('result.scanAnother')}
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.unknownProductContent}>
+            <Ionicons name="barcode-outline" size={80} color={colors.textTertiary} />
+            <Text style={[styles.errorTitle, { color: colors.text, marginTop: 24 }]}>
+              {t('result.productUnknown') || 'Unknown Product'}
+            </Text>
+            <Text style={[styles.errorText, { color: colors.textSecondary, marginTop: 12, marginBottom: 8 }]}>
+              {t('result.unknownProductMessage') || 'We couldn\'t find detailed information about this product in our databases.'}
+            </Text>
+            <Text style={[styles.barcodeText, { color: colors.textTertiary, marginBottom: 32 }]}>
+              Barcode: {barcode}
+            </Text>
+            
+            {/* Primary Action: Add Product Information */}
+            <TouchableOpacity
+              style={[styles.primaryActionButton, { backgroundColor: colors.primary }]}
+              onPress={() => setManualProductModalVisible(true)}
+            >
+              <Ionicons name="add-circle" size={24} color="#fff" />
+              <Text style={styles.primaryActionButtonText}>
+                {t('manualProduct.addProductInformation') || 'Add Product Information'}
+              </Text>
+              <Text style={styles.primaryActionButtonSubtext}>
+                {t('manualProduct.addProductSubtext') || 'Enter details from the product label'}
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Secondary Action: Contribute to Open Food Facts */}
+            <TouchableOpacity
+              style={[styles.secondaryActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={handleContribute}
+            >
+              <Ionicons name="globe-outline" size={20} color={colors.primary} />
+              <Text style={[styles.secondaryActionButtonText, { color: colors.primary }]}>
+                {t('result.contributeToOpenFoodFacts') || 'Contribute to Open Food Facts'}
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Help Text */}
+            <View style={[styles.helpSection, { backgroundColor: colors.surface }]}>
+              <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+              <Text style={[styles.helpText, { color: colors.textSecondary }]}>
+                {t('result.unknownProductHelp') || 'You can add product information manually, or contribute it to the Open Food Facts database to help others.'}
+              </Text>
+            </View>
+            
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Text style={[styles.backButtonText, { color: colors.primary }]}>
+                {t('result.scanAnother') || 'Scan Another Product'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+        
+        {/* Manual Product Entry Modal */}
+        <ManualProductEntryModal
+          visible={manualProductModalVisible}
+          onClose={() => setManualProductModalVisible(false)}
+          onSave={handleManualProductSave}
+          barcode={barcode}
+        />
+      </SafeAreaView>
     );
   }
 
@@ -372,12 +406,18 @@ function ResultScreenContent() {
   // Calculate Eco-Score using the proper function to ensure grade is calculated from score if missing
   const calculatedEcoScore = product ? calculateEcoScore(product) : null;
   
-  // Check if product has minimal/no useful data
+  // Check if product has minimal/no useful data - treat as "Unknown Product"
   const hasMinimalData = !imageUrl && 
                          (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
                          !product.ingredients_text &&
-                         (!product.product_name || product.product_name.startsWith('Product ')) &&
-                         (!product.generic_name || product.generic_name.length < 20);
+                         (!product.product_name || product.product_name.startsWith('Product ') || product.product_name === 'Unknown Product') &&
+                         (!product.generic_name || product.generic_name.length < 20) &&
+                         (!product.brands || product.brands.trim().length === 0);
+  
+  // If product has minimal data, show "Unknown Product" page instead of full product page
+  const shouldShowUnknownProductPage = hasMinimalData || 
+                                       (product.product_name === 'Unknown Product') ||
+                                       (product.product_name && product.product_name.startsWith('Product '));
 
   const handleSearchWeb = () => {
     if (!product) return;
@@ -479,23 +519,21 @@ function ResultScreenContent() {
             </Text>
           )}
           
-          {/* Web Search Notice & Button (shown when product is from web search fallback or has minimal data) */}
-          {(isWebSearchProduct || hasMinimalData) && (
-            <View style={[styles.webSearchNotice, { backgroundColor: hasMinimalData ? '#ff6b6b' + '20' : '#ffa500' + '20', borderColor: hasMinimalData ? '#ff6b6b' : '#ffa500' }]}>
+          {/* Web Search Notice (only shown for products with SOME data, not minimal) */}
+          {isWebSearchProduct && !hasMinimalData && (
+            <View style={[styles.webSearchNotice, { backgroundColor: '#ffa500' + '20', borderColor: '#ffa500' }]}>
               <View style={styles.webSearchNoticeHeader}>
-                <Ionicons name={hasMinimalData ? "warning" : "information-circle"} size={20} color={hasMinimalData ? '#ff6b6b' : '#ffa500'} />
+                <Ionicons name="information-circle" size={20} color="#ffa500" />
                 <Text style={[styles.webSearchNoticeTitle, { color: colors.text }]}>
-                  {hasMinimalData ? t('result.minimalDataNotice') : t('result.webSearchNotice')}
+                  {t('result.webSearchNotice')}
                 </Text>
               </View>
               <Text style={[styles.webSearchNoticeText, { color: colors.textSecondary }]}>
-                {hasMinimalData 
-                  ? t('result.minimalDataNoticeText')
-                  : t('result.webSearchNoticeText')}
+                {t('result.webSearchNoticeText')}
               </Text>
               <View style={styles.webSearchButtonContainer}>
                 <TouchableOpacity
-                  style={[styles.webSearchButton, { backgroundColor: hasMinimalData ? '#ff6b6b' : '#ffa500', flex: 1 }]}
+                  style={[styles.webSearchButton, { backgroundColor: '#ffa500', flex: 1 }]}
                   onPress={handleSearchWeb}
                 >
                   <Ionicons name="search" size={20} color="#fff" />
@@ -513,15 +551,6 @@ function ResultScreenContent() {
                   </Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={[styles.contributeButton, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, marginTop: 8 }]}
-                onPress={handleContribute}
-              >
-                <Ionicons name="globe-outline" size={20} color={colors.primary} />
-                <Text style={[styles.contributeButtonText, { color: colors.primary }]}>
-                  {t('result.contributeToOpenFoodFacts') || 'Contribute to Open Food Facts'}
-                </Text>
-              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -1537,6 +1566,64 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+  },
+  unknownProductContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 32,
+  },
+  unknownProductContent: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  primaryActionButton: {
+    width: '100%',
+    alignItems: 'center',
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 16,
+    gap: 8,
+  },
+  primaryActionButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  primaryActionButtonSubtext: {
+    color: '#fff',
+    fontSize: 14,
+    opacity: 0.9,
+    textAlign: 'center',
+  },
+  secondaryActionButton: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 8,
+    marginBottom: 24,
+  },
+  secondaryActionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  helpSection: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
+    marginBottom: 24,
+  },
+  helpText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
   },
   errorTitle: {
     fontSize: 24,
