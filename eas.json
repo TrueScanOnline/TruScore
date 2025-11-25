@@ -1,13 +1,14 @@
 {
   "build": {
     "preview": {
-      "distribution": "internal",
+      "distribution": "store",
       "node": "20.19.4",
       "android": {
         "buildType": "apk"
       },
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "buildConfiguration": "Release"
       }
     },
     "development": {
