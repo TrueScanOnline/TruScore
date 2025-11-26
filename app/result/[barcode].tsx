@@ -749,7 +749,7 @@ function ResultScreenContent() {
             <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </View>
           <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Set preferences for geopolitical, ethical, and environmental insights – These insights do not affect the TruScore
+            Set preferences for geopolitical, ethical, and environmental insights – These insights do not affect TruScore
           </Text>
           {(() => {
             const activeCount = [
@@ -1127,6 +1127,11 @@ function ResultScreenContent() {
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
                     {t('result.orangeFlag')} - {t('result.containsPalmOil')}
                   </Text>
+                  {product.ingredients_text && !product.ingredients_analysis_tags?.some(tag => tag.includes('palm-oil')) && (
+                    <Text style={[styles.palmOilNote, { color: colors.textSecondary }]}>
+                      Detected from ingredients list
+                    </Text>
+                  )}
                 </View>
               ) : (
                 <View style={[styles.palmOilStatus, { backgroundColor: '#16a085' + '20', borderLeftWidth: 4, borderLeftColor: '#16a085' }]}>
@@ -2300,6 +2305,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
+  },
+  palmOilNote: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 4,
   },
   packagingContent: {
     marginTop: 12,

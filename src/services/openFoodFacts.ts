@@ -275,8 +275,9 @@ function enhanceProductWithSustainabilityData(product: Product): void {
     enhanceEcoScoreData(product);
   }
 
-  // Extract palm oil analysis
-  if (product.ingredients_analysis_tags || product.ingredients_analysis) {
+  // Extract palm oil analysis - always create if we have ingredients data
+  // This ensures consistency with Values Insights (which checks ingredients_text)
+  if (product.ingredients_analysis_tags || product.ingredients_analysis || product.ingredients_text) {
     product.palm_oil_analysis = extractPalmOilAnalysis(product);
   }
 
@@ -335,18 +336,43 @@ function enhanceEcoScoreData(product: Product): void {
 export function extractPalmOilAnalysis(product: Product): PalmOilAnalysis {
   const tags = product.ingredients_analysis_tags || [];
   const analysis = product.ingredients_analysis || {};
+  const ingredientsText = (product.ingredients_text || '').toLowerCase();
 
-  const containsPalmOil = 
+  // Check OFF structured data first (most reliable)
+  let containsPalmOil = 
     tags.includes('en:palm-oil') || 
     analysis['en:palm-oil'] === 'yes' ||
     analysis['en:palm-oil'] === 'maybe';
 
-  const isPalmOilFree = 
+  let isPalmOilFree = 
     tags.includes('en:palm-oil-free') || 
     analysis['en:palm-oil'] === 'no';
 
-  const isNonSustainable = 
+  let isNonSustainable = 
     tags.includes('en:non-sustainable-palm-oil');
+
+  // Fallback: Always check ingredients_text if OFF data doesn't explicitly say palm-oil-free
+  // This ensures consistency with Values Insights detection
+  // Only skip if OFF explicitly says it's palm-oil-free (trust OFF certification)
+  if (!isPalmOilFree && ingredientsText) {
+    // Check for palm oil in ingredients text (word boundary matching + variations)
+    // Common variations: "palm oil", "palmolein", "palm fat", "palm kernel oil", "palm stearin"
+    const palmOilPattern = /\bpalm\s+oil\b/i;
+    const palmOilVariations = /\b(palmolein|palm\s+fat|palm\s+kernel\s+oil|palm\s+stearin|palm\s+olein)\b/i;
+    const palmOilFreePattern = /\bpalm[-\s]?oil[-\s]?free\b/i;
+    
+    if (palmOilFreePattern.test(ingredientsText)) {
+      // Explicitly marked as palm-oil-free in ingredients
+      isPalmOilFree = true;
+      containsPalmOil = false;
+    } else if (palmOilPattern.test(ingredientsText) || palmOilVariations.test(ingredientsText)) {
+      // Contains palm oil in ingredients (but sustainability unknown)
+      // Override OFF data if OFF didn't detect it (OFF might have incomplete data)
+      containsPalmOil = true;
+      // Note: We don't set isNonSustainable = true here because we can't determine
+      // sustainability from ingredients text alone - it requires certification data
+    }
+  }
 
   // Calculate score: -10 for non-sustainable palm oil, -5 for palm oil, +10 for palm-oil-free
   let score = 0;

@@ -4,7 +4,6 @@
 // Registration: https://developer.edamam.com/
 // Requires: App ID + App Key
 
-import axios from 'axios';
 import { Product, ProductNutriments } from '../types/product';
 import { logger } from '../utils/logger';
 
@@ -69,31 +68,37 @@ export async function fetchProductFromEdamam(barcode: string): Promise<Product |
 
   try {
     // Edamam uses barcode search endpoint
-    const searchUrl = `${EDAMAM_API_BASE}/parser`;
-    const params = {
+    const params = new URLSearchParams({
       app_id: APP_ID,
       app_key: APP_KEY,
       upc: barcode,
-    };
+    });
+    const searchUrl = `${EDAMAM_API_BASE}/parser?${params.toString()}`;
     
     logger.debug(`Fetching from Edamam API: ${barcode}`);
     
-    const response = await axios.get<EdamamSearchResponse>(searchUrl, {
-      params,
-      timeout: 10000,
+    const response = await fetch(searchUrl, {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'TrueScan-FoodScanner/1.0',
       },
     });
 
+    if (!response.ok) {
+      logger.debug(`Edamam API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const data: EdamamSearchResponse = await response.json();
+
     // Check if product found
-    if (!response.data || !response.data.hints || response.data.hints.length === 0) {
+    if (!data || !data.hints || data.hints.length === 0) {
       logger.debug(`Edamam: Product not found for ${barcode}`);
       return null;
     }
 
-    const food = response.data.hints[0]?.food;
+    const food = data.hints[0]?.food;
     if (!food) {
       return null;
     }
@@ -116,7 +121,7 @@ export async function fetchProductFromEdamam(barcode: string): Promise<Product |
     // Convert nutrients to our format
     const nutrients = food.nutrients;
     const nutriments: ProductNutriments | undefined = nutrients ? {
-      energy_kcal_100g: nutrients.ENERC_KCAL ? Math.round(nutrients.ENERC_KCAL) : undefined,
+      'energy-kcal_100g': nutrients.ENERC_KCAL ? Math.round(nutrients.ENERC_KCAL) : undefined,
       proteins_100g: nutrients.PROCNT ? Math.round(nutrients.PROCNT * 10) / 10 : undefined,
       fat_100g: nutrients.FAT ? Math.round(nutrients.FAT * 10) / 10 : undefined,
       carbohydrates_100g: nutrients.CHOCDF ? Math.round(nutrients.CHOCDF * 10) / 10 : undefined,
@@ -177,7 +182,7 @@ export async function fetchProductFromEdamam(barcode: string): Promise<Product |
   }
 }
 
-function calculateQuality(food: EdamamSearchResponse['hints']?[0]?['food']): number {
+function calculateQuality(food: NonNullable<NonNullable<EdamamSearchResponse['hints']>[number]>['food'] | undefined): number {
   if (!food) return 0;
   
   let score = 0;
@@ -190,7 +195,7 @@ function calculateQuality(food: EdamamSearchResponse['hints']?[0]?['food']): num
   return Math.min(score, 100);
 }
 
-function calculateCompletion(food: EdamamSearchResponse['hints']?[0]?['food']): number {
+function calculateCompletion(food: NonNullable<NonNullable<EdamamSearchResponse['hints']>[number]>['food'] | undefined): number {
   if (!food) return 0;
   
   const fields = [

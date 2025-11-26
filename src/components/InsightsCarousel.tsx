@@ -100,10 +100,21 @@ export default function InsightsCarousel({ insights, productName }: InsightsCaro
   const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [expandedInsights, setExpandedInsights] = useState<Set<number>>(new Set());
 
   if (insights.length === 0) return null;
 
   const displayedInsights = showAll ? insights : insights.slice(0, 3);
+  
+  const toggleExpand = (index: number) => {
+    const newExpanded = new Set(expandedInsights);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedInsights(newExpanded);
+  };
 
   const handleInsightPress = (insight: Insight) => {
     setSelectedInsight(insight);
@@ -134,42 +145,67 @@ export default function InsightsCarousel({ insights, productName }: InsightsCaro
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.carousel}
       >
-        {displayedInsights.map((insight, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.insightBanner, { backgroundColor: insight.color + '20', borderColor: insight.color }]}
-            onPress={() => handleInsightPress(insight)}
-          >
-            <View style={styles.insightContent}>
-              <View style={[styles.insightIcon, { backgroundColor: insight.color }]}>
-                <Ionicons
-                  name={
-                    insight.type === 'geopolitical'
-                      ? 'globe-outline'
-                      : insight.type === 'ethical'
-                      ? 'heart-outline'
-                      : 'leaf-outline'
-                  }
-                  size={16}
-                  color="#fff"
-                />
-              </View>
-              <View style={styles.insightTextContainer}>
-                <Text style={[styles.insightTypeLabel, { color: insight.color }]}>
-                  {insight.type.charAt(0).toUpperCase() + insight.type.slice(1)}
-                </Text>
-                <Text 
-                  style={[styles.insightReasonText, { color: colors.text }]} 
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
+        {displayedInsights.map((insight, index) => {
+          const isExpanded = expandedInsights.has(index);
+          const shouldTruncate = insight.reason.length > 80; // Truncate if longer than 80 chars
+          
+          return (
+            <View
+              key={index}
+              style={[styles.insightBanner, { backgroundColor: insight.color + '20', borderColor: insight.color }]}
+            >
+              <TouchableOpacity
+                onPress={() => handleInsightPress(insight)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.insightContent}>
+                  <View style={[styles.insightIcon, { backgroundColor: insight.color }]}>
+                    <Ionicons
+                      name={
+                        insight.type === 'geopolitical'
+                          ? 'globe-outline'
+                          : insight.type === 'ethical'
+                          ? 'heart-outline'
+                          : 'leaf-outline'
+                      }
+                      size={16}
+                      color="#fff"
+                    />
+                  </View>
+                  <View style={styles.insightTextContainer}>
+                    <Text style={[styles.insightTypeLabel, { color: insight.color }]}>
+                      {insight.type.charAt(0).toUpperCase() + insight.type.slice(1)}
+                    </Text>
+                    <Text 
+                      style={[styles.insightReasonText, { color: colors.text }]} 
+                      numberOfLines={isExpanded ? undefined : (shouldTruncate ? 2 : undefined)}
+                      ellipsizeMode="tail"
+                    >
+                      {insight.reason}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={insight.color} />
+                </View>
+              </TouchableOpacity>
+              {shouldTruncate && (
+                <TouchableOpacity
+                  onPress={() => toggleExpand(index)}
+                  style={styles.expandButton}
+                  activeOpacity={0.7}
                 >
-                  {insight.reason}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={insight.color} />
+                  <Text style={[styles.expandText, { color: insight.color }]}>
+                    {isExpanded ? 'Show less' : 'Show more'}
+                  </Text>
+                  <Ionicons 
+                    name={isExpanded ? 'chevron-up' : 'chevron-down'} 
+                    size={16} 
+                    color={insight.color} 
+                  />
+                </TouchableOpacity>
+              )}
             </View>
-          </TouchableOpacity>
-        ))}
+          );
+        })}
       </ScrollView>
 
       {insights.length > 3 && !showAll && (
@@ -222,6 +258,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 2,
     marginRight: 12,
+    overflow: 'hidden',
   },
   insightContent: {
     flexDirection: 'row',
@@ -336,6 +373,18 @@ const styles = StyleSheet.create({
   },
   footerButtonText: {
     fontSize: 14,
+    fontWeight: '600',
+  },
+  expandButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    paddingTop: 8,
+    gap: 4,
+  },
+  expandText: {
+    fontSize: 12,
     fontWeight: '600',
   },
 });

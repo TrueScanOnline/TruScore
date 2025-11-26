@@ -154,3 +154,4 @@ const maxScans = isUnlimited ? Infinity : MAX_SCANS_FREE;
 **See:** `PREMIUM_FEATURES_ANALYSIS_AND_STRATEGY.md` for full details.
 
 
+

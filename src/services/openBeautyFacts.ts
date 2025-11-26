@@ -2,6 +2,7 @@
 // Similar structure to Open Food Facts but for cosmetics and personal care products
 import { Product, PalmOilAnalysis, PackagingData, PackagingItem, AgribalyseData } from '../types/product';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
+import { extractPalmOilAnalysis as extractPalmOilAnalysisFromOFF } from './openFoodFacts';
 
 const OBF_API_BASE = 'https://world.openbeautyfacts.org/api/v2/product';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -66,8 +67,9 @@ export async function fetchProductFromOBF(barcode: string): Promise<Product | nu
  * Similar to OFF but cosmetics may have different data structure
  */
 function enhanceProductWithSustainabilityData(product: Product): void {
-  // Extract palm oil analysis (if available)
-  if (product.ingredients_analysis_tags || product.ingredients_analysis) {
+  // Extract palm oil analysis - always create if we have ingredients data
+  // This ensures consistency with Values Insights (which checks ingredients_text)
+  if (product.ingredients_analysis_tags || product.ingredients_analysis || product.ingredients_text) {
     product.palm_oil_analysis = extractPalmOilAnalysis(product);
   }
 
@@ -82,39 +84,11 @@ function enhanceProductWithSustainabilityData(product: Product): void {
 
 /**
  * Extract palm oil analysis from ingredients_analysis_tags
- * (Reuse from openFoodFacts.ts logic)
+ * (Reuse from openFoodFacts.ts - import the enhanced version)
  */
 function extractPalmOilAnalysis(product: Product): PalmOilAnalysis {
-  const tags = product.ingredients_analysis_tags || [];
-  const analysis = product.ingredients_analysis || {};
-
-  const containsPalmOil = 
-    tags.includes('en:palm-oil') || 
-    analysis['en:palm-oil'] === 'yes' ||
-    analysis['en:palm-oil'] === 'maybe';
-
-  const isPalmOilFree = 
-    tags.includes('en:palm-oil-free') || 
-    analysis['en:palm-oil'] === 'no';
-
-  const isNonSustainable = 
-    tags.includes('en:non-sustainable-palm-oil');
-
-  let score = 0;
-  if (isNonSustainable) {
-    score = -10;
-  } else if (containsPalmOil && !isPalmOilFree) {
-    score = -5;
-  } else if (isPalmOilFree) {
-    score = 10;
-  }
-
-  return {
-    containsPalmOil,
-    isPalmOilFree,
-    isNonSustainable,
-    score,
-  };
+  // Use the enhanced version from openFoodFacts that also checks ingredients_text
+  return extractPalmOilAnalysisFromOFF(product);
 }
 
 /**

@@ -4,7 +4,6 @@
 // Registration: https://spoonacular.com/food-api
 // Note: Points-based system (each request costs points)
 
-import axios from 'axios';
 import { Product, ProductNutriments } from '../types/product';
 import { logger } from '../utils/logger';
 
@@ -68,29 +67,33 @@ export async function fetchProductFromSpoonacular(barcode: string): Promise<Prod
   }
 
   try {
-    const url = `${SPOONACULAR_API_BASE}/upc/${barcode}`;
-    const params = {
+    const params = new URLSearchParams({
       apiKey: API_KEY,
-    };
+    });
+    const url = `${SPOONACULAR_API_BASE}/upc/${barcode}?${params.toString()}`;
     
     logger.debug(`Fetching from Spoonacular API: ${barcode}`);
     
-    const response = await axios.get<SpoonacularProductResponse>(url, {
-      params,
-      timeout: 10000,
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'TrueScan-FoodScanner/1.0',
       },
     });
 
-    // Check if product found
-    if (!response.data || !response.data.id) {
-      logger.debug(`Spoonacular: Product not found for ${barcode}`);
+    if (!response.ok) {
+      logger.debug(`Spoonacular API error: ${response.status} ${response.statusText}`);
       return null;
     }
 
-    const data = response.data;
+    const data: SpoonacularProductResponse = await response.json();
+
+    // Check if product found
+    if (!data || !data.id) {
+      logger.debug(`Spoonacular: Product not found for ${barcode}`);
+      return null;
+    }
     
     // Extract product name
     const productName = data.title || 'Unknown Product';
@@ -99,13 +102,13 @@ export async function fetchProductFromSpoonacular(barcode: string): Promise<Prod
     const category = data.aisle || data.breadcrumbs?.[0] || '';
     
     // Extract ingredients
-    const ingredients = data.ingredientList || data.ingredients?.map(i => i.name).filter(Boolean).join(', ') || '';
+    const ingredients = data.ingredientList || data.ingredients?.map((i: { name?: string }) => i.name).filter(Boolean).join(', ') || '';
     
     // Convert nutrients to our format
     const nutrients = data.nutrition?.nutrients;
     const nutriments: ProductNutriments | undefined = nutrients ? (() => {
       const nutrientMap: Record<string, number> = {};
-      nutrients.forEach(nutrient => {
+      nutrients.forEach((nutrient: { name?: string; amount?: number }) => {
         if (nutrient.name && nutrient.amount !== undefined) {
           nutrientMap[nutrient.name.toLowerCase()] = nutrient.amount;
         }

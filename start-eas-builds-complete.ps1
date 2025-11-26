@@ -16,12 +16,28 @@ Write-Host "----------------------------------------" -ForegroundColor Gray
 
 Write-Host "`n[1/3] Running Expo Doctor..." -ForegroundColor Cyan
 $doctorResult = npx expo-doctor 2>&1
+$doctorOutput = $doctorResult | Out-String
+
+# Check if expo-doctor found issues
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "`n⚠️  Expo Doctor found issues. Please fix them before continuing." -ForegroundColor Red
-    Write-Host $doctorResult -ForegroundColor Yellow
-    exit 1
+    # Check if the only issue is the non-blocking app config warning
+    # This warning appears when native folders exist - it's expected and non-blocking
+    $hasAppConfigWarning = $doctorOutput -match "app config fields that may not be synced"
+    $hasOnlyOneFailure = $doctorOutput -match "1 checks failed"
+    $hasOnlyAppConfigWarning = $hasAppConfigWarning -and $hasOnlyOneFailure
+    
+    if ($hasOnlyAppConfigWarning) {
+        Write-Host "⚠️  Expo Doctor: Non-blocking warning detected (app config sync)" -ForegroundColor Yellow
+        Write-Host "   This is expected when native folders exist. Build will proceed." -ForegroundColor Gray
+        Write-Host "✅ Expo Doctor: Proceeding with build (warning is non-blocking)" -ForegroundColor Green
+    } else {
+        Write-Host "`n⚠️  Expo Doctor found issues. Please fix them before continuing." -ForegroundColor Red
+        Write-Host $doctorResult -ForegroundColor Yellow
+        exit 1
+    }
+} else {
+    Write-Host "✅ Expo Doctor: All checks passed" -ForegroundColor Green
 }
-Write-Host "✅ Expo Doctor: All checks passed" -ForegroundColor Green
 
 Write-Host "`n[2/3] Generating native code (validation)..." -ForegroundColor Cyan
 $prebuildResult = npx expo prebuild --clean 2>&1

@@ -273,6 +273,19 @@ export function calculateTruScore(
 
     // Generate insights if preferences provided
     const insights = preferences ? generateInsights(product, preferences) : [];
+    
+    // Debug logging for insights generation
+    if (preferences && insights.length === 0) {
+      console.log('[TruScore] No insights generated:', {
+        hasPreferences: !!preferences,
+        environmentalEnabled: preferences.environmentalEnabled,
+        avoidPalmOil: preferences.avoidPalmOil,
+        hasIngredientsText: !!(product.ingredients_text && product.ingredients_text.trim().length > 0),
+        ingredientsTextSample: product.ingredients_text?.substring(0, 100),
+        hasPalmOilAnalysis: !!product.palm_oil_analysis,
+        palmOilContains: product.palm_oil_analysis?.containsPalmOil
+      });
+    }
 
     return {
       truscore,

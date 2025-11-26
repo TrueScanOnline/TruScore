@@ -3,7 +3,6 @@
 // Coverage: Product database
 // Registration: https://www.barcodelookup.com/api
 
-import axios from 'axios';
 import { Product } from '../types/product';
 import { logger } from '../utils/logger';
 
@@ -88,21 +87,28 @@ export async function fetchProductFromBarcodeLookup(barcode: string): Promise<Pr
     
     logger.debug(`Fetching from Barcode Lookup API: ${barcode}`);
     
-    const response = await axios.get<BarcodeLookupResponse>(url, {
-      timeout: 10000,
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'TrueScan-FoodScanner/1.0',
       },
     });
 
+    if (!response.ok) {
+      logger.debug(`Barcode Lookup API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const data: BarcodeLookupResponse = await response.json();
+
     // Check if product found
-    if (!response.data || !response.data.products || response.data.products.length === 0) {
+    if (!data || !data.products || data.products.length === 0) {
       logger.debug(`Barcode Lookup: Product not found for ${barcode}`);
       return null;
     }
 
-    const item = response.data.products[0];
+    const item = data.products[0];
     
     // Extract product name (prefer product_name, fallback to title)
     const productName = item.product_name || item.title || 'Unknown Product';
@@ -181,7 +187,7 @@ export async function fetchProductFromBarcodeLookup(barcode: string): Promise<Pr
   }
 }
 
-function calculateQuality(item: BarcodeLookupResponse['products']?[0]): number {
+function calculateQuality(item: NonNullable<BarcodeLookupResponse['products']>[number] | undefined): number {
   if (!item) return 0;
   
   let score = 0;
@@ -195,7 +201,7 @@ function calculateQuality(item: BarcodeLookupResponse['products']?[0]): number {
   return Math.min(score, 100);
 }
 
-function calculateCompletion(item: BarcodeLookupResponse['products']?[0]): number {
+function calculateCompletion(item: NonNullable<BarcodeLookupResponse['products']>[number] | undefined): number {
   if (!item) return 0;
   
   const fields = [

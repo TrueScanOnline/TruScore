@@ -2,6 +2,7 @@
 import { Product } from '../types/product';
 import { ValuesPreferences } from '../store/useValuesStore';
 import { Insight } from './truscoreEngine';
+import { VALUES_COLORS } from '../theme/valuesColors';
 
 // Known companies linked to regions (simplified - in production, use comprehensive database)
 const ISRAEL_LINKED_BRANDS = ['soda-stream', 'strauss', 'osem', 'tnuva', 'sabon', 'coca-cola', 'coke', 'coca cola'];
@@ -72,7 +73,7 @@ export function generateInsights(
           type: 'geopolitical',
           reason: 'Geopolitical Insight: Matches Avoid Israel-linked preference',
           source: 'Product origin/brand analysis',
-          color: '#ff6b6b', // Red
+          color: VALUES_COLORS.geopolitical,
         });
       }
     } else if (preferences.israelPalestine === 'avoid_palestine') {
@@ -83,7 +84,7 @@ export function generateInsights(
           type: 'geopolitical',
           reason: 'Geopolitical Insight: Matches Avoid Palestine-linked preference',
           source: 'Product origin/brand analysis',
-          color: '#ff6b6b', // Red
+          color: VALUES_COLORS.geopolitical,
         });
       }
     }
@@ -97,7 +98,7 @@ export function generateInsights(
           type: 'geopolitical',
           reason: 'Geopolitical Insight: Matches Avoid China-linked preference',
           source: 'Product origin/brand analysis',
-          color: '#ff6b6b', // Red
+          color: VALUES_COLORS.geopolitical,
         });
       }
     } else if (preferences.indiaChina === 'avoid_india') {
@@ -108,7 +109,7 @@ export function generateInsights(
           type: 'geopolitical',
           reason: 'Geopolitical Insight: Matches Avoid India-linked preference',
           source: 'Product origin/brand analysis',
-          color: '#ff6b6b', // Red
+          color: VALUES_COLORS.geopolitical,
         });
       }
     }
@@ -124,7 +125,7 @@ export function generateInsights(
           type: 'ethical',
           reason: 'Parent company linked to animal testing/cruelty',
           source: 'Known cruel parent companies database',
-          color: '#9b59b6', // Purple
+          color: VALUES_COLORS.ethical,
         });
       }
     }
@@ -140,7 +141,7 @@ export function generateInsights(
           type: 'ethical',
           reason: 'Potential forced/child labor concerns',
           source: 'Product analysis tags',
-          color: '#9b59b6', // Purple
+          color: VALUES_COLORS.ethical,
         });
       }
     }
@@ -149,16 +150,23 @@ export function generateInsights(
   // Environmental insights
   if (preferences.environmentalEnabled) {
     if (preferences.avoidPalmOil) {
-      const hasPalmOil = analysisTags.some((tag: string) =>
+      // Check OFF tags first, then fall back to ingredients_text (word boundary matching + variations)
+      const hasPalmOilTag = analysisTags.some((tag: string) =>
         tag.toLowerCase().includes('palm') && !tag.toLowerCase().includes('palm-oil-free')
-      ) || (product.ingredients_text || '').toLowerCase().includes('palm oil');
+      );
+      const ingredientsText = (product.ingredients_text || '').toLowerCase();
+      // Common variations: "palm oil", "palmolein", "palm fat", "palm kernel oil", "palm stearin"
+      const palmOilPattern = /\bpalm\s+oil\b/i;
+      const palmOilVariations = /\b(palmolein|palm\s+fat|palm\s+kernel\s+oil|palm\s+stearin|palm\s+olein)\b/i;
+      const hasPalmOilInText = palmOilPattern.test(ingredientsText) || palmOilVariations.test(ingredientsText);
+      const hasPalmOil = hasPalmOilTag || hasPalmOilInText;
       
       if (hasPalmOil) {
         insights.push({
           type: 'environmental',
           reason: 'Contains unsustainable palm oil',
           source: 'Ingredients analysis',
-          color: '#16a085', // Green
+          color: VALUES_COLORS.environmental,
         });
       }
     }

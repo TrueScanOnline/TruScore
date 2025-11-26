@@ -85,7 +85,7 @@ export default function ShareValuesCard({ truScore }: ShareValuesCardProps = {})
         setSharing(false);
         Alert.alert(
           'No Active Preferences',
-          'Please enable at least one value preference to share. Would you like to set up preferences now?',
+          'Enable at least one value preference to share. Set up preferences now?',
           [
             {
               text: 'Cancel',
@@ -102,7 +102,7 @@ export default function ShareValuesCard({ truScore }: ShareValuesCardProps = {})
         return;
       }
 
-      // Build share message
+      // Build share message - v1.3 spec: objective "TruScore 78 + insights" format
       const score = truScore || 0;
       const hasInsights = activeToggles.length > 0;
       

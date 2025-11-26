@@ -1,4 +1,4 @@
-// ValuesHome.tsx - Main values preferences screen with swipe tabs
+// ValuesHome.tsx - Main values preferences screen with swipe tabs (v1.3)
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -13,12 +13,18 @@ import { useTheme } from '../../theme';
 import { useValuesStore } from '../../store/useValuesStore';
 import Toast from 'react-native-toast-message';
 import ShareValuesCard from './ShareValuesCard';
+import { VALUES_COLORS, getValuesColorWithOpacity } from '../../theme/valuesColors';
+import ValuesDisclaimerModal from '../../components/ValuesDisclaimerModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type TabType = 'geopolitical' | 'ethical' | 'environmental';
+
+const DISCLAIMER_KEY = '@truescan_values_disclaimer_accepted';
 
 export default function ValuesHome() {
   const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>('geopolitical');
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   
   const {
     israelPalestine,
@@ -42,7 +48,29 @@ export default function ValuesHome() {
 
   useEffect(() => {
     initializeStore();
+    checkDisclaimer();
   }, []);
+
+  const checkDisclaimer = async () => {
+    try {
+      const accepted = await AsyncStorage.getItem(DISCLAIMER_KEY);
+      if (!accepted) {
+        setShowDisclaimer(true);
+      }
+    } catch (error) {
+      console.error('[ValuesHome] Error checking disclaimer:', error);
+    }
+  };
+
+  const handleAcceptDisclaimer = async () => {
+    try {
+      await AsyncStorage.setItem(DISCLAIMER_KEY, 'true');
+      setShowDisclaimer(false);
+    } catch (error) {
+      console.error('[ValuesHome] Error saving disclaimer:', error);
+      setShowDisclaimer(false);
+    }
+  };
 
   const renderTriStateRadio = (
     label: string,
@@ -51,16 +79,37 @@ export default function ValuesHome() {
     onChange: (value: string) => void,
     enabled: boolean
   ) => {
+    // Get theme color based on active tab
+    const themeColor = activeTab === 'geopolitical' 
+      ? VALUES_COLORS.geopolitical 
+      : activeTab === 'ethical'
+      ? VALUES_COLORS.ethical
+      : VALUES_COLORS.environmental;
+    
     return (
       <View style={[styles.radioGroup, { opacity: enabled ? 1 : 0.5 }]}>
-        <Text style={[styles.radioGroupLabel, { color: colors.text }]}>{label}</Text>
+        <View style={styles.radioGroupLabelContainer}>
+          <Text style={[styles.radioGroupLabel, { color: colors.text }]}>
+            {label.replace('△!', '')}
+          </Text>
+          {label.includes('△!') && (
+            <Text style={[styles.geopoliticsIndicator, { color: '#ef4444' }]}>△!</Text>
+          )}
+        </View>
         {options.map((option) => (
           <TouchableOpacity
             key={option.value}
             style={[
               styles.radioOption,
               { borderColor: colors.border },
-              value === option.value && { borderColor: colors.primary, backgroundColor: colors.primary + '20' },
+              value === option.value && { 
+                borderColor: themeColor, 
+                backgroundColor: getValuesColorWithOpacity(
+                  activeTab === 'geopolitical' ? 'geopolitical' : 
+                  activeTab === 'ethical' ? 'ethical' : 'environmental',
+                  0.1
+                ),
+              },
             ]}
             onPress={() => {
               if (enabled) {
@@ -69,9 +118,9 @@ export default function ValuesHome() {
             }}
             disabled={!enabled}
           >
-            <View style={[styles.radioCircle, value === option.value && { borderColor: colors.primary }]}>
+            <View style={[styles.radioCircle, value === option.value && { borderColor: themeColor }]}>
               {value === option.value && (
-                <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />
+                <View style={[styles.radioInner, { backgroundColor: themeColor }]} />
               )}
             </View>
             <Text style={[styles.radioLabel, { color: colors.text }]}>{option.label}</Text>
@@ -88,8 +137,23 @@ export default function ValuesHome() {
     onChange: (value: boolean) => void,
     enabled: boolean
   ) => {
+    // Get theme color based on active tab
+    const themeColor = activeTab === 'geopolitical' 
+      ? VALUES_COLORS.geopolitical 
+      : activeTab === 'ethical'
+      ? VALUES_COLORS.ethical
+      : VALUES_COLORS.environmental;
+    
     return (
-      <View style={[styles.switchRow, { opacity: enabled ? 1 : 0.5 }]}>
+      <View style={[
+        styles.switchRow, 
+        { 
+          opacity: enabled ? 1 : 0.5,
+          backgroundColor: colors.card,
+          borderColor: value && enabled ? themeColor : colors.border,
+          borderWidth: value && enabled ? 2 : 1,
+        }
+      ]}>
         <View style={styles.switchContent}>
           <Text style={[styles.switchLabel, { color: colors.text }]}>{label}</Text>
           <Text style={[styles.switchDescription, { color: colors.textSecondary }]}>{description}</Text>
@@ -102,7 +166,7 @@ export default function ValuesHome() {
             }
           }}
           disabled={!enabled}
-          trackColor={{ false: colors.border, true: colors.primary }}
+          trackColor={{ false: colors.border, true: themeColor }}
           thumbColor={value && enabled ? '#fff' : colors.textSecondary}
         />
       </View>
@@ -111,67 +175,85 @@ export default function ValuesHome() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
+      {/* Header - v1.3 spec */}
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>
-          Values Preferences
+          Your Values, Your Choice – Additional Insights for Scans
         </Text>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          Additional Insights for Scans – These insights do not affect the TruScore
+          These insights do not affect the TruScore
         </Text>
       </View>
 
       {/* Tabs */}
       <View style={[styles.tabs, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'geopolitical' && styles.activeTab]}
+          style={[
+            styles.tab,
+            activeTab === 'geopolitical' && {
+              borderBottomColor: VALUES_COLORS.geopolitical,
+              backgroundColor: getValuesColorWithOpacity('geopolitical', 0.05),
+            },
+          ]}
           onPress={() => setActiveTab('geopolitical')}
         >
           <Ionicons
             name="globe-outline"
             size={20}
-            color={activeTab === 'geopolitical' ? colors.primary : colors.textSecondary}
+            color={activeTab === 'geopolitical' ? VALUES_COLORS.geopolitical : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabText,
-              { color: activeTab === 'geopolitical' ? colors.primary : colors.textSecondary },
+              { color: activeTab === 'geopolitical' ? VALUES_COLORS.geopolitical : colors.textSecondary },
             ]}
           >
             Geopolitical
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'ethical' && styles.activeTab]}
+          style={[
+            styles.tab,
+            activeTab === 'ethical' && {
+              borderBottomColor: VALUES_COLORS.ethical,
+              backgroundColor: getValuesColorWithOpacity('ethical', 0.05),
+            },
+          ]}
           onPress={() => setActiveTab('ethical')}
         >
           <Ionicons
             name="heart-outline"
             size={20}
-            color={activeTab === 'ethical' ? colors.primary : colors.textSecondary}
+            color={activeTab === 'ethical' ? VALUES_COLORS.ethical : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabText,
-              { color: activeTab === 'ethical' ? colors.primary : colors.textSecondary },
+              { color: activeTab === 'ethical' ? VALUES_COLORS.ethical : colors.textSecondary },
             ]}
           >
             Ethical
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'environmental' && styles.activeTab]}
+          style={[
+            styles.tab,
+            activeTab === 'environmental' && {
+              borderBottomColor: VALUES_COLORS.environmental,
+              backgroundColor: getValuesColorWithOpacity('environmental', 0.05),
+            },
+          ]}
           onPress={() => setActiveTab('environmental')}
         >
           <Ionicons
             name="leaf-outline"
             size={20}
-            color={activeTab === 'environmental' ? colors.primary : colors.textSecondary}
+            color={activeTab === 'environmental' ? VALUES_COLORS.environmental : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabText,
-              { color: activeTab === 'environmental' ? colors.primary : colors.textSecondary },
+              { color: activeTab === 'environmental' ? VALUES_COLORS.environmental : colors.textSecondary },
             ]}
           >
             Environmental
@@ -184,7 +266,14 @@ export default function ValuesHome() {
         {activeTab === 'geopolitical' && (
           <View style={styles.tabContent}>
             {/* Master Switch */}
-            <View style={[styles.masterSwitch, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[
+              styles.masterSwitch, 
+              { 
+                backgroundColor: colors.card, 
+                borderColor: geopoliticalEnabled ? VALUES_COLORS.geopolitical : colors.border,
+                borderWidth: geopoliticalEnabled ? 2 : 1,
+              }
+            ]}>
               <View style={styles.masterSwitchContent}>
                 <Text style={[styles.masterSwitchLabel, { color: colors.text }]}>Enable Geopolitical Insights</Text>
                 <Text style={[styles.masterSwitchDescription, { color: colors.textSecondary }]}>
@@ -193,8 +282,11 @@ export default function ValuesHome() {
               </View>
               <Switch
                 value={geopoliticalEnabled}
-                onValueChange={setGeopoliticalEnabled}
-                trackColor={{ false: colors.border, true: colors.primary }}
+                onValueChange={async (val) => {
+                  await setGeopoliticalEnabled(val);
+                  Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
+                }}
+                trackColor={{ false: colors.border, true: VALUES_COLORS.geopolitical }}
                 thumbColor={geopoliticalEnabled ? '#fff' : colors.textSecondary}
               />
             </View>
@@ -202,19 +294,22 @@ export default function ValuesHome() {
             {geopoliticalEnabled && (
               <>
                 {renderTriStateRadio(
-                  'Israel–Palestine',
+                  'Israel–Palestine △!',
                   israelPalestine,
                   [
                     { value: 'neutral', label: 'Neutral (default)' },
                     { value: 'avoid_israel', label: 'Avoid Israel-linked' },
                     { value: 'avoid_palestine', label: 'Avoid Palestine-linked' },
                   ],
-                  (val) => setIsraelPalestine(val as 'neutral' | 'avoid_israel' | 'avoid_palestine'),
+                  async (val) => {
+                    await setIsraelPalestine(val as 'neutral' | 'avoid_israel' | 'avoid_palestine');
+                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
+                  },
                   geopoliticalEnabled
                 )}
 
                 {renderTriStateRadio(
-                  'India–China',
+                  'India–China △!',
                   indiaChina,
                   [
                     { value: 'neutral', label: 'Neutral' },
@@ -223,7 +318,7 @@ export default function ValuesHome() {
                   ],
                   async (val) => {
                     await setIndiaChina(val as 'neutral' | 'avoid_china' | 'avoid_india');
-                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Preference saved' });
+                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
                   },
                   geopoliticalEnabled
                 )}
@@ -235,7 +330,14 @@ export default function ValuesHome() {
         {activeTab === 'ethical' && (
           <View style={styles.tabContent}>
             {/* Master Switch */}
-            <View style={[styles.masterSwitch, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[
+              styles.masterSwitch, 
+              { 
+                backgroundColor: colors.card, 
+                borderColor: ethicalEnabled ? VALUES_COLORS.ethical : colors.border,
+                borderWidth: ethicalEnabled ? 2 : 1,
+              }
+            ]}>
               <View style={styles.masterSwitchContent}>
                 <Text style={[styles.masterSwitchLabel, { color: colors.text }]}>Enable Ethical Insights</Text>
                 <Text style={[styles.masterSwitchDescription, { color: colors.textSecondary }]}>
@@ -244,8 +346,11 @@ export default function ValuesHome() {
               </View>
               <Switch
                 value={ethicalEnabled}
-                onValueChange={setEthicalEnabled}
-                trackColor={{ false: colors.border, true: colors.primary }}
+                onValueChange={async (val) => {
+                  await setEthicalEnabled(val);
+                  Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
+                }}
+                trackColor={{ false: colors.border, true: VALUES_COLORS.ethical }}
                 thumbColor={ethicalEnabled ? '#fff' : colors.textSecondary}
               />
             </View>
@@ -258,7 +363,7 @@ export default function ValuesHome() {
                   avoidAnimalTesting,
                   async (val) => {
                     await setAvoidAnimalTesting(val);
-                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Preference saved' });
+                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
                   },
                   ethicalEnabled
                 )}
@@ -269,7 +374,7 @@ export default function ValuesHome() {
                   avoidForcedLabour,
                   async (val) => {
                     await setAvoidForcedLabour(val);
-                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Preference saved' });
+                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
                   },
                   ethicalEnabled
                 )}
@@ -281,7 +386,14 @@ export default function ValuesHome() {
         {activeTab === 'environmental' && (
           <View style={styles.tabContent}>
             {/* Master Switch */}
-            <View style={[styles.masterSwitch, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[
+              styles.masterSwitch, 
+              { 
+                backgroundColor: colors.card, 
+                borderColor: environmentalEnabled ? VALUES_COLORS.environmental : colors.border,
+                borderWidth: environmentalEnabled ? 2 : 1,
+              }
+            ]}>
               <View style={styles.masterSwitchContent}>
                 <Text style={[styles.masterSwitchLabel, { color: colors.text }]}>Enable Environmental Insights</Text>
                 <Text style={[styles.masterSwitchDescription, { color: colors.textSecondary }]}>
@@ -290,8 +402,11 @@ export default function ValuesHome() {
               </View>
               <Switch
                 value={environmentalEnabled}
-                onValueChange={setEnvironmentalEnabled}
-                trackColor={{ false: colors.border, true: colors.primary }}
+                onValueChange={async (val) => {
+                  await setEnvironmentalEnabled(val);
+                  Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
+                }}
+                trackColor={{ false: colors.border, true: VALUES_COLORS.environmental }}
                 thumbColor={environmentalEnabled ? '#fff' : colors.textSecondary}
               />
             </View>
@@ -304,7 +419,7 @@ export default function ValuesHome() {
                   avoidPalmOil,
                   async (val) => {
                     await setAvoidPalmOil(val);
-                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Preference saved' });
+                    Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
                   },
                   environmentalEnabled
                 )}
@@ -318,6 +433,13 @@ export default function ValuesHome() {
           <ShareValuesCard />
         </View>
       </ScrollView>
+
+      {/* Disclaimer Modal */}
+      <ValuesDisclaimerModal
+        visible={showDisclaimer}
+        onAccept={handleAcceptDisclaimer}
+        onDismiss={handleAcceptDisclaimer}
+      />
     </View>
   );
 }
@@ -354,7 +476,15 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#0A84FF',
+  },
+  radioGroupLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  geopoliticsIndicator: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   tabText: {
     fontSize: 14,
@@ -431,7 +561,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderRadius: 12,
-    backgroundColor: '#fff',
     marginBottom: 12,
   },
   switchContent: {

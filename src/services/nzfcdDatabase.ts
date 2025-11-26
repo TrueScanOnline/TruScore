@@ -216,6 +216,7 @@ export async function lookupProductInNZFCD(
     }
 
     const product: Product = {
+      barcode: '', // NZFCD doesn't have barcodes - will be set by caller if needed
       product_name: result.food_name,
       product_name_en: result.food_name,
       categories: result.food_group,
@@ -275,4 +276,5 @@ export async function enhanceProductWithNZFCD(
 
   return product;
 }
+
 

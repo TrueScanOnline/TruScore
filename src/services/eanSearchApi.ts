@@ -3,7 +3,6 @@
 // Coverage: 1B+ products worldwide (all categories)
 // URL: https://api.ean-search.org/
 
-import axios from 'axios';
 import { Product } from '../types/product';
 import { logger } from '../utils/logger';
 
@@ -54,21 +53,26 @@ export async function fetchProductFromEANSearch(barcode: string): Promise<Produc
     
     logger.debug(`Fetching from EAN-Search API: ${barcode}`);
     
-    const response = await axios.get<EANSearchResponse>(url, {
-      timeout: 10000, // 10 second timeout
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'TrueScan-FoodScanner/1.0',
       },
     });
 
-    // Check if product found
-    if (!response.data || !response.data.ean) {
-      logger.debug(`EAN-Search: Product not found for ${barcode}`);
+    if (!response.ok) {
+      logger.debug(`EAN-Search API error: ${response.status} ${response.statusText}`);
       return null;
     }
 
-    const data = response.data;
+    const data: EANSearchResponse = await response.json();
+
+    // Check if product found
+    if (!data || !data.ean) {
+      logger.debug(`EAN-Search: Product not found for ${barcode}`);
+      return null;
+    }
     
     // Extract product name (prefer attributes.title, fallback to name)
     const productName = data.attributes?.title || data.name || 'Unknown Product';

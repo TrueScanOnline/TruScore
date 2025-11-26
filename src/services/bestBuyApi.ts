@@ -3,7 +3,6 @@
 // Coverage: Electronics products
 // Registration: https://developer.bestbuy.com/
 
-import axios from 'axios';
 import { Product } from '../types/product';
 import { logger } from '../utils/logger';
 
@@ -63,31 +62,37 @@ export async function fetchProductFromBestBuy(barcode: string): Promise<Product 
   }
 
   try {
-    const url = `${BESTBUY_API_BASE}(upc=${barcode})`;
-    const params = {
+    const params = new URLSearchParams({
       apiKey: API_KEY,
       format: 'json',
       show: 'sku,name,upc,salePrice,regularPrice,onSale,shortDescription,longDescription,manufacturer,modelNumber,image,largeImage,thumbnailImage,customerReviewAverage,customerReviewCount,categoryPath,color,depth,height,weight,width,features,specifications',
-    };
+    });
+    const url = `${BESTBUY_API_BASE}(upc=${barcode})?${params.toString()}`;
     
     logger.debug(`Fetching from Best Buy API: ${barcode}`);
     
-    const response = await axios.get<BestBuyProductResponse>(url, {
-      params,
-      timeout: 10000,
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'TrueScan-FoodScanner/1.0',
       },
     });
 
+    if (!response.ok) {
+      logger.debug(`Best Buy API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const data: BestBuyProductResponse = await response.json();
+
     // Check if product found
-    if (!response.data || !response.data.products || response.data.products.length === 0) {
+    if (!data || !data.products || data.products.length === 0) {
       logger.debug(`Best Buy: Product not found for ${barcode}`);
       return null;
     }
 
-    const item = response.data.products[0];
+    const item = data.products[0];
     
     // Extract product name
     const productName = item.name || 'Unknown Product';
@@ -105,8 +110,8 @@ export async function fetchProductFromBestBuy(barcode: string): Promise<Product 
     const imageUrl = item.largeImage || item.image || item.thumbnailImage || undefined;
     
     // Extract features/specifications
-    const features = item.features?.map(f => f.feature).filter(Boolean).join(', ') || '';
-    const specifications = item.specifications?.map(s => `${s.name}: ${s.value}`).filter(Boolean).join(', ') || '';
+    const features = item.features?.map((f: { feature?: string }) => f.feature).filter(Boolean).join(', ') || '';
+    const specifications = item.specifications?.map((s: { name?: string; value?: string }) => `${s.name}: ${s.value}`).filter(Boolean).join(', ') || '';
     const additionalInfo = [features, specifications].filter(Boolean).join(' | ');
     
     // Build product object
@@ -173,7 +178,7 @@ export async function fetchProductFromBestBuy(barcode: string): Promise<Product 
   }
 }
 
-function calculateQuality(item: BestBuyProductResponse['products']?[0]): number {
+function calculateQuality(item: NonNullable<BestBuyProductResponse['products']>[number] | undefined): number {
   if (!item) return 0;
   
   let score = 0;
@@ -187,7 +192,7 @@ function calculateQuality(item: BestBuyProductResponse['products']?[0]): number 
   return Math.min(score, 100);
 }
 
-function calculateCompletion(item: BestBuyProductResponse['products']?[0]): number {
+function calculateCompletion(item: NonNullable<BestBuyProductResponse['products']>[number] | undefined): number {
   if (!item) return 0;
   
   const fields = [

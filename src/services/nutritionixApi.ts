@@ -3,7 +3,6 @@
 // Coverage: Nutrition facts, food database
 // Registration: https://www.nutritionix.com/business/api
 
-import axios from 'axios';
 import { Product, ProductNutriments } from '../types/product';
 import { logger } from '../utils/logger';
 
@@ -58,16 +57,15 @@ export async function fetchProductFromNutritionix(barcode: string): Promise<Prod
   }
 
   try {
-    const url = `${NUTRITIONIX_API_BASE}/search/item`;
-    const params = {
+    const params = new URLSearchParams({
       upc: barcode,
-    };
+    });
+    const url = `${NUTRITIONIX_API_BASE}/search/item?${params.toString()}`;
     
     logger.debug(`Fetching from Nutritionix API: ${barcode}`);
     
-    const response = await axios.get<NutritionixItemResponse>(url, {
-      params,
-      timeout: 10000,
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'x-app-id': APP_ID,
         'x-app-key': APP_KEY,
@@ -77,13 +75,20 @@ export async function fetchProductFromNutritionix(barcode: string): Promise<Prod
       },
     });
 
+    if (!response.ok) {
+      logger.debug(`Nutritionix API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const data: NutritionixItemResponse = await response.json();
+
     // Check if product found
-    if (!response.data || !response.data.foods || response.data.foods.length === 0) {
+    if (!data || !data.foods || data.foods.length === 0) {
       logger.debug(`Nutritionix: Product not found for ${barcode}`);
       return null;
     }
 
-    const food = response.data.foods[0];
+    const food = data.foods[0];
     if (!food) {
       return null;
     }
@@ -102,7 +107,7 @@ export async function fetchProductFromNutritionix(barcode: string): Promise<Prod
     const multiplier = 100 / servingWeightGrams;
     
     const nutriments: ProductNutriments | undefined = {
-      energy_kcal_100g: food.nf_calories ? Math.round(food.nf_calories * multiplier) : undefined,
+      'energy-kcal_100g': food.nf_calories ? Math.round(food.nf_calories * multiplier) : undefined,
       proteins_100g: food.nf_protein ? Math.round(food.nf_protein * multiplier * 10) / 10 : undefined,
       fat_100g: food.nf_total_fat ? Math.round(food.nf_total_fat * multiplier * 10) / 10 : undefined,
       'saturated-fat_100g': food.nf_saturated_fat ? Math.round(food.nf_saturated_fat * multiplier * 10) / 10 : undefined,
@@ -164,7 +169,7 @@ export async function fetchProductFromNutritionix(barcode: string): Promise<Prod
   }
 }
 
-function calculateQuality(food: NutritionixItemResponse['foods']?[0]): number {
+function calculateQuality(food: NonNullable<NutritionixItemResponse['foods']>[number] | undefined): number {
   if (!food) return 0;
   
   let score = 0;
@@ -177,7 +182,7 @@ function calculateQuality(food: NutritionixItemResponse['foods']?[0]): number {
   return Math.min(score, 100);
 }
 
-function calculateCompletion(food: NutritionixItemResponse['foods']?[0]): number {
+function calculateCompletion(food: NonNullable<NutritionixItemResponse['foods']>[number] | undefined): number {
   if (!food) return 0;
   
   const fields = [

@@ -3,7 +3,6 @@
 // Coverage: 4.3M+ products worldwide
 // Registration: https://www.upcdatabase.com/api
 
-import axios from 'axios';
 import { Product } from '../types/product';
 import { logger } from '../utils/logger';
 
@@ -52,21 +51,28 @@ export async function fetchProductFromUPCDatabase(barcode: string): Promise<Prod
     
     logger.debug(`Fetching from UPC Database API: ${barcode}`);
     
-    const response = await axios.get<UPCDatabaseResponse>(url, {
-      timeout: 10000,
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'TrueScan-FoodScanner/1.0',
       },
     });
 
+    if (!response.ok) {
+      logger.debug(`UPC Database API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const data: UPCDatabaseResponse = await response.json();
+
     // Check if product found
-    if (!response.data || !response.data.success || !response.data.items || response.data.items.length === 0) {
+    if (!data || !data.success || !data.items || data.items.length === 0) {
       logger.debug(`UPC Database: Product not found for ${barcode}`);
       return null;
     }
 
-    const item = response.data.items[0];
+    const item = data.items[0];
     
     // Extract product name
     const productName = item.title || 'Unknown Product';
@@ -138,7 +144,7 @@ export async function fetchProductFromUPCDatabase(barcode: string): Promise<Prod
   }
 }
 
-function calculateQuality(item: UPCDatabaseResponse['items']?[0]): number {
+function calculateQuality(item: NonNullable<UPCDatabaseResponse['items']>[number] | undefined): number {
   if (!item) return 0;
   
   let score = 0;
@@ -152,7 +158,7 @@ function calculateQuality(item: UPCDatabaseResponse['items']?[0]): number {
   return Math.min(score, 100);
 }
 
-function calculateCompletion(item: UPCDatabaseResponse['items']?[0]): number {
+function calculateCompletion(item: NonNullable<UPCDatabaseResponse['items']>[number] | undefined): number {
   if (!item) return 0;
   
   const fields = [

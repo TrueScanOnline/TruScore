@@ -58,3 +58,4 @@ console.log(`✅ Generated ${entries.length} entries`);
 console.log(`📝 Saved to: ${outputFile}`);
 console.log(`\nNote: This generates placeholder entries. You may want to replace some with more detailed information for commonly encountered E-numbers.`);
 
+

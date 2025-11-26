@@ -25,6 +25,7 @@ import { fetchProductFromEANData } from './eanDataApi';
 import { fetchProductFromWebSearch, isWebSearchFallback } from './webSearchFallback';
 import { getCachedProduct, cacheProduct } from './cacheService';
 import { calculateTrustScore } from '../utils/trustScore';
+import { extractPalmOilAnalysis } from './openFoodFacts';
 import { checkFDARecalls } from './fdaRecallService';
 import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
 import { getUserCountryCode } from '../utils/countryDetection';
@@ -95,9 +96,43 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
   // Check SQLite database first (offline-first, country-specific)
   // This provides instant lookups for products in the local database
   const userCountry = getUserCountryCode();
-  const sqliteProduct = await lookupProductInSQLite(primaryBarcode, userCountry);
+  const sqliteProduct = await lookupProductInSQLite(primaryBarcode, userCountry ?? undefined);
   if (sqliteProduct) {
     logger.debug(`Found product in SQLite database: ${primaryBarcode}`);
+    
+    // CRITICAL: Enhance SQLite products with computed fields (palm oil analysis, etc.)
+    // SQLite doesn't store computed fields, so we need to regenerate them
+    const hasIngredientsText = sqliteProduct.ingredients_text && typeof sqliteProduct.ingredients_text === 'string' && sqliteProduct.ingredients_text.trim().length > 0;
+    const hasAnalysisTags = Array.isArray(sqliteProduct.ingredients_analysis_tags) && sqliteProduct.ingredients_analysis_tags.length > 0;
+    const hasAnalysis = sqliteProduct.ingredients_analysis && typeof sqliteProduct.ingredients_analysis === 'object' && Object.keys(sqliteProduct.ingredients_analysis).length > 0;
+    
+    logger.debug(`[SQLite Enhancement] ingredients_text: ${hasIngredientsText ? 'YES' : 'NO'}, analysis_tags: ${hasAnalysisTags ? 'YES' : 'NO'}, analysis: ${hasAnalysis ? 'YES' : 'NO'}`);
+    
+    if (hasIngredientsText || hasAnalysisTags || hasAnalysis) {
+      try {
+        sqliteProduct.palm_oil_analysis = extractPalmOilAnalysis(sqliteProduct);
+        // Check if palm oil was detected in the full ingredients text
+        const fullIngredientsText = sqliteProduct.ingredients_text || '';
+        const palmOilMatch = /\bpalm\s+oil\b/i.test(fullIngredientsText);
+        const palmOilVariationsMatch = /\b(palmolein|palm\s+fat|palm\s+kernel\s+oil|palm\s+stearin|palm\s+olein)\b/i.test(fullIngredientsText);
+        
+        logger.debug(`[SQLite Enhancement] Palm oil analysis created:`, {
+          containsPalmOil: sqliteProduct.palm_oil_analysis?.containsPalmOil,
+          isPalmOilFree: sqliteProduct.palm_oil_analysis?.isPalmOilFree,
+          isNonSustainable: sqliteProduct.palm_oil_analysis?.isNonSustainable,
+          ingredients_text_length: fullIngredientsText.length,
+          ingredients_text_sample: fullIngredientsText.substring(0, 200),
+          palmOilPatternMatch: palmOilMatch,
+          palmOilVariationsMatch: palmOilVariationsMatch,
+          fullTextContainsPalm: fullIngredientsText.toLowerCase().includes('palm')
+        });
+      } catch (error) {
+        logger.debug('Error extracting palm oil analysis from SQLite product:', error);
+      }
+    } else {
+      logger.debug('[SQLite Enhancement] No ingredients data available for palm oil analysis');
+    }
+    
     // Apply confidence score and calculate trust score
     const productWithConfidence = applyConfidenceScore(sqliteProduct);
     return calculateTrustScore(productWithConfidence);
@@ -120,6 +155,21 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
           // Don't return cached - continue to retry web search
         } else {
           logger.debug(`Using cached product: ${variant}${isPremium ? ' (premium cache)' : ''}`);
+          
+          // CRITICAL: Enhance cached products with computed fields (palm oil analysis, etc.)
+          // Cached products might have been stored before enhancement logic was added
+          const hasIngredientsText = cached.ingredients_text && typeof cached.ingredients_text === 'string' && cached.ingredients_text.trim().length > 0;
+          const hasAnalysisTags = Array.isArray(cached.ingredients_analysis_tags) && cached.ingredients_analysis_tags.length > 0;
+          const hasAnalysis = cached.ingredients_analysis && typeof cached.ingredients_analysis === 'object' && Object.keys(cached.ingredients_analysis).length > 0;
+          
+          if (hasIngredientsText || hasAnalysisTags || hasAnalysis) {
+            try {
+              cached.palm_oil_analysis = extractPalmOilAnalysis(cached);
+            } catch (error) {
+              logger.debug('Error extracting palm oil analysis from cached product:', error);
+            }
+          }
+          
           // Apply confidence score to cached product
           const productWithConfidence = applyConfidenceScore(cached);
           return calculateTrustScore(productWithConfidence);
@@ -694,6 +744,24 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     product.ingredients = formatIngredients(product);
   }
 
+  // Ensure palm oil analysis is always created/extracted if we have any ingredients data
+  // This ensures consistency between Palm Oil card and Values Insights
+  // We re-extract even if palm_oil_analysis already exists to apply fallback logic
+  // (OFF might have created it without checking ingredients_text)
+  // Check if we have any ingredients data (text, tags, or analysis object)
+  const hasIngredientsText = product.ingredients_text && typeof product.ingredients_text === 'string' && product.ingredients_text.trim().length > 0;
+  const hasAnalysisTags = Array.isArray(product.ingredients_analysis_tags) && product.ingredients_analysis_tags.length > 0;
+  const hasAnalysis = product.ingredients_analysis && typeof product.ingredients_analysis === 'object' && Object.keys(product.ingredients_analysis).length > 0;
+  
+  if (hasIngredientsText || hasAnalysisTags || hasAnalysis) {
+    try {
+      product.palm_oil_analysis = extractPalmOilAnalysis(product);
+    } catch (error) {
+      // If extraction fails, log but don't break the product
+      logger.debug('Error extracting palm oil analysis:', error);
+    }
+  }
+
   // Calculate and ensure Eco-Score grade is set (if score exists but grade is missing)
   // This ensures the grade is always calculated from score when needed
   const calculatedEcoScore = calculateEcoScore(product);
@@ -743,7 +811,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     
     // Also save to SQLite for offline-first lookups
     const userCountry = getUserCountryCode();
-    await saveProductToSQLite(product, userCountry).catch(err => {
+    await saveProductToSQLite(product, userCountry ?? undefined).catch(err => {
       logger.debug('Error saving to SQLite (non-critical):', err);
     });
   }

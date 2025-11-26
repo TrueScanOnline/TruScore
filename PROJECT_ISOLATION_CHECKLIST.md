@@ -53,3 +53,4 @@ Get-Content package.json | Select-String "truescan-food-scanner"
 **Remember:** When in doubt, verify! It takes 10 seconds and prevents hours of fixing mistakes.
 
 
+

@@ -306,14 +306,18 @@ function convertRowToProduct(row: SQLiteProductRow): Product {
     packaging_data: row.packaging_data ? JSON.parse(row.packaging_data) : undefined,
     manufacturing_places: row.manufacturing_places || undefined,
     countries: row.countries || undefined,
-    ecoscore_grade: row.ecoscore_grade || undefined,
+    ecoscore_grade: (row.ecoscore_grade && ['a', 'b', 'c', 'd', 'e', 'unknown'].includes(row.ecoscore_grade.toLowerCase())) 
+      ? row.ecoscore_grade.toLowerCase() as 'a' | 'b' | 'c' | 'd' | 'e' | 'unknown'
+      : undefined,
     ecoscore_score: row.ecoscore_score || undefined,
-    nutriscore_grade: row.nutriscore_grade || undefined,
+    nutriscore_grade: (row.nutriscore_grade && ['a', 'b', 'c', 'd', 'e', 'unknown'].includes(row.nutriscore_grade.toLowerCase())) 
+      ? row.nutriscore_grade.toLowerCase() as 'a' | 'b' | 'c' | 'd' | 'e' | 'unknown'
+      : undefined,
     nutriscore_score: row.nutriscore_score || undefined,
     labels_tags: row.labels_tags ? JSON.parse(row.labels_tags) : undefined,
     allergens_tags: row.allergens_tags ? JSON.parse(row.allergens_tags) : undefined,
     additives_tags: row.additives_tags ? JSON.parse(row.additives_tags) : undefined,
-    source: row.source || 'sqlite',
+    source: (row.source && row.source !== 'sqlite') ? row.source as Product['source'] : undefined,
     quality: row.quality || undefined,
     completion: row.completion || undefined,
   };

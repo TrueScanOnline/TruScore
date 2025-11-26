@@ -4,7 +4,6 @@
 // Registration: https://eandata.com/feed/
 // Note: Basic but reliable for validation
 
-import axios from 'axios';
 import { Product } from '../types/product';
 import { logger } from '../utils/logger';
 
@@ -40,32 +39,36 @@ export async function fetchProductFromEANData(barcode: string): Promise<Product 
   }
 
   try {
-    const url = `${EANDATA_API_URL}/`;
-    const params = {
+    const params = new URLSearchParams({
       v: '1.0',
       key: API_KEY,
       q: barcode,
       fmt: 'json',
-    };
+    });
+    const url = `${EANDATA_API_URL}/?${params.toString()}`;
     
     logger.debug(`Fetching from EANData API: ${barcode}`);
     
-    const response = await axios.get<EANDataResponse>(url, {
-      params,
-      timeout: 10000,
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'TrueScan-FoodScanner/1.0',
       },
     });
 
-    // Check if product found
-    if (!response.data || response.data.status === 'error' || !response.data.name) {
-      logger.debug(`EANData: Product not found for ${barcode}`);
+    if (!response.ok) {
+      logger.debug(`EANData API error: ${response.status} ${response.statusText}`);
       return null;
     }
 
-    const data = response.data;
+    const data: EANDataResponse = await response.json();
+
+    // Check if product found
+    if (!data || data.status === 'error' || !data.name) {
+      logger.debug(`EANData: Product not found for ${barcode}`);
+      return null;
+    }
     
     // Extract product name
     const productName = data.name || 'Unknown Product';

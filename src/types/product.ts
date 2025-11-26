@@ -13,6 +13,7 @@ export interface ProductNutriments {
   energy?: number;
   'energy-kcal'?: number;
   'energy-kcal_100g'?: number;
+  'energy-kj_100g'?: number; // Added for AFCD/NZFCD databases
   fat?: number;
   'fat_100g'?: number;
   'saturated-fat'?: number;
@@ -29,6 +30,7 @@ export interface ProductNutriments {
   'salt_100g'?: number;
   sodium?: number;
   'sodium_100g'?: number;
+  [key: string]: number | undefined; // Allow additional nutrient fields
 }
 
 export interface ProductNutrientLevels {
@@ -227,7 +229,7 @@ export interface Product {
   sourceReliability?: 'high' | 'medium' | 'low'; // Human-readable reliability level
   
   // API source
-  source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'go_upc' | 'buycott' | 'open_gtin' | 'barcode_monster' | 'web_search' | 'woolworths_nz' | 'paknsave' | 'newworld' | 'woolworths_au' | 'coles_au' | 'iga_au' | 'fsanz_au' | 'fsanz_nz' | 'nz_store_api';
+  source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'go_upc' | 'buycott' | 'open_gtin' | 'barcode_monster' | 'web_search' | 'woolworths_nz' | 'paknsave' | 'newworld' | 'woolworths_au' | 'coles_au' | 'iga_au' | 'fsanz_au' | 'fsanz_nz' | 'nz_store_api' | 'afcd' | 'nzfcd' | 'barcode_lookup' | 'bestbuy' | 'eandata' | 'ean_search' | 'edamam' | 'nutritionix' | 'upc_database' | 'sqlite' | string; // Allow string for composite sources like 'openfoodfacts+afcd'
 }
 
 export interface TrustScoreBreakdown {
