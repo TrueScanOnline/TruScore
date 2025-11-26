@@ -48,6 +48,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.truescan.foodscanner',
+      buildNumber: '2', // Incremented from 1 (build 1 already submitted)
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
