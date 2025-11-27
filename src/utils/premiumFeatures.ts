@@ -1,4 +1,5 @@
 import { useSubscriptionStore, SubscriptionInfo } from '../store/useSubscriptionStore';
+import { ENABLE_PREMIUM_GATING, isFeaturePremium } from '../config/premiumFeatures';
 
 /**
  * Premium feature definitions
@@ -123,16 +124,17 @@ export function isPremiumFeatureEnabled(
   feature: PremiumFeature,
   subscriptionInfo: SubscriptionInfo
 ): boolean {
-  // TODO: Remove this temporary override when ready to launch premium features
-  // TEMPORARY: Always return true to enable all features for testing
-  // Set to false when ready to enable premium gating
-  const ENABLE_PREMIUM_GATING = false; // Change to true to enable premium gating
-  
+  // If premium gating is disabled globally, allow all features
   if (!ENABLE_PREMIUM_GATING) {
-    return true; // Testing mode - all features enabled
+    return true; // Testing/development mode - all features enabled
   }
 
-  // All premium features require active subscription
+  // Check if this specific feature is configured as premium
+  if (!isFeaturePremium(feature)) {
+    return true; // Feature is not premium, allow access
+  }
+
+  // Premium features require active subscription
   if (!subscriptionInfo.isPremium) {
     return false;
   }

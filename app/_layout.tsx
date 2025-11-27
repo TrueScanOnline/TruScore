@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, View, useColorScheme, AppState } from 'react-native';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import '../src/i18n'; // Initialize i18n
@@ -114,8 +114,19 @@ function RootLayout() {
         // Initialize favorites store
         await initFavorites();
         
-        // Initialize subscription store
-        await initSubscription();
+        // Initialize subscription store with error handling
+        try {
+          await initSubscription();
+          // Verify initialization succeeded
+          const { isInitialized, error } = useSubscriptionStore.getState();
+          if (!isInitialized && error) {
+            console.warn('[RootLayout] Subscription initialization failed:', error);
+            // App continues in free mode - this is acceptable
+          }
+        } catch (subscriptionError) {
+          console.error('[RootLayout] Subscription initialization error:', subscriptionError);
+          // App continues in free mode - this is acceptable
+        }
         
         // Check for initial deep link (but don't let it override onboarding)
         const url = await Linking.getInitialURL();
@@ -138,15 +149,27 @@ function RootLayout() {
     initialize();
 
     // Listen for deep links while app is running
-    const subscription = Linking.addEventListener('url', ({ url }) => {
+    const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
       const barcode = parseBarcodeFromUrl(url);
       if (barcode) {
         setInitialUrl(barcode);
       }
     });
 
+    // Refresh subscription status when app comes to foreground
+    const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        // App came to foreground - refresh subscription status
+        const { checkSubscriptionStatus } = useSubscriptionStore.getState();
+        checkSubscriptionStatus().catch(err => {
+          console.warn('[RootLayout] Failed to refresh subscription status:', err);
+        });
+      }
+    });
+
     return () => {
-      subscription.remove();
+      linkingSubscription.remove();
+      appStateSubscription.remove();
     };
   }, []);
 

@@ -1,5 +1,6 @@
 import Qonversion, { Product } from 'react-native-qonversion';
 import { Platform } from 'react-native';
+import * as Localization from 'expo-localization';
 
 export interface QonversionProduct {
   qonversionId: string;
@@ -26,11 +27,16 @@ export interface QonversionOfferings {
 /**
  * Get available subscription products
  */
-export async function getAvailableProducts(): Promise<QonversionProduct[]> {
+export async function getAvailableProducts(retryCount = 0): Promise<QonversionProduct[]> {
   try {
     const offerings = await Qonversion.getSharedInstance().offerings();
     
     if (!offerings || !offerings.main || offerings.main.products.length === 0) {
+      // Retry once if no products found (network issue)
+      if (retryCount < 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return getAvailableProducts(retryCount + 1);
+      }
       console.warn('No products available in Qonversion');
       return [];
     }
@@ -156,15 +162,18 @@ export async function getProduct(productId: string): Promise<QonversionProduct |
 }
 
 /**
- * Format price for display
+ * Format price for display using user's locale
  */
 export function formatPrice(price: number, currencyCode: string): string {
   try {
-    return new Intl.NumberFormat('en-US', {
+    // Use user's locale from expo-localization
+    const locale = Localization.locale || 'en-US';
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currencyCode,
     }).format(price);
   } catch (error) {
+    // Fallback if locale formatting fails
     return `${currencyCode} ${price.toFixed(2)}`;
   }
 }

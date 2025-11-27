@@ -27,8 +27,8 @@ export default function PremiumGate({ feature, children, fallback, showUpgradeBu
   const isEnabled = isPremiumFeatureEnabled(feature, subscriptionInfo);
   const featureDesc = PremiumFeatureDescriptions[feature];
 
-  // TEMPORARY: Always show children to enable all features for testing
-  if (isEnabled || true) {
+  // If feature is enabled (either not premium or user has subscription), show content
+  if (isEnabled) {
     return <>{children}</>;
   }
 

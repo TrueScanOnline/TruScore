@@ -18,6 +18,7 @@ import { RootStackParamList } from './_layout';
 import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
 import { getAvailableProducts, formatPrice, calculateAnnualSavings, getPeriodLabel } from '../src/services/subscriptionService';
 import { QonversionProduct } from '../src/services/subscriptionService';
+import { PremiumFeature, PremiumFeatureDescriptions } from '../src/utils/premiumFeatures';
 import { useTheme } from '../src/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -38,19 +39,31 @@ export default function SubscriptionScreen() {
     loadProducts();
   }, []);
 
-  const loadProducts = async () => {
+  const loadProducts = async (retryCount = 0) => {
     setLoading(true);
     try {
       const availableProducts = await getAvailableProducts();
-      // Sort: monthly first, then annual
+      
+      if (availableProducts.length === 0 && retryCount < 2) {
+        // Retry if no products found (might be network issue)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return loadProducts(retryCount + 1);
+      }
+      
+      // Sort: annual first (best value), then monthly
       const sorted = availableProducts.sort((a, b) => {
-        if (a.duration === 'monthly' && b.duration === 'annual') return -1;
-        if (a.duration === 'annual' && b.duration === 'monthly') return 1;
+        if (a.duration === 'annual' && b.duration === 'monthly') return -1;
+        if (a.duration === 'monthly' && b.duration === 'annual') return 1;
         return 0;
       });
       setProducts(sorted);
     } catch (error) {
       console.error('Failed to load products:', error);
+      if (retryCount < 2) {
+        // Retry on error
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return loadProducts(retryCount + 1);
+      }
       Alert.alert(
         t('subscription.noProducts'),
         t('subscription.noProductsMessage')
@@ -81,9 +94,19 @@ export default function SubscriptionScreen() {
         );
       } else {
         if (result.error !== 'Purchase cancelled by user') {
+          // Provide more specific error messages
+          const errorMessage = getPurchaseErrorMessage(result.error || '');
           Alert.alert(
             t('subscription.purchaseError'),
-            result.error || t('subscription.purchaseErrorMessage')
+            errorMessage,
+            [
+              { text: t('common.ok') },
+              { 
+                text: t('profile.manageSubscription'), 
+                onPress: handleManageSubscription,
+                style: 'default'
+              }
+            ]
           );
         }
       }
@@ -140,6 +163,23 @@ export default function SubscriptionScreen() {
     Linking.openURL(url).catch(() => {
       Alert.alert(t('common.error'), 'Unable to open subscription settings');
     });
+  };
+
+  const getPurchaseErrorMessage = (error: string): string => {
+    const errorLower = error.toLowerCase();
+    if (errorLower.includes('network') || errorLower.includes('connection') || errorLower.includes('timeout')) {
+      return t('subscription.error.network') || 'Network error. Please check your connection and try again.';
+    }
+    if (errorLower.includes('declined') || errorLower.includes('payment') || errorLower.includes('card')) {
+      return t('subscription.error.paymentDeclined') || 'Payment was declined. Please check your payment method.';
+    }
+    if (errorLower.includes('cancelled') || errorLower.includes('canceled')) {
+      return t('subscription.error.cancelled') || 'Purchase was cancelled.';
+    }
+    if (errorLower.includes('already') || errorLower.includes('purchased')) {
+      return t('subscription.error.alreadyPurchased') || 'You already have an active subscription.';
+    }
+    return error || t('subscription.purchaseErrorMessage') || 'Failed to complete purchase. Please try again.';
   };
 
   const monthlyProduct = products.find(p => p.duration === 'monthly');
@@ -327,26 +367,28 @@ export default function SubscriptionScreen() {
             {t('subscription.features.title')}
           </Text>
           {[
-            { key: 'offlineMode', icon: 'cloud-offline-outline' },
-            { key: 'advancedSearch', icon: 'search-outline' },
-            { key: 'adFree', icon: 'close-circle-outline' },
-            { key: 'pricingTrends', icon: 'trending-up-outline' },
-            { key: 'additionalInfo', icon: 'information-circle-outline' },
-            { key: 'productFilters', icon: 'options-outline' },
-            { key: 'enhancedTrustScore', icon: 'shield-checkmark-outline' },
-          ].map((feature) => (
-            <View key={feature.key} style={styles.featureItem}>
-              <Ionicons name={feature.icon as any} size={20} color={colors.primary} />
-              <View style={styles.featureText}>
-                <Text style={[styles.featureTitle, { color: colors.text }]}>
-                  {t(`subscription.features.${feature.key}`)}
-                </Text>
-                <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
-                  {t(`subscription.features.${feature.key}Desc`)}
-                </Text>
+            { feature: 'OFFLINE_MODE', icon: 'cloud-offline-outline' },
+            { feature: 'UNLIMITED_HISTORY', icon: 'infinite-outline' },
+            { feature: 'ADVANCED_SEARCH', icon: 'search-outline' },
+            { feature: 'EXPORT_DATA', icon: 'download-outline' },
+            { feature: 'ENHANCED_INSIGHTS', icon: 'analytics-outline' },
+            { feature: 'AD_FREE', icon: 'close-circle-outline' },
+          ].map((item) => {
+            const featureDesc = PremiumFeatureDescriptions[PremiumFeature[item.feature as keyof typeof PremiumFeature]];
+            return (
+              <View key={item.feature} style={styles.featureItem}>
+                <Ionicons name={item.icon as any} size={20} color={colors.primary} />
+                <View style={styles.featureText}>
+                  <Text style={[styles.featureTitle, { color: colors.text }]}>
+                    {featureDesc.title}
+                  </Text>
+                  <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
+                    {featureDesc.description}
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         {/* Footer */}

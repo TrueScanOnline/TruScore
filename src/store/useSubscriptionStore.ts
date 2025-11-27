@@ -43,6 +43,15 @@ const QONVERSION_API_KEY = process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY ||
 
 const PREMIUM_ENTITLEMENT_ID = 'premium'; // Qonversion entitlement ID
 
+// Product ID to period mapping - update this when adding new products
+const PRODUCT_PERIOD_MAP: Record<string, SubscriptionPeriod> = {
+  'monthly_premium': 'monthly',
+  'annual_premium': 'annual',
+  'premium_monthly': 'monthly',
+  'premium_annual': 'annual',
+  // Add more product IDs as needed
+};
+
 const initialState: SubscriptionInfo = {
   isPremium: false,
   status: null,
@@ -62,11 +71,18 @@ function parseSubscriptionInfo(entitlements: Map<string, any>): SubscriptionInfo
   }
 
   const productId = premium.productId || null;
-  const period = productId?.includes('annual') || productId?.includes('year') 
-    ? 'annual' 
-    : productId?.includes('month') || productId?.includes('monthly')
-    ? 'monthly'
-    : null;
+  
+  // Use explicit mapping first, then fallback to string matching
+  let period: SubscriptionPeriod = PRODUCT_PERIOD_MAP[productId || ''] || null;
+  
+  if (!period && productId) {
+    // Fallback to string matching for unknown products
+    if (productId.includes('annual') || productId.includes('year')) {
+      period = 'annual';
+    } else if (productId.includes('month') || productId.includes('monthly')) {
+      period = 'monthly';
+    }
+  }
 
   // Determine status from renewState
   let status: SubscriptionStatus = 'active';
@@ -98,10 +114,12 @@ function parseSubscriptionInfo(entitlements: Map<string, any>): SubscriptionInfo
                     premium.renewState !== 'billing_issue' &&
                     premium.renewState !== 'cancelled';
 
-  // Check if trial period
+  // Check if trial period - improved detection
   const isTrialPeriod = !!premium.trialStartDate && 
                         premium.expirationDate && 
-                        premium.trialStartDate.getTime() === premium.startedDate.getTime();
+                        premium.trialStartDate <= new Date() &&
+                        premium.expirationDate > new Date() &&
+                        premium.renewState !== 'non_renewable';
 
   return {
     isPremium: true,
@@ -149,8 +167,12 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
             throw new Error('Qonversion native module not available. Requires development build or EAS build.');
           }
 
+          // Use SANDBOX in development, PRODUCTION in production builds
+          // Check if we're in development mode (__DEV__ is set by React Native/Expo)
+          const environment = __DEV__ ? Environment.SANDBOX : Environment.PRODUCTION;
+          
           const config = new QonversionConfigBuilder(QONVERSION_API_KEY, LaunchMode.ANALYTICS)
-            .setEnvironment(Environment.PRODUCTION) // Use Environment.SANDBOX for testing
+            .setEnvironment(environment)
             .build();
           
           Qonversion.initialize(config);
