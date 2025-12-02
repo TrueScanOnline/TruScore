@@ -18,6 +18,7 @@ module.exports = {
         backgroundColor: '#16a085',
       },
       package: 'com.truescan.foodscanner',
+      versionCode: 4, // Incremented for Android APK build
       permissions: ['CAMERA'],
       navigationBar: {
         // Configure navigation bar to work with app tabs
@@ -48,11 +49,11 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.truescan.foodscanner',
-      buildNumber: '2', // Incremented from 1 (build 1 already submitted)
+      buildNumber: '6', // Incremented for new build with iOS crash fixes
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        NSCameraUsageDescription: 'TrueScan needs access to your camera to scan product barcodes for transparency info.',
+        NSCameraUsageDescription: 'TrueScan needs access to your camera to scan product barcodes and identify products. This allows you to quickly get detailed information about food products including ingredients, nutrition, and sustainability data.',
         // Note: NSMicrophoneUsageDescription not needed since we're not using video recording
       },
     },
@@ -66,7 +67,7 @@ module.exports = {
       [
         'expo-camera',
         {
-          cameraPermission: 'TrueScan needs access to your camera to scan product barcodes for transparency info.',
+          cameraPermission: 'TrueScan needs access to your camera to scan product barcodes and identify products. This allows you to quickly get detailed information about food products including ingredients, nutrition, and sustainability data.',
           // Note: Microphone permission is optional - only needed if using video recording
           // Setting to false prevents microphone permission request
           microphonePermission: false,
