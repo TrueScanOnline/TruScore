@@ -45,7 +45,13 @@ class Logger {
 
   info(message: string, ...args: unknown[]): void {
     if (this.shouldLog('INFO')) {
-      console.log(`[INFO] ${message}`, ...args.map(arg => this.sanitizeData(arg)));
+      const formatted = `[INFO] ${message}`;
+      console.log(formatted, ...args.map(arg => this.sanitizeData(arg)));
+      // Also output to PowerShell-friendly format
+      if (typeof window === 'undefined' || process.env.NODE_ENV === 'development') {
+        // In Node/development, output structured logs
+        console.log(formatted);
+      }
     }
   }
 

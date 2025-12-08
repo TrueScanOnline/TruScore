@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  ScrollView,
   Modal,
   TextInput,
   KeyboardAvoidingView,
@@ -25,6 +24,7 @@ import { useNetworkStatus } from '../src/hooks/useNetworkStatus';
 import { useTheme } from '../src/theme';
 import PremiumGate from '../src/components/PremiumGate';
 import { RootStackParamList } from './_layout';
+import { useCameraLifecycle } from '../src/hooks/useCameraLifecycle';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -34,61 +34,47 @@ export default function ScanScreen() {
   const { colors } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const [cameraActive, setCameraActive] = useState(true);
-  const [cameraKey, setCameraKey] = useState(0); // Force remount camera
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
   const { addScan } = useScanStore();
   const { subscriptionInfo } = useSubscriptionStore();
   const { isOffline, isOnline, canUseOfflineMode, isOfflineModeEnabled } = useNetworkStatus();
   const isPremium = isPremiumFeatureEnabled(PremiumFeature.OFFLINE_MODE, subscriptionInfo);
-  const remountTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Reset camera when screen is focused (user returns to scanner)
-  // OPTIMIZED: Debounce camera remounting to prevent memory leaks from rapid tab switching
+  // Camera lifecycle - hook handles ALL state management
+  const cameraLifecycle = useCameraLifecycle(permission?.granted ?? false, {
+    autoActivate: true,
+    onReady: () => {
+      console.log(`[ScanScreen] Camera ready on ${Platform.OS}`);
+    },
+    onError: (error) => {
+      console.error('[ScanScreen] Camera error:', error);
+    },
+    onStateChange: (state, previousState) => {
+      console.log(`[ScanScreen] Camera state: ${previousState} → ${state}`);
+    },
+  });
+
+  // Handle screen focus - simple and clean
   useFocusEffect(
     useCallback(() => {
-      // Clear any pending remount timer
-      if (remountTimerRef.current) {
-        clearTimeout(remountTimerRef.current);
-        remountTimerRef.current = null;
-      }
-
-      // Reset scanner state immediately
+      // Reset scanner state
       setScanned(false);
       
-      // On iOS, ensure camera is active immediately when permission is granted
+      // Activate camera when screen is focused (if permission granted)
       if (permission?.granted) {
-        // For iOS: Activate camera immediately without delay
-        if (Platform.OS === 'ios') {
-          setCameraActive(true);
-          // Force remount to ensure camera initializes properly
-          setCameraKey(prev => prev + 1);
-        } else {
-          // For Android: Use debounced remount
-          setCameraActive(true);
-          remountTimerRef.current = setTimeout(() => {
-            if (permission?.granted) {
-              setCameraKey(prev => prev + 1);
-              setCameraActive(true);
-            }
-            remountTimerRef.current = null;
-          }, 100);
-        }
+        cameraLifecycle.activate();
       }
 
       return () => {
-        // Cleanup: clear timer if component unmounts or loses focus
-        if (remountTimerRef.current) {
-          clearTimeout(remountTimerRef.current);
-          remountTimerRef.current = null;
-        }
+        // Deactivate camera when screen loses focus
+        cameraLifecycle.deactivate();
       };
-    }, [permission?.granted])
+    }, [permission?.granted, cameraLifecycle.activate, cameraLifecycle.deactivate])
   );
 
+  // Request camera permission on mount
   useEffect(() => {
-    // Request camera permission on mount
     const requestCameraPermission = async () => {
       try {
         if (!permission?.granted && permission?.canAskAgain) {
@@ -98,7 +84,6 @@ export default function ScanScreen() {
         }
       } catch (error: any) {
         console.error('[ScanScreen] Camera permission error:', error);
-        // Show alert for both iOS and Android
         Alert.alert(
           t('scan.cameraPermissionError') || 'Camera Access Needed',
           t('scan.cameraPermissionErrorMessage') || 'Camera access needed – enable in settings',
@@ -119,96 +104,135 @@ export default function ScanScreen() {
     };
 
     requestCameraPermission();
-  }, [permission?.granted, requestPermission]);
+  }, [permission?.granted, requestPermission, t]);
 
-  // Separate effect to handle camera activation when permission is granted
+  // Cleanup on unmount
   useEffect(() => {
-    if (permission?.granted) {
-      console.log('[ScanScreen] Camera permission granted, activating camera...');
-      // On iOS, activate immediately; on Android, use a small delay
-      if (Platform.OS === 'ios') {
-        setCameraActive(true);
-        // Force remount to ensure proper initialization
-        setCameraKey(prev => prev + 1);
-      } else {
-        // Android: Small delay to ensure proper initialization
-        setCameraActive(false);
-        setTimeout(() => {
-          setCameraKey(prev => prev + 1);
-          setCameraActive(true);
-        }, 100);
-      }
-    } else {
-      setCameraActive(false);
-    }
-  }, [permission?.granted]);
+    return () => {
+      cameraLifecycle.reset();
+    };
+  }, [cameraLifecycle.reset]);
 
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
-    if (scanned) return;
+    // Prevent multiple scans
+    if (scanned) {
+      console.log('[ScanScreen] Ignoring duplicate scan');
+      return;
+    }
     
-    setScanned(true);
-    setCameraActive(false);
+    try {
+      console.log('[ScanScreen] Barcode scanned:', { type, data, platform: Platform.OS });
+      
+      setScanned(true);
+      cameraLifecycle.deactivate(); // Pause camera after scan
 
-    let barcode = data.trim();
-    
-    // Handle QR/DataMatrix codes - extract GTIN if present
-    if (type === 'qr' || type === 'datamatrix') {
-      // Try to extract GTIN from QR code data
-      // QR codes may contain GTIN in various formats: GTIN:1234567890123, 1234567890123, etc.
-      const gtinMatch = barcode.match(/(?:gtin|ean|upc)[:\s]*(\d{8,14})/i) || barcode.match(/(\d{8,14})/);
-      if (gtinMatch && gtinMatch[1]) {
-        barcode = gtinMatch[1];
-        // Show toast notification for QR fallback
-        const Toast = require('react-native-toast-message').default;
-        Toast.show({ type: 'info', text1: 'Scan complete', text2: 'QR fallback – scan complete' });
-      } else {
-        // QR code doesn't contain a valid GTIN
+      let barcode = data?.trim();
+      
+      // Validate input
+      if (!barcode || typeof barcode !== 'string') {
+        console.error('[ScanScreen] Invalid barcode data:', data);
         Alert.alert(
           t('scan.invalidBarcode') || 'Invalid Barcode',
-          t('scan.qrNoGtin') || 'QR code does not contain a valid product barcode (GTIN).',
+          t('scan.invalidBarcodeMessage') || 'Please try scanning again.',
           [
             {
               text: 'OK',
               onPress: () => {
                 setScanned(false);
-                setCameraActive(true);
+                cameraLifecycle.activate();
               },
             },
           ]
         );
         return;
       }
-    }
+      
+      // Handle QR/DataMatrix codes - extract GTIN if present
+      if (type === 'qr' || type === 'datamatrix') {
+        const gtinMatch = barcode.match(/(?:gtin|ean|upc)[:\s]*(\d{8,14})/i) || barcode.match(/(\d{8,14})/);
+        if (gtinMatch && gtinMatch[1]) {
+          barcode = gtinMatch[1];
+          console.log('[ScanScreen] Extracted GTIN from QR code:', barcode);
+        } else {
+          console.warn('[ScanScreen] QR code does not contain valid GTIN:', barcode);
+          Alert.alert(
+            t('scan.invalidBarcode') || 'Invalid Barcode',
+            t('scan.qrNoGtin') || 'QR code does not contain a valid product barcode (GTIN).',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  setScanned(false);
+                  cameraLifecycle.activate();
+                },
+              },
+            ]
+          );
+          return;
+        }
+      }
 
-    // Validate barcode (UPC/EAN should be 8-14 digits)
-    if (!/^\d{8,14}$/.test(barcode)) {
-      Alert.alert(
-        t('scan.invalidBarcode'),
-        t('scan.invalidBarcodeMessage'),
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setScanned(false);
-              setCameraActive(true);
+      // Validate barcode format
+      if (!/^\d{8,14}$/.test(barcode)) {
+        console.warn('[ScanScreen] Invalid barcode format:', barcode);
+        Alert.alert(
+          t('scan.invalidBarcode'),
+          t('scan.invalidBarcodeMessage'),
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setScanned(false);
+                cameraLifecycle.activate();
+              },
             },
-          },
-        ]
+          ]
+        );
+        return;
+      }
+
+      console.log('[ScanScreen] Valid barcode, adding to history:', barcode);
+
+      // Add to history
+      try {
+        addScan({
+          barcode,
+          timestamp: Date.now(),
+          productName: null,
+        });
+        console.log('[ScanScreen] Added to scan history');
+      } catch (scanError) {
+        console.error('[ScanScreen] Error adding to scan history:', scanError);
+      }
+
+      // Navigate to result screen
+      console.log('[ScanScreen] Navigating to Result screen with barcode:', barcode);
+      
+      try {
+        navigation.navigate('Result', { barcode });
+        console.log('[ScanScreen] Navigation successful');
+      } catch (navError) {
+        console.error('[ScanScreen] Navigation error:', navError);
+        setScanned(false);
+        cameraLifecycle.activate();
+        
+        Alert.alert(
+          'Navigation Error',
+          'Failed to navigate to product page. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('[ScanScreen] Fatal error in handleBarCodeScanned:', error);
+      setScanned(false);
+      cameraLifecycle.activate();
+      
+      Alert.alert(
+        'Scan Error',
+        'An error occurred while processing the scan. Please try again.',
+        [{ text: 'OK' }]
       );
-      return;
     }
-
-    // Add to history
-    addScan({
-      barcode,
-      timestamp: Date.now(),
-      productName: null, // Will be fetched in result screen
-    });
-
-    // Navigate to result screen
-    navigation.navigate('Result', { barcode });
-    
-    // Don't reset here - useFocusEffect will handle it when returning to screen
   };
 
   const handleManualEntry = () => {
@@ -229,14 +253,12 @@ export default function ScanScreen() {
     setShowManualEntry(false);
     setManualBarcode('');
     
-    // Add to history
     addScan({
       barcode: trimmedBarcode,
       timestamp: Date.now(),
       productName: null,
     });
 
-    // Navigate to result screen
     navigation.navigate('Result', { barcode: trimmedBarcode });
   };
 
@@ -245,6 +267,7 @@ export default function ScanScreen() {
     setManualBarcode('');
   };
 
+  // Loading state
   if (!permission) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -256,6 +279,7 @@ export default function ScanScreen() {
     );
   }
 
+  // Permission denied state
   if (!permission.granted) {
     return (
       <View style={[styles.permissionContainer, { backgroundColor: colors.background }]}>
@@ -276,84 +300,100 @@ export default function ScanScreen() {
     );
   }
 
+  // Main camera view
   return (
     <View style={styles.container}>
-      {/* Camera View */}
+      {/* Camera View - Render when ready or active, show placeholder for error */}
       {permission?.granted && (
         <>
-          {cameraActive ? (
+          {cameraLifecycle.state !== 'error' && (cameraLifecycle.state === 'ready' || cameraLifecycle.state === 'active') ? (
             <CameraView
-              key={cameraKey} // Force remount on focus
+              key={cameraLifecycle.cameraKey}
               style={styles.camera}
               facing="back"
               enableTorch={false}
               barcodeScannerSettings={{
                 barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'qr', 'datamatrix'],
               }}
-              onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-              onCameraReady={() => {
-                console.log('[ScanScreen] Camera ready on', Platform.OS);
-                setCameraActive(true);
-              }}
+              onBarcodeScanned={scanned || cameraLifecycle.state !== 'active' ? undefined : handleBarCodeScanned}
+              onCameraReady={cameraLifecycle.handleCameraReady}
               onMountError={(error) => {
+                // Enhanced error handling for iOS camera issues
                 console.error('[ScanScreen] Camera mount error:', error);
-                console.error('[ScanScreen] Error details:', JSON.stringify(error, null, 2));
-                setCameraActive(false);
-                
-                // More helpful error message for iOS
-                const errorMessage = Platform.OS === 'ios' 
-                  ? 'Failed to initialize camera. Please check Settings > TrueScan > Camera and ensure it is enabled. Then restart the app.'
-                  : t('scan.cameraErrorMessage') || 'Failed to initialize camera. Please try again.';
-                
-                Alert.alert(
-                  t('scan.cameraError') || 'Camera Error',
-                  errorMessage,
-                  [
-                    {
-                      text: t('common.settings') || 'Settings',
-                      onPress: () => {
-                        Linking.openSettings?.();
+                try {
+                  const errorObj = error instanceof Error 
+                    ? error 
+                    : new Error(error?.message || String(error) || 'Camera mount error');
+                  cameraLifecycle.handleCameraError(errorObj);
+                  
+                  const errorMessage = Platform.OS === 'ios' 
+                    ? 'Failed to initialize camera. Please check Settings > TrueScan > Camera and ensure it is enabled. Then restart the app.'
+                    : t('scan.cameraErrorMessage') || 'Failed to initialize camera. Please try again.';
+                  
+                  Alert.alert(
+                    t('scan.cameraError') || 'Camera Error',
+                    errorMessage,
+                    [
+                      {
+                        text: t('common.settings') || 'Settings',
+                        onPress: () => {
+                          try {
+                            Linking.openSettings?.();
+                          } catch (linkError) {
+                            console.error('[ScanScreen] Error opening settings:', linkError);
+                          }
+                        },
                       },
-                    },
-                    {
-                      text: t('common.retry') || 'Retry',
-                      onPress: () => {
-                        console.log('[ScanScreen] Retrying camera mount...');
-                        setCameraKey(prev => prev + 1);
-                        setTimeout(() => setCameraActive(true), 300);
+                      {
+                        text: t('common.retry') || 'Retry',
+                        onPress: () => {
+                          try {
+                            cameraLifecycle.remount();
+                          } catch (remountError) {
+                            console.error('[ScanScreen] Error remounting camera:', remountError);
+                          }
+                        },
                       },
-                    },
-                    {
-                      text: t('common.cancel') || 'Cancel',
-                      style: 'cancel',
-                    },
-                  ]
-                );
+                      {
+                        text: t('common.cancel') || 'Cancel',
+                        style: 'cancel',
+                      },
+                    ]
+                  );
+                } catch (alertError) {
+                  // Fallback if alert fails
+                  console.error('[ScanScreen] Error showing camera error alert:', alertError);
+                }
               }}
             />
           ) : (
             <View style={[styles.camera, styles.cameraPlaceholder, { backgroundColor: '#000' }]}>
               <ActivityIndicator size="large" color={colors.primary} />
               <Text style={[styles.cameraPlaceholderText, { color: colors.textSecondary }]}>
-                {t('scan.initializingCamera') || 'Initializing camera...'}
+                {cameraLifecycle.state === 'error' 
+                  ? (t('scan.cameraError') || 'Camera Error')
+                  : (t('scan.initializingCamera') || 'Initializing camera...')}
               </Text>
-              <TouchableOpacity
-                style={[styles.retryButton, { backgroundColor: colors.primary, marginTop: 16 }]}
-                onPress={() => {
-                  setCameraKey(prev => prev + 1);
-                  setCameraActive(true);
-                }}
-              >
-                <Text style={styles.retryButtonText}>Retry Camera</Text>
-              </TouchableOpacity>
+              {cameraLifecycle.state === 'error' && (
+                <TouchableOpacity
+                  style={[styles.retryButton, { backgroundColor: colors.primary, marginTop: 16 }]}
+                  onPress={() => {
+                    console.log('[ScanScreen] Retry camera button pressed');
+                    setScanned(false);
+                    cameraLifecycle.remount();
+                  }}
+                >
+                  <Text style={styles.retryButtonText}>{t('scan.retryCamera') || 'Retry Camera'}</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
-          {/* Scanner Overlay - Absolutely positioned on top */}
+          
+          {/* Scanner Overlay */}
           <View style={styles.overlay}>
             {/* Top Bar */}
             <View style={styles.topBar}>
               <Text style={styles.appTitle}>TrueScan</Text>
-              {/* Offline Indicator */}
               {isOffline && (
                 <View style={[styles.offlineIndicator, { backgroundColor: canUseOfflineMode ? '#ffa500' : '#ff6b6b' }]}>
                   <Ionicons 
@@ -459,7 +499,6 @@ export default function ScanScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-
     </View>
   );
 }
@@ -700,4 +739,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

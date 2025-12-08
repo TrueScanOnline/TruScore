@@ -1,0 +1,21 @@
+{
+  "pillar": "care",
+  "barcode": "9310055105850",
+  "productName": "NUTRI GRAIN",
+  "result": {
+    "score": 15,
+    "base": 15,
+    "adjustments": [
+      {
+        "description": "Base score (assumes ethical until violations)",
+        "value": 0,
+        "type": "neutral"
+      }
+    ],
+    "details": {
+      "certificationBonus": 0,
+      "cruelParentPenalty": 0,
+      "recallPenalty": 0
+    }
+  }
+}

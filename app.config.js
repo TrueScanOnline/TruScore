@@ -18,7 +18,7 @@ module.exports = {
         backgroundColor: '#16a085',
       },
       package: 'com.truescan.foodscanner',
-      versionCode: 4, // Incremented for Android APK build
+      versionCode: 5, // Incremented for production build with UI fixes
       permissions: ['CAMERA'],
       navigationBar: {
         // Configure navigation bar to work with app tabs
@@ -49,12 +49,21 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.truescan.foodscanner',
-      buildNumber: '6', // Incremented for new build with iOS crash fixes
+      buildNumber: '8', // Production build with UI fixes and score highlight rules
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSCameraUsageDescription: 'TrueScan needs access to your camera to scan product barcodes and identify products. This allows you to quickly get detailed information about food products including ingredients, nutrition, and sustainability data.',
+        NSLocationWhenInUseUsageDescription: 'TrueScan uses your location to show local store prices and provide country-specific product information. This helps you find the best prices and relevant product data for your region.',
+        NSLocationAlwaysAndWhenInUseUsageDescription: 'TrueScan uses your location to show local store prices and provide country-specific product information. This helps you find the best prices and relevant product data for your region.',
         // Note: NSMicrophoneUsageDescription not needed since we're not using video recording
+        // URL schemes for sharing (WhatsApp, SMS)
+        LSApplicationQueriesSchemes: [
+          'whatsapp',
+          'sms',
+          'tel',
+          'mailto',
+        ],
       },
     },
     scheme: 'truescan',
@@ -80,7 +89,7 @@ module.exports = {
             compileSdkVersion: 35,
             targetSdkVersion: 35,
             minSdkVersion: 24,
-            buildToolsVersion: '34.0.4',
+            // buildToolsVersion removed - let AGP auto-select (recommended for Expo SDK 53)
           },
         },
       ],
@@ -152,6 +161,17 @@ module.exports = {
       // Register at: https://eandata.com/feed/
       // If you have an EANData API key, add it here: EXPO_PUBLIC_EANDATA_API_KEY
       EXPO_PUBLIC_EANDATA_API_KEY: process.env.EXPO_PUBLIC_EANDATA_API_KEY || '',
+      // Vercel Backend URL
+      // After deploying backend with `vercel --prod`, update this URL
+      // Get your deployment URL from Vercel dashboard or `vercel --prod` output
+      EXPO_PUBLIC_BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://YOUR-VERCEL-URL.vercel.app',
+      // Open Food Facts API Credentials (Recommended for full functionality)
+      // Create account at: https://world.openfoodfacts.org
+      // Use your username (not email) as user_id
+      // These credentials enable automatic product submission to Open Food Facts
+      // Add to .env: EXPO_PUBLIC_OFF_USER_ID and EXPO_PUBLIC_OFF_PASSWORD
+      EXPO_PUBLIC_OFF_USER_ID: process.env.EXPO_PUBLIC_OFF_USER_ID || '',
+      EXPO_PUBLIC_OFF_PASSWORD: process.env.EXPO_PUBLIC_OFF_PASSWORD || '',
     },
   },
 };

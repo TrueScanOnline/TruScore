@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ProductNutriments, ProductNutrientLevels } from '../types/product';
@@ -11,12 +11,16 @@ interface NutritionTableProps {
   nutriments?: ProductNutriments;
   nutrientLevels?: ProductNutrientLevels;
   servingSize?: string;
+  onShare?: () => void;
+  onEdit?: () => void;
 }
 
-export default function NutritionTable({
+const NutritionTable = React.memo(function NutritionTable({
   nutriments,
   nutrientLevels,
   servingSize,
+  onShare,
+  onEdit,
 }: NutritionTableProps) {
   const { t } = useTranslation();
   const { units } = useSettingsStore();
@@ -24,7 +28,7 @@ export default function NutritionTable({
 
   if (!nutriments) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.card }]}>
+      <View style={[styles.container, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#16a085' }]}>
         <Text style={[styles.noDataText, { color: colors.textTertiary }]}>{t('nutrition.notAvailable')}</Text>
       </View>
     );
@@ -78,11 +82,42 @@ export default function NutritionTable({
   
   const nutritionRows = getNutritionRows();
 
+  // Determine border color based on nutrient levels
+  // Red if high levels of negative nutrients (sugar, salt, saturated fat)
+  const hasHighNegativeNutrients = 
+    nutrientLevels?.sugars === 'high' ||
+    nutrientLevels?.salt === 'high' ||
+    nutrientLevels?.saturated_fat === 'high';
+  
+  const borderColor = hasHighNegativeNutrients ? '#ff6b6b' : '#16a085';
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.card }]}>
+    <View style={[styles.container, { backgroundColor: colors.card, borderWidth: 2, borderColor }]}>
       <View style={styles.titleContainer}>
-        <Ionicons name="nutrition" size={24} color={colors.primary} />
-        <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{t('result.nutritionFacts')}</Text>
+        <View style={styles.titleLeft}>
+          <Ionicons name="nutrition" size={24} color={colors.primary} />
+          <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{t('result.nutritionFacts')}</Text>
+        </View>
+        <View style={styles.headerButtons}>
+          {onEdit && (
+            <TouchableOpacity
+              onPress={onEdit}
+              style={styles.editButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="create-outline" size={20} color={colors.primary} />
+            </TouchableOpacity>
+          )}
+          {onShare && (
+            <TouchableOpacity
+              onPress={onShare}
+              style={styles.shareButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="share-outline" size={20} color={colors.primary} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       {servingSize && (
         <Text style={[styles.servingSize, { color: colors.textSecondary }]}>
@@ -126,7 +161,7 @@ export default function NutritionTable({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -142,7 +177,23 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 8,
+  },
+  titleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  editButton: {
+    padding: 4,
+  },
+  shareButton: {
+    padding: 4,
   },
   title: {
     fontSize: 20,
@@ -211,4 +262,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 });
+
+export default NutritionTable;
 

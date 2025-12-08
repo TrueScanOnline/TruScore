@@ -1,0 +1,103 @@
+[
+  {
+    "barcode": "9310055105850",
+    "productName": "NUTRI GRAIN",
+    "truScore": 27,
+    "breakdown": {
+      "Body": {
+        "pillar": "Body",
+        "base": 10,
+        "adjustments": [
+          {
+            "description": "Nutri-Score Grade D",
+            "value": 10,
+            "type": "positive"
+          },
+          {
+            "description": "3 additive(s) (estimated penalty: -1.5 each, capped at -15)",
+            "value": -4.5,
+            "type": "negative"
+          },
+          {
+            "description": "NOVA Group 4 (ultra-processed)",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 0
+      },
+      "Planet": {
+        "pillar": "Planet",
+        "base": 5,
+        "adjustments": [
+          {
+            "description": "Eco-Score Grade E",
+            "value": 5,
+            "type": "positive"
+          },
+          {
+            "description": "Contains palm oil (non-certified)",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 5
+      },
+      "Care": {
+        "pillar": "Care",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes ethical until violations)",
+            "value": 15,
+            "type": "neutral"
+          }
+        ],
+        "final": 15
+      },
+      "Open": {
+        "pillar": "Open",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes transparent until hidden)",
+            "value": 15,
+            "type": "neutral"
+          },
+          {
+            "description": "Full ingredients disclosure",
+            "value": 15,
+            "type": "positive"
+          },
+          {
+            "description": "No origin information",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 7
+      }
+    },
+    "productData": {
+      "nutriscore_grade": "d",
+      "ecoscore_grade": "e",
+      "nova_group": 4,
+      "additives_count": 3,
+      "additives_tags": [
+        "en:e414",
+        "en:e501",
+        "en:e501ii"
+      ],
+      "hasIngredients": true,
+      "ingredientsLength": 817,
+      "hasPalmOil": true,
+      "certifications": [],
+      "labels": [
+        "en:australian-made",
+        "en:health-star-rating",
+        "en:health-star-rating-4"
+      ],
+      "hasOrigin": false
+    }
+  }
+]

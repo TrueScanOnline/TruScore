@@ -281,7 +281,7 @@ async function analyzeBarcode(barcode: string): Promise<AnalysisResult> {
         hasPalmOil: product.ingredients_analysis_tags?.some(t => t.includes('palm-oil')) || false,
         certifications: product.certifications?.map(c => c.name) || [],
         labels: product.labels_tags || [],
-        hasOrigin: result.hasOrigin,
+        hasOrigin: result.hasOrigin || false,
         recalls: product.recalls,
       },
     };
@@ -396,5 +396,6 @@ if (require.main === module) {
   main().catch(console.error);
 }
 
-export { analyzeBarcode, AnalysisResult };
+export { analyzeBarcode };
+export type { AnalysisResult };
 

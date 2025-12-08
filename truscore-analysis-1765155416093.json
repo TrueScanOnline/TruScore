@@ -1,0 +1,80 @@
+[
+  {
+    "barcode": "9420020300194",
+    "productName": "Sushi seaweed",
+    "truScore": 47,
+    "breakdown": {
+      "Body": {
+        "pillar": "Body",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Nutri-Score Grade UNKNOWN",
+            "value": 15,
+            "type": "positive"
+          }
+        ],
+        "final": 15
+      },
+      "Planet": {
+        "pillar": "Planet",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Eco-Score Grade F",
+            "value": 15,
+            "type": "positive"
+          }
+        ],
+        "final": 15
+      },
+      "Care": {
+        "pillar": "Care",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes ethical until violations)",
+            "value": 15,
+            "type": "neutral"
+          }
+        ],
+        "final": 15
+      },
+      "Open": {
+        "pillar": "Open",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes transparent until hidden)",
+            "value": 15,
+            "type": "neutral"
+          },
+          {
+            "description": "No ingredients listed",
+            "value": -5,
+            "type": "negative"
+          },
+          {
+            "description": "No origin information",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 2
+      }
+    },
+    "productData": {
+      "nutriscore_grade": "unknown",
+      "ecoscore_grade": "f",
+      "nova_group": null,
+      "additives_count": 0,
+      "additives_tags": [],
+      "hasIngredients": false,
+      "ingredientsLength": 0,
+      "hasPalmOil": false,
+      "certifications": [],
+      "labels": [],
+      "hasOrigin": false
+    }
+  }
+]

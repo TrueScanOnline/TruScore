@@ -11,9 +11,13 @@ import { scrapeStoreWebsite } from './pricingApis/storeWebScraping';
 import { scrapeStoreWebsiteEnhanced } from './pricingApis/enhancedStoreScraping';
 import { scrapeProductSpecificPrice } from './pricingApis/productSpecificScraping';
 import { getStoreChainsForCountry, StoreChain, buildStoreSearchUrl } from './pricingApis/countryStores';
-import { fetchGoogleShoppingPrices } from './pricingApis/googleShoppingPricing';
+// Pricing service - REMOVED Google Search scraping (poor quality results)
+// For NZ: Use Vercel Playwright backend (backend/vercel/api/nz-prices.ts)
+// For other countries: Not implemented yet (show nothing rather than bad data)
 
-class PricingService {
+import { logger } from '../utils/logger';
+
+export class PricingService {
   /**
    * Get user's current location
    * REQUIRED for local pricing
@@ -81,23 +85,50 @@ class PricingService {
   ): Promise<PriceEntry[]> {
     const allPrices: PriceEntry[] = [];
 
-    if (!location.coordinates) {
-      console.warn('[pricingService] No coordinates available for local store pricing');
-      return allPrices;
-    }
-
     try {
+      // For NZ: Try Vercel backend first (if available)
+      if (countryCode === 'NZ') {
+        try {
+          // Try Vercel backend for NZ pricing
+          const vercelUrl = `https://truescan-backend.vercel.app/api/nz-prices?barcode=${barcode}`;
+          const response = await fetch(vercelUrl);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.prices && Array.isArray(data.prices) && data.prices.length > 0) {
+              // Convert Vercel format to PriceEntry format
+              const vercelPrices: PriceEntry[] = data.prices.map((p: any) => ({
+                price: p.price,
+                currency: 'NZD',
+                retailer: p.store,
+                location: location.city || location.region || location.country || '',
+                url: p.url,
+                inStock: true,
+                lastUpdated: p.updatedAt ? new Date(p.updatedAt).getTime() : Date.now(),
+              }));
+              return vercelPrices;
+            }
+          }
+        } catch (error) {
+          logger.debug('Vercel backend not available, continuing with other methods', error);
+        }
+      }
+      
+      // For other countries or if Vercel fails, return empty array
+      // The UniversalPricingCard will show Google search fallback
+      logger.debug(`[pricingService] No store scraping available for ${countryCode} - will show Google search fallback`);
+      return allPrices;
+
       // Get country-specific store chains
       const storeChains = getStoreChainsForCountry(countryCode);
       
       if (storeChains.length === 0) {
-        console.warn(`[pricingService] No store chains configured for country: ${countryCode}`);
+        console.log(`[pricingService] No store chains configured for country: ${countryCode} - using Google Search results only`);
         return allPrices;
       }
 
-      console.log(`[pricingService] Found ${storeChains.length} store chains for ${countryCode}`);
+      console.log(`[pricingService] Found ${storeChains.length} store chains for ${countryCode}, attempting to scrape...`);
 
-      // Fetch prices from each local store chain in parallel
+      // SECONDARY: Fetch prices from each local store chain in parallel (fallback)
       const pricePromises = storeChains
         .filter(chain => chain.searchUrl) // Only chains with search URLs
         .map(async (chain: StoreChain) => {
@@ -166,15 +197,19 @@ class PricingService {
       });
 
       // Also try finding nearby physical stores and scraping their websites
-      try {
-        const nearbyStorePrices = await fetchLocalStorePrices(
-          barcode,
-          productName,
-          location.coordinates.lat,
-          location.coordinates.lng,
-          20, // 20 miles radius
-          countryCode
-        );
+      // Only if coordinates are available
+      if (location.coordinates) {
+        try {
+          // TypeScript type narrowing: coordinates is guaranteed to exist after the if check
+          const coords = location.coordinates as { lat: number; lng: number };
+          const nearbyStorePrices = await fetchLocalStorePrices(
+            barcode,
+            productName,
+            coords.lat,
+            coords.lng,
+            20, // 20 miles radius
+            countryCode
+          );
 
         if (nearbyStorePrices.length > 0) {
           console.log(`[pricingService] ✅ Found ${nearbyStorePrices.length} prices from nearby stores`);
@@ -201,8 +236,9 @@ class PricingService {
             }
           });
         }
-      } catch (error) {
-        console.warn('[pricingService] Nearby store search failed:', error);
+        } catch (error) {
+          console.warn('[pricingService] Nearby store search failed:', error);
+        }
       }
 
       // Google Shopping removed - unreliable source
@@ -258,8 +294,8 @@ class PricingService {
   }
 
   /**
-   * Get pricing data for a product - LOCAL STORES ONLY
-   * REQUIRES location - returns null if location not available
+   * Get pricing data for a product - Works with or without location
+   * Falls back to device locale if location unavailable
    */
   async getProductPricing(
     barcode: string,
@@ -268,17 +304,35 @@ class PricingService {
     productName?: string
   ): Promise<ProductPricing | null> {
     try {
-      // REQUIRED: Get user location first
+      // Try to get user location, but don't require it
       let location = await this.getUserLocation();
       
-      if (!location || !location.coordinates) {
-        console.warn('[pricingService] Location required for local pricing - returning null');
-        return null;
-      }
-
-      if (!location.countryCode) {
-        console.warn('[pricingService] Country code not available - cannot fetch local prices');
-        return null;
+      // Fallback to device locale if location unavailable
+      if (!location || !location.countryCode) {
+        console.log('[pricingService] Location unavailable, using device locale');
+        // Use device locale as fallback
+        const Localization = require('expo-localization');
+        const locales = Localization.getLocales();
+        let countryCode = 'US'; // Default fallback
+        if (locales && locales.length > 0) {
+          const regionCode = locales[0]?.regionCode;
+          if (regionCode) {
+            countryCode = regionCode.toUpperCase();
+          } else {
+            // Try to extract from languageTag
+            const localeString = locales[0]?.languageTag || '';
+            if (localeString) {
+              const parts = localeString.split('-');
+              if (parts.length >= 2) {
+                countryCode = parts[parts.length - 1].toUpperCase();
+              }
+            }
+          }
+        }
+        location = {
+          countryCode,
+          country: countryCode,
+        };
       }
 
       // Determine target currency from location
@@ -298,16 +352,16 @@ class PricingService {
       console.log(`[pricingService] Fetching LOCAL prices for: ${productName || barcode}`);
       console.log(`[pricingService] Location: ${location.city || location.region || location.country} (${location.countryCode})`);
 
-      // ONLY fetch from local stores - no international APIs
+      // Fetch prices - Google Search first (works without location), then try store scraping
       const localPrices = await this.fetchLocalStorePricesOnly(
         barcode,
         productName || `Product ${barcode}`,
         location,
-        location.countryCode
+        location.countryCode || 'US'
       );
 
       if (localPrices.length === 0) {
-        console.log(`[pricingService] No local prices found for barcode: ${barcode}`);
+        console.log(`[pricingService] No prices found for barcode: ${barcode}`);
         return null;
       }
 
@@ -331,29 +385,22 @@ class PricingService {
       const priceRange = this.calculatePriceRange(priceValues);
 
       // Aggregate by retailer (show lowest price per store)
-      // CRITICAL: Filter out any retailers that don't match country-specific chains
-      // For New Zealand: Allow curated stores + Google Shopping
-      const countryChains = getStoreChainsForCountry(location.countryCode);
+      // IMPORTANT: Don't filter out Google Search prices - they're already location-aware
+      // Only filter out obviously wrong international stores
       const retailerMap = new Map<string, RetailerPrice>();
       normalizedPrices.forEach(price => {
         if (price.retailer) {
           const retailerLower = price.retailer.toLowerCase();
           
-          // Google Shopping removed - no longer used as pricing source
-          
-          // Verify retailer matches a country-specific chain
-          const matchesChain = countryChains.some(chain => 
-            chain.patterns.some(pattern => retailerLower.includes(pattern.toLowerCase()))
-          );
-          
-          // Also reject common international stores that shouldn't appear
+          // Only reject obviously wrong international stores
           const isInternationalStore = retailerLower.includes('home depot') ||
                                       retailerLower.includes('b&h photo') ||
                                       retailerLower.includes('overstock') ||
                                       (retailerLower.includes('kroger') && location.countryCode !== 'US') ||
                                       (retailerLower.includes('target') && location.countryCode !== 'US');
           
-          if (matchesChain && !isInternationalStore) {
+          // Accept all other retailers (including Google Search results)
+          if (!isInternationalStore) {
             const key = retailerLower;
             const existing = retailerMap.get(key);
             if (!existing || price.price < existing.price) {
@@ -366,7 +413,7 @@ class PricingService {
               });
             }
           } else {
-            console.warn(`[pricingService] ⚠️ Filtering out retailer "${price.retailer}" - does not match ${location.countryCode} stores`);
+            console.log(`[pricingService] Filtering out international store: "${price.retailer}"`);
           }
         }
       });

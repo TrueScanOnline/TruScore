@@ -5,6 +5,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { validateCountrySubmission, RateLimiter } from '../utils/validation';
 import { logger } from '../utils/logger';
+import { submitManufacturingCountryToOpenFoodFacts } from './openFoodFactsSubmission';
+import { uploadProductPhoto } from './photoUploadService';
 
 // Rate limiter: max 1 submission per barcode per user (enforced by userId check)
 // Additional rate limit: max 10 submissions per hour per user
@@ -19,11 +21,16 @@ export interface ManufacturingCountrySubmission {
   verifiedCount: number; // Number of users who submitted same country
   disputed: boolean;
   photoUrl?: string; // Optional photo of label
+  hasImportedIngredients?: boolean; // "With some imported ingredients" flag
 }
 
 const STORAGE_KEY = 'manufacturing_country_submissions';
 const USER_ID_KEY = 'manufacturing_country_user_id';
 const VERIFICATION_THRESHOLD = 3; // Number of matching submissions needed for verification
+
+// Backend API URL for global sharing (set via environment variable or use default)
+import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
+const MANUFACTURING_COUNTRY_API = BackendEndpoints.manufacturingCountry(getBackendUrl());
 
 /**
  * Get device/user ID (persistent implementation)
@@ -56,9 +63,9 @@ async function getSubmissionsForBarcode(barcode: string): Promise<ManufacturingC
     if (!data) return [];
     
     const allSubmissions: ManufacturingCountrySubmission[] = JSON.parse(data);
-    return allSubmissions.filter(s => s.barcode === barcode);
+    return allSubmissions.filter((s: ManufacturingCountrySubmission) => s.barcode === barcode);
   } catch (error) {
-    console.error('Error getting submissions:', error);
+    logger.error('Error getting submissions:', error);
     return [];
   }
 }
@@ -69,7 +76,8 @@ async function getSubmissionsForBarcode(barcode: string): Promise<ManufacturingC
 export async function submitManufacturingCountry(
   barcode: string,
   country: string,
-  photoUrl?: string
+  photoUrl?: string,
+  hasImportedIngredients?: boolean
 ): Promise<{ success: boolean; verified: boolean; message: string; alreadySubmitted?: boolean }> {
   try {
     // Validate input using validation utility
@@ -85,6 +93,13 @@ export async function submitManufacturingCountry(
     const { country: validatedCountry, photoUrl: validatedPhotoUrl } = validation.data;
     const userId = await getUserId();
     
+    console.log('[ManufacturingCountryService] Submitting:', {
+      barcode,
+      country: validatedCountry,
+      hasImportedIngredients,
+      userId,
+    });
+    
     // Rate limiting check
     if (!submissionRateLimiter.isAllowed(userId)) {
       return {
@@ -93,27 +108,269 @@ export async function submitManufacturingCountry(
         message: 'Too many submissions. Please try again later.',
       };
     }
+
+    // Try to submit to backend API first (for global sharing)
+    try {
+      const submissionData = {
+        barcode,
+        country: validatedCountry,
+        userId,
+        photoUrl: validatedPhotoUrl,
+        hasImportedIngredients: hasImportedIngredients || false,
+      };
+      console.log('[ManufacturingCountryService] POST to backend:', submissionData);
+      
+      const response = await fetch(MANUFACTURING_COUNTRY_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('[ManufacturingCountryService] Submitted to backend API:', result);
+        
+        // CRITICAL: Upload photo if provided
+        let uploadedPhotoUrl: string | undefined = validatedPhotoUrl || undefined;
+        if (validatedPhotoUrl) {
+          try {
+            const photoResult = await uploadProductPhoto(barcode, validatedPhotoUrl, 'country_label');
+            if (photoResult.success) {
+              uploadedPhotoUrl = photoResult.openFoodFactsUrl || photoResult.vercelUrl || validatedPhotoUrl;
+              logger.info(`[ManufacturingCountryService] Photo uploaded: ${uploadedPhotoUrl}`);
+            }
+          } catch (photoError) {
+            logger.warn('[ManufacturingCountryService] Photo upload failed (non-critical):', photoError);
+          }
+        }
+        
+        // CRITICAL: Submit to Open Food Facts for global database
+        try {
+          const offResult = await submitManufacturingCountryToOpenFoodFacts(barcode, validatedCountry);
+          if (offResult.success) {
+            logger.info(`[ManufacturingCountryService] ✅ Submitted to Open Food Facts`);
+          } else {
+            logger.warn(`[ManufacturingCountryService] Open Food Facts submission failed: ${offResult.message}`);
+          }
+        } catch (offError) {
+          logger.warn('[ManufacturingCountryService] Open Food Facts submission failed (non-critical):', offError);
+        }
+        
+        // Also save locally as cache/backup
+        // Check if user already has a submission and update it instead of creating duplicate
+        const existingSubmissions = await getSubmissionsForBarcode(barcode);
+        const userExistingSubmission = existingSubmissions.find((s: ManufacturingCountrySubmission) => s.userId === userId);
+        
+        if (userExistingSubmission) {
+          // Check if country is changing
+          const isCountryChange = userExistingSubmission.country.toUpperCase() !== validatedCountry.toUpperCase();
+          
+          if (isCountryChange) {
+            // Country change - update submission and reset verification
+            userExistingSubmission.country = validatedCountry;
+            userExistingSubmission.timestamp = Date.now();
+            userExistingSubmission.verified = false;
+            userExistingSubmission.verifiedCount = 1;
+            userExistingSubmission.disputed = false;
+            userExistingSubmission.hasImportedIngredients = hasImportedIngredients || false;
+            if (uploadedPhotoUrl) {
+              userExistingSubmission.photoUrl = uploadedPhotoUrl;
+            }
+            
+            // Recalculate verification status for all submissions
+            const allSubmissionsForBarcode = existingSubmissions.filter(s => s.userId !== userId);
+            allSubmissionsForBarcode.push(userExistingSubmission);
+            
+            const matchingSubmissions = allSubmissionsForBarcode.filter(
+              s => s.country.toUpperCase() === validatedCountry.toUpperCase()
+            );
+            const verifiedCount = matchingSubmissions.length;
+            const isVerified = verifiedCount >= VERIFICATION_THRESHOLD;
+            const uniqueCountries = new Set(allSubmissionsForBarcode.map(s => s.country.toUpperCase()));
+            const isDisputed = uniqueCountries.size > 1 && verifiedCount < VERIFICATION_THRESHOLD;
+            
+            allSubmissionsForBarcode.forEach(submission => {
+              if (submission.country.toUpperCase() === validatedCountry.toUpperCase()) {
+                submission.verified = isVerified;
+                submission.verifiedCount = verifiedCount;
+                submission.disputed = isDisputed;
+              } else {
+                submission.verified = false;
+                submission.verifiedCount = allSubmissionsForBarcode.filter(
+                  s => s.country.toUpperCase() === submission.country.toUpperCase()
+                ).length;
+                submission.disputed = isDisputed;
+              }
+            });
+            
+            const allSubmissions = await getAllSubmissions();
+            const otherSubmissions = allSubmissions.filter(s => s.barcode !== barcode);
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...otherSubmissions, ...allSubmissionsForBarcode]));
+            
+            return {
+              success: true,
+              verified: false,
+              message: `Thank you! Country updated to "${validatedCountry}". Community verification in progress...`,
+              alreadySubmitted: false,
+            };
+          } else {
+            // Same country - just update flags
+            userExistingSubmission.hasImportedIngredients = hasImportedIngredients || false;
+            if (uploadedPhotoUrl) {
+              userExistingSubmission.photoUrl = uploadedPhotoUrl;
+            }
+            const allSubmissions = await getAllSubmissions();
+            const otherSubmissions = allSubmissions.filter(s => s.barcode !== barcode);
+            const updatedSubmissions = [...otherSubmissions, ...existingSubmissions];
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSubmissions));
+          }
+        } else {
+          // Create new submission
+          await saveToLocalStorage(barcode, validatedCountry, userId, uploadedPhotoUrl || undefined, hasImportedIngredients);
+        }
+        
+        return {
+          success: result.success,
+          verified: result.verified || false,
+          message: result.message || 'Thank you for your contribution!',
+          alreadySubmitted: result.alreadySubmitted || false,
+        };
+      }
+    } catch (apiError) {
+      console.warn('[ManufacturingCountryService] Backend API unavailable, using local storage:', apiError);
+      // Fall back to local storage if backend is unavailable
+    }
+
+    // Fallback to local storage (for offline support)
     const timestamp = Date.now();
 
     // Get existing submissions for this barcode
     const existingSubmissions = await getSubmissionsForBarcode(barcode);
 
     // Check if this user already submitted for this barcode
-    const userExistingSubmission = existingSubmissions.find(s => s.userId === userId);
+    const userExistingSubmission = existingSubmissions.find((s: ManufacturingCountrySubmission) => s.userId === userId);
     if (userExistingSubmission) {
-      // User already submitted - return friendly message (not an error)
-      // Get current verification status for the existing submissions
+      // Check if user is changing the country (not just updating imported ingredients flag)
+      const isCountryChange = userExistingSubmission.country.toUpperCase() !== validatedCountry.toUpperCase();
+      
+      if (isCountryChange) {
+        // User is changing their submitted country - reset verification status
+        logger.info(`[ManufacturingCountryService] User changing country from "${userExistingSubmission.country}" to "${validatedCountry}" - resetting verification`);
+        
+        // Remove old submission from count and update with new country
+        userExistingSubmission.country = validatedCountry;
+        userExistingSubmission.timestamp = timestamp;
+        userExistingSubmission.verified = false;
+        userExistingSubmission.verifiedCount = 1; // Reset to 1 (just this user)
+        userExistingSubmission.disputed = false;
+        userExistingSubmission.hasImportedIngredients = hasImportedIngredients || false;
+        
+        // Recalculate verification status for ALL submissions (new country starts fresh)
+        const allSubmissionsForBarcode = existingSubmissions.filter(s => s.userId !== userId);
+        allSubmissionsForBarcode.push(userExistingSubmission);
+        
+        // Count matching submissions for new country
+        const matchingSubmissions = allSubmissionsForBarcode.filter(
+          (s: ManufacturingCountrySubmission) => s.country.toUpperCase() === validatedCountry.toUpperCase()
+        );
+        const verifiedCount = matchingSubmissions.length;
+        const isVerified = verifiedCount >= VERIFICATION_THRESHOLD;
+        
+        // Check for disputes (multiple different countries)
+        const uniqueCountries = new Set(allSubmissionsForBarcode.map(s => s.country.toUpperCase()));
+        const isDisputed = uniqueCountries.size > 1 && verifiedCount < VERIFICATION_THRESHOLD;
+        
+        // Update all submissions with new verification status
+        allSubmissionsForBarcode.forEach(submission => {
+          if (submission.country.toUpperCase() === validatedCountry.toUpperCase()) {
+            submission.verified = isVerified;
+            submission.verifiedCount = verifiedCount;
+            submission.disputed = isDisputed;
+          } else {
+            submission.verified = false;
+            submission.verifiedCount = allSubmissionsForBarcode.filter(
+              s => s.country.toUpperCase() === submission.country.toUpperCase()
+            ).length;
+            submission.disputed = isDisputed;
+          }
+        });
+        
+        // Save updated submissions
+        const allSubmissions = await getAllSubmissions();
+        const otherSubmissions = allSubmissions.filter(s => s.barcode !== barcode);
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...otherSubmissions, ...allSubmissionsForBarcode]));
+        
+        // Submit to backend if available
+        try {
+          const response = await fetch(MANUFACTURING_COUNTRY_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              barcode,
+              country: validatedCountry,
+              userId,
+              photoUrl: validatedPhotoUrl,
+              hasImportedIngredients: hasImportedIngredients || false,
+            }),
+          });
+          if (response.ok) {
+            logger.info(`[ManufacturingCountryService] ✅ Country change submitted to backend`);
+          }
+        } catch (backendError) {
+          logger.debug('[ManufacturingCountryService] Backend submission failed (non-critical):', backendError);
+        }
+        
+        return {
+          success: true,
+          verified: false, // Always false after country change - needs re-verification
+          alreadySubmitted: false, // Not a repeat - it's an update
+          message: `Thank you! Country updated to "${validatedCountry}". Community verification in progress...`,
+        };
+      }
+      
+      // Same country - check if we need to update the imported ingredients flag
+      const needsUpdate = userExistingSubmission.hasImportedIngredients !== (hasImportedIngredients || false);
+      
+      if (needsUpdate) {
+        // Update the existing submission with the new imported ingredients flag
+        logger.info('[ManufacturingCountryService] Updating existing submission with new imported ingredients flag');
+        userExistingSubmission.hasImportedIngredients = hasImportedIngredients || false;
+        
+        // Save the updated submissions
+        const allSubmissions = await getAllSubmissions();
+        const otherSubmissions = allSubmissions.filter(s => s.barcode !== barcode);
+        const updatedSubmissions = [...otherSubmissions, ...existingSubmissions];
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSubmissions));
+        
+        // Get current verification status
+        const matchingSubmissions = existingSubmissions.filter(
+          (s: ManufacturingCountrySubmission) => s.country.toUpperCase() === userExistingSubmission.country.toUpperCase()
+        );
+        const verifiedCount = matchingSubmissions.length;
+        const isVerified = verifiedCount >= VERIFICATION_THRESHOLD;
+        
+        return {
+          success: true,
+          verified: isVerified,
+          alreadySubmitted: true,
+          message: 'Thank you! Your submission has been updated with the imported ingredients information.',
+        };
+      }
+      
+      // User already submitted same country with same flags - return friendly message
       const matchingSubmissions = existingSubmissions.filter(
-        s => s.country.toUpperCase() === userExistingSubmission.country.toUpperCase()
+        (s: ManufacturingCountrySubmission) => s.country.toUpperCase() === userExistingSubmission.country.toUpperCase()
       );
       const verifiedCount = matchingSubmissions.length;
       const isVerified = verifiedCount >= VERIFICATION_THRESHOLD;
       
       return {
-        success: true, // Success to prevent error display
+        success: true,
         verified: isVerified,
-        alreadySubmitted: true, // Flag to indicate this is a repeat submission
-        message: 'Thank you for your previous submission, we can only allow one submission from each user.',
+        alreadySubmitted: true,
+        message: 'Thank you for your previous submission. You can update the country if it has changed.',
       };
     }
 
@@ -127,12 +384,18 @@ export async function submitManufacturingCountry(
       verifiedCount: 1,
       disputed: false,
       photoUrl: validatedPhotoUrl || undefined,
+      hasImportedIngredients: hasImportedIngredients || false,
     };
+    console.log('[ManufacturingCountryService] Creating new submission:', {
+      barcode,
+      country: validatedCountry,
+      hasImportedIngredients: newSubmission.hasImportedIngredients,
+    });
     existingSubmissions.push(newSubmission);
 
     // Count matching submissions (same country)
     const matchingSubmissions = existingSubmissions.filter(
-      s => s.country.toUpperCase() === validatedCountry.toUpperCase()
+      (s: ManufacturingCountrySubmission) => s.country.toUpperCase() === validatedCountry.toUpperCase()
     );
     const verifiedCount = matchingSubmissions.length;
 
@@ -140,11 +403,11 @@ export async function submitManufacturingCountry(
     const isVerified = verifiedCount >= VERIFICATION_THRESHOLD;
 
     // Check if disputed (conflicting submissions)
-    const uniqueCountries = new Set(existingSubmissions.map(s => s.country.toUpperCase()));
+    const uniqueCountries = new Set(existingSubmissions.map((s: ManufacturingCountrySubmission) => s.country.toUpperCase()));
     const isDisputed = uniqueCountries.size > 1 && verifiedCount < VERIFICATION_THRESHOLD;
 
     // Update verification status for all matching submissions
-    matchingSubmissions.forEach(submission => {
+    matchingSubmissions.forEach((submission: ManufacturingCountrySubmission) => {
       submission.verified = isVerified;
       submission.verifiedCount = verifiedCount;
       submission.disputed = isDisputed;
@@ -152,8 +415,8 @@ export async function submitManufacturingCountry(
 
     // Update non-matching submissions
     existingSubmissions
-      .filter(s => s.country.toUpperCase() !== validatedCountry.toUpperCase())
-      .forEach(submission => {
+      .filter((s: ManufacturingCountrySubmission) => s.country.toUpperCase() !== validatedCountry.toUpperCase())
+      .forEach((submission: ManufacturingCountrySubmission) => {
         submission.disputed = isDisputed;
         submission.verified = false;
       });
@@ -195,42 +458,125 @@ export async function submitManufacturingCountry(
 }
 
 /**
+ * Helper function to save submission to local storage
+ */
+async function saveToLocalStorage(
+  barcode: string,
+  country: string,
+  userId: string,
+  photoUrl?: string | null,
+  hasImportedIngredients?: boolean
+): Promise<void> {
+  try {
+    const timestamp = Date.now();
+    const newSubmission: ManufacturingCountrySubmission = {
+      barcode,
+      country,
+      userId,
+      timestamp,
+      verified: false,
+      verifiedCount: 1,
+      disputed: false,
+      photoUrl: (photoUrl && photoUrl !== null) ? photoUrl : undefined,
+      hasImportedIngredients: hasImportedIngredients || false,
+    };
+    console.log('[ManufacturingCountryService] Saving to local storage:', {
+      barcode,
+      country,
+      hasImportedIngredients: newSubmission.hasImportedIngredients,
+    });
+
+    const existingSubmissions = await getSubmissionsForBarcode(barcode);
+    existingSubmissions.push(newSubmission);
+
+    const allSubmissions = await getAllSubmissions();
+    const otherSubmissions = allSubmissions.filter(s => s.barcode !== barcode);
+    const updatedSubmissions = [...otherSubmissions, ...existingSubmissions];
+    
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSubmissions));
+  } catch (error) {
+    console.error('[ManufacturingCountryService] Error saving to local storage:', error);
+  }
+}
+
+/**
  * Get verified manufacturing country for a barcode
  */
 export async function getManufacturingCountry(barcode: string): Promise<{
   country: string | null;
   confidence: 'verified' | 'community' | 'unverified' | 'disputed';
   verifiedCount: number;
+  hasImportedIngredients?: boolean; // True if any submission has imported ingredients flag
 }> {
   try {
+    // Try to fetch from backend API first (for global data)
+    try {
+      const response = await fetch(`${MANUFACTURING_COUNTRY_API}?barcode=${encodeURIComponent(barcode)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('[ManufacturingCountryService] Fetched from backend API:', result);
+        return {
+          country: result.country || null,
+          confidence: result.confidence || 'unverified',
+          verifiedCount: result.verifiedCount || 0,
+          hasImportedIngredients: result.hasImportedIngredients || false,
+        };
+      }
+    } catch (apiError) {
+      console.warn('[ManufacturingCountryService] Backend API unavailable, using local storage:', apiError);
+      // Fall back to local storage if backend is unavailable
+    }
+
+    // Fallback to local storage
     const submissions = await getSubmissionsForBarcode(barcode);
+    
+    console.log('[ManufacturingCountryService] Retrieved submissions from local storage:', {
+      barcode,
+      submissionCount: submissions.length,
+      submissions: submissions.map(s => ({
+        country: s.country,
+        hasImportedIngredients: s.hasImportedIngredients,
+      })),
+    });
     
     if (submissions.length === 0) {
       return {
         country: null,
         confidence: 'unverified',
         verifiedCount: 0,
+        hasImportedIngredients: false,
       };
     }
 
+    // Check if any submission has imported ingredients flag
+    const hasImportedIngredients = submissions.some((s: ManufacturingCountrySubmission) => s.hasImportedIngredients === true);
+    console.log('[ManufacturingCountryService] Aggregated hasImportedIngredients:', hasImportedIngredients);
+
     // Find verified submissions
-    const verifiedSubmissions = submissions.filter(s => s.verified && !s.disputed);
+    const verifiedSubmissions = submissions.filter((s: ManufacturingCountrySubmission) => s.verified && !s.disputed);
     
     if (verifiedSubmissions.length > 0) {
       // Return most common verified country
       const country = verifiedSubmissions[0].country;
-      const verifiedCount = verifiedSubmissions.filter(s => s.country === country).length;
+      const verifiedCount = verifiedSubmissions.filter((s: ManufacturingCountrySubmission) => s.country === country).length;
       
       return {
         country,
         confidence: 'verified',
         verifiedCount,
+        hasImportedIngredients,
       };
     }
 
     // Find most common country (even if not verified)
     const countryCounts: Record<string, number> = {};
-    submissions.forEach(s => {
+    submissions.forEach((s: ManufacturingCountrySubmission) => {
       if (!s.disputed) {
         countryCounts[s.country] = (countryCounts[s.country] || 0) + 1;
       }
@@ -251,6 +597,7 @@ export async function getManufacturingCountry(barcode: string): Promise<{
           country,
           confidence: 'disputed',
           verifiedCount: count,
+          hasImportedIngredients,
         };
       }
 
@@ -260,6 +607,7 @@ export async function getManufacturingCountry(barcode: string): Promise<{
           country,
           confidence: 'community',
           verifiedCount: count,
+          hasImportedIngredients,
         };
       }
 
@@ -267,6 +615,7 @@ export async function getManufacturingCountry(barcode: string): Promise<{
         country,
         confidence: 'unverified',
         verifiedCount: count,
+        hasImportedIngredients,
       };
     }
 
@@ -274,6 +623,7 @@ export async function getManufacturingCountry(barcode: string): Promise<{
       country: null,
       confidence: 'unverified',
       verifiedCount: 0,
+      hasImportedIngredients: false,
     };
   } catch (error) {
     console.error('Error getting manufacturing country:', error);
@@ -281,6 +631,7 @@ export async function getManufacturingCountry(barcode: string): Promise<{
       country: null,
       confidence: 'unverified',
       verifiedCount: 0,
+      hasImportedIngredients: false,
     };
   }
 }
@@ -306,7 +657,7 @@ export async function hasUserSubmitted(barcode: string): Promise<boolean> {
   try {
     const submissions = await getSubmissionsForBarcode(barcode);
     const userId = await getUserId();
-    return submissions.some(s => s.userId === userId);
+    return submissions.some((s: ManufacturingCountrySubmission) => s.userId === userId);
   } catch (error) {
     console.error('Error checking user submission:', error);
     return false;
@@ -314,24 +665,49 @@ export async function hasUserSubmitted(barcode: string): Promise<boolean> {
 }
 
 /**
- * Submit verified data to Open Food Facts (future implementation)
- * This would integrate with Open Food Facts API to contribute data back
+ * Get community country statistics - top countries by submission count
+ * Returns array of countries sorted by submission count (descending)
+ */
+export async function getCommunityCountryStats(barcode: string): Promise<Array<{ country: string; count: number }>> {
+  try {
+    const submissions = await getSubmissionsForBarcode(barcode);
+    
+    if (submissions.length === 0) {
+      return [];
+    }
+
+    // Count submissions per country
+    const countryCounts: Record<string, number> = {};
+    submissions.forEach((s: ManufacturingCountrySubmission) => {
+      if (!s.disputed) {
+        countryCounts[s.country] = (countryCounts[s.country] || 0) + 1;
+      }
+    });
+
+    // Convert to array and sort by count (descending)
+    const stats = Object.entries(countryCounts)
+      .map(([country, count]) => ({ country, count }))
+      .sort((a, b) => b.count - a.count);
+
+    return stats;
+  } catch (error) {
+    logger.error('Error getting community country stats', error);
+    return [];
+  }
+}
+
+/**
+ * Submit verified data to Open Food Facts
+ * Now implemented - auto-submission happens in submitManufacturingCountry()
+ * 
+ * @deprecated Use submitManufacturingCountry() which automatically submits to OFF
  */
 export async function submitToOpenFoodFacts(
   barcode: string,
   country: string
 ): Promise<{ success: boolean; message: string }> {
-  // TODO: Implement Open Food Facts API integration
-  // This would require:
-  // 1. Open Food Facts API authentication
-  // 2. API endpoint for updating product origins
-  // 3. Proper formatting of country data
-  
-  console.log(`Would submit ${country} for barcode ${barcode} to Open Food Facts`);
-  
-  return {
-    success: false,
-    message: 'Open Food Facts submission not yet implemented',
-  };
+  // Auto-submission now happens in submitManufacturingCountry()
+  // This function is kept for backward compatibility
+  return await submitManufacturingCountryToOpenFoodFacts(barcode, country);
 }
 

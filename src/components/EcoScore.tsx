@@ -30,7 +30,7 @@ function calculateGradeFromScore(score: number): 'a' | 'b' | 'c' | 'd' | 'e' | '
   return 'unknown';
 }
 
-export default function EcoScore({ ecoScore }: EcoScoreProps) {
+const EcoScore = React.memo(function EcoScore({ ecoScore }: EcoScoreProps) {
   const { t } = useTranslation();
   const score = ecoScore.score || 0;
   
@@ -105,7 +105,9 @@ export default function EcoScore({ ecoScore }: EcoScoreProps) {
       )}
     </View>
   );
-}
+});
+
+export default EcoScore;
 
 const styles = StyleSheet.create({
   container: {

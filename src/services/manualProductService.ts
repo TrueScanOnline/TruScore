@@ -4,7 +4,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product, ProductWithTrustScore, TrustScoreBreakdown } from '../types/product';
 import { cacheProduct } from './cacheService';
-import { calculateTruScore } from '../lib/scoringEngine';
+import { calculateTruScore } from '../lib/truscoreEngine';
+import { logger } from '../utils/logger';
+import { submitProductToOpenFoodFacts, hasOFFCredentials } from './openFoodFactsSubmission';
+import { uploadProductPhoto } from './photoUploadService';
+import { saveProductToSQLite } from './sqliteProductDatabase';
+import { getUserCountryCode } from '../utils/countryDetection';
 
 const STORAGE_KEY_PREFIX = '@truescan_manual_product_';
 const MAX_MANUAL_PRODUCTS = 100; // Limit to prevent storage bloat
@@ -34,16 +39,18 @@ export interface ManualProductData {
  */
 export async function saveManualProduct(data: ManualProductData): Promise<boolean> {
   try {
-    // Validate required fields
-    if (!data.barcode || !data.product_name) {
-      throw new Error('Barcode and product name are required');
+    // Validate required fields (barcode always required, product_name can be optional for partial updates)
+    if (!data.barcode) {
+      throw new Error('Barcode is required');
     }
+    // Use 'Unknown Product' as fallback if product_name not provided
+    const productName = data.product_name || 'Unknown Product';
 
     // Create Product object from manual data
     const product: Product = {
       barcode: data.barcode,
-      product_name: data.product_name,
-      product_name_en: data.product_name,
+      product_name: productName,
+      product_name_en: productName,
       brands: data.brands,
       ingredients_text: data.ingredients_text,
       image_url: data.image_url,
@@ -66,7 +73,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
     // Calculate Trust Score if we have enough data
     let productWithScore: ProductWithTrustScore;
     try {
-      const trustScoreResult = calculateTruScore(product, 'user_contributed');
+      const trustScoreResult = calculateTruScore(product);
       // Map TruScoreResult to TrustScoreBreakdown format
       const breakdown: TrustScoreBreakdown = {
         body: trustScoreResult.breakdown.Body || 0,
@@ -87,7 +94,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
         },
       };
     } catch (error) {
-      console.error('[ManualProductService] Error calculating trust score:', error);
+      logger.error('[ManualProductService] Error calculating trust score', error);
       // If trust score calculation fails, use product without score
       productWithScore = {
         ...product,
@@ -99,6 +106,17 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
     // Save to cache (so it appears in app immediately)
     await cacheProduct(productWithScore, false); // false = not premium
 
+    // CRITICAL: Save to SQLite database for persistent storage across app restarts
+    // This ensures user-contributed data is available for all future scans
+    try {
+      const countryCode = await getUserCountryCode();
+      await saveProductToSQLite(productWithScore, countryCode ?? undefined);
+      logger.info(`[ManualProductService] ✅ Saved user-contributed product to SQLite: ${data.barcode}`);
+    } catch (sqliteError) {
+      logger.warn('[ManualProductService] Failed to save to SQLite (non-critical):', sqliteError);
+      // Continue - cache and AsyncStorage still work
+    }
+
     // Also save to manual products storage (for management)
     const storageKey = `${STORAGE_KEY_PREFIX}${data.barcode}`;
     await AsyncStorage.setItem(storageKey, JSON.stringify({
@@ -109,10 +127,165 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
     // Add to manual products list
     await addToManualProductsList(data.barcode);
 
-    console.log(`[ManualProductService] ✅ Saved manual product: ${data.barcode} - ${data.product_name}`);
+    logger.info(`[ManualProductService] ✅ Saved manual product: ${data.barcode} - ${productName}`);
+    
+    // CRITICAL: Submit to Open Food Facts and Vercel backend for global sharing
+    // This ensures user data becomes available to all users worldwide
+    try {
+      // Upload photo first if available
+      if (data.image_url) {
+        try {
+          const photoResult = await uploadProductPhoto(data.barcode, data.image_url, 'front');
+          if (photoResult.success) {
+            logger.info(`[ManualProductService] Photo uploaded: ${photoResult.openFoodFactsUrl || photoResult.vercelUrl}`);
+            // Update product with uploaded photo URL
+            if (photoResult.openFoodFactsUrl) {
+              productWithScore.image_url = photoResult.openFoodFactsUrl;
+            } else if (photoResult.vercelUrl) {
+              productWithScore.image_url = photoResult.vercelUrl;
+            }
+          }
+        } catch (photoError) {
+          logger.warn('[ManualProductService] Photo upload failed (non-critical):', photoError);
+        }
+      }
+      
+      // Submit to Open Food Facts
+      const offResult = await submitProductToOpenFoodFacts(data);
+      if (offResult.success) {
+        logger.info(`[ManualProductService] ✅ Submitted to Open Food Facts: ${offResult.productUrl}`);
+      } else {
+        logger.warn(`[ManualProductService] Open Food Facts submission failed: ${offResult.message}`);
+        // Continue - local save was successful
+      }
+      
+      // Submit to Vercel backend for global sharing
+      // CRITICAL: This ensures user edits are available to all users worldwide
+      let backendSubmissionSuccess = false;
+      const maxRetries = 3;
+      let retryCount = 0;
+      
+      while (!backendSubmissionSuccess && retryCount < maxRetries) {
+        try {
+          const { getBackendUrl, BackendEndpoints } = await import('../config/backendConfig');
+          const backendUrl = getBackendUrl();
+          const endpoint = BackendEndpoints.manualProducts(backendUrl);
+          
+          logger.info(`[ManualProductService] Submitting to backend (attempt ${retryCount + 1}/${maxRetries}): ${endpoint}`);
+          
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              barcode: data.barcode,
+              productData: {
+                product_name: data.product_name,
+                brands: data.brands,
+                ingredients_text: data.ingredients_text,
+                image_url: productWithScore.image_url,
+                nutriments: data.nutriments,
+                manufacturing_places: data.manufacturing_places,
+                countries: data.countries,
+                categories: data.categories,
+                allergens_tags: data.allergens_tags,
+                additives_tags: data.additives_tags,
+                packaging_data: data.packaging_data,
+                serving_size: data.serving_size,
+                quantity: data.quantity,
+              },
+            }),
+          });
+          
+          const responseText = await response.text();
+          let responseData: any = null;
+          try {
+            responseData = JSON.parse(responseText);
+          } catch {
+            // Response is not JSON
+          }
+          
+          if (response.ok) {
+            logger.info(`[ManualProductService] ✅ Successfully submitted to Vercel backend: ${data.barcode}`);
+            logger.info(`[ManualProductService] Backend response: ${responseText.substring(0, 200)}`);
+            backendSubmissionSuccess = true;
+          } else if (response.status === 401) {
+            // 401 indicates authentication required - this should NOT happen with production URLs
+            logger.error(`[ManualProductService] ❌ Backend returned 401 - Authentication Required`);
+            logger.error(`[ManualProductService] This usually means a preview deployment URL is being used`);
+            logger.error(`[ManualProductService] Backend URL: ${backendUrl}`);
+            logger.error(`[ManualProductService] Response: ${responseText.substring(0, 500)}`);
+            
+            // Check if this is a preview deployment URL
+            if (backendUrl.includes('-') && backendUrl.match(/https:\/\/[^-]+-[a-z0-9]+\.vercel\.app/)) {
+              logger.error(`[ManualProductService] ❌ CRITICAL: Preview deployment URL detected!`);
+              logger.error(`[ManualProductService] ❌ Preview deployments require authentication and cannot be used for public API access`);
+              logger.error(`[ManualProductService] ❌ Please use production deployment URL or configure EXPO_PUBLIC_BACKEND_URL`);
+              logger.error(`[ManualProductService] ❌ Data saved locally only - will NOT be available to other users`);
+            }
+            
+            // Don't retry 401 errors - they won't succeed
+            logger.warn(`[ManualProductService] ⚠️  Backend submission failed due to authentication. Data saved locally only.`);
+            logger.warn(`[ManualProductService] ⚠️  Other users will NOT see this update until backend is accessible.`);
+            break; // Don't retry - authentication won't change
+          } else {
+            logger.error(`[ManualProductService] ❌ Backend submission failed: ${response.status} ${response.statusText}`);
+            logger.error(`[ManualProductService] Response: ${responseText.substring(0, 500)}`);
+            
+            // Retry on server errors (5xx) or rate limits (429)
+            if ((response.status >= 500 && response.status < 600) || response.status === 429) {
+              retryCount++;
+              if (retryCount < maxRetries) {
+                const delay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Exponential backoff, max 5s
+                logger.info(`[ManualProductService] Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+              }
+            }
+            
+            // For other errors, don't retry
+            break;
+          }
+        } catch (backendError: any) {
+          logger.error('[ManualProductService] ❌ Backend submission error:', {
+            error: backendError?.message || String(backendError),
+            stack: backendError?.stack,
+            barcode: data.barcode,
+            attempt: retryCount + 1,
+          });
+          
+          // Retry on network errors
+          if (retryCount < maxRetries - 1 && (
+            backendError?.message?.includes('Network') ||
+            backendError?.message?.includes('fetch') ||
+            backendError?.code === 'ERR_NETWORK'
+          )) {
+            retryCount++;
+            const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
+            logger.info(`[ManualProductService] Network error, retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          
+          // Don't retry on other errors
+          break;
+        }
+      }
+      
+      if (!backendSubmissionSuccess) {
+        logger.warn(`[ManualProductService] ⚠️  Backend submission failed after ${retryCount + 1} attempts. Data saved locally only.`);
+        logger.warn(`[ManualProductService] ⚠️  Other users may not see this update until backend is accessible.`);
+      }
+    } catch (submissionError) {
+      logger.warn('[ManualProductService] Error during global submission (non-critical):', submissionError);
+      // Continue - local save was successful, submission is best-effort
+    }
+    
     return true;
   } catch (error) {
-    console.error('[ManualProductService] Error saving manual product:', error);
+    logger.error('[ManualProductService] Error saving manual product', error);
     return false;
   }
 }
@@ -132,7 +305,7 @@ export async function getManualProduct(barcode: string): Promise<ProductWithTrus
     const parsed = JSON.parse(data);
     return parsed.product || null;
   } catch (error) {
-    console.error('[ManualProductService] Error getting manual product:', error);
+    logger.error('[ManualProductService] Error getting manual product', error);
     return null;
   }
 }
@@ -177,7 +350,7 @@ export async function getAllManualProducts(): Promise<ManualProductData[]> {
     // Sort by timestamp (newest first)
     return products.sort((a, b) => b.timestamp - a.timestamp);
   } catch (error) {
-    console.error('[ManualProductService] Error getting all manual products:', error);
+    logger.error('[ManualProductService] Error getting all manual products', error);
     return [];
   }
 }
@@ -192,7 +365,7 @@ export async function deleteManualProduct(barcode: string): Promise<boolean> {
     await removeFromManualProductsList(barcode);
     return true;
   } catch (error) {
-    console.error('[ManualProductService] Error deleting manual product:', error);
+    logger.error('[ManualProductService] Error deleting manual product', error);
     return false;
   }
 }
@@ -218,7 +391,7 @@ async function addToManualProductsList(barcode: string): Promise<void> {
       await AsyncStorage.setItem(listKey, JSON.stringify(barcodes));
     }
   } catch (error) {
-    console.error('[ManualProductService] Error adding to list:', error);
+    logger.error('[ManualProductService] Error adding to list', error);
   }
 }
 
@@ -235,7 +408,7 @@ async function removeFromManualProductsList(barcode: string): Promise<void> {
     const filtered = barcodes.filter(b => b !== barcode);
     await AsyncStorage.setItem(listKey, JSON.stringify(filtered));
   } catch (error) {
-    console.error('[ManualProductService] Error removing from list:', error);
+    logger.error('[ManualProductService] Error removing from list', error);
   }
 }
 
@@ -280,20 +453,19 @@ function calculateQuality(data: ManualProductData): number {
 }
 
 /**
- * Submit manual product to Open Food Facts (optional)
- * This allows users to contribute their manual entry to the public database
+ * Submit manual product to Open Food Facts (optional - now handled automatically)
+ * This function is kept for backward compatibility but auto-submission happens in saveManualProduct()
+ * 
+ * @deprecated Use saveManualProduct() which automatically submits to OFF and Vercel
  */
 export async function submitToOpenFoodFacts(data: ManualProductData): Promise<boolean> {
   try {
-    // Open Open Food Facts edit page with pre-filled data
-    const offUrl = `https://world.openfoodfacts.org/cgi/product.pl?type=edit&code=${data.barcode}`;
-    
-    // Note: This would ideally use the Open Food Facts API, but that requires authentication
-    // For now, we'll just open the web page for the user to complete the submission
-    
-    return true;
+    // Auto-submission now happens in saveManualProduct()
+    // This function is kept for backward compatibility
+    const result = await submitProductToOpenFoodFacts(data);
+    return result.success;
   } catch (error) {
-    console.error('[ManualProductService] Error submitting to OFF:', error);
+    logger.error('[ManualProductService] Error submitting to OFF', error);
     return false;
   }
 }

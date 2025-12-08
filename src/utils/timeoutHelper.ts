@@ -205,7 +205,7 @@ export function getGlobalRateLimiter(): RateLimiter {
 }
 
 /**
- * Fetch with rate limiting
+ * Fetch with rate limiting and retry logic
  * 
  * @param url - URL to fetch
  * @param options - Fetch options
@@ -220,13 +220,42 @@ export async function fetchWithRateLimit(
   const rateLimiter = getGlobalRateLimiter();
   
   return rateLimiter.addRequest(source, async () => {
-    const response = await fetch(url, options);
+    // Use retry logic for network errors
+    const { fetchWithRetry } = await import('./networkRetry');
     
-    // Check for rate limit errors
-    if (response.status === 429) {
-      throw new Error(`Rate limit exceeded for ${source}`);
+    try {
+      const response = await fetchWithRetry(
+        url,
+        options,
+        {
+          maxRetries: 3,
+          initialDelay: 500,
+          maxDelay: 5000,
+          timeout: 10000, // 10 second timeout per request
+        }
+      );
+      
+      // Check for rate limit errors
+      if (response.status === 429) {
+        throw new Error(`Rate limit exceeded for ${source}`);
+      }
+      
+      return response;
+    } catch (error) {
+      // Re-throw network errors for retry logic to handle
+      if (error instanceof TypeError && (
+        error.message.includes('Network request failed') ||
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('NetworkError')
+      )) {
+        throw error;
+      }
+      // For other errors, try once more with basic fetch
+      const response = await fetch(url, options);
+      if (response.status === 429) {
+        throw new Error(`Rate limit exceeded for ${source}`);
+      }
+      return response;
     }
-    
-    return response;
   });
 }

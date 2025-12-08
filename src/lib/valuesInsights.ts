@@ -3,6 +3,7 @@ import { Product } from '../types/product';
 import { ValuesPreferences } from '../store/useValuesStore';
 import { Insight } from './truscoreEngine';
 import { VALUES_COLORS } from '../theme/valuesColors';
+import { logger } from '../utils/logger';
 
 // Known companies linked to regions (simplified - in production, use comprehensive database)
 const ISRAEL_LINKED_BRANDS = ['soda-stream', 'strauss', 'osem', 'tnuva', 'sabon', 'coca-cola', 'coke', 'coca cola'];
@@ -150,31 +151,66 @@ export function generateInsights(
   // Environmental insights
   if (preferences.environmentalEnabled) {
     if (preferences.avoidPalmOil) {
-      // Check OFF tags first, then fall back to ingredients_text (word boundary matching + variations)
-      const hasPalmOilTag = analysisTags.some((tag: string) =>
-        tag.toLowerCase().includes('palm') && !tag.toLowerCase().includes('palm-oil-free')
-      );
-      const ingredientsText = (product.ingredients_text || '').toLowerCase();
-      // Common variations: "palm oil", "palmolein", "palm fat", "palm kernel oil", "palm stearin"
-      const palmOilPattern = /\bpalm\s+oil\b/i;
-      const palmOilVariations = /\b(palmolein|palm\s+fat|palm\s+kernel\s+oil|palm\s+stearin|palm\s+olein)\b/i;
-      const hasPalmOilInText = palmOilPattern.test(ingredientsText) || palmOilVariations.test(ingredientsText);
-      const hasPalmOil = hasPalmOilTag || hasPalmOilInText;
-      
-      if (hasPalmOil) {
-        insights.push({
-          type: 'environmental',
-          reason: 'Contains unsustainable palm oil',
-          source: 'Ingredients analysis',
-          color: VALUES_COLORS.environmental,
-        });
+      // Use the SAME logic as extractPalmOilAnalysis to ensure consistency
+      // Check if product has palm_oil_analysis (from extractPalmOilAnalysis)
+      if (product.palm_oil_analysis) {
+        const palmOilAnalysis = product.palm_oil_analysis;
+        // Only show insight if palm oil is actually detected (not free, not unknown)
+        // This matches the Palm Oil card logic exactly
+        if (palmOilAnalysis.containsPalmOil && !palmOilAnalysis.isPalmOilFree) {
+          insights.push({
+            type: 'environmental',
+            reason: palmOilAnalysis.isNonSustainable 
+              ? 'Contains non-sustainable palm oil'
+              : 'Contains palm oil',
+            source: palmOilAnalysis.detectedFromIngredientsText 
+              ? 'Ingredients analysis'
+              : 'Open Food Facts data',
+            color: VALUES_COLORS.environmental,
+          });
+        }
+      } else {
+        // Fallback: If palm_oil_analysis doesn't exist, use same comprehensive detection logic
+        // This ensures consistency even if analysis wasn't created
+        const hasPalmOilTag = analysisTags.some((tag: string) =>
+          tag.toLowerCase().includes('palm') && !tag.toLowerCase().includes('palm-oil-free')
+        );
+        const ingredientsText = (product.ingredients_text || '').toLowerCase();
+        
+        // Use the SAME comprehensive patterns as extractPalmOilAnalysis
+        const palmOilDirectPattern = /\bpalm\s+oil\b/i;
+        const palmOilVariations = /\b(palmolein|palm\s+fat|palm\s+kernel\s+oil|palm\s+stearin|palm\s+olein|palm\s+fruit\s+oil)\b/i;
+        const palmDerivativesPattern = /\b(palmate|palmitate|palmityl|palmitic\s+acid|stearic\s+acid|glyceryl\s+stearate)\b/i;
+        const palmScientificPattern = /\belaeis\s+guineensis\b/i;
+        const palmSodiumPattern = /\b(sodium\s+lauryl\s+sulfate|sodium\s+kernelate|sodium\s+palm\s+kernelate)\b/i;
+        const palmOilFreePattern = /\bpalm[-\s]?oil[-\s]?free\b/i;
+        
+        // Check for palm-oil-free first (explicit statement)
+        if (palmOilFreePattern.test(ingredientsText)) {
+          // Explicitly palm-oil-free, don't show insight
+        } else if (
+          hasPalmOilTag || 
+          palmOilDirectPattern.test(ingredientsText) || 
+          palmOilVariations.test(ingredientsText) ||
+          palmDerivativesPattern.test(ingredientsText) ||
+          palmScientificPattern.test(ingredientsText) ||
+          palmSodiumPattern.test(ingredientsText)
+        ) {
+          // Palm oil or derivatives detected
+          insights.push({
+            type: 'environmental',
+            reason: 'Contains palm oil',
+            source: 'Ingredients analysis',
+            color: VALUES_COLORS.environmental,
+          });
+        }
       }
     }
   }
 
     return insights;
   } catch (error) {
-    console.error('[valuesInsights] Error generating insights:', error);
+    logger.error('[valuesInsights] Error generating insights', error);
     return []; // Safe fallback
   }
 }

@@ -1,0 +1,23 @@
+{
+  "pillar": "planet",
+  "barcode": "9310055105850",
+  "productName": "NUTRI GRAIN",
+  "result": {
+    "score": 5,
+    "base": 15,
+    "adjustments": [
+      {
+        "description": "Eco-Score Grade E (poor environmental impact)",
+        "value": -10,
+        "type": "negative"
+      }
+    ],
+    "details": {
+      "hasEcoScore": true,
+      "ecoscoreGrade": "e",
+      "ecoscoreValue": 5,
+      "palmOilPenalty": 0,
+      "recyclableBonus": 0
+    }
+  }
+}

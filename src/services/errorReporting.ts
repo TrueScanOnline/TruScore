@@ -18,27 +18,19 @@ class ErrorReportingService {
    * If Sentry is not installed, this will gracefully fail and the app will continue.
    */
   async initialize() {
-    // Temporarily disabled - uncomment when @sentry/react-native is installed
-    // Metro bundler requires the module to exist for static analysis
-    // 
+    // Sentry error reporting - gracefully handles if not installed or configured
     // To enable Sentry:
     // 1. Install: yarn add @sentry/react-native
-    // 2. Uncomment the code below
-    // 3. Configure EXPO_PUBLIC_SENTRY_DSN in .env
+    // 2. Configure EXPO_PUBLIC_SENTRY_DSN in .env
+    // 3. Rebuild native code: npx expo prebuild
     
-    console.log('[ErrorReporting] Sentry initialization skipped (not installed)');
-    this.sentry = null;
-    this.isInitialized = false;
-    return false;
-    
-    /* 
-    // UNCOMMENT WHEN SENTRY IS INSTALLED:
     try {
+      // Try to require Sentry (will fail gracefully if not installed)
       const Sentry = require('@sentry/react-native');
       if (Sentry && Sentry.init) {
         const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN;
         
-        if (SENTRY_DSN && SENTRY_DSN !== 'YOUR_SENTRY_DSN') {
+        if (SENTRY_DSN && SENTRY_DSN !== 'YOUR_SENTRY_DSN' && SENTRY_DSN.length > 10) {
           Sentry.init({
             dsn: SENTRY_DSN,
             enableInExpoDevelopment: false,
@@ -53,15 +45,19 @@ class ErrorReportingService {
           this.isInitialized = true;
           console.log('[ErrorReporting] Sentry initialized successfully');
           return true;
+        } else {
+          console.log('[ErrorReporting] Sentry DSN not configured - error reporting disabled');
         }
       }
     } catch (error) {
-      console.log('[ErrorReporting] Sentry not available');
+      // Sentry not installed or not available - this is OK for testing
+      // App will continue to work, errors will just be logged to console
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log('[ErrorReporting] Sentry not available (this is OK for testing):', errorMessage);
       this.sentry = null;
       this.isInitialized = false;
     }
     return false;
-    */
   }
 
   /**

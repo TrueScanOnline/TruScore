@@ -4,8 +4,12 @@
     "module": "commonjs",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": "..",
+    "paths": {
+      "src/*": ["src/*"]
+    }
   },
-  "include": ["*.ts", "global.d.ts", "../global.d.ts"]
+  "include": ["*.ts", "global.d.ts", "../global.d.ts", "../src/**/*"]
 }
 

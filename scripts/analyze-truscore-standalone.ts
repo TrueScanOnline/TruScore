@@ -32,7 +32,11 @@ Module._load = function(request: string, parent: any) {
 };
 
 import { Product } from '../src/types/product';
-import { calculateTruScore } from '../src/lib/truscoreEngine';
+import { calculateTruScore } from '../src/lib/truscoreEngine/index';
+import { calculateBodyPillar } from '../src/lib/truscoreEngine/pillars/bodyPillar';
+import { calculatePlanetPillar } from '../src/lib/truscoreEngine/pillars/planetPillar';
+import { calculateCarePillar } from '../src/lib/truscoreEngine/pillars/carePillar';
+import { calculateOpenPillar } from '../src/lib/truscoreEngine/pillars/openPillar';
 import * as fs from 'fs';
 
 interface DetailedBreakdown {
@@ -126,6 +130,42 @@ async function fetchProductFromOFF(barcode: string): Promise<Product | null> {
 }
 
 function calculateDetailedBreakdown(product: Product, result: any): AnalysisResult['breakdown'] {
+  // Use the new modular pillar system for accurate breakdown
+  const bodyResult = calculateBodyPillar(product);
+  const planetResult = calculatePlanetPillar(product);
+  const careResult = calculateCarePillar(product);
+  const openResult = calculateOpenPillar(product);
+  
+  return {
+    Body: {
+      pillar: 'Body',
+      base: bodyResult.base,
+      adjustments: bodyResult.adjustments,
+      final: bodyResult.score,
+    },
+    Planet: {
+      pillar: 'Planet',
+      base: planetResult.base,
+      adjustments: planetResult.adjustments,
+      final: planetResult.score,
+    },
+    Care: {
+      pillar: 'Care',
+      base: careResult.base,
+      adjustments: careResult.adjustments,
+      final: careResult.score,
+    },
+    Open: {
+      pillar: 'Open',
+      base: openResult.base,
+      adjustments: openResult.adjustments,
+      final: openResult.score,
+    },
+  };
+}
+
+// Legacy function - kept for reference but not used
+function calculateDetailedBreakdownLegacy(product: Product, result: any): AnalysisResult['breakdown'] {
   const text = (product.ingredients_text || '').toLowerCase();
   const analysisTags = (product.ingredients_analysis_tags || []).filter((tag: unknown) => 
     typeof tag === 'string'

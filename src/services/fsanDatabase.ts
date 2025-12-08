@@ -100,7 +100,9 @@ export async function queryFSANZLocalDatabase(
       }
     }
     
-    logger.debug(`FSANZ ${country}: No local database available for ${barcode}. Consider downloading ${country} food composition database.`);
+    // Database exists but barcode not found
+    const productCount = database ? Object.keys(database).length : 0;
+    logger.debug(`FSANZ ${country}: Barcode ${barcode} not found in database (${productCount} products available)`);
     return null;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

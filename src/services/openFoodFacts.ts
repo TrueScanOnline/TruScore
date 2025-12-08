@@ -351,24 +351,53 @@ export function extractPalmOilAnalysis(product: Product): PalmOilAnalysis {
   let isNonSustainable = 
     tags.includes('en:non-sustainable-palm-oil');
 
+  // Track if detection came from ingredients_text (for transparency)
+  let detectedFromIngredientsText = false;
+  
   // Fallback: Always check ingredients_text if OFF data doesn't explicitly say palm-oil-free
   // This ensures consistency with Values Insights detection
   // Only skip if OFF explicitly says it's palm-oil-free (trust OFF certification)
   if (!isPalmOilFree && ingredientsText) {
-    // Check for palm oil in ingredients text (word boundary matching + variations)
-    // Common variations: "palm oil", "palmolein", "palm fat", "palm kernel oil", "palm stearin"
-    const palmOilPattern = /\bpalm\s+oil\b/i;
-    const palmOilVariations = /\b(palmolein|palm\s+fat|palm\s+kernel\s+oil|palm\s+stearin|palm\s+olein)\b/i;
+    // COMPREHENSIVE PALM OIL DETECTION
+    // Suppliers often hide palm oil under alternative names to avoid negative perception
+    // We check for ALL known variations and derivatives
+    
+    // Direct palm oil names (explicit)
+    const palmOilDirectPattern = /\bpalm\s+oil\b/i;
+    const palmOilVariations = /\b(palmolein|palm\s+fat|palm\s+kernel\s+oil|palm\s+stearin|palm\s+olein|palm\s+fruit\s+oil)\b/i;
+    
+    // Chemical derivatives (palm oil derivatives)
+    const palmDerivativesPattern = /\b(palmate|palmitate|palmityl|palmitic\s+acid|stearic\s+acid|glyceryl\s+stearate)\b/i;
+    
+    // Scientific name
+    const palmScientificPattern = /\belaeis\s+guineensis\b/i;
+    
+    // Sodium-based derivatives (common in soaps/detergents)
+    const palmSodiumPattern = /\b(sodium\s+lauryl\s+sulfate|sodium\s+kernelate|sodium\s+palm\s+kernelate)\b/i;
+    
+    // Generic vegetable oil/fat (WARNING: This is a weak indicator - many products use other vegetable oils)
+    // We only flag this if combined with other indicators or if explicitly suspicious
+    // NOTE: We're NOT flagging generic "vegetable oil" alone as it's too broad and would cause false positives
+    
+    // Palm-oil-free explicit statement (highest priority - trust this)
     const palmOilFreePattern = /\bpalm[-\s]?oil[-\s]?free\b/i;
     
     if (palmOilFreePattern.test(ingredientsText)) {
       // Explicitly marked as palm-oil-free in ingredients
       isPalmOilFree = true;
       containsPalmOil = false;
-    } else if (palmOilPattern.test(ingredientsText) || palmOilVariations.test(ingredientsText)) {
-      // Contains palm oil in ingredients (but sustainability unknown)
+      detectedFromIngredientsText = true;
+    } else if (
+      palmOilDirectPattern.test(ingredientsText) || 
+      palmOilVariations.test(ingredientsText) ||
+      palmDerivativesPattern.test(ingredientsText) ||
+      palmScientificPattern.test(ingredientsText) ||
+      palmSodiumPattern.test(ingredientsText)
+    ) {
+      // Contains palm oil or palm oil derivatives in ingredients
       // Override OFF data if OFF didn't detect it (OFF might have incomplete data)
       containsPalmOil = true;
+      detectedFromIngredientsText = true;
       // Note: We don't set isNonSustainable = true here because we can't determine
       // sustainability from ingredients text alone - it requires certification data
     }
@@ -389,6 +418,7 @@ export function extractPalmOilAnalysis(product: Product): PalmOilAnalysis {
     isPalmOilFree,
     isNonSustainable,
     score,
+    detectedFromIngredientsText,
   };
 }
 

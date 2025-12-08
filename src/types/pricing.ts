@@ -36,6 +36,7 @@ export interface PriceEntry {
   timestamp: number;
   source: 'api' | 'user' | 'retailer';
   verified: boolean;
+  url?: string; // Optional URL to product page
 }
 
 export interface RetailerPrice {

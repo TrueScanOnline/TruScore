@@ -1,0 +1,26 @@
+{
+  "pillar": "body",
+  "barcode": "9420020300194",
+  "productName": "Sushi seaweed",
+  "result": {
+    "score": 15,
+    "base": 15,
+    "adjustments": [
+      {
+        "description": "Nutri-Score Grade UNKNOWN (average nutrition)",
+        "value": 0,
+        "type": "neutral"
+      }
+    ],
+    "details": {
+      "hasNutriScore": true,
+      "nutriscoreGrade": "unknown",
+      "nutriscoreValue": 15,
+      "additivePenalty": 0,
+      "riskyTagsPenalty": 0,
+      "irritantPenalty": 0,
+      "fragrancePenalty": 0,
+      "novaAdjustment": 0
+    }
+  }
+}

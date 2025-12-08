@@ -1,8 +1,197 @@
 {
+  "version": 2,
   "functions": {
     "api/nz-prices.ts": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "api/fsanz-database.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "api/foodatlas-query.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "api/fsanz-query.ts": {
+      "maxDuration": 60,
+      "memory": 2048
+    },
+    "api/fsanz-health.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "api/manufacturing-country.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "api/manual-products.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "api/user-prices.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "api/upload-photo.ts": {
+      "maxDuration": 60,
+      "memory": 2048
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/fsanz/:country.json",
+      "destination": "/api/fsanz-database?country=:country"
+    },
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "destination": "/api/.well-known/apple-app-site-association"
+    },
+    {
+      "source": "/.well-known/assetlinks.json",
+      "destination": "/api/.well-known/assetlinks.json"
+    },
+    {
+      "source": "/barcode/:barcode",
+      "destination": "/api/barcode/:barcode"
+    },
+    {
+      "source": "/api/product-preview",
+      "destination": "/api/product-preview"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/fsanz/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/api/fsanz-database",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
+    },
+    {
+      "source": "/api/fsanz-query",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, User-Agent, X-Requested-With"
+        }
+      ]
+    },
+    {
+      "source": "/api/foodatlas-query",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, User-Agent, X-Requested-With"
+        }
+      ]
+    },
+    {
+      "source": "/api/manufacturing-country",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, User-Agent, X-Requested-With"
+        }
+      ]
+    },
+    {
+      "source": "/api/manual-products",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
+    },
+    {
+      "source": "/api/user-prices",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
+    },
+    {
+      "source": "/api/upload-photo",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
+    }
+  ]
 }

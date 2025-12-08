@@ -2,6 +2,7 @@
 // Official GS1 barcode registry (Global Trade Item Number)
 import { Product } from '../types/product';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
+import { logger } from '../utils/logger';
 
 const GS1_API_BASE = 'https://api.gs1.org/v1';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -37,7 +38,7 @@ export async function fetchProductFromGS1(barcode: string): Promise<Product | nu
   // Skip if no API key configured
   // Note: GS1 requires subscription or trial, so this is expected if no key is provided
   if (!GS1_API_KEY) {
-    console.log('GS1 API key not configured (requires subscription or 60-day trial), skipping GS1 lookup');
+    logger.debug('GS1 API key not configured (requires subscription or 60-day trial), skipping GS1 lookup');
     return null;
   }
 
@@ -55,10 +56,10 @@ export async function fetchProductFromGS1(barcode: string): Promise<Product | nu
 
     if (!response.ok) {
       if (response.status === 404) {
-        console.warn(`Product not found in GS1: ${barcode}`);
+        logger.debug(`Product not found in GS1: ${barcode}`);
         return null;
       }
-      console.warn(`GS1 API error: ${response.status} ${response.statusText}`);
+      logger.warn(`GS1 API error: ${response.status} ${response.statusText}`);
       return null;
     }
 
@@ -95,7 +96,7 @@ export async function fetchProductFromGS1(barcode: string): Promise<Product | nu
 
     return product;
   } catch (error) {
-    console.error(`Error fetching from GS1: ${error}`);
+    logger.error(`Error fetching from GS1`, error);
     return null;
   }
 }

@@ -10,7 +10,7 @@ interface TruScoreProps {
   size?: 'small' | 'medium' | 'large';
 }
 
-export default function TruScore({ truScore, size = 'medium' }: TruScoreProps) {
+const TruScore = React.memo(function TruScore({ truScore, size = 'medium' }: TruScoreProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { truscore, breakdown } = truScore;
@@ -58,29 +58,32 @@ export default function TruScore({ truScore, size = 'medium' }: TruScoreProps) {
       </Text>
       <Text style={[styles.subLabel, { color: colors.textSecondary }]}>TruScore</Text>
 
-      {/* Pillar Bars */}
+      {/* Pillar Bars - Display in consistent order: Body, Planet, Care, Open */}
       <View style={styles.pillarsContainer}>
-        {Object.entries(breakdown).map(([pillar, value]) => (
-          <View key={pillar} style={styles.pillarRow}>
-            <Text style={[styles.pillarLabel, { color: colors.text }]}>{pillar}</Text>
-            <View style={[styles.pillarBarContainer, { backgroundColor: colors.surface }]}>
-              <View
-                style={[
-                  styles.pillarBar,
-                  {
-                    width: `${(value / 25) * 100}%`,
-                    backgroundColor: getPillarColor(pillar, value),
-                  },
-                ]}
-              />
+        {(['Body', 'Planet', 'Care', 'Open'] as const).map((pillar) => {
+          const value = breakdown[pillar];
+          return (
+            <View key={pillar} style={styles.pillarRow}>
+              <Text style={[styles.pillarLabel, { color: colors.text }]}>{pillar}</Text>
+              <View style={[styles.pillarBarContainer, { backgroundColor: colors.surface }]}>
+                <View
+                  style={[
+                    styles.pillarBar,
+                    {
+                      width: `${(value / 25) * 100}%`,
+                      backgroundColor: getPillarColor(pillar, value),
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.pillarValue, { color: colors.text }]}>{value}/25</Text>
             </View>
-            <Text style={[styles.pillarValue, { color: colors.text }]}>{value}/25</Text>
-          </View>
-        ))}
+          );
+        })}
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -168,3 +171,4 @@ const styles = StyleSheet.create({
   },
 });
 
+export default TruScore;

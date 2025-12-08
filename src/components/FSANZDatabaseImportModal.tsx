@@ -23,6 +23,7 @@ import {
   isFSANZDatabaseImported,
 } from '../services/fsanDatabaseImport';
 import { getUserCountryCode } from '../utils/countryDetection';
+import { forceRetryFSANZDownload } from '../services/fsanDatabaseAutoDownload';
 
 interface FSANZDatabaseImportModalProps {
   visible: boolean;
@@ -44,6 +45,7 @@ export default function FSANZDatabaseImportModal({
   const [importResult, setImportResult] = useState<{ productCount: number; error?: string } | null>(null);
   const [databaseStatus, setDatabaseStatus] = useState<{ imported: boolean; productCount?: number; importDate?: number } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [autoDownloading, setAutoDownloading] = useState(false);
 
   // Load database status when modal opens
   useEffect(() => {
@@ -457,6 +459,20 @@ const styles = StyleSheet.create({
   },
   importButtonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  autoDownloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    gap: 8,
+    marginBottom: 12,
+  },
+  autoDownloadButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },

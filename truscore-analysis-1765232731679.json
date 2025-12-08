@@ -1,0 +1,94 @@
+[
+  {
+    "barcode": "9421901881054",
+    "productName": "PEANUT BUTTER - CRUNCHY",
+    "truScore": 36,
+    "breakdown": {
+      "Body": {
+        "pillar": "Body",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Nutri-Score Grade UNKNOWN (average nutrition)",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "NOVA Group 3 (processed)",
+            "value": -3,
+            "type": "negative"
+          }
+        ],
+        "final": 12
+      },
+      "Planet": {
+        "pillar": "Planet",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Eco-Score Grade D (poor environmental impact)",
+            "value": -5,
+            "type": "negative"
+          },
+          {
+            "description": "Contains palm oil (non-certified, detected from tags)",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 2
+      },
+      "Care": {
+        "pillar": "Care",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes ethical until violations)",
+            "value": 0,
+            "type": "neutral"
+          }
+        ],
+        "final": 15
+      },
+      "Open": {
+        "pillar": "Open",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes transparent until hidden)",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "Complete ingredients disclosure",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "No origin information",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 7
+      }
+    },
+    "productData": {
+      "nutriscore_grade": "unknown",
+      "ecoscore_grade": "d",
+      "nova_group": 3,
+      "additives_count": 0,
+      "additives_tags": [],
+      "hasIngredients": true,
+      "ingredientsLength": 34,
+      "hasPalmOil": true,
+      "certifications": [],
+      "labels": [
+        "en:no-gluten",
+        "en:no-gmos",
+        "en:non-gmo-project"
+      ],
+      "hasOrigin": false
+    }
+  }
+]

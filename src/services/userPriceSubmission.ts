@@ -87,11 +87,41 @@ export async function submitUserPrice(
       verified: existingPrices.length >= 2, // Auto-verify if multiple submissions exist
     };
 
-    // Store price
+    // Store price locally
     await storeUserPrice(barcode, priceEntry);
 
     // Also add to global list for easy retrieval
     await addToGlobalList(barcode);
+
+    // CRITICAL: Submit to Vercel backend for global sharing
+    // This ensures user prices are available to all users worldwide
+    try {
+      const { getBackendUrl, BackendEndpoints } = await import('../config/backendConfig');
+      const backendUrl = getBackendUrl();
+      const response = await fetch(BackendEndpoints.userPrices(backendUrl), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          barcode,
+          price: priceEntry.price,
+          currency: priceEntry.currency,
+          retailer: priceEntry.retailer,
+          location: priceEntry.location,
+          userId: 'anonymous', // TODO: Get actual user ID if available
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('[UserPriceSubmission] ✅ Submitted to Vercel backend');
+      } else {
+        console.warn(`[UserPriceSubmission] Vercel backend submission failed: ${response.status}`);
+      }
+    } catch (backendError) {
+      console.warn('[UserPriceSubmission] Vercel backend submission failed (non-critical):', backendError);
+      // Continue - local save was successful
+    }
 
     return { success: true, message: 'Price submitted successfully!' };
   } catch (error) {

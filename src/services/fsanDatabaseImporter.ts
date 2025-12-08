@@ -54,12 +54,11 @@ export async function importFSANZDatabase(
 
     const productCount = Object.keys(databaseData).length;
     
+    // Allow empty databases - they can be populated later
+    // This allows the download/import flow to complete successfully
+    // even if the database file is empty (ready for future data)
     if (productCount === 0) {
-      return {
-        success: false,
-        productCount: 0,
-        error: 'Database is empty',
-      };
+      logger.warn(`FSANZ ${country} database is empty - importing anyway (ready for future data)`);
     }
 
     // Check storage size

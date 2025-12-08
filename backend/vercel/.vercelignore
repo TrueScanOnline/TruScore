@@ -1,0 +1,9 @@
+# Include data files - they need to be deployed
+!data/
+!data/*.json
+
+# Ignore other files
+node_modules/
+*.log
+.env.local
+.DS_Store

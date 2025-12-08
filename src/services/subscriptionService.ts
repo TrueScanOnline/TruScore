@@ -167,7 +167,13 @@ export async function getProduct(productId: string): Promise<QonversionProduct |
 export function formatPrice(price: number, currencyCode: string): string {
   try {
     // Use user's locale from expo-localization
-    const locale = Localization.locale || 'en-US';
+    // getLocales() returns an array of locale objects
+    const locales = Localization.getLocales();
+    const locale = locales[0]?.languageTag || 
+                   (locales[0]?.languageCode && locales[0]?.regionCode 
+                     ? `${locales[0].languageCode}-${locales[0].regionCode}` 
+                     : locales[0]?.languageCode || 'en-US');
+    
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currencyCode,

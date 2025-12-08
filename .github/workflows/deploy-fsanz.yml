@@ -1,0 +1,53 @@
+# GitHub Actions Workflow for Automatic FSANZ Deployment
+# This automatically deploys FSANZ database when code is pushed
+
+name: Deploy FSANZ Database
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/vercel/**'
+      - 'Database files/**'
+      - 'scripts/deployFSANZAutomated.ps1'
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        cd backend/vercel
+        npm install
+        
+    - name: Create data files
+      run: |
+        node -e "const fs=require('fs'),path=require('path'),XLSX=require('xlsx');const wb=XLSX.readFile('Database files/Principal files/Excel files/Standard/Standard DATA.FT.xlsx');const data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);const out=path.join('backend','vercel','data');if(!fs.existsSync(out))fs.mkdirSync(out,{recursive:true});fs.writeFileSync(path.join(out,'nzfcd.json'),JSON.stringify(data.map((r,i)=>({foodName:String(r['Food Name']||r['Food name']||'Food '+i).trim(),foodNameLower:String(r['Food Name']||r['Food name']||'Food '+i).toLowerCase().trim(),energyKcal:parseFloat(r['Energy (kcal)']||r['Energy kcal']||'')||undefined,protein:parseFloat(r['Protein']||'')||undefined,fat:parseFloat(r['Fat']||'')||undefined,carbohydrates:parseFloat(r['Carbohydrates']||r['Carbohydrates (g)']||'')||undefined})),null,2));"
+        node -e "const fs=require('fs'),path=require('path'),XLSX=require('xlsx');const wb=XLSX.readFile('Database files/AU Release 2 - Nutrient file.xlsx');const data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);const out=path.join('backend','vercel','data');fs.writeFileSync(path.join(out,'afcd.json'),JSON.stringify(data.map((r,i)=>({foodName:String(r['Food Name']||r['Food name']||'Food '+i).trim(),foodNameLower:String(r['Food Name']||r['Food name']||'Food '+i).toLowerCase().trim(),energyKcal:parseFloat(r['Energy (kcal)']||r['Energy kcal']||'')||undefined,protein:parseFloat(r['Protein']||'')||undefined,fat:parseFloat(r['Fat']||'')||undefined,carbohydrates:parseFloat(r['Carbohydrates']||r['Carbohydrates (g)']||'')||undefined})),null,2));"
+        
+    - name: Install Vercel CLI
+      run: npm install -g vercel
+      
+    - name: Deploy to Vercel
+      working-directory: backend/vercel
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      run: vercel --prod --yes --token $VERCEL_TOKEN
+      
+    - name: Wait for deployment
+      run: sleep 120
+      
+    - name: Test API
+      run: |
+        node -e "const https=require('https');https.get('https://truscoreapi.vercel.app/api/fsanz-query?country=nz&productName=Milk',(r)=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>{if(r.statusCode===200){console.log('✅ API working');process.exit(0);}else{console.log('❌ API failed:',r.statusCode);process.exit(1);}});}).on('error',e=>{console.log('❌ Error:',e.message);process.exit(1);});"

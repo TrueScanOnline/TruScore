@@ -1,0 +1,41 @@
+# FSANZ Status and Next Steps
+
+## Current Status: ❌ NOT WORKING
+
+The FSANZ database is broken and will return NOTHING for TruScore.
+
+## The Problem
+
+The `nzfcd.json` file contains:
+- "Food 1", "Food 2", "Food 3" instead of real food names
+- `rawData` fields with "__EMPTY" keys (definitive signature of Excel component file)
+- **NO MATCHES will be found** when searching by product name
+
+## Root Cause
+
+The database is being generated from Excel files with **component-based structure**:
+- Each row = one nutrient component (ALC, ASH, etc.) for one food
+- Multiple rows per food
+- Creates "Food 1", "Food 2" when parsed incorrectly
+
+## Scripts Disabled
+
+1. ✅ `scripts\completeFSANZDeploymentFinal.ps1`
+2. ✅ `scripts\deployAndVerifyFSANZ.ps1`
+3. ✅ `scripts\generateFullNZFCD.js`
+4. ✅ `scripts\convertFSANZToJSON.js`
+5. ✅ `scripts\createNZFCD.js`
+
+## The Issue
+
+Even after disabling these scripts, the database is still broken. The database file has `rawData` with "__EMPTY" fields, which is a definitive signature of XLSX library reading Excel files with empty columns.
+
+## Next Steps
+
+I need to:
+1. Verify the text file structure is correct
+2. Ensure my fix script is working correctly
+3. Find what's still generating from Excel
+4. Test with real barcodes
+5. Verify it works
+

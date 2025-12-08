@@ -1,0 +1,96 @@
+[
+  {
+    "barcode": "9421903938589",
+    "productName": "Smooth Peanut Butter",
+    "truScore": 59,
+    "breakdown": {
+      "Body": {
+        "pillar": "Body",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Nutri-Score Grade A (excellent nutrition)",
+            "value": 10,
+            "type": "positive"
+          },
+          {
+            "description": "NOVA Group 3 (processed)",
+            "value": -3,
+            "type": "negative"
+          }
+        ],
+        "final": 22
+      },
+      "Planet": {
+        "pillar": "Planet",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Eco-Score Grade C (average environmental impact)",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "All packaging recyclable (meets local requirements)",
+            "value": 5,
+            "type": "positive"
+          }
+        ],
+        "final": 20
+      },
+      "Care": {
+        "pillar": "Care",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes ethical until violations)",
+            "value": 0,
+            "type": "neutral"
+          }
+        ],
+        "final": 15
+      },
+      "Open": {
+        "pillar": "Open",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes transparent until hidden)",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "Minimal ingredients disclosure (<50 characters, likely incomplete)",
+            "value": -5,
+            "type": "negative"
+          },
+          {
+            "description": "No origin information",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 2
+      }
+    },
+    "productData": {
+      "nutriscore_grade": "a",
+      "ecoscore_grade": "c",
+      "nova_group": 3,
+      "additives_count": 0,
+      "additives_tags": [],
+      "hasIngredients": true,
+      "ingredientsLength": 35,
+      "hasPalmOil": true,
+      "certifications": [],
+      "labels": [
+        "en:vegetarian",
+        "en:vegan",
+        "en:health-star-rating",
+        "en:health-star-rating-5",
+        "en:no-added-sugar"
+      ],
+      "hasOrigin": false
+    }
+  }
+]

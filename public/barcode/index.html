@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrueScan - Product Scanner</title>
+  <meta name="description" content="Scan product barcodes with TrueScan to get detailed product information, TruScore, and sustainability data.">
+  
+  <!-- iOS Universal Links -->
+  <meta property="al:ios:app_store_id" content="[APP_STORE_ID]">
+  <meta property="al:ios:app_name" content="TrueScan">
+  <meta property="al:ios:url" content="truescan://barcode/[BARCODE]">
+  
+  <!-- Android App Links -->
+  <meta property="al:android:package" content="com.truescan.foodscanner">
+  <meta property="al:android:app_name" content="TrueScan">
+  <meta property="al:android:url" content="truescan://barcode/[BARCODE]">
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #16a085 0%, #4dd09f 100%);
+      color: #fff;
+      text-align: center;
+    }
+    .container {
+      max-width: 500px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      color: #333;
+    }
+    .logo {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0 0 10px 0;
+      color: #16a085;
+      font-size: 28px;
+    }
+    p {
+      margin: 10px 0;
+      color: #666;
+      line-height: 1.6;
+    }
+    .button {
+      display: inline-block;
+      margin: 15px 10px;
+      padding: 15px 30px;
+      background: #16a085;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    .button:hover {
+      background: #138d75;
+    }
+    .button.secondary {
+      background: #4dd09f;
+    }
+    .button.secondary:hover {
+      background: #3bb88a;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #16a085;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🔍</div>
+    <h1>TrueScan</h1>
+    <p>Opening product in TrueScan...</p>
+    <div class="spinner"></div>
+    <p style="font-size: 14px; margin-top: 30px;">
+      Don't have TrueScan?<br>
+      <a href="#" id="appStoreLink" class="button">Download for iOS</a>
+      <a href="#" id="playStoreLink" class="button secondary">Download for Android</a>
+    </p>
+  </div>
+
+  <script>
+    // Extract barcode from URL
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    const barcode = pathParts[pathParts.length - 1] || pathParts[pathParts.indexOf('barcode') + 1];
+    
+    // App deep link
+    const deepLink = `truescan://barcode/${barcode}`;
+    
+    // App Store links
+    const appStoreLink = 'https://apps.apple.com/app/id[APP_STORE_ID]';
+    const playStoreLink = 'https://play.google.com/store/apps/details?id=com.truescan.foodscanner';
+    
+    // Update download buttons
+    document.getElementById('appStoreLink').href = appStoreLink;
+    document.getElementById('playStoreLink').href = playStoreLink;
+    
+    // Detect platform
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    // Try to open app
+    function tryOpenApp() {
+      // Try deep link
+      window.location.href = deepLink;
+      
+      // If app is not installed, redirect to app store after delay
+      setTimeout(() => {
+        if (isIOS) {
+          window.location.href = appStoreLink;
+        } else if (isAndroid) {
+          window.location.href = playStoreLink;
+        } else {
+          // Desktop/other - show download options
+          document.querySelector('.spinner').style.display = 'none';
+          document.querySelector('p').textContent = 'Download TrueScan to scan this product:';
+        }
+      }, 2000);
+    }
+    
+    // For Android, use Intent URL for better app detection
+    if (isAndroid) {
+      const intentUrl = `intent://barcode/${barcode}#Intent;scheme=truescan;package=com.truescan.foodscanner;S.browser_fallback_url=${encodeURIComponent(playStoreLink)};end`;
+      window.location.href = intentUrl;
+    } else {
+      // iOS - try universal link first, then deep link
+      tryOpenApp();
+    }
+  </script>
+</body>
+</html>

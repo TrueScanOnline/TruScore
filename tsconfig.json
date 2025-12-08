@@ -15,7 +15,7 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "global.d.ts"],
   "exclude": ["backend/**/*", "node_modules", "**/__tests__/**/*", "**/*.test.ts", "**/*.test.tsx"]
 }
 

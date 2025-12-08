@@ -1,0 +1,16 @@
+# ============================================================================
+# BUILD ANDROID APK FOR DIRECT INSTALLATION - COPY AND PASTE THIS
+# ============================================================================
+
+cd C:\TrueScan-FoodScanner; eas build --platform android --profile preview --non-interactive
+
+# ============================================================================
+# END
+# ============================================================================
+# 
+# After build completes:
+# 1. Go to: https://expo.dev/accounts/crwmlw/projects/truescan-food-scanner/builds
+# 2. Find the "preview" build (APK)
+# 3. Click Download
+# 4. Install the .apk file on your Android phone
+# ============================================================================

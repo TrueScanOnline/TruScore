@@ -29,17 +29,17 @@ export default function ConfidenceBadge({
   const confidence = product.confidence ?? getSourceConfidence(product.source).confidence;
   const reliability = product.sourceReliability ?? getSourceConfidence(product.source).reliability;
   
-  // Get label text - use simple, user-friendly labels
+  // Get label text - use simple, user-friendly labels (plain English)
   const getReliabilityLabel = () => {
     switch (reliability) {
       case 'high':
-        return t('dataQuality.high') || 'High confidence';
+        return 'High confidence';
       case 'medium':
-        return t('dataQuality.medium') || 'Medium confidence';
+        return 'Medium confidence';
       case 'low':
-        return t('dataQuality.low') || 'Low confidence';
+        return 'Low confidence';
       default:
-        return t('dataQuality.unknown') || 'Unknown';
+        return 'Unknown';
     }
   };
   
@@ -140,37 +140,48 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    justifyContent: 'center',
+    borderRadius: 20, // More oval/pill-shaped
+    borderWidth: 1.5, // Slightly thicker border for better visibility
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    minWidth: 120, // Ensure consistent width
   },
   smallContainer: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-  },
-  mediumContainer: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  largeContainer: {
     paddingHorizontal: 10,
     paddingVertical: 5,
+    borderRadius: 18,
+    minWidth: 110,
+  },
+  mediumContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    minWidth: 120,
+  },
+  largeContainer: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 22,
+    minWidth: 130,
   },
   smallText: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  mediumText: {
     fontSize: 12,
     fontWeight: '600',
-    marginLeft: 5,
+    marginLeft: 6,
+    letterSpacing: 0.2,
+  },
+  mediumText: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 6,
+    letterSpacing: 0.2,
   },
   largeText: {
     fontSize: 14,
     fontWeight: '600',
-    marginLeft: 6,
+    marginLeft: 7,
+    letterSpacing: 0.3,
   },
   smallDescription: {
     fontSize: 10,
@@ -188,6 +199,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+
+
+
+
 
 
 

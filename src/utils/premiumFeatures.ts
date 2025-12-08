@@ -1,5 +1,4 @@
 import { useSubscriptionStore, SubscriptionInfo } from '../store/useSubscriptionStore';
-import { ENABLE_PREMIUM_GATING, isFeaturePremium } from '../config/premiumFeatures';
 
 /**
  * Premium feature definitions
@@ -15,6 +14,7 @@ export enum PremiumFeature {
   // Tier 2: Enhanced Features (Medium Value)
   ENHANCED_INSIGHTS = 'enhanced_insights',
   AD_FREE = 'ad_free',
+  ALLERGENS_ADDITIVES = 'allergens_additives',
   
   // Tier 3: Future Features (To Be Implemented)
   PRODUCT_COMPARISONS = 'product_comparisons',
@@ -69,6 +69,11 @@ export const PremiumFeatureDescriptions: Record<PremiumFeature, {
     description: 'Enjoy TrueScan without advertisements',
     icon: 'close-circle-outline',
   },
+  [PremiumFeature.ALLERGENS_ADDITIVES]: {
+    title: 'Allergens & Additives',
+    description: 'Detailed allergen and additive information with safety ratings',
+    icon: 'warning-outline',
+  },
   
   // Tier 3: Future Features
   [PremiumFeature.PRODUCT_COMPARISONS]: {
@@ -109,6 +114,55 @@ export const PremiumFeatureDescriptions: Record<PremiumFeature, {
     icon: 'shield-checkmark-outline',
   },
 };
+
+/**
+ * Global premium gating toggle
+ * 
+ * Set to true to enable premium gating (features will be locked behind subscription)
+ * Set to false to allow all features for free (testing/development mode)
+ * 
+ * IMPORTANT: Set to true before production launch!
+ */
+export const ENABLE_PREMIUM_GATING = false;
+
+/**
+ * Premium Features Configuration
+ * 
+ * Controls which features require premium subscription.
+ * Set isPremium: true to gate a feature behind subscription.
+ * 
+ * You can easily enable/disable premium gating for individual features here.
+ */
+export const PREMIUM_FEATURES: Record<PremiumFeature, { isPremium: boolean }> = {
+  // Tier 1: Core Premium Features
+  [PremiumFeature.OFFLINE_MODE]: { isPremium: true },
+  [PremiumFeature.UNLIMITED_HISTORY]: { isPremium: true },
+  [PremiumFeature.ADVANCED_SEARCH]: { isPremium: true },
+  [PremiumFeature.EXPORT_DATA]: { isPremium: true },
+  
+  // Tier 2: Enhanced Features
+  [PremiumFeature.ENHANCED_INSIGHTS]: { isPremium: true },
+  [PremiumFeature.AD_FREE]: { isPremium: true },
+  [PremiumFeature.ALLERGENS_ADDITIVES]: { isPremium: true },
+  
+  // Tier 3: Future Features
+  [PremiumFeature.PRODUCT_COMPARISONS]: { isPremium: true },
+  [PremiumFeature.PERSONALIZED_RECOMMENDATIONS]: { isPremium: true },
+  [PremiumFeature.HISTORICAL_TRENDS]: { isPremium: true },
+  
+  // Legacy/Deprecated (keep for backward compatibility)
+  [PremiumFeature.PRICING_TRENDS]: { isPremium: false }, // Deprecated
+  [PremiumFeature.ADDITIONAL_PRODUCT_INFO]: { isPremium: false }, // Merged into ENHANCED_INSIGHTS
+  [PremiumFeature.PRODUCT_FILTERS]: { isPremium: false }, // Merged into ADVANCED_SEARCH
+  [PremiumFeature.BETTER_TRUST_SCORE]: { isPremium: false }, // Merged into ENHANCED_INSIGHTS
+};
+
+/**
+ * Check if a feature is configured as premium
+ */
+export function isFeaturePremium(feature: PremiumFeature): boolean {
+  return PREMIUM_FEATURES[feature]?.isPremium ?? false;
+}
 
 /**
  * Check if a premium feature is enabled

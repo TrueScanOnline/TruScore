@@ -1,0 +1,6 @@
+foodatlas_id	name
+r1	contains
+r2	is_a
+r3	positively_correlates_with
+r4	negatively_correlates_with
+r5	has_flavor

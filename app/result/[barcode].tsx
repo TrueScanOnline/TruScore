@@ -11,33 +11,34 @@ import {
   Alert,
   Share,
   Dimensions,
+  Platform,
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../_layout';
 import { fetchProduct, refreshProduct } from '../../src/services/productService';
-import { ProductWithTrustScore } from '../../src/types/product';
+import { Product, ProductWithTrustScore } from '../../src/types/product';
 import { useScanStore } from '../../src/store/useScanStore';
 import { useFavoritesStore } from '../../src/store/useFavoritesStore';
 import { useSubscriptionStore } from '../../src/store/useSubscriptionStore';
 import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
-import TrustScore from '../../src/components/TrustScore';
 import TruScore from '../../src/components/TruScore';
 import ConfidenceBadge from '../../src/components/ConfidenceBadge';
 import CountryFlag from '../../src/components/CountryFlag';
 import CertBadge from '../../src/components/CertBadge';
 import EcoScore from '../../src/components/EcoScore';
+import UniversalPricingCard from '../../src/components/UniversalPricingCard';
 import NutritionTable from '../../src/components/NutritionTable';
 import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
 import { useValuesStore } from '../../src/store/useValuesStore';
 import InsightsCarousel from '../../src/components/InsightsCarousel';
-import TrustScoreInfoModal from '../../src/components/TrustScoreInfoModal';
+import TruScoreInfoModal from '../../src/components/TrustScoreInfoModal';
 import EcoScoreInfoModal from '../../src/components/EcoScoreInfoModal';
 import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModal';
 import ProcessingLevelModal from '../../src/components/ProcessingLevelModal';
@@ -60,6 +61,11 @@ import { logger } from '../../src/utils/logger';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import { saveManualProduct, ManualProductData, getManualProduct, isManualProduct } from '../../src/services/manualProductService';
 import { meetsLocalRecyclingRequirements } from '../../src/utils/packagingRecyclability';
+import { getPalmOilStatus, getPalmOilFlagColor } from '../../src/utils/palmOilUtils';
+import { crashReporter } from '../../src/utils/crashReporter';
+import ShareModal from '../../src/components/ShareModal';
+import PremiumGate from '../../src/components/PremiumGate';
+import { PremiumFeature, isPremiumFeatureEnabled } from '../../src/utils/premiumFeatures';
 
 type ResultScreenRouteProp = RouteProp<RootStackParamList, 'Result'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -83,8 +89,8 @@ function ResultScreenContent() {
   // Tab bar height (60px + safe area bottom)
   const tabBarHeight = 60 + insets.bottom;
 
-  // Helper function to get Trust Score color
-  const getTrustScoreColor = (score: number | null) => {
+  // Helper function to get TruScore color
+  const getTruScoreColor = (score: number | null) => {
     if (score === null) return '#95a5a6'; // Gray for insufficient data
     if (score >= 80) return '#16a085'; // Green (excellent)
     if (score >= 60) return '#4dd09f'; // Light green (good)
@@ -92,8 +98,8 @@ function ResultScreenContent() {
     return '#ff6b6b'; // Red (poor)
   };
 
-  // Helper function to get Trust Score label
-  const getTrustScoreLabel = (score: number | null) => {
+  // Helper function to get TruScore label
+  const getTruScoreLabel = (score: number | null) => {
     if (score === null) return t('trust.insufficientData');
     if (score >= 80) return t('trust.excellent');
     if (score >= 60) return t('trust.good');
@@ -106,7 +112,7 @@ function ResultScreenContent() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [trustScoreModalVisible, setTrustScoreModalVisible] = useState(false);
+  const [truScoreModalVisible, setTruScoreModalVisible] = useState(false);
   const [ecoScoreModalVisible, setEcoScoreModalVisible] = useState(false);
   const [allergensAdditivesModalVisible, setAllergensAdditivesModalVisible] = useState(false);
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
@@ -116,39 +122,134 @@ function ResultScreenContent() {
   const [palmOilInfoModalVisible, setPalmOilInfoModalVisible] = useState(false);
   const [packagingInfoModalVisible, setPackagingInfoModalVisible] = useState(false);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
-  const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number } | null>(null);
+  const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
+  const [editMode, setEditMode] = useState(false);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [shareType, setShareType] = useState<'truScore' | 'recall' | 'countryOfManufacture' | 'negativeTruScore' | 'productInfo' | 'insights' | 'palmOil' | 'nutrition' | 'ingredients' | 'processing' | 'allergens' | 'ecoscore'>('truScore');
+  const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number; hasImportedIngredients?: boolean } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isUserContributed, setIsUserContributed] = useState(false);
   const [insightsExpanded, setInsightsExpanded] = useState(true);
+  const [communityCountryStats, setCommunityCountryStats] = useState<Array<{ country: string; count: number }>>([]);
 
   useEffect(() => {
-    loadProduct();
+    // Log screen entry (not a crash - just diagnostics)
+    console.log('[ResultScreen] Screen mounted with barcode:', barcode, 'Platform:', Platform.OS);
+    // Don't log screen mounts as crashes - only log actual errors
+    
+    // Load product with error boundary
+    loadProduct().catch((error) => {
+      console.error('[ResultScreen] Unhandled error in loadProduct:', error);
+      crashReporter.logCrash({
+        screen: 'Result',
+        action: 'loadProduct',
+        barcode,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+    });
   }, [barcode, isPremium, isOffline]);
 
   // Check for user-contributed manufacturing country (must be before early returns)
   useEffect(() => {
     const checkUserContributedCountry = async () => {
       if (product) {
-        const offCountry = extractManufacturingCountry(product);
-        if (!offCountry) {
-          // Only check user contributions if we don't have manufacturing country from Open Food Facts
+        try {
+          const offCountry = extractManufacturingCountry(product);
+          
+          // Always load user-contributed data to check for imported ingredients flag
           const contributed = await getManufacturingCountry(barcode);
-          if (contributed.country) {
-            setUserContributedCountry({
-              country: contributed.country,
-              confidence: contributed.confidence as 'verified' | 'community' | 'unverified' | 'disputed',
-              verifiedCount: contributed.verifiedCount || 0,
-            });
-          } else {
-            setUserContributedCountry(null);
-          }
+          
+          console.log('[ResultScreen] Loaded country data:', {
+            offCountry,
+            contributedCountry: contributed.country,
+            hasImportedIngredients: contributed.hasImportedIngredients,
+            confidence: contributed.confidence,
+          });
+          
+          if (!offCountry) {
+            // No Open Food Facts country - use user-contributed data if available
+            if (contributed.country) {
+              setUserContributedCountry({
+                country: contributed.country,
+                confidence: contributed.confidence as 'verified' | 'community' | 'unverified' | 'disputed',
+                verifiedCount: contributed.verifiedCount || 0,
+                hasImportedIngredients: contributed.hasImportedIngredients || false,
+              });
+              
+              // Get community country statistics (top countries by submission count)
+              try {
+                const { getCommunityCountryStats } = await import('../../src/services/manufacturingCountryService');
+                const stats = await getCommunityCountryStats(barcode);
+                setCommunityCountryStats(stats);
+              } catch (statsError) {
+                console.warn('[ResultScreen] Error loading community country stats:', statsError);
+                setCommunityCountryStats([]);
+              }
+            } else {
+              setUserContributedCountry(null);
+              setCommunityCountryStats([]);
+            }
 
-          // Check if current user has already submitted
-          const userHasSubmitted = await hasUserSubmitted(barcode);
-          setHasSubmitted(userHasSubmitted);
-        } else {
-          // We have Open Food Facts data, clear user contributions
+            // Check if current user has already submitted
+            try {
+              const userHasSubmitted = await hasUserSubmitted(barcode);
+              setHasSubmitted(userHasSubmitted);
+            } catch (submitError) {
+              console.warn('[ResultScreen] Error checking user submission:', submitError);
+              setHasSubmitted(false);
+            }
+          } else {
+            // We have Open Food Facts country - check if user has overridden it
+            if (contributed.country && contributed.country.toUpperCase() !== offCountry.toUpperCase()) {
+              // User has submitted a different country than default - prioritize user's country
+              setUserContributedCountry({
+                country: contributed.country,
+                confidence: contributed.confidence as 'verified' | 'community' | 'unverified' | 'disputed',
+                verifiedCount: contributed.verifiedCount || 0,
+                hasImportedIngredients: contributed.hasImportedIngredients || false,
+              });
+              
+              // Get community country statistics
+              try {
+                const { getCommunityCountryStats } = await import('../../src/services/manufacturingCountryService');
+                const stats = await getCommunityCountryStats(barcode);
+                setCommunityCountryStats(stats);
+              } catch (statsError) {
+                console.warn('[ResultScreen] Error loading community country stats:', statsError);
+                setCommunityCountryStats([]);
+              }
+              
+              // Check if current user has already submitted
+              try {
+                const userHasSubmitted = await hasUserSubmitted(barcode);
+                setHasSubmitted(userHasSubmitted);
+              } catch (submitError) {
+                console.warn('[ResultScreen] Error checking user submission:', submitError);
+                setHasSubmitted(false);
+              }
+            } else if (contributed.hasImportedIngredients) {
+              // Same country as default, but has imported ingredients flag
+              setUserContributedCountry({
+                country: '', // Empty since we use Open Food Facts country
+                confidence: 'verified' as const,
+                verifiedCount: 0,
+                hasImportedIngredients: true,
+              });
+              setHasSubmitted(false);
+              setCommunityCountryStats([]);
+            } else {
+              // No user override and no imported ingredients flag
+              setUserContributedCountry(null);
+              setHasSubmitted(false);
+              setCommunityCountryStats([]);
+            }
+          }
+        } catch (error) {
+          // Non-critical error - log but don't break the UI
+          console.warn('[ResultScreen] Error checking user-contributed country:', error);
           setUserContributedCountry(null);
+          setCommunityCountryStats([]);
           setHasSubmitted(false);
         }
       }
@@ -163,8 +264,13 @@ function ResultScreenContent() {
   useEffect(() => {
     const checkUserContributed = async () => {
       if (product) {
-        const isManual = await isManualProduct(barcode);
-        setIsUserContributed(isManual);
+        try {
+          const isManual = await isManualProduct(barcode);
+          setIsUserContributed(isManual);
+        } catch (error) {
+          console.warn('[ResultScreen] Error checking manual product:', error);
+          setIsUserContributed(false);
+        }
       } else {
         setIsUserContributed(false);
       }
@@ -177,31 +283,47 @@ function ResultScreenContent() {
     valuesPreferences.initializeStore();
   }, []);
 
-  // Calculate TruScore when product data is available
+  // Use TruScore from product object (already calculated in productService.ts using truscoreEngine.ts)
+  // Always use product object score for consistency with logs - no fallback recalculation
   useEffect(() => {
     if (product) {
-      try {
-        // Get current preferences for insights generation
-        const prefs = {
-          israelPalestine: valuesPreferences.israelPalestine,
-          indiaChina: valuesPreferences.indiaChina,
-          avoidAnimalTesting: valuesPreferences.avoidAnimalTesting,
-          avoidForcedLabour: valuesPreferences.avoidForcedLabour,
-          avoidPalmOil: valuesPreferences.avoidPalmOil,
-          geopoliticalEnabled: valuesPreferences.geopoliticalEnabled,
-          ethicalEnabled: valuesPreferences.ethicalEnabled,
-          environmentalEnabled: valuesPreferences.environmentalEnabled,
+      // Use score from product if available (from productService.ts - consistent with logs)
+      if (product.trust_score !== null && product.trust_score_breakdown) {
+        // Generate insights if values preferences are enabled
+        let insights: TruScoreResult['insights'] = undefined;
+        if (valuesPreferences && (
+          valuesPreferences.geopoliticalEnabled ||
+          valuesPreferences.ethicalEnabled ||
+          valuesPreferences.environmentalEnabled
+        )) {
+          try {
+            const { generateInsights } = require('../../src/lib/valuesInsights');
+            const generatedInsights = generateInsights(product, valuesPreferences);
+            if (generatedInsights && generatedInsights.length > 0) {
+              insights = generatedInsights;
+            }
+          } catch (error) {
+            console.warn('[ResultScreen] Error generating insights:', error);
+          }
+        }
+        
+        const score: TruScoreResult = {
+          truscore: product.trust_score,
+          breakdown: {
+            Body: product.trust_score_breakdown.body,
+            Planet: product.trust_score_breakdown.planet,
+            Care: product.trust_score_breakdown.care,
+            Open: product.trust_score_breakdown.open,
+          },
+          hasNutriScore: product._truscore_metadata?.hasNutriScore,
+          hasEcoScore: product._truscore_metadata?.hasEcoScore,
+          hasOrigin: product._truscore_metadata?.hasOrigin,
+          insights,
         };
-        const score = calculateTruScore(product, prefs);
         setTruScore(score);
-        console.log('[TruScore] Calculated:', score);
-      } catch (error) {
-        console.error('[TruScore] Calculation error:', error);
-        // Still set a default score even on error
-        setTruScore({
-          truscore: 0,
-          breakdown: { Body: 0, Planet: 0, Care: 0, Open: 0 },
-        });
+      } else {
+        // If score is missing, set to null (don't recalculate - ensures consistency)
+        setTruScore(null);
       }
     } else {
       setTruScore(null);
@@ -211,36 +333,97 @@ function ResultScreenContent() {
   const loadProduct = async () => {
     setLoading(true);
     setError(null);
+    
     try {
-      // First check if this is a manually added product
-      const manualProduct = await getManualProduct(barcode);
-      if (manualProduct) {
-        setProduct(manualProduct);
-        addScan({
-          barcode,
-          timestamp: Date.now(),
-          productName: manualProduct.product_name || manualProduct.product_name_en || null,
-        });
+      console.log('[ResultScreen] Loading product for barcode:', barcode, 'Platform:', Platform.OS);
+      
+      // Validate barcode
+      if (!barcode || typeof barcode !== 'string' || !/^\d{8,14}$/.test(barcode)) {
+        console.error('[ResultScreen] Invalid barcode:', barcode);
+        setError('Invalid barcode format');
         setLoading(false);
         return;
       }
+      
+      // First check if this is a manually added product
+      try {
+        const manualProduct = await getManualProduct(barcode);
+        if (manualProduct) {
+          console.log('[ResultScreen] Found manual product');
+          setProduct(manualProduct);
+          try {
+            addScan({
+              barcode,
+              timestamp: Date.now(),
+              productName: manualProduct.product_name || manualProduct.product_name_en || null,
+            });
+          } catch (scanError) {
+            console.warn('[ResultScreen] Error adding to scan history:', scanError);
+            // Continue - not critical
+          }
+          setLoading(false);
+          return;
+        }
+      } catch (manualError) {
+        console.warn('[ResultScreen] Error checking manual product:', manualError);
+        // Continue to API fetch
+      }
 
       // If not manual, try fetching from APIs
-      const productData = await fetchProduct(barcode, true, isPremium, isOffline);
+      console.log('[ResultScreen] Fetching product from APIs...');
+      let productData: ProductWithTrustScore | null = null;
+      try {
+        productData = await fetchProduct(barcode, true, isPremium, isOffline);
+      } catch (fetchError) {
+        console.error('[ResultScreen] Error fetching product:', fetchError);
+        // Enhanced error logging for iOS
+        if (Platform.OS === 'ios') {
+          logger.error('[ResultScreen] iOS product fetch error', {
+            barcode,
+            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            stack: fetchError instanceof Error ? fetchError.stack : undefined,
+          });
+        }
+        // Don't set error yet - try to show something to user
+        productData = null;
+      }
+      
       if (productData) {
+        console.log('[ResultScreen] Product fetched successfully');
         setProduct(productData);
         // Update scan history with product name
-        addScan({
-          barcode,
-          timestamp: Date.now(),
-          productName: productData.product_name || productData.product_name_en || null,
-        });
+        try {
+          addScan({
+            barcode,
+            timestamp: Date.now(),
+            productName: productData.product_name || productData.product_name_en || null,
+          });
+        } catch (scanError) {
+          console.warn('[ResultScreen] Error adding to scan history:', scanError);
+          // Continue - not critical
+        }
       } else {
-        setError('Product not found');
+        console.warn('[ResultScreen] Product not found');
+        setError('Product not found. Please check your internet connection and try again.');
       }
     } catch (err) {
-      console.error('Error loading product:', err);
+      console.error('[ResultScreen] Fatal error loading product:', err);
+      console.error('[ResultScreen] Error details:', {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : 'No stack trace',
+        barcode,
+        platform: Platform.OS,
+      });
       setError('Failed to load product data');
+      
+      // On iOS, log additional context
+      if (Platform.OS === 'ios') {
+        logger.error('[ResultScreen] iOS crash context', {
+          barcode,
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -270,33 +453,20 @@ function ResultScreenContent() {
     }
   };
 
-  const handleShare = async () => {
+  // Handle sharing for specific card types
+  const handleShare = (cardType: 'truScore' | 'recall' | 'countryOfManufacture' | 'negativeTruScore' | 'productInfo' | 'insights' | 'palmOil' | 'nutrition' | 'ingredients' | 'processing' | 'allergens' | 'ecoscore') => {
     if (!product) return;
+    
+    setShareType(cardType);
+    setShareModalVisible(true);
+  };
 
-    try {
-      const shareUrl = generateBarcodeShareUrl(barcode);
-      const deepLink = generateBarcodeDeepLink(barcode);
-      const message = `Check out "${product.product_name || 'this product'}" on TrueScan!\n\n` +
-        `Trust Score: ${product.trust_score}/100\n` +
-        `Barcode: ${barcode}\n\n` +
-        `${shareUrl}\n\n` +
-        `Or scan with TrueScan app: ${deepLink}`;
-
-      const result = await Share.share({
-        message,
-        title: product.product_name || 'Product on TrueScan',
-        url: shareUrl,
-      });
-
-      if (result.action === Share.sharedAction) {
-        console.log('Shared successfully');
-      } else if (result.action === Share.dismissedAction) {
-        console.log('Share dismissed');
-      }
-    } catch (err) {
-      console.error('Error sharing:', err);
-      Alert.alert(t('common.error'), 'Failed to share product');
-    }
+  // Handle editing product data - opens modal in edit mode
+  const handleEditProduct = () => {
+    if (!product) return;
+    setEditProductData(product);
+    setEditMode(true);
+    setManualProductModalVisible(true);
   };
 
   const handleContribute = () => {
@@ -334,23 +504,73 @@ function ResultScreenContent() {
 
   // Check if product has minimal/no useful data (only if product exists)
   // Show unknown product page for: no product, errors, minimal data, web search products with minimal data
+  // IMPORTANT: SQLite products are cached products - always show them (they have real data)
+  // IMPORTANT: Products from real databases (OFF, OBF, etc.) should always be shown even if merged with web search
   let shouldShowUnknownProductPage = false;
   if (product) {
-    const imageUrl = product.image_url || product.image_front_url || product.image_front_small_url;
-    const hasMinimalData = !imageUrl && 
-                           (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
-                           !product.ingredients_text &&
-                           (!product.product_name || product.product_name.startsWith('Product ') || product.product_name === 'Unknown Product') &&
-                           (!product.generic_name || product.generic_name.length < 20) &&
-                           (!product.brands || product.brands.trim().length === 0);
+    // Check if product came from a real database (not web search only)
+    const isRealDatabaseProduct = product.source === 'sqlite' || 
+                                  product.source === 'openfoodfacts' ||
+                                  product.source === 'openbeautyfacts' ||
+                                  product.source === 'openpetfoodfacts' ||
+                                  product.source === 'openproductsfacts' ||
+                                  product.source === 'usda_fooddata' ||
+                                  product.source === 'fsanz_au' ||
+                                  product.source === 'fsanz_nz' ||
+                                  product.source === 'health_canada_cnf' ||
+                                  product.source === 'uk_fsa' ||
+                                  product.source === 'efsa' ||
+                                  product.source === 'tesco_labs' ||
+                                  product.source === 'walmart_open' ||
+                                  product.source === 'foodrepo' ||
+                                  product.source?.includes('+'); // Merged products (e.g., 'openfoodfacts+web_search')
     
-    // Show unknown product page for minimal data OR web search products (always show clean page)
-    const isWebSearchProduct = isWebSearchFallback(product);
-    
-    shouldShowUnknownProductPage = hasMinimalData || 
-                                   isWebSearchProduct ||
-                                   (product.product_name === 'Unknown Product') ||
-                                   !!(product.product_name && product.product_name.startsWith('Product '));
+    // If it's a real database product, check if it has meaningful data
+    if (isRealDatabaseProduct) {
+      // CRITICAL: Real database products (OFF, OBF, etc.) should ALWAYS be shown if they have ANY real data
+      // Even if quality is low or merged with web search, real database products are valid
+      
+      // Check if product has a valid name (not generic placeholder)
+      const hasValidName = product.product_name && 
+                          product.product_name !== 'Unknown Product' &&
+                          product.product_name.trim().length > 0 &&
+                          !product.product_name.match(/^Product \d+$/); // Exclude "Product 123456" but allow "Product (cream)"
+      
+      // Check for ANY meaningful data - real database products just need one indicator
+      const hasAnyRealData = (
+                         (product.ingredients_text && product.ingredients_text.trim().length > 10) ||
+                         (product.image_url || product.image_front_url || product.image_front_small_url) ||
+                         (product.nutriments && Object.keys(product.nutriments).length > 0) ||
+                         (product.categories && product.categories.trim().length > 0) ||
+                         (product.certifications && Array.isArray(product.certifications) && product.certifications.length > 0) ||
+                         (product.labels_tags && Array.isArray(product.labels_tags) && product.labels_tags.length > 0) ||
+                         product.ecoscore_grade ||
+                         product.nutriscore_grade ||
+                         product.nova_group !== undefined ||
+                         (product.brands && product.brands.trim().length > 0 && product.brands !== 'N/A' && product.brands.toLowerCase() !== 'n/a')
+                         );
+      
+      // Real database products with valid name and ANY real data should ALWAYS be shown
+      // Don't check quality - real database products are valid even if incomplete
+      shouldShowUnknownProductPage = !(hasValidName && hasAnyRealData);
+    } else {
+      // For web search only products, check for minimal data
+      const imageUrl = product.image_url || product.image_front_url || product.image_front_small_url;
+      const hasMinimalData = !imageUrl && 
+                             (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
+                             !product.ingredients_text &&
+                             (!product.product_name || product.product_name.startsWith('Product ') || product.product_name === 'Unknown Product') &&
+                             (!product.generic_name || product.generic_name.length < 20) &&
+                             (!product.brands || product.brands.trim().length === 0);
+      
+      // Show unknown product page for minimal data OR web search products (always show clean page)
+      const isWebSearchProduct = isWebSearchFallback(product);
+      
+      shouldShowUnknownProductPage = hasMinimalData || 
+                                     isWebSearchProduct ||
+                                     (product.product_name === 'Unknown Product') ||
+                                     !!(product.product_name && product.product_name.startsWith('Product '));
+    }
   }
 
   // Show "Unknown Product" page if product not found OR has minimal/no useful data
@@ -406,7 +626,39 @@ function ResultScreenContent() {
               </Text>
             </View>
             
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <TouchableOpacity 
+              style={styles.backButton} 
+              onPress={() => {
+                // Navigate to Scan tab - use reset to ensure proper navigation on iOS
+                try {
+                  navigation.dispatch(
+                    CommonActions.reset({
+                      index: 0,
+                      routes: [
+                        {
+                          name: 'Main',
+                          state: {
+                            routes: [{ name: 'Scan' }],
+                            index: 0,
+                          },
+                        },
+                      ],
+                    })
+                  );
+                } catch (error) {
+                  // Fallback: try simple navigate
+                  try {
+                    navigation.navigate('Main', { screen: 'Scan' });
+                  } catch (navError) {
+                    // Last resort: go back and navigate
+                    navigation.goBack();
+                    setTimeout(() => {
+                      navigation.navigate('Main', { screen: 'Scan' });
+                    }, 100);
+                  }
+                }
+              }}
+            >
               <Text style={[styles.backButtonText, { color: colors.primary }]}>
                 {t('result.scanAnother') || 'Scan Another Product'}
               </Text>
@@ -429,8 +681,14 @@ function ResultScreenContent() {
   const imageUrl = product.image_url || product.image_front_url || product.image_front_small_url;
   const isWebSearchProduct = isWebSearchFallback(product);
 
-  // Combine Open Food Facts data with user contributions (user contributions as fallback)
-  const displayManufacturingCountry = manufacturingCountry || userContributedCountry?.country || null;
+  // Combine Open Food Facts data with user contributions
+  // CRITICAL: If user has overridden default country, prioritize user-contributed country
+  // This ensures when user changes default country, their entry is displayed with verification status
+  const displayManufacturingCountry = (userContributedCountry?.country && 
+                                      manufacturingCountry && 
+                                      userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase())
+    ? userContributedCountry.country  // User overrode default - show user's country
+    : (manufacturingCountry || userContributedCountry?.country || null); // Otherwise use default or user-contributed
   
   // Calculate Eco-Score using the proper function to ensure grade is calculated from score if missing
   const calculatedEcoScore = product ? calculateEcoScore(product) : null;
@@ -507,6 +765,54 @@ function ResultScreenContent() {
             </Text>
           )}
           
+          {/* Action Buttons Row */}
+          <View style={styles.actionButtonsRow}>
+            {/* Scan Another Product Button */}
+            <TouchableOpacity
+              style={[styles.scanAnotherButton, { backgroundColor: colors.primary, flex: 1 }]}
+              onPress={() => {
+                // Navigate to Scan tab - use reset to ensure proper navigation on iOS
+                // This ensures we go back to Main and select the Scan tab
+                try {
+                  navigation.dispatch(
+                    CommonActions.reset({
+                      index: 0,
+                      routes: [
+                        {
+                          name: 'Main',
+                          state: {
+                            routes: [{ name: 'Scan' }],
+                            index: 0,
+                          },
+                        },
+                      ],
+                    })
+                  );
+                } catch (error) {
+                  // Fallback: try simple navigate
+                  console.warn('[ResultScreen] Navigation reset failed, trying navigate:', error);
+                  try {
+                    navigation.navigate('Main', { screen: 'Scan' });
+                  } catch (navError) {
+                    // Last resort: go back and navigate
+                    console.warn('[ResultScreen] Navigation navigate failed, trying goBack:', navError);
+                    navigation.goBack();
+                    setTimeout(() => {
+                      navigation.navigate('Main', { screen: 'Scan' });
+                    }, 100);
+                  }
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="barcode-outline" size={20} color="#fff" />
+              <Text style={styles.scanAnotherButtonText}>
+                {t('result.scanAnother') || 'Scan Another Product'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Share button removed - share icons now appear on individual cards */}
+          </View>
         </View>
 
         {/* Food Recall Alert - Compact banner that opens modal */}
@@ -543,48 +849,56 @@ function ResultScreenContent() {
           <TouchableOpacity
             style={[styles.card, { 
               backgroundColor: colors.card,
-              borderColor: getTrustScoreColor(truScore.truscore),
+              borderColor: getTruScoreColor(truScore.truscore),
               borderWidth: 2,
             }]}
-            onPress={() => setTrustScoreModalVisible(true)}
+            onPress={() => setTruScoreModalVisible(true)}
             activeOpacity={0.7}
           >
           <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderLeft}>
-              <Ionicons name="shield" size={24} color={colors.primary} />
-              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>TruScore</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setTrustScoreModalVisible(true);
-                }}
-                style={styles.infoButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-              </TouchableOpacity>
+            {/* Top line: Icons */}
+            <View style={styles.cardHeaderTop}>
+              <View style={styles.cardHeaderLeft}>
+                <Ionicons name="shield" size={24} color={colors.primary} />
+                <TouchableOpacity
+                  onPress={() => {
+                    setTruScoreModalVisible(true);
+                  }}
+                  style={styles.infoButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.cardHeaderRight}>
+                <TouchableOpacity
+                  onPress={handleToggleFavorite}
+                  style={styles.favoriteButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons
+                    name={isFavorite(barcode) ? 'heart' : 'heart-outline'}
+                    size={20}
+                    color={isFavorite(barcode) ? '#ff6b6b' : colors.primary}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    // Determine share type for TruScore card
+                    const cardShareType = product.trust_score !== null && product.trust_score < 40 
+                      ? 'negativeTruScore' 
+                      : 'truScore';
+                    handleShare(cardShareType);
+                  }}
+                  style={styles.shareButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="share-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
             </View>
-            <View style={styles.cardHeaderRight}>
-              <TouchableOpacity
-                onPress={handleToggleFavorite}
-                style={styles.favoriteButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons
-                  name={isFavorite(barcode) ? 'heart' : 'heart-outline'}
-                  size={20}
-                  color={isFavorite(barcode) ? '#ff6b6b' : colors.primary}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  handleShare();
-                }}
-                style={styles.shareButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="share-outline" size={20} color={colors.primary} />
-              </TouchableOpacity>
-            </View>
+            {/* Second line: Heading */}
+            <Text style={[styles.cardTitle, { color: colors.text }]}>TruScore</Text>
           </View>
           
           {/* TruScore Display - v1.4 */}
@@ -599,6 +913,18 @@ function ResultScreenContent() {
 
           {/* Why this score - Green/Red Flags */}
           {(() => {
+            // Ensure palm_oil_analysis exists before generating flags
+            // This ensures consistency with Palm Oil card and Values Insights
+            if (product.ingredients_text && !product.palm_oil_analysis) {
+              // Re-extract palm oil analysis if missing (shouldn't happen, but safety check)
+              const { extractPalmOilAnalysis } = require('../../src/services/openFoodFacts');
+              try {
+                product.palm_oil_analysis = extractPalmOilAnalysis(product);
+              } catch (error) {
+                console.warn('[ResultScreen] Failed to extract palm oil analysis:', error);
+              }
+            }
+            
             const flags = generateProductFlags(product);
             const greenFlags = flags.filter(f => f.type === 'green');
             const redFlags = flags.filter(f => f.type === 'red');
@@ -607,7 +933,21 @@ function ResultScreenContent() {
             
             return (
               <View style={[styles.reasonsContainer, { borderTopColor: colors.border }]}>
-                <Text style={[styles.reasonsTitle, { color: colors.text }]}>Score highlights:</Text>
+                <View style={styles.reasonsHeader}>
+                  <Text style={[styles.reasonsTitle, { color: colors.text }]}>Score highlights:</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const cardShareType = product.trust_score !== null && product.trust_score < 40 
+                        ? 'negativeTruScore' 
+                        : 'truScore';
+                      handleShare(cardShareType);
+                    }}
+                    style={styles.shareButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="share-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
                 
                 {/* Green Flags (Positive) */}
                 {greenFlags.length > 0 && (
@@ -666,34 +1006,38 @@ function ResultScreenContent() {
           /* Insufficient Data Card */
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <View style={styles.cardHeader}>
-              <View style={styles.cardHeaderLeft}>
-                <Ionicons name="information-circle-outline" size={24} color={colors.warning || '#ff9800'} />
-                <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-                  {t('result.insufficientData')}
-                </Text>
+              {/* Top line: Icons */}
+              <View style={styles.cardHeaderTop}>
+                <View style={styles.cardHeaderLeft}>
+                  <Ionicons name="information-circle-outline" size={24} color={colors.warning || '#ff9800'} />
+                </View>
+                <View style={styles.cardHeaderRight}>
+                  <TouchableOpacity
+                    onPress={handleToggleFavorite}
+                    style={styles.favoriteButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons
+                      name={isFavorite(barcode) ? 'heart' : 'heart-outline'}
+                      size={20}
+                      color={isFavorite(barcode) ? '#ff6b6b' : colors.primary}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      handleShare('productInfo');
+                    }}
+                    style={styles.shareButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="share-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
               </View>
-              <View style={styles.cardHeaderRight}>
-                <TouchableOpacity
-                  onPress={handleToggleFavorite}
-                  style={styles.favoriteButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons
-                    name={isFavorite(barcode) ? 'heart' : 'heart-outline'}
-                    size={20}
-                    color={isFavorite(barcode) ? '#ff6b6b' : colors.primary}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    handleShare();
-                  }}
-                  style={styles.shareButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="share-outline" size={20} color={colors.primary} />
-                </TouchableOpacity>
-              </View>
+              {/* Second line: Heading */}
+              <Text style={[styles.cardTitle, { color: colors.text }]}>
+                {t('result.insufficientData')}
+              </Text>
             </View>
             <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
               {t('result.insufficientDataMessage')}
@@ -704,12 +1048,12 @@ function ResultScreenContent() {
         {/* Insights Carousel - Values v1.1 (Collapsible) */}
         {truScore && truScore.insights && truScore.insights.length > 0 && (
           <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <TouchableOpacity
-              style={[styles.insightsHeader, { borderBottomColor: colors.border }]}
-              onPress={() => setInsightsExpanded(!insightsExpanded)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.insightsHeaderLeft}>
+            <View style={[styles.insightsHeader, { borderBottomColor: colors.border }]}>
+              <TouchableOpacity
+                style={styles.insightsHeaderLeft}
+                onPress={() => setInsightsExpanded(!insightsExpanded)}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="bulb" size={20} color={colors.primary} />
                 <Text style={[styles.insightsHeaderTitle, { color: colors.text }]}>
                   Insights
@@ -717,13 +1061,22 @@ function ResultScreenContent() {
                 <Text style={[styles.insightsHeaderCount, { color: colors.textSecondary }]}>
                   ({truScore.insights.length})
                 </Text>
+              </TouchableOpacity>
+              <View style={styles.insightsHeaderRight}>
+                <TouchableOpacity
+                  onPress={() => handleShare('insights')}
+                  style={styles.shareButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="share-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
+                <Ionicons
+                  name={insightsExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  color={colors.textSecondary}
+                />
               </View>
-              <Ionicons
-                name={insightsExpanded ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
+            </View>
             {insightsExpanded && (
               <InsightsCarousel
                 insights={truScore.insights}
@@ -734,42 +1087,61 @@ function ResultScreenContent() {
         )}
 
         {/* Values Preferences Card - Link to Values Screen */}
-        <TouchableOpacity
-          style={[styles.card, { backgroundColor: colors.card }]}
-          onPress={() => navigation.navigate('Values')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderLeft}>
-              <Ionicons name="heart-outline" size={24} color={colors.primary} />
-              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-                Values Preferences
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-          </View>
-          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Set preferences for geopolitical, ethical, and environmental insights – These insights do not affect TruScore
-          </Text>
-          {(() => {
-            const activeCount = [
-              valuesPreferences.geopoliticalEnabled,
-              valuesPreferences.ethicalEnabled,
-              valuesPreferences.environmentalEnabled,
-            ].filter(Boolean).length;
-            if (activeCount > 0) {
-              return (
-                <View style={[styles.activeBadge, { backgroundColor: colors.primary + '20' }]}>
-                  <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-                  <Text style={[styles.activeBadgeText, { color: colors.primary }]}>
-                    {activeCount} preference{activeCount !== 1 ? 's' : ''} active
-                  </Text>
+        {(() => {
+          // Determine border color based on insights
+          // Red if there are negative insights (geopolitical, ethical, environmental concerns)
+          const hasNegativeInsights = truScore?.insights && truScore.insights.length > 0 && 
+            truScore.insights.some(insight => 
+              insight.type === 'geopolitical' || 
+              insight.type === 'ethical' || 
+              insight.type === 'environmental'
+            );
+          
+          const borderColor = hasNegativeInsights ? '#ff6b6b' : '#16a085';
+          
+          return (
+            <TouchableOpacity
+              style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor }]}
+              onPress={() => navigation.navigate('Values')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.cardHeader}>
+                {/* Top line: Icons */}
+                <View style={styles.cardHeaderTop}>
+                  <View style={styles.cardHeaderLeft}>
+                    <Ionicons name="heart-outline" size={24} color={colors.primary} />
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                 </View>
-              );
-            }
-            return null;
-          })()}
-        </TouchableOpacity>
+                {/* Second line: Heading */}
+                <Text style={[styles.cardTitle, { color: colors.text }]}>
+                  Values Preferences
+                </Text>
+              </View>
+              <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+                Set preferences for geopolitical, ethical, and environmental insights – These insights do not affect TruScore
+              </Text>
+              {(() => {
+                const activeCount = [
+                  valuesPreferences.geopoliticalEnabled,
+                  valuesPreferences.ethicalEnabled,
+                  valuesPreferences.environmentalEnabled,
+                ].filter(Boolean).length;
+                if (activeCount > 0) {
+                  return (
+                    <View style={[styles.activeBadge, { backgroundColor: colors.primary + '20' }]}>
+                      <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+                      <Text style={[styles.activeBadgeText, { color: colors.primary }]}>
+                        {activeCount} preference{activeCount !== 1 ? 's' : ''} active
+                      </Text>
+                    </View>
+                  );
+                }
+                return null;
+              })()}
+            </TouchableOpacity>
+          );
+        })()}
 
         {/* Country of Manufacture */}
         {(() => {
@@ -808,41 +1180,145 @@ function ResultScreenContent() {
           return (
             <>
               {displayManufacturingCountry ? (
-                <View style={[styles.card, { backgroundColor: colors.card }]}>
-                  <View style={styles.cardHeaderRow}>
-                    <View style={styles.cardHeaderLeft}>
-                      <Ionicons name="globe-outline" size={24} color={colors.text} />
-                      <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.countryOfManufacture', 'Country of Manufacture')}</Text>
-                    </View>
-                    <View style={styles.confidenceBadge}>
-                      {manufacturingCountry ? (
-                        // Open Food Facts data - verified source
-                        <Ionicons name="checkmark-circle" size={16} color="#16a085" />
-                      ) : userContributedCountry ? (
-                        // User-contributed data - show confidence level
-                        <>
-                          {userContributedCountry.confidence === 'verified' && (
-                            <Ionicons name="checkmark-circle" size={16} color="#16a085" />
-                          )}
-                          {userContributedCountry.confidence === 'community' && (
-                            <Ionicons name="people" size={16} color="#4dd09f" />
-                          )}
-                          {userContributedCountry.confidence === 'unverified' && (
-                            <Ionicons name="help-circle" size={16} color="#ffd93d" />
-                          )}
-                          {userContributedCountry.confidence === 'disputed' && (
-                            <Ionicons name="warning" size={16} color="#ff9800" />
-                          )}
-                        </>
-                      ) : null}
+                <>
+                  <View style={[styles.card, { 
+                    backgroundColor: colors.card, 
+                    borderColor: (() => {
+                      // Check if user has overridden the default country
+                      const hasOverriddenDefault = manufacturingCountry && 
+                                                   userContributedCountry?.country && 
+                                                   userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase();
+                      
+                      if (hasOverriddenDefault) {
+                        // User overrode - show status-based border color
+                        if ((userContributedCountry.verifiedCount || 0) >= 3) {
+                          return '#16a085'; // Green when verified
+                        } else if (userContributedCountry.confidence === 'disputed') {
+                          return '#ff9800'; // Orange when disputed
+                        } else {
+                          return '#ffd93d'; // Yellow when in verification
+                        }
+                      }
+                      return '#16a085'; // Green for default or verified
+                    })(),
+                    borderWidth: 2 
+                  }]}>
+                  <View style={styles.cardHeader}>
+                    {/* Top line: Icons */}
+                    <View style={styles.cardHeaderTop}>
+                      <View style={styles.cardHeaderLeft}>
+                        <Ionicons name="globe-outline" size={24} color={colors.text} />
+                      </View>
+                      <View style={styles.cardHeaderRight}>
+                      <View style={styles.confidenceBadge}>
+                      {(() => {
+                        // Check if user has overridden the default country
+                        const hasOverriddenDefault = manufacturingCountry && 
+                                                     userContributedCountry?.country && 
+                                                     userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase();
+                        
+                        if (hasOverriddenDefault) {
+                          // User overrode default - show user-contributed confidence level
+                          if (userContributedCountry.confidence === 'verified') {
+                            return <Ionicons name="checkmark-circle" size={16} color="#16a085" />;
+                          } else if (userContributedCountry.confidence === 'community') {
+                            return <Ionicons name="people" size={16} color="#4dd09f" />;
+                          } else if (userContributedCountry.confidence === 'unverified') {
+                            return <Ionicons name="help-circle" size={16} color="#ffd93d" />;
+                          } else if (userContributedCountry.confidence === 'disputed') {
+                            return <Ionicons name="warning" size={16} color="#ff9800" />;
+                          }
+                          return <Ionicons name="help-circle" size={16} color="#ffd93d" />;
+                        } else if (manufacturingCountry) {
+                          // Open Food Facts data - verified source (no override)
+                          return <Ionicons name="checkmark-circle" size={16} color="#16a085" />;
+                        } else if (userContributedCountry) {
+                          // User-contributed data (no default) - show confidence level
+                          if (userContributedCountry.confidence === 'verified') {
+                            return <Ionicons name="checkmark-circle" size={16} color="#16a085" />;
+                          } else if (userContributedCountry.confidence === 'community') {
+                            return <Ionicons name="people" size={16} color="#4dd09f" />;
+                          } else if (userContributedCountry.confidence === 'unverified') {
+                            return <Ionicons name="help-circle" size={16} color="#ffd93d" />;
+                          } else if (userContributedCountry.confidence === 'disputed') {
+                            return <Ionicons name="warning" size={16} color="#ff9800" />;
+                          }
+                          return null;
+                        }
+                        return null;
+                      })()}
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => handleShare('countryOfManufacture')}
+                        style={styles.shareButton}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <Ionicons name="share-outline" size={20} color={colors.primary} />
+                      </TouchableOpacity>
                     </View>
                   </View>
+                  {/* Second line: Heading */}
+                  <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.countryOfManufacture', 'Country of Manufacture')}</Text>
+                </View>
                   <View style={styles.originContainer}>
                     <CountryFlag country={displayManufacturingCountry} />
+                    {(() => {
+                      const shouldShow = userContributedCountry?.hasImportedIngredients === true;
+                      console.log('[ResultScreen] Badge display check:', {
+                        userContributedCountry: userContributedCountry ? 'exists' : 'null',
+                        hasImportedIngredients: userContributedCountry?.hasImportedIngredients,
+                        shouldShow,
+                        displayManufacturingCountry,
+                      });
+                      return shouldShow ? (
+                        <View style={[styles.importedIngredientsBadge, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}>
+                          <Ionicons name="globe" size={16} color={colors.primary} />
+                          <Text style={[styles.importedIngredientsText, { color: colors.primary }]}>
+                            {t('manufacturingCountry.withImportedIngredients', 'With some imported ingredients')}
+                          </Text>
+                        </View>
+                      ) : null;
+                    })()}
                   </View>
                   
+                  {/* Community Country Statistics - Show after 3+ submissions */}
+                  {communityCountryStats.length >= 3 && (
+                    <View style={[styles.communityStatsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                      <View style={styles.communityStatsHeader}>
+                        <Ionicons name="people" size={20} color={colors.primary} />
+                        <Text style={[styles.communityStatsTitle, { color: colors.text }]}>
+                          {t('manufacturingCountry.communitySelected', 'Community Selected Countries')}
+                        </Text>
+                      </View>
+                      <View style={styles.communityStatsList}>
+                        {communityCountryStats.slice(0, 5).map((stat, index) => (
+                          <View key={index} style={styles.communityStatItem}>
+                            <View style={styles.communityStatLeft}>
+                              <View style={[styles.communityStatRank, { backgroundColor: index === 0 ? colors.primary : colors.border }]}>
+                                <Text style={[styles.communityStatRankText, { color: index === 0 ? '#fff' : colors.text }]}>
+                                  {index + 1}
+                                </Text>
+                              </View>
+                              <Text style={[styles.communityStatCountry, { color: colors.text }]}>
+                                {stat.country}
+                              </Text>
+                            </View>
+                            <Text style={[styles.communityStatCount, { color: colors.textSecondary }]}>
+                              {stat.count} {stat.count === 1 ? 'user' : 'users'}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+
                   {/* Validation Status Message and Progress Indicators */}
-                  {!manufacturingCountry && userContributedCountry && (
+                  {/* Show validation status when:
+                      1. No default country AND user has contributed, OR
+                      2. User has overridden default country with a different country */}
+                  {((!manufacturingCountry && userContributedCountry) ||
+                    (manufacturingCountry && userContributedCountry?.country && 
+                     userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase())) && (
                     <View style={styles.validationStatusContainer}>
                       {/* Always show authentication status until verified by 3 users */}
                       {(userContributedCountry.verifiedCount || 0) >= 3 ? (
@@ -960,13 +1436,8 @@ function ResultScreenContent() {
                             {/* Progress text with clear status */}
                             <View style={styles.validationProgressTextContainer}>
                               <Text style={[styles.validationProgressText, { color: colors.text, fontWeight: '600' }]}>
-                                {userContributedCountry.verifiedCount || 0}/3 {t('manufacturingCountry.verifiedUsers', 'independent users verified')}
+                                {t('manufacturingCountry.communityVerificationInProgress', 'COMMUNITY VERIFICATION IN PROGRESS...')}
                               </Text>
-                              {(userContributedCountry.verifiedCount || 0) < 3 && (
-                                <Text style={[styles.validationRemainingText, { color: colors.textSecondary }]}>
-                                  {3 - (userContributedCountry.verifiedCount || 0)} {t('manufacturingCountry.moreNeeded', 'more needed for authentication')}
-                                </Text>
-                              )}
                             </View>
                           </View>
                         </>
@@ -974,9 +1445,22 @@ function ResultScreenContent() {
                     </View>
                   )}
                 </View>
+                
+                {/* ALWAYS show "Update Country" button */}
+                <TouchableOpacity
+                  style={[styles.updateCountryButton, { backgroundColor: colors.primary }]}
+                  onPress={() => setManufacturingCountryModalVisible(true)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="create-outline" size={18} color="#fff" />
+                  <Text style={styles.updateCountryButtonText}>
+                    {t('manufacturingCountry.updateCountry', 'Update Country')}
+                  </Text>
+                </TouchableOpacity>
+              </>
               ) : (
                 <TouchableOpacity
-                  style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#d32f2f' }]}
+                  style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#ff6b6b' }]}
                   onPress={() => setManufacturingCountryModalVisible(true)}
                   activeOpacity={0.7}
                 >
@@ -999,20 +1483,6 @@ function ResultScreenContent() {
                       </Text>
                     </View>
                   </View>
-                </TouchableOpacity>
-              )}
-              
-              {/* Verify/Update button - shown only when appropriate */}
-              {shouldShowVerifyButton() && (
-                <TouchableOpacity
-                  style={[styles.reportButton, { backgroundColor: colors.background, borderColor: colors.border }]}
-                  onPress={() => setManufacturingCountryModalVisible(true)}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="pencil-outline" size={16} color={colors.primary} />
-                  <Text style={[styles.reportButtonText, { color: colors.primary }]}>
-                    {getVerifyButtonText()}
-                  </Text>
                 </TouchableOpacity>
               )}
             </>
@@ -1050,16 +1520,25 @@ function ResultScreenContent() {
                 <Text style={[styles.ecoScoreTitle, { color: colors.text, marginLeft: 8 }]}>
                   {t('result.ecoScore', 'Eco-Score')}
                 </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setEcoScoreModalVisible(true);
+                  }}
+                  style={styles.infoButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                onPress={() => {
-                  setEcoScoreModalVisible(true);
-                }}
-                style={[styles.infoButtonAbsolute, { backgroundColor: colors.background }]}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-              </TouchableOpacity>
+              <View style={styles.cardHeaderRight}>
+                <TouchableOpacity
+                  onPress={() => handleShare('ecoscore')}
+                  style={styles.shareButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="share-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
             </View>
             <View style={styles.ecoScoreContent}>
               <EcoScore ecoScore={calculatedEcoScore} />
@@ -1070,18 +1549,12 @@ function ResultScreenContent() {
 
         {/* Palm Oil Analysis */}
         {product.palm_oil_analysis && (() => {
-          // Determine palm oil card color:
-          // GREEN if palm oil free OR unknown/undetected (default)
-          // RED if non-sustainable palm oil detected
-          // ORANGE only if palm oil is actually detected (containsPalmOil = true)
-          const palmOilAnalysis = product.palm_oil_analysis;
-          const palmOilFlagColor = palmOilAnalysis.isPalmOilFree 
-            ? '#16a085' // Green: Palm oil free
-            : palmOilAnalysis.isNonSustainable 
-            ? '#ff6b6b' // Red: Non-sustainable palm oil
-            : palmOilAnalysis.containsPalmOil 
-            ? '#ff9500' // Orange: Contains palm oil (detected)
-            : '#16a085'; // Green: Unknown/undetected (default to green)
+          // Use shared utility function to ensure consistency with modal
+          const palmOilStatus = getPalmOilStatus(product.palm_oil_analysis);
+          if (!palmOilStatus) return null;
+          
+          const { flag, isPalmOilFree, containsPalmOil, isNonSustainable, isUnknown } = palmOilStatus;
+          const palmOilFlagColor = getPalmOilFlagColor(flag);
           return (
             <TouchableOpacity
               style={[
@@ -1096,51 +1569,66 @@ function ResultScreenContent() {
               onPress={() => setPalmOilInfoModalVisible(true)}
               activeOpacity={0.7}
             >
-            <View style={styles.cardHeaderLeft}>
-              <Ionicons 
-                name="flag" 
-                size={24} 
-                color={palmOilFlagColor} 
-              />
-              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
+            <View style={styles.cardHeader}>
+              {/* Top line: Icons */}
+              <View style={styles.cardHeaderTop}>
+                <View style={styles.cardHeaderLeft}>
+                  <Ionicons 
+                    name="flag" 
+                    size={24} 
+                    color={palmOilFlagColor} 
+                  />
+                </View>
+                <View style={styles.cardHeaderRight}>
+                  <TouchableOpacity
+                    onPress={() => handleShare('palmOil')}
+                    style={styles.shareButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="share-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              {/* Second line: Heading */}
+              <Text style={[styles.cardTitle, { color: colors.text }]}>
                 {t('result.palmOil')}
               </Text>
             </View>
             <View style={styles.palmOilContent}>
-              {palmOilAnalysis.isPalmOilFree ? (
-                <View style={[styles.palmOilStatus, { backgroundColor: '#16a085' + '20', borderLeftWidth: 4, borderLeftColor: '#16a085' }]}>
-                  <Text style={[styles.palmOilFlag, { color: '#16a085' }]}>🟢</Text>
+              {isPalmOilFree ? (
+                <View style={[styles.palmOilStatus, { backgroundColor: palmOilFlagColor + '20', borderLeftWidth: 4, borderLeftColor: palmOilFlagColor }]}>
+                  <Text style={[styles.palmOilFlag, { color: palmOilFlagColor }]}>🟢</Text>
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
                     {t('result.greenFlag')} - {t('result.palmOilFree')}
                   </Text>
                 </View>
-              ) : palmOilAnalysis.isNonSustainable ? (
-                <View style={[styles.palmOilStatus, { backgroundColor: '#ff6b6b' + '20', borderLeftWidth: 4, borderLeftColor: '#ff6b6b' }]}>
-                  <Text style={[styles.palmOilFlag, { color: '#ff6b6b' }]}>🔴</Text>
+              ) : isNonSustainable ? (
+                <View style={[styles.palmOilStatus, { backgroundColor: palmOilFlagColor + '20', borderLeftWidth: 4, borderLeftColor: palmOilFlagColor }]}>
+                  <Text style={[styles.palmOilFlag, { color: palmOilFlagColor }]}>🔴</Text>
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
                     {t('result.redFlag')} - {t('result.nonSustainablePalmOil')}
                   </Text>
                 </View>
-              ) : palmOilAnalysis.containsPalmOil ? (
-                <View style={[styles.palmOilStatus, { backgroundColor: '#ff9500' + '20', borderLeftWidth: 4, borderLeftColor: '#ff9500' }]}>
-                  <Text style={[styles.palmOilFlag, { color: '#ff9500' }]}>🟠</Text>
+              ) : containsPalmOil ? (
+                <View style={[styles.palmOilStatus, { backgroundColor: palmOilFlagColor + '20', borderLeftWidth: 4, borderLeftColor: palmOilFlagColor }]}>
+                  <Text style={[styles.palmOilFlag, { color: palmOilFlagColor }]}>🟠</Text>
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
                     {t('result.orangeFlag')} - {t('result.containsPalmOil')}
                   </Text>
-                  {product.ingredients_text && !product.ingredients_analysis_tags?.some(tag => tag.includes('palm-oil')) && (
+                  {product.palm_oil_analysis?.detectedFromIngredientsText && (
                     <Text style={[styles.palmOilNote, { color: colors.textSecondary }]}>
-                      Detected from ingredients list
+                      {t('result.detectedFromIngredients', 'Detected from ingredients list')}
                     </Text>
                   )}
                 </View>
-              ) : (
-                <View style={[styles.palmOilStatus, { backgroundColor: '#16a085' + '20', borderLeftWidth: 4, borderLeftColor: '#16a085' }]}>
-                  <Text style={[styles.palmOilFlag, { color: '#16a085' }]}>🟢</Text>
+              ) : isUnknown ? (
+                <View style={[styles.palmOilStatus, { backgroundColor: palmOilFlagColor + '20', borderLeftWidth: 4, borderLeftColor: palmOilFlagColor }]}>
+                  <Text style={[styles.palmOilFlag, { color: palmOilFlagColor }]}>🟢</Text>
                   <Text style={[styles.palmOilText, { color: colors.text }]}>
                     {t('result.palmOilUnknown', 'Palm Oil Status Unknown')}
                   </Text>
                 </View>
-              )}
+              ) : null}
             </View>
           </TouchableOpacity>
           );
@@ -1175,13 +1663,26 @@ function ResultScreenContent() {
               activeOpacity={0.7}
             >
             <View style={styles.cardHeader}>
-              <View style={styles.cardHeaderLeft}>
-                <Ionicons name="cube-outline" size={24} color={colors.primary} />
-                <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-                  {t('result.packaging')}
-                </Text>
+              {/* Top line: Icons */}
+              <View style={styles.cardHeaderTop}>
+                <View style={styles.cardHeaderLeft}>
+                  <Ionicons name="cube-outline" size={24} color={colors.primary} />
+                </View>
+                <View style={styles.cardHeaderRight}>
+                  <TouchableOpacity
+                    onPress={handleEditProduct}
+                    style={styles.shareButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="create-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                </View>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+              {/* Second line: Heading */}
+              <Text style={[styles.cardTitle, { color: colors.text }]}>
+                {t('result.packaging')}
+              </Text>
             </View>
             <View style={styles.packagingContent}>
               <View style={styles.packagingStatusRow}>
@@ -1228,9 +1729,15 @@ function ResultScreenContent() {
         {/* Ethics / Certifications */}
         {product.certifications && product.certifications.length > 0 && (
           <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <View style={styles.cardHeaderLeft}>
-              <Ionicons name="shield-checkmark" size={24} color={colors.primary} />
-              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.certifications')}</Text>
+            <View style={styles.cardHeader}>
+              {/* Top line: Icons */}
+              <View style={styles.cardHeaderTop}>
+                <View style={styles.cardHeaderLeft}>
+                  <Ionicons name="shield-checkmark" size={24} color={colors.primary} />
+                </View>
+              </View>
+              {/* Second line: Heading */}
+              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.certifications')}</Text>
             </View>
             <View style={styles.certificationsContainer}>
               {product.certifications.map((cert) => (
@@ -1240,11 +1747,20 @@ function ResultScreenContent() {
           </View>
         )}
 
+        {/* Price Information */}
+        <UniversalPricingCard 
+          barcode={barcode} 
+          productName={product?.product_name || product?.product_name_en || undefined}
+          product={product}
+        />
+
         {/* Nutrition Facts */}
         <NutritionTable
           nutriments={product.nutriments}
           nutrientLevels={product.nutrient_levels}
           servingSize={product.serving_size}
+          onShare={() => handleShare('nutrition')}
+          onEdit={handleEditProduct}
         />
 
         {/* Ingredients */}
@@ -1274,11 +1790,45 @@ function ResultScreenContent() {
             return null;
           }
           
+          // Determine border color based on negative indicators
+          // Red if: many additives, hidden ingredients, ultra-processed (NOVA 4)
+          const hasManyAdditives = product.additives_tags && product.additives_tags.length > 5;
+          const hiddenTerms = ['parfum', 'fragrance', 'aroma', 'natural flavor', 'proprietary blend'];
+          const hasHiddenIngredients = hiddenTerms.some(term => 
+            ingredientsText.toLowerCase().includes(term)
+          );
+          const isUltraProcessed = product.nova_group === 4;
+          
+          const hasNegativeIndicators = hasManyAdditives || hasHiddenIngredients || isUltraProcessed;
+          const borderColor = hasNegativeIndicators ? '#ff6b6b' : '#16a085';
+          
           return (
-            <View style={[styles.card, { backgroundColor: colors.card }]}>
-              <View style={styles.cardHeaderLeft}>
-                <Ionicons name="flask" size={24} color={colors.primary} />
-                <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.ingredients')}</Text>
+            <View style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor }]}>
+              <View style={styles.cardHeader}>
+                {/* Top line: Icons */}
+                <View style={styles.cardHeaderTop}>
+                  <View style={styles.cardHeaderLeft}>
+                    <Ionicons name="flask" size={24} color={colors.primary} />
+                  </View>
+                  <View style={styles.cardHeaderRight}>
+                    <TouchableOpacity
+                      onPress={handleEditProduct}
+                      style={styles.shareButton}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Ionicons name="create-outline" size={20} color={colors.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleShare('ingredients')}
+                      style={styles.shareButton}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Ionicons name="share-outline" size={20} color={colors.primary} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                {/* Second line: Heading */}
+                <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
               </View>
               <Text style={[styles.ingredientsText, { color: colors.text }]}>{ingredientsText}</Text>
             {product.nova_group && (() => {
@@ -1290,89 +1840,129 @@ function ResultScreenContent() {
                 : '#ff6b6b'; // Red for NOVA 4
               
               return (
-                <TouchableOpacity
-                  style={[styles.novaContainer, { borderTopColor: colors.border }]}
-                  onPress={() => setProcessingLevelModalVisible(true)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.novaHeader}>
+                <View style={[styles.novaContainer, { borderTopColor: colors.border }]}>
+                  <TouchableOpacity
+                    style={styles.novaHeader}
+                    onPress={() => setProcessingLevelModalVisible(true)}
+                    activeOpacity={0.7}
+                  >
                     <Text style={[styles.novaLabel, { color: colors.text }]}>{t('result.processingLevel')}:</Text>
                     <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                  <View style={styles.novaContent}>
+                    <Text style={[styles.novaValue, { color: novaColor }]}>
+                      NOVA {product.nova_group} ({t(`nova.${product.nova_group}`)})
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => handleShare('processing')}
+                      style={styles.shareButton}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Ionicons name="share-outline" size={20} color={colors.primary} />
+                    </TouchableOpacity>
                   </View>
-                  <Text style={[styles.novaValue, { color: novaColor }]}>
-                    NOVA {product.nova_group} ({t(`nova.${product.nova_group}`)})
-                  </Text>
-                </TouchableOpacity>
+                </View>
               );
             })()}
           </View>
           );
         })()}
 
-        {/* Allergens & Additives */}
-        {(product.allergens_tags || product.additives_tags) && (() => {
-          const hasAllergens = product.allergens_tags && product.allergens_tags.length > 0;
-          const hasAdditives = product.additives_tags && product.additives_tags.length > 0;
-          const hasDetected = hasAllergens || hasAdditives;
-          const redColor = '#ff6b6b';
-          
-          return (
-            <TouchableOpacity
-              style={[
-                styles.card,
-                {
-                  backgroundColor: colors.card,
-                  borderWidth: hasDetected ? 2 : 0,
-                  borderColor: hasDetected ? redColor : 'transparent',
-                }
-              ]}
-              onPress={() => setAllergensAdditivesModalVisible(true)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.cardHeader}>
-                <View style={styles.cardHeaderLeft}>
-                  <Ionicons name="warning" size={24} color={hasDetected ? redColor : colors.primary} />
-                  <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{t('result.allergensAdditives')}</Text>
-                </View>
-                <Ionicons name="information-circle-outline" size={20} color={hasDetected ? redColor : colors.primary} />
-              </View>
-            {product.allergens_tags && product.allergens_tags.length > 0 && (
-              <View style={[styles.warningSection, { backgroundColor: colors.error + '20' }]}>
-                <Ionicons name="warning" size={20} color={colors.error} />
-                <Text style={[styles.warningTitle, { color: colors.error }]}>{t('result.containsAllergens')}</Text>
-                <Text style={[styles.warningText, { color: colors.error }]}>
-                  {product.allergens_tags
-                    .map((tag) => tag.replace(/^en:/, '').replace(/-/g, ' '))
-                    .join(', ')}
-                </Text>
-              </View>
-            )}
-            {product.additives_tags && product.additives_tags.length > 0 && (
-              <View style={styles.additivesSection}>
-                <Text style={[styles.additivesLabel, { color: colors.text }]}>
-                  {t('result.additives')} ({product.additives_tags.length}):
-                </Text>
-                <Text style={[styles.additivesText, { color: colors.textSecondary }]}>
-                  {product.additives_tags
-                    .map((tag) => tag.replace(/^en:/, '').toUpperCase())
-                    .join(', ')}
-                </Text>
-              </View>
-            )}
-            </TouchableOpacity>
-          );
-        })()}
+        {/* Allergens & Additives - Premium Feature */}
+        {(product.allergens_tags || product.additives_tags) && (
+          <PremiumGate feature={PremiumFeature.ALLERGENS_ADDITIVES}>
+            {(() => {
+              const hasAllergens = product.allergens_tags && product.allergens_tags.length > 0;
+              const hasAdditives = product.additives_tags && product.additives_tags.length > 0;
+              const hasDetected = hasAllergens || hasAdditives;
+              const redColor = '#ff6b6b';
+              
+              return (
+                <TouchableOpacity
+                  style={[
+                    styles.card,
+                    {
+                      backgroundColor: colors.card,
+                      borderWidth: hasDetected ? 2 : 0,
+                      borderColor: hasDetected ? redColor : 'transparent',
+                    }
+                  ]}
+                  onPress={() => {
+                    // Check premium status before opening modal
+                    if (isPremiumFeatureEnabled(PremiumFeature.ALLERGENS_ADDITIVES, subscriptionInfo)) {
+                      setAllergensAdditivesModalVisible(true);
+                    } else {
+                      navigation.navigate('Subscription');
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.cardHeader}>
+                    {/* Top line: Icons */}
+                    <View style={styles.cardHeaderTop}>
+                      <View style={styles.cardHeaderLeft}>
+                        <Ionicons name="warning" size={24} color={hasDetected ? redColor : colors.primary} />
+                      </View>
+                      <View style={styles.cardHeaderRight}>
+                        <TouchableOpacity
+                          onPress={handleEditProduct}
+                          style={styles.shareButton}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <Ionicons name="create-outline" size={20} color={colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => handleShare('allergens')}
+                          style={styles.shareButton}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <Ionicons name="share-outline" size={20} color={colors.primary} />
+                        </TouchableOpacity>
+                        <Ionicons name="information-circle-outline" size={20} color={hasDetected ? redColor : colors.primary} />
+                      </View>
+                    </View>
+                    {/* Second line: Heading */}
+                    <Text style={[styles.cardTitle, { color: colors.text, marginTop: 8 }]}>{t('result.allergensAdditives')}</Text>
+                  </View>
+                {product.allergens_tags && product.allergens_tags.length > 0 && (
+                  <View style={[styles.warningSection, { backgroundColor: colors.error + '20' }]}>
+                    <Ionicons name="warning" size={20} color={colors.error} />
+                    <Text style={[styles.warningTitle, { color: colors.error }]}>{t('result.containsAllergens')}</Text>
+                    <Text style={[styles.warningText, { color: colors.error }]}>
+                      {product.allergens_tags
+                        .map((tag) => tag.replace(/^en:/, '').replace(/-/g, ' '))
+                        .join(', ')}
+                    </Text>
+                  </View>
+                )}
+                {product.additives_tags && product.additives_tags.length > 0 && (
+                  <View style={styles.additivesSection}>
+                    <Text style={[styles.additivesLabel, { color: colors.text }]}>
+                      {t('result.additives')} ({product.additives_tags.length}):
+                    </Text>
+                    <Text style={[styles.additivesText, { color: colors.textSecondary }]}>
+                      {product.additives_tags
+                        .map((tag) => tag.replace(/^en:/, '').toUpperCase())
+                        .join(', ')}
+                    </Text>
+                  </View>
+                )}
+                </TouchableOpacity>
+              );
+            })()}
+          </PremiumGate>
+        )}
 
         {/* Bottom spacing */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
 
-      {/* Trust Score Info Modal - Only show if we have data */}
+      {/* TruScore Info Modal - Only show if we have data */}
       {product && product.trust_score !== null && product.trust_score_breakdown && (
-        <TrustScoreInfoModal
-          visible={trustScoreModalVisible}
-          onClose={() => setTrustScoreModalVisible(false)}
+        <TruScoreInfoModal
+          visible={truScoreModalVisible}
+          onClose={() => setTruScoreModalVisible(false)}
           product={product}
         />
       )}
@@ -1383,12 +1973,14 @@ function ResultScreenContent() {
         onClose={() => setEcoScoreModalVisible(false)}
       />
 
-      {/* Allergens & Additives Modal */}
-      <AllergensAdditivesModal
-        visible={allergensAdditivesModalVisible}
-        onClose={() => setAllergensAdditivesModalVisible(false)}
-        product={product}
-      />
+      {/* Allergens & Additives Modal - Premium Feature */}
+      {isPremiumFeatureEnabled(PremiumFeature.ALLERGENS_ADDITIVES, subscriptionInfo) && (
+        <AllergensAdditivesModal
+          visible={allergensAdditivesModalVisible}
+          onClose={() => setAllergensAdditivesModalVisible(false)}
+          product={product}
+        />
+      )}
 
       {/* Processing Level Modal */}
       <ProcessingLevelModal
@@ -1414,8 +2006,8 @@ function ResultScreenContent() {
             setManufacturingCountryModalVisible(false);
           }
         }}
-        onSubmit={async (country: string) => {
-          const result = await submitManufacturingCountry(barcode, country);
+        onSubmit={async (country: string, hasImportedIngredients?: boolean) => {
+          const result = await submitManufacturingCountry(barcode, country, undefined, hasImportedIngredients);
           if (result.success) {
             // Check if this is a repeat submission
             if (result.alreadySubmitted) {
@@ -1434,15 +2026,63 @@ function ResultScreenContent() {
                 "Thank you for submitting the 'country of manufacture' information, this helps us spread the word to keep everyone informed.",
                 [{ text: t('common.ok') || 'OK' }]
               );
-              // Refresh user-contributed country
+              // Refresh user-contributed country and community stats
+              // Add a small delay to ensure data is saved before reloading
+              await new Promise(resolve => setTimeout(resolve, 100));
+              const offCountry = extractManufacturingCountry(product);
               const contributed = await getManufacturingCountry(barcode);
-              if (contributed.country) {
-                setUserContributedCountry({
-                  country: contributed.country,
-                  confidence: contributed.confidence as 'verified' | 'community' | 'unverified' | 'disputed',
-                  verifiedCount: contributed.verifiedCount || 0,
-                });
+              
+              console.log('[ResultScreen] Reloaded country data after submission:', {
+                offCountry,
+                contributedCountry: contributed.country,
+                hasImportedIngredients: contributed.hasImportedIngredients,
+              });
+              
+              if (!offCountry) {
+                // No Open Food Facts country - use user-contributed data if available
+                if (contributed.country) {
+                  setUserContributedCountry({
+                    country: contributed.country,
+                    confidence: contributed.confidence as 'verified' | 'community' | 'unverified' | 'disputed',
+                    verifiedCount: contributed.verifiedCount || 0,
+                    hasImportedIngredients: contributed.hasImportedIngredients || false,
+                  });
+                } else {
+                  setUserContributedCountry(null);
+                }
+              } else {
+                // We have Open Food Facts country - check if user has overridden it
+                if (contributed.country && contributed.country.toUpperCase() !== offCountry.toUpperCase()) {
+                  // User has submitted a different country than default - prioritize user's country
+                  setUserContributedCountry({
+                    country: contributed.country,
+                    confidence: contributed.confidence as 'verified' | 'community' | 'unverified' | 'disputed',
+                    verifiedCount: contributed.verifiedCount || 0,
+                    hasImportedIngredients: contributed.hasImportedIngredients || false,
+                  });
+                  
+                  // Get community country statistics
+                  const { getCommunityCountryStats } = await import('../../src/services/manufacturingCountryService');
+                  const stats = await getCommunityCountryStats(barcode);
+                  setCommunityCountryStats(stats);
+                } else if (contributed.hasImportedIngredients) {
+                  // Same country as default, but has imported ingredients flag
+                  setUserContributedCountry({
+                    country: '', // Empty since we use Open Food Facts country
+                    confidence: 'verified' as const,
+                    verifiedCount: 0,
+                    hasImportedIngredients: true,
+                  });
+                } else {
+                  setUserContributedCountry(null);
+                }
               }
+              
+              // Refresh community country statistics
+              const { getCommunityCountryStats } = await import('../../src/services/manufacturingCountryService');
+              const stats = await getCommunityCountryStats(barcode);
+              setCommunityCountryStats(stats);
+              
               setHasSubmitted(true);
               // Close modal after successful submission
               setManufacturingCountryModalVisible(false);
@@ -1487,10 +2127,28 @@ function ResultScreenContent() {
       {/* Manual Product Entry Modal */}
       <ManualProductEntryModal
         visible={manualProductModalVisible}
-        onClose={() => setManualProductModalVisible(false)}
+        onClose={() => {
+          setManualProductModalVisible(false);
+          setEditProductData(null);
+          setEditMode(false);
+        }}
         onSave={handleManualProductSave}
         barcode={barcode}
+        initialProduct={editProductData}
+        editMode={editMode}
       />
+
+      {/* Share Modal */}
+      {product && (
+        <ShareModal
+          visible={shareModalVisible}
+          onClose={() => setShareModalVisible(false)}
+          product={product}
+          truScore={truScore || undefined}
+          shareType={shareType}
+          country={shareType === 'countryOfManufacture' ? (displayManufacturingCountry || userContributedCountry?.country || undefined) : undefined}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -1606,6 +2264,110 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  scanAnotherButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    marginTop: 16,
+    marginHorizontal: 16,
+    gap: 8,
+  },
+  scanAnotherButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+    marginHorizontal: 16,
+  },
+  shareButtonHero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    borderWidth: 2,
+    gap: 8,
+  },
+  shareButtonHeroText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  updateCountryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginTop: 16,
+    marginHorizontal: 16,
+    gap: 8,
+  },
+  updateCountryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  communityStatsContainer: {
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+  },
+  communityStatsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  communityStatsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  communityStatsList: {
+    gap: 8,
+  },
+  communityStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+  },
+  communityStatLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  communityStatRank: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  communityStatRankText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  communityStatCountry: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  communityStatCount: {
+    fontSize: 14,
+  },
   hero: {
     alignItems: 'center',
     padding: 24,
@@ -1674,10 +2436,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardHeader: {
+    marginBottom: 16,
+  },
+  cardHeaderTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
   },
   cardHeaderLeft: {
     flexDirection: 'row',
@@ -1688,6 +2452,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    marginTop: 8,
   },
   infoButton: {
     padding: 4,
@@ -1942,6 +2707,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  reasonsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
   reasonsContainer: {
     marginTop: 16,
     paddingTop: 16,
@@ -1950,7 +2721,6 @@ const styles = StyleSheet.create({
   reasonsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 16,
   },
   flagsSection: {
     marginBottom: 12,
@@ -2009,6 +2779,21 @@ const styles = StyleSheet.create({
   originContainer: {
     marginTop: 12,
     gap: 8,
+    alignItems: 'center',
+  },
+  importedIngredientsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    marginTop: 8,
+  },
+  importedIngredientsText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   validationStatusContainer: {
     marginTop: 16,
@@ -2199,6 +2984,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  novaContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   novaLabel: {
     fontSize: 14,
     fontWeight: '600',
@@ -2250,6 +3040,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
+  },
+  insightsHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   insightsHeaderLeft: {
     flexDirection: 'row',

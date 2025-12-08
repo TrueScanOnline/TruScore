@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import InfoModal from './InfoModal';
 import { useTheme } from '../theme';
 import { Product } from '../types/product';
+import { getPalmOilStatus, getPalmOilFlagColor } from '../utils/palmOilUtils';
 
 interface PalmOilInfoModalProps {
   visible: boolean;
@@ -19,11 +20,13 @@ export default function PalmOilInfoModal({ visible, onClose, product }: PalmOilI
   if (!product || !product.palm_oil_analysis) return null;
 
   const analysis = product.palm_oil_analysis;
-  const isPalmOilFree = analysis.isPalmOilFree;
-  const containsPalmOil = analysis.containsPalmOil;
-  const isNonSustainable = analysis.isNonSustainable;
-  // Determine current flag: priority order - green (palm oil free) > red (non-sustainable) > orange (contains palm oil)
-  const currentFlag = isPalmOilFree ? 'green' : isNonSustainable ? 'red' : containsPalmOil ? 'orange' : 'orange'; // Default to orange if unclear
+  
+  // Use shared utility function to ensure consistency with card
+  const palmOilStatus = getPalmOilStatus(analysis);
+  if (!palmOilStatus) return null;
+
+  const { flag: currentFlag, isPalmOilFree, containsPalmOil, isNonSustainable, isUnknown } = palmOilStatus;
+  const flagColor = getPalmOilFlagColor(currentFlag);
 
   return (
     <InfoModal
@@ -31,7 +34,7 @@ export default function PalmOilInfoModal({ visible, onClose, product }: PalmOilI
       onClose={onClose}
       title={t('result.palmOil')}
       icon="flag"
-      iconColor={isPalmOilFree ? '#16a085' : isNonSustainable ? '#ff6b6b' : '#ff9500'}
+      iconColor={flagColor}
     >
       <View>
         {/* Current Status Section */}
@@ -40,31 +43,25 @@ export default function PalmOilInfoModal({ visible, onClose, product }: PalmOilI
             {t('result.currentStatus', 'Current Status')}
           </Text>
           <View style={[styles.currentStatusCard, { 
-            backgroundColor: currentFlag === 'green' ? '#16a085' + '20' : currentFlag === 'orange' ? '#ff9500' + '20' : '#ff6b6b' + '20',
-            borderColor: currentFlag === 'green' ? '#16a085' : currentFlag === 'orange' ? '#ff9500' : '#ff6b6b',
+            backgroundColor: flagColor + '20',
+            borderColor: flagColor,
             borderWidth: 2
           }]}>
-            {currentFlag === 'green' && (
-              <Text style={[styles.currentStatusText, { color: '#16a085' }]}>
-                🟢 <Text style={[styles.currentStatusBold, { color: '#16a085' }]}>
-                  {t('result.palmOilFree', 'Palm Oil Free')}
-                </Text>
+            <Text style={[styles.currentStatusText, { color: flagColor }]}>
+              {currentFlag === 'green' && '🟢'}
+              {currentFlag === 'orange' && '🟠'}
+              {currentFlag === 'red' && '🔴'}
+              {' '}
+              <Text style={[styles.currentStatusBold, { color: flagColor }]}>
+                {isPalmOilFree 
+                  ? t('result.palmOilFree', 'Palm Oil Free')
+                  : isUnknown
+                  ? t('result.palmOilUnknown', 'Palm Oil Status Unknown')
+                  : isNonSustainable
+                  ? t('result.nonSustainablePalmOil', 'Non-Sustainable Palm Oil')
+                  : t('result.containsPalmOil', 'Contains Palm Oil')}
               </Text>
-            )}
-            {currentFlag === 'orange' && (
-              <Text style={[styles.currentStatusText, { color: '#ff9500' }]}>
-                🟠 <Text style={[styles.currentStatusBold, { color: '#ff9500' }]}>
-                  {t('result.containsPalmOil', 'Contains Palm Oil')}
-                </Text>
-              </Text>
-            )}
-            {currentFlag === 'red' && (
-              <Text style={[styles.currentStatusText, { color: '#ff6b6b' }]}>
-                🔴 <Text style={[styles.currentStatusBold, { color: '#ff6b6b' }]}>
-                  {t('result.nonSustainablePalmOil', 'Non-Sustainable Palm Oil')}
-                </Text>
-              </Text>
-            )}
+            </Text>
           </View>
           
           {/* Show all flags summary */}
@@ -75,11 +72,13 @@ export default function PalmOilInfoModal({ visible, onClose, product }: PalmOilI
             <View style={styles.flagSummaryItem}>
               <Text style={[styles.summaryFlag, { color: '#16a085' }]}>
                 🟢 <Text style={[styles.summaryFlagText, { color: colors.text }]}>
-                  {t('result.greenFlag')} ({t('result.priority1', 'Priority 1')}): {t('result.palmOilFree')}
+                  {t('result.greenFlag')} ({t('result.priority1', 'Priority 1')}): {isPalmOilFree ? t('result.palmOilFree') : t('result.palmOilUnknown', 'Status Unknown')}
                 </Text>
               </Text>
               <Text style={[styles.summaryDescription, { color: colors.textSecondary }]}>
-                {t('result.greenFlagSummary', 'Benefits and why it\'s the best choice')}
+                {isPalmOilFree 
+                  ? t('result.greenFlagSummary', 'Benefits and why it\'s the best choice')
+                  : t('result.unknownFlagSummary', 'Status could not be determined - check ingredients manually')}
               </Text>
             </View>
             <View style={styles.flagSummaryItem}>
@@ -114,44 +113,87 @@ export default function PalmOilInfoModal({ visible, onClose, product }: PalmOilI
             {t('result.palmOilFlagsDescription', 'Understanding palm oil flags helps you make informed choices. Each flag represents a different level of environmental impact and sustainability.')}
           </Text>
 
-          {/* Green Flag (Priority 1) */}
-          <View style={[styles.flagCard, { 
-            backgroundColor: '#16a085' + '15', 
-            borderColor: '#16a085',
-            borderWidth: currentFlag === 'green' ? 2 : 1
-          }]}>
-            <View style={styles.flagHeader}>
-              <Text style={[styles.flagEmoji, { fontSize: 28 }]}>🟢</Text>
-              <View style={styles.flagTitleContainer}>
-                <Text style={[styles.flagTitle, { color: '#16a085' }]}>
-                  {t('result.greenFlag')} - {t('result.palmOilFree')}
+          {/* Green Flag (Priority 1) - Palm Oil Free */}
+          {isPalmOilFree && (
+            <View style={[styles.flagCard, { 
+              backgroundColor: '#16a085' + '15', 
+              borderColor: '#16a085',
+              borderWidth: currentFlag === 'green' ? 2 : 1
+            }]}>
+              <View style={styles.flagHeader}>
+                <Text style={[styles.flagEmoji, { fontSize: 28 }]}>🟢</Text>
+                <View style={styles.flagTitleContainer}>
+                  <Text style={[styles.flagTitle, { color: '#16a085' }]}>
+                    {t('result.greenFlag')} - {t('result.palmOilFree')}
+                  </Text>
+                  <Text style={[styles.flagPriority, { color: colors.textSecondary }]}>
+                    {t('result.priority1', 'Priority 1: Best Choice')}
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.flagDescription, { color: colors.textSecondary, marginTop: 12 }]}>
+                {t('result.greenFlagDescription', 'This product does not contain palm oil or palm oil derivatives. Products with a green flag have no palm oil content, making them the most environmentally friendly option. By choosing palm oil-free products, you help reduce the demand for palm oil plantations, which are a leading cause of deforestation, biodiversity loss, and climate change. This is the best choice for environmental sustainability.')}
+              </Text>
+              <View style={styles.flagBenefits}>
+                <Text style={[styles.flagBenefitsTitle, { color: colors.text }]}>
+                  {t('result.benefits', 'Benefits:')}
                 </Text>
-                <Text style={[styles.flagPriority, { color: colors.textSecondary }]}>
-                  {t('result.priority1', 'Priority 1: Best Choice')}
+                <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
+                  • {t('result.benefitNoDeforestation', 'No contribution to deforestation')}
+                </Text>
+                <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
+                  • {t('result.benefitNoHabitatLoss', 'No habitat destruction for endangered species')}
+                </Text>
+                <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
+                  • {t('result.benefitLowerCarbon', 'Lower carbon footprint')}
+                </Text>
+                <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
+                  • {t('result.benefitBiodiversity', 'Supports biodiversity conservation')}
                 </Text>
               </View>
             </View>
-            <Text style={[styles.flagDescription, { color: colors.textSecondary, marginTop: 12 }]}>
-              {t('result.greenFlagDescription', 'This product does not contain palm oil or palm oil derivatives. Products with a green flag have no palm oil content, making them the most environmentally friendly option. By choosing palm oil-free products, you help reduce the demand for palm oil plantations, which are a leading cause of deforestation, biodiversity loss, and climate change. This is the best choice for environmental sustainability.')}
-            </Text>
-            <View style={styles.flagBenefits}>
-              <Text style={[styles.flagBenefitsTitle, { color: colors.text }]}>
-                {t('result.benefits', 'Benefits:')}
+          )}
+
+          {/* Green Flag - Unknown Status */}
+          {!isPalmOilFree && !containsPalmOil && !isNonSustainable && (
+            <View style={[styles.flagCard, { 
+              backgroundColor: '#16a085' + '15', 
+              borderColor: '#16a085',
+              borderWidth: currentFlag === 'green' ? 2 : 1
+            }]}>
+              <View style={styles.flagHeader}>
+                <Text style={[styles.flagEmoji, { fontSize: 28 }]}>🟢</Text>
+                <View style={styles.flagTitleContainer}>
+                  <Text style={[styles.flagTitle, { color: '#16a085' }]}>
+                    {t('result.greenFlag')} - {t('result.palmOilUnknown', 'Palm Oil Status Unknown')}
+                  </Text>
+                  <Text style={[styles.flagPriority, { color: colors.textSecondary }]}>
+                    {t('result.statusUnknown', 'Status: Unknown')}
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.flagDescription, { color: colors.textSecondary, marginTop: 12 }]}>
+                {t('result.unknownStatusDescription', 'The palm oil status of this product could not be determined from available data sources. This may occur when product information is incomplete or not yet verified in our databases. While a green flag typically indicates no palm oil, in this case it means the status is unknown. To be certain, check the product\'s ingredients list for palm oil, palmolein, palm fat, or other palm oil derivatives. If you find palm oil listed, the product should be considered as containing palm oil (orange flag) unless certified as sustainable.')}
               </Text>
-              <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
-                • {t('result.benefitNoDeforestation', 'No contribution to deforestation')}
-              </Text>
-              <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
-                • {t('result.benefitNoHabitatLoss', 'No habitat destruction for endangered species')}
-              </Text>
-              <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
-                • {t('result.benefitLowerCarbon', 'Lower carbon footprint')}
-              </Text>
-              <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
-                • {t('result.benefitBiodiversity', 'Supports biodiversity conservation')}
-              </Text>
+              <View style={styles.flagBenefits}>
+                <Text style={[styles.flagBenefitsTitle, { color: colors.text }]}>
+                  {t('result.whatThisMeans', 'What This Means:')}
+                </Text>
+                <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
+                  • {t('result.unknownDataIncomplete', 'Product data may be incomplete or not yet verified')}
+                </Text>
+                <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
+                  • {t('result.unknownCheckIngredients', 'Check the ingredients list manually for palm oil')}
+                </Text>
+                <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
+                  • {t('result.unknownLookForVariations', 'Look for: palm oil, palmolein, palm fat, palm kernel oil')}
+                </Text>
+                <Text style={[styles.flagBenefitsText, { color: colors.textSecondary }]}>
+                  • {t('result.unknownWhenInDoubt', 'When in doubt, assume it may contain palm oil and look for RSPO certification')}
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
 
           {/* Orange Flag (Priority 2) */}
           <View style={[styles.flagCard, { 

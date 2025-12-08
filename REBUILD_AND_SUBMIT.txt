@@ -1,0 +1,35 @@
+# ============================================================================
+# REBUILD iOS WITH NEW BUILD NUMBER AND SUBMIT TO APP STORE CONNECT
+# ============================================================================
+
+# Build number has been incremented to 5 in app.config.js
+# Now rebuild iOS and submit to App Store Connect
+
+# ============================================================================
+# OPTION 1: Quick iOS Build and Submit (Recommended)
+# ============================================================================
+
+cd C:\TrueScan-FoodScanner; eas build --platform ios --profile production --non-interactive
+
+# After build completes, submit to App Store Connect:
+cd C:\TrueScan-FoodScanner; eas submit --platform ios --latest --non-interactive
+
+# ============================================================================
+# OPTION 2: Use the Complete Build Script (Includes Testing)
+# ============================================================================
+
+cd C:\TrueScan-FoodScanner; .\scripts\completeBuildWithTesting.ps1
+
+# ============================================================================
+# WHAT CHANGED:
+# ============================================================================
+# - iOS buildNumber: 4 -> 5 (in app.config.js)
+# - Android versionCode: 3 -> 4 (in app.config.js)
+# - This allows a new build to be submitted to App Store Connect
+# ============================================================================
+#
+# AFTER BUILD COMPLETES:
+# 1. The build will have build number 5
+# 2. You can submit it to App Store Connect
+# 3. It will be available for TestFlight testing on iPhone 11
+# ============================================================================

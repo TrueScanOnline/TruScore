@@ -66,29 +66,97 @@ function RootLayout() {
 
   useEffect(() => {
     // Initialize both stores (load cached data) and check for deep links
+    // Uses systematic initialization manager instead of uncoordinated .then() chains
     const initialize = async () => {
       console.log('[RootLayout] Starting initialization...');
       console.log('[RootLayout] Initial showOnboarding state:', showOnboarding);
       
       try {
-        // Initialize error reporting (Sentry) early - TEMPORARILY DISABLED
-        // TODO: Uncomment when Sentry is installed: await errorReporting.initialize();
-        // Error reporting is optional and will be enabled when @sentry/react-native is installed
+        // Use systematic initialization manager
+        const { appInitializationManager } = await import('../src/services/appInitializationManager');
         
-        // Initialize FSANZ auto-update system (non-blocking)
-        import('../src/services/fsanDatabaseAutoUpdate').then(({ initializeFSANZAutoUpdate }) => {
-          initializeFSANZAutoUpdate().catch(err => {
-            console.log('[RootLayout] FSANZ auto-update initialization error (non-critical):', err);
-          });
-        });
+        // Register all initialization tasks with proper dependencies
+        appInitializationManager.registerTasks([
+          {
+            name: 'environmentValidation',
+            task: async () => {
+              const { validateEnvironment } = await import('../src/utils/environmentValidation');
+              const validation = validateEnvironment();
+              if (!validation.isValid) {
+                console.warn('[RootLayout] Environment validation warnings:', validation.warnings);
+              }
+            },
+            critical: false,
+          },
+          {
+            name: 'rateLimiter',
+            task: async () => {
+              const { initializeRateLimits } = await import('../src/utils/rateLimiter');
+              initializeRateLimits();
+            },
+            critical: false,
+          },
+          {
+            name: 'settingsStore',
+            task: async () => {
+              await initSettings();
+            },
+            critical: true, // Critical - needed for onboarding decision
+          },
+          {
+            name: 'scanStore',
+            task: async () => {
+              await initScan();
+            },
+            dependencies: ['settingsStore'],
+            critical: false,
+          },
+          {
+            name: 'favoritesStore',
+            task: async () => {
+              await initFavorites();
+            },
+            dependencies: ['settingsStore'],
+            critical: false,
+          },
+          {
+            name: 'subscriptionStore',
+            task: async () => {
+              await initSubscription();
+              // Verify initialization succeeded
+              const { isInitialized, error } = useSubscriptionStore.getState();
+              if (!isInitialized && error) {
+                console.warn('[RootLayout] Subscription initialization failed:', error);
+                // App continues in free mode - this is acceptable, don't throw
+              }
+            },
+            dependencies: ['settingsStore'],
+            critical: false, // Non-critical - app works in free mode
+            retries: 1,
+          },
+          {
+            name: 'fsanDatabaseInitializer',
+            task: async () => {
+              const { initializeFSANZDatabases } = await import('../src/services/fsanDatabaseInitializer');
+              await initializeFSANZDatabases();
+            },
+            critical: false,
+          },
+          {
+            name: 'fsanDatabaseAutoUpdate',
+            task: async () => {
+              const { initializeFSANZAutoUpdate } = await import('../src/services/fsanDatabaseAutoUpdate');
+              await initializeFSANZAutoUpdate();
+            },
+            critical: false,
+          },
+        ]);
+
+        // Execute all initialization tasks
+        await appInitializationManager.initialize();
         
-        // Initialize settings store first - this loads from AsyncStorage
-        await initSettings();
-        
-        // Wait a tick to ensure Zustand state is fully updated after async set
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        // Check stored value AFTER initialization completes
+        // Check stored value AFTER initialization completes (no setTimeout needed)
+        // Zustand state is immediately available after await
         const settings = useSettingsStore.getState();
         
         // FORCE CHECK: Explicitly check if hasCompletedOnboarding is true
@@ -107,26 +175,6 @@ function RootLayout() {
         
         // FORCE UPDATE: Set the state explicitly
         setShowOnboarding(shouldShowOnboarding);
-        
-        // Initialize scan store
-        await initScan();
-        
-        // Initialize favorites store
-        await initFavorites();
-        
-        // Initialize subscription store with error handling
-        try {
-          await initSubscription();
-          // Verify initialization succeeded
-          const { isInitialized, error } = useSubscriptionStore.getState();
-          if (!isInitialized && error) {
-            console.warn('[RootLayout] Subscription initialization failed:', error);
-            // App continues in free mode - this is acceptable
-          }
-        } catch (subscriptionError) {
-          console.error('[RootLayout] Subscription initialization error:', subscriptionError);
-          // App continues in free mode - this is acceptable
-        }
         
         // Check for initial deep link (but don't let it override onboarding)
         const url = await Linking.getInitialURL();

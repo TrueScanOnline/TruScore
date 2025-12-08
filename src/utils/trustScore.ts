@@ -1,15 +1,22 @@
-// Trust score calculation
+// TruScore calculation
 import { Product, ProductWithTrustScore, TrustScoreBreakdown } from '../types/product';
 import { extractManufacturingCountry, calculateEcoScore, formatCertifications } from '../services/openFoodFacts';
-import { calculateTruScore } from '../lib/scoringEngine';
+import { calculateTruScore } from '../lib/truscoreEngine';
+import { getCachedTruScore, cacheTruScore } from './truScoreCache';
+import { logger } from './logger';
 
 /**
- * Check if we have sufficient real data to calculate a meaningful Trust Score
+ * Check if we have sufficient real data to calculate a meaningful TruScore
  * Only products from Open Food Facts or with comprehensive data should get scores
  */
 function hasSufficientDataForTrustScore(product: Product): boolean {
   // If source is Open Food Facts, we have real data
   if (product.source === 'openfoodfacts') {
+    return true;
+  }
+  
+  // SQLite products are cached products - they have real data (even if minimal)
+  if (product.source === 'sqlite') {
     return true;
   }
   
@@ -34,15 +41,20 @@ function hasSufficientDataForTrustScore(product: Product): boolean {
 }
 
 /**
- * Calculate overall trust score (0-100) based on multiple factors
+ * Calculate overall TruScore (0-100) based on multiple factors
  * Only calculates score if we have sufficient real data
+ * 
+ * Note: This is a wrapper function that calls calculateTruScore from truscoreEngine.ts
+ * The function name uses "TrustScore" for backward compatibility with ProductWithTrustScore type
+ * 
+ * Now includes caching to avoid recalculation
  */
-export function calculateTrustScore(product: Product): ProductWithTrustScore {
-  // Check if we have sufficient data for a meaningful Trust Score
+export async function calculateTrustScore(product: Product): Promise<ProductWithTrustScore> {
+  // Check if we have sufficient data for a meaningful TruScore
   const hasRealData = hasSufficientDataForTrustScore(product);
   
   if (!hasRealData) {
-    // Return product without Trust Score (marked as insufficient data)
+    // Return product without TruScore (marked as insufficient data)
     return {
       ...product,
       trust_score: null,
@@ -50,10 +62,35 @@ export function calculateTrustScore(product: Product): ProductWithTrustScore {
     };
   }
 
-  // TruScore v1.3: 4 equal pillars (25 points each = 100 total)
-  // 100% based on recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels)
-  // Use v1.3 scoring engine
-  const truScoreResult = calculateTruScore(product, product.source || 'unknown');
+  // Check cache first
+  const cachedTruScore = await getCachedTruScore(product.barcode);
+  let truScoreResult;
+  
+  if (cachedTruScore) {
+    truScoreResult = cachedTruScore;
+    logger.debug('[TruScore] Using cached TruScore result:', {
+      barcode: product.barcode,
+      truscore: truScoreResult.truscore,
+      breakdown: truScoreResult.breakdown,
+      hasNutriScore: truScoreResult.hasNutriScore,
+      hasEcoScore: truScoreResult.hasEcoScore,
+    });
+  } else {
+    // TruScore v1.4: 4 equal pillars (25 points each = 100 total)
+    // 100% based on recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels)
+    // Use v1.4 scoring engine (truscoreEngine.ts) - matches UI component
+    logger.debug('[TruScore] Calculating fresh TruScore (not cached):', {
+      barcode: product.barcode,
+      hasNutriScore: !!product.nutriscore_grade,
+      nutriscore_grade: product.nutriscore_grade,
+      hasEcoScore: !!product.ecoscore_grade,
+      ecoscore_grade: product.ecoscore_grade,
+    });
+    truScoreResult = calculateTruScore(product);
+    
+    // Cache the result
+    await cacheTruScore(product.barcode, truScoreResult);
+  }
   
   const body = truScoreResult.breakdown.Body;
   const planet = truScoreResult.breakdown.Planet;
@@ -79,11 +116,15 @@ export function calculateTrustScore(product: Product): ProductWithTrustScore {
   const truScore = truScoreResult.truscore;
 
   // Generate reasons (use v1.3 metadata)
-  breakdown.reasons = generateTrustReasons(breakdown, product, {
-    hasNutriScore: truScoreResult.hasNutriScore,
-    hasEcoScore: truScoreResult.hasEcoScore,
-    hasOrigin: truScoreResult.hasOrigin,
-  });
+  breakdown.reasons = generateTrustReasons(
+    breakdown,
+    product,
+    {
+      hasNutriScore: truScoreResult.hasNutriScore,
+      hasEcoScore: truScoreResult.hasEcoScore,
+      hasOrigin: truScoreResult.hasOrigin,
+    }
+  );
 
   return {
     ...product,
@@ -99,213 +140,9 @@ export function calculateTrustScore(product: Product): ProductWithTrustScore {
 }
 
 /**
- * Calculate Planet score (0-25) - TruScore Pillar #2
- * Based on Eco-Score (official French system) + packaging + palm oil
- */
-function calculatePlanetScore(product: Product): number {
-  const ecoScore = calculateEcoScore(product);
-
-  // Eco-Score grade conversion (A=25, B=20, C=15, D=10, E=5, unknown=12)
-  // Direct conversion from recognized public system
-  const gradeScores: Record<string, number> = {
-    'a': 25,
-    'b': 20,
-    'c': 15,
-    'd': 10,
-    'e': 5,
-    'unknown': 12,
-  };
-  let score = ecoScore?.grade ? (gradeScores[ecoScore.grade.toLowerCase()] || 12) : 12;
-
-  // Palm oil / deforestation risk
-  const hasPalmOil = product.ingredients_analysis_tags?.some(tag => 
-    tag.toLowerCase().includes('palm-oil') && !tag.toLowerCase().includes('palm-oil-free')
-  );
-  if (hasPalmOil) {
-    score -= 8; // Non-sustainable palm oil = major deforestation risk
-  }
-
-  // Packaging recyclability (bonus for fully recyclable)
-  const packagings = product.packagings || [];
-  if (packagings.length > 0) {
-    const recyclable = packagings.filter(p => 
-      p.recycling === 'recycle' || p.recycling === 'widely recycled'
-    ).length;
-    
-    if (recyclable === packagings.length) {
-      score += 5; // All packaging recyclable = bonus
-    } else if (recyclable > 0) {
-      score += 2; // Some packaging recyclable = small bonus
-    }
-  } else if (product.packaging_tags) {
-    // Fallback to packaging_tags if packagings array not available
-    const hasRecyclable = product.packaging_tags.some(tag => 
-      tag.toLowerCase().includes('recyclable')
-    );
-    if (hasRecyclable) {
-      score += 5; // Recyclable packaging = bonus
-    }
-  }
-
-  return Math.max(0, Math.min(25, Math.round(score)));
-}
-
-/**
- * Calculate Care score (0-25) - TruScore Pillar #3
- * Based on ethical & welfare certifications (Fairtrade, Organic, MSC, etc.)
- * Explicit bonus structure: Fairtrade +8, EU Organic +7, MSC +6, etc.
- */
-function calculateCareScore(product: Product): number {
-  let score = 0; // Start at 0, build up with certifications
-
-  // Extract labels from labels_tags (Open Food Facts format)
-  const labels = (product.labels_tags || []).map(l => l.toLowerCase());
-  
-  // Explicit bonus structure (can stack up to +25)
-  const labelBonuses: Record<string, number> = {
-    'en:fair-trade': 8,           // Fairtrade = major ethical bonus
-    'en:eu-organic': 7,           // EU Organic = high ethical standard
-    'en:organic': 7,              // Organic (general)
-    'en:rainforest-alliance': 6,  // Rainforest Alliance = strong certification
-    'en:msc': 6,                  // Marine Stewardship Council = sustainable fishing
-    'en:asc': 6,                  // Aquaculture Stewardship Council = sustainable aquaculture
-    'en:rspca-assured': 5,        // RSPCA Assured = animal welfare
-    'en:cage-free': 4,            // Cage-free = animal welfare
-    'en:free-range': 4,           // Free-range = animal welfare
-    'en:grass-fed': 4,            // Grass-fed = animal welfare
-    'en:utz': 3,                  // UTZ = sustainable farming
-    'en:fair-for-life': 3,        // Fair for Life = ethical trade
-  };
-
-  // Apply bonuses for each label
-  for (const label of labels) {
-    for (const [key, bonus] of Object.entries(labelBonuses)) {
-      if (label.includes(key)) {
-        score += bonus;
-        break; // Only count each label once
-      }
-    }
-  }
-
-  // Known cruelty/exploitation brand penalty (simple internal list)
-  // These are parent companies known for poor ethical practices
-  const crueltyBrands = [
-    'nestle', 'unilever', 'procter & gamble', 'l\'oreal', 
-    'mars', 'mondelez', 'kraft heinz', 'coca-cola', 'pepsico'
-  ];
-  
-  const brandName = (product.brands || '').toLowerCase();
-  const isCrueltyBrand = crueltyBrands.some(cruel => brandName.includes(cruel));
-  
-  if (isCrueltyBrand) {
-    score -= 10; // Known cruelty brand = major penalty
-  }
-
-  // Cap at 25 (maximum)
-  return Math.max(0, Math.min(25, score));
-}
-
-/**
- * Calculate Body score (0-25) - TruScore Pillar #1
- * Based on Nutri-Score (official EU system) + NOVA + additives + allergens
- */
-function calculateBodyScore(product: Product): number {
-  // Primary: Use Nutri-Score if available (recognized standard)
-  // Direct conversion: A=25, B=20, C=15, D=10, E=5, missing=12
-  if (product.nutriscore_grade) {
-    const gradeScores: Record<string, number> = {
-      'a': 25,
-      'b': 20,
-      'c': 15,
-      'd': 10,
-      'e': 5,
-      'unknown': 12,
-    };
-    
-    let score = gradeScores[product.nutriscore_grade.toLowerCase()] || 12;
-    
-    // NOVA ultra-processing (São Paulo University system - now merged into Body)
-    // NOVA 1 = +3, NOVA 3 = -3, NOVA 4 = -8
-    if (product.nova_group === 1) {
-      score += 3; // Unprocessed or minimally processed = bonus
-    } else if (product.nova_group === 3) {
-      score -= 3; // Processed = penalty
-    } else if (product.nova_group === 4) {
-      score -= 8; // Ultra-processed = major penalty
-    }
-    
-    // Risky additives / contaminants (OFF analysis)
-    // High-risk additives (EFSA/EWG flagged) - penalty of -3 to -10
-    if (product.additives_tags && product.additives_tags.length > 0) {
-      const highRiskAdditives = ['en:e102', 'en:e104', 'en:e110', 'en:e122', 'en:e124', 'en:e129', 
-                                 'en:e211', 'en:e250', 'en:e251', 'en:e621', 'en:e951', 'en:e952'];
-      const highRiskCount = product.additives_tags.filter(tag => 
-        highRiskAdditives.some(risk => tag.toLowerCase().includes(risk))
-      ).length;
-      
-      // Also check ingredients_analysis_tags for risk indicators
-      const riskyIngredients = product.ingredients_analysis_tags?.filter(tag =>
-        tag.toLowerCase().includes('palm') || 
-        tag.toLowerCase().includes('risk') || 
-        tag.toLowerCase().includes('carcinogenic')
-      ).length || 0;
-      
-      // Deduct up to -10 points for risky additives and ingredients
-      const additivePenalty = Math.min(10, (highRiskCount * 2) + (riskyIngredients * 3));
-      score -= additivePenalty;
-    }
-    
-    // Allergens & irritants (deduct up to -5)
-    if (product.allergens_tags && product.allergens_tags.length > 0) {
-      score -= Math.min(5, product.allergens_tags.length * 1);
-    }
-    
-    // Cosmetics/household irritants (parfum, fragrance, phthalate, paraben)
-    const ingredientsText = (product.ingredients_text || '').toLowerCase();
-    const irritants = ['parfum', 'fragrance', 'phthalate', 'paraben'];
-    const hasIrritants = irritants.some(irritant => ingredientsText.includes(irritant));
-    if (hasIrritants) {
-      score -= 5;
-    }
-    
-    return Math.max(0, Math.min(25, Math.round(score)));
-  }
-  
-  // Fallback: If no Nutri-Score, use basic nutrition data (less reliable)
-  // Base score of 12 (equivalent to "unknown" Nutri-Score)
-  let score = 12;
-  
-  if (!product.nutriments) {
-    return Math.max(0, score); // No nutrition data = base score only
-  }
-
-  // Basic nutrition-based scoring (simple fallback)
-  const nutrientLevels = product.nutrient_levels || {};
-  
-  // Good nutrition indicators (small bonuses)
-  if (nutrientLevels.fat === 'low') score += 2;
-  if (nutrientLevels.saturated_fat === 'low') score += 2;
-  if (nutrientLevels.sugars === 'low') score += 2;
-  if (nutrientLevels.salt === 'low') score += 2;
-  
-  // Poor nutrition indicators (penalties)
-  if (nutrientLevels.fat === 'high') score -= 3;
-  if (nutrientLevels.saturated_fat === 'high') score -= 3;
-  if (nutrientLevels.sugars === 'high') score -= 3;
-  if (nutrientLevels.salt === 'high') score -= 3;
-  
-  // NOVA adjustment (if available)
-  if (product.nova_group === 1) {
-    score += 3;
-  } else if (product.nova_group === 4) {
-    score -= 8;
-  }
-
-  return Math.max(0, Math.min(25, Math.round(score)));
-}
-
-/**
  * Calculate processing score (0-100)
+ * Used for educational display in breakdown.processing field
+ * Note: This is separate from TruScore calculation (which uses truscoreEngine.ts)
  */
 function calculateProcessingScore(product: Product): number {
   let score = 50;
@@ -336,88 +173,8 @@ function calculateProcessingScore(product: Product): number {
 }
 
 /**
- * Calculate Open score (0-25) - TruScore Pillar #4
- * Based on ingredient disclosure transparency (hidden terms detection)
- * Detects generic terms like "parfum", "fragrance", "natural flavor", "proprietary blend"
- */
-function calculateOpenScore(product: Product): number {
-  let score = 25; // Start with perfect score (full transparency)
-
-  const ingredientsText = (product.ingredients_text || '').toLowerCase();
-  
-  // Check for hidden terms (generic ingredient descriptors)
-  const hiddenTerms = [
-    'parfum', 'fragrance', 'aroma', 'flavor', 'flavour',
-    'natural flavor', 'natural flavour', 
-    'artificial flavor', 'artificial flavour',
-    'proprietary blend', 'natural flavoring', 'artificial flavoring'
-  ];
-  
-  const hiddenCount = hiddenTerms.filter(term => 
-    ingredientsText.includes(term)
-  ).length;
-  
-  // Deduct points for hidden terms
-  if (hiddenCount >= 3) {
-    score -= 20; // Multiple hidden terms = major transparency issue
-  } else if (hiddenCount >= 1) {
-    score -= 10; // One hidden term = moderate concern
-  }
-  
-  // Check for ingredient list presence
-  if (!ingredientsText || ingredientsText.length < 10) {
-    score = 5; // No ingredient list = very poor transparency (minimum score)
-  }
-  
-  // Check for percentage disclosure (bonus for full disclosure)
-  // If ingredients list contains percentages, it's more transparent
-  const hasPercentages = /%\s|\d+%/.test(ingredientsText);
-  if (hasPercentages && score >= 15) {
-    score = Math.min(25, score + 2); // Small bonus for percentage disclosure
-  }
-
-  return Math.max(0, Math.min(25, Math.round(score)));
-}
-
-/**
- * Legacy: Calculate transparency score (0-100) - for backward compatibility
- */
-function calculateTransparencyScore(product: Product): number {
-  const openScore = calculateOpenScore(product);
-  // Convert 0-25 to 0-100 for compatibility
-  return (openScore / 25) * 100;
-}
-
-/**
- * Legacy: Calculate sustainability score (0-100) - for backward compatibility
- */
-function calculateSustainabilityScore(product: Product): number {
-  const planetScore = calculatePlanetScore(product);
-  // Convert 0-25 to 0-100 for compatibility
-  return (planetScore / 25) * 100;
-}
-
-/**
- * Legacy: Calculate ethics score (0-100) - for backward compatibility
- */
-function calculateEthicsScore(product: Product): number {
-  const careScore = calculateCareScore(product);
-  // Convert 0-25 to 0-100 for compatibility
-  return (careScore / 25) * 100;
-}
-
-/**
- * Legacy: Calculate Body Safety score (0-100) - for backward compatibility
- */
-function calculateBodySafetyScore(product: Product): number {
-  const bodyScore = calculateBodyScore(product);
-  // Convert 0-25 to 0-100 for compatibility
-  return (bodyScore / 25) * 100;
-}
-
-/**
- * Generate human-readable reasons for trust score
- * Updated for TruScore v1.3 4-pillar system
+ * Generate human-readable reasons for TruScore
+ * Updated for TruScore v1.4 4-pillar system
  */
 function generateTrustReasons(
   breakdown: TrustScoreBreakdown, 

@@ -1,6 +1,8 @@
 // Product flags system - generates green (positive) and red (negative) flags
 import { Product, ProductWithTrustScore } from '../types/product';
 import { extractManufacturingCountry } from '../services/openFoodFacts';
+import { getPalmOilStatus } from './palmOilUtils';
+import { applyOverrideRules } from '../config/scoreHighlightOverrides';
 
 export interface ProductFlag {
   type: 'green' | 'red';
@@ -12,6 +14,7 @@ export interface ProductFlag {
 
 /**
  * Generate all flags for a product based on available data
+ * Applies override rules to filter out inaccurate or misleading highlights
  */
 export function generateProductFlags(product: ProductWithTrustScore): ProductFlag[] {
   const flags: ProductFlag[] = [];
@@ -37,7 +40,10 @@ export function generateProductFlags(product: ProductWithTrustScore): ProductFla
   // News flags (placeholder - would need external data source)
   flags.push(...generateNewsFlags(product));
 
-  return flags;
+  // Apply override rules to filter out inaccurate highlights
+  const filteredFlags = applyOverrideRules(flags, product);
+
+  return filteredFlags;
 }
 
 /**
@@ -68,30 +74,37 @@ function generateSustainabilityFlags(product: ProductWithTrustScore): ProductFla
     }
   }
 
-  // Palm oil
-  const hasPalmOil = product.ingredients_analysis_tags?.some(tag => 
-    tag.toLowerCase().includes('palm-oil') && !tag.toLowerCase().includes('palm-oil-free')
-  );
-  const isPalmOilFree = product.ingredients_analysis_tags?.some(tag => 
-    tag.toLowerCase().includes('palm-oil-free')
-  );
-
-  if (hasPalmOil) {
-    flags.push({
-      type: 'red',
-      category: 'sustainability',
-      title: 'Contains Palm Oil',
-      description: 'Palm oil production is linked to deforestation and biodiversity loss',
-      severity: 'medium',
-    });
-  } else if (isPalmOilFree) {
-    flags.push({
-      type: 'green',
-      category: 'sustainability',
-      title: 'Palm Oil Free',
-      description: 'This product does not contain palm oil',
-      severity: 'low',
-    });
+  // Palm oil - USE THE SAME LOGIC AS PALM OIL CARD AND VALUES INSIGHTS
+  // This ensures consistency across the entire app
+  const palmOilStatus = getPalmOilStatus(product.palm_oil_analysis);
+  
+  if (palmOilStatus) {
+    if (palmOilStatus.isPalmOilFree) {
+      flags.push({
+        type: 'green',
+        category: 'sustainability',
+        title: 'Palm Oil Free',
+        description: 'This product does not contain palm oil',
+        severity: 'low',
+      });
+    } else if (palmOilStatus.isNonSustainable) {
+      flags.push({
+        type: 'red',
+        category: 'sustainability',
+        title: 'Contains Non-Sustainable Palm Oil',
+        description: 'Palm oil production is linked to deforestation and biodiversity loss',
+        severity: 'high',
+      });
+    } else if (palmOilStatus.containsPalmOil) {
+      flags.push({
+        type: 'red',
+        category: 'sustainability',
+        title: 'Contains Palm Oil',
+        description: 'Palm oil production is linked to deforestation and biodiversity loss',
+        severity: 'medium',
+      });
+    }
+    // Note: We don't show a flag for "unknown" status - that's neutral
   }
 
   // Packaging recyclability
@@ -307,11 +320,14 @@ function generateNutritionFlags(product: ProductWithTrustScore): ProductFlag[] {
 
   // Allergens
   if (product.allergens_tags && product.allergens_tags.length > 0) {
+    const allergenNames = product.allergens_tags
+      .map(tag => tag.replace(/^en:/, '').replace(/-/g, ' '))
+      .join(', ');
     flags.push({
       type: 'red',
       category: 'nutrition',
       title: 'Contains Allergens',
-      description: `Contains: ${product.allergens_tags.join(', ')}`,
+      description: `Contains: ${allergenNames}`,
       severity: 'low',
     });
   }

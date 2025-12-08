@@ -1,0 +1,9 @@
+# ============================================================================
+# COPY AND PASTE THIS ENTIRE BLOCK INTO POWERSHELL
+# ============================================================================
+
+cd C:\TrueScan-FoodScanner; powershell -ExecutionPolicy Bypass -File scripts\completeBuildAndSubmit.ps1
+
+# ============================================================================
+# END - Copy everything above this line
+# ============================================================================

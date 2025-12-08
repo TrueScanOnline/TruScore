@@ -1,0 +1,36 @@
+{
+  "pillar": "body",
+  "barcode": "9310055105850",
+  "productName": "NUTRI GRAIN",
+  "result": {
+    "score": 0,
+    "base": 15,
+    "adjustments": [
+      {
+        "description": "Nutri-Score Grade D (poor nutrition)",
+        "value": -5,
+        "type": "negative"
+      },
+      {
+        "description": "3 additive(s) (weighted by safety rating)",
+        "value": -2.5,
+        "type": "negative"
+      },
+      {
+        "description": "NOVA Group 4 (ultra-processed)",
+        "value": -8,
+        "type": "negative"
+      }
+    ],
+    "details": {
+      "hasNutriScore": true,
+      "nutriscoreGrade": "d",
+      "nutriscoreValue": 10,
+      "additivePenalty": 2.5,
+      "riskyTagsPenalty": 0,
+      "irritantPenalty": 0,
+      "fragrancePenalty": 0,
+      "novaAdjustment": -8
+    }
+  }
+}

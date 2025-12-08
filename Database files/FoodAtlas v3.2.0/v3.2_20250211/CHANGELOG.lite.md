@@ -1,0 +1,1 @@
+The changelog updates identifiers in entities.tsv, restructures triplet relationships, adds ontology files, and refines naming conventions. Key changes include an 'is_outlier' column in metadata_contains.tsv and switching from PubChem CID to ChEBI, CDNO, and FDC Nutrient IDs. Formatting and consistency improvements were also made.

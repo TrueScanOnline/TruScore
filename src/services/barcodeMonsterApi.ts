@@ -2,6 +2,7 @@
 // Good for general products, returns product name, brand, image
 import { Product } from '../types/product';
 import { createTimeoutSignal, fetchWithRateLimit } from '../utils/timeoutHelper';
+import { logger } from '../utils/logger';
 
 const BARCODE_MONSTER_API = 'https://api.barcodemonster.com/v1/lookup';
 const API_KEY = process.env.EXPO_PUBLIC_BARCODE_MONSTER_API_KEY || ''; // Optional - free tier works without key
@@ -39,7 +40,7 @@ export async function fetchProductFromBarcodeMonster(barcode: string): Promise<P
 
     if (!response.ok) {
       if (response.status !== 404) {
-        console.log(`[DEBUG] Barcode Monster API error: ${response.status}`);
+        logger.debug(`Barcode Monster API error: ${response.status}`);
       }
       return null;
     }
@@ -67,7 +68,7 @@ export async function fetchProductFromBarcodeMonster(barcode: string): Promise<P
   } catch (error: any) {
     // Don't log network errors as warnings - they're expected
     if (error.name !== 'AbortError' && error.message && !error.message.includes('timeout')) {
-      console.log(`[DEBUG] Barcode Monster API error for ${barcode}:`, error.message);
+      logger.debug(`Barcode Monster API error for ${barcode}: ${error.message}`);
     }
     return null;
   }

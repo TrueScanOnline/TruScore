@@ -18,7 +18,7 @@ import { Country, findCountryByName } from '../utils/countries';
 interface ManufacturingCountryModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (country: string) => Promise<void>;
+  onSubmit: (country: string, hasImportedIngredients?: boolean) => Promise<void>;
   barcode: string;
   productName?: string;
 }
@@ -33,6 +33,7 @@ export default function ManufacturingCountryModal({
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [hasImportedIngredients, setHasImportedIngredients] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<1 | 2>(1); // Step 1: Instructions, Step 2: Select Country
   const isClosingRef = useRef(false);
@@ -65,6 +66,7 @@ export default function ManufacturingCountryModal({
       console.log('[ManufacturingCountryModal] Modal opened - resetting state');
       setStep(1);
       setSelectedCountry(null);
+      setHasImportedIngredients(false);
       setSubmitting(false);
       isClosingRef.current = false;
       hasInitializedRef.current = true;
@@ -105,8 +107,16 @@ export default function ManufacturingCountryModal({
 
     setSubmitting(true);
     try {
-      await onSubmit(selectedCountry.name);
+      // Capture the current checkbox state at submission time
+      const currentHasImportedIngredients = hasImportedIngredients;
+      console.log('[ManufacturingCountryModal] Submitting with:', {
+        country: selectedCountry.name,
+        hasImportedIngredients: currentHasImportedIngredients,
+        checkboxState: hasImportedIngredients,
+      });
+      await onSubmit(selectedCountry.name, currentHasImportedIngredients);
       setSelectedCountry(null);
+      setHasImportedIngredients(false);
       setStep(1);
       isClosingRef.current = true;
       onClose();
@@ -120,7 +130,7 @@ export default function ManufacturingCountryModal({
     } finally {
       setSubmitting(false);
     }
-  }, [selectedCountry, submitting, onSubmit, onClose, getTranslation]);
+  }, [selectedCountry, hasImportedIngredients, submitting, onSubmit, onClose, getTranslation]);
 
   const handleCancel = useCallback(() => {
     if (submitting || isClosingRef.current) {
@@ -129,6 +139,7 @@ export default function ManufacturingCountryModal({
     
     isClosingRef.current = true;
     setSelectedCountry(null);
+    setHasImportedIngredients(false);
     setStep(1);
     setSubmitting(false);
     onClose();
@@ -331,6 +342,40 @@ export default function ManufacturingCountryModal({
                       </Text>
                     </View>
                   )}
+                </View>
+
+                {/* Imported Ingredients Checkbox */}
+                <View style={styles.checkboxContainer}>
+                  <TouchableOpacity
+                    style={styles.checkboxRow}
+                    onPress={() => {
+                      const newValue = !hasImportedIngredients;
+                      console.log('[ManufacturingCountryModal] Checkbox toggled:', {
+                        oldValue: hasImportedIngredients,
+                        newValue,
+                      });
+                      setHasImportedIngredients(newValue);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[
+                      styles.checkbox,
+                      { 
+                        borderColor: hasImportedIngredients ? colors.primary : colors.border,
+                        backgroundColor: hasImportedIngredients ? colors.primary : 'transparent'
+                      }
+                    ]}>
+                      {hasImportedIngredients && (
+                        <Ionicons name="checkmark" size={16} color="#fff" />
+                      )}
+                    </View>
+                    <Text style={[styles.checkboxLabel, { color: colors.text }]}>
+                      {getTranslation('manufacturingCountry.hasImportedIngredients', 'With some imported ingredients')}
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={[styles.checkboxHint, { color: colors.textSecondary }]}>
+                    {getTranslation('manufacturingCountry.importedIngredientsHint', 'Check this if the label states "With some imported ingredients"')}
+                  </Text>
                 </View>
 
                 <View style={styles.infoCard}>
@@ -648,5 +693,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  checkboxContainer: {
+    marginTop: 16,
+    gap: 8,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    flex: 1,
+  },
+  checkboxHint: {
+    fontSize: 13,
+    marginLeft: 36,
+    lineHeight: 18,
   },
 });

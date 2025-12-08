@@ -28,154 +28,208 @@ import { calculateTrustScore } from '../utils/trustScore';
 import { extractPalmOilAnalysis } from './openFoodFacts';
 import { checkFDARecalls } from './fdaRecallService';
 import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
-import { getUserCountryCode } from '../utils/countryDetection';
+import { getUserCountryCode, isEUCountry } from '../utils/countryDetection';
 import { fetchProductFromNZStores } from './nzStoreApi';
 import { fetchProductFromFSANZ } from './fsanDatabase';
 import { fetchProductFromAURetailers } from './auRetailerScraping';
 import { enhanceProductWithNZFCD } from './nzfcdDatabase';
 import { enhanceProductWithAFCD } from './afcdDatabase';
+import { fetchProductFromHealthCanada } from './healthCanadaDatabase';
+import { fetchProductFromUKFSA } from './ukFsaDatabase';
+import { fetchProductFromEFSA } from './efsaDatabase';
+import { fetchProductFromTesco } from './tescoLabsApi';
+import { fetchProductFromWalmart } from './walmartOpenApi';
+import { fetchProductFromFoodRepo } from './foodRepoApi';
+import { fetchProductFromOpenNutrition } from './openNutritionApi';
+import { checkComprehensiveUSRecalls } from './recallsGovService';
+import { checkRASFFAlerts } from './rasffService';
+import { checkCFIARecalls } from './cfiaRecallService';
+import { UnifiedRecall, convertFDARecall, convertComprehensiveUSRecall, convertRASFFAlert, convertCFIARecall } from '../types/recall';
+import { enrichProductWithEANSearchBrand } from './eanSearchBrandApi';
+import { enrichProductWithOpenCorporates } from './openCorporatesApi';
+import { enrichProductWithBCorp } from './bCorpApi';
 import { applyConfidenceScore } from '../utils/confidenceScoring';
 import { mergeProducts } from './productDataMerger';
 import { lookupProductInSQLite, saveProductToSQLite } from './sqliteProductDatabase';
+import { applyMVPEnhancements } from './enhancements/enhancementLayer';
+import { calculateDataCompleteness, formatCompletenessMetrics } from '../utils/dataCompleteness';
+import { TruScoreOptimizedDatabase } from '../data/databases/truScoreOptimizedDatabase';
+import { powershellLogger } from '../utils/powershellLogger';
+import { discoverProductNameEarly, extractProductName } from './productNameDiscovery';
+import { getManualProduct } from './manualProductService';
+import { getUserContributedProduct } from './userContributedProductsService';
+// New modular services
+import {
+  lookupFromSQLite,
+  lookupFromCache,
+  processSQLiteProduct,
+  processCachedProduct,
+  isLowQualityCache,
+  saveProductToCache,
+  mergeUserContributedData,
+} from './productCacheService';
+import { enhanceProduct } from './productEnhancementService';
+import { handleError, ErrorCategory, ErrorSeverity } from './errorHandlingService';
 
 /**
- * Fetch product data with comprehensive fallback strategy:
- * 0. Check SQLite database (offline-first, country-specific)
- * 1. Check cache (with premium support)
- * 2. Try Open Food Facts (covers food, drinks)
- * 3. Try Open Beauty Facts (covers cosmetics, personal care products)
- * 4. Try Open Pet Food Facts (covers pet food specifically)
- * 5. Try Open Products Facts (covers general products: electronics, household, tools, etc.)
- * 6. Try USDA FoodData Central (official US branded foods - requires API key)
- * 7. Try GS1 Data Source (official barcode verification - requires API key)
- * 8. Try UPCitemdb (covers alcohol, household products, electronics, general products)
- * 9. Try Barcode Spider (fallback for general products)
- * 10. Try EAN-Search.org (1B+ products, good for regional/obscure products)
- * 11. Try UPC Database API (4.3M+ products, different database than UPCitemdb)
- * 12. Try Edamam Food Database (10K requests/month, strong nutrition data)
- * 13. Try Barcode Lookup API (100/day, additional product source)
- * 14. Try Nutritionix API (100/day, nutrition-focused)
- * 15. Try Spoonacular API (150 points/day, food-focused)
- * 16. Try Best Buy API (5K/day, electronics focus)
- * 17. Try EANData API (100/day, basic but reliable validation)
- * 18. Try Web Search (DuckDuckGo Instant Answer - ensures we ALWAYS return something)
- * 19. Check for food recalls (FDA API - non-blocking, for food products only)
- * 20. Cache result (with premium support)
+ * Check if product data is incomplete (missing critical fields)
+ * Used to determine if USDA should override OFF data for US users
+ */
+function isProductIncomplete(product: Product): boolean {
+  const hasNutrition = product.nutriments && Object.keys(product.nutriments).length > 0;
+  const hasIngredients = product.ingredients_text && product.ingredients_text.trim().length > 10;
+  const hasName = product.product_name && !product.product_name.startsWith('Product ');
+  
+  // Consider incomplete if missing critical data
+  return !hasNutrition || !hasIngredients || !hasName;
+}
+
+/**
+ * Fetch product data with comprehensive fallback strategy.
  * 
- * GUARANTEE: This function will ALWAYS return a Product (never null) unless offline without cache.
+ * This is the main product lookup function that orchestrates queries across 20+ data sources.
+ * It follows an offline-first approach with intelligent caching and fallback strategies.
+ * 
+ * **Query Strategy:**
+ * 1. SQLite database (offline-first, country-specific)
+ * 2. AsyncStorage cache (with premium support)
+ * 3. User-contributed products
+ * 4. Multi-tier database queries (parallel execution):
+ *    - Tier 1: Gold Standard (Open Food Facts, USDA, Health Canada, etc.)
+ *    - Tier 2: Enhancements (FSANZ, FoodAtlas, NZFCD/AFCD)
+ *    - Tier 3: Fallbacks (UPCitemdb, EAN-Search, etc.)
+ *    - Tier 4: Web Search (last resort)
+ * 5. Product name-based queries (FSANZ, FoodAtlas)
+ * 6. Data merging (TruScore-first strategy)
+ * 7. Enhancements (MVP, brand enrichment)
+ * 8. TruScore calculation
+ * 9. Cache result
+ * 
+ * **Coverage:**
+ * - Food & Drinks: Open Food Facts, USDA, Health Canada, UK FSA, EFSA
+ * - Cosmetics: Open Beauty Facts
+ * - Pet Food: Open Pet Food Facts
+ * - General Products: Open Products Facts, UPCitemdb, EAN-Search, etc.
+ * - Regional: FSANZ (AU/NZ), FoodAtlas
+ * 
+ * **Guarantee:** This function will ALWAYS return a Product (never null) unless offline without cache.
  * Even if all databases fail, web search fallback creates a minimal product result.
  * 
- * This expanded database covers:
- * - Food & Drinks (Open Food Facts, USDA FoodData Central)
- * - Cosmetics & Beauty (Open Beauty Facts, Open Food Facts)
- * - Pet Food (Open Pet Food Facts, Open Food Facts)
- * - General Products (Open Products Facts, UPCitemdb, Barcode Spider, EAN-Search, UPC Database, Barcode Lookup, EANData, GS1)
- * - Alcohol (UPCitemdb, Open Products Facts, EAN-Search, UPC Database, EANData)
- * - Household Products (Open Products Facts, UPCitemdb, EAN-Search, UPC Database, Barcode Lookup, EANData)
- * - Electronics (Open Products Facts, GS1, EAN-Search, Best Buy, UPC Database, Barcode Lookup, EANData)
- * - Tools & Hardware (Open Products Facts, GS1, EAN-Search, Best Buy, UPC Database, EANData)
- * - Food & Nutrition (Edamam, Nutritionix, Spoonacular, USDA, Open Food Facts)
- * - Regional/Obscure Products (EAN-Search - 1B+ products, strong EU/AU coverage)
- * - US Branded Foods (USDA FoodData Central - official data)
- * - Official Barcode Verification (GS1 Data Source)
- * - ANY Product (Web Search Fallback - last resort, ensures result)
+ * **Expected Coverage:** ~85-90% of all scanned products
  * 
- * Safety Features:
- * - Food recall checking (FDA API) for food and pet food products
- * - Non-blocking recall checks (won't delay product display)
+ * @param barcode - Product barcode (8-14 digits, will be normalized)
+ * @param useCache - Whether to use cache (default: true)
+ * @param isPremium - Whether user has premium subscription (affects cache size)
+ * @param isOffline - Whether device is offline (affects query strategy)
+ * @returns Product with TruScore, or null if offline without cache
  * 
- * Expected Coverage: ~85-90% of all scanned products (up from ~60-65%)
+ * @example
+ * ```typescript
+ * const product = await fetchProduct('1234567890123');
+ * if (product) {
+ *   console.log(`TruScore: ${product.trust_score}/100`);
+ * }
+ * ```
  */
+// Query deduplication at productService level
+const activeProductQueries = new Map<string, Promise<ProductWithTrustScore | null>>();
+
 export async function fetchProduct(barcode: string, useCache = true, isPremium = false, isOffline = false): Promise<ProductWithTrustScore | null> {
+  // Check if query is already in progress (deduplication)
+  const queryKey = `${barcode}_${useCache}_${isPremium}_${isOffline}`;
+  if (activeProductQueries.has(queryKey)) {
+    logger.debug(`Product query already in progress for ${barcode}, waiting for existing query...`);
+    return activeProductQueries.get(queryKey)!;
+  }
+  
+  // Create query promise
+  const queryPromise = executeFetchProduct(barcode, useCache, isPremium, isOffline);
+  
+  // Store in active queries
+  activeProductQueries.set(queryKey, queryPromise);
+  
+  // Clean up after query completes
+  queryPromise.finally(() => {
+    activeProductQueries.delete(queryKey);
+  });
+  
+  return queryPromise;
+}
+
+async function executeFetchProduct(barcode: string, useCache = true, isPremium = false, isOffline = false): Promise<ProductWithTrustScore | null> {
   // Normalize barcode - try multiple variants (EAN-8 -> EAN-13, etc.)
   const barcodeVariants = normalizeBarcode(barcode);
   const primaryBarcode = getPrimaryBarcode(barcode);
+  const userCountry = getUserCountryCode();
   logger.debug(`Barcode variants to try: ${barcodeVariants.join(', ')} (primary: ${primaryBarcode})`);
 
   try {
   // Check SQLite database first (offline-first, country-specific)
   // This provides instant lookups for products in the local database
-  const userCountry = getUserCountryCode();
-  const sqliteProduct = await lookupProductInSQLite(primaryBarcode, userCountry ?? undefined);
+  const sqliteProduct = await lookupFromSQLite(primaryBarcode);
   if (sqliteProduct) {
     logger.debug(`Found product in SQLite database: ${primaryBarcode}`);
     
-    // CRITICAL: Enhance SQLite products with computed fields (palm oil analysis, etc.)
-    // SQLite doesn't store computed fields, so we need to regenerate them
-    const hasIngredientsText = sqliteProduct.ingredients_text && typeof sqliteProduct.ingredients_text === 'string' && sqliteProduct.ingredients_text.trim().length > 0;
-    const hasAnalysisTags = Array.isArray(sqliteProduct.ingredients_analysis_tags) && sqliteProduct.ingredients_analysis_tags.length > 0;
-    const hasAnalysis = sqliteProduct.ingredients_analysis && typeof sqliteProduct.ingredients_analysis === 'object' && Object.keys(sqliteProduct.ingredients_analysis).length > 0;
+    // DIAGNOSTIC: Log key scoring data before enhancement
+    logger.info(`[SQLite Product Diagnostics] Product data before TruScore calculation:`, {
+      barcode: sqliteProduct.barcode,
+      product_name: sqliteProduct.product_name,
+      nutriscore_grade: sqliteProduct.nutriscore_grade || 'NOT SET',
+      nutriscore_score: sqliteProduct.nutriscore_score || 'NOT SET',
+      ecoscore_grade: sqliteProduct.ecoscore_grade || 'NOT SET',
+      ecoscore_score: sqliteProduct.ecoscore_score || 'NOT SET',
+      hasIngredients: !!(sqliteProduct.ingredients_text && sqliteProduct.ingredients_text.trim().length > 0),
+      ingredientsLength: sqliteProduct.ingredients_text?.length || 0,
+      hasOrigin: !!(sqliteProduct.origins_tags?.length || sqliteProduct.manufacturing_places_tags?.length || sqliteProduct.origins || sqliteProduct.manufacturing_places),
+      nova_group: sqliteProduct.nova_group || 'NOT SET',
+      additives_count: sqliteProduct.additives_tags?.length || 0,
+      labels_count: sqliteProduct.labels_tags?.length || 0,
+    });
     
-    logger.debug(`[SQLite Enhancement] ingredients_text: ${hasIngredientsText ? 'YES' : 'NO'}, analysis_tags: ${hasAnalysisTags ? 'YES' : 'NO'}, analysis: ${hasAnalysis ? 'YES' : 'NO'}`);
-    
-    if (hasIngredientsText || hasAnalysisTags || hasAnalysis) {
-      try {
-        sqliteProduct.palm_oil_analysis = extractPalmOilAnalysis(sqliteProduct);
-        // Check if palm oil was detected in the full ingredients text
-        const fullIngredientsText = sqliteProduct.ingredients_text || '';
-        const palmOilMatch = /\bpalm\s+oil\b/i.test(fullIngredientsText);
-        const palmOilVariationsMatch = /\b(palmolein|palm\s+fat|palm\s+kernel\s+oil|palm\s+stearin|palm\s+olein)\b/i.test(fullIngredientsText);
-        
-        logger.debug(`[SQLite Enhancement] Palm oil analysis created:`, {
-          containsPalmOil: sqliteProduct.palm_oil_analysis?.containsPalmOil,
-          isPalmOilFree: sqliteProduct.palm_oil_analysis?.isPalmOilFree,
-          isNonSustainable: sqliteProduct.palm_oil_analysis?.isNonSustainable,
-          ingredients_text_length: fullIngredientsText.length,
-          ingredients_text_sample: fullIngredientsText.substring(0, 200),
-          palmOilPatternMatch: palmOilMatch,
-          palmOilVariationsMatch: palmOilVariationsMatch,
-          fullTextContainsPalm: fullIngredientsText.toLowerCase().includes('palm')
-        });
-      } catch (error) {
-        logger.debug('Error extracting palm oil analysis from SQLite product:', error);
-      }
-    } else {
-      logger.debug('[SQLite Enhancement] No ingredients data available for palm oil analysis');
-    }
-    
-    // Apply confidence score and calculate trust score
-    const productWithConfidence = applyConfidenceScore(sqliteProduct);
-    return calculateTrustScore(productWithConfidence);
+    // Process SQLite product: enhance, merge user data, score, and return
+    return await processSQLiteProduct(sqliteProduct, primaryBarcode);
   }
 
   // Check cache - try all variants
   if (useCache) {
-    for (const variant of barcodeVariants) {
-      const cached = await getCachedProduct(variant, isPremium);
-      if (cached) {
-        // Check if cached product is a low-quality web search result
-        // If so, retry web search to see if we can get better data
-        const isLowQualityWebSearch = (cached.source === 'web_search' || isWebSearchFallback(cached)) && 
-                                      ((cached.quality && cached.quality < 50) || 
-                                       (cached.completion && cached.completion < 50) ||
-                                       (!cached.image_url && !cached.nutriments && !cached.ingredients_text));
-        
-        if (isLowQualityWebSearch && !isOffline) {
-          logger.debug(`Cached product ${variant} is low-quality web search result, retrying web search...`);
-          // Don't return cached - continue to retry web search
-        } else {
-          logger.debug(`Using cached product: ${variant}${isPremium ? ' (premium cache)' : ''}`);
-          
-          // CRITICAL: Enhance cached products with computed fields (palm oil analysis, etc.)
-          // Cached products might have been stored before enhancement logic was added
-          const hasIngredientsText = cached.ingredients_text && typeof cached.ingredients_text === 'string' && cached.ingredients_text.trim().length > 0;
-          const hasAnalysisTags = Array.isArray(cached.ingredients_analysis_tags) && cached.ingredients_analysis_tags.length > 0;
-          const hasAnalysis = cached.ingredients_analysis && typeof cached.ingredients_analysis === 'object' && Object.keys(cached.ingredients_analysis).length > 0;
-          
-          if (hasIngredientsText || hasAnalysisTags || hasAnalysis) {
-            try {
-              cached.palm_oil_analysis = extractPalmOilAnalysis(cached);
-            } catch (error) {
-              logger.debug('Error extracting palm oil analysis from cached product:', error);
-            }
-          }
-          
-          // Apply confidence score to cached product
-          const productWithConfidence = applyConfidenceScore(cached);
-          return calculateTrustScore(productWithConfidence);
-        }
+    const cached = await lookupFromCache(primaryBarcode, isPremium, barcodeVariants);
+    if (cached) {
+      // Check if cached product is low quality and should be retried
+      if (isLowQualityCache(cached, isOffline)) {
+        logger.debug(`Cached product ${primaryBarcode} is low-quality web search result, retrying web search...`);
+        // Don't return cached - continue to retry web search
+      } else {
+        logger.debug(`Using cached product: ${primaryBarcode}${isPremium ? ' (premium cache)' : ''}`);
+        // Process cached product: enhance, merge user data, score, and return
+        return await processCachedProduct(cached, primaryBarcode);
       }
     }
+  }
+
+  // Check for user-contributed products (manual products or from Vercel backend)
+  // This ensures users can access products submitted by other users
+  // Check this BEFORE main database queries to prioritize user contributions
+  try {
+    const userContributedProduct = await getUserContributedProduct(primaryBarcode);
+    if (userContributedProduct) {
+      logger.info(`[ProductService] Found user-contributed product: ${primaryBarcode}`);
+      
+      // Apply confidence score and calculate trust score
+      const productWithConfidence = applyConfidenceScore(userContributedProduct);
+      try {
+        return await calculateTrustScore(productWithConfidence);
+      } catch (error) {
+        logger.error('Error calculating TruScore for user-contributed product (non-critical):', error);
+        return {
+          ...productWithConfidence,
+          trust_score: null,
+          trust_score_breakdown: null,
+        };
+      }
+    }
+  } catch (error) {
+    logger.debug('[ProductService] Error checking user-contributed products (non-critical):', error);
+    // Continue to main database queries
   }
 
   // If offline and no cache, return null (premium users should have cache)
@@ -184,522 +238,150 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     return null;
   }
 
-  // OPTIMIZED: Parallelize API calls for faster product fetching
-  // Tier 1: Open Facts databases (parallel - independent sources)
-  // Try all barcode variants in parallel across all Open Facts databases
-  logger.debug(`Fetching from Open Facts databases in parallel: ${barcodeVariants.join(', ')}`);
+  // Start comprehensive logging for product fetch
+  logger.info(`═══════════════════════════════════════════════════════════════`);
+  logger.info(`🔍 PRODUCT SCAN: ${barcode}`);
+  logger.info(`═══════════════════════════════════════════════════════════════`);
+  logger.info(`📋 Barcode Variants: ${barcodeVariants.join(', ')}`);
+  logger.info(`🌍 User Country: ${userCountry || 'Unknown'}`);
+
+  // NEW: Early Product Name Discovery
+  // Discover product name early to enable name-based queries (FSANZ, FoodAtlas)
+  // This maximizes query success rates and TruScore quality
+  logger.info(`───────────────────────────────────────────────────────────────`);
+  logger.info(`🔍 EARLY PRODUCT NAME DISCOVERY`);
+  logger.info(`───────────────────────────────────────────────────────────────`);
+  const earlyProductName = await discoverProductNameEarly(primaryBarcode, userCountry);
+  if (earlyProductName) {
+    logger.info(`✅ Discovered product name early: "${earlyProductName}"`);
+    logger.info(`   This enables name-based queries (FSANZ, FoodAtlas) in parallel`);
+  } else {
+    logger.info(`⚠️  No product name discovered early - will try after barcode queries`);
+  }
+
+  // TRUSCORE-OPTIMIZED: Query ALL databases in parallel using optimized service
+  // This ensures maximum data quality and completeness for TruScore calculation
+  // NEW: Pass early product name to enable name-based queries
+  logger.info(`───────────────────────────────────────────────────────────────`);
+  logger.info(`📊 TRUSCORE-OPTIMIZED DATABASE QUERY (All Databases in Parallel)`);
+  logger.info(`───────────────────────────────────────────────────────────────`);
+  
+  const databaseService = new TruScoreOptimizedDatabase();
+  const allProducts = await databaseService.queryAllDatabases(primaryBarcode, userCountry, earlyProductName);
+  
   let product: Product | null = null;
   
-  // Try all barcode variants in parallel across all Open Facts databases
-  const offPromises = barcodeVariants.map(variant => 
-    fetchProductFromOFF(variant).catch(err => {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      logger.debug(`OFF fetch error for ${variant}:`, errorMessage);
-      return null;
-    })
-  );
+  // Extract product names from all results for later use
+  const extractedProductNames = new Set<string>();
+  allProducts.forEach(p => {
+    const name = extractProductName(p);
+    if (name) extractedProductNames.add(name);
+  });
   
-  const obfPromises = barcodeVariants.map(variant => 
-    fetchProductFromOBF(variant).catch(err => {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      logger.debug(`OBF fetch error for ${variant}:`, errorMessage);
-      return null;
-    })
-  );
-  
-  const opffPromises = barcodeVariants.map(variant => 
-    fetchProductFromOPFF(variant).catch(err => {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      logger.debug(`OPFF fetch error for ${variant}:`, errorMessage);
-      return null;
-    })
-  );
-  
-  const opfPromises = barcodeVariants.map(variant => 
-    fetchProductFromOPF(variant).catch(err => {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      logger.debug(`OPF fetch error for ${variant}:`, errorMessage);
-      return null;
-    })
-  );
-  
-  // Execute all searches in parallel
-  const [offResults, obfResults, opffResults, opfResults] = await Promise.allSettled([
-    Promise.all(offPromises),
-    Promise.all(obfPromises),
-    Promise.all(opffPromises),
-    Promise.all(opfPromises),
-  ]);
-  
-  // Collect all successful results from any variant
-  const allOffResults = offResults.status === 'fulfilled' ? offResults.value : [];
-  const allObfResults = obfResults.status === 'fulfilled' ? obfResults.value : [];
-  const allOpffResults = opffResults.status === 'fulfilled' ? opffResults.value : [];
-  const allOpfResults = opfResults.status === 'fulfilled' ? opfResults.value : [];
-  
-  // Collect all products found (for merging)
-  const foundProducts: Product[] = [];
-  
-  // Collect from all Open Facts databases
-  for (const result of allOffResults) {
-    if (result) foundProducts.push(result);
+  // Use best product name (prefer early discovery, then from results)
+  const bestProductName = earlyProductName || Array.from(extractedProductNames)[0] || null;
+  if (bestProductName && !earlyProductName) {
+    logger.info(`📝 Extracted product name from results: "${bestProductName}"`);
   }
-  for (const result of allObfResults) {
-    if (result) foundProducts.push(result);
-  }
-  for (const result of allOpffResults) {
-    if (result) foundProducts.push(result);
-  }
-  for (const result of allOpfResults) {
-    if (result) foundProducts.push(result);
-  }
-  
-  // Merge products if multiple found, otherwise use first
-  if (foundProducts.length > 0) {
-    if (foundProducts.length > 1) {
-      product = mergeProducts(foundProducts);
-      logger.debug(`Merged ${foundProducts.length} products from Open Facts databases: ${barcode}`);
+
+  // Merge all products found with TruScore-first strategy
+  if (allProducts.length > 0) {
+    if (allProducts.length === 1) {
+      product = allProducts[0];
+      const completeness = calculateDataCompleteness(product);
+      logger.info(`✅ Single product found: ${product.source} | ${formatCompletenessMetrics(completeness, product.source || 'unknown')}`);
+      powershellLogger.dataQuality(barcode, product, completeness);
     } else {
-      product = foundProducts[0];
-      logger.debug(`Found product in Open Facts: ${barcode}`);
+      logger.info(`🔄 Merging ${allProducts.length} products with TruScore-first strategy...`);
+      const preMergeCompleteness = calculateDataCompleteness(allProducts[0]);
+      powershellLogger.log('INFO', 'MERGE_START', `Merging ${allProducts.length} products`, {
+        sources: allProducts.map(p => p?.source).filter(Boolean),
+        preMergeCompleteness,
+      });
+      
+      product = mergeProducts(allProducts, {
+        sourceWeights: databaseService.getTruScoreSourceWeights(),
+        normalizeNutrition: true,
+        shouldMergeCertifications: true,
+      });
+      
+      const completeness = calculateDataCompleteness(product);
+      logger.info(`✅ Merged product: ${product.source} | ${formatCompletenessMetrics(completeness, 'MERGED')}`);
+      powershellLogger.productMerge(allProducts, product, 'TruScore-first');
+      powershellLogger.dataQuality(barcode, product, completeness);
     }
+  } else {
+    logger.info(`❌ No products found in optimized database query`);
+    powershellLogger.log('WARN', 'NO_PRODUCTS', 'No products found in database query', { barcode });
   }
+  
+  // Note: All database queries are now handled by TruScoreOptimizedDatabase above
+  // This ensures maximum parallelization and location-specific database coverage
 
-  // Tier 1.5: Country-specific store APIs and government databases (for NZ, AU, etc.)
-  // Try country-specific sources if user is in that country and product not found yet
+  // FINAL FALLBACK: Web Search - ONLY if no product found in Tiers 1-3
+  // CRITICAL: Never use web_search if Open Food Facts found a product (better data quality)
+  // Optimized: Only query web search if nothing was found in previous tiers
+  // This significantly reduces query time and API calls
+  const hasOpenFoodFacts = product?.source === 'openfoodfacts';
   if (!product) {
-    const userCountry = getUserCountryCode();
+    logger.info(`───────────────────────────────────────────────────────────────`);
+    logger.info(`📊 TIER 4: Web Search (Fallback - Only if Tiers 1-3 found nothing)`);
+    logger.info(`───────────────────────────────────────────────────────────────`);
+    logger.info(`🔍 No product found in Tiers 1-3, using Web Search as fallback...`);
     
-    // Try NZ store APIs if user is in NZ
-    if (userCountry === 'NZ') {
-      logger.debug(`Trying NZ store APIs for barcode variants: ${barcodeVariants.join(', ')}`);
-      for (const variant of barcodeVariants) {
-        const nzStoreProduct = await fetchProductFromNZStores(variant);
-        if (nzStoreProduct) {
-          product = nzStoreProduct;
-          logger.debug(`Found product in NZ store API: ${variant}`);
+    // Try to extract any product name from partial database results before web search
+    // Some databases might return a name even if they don't return full product data
+    let extractedProductName: string | undefined;
+    if (allProducts && allProducts.length > 0) {
+      // Check if any partial products have a name
+      for (const partialProduct of allProducts) {
+        if (partialProduct?.product_name && 
+            partialProduct.product_name !== `Product ${barcode}` &&
+            partialProduct.product_name.length > 5) {
+          extractedProductName = partialProduct.product_name;
+          logger.info(`📝 Extracted product name from partial results: ${extractedProductName}`);
           break;
         }
       }
     }
     
-    // Try AU retailer APIs if user is in AU
-    if (userCountry === 'AU') {
-      logger.debug(`Trying AU store APIs for barcode variants: ${barcodeVariants.join(', ')}`);
-      for (const variant of barcodeVariants) {
-        const auRetailerProduct = await fetchProductFromAURetailers(variant);
-        if (auRetailerProduct) {
-          product = auRetailerProduct;
-          logger.debug(`Found product in AU retailer API: ${variant}`);
-          break;
-        }
-      }
-    }
+    // Set timeout for web search (increased to 15 seconds for better results)
+    const webSearchTimeout = new Promise<Product | null>((resolve) => {
+      setTimeout(() => {
+        logger.warn(`Web search timeout after 15 seconds, skipping...`);
+        resolve(null);
+      }, 15000);
+    });
     
-    // Try FSANZ databases if user is in NZ or AU
-    if (userCountry === 'NZ' || userCountry === 'AU') {
-      logger.debug(`Trying FSANZ ${userCountry} database for barcode variants: ${barcodeVariants.join(', ')}`);
-      for (const variant of barcodeVariants) {
-        const fsanzProduct = await fetchProductFromFSANZ(variant, userCountry);
-        if (fsanzProduct) {
-          product = fsanzProduct;
-          logger.debug(`Found product in FSANZ ${userCountry} database: ${variant}`);
-          break;
-        }
-      }
-    }
-  }
-
-  // Tier 2: Official sources (parallel - independent sources)
-  // If Open Facts didn't return a product, try official sources in parallel
-  if (!product) {
-    logger.debug(`Open Facts databases not found, trying official sources in parallel: ${primaryBarcode}`);
-    // Try all variants for official sources too
-    const usdaPromises = barcodeVariants.map(variant => 
-      fetchProductFromUSDA(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`USDA fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
+    // Pass extracted product name to web search if available
+    const webSearchPromise = fetchProductFromWebSearch(primaryBarcode, extractedProductName);
     
-    const gs1Promises = barcodeVariants.map(variant => 
-      fetchProductFromGS1(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`GS1 fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
+    product = await Promise.race([webSearchPromise, webSearchTimeout]);
     
-    const [usdaResults, gs1Results] = await Promise.allSettled([
-      Promise.all(usdaPromises),
-      Promise.all(gs1Promises),
-    ]);
-    
-    // Check USDA results
-    if (usdaResults.status === 'fulfilled') {
-      for (const result of usdaResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in USDA: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check GS1 results
-    if (!product && gs1Results.status === 'fulfilled') {
-      for (const result of gs1Results.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in GS1: ${barcode}`);
-          break;
-        }
-      }
-    }
-  }
-
-  // Tier 3: Fallback sources (parallel - independent sources)
-  // If official sources didn't return a product, try fallback sources in parallel
-  if (!product) {
-    logger.debug(`Official sources not found, trying fallback sources in parallel: ${primaryBarcode}`);
-    // Try all variants for fallback sources
-    const upcitemdbPromises = barcodeVariants.map(variant => 
-      fetchProductFromUPCitemdb(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`UPCitemdb fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const barcodeSpiderPromises = barcodeVariants.map(variant => 
-      fetchProductFromBarcodeSpider(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Barcode Spider fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const goUpcPromises = barcodeVariants.map(variant => 
-      fetchProductFromGoUpc(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Go-UPC fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const buycottPromises = barcodeVariants.map(variant => 
-      fetchProductFromBuycott(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Buycott fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const openGtinPromises = barcodeVariants.map(variant => 
-      fetchProductFromOpenGtin(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Open GTIN fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const barcodeMonsterPromises = barcodeVariants.map(variant => 
-      fetchProductFromBarcodeMonster(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Barcode Monster fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const eanSearchPromises = barcodeVariants.map(variant => 
-      fetchProductFromEANSearch(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`EAN-Search fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const upcDatabasePromises = barcodeVariants.map(variant => 
-      fetchProductFromUPCDatabase(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`UPC Database fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const edamamPromises = barcodeVariants.map(variant => 
-      fetchProductFromEdamam(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Edamam fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const barcodeLookupPromises = barcodeVariants.map(variant => 
-      fetchProductFromBarcodeLookup(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Barcode Lookup fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const nutritionixPromises = barcodeVariants.map(variant => 
-      fetchProductFromNutritionix(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Nutritionix fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const spoonacularPromises = barcodeVariants.map(variant => 
-      fetchProductFromSpoonacular(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Spoonacular fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const bestBuyPromises = barcodeVariants.map(variant => 
-      fetchProductFromBestBuy(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`Best Buy fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const eanDataPromises = barcodeVariants.map(variant => 
-      fetchProductFromEANData(variant).catch(err => {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.debug(`EANData fetch error for ${variant}:`, errorMessage);
-        return null;
-      })
-    );
-    
-    const [upcitemdbResults, barcodeSpiderResults, goUpcResults, buycottResults, openGtinResults, barcodeMonsterResults, eanSearchResults, upcDatabaseResults, edamamResults, barcodeLookupResults, nutritionixResults, spoonacularResults, bestBuyResults, eanDataResults] = await Promise.allSettled([
-      Promise.all(upcitemdbPromises),
-      Promise.all(barcodeSpiderPromises),
-      Promise.all(goUpcPromises),
-      Promise.all(buycottPromises),
-      Promise.all(openGtinPromises),
-      Promise.all(barcodeMonsterPromises),
-      Promise.all(eanSearchPromises),
-      Promise.all(upcDatabasePromises),
-      Promise.all(edamamPromises),
-      Promise.all(barcodeLookupPromises),
-      Promise.all(nutritionixPromises),
-      Promise.all(spoonacularPromises),
-      Promise.all(bestBuyPromises),
-      Promise.all(eanDataPromises),
-    ]);
-    
-    // Check UPCitemdb results
-    if (upcitemdbResults.status === 'fulfilled') {
-      for (const result of upcitemdbResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in UPCitemdb: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Barcode Spider results
-    if (!product && barcodeSpiderResults.status === 'fulfilled') {
-      for (const result of barcodeSpiderResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Barcode Spider: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Go-UPC results
-    if (!product && goUpcResults.status === 'fulfilled') {
-      for (const result of goUpcResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Go-UPC: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Buycott results
-    if (!product && buycottResults.status === 'fulfilled') {
-      for (const result of buycottResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Buycott: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Open GTIN results
-    if (!product && openGtinResults.status === 'fulfilled') {
-      for (const result of openGtinResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Open GTIN: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Barcode Monster results
-    if (!product && barcodeMonsterResults.status === 'fulfilled') {
-      for (const result of barcodeMonsterResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Barcode Monster: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check EAN-Search results
-    if (!product && eanSearchResults.status === 'fulfilled') {
-      for (const result of eanSearchResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in EAN-Search: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check UPC Database results
-    if (!product && upcDatabaseResults.status === 'fulfilled') {
-      for (const result of upcDatabaseResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in UPC Database: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Edamam results
-    if (!product && edamamResults.status === 'fulfilled') {
-      for (const result of edamamResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Edamam: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Barcode Lookup results
-    if (!product && barcodeLookupResults.status === 'fulfilled') {
-      for (const result of barcodeLookupResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Barcode Lookup: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Nutritionix results
-    if (!product && nutritionixResults.status === 'fulfilled') {
-      for (const result of nutritionixResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Nutritionix: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Spoonacular results
-    if (!product && spoonacularResults.status === 'fulfilled') {
-      for (const result of spoonacularResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Spoonacular: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check Best Buy results
-    if (!product && bestBuyResults.status === 'fulfilled') {
-      for (const result of bestBuyResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in Best Buy: ${barcode}`);
-          break;
-        }
-      }
-    }
-    
-    // Check EANData results
-    if (!product && eanDataResults.status === 'fulfilled') {
-      for (const result of eanDataResults.value) {
-        if (result) {
-          product = result;
-          logger.debug(`Found product in EANData: ${barcode}`);
-          break;
-        }
-      }
-    }
-  }
-
-  // FINAL FALLBACK: Web Search - ensures we ALWAYS return a result
-  // This guarantees that every scanned barcode returns SOME product data
-  // Try primary barcode first, then fall back to original if different
-  if (!product) {
-    // Suppress - expected fallback behavior when product not in databases
-    product = await fetchProductFromWebSearch(primaryBarcode);
-    
-    // If primary barcode didn't work and it's different from original, try original
+    // If primary barcode didn't work and it's different from original, try original (with timeout)
     if (!product && primaryBarcode !== barcode) {
       logger.debug(`Trying web search with original barcode: ${barcode}`);
-      product = await fetchProductFromWebSearch(barcode);
+      const webSearchPromise2 = fetchProductFromWebSearch(barcode, extractedProductName);
+      const webSearchTimeout2 = new Promise<Product | null>((resolve) => {
+        setTimeout(() => resolve(null), 15000);
+      });
+      product = await Promise.race([webSearchPromise2, webSearchTimeout2]);
     }
-    // Web search fallback will always return a product (even if minimal)
-    logger.debug(`Web search fallback provided result for: ${barcode}`);
-  } else if (isWebSearchFallback(product)) {
-    // Even if we found a product from a database, if it's low quality, try web search too
-    logger.debug(`Found low-quality product from database, also trying web search for: ${barcode}`);
-    const webSearchProduct = await fetchProductFromWebSearch(barcode);
     
-    // Merge web search data if it's better
-    if (webSearchProduct) {
-      const mergedProduct = { ...product };
-      let improved = false;
-      
-      // Use web search image if we don't have one
-      if (!mergedProduct.image_url && webSearchProduct.image_url) {
-        mergedProduct.image_url = webSearchProduct.image_url;
-        improved = true;
-      }
-      
-      // Merge nutrition data
-      if (webSearchProduct.nutriments && Object.keys(webSearchProduct.nutriments).length > 0) {
-        mergedProduct.nutriments = { ...mergedProduct.nutriments, ...webSearchProduct.nutriments };
-        improved = true;
-      }
-      
-      // Use web search ingredients if we don't have one
-      if (!mergedProduct.ingredients_text && webSearchProduct.ingredients_text) {
-        mergedProduct.ingredients_text = webSearchProduct.ingredients_text;
-        improved = true;
-      }
-      
-      // Use web search product name if we don't have one
-      if (!mergedProduct.product_name && webSearchProduct.product_name) {
-        mergedProduct.product_name = webSearchProduct.product_name;
-        improved = true;
-      }
-      
-      if (improved) {
-        logger.debug(`Web search improved product data for: ${barcode}`);
-        product = mergedProduct;
-      }
+    // Web search fallback will always return a product (even if minimal)
+    if (product) {
+      logger.info(`✅ Web Search: Found product | ${formatCompletenessMetrics(calculateDataCompleteness(product), 'WEB_SEARCH')}`);
+    } else {
+      logger.warn(`⚠️ Web Search also returned no product for barcode: ${barcode}`);
+    }
+  } else {
+    logger.info(`───────────────────────────────────────────────────────────────`);
+    logger.info(`📊 TIER 4: Web Search - SKIPPED (Product already found in Tiers 1-3)`);
+    logger.info(`───────────────────────────────────────────────────────────────`);
+    if (hasOpenFoodFacts) {
+      logger.info(`✅ Product found in Open Food Facts, skipping web_search for better data quality`);
+    } else {
+      logger.info(`✅ Product found in earlier tiers, skipping Tier 4 web search for performance`);
     }
   }
 
@@ -716,65 +398,75 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     };
   }
 
-  // Enhance product with NZFCD or AFCD nutrition data if available
-  // This supplements products that may lack comprehensive nutrition data
-  try {
-    const userCountry = getUserCountryCode();
-    if (userCountry === 'NZ') {
-      product = await enhanceProductWithNZFCD(product);
-    } else if (userCountry === 'AU') {
-      product = await enhanceProductWithAFCD(product);
-    }
-  } catch (error) {
-    logger.debug('Error enhancing product with NZFCD/AFCD:', error);
-    // Continue without enhancement if it fails
-  }
-
-  // Format and enrich product data (for Open Facts family)
-  if (product.source === 'openfoodfacts' || 
-      product.source === 'openbeautyfacts' || 
-      product.source === 'openpetfoodfacts') {
-    product.ingredients = formatIngredients(product);
-    product.certifications = formatCertifications(product);
-  }
-
-  // Open Products Facts may have similar structure but less detailed nutrition data
-  // Still try to format if available
-  if (product.source === 'openproductsfacts' && product.ingredients_text) {
-    product.ingredients = formatIngredients(product);
-  }
-
-  // Ensure palm oil analysis is always created/extracted if we have any ingredients data
-  // This ensures consistency between Palm Oil card and Values Insights
-  // We re-extract even if palm_oil_analysis already exists to apply fallback logic
-  // (OFF might have created it without checking ingredients_text)
-  // Check if we have any ingredients data (text, tags, or analysis object)
-  const hasIngredientsText = product.ingredients_text && typeof product.ingredients_text === 'string' && product.ingredients_text.trim().length > 0;
-  const hasAnalysisTags = Array.isArray(product.ingredients_analysis_tags) && product.ingredients_analysis_tags.length > 0;
-  const hasAnalysis = product.ingredients_analysis && typeof product.ingredients_analysis === 'object' && Object.keys(product.ingredients_analysis).length > 0;
-  
-  if (hasIngredientsText || hasAnalysisTags || hasAnalysis) {
+  // CRITICAL: Query by product name (ALWAYS execute after product found OR if we have a name)
+  // This is the PRIMARY way to access full FSANZ databases - queries by food name, not barcode
+  // This ensures maximum data completeness for TruScore calculation
+  // NEW: Also query if we have a product name but no product yet (from early discovery)
+  const productNameToQuery = product?.product_name || bestProductName;
+  if (productNameToQuery && !productNameToQuery.startsWith('Product ')) {
+    logger.info(`───────────────────────────────────────────────────────────────`);
+    logger.info(`📊 PRODUCT NAME QUERIES: "${productNameToQuery}" (CRITICAL for FSANZ)`);
+    logger.info(`───────────────────────────────────────────────────────────────`);
+    
     try {
-      product.palm_oil_analysis = extractPalmOilAnalysis(product);
+      // Create a minimal product for queryByNameForTruScore if we don't have one yet
+      const productForQuery = product || {
+        barcode: primaryBarcode,
+        product_name: productNameToQuery,
+        source: 'name_discovery',
+      } as Product;
+      
+      const nameProducts = await databaseService.queryByNameForTruScore(productForQuery, userCountry);
+      
+      if (nameProducts.length > 0) {
+        if (product) {
+          // Log before merging
+          const preMergeCompleteness = calculateDataCompleteness(product);
+          const preMergeNutrients = Object.keys(product.nutriments || {}).length;
+          logger.info(`📊 BEFORE PRODUCT NAME MERGE:`);
+          logger.info(`   ${formatCompletenessMetrics(preMergeCompleteness, 'PRE-MERGE')}`);
+          logger.info(`   Nutrition: ${preMergeNutrients} nutrients`);
+          
+          // Merge with TruScore-first strategy
+          product = mergeProducts([product, ...nameProducts], {
+            sourceWeights: databaseService.getTruScoreSourceWeights(),
+            normalizeNutrition: true,
+            shouldMergeCertifications: true,
+          });
+          
+          // Log after merging
+          const postMergeCompleteness = calculateDataCompleteness(product);
+          const postMergeNutrients = Object.keys(product.nutriments || {}).length;
+          const nutrientsAdded = postMergeNutrients - preMergeNutrients;
+          logger.info(`📊 AFTER PRODUCT NAME MERGE:`);
+          logger.info(`   ${formatCompletenessMetrics(postMergeCompleteness, 'POST-MERGE')}`);
+          logger.info(`   Nutrition: ${postMergeNutrients} nutrients (${nutrientsAdded > 0 ? `+${nutrientsAdded} added` : 'no change'})`);
+          logger.info(`✅ Product name queries enhanced product with additional data`);
+        } else {
+          // No product yet, but name-based queries found something - use it!
+          logger.info(`✅ Product name queries found product when barcode queries failed!`);
+          product = mergeProducts(nameProducts, {
+            sourceWeights: databaseService.getTruScoreSourceWeights(),
+            normalizeNutrition: true,
+            shouldMergeCertifications: true,
+          });
+        }
+      } else {
+        logger.info(`⚠️  Product name queries: No additional products found`);
+      }
     } catch (error) {
-      // If extraction fails, log but don't break the product
-      logger.debug('Error extracting palm oil analysis:', error);
+      logger.debug('Error querying by product name:', error);
+      // Continue without enhancement if it fails
     }
   }
 
-  // Calculate and ensure Eco-Score grade is set (if score exists but grade is missing)
-  // This ensures the grade is always calculated from score when needed
-  const calculatedEcoScore = calculateEcoScore(product);
-  if (calculatedEcoScore) {
-    // Ensure the calculated ecoscore_data is set on the product
-    product.ecoscore_data = calculatedEcoScore;
-    // Also set root-level grade and score for compatibility
-    if (calculatedEcoScore.grade && calculatedEcoScore.grade !== 'unknown') {
-      product.ecoscore_grade = calculatedEcoScore.grade;
-    }
-    if (calculatedEcoScore.score !== undefined) {
-      product.ecoscore_score = calculatedEcoScore.score;
-    }
+  // Apply all enhancements: format, palm oil analysis, MVP enhancements, brand enrichment, Eco-Score
+  product = await enhanceProduct(product);
+
+  // Ensure product is not null before proceeding
+  if (!product) {
+    logger.error('Product is null after enhancements - cannot proceed');
+    return null;
   }
 
   // Check for food recalls (async, don't block product display)
@@ -795,56 +487,381 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
       });
   }
 
-  // Cache the product (premium users get larger cache)
-  // Note: We cache even web search results so users don't re-search the same barcode
-  // Cache with primary barcode for consistency, and also with original if different
-  if (useCache && product) {
-    // Update barcode to primary for consistency
-    product.barcode = primaryBarcode;
-    await cacheProduct(product, isPremium);
+  // Generate comprehensive summary log before caching
+  if (product) {
+    const finalCompleteness = calculateDataCompleteness(product);
+    const sources = product.source ? product.source.split('+') : [product.source || 'unknown'];
     
-    // Also cache with original barcode for faster lookup next time
-    if (primaryBarcode !== barcode) {
-      const cachedProduct = { ...product, barcode };
-      await cacheProduct(cachedProduct, isPremium);
+    logger.info(`═══════════════════════════════════════════════════════════════`);
+    logger.info(`📊 DATABASE QUERY SUMMARY`);
+    logger.info(`═══════════════════════════════════════════════════════════════`);
+    logger.info(`📦 Final Product: ${product.product_name || 'Unknown'}`);
+    logger.info(`🏷️  Sources: ${sources.join(' → ')}`);
+    logger.info(`📊 Data Completeness: ${formatCompletenessMetrics(finalCompleteness, 'FINAL')}`);
+    logger.info(`📈 Quality: ${product.quality || 'N/A'}, Completion: ${product.completion || 'N/A'}`);
+    
+    // Show which databases contributed
+    logger.info(`🔍 Databases Queried:`);
+    if (sources.includes('openfoodfacts')) {
+      logger.info(`   ✅ Open Food Facts - PRIMARY source`);
+    }
+    if (sources.includes('openbeautyfacts')) {
+      logger.info(`   ✅ Open Beauty Facts - PRIMARY source`);
+    }
+    if (sources.includes('openpetfoodfacts')) {
+      logger.info(`   ✅ Open Pet Food Facts - PRIMARY source`);
+    }
+    if (sources.includes('openproductsfacts')) {
+      logger.info(`   ✅ Open Products Facts - PRIMARY source`);
+    }
+    if (sources.includes('nzfcd') || sources.includes('afcd')) {
+      logger.info(`   ✅ FSANZ (${sources.includes('nzfcd') ? 'NZFCD' : 'AFCD'}) - ENHANCED nutrition data`);
+    }
+    if (sources.includes('nzfcd-fallback')) {
+      logger.info(`   ✅ FSANZ NZFCD (FALLBACK) - Used for AU user when AFCD not found`);
+    }
+    if (sources.includes('usda')) {
+      logger.info(`   ✅ USDA FoodData - PRIMARY source (US users)`);
+    }
+    if (sources.includes('healthcanada')) {
+      logger.info(`   ✅ Health Canada - PRIMARY source (CA users)`);
+    }
+    if (sources.includes('ukfsa')) {
+      logger.info(`   ✅ UK FSA - PRIMARY source (GB users)`);
+    }
+    if (sources.includes('efsa')) {
+      logger.info(`   ✅ EFSA - PRIMARY source (EU users)`);
     }
     
-    // Also save to SQLite for offline-first lookups
-    const userCountry = getUserCountryCode();
-    await saveProductToSQLite(product, userCountry ?? undefined).catch(err => {
-      logger.debug('Error saving to SQLite (non-critical):', err);
-    });
+    // Show nutrition data quality
+    const nutrientCount = product.nutriments ? Object.keys(product.nutriments).length : 0;
+    logger.info(`🥗 Nutrition Data: ${nutrientCount} nutrients available`);
+    if (product.nutriments) {
+      const hasEnergy = product.nutriments['energy-kcal'] || product.nutriments['energy-kj'];
+      const hasMacros = product.nutriments.proteins || product.nutriments.fat || product.nutriments.carbohydrates;
+      const hasMinerals = product.nutriments.calcium || product.nutriments.iron || product.nutriments.sodium;
+      logger.info(`   ${hasEnergy ? '✅' : '❌'} Energy data, ${hasMacros ? '✅' : '❌'} Macros, ${hasMinerals ? '✅' : '❌'} Minerals`);
+    }
+    
+    // Show best database
+    const bestSource = sources[0] || 'unknown';
+    logger.info(`🏆 Best Database: ${bestSource.toUpperCase()}`);
+    logger.info(`═══════════════════════════════════════════════════════════════`);
   }
 
   // Apply confidence scoring to product
   const productWithConfidence = applyConfidenceScore(product);
   
-  // Calculate trust score (works even for minimal web search products)
-  const productWithTrustScore = calculateTrustScore(productWithConfidence);
+  // Log final product data before scoring
+  logger.info(`───────────────────────────────────────────────────────────────`);
+  logger.info(`🎯 FINAL PRODUCT DATA (Before Scoring)`);
+  logger.info(`───────────────────────────────────────────────────────────────`);
+  const finalCompleteness = calculateDataCompleteness(productWithConfidence);
+  logger.info(`  ${formatCompletenessMetrics(finalCompleteness, 'FINAL')}`);
+  logger.info(`  Source: ${productWithConfidence.source}`);
+  logger.info(`  Product Name: ${productWithConfidence.product_name || 'N/A'}`);
+  logger.info(`  Brand: ${productWithConfidence.brands || 'N/A'}`);
+  logger.info(`  Has Nutrition: ${finalCompleteness.breakdown.hasNutrition ? 'Yes' : 'No'}`);
+  logger.info(`  Has Ingredients: ${finalCompleteness.breakdown.hasIngredients ? 'Yes' : 'No'}`);
+  logger.info(`  Has Eco-Score: ${finalCompleteness.breakdown.hasEcoScore ? 'Yes' : 'No'}`);
+  logger.info(`  Has Palm Oil Analysis: ${finalCompleteness.breakdown.hasPalmOilAnalysis ? 'Yes' : 'No'}`);
+  logger.info(`  Has Certifications: ${finalCompleteness.breakdown.hasCertifications ? 'Yes' : 'No'}`);
   
-  // Check recalls synchronously if we have product name (for immediate display)
+  // ===== VERIFICATION: Log FSANZ data presence =====
+  const hasFSANZSource = productWithConfidence.source?.includes('nzfcd') || 
+                         productWithConfidence.source?.includes('afcd') ||
+                         productWithConfidence.source?.includes('fsanz');
+  if (hasFSANZSource) {
+    logger.info(`  🔍 [FSANZ VERIFICATION] FSANZ data detected in source: ${productWithConfidence.source}`);
+    const fsanzNutrients = productWithConfidence.nutriments ? Object.keys(productWithConfidence.nutriments).length : 0;
+    logger.info(`     ✅ Nutrition from FSANZ: ${fsanzNutrients} nutrients present`);
+    const ingredientsStatus = productWithConfidence.ingredients_text ? '✅' : '❌';
+    const ingredientsSource = productWithConfidence.ingredients_text ? 'PRESENT (from base product)' : 'MISSING (FSANZ doesn\'t provide)';
+    logger.info(`     ${ingredientsStatus} Ingredients: ${ingredientsSource}`);
+    const labelsStatus = productWithConfidence.labels_tags && productWithConfidence.labels_tags.length > 0 ? '✅' : '❌';
+    const labelsCount = productWithConfidence.labels_tags?.length || 0;
+    const labelsSource = productWithConfidence.labels_tags?.length ? '(from base product)' : '(FSANZ doesn\'t provide)';
+    logger.info(`     ${labelsStatus} Labels: ${labelsCount} tags ${labelsSource}`);
+    const packagingStatus = productWithConfidence.packagings && productWithConfidence.packagings.length > 0 ? '✅' : '❌';
+    const packagingCount = productWithConfidence.packagings?.length || 0;
+    const packagingSource = productWithConfidence.packagings?.length ? '(from base product)' : '(FSANZ doesn\'t provide)';
+    logger.info(`     ${packagingStatus} Packaging: ${packagingCount} items ${packagingSource}`);
+  }
+  
+  // Calculate trust score (works even for minimal web search products)
+  // CRITICAL FIX: Wrap in try-catch to ensure product is always returned even if TruScore calculation fails
+  let productWithTrustScore: ProductWithTrustScore;
+  try {
+    productWithTrustScore = await calculateTrustScore(productWithConfidence);
+  } catch (error) {
+    // If TruScore calculation fails, return product without TruScore rather than failing entirely
+    logger.error('Error calculating TruScore (non-critical, returning product without score):', error);
+    productWithTrustScore = {
+      ...productWithConfidence,
+      trust_score: null,
+      trust_score_breakdown: null,
+    };
+  }
+  
+  // PowerShell logging for TruScore calculation
+  if (productWithTrustScore && productWithTrustScore.trust_score !== null && productWithTrustScore.trust_score_breakdown) {
+    const truScoreResult = {
+      truscore: productWithTrustScore.trust_score,
+      breakdown: {
+        Body: productWithTrustScore.trust_score_breakdown.body,
+        Planet: productWithTrustScore.trust_score_breakdown.planet,
+        Care: productWithTrustScore.trust_score_breakdown.care,
+        Open: productWithTrustScore.trust_score_breakdown.open,
+      },
+      hasNutriScore: productWithTrustScore._truscore_metadata?.hasNutriScore,
+      hasEcoScore: productWithTrustScore._truscore_metadata?.hasEcoScore,
+      hasOrigin: productWithTrustScore._truscore_metadata?.hasOrigin,
+    };
+    powershellLogger.truScoreCalculation(productWithTrustScore, truScoreResult, truScoreResult.breakdown);
+  }
+  
+  logger.info(`───────────────────────────────────────────────────────────────`);
+  logger.info(`📊 TRUSCORE CALCULATION`);
+  logger.info(`───────────────────────────────────────────────────────────────`);
+  logger.info(`  TruScore: ${productWithTrustScore.trust_score || 'N/A'}/100`);
+  if (productWithTrustScore.trust_score_breakdown) {
+    logger.info(`  Body Pillar: ${productWithTrustScore.trust_score_breakdown.body || 'N/A'}/25`);
+    logger.info(`  Planet Pillar: ${productWithTrustScore.trust_score_breakdown.planet || 'N/A'}/25`);
+    logger.info(`  Care Pillar: ${productWithTrustScore.trust_score_breakdown.care || 'N/A'}/25`);
+    logger.info(`  Open Pillar: ${productWithTrustScore.trust_score_breakdown.open || 'N/A'}/25`);
+    
+    // ===== VERIFICATION: Log FSANZ contribution to TruScore =====
+    if (hasFSANZSource) {
+      logger.info(`  🔍 [FSANZ TRUSCORE VERIFICATION] FSANZ Contribution Analysis:`);
+      const bodyPillar = productWithTrustScore.trust_score_breakdown.body || 0;
+      const hasNutriScore = productWithTrustScore._truscore_metadata?.hasNutriScore;
+      const nutritionCount = productWithTrustScore.nutriments ? Object.keys(productWithTrustScore.nutriments).length : 0;
+      
+      logger.info(`     Body Pillar: ${bodyPillar}/25`);
+      if (hasNutriScore) {
+        logger.info(`       ✅ Nutri-Score: PRESENT (from base product, not FSANZ)`);
+      } else {
+        logger.info(`       ⚠️  Nutri-Score: MISSING (baseline 15 used - FSANZ provides nutrition but no Nutri-Score)`);
+        logger.info(`       ✅ Nutrition Data: ${nutritionCount} nutrients (FSANZ enhanced)`);
+      }
+      
+      const planetPillar = productWithTrustScore.trust_score_breakdown.planet || 0;
+      const hasEcoScore = productWithTrustScore._truscore_metadata?.hasEcoScore;
+      logger.info(`     Planet Pillar: ${planetPillar}/25`);
+      if (hasEcoScore) {
+        logger.info(`       ✅ Eco-Score: PRESENT (from base product, not FSANZ)`);
+      } else {
+        logger.info(`       ⚠️  Eco-Score: MISSING (baseline 15 used - FSANZ doesn't provide)`);
+      }
+      
+      const openPillar = productWithTrustScore.trust_score_breakdown.open || 0;
+      logger.info(`     Open Pillar: ${openPillar}/25`);
+      if (productWithTrustScore.ingredients_text && productWithTrustScore.ingredients_text.trim().length > 10) {
+        logger.info(`       ✅ Ingredients: PRESENT (from base product, not FSANZ)`);
+      } else {
+        logger.info(`       ❌ Ingredients: MISSING (major penalty - FSANZ doesn't provide ingredients)`);
+        logger.info(`       ⚠️  Open Pillar reduced to ~5-10 points due to missing ingredients`);
+      }
+      
+      logger.info(`     📊 Summary: FSANZ enhanced nutrition (Body pillar), but TruScore limited by missing ingredients/certifications`);
+    }
+    
+    // Enhanced logging: Show which data sources contributed to the score
+    if (productWithTrustScore._truscore_metadata) {
+      logger.info(`  Data Sources Used:`);
+      logger.info(`    Nutri-Score: ${productWithTrustScore._truscore_metadata.hasNutriScore ? 'Yes' : 'No (baseline 15 used)'}`);
+      logger.info(`    Eco-Score: ${productWithTrustScore._truscore_metadata.hasEcoScore ? 'Yes' : 'No (baseline 15 used)'}`);
+      logger.info(`    Origin Data: ${productWithTrustScore._truscore_metadata.hasOrigin ? 'Yes' : 'No (-8 penalty applied)'}`);
+    }
+    
+    // Log NOVA group and bonus/penalty (updated to match spec v2)
+    if (productWithTrustScore.nova_group) {
+      const nova = productWithTrustScore.nova_group;
+      let novaEffect = '';
+      if (nova === 1) novaEffect = 'NOVA 1: +3 bonus (unprocessed)';
+      else if (nova === 2) novaEffect = 'NOVA 2: 0 (no adjustment)';
+      else if (nova === 3) novaEffect = 'NOVA 3: -3 penalty (processed)';
+      else if (nova === 4) novaEffect = 'NOVA 4: -8 penalty (ultra-processed)';
+      logger.info(`  NOVA Group: ${nova} (${novaEffect})`);
+    }
+    
+    // Log additive count if available
+    if (productWithTrustScore.additives_tags && productWithTrustScore.additives_tags.length > 0) {
+      logger.info(`  Additives: ${productWithTrustScore.additives_tags.length} (weighted penalty applied)`);
+    }
+    
+    // Log palm oil status if available (updated to match spec v2)
+    if (productWithTrustScore.palm_oil_analysis) {
+      const { containsPalmOil, isPalmOilFree, isCertifiedSustainable } = productWithTrustScore.palm_oil_analysis;
+      if (containsPalmOil && !isPalmOilFree) {
+        logger.info(`  Palm Oil: Detected (${isCertifiedSustainable ? 'Certified Sustainable: -5 penalty' : 'Non-certified: -8 penalty'})`);
+      } else if (isPalmOilFree) {
+        logger.info(`  Palm Oil: Free (no penalty)`);
+      }
+    }
+    
+    // Log certifications (Care pillar)
+    if (productWithTrustScore.labels_tags && productWithTrustScore.labels_tags.length > 0) {
+      const certificationLabels = productWithTrustScore.labels_tags.filter((tag: string) => {
+        const lowerTag = tag.toLowerCase();
+        return lowerTag.includes('organic') || lowerTag.includes('fair-trade') || 
+               lowerTag.includes('msc') || lowerTag.includes('asc') || 
+               lowerTag.includes('rainforest') || lowerTag.includes('utz') ||
+               lowerTag.includes('rspca') || lowerTag.includes('vegan') || 
+               lowerTag.includes('cruelty-free');
+      });
+      if (certificationLabels.length > 0) {
+        logger.info(`  Certifications: ${certificationLabels.length} found (${certificationLabels.join(', ')})`);
+      }
+    }
+    
+    // Log hidden terms count (Open pillar)
+    const hiddenTerms = ['parfum', 'fragrance', 'aroma', 'flavor', 'flavour', 'natural flavor', 
+                         'natural flavour', 'artificial flavor', 'artificial flavour', 
+                         'natural flavoring', 'natural flavouring', 'artificial flavoring', 
+                         'artificial flavouring', 'proprietary', 'proprietary blend'];
+    const ingredientsText = (productWithTrustScore.ingredients_text || '').toLowerCase();
+    const hiddenCount = hiddenTerms.filter(term => {
+      const regex = new RegExp(`\\b${term}\\b`, 'i');
+      return regex.test(ingredientsText);
+    }).length;
+    if (hiddenCount > 0) {
+      logger.info(`  Hidden Terms: ${hiddenCount} found (${hiddenCount >= 3 ? '-20 penalty' : '-12 penalty'})`);
+    }
+    
+    // Log recyclable packaging status (Planet pillar)
+    if (productWithTrustScore.packagings && productWithTrustScore.packagings.length > 0) {
+      const { getLocalRecyclabilityStatus } = require('../utils/packagingRecyclability');
+      const recyclabilityStatus = getLocalRecyclabilityStatus(productWithTrustScore.packagings);
+      if (recyclabilityStatus.isRecyclable) {
+        const recyclableCount = recyclabilityStatus.recyclableItems.length;
+        const totalCount = productWithTrustScore.packagings.length;
+        if (recyclableCount === totalCount) {
+          logger.info(`  Recyclable Packaging: All ${totalCount} items recyclable (+5 bonus)`);
+        } else {
+          logger.info(`  Recyclable Packaging: ${recyclableCount}/${totalCount} items recyclable (+2 bonus)`);
+        }
+      } else {
+        logger.info(`  Recyclable Packaging: Not recyclable (no bonus)`);
+      }
+    }
+    
+    // Log cruel parent detection (Care pillar)
+    if (productWithTrustScore.brands) {
+      const { isCruelParent } = require('../data/brandDatabase');
+      const brands = (productWithTrustScore.brands || '').toLowerCase();
+      if (isCruelParent(brands)) {
+        logger.info(`  Cruel Parent: Detected (-30 penalty in Care pillar)`);
+      }
+    }
+  } else {
+    logger.info(`  Breakdown: N/A (insufficient data)`);
+  }
+  logger.info(`═══════════════════════════════════════════════════════════════`);
+  logger.info(`✅ PRODUCT SCAN COMPLETE`);
+  logger.info(`═══════════════════════════════════════════════════════════════`);
+  
+  // Check recalls from multiple sources (comprehensive recall system)
   // This is a quick check that won't block too long
-  if ((productWithTrustScore.source === 'openfoodfacts' || 
-       productWithTrustScore.source === 'openpetfoodfacts') && 
-      (productWithTrustScore.product_name || productWithTrustScore.brands)) {
+  if (productWithTrustScore.product_name || productWithTrustScore.brands) {
     try {
+      const userCountry = getUserCountryCode();
+      
       // Quick recall check (with timeout to not block)
-      const recallPromise = checkFDARecalls(
-        productWithTrustScore.product_name,
-        productWithTrustScore.brands,
-        barcode
-      );
-      const timeoutPromise = new Promise<typeof productWithTrustScore.recalls>((resolve) => 
-        setTimeout(() => resolve(undefined), 2000) // 2 second timeout
+      const recallPromises: Promise<UnifiedRecall[]>[] = [];
+      
+      // Always check FDA recalls (US and global)
+      recallPromises.push(
+        checkFDARecalls(
+          productWithTrustScore.product_name,
+          productWithTrustScore.brands,
+          barcode
+        ).then(recalls => recalls.map(convertFDARecall)).catch(() => [])
       );
       
-      const recalls = await Promise.race([recallPromise, timeoutPromise]);
-      if (recalls && recalls.length > 0) {
-        productWithTrustScore.recalls = recalls;
+      // Check comprehensive US recalls (Recalls.gov) for US users
+      if (userCountry === 'US') {
+        recallPromises.push(
+          checkComprehensiveUSRecalls(
+            productWithTrustScore.product_name,
+            productWithTrustScore.brands,
+            barcode
+          ).then(recalls => recalls.map(convertComprehensiveUSRecall)).catch(() => [])
+        );
+      }
+      
+      // Check EU RASFF alerts for EU users
+      if (isEUCountry(userCountry)) {
+        recallPromises.push(
+          checkRASFFAlerts(
+            productWithTrustScore.product_name,
+            productWithTrustScore.brands,
+            barcode
+          ).then(alerts => alerts.map(convertRASFFAlert)).catch(() => [])
+        );
+      }
+      
+      // Check CFIA recalls for Canadian users
+      if (userCountry === 'CA') {
+        recallPromises.push(
+          checkCFIARecalls(
+            productWithTrustScore.product_name,
+            productWithTrustScore.brands,
+            barcode
+          ).then(recalls => recalls.map(convertCFIARecall)).catch(() => [])
+        );
+      }
+      
+      const timeoutPromise = new Promise<UnifiedRecall[]>((resolve) => 
+        setTimeout(() => resolve([]), 3000) // 3 second timeout for multiple recall checks
+      );
+      
+      const recallResults = await Promise.race([
+        Promise.all(recallPromises).then(results => results.flat()),
+        timeoutPromise
+      ]);
+      
+      if (recallResults && recallResults.length > 0) {
+        // Convert to FoodRecall format for backward compatibility
+        productWithTrustScore.recalls = recallResults.map(recall => ({
+          recallId: recall.recallId,
+          productName: recall.productName,
+          brand: recall.brand,
+          reason: recall.reason,
+          recallDate: recall.recallDate,
+          distribution: recall.distribution,
+          isActive: recall.isActive,
+          url: recall.url,
+        }));
+        logger.info(`⚠️ RECALL ALERT: ${recallResults.length} recall(s) found for this product`);
       }
     } catch (error) {
       // Non-blocking - recalls will be checked in background
       logger.debug('Recall check timed out or failed (non-critical):', error);
+    }
+  }
+  
+  // CRITICAL: Merge user-contributed data and save to SQLite before returning
+  // This ensures ALL user-entered data persists for future scans
+  productWithTrustScore = await mergeUserContributedData(productWithTrustScore, primaryBarcode) as ProductWithTrustScore;
+  
+  // Save final merged product (with user data) to SQLite for future scans
+  try {
+    await saveProductToSQLite(productWithTrustScore, userCountry ?? undefined);
+    logger.info(`[ProductService] ✅ Saved final merged product (with user data) to SQLite for future scans`);
+  } catch (sqliteError) {
+    logger.debug('[ProductService] Failed to save final product to SQLite (non-critical):', sqliteError);
+  }
+  
+  // Cache the product (premium users get larger cache)
+  // Note: We cache even web search results so users don't re-search the same barcode
+  if (useCache && productWithTrustScore) {
+    await saveProductToCache(productWithTrustScore, primaryBarcode, isPremium);
+    
+    // Also cache with original barcode for faster lookup next time
+    if (primaryBarcode !== barcode) {
+      const cachedProduct = { ...productWithTrustScore, barcode };
+      await cacheProduct(cachedProduct, isPremium);
     }
   }
   
@@ -865,12 +882,34 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     
     // Apply confidence score to fallback product
     const fallbackWithConfidence = applyConfidenceScore(fallbackProduct);
-    return calculateTrustScore(fallbackWithConfidence);
+    try {
+      return await calculateTrustScore(fallbackWithConfidence);
+    } catch (error) {
+      // If TruScore calculation fails, return product without TruScore
+      logger.error('Error calculating TruScore for fallback product (non-critical):', error);
+      return {
+        ...fallbackWithConfidence,
+        trust_score: null,
+        trust_score_breakdown: null,
+      };
+    }
   }
 }
 
 /**
- * Refresh product data (skip cache)
+ * Refresh product data by skipping cache.
+ * 
+ * Forces a fresh query from all data sources, bypassing SQLite and AsyncStorage cache.
+ * Useful when user wants to get the latest product data.
+ * 
+ * @param barcode - Product barcode (8-14 digits)
+ * @returns Fresh product data with TruScore, or null if not found
+ * 
+ * @example
+ * ```typescript
+ * // User taps "Refresh" button
+ * const freshProduct = await refreshProduct('1234567890123');
+ * ```
  */
 export async function refreshProduct(barcode: string): Promise<ProductWithTrustScore | null> {
   return fetchProduct(barcode, false);

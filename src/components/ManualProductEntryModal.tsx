@@ -1,7 +1,7 @@
 // Manual Product Entry Modal
 // Allows users to manually add product information when product is not found
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -23,12 +23,16 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { saveManualProduct, ManualProductData } from '../services/manualProductService';
 import CameraCaptureModal from './CameraCaptureModal';
+import { parseAllergensAndAdditives, parsePackagingData } from '../utils/manualProductParsing';
+import { Product } from '../types/product';
 
 interface ManualProductEntryModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (product: ManualProductData) => void;
   barcode: string;
+  initialProduct?: Product | null; // For edit mode - pre-fill with existing product data
+  editMode?: boolean; // If true, allows editing existing products (product_name optional)
 }
 
 export default function ManualProductEntryModal({
@@ -36,6 +40,8 @@ export default function ManualProductEntryModal({
   onClose,
   onSave,
   barcode,
+  initialProduct,
+  editMode = false,
 }: ManualProductEntryModalProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -67,6 +73,78 @@ export default function ManualProductEntryModal({
 
   // Recycling/Packaging Information
   const [recyclingInfo, setRecyclingInfo] = useState('');
+
+  // Pre-fill form fields when editing existing product
+  useEffect(() => {
+    if (visible && initialProduct && editMode) {
+      setProductName(initialProduct.product_name || '');
+      setBrand(initialProduct.brands || '');
+      setIngredients(initialProduct.ingredients_text || '');
+      setServingSize(initialProduct.serving_size || '');
+      setQuantity(initialProduct.quantity || '');
+      setManufacturingCountry(initialProduct.manufacturing_places || initialProduct.countries || '');
+      setCategories(initialProduct.categories || '');
+      setImageUri(initialProduct.image_url || initialProduct.image_front_url || null);
+      
+      // Pre-fill nutrition data
+      if (initialProduct.nutriments) {
+        setEnergy(initialProduct.nutriments.energy?.toString() || '');
+        setFat(initialProduct.nutriments.fat?.toString() || '');
+        setSaturatedFat(initialProduct.nutriments['saturated-fat']?.toString() || '');
+        setCarbs(initialProduct.nutriments.carbohydrates?.toString() || '');
+        setSugars(initialProduct.nutriments.sugars?.toString() || '');
+        setFiber(initialProduct.nutriments.fiber?.toString() || '');
+        setProtein(initialProduct.nutriments.proteins?.toString() || '');
+        setSalt(initialProduct.nutriments.salt?.toString() || '');
+      }
+      
+      // Pre-fill allergens/additives (convert tags back to text for editing)
+      const allergenText = initialProduct.allergens_tags?.map(tag => 
+        tag.replace(/^en:/, '').replace(/-/g, ' ')
+      ).join(', ') || '';
+      const additiveText = initialProduct.additives_tags?.map(tag => 
+        tag.replace(/^en:/, '').toUpperCase()
+      ).join(', ') || '';
+      const allergensAdditivesText = [allergenText, additiveText]
+        .filter(t => t.length > 0)
+        .join(', ');
+      setAllergensAdditives(allergensAdditivesText);
+      
+      // Pre-fill packaging info (convert structured data back to text)
+      if (initialProduct.packaging_data) {
+        const packagingItems = initialProduct.packaging_data.items.map(item => {
+          const parts: string[] = [];
+          if (item.material) parts.push(item.material.replace(/^en:/, ''));
+          if (item.shape) parts.push(item.shape.replace(/^en:/, ''));
+          if (item.recycling === 'en:recyclable') parts.push('recyclable');
+          return parts.join(' - ');
+        }).filter(p => p.length > 0);
+        setRecyclingInfo(packagingItems.join(', '));
+      } else if (initialProduct.packaging) {
+        setRecyclingInfo(initialProduct.packaging);
+      }
+    } else if (visible && !editMode) {
+      // Reset form when opening in add mode
+      setProductName('');
+      setBrand('');
+      setIngredients('');
+      setServingSize('');
+      setQuantity('');
+      setManufacturingCountry('');
+      setCategories('');
+      setImageUri(null);
+      setEnergy('');
+      setFat('');
+      setSaturatedFat('');
+      setCarbs('');
+      setSugars('');
+      setFiber('');
+      setProtein('');
+      setSalt('');
+      setAllergensAdditives('');
+      setRecyclingInfo('');
+    }
+  }, [visible, initialProduct, editMode]);
 
   const handleImageCapture = async (uri: string) => {
     setImageUri(uri);
@@ -111,8 +189,8 @@ export default function ManualProductEntryModal({
   };
 
   const handleSave = async () => {
-    // Validate required fields
-    if (!productName.trim()) {
+    // Validate required fields (product name only required in add mode, not edit mode)
+    if (!editMode && !productName.trim()) {
       Alert.alert(
         t('manualProduct.validationError') || 'Validation Error',
         t('manualProduct.productNameRequired') || 'Product name is required'
@@ -133,9 +211,20 @@ export default function ManualProductEntryModal({
       if (protein) nutriments.proteins = parseFloat(protein) || 0;
       if (salt) nutriments.salt = parseFloat(salt) || 0;
 
+      // Parse allergens/additives text into structured tags
+      const { allergens_tags, additives_tags } = parseAllergensAndAdditives(allergensAdditives);
+      
+      // Parse packaging/recycling text into structured data
+      const { packaging_data } = parsePackagingData(recyclingInfo);
+      
+      // Use product name from initialProduct if editing and no name provided
+      const finalProductName = editMode && !productName.trim() && initialProduct?.product_name
+        ? initialProduct.product_name
+        : productName.trim();
+      
       const productData: ManualProductData = {
         barcode,
-        product_name: productName.trim(),
+        product_name: finalProductName || (initialProduct?.product_name || 'Unknown Product'),
         brands: brand.trim() || undefined,
         ingredients_text: ingredients.trim() || undefined,
         image_url: imageUri || undefined,
@@ -145,6 +234,9 @@ export default function ManualProductEntryModal({
         manufacturing_places: manufacturingCountry.trim() || undefined,
         countries: manufacturingCountry.trim() || undefined,
         categories: categories.trim() || undefined,
+        allergens_tags: allergens_tags.length > 0 ? allergens_tags : undefined,
+        additives_tags: additives_tags.length > 0 ? additives_tags : undefined,
+        packaging_data: packaging_data,
         timestamp: Date.now(),
       };
 
@@ -219,7 +311,10 @@ export default function ManualProductEntryModal({
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
             <Text style={[styles.title, { color: colors.text }]}>
-              {t('manualProduct.title') || 'Add Product Information'}
+              {editMode 
+                ? (t('manualProduct.editTitle') || 'Edit Product Information')
+                : (t('manualProduct.title') || 'Add Product Information')
+              }
             </Text>
             <View style={styles.placeholder} />
           </View>
@@ -284,7 +379,8 @@ export default function ManualProductEntryModal({
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.text }]}>
-                  {t('manualProduct.productName') || 'Product Name'} <Text style={styles.required}>*</Text>
+                  {t('manualProduct.productName') || 'Product Name'} 
+                  {!editMode && <Text style={styles.required}> *</Text>}
                 </Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
@@ -582,7 +678,7 @@ export default function ManualProductEntryModal({
             <TouchableOpacity
               style={[styles.saveButton, { backgroundColor: colors.primary }]}
               onPress={handleSave}
-              disabled={loading || !productName.trim()}
+              disabled={loading || (!editMode && !productName.trim())}
             >
               {loading ? (
                 <ActivityIndicator size="small" color="#fff" />

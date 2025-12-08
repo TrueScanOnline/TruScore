@@ -6,71 +6,167 @@ import * as SQLite from 'expo-sqlite';
 import { Product } from '../types/product';
 import { logger } from '../utils/logger';
 import { normalizeBarcode } from '../utils/barcodeNormalization';
+import { createDatabaseIndexes } from '../utils/databaseIndexes';
+import { initializeDatabaseConnection, executeWithRetry } from './databaseConnectionManager';
 
 const DB_NAME = 'truescan_products.db';
 let db: SQLite.SQLiteDatabase | null = null;
 
 /**
  * Initialize SQLite database
+ * Uses proper connection management instead of setTimeout patches
  */
 export async function initSQLiteDatabase(): Promise<void> {
   try {
-    db = await SQLite.openDatabaseAsync(DB_NAME);
+    // Close existing database if it exists (in case of re-initialization)
+    if (db) {
+      try {
+        await db.closeAsync();
+      } catch (closeError) {
+        logger.debug('Error closing existing database (non-critical):', closeError);
+      }
+      db = null;
+    }
     
-    // Create products table if it doesn't exist
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS products (
-        barcode TEXT PRIMARY KEY,
-        product_name TEXT,
-        product_name_en TEXT,
-        brands TEXT,
-        generic_name TEXT,
-        categories TEXT,
-        categories_tags TEXT,
-        ingredients_text TEXT,
-        image_url TEXT,
-        image_front_url TEXT,
-        image_front_small_url TEXT,
-        nutriments TEXT,
-        packaging_data TEXT,
-        manufacturing_places TEXT,
-        countries TEXT,
-        ecoscore_grade TEXT,
-        ecoscore_score REAL,
-        nutriscore_grade TEXT,
-        nutriscore_score INTEGER,
-        labels_tags TEXT,
-        allergens_tags TEXT,
-        additives_tags TEXT,
-        source TEXT,
-        quality INTEGER,
-        completion INTEGER,
-        last_updated INTEGER,
-        country_filter TEXT
-      );
-      
-      CREATE INDEX IF NOT EXISTS idx_barcode ON products(barcode);
-      CREATE INDEX IF NOT EXISTS idx_country_filter ON products(country_filter);
-      CREATE INDEX IF NOT EXISTS idx_last_updated ON products(last_updated);
-    `);
+    // Use proper connection manager instead of setTimeout patches
+    db = await initializeDatabaseConnection(DB_NAME);
+    
+    if (!db) {
+      throw new Error('Failed to initialize database connection');
+    }
+    
+    // Create products table if it doesn't exist (with retry logic)
+    await executeWithRetry(async () => {
+      if (!db) throw new Error('Database not initialized');
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS products (
+          barcode TEXT PRIMARY KEY,
+          product_name TEXT,
+          product_name_en TEXT,
+          brands TEXT,
+          generic_name TEXT,
+          categories TEXT,
+          categories_tags TEXT,
+          ingredients_text TEXT,
+          image_url TEXT,
+          image_front_url TEXT,
+          image_front_small_url TEXT,
+          nutriments TEXT,
+          packaging_data TEXT,
+          manufacturing_places TEXT,
+          countries TEXT,
+          ecoscore_grade TEXT,
+          ecoscore_score REAL,
+          nutriscore_grade TEXT,
+          nutriscore_score INTEGER,
+          labels_tags TEXT,
+          allergens_tags TEXT,
+          additives_tags TEXT,
+          source TEXT,
+          quality INTEGER,
+          completion INTEGER,
+          last_updated INTEGER,
+          country_filter TEXT
+        )
+      `);
+    });
+    
+    // Create basic indexes separately (with retry logic)
+    const indexOperations = [
+      () => {
+        if (!db) throw new Error('Database not initialized');
+        return db.execAsync('CREATE INDEX IF NOT EXISTS idx_barcode ON products(barcode)');
+      },
+      () => {
+        if (!db) throw new Error('Database not initialized');
+        return db.execAsync('CREATE INDEX IF NOT EXISTS idx_country_filter ON products(country_filter)');
+      },
+      () => {
+        if (!db) throw new Error('Database not initialized');
+        return db.execAsync('CREATE INDEX IF NOT EXISTS idx_last_updated ON products(last_updated)');
+      },
+    ];
+    
+    for (const operation of indexOperations) {
+      try {
+        await executeWithRetry(operation, 2, 50); // 2 retries, 50ms delay
+      } catch (idxError) {
+        // Index might already exist - this is non-critical
+        logger.debug('Error creating index (may already exist):', idxError);
+      }
+    }
+    
+    // Create additional performance indexes (with error handling)
+    try {
+      await executeWithRetry(async () => {
+        if (!db) throw new Error('Database not initialized');
+        await createDatabaseIndexes(db);
+      }, 2, 50);
+    } catch (indexError) {
+      logger.debug('Error creating additional indexes (non-critical):', indexError);
+      // Don't throw - indexes are optional for performance
+    }
     
     logger.debug('SQLite database initialized successfully');
   } catch (error) {
     logger.error('Error initializing SQLite database:', error);
-    throw error;
+    db = null; // Reset db on error
+    // Don't throw - allow app to continue without SQLite
+    // The app can still function using cache and API calls
   }
 }
 
+// Track initialization to prevent concurrent initialization
+let isInitializing = false;
+let initPromise: Promise<void> | null = null;
+let initFailed = false; // Track if initialization has permanently failed
+
 /**
  * Get SQLite database instance (initializes if needed)
+ * Returns null if database is unavailable (allows graceful fallback)
  */
-async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
-  if (!db) {
-    await initSQLiteDatabase();
+async function getDatabase(): Promise<SQLite.SQLiteDatabase | null> {
+  // If initialization has permanently failed, don't retry
+  if (initFailed) {
+    return null;
   }
-  if (!db) {
-    throw new Error('Failed to initialize SQLite database');
+  
+  // If already initialized, return it
+  if (db) {
+    return db;
   }
+  
+  // If currently initializing, wait for that to complete
+  if (isInitializing && initPromise) {
+    await initPromise;
+    if (db) {
+      return db;
+    }
+    // If initialization completed but db is still null, mark as failed
+    initFailed = true;
+    return null;
+  }
+  
+  // Start initialization
+  isInitializing = true;
+  initPromise = initSQLiteDatabase();
+  
+  try {
+    await initPromise;
+  } catch (error) {
+    logger.debug('Database initialization failed:', error);
+    initFailed = true;
+    return null;
+  } finally {
+    isInitializing = false;
+    initPromise = null;
+  }
+  
+  if (!db) {
+    initFailed = true;
+    return null;
+  }
+  
   return db;
 }
 
@@ -81,36 +177,49 @@ async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
 export async function lookupProductInSQLite(barcode: string, countryCode?: string): Promise<Product | null> {
   try {
     const database = await getDatabase();
+    
+    if (!database) {
+      // Database not available - this is fine, app can use cache/API
+      return null;
+    }
+    
     const barcodeVariants = normalizeBarcode(barcode);
     
     // Try each barcode variant
     for (const variant of barcodeVariants) {
-      // First try with country filter if provided
-      if (countryCode) {
+      try {
+        // First try with country filter if provided
+        if (countryCode) {
+          const result = await database.getFirstAsync<SQLiteProductRow>(
+            `SELECT * FROM products WHERE barcode = ? AND (country_filter IS NULL OR country_filter = ?) ORDER BY last_updated DESC LIMIT 1`,
+            [variant, countryCode]
+          );
+          
+          if (result) {
+            return convertRowToProduct(result);
+          }
+        }
+        
+        // Fallback: try without country filter
         const result = await database.getFirstAsync<SQLiteProductRow>(
-          `SELECT * FROM products WHERE barcode = ? AND (country_filter IS NULL OR country_filter = ?) ORDER BY last_updated DESC LIMIT 1`,
-          [variant, countryCode]
+          `SELECT * FROM products WHERE barcode = ? ORDER BY last_updated DESC LIMIT 1`,
+          [variant]
         );
         
         if (result) {
           return convertRowToProduct(result);
         }
-      }
-      
-      // Fallback: try without country filter
-      const result = await database.getFirstAsync<SQLiteProductRow>(
-        `SELECT * FROM products WHERE barcode = ? ORDER BY last_updated DESC LIMIT 1`,
-        [variant]
-      );
-      
-      if (result) {
-        return convertRowToProduct(result);
+      } catch (queryError) {
+        // Log but continue to next variant
+        logger.debug(`Error querying barcode variant ${variant}:`, queryError);
+        continue;
       }
     }
     
     return null;
   } catch (error) {
-    logger.error('Error looking up product in SQLite:', error);
+    // Don't log as error - database might not be initialized yet, which is fine
+    logger.debug('SQLite lookup failed (non-critical):', error instanceof Error ? error.message : error);
     return null;
   }
 }
@@ -121,6 +230,11 @@ export async function lookupProductInSQLite(barcode: string, countryCode?: strin
 export async function saveProductToSQLite(product: Product, countryCode?: string): Promise<boolean> {
   try {
     const database = await getDatabase();
+    
+    if (!database) {
+      // Database not available - this is fine, app can continue without SQLite
+      return false;
+    }
     
     const row: SQLiteProductRow = {
       barcode: product.barcode,
@@ -185,6 +299,9 @@ export async function saveProductToSQLite(product: Product, countryCode?: string
 export async function bulkImportProducts(products: Product[], countryCode?: string): Promise<number> {
   try {
     const database = await getDatabase();
+    if (!database) {
+      return 0;
+    }
     let imported = 0;
     
     await database.withTransactionAsync(async () => {
@@ -210,6 +327,9 @@ export async function bulkImportProducts(products: Product[], countryCode?: stri
 export async function getSQLiteStats(): Promise<{ totalProducts: number; countryProducts: Record<string, number> }> {
   try {
     const database = await getDatabase();
+    if (!database) {
+      return { totalProducts: 0, countryProducts: {} };
+    }
     
     const totalResult = await database.getFirstAsync<{ count: number }>(
       `SELECT COUNT(*) as count FROM products`
@@ -241,6 +361,9 @@ export async function getSQLiteStats(): Promise<{ totalProducts: number; country
 export async function clearOldProducts(daysOld: number = 90): Promise<number> {
   try {
     const database = await getDatabase();
+    if (!database) {
+      return 0;
+    }
     const cutoffTime = Date.now() - (daysOld * 24 * 60 * 60 * 1000);
     
     const result = await database.runAsync(
@@ -317,7 +440,7 @@ function convertRowToProduct(row: SQLiteProductRow): Product {
     labels_tags: row.labels_tags ? JSON.parse(row.labels_tags) : undefined,
     allergens_tags: row.allergens_tags ? JSON.parse(row.allergens_tags) : undefined,
     additives_tags: row.additives_tags ? JSON.parse(row.additives_tags) : undefined,
-    source: (row.source && row.source !== 'sqlite') ? row.source as Product['source'] : undefined,
+    source: row.source ? (row.source as Product['source']) : 'sqlite', // Preserve source, default to 'sqlite' if missing
     quality: row.quality || undefined,
     completion: row.completion || undefined,
   };

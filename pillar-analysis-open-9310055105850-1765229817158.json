@@ -1,0 +1,33 @@
+{
+  "pillar": "open",
+  "barcode": "9310055105850",
+  "productName": "NUTRI GRAIN",
+  "result": {
+    "score": 7,
+    "base": 15,
+    "adjustments": [
+      {
+        "description": "Base score (assumes transparent until hidden)",
+        "value": 0,
+        "type": "neutral"
+      },
+      {
+        "description": "Full ingredients disclosure (>100 characters)",
+        "value": 0,
+        "type": "neutral"
+      },
+      {
+        "description": "No origin information",
+        "value": -8,
+        "type": "negative"
+      }
+    ],
+    "details": {
+      "ingredientsScore": 0,
+      "ingredientsLength": 817,
+      "hiddenTermsPenalty": 0,
+      "sophisticationBonus": 0,
+      "originPenalty": 8
+    }
+  }
+}

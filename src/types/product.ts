@@ -99,7 +99,9 @@ export interface PalmOilAnalysis {
   containsPalmOil: boolean;
   isPalmOilFree: boolean;
   isNonSustainable: boolean;
+  isCertifiedSustainable?: boolean; // True if WWF enhancement marks as certified sustainable
   score: number; // -10 to +10 (penalty for palm oil, bonus for palm-oil-free)
+  detectedFromIngredientsText?: boolean; // True if detection came from ingredients_text (not OFF tags)
 }
 
 // Packaging sustainability data
@@ -229,7 +231,7 @@ export interface Product {
   sourceReliability?: 'high' | 'medium' | 'low'; // Human-readable reliability level
   
   // API source
-  source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'go_upc' | 'buycott' | 'open_gtin' | 'barcode_monster' | 'web_search' | 'woolworths_nz' | 'paknsave' | 'newworld' | 'woolworths_au' | 'coles_au' | 'iga_au' | 'fsanz_au' | 'fsanz_nz' | 'nz_store_api' | 'afcd' | 'nzfcd' | 'barcode_lookup' | 'bestbuy' | 'eandata' | 'ean_search' | 'edamam' | 'nutritionix' | 'upc_database' | 'sqlite' | string; // Allow string for composite sources like 'openfoodfacts+afcd'
+  source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'go_upc' | 'buycott' | 'open_gtin' | 'barcode_monster' | 'web_search' | 'woolworths_nz' | 'paknsave' | 'newworld' | 'woolworths_au' | 'coles_au' | 'iga_au' | 'fsanz_au' | 'fsanz_nz' | 'nz_store_api' | 'afcd' | 'nzfcd' | 'barcode_lookup' | 'bestbuy' | 'eandata' | 'ean_search' | 'edamam' | 'nutritionix' | 'upc_database' | 'sqlite' | 'health_canada_cnf' | 'uk_fsa' | 'efsa' | 'tesco_labs' | 'walmart_open' | 'foodrepo' | 'opennutrition' | string; // Allow string for composite sources like 'openfoodfacts+afcd'
 }
 
 export interface TrustScoreBreakdown {

@@ -1,0 +1,7327 @@
+[
+  {
+    "name": "greek yogurt",
+    "nutriments": {
+      "vitamin-d_100g": 0,
+      "magnesium_100g": 10.4,
+      "selenium_100g": 0.0098,
+      "fatty-acids-total-saturated_100g": 2392.9999999999995,
+      "copper_100g": 0.001,
+      "phosphorus_100g": 113,
+      "vitamin-e_100g": 0.01,
+      "fatty-acids-total-monounsaturated_100g": 2,
+      "vitamin-b6_100g": 0.064,
+      "fat_100g": 370,
+      "sodium_100g": 33.76,
+      "riboflavin_100g": 0.281,
+      "thiamin_100g": 0.022,
+      "niacin_100g": 0.208,
+      "cholesterol_100g": 16.84,
+      "zinc_100g": 0.53,
+      "proteins_100g": 8060.000000000001,
+      "vitamin-b12_100g": 0.00045,
+      "iron_100g": 0,
+      "vitamin-k_100g": 0,
+      "potassium_100g": 146.9,
+      "calcium_100g": 110.9,
+      "folate_100g": 0.0199999999999999,
+      "vitamin-c_100g": 0.2,
+      "fiber_100g": 600,
+      "salt_100g": 85.7504
+    },
+    "nutrient_count": 26
+  },
+  {
+    "name": "pollock (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 0,
+      "magnesium_100g": 16.1,
+      "potassium_100g": 160,
+      "iron_100g": 0.22,
+      "zinc_100g": 0.31,
+      "vitamin-k_100g": 0,
+      "fatty-acids-total-monounsaturated_100g": 16,
+      "fat_100g": 410,
+      "vitamin-d_100g": 0.0002,
+      "vitamin-b12_100g": 0.0016299999999999,
+      "selenium_100g": 0.0159,
+      "proteins_100g": 12300.000000000002,
+      "vitamin-b6_100g": 0.069,
+      "fatty-acids-total-saturated_100g": 128,
+      "sodium_100g": 333,
+      "niacin_100g": 0.653,
+      "riboflavin_100g": 0.08,
+      "phosphorus_100g": 284,
+      "vitamin-e_100g": 0.49,
+      "vitamin-c_100g": 0,
+      "cholesterol_100g": 46,
+      "copper_100g": 0.0029999999999999,
+      "thiamin_100g": 0.03,
+      "calcium_100g": 15,
+      "salt_100g": 845.82
+    },
+    "nutrient_count": 25
+  },
+  {
+    "name": "restaurant, chinese, sweet and sour pork",
+    "nutriments": {
+      "fat_100g": 13600,
+      "selenium_100g": 0.0096999999999999,
+      "carbohydrates_100g": 25500,
+      "vitamin-k_100g": 0.0278,
+      "cholesterol_100g": 24.000000000000004,
+      "potassium_100g": 152,
+      "fatty-acids-total-monounsaturated_100g": 86.99999999999999,
+      "phosphorus_100g": 133,
+      "vitamin-b12_100g": 0.00019,
+      "niacin_100g": 2.11,
+      "vitamin-c_100g": 2.3,
+      "copper_100g": 0.029,
+      "thiamin_100g": 0.2349999999999999,
+      "iron_100g": 3.0700000000000003,
+      "magnesium_100g": 13,
+      "fatty-acids-total-saturated_100g": 2680,
+      "riboflavin_100g": 0.103,
+      "zinc_100g": 1.07,
+      "calcium_100g": 46,
+      "vitamin-e_100g": 0.89,
+      "fiber_100g": 1000,
+      "proteins_100g": 8880,
+      "sodium_100g": 304,
+      "vitamin-b6_100g": 0.17,
+      "salt_100g": 772.16
+    },
+    "nutrient_count": 25
+  },
+  {
+    "name": "parmesan cheese (grated)",
+    "nutriments": {
+      "iron_100g": 0.1405,
+      "phosphorus_100g": 625.3,
+      "vitamin-b12_100g": 0.00135,
+      "vitamin-e_100g": 0.51,
+      "vitamin-b6_100g": 0.081,
+      "selenium_100g": 0.0349999999999999,
+      "vitamin-k_100g": 0.0017,
+      "carbohydrates_100g": 12400,
+      "copper_100g": 0.2279999999999999,
+      "cholesterol_100g": 87,
+      "zinc_100g": 4.33,
+      "riboflavin_100g": 0.4093999999999999,
+      "magnesium_100g": 34.9,
+      "potassium_100g": 184,
+      "niacin_100g": 0.1406,
+      "thiamin_100g": 0.03486,
+      "calcium_100g": 950.4,
+      "proteins_100g": 29600.000000000007,
+      "sodium_100g": 1046,
+      "folate_100g": 0.0059999999999999,
+      "fat_100g": 28000,
+      "fatty-acids-total-saturated_100g": 17170,
+      "fatty-acids-total-monounsaturated_100g": 896.0000000000001,
+      "salt_100g": 2656.84
+    },
+    "nutrient_count": 24
+  },
+  {
+    "name": "mustard, prepared, yellow",
+    "nutriments": {
+      "vitamin-b6_100g": 0.069,
+      "niacin_100g": 0.561,
+      "carbohydrates_100g": 5300,
+      "fat_100g": 3379.9999999999995,
+      "selenium_100g": 0.034,
+      "fatty-acids-total-saturated_100g": 252,
+      "potassium_100g": 150,
+      "calcium_100g": 63,
+      "folate_100g": 0.007,
+      "vitamin-k_100g": 0.0014999999999999,
+      "zinc_100g": 0.64,
+      "proteins_100g": 4250,
+      "iron_100g": 1.59,
+      "riboflavin_100g": 0.066,
+      "fatty-acids-total-monounsaturated_100g": 10,
+      "magnesium_100g": 47.7,
+      "thiamin_100g": 0.189,
+      "vitamin-c_100g": 0.4,
+      "vitamin-e_100g": 0.35,
+      "sodium_100g": 1100,
+      "fiber_100g": 4300,
+      "phosphorus_100g": 108,
+      "copper_100g": 0.004,
+      "salt_100g": 2794
+    },
+    "nutrient_count": 24
+  },
+  {
+    "name": "ricotta cheese",
+    "nutriments": {
+      "fat_100g": 11000,
+      "calcium_100g": 224.00000000000003,
+      "zinc_100g": 0.56,
+      "vitamin-b6_100g": 0.099,
+      "potassium_100g": 230,
+      "carbohydrates_100g": 6860.000000000001,
+      "iron_100g": 0.1,
+      "phosphorus_100g": 162,
+      "vitamin-k_100g": 0.0006,
+      "proteins_100g": 7810.000000000001,
+      "sodium_100g": 105,
+      "magnesium_100g": 19.7,
+      "thiamin_100g": 0.043,
+      "fatty-acids-total-saturated_100g": 6970,
+      "selenium_100g": 0.0055,
+      "fatty-acids-total-monounsaturated_100g": 351,
+      "vitamin-b12_100g": 0.00078,
+      "cholesterol_100g": 48.00000000000001,
+      "niacin_100g": 0.168,
+      "copper_100g": 0.1269999999999999,
+      "folate_100g": 0.004,
+      "riboflavin_100g": 0.327,
+      "vitamin-e_100g": 0.2700000000000001,
+      "salt_100g": 266.7
+    },
+    "nutrient_count": 24
+  },
+  {
+    "name": "swiss cheese",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 18200,
+      "zinc_100g": 4.37,
+      "vitamin-b12_100g": 0.0030199999999999,
+      "vitamin-k_100g": 0.0013999999999999,
+      "magnesium_100g": 33.4,
+      "copper_100g": 0.292,
+      "vitamin-e_100g": 0.6,
+      "proteins_100g": 27000,
+      "vitamin-b6_100g": 0.07,
+      "folate_100g": 0.009,
+      "iron_100g": 0.13,
+      "thiamin_100g": 0.011,
+      "vitamin-d_100g": 0,
+      "riboflavin_100g": 0.303,
+      "fatty-acids-total-monounsaturated_100g": 993,
+      "calcium_100g": 890,
+      "potassium_100g": 71,
+      "phosphorus_100g": 574,
+      "cholesterol_100g": 93,
+      "niacin_100g": 0.06,
+      "selenium_100g": 0.0300999999999999,
+      "sodium_100g": 185,
+      "carbohydrates_100g": 1440,
+      "salt_100g": 469.90000000000003
+    },
+    "nutrient_count": 24
+  },
+  {
+    "name": "skim milk (pasteurized, vitamin a and d fortified)",
+    "nutriments": {
+      "calcium_100g": 132,
+      "potassium_100g": 167.00000000000003,
+      "carbohydrates_100g": 4920,
+      "fatty-acids-total-saturated_100g": 49,
+      "fatty-acids-total-monounsaturated_100g": 0,
+      "cholesterol_100g": 3.0000000000000004,
+      "copper_100g": 0.064,
+      "vitamin-d_100g": 0.0011,
+      "phosphorus_100g": 107,
+      "proteins_100g": 3430.0000000000005,
+      "fat_100g": 80,
+      "vitamin-b12_100g": 0.0005799999999999,
+      "vitamin-e_100g": 0,
+      "sodium_100g": 41,
+      "vitamin-b6_100g": 0.058,
+      "zinc_100g": 0.45,
+      "magnesium_100g": 12.5,
+      "iron_100g": 0,
+      "folate_100g": 0.002,
+      "thiamin_100g": 0.056,
+      "niacin_100g": 0.1179999999999999,
+      "selenium_100g": 0.002,
+      "riboflavin_100g": 0.131,
+      "salt_100g": 104.14
+    },
+    "nutrient_count": 24
+  },
+  {
+    "name": "lowfat cow milk (2%, fortified, pasteurized)",
+    "nutriments": {
+      "fat_100g": 1900,
+      "calcium_100g": 126,
+      "phosphorus_100g": 103,
+      "vitamin-b6_100g": 0.061,
+      "vitamin-d_100g": 0.00113,
+      "copper_100g": 0.0829999999999999,
+      "riboflavin_100g": 0.137,
+      "folate_100g": 0.002,
+      "cholesterol_100g": 8,
+      "fatty-acids-total-monounsaturated_100g": 70,
+      "sodium_100g": 39.00000000000001,
+      "selenium_100g": 0.0018,
+      "vitamin-b12_100g": 0.00055,
+      "proteins_100g": 3360,
+      "vitamin-e_100g": 0.03,
+      "fatty-acids-total-saturated_100g": 1110,
+      "niacin_100g": 0.112,
+      "potassium_100g": 159,
+      "iron_100g": 0,
+      "carbohydrates_100g": 4900,
+      "zinc_100g": 0.43,
+      "thiamin_100g": 0.0589999999999999,
+      "magnesium_100g": 12.000000000000002,
+      "salt_100g": 99.06000000000002
+    },
+    "nutrient_count": 24
+  },
+  {
+    "name": "pork sausage (oven-cooked)",
+    "nutriments": {
+      "magnesium_100g": 18.6,
+      "calcium_100g": 12.000000000000002,
+      "vitamin-b12_100g": 0.0010599999999999,
+      "carbohydrates_100g": 2150,
+      "vitamin-b6_100g": 0.343,
+      "folate_100g": 0,
+      "iron_100g": 1.29,
+      "copper_100g": 0.022,
+      "vitamin-e_100g": 0.8,
+      "fatty-acids-total-monounsaturated_100g": 100,
+      "vitamin-k_100g": 0,
+      "fatty-acids-total-saturated_100g": 9150,
+      "selenium_100g": 0.0202,
+      "zinc_100g": 2.41,
+      "proteins_100g": 18200,
+      "phosphorus_100g": 145,
+      "potassium_100g": 310.00000000000006,
+      "fat_100g": 26200,
+      "cholesterol_100g": 80,
+      "sodium_100g": 766,
+      "riboflavin_100g": 0.242,
+      "thiamin_100g": 0.31,
+      "niacin_100g": 5.73,
+      "salt_100g": 1945.64
+    },
+    "nutrient_count": 24
+  },
+  {
+    "name": "almond milk",
+    "nutriments": {
+      "fat_100g": 1558,
+      "copper_100g": 0.0414,
+      "carbohydrates_100g": 337.1125,
+      "proteins_100g": 554.6875,
+      "magnesium_100g": 6.785000000000001,
+      "potassium_100g": 30.79,
+      "vitamin-e_100g": 3.3230000000000004,
+      "thiamin_100g": 0.005,
+      "folate_100g": 0,
+      "zinc_100g": 0.07661,
+      "calcium_100g": 157.5,
+      "fatty-acids-total-saturated_100g": 103.8,
+      "fatty-acids-total-monounsaturated_100g": 0,
+      "fiber_100g": 0,
+      "vitamin-b12_100g": 0.0004491999999999,
+      "sodium_100g": 59.58000000000001,
+      "selenium_100g": 0,
+      "phosphorus_100g": 19.08,
+      "vitamin-b6_100g": 0,
+      "iron_100g": 0.2899,
+      "niacin_100g": 0.07438,
+      "riboflavin_100g": 0.08333,
+      "vitamin-k_100g": 0,
+      "salt_100g": 151.33320000000003
+    },
+    "nutrient_count": 24
+  },
+  {
+    "name": "almond (dry, roasted)",
+    "nutriments": {
+      "carbohydrates_100g": 16200,
+      "vitamin-c_100g": 0,
+      "thiamin_100g": 0.079,
+      "vitamin-b6_100g": 0.075,
+      "zinc_100g": 2.8,
+      "fatty-acids-total-monounsaturated_100g": 32,
+      "sodium_100g": 256,
+      "selenium_100g": 0,
+      "fatty-acids-total-saturated_100g": 4559.999999999999,
+      "folate_100g": 0.0349999999999999,
+      "niacin_100g": 3.1,
+      "copper_100g": 0.002,
+      "vitamin-k_100g": 0,
+      "fiber_100g": 11000,
+      "vitamin-e_100g": 19,
+      "phosphorus_100g": 456,
+      "magnesium_100g": 258,
+      "riboflavin_100g": 1.5700000000000005,
+      "potassium_100g": 684,
+      "iron_100g": 3.17,
+      "proteins_100g": 20400,
+      "calcium_100g": 273.00000000000006,
+      "salt_100g": 650.24
+    },
+    "nutrient_count": 23
+  },
+  {
+    "name": "sunflower seed (shell off, roasted)",
+    "nutriments": {
+      "copper_100g": 0.001,
+      "carbohydrates_100g": 17100,
+      "calcium_100g": 78.00000000000001,
+      "phosphorus_100g": 750,
+      "potassium_100g": 689,
+      "magnesium_100g": 358,
+      "iron_100g": 5.21,
+      "folate_100g": 0.1689999999999999,
+      "fiber_100g": 10300.000000000002,
+      "proteins_100g": 21000,
+      "niacin_100g": 6.959999999999999,
+      "fatty-acids-total-monounsaturated_100g": 297,
+      "selenium_100g": 0.0804,
+      "vitamin-k_100g": 0.0012,
+      "riboflavin_100g": 0.507,
+      "vitamin-b6_100g": 0.76,
+      "thiamin_100g": 0.473,
+      "vitamin-e_100g": 19.6,
+      "sodium_100g": 532,
+      "vitamin-c_100g": 0,
+      "zinc_100g": 6.000000000000001,
+      "fatty-acids-total-saturated_100g": 5360,
+      "salt_100g": 1351.28
+    },
+    "nutrient_count": 23
+  },
+  {
+    "name": "nectarine (raw)",
+    "nutriments": {
+      "fiber_100g": 1500,
+      "proteins_100g": 1060,
+      "phosphorus_100g": 26,
+      "selenium_100g": 0,
+      "vitamin-e_100g": 0.61,
+      "niacin_100g": 1.12,
+      "iron_100g": 0.3,
+      "copper_100g": 0.0209999999999999,
+      "magnesium_100g": 8.8,
+      "thiamin_100g": 0.034,
+      "carbohydrates_100g": 9180,
+      "vitamin-c_100g": 2.9000000000000004,
+      "calcium_100g": 2,
+      "potassium_100g": 131.00000000000003,
+      "vitamin-k_100g": 0.002,
+      "fat_100g": 280,
+      "fatty-acids-total-saturated_100g": 0,
+      "vitamin-b6_100g": 0.025,
+      "sodium_100g": 13,
+      "folate_100g": 0.0059999999999999,
+      "riboflavin_100g": 0.027,
+      "zinc_100g": 0.21,
+      "salt_100g": 33.02
+    },
+    "nutrient_count": 23
+  },
+  {
+    "name": "cheddar cheese",
+    "nutriments": {
+      "iron_100g": 0.16,
+      "potassium_100g": 77,
+      "phosphorus_100g": 458,
+      "niacin_100g": 0.052,
+      "folate_100g": 0.0209999999999999,
+      "cholesterol_100g": 100,
+      "copper_100g": 0.3159999999999999,
+      "fatty-acids-total-saturated_100g": 19200,
+      "riboflavin_100g": 0.441,
+      "fatty-acids-total-monounsaturated_100g": 1139.9999999999998,
+      "vitamin-k_100g": 0.0024,
+      "magnesium_100g": 26.8,
+      "zinc_100g": 3.67,
+      "carbohydrates_100g": 2440,
+      "sodium_100g": 654,
+      "thiamin_100g": 0.029,
+      "vitamin-e_100g": 0.7500000000000001,
+      "proteins_100g": 23300,
+      "calcium_100g": 707.0000000000001,
+      "vitamin-b12_100g": 0.0010599999999999,
+      "vitamin-b6_100g": 0.069,
+      "selenium_100g": 0.0283,
+      "salt_100g": 1661.16
+    },
+    "nutrient_count": 23
+  },
+  {
+    "name": "cottage cheese (lowfat)",
+    "nutriments": {
+      "potassium_100g": 120,
+      "folate_100g": 0.0099999999999999,
+      "fatty-acids-total-saturated_100g": 1260,
+      "fat_100g": 2300,
+      "copper_100g": 0.0689999999999999,
+      "niacin_100g": 0.09,
+      "zinc_100g": 0.61,
+      "iron_100g": 0.13,
+      "carbohydrates_100g": 4310,
+      "proteins_100g": 11000,
+      "selenium_100g": 0.0145999999999999,
+      "sodium_100g": 321,
+      "phosphorus_100g": 148,
+      "magnesium_100g": 8.9,
+      "cholesterol_100g": 12.000000000000002,
+      "thiamin_100g": 0.02,
+      "vitamin-e_100g": 0.08,
+      "riboflavin_100g": 0.234,
+      "vitamin-b12_100g": 0.0004199999999999,
+      "vitamin-b6_100g": 0.0569999999999999,
+      "calcium_100g": 103,
+      "fatty-acids-total-monounsaturated_100g": 69,
+      "salt_100g": 815.34
+    },
+    "nutrient_count": 23
+  },
+  {
+    "name": "mozzarella cheese (low-moisture, part-skim)",
+    "nutriments": {
+      "fatty-acids-total-monounsaturated_100g": 705,
+      "cholesterol_100g": 65.00000000000001,
+      "fatty-acids-total-saturated_100g": 11700,
+      "vitamin-e_100g": 0.51,
+      "carbohydrates_100g": 4440,
+      "potassium_100g": 116,
+      "iron_100g": 0.2,
+      "proteins_100g": 23700,
+      "selenium_100g": 0.0266999999999999,
+      "niacin_100g": 0.101,
+      "vitamin-b6_100g": 0.09,
+      "folate_100g": 0.026,
+      "zinc_100g": 3.62,
+      "calcium_100g": 693,
+      "copper_100g": 0.2029999999999999,
+      "sodium_100g": 699,
+      "vitamin-k_100g": 0.0013,
+      "phosphorus_100g": 533.0000000000001,
+      "vitamin-b12_100g": 0.0016499999999999,
+      "magnesium_100g": 27.200000000000006,
+      "riboflavin_100g": 0.36,
+      "thiamin_100g": 0.023,
+      "salt_100g": 1775.46
+    },
+    "nutrient_count": 23
+  },
+  {
+    "name": "lowfat cow milk (1% fat)",
+    "nutriments": {
+      "cholesterol_100g": 5,
+      "calcium_100g": 126,
+      "vitamin-b12_100g": 0.0006099999999999,
+      "niacin_100g": 0.1129999999999999,
+      "potassium_100g": 159,
+      "phosphorus_100g": 103,
+      "zinc_100g": 0.43,
+      "proteins_100g": 3379.9999999999995,
+      "sodium_100g": 39.00000000000001,
+      "vitamin-d_100g": 0.0010599999999999,
+      "copper_100g": 0.058,
+      "folate_100g": 0.002,
+      "fatty-acids-total-monounsaturated_100g": 36,
+      "vitamin-b6_100g": 0.06,
+      "fatty-acids-total-saturated_100g": 568,
+      "iron_100g": 0,
+      "riboflavin_100g": 0.14,
+      "carbohydrates_100g": 5180,
+      "thiamin_100g": 0.0569999999999999,
+      "selenium_100g": 0.0021,
+      "vitamin-e_100g": 0.02,
+      "magnesium_100g": 12.000000000000002,
+      "salt_100g": 99.06000000000002
+    },
+    "nutrient_count": 23
+  },
+  {
+    "name": "chorizo",
+    "nutriments": {
+      "folate_100g": 0.0099999999999999,
+      "potassium_100g": 435,
+      "fatty-acids-total-monounsaturated_100g": 115,
+      "calcium_100g": 37,
+      "vitamin-k_100g": 0.0059999999999999,
+      "magnesium_100g": 30.1,
+      "cholesterol_100g": 107,
+      "zinc_100g": 2.19,
+      "thiamin_100g": 0.365,
+      "riboflavin_100g": 0.42,
+      "iron_100g": 2.34,
+      "carbohydrates_100g": 2630,
+      "vitamin-b6_100g": 0.5540000000000002,
+      "sodium_100g": 983,
+      "proteins_100g": 19300,
+      "vitamin-b12_100g": 0.00121,
+      "phosphorus_100g": 207,
+      "fatty-acids-total-saturated_100g": 9449.999999999998,
+      "copper_100g": 0,
+      "vitamin-e_100g": 1.5000000000000002,
+      "niacin_100g": 7.06,
+      "selenium_100g": 0.0258999999999999,
+      "salt_100g": 2496.82
+    },
+    "nutrient_count": 23
+  },
+  {
+    "name": "soybean milk",
+    "nutriments": {
+      "fat_100g": 1957,
+      "vitamin-d_100g": 0.000681,
+      "copper_100g": 0.0581999999999999,
+      "zinc_100g": 0.2636,
+      "riboflavin_100g": 0.084,
+      "calcium_100g": 101,
+      "phosphorus_100g": 45.96,
+      "fiber_100g": 0,
+      "niacin_100g": 0.1329,
+      "potassium_100g": 117.9,
+      "vitamin-e_100g": 0.1557,
+      "fatty-acids-total-saturated_100g": 313.8,
+      "selenium_100g": 0,
+      "fatty-acids-total-monounsaturated_100g": 0,
+      "vitamin-b12_100g": 0.0013269999999999,
+      "iron_100g": 0.5416000000000001,
+      "sodium_100g": 34.28,
+      "folate_100g": 0.01969,
+      "vitamin-b6_100g": 0.03643,
+      "magnesium_100g": 21.54,
+      "thiamin_100g": 0.06319,
+      "vitamin-k_100g": 0.0027999999999999,
+      "salt_100g": 87.0712
+    },
+    "nutrient_count": 23
+  },
+  {
+    "name": "hummus",
+    "nutriments": {
+      "magnesium_100g": 71.1,
+      "fatty-acids-total-saturated_100g": 2220,
+      "iron_100g": 2.41,
+      "selenium_100g": 0.0162,
+      "vitamin-k_100g": 0.0171999999999999,
+      "copper_100g": 0.001,
+      "vitamin-b6_100g": 0.143,
+      "fiber_100g": 5400.000000000001,
+      "phosphorus_100g": 166,
+      "proteins_100g": 7350,
+      "calcium_100g": 41,
+      "potassium_100g": 289,
+      "sodium_100g": 438,
+      "folate_100g": 0.036,
+      "fatty-acids-total-monounsaturated_100g": 18,
+      "thiamin_100g": 0.15,
+      "zinc_100g": 1.38,
+      "vitamin-e_100g": 1.7399999999999998,
+      "vitamin-c_100g": 0,
+      "niacin_100g": 0.9479999999999998,
+      "riboflavin_100g": 0.1149999999999999,
+      "salt_100g": 1112.52
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "pasteurized process cheese food",
+    "nutriments": {
+      "riboflavin_100g": 0.247,
+      "iron_100g": 0.48,
+      "fatty-acids-total-monounsaturated_100g": 1150,
+      "vitamin-b12_100g": 0.00145,
+      "proteins_100g": 18000,
+      "fatty-acids-total-saturated_100g": 18100.000000000004,
+      "vitamin-b6_100g": 0.056,
+      "thiamin_100g": 0.015,
+      "carbohydrates_100g": 5270,
+      "niacin_100g": 0.095,
+      "cholesterol_100g": 98,
+      "magnesium_100g": 25.100000000000005,
+      "zinc_100g": 2.42,
+      "calcium_100g": 866,
+      "vitamin-e_100g": 0.79,
+      "potassium_100g": 149,
+      "selenium_100g": 0.0203999999999999,
+      "copper_100g": 0.3,
+      "vitamin-k_100g": 0.0032,
+      "phosphorus_100g": 540,
+      "sodium_100g": 1660.0000000000002,
+      "salt_100g": 4216.400000000001
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "chicken drumstick (cooked)",
+    "nutriments": {
+      "vitamin-e_100g": 0.17,
+      "thiamin_100g": 0.088,
+      "potassium_100g": 239,
+      "calcium_100g": 12.000000000000002,
+      "copper_100g": 0.007,
+      "magnesium_100g": 22.4,
+      "sodium_100g": 117,
+      "fat_100g": 5950.000000000001,
+      "riboflavin_100g": 0.18,
+      "vitamin-b12_100g": 0.00041,
+      "vitamin-b6_100g": 0.372,
+      "zinc_100g": 2.54,
+      "fatty-acids-total-monounsaturated_100g": 30,
+      "phosphorus_100g": 184,
+      "proteins_100g": 23900,
+      "iron_100g": 0.9399999999999998,
+      "selenium_100g": 0.0278999999999999,
+      "cholesterol_100g": 127,
+      "fatty-acids-total-saturated_100g": 1600,
+      "carbohydrates_100g": 0,
+      "niacin_100g": 5.05,
+      "salt_100g": 297.18
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "restaurant, latino, tamale, pork",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 2690,
+      "vitamin-b12_100g": 0.0001199999999999,
+      "potassium_100g": 152,
+      "zinc_100g": 1.2,
+      "selenium_100g": 0.0098,
+      "calcium_100g": 75,
+      "fatty-acids-total-monounsaturated_100g": 57.99999999999999,
+      "vitamin-e_100g": 0.53,
+      "magnesium_100g": 26.200000000000003,
+      "iron_100g": 0.8699999999999999,
+      "sodium_100g": 473.00000000000006,
+      "copper_100g": 0.0119999999999999,
+      "proteins_100g": 7380.000000000001,
+      "fiber_100g": 2400,
+      "phosphorus_100g": 120,
+      "vitamin-b6_100g": 0.132,
+      "niacin_100g": 1.29,
+      "cholesterol_100g": 20,
+      "riboflavin_100g": 0.05,
+      "vitamin-k_100g": 0.0050999999999999,
+      "thiamin_100g": 0.04,
+      "salt_100g": 1201.42
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "queso blanco",
+    "nutriments": {
+      "selenium_100g": 0.0223999999999999,
+      "carbohydrates_100g": 2070,
+      "vitamin-b12_100g": 0.0017,
+      "riboflavin_100g": 0.2299999999999999,
+      "phosphorus_100g": 475,
+      "cholesterol_100g": 78.00000000000001,
+      "potassium_100g": 116,
+      "iron_100g": 0.18,
+      "vitamin-b6_100g": 0.091,
+      "sodium_100g": 1810,
+      "proteins_100g": 24500,
+      "zinc_100g": 3.28,
+      "thiamin_100g": 0.038,
+      "calcium_100g": 661,
+      "niacin_100g": 0.083,
+      "vitamin-k_100g": 0.0016,
+      "fatty-acids-total-saturated_100g": 13699.999999999996,
+      "fatty-acids-total-monounsaturated_100g": 877,
+      "magnesium_100g": 26.700000000000003,
+      "vitamin-e_100g": 0.49,
+      "copper_100g": 0.2259999999999999,
+      "salt_100g": 4597.4
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "fig (dried)",
+    "nutriments": {
+      "fat_100g": 920,
+      "fiber_100g": 9800,
+      "vitamin-k_100g": 0.0156,
+      "vitamin-c_100g": 1.2,
+      "vitamin-b6_100g": 0.106,
+      "selenium_100g": 0.0006,
+      "carbohydrates_100g": 63900,
+      "phosphorus_100g": 67,
+      "potassium_100g": 680,
+      "riboflavin_100g": 0.082,
+      "thiamin_100g": 0.085,
+      "calcium_100g": 162,
+      "copper_100g": 0,
+      "vitamin-e_100g": 0.36,
+      "proteins_100g": 3300,
+      "magnesium_100g": 67.6,
+      "sodium_100g": 10,
+      "niacin_100g": 0.619,
+      "iron_100g": 2.03,
+      "zinc_100g": 0.66,
+      "folate_100g": 0.009,
+      "salt_100g": 25.4
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "romaine lettuce head (raw)",
+    "nutriments": {
+      "iron_100g": 0.267,
+      "proteins_100g": 976.875,
+      "vitamin-k_100g": 0.0834,
+      "thiamin_100g": 0.079,
+      "fiber_100g": 1800.0000000000005,
+      "magnesium_100g": 13.699999999999998,
+      "riboflavin_100g": 0.072,
+      "phosphorus_100g": 30,
+      "carbohydrates_100g": 4055.575,
+      "copper_100g": 0.436,
+      "vitamin-e_100g": 0.14,
+      "calcium_100g": 35,
+      "potassium_100g": 260.4,
+      "fat_100g": 71.24999999999999,
+      "selenium_100g": 0.0004,
+      "folate_100g": 0.05,
+      "niacin_100g": 0.3713,
+      "vitamin-c_100g": 4.6,
+      "vitamin-b6_100g": 0.06325,
+      "zinc_100g": 0.2516,
+      "sodium_100g": 23,
+      "salt_100g": 58.42
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "beef sausage",
+    "nutriments": {
+      "vitamin-e_100g": 0.33,
+      "vitamin-c_100g": 19.2,
+      "vitamin-b12_100g": 0.00113,
+      "riboflavin_100g": 0.132,
+      "proteins_100g": 13300,
+      "sodium_100g": 866,
+      "vitamin-b6_100g": 0.15,
+      "cholesterol_100g": 61,
+      "iron_100g": 1.55,
+      "fatty-acids-total-monounsaturated_100g": 1180,
+      "fatty-acids-total-saturated_100g": 11300,
+      "calcium_100g": 35,
+      "copper_100g": 0.018,
+      "zinc_100g": 2.14,
+      "magnesium_100g": 19.7,
+      "carbohydrates_100g": 3370.0000000000005,
+      "phosphorus_100g": 124,
+      "selenium_100g": 0.0116,
+      "niacin_100g": 2.43,
+      "potassium_100g": 263,
+      "thiamin_100g": 0.054,
+      "salt_100g": 2199.64
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "turkey sausage",
+    "nutriments": {
+      "fat_100g": 10400.000000000002,
+      "calcium_100g": 32,
+      "magnesium_100g": 18.9,
+      "thiamin_100g": 0.047,
+      "selenium_100g": 0.0125,
+      "vitamin-k_100g": 0.0004,
+      "iron_100g": 1.17,
+      "sodium_100g": 599,
+      "cholesterol_100g": 78.00000000000001,
+      "vitamin-e_100g": 0.24,
+      "potassium_100g": 310.00000000000006,
+      "niacin_100g": 5.02,
+      "fatty-acids-total-saturated_100g": 2530,
+      "carbohydrates_100g": 930,
+      "fatty-acids-total-monounsaturated_100g": 104,
+      "zinc_100g": 2.58,
+      "riboflavin_100g": 0.296,
+      "vitamin-b6_100g": 0.335,
+      "vitamin-b12_100g": 0.0012,
+      "phosphorus_100g": 178,
+      "proteins_100g": 16699.999999999996,
+      "salt_100g": 1521.46
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "turkey meat (ground or minced)",
+    "nutriments": {
+      "vitamin-b6_100g": 0.4969999999999999,
+      "riboflavin_100g": 0.262,
+      "vitamin-e_100g": 0.18,
+      "fat_100g": 11599.999999999998,
+      "proteins_100g": 27100,
+      "calcium_100g": 31,
+      "niacin_100g": 8.09,
+      "zinc_100g": 3.77,
+      "vitamin-b12_100g": 0.0018999999999999,
+      "potassium_100g": 304,
+      "phosphorus_100g": 259,
+      "magnesium_100g": 29.100000000000005,
+      "copper_100g": 0.03,
+      "thiamin_100g": 0.088,
+      "selenium_100g": 0.0283999999999999,
+      "fatty-acids-total-saturated_100g": 2970,
+      "iron_100g": 1.5599999999999998,
+      "sodium_100g": 90.00000000000001,
+      "carbohydrates_100g": 0,
+      "fatty-acids-total-monounsaturated_100g": 144,
+      "cholesterol_100g": 104,
+      "salt_100g": 228.60000000000005
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "broccoli floret (raw)",
+    "nutriments": {
+      "sodium_100g": 36,
+      "iron_100g": 0.69,
+      "calcium_100g": 46,
+      "selenium_100g": 0.0016,
+      "zinc_100g": 0.42,
+      "vitamin-k_100g": 0.102,
+      "thiamin_100g": 0.077,
+      "vitamin-c_100g": 91.3,
+      "fiber_100g": 2400,
+      "carbohydrates_100g": 6269.999999999999,
+      "phosphorus_100g": 67,
+      "copper_100g": 0.008,
+      "fatty-acids-total-saturated_100g": 39,
+      "vitamin-b6_100g": 0.191,
+      "magnesium_100g": 21.000000000000004,
+      "riboflavin_100g": 0.1139999999999999,
+      "potassium_100g": 303,
+      "vitamin-e_100g": 0.15,
+      "folate_100g": 0.065,
+      "proteins_100g": 2569.9999999999995,
+      "niacin_100g": 0.639,
+      "salt_100g": 91.44
+    },
+    "nutrient_count": 22
+  },
+  {
+    "name": "kale leaf (raw)",
+    "nutriments": {
+      "folate_100g": 0.062,
+      "vitamin-k_100g": 0.3899999999999999,
+      "niacin_100g": 1.18,
+      "zinc_100g": 0.3899999999999999,
+      "magnesium_100g": 32.7,
+      "proteins_100g": 2920,
+      "vitamin-b6_100g": 0.147,
+      "fiber_100g": 4099.999999999999,
+      "copper_100g": 0.241,
+      "vitamin-e_100g": 0.66,
+      "carbohydrates_100g": 4420,
+      "calcium_100g": 254,
+      "phosphorus_100g": 55.00000000000001,
+      "sodium_100g": 53.000000000000014,
+      "vitamin-c_100g": 93.4,
+      "thiamin_100g": 0.1129999999999999,
+      "fat_100g": 1490,
+      "riboflavin_100g": 0.347,
+      "iron_100g": 1.6,
+      "potassium_100g": 348,
+      "salt_100g": 134.62000000000003
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "onion ring (breaded, frozen)",
+    "nutriments": {
+      "fiber_100g": 2400,
+      "calcium_100g": 28.000000000000004,
+      "fat_100g": 14400.000000000004,
+      "proteins_100g": 4520,
+      "zinc_100g": 0.59,
+      "magnesium_100g": 20.4,
+      "iron_100g": 1.14,
+      "sodium_100g": 374,
+      "phosphorus_100g": 75,
+      "vitamin-b6_100g": 0.127,
+      "fatty-acids-total-saturated_100g": 2150,
+      "fatty-acids-total-monounsaturated_100g": 41,
+      "potassium_100g": 135,
+      "vitamin-c_100g": 1.6,
+      "thiamin_100g": 0.196,
+      "selenium_100g": 0.0055999999999999,
+      "folate_100g": 0.031,
+      "riboflavin_100g": 0.116,
+      "niacin_100g": 1.5700000000000005,
+      "vitamin-e_100g": 0.57,
+      "salt_100g": 949.96
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "dill pickle",
+    "nutriments": {
+      "proteins_100g": 480,
+      "fiber_100g": 1000,
+      "vitamin-c_100g": 2.1,
+      "potassium_100g": 112,
+      "thiamin_100g": 0.047,
+      "phosphorus_100g": 16,
+      "fat_100g": 430,
+      "vitamin-k_100g": 0.0168,
+      "calcium_100g": 54,
+      "sodium_100g": 808,
+      "zinc_100g": 0.11,
+      "niacin_100g": 0.109,
+      "vitamin-b6_100g": 0.034,
+      "copper_100g": 0.004,
+      "magnesium_100g": 7.1,
+      "vitamin-e_100g": 0.12,
+      "riboflavin_100g": 0.0569999999999999,
+      "folate_100g": 0.008,
+      "iron_100g": 0.2299999999999999,
+      "carbohydrates_100g": 1990,
+      "salt_100g": 2052.32
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "peach (raw)",
+    "nutriments": {
+      "phosphorus_100g": 22,
+      "vitamin-b6_100g": 0.025,
+      "magnesium_100g": 8,
+      "fiber_100g": 1500,
+      "niacin_100g": 0.8060000000000002,
+      "fat_100g": 270,
+      "thiamin_100g": 0.024,
+      "riboflavin_100g": 0.031,
+      "folate_100g": 0.0059999999999999,
+      "sodium_100g": 13,
+      "carbohydrates_100g": 10099.999999999998,
+      "zinc_100g": 0.2299999999999999,
+      "copper_100g": 0.0239999999999999,
+      "vitamin-c_100g": 4.1,
+      "iron_100g": 0.3400000000000001,
+      "vitamin-k_100g": 0.0029999999999999,
+      "calcium_100g": 4,
+      "potassium_100g": 122,
+      "proteins_100g": 910,
+      "selenium_100g": 0.0021,
+      "salt_100g": 33.02
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "chicken, broiler or fryers, breast, skinless, boneless, meat only, cooked, braised",
+    "nutriments": {
+      "iron_100g": 0.49,
+      "zinc_100g": 0.96,
+      "vitamin-e_100g": 0.33,
+      "sodium_100g": 47,
+      "magnesium_100g": 32,
+      "fat_100g": 3240.0000000000005,
+      "potassium_100g": 343,
+      "carbohydrates_100g": 0,
+      "proteins_100g": 32100,
+      "thiamin_100g": 0.098,
+      "riboflavin_100g": 0.187,
+      "vitamin-b12_100g": 0.0002,
+      "fatty-acids-total-saturated_100g": 1010,
+      "cholesterol_100g": 116,
+      "niacin_100g": 9.45,
+      "fatty-acids-total-monounsaturated_100g": 12.999999999999998,
+      "calcium_100g": 6.000000000000001,
+      "vitamin-b6_100g": 0.9210000000000002,
+      "phosphorus_100g": 241,
+      "selenium_100g": 0.0319,
+      "salt_100g": 119.38
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "olive (stuffed with pimiento)",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 2300,
+      "iron_100g": 0.31,
+      "folate_100g": 0,
+      "vitamin-c_100g": 0,
+      "potassium_100g": 43,
+      "sodium_100g": 1620,
+      "vitamin-e_100g": 3.7800000000000007,
+      "thiamin_100g": 0.041,
+      "phosphorus_100g": 7.000000000000001,
+      "zinc_100g": 0.09,
+      "fiber_100g": 4000,
+      "niacin_100g": 0.103,
+      "copper_100g": 0.025,
+      "fatty-acids-total-monounsaturated_100g": 0,
+      "riboflavin_100g": 0,
+      "vitamin-b6_100g": 0,
+      "vitamin-k_100g": 0.0166,
+      "proteins_100g": 1150,
+      "magnesium_100g": 12.4,
+      "calcium_100g": 121,
+      "salt_100g": 4114.8
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "cookies, oatmeal, soft, with raisins",
+    "nutriments": {
+      "riboflavin_100g": 0.218,
+      "fatty-acids-total-monounsaturated_100g": 40,
+      "selenium_100g": 0.0059999999999999,
+      "zinc_100g": 0.62,
+      "thiamin_100g": 0.295,
+      "fiber_100g": 3300,
+      "vitamin-b6_100g": 0.07,
+      "carbohydrates_100g": 69600,
+      "iron_100g": 2.28,
+      "vitamin-k_100g": 0.0171,
+      "potassium_100g": 245.00000000000003,
+      "sodium_100g": 314,
+      "calcium_100g": 29,
+      "phosphorus_100g": 111,
+      "vitamin-e_100g": 2.69,
+      "proteins_100g": 5790,
+      "fatty-acids-total-saturated_100g": 4780,
+      "niacin_100g": 2.11,
+      "folate_100g": 0.034,
+      "magnesium_100g": 32.4,
+      "salt_100g": 797.5600000000001
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "haddock (raw)",
+    "nutriments": {
+      "iron_100g": 0.17,
+      "calcium_100g": 11,
+      "cholesterol_100g": 54,
+      "vitamin-b12_100g": 0.0018299999999999,
+      "fatty-acids-total-saturated_100g": 93,
+      "vitamin-e_100g": 0.45,
+      "selenium_100g": 0.0258999999999999,
+      "vitamin-b6_100g": 0.281,
+      "carbohydrates_100g": 0,
+      "thiamin_100g": 0.02,
+      "zinc_100g": 0.32,
+      "magnesium_100g": 21.1,
+      "potassium_100g": 286.00000000000006,
+      "phosphorus_100g": 227,
+      "riboflavin_100g": 0.0569999999999999,
+      "fatty-acids-total-monounsaturated_100g": 4,
+      "sodium_100g": 213,
+      "vitamin-d_100g": 0.0005,
+      "niacin_100g": 3.36,
+      "proteins_100g": 16300,
+      "salt_100g": 541.02
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "tuna (white, solid pack, canned in water)",
+    "nutriments": {
+      "vitamin-d_100g": 0.0012,
+      "carbohydrates_100g": 80,
+      "thiamin_100g": 0.03,
+      "proteins_100g": 19000,
+      "fat_100g": 940,
+      "cholesterol_100g": 36,
+      "selenium_100g": 0.0677999999999999,
+      "niacin_100g": 9.92,
+      "magnesium_100g": 22.7,
+      "fatty-acids-total-saturated_100g": 224.00000000000003,
+      "zinc_100g": 0.66,
+      "fatty-acids-total-monounsaturated_100g": 2,
+      "potassium_100g": 176,
+      "phosphorus_100g": 137,
+      "vitamin-b6_100g": 0.32,
+      "sodium_100g": 219,
+      "iron_100g": 1.67,
+      "vitamin-b12_100g": 0.0025699999999999,
+      "riboflavin_100g": 0.082,
+      "calcium_100g": 18,
+      "salt_100g": 556.26
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "beef top loin steak",
+    "nutriments": {
+      "vitamin-d_100g": 0,
+      "proteins_100g": 22800,
+      "selenium_100g": 0.0213,
+      "riboflavin_100g": 0.202,
+      "magnesium_100g": 11.3,
+      "potassium_100g": 282,
+      "vitamin-b6_100g": 0.575,
+      "phosphorus_100g": 206,
+      "carbohydrates_100g": 0,
+      "fatty-acids-total-saturated_100g": 2560,
+      "iron_100g": 1.9,
+      "thiamin_100g": 0.053,
+      "niacin_100g": 6.88,
+      "calcium_100g": 15,
+      "fatty-acids-total-monounsaturated_100g": 305.99999999999994,
+      "cholesterol_100g": 57.99999999999999,
+      "sodium_100g": 45.00000000000001,
+      "vitamin-e_100g": 0.25,
+      "vitamin-b12_100g": 0.0017199999999999,
+      "zinc_100g": 3.7599999999999993,
+      "salt_100g": 114.30000000000003
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "tapioca flour",
+    "nutriments": {
+      "selenium_100g": 0.0226999999999999,
+      "fat_100g": 2410,
+      "proteins_100g": 23700,
+      "potassium_100g": 316,
+      "fatty-acids-total-monounsaturated_100g": 125,
+      "zinc_100g": 3.54,
+      "vitamin-b12_100g": 0.00162,
+      "vitamin-e_100g": 0.21,
+      "sodium_100g": 55.00000000000001,
+      "magnesium_100g": 11.9,
+      "phosphorus_100g": 220.00000000000003,
+      "thiamin_100g": 0.064,
+      "calcium_100g": 13,
+      "iron_100g": 2.34,
+      "fatty-acids-total-saturated_100g": 924,
+      "niacin_100g": 6.160000000000001,
+      "riboflavin_100g": 0.25,
+      "vitamin-b6_100g": 0.626,
+      "carbohydrates_100g": 0,
+      "cholesterol_100g": 63,
+      "salt_100g": 139.70000000000002
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "cantaloupe (raw)",
+    "nutriments": {
+      "proteins_100g": 819.9999999999999,
+      "thiamin_100g": 0.049,
+      "fiber_100g": 800,
+      "carbohydrates_100g": 8160.000000000001,
+      "magnesium_100g": 13,
+      "potassium_100g": 157,
+      "niacin_100g": 0.694,
+      "vitamin-c_100g": 10.900000000000002,
+      "vitamin-k_100g": 0.0027,
+      "phosphorus_100g": 17,
+      "folate_100g": 0.014,
+      "iron_100g": 0.38,
+      "sodium_100g": 30,
+      "zinc_100g": 0.44,
+      "fat_100g": 180,
+      "copper_100g": 0.232,
+      "riboflavin_100g": 0.027,
+      "calcium_100g": 9,
+      "selenium_100g": 0.0017,
+      "vitamin-b6_100g": 0.04,
+      "salt_100g": 76.2
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "williams pear (raw)",
+    "nutriments": {
+      "vitamin-c_100g": 4.4,
+      "copper_100g": 0.001,
+      "calcium_100g": 8,
+      "vitamin-k_100g": 0.0037999999999999,
+      "phosphorus_100g": 10,
+      "iron_100g": 0.17,
+      "fiber_100g": 3100,
+      "zinc_100g": 0.07,
+      "potassium_100g": 87,
+      "sodium_100g": 7.000000000000001,
+      "proteins_100g": 380,
+      "fat_100g": 160,
+      "vitamin-b6_100g": 0.026,
+      "folate_100g": 0.0059999999999999,
+      "magnesium_100g": 5.7,
+      "thiamin_100g": 0.012,
+      "niacin_100g": 0.164,
+      "carbohydrates_100g": 15100,
+      "riboflavin_100g": 0.026,
+      "selenium_100g": 0.0002,
+      "salt_100g": 17.78
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "oat milk",
+    "nutriments": {
+      "vitamin-k_100g": 0.0004,
+      "vitamin-d_100g": 0.0017,
+      "carbohydrates_100g": 5100.325,
+      "proteins_100g": 796.875,
+      "vitamin-b12_100g": 0.0005064,
+      "thiamin_100g": 0.04,
+      "iron_100g": 0.2612,
+      "potassium_100g": 148.4,
+      "folate_100g": 0,
+      "riboflavin_100g": 0.2807,
+      "calcium_100g": 148.50000000000003,
+      "vitamin-b6_100g": 0.0065,
+      "fat_100g": 2749,
+      "zinc_100g": 0.09062,
+      "fiber_100g": 0,
+      "niacin_100g": 0.09625,
+      "magnesium_100g": 5.909,
+      "phosphorus_100g": 89.18000000000002,
+      "selenium_100g": 0,
+      "sodium_100g": 41.98,
+      "salt_100g": 106.6292
+    },
+    "nutrient_count": 21
+  },
+  {
+    "name": "grape tomato (raw)",
+    "nutriments": {
+      "vitamin-e_100g": 0.98,
+      "niacin_100g": 0.8050000000000002,
+      "vitamin-c_100g": 27.200000000000006,
+      "magnesium_100g": 11.9,
+      "iron_100g": 0.33,
+      "potassium_100g": 260.00000000000006,
+      "zinc_100g": 0.2,
+      "carbohydrates_100g": 5509.999999999999,
+      "calcium_100g": 11,
+      "folate_100g": 0.0099999999999999,
+      "fiber_100g": 2100,
+      "vitamin-k_100g": 0.0042,
+      "proteins_100g": 830.0000000000001,
+      "sodium_100g": 6.000000000000001,
+      "fat_100g": 630,
+      "thiamin_100g": 0.075,
+      "vitamin-b6_100g": 0.06,
+      "riboflavin_100g": 0.065,
+      "phosphorus_100g": 28.000000000000004,
+      "salt_100g": 15.240000000000002
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "beef frankfurter",
+    "nutriments": {
+      "phosphorus_100g": 128,
+      "fatty-acids-total-monounsaturated_100g": 1590,
+      "vitamin-b12_100g": 0.0009699999999999,
+      "copper_100g": 0.0029999999999999,
+      "proteins_100g": 11700,
+      "fatty-acids-total-saturated_100g": 11400,
+      "riboflavin_100g": 0.154,
+      "sodium_100g": 872.0000000000001,
+      "magnesium_100g": 11.5,
+      "folate_100g": 0,
+      "iron_100g": 1.14,
+      "vitamin-b6_100g": 0.13,
+      "niacin_100g": 2.25,
+      "vitamin-e_100g": 0.51,
+      "calcium_100g": 15,
+      "zinc_100g": 2.06,
+      "carbohydrates_100g": 2890,
+      "potassium_100g": 343,
+      "thiamin_100g": 0.033,
+      "salt_100g": 2214.88
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "kale (frozen)",
+    "nutriments": {
+      "copper_100g": 0.146,
+      "carbohydrates_100g": 5300,
+      "vitamin-k_100g": 0.418,
+      "phosphorus_100g": 42.00000000000001,
+      "fat_100g": 1210,
+      "zinc_100g": 0.2700000000000001,
+      "vitamin-e_100g": 1.6100000000000003,
+      "calcium_100g": 150,
+      "proteins_100g": 2940,
+      "niacin_100g": 0.457,
+      "vitamin-b6_100g": 0.063,
+      "potassium_100g": 144,
+      "iron_100g": 0.84,
+      "sodium_100g": 16,
+      "riboflavin_100g": 0.14,
+      "vitamin-c_100g": 17.8,
+      "folate_100g": 0.065,
+      "magnesium_100g": 25,
+      "thiamin_100g": 0.063,
+      "salt_100g": 40.64
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "fuzzy kiwifruit (raw)",
+    "nutriments": {
+      "zinc_100g": 0.14,
+      "sodium_100g": 5,
+      "carbohydrates_100g": 14000,
+      "potassium_100g": 198,
+      "selenium_100g": 0.0002,
+      "vitamin-b6_100g": 0.061,
+      "folate_100g": 0.026,
+      "phosphorus_100g": 34,
+      "magnesium_100g": 15.7,
+      "proteins_100g": 1060,
+      "niacin_100g": 0.37,
+      "iron_100g": 0.24,
+      "fat_100g": 440.00000000000006,
+      "thiamin_100g": 0.027,
+      "vitamin-e_100g": 1.3,
+      "fiber_100g": 3000,
+      "calcium_100g": 35,
+      "riboflavin_100g": 0.025,
+      "vitamin-k_100g": 0.0402999999999999,
+      "salt_100g": 12.7
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "restaurant, latino, pupusas con frijoles (pupusas, bean)",
+    "nutriments": {
+      "vitamin-b6_100g": 0.172,
+      "phosphorus_100g": 144,
+      "potassium_100g": 305,
+      "vitamin-e_100g": 0.36,
+      "magnesium_100g": 53.6,
+      "thiamin_100g": 0.077,
+      "proteins_100g": 5590,
+      "fatty-acids-total-monounsaturated_100g": 56.99999999999999,
+      "iron_100g": 1.46,
+      "riboflavin_100g": 0.03,
+      "carbohydrates_100g": 31500,
+      "zinc_100g": 0.9399999999999998,
+      "sodium_100g": 305,
+      "niacin_100g": 0.8670000000000001,
+      "fiber_100g": 5799.999999999999,
+      "calcium_100g": 51,
+      "selenium_100g": 0.007,
+      "vitamin-k_100g": 0.0073999999999999,
+      "fatty-acids-total-saturated_100g": 2190,
+      "salt_100g": 774.7
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "carrot (frozen)",
+    "nutriments": {
+      "potassium_100g": 210,
+      "niacin_100g": 0.465,
+      "vitamin-b6_100g": 0.088,
+      "thiamin_100g": 0.039,
+      "fiber_100g": 3200,
+      "fat_100g": 470,
+      "fatty-acids-total-saturated_100g": 0,
+      "zinc_100g": 0.28,
+      "folate_100g": 0.007,
+      "calcium_100g": 33,
+      "vitamin-c_100g": 2.2,
+      "sodium_100g": 66,
+      "phosphorus_100g": 31,
+      "magnesium_100g": 10.8,
+      "riboflavin_100g": 0.047,
+      "proteins_100g": 810.0000000000001,
+      "vitamin-e_100g": 0.69,
+      "iron_100g": 0.43,
+      "vitamin-k_100g": 0.015,
+      "salt_100g": 167.64000000000001
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "oranges, raw, navels",
+    "nutriments": {
+      "carbohydrates_100g": 11800.000000000002,
+      "iron_100g": 0.33,
+      "folate_100g": 0.025,
+      "zinc_100g": 0.11,
+      "magnesium_100g": 10.7,
+      "calcium_100g": 43,
+      "riboflavin_100g": 0.051,
+      "phosphorus_100g": 23,
+      "vitamin-k_100g": 0,
+      "selenium_100g": 0,
+      "proteins_100g": 910,
+      "vitamin-b6_100g": 0.079,
+      "fiber_100g": 2000,
+      "fat_100g": 150,
+      "niacin_100g": 0.4250000000000001,
+      "sodium_100g": 9,
+      "potassium_100g": 166,
+      "vitamin-c_100g": 59.1,
+      "thiamin_100g": 0.068,
+      "salt_100g": 22.86
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "cow whole milk 3.5% fat",
+    "nutriments": {
+      "sodium_100g": 38,
+      "fatty-acids-total-monounsaturated_100g": 112,
+      "magnesium_100g": 11.9,
+      "phosphorus_100g": 101,
+      "niacin_100g": 0.105,
+      "potassium_100g": 150,
+      "selenium_100g": 0.0018999999999999,
+      "calcium_100g": 123,
+      "riboflavin_100g": 0.138,
+      "thiamin_100g": 0.056,
+      "iron_100g": 0,
+      "vitamin-b12_100g": 0.00054,
+      "zinc_100g": 0.42,
+      "fat_100g": 3200,
+      "folate_100g": 0.0021,
+      "carbohydrates_100g": 4630,
+      "vitamin-b6_100g": 0.061,
+      "vitamin-e_100g": 0.05,
+      "fatty-acids-total-saturated_100g": 1860,
+      "salt_100g": 96.52
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "baby spinach",
+    "nutriments": {
+      "carbohydrates_100g": 2406.325,
+      "copper_100g": 0.283,
+      "proteins_100g": 2851.875,
+      "phosphorus_100g": 39.05,
+      "zinc_100g": 0.4471,
+      "riboflavin_100g": 0.1935,
+      "fat_100g": 618.8,
+      "potassium_100g": 581.8,
+      "thiamin_100g": 0.07688,
+      "folate_100g": 0.1165,
+      "niacin_100g": 0.5506,
+      "calcium_100g": 68.35,
+      "iron_100g": 1.261,
+      "fiber_100g": 1558,
+      "selenium_100g": 0,
+      "vitamin-b6_100g": 0.1946,
+      "magnesium_100g": 92.86,
+      "sodium_100g": 111.4,
+      "vitamin-c_100g": 26.52,
+      "salt_100g": 282.956
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "spinach leaf (raw)",
+    "nutriments": {
+      "copper_100g": 0.306,
+      "carbohydrates_100g": 2641.35,
+      "proteins_100g": 2906.25,
+      "magnesium_100g": 92.96,
+      "fiber_100g": 1588.0000000000002,
+      "niacin_100g": 0.51,
+      "zinc_100g": 0.4229,
+      "thiamin_100g": 0.0765,
+      "phosphorus_100g": 40.56000000000001,
+      "iron_100g": 1.054,
+      "vitamin-c_100g": 30.27,
+      "fat_100g": 604.4000000000001,
+      "vitamin-b6_100g": 0.2143,
+      "calcium_100g": 66.64,
+      "folate_100g": 0.1134,
+      "selenium_100g": 0,
+      "riboflavin_100g": 0.192,
+      "sodium_100g": 106.59999999999998,
+      "potassium_100g": 459.69999999999993,
+      "salt_100g": 270.76399999999995
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "peanut butter (creamy)",
+    "nutriments": {
+      "vitamin-k_100g": 0,
+      "carbohydrates_100g": 22703.76,
+      "proteins_100g": 23991.24,
+      "niacin_100g": 17.2,
+      "vitamin-b6_100g": 0.3805,
+      "selenium_100g": 0.02016,
+      "sodium_100g": 220.7,
+      "folate_100g": 0.09729,
+      "potassium_100g": 654,
+      "iron_100g": 1.853,
+      "zinc_100g": 3.0620000000000003,
+      "fiber_100g": 6323.000000000001,
+      "fatty-acids-total-saturated_100g": 8415,
+      "fat_100g": 49430,
+      "phosphorus_100g": 393.2,
+      "thiamin_100g": 0.1206,
+      "vitamin-e_100g": 5.413,
+      "calcium_100g": 49.85000000000001,
+      "magnesium_100g": 192.6,
+      "salt_100g": 560.578
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "sesame butter",
+    "nutriments": {
+      "vitamin-k_100g": 0.0017129999999999,
+      "carbohydrates_100g": 14179,
+      "proteins_100g": 19705.4,
+      "zinc_100g": 6.039000000000001,
+      "potassium_100g": 407.7,
+      "iron_100g": 7.002999999999999,
+      "fiber_100g": 8372,
+      "vitamin-e_100g": 0,
+      "niacin_100g": 5.813,
+      "magnesium_100g": 356.8,
+      "fatty-acids-total-saturated_100g": 8966,
+      "calcium_100g": 115.8,
+      "thiamin_100g": 0.9928,
+      "fat_100g": 62400,
+      "vitamin-b6_100g": 0.5953000000000002,
+      "phosphorus_100g": 719.3,
+      "sodium_100g": 63.63,
+      "selenium_100g": 0.0464799999999999,
+      "folate_100g": 0.1084,
+      "salt_100g": 161.6202
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "almond butter",
+    "nutriments": {
+      "vitamin-k_100g": 0,
+      "carbohydrates_100g": 21236.66,
+      "proteins_100g": 20787.34,
+      "vitamin-b6_100g": 0.08375,
+      "sodium_100g": 0.9963,
+      "potassium_100g": 745.4,
+      "magnesium_100g": 267.8,
+      "thiamin_100g": 0.09456,
+      "folate_100g": 0.04246,
+      "calcium_100g": 263.8,
+      "fatty-acids-total-saturated_100g": 4253,
+      "fiber_100g": 9718,
+      "selenium_100g": 0.0007937999999999,
+      "iron_100g": 4.108,
+      "zinc_100g": 3.1780000000000004,
+      "niacin_100g": 3.909,
+      "fat_100g": 53040,
+      "vitamin-e_100g": 16.67,
+      "phosphorus_100g": 506.9,
+      "salt_100g": 2.530602
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "flaxseed (processed)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0036749999999999,
+      "carbohydrates_100g": 34355.1,
+      "proteins_100g": 18035.9,
+      "fatty-acids-total-saturated_100g": 3281,
+      "sodium_100g": 36.74,
+      "selenium_100g": 0.1358999999999999,
+      "zinc_100g": 4.738,
+      "iron_100g": 5.778,
+      "phosphorus_100g": 556.4,
+      "niacin_100g": 3.756,
+      "magnesium_100g": 372.1000000000001,
+      "thiamin_100g": 0.5368,
+      "fat_100g": 37280,
+      "calcium_100g": 229.9,
+      "potassium_100g": 793.4,
+      "fiber_100g": 23130,
+      "folate_100g": 0.04145,
+      "vitamin-b6_100g": 0.3926,
+      "vitamin-e_100g": 0,
+      "salt_100g": 93.31960000000001
+    },
+    "nutrient_count": 20
+  },
+  {
+    "name": "white grapefruit juice",
+    "nutriments": {
+      "niacin_100g": 0.253,
+      "vitamin-c_100g": 39.4,
+      "folate_100g": 0.0119999999999999,
+      "potassium_100g": 141,
+      "phosphorus_100g": 17,
+      "thiamin_100g": 0.062,
+      "sodium_100g": 1,
+      "calcium_100g": 16,
+      "fat_100g": 699.9999999999999,
+      "magnesium_100g": 9.6,
+      "vitamin-b6_100g": 0,
+      "vitamin-e_100g": 0.22,
+      "carbohydrates_100g": 7589.999999999999,
+      "fiber_100g": 200,
+      "iron_100g": 0.07,
+      "riboflavin_100g": 0.02,
+      "proteins_100g": 550.0000000000001,
+      "zinc_100g": 0.04,
+      "salt_100g": 2.54
+    },
+    "nutrient_count": 19
+  },
+  {
+    "name": "bread, white, commercially prepared",
+    "nutriments": {
+      "phosphorus_100g": 113,
+      "fat_100g": 3590,
+      "fatty-acids-total-monounsaturated_100g": 35,
+      "fatty-acids-total-saturated_100g": 821.0000000000001,
+      "proteins_100g": 9430,
+      "thiamin_100g": 0.507,
+      "zinc_100g": 0.88,
+      "carbohydrates_100g": 49200.00000000001,
+      "niacin_100g": 4.76,
+      "selenium_100g": 0.0232,
+      "fiber_100g": 2300,
+      "riboflavin_100g": 0.24,
+      "calcium_100g": 211,
+      "vitamin-b6_100g": 0.092,
+      "iron_100g": 3.36,
+      "potassium_100g": 117,
+      "magnesium_100g": 26.899999999999995,
+      "sodium_100g": 477,
+      "salt_100g": 1211.58
+    },
+    "nutrient_count": 19
+  },
+  {
+    "name": "bread, whole-wheat, commercially prepared",
+    "nutriments": {
+      "vitamin-b6_100g": 0.216,
+      "fatty-acids-total-monounsaturated_100g": 22,
+      "selenium_100g": 0.0257999999999999,
+      "proteins_100g": 12300.000000000002,
+      "fatty-acids-total-saturated_100g": 732,
+      "thiamin_100g": 0.391,
+      "phosphorus_100g": 212.00000000000009,
+      "niacin_100g": 4.43,
+      "calcium_100g": 163,
+      "folate_100g": 0.0419999999999999,
+      "fiber_100g": 6000,
+      "potassium_100g": 250,
+      "vitamin-e_100g": 2.82,
+      "magnesium_100g": 76.6,
+      "riboflavin_100g": 0.166,
+      "zinc_100g": 1.76,
+      "sodium_100g": 450.0000000000001,
+      "iron_100g": 2.56,
+      "salt_100g": 1143.0000000000002
+    },
+    "nutrient_count": 19
+  },
+  {
+    "name": "beef tenderloin",
+    "nutriments": {
+      "phosphorus_100g": 259,
+      "sodium_100g": 54,
+      "cholesterol_100g": 85,
+      "proteins_100g": 27700,
+      "vitamin-b12_100g": 0.00421,
+      "riboflavin_100g": 0.4,
+      "fatty-acids-total-monounsaturated_100g": 359,
+      "magnesium_100g": 13.699999999999998,
+      "fatty-acids-total-saturated_100g": 2470.0000000000005,
+      "vitamin-b6_100g": 0.67,
+      "carbohydrates_100g": 0,
+      "fat_100g": 6360,
+      "selenium_100g": 0.0254,
+      "niacin_100g": 5.76,
+      "potassium_100g": 352,
+      "zinc_100g": 3.7000000000000006,
+      "calcium_100g": 13,
+      "iron_100g": 3.04,
+      "salt_100g": 137.16
+    },
+    "nutrient_count": 19
+  },
+  {
+    "name": "beef t-bone steak",
+    "nutriments": {
+      "zinc_100g": 4.690000000000001,
+      "iron_100g": 3.53,
+      "proteins_100g": 27300,
+      "riboflavin_100g": 0.2700000000000001,
+      "sodium_100g": 67,
+      "phosphorus_100g": 211,
+      "potassium_100g": 283,
+      "fat_100g": 11400,
+      "carbohydrates_100g": 0,
+      "vitamin-b6_100g": 0.7530000000000001,
+      "calcium_100g": 19,
+      "cholesterol_100g": 80,
+      "vitamin-b12_100g": 0.0018799999999999,
+      "fatty-acids-total-saturated_100g": 4680,
+      "magnesium_100g": 20,
+      "fatty-acids-total-monounsaturated_100g": 594,
+      "selenium_100g": 0.0296999999999999,
+      "niacin_100g": 6.370000000000001,
+      "salt_100g": 170.18
+    },
+    "nutrient_count": 19
+  },
+  {
+    "name": "butter (salted)",
+    "nutriments": {
+      "zinc_100g": 0.07,
+      "selenium_100g": 0,
+      "iron_100g": 0.06,
+      "cholesterol_100g": 235,
+      "calcium_100g": 21.000000000000004,
+      "riboflavin_100g": 0,
+      "potassium_100g": 23,
+      "vitamin-e_100g": 0,
+      "niacin_100g": 0,
+      "vitamin-b6_100g": 0,
+      "copper_100g": 0.7579999999999999,
+      "fat_100g": 82200.00000000001,
+      "fatty-acids-total-saturated_100g": 45600,
+      "vitamin-b12_100g": 0,
+      "folate_100g": 0.0049999999999999,
+      "magnesium_100g": 1.6,
+      "phosphorus_100g": 22,
+      "sodium_100g": 524.0000000000001,
+      "salt_100g": 1330.9600000000003
+    },
+    "nutrient_count": 19
+  },
+  {
+    "name": "cavendish banana (ripe)",
+    "nutriments": {
+      "vitamin-b6_100g": 0.209,
+      "zinc_100g": 0.16,
+      "vitamin-c_100g": 12.3,
+      "phosphorus_100g": 22,
+      "selenium_100g": 0,
+      "carbohydrates_100g": 23000,
+      "potassium_100g": 326,
+      "calcium_100g": 5,
+      "thiamin_100g": 0.056,
+      "magnesium_100g": 28.000000000000004,
+      "iron_100g": 0,
+      "copper_100g": 0.001,
+      "riboflavin_100g": 0,
+      "folate_100g": 0.014,
+      "sodium_100g": 0,
+      "vitamin-k_100g": 0.0001,
+      "niacin_100g": 0.662,
+      "fat_100g": 290,
+      "proteins_100g": 740
+    },
+    "nutrient_count": 19
+  },
+  {
+    "name": "white mushroom",
+    "nutriments": {
+      "fiber_100g": 1717.0000000000002,
+      "vitamin-d_100g": 0.0000217,
+      "carbohydrates_100g": 4079.375,
+      "proteins_100g": 2890.625,
+      "niacin_100g": 3.883000000000001,
+      "potassium_100g": 373.00000000000006,
+      "selenium_100g": 0.02005,
+      "phosphorus_100g": 93.05,
+      "magnesium_100g": 10.16,
+      "zinc_100g": 0.511,
+      "calcium_100g": 5.465,
+      "folate_100g": 0.0347599999999999,
+      "vitamin-b6_100g": 0.07683,
+      "iron_100g": 0.2266999999999999,
+      "sodium_100g": 6.4430000000000005,
+      "fat_100g": 370.8,
+      "thiamin_100g": 0.065,
+      "riboflavin_100g": 0.4442,
+      "salt_100g": 16.36522
+    },
+    "nutrient_count": 19
+  },
+  {
+    "name": "plum tomato (raw)",
+    "nutriments": {
+      "copper_100g": 0.0238999999999999,
+      "carbohydrates_100g": 3837.475,
+      "proteins_100g": 695.6250000000001,
+      "magnesium_100g": 8.089,
+      "fat_100g": 425,
+      "selenium_100g": 0,
+      "sodium_100g": 0,
+      "folate_100g": 0.009994,
+      "vitamin-b6_100g": 0.07894,
+      "thiamin_100g": 0.05575,
+      "potassium_100g": 192.8,
+      "fiber_100g": 970.6,
+      "phosphorus_100g": 19.09,
+      "zinc_100g": 0.08245,
+      "riboflavin_100g": 0,
+      "niacin_100g": 0.5331,
+      "iron_100g": 0.1031,
+      "vitamin-c_100g": 17.75,
+      "calcium_100g": 9.963
+    },
+    "nutrient_count": 19
+  },
+  {
+    "name": "beef round roast (boneless, raw)",
+    "nutriments": {
+      "iron_100g": 1.37,
+      "selenium_100g": 0.0222,
+      "zinc_100g": 3.38,
+      "proteins_100g": 23400,
+      "magnesium_100g": 11.4,
+      "vitamin-b6_100g": 0.6380000000000001,
+      "vitamin-b12_100g": 0.0020599999999999,
+      "riboflavin_100g": 0.185,
+      "cholesterol_100g": 62,
+      "carbohydrates_100g": 0,
+      "fatty-acids-total-monounsaturated_100g": 129,
+      "potassium_100g": 312.00000000000006,
+      "phosphorus_100g": 222.00000000000003,
+      "fatty-acids-total-saturated_100g": 953,
+      "niacin_100g": 6.58,
+      "calcium_100g": 13,
+      "sodium_100g": 50,
+      "salt_100g": 127
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "beef porterhouse steak",
+    "nutriments": {
+      "iron_100g": 2.26,
+      "selenium_100g": 0.0214,
+      "riboflavin_100g": 0.2299999999999999,
+      "fatty-acids-total-monounsaturated_100g": 280,
+      "potassium_100g": 266,
+      "fatty-acids-total-saturated_100g": 2070,
+      "zinc_100g": 3.52,
+      "niacin_100g": 5.32,
+      "sodium_100g": 43,
+      "calcium_100g": 19,
+      "carbohydrates_100g": 0,
+      "vitamin-b6_100g": 0.751,
+      "cholesterol_100g": 56.99999999999999,
+      "phosphorus_100g": 200,
+      "proteins_100g": 22700,
+      "magnesium_100g": 10.7,
+      "vitamin-b12_100g": 0.00198,
+      "salt_100g": 109.22
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "sauce, salsa, ready-to-serve",
+    "nutriments": {
+      "carbohydrates_100g": 6740.000000000001,
+      "proteins_100g": 1440,
+      "vitamin-e_100g": 1.22,
+      "niacin_100g": 1.12,
+      "zinc_100g": 0.2,
+      "fat_100g": 190,
+      "vitamin-k_100g": 0.0042,
+      "copper_100g": 0.0239999999999999,
+      "magnesium_100g": 15.2,
+      "potassium_100g": 258,
+      "calcium_100g": 28.000000000000004,
+      "iron_100g": 0.42,
+      "fiber_100g": 1800.0000000000005,
+      "vitamin-b6_100g": 0.176,
+      "sodium_100g": 656,
+      "phosphorus_100g": 32,
+      "thiamin_100g": 0.035,
+      "salt_100g": 1666.24
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "white wheat flour (unenriched, unbleached)",
+    "nutriments": {
+      "phosphorus_100g": 134,
+      "selenium_100g": 0.0201,
+      "zinc_100g": 1.15,
+      "niacin_100g": 1.59,
+      "fat_100g": 1700,
+      "calcium_100g": 22,
+      "magnesium_100g": 36.1,
+      "potassium_100g": 150,
+      "fiber_100g": 3000,
+      "sodium_100g": 2,
+      "folate_100g": 0.023,
+      "thiamin_100g": 0.298,
+      "proteins_100g": 12000,
+      "riboflavin_100g": 0,
+      "vitamin-b6_100g": 0.085,
+      "iron_100g": 1.18,
+      "carbohydrates_100g": 74600,
+      "salt_100g": 5.08
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "whole wheat flour",
+    "nutriments": {
+      "sodium_100g": 3.0000000000000004,
+      "iron_100g": 3.86,
+      "selenium_100g": 0.0236,
+      "calcium_100g": 38,
+      "vitamin-b6_100g": 0.268,
+      "carbohydrates_100g": 71200.00000000001,
+      "niacin_100g": 5.55,
+      "folate_100g": 0.039,
+      "potassium_100g": 376,
+      "fiber_100g": 10600,
+      "riboflavin_100g": 0.128,
+      "zinc_100g": 3.2400000000000007,
+      "fat_100g": 2730,
+      "phosphorus_100g": 352,
+      "proteins_100g": 15100,
+      "magnesium_100g": 136,
+      "thiamin_100g": 0.504,
+      "salt_100g": 7.620000000000001
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "white rice flour",
+    "nutriments": {
+      "zinc_100g": 1.19,
+      "thiamin_100g": 0.09,
+      "folate_100g": 0.016,
+      "fat_100g": 1300.0000000000002,
+      "selenium_100g": 0.0053,
+      "carbohydrates_100g": 79799.99999999999,
+      "fiber_100g": 500,
+      "magnesium_100g": 22.9,
+      "calcium_100g": 6.000000000000001,
+      "niacin_100g": 1.25,
+      "potassium_100g": 75,
+      "phosphorus_100g": 94,
+      "sodium_100g": 5,
+      "riboflavin_100g": 0,
+      "iron_100g": 0.22,
+      "proteins_100g": 6940.000000000001,
+      "vitamin-b6_100g": 0.052,
+      "salt_100g": 12.7
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "bearded tooth mushroom",
+    "nutriments": {
+      "fiber_100g": 4376,
+      "carbohydrates_100g": 7589.699999999999,
+      "proteins_100g": 2500,
+      "magnesium_100g": 11.72,
+      "folate_100g": 0.02958,
+      "vitamin-b6_100g": 0.0655,
+      "fat_100g": 256.29999999999995,
+      "niacin_100g": 1.626,
+      "potassium_100g": 443.30000000000007,
+      "selenium_100g": 0.0017729999999999,
+      "phosphorus_100g": 93.95,
+      "riboflavin_100g": 0.3631,
+      "zinc_100g": 0.7448,
+      "iron_100g": 0.6883,
+      "sodium_100g": 0.3363,
+      "calcium_100g": 0,
+      "thiamin_100g": 0.1463,
+      "salt_100g": 0.854202
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "oyster mushroom (raw)",
+    "nutriments": {
+      "fiber_100g": 2850,
+      "carbohydrates_100g": 6941.250000000001,
+      "proteins_100g": 2898.7500000000005,
+      "magnesium_100g": 13.91,
+      "potassium_100g": 281.6,
+      "fat_100g": 187.5,
+      "iron_100g": 0.6981,
+      "folate_100g": 0.0631399999999999,
+      "sodium_100g": 1.128,
+      "selenium_100g": 0.001379,
+      "zinc_100g": 0.6843,
+      "riboflavin_100g": 0.2438,
+      "vitamin-b6_100g": 0.09888,
+      "thiamin_100g": 0.07,
+      "phosphorus_100g": 86.24,
+      "calcium_100g": 0,
+      "niacin_100g": 5.751000000000001,
+      "salt_100g": 2.8651199999999997
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "shiitake mushroom",
+    "nutriments": {
+      "fiber_100g": 4166,
+      "carbohydrates_100g": 8170.625,
+      "proteins_100g": 2414.375,
+      "vitamin-b6_100g": 0.1593,
+      "potassium_100g": 243.00000000000003,
+      "niacin_100g": 2.741,
+      "magnesium_100g": 14.06,
+      "riboflavin_100g": 0.2163,
+      "fat_100g": 195.00000000000003,
+      "sodium_100g": 0.9363,
+      "zinc_100g": 0.7641,
+      "selenium_100g": 0.0012439999999999,
+      "calcium_100g": 0.7663,
+      "iron_100g": 0.1443,
+      "folate_100g": 0.03213,
+      "phosphorus_100g": 75.82,
+      "thiamin_100g": 0.00125,
+      "salt_100g": 2.378202
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "fine semolina flour (durum wheat)",
+    "nutriments": {
+      "carbohydrates_100g": 71985.75,
+      "proteins_100g": 13331.25,
+      "iron_100g": 2.431,
+      "calcium_100g": 19.76,
+      "magnesium_100g": 46.28,
+      "selenium_100g": 0.04407,
+      "thiamin_100g": 0.695,
+      "sodium_100g": 0.4263,
+      "folate_100g": 0.1636,
+      "vitamin-b6_100g": 0.1082,
+      "fat_100g": 1838,
+      "fiber_100g": 3683,
+      "phosphorus_100g": 163.1,
+      "potassium_100g": 207.80000000000004,
+      "riboflavin_100g": 0.3400000000000001,
+      "niacin_100g": 5.599,
+      "zinc_100g": 1.24,
+      "salt_100g": 1.082802
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "portobello mushroom",
+    "nutriments": {
+      "fiber_100g": 1879,
+      "vitamin-d_100g": 0,
+      "carbohydrates_100g": 4658.3,
+      "proteins_100g": 2750,
+      "vitamin-b6_100g": 0.0969199999999999,
+      "riboflavin_100g": 0.465,
+      "fat_100g": 311.7,
+      "zinc_100g": 0.3888,
+      "potassium_100g": 349.3,
+      "iron_100g": 0.139,
+      "thiamin_100g": 0.005167,
+      "phosphorus_100g": 87.48,
+      "niacin_100g": 3.898,
+      "selenium_100g": 0.0146699999999999,
+      "sodium_100g": 5.312,
+      "calcium_100g": 3.2350000000000003,
+      "magnesium_100g": 9.037,
+      "salt_100g": 13.49248
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "enoki mushroom",
+    "nutriments": {
+      "fiber_100g": 2944.9999999999995,
+      "vitamin-d_100g": 0,
+      "carbohydrates_100g": 8141.424999999999,
+      "proteins_100g": 2416.8750000000005,
+      "calcium_100g": 1.432,
+      "magnesium_100g": 12.839999999999998,
+      "niacin_100g": 6.987,
+      "riboflavin_100g": 0.24,
+      "phosphorus_100g": 84.1,
+      "iron_100g": 1.275,
+      "potassium_100g": 402.3,
+      "vitamin-b6_100g": 0.1188,
+      "zinc_100g": 0.4815,
+      "selenium_100g": 0,
+      "fat_100g": 245,
+      "thiamin_100g": 0.012,
+      "sodium_100g": 0.4167,
+      "salt_100g": 1.058418
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "brown mushroom",
+    "nutriments": {
+      "fiber_100g": 1780.9999999999998,
+      "vitamin-d_100g": 0,
+      "carbohydrates_100g": 4014.55,
+      "proteins_100g": 3093.75,
+      "niacin_100g": 4.17,
+      "vitamin-b6_100g": 0.1125,
+      "magnesium_100g": 10.25,
+      "riboflavin_100g": 0.5167,
+      "calcium_100g": 4.105,
+      "thiamin_100g": 0.004167,
+      "potassium_100g": 380.3,
+      "selenium_100g": 0.01531,
+      "fat_100g": 196.7,
+      "iron_100g": 0.3115,
+      "sodium_100g": 4.572,
+      "zinc_100g": 0.5123,
+      "phosphorus_100g": 100.5,
+      "salt_100g": 11.61288
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "carrot root (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 10267.55,
+      "proteins_100g": 941.25,
+      "calcium_100g": 30.48,
+      "thiamin_100g": 0.065,
+      "niacin_100g": 1.406,
+      "riboflavin_100g": 0.095,
+      "potassium_100g": 279.6,
+      "vitamin-b6_100g": 0.1456,
+      "sodium_100g": 86.65,
+      "phosphorus_100g": 39.81,
+      "iron_100g": 0.1504,
+      "magnesium_100g": 12.45,
+      "selenium_100g": 0,
+      "zinc_100g": 0.2363999999999999,
+      "fat_100g": 350.6,
+      "fiber_100g": 3095.0000000000005,
+      "folate_100g": 0.03706,
+      "salt_100g": 220.091
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "baby carrot root (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 9078.7,
+      "proteins_100g": 805.0000000000001,
+      "selenium_100g": 0,
+      "folate_100g": 0.04365,
+      "fat_100g": 137.50000000000003,
+      "magnesium_100g": 11.06,
+      "niacin_100g": 0.7413000000000001,
+      "fiber_100g": 2694,
+      "iron_100g": 0.088,
+      "zinc_100g": 0.1597,
+      "calcium_100g": 42.23,
+      "sodium_100g": 62.66,
+      "potassium_100g": 237.3,
+      "vitamin-b6_100g": 0.1146,
+      "thiamin_100g": 0.04381,
+      "riboflavin_100g": 0.1156,
+      "phosphorus_100g": 29.58,
+      "salt_100g": 159.1564
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "yellow bell pepper (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 6601.725,
+      "proteins_100g": 819.375,
+      "zinc_100g": 0.193,
+      "potassium_100g": 197.3,
+      "calcium_100g": 6.686,
+      "fiber_100g": 1071,
+      "magnesium_100g": 10.34,
+      "fat_100g": 121.1,
+      "vitamin-b6_100g": 0.2918,
+      "iron_100g": 0.3596,
+      "vitamin-c_100g": 138.8,
+      "folate_100g": 0.04163,
+      "selenium_100g": 0,
+      "sodium_100g": 0,
+      "niacin_100g": 0.91,
+      "riboflavin_100g": 0.09778,
+      "phosphorus_100g": 24.76,
+      "thiamin_100g": 0.04867
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "red bell pepper (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 6653.175,
+      "proteins_100g": 895.6250000000001,
+      "vitamin-b6_100g": 0.3027000000000001,
+      "niacin_100g": 1.024,
+      "iron_100g": 0.3533,
+      "phosphorus_100g": 26.590000000000003,
+      "calcium_100g": 6.361,
+      "potassium_100g": 212.7,
+      "thiamin_100g": 0.05494,
+      "fiber_100g": 1158,
+      "zinc_100g": 0.2023,
+      "vitamin-c_100g": 141.7,
+      "magnesium_100g": 10.98,
+      "sodium_100g": 0,
+      "fat_100g": 125.6,
+      "riboflavin_100g": 0.1422,
+      "folate_100g": 0.0473199999999999,
+      "selenium_100g": 0
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "cow buttermilk (raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0,
+      "carbohydrates_100g": 4811.522,
+      "proteins_100g": 3464.978,
+      "phosphorus_100g": 92.19,
+      "sodium_100g": 92.49,
+      "iron_100g": 0.01325,
+      "magnesium_100g": 11.03,
+      "niacin_100g": 0.1275,
+      "vitamin-b6_100g": 0.03931,
+      "calcium_100g": 120.09999999999998,
+      "potassium_100g": 158,
+      "zinc_100g": 0.4263,
+      "thiamin_100g": 0.0485,
+      "riboflavin_100g": 0.1963,
+      "fatty-acids-total-saturated_100g": 552.5,
+      "cholesterol_100g": 4.793,
+      "fat_100g": 1081,
+      "salt_100g": 234.9246
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "yogurt (plain)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0002,
+      "carbohydrates_100g": 8076.750000000001,
+      "proteins_100g": 3824.172,
+      "fat_100g": 4484,
+      "fatty-acids-total-saturated_100g": 2316,
+      "phosphorus_100g": 101.2,
+      "sodium_100g": 51.47999999999999,
+      "magnesium_100g": 15.21,
+      "potassium_100g": 164.1,
+      "iron_100g": 0,
+      "riboflavin_100g": 0.2431,
+      "niacin_100g": 0.135,
+      "thiamin_100g": 0.05519,
+      "vitamin-b6_100g": 0.04506,
+      "calcium_100g": 126.8,
+      "zinc_100g": 0.4283,
+      "cholesterol_100g": 3.375,
+      "salt_100g": 130.75919999999996
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "feta cheese",
+    "nutriments": {
+      "vitamin-k_100g": 0.0012,
+      "carbohydrates_100g": 5583.179999999999,
+      "proteins_100g": 19707.82,
+      "niacin_100g": 0.2644,
+      "calcium_100g": 371.1,
+      "magnesium_100g": 17.69,
+      "cholesterol_100g": 57.52000000000002,
+      "phosphorus_100g": 327.6,
+      "sodium_100g": 1034,
+      "riboflavin_100g": 0.4444,
+      "thiamin_100g": 0.05638,
+      "fatty-acids-total-saturated_100g": 11169.999999999998,
+      "vitamin-b6_100g": 0.03831,
+      "zinc_100g": 2.353,
+      "iron_100g": 0.0675,
+      "potassium_100g": 105.3,
+      "fat_100g": 19080,
+      "salt_100g": 2626.36
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "almond meal",
+    "nutriments": {
+      "carbohydrates_100g": 16249.25,
+      "proteins_100g": 26243.75,
+      "sodium_100g": 0.8944000000000001,
+      "iron_100g": 3.225000000000001,
+      "fiber_100g": 9266.000000000002,
+      "thiamin_100g": 0.1125,
+      "fat_100g": 50229.99999999999,
+      "niacin_100g": 3.998,
+      "zinc_100g": 2.795,
+      "riboflavin_100g": 0.7475000000000002,
+      "phosphorus_100g": 512.1,
+      "selenium_100g": 0.0007419,
+      "potassium_100g": 666.8,
+      "calcium_100g": 232.3,
+      "folate_100g": 0.0378299999999999,
+      "magnesium_100g": 251.1,
+      "vitamin-b6_100g": 0.09988,
+      "salt_100g": 2.2717760000000005
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "oat flour",
+    "nutriments": {
+      "carbohydrates_100g": 69917.25,
+      "proteins_100g": 13168.749999999996,
+      "sodium_100g": 3.619,
+      "folate_100g": 0.03469,
+      "phosphorus_100g": 371.8,
+      "thiamin_100g": 0.3899999999999999,
+      "iron_100g": 3.997,
+      "fiber_100g": 10500,
+      "zinc_100g": 2.754,
+      "potassium_100g": 373.1,
+      "niacin_100g": 1.9450000000000005,
+      "vitamin-b6_100g": 0.1476,
+      "selenium_100g": 0.0382,
+      "calcium_100g": 42.81,
+      "riboflavin_100g": 0.1613,
+      "magnesium_100g": 125.29999999999998,
+      "fat_100g": 6309.000000000001,
+      "salt_100g": 9.192260000000001
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "cottage cheese",
+    "nutriments": {
+      "vitamin-k_100g": 0.0002,
+      "carbohydrates_100g": 4599.64,
+      "proteins_100g": 11624.36,
+      "potassium_100g": 123.60000000000002,
+      "calcium_100g": 88.27,
+      "niacin_100g": 0.138,
+      "vitamin-b6_100g": 0.0466,
+      "cholesterol_100g": 18,
+      "fatty-acids-total-saturated_100g": 2601,
+      "phosphorus_100g": 154,
+      "vitamin-b12_100g": 0.0006616999999999,
+      "iron_100g": 0,
+      "thiamin_100g": 0.0522,
+      "magnesium_100g": 9.189,
+      "sodium_100g": 349.8,
+      "zinc_100g": 0.4537999999999999,
+      "fat_100g": 4224.999999999999,
+      "salt_100g": 888.4920000000001
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "heavy cream",
+    "nutriments": {
+      "vitamin-k_100g": 0.0024,
+      "carbohydrates_100g": 3799.506,
+      "proteins_100g": 2017.994,
+      "magnesium_100g": 5.974,
+      "fatty-acids-total-saturated_100g": 20450,
+      "phosphorus_100g": 57.03,
+      "vitamin-b12_100g": 0,
+      "potassium_100g": 96.94,
+      "fat_100g": 35560,
+      "calcium_100g": 61.21,
+      "niacin_100g": 0.06125,
+      "thiamin_100g": 0.03225,
+      "sodium_100g": 20.610000000000003,
+      "vitamin-b6_100g": 0.031,
+      "zinc_100g": 0.2231,
+      "cholesterol_100g": 103.1,
+      "iron_100g": 0,
+      "salt_100g": 52.34940000000001
+    },
+    "nutrient_count": 18
+  },
+  {
+    "name": "white wheat flour (all purpose)",
+    "nutriments": {
+      "calcium_100g": 19,
+      "vitamin-b6_100g": 0.066,
+      "iron_100g": 5.620000000000001,
+      "selenium_100g": 0.0157,
+      "folate_100g": 0.1599999999999999,
+      "riboflavin_100g": 0.443,
+      "carbohydrates_100g": 77300,
+      "proteins_100g": 10900,
+      "zinc_100g": 0.72,
+      "fat_100g": 1480,
+      "potassium_100g": 136,
+      "magnesium_100g": 26.700000000000003,
+      "phosphorus_100g": 108,
+      "thiamin_100g": 0.939,
+      "niacin_100g": 6.74,
+      "sodium_100g": 2,
+      "salt_100g": 5.08
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "white wheat flour (unbleached, enriched)",
+    "nutriments": {
+      "thiamin_100g": 1.05,
+      "zinc_100g": 0.9000000000000001,
+      "proteins_100g": 13100,
+      "calcium_100g": 21.000000000000004,
+      "potassium_100g": 135,
+      "magnesium_100g": 33.3,
+      "selenium_100g": 0.0141999999999999,
+      "vitamin-b6_100g": 0.079,
+      "carbohydrates_100g": 73200,
+      "phosphorus_100g": 115,
+      "iron_100g": 5.41,
+      "fat_100g": 1480,
+      "sodium_100g": 4,
+      "riboflavin_100g": 0.4670000000000001,
+      "niacin_100g": 7.07,
+      "folate_100g": 0.159,
+      "salt_100g": 10.16
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "white bread flour",
+    "nutriments": {
+      "riboflavin_100g": 0.4360000000000001,
+      "niacin_100g": 6.559999999999999,
+      "selenium_100g": 0.0332999999999999,
+      "thiamin_100g": 0.953,
+      "sodium_100g": 3.0000000000000004,
+      "fat_100g": 1650,
+      "magnesium_100g": 35.9,
+      "vitamin-b6_100g": 0.079,
+      "proteins_100g": 14300.000000000004,
+      "iron_100g": 5.55,
+      "folate_100g": 0.145,
+      "phosphorus_100g": 124,
+      "calcium_100g": 19,
+      "zinc_100g": 1.06,
+      "potassium_100g": 127,
+      "carbohydrates_100g": 72800,
+      "salt_100g": 7.620000000000001
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "yellow corn flour",
+    "nutriments": {
+      "iron_100g": 4.44,
+      "magnesium_100g": 30.1,
+      "riboflavin_100g": 0.354,
+      "phosphorus_100g": 92,
+      "fiber_100g": 4300,
+      "zinc_100g": 0.62,
+      "folate_100g": 0.155,
+      "proteins_100g": 6200,
+      "vitamin-b6_100g": 0.13,
+      "thiamin_100g": 0.662,
+      "potassium_100g": 144,
+      "niacin_100g": 5.75,
+      "sodium_100g": 0,
+      "selenium_100g": 0.0083,
+      "calcium_100g": 0,
+      "carbohydrates_100g": 80799.99999999999,
+      "fat_100g": 1739.9999999999998
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "glutinous rice flour",
+    "nutriments": {
+      "proteins_100g": 6690.000000000001,
+      "selenium_100g": 0.002,
+      "calcium_100g": 10,
+      "riboflavin_100g": 0,
+      "iron_100g": 0.3400000000000001,
+      "sodium_100g": 6.000000000000001,
+      "magnesium_100g": 21.2,
+      "thiamin_100g": 0.053,
+      "fat_100g": 1160,
+      "potassium_100g": 80,
+      "niacin_100g": 1.12,
+      "zinc_100g": 1.34,
+      "vitamin-b6_100g": 0.044,
+      "phosphorus_100g": 63,
+      "carbohydrates_100g": 80099.99999999999,
+      "sugars_100g": 0.84,
+      "salt_100g": 15.240000000000002
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "red delicious apple",
+    "nutriments": {
+      "carbohydrates_100g": 14781.7,
+      "proteins_100g": 187.5,
+      "potassium_100g": 95.31000000000002,
+      "sodium_100g": 0,
+      "iron_100g": 0,
+      "vitamin-b6_100g": 0.02131,
+      "folate_100g": 0,
+      "riboflavin_100g": 0.06625,
+      "fiber_100g": 2043,
+      "magnesium_100g": 4.695000000000001,
+      "sugars_100g": 12220,
+      "phosphorus_100g": 9.183,
+      "fat_100g": 212.5,
+      "niacin_100g": 0.09,
+      "calcium_100g": 4.656000000000001,
+      "thiamin_100g": 0.00875,
+      "zinc_100g": 0.01964
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "fuji apple",
+    "nutriments": {
+      "proteins_100g": 148.4375,
+      "fiber_100g": 2075,
+      "magnesium_100g": 4.67,
+      "phosphorus_100g": 9.78,
+      "sodium_100g": 1.013,
+      "fat_100g": 162.50000000000003,
+      "calcium_100g": 5.975,
+      "potassium_100g": 103.8,
+      "zinc_100g": 0.01676,
+      "niacin_100g": 0.09063,
+      "thiamin_100g": 0.00625,
+      "vitamin-b6_100g": 0.03544,
+      "riboflavin_100g": 0.0675,
+      "iron_100g": 0.015,
+      "sugars_100g": 13330.000000000002,
+      "folate_100g": 0,
+      "salt_100g": 2.5730199999999996
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "gala apple",
+    "nutriments": {
+      "proteins_100g": 132.8125,
+      "magnesium_100g": 4.947,
+      "fat_100g": 150,
+      "calcium_100g": 6.639,
+      "zinc_100g": 0.02349,
+      "riboflavin_100g": 0.06875,
+      "potassium_100g": 105.90000000000002,
+      "sugars_100g": 11830,
+      "iron_100g": 0.06013,
+      "fiber_100g": 2109,
+      "sodium_100g": 0.2788,
+      "folate_100g": 0.0008125,
+      "vitamin-b6_100g": 0.03175,
+      "niacin_100g": 0.08938,
+      "phosphorus_100g": 8.435,
+      "thiamin_100g": 0.01125,
+      "salt_100g": 0.708152
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "granny smith apple",
+    "nutriments": {
+      "carbohydrates_100g": 14142.975,
+      "proteins_100g": 265.625,
+      "folate_100g": 0,
+      "potassium_100g": 115.9,
+      "sodium_100g": 0,
+      "calcium_100g": 5.483,
+      "sugars_100g": 10650,
+      "niacin_100g": 0.11,
+      "thiamin_100g": 0.01688,
+      "fat_100g": 137.50000000000003,
+      "zinc_100g": 0.02276,
+      "riboflavin_100g": 0.075,
+      "iron_100g": 0.06963,
+      "fiber_100g": 2514,
+      "magnesium_100g": 5.055,
+      "vitamin-b6_100g": 0.02788,
+      "phosphorus_100g": 9.859
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "honeycrisp apple",
+    "nutriments": {
+      "proteins_100g": 101.5625,
+      "thiamin_100g": 0.00875,
+      "folate_100g": 0,
+      "sugars_100g": 12369.999999999998,
+      "sodium_100g": 0.1375,
+      "zinc_100g": 0.01828,
+      "niacin_100g": 0.07375,
+      "fat_100g": 100,
+      "iron_100g": 0,
+      "riboflavin_100g": 0.07375,
+      "phosphorus_100g": 7.852000000000002,
+      "vitamin-b6_100g": 0.03275,
+      "potassium_100g": 98.04,
+      "magnesium_100g": 4.151,
+      "fiber_100g": 1721,
+      "calcium_100g": 3.874000000000001,
+      "salt_100g": 0.34925000000000006
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "00 white wheat flour",
+    "nutriments": {
+      "carbohydrates_100g": 74446.20000000001,
+      "proteins_100g": 11400,
+      "potassium_100g": 135.5,
+      "iron_100g": 0.9863,
+      "folate_100g": 0.01346,
+      "niacin_100g": 1.364,
+      "thiamin_100g": 0.125,
+      "riboflavin_100g": 0.09125,
+      "fiber_100g": 2656,
+      "fat_100g": 1520,
+      "magnesium_100g": 25.800000000000008,
+      "calcium_100g": 18.68,
+      "selenium_100g": 0.0103,
+      "phosphorus_100g": 106.2,
+      "zinc_100g": 0.791,
+      "vitamin-b6_100g": 0.05513,
+      "sodium_100g": 0
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "flour, spelt, whole grain",
+    "nutriments": {
+      "carbohydrates_100g": 70723,
+      "proteins_100g": 14475,
+      "vitamin-b6_100g": 0.2355,
+      "niacin_100g": 5.466,
+      "fat_100g": 2543,
+      "phosphorus_100g": 361.7,
+      "fiber_100g": 9339,
+      "iron_100g": 3.769,
+      "thiamin_100g": 0.2981,
+      "folate_100g": 0.03842,
+      "potassium_100g": 349.8,
+      "sodium_100g": 0,
+      "calcium_100g": 30.04,
+      "selenium_100g": 0.0094789999999999,
+      "zinc_100g": 3.5910000000000006,
+      "magnesium_100g": 123.8,
+      "riboflavin_100g": 0.1431
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "semolina flour (durum wheat)",
+    "nutriments": {
+      "carbohydrates_100g": 73823.45,
+      "proteins_100g": 11731.249999999998,
+      "magnesium_100g": 35.21,
+      "fiber_100g": 3216.0000000000005,
+      "selenium_100g": 0.0297899999999999,
+      "vitamin-b6_100g": 0.08283,
+      "niacin_100g": 3.632,
+      "folate_100g": 0.1677,
+      "iron_100g": 1.547,
+      "phosphorus_100g": 129.8,
+      "fat_100g": 1597,
+      "sodium_100g": 0,
+      "thiamin_100g": 0.4050000000000001,
+      "riboflavin_100g": 0.2467,
+      "calcium_100g": 17.16,
+      "potassium_100g": 173.8,
+      "zinc_100g": 0.947
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "king oyster mushroom",
+    "nutriments": {
+      "fiber_100g": 3009,
+      "carbohydrates_100g": 8500.65,
+      "proteins_100g": 2406.25,
+      "riboflavin_100g": 0.2438,
+      "sodium_100g": 0.7713,
+      "potassium_100g": 294.5,
+      "magnesium_100g": 13.51,
+      "phosphorus_100g": 89.86,
+      "fat_100g": 307.5,
+      "calcium_100g": 0,
+      "selenium_100g": 0.001203,
+      "thiamin_100g": 0.006375,
+      "iron_100g": 0.3381,
+      "zinc_100g": 0.6254,
+      "niacin_100g": 6.451,
+      "vitamin-b6_100g": 0.1188,
+      "salt_100g": 1.959102
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "maitake mushroom",
+    "nutriments": {
+      "fiber_100g": 3071,
+      "carbohydrates_100g": 6604.375,
+      "proteins_100g": 2203.125,
+      "iron_100g": 0.2089,
+      "thiamin_100g": 0.009875,
+      "magnesium_100g": 11.04,
+      "phosphorus_100g": 72.38,
+      "selenium_100g": 0.003269,
+      "potassium_100g": 260.00000000000006,
+      "calcium_100g": 0,
+      "fat_100g": 265,
+      "sodium_100g": 0.345,
+      "niacin_100g": 6.763,
+      "zinc_100g": 0.7629,
+      "riboflavin_100g": 0.2694,
+      "vitamin-b6_100g": 0.071,
+      "salt_100g": 0.8763
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "white beech mushroom",
+    "nutriments": {
+      "fiber_100g": 3139,
+      "carbohydrates_100g": 6759.3,
+      "proteins_100g": 2180,
+      "riboflavin_100g": 0.2075,
+      "zinc_100g": 0.4977999999999999,
+      "fat_100g": 449.4000000000001,
+      "sodium_100g": 0.8912999999999999,
+      "niacin_100g": 6.4,
+      "magnesium_100g": 10.490000000000002,
+      "selenium_100g": 0.00038,
+      "calcium_100g": 0.4325,
+      "thiamin_100g": 0.007875,
+      "phosphorus_100g": 85.9,
+      "iron_100g": 0.7388,
+      "potassium_100g": 375.9,
+      "vitamin-b6_100g": 0.1054,
+      "salt_100g": 2.263902
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "orange bell pepper (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 6703.125,
+      "proteins_100g": 881.875,
+      "magnesium_100g": 10.43,
+      "vitamin-c_100g": 158.3,
+      "calcium_100g": 4.899,
+      "sodium_100g": 0,
+      "fiber_100g": 967.4,
+      "vitamin-b6_100g": 0.3324,
+      "potassium_100g": 200.80000000000004,
+      "zinc_100g": 0.2422,
+      "riboflavin_100g": 0.1016999999999999,
+      "thiamin_100g": 0.0545599999999999,
+      "iron_100g": 0.3652,
+      "fat_100g": 155.6,
+      "selenium_100g": 0.0003,
+      "phosphorus_100g": 26.590000000000003,
+      "niacin_100g": 1.078
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "potato flour",
+    "nutriments": {
+      "carbohydrates_100g": 79942.2,
+      "proteins_100g": 8112.5,
+      "magnesium_100g": 73.65,
+      "calcium_100g": 44.12,
+      "potassium_100g": 1269,
+      "riboflavin_100g": 0.1149999999999999,
+      "folate_100g": 0.0411499999999999,
+      "sodium_100g": 47.66,
+      "thiamin_100g": 0.1981,
+      "niacin_100g": 5.628,
+      "iron_100g": 11.97,
+      "vitamin-b6_100g": 0.5820000000000001,
+      "selenium_100g": 0.001425,
+      "phosphorus_100g": 197.3,
+      "fat_100g": 951.3,
+      "zinc_100g": 0.9002,
+      "salt_100g": 121.0564
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "cream cheese",
+    "nutriments": {
+      "vitamin-k_100g": 0.0024,
+      "carbohydrates_100g": 4556.15,
+      "proteins_100g": 5789.85,
+      "potassium_100g": 124.8,
+      "vitamin-b6_100g": 0.03925,
+      "sodium_100g": 367.8,
+      "phosphorus_100g": 107.7,
+      "calcium_100g": 97.11,
+      "zinc_100g": 0.5891000000000001,
+      "iron_100g": 0,
+      "thiamin_100g": 0.03813,
+      "magnesium_100g": 8.914,
+      "niacin_100g": 0.0925,
+      "fatty-acids-total-saturated_100g": 19730,
+      "fat_100g": 33490,
+      "vitamin-b12_100g": 0,
+      "salt_100g": 934.212
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "sour cream",
+    "nutriments": {
+      "vitamin-k_100g": 0.0012,
+      "carbohydrates_100g": 5555.506,
+      "vitamin-b12_100g": 0.00006175,
+      "vitamin-b6_100g": 0.0385,
+      "niacin_100g": 0.1,
+      "thiamin_100g": 0.04275,
+      "potassium_100g": 153.8,
+      "sodium_100g": 50.040000000000006,
+      "cholesterol_100g": 52.68999999999999,
+      "phosphorus_100g": 102,
+      "iron_100g": 0,
+      "calcium_100g": 107.2,
+      "magnesium_100g": 10.11,
+      "zinc_100g": 0.3919000000000001,
+      "fatty-acids-total-saturated_100g": 10700,
+      "fat_100g": 17989.999999999996,
+      "salt_100g": 127.10160000000002
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "idaho russet potato (raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0014999999999999,
+      "carbohydrates_100g": 17771.25,
+      "proteins_100g": 2273.75,
+      "calcium_100g": 7.800999999999999,
+      "vitamin-b6_100g": 0.1573,
+      "phosphorus_100g": 55.19,
+      "fat_100g": 360,
+      "iron_100g": 0.3835,
+      "sodium_100g": 2.743,
+      "zinc_100g": 0.3781,
+      "thiamin_100g": 0.07375,
+      "potassium_100g": 450.1,
+      "niacin_100g": 1.501,
+      "selenium_100g": 0,
+      "vitamin-c_100g": 10.900000000000002,
+      "magnesium_100g": 25.64,
+      "salt_100g": 6.96722
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "potatoes, red, without skin, raw",
+    "nutriments": {
+      "vitamin-k_100g": 0.0011,
+      "carbohydrates_100g": 16269.999999999998,
+      "proteins_100g": 2062.5,
+      "fat_100g": 247.5,
+      "vitamin-b6_100g": 0.1441,
+      "potassium_100g": 472.00000000000006,
+      "selenium_100g": 0,
+      "niacin_100g": 1.481,
+      "zinc_100g": 0.3922999999999999,
+      "thiamin_100g": 0.06625,
+      "sodium_100g": 2.856,
+      "magnesium_100g": 23.56,
+      "iron_100g": 0.3911,
+      "calcium_100g": 5.128,
+      "phosphorus_100g": 55.65,
+      "vitamin-c_100g": 21.29,
+      "salt_100g": 7.254239999999999
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "yellow potato",
+    "nutriments": {
+      "vitamin-k_100g": 0.0008,
+      "carbohydrates_100g": 15962.4,
+      "proteins_100g": 1812.5,
+      "vitamin-b6_100g": 0.145,
+      "phosphorus_100g": 56.95,
+      "niacin_100g": 1.585,
+      "potassium_100g": 445.8,
+      "zinc_100g": 0.3739,
+      "magnesium_100g": 22.3,
+      "vitamin-c_100g": 23.3,
+      "iron_100g": 0.3728,
+      "sodium_100g": 2.2380000000000004,
+      "selenium_100g": 0,
+      "fat_100g": 263.8,
+      "thiamin_100g": 0.0512499999999999,
+      "calcium_100g": 5.943,
+      "salt_100g": 5.684520000000001
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "barley flour",
+    "nutriments": {
+      "selenium_100g": 0.0130999999999999,
+      "carbohydrates_100g": 77398.32,
+      "proteins_100g": 8721.679999999998,
+      "fiber_100g": 12790,
+      "riboflavin_100g": 0.1463,
+      "sodium_100g": 20.33,
+      "phosphorus_100g": 234.4,
+      "iron_100g": 3.3010000000000006,
+      "zinc_100g": 2.144,
+      "thiamin_100g": 0.225,
+      "niacin_100g": 5.941000000000001,
+      "calcium_100g": 35.56,
+      "fat_100g": 2450,
+      "magnesium_100g": 88.04,
+      "vitamin-b6_100g": 0.1995,
+      "potassium_100g": 366.6,
+      "salt_100g": 51.6382
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "long-grain white rice (uncooked)",
+    "nutriments": {
+      "selenium_100g": 0.0065999999999999,
+      "carbohydrates_100g": 80313.14999999998,
+      "proteins_100g": 7038.85,
+      "thiamin_100g": 0.065,
+      "magnesium_100g": 26.530000000000005,
+      "niacin_100g": 1.434,
+      "calcium_100g": 4.46,
+      "sodium_100g": 0.4625000000000001,
+      "phosphorus_100g": 108.2,
+      "fat_100g": 1032.9999999999998,
+      "iron_100g": 0.1405,
+      "vitamin-b6_100g": 0.05788,
+      "zinc_100g": 1.354,
+      "fiber_100g": 148.8,
+      "riboflavin_100g": 0.08,
+      "potassium_100g": 82.26,
+      "salt_100g": 1.1747500000000002
+    },
+    "nutrient_count": 17
+  },
+  {
+    "name": "soybean flour (defatted)",
+    "nutriments": {
+      "thiamin_100g": 0.542,
+      "magnesium_100g": 313,
+      "potassium_100g": 2480.0000000000005,
+      "carbohydrates_100g": 32899.99999999999,
+      "riboflavin_100g": 0.298,
+      "vitamin-b6_100g": 0.618,
+      "zinc_100g": 4.44,
+      "calcium_100g": 338,
+      "iron_100g": 7.339999999999999,
+      "selenium_100g": 0.0457999999999999,
+      "sodium_100g": 2,
+      "phosphorus_100g": 726,
+      "proteins_100g": 51100,
+      "niacin_100g": 3.4300000000000006,
+      "fat_100g": 3330.0000000000005,
+      "salt_100g": 5.08
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "pastry flour",
+    "nutriments": {
+      "selenium_100g": 0.0049999999999999,
+      "sodium_100g": 1,
+      "thiamin_100g": 0.146,
+      "fat_100g": 1639.9999999999998,
+      "phosphorus_100g": 102,
+      "magnesium_100g": 22.4,
+      "proteins_100g": 8750,
+      "vitamin-b6_100g": 0.065,
+      "zinc_100g": 0.74,
+      "potassium_100g": 142,
+      "riboflavin_100g": 0,
+      "carbohydrates_100g": 77200,
+      "niacin_100g": 0.988,
+      "iron_100g": 0.8699999999999999,
+      "calcium_100g": 17,
+      "salt_100g": 2.54
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "reconstituted orange juice (chilled)",
+    "nutriments": {
+      "carbohydrates_100g": 10340.624999999998,
+      "proteins_100g": 734.375,
+      "zinc_100g": 0.03189,
+      "sodium_100g": 5.231,
+      "niacin_100g": 0.04031,
+      "folate_100g": 0.0298499999999999,
+      "potassium_100g": 179.5,
+      "calcium_100g": 12.81,
+      "iron_100g": 0.06458,
+      "thiamin_100g": 0.07006,
+      "magnesium_100g": 10.64,
+      "fat_100g": 325.00000000000006,
+      "vitamin-b6_100g": 0.04288,
+      "phosphorus_100g": 18.15,
+      "vitamin-c_100g": 26.890000000000004,
+      "salt_100g": 13.28674
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "grape juice",
+    "nutriments": {
+      "carbohydrates_100g": 16000,
+      "proteins_100g": 257.8125,
+      "folate_100g": 0.0006643999999999,
+      "zinc_100g": 0.0571,
+      "vitamin-b6_100g": 0.03869,
+      "magnesium_100g": 7.873000000000001,
+      "niacin_100g": 0.01638,
+      "phosphorus_100g": 11.95,
+      "thiamin_100g": 0.02588,
+      "sodium_100g": 4.019,
+      "vitamin-c_100g": 22.3,
+      "calcium_100g": 9.741,
+      "potassium_100g": 49.78000000000001,
+      "iron_100g": 0.04092,
+      "fat_100g": 287.5,
+      "salt_100g": 10.208260000000001
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "white grape juice",
+    "nutriments": {
+      "carbohydrates_100g": 15843.75,
+      "proteins_100g": 93.75,
+      "thiamin_100g": 0,
+      "magnesium_100g": 4.274,
+      "potassium_100g": 49.010000000000005,
+      "sodium_100g": 7.188,
+      "folate_100g": 0.001731,
+      "iron_100g": 0.1191,
+      "vitamin-b6_100g": 0.0141299999999999,
+      "fat_100g": 265,
+      "zinc_100g": 0.01773,
+      "phosphorus_100g": 12.57,
+      "vitamin-c_100g": 55.25,
+      "niacin_100g": 0.005875,
+      "calcium_100g": 7.318,
+      "salt_100g": 18.25752
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "cranberry juice",
+    "nutriments": {
+      "carbohydrates_100g": 7263.749999999999,
+      "proteins_100g": 0,
+      "calcium_100g": 6.641,
+      "vitamin-c_100g": 0,
+      "potassium_100g": 70.58,
+      "phosphorus_100g": 3.299,
+      "magnesium_100g": 4.381,
+      "sodium_100g": 6.341000000000001,
+      "folate_100g": 0.008968,
+      "niacin_100g": 0.0095,
+      "vitamin-b6_100g": 0.00925,
+      "zinc_100g": 0.0412,
+      "thiamin_100g": 0.0175,
+      "iron_100g": 0.1257,
+      "fat_100g": 337.50000000000006,
+      "salt_100g": 16.106140000000003
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "tomato juice",
+    "nutriments": {
+      "carbohydrates_100g": 4320.625,
+      "proteins_100g": 859.375,
+      "potassium_100g": 197.6,
+      "zinc_100g": 0.104,
+      "iron_100g": 0.2988,
+      "vitamin-c_100g": 11.699999999999998,
+      "vitamin-b6_100g": 0.07613,
+      "magnesium_100g": 10.43,
+      "folate_100g": 0.01893,
+      "phosphorus_100g": 18.54,
+      "thiamin_100g": 0.04188,
+      "calcium_100g": 9.744,
+      "niacin_100g": 0.0865,
+      "sodium_100g": 235.6,
+      "fat_100g": 287.5,
+      "salt_100g": 598.424
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "orange juice (chilled)",
+    "nutriments": {
+      "carbohydrates_100g": 10012.4,
+      "proteins_100g": 812.5,
+      "fat_100g": 356.3,
+      "iron_100g": 0.07061,
+      "vitamin-c_100g": 30.54,
+      "folate_100g": 0.02898,
+      "sodium_100g": 0.075,
+      "phosphorus_100g": 18.96,
+      "calcium_100g": 9.288,
+      "vitamin-b6_100g": 0.04113,
+      "magnesium_100g": 10.26,
+      "potassium_100g": 182.80000000000004,
+      "zinc_100g": 0.03206,
+      "niacin_100g": 0.02906,
+      "thiamin_100g": 0.07456,
+      "salt_100g": 0.1905
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "pioppini mushroom",
+    "nutriments": {
+      "fiber_100g": 2753,
+      "carbohydrates_100g": 5763.7,
+      "proteins_100g": 3500,
+      "phosphorus_100g": 120.6,
+      "riboflavin_100g": 0.4263,
+      "iron_100g": 0.486,
+      "selenium_100g": 0.004121,
+      "vitamin-b6_100g": 0.1023,
+      "thiamin_100g": 0.01213,
+      "potassium_100g": 392.4,
+      "calcium_100g": 0,
+      "sodium_100g": 0,
+      "zinc_100g": 0.8573,
+      "niacin_100g": 6.224,
+      "magnesium_100g": 15.990000000000002,
+      "fat_100g": 240
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "sweet green pepper (raw)",
+    "nutriments": {
+      "proteins_100g": 715,
+      "vitamin-b6_100g": 0.2467999999999999,
+      "folate_100g": 0.02221,
+      "potassium_100g": 163.1,
+      "sodium_100g": 0,
+      "phosphorus_100g": 16.75,
+      "zinc_100g": 0.1256,
+      "niacin_100g": 0.6363,
+      "calcium_100g": 7.495999999999999,
+      "iron_100g": 0.1861,
+      "selenium_100g": 0,
+      "fat_100g": 106.3,
+      "fiber_100g": 941.9,
+      "thiamin_100g": 0.03906,
+      "riboflavin_100g": 0.08875,
+      "magnesium_100g": 9.004
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "lettuce leaf",
+    "nutriments": {
+      "vitamin-k_100g": 0.1185,
+      "vitamin-b6_100g": 0.07413,
+      "potassium_100g": 321.4,
+      "vitamin-c_100g": 15.15,
+      "zinc_100g": 0.3103,
+      "thiamin_100g": 0.08225,
+      "iron_100g": 0.4023,
+      "magnesium_100g": 12.77,
+      "calcium_100g": 42.59,
+      "phosphorus_100g": 26.55,
+      "niacin_100g": 0.375,
+      "sodium_100g": 24.890000000000004,
+      "fat_100g": 156.29999999999998,
+      "proteins_100g": 883.1250000000001,
+      "carbohydrates_100g": 4066.150000000001,
+      "salt_100g": 63.22060000000001
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "almond (raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0,
+      "fatty-acids-total-saturated_100g": 3785,
+      "carbohydrates_100g": 20034.620000000003,
+      "proteins_100g": 21450.38,
+      "sodium_100g": 0,
+      "phosphorus_100g": 502.9,
+      "zinc_100g": 2.865,
+      "magnesium_100g": 257.6,
+      "potassium_100g": 732.8,
+      "iron_100g": 3.741000000000001,
+      "vitamin-b6_100g": 0.1008,
+      "fiber_100g": 10780,
+      "calcium_100g": 253.6,
+      "niacin_100g": 3.77,
+      "thiamin_100g": 0.1605,
+      "fat_100g": 51090
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "walnut (raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0017,
+      "fatty-acids-total-saturated_100g": 6054.000000000001,
+      "carbohydrates_100g": 10909.6,
+      "proteins_100g": 14564.4,
+      "thiamin_100g": 0.2299999999999999,
+      "niacin_100g": 1.218,
+      "fat_100g": 69739.99999999999,
+      "vitamin-b6_100g": 0.6603,
+      "sodium_100g": 0,
+      "phosphorus_100g": 365.1,
+      "calcium_100g": 88.26,
+      "fiber_100g": 5210,
+      "magnesium_100g": 142.4,
+      "iron_100g": 2.235,
+      "zinc_100g": 2.76,
+      "potassium_100g": 423.50000000000006
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "pecan nut (raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0040999999999999,
+      "fatty-acids-total-saturated_100g": 6465.000000000001,
+      "carbohydrates_100g": 12699.3,
+      "proteins_100g": 9958.7,
+      "iron_100g": 2.371,
+      "vitamin-b6_100g": 0.1711,
+      "niacin_100g": 0.9463,
+      "zinc_100g": 3.93,
+      "fiber_100g": 5793,
+      "calcium_100g": 54.83,
+      "fat_100g": 73280,
+      "thiamin_100g": 0.5476,
+      "magnesium_100g": 102.90000000000002,
+      "phosphorus_100g": 252.7,
+      "sodium_100g": 0,
+      "potassium_100g": 360.3
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "rolled oats",
+    "nutriments": {
+      "carbohydrates_100g": 68657.55,
+      "proteins_100g": 13496.45,
+      "iron_100g": 4.339,
+      "potassium_100g": 350.1,
+      "vitamin-b6_100g": 0.1346,
+      "thiamin_100g": 0.4063,
+      "magnesium_100g": 126.3,
+      "phosphorus_100g": 387.3,
+      "selenium_100g": 0.0253499999999999,
+      "folate_100g": 0.03203,
+      "zinc_100g": 2.744,
+      "calcium_100g": 45.53,
+      "fat_100g": 5889.999999999999,
+      "sodium_100g": 0.6675,
+      "niacin_100g": 0.9931,
+      "salt_100g": 1.69545
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "steel cut oats",
+    "nutriments": {
+      "carbohydrates_100g": 69750.81999999999,
+      "proteins_100g": 12511.179999999998,
+      "magnesium_100g": 128.6,
+      "potassium_100g": 375.9,
+      "niacin_100g": 0.9263,
+      "thiamin_100g": 0.3338,
+      "fat_100g": 5799.999999999999,
+      "selenium_100g": 0.0290399999999999,
+      "sodium_100g": 0.3113,
+      "zinc_100g": 2.843,
+      "calcium_100g": 51.34000000000001,
+      "iron_100g": 3.801,
+      "phosphorus_100g": 417.30000000000007,
+      "vitamin-b6_100g": 0.1188999999999999,
+      "folate_100g": 0.0299899999999999,
+      "salt_100g": 0.790702
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "sweet potato (raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0002,
+      "carbohydrates_100g": 17327.874999999996,
+      "proteins_100g": 1578.125,
+      "iron_100g": 0.398,
+      "vitamin-c_100g": 14.84,
+      "potassium_100g": 486.4,
+      "calcium_100g": 22.33,
+      "vitamin-b6_100g": 0.1240999999999999,
+      "sodium_100g": 0,
+      "phosphorus_100g": 36.73,
+      "thiamin_100g": 0.045,
+      "magnesium_100g": 19.14,
+      "niacin_100g": 0.4325,
+      "zinc_100g": 0.3374,
+      "fat_100g": 375,
+      "selenium_100g": 0
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "amaranth flour",
+    "nutriments": {
+      "selenium_100g": 0.0211,
+      "carbohydrates_100g": 68778.7,
+      "proteins_100g": 13209.3,
+      "fiber_100g": 7209,
+      "zinc_100g": 3.001,
+      "vitamin-b6_100g": 0.3873,
+      "phosphorus_100g": 424.9,
+      "thiamin_100g": 0.0587499999999999,
+      "riboflavin_100g": 0.175,
+      "calcium_100g": 135.2,
+      "iron_100g": 7.560000000000001,
+      "niacin_100g": 0.7475000000000002,
+      "fat_100g": 6236,
+      "potassium_100g": 395.80000000000007,
+      "sodium_100g": 0,
+      "magnesium_100g": 232.7
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "buckwheat flour",
+    "nutriments": {
+      "selenium_100g": 0.0157,
+      "carbohydrates_100g": 75018.08,
+      "proteins_100g": 8884.92,
+      "fiber_100g": 10350,
+      "calcium_100g": 30.55,
+      "riboflavin_100g": 0.16,
+      "magnesium_100g": 167.4,
+      "zinc_100g": 1.755,
+      "vitamin-b6_100g": 0.1699,
+      "iron_100g": 3.84,
+      "potassium_100g": 378.1,
+      "thiamin_100g": 0.2413,
+      "niacin_100g": 3.839,
+      "fat_100g": 2484,
+      "sodium_100g": 0,
+      "phosphorus_100g": 281.9
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "cassava flour",
+    "nutriments": {
+      "selenium_100g": 0,
+      "proteins_100g": 918.225,
+      "magnesium_100g": 33.56,
+      "thiamin_100g": 0.0512499999999999,
+      "vitamin-b6_100g": 0.04988,
+      "iron_100g": 3.988,
+      "fiber_100g": 4834,
+      "potassium_100g": 197.6,
+      "riboflavin_100g": 0.0675,
+      "sodium_100g": 13.08,
+      "niacin_100g": 0.6,
+      "calcium_100g": 74.55,
+      "zinc_100g": 0.4099,
+      "fat_100g": 493.80000000000007,
+      "phosphorus_100g": 39.24,
+      "salt_100g": 33.2232
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "brown rice kernel",
+    "nutriments": {
+      "selenium_100g": 0.0147999999999999,
+      "carbohydrates_100g": 76687.95,
+      "proteins_100g": 7253.05,
+      "magnesium_100g": 115,
+      "vitamin-b6_100g": 0.1606,
+      "sodium_100g": 0,
+      "phosphorus_100g": 302.8,
+      "zinc_100g": 1.854,
+      "niacin_100g": 6.271,
+      "riboflavin_100g": 0.1024999999999999,
+      "potassium_100g": 250.1,
+      "iron_100g": 1.2420000000000002,
+      "calcium_100g": 8.058,
+      "fiber_100g": 3021,
+      "thiamin_100g": 0.3263,
+      "fat_100g": 3306
+    },
+    "nutrient_count": 16
+  },
+  {
+    "name": "soybean flour",
+    "nutriments": {
+      "riboflavin_100g": 0.363,
+      "thiamin_100g": 0.362,
+      "selenium_100g": 0.0143,
+      "phosphorus_100g": 607.0000000000001,
+      "iron_100g": 9.51,
+      "calcium_100g": 258,
+      "zinc_100g": 3.75,
+      "vitamin-b6_100g": 0.3400000000000001,
+      "carbohydrates_100g": 27900,
+      "fat_100g": 20700,
+      "sodium_100g": 2,
+      "magnesium_100g": 254,
+      "potassium_100g": 1860,
+      "niacin_100g": 2.74,
+      "salt_100g": 5.08
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "brown rice flour",
+    "nutriments": {
+      "potassium_100g": 265,
+      "thiamin_100g": 0.322,
+      "iron_100g": 1.5000000000000002,
+      "proteins_100g": 7190.000000000001,
+      "zinc_100g": 1.91,
+      "riboflavin_100g": 0.008,
+      "vitamin-b6_100g": 0.132,
+      "calcium_100g": 10,
+      "niacin_100g": 5.990000000000001,
+      "fat_100g": 3850,
+      "magnesium_100g": 124,
+      "selenium_100g": 0.00968,
+      "sodium_100g": 1,
+      "phosphorus_100g": 319,
+      "salt_100g": 2.54
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "grapefruit juice",
+    "nutriments": {
+      "carbohydrates_100g": 9102.1875,
+      "proteins_100g": 570.3125,
+      "magnesium_100g": 7.748000000000001,
+      "folate_100g": 0.01902,
+      "thiamin_100g": 0.03275,
+      "phosphorus_100g": 14.580000000000002,
+      "sodium_100g": 1.031,
+      "niacin_100g": 0.01875,
+      "iron_100g": 0.01529,
+      "vitamin-b6_100g": 0.022,
+      "calcium_100g": 8.879,
+      "potassium_100g": 128.3,
+      "fat_100g": 266.90000000000003,
+      "zinc_100g": 0.0273899999999999,
+      "salt_100g": 2.61874
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "crisphead lettuce",
+    "nutriments": {
+      "vitamin-k_100g": 0.0204999999999999,
+      "sodium_100g": 16.11,
+      "magnesium_100g": 6.311,
+      "thiamin_100g": 0.05638,
+      "zinc_100g": 0.1728,
+      "niacin_100g": 0.2174999999999999,
+      "potassium_100g": 139.3,
+      "vitamin-b6_100g": 0.04013,
+      "iron_100g": 0.03325,
+      "calcium_100g": 14.24,
+      "phosphorus_100g": 19.18,
+      "fat_100g": 73.75,
+      "proteins_100g": 742.5,
+      "carbohydrates_100g": 3368.75,
+      "salt_100g": 40.919399999999996
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "pine nut kernel (raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0032,
+      "carbohydrates_100g": 18592.099999999995,
+      "proteins_100g": 15703.9,
+      "magnesium_100g": 205.9,
+      "vitamin-b6_100g": 0.2546,
+      "phosphorus_100g": 540,
+      "potassium_100g": 654.8,
+      "sodium_100g": 0,
+      "thiamin_100g": 0.6253,
+      "fat_100g": 61270.00000000001,
+      "calcium_100g": 8.736,
+      "iron_100g": 5.36,
+      "fiber_100g": 3941.000000000001,
+      "zinc_100g": 5.713,
+      "niacin_100g": 4.466000000000001
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "pineapple (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 14091.462500000003,
+      "proteins_100g": 460.9375,
+      "fiber_100g": 934.6,
+      "zinc_100g": 0.1067,
+      "sodium_100g": 0,
+      "calcium_100g": 12.5,
+      "phosphorus_100g": 5.42,
+      "vitamin-b6_100g": 0.1101,
+      "fat_100g": 211.3,
+      "thiamin_100g": 0.06375,
+      "iron_100g": 0.054,
+      "vitamin-c_100g": 58.60999999999999,
+      "magnesium_100g": 13.38,
+      "niacin_100g": 0.2275,
+      "potassium_100g": 137.1
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "green bean (cut, raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0439,
+      "carbohydrates_100g": 7412.45,
+      "proteins_100g": 1968.75,
+      "phosphorus_100g": 41.15,
+      "iron_100g": 0.6516,
+      "fiber_100g": 3011.0000000000005,
+      "fat_100g": 275.00000000000006,
+      "potassium_100g": 290.4,
+      "magnesium_100g": 28.21,
+      "niacin_100g": 0.7313,
+      "vitamin-b6_100g": 0.121,
+      "sodium_100g": 0,
+      "zinc_100g": 0.3498,
+      "thiamin_100g": 0.06,
+      "calcium_100g": 40.05
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "sorghum flour",
+    "nutriments": {
+      "selenium_100g": 0.0124,
+      "carbohydrates_100g": 77391.22999999998,
+      "proteins_100g": 8272.77,
+      "niacin_100g": 3.953,
+      "riboflavin_100g": 0.15,
+      "vitamin-b6_100g": 0.1656,
+      "calcium_100g": 11.41,
+      "phosphorus_100g": 261.9,
+      "potassium_100g": 335.1000000000001,
+      "magnesium_100g": 116.40000000000002,
+      "iron_100g": 3.721,
+      "sodium_100g": 0,
+      "zinc_100g": 1.66,
+      "thiamin_100g": 0.2700000000000001,
+      "fat_100g": 3586
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "rye flour",
+    "nutriments": {
+      "selenium_100g": 0.0166,
+      "carbohydrates_100g": 77161.8,
+      "proteins_100g": 8395.2,
+      "calcium_100g": 32.24,
+      "niacin_100g": 1.163,
+      "iron_100g": 2.536,
+      "fat_100g": 1908,
+      "thiamin_100g": 0.2163,
+      "sodium_100g": 0,
+      "potassium_100g": 434,
+      "magnesium_100g": 95.39,
+      "phosphorus_100g": 280.3,
+      "vitamin-b6_100g": 0.1638,
+      "riboflavin_100g": 0.17,
+      "zinc_100g": 2.3280000000000003
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "buckwheat seed (dried)",
+    "nutriments": {
+      "selenium_100g": 0.0136,
+      "carbohydrates_100g": 71130.66,
+      "proteins_100g": 11065.340000000002,
+      "thiamin_100g": 0.5388,
+      "magnesium_100g": 203,
+      "phosphorus_100g": 373.7,
+      "potassium_100g": 414.5,
+      "fat_100g": 3039,
+      "vitamin-b6_100g": 0.2776,
+      "iron_100g": 2.444,
+      "sodium_100g": 0,
+      "riboflavin_100g": 0.1775,
+      "zinc_100g": 2.236,
+      "calcium_100g": 13.640000000000002,
+      "niacin_100g": 5.366
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "millet seed (dried)",
+    "nutriments": {
+      "selenium_100g": 0.0231,
+      "carbohydrates_100g": 74446.23,
+      "potassium_100g": 214.1,
+      "calcium_100g": 9.105,
+      "fiber_100g": 2619,
+      "magnesium_100g": 105.5,
+      "zinc_100g": 2.258,
+      "sodium_100g": 0,
+      "niacin_100g": 4.86,
+      "iron_100g": 2.534,
+      "thiamin_100g": 0.4113,
+      "phosphorus_100g": 257.9,
+      "riboflavin_100g": 0.1363,
+      "vitamin-b6_100g": 0.1918,
+      "fatty-acids-total-saturated_100g": 85.54
+    },
+    "nutrient_count": 15
+  },
+  {
+    "name": "restaurant, chinese, fried rice, without meat",
+    "nutriments": {
+      "iron_100g": 0.4599999999999999,
+      "fat_100g": 3190,
+      "copper_100g": 0.022,
+      "potassium_100g": 69,
+      "calcium_100g": 11,
+      "carbohydrates_100g": 32500,
+      "fatty-acids-total-saturated_100g": 493.00000000000006,
+      "zinc_100g": 0.69,
+      "sodium_100g": 361,
+      "magnesium_100g": 9.7,
+      "fatty-acids-total-monounsaturated_100g": 9,
+      "phosphorus_100g": 44,
+      "proteins_100g": 3840,
+      "salt_100g": 916.94
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "yellow onion (raw)",
+    "nutriments": {
+      "fiber_100g": 1900,
+      "magnesium_100g": 9,
+      "fat_100g": 50,
+      "proteins_100g": 830.0000000000001,
+      "phosphorus_100g": 34,
+      "sodium_100g": 1,
+      "selenium_100g": 0,
+      "zinc_100g": 0.2,
+      "potassium_100g": 182,
+      "vitamin-c_100g": 8.2,
+      "carbohydrates_100g": 8610,
+      "iron_100g": 0.28,
+      "calcium_100g": 15,
+      "salt_100g": 2.54
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "apple juice",
+    "nutriments": {
+      "carbohydrates_100g": 11363.9625,
+      "proteins_100g": 85.9375,
+      "iron_100g": 0.04016,
+      "vitamin-b6_100g": 0.01388,
+      "magnesium_100g": 4.861,
+      "folate_100g": 0.003088,
+      "zinc_100g": 0.002125,
+      "calcium_100g": 7.099,
+      "sodium_100g": 4.872,
+      "potassium_100g": 95.87,
+      "thiamin_100g": 0,
+      "phosphorus_100g": 5.987,
+      "niacin_100g": 0.01031,
+      "salt_100g": 12.37488
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "green cabbage head (raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0593999999999999,
+      "potassium_100g": 207.1,
+      "calcium_100g": 41.84,
+      "phosphorus_100g": 26.93,
+      "zinc_100g": 0.2112,
+      "vitamin-c_100g": 40.34,
+      "vitamin-b6_100g": 0.1384,
+      "iron_100g": 0.06625,
+      "fat_100g": 227.5,
+      "magnesium_100g": 13.86,
+      "sodium_100g": 16.1,
+      "proteins_100g": 961.25,
+      "carbohydrates_100g": 6383.750000000001,
+      "salt_100g": 40.894000000000005
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "red cabbage head (raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0322999999999999,
+      "magnesium_100g": 13.3,
+      "calcium_100g": 30.99,
+      "zinc_100g": 0.245,
+      "phosphorus_100g": 35.84,
+      "fat_100g": 213.8,
+      "iron_100g": 0,
+      "sodium_100g": 11.72,
+      "potassium_100g": 269.1,
+      "vitamin-c_100g": 53.88,
+      "vitamin-b6_100g": 0.1789,
+      "proteins_100g": 1242.5,
+      "carbohydrates_100g": 6789.9,
+      "salt_100g": 29.768800000000002
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "beef (ground, raw)",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 6845,
+      "fatty-acids-total-monounsaturated_100g": 484,
+      "zinc_100g": 4.194000000000001,
+      "calcium_100g": 6.889000000000001,
+      "sodium_100g": 61.64000000000001,
+      "cholesterol_100g": 67.74,
+      "iron_100g": 2.128,
+      "magnesium_100g": 16.41,
+      "phosphorus_100g": 144.4,
+      "fat_100g": 19440,
+      "potassium_100g": 273.3,
+      "proteins_100g": 17531.25,
+      "carbohydrates_100g": 0,
+      "salt_100g": 156.56560000000002
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "pork (ground or minced)",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 6283,
+      "fatty-acids-total-monounsaturated_100g": 66,
+      "iron_100g": 0.7876,
+      "phosphorus_100g": 173.3,
+      "potassium_100g": 317.7,
+      "zinc_100g": 2.226,
+      "sodium_100g": 53.63,
+      "fat_100g": 17489.999999999996,
+      "cholesterol_100g": 71.16,
+      "calcium_100g": 5.857,
+      "magnesium_100g": 19.03,
+      "proteins_100g": 17806.249999999996,
+      "carbohydrates_100g": 0,
+      "salt_100g": 136.2202
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "chicken meat (ground or minced)",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 1559,
+      "fatty-acids-total-monounsaturated_100g": 21.000000000000004,
+      "cholesterol_100g": 81.69,
+      "iron_100g": 0.5926,
+      "sodium_100g": 62.95,
+      "potassium_100g": 301.70000000000005,
+      "zinc_100g": 1.177,
+      "phosphorus_100g": 165.5,
+      "magnesium_100g": 20.51,
+      "fat_100g": 7161,
+      "calcium_100g": 5.819,
+      "proteins_100g": 17912.5,
+      "carbohydrates_100g": 0,
+      "salt_100g": 159.893
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "turkey, ground, 93% lean/ 7% fat, raw",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 2263.9999999999995,
+      "fatty-acids-total-monounsaturated_100g": 81,
+      "magnesium_100g": 17.300000000000004,
+      "cholesterol_100g": 82.26,
+      "sodium_100g": 80.18,
+      "iron_100g": 1.087,
+      "calcium_100g": 23.630000000000003,
+      "zinc_100g": 2.95,
+      "fat_100g": 9591,
+      "potassium_100g": 246.30000000000004,
+      "phosphorus_100g": 162,
+      "proteins_100g": 17343.75,
+      "carbohydrates_100g": 0,
+      "salt_100g": 203.65720000000002
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "cashew nut (raw)",
+    "nutriments": {
+      "phosphorus_100g": 532.2,
+      "selenium_100g": 0.02067,
+      "fiber_100g": 4104,
+      "calcium_100g": 41.95,
+      "zinc_100g": 5.071,
+      "potassium_100g": 638.3,
+      "iron_100g": 5.988,
+      "magnesium_100g": 250.6,
+      "fat_100g": 38860,
+      "sodium_100g": 4.759,
+      "proteins_100g": 17442.3,
+      "sugars_100g": 12500,
+      "vitamin-c_100g": 0.27937,
+      "salt_100g": 12.087860000000001
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "coconut flour",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 13999,
+      "selenium_100g": 0.02676,
+      "phosphorus_100g": 507.2,
+      "fiber_100g": 34240,
+      "iron_100g": 8.018,
+      "calcium_100g": 35.98,
+      "magnesium_100g": 247.7,
+      "zinc_100g": 3.698,
+      "fat_100g": 15279.999999999998,
+      "potassium_100g": 2088,
+      "sodium_100g": 46.94,
+      "proteins_100g": 16138.5,
+      "carbohydrates_100g": 58902.5,
+      "salt_100g": 119.2276
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "beef top round roast (boneless, raw)",
+    "nutriments": {
+      "carbohydrates_100g": 852,
+      "fatty-acids-total-saturated_100g": 1695,
+      "calcium_100g": 4.07,
+      "phosphorus_100g": 192.3,
+      "magnesium_100g": 22.08,
+      "zinc_100g": 3.778,
+      "sodium_100g": 45.54,
+      "fatty-acids-total-monounsaturated_100g": 228.3,
+      "potassium_100g": 351.5,
+      "iron_100g": 1.901,
+      "fat_100g": 5703,
+      "cholesterol_100g": 59.260000000000005,
+      "proteins_100g": 21475.000000000004,
+      "salt_100g": 115.6716
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "oaxaca cheese",
+    "nutriments": {
+      "vitamin-d_100g": 0,
+      "carbohydrates_100g": 2402.02,
+      "proteins_100g": 22144.98,
+      "calcium_100g": 532.3,
+      "sodium_100g": 734.2,
+      "phosphorus_100g": 380.4,
+      "zinc_100g": 3.506,
+      "cholesterol_100g": 65.53,
+      "iron_100g": 0,
+      "magnesium_100g": 21.58,
+      "fatty-acids-total-saturated_100g": 12710.000000000002,
+      "potassium_100g": 80.73,
+      "fat_100g": 22100,
+      "salt_100g": 1864.8680000000002
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "crustaceans, shrimp, farm raised, raw",
+    "nutriments": {
+      "carbohydrates_100g": 484.95,
+      "selenium_100g": 0.01948,
+      "magnesium_100g": 22.53,
+      "calcium_100g": 64.63000000000001,
+      "sodium_100g": 474.9,
+      "potassium_100g": 145.9,
+      "zinc_100g": 0.9368,
+      "phosphorus_100g": 190.6,
+      "iron_100g": 0.5223,
+      "fat_100g": 801.3,
+      "cholesterol_100g": 136,
+      "vitamin-b12_100g": 0.0009962999999999,
+      "proteins_100g": 15568.75,
+      "salt_100g": 1206.2459999999999
+    },
+    "nutrient_count": 14
+  },
+  {
+    "name": "hen egg liquid (pasteurized, frozen)",
+    "nutriments": {
+      "carbohydrates_100g": 910,
+      "iron_100g": 1.77,
+      "sodium_100g": 121,
+      "vitamin-d_100g": 0.0022999999999999,
+      "proteins_100g": 12300.000000000002,
+      "zinc_100g": 1.2,
+      "potassium_100g": 117,
+      "phosphorus_100g": 189,
+      "magnesium_100g": 11.2,
+      "calcium_100g": 55.00000000000001,
+      "cholesterol_100g": 420,
+      "fat_100g": 10300.000000000002,
+      "salt_100g": 307.34000000000003
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "hen egg white (pasteurized, frozen)",
+    "nutriments": {
+      "potassium_100g": 130.00000000000003,
+      "magnesium_100g": 10.6,
+      "fat_100g": 160,
+      "vitamin-d_100g": 0,
+      "phosphorus_100g": 0,
+      "zinc_100g": 0.02,
+      "cholesterol_100g": 3.0000000000000004,
+      "iron_100g": 0.18,
+      "sodium_100g": 144,
+      "carbohydrates_100g": 740,
+      "calcium_100g": 9,
+      "proteins_100g": 10099.999999999998,
+      "salt_100g": 365.76
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "coconut oil",
+    "nutriments": {
+      "potassium_100g": 0,
+      "iron_100g": 0.05,
+      "fat_100g": 4,
+      "carbohydrates_100g": 840,
+      "sodium_100g": 0,
+      "calcium_100g": 1,
+      "zinc_100g": 0.02,
+      "vitamin-k_100g": 0.0006,
+      "vitamin-e_100g": 0.11,
+      "phosphorus_100g": 0,
+      "fatty-acids-total-monounsaturated_100g": 28.000000000000004,
+      "fatty-acids-total-saturated_100g": 90,
+      "magnesium_100g": 0
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "sauce, pasta, spaghetti/marinara, ready-to-serve",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 170.00000000000003,
+      "phosphorus_100g": 34,
+      "proteins_100g": 1410,
+      "iron_100g": 0.7799999999999999,
+      "copper_100g": 0.032,
+      "calcium_100g": 27,
+      "fatty-acids-total-monounsaturated_100g": 5,
+      "potassium_100g": 319,
+      "fiber_100g": 1800.0000000000005,
+      "zinc_100g": 0.2,
+      "magnesium_100g": 18.5,
+      "sodium_100g": 419.00000000000006,
+      "salt_100g": 1064.2600000000002
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "cheese food (american, grated)",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 17700,
+      "sodium_100g": 1600,
+      "fat_100g": 31100,
+      "fatty-acids-total-monounsaturated_100g": 1010,
+      "iron_100g": 0.24,
+      "calcium_100g": 508,
+      "zinc_100g": 2.45,
+      "phosphorus_100g": 380,
+      "proteins_100g": 17500,
+      "carbohydrates_100g": 6350,
+      "magnesium_100g": 25,
+      "potassium_100g": 173,
+      "salt_100g": 4064
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "bacon (whole cut or pieces)",
+    "nutriments": {
+      "potassium_100g": 557,
+      "carbohydrates_100g": 2100,
+      "fatty-acids-total-monounsaturated_100g": 150,
+      "fat_100g": 36500,
+      "zinc_100g": 3.56,
+      "calcium_100g": 13,
+      "magnesium_100g": 36.5,
+      "sodium_100g": 1830,
+      "fatty-acids-total-saturated_100g": 12600,
+      "proteins_100g": 40900,
+      "phosphorus_100g": 415.00000000000006,
+      "iron_100g": 1.28,
+      "salt_100g": 4648.2
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "red onion (raw)",
+    "nutriments": {
+      "zinc_100g": 0.17,
+      "carbohydrates_100g": 9930,
+      "vitamin-c_100g": 8.1,
+      "phosphorus_100g": 41,
+      "fat_100g": 100,
+      "selenium_100g": 0.0005,
+      "calcium_100g": 17,
+      "sodium_100g": 1,
+      "potassium_100g": 197,
+      "magnesium_100g": 11.4,
+      "iron_100g": 0.24,
+      "proteins_100g": 940,
+      "salt_100g": 2.54
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "white onion (raw)",
+    "nutriments": {
+      "fat_100g": 130,
+      "zinc_100g": 0.12,
+      "carbohydrates_100g": 7680,
+      "sodium_100g": 2,
+      "calcium_100g": 21.000000000000004,
+      "iron_100g": 0.15,
+      "fiber_100g": 1200,
+      "proteins_100g": 890,
+      "phosphorus_100g": 29,
+      "selenium_100g": 0,
+      "magnesium_100g": 9.3,
+      "potassium_100g": 141,
+      "salt_100g": 5.08
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "quinoa flour",
+    "nutriments": {
+      "selenium_100g": 0.0040999999999999,
+      "calcium_100g": 37.56000000000001,
+      "sodium_100g": 6.321000000000001,
+      "vitamin-b6_100g": 0.2224,
+      "zinc_100g": 2.77,
+      "riboflavin_100g": 0.3163,
+      "thiamin_100g": 0.345,
+      "iron_100g": 4.528,
+      "potassium_100g": 550.9,
+      "niacin_100g": 1.211,
+      "magnesium_100g": 163.8,
+      "phosphorus_100g": 369.3,
+      "salt_100g": 16.05534
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "brazilnut (raw)",
+    "nutriments": {
+      "selenium_100g": 0.2804,
+      "sodium_100g": 0,
+      "phosphorus_100g": 706.9,
+      "iron_100g": 2.4740000000000006,
+      "fat_100g": 57430.00000000001,
+      "potassium_100g": 592.5,
+      "calcium_100g": 167.8,
+      "fiber_100g": 5984,
+      "zinc_100g": 3.824,
+      "magnesium_100g": 351.3,
+      "proteins_100g": 15036.839999999998,
+      "carbohydrates_100g": 21642.16,
+      "fatty-acids-total-saturated_100g": 70
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "peanut (raw)",
+    "nutriments": {
+      "fat_100g": 43280,
+      "fiber_100g": 8013.999999999998,
+      "phosphorus_100g": 380.4,
+      "selenium_100g": 0.0178099999999999,
+      "calcium_100g": 49.13000000000001,
+      "iron_100g": 1.554,
+      "zinc_100g": 2.78,
+      "potassium_100g": 635.6,
+      "magnesium_100g": 179.7,
+      "sodium_100g": 1.493,
+      "proteins_100g": 23205,
+      "carbohydrates_100g": 26498,
+      "salt_100g": 3.7922200000000004
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "chestnut flour",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 689,
+      "calcium_100g": 55.81,
+      "fiber_100g": 8711.000000000002,
+      "iron_100g": 1.6209999999999998,
+      "potassium_100g": 1032,
+      "fat_100g": 4636,
+      "sodium_100g": 0,
+      "vitamin-c_100g": 4.05,
+      "magnesium_100g": 68.75,
+      "selenium_100g": 0,
+      "phosphorus_100g": 134.2,
+      "zinc_100g": 1.038,
+      "proteins_100g": 5286.75
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "pork loin (raw)",
+    "nutriments": {
+      "magnesium_100g": 21.96,
+      "fatty-acids-total-monounsaturated_100g": 28.75,
+      "zinc_100g": 1.5700000000000005,
+      "potassium_100g": 361.2,
+      "fatty-acids-total-saturated_100g": 3285,
+      "iron_100g": 0.4519,
+      "cholesterol_100g": 55.93,
+      "phosphorus_100g": 196.8,
+      "fat_100g": 9469,
+      "calcium_100g": 4.111000000000001,
+      "sodium_100g": 40.2,
+      "proteins_100g": 21118.75,
+      "salt_100g": 102.108
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "pork tenderloin (raw)",
+    "nutriments": {
+      "iron_100g": 0.9293,
+      "fat_100g": 3899,
+      "zinc_100g": 1.773,
+      "fatty-acids-total-saturated_100g": 866.2999999999998,
+      "cholesterol_100g": 59.58000000000001,
+      "potassium_100g": 397.4,
+      "magnesium_100g": 24.660000000000004,
+      "sodium_100g": 41.39,
+      "phosphorus_100g": 217.4,
+      "fatty-acids-total-monounsaturated_100g": 10,
+      "calcium_100g": 4.528,
+      "proteins_100g": 21581.250000000004,
+      "salt_100g": 105.1306
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "chicken, breast, boneless, skinless, raw",
+    "nutriments": {
+      "calcium_100g": 3.939,
+      "cholesterol_100g": 72.73,
+      "zinc_100g": 0.6545,
+      "fat_100g": 1934,
+      "fatty-acids-total-saturated_100g": 348.8,
+      "potassium_100g": 330.1,
+      "iron_100g": 0.3543,
+      "phosphorus_100g": 214.9,
+      "magnesium_100g": 26.200000000000003,
+      "sodium_100g": 65.75,
+      "fatty-acids-total-monounsaturated_100g": 8.75,
+      "proteins_100g": 22525,
+      "salt_100g": 167.005
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "chicken thigh (skinless, debonned)",
+    "nutriments": {
+      "fat_100g": 7916.000000000001,
+      "phosphorus_100g": 178.3,
+      "fatty-acids-total-saturated_100g": 1657.9999999999998,
+      "fatty-acids-total-monounsaturated_100g": 23.75,
+      "zinc_100g": 1.348,
+      "sodium_100g": 62.330000000000005,
+      "potassium_100g": 271.8,
+      "cholesterol_100g": 91.66,
+      "magnesium_100g": 21.800000000000004,
+      "iron_100g": 0.6018,
+      "calcium_100g": 5.65,
+      "proteins_100g": 18612.5,
+      "salt_100g": 158.31820000000002
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "beef ribeye steak (raw)",
+    "nutriments": {
+      "fat_100g": 20040,
+      "calcium_100g": 4.173,
+      "phosphorus_100g": 149.7,
+      "fatty-acids-total-saturated_100g": 7966.000000000001,
+      "cholesterol_100g": 62.66,
+      "fatty-acids-total-monounsaturated_100g": 974.3,
+      "magnesium_100g": 16.68,
+      "potassium_100g": 288,
+      "sodium_100g": 42.54,
+      "iron_100g": 1.641,
+      "zinc_100g": 4.063,
+      "proteins_100g": 18743.75,
+      "salt_100g": 108.0516
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "beef chuck roast (raw)",
+    "nutriments": {
+      "sodium_100g": 48.44,
+      "cholesterol_100g": 66.75,
+      "zinc_100g": 5.386,
+      "fat_100g": 17800.000000000004,
+      "phosphorus_100g": 151,
+      "potassium_100g": 281.1,
+      "fatty-acids-total-saturated_100g": 6341.000000000001,
+      "iron_100g": 2.059,
+      "calcium_100g": 4.576,
+      "magnesium_100g": 16.990000000000002,
+      "fatty-acids-total-monounsaturated_100g": 668.6,
+      "proteins_100g": 18400,
+      "salt_100g": 123.0376
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "beef flank steak (raw)",
+    "nutriments": {
+      "cholesterol_100g": 57.70000000000001,
+      "potassium_100g": 331.8,
+      "calcium_100g": 3.836,
+      "iron_100g": 1.8340000000000003,
+      "fatty-acids-total-saturated_100g": 3551,
+      "zinc_100g": 5.563,
+      "magnesium_100g": 18.86,
+      "phosphorus_100g": 167.3,
+      "fat_100g": 9399,
+      "fatty-acids-total-monounsaturated_100g": 388.6,
+      "sodium_100g": 51.3,
+      "proteins_100g": 20131.25,
+      "salt_100g": 130.302
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "monterey jack cheese (pasteurized)",
+    "nutriments": {
+      "carbohydrates_100g": 1897.9,
+      "proteins_100g": 22617.1,
+      "fat_100g": 32630,
+      "fatty-acids-total-saturated_100g": 19160,
+      "sodium_100g": 662.2,
+      "zinc_100g": 3.785000000000001,
+      "potassium_100g": 82.94,
+      "magnesium_100g": 29.600000000000005,
+      "cholesterol_100g": 99.76,
+      "calcium_100g": 714.6000000000001,
+      "iron_100g": 0,
+      "phosphorus_100g": 470.9,
+      "salt_100g": 1681.988
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "pasteurized process cheese food product",
+    "nutriments": {
+      "carbohydrates_100g": 8189.799999999999,
+      "proteins_100g": 15567.2,
+      "phosphorus_100g": 880.0000000000001,
+      "sodium_100g": 1420,
+      "zinc_100g": 2.379,
+      "iron_100g": 1.303,
+      "potassium_100g": 211.80000000000004,
+      "cholesterol_100g": 73.24,
+      "magnesium_100g": 34.60000000000001,
+      "calcium_100g": 1498,
+      "fat_100g": 23860,
+      "fatty-acids-total-saturated_100g": 13699.999999999996,
+      "salt_100g": 3606.8
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "provolone cheese",
+    "nutriments": {
+      "carbohydrates_100g": 2453.1200000000003,
+      "proteins_100g": 23452.88,
+      "fat_100g": 28130,
+      "potassium_100g": 94.84,
+      "calcium_100g": 748.8,
+      "fatty-acids-total-saturated_100g": 16239.999999999998,
+      "phosphorus_100g": 494.1,
+      "sodium_100g": 600.9,
+      "iron_100g": 0,
+      "cholesterol_100g": 85.43,
+      "magnesium_100g": 29.500000000000004,
+      "zinc_100g": 3.890000000000001,
+      "salt_100g": 1526.286
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "queso fresco",
+    "nutriments": {
+      "carbohydrates_100g": 2957.2,
+      "proteins_100g": 18884.8,
+      "potassium_100g": 126.4,
+      "iron_100g": 0,
+      "sodium_100g": 626.5,
+      "zinc_100g": 2.908,
+      "phosphorus_100g": 389.80000000000007,
+      "magnesium_100g": 27.64,
+      "fatty-acids-total-saturated_100g": 13949.999999999996,
+      "calcium_100g": 601.8,
+      "fat_100g": 23360,
+      "cholesterol_100g": 76.09,
+      "salt_100g": 1591.31
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "cotija cheese",
+    "nutriments": {
+      "carbohydrates_100g": 2724.32,
+      "proteins_100g": 23835.68,
+      "sodium_100g": 1625,
+      "potassium_100g": 116.7,
+      "iron_100g": 0,
+      "magnesium_100g": 29.9,
+      "cholesterol_100g": 89.26000000000002,
+      "fat_100g": 27240,
+      "fatty-acids-total-saturated_100g": 15890,
+      "phosphorus_100g": 485.50000000000006,
+      "zinc_100g": 3.5970000000000004,
+      "calcium_100g": 699.6,
+      "salt_100g": 4127.5
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "sockeye salmon (raw)",
+    "nutriments": {
+      "potassium_100g": 329.7,
+      "zinc_100g": 0.4246,
+      "cholesterol_100g": 59.3,
+      "selenium_100g": 0.0301999999999999,
+      "vitamin-b12_100g": 0.00516,
+      "sodium_100g": 53.29999999999999,
+      "magnesium_100g": 26.15,
+      "iron_100g": 0.4024,
+      "calcium_100g": 14.84,
+      "fat_100g": 4936,
+      "phosphorus_100g": 226.3,
+      "proteins_100g": 22300,
+      "salt_100g": 135.38199999999998
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "atlantic salmon (raw)",
+    "nutriments": {
+      "fat_100g": 13110,
+      "phosphorus_100g": 230.3,
+      "iron_100g": 0.2588,
+      "sodium_100g": 49.49000000000001,
+      "potassium_100g": 378.2,
+      "vitamin-b12_100g": 0.005696,
+      "zinc_100g": 0.3394,
+      "cholesterol_100g": 62.11,
+      "magnesium_100g": 25.390000000000008,
+      "calcium_100g": 9.423,
+      "selenium_100g": 0.0228,
+      "proteins_100g": 20318.750000000004,
+      "salt_100g": 125.70460000000003
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "tilapia (raw)",
+    "nutriments": {
+      "phosphorus_100g": 159.4,
+      "calcium_100g": 8.628,
+      "magnesium_100g": 24.28,
+      "sodium_100g": 93.66,
+      "selenium_100g": 0.02051,
+      "zinc_100g": 0.2995,
+      "cholesterol_100g": 47.6,
+      "vitamin-b12_100g": 0.0007593999999999,
+      "fat_100g": 2479,
+      "potassium_100g": 342.4,
+      "iron_100g": 0,
+      "proteins_100g": 19000,
+      "salt_100g": 237.8964
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "fish, cod, atlantic, wild caught, raw",
+    "nutriments": {
+      "calcium_100g": 6.59,
+      "zinc_100g": 0.3051,
+      "potassium_100g": 245.1,
+      "iron_100g": 0.065,
+      "phosphorus_100g": 224.1,
+      "sodium_100g": 298.8,
+      "selenium_100g": 0.0227899999999999,
+      "cholesterol_100g": 47.44,
+      "magnesium_100g": 17.98,
+      "fat_100g": 667.5,
+      "vitamin-b12_100g": 0.001248,
+      "proteins_100g": 16068.75,
+      "salt_100g": 758.952
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "catfish (raw)",
+    "nutriments": {
+      "selenium_100g": 0.009281,
+      "fat_100g": 7308,
+      "phosphorus_100g": 166.2,
+      "zinc_100g": 0.4749,
+      "magnesium_100g": 20.630000000000003,
+      "vitamin-b12_100g": 0.002266,
+      "cholesterol_100g": 65.96,
+      "sodium_100g": 60.51,
+      "iron_100g": 0,
+      "calcium_100g": 7.796,
+      "potassium_100g": 292.3,
+      "proteins_100g": 16468.75,
+      "salt_100g": 153.6954
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "crustaceans, crab, blue swimming, lump, pasteurized, refrigerated",
+    "nutriments": {
+      "selenium_100g": 0.04579,
+      "zinc_100g": 3.478000000000001,
+      "iron_100g": 0.6319,
+      "cholesterol_100g": 113.5,
+      "phosphorus_100g": 278.5,
+      "potassium_100g": 234.80000000000004,
+      "vitamin-b12_100g": 0.0031159999999999,
+      "magnesium_100g": 43.08,
+      "sodium_100g": 331.30000000000007,
+      "calcium_100g": 110.9,
+      "fat_100g": 807.5000000000001,
+      "proteins_100g": 18650,
+      "salt_100g": 841.5020000000002
+    },
+    "nutrient_count": 13
+  },
+  {
+    "name": "hen egg white (dried)",
+    "nutriments": {
+      "zinc_100g": 0.43,
+      "carbohydrates_100g": 6020,
+      "magnesium_100g": 87.6,
+      "iron_100g": 0,
+      "proteins_100g": 79900,
+      "fat_100g": 650.0000000000001,
+      "sodium_100g": 1250,
+      "phosphorus_100g": 107,
+      "cholesterol_100g": 17,
+      "potassium_100g": 959,
+      "calcium_100g": 104,
+      "salt_100g": 3175
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "hen egg (shell off, solids, dried)",
+    "nutriments": {
+      "potassium_100g": 468,
+      "fat_100g": 39799.99999999999,
+      "carbohydrates_100g": 1870,
+      "proteins_100g": 48100.00000000001,
+      "magnesium_100g": 44.6,
+      "cholesterol_100g": 1700,
+      "zinc_100g": 5.02,
+      "phosphorus_100g": 770,
+      "calcium_100g": 220.00000000000003,
+      "iron_100g": 6.97,
+      "sodium_100g": 485.00000000000006,
+      "salt_100g": 1231.9
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "hen egg yolk (frozen)",
+    "nutriments": {
+      "sodium_100g": 66,
+      "proteins_100g": 15600,
+      "magnesium_100g": 11.2,
+      "iron_100g": 4.13,
+      "calcium_100g": 119,
+      "phosphorus_100g": 443,
+      "cholesterol_100g": 1000,
+      "carbohydrates_100g": 590,
+      "fat_100g": 25100,
+      "zinc_100g": 2.93,
+      "potassium_100g": 102,
+      "salt_100g": 167.64000000000001
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "hen egg yolk (dried)",
+    "nutriments": {
+      "magnesium_100g": 26,
+      "proteins_100g": 34200,
+      "sodium_100g": 149,
+      "carbohydrates_100g": 1070,
+      "potassium_100g": 231,
+      "zinc_100g": 7.109999999999999,
+      "fat_100g": 55500,
+      "cholesterol_100g": 2340,
+      "iron_100g": 9.28,
+      "phosphorus_100g": 982,
+      "calcium_100g": 270,
+      "salt_100g": 378.46
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "ham (sliced, cooked)",
+    "nutriments": {
+      "zinc_100g": 1.76,
+      "phosphorus_100g": 246,
+      "proteins_100g": 19600,
+      "carbohydrates_100g": 2360,
+      "iron_100g": 0.58,
+      "fatty-acids-total-monounsaturated_100g": 10,
+      "fatty-acids-total-saturated_100g": 1250,
+      "potassium_100g": 484,
+      "magnesium_100g": 18.800000000000004,
+      "calcium_100g": 6.000000000000001,
+      "sodium_100g": 1040.0000000000002,
+      "salt_100g": 2641.600000000001
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "chicken egg",
+    "nutriments": {
+      "calcium_100g": 94,
+      "iron_100g": 1.67,
+      "proteins_100g": 10.5,
+      "niacin_100g": 0,
+      "selenium_100g": 0.0310999999999999,
+      "fiber_100g": 0,
+      "magnesium_100g": 11.4,
+      "potassium_100g": 132,
+      "zinc_100g": 1.24,
+      "phosphorus_100g": 184,
+      "sodium_100g": 129,
+      "salt_100g": 327.66
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "sweet cherry (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 16163.125,
+      "proteins_100g": 1039.375,
+      "vitamin-b6_100g": 0.0488799999999999,
+      "iron_100g": 0.1054,
+      "phosphorus_100g": 23.25,
+      "magnesium_100g": 12.11,
+      "vitamin-c_100g": 10.39,
+      "sodium_100g": 0,
+      "zinc_100g": 0.06446,
+      "potassium_100g": 229.6,
+      "calcium_100g": 12.26,
+      "fat_100g": 192.5
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "cucumber (raw)",
+    "nutriments": {
+      "vitamin-k_100g": 0.0239999999999999,
+      "phosphorus_100g": 23.23,
+      "fat_100g": 177.5,
+      "iron_100g": 0,
+      "calcium_100g": 16.34,
+      "zinc_100g": 0.204,
+      "sodium_100g": 1.515,
+      "magnesium_100g": 10.11,
+      "potassium_100g": 169.6,
+      "proteins_100g": 625,
+      "carbohydrates_100g": 2952.5,
+      "salt_100g": 3.8480999999999996
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "red grape (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 20196.825,
+      "proteins_100g": 914.375,
+      "fat_100g": 163.79999999999998,
+      "magnesium_100g": 8.556,
+      "calcium_100g": 10.17,
+      "potassium_100g": 229.4,
+      "phosphorus_100g": 24.86,
+      "sodium_100g": 6.999,
+      "zinc_100g": 0.03603,
+      "iron_100g": 0.1615,
+      "vitamin-c_100g": 3.308,
+      "salt_100g": 17.777459999999998
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "grape (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 18603.750000000004,
+      "proteins_100g": 898.7500000000001,
+      "phosphorus_100g": 21.98,
+      "zinc_100g": 0.02674,
+      "potassium_100g": 218.1,
+      "calcium_100g": 9.897000000000002,
+      "fat_100g": 232.50000000000003,
+      "sodium_100g": 3.171,
+      "vitamin-c_100g": 3.0170000000000003,
+      "iron_100g": 0.1991,
+      "magnesium_100g": 7.118,
+      "salt_100g": 8.05434
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "applesauce",
+    "nutriments": {
+      "carbohydrates_100g": 12261.5625,
+      "proteins_100g": 273.4375,
+      "vitamin-c_100g": 43.69,
+      "zinc_100g": 0.002625,
+      "phosphorus_100g": 9.119,
+      "iron_100g": 0.04475,
+      "sodium_100g": 0.5038,
+      "calcium_100g": 3.821,
+      "potassium_100g": 107.7,
+      "magnesium_100g": 3.938,
+      "fat_100g": 162.50000000000003,
+      "salt_100g": 1.279652
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "filbert nut (raw)",
+    "nutriments": {
+      "phosphorus_100g": 321.1,
+      "selenium_100g": 0,
+      "iron_100g": 3.465,
+      "calcium_100g": 134.70000000000002,
+      "fiber_100g": 8410,
+      "zinc_100g": 2.334,
+      "fat_100g": 53490.00000000001,
+      "sodium_100g": 0,
+      "magnesium_100g": 155.8,
+      "potassium_100g": 635.9,
+      "proteins_100g": 13493.8,
+      "carbohydrates_100g": 26501.2
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "macadamia nut (raw)",
+    "nutriments": {
+      "zinc_100g": 1.2,
+      "potassium_100g": 372.6,
+      "fat_100g": 64930.00000000001,
+      "phosphorus_100g": 208.4,
+      "magnesium_100g": 106.8,
+      "fiber_100g": 7563.000000000001,
+      "selenium_100g": 0.03262,
+      "calcium_100g": 52.710000000000015,
+      "sodium_100g": 0,
+      "iron_100g": 1.881,
+      "proteins_100g": 7785.700000000002,
+      "carbohydrates_100g": 24094.300000000003
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "pistachio nut (raw)",
+    "nutriments": {
+      "iron_100g": 3.456,
+      "selenium_100g": 0.02312,
+      "phosphorus_100g": 499.6,
+      "fiber_100g": 6969,
+      "sodium_100g": 0,
+      "calcium_100g": 117.40000000000002,
+      "potassium_100g": 947,
+      "fat_100g": 45020.00000000001,
+      "magnesium_100g": 109.70000000000002,
+      "zinc_100g": 2.176,
+      "proteins_100g": 20505.7,
+      "carbohydrates_100g": 27694.3
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "pumpkin seed (shell off)",
+    "nutriments": {
+      "selenium_100g": 0.0205199999999999,
+      "sodium_100g": 0,
+      "phosphorus_100g": 1150,
+      "magnesium_100g": 499.7,
+      "potassium_100g": 691.2,
+      "zinc_100g": 6.341000000000001,
+      "fat_100g": 40030,
+      "fiber_100g": 5078.999999999999,
+      "iron_100g": 8.363,
+      "calcium_100g": 37.38,
+      "proteins_100g": 29907.900000000005,
+      "carbohydrates_100g": 18675.1
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "sunflower seed (whole kernel, raw)",
+    "nutriments": {
+      "zinc_100g": 5.578,
+      "potassium_100g": 656.8,
+      "sodium_100g": 0,
+      "phosphorus_100g": 732,
+      "fat_100g": 48440,
+      "selenium_100g": 0.01778,
+      "iron_100g": 4.37,
+      "magnesium_100g": 301.9,
+      "fiber_100g": 7214.999999999999,
+      "calcium_100g": 115.6,
+      "proteins_100g": 18873.3,
+      "carbohydrates_100g": 24500.7
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "bok choy rosette",
+    "nutriments": {
+      "potassium_100g": 227.8,
+      "calcium_100g": 61.92999999999999,
+      "fiber_100g": 1258.9999999999998,
+      "zinc_100g": 0.2738,
+      "sodium_100g": 14.27,
+      "magnesium_100g": 13.640000000000002,
+      "fat_100g": 233.8,
+      "iron_100g": 0.4388,
+      "phosphorus_100g": 30.510000000000005,
+      "proteins_100g": 1023.75,
+      "carbohydrates_100g": 3514.9500000000003,
+      "salt_100g": 36.2458
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "cauliflower floret (raw)",
+    "nutriments": {
+      "iron_100g": 0.3338,
+      "zinc_100g": 0.2344,
+      "potassium_100g": 274.4,
+      "fat_100g": 237.5,
+      "calcium_100g": 20.35,
+      "fiber_100g": 1948,
+      "magnesium_100g": 14.2,
+      "phosphorus_100g": 39.69,
+      "sodium_100g": 20,
+      "proteins_100g": 1640.625,
+      "carbohydrates_100g": 4723.074999999999,
+      "salt_100g": 50.8
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "collard greens bunch",
+    "nutriments": {
+      "fat_100g": 770,
+      "phosphorus_100g": 45.01,
+      "sodium_100g": 18.410000000000004,
+      "calcium_100g": 276.4,
+      "iron_100g": 0.7505,
+      "zinc_100g": 0.4594,
+      "potassium_100g": 409.8,
+      "fiber_100g": 3816,
+      "magnesium_100g": 49.50999999999999,
+      "proteins_100g": 2968.75,
+      "carbohydrates_100g": 7022.25,
+      "salt_100g": 46.76140000000001
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "brussels sprout (raw)",
+    "nutriments": {
+      "calcium_100g": 38.64,
+      "phosphorus_100g": 78.54,
+      "magnesium_100g": 25,
+      "iron_100g": 0.7305000000000001,
+      "fiber_100g": 4785,
+      "zinc_100g": 0.3663,
+      "sodium_100g": 25.739999999999995,
+      "potassium_100g": 476.8,
+      "fat_100g": 565,
+      "proteins_100g": 3984.375,
+      "carbohydrates_100g": 9615.625,
+      "salt_100g": 65.37959999999998
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "eggplant (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 5399.325,
+      "proteins_100g": 851.8750000000001,
+      "fat_100g": 120,
+      "phosphorus_100g": 22.75,
+      "fiber_100g": 2447.9999999999995,
+      "calcium_100g": 11.06,
+      "iron_100g": 0,
+      "magnesium_100g": 13.54,
+      "zinc_100g": 0.1188999999999999,
+      "potassium_100g": 222.10000000000005,
+      "sodium_100g": 0.4425,
+      "salt_100g": 1.12395
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "tomato (canned)",
+    "nutriments": {
+      "carbohydrates_100g": 4287.4,
+      "proteins_100g": 867.5000000000001,
+      "magnesium_100g": 10.75,
+      "phosphorus_100g": 17.31,
+      "iron_100g": 0.9291,
+      "potassium_100g": 202.9,
+      "fiber_100g": 872.5,
+      "fat_100g": 206.3,
+      "zinc_100g": 0.1198,
+      "sodium_100g": 111.50000000000004,
+      "calcium_100g": 19.83,
+      "salt_100g": 283.2100000000001
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "tomato, sauce, canned, with salt added",
+    "nutriments": {
+      "carbohydrates_100g": 6331.625,
+      "proteins_100g": 1351.875,
+      "potassium_100g": 355.50000000000006,
+      "iron_100g": 1.107,
+      "magnesium_100g": 18.73,
+      "phosphorus_100g": 29.2,
+      "zinc_100g": 0.183,
+      "calcium_100g": 17.1,
+      "sodium_100g": 416.9,
+      "fat_100g": 382.5,
+      "fiber_100g": 1636,
+      "salt_100g": 1058.926
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "tomato paste (canned)",
+    "nutriments": {
+      "carbohydrates_100g": 20188.125,
+      "proteins_100g": 4234.375,
+      "sodium_100g": 61.14999999999999,
+      "fat_100g": 732.5000000000001,
+      "phosphorus_100g": 91.16,
+      "fiber_100g": 4704,
+      "iron_100g": 3.1850000000000005,
+      "zinc_100g": 0.5113000000000001,
+      "potassium_100g": 971.6,
+      "calcium_100g": 36.85,
+      "magnesium_100g": 49.61,
+      "salt_100g": 155.32099999999997
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "tomato (mashed, canned)",
+    "nutriments": {
+      "carbohydrates_100g": 7136.999999999999,
+      "proteins_100g": 1437.5,
+      "calcium_100g": 19.2,
+      "iron_100g": 2.268,
+      "magnesium_100g": 18.64,
+      "potassium_100g": 345.6,
+      "sodium_100g": 139.8,
+      "fat_100g": 397.5,
+      "zinc_100g": 0.2014,
+      "phosphorus_100g": 32.910000000000004,
+      "fiber_100g": 1944,
+      "salt_100g": 355.09200000000004
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "tomato puree",
+    "nutriments": {
+      "carbohydrates_100g": 8036.875000000001,
+      "proteins_100g": 1578.125,
+      "potassium_100g": 416.4,
+      "zinc_100g": 0.2084,
+      "magnesium_100g": 19.33,
+      "calcium_100g": 17.64,
+      "iron_100g": 1.2370000000000003,
+      "sodium_100g": 29.36,
+      "fiber_100g": 1971,
+      "fat_100g": 265,
+      "phosphorus_100g": 34.14,
+      "salt_100g": 74.5744
+    },
+    "nutrient_count": 12
+  },
+  {
+    "name": "green bean (canned)",
+    "nutriments": {
+      "zinc_100g": 0.19,
+      "potassium_100g": 97,
+      "calcium_100g": 36,
+      "carbohydrates_100g": 4110,
+      "fat_100g": 390.00000000000006,
+      "proteins_100g": 1040,
+      "phosphorus_100g": 23,
+      "iron_100g": 0.7799999999999999,
+      "magnesium_100g": 12.7,
+      "sodium_100g": 282,
+      "salt_100g": 716.28
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "tomato (diced, canned)",
+    "nutriments": {
+      "potassium_100g": 198,
+      "fat_100g": 500,
+      "proteins_100g": 840,
+      "calcium_100g": 30,
+      "magnesium_100g": 9.8,
+      "phosphorus_100g": 18,
+      "carbohydrates_100g": 3320.0000000000005,
+      "iron_100g": 0.57,
+      "zinc_100g": 0.12,
+      "sodium_100g": 125,
+      "salt_100g": 317.5
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "sugars, granulated",
+    "nutriments": {
+      "sodium_100g": 1,
+      "proteins_100g": 0,
+      "fat_100g": 320,
+      "phosphorus_100g": 0,
+      "calcium_100g": 1,
+      "potassium_100g": 2,
+      "zinc_100g": 0.01,
+      "magnesium_100g": 0.3,
+      "iron_100g": 0.05,
+      "carbohydrates_100g": 99600,
+      "salt_100g": 2.54
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "ketchup, restaurant",
+    "nutriments": {
+      "carbohydrates_100g": 26800,
+      "proteins_100g": 1110,
+      "fat_100g": 550.0000000000001,
+      "phosphorus_100g": 25,
+      "sodium_100g": 949,
+      "zinc_100g": 0.16,
+      "potassium_100g": 249.00000000000009,
+      "magnesium_100g": 13.5,
+      "calcium_100g": 14.000000000000002,
+      "iron_100g": 0.43,
+      "salt_100g": 2410.46
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "cavendish banana (overripe, raw)",
+    "nutriments": {
+      "fiber_100g": 1700,
+      "proteins_100g": 730,
+      "riboflavin_100g": 0,
+      "copper_100g": 0.001,
+      "vitamin-b6_100g": 0.234,
+      "thiamin_100g": 0.04,
+      "fat_100g": 220.00000000000003,
+      "vitamin-k_100g": 0.0002,
+      "folate_100g": 0.025,
+      "niacin_100g": 0.57,
+      "vitamin-c_100g": 9.7
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "strawberry (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 7964.375,
+      "proteins_100g": 640.625,
+      "sodium_100g": 0,
+      "calcium_100g": 16.9,
+      "fat_100g": 220.00000000000003,
+      "magnesium_100g": 12.52,
+      "phosphorus_100g": 22.98,
+      "vitamin-c_100g": 59.62,
+      "zinc_100g": 0.1139999999999999,
+      "iron_100g": 0.255,
+      "potassium_100g": 160.7
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "raspberry (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 12904.375000000002,
+      "proteins_100g": 1008.125,
+      "calcium_100g": 16.41,
+      "vitamin-c_100g": 23.04,
+      "fat_100g": 187.5,
+      "zinc_100g": 0.2213,
+      "potassium_100g": 155.8,
+      "iron_100g": 0.4501,
+      "sodium_100g": 0,
+      "phosphorus_100g": 27.47,
+      "magnesium_100g": 19.15
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "blueberry (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 14571.775,
+      "proteins_100g": 703.125,
+      "calcium_100g": 11.69,
+      "fat_100g": 306.3,
+      "iron_100g": 0.3398,
+      "sodium_100g": 0,
+      "zinc_100g": 0.08534,
+      "potassium_100g": 85.64000000000001,
+      "phosphorus_100g": 12.960000000000004,
+      "magnesium_100g": 6.179,
+      "vitamin-c_100g": 8.059
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "white kidney bean",
+    "nutriments": {
+      "iron_100g": 1.4050000000000002,
+      "sodium_100g": 164,
+      "phosphorus_100g": 412.3,
+      "magnesium_100g": 153.6,
+      "fat_100g": 1169.0000000000002,
+      "zinc_100g": 2.7200000000000006,
+      "calcium_100g": 142.9,
+      "potassium_100g": 202.6,
+      "proteins_100g": 7412.5,
+      "carbohydrates_100g": 59795.50000000001,
+      "salt_100g": 416.56
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "chickpea (dried)",
+    "nutriments": {
+      "sodium_100g": 8.779,
+      "zinc_100g": 3.124,
+      "calcium_100g": 111.1,
+      "iron_100g": 5.094000000000001,
+      "phosphorus_100g": 353.1,
+      "magnesium_100g": 134.8,
+      "fat_100g": 6274,
+      "potassium_100g": 1074.0000000000002,
+      "proteins_100g": 21275,
+      "carbohydrates_100g": 60358.00000000001,
+      "salt_100g": 22.29866
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "blackeyed pea (raw)",
+    "nutriments": {
+      "magnesium_100g": 183.9,
+      "sodium_100g": 3.458,
+      "zinc_100g": 3.654,
+      "iron_100g": 5.93,
+      "potassium_100g": 1243,
+      "calcium_100g": 71.4,
+      "fat_100g": 2419,
+      "phosphorus_100g": 427.6000000000001,
+      "proteins_100g": 21225.000000000004,
+      "carbohydrates_100g": 61836,
+      "salt_100g": 8.78332
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "navy bean",
+    "nutriments": {
+      "magnesium_100g": 29.56,
+      "zinc_100g": 0.6313,
+      "fat_100g": 1397.9999999999998,
+      "phosphorus_100g": 86.71,
+      "potassium_100g": 183.7,
+      "iron_100g": 1.599,
+      "calcium_100g": 63.91,
+      "sodium_100g": 190.1,
+      "proteins_100g": 6568.75,
+      "carbohydrates_100g": 19983.25,
+      "salt_100g": 482.854
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "chickpea (canned)",
+    "nutriments": {
+      "sodium_100g": 201.70000000000005,
+      "phosphorus_100g": 86.48,
+      "magnesium_100g": 28.410000000000004,
+      "fat_100g": 3096,
+      "iron_100g": 1.042,
+      "calcium_100g": 40.48,
+      "potassium_100g": 136.8,
+      "zinc_100g": 0.7243000000000002,
+      "proteins_100g": 7018.75,
+      "carbohydrates_100g": 20320.25,
+      "salt_100g": 512.3180000000001
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "red kidney bean (canned)",
+    "nutriments": {
+      "sodium_100g": 172.3,
+      "magnesium_100g": 29.31,
+      "calcium_100g": 56.940000000000005,
+      "phosphorus_100g": 104.1,
+      "fat_100g": 1256,
+      "zinc_100g": 0.56,
+      "potassium_100g": 226.9,
+      "iron_100g": 1.4390000000000005,
+      "proteins_100g": 7800,
+      "carbohydrates_100g": 21030,
+      "salt_100g": 437.64200000000005
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "kidney bean (canned)",
+    "nutriments": {
+      "zinc_100g": 0.526,
+      "magnesium_100g": 25.489999999999995,
+      "calcium_100g": 60.25,
+      "potassium_100g": 209.4,
+      "phosphorus_100g": 93.56,
+      "fat_100g": 1299,
+      "iron_100g": 1.305,
+      "sodium_100g": 158.5,
+      "proteins_100g": 7306.25,
+      "carbohydrates_100g": 21446.75,
+      "salt_100g": 402.59000000000003
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "green pea (canned)",
+    "nutriments": {
+      "fat_100g": 1153,
+      "zinc_100g": 0.712,
+      "magnesium_100g": 21.91,
+      "calcium_100g": 28.21,
+      "sodium_100g": 207.4,
+      "potassium_100g": 109.2,
+      "phosphorus_100g": 77.74,
+      "iron_100g": 1.139,
+      "proteins_100g": 4734.375,
+      "carbohydrates_100g": 12707.625,
+      "salt_100g": 526.796
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "pinto bean (canned)",
+    "nutriments": {
+      "zinc_100g": 0.6248,
+      "fat_100g": 1266,
+      "sodium_100g": 201.6,
+      "calcium_100g": 55.23,
+      "phosphorus_100g": 83.11,
+      "potassium_100g": 209.6,
+      "iron_100g": 1.284,
+      "magnesium_100g": 27.49,
+      "proteins_100g": 6693.75,
+      "carbohydrates_100g": 19600.25,
+      "salt_100g": 512.064
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "blackeyed pea",
+    "nutriments": {
+      "iron_100g": 1.084,
+      "potassium_100g": 138.1,
+      "sodium_100g": 226.7,
+      "magnesium_100g": 27.26,
+      "zinc_100g": 0.6550000000000001,
+      "phosphorus_100g": 83.03,
+      "fat_100g": 1296,
+      "calcium_100g": 27.78,
+      "proteins_100g": 6924.999999999998,
+      "carbohydrates_100g": 19165.9,
+      "salt_100g": 575.818
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "great northern bean (canned)",
+    "nutriments": {
+      "zinc_100g": 0.6349,
+      "sodium_100g": 223.1,
+      "calcium_100g": 67.16,
+      "fat_100g": 1266,
+      "iron_100g": 1.382,
+      "potassium_100g": 213.1,
+      "phosphorus_100g": 88.61,
+      "magnesium_100g": 29.3,
+      "proteins_100g": 7031.25,
+      "carbohydrates_100g": 19328.75,
+      "salt_100g": 566.674
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "butternut squash (raw)",
+    "nutriments": {
+      "calcium_100g": 21.74,
+      "fiber_100g": 1959,
+      "magnesium_100g": 14.95,
+      "fat_100g": 167.5,
+      "phosphorus_100g": 26.530000000000005,
+      "sodium_100g": 0,
+      "iron_100g": 0.2129,
+      "potassium_100g": 329.1,
+      "zinc_100g": 0.193,
+      "proteins_100g": 29.81,
+      "carbohydrates_100g": 10507.45
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "acorn squash (raw)",
+    "nutriments": {
+      "magnesium_100g": 23.75,
+      "zinc_100g": 0.2935,
+      "fat_100g": 182.5,
+      "iron_100g": 0.3078,
+      "phosphorus_100g": 42.040000000000006,
+      "calcium_100g": 24.82,
+      "potassium_100g": 332.1,
+      "sodium_100g": 0,
+      "fiber_100g": 2635,
+      "proteins_100g": 1250,
+      "carbohydrates_100g": 10480.000000000002
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "beet (raw)",
+    "nutriments": {
+      "proteins_100g": 1687.5,
+      "fiber_100g": 3119,
+      "iron_100g": 0.4281,
+      "potassium_100g": 341.5,
+      "magnesium_100g": 21.01,
+      "fat_100g": 302.5,
+      "phosphorus_100g": 33.650000000000006,
+      "sodium_100g": 111.6,
+      "calcium_100g": 13.82,
+      "zinc_100g": 0.3104,
+      "salt_100g": 283.464
+    },
+    "nutrient_count": 11
+  },
+  {
+    "name": "butter (unsalted)",
+    "nutriments": {
+      "iron_100g": 0.03,
+      "phosphorus_100g": 19,
+      "calcium_100g": 14.000000000000002,
+      "fat_100g": 81500,
+      "zinc_100g": 0.07,
+      "cholesterol_100g": 234,
+      "magnesium_100g": 1.6,
+      "sodium_100g": 10,
+      "potassium_100g": 19,
+      "salt_100g": 25.4
+    },
+    "nutrient_count": 10
+  },
+  {
+    "name": "celery stalk (raw)",
+    "nutriments": {
+      "zinc_100g": 0.0929,
+      "iron_100g": 0,
+      "vitamin-b6_100g": 0.05175,
+      "selenium_100g": 0,
+      "sodium_100g": 97.21,
+      "calcium_100g": 46.28,
+      "phosphorus_100g": 21.6,
+      "magnesium_100g": 10.93,
+      "potassium_100g": 265.2,
+      "salt_100g": 246.9134
+    },
+    "nutrient_count": 10
+  },
+  {
+    "name": "lentil (dried)",
+    "nutriments": {
+      "fat_100g": 1925,
+      "calcium_100g": 61.85000000000001,
+      "sodium_100g": 0,
+      "potassium_100g": 948.9,
+      "zinc_100g": 3.863,
+      "magnesium_100g": 106.7,
+      "iron_100g": 7.158,
+      "phosphorus_100g": 373.6,
+      "proteins_100g": 23568.750000000004,
+      "carbohydrates_100g": 62171.25
+    },
+    "nutrient_count": 10
+  },
+  {
+    "name": "zucchini squash (raw)",
+    "nutriments": {
+      "fiber_100g": 752.5,
+      "magnesium_100g": 15.289999999999996,
+      "phosphorus_100g": 32.9,
+      "sodium_100g": 0,
+      "potassium_100g": 225.8,
+      "zinc_100g": 0.2605,
+      "fat_100g": 205,
+      "calcium_100g": 20.85,
+      "iron_100g": 0.1945,
+      "proteins_100g": 984.375
+    },
+    "nutrient_count": 10
+  },
+  {
+    "name": "yellow summer squash (raw)",
+    "nutriments": {
+      "iron_100g": 0.1369,
+      "magnesium_100g": 16.84,
+      "phosphorus_100g": 30.74,
+      "potassium_100g": 220.5,
+      "fat_100g": 135,
+      "zinc_100g": 0.203,
+      "sodium_100g": 0,
+      "fiber_100g": 956.3,
+      "calcium_100g": 22.69,
+      "proteins_100g": 890.625
+    },
+    "nutrient_count": 10
+  },
+  {
+    "name": "winged bean food product",
+    "nutriments": {
+      "potassium_100g": 1540,
+      "fiber_100g": 4300,
+      "phosphorus_100g": 543,
+      "magnesium_100g": 182,
+      "zinc_100g": 3.54,
+      "fat_100g": 1240,
+      "proteins_100g": 23500,
+      "iron_100g": 6.27,
+      "calcium_100g": 137
+    },
+    "nutrient_count": 9
+  },
+  {
+    "name": "dry bean food product",
+    "nutriments": {
+      "iron_100g": 5.87,
+      "fiber_100g": 4200,
+      "zinc_100g": 3.37,
+      "fat_100g": 1440,
+      "magnesium_100g": 180.00000000000003,
+      "proteins_100g": 25200,
+      "phosphorus_100g": 522,
+      "potassium_100g": 1540,
+      "calcium_100g": 191
+    },
+    "nutrient_count": 9
+  },
+  {
+    "name": "light red kidney bean",
+    "nutriments": {
+      "potassium_100g": 1540,
+      "magnesium_100g": 158,
+      "zinc_100g": 3.5000000000000004,
+      "calcium_100g": 103,
+      "iron_100g": 6.950000000000001,
+      "phosphorus_100g": 549,
+      "fiber_100g": 4500,
+      "proteins_100g": 25000,
+      "fat_100g": 1030
+    },
+    "nutrient_count": 9
+  },
+  {
+    "name": "dark red kidney bean",
+    "nutriments": {
+      "fiber_100g": 4300,
+      "fat_100g": 1310.0000000000002,
+      "proteins_100g": 25900,
+      "potassium_100g": 1490,
+      "calcium_100g": 98,
+      "phosphorus_100g": 612,
+      "magnesium_100g": 164,
+      "iron_100g": 6.58,
+      "zinc_100g": 3.29
+    },
+    "nutrient_count": 9
+  },
+  {
+    "name": "great northern bean",
+    "nutriments": {
+      "proteins_100g": 24700,
+      "iron_100g": 5.48,
+      "calcium_100g": 192.00000000000003,
+      "zinc_100g": 3.45,
+      "fat_100g": 1240,
+      "fiber_100g": 4300,
+      "potassium_100g": 1520,
+      "magnesium_100g": 176,
+      "phosphorus_100g": 519
+    },
+    "nutrient_count": 9
+  },
+  {
+    "name": "black turtle bean",
+    "nutriments": {
+      "sodium_100g": 217.90000000000003,
+      "magnesium_100g": 32.54,
+      "potassium_100g": 253.1,
+      "phosphorus_100g": 90.95,
+      "fat_100g": 1272.9999999999998,
+      "calcium_100g": 43.31,
+      "zinc_100g": 0.7399000000000001,
+      "iron_100g": 1.6880000000000002,
+      "salt_100g": 553.4660000000001
+    },
+    "nutrient_count": 9
+  },
+  {
+    "name": "salt, table, iodized",
+    "nutriments": {
+      "zinc_100g": 0,
+      "potassium_100g": 2,
+      "phosphorus_100g": 0,
+      "magnesium_100g": 0,
+      "sodium_100g": 38700,
+      "calcium_100g": 50,
+      "iron_100g": 0,
+      "salt_100g": 98298
+    },
+    "nutrient_count": 8
+  },
+  {
+    "name": "chia seed",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 10,
+      "fat_100g": 16.5,
+      "proteins_100g": 14.5,
+      "thiamin_100g": 0.6,
+      "riboflavin_100g": 0.2,
+      "niacin_100g": 8.8,
+      "carbohydrates_100g": 42,
+      "folate_100g": 0.049
+    },
+    "nutrient_count": 8
+  },
+  {
+    "name": "hen egg yolk (raw)",
+    "nutriments": {
+      "selenium_100g": 0.0557999999999999,
+      "proteins_100g": 16200,
+      "riboflavin_100g": 0.4670000000000001,
+      "carbohydrates_100g": 1020,
+      "fat_100g": 28800.000000000007,
+      "vitamin-e_100g": 5.64
+    },
+    "nutrient_count": 6
+  },
+  {
+    "name": "garlic bulb (raw)",
+    "nutriments": {
+      "selenium_100g": 0.0098,
+      "proteins_100g": 6619.999999999999,
+      "fat_100g": 380,
+      "vitamin-c_100g": 10,
+      "fiber_100g": 2700.0000000000005,
+      "carbohydrates_100g": 28200
+    },
+    "nutrient_count": 6
+  },
+  {
+    "name": "hen egg white (raw)",
+    "nutriments": {
+      "riboflavin_100g": 0.391,
+      "selenium_100g": 0.0179,
+      "carbohydrates_100g": 2360,
+      "proteins_100g": 10700,
+      "fat_100g": 0
+    },
+    "nutrient_count": 5
+  },
+  {
+    "name": "pleoticus muelleri",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 40,
+      "folate_100g": 0.0134,
+      "fat_100g": 67.5,
+      "thiamin_100g": 0.0036499999999999,
+      "niacin_100g": 0.001
+    },
+    "nutrient_count": 5
+  },
+  {
+    "name": "pineapple",
+    "nutriments": {
+      "carbohydrates_100g": 37,
+      "proteins_100g": 35,
+      "fat_100g": 1.1,
+      "vitamin-e_100g": 0.0545,
+      "folate_100g": 0.032
+    },
+    "nutrient_count": 5
+  },
+  {
+    "name": "grape",
+    "nutriments": {
+      "vitamin-c_100g": 22.3,
+      "carbohydrates_100g": 22370,
+      "proteins_100g": 10700,
+      "folate_100g": 0.032
+    },
+    "nutrient_count": 4
+  },
+  {
+    "name": "common wheat kernel",
+    "nutriments": {
+      "carbohydrates_100g": 55,
+      "fat_100g": 65,
+      "folate_100g": 0.075,
+      "niacin_100g": 5.483
+    },
+    "nutrient_count": 4
+  },
+  {
+    "name": "pork meat food product",
+    "nutriments": {
+      "thiamin_100g": 0.56,
+      "fat_100g": 3.6,
+      "proteins_100g": 60,
+      "folate_100g": 0.001
+    },
+    "nutrient_count": 4
+  },
+  {
+    "name": "peanut oil",
+    "nutriments": {
+      "vitamin-k_100g": 0.0042629999999999,
+      "fatty-acids-total-saturated_100g": 80,
+      "fatty-acids-total-monounsaturated_100g": 172.5
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "safflower oil",
+    "nutriments": {
+      "vitamin-k_100g": 0.005344,
+      "fatty-acids-total-saturated_100g": 7650.999999999999,
+      "fatty-acids-total-monounsaturated_100g": 129.39999999999998
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "apple",
+    "nutriments": {
+      "vitamin-c_100g": 19,
+      "folate_100g": 0.019,
+      "sugars_100g": 11.5
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "spinach head",
+    "nutriments": {
+      "vitamin-c_100g": 51.9,
+      "fat_100g": 18.67,
+      "fatty-acids-total-saturated_100g": 83.88
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "broccoli floret",
+    "nutriments": {
+      "sodium_100g": 850.0000000000001,
+      "folate_100g": 0.183,
+      "salt_100g": 2159.0000000000005
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "lupine bean food product",
+    "nutriments": {
+      "thiamin_100g": 0.3899999999999999,
+      "riboflavin_100g": 0.2299999999999999,
+      "niacin_100g": 3.91
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "seed oil",
+    "nutriments": {
+      "carbohydrates_100g": 46.4,
+      "proteins_100g": 18.3,
+      "fat_100g": 13
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "papaya",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 77.5,
+      "vitamin-c_100g": 151,
+      "vitamin-e_100g": 4.09
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "soybean",
+    "nutriments": {
+      "carbohydrates_100g": 35,
+      "folate_100g": 0.06405,
+      "fatty-acids-total-saturated_100g": 10.5
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "coffee (liquid drink)",
+    "nutriments": {
+      "carbohydrates_100g": 51.5,
+      "fat_100g": 20,
+      "thiamin_100g": 0.06
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "ginger food product",
+    "nutriments": {
+      "fat_100g": 3.67,
+      "proteins_100g": 13,
+      "calcium_100g": 158.7
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "sesame seed",
+    "nutriments": {
+      "proteins_100g": 22.5,
+      "carbohydrates_100g": 19.5,
+      "fat_100g": 47.5
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "mango",
+    "nutriments": {
+      "carbohydrates_100g": 64.24,
+      "fatty-acids-total-saturated_100g": 46,
+      "fat_100g": 1
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "dairy food product",
+    "nutriments": {
+      "vitamin-d_100g": 0.0014999999999999,
+      "calcium_100g": 154,
+      "fatty-acids-total-saturated_100g": 24
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "salmon",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 79,
+      "vitamin-d_100g": 0.0215,
+      "fat_100g": 27.6
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "finger millet seed",
+    "nutriments": {
+      "fat_100g": 6,
+      "calcium_100g": 1006,
+      "vitamin-c_100g": 5.9705
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "mung bean",
+    "nutriments": {
+      "carbohydrates_100g": 55,
+      "fatty-acids-total-saturated_100g": 2.92,
+      "vitamin-c_100g": 14.429999999999998
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "snail",
+    "nutriments": {
+      "carbohydrates_100g": 43.75,
+      "calcium_100g": 731,
+      "fatty-acids-total-saturated_100g": 75
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "chinese chestnut",
+    "nutriments": {
+      "carbohydrates_100g": 42.2,
+      "proteins_100g": 4.2,
+      "fat_100g": 0.7
+    },
+    "nutrient_count": 3
+  },
+  {
+    "name": "oil, corn",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 13400,
+      "vitamin-e_100g": 22.6
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "sunflower seed oil",
+    "nutriments": {
+      "vitamin-k_100g": 0.0069249999999999,
+      "fatty-acids-total-monounsaturated_100g": 116.3
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "olive oil",
+    "nutriments": {
+      "fatty-acids-total-monounsaturated_100g": 115.6,
+      "fatty-acids-total-saturated_100g": 15820.000000000002
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "almond",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 45,
+      "carbohydrates_100g": 4
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "nut (whole or pieces)",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 4.5,
+      "carbohydrates_100g": 2.5
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "milk",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 25,
+      "folate_100g": 0.0021
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "vegetable",
+    "nutriments": {
+      "thiamin_100g": 0.2799999999999999,
+      "vitamin-a_100g": 31.3
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "orange",
+    "nutriments": {
+      "thiamin_100g": 2.727,
+      "riboflavin_100g": 0.8160000000000001
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "mussel",
+    "nutriments": {
+      "vitamin-b12_100g": 0.0849999999999999,
+      "fat_100g": 55
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "eggplant",
+    "nutriments": {
+      "carbohydrates_100g": 17.83,
+      "proteins_100g": 7.19
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "raspberry",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 58.3,
+      "carbohydrates_100g": 14.3
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "rice",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 24,
+      "fat_100g": 6.6
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "radish",
+    "nutriments": {
+      "vitamin-e_100g": 24,
+      "vitamin-c_100g": 94
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "potato",
+    "nutriments": {
+      "folate_100g": 0.019,
+      "fat_100g": 25000
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "elderberry",
+    "nutriments": {
+      "vitamin-c_100g": 15.5,
+      "calcium_100g": 1.38
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "tamarind pod",
+    "nutriments": {
+      "carbohydrates_100g": 70.8,
+      "proteins_100g": 3.1
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "kale (whole or pieces)",
+    "nutriments": {
+      "fat_100g": 23.610000000000003,
+      "sugars_100g": 4.2
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "rapeseed",
+    "nutriments": {
+      "proteins_100g": 25,
+      "thiamin_100g": 0.8
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "chickpea",
+    "nutriments": {
+      "vitamin-c_100g": 86.83000000000001,
+      "fatty-acids-total-saturated_100g": 75
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "alfalfa",
+    "nutriments": {
+      "fat_100g": 8.5,
+      "vitamin-b6_100g": 0.1139999999999999
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "shellfish food product",
+    "nutriments": {
+      "thiamin_100g": 0.0000036499999999999,
+      "niacin_100g": 0.001
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "squash",
+    "nutriments": {
+      "energy-kcal_100g": 30,
+      "energy-kj_100g": 125.52000000000001
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "spirulina seaweed (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 6.83,
+      "fat_100g": 4.5
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "pepper",
+    "nutriments": {
+      "folate_100g": 0.2652,
+      "carbohydrates_100g": 43.6
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "beetroot",
+    "nutriments": {
+      "thiamin_100g": 16.664999999999996,
+      "folate_100g": 0.907
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "jackfruit",
+    "nutriments": {
+      "vitamin-a_100g": 0.2948,
+      "vitamin-c_100g": 27.6
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "quinoa seed (dried)",
+    "nutriments": {
+      "folate_100g": 0.184,
+      "proteins_100g": 17.5
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "white rice",
+    "nutriments": {
+      "proteins_100g": 7.5,
+      "vitamin-b6_100g": 0.018
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "honey",
+    "nutriments": {
+      "vitamin-c_100g": 26.09,
+      "carbohydrates_100g": 14240
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "cereal grain",
+    "nutriments": {
+      "thiamin_100g": 0.55,
+      "fat_100g": 4.25
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "gooseberry",
+    "nutriments": {
+      "vitamin-e_100g": 0.664,
+      "vitamin-c_100g": 12.8
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "orange juice",
+    "nutriments": {
+      "riboflavin_100g": 0.8160000000000001,
+      "thiamin_100g": 2.727
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "arabica coffee (liquid)",
+    "nutriments": {
+      "fat_100g": 15,
+      "proteins_100g": 10.25
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "insect food product",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 70,
+      "folate_100g": 0.0915
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "hazelnut",
+    "nutriments": {
+      "fat_100g": 68.2,
+      "carbohydrates_100g": 18000
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "atlantic mackerel (raw)",
+    "nutriments": {
+      "fat_100g": 86.9,
+      "proteins_100g": 19.4
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "goat milk",
+    "nutriments": {
+      "fat_100g": 46,
+      "proteins_100g": 3.4
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "cowpea",
+    "nutriments": {
+      "proteins_100g": 27.5,
+      "fat_100g": 5.695
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "mustard oil",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 12,
+      "proteins_100g": 30
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "gum arabic",
+    "nutriments": {
+      "carbohydrates_100g": 53.4,
+      "fat_100g": 9
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "tofu",
+    "nutriments": {
+      "folate_100g": 0.01431,
+      "vitamin-e_100g": 5.3
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "caper",
+    "nutriments": {
+      "calcium_100g": 67,
+      "proteins_100g": 24.5
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "yam",
+    "nutriments": {
+      "proteins_100g": 2,
+      "vitamin-c_100g": 8
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "winged bean",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 35,
+      "proteins_100g": 20
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "camel milk (food product)",
+    "nutriments": {
+      "fat_100g": 45.865,
+      "vitamin-e_100g": 0.00178
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "abalone food product",
+    "nutriments": {
+      "fat_100g": 6.46,
+      "proteins_100g": 35
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "bambara groundnut",
+    "nutriments": {
+      "carbohydrates_100g": 63,
+      "proteins_100g": 19
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "winged bean tuber",
+    "nutriments": {
+      "proteins_100g": 20,
+      "carbohydrates_100g": 27.5
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "chickpea flour",
+    "nutriments": {
+      "fat_100g": 62,
+      "proteins_100g": 20.21
+    },
+    "nutrient_count": 2
+  },
+  {
+    "name": "canola oil",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 62.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "soybean oil",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 16.2
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "olive oil (extra-virgin)",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 15400
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "apricot",
+    "nutriments": {
+      "vitamin-c_100g": 10
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "onion",
+    "nutriments": {
+      "carbohydrates_100g": 80
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "peach",
+    "nutriments": {
+      "vitamin-c_100g": 37.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "barley seed (raw)",
+    "nutriments": {
+      "vitamin-c_100g": 0.365
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cassava",
+    "nutriments": {
+      "fat_100g": 0.1
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "watermelon",
+    "nutriments": {
+      "fat_100g": 34.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "basil food product",
+    "nutriments": {
+      "carbohydrates_100g": 70.63
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cherry",
+    "nutriments": {
+      "fat_100g": 1.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "chicken",
+    "nutriments": {
+      "folate_100g": 0.0049999999999999
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "goji berry",
+    "nutriments": {
+      "vitamin-c_100g": 42.00000000000001
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "sorghum kernel",
+    "nutriments": {
+      "carbohydrates_100g": 69.9
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "mulberry",
+    "nutriments": {
+      "fat_100g": 6.57
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "sweet potato",
+    "nutriments": {
+      "niacin_100g": 1.1769999999999998
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "blueberry",
+    "nutriments": {
+      "vitamin-c_100g": 8
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "fish food product",
+    "nutriments": {
+      "folate_100g": 0.00332
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "strawberry",
+    "nutriments": {
+      "folate_100g": 0.093
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cauliflower floret",
+    "nutriments": {
+      "folate_100g": 5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "grape seed oil (edible)",
+    "nutriments": {
+      "fat_100g": 87.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "rapeseed oil",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 7.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "lettuce head food product",
+    "nutriments": {
+      "vitamin-b6_100g": 0.1
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "banana",
+    "nutriments": {
+      "vitamin-c_100g": 8.7
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "carrot root",
+    "nutriments": {
+      "folate_100g": 5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "lemon",
+    "nutriments": {
+      "vitamin-c_100g": 46
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cow milk",
+    "nutriments": {
+      "carbohydrates_100g": 4.7
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "bean",
+    "nutriments": {
+      "proteins_100g": 25.1
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cocoa bean",
+    "nutriments": {
+      "fat_100g": 53.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "mushroom fruitbody",
+    "nutriments": {
+      "fiber_100g": 3.3
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "citrus juice",
+    "nutriments": {
+      "vitamin-c_100g": 54
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "parsley (whole or pieces)",
+    "nutriments": {
+      "vitamin-k_100g": 3.7
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "coriander",
+    "nutriments": {
+      "folate_100g": 0.058
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "sea-buckthorn food product",
+    "nutriments": {
+      "vitamin-e_100g": 35.655
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "melon",
+    "nutriments": {
+      "carbohydrates_100g": 7.75
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "rice bran",
+    "nutriments": {
+      "carbohydrates_100g": 48
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "turmeric root",
+    "nutriments": {
+      "carbohydrates_100g": 65
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cabbage head",
+    "nutriments": {
+      "proteins_100g": 23.15
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "oat",
+    "nutriments": {
+      "fat_100g": 3
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "rye kernel",
+    "nutriments": {
+      "niacin_100g": 4.168
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "pomelo fruit",
+    "nutriments": {
+      "vitamin-c_100g": 2.98
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "algal food product",
+    "nutriments": {
+      "fat_100g": 18.8
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "green algae food product",
+    "nutriments": {
+      "fat_100g": 1.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "clove food product",
+    "nutriments": {
+      "carbohydrates_100g": 44500
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "thyme food product",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 19.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "pistachio nut",
+    "nutriments": {
+      "fat_100g": 3.81
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "date (fruit)",
+    "nutriments": {
+      "fat_100g": 11.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "roselle food product",
+    "nutriments": {
+      "fat_100g": 23
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "pea",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 6.83
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cottonseed",
+    "nutriments": {
+      "proteins_100g": 40
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "mulberry (raw)",
+    "nutriments": {
+      "vitamin-c_100g": 2.97
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "sage food product",
+    "nutriments": {
+      "carbohydrates_100g": 70.505
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "garlic bulb",
+    "nutriments": {
+      "proteins_100g": 2
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "pine nut kernel",
+    "nutriments": {
+      "vitamin-e_100g": 4.1
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cutthroat trout (raw)",
+    "nutriments": {
+      "fat_100g": 14.1
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "kiwifruit",
+    "nutriments": {
+      "vitamin-c_100g": 221
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "coconut",
+    "nutriments": {
+      "vitamin-c_100g": 0.7
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "neem leaf",
+    "nutriments": {
+      "fat_100g": 26
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "durum wheat kernel",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 20.79
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "mamey apple",
+    "nutriments": {
+      "carbohydrates_100g": 30
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "dragon fruit",
+    "nutriments": {
+      "carbohydrates_100g": 28700
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "purslane leaf (raw)",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 78.88
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "sweet corn kernel",
+    "nutriments": {
+      "folate_100g": 0.0476
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "flaxseed",
+    "nutriments": {
+      "thiamin_100g": 0.6
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cultivated mushroom",
+    "nutriments": {
+      "riboflavin_100g": 0.0001099999999999
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "celtuce food product",
+    "nutriments": {
+      "folate_100g": 0.0577
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "passion fruit",
+    "nutriments": {
+      "riboflavin_100g": 0.13
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "lychee",
+    "nutriments": {
+      "vitamin-c_100g": 36.4
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "lotus plant food product",
+    "nutriments": {
+      "carbohydrates_100g": 65
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "yellow nutsedge tuber (raw)",
+    "nutriments": {
+      "carbohydrates_100g": 43.3
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "flaxseed oil",
+    "nutriments": {
+      "vitamin-e_100g": 54.400000000000006
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "black cumin seed",
+    "nutriments": {
+      "carbohydrates_100g": 19.7
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "hot pepper",
+    "nutriments": {
+      "folate_100g": 0.072
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "poultry carcass",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 66
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cinnamon food product",
+    "nutriments": {
+      "fat_100g": 12
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "butter",
+    "nutriments": {
+      "vitamin-e_100g": 2.52
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "lima bean",
+    "nutriments": {
+      "carbohydrates_100g": 55.36
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "india sardine (raw)",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 21.97
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "grape seed",
+    "nutriments": {
+      "proteins_100g": 11
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "quince",
+    "nutriments": {
+      "proteins_100g": 395
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "alfalfa sprout",
+    "nutriments": {
+      "vitamin-e_100g": 24
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "clam",
+    "nutriments": {
+      "vitamin-b12_100g": 0.0849999999999999
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "milk fat",
+    "nutriments": {
+      "vitamin-e_100g": 15
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "hemp oil",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 80
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "common bean",
+    "nutriments": {
+      "vitamin-b6_100g": 0.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "pork belly",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 47
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "donkey milk",
+    "nutriments": {
+      "vitamin-b12_100g": 0.00011
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "soybean sprout",
+    "nutriments": {
+      "folate_100g": 0.0640999999999999
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "glutinous rice",
+    "nutriments": {
+      "sugars_100g": 0.84
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "acorn (raw)",
+    "nutriments": {
+      "fat_100g": 6.1
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "jerusalem artichoke",
+    "nutriments": {
+      "vitamin-c_100g": 2.542
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "almond oil",
+    "nutriments": {
+      "vitamin-e_100g": 9500
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "tamarillo (raw)",
+    "nutriments": {
+      "folate_100g": 0.2595
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "pulse food product",
+    "nutriments": {
+      "carbohydrates_100g": 67
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "currant food product",
+    "nutriments": {
+      "vitamin-e_100g": 0.664
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "wakame",
+    "nutriments": {
+      "fat_100g": 70
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "konbu vegetable food product",
+    "nutriments": {
+      "vitamin-d_100g": 0.00001
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "durian",
+    "nutriments": {
+      "folate_100g": 0.175
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "bovine meat food product",
+    "nutriments": {
+      "fat_100g": 6.300000000000001e-8
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "white lupine bean",
+    "nutriments": {
+      "fat_100g": 12.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "rice bran oil",
+    "nutriments": {
+      "fat_100g": 0.91
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "anchovy",
+    "nutriments": {
+      "vitamin-d_100g": 0.004
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "blueback herring (raw)",
+    "nutriments": {
+      "fat_100g": 34
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "skipjack tuna food product",
+    "nutriments": {
+      "proteins_100g": 18470
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "opium poppy seed food product",
+    "nutriments": {
+      "vitamin-c_100g": 17
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "rose hip",
+    "nutriments": {
+      "vitamin-e_100g": 31.4
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "avocado oil",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 67.8
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "taro root",
+    "nutriments": {
+      "thiamin_100g": 0.000107
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "borage flower",
+    "nutriments": {
+      "fat_100g": 22.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "hazelnut oil",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 8
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "mustard seed",
+    "nutriments": {
+      "proteins_100g": 36.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "white wheat flour",
+    "nutriments": {
+      "thiamin_100g": 0.06
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "garden cress leaf",
+    "nutriments": {
+      "proteins_100g": 22.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "barley malt",
+    "nutriments": {
+      "fat_100g": 3
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cottonseed oil",
+    "nutriments": {
+      "fatty-acids-total-saturated_100g": 59
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "pasta",
+    "nutriments": {
+      "fat_100g": 0.9
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "custard apple",
+    "nutriments": {
+      "carbohydrates_100g": 30
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "chicory head",
+    "nutriments": {
+      "riboflavin_100g": 0.53
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "horned melon",
+    "nutriments": {
+      "folate_100g": 0.00782
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "sheep milk",
+    "nutriments": {
+      "fat_100g": 14.5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "butternut (raw)",
+    "nutriments": {
+      "folate_100g": 0.027
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "common millet food product",
+    "nutriments": {
+      "fat_100g": 6
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "yogurt food product",
+    "nutriments": {
+      "folate_100g": 0.0068499999999999
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "muskmelon",
+    "nutriments": {
+      "vitamin-c_100g": 2.75
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "pitaya fruit",
+    "nutriments": {
+      "vitamin-c_100g": 32.65
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "pawpaw",
+    "nutriments": {
+      "vitamin-c_100g": 39.00000000000001
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "hen egg white food product",
+    "nutriments": {
+      "proteins_100g": 225
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "miso",
+    "nutriments": {
+      "fat_100g": 6
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "rice bean",
+    "nutriments": {
+      "calcium_100g": 302
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "hyacinth bean food product",
+    "nutriments": {
+      "proteins_100g": 24
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "crangon vulgaris (cooked)",
+    "nutriments": {
+      "fat_100g": 30
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "kefir",
+    "nutriments": {
+      "proteins_100g": 7.2
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "poutassou (raw)",
+    "nutriments": {
+      "fat_100g": 5
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "piece of lamb meat",
+    "nutriments": {
+      "niacin_100g": 5.05
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "porcini mushroom",
+    "nutriments": {
+      "proteins_100g": 36240
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "water snail",
+    "nutriments": {
+      "carbohydrates_100g": 43.75
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "maize cob",
+    "nutriments": {
+      "proteins_100g": 5900
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "snail shell",
+    "nutriments": {
+      "calcium_100g": 95
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "hoki (raw)",
+    "nutriments": {
+      "fat_100g": 1900
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "australian herring (raw)",
+    "nutriments": {
+      "fat_100g": 1200
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "kahawai (raw)",
+    "nutriments": {
+      "fat_100g": 1000
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "southern bluefin tuna (raw)",
+    "nutriments": {
+      "fat_100g": 699.9999999999999
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "rice cereal",
+    "nutriments": {
+      "carbohydrates_100g": 80
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "amaranth leaf",
+    "nutriments": {
+      "carbohydrates_100g": 28.2
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "cowpea vegetable food product",
+    "nutriments": {
+      "vitamin-c_100g": 9
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "egusi seed",
+    "nutriments": {
+      "fat_100g": 0.32
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "mushroom fruitbody (dried)",
+    "nutriments": {
+      "vitamin-d_100g": 1.6
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "apple flour",
+    "nutriments": {
+      "carbohydrates_100g": 76
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "passion fruit juice",
+    "nutriments": {
+      "riboflavin_100g": 0.13
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "bean (raw)",
+    "nutriments": {
+      "proteins_100g": 23600.000000000004
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "striped snakehead (raw)",
+    "nutriments": {
+      "fat_100g": 0.316
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "striped mullet (raw)",
+    "nutriments": {
+      "fat_100g": 13.396
+    },
+    "nutrient_count": 1
+  },
+  {
+    "name": "trumpet chanterelle",
+    "nutriments": {
+      "vitamin-d_100g": 0.0211
+    },
+    "nutrient_count": 1
+  }
+]

@@ -1,0 +1,9 @@
+# ============================================================================
+# FINAL BUILD COMMAND - COPY AND PASTE THIS INTO POWERSHELL
+# ============================================================================
+
+cd C:\TrueScan-FoodScanner; powershell -NoProfile -ExecutionPolicy Bypass -File scripts\completeBuildAndSubmit.ps1
+
+# ============================================================================
+# END - Copy everything above this line
+# ============================================================================

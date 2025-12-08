@@ -415,7 +415,26 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
       return null;
     },
     
-    // Strategy 2: Try DuckDuckGo with "barcode {barcode}" query
+    // Strategy 2: Try DuckDuckGo with "UPC {barcode}" query (better for product searches)
+    async () => {
+      try {
+        const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(`UPC ${barcode}`)}&format=json&no_html=1&skip_disambig=1`;
+        const response = await fetch(ddgUrl, {
+          headers: { 'Accept': 'application/json', 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.Heading && data.Heading !== barcode && data.Heading.length > 2) {
+            return data.Heading;
+          }
+        }
+      } catch (e) {
+        console.warn(`[WebSearch] Strategy 2 error:`, e);
+      }
+      return null;
+    },
+    
+    // Strategy 3: Try DuckDuckGo with "barcode {barcode}" query
     async () => {
       try {
         const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(`barcode ${barcode}`)}&format=json&no_html=1&skip_disambig=1`;
@@ -449,34 +468,6 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
             const capitalizedMatch = text.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})\b/);
             if (capitalizedMatch && capitalizedMatch[1].length > 5 && !capitalizedMatch[1].includes('Barcode')) {
               return capitalizedMatch[1];
-            }
-          }
-        }
-      } catch (e) {
-        console.warn(`[WebSearch] Strategy 2 error:`, e);
-      }
-      return null;
-    },
-    
-    // Strategy 3: Try DuckDuckGo with "UPC {barcode}" query
-    async () => {
-      try {
-        const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(`UPC ${barcode}`)}&format=json&no_html=1&skip_disambig=1`;
-        const response = await fetch(ddgUrl, {
-          headers: { 'Accept': 'application/json', 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Suppress verbose response logging - only log if we found something useful
-          
-          if (data.Heading && !data.Heading.includes('UPC') && !data.Heading.includes('Barcode') && data.Heading.length > 2) {
-            return data.Heading;
-          }
-          
-          if (data.AbstractText) {
-            const quotedMatch = data.AbstractText.match(/"([^"]{3,50})"/);
-            if (quotedMatch && quotedMatch[1]) {
-              return quotedMatch[1];
             }
           }
         }
@@ -526,14 +517,18 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
  * Try to fetch basic product info from web search using DuckDuckGo Instant Answer API
  * Enhanced to also fetch images, nutrition, and ingredients
  * This is free and doesn't require an API key
+ * 
+ * @param barcode - The product barcode
+ * @param suggestedProductName - Optional product name to use for better search results
  */
-export async function fetchProductFromWebSearch(barcode: string): Promise<Product | null> {
+export async function fetchProductFromWebSearch(barcode: string, suggestedProductName?: string): Promise<Product | null> {
   // Suppress - expected fallback behavior
   
   try {
     // CRITICAL: First, try to get the product name from the barcode
     // Without a product name, we can't search for images/nutrition/ingredients
-    let productName = await getProductNameFromBarcode(barcode);
+    // Use suggested product name if provided (from partial database results)
+    let productName = suggestedProductName || await getProductNameFromBarcode(barcode);
     
     let genericDescription: string | undefined;
     
@@ -579,18 +574,42 @@ export async function fetchProductFromWebSearch(barcode: string): Promise<Produc
 
     // If we still don't have a product name, try searching with the barcode directly
     // This is important because sometimes we can still find data even without a product name
+    // But use better search queries that combine barcode with product-related terms
     if (!productName) {
       // Suppress - expected fallback behavior
       
       // Try comprehensive web scraping with barcode directly
+      // Use multiple search strategies with barcode + product terms
+      const searchQueries = [
+        barcode,
+        `UPC ${barcode}`,
+        `barcode ${barcode}`,
+        `product ${barcode}`,
+        `EAN ${barcode}`,
+      ];
       
-      const scrapedData = await scrapeProductInfo(barcode);
+      // Try each query strategy
+      let scrapedData: { image?: string; ingredients?: string; nutrition?: ProductNutriments; productName?: string } = {};
+      for (const query of searchQueries) {
+        try {
+          const result = await scrapeProductInfo(barcode, query);
+          if (result.productName || result.image || result.nutrition || result.ingredients) {
+            scrapedData = result;
+            if (result.productName) {
+              productName = result.productName;
+              break; // Found a product name, use it
+            }
+          }
+        } catch (e) {
+          // Continue to next query
+        }
+      }
       
-      // Also try old methods as fallback
+      // Also try old methods as fallback with better queries
       const [imageUrlOld, nutrimentsOld, ingredientsTextOld] = await Promise.all([
-        fetchProductImage(barcode, barcode).catch(() => undefined),
-        fetchNutritionInfo(barcode).catch(() => undefined),
-        fetchIngredients(barcode).catch(() => undefined),
+        Promise.race(searchQueries.map(q => fetchProductImage(q, barcode).catch(() => undefined))).then(r => r || undefined),
+        Promise.race(searchQueries.map(q => fetchNutritionInfo(q).catch(() => undefined))).then(r => r || undefined),
+        Promise.race(searchQueries.map(q => fetchIngredients(q).catch(() => undefined))).then(r => r || undefined),
       ]);
 
       const imageUrl = scrapedData.image || imageUrlOld;
@@ -636,14 +655,40 @@ export async function fetchProductFromWebSearch(barcode: string): Promise<Produc
     // Now fetch image, nutrition, and ingredients using comprehensive web scraping
     // Suppress verbose logging
     
-    // Use comprehensive web scraping service
-    const scrapedData = await scrapeProductInfo(barcode, productName);
+    // Use comprehensive web scraping service with product name
+    // Also try multiple search query variations for better results
+    const searchQueries = productName ? [
+      productName,
+      `${productName} product`,
+      `${productName} ${barcode}`,
+      `UPC ${barcode} ${productName}`,
+    ] : [
+      `UPC ${barcode}`,
+      `barcode ${barcode}`,
+      `product ${barcode}`,
+      barcode,
+    ];
     
-    // Also try the old methods in parallel as fallback
+    // Try scraping with different query variations
+    let scrapedData: { image?: string; ingredients?: string; nutrition?: ProductNutriments; productName?: string } = {};
+    for (const query of searchQueries) {
+      try {
+        const result = await scrapeProductInfo(barcode, query);
+        // Merge results, keeping the best data
+        if (result.image && !scrapedData.image) scrapedData.image = result.image;
+        if (result.nutrition && !scrapedData.nutrition) scrapedData.nutrition = result.nutrition;
+        if (result.ingredients && !scrapedData.ingredients) scrapedData.ingredients = result.ingredients;
+        if (result.productName && !scrapedData.productName) scrapedData.productName = result.productName;
+      } catch (e) {
+        // Continue to next query
+      }
+    }
+    
+    // Also try the old methods in parallel as fallback with multiple query variations
     const [imageUrlOld, nutrimentsOld, ingredientsTextOld] = await Promise.all([
-      fetchProductImage(productName, barcode).catch(() => undefined),
-      fetchNutritionInfo(productName).catch(() => undefined),
-      fetchIngredients(productName).catch(() => undefined),
+      Promise.race(searchQueries.map(q => fetchProductImage(q, barcode).catch(() => undefined))).then(r => r || undefined),
+      Promise.race(searchQueries.map(q => fetchNutritionInfo(q).catch(() => undefined))).then(r => r || undefined),
+      Promise.race(searchQueries.map(q => fetchIngredients(q).catch(() => undefined))).then(r => r || undefined),
     ]);
 
     // Merge results (scraped data takes priority, but use old methods as fallback)
@@ -745,9 +790,32 @@ async function createFallbackProduct(barcode: string): Promise<Product> {
     completion += 15;
   }
 
+  // Always set a product name (even if generic) - never undefined
+  // If we have ingredients, try to extract a better name from ingredients
+  let finalProductName = productName;
+  if (!finalProductName || finalProductName === `Product ${barcode}`) {
+    // Try to extract product name from ingredients if available
+    if (ingredientsText && ingredientsText.length > 10) {
+      // Look for common product name patterns in ingredients
+      const ingredientWords = ingredientsText.toLowerCase().split(/[,\s]+/).slice(0, 5);
+      // If ingredients suggest a product type, use that
+      const productTypeWords = ['milk', 'cream', 'cheese', 'yogurt', 'butter', 'bread', 'cereal', 
+                                'soup', 'sauce', 'juice', 'soda', 'water', 'tea', 'coffee',
+                                'chocolate', 'candy', 'cookies', 'crackers', 'chips', 'nuts'];
+      const foundType = ingredientWords.find(w => productTypeWords.includes(w));
+      if (foundType) {
+        finalProductName = `Product (${foundType})`;
+      } else {
+        finalProductName = `Product ${barcode}`;
+      }
+    } else {
+      finalProductName = `Product ${barcode}`;
+    }
+  }
+  
   return {
     barcode,
-    product_name: productName !== `Product ${barcode}` ? productName : undefined,
+    product_name: finalProductName, // Always set a name, never undefined
     source: 'web_search',
     image_url: imageUrl,
     nutriments: nutriments,

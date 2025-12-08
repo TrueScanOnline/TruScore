@@ -294,20 +294,41 @@ async function scrapeProductPage(url: string): Promise<{
 function generateProductUrls(barcode: string, productName?: string): string[] {
   const urls: string[] = [];
   
-  // Amazon
-  urls.push(`https://www.amazon.com/s?k=${barcode}`);
+  // Use product name in searches if available (much better results than barcode alone)
+  const searchQuery = productName && !productName.startsWith('Product ') && productName !== barcode
+    ? `${productName} ${barcode}`
+    : barcode;
+  
+  // Amazon - prefer product name search
+  if (productName && !productName.startsWith('Product ')) {
+    urls.push(`https://www.amazon.com/s?k=${encodeURIComponent(productName)}`);
+    urls.push(`https://www.amazon.com/s?k=${encodeURIComponent(`${productName} ${barcode}`)}`);
+  }
+  urls.push(`https://www.amazon.com/s?k=${encodeURIComponent(barcode)}`);
   urls.push(`https://www.amazon.com/dp/${barcode}`);
   
-  // Walmart
-  urls.push(`https://www.walmart.com/search?q=${barcode}`);
+  // Walmart - prefer product name search
+  if (productName && !productName.startsWith('Product ')) {
+    urls.push(`https://www.walmart.com/search?q=${encodeURIComponent(productName)}`);
+    urls.push(`https://www.walmart.com/search?q=${encodeURIComponent(`${productName} ${barcode}`)}`);
+  }
+  urls.push(`https://www.walmart.com/search?q=${encodeURIComponent(barcode)}`);
   
-  // Google Shopping
-  urls.push(`https://www.google.com/search?tbm=shop&q=${barcode}`);
+  // Google Shopping - prefer product name search
+  if (productName && !productName.startsWith('Product ')) {
+    urls.push(`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(productName)}`);
+    urls.push(`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(`${productName} ${barcode}`)}`);
+  }
+  urls.push(`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(barcode)}`);
   
-  // eBay
-  urls.push(`https://www.ebay.com/sch/i.html?_nkw=${barcode}`);
+  // eBay - prefer product name search
+  if (productName && !productName.startsWith('Product ')) {
+    urls.push(`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(productName)}`);
+    urls.push(`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(`${productName} ${barcode}`)}`);
+  }
+  urls.push(`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(barcode)}`);
   
-  // Barcode lookup sites
+  // Barcode lookup sites (always use barcode)
   urls.push(`https://www.barcodelookup.com/${barcode}`);
   urls.push(`https://www.upcitemdb.com/upc/${barcode}`);
   
@@ -422,12 +443,40 @@ export async function scrapeProductInfo(barcode: string, productName?: string): 
     }
   }
 
-  // Strategy 4: Try to find ingredients and nutrition using multiple web search queries
+  // Strategy 4: Try to extract product name from web search if not found yet
+  if (!results.productName) {
+    try {
+      // Try DuckDuckGo Instant Answer for product name
+      const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(barcode)}&format=json&no_html=1&skip_disambig=1`;
+      const response = await fetch(ddgUrl, {
+        headers: { 'Accept': 'application/json', 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.Heading && !data.Heading.includes('Barcode') && !data.Heading.includes('UPC') && data.Heading.length > 3) {
+          results.productName = data.Heading;
+          console.log(`[WebScraping] Found product name from DuckDuckGo: ${data.Heading}`);
+        } else if (data.AbstractText) {
+          // Try to extract product name from abstract text
+          const quotedMatch = data.AbstractText.match(/"([^"]{3,50})"/);
+          if (quotedMatch && quotedMatch[1]) {
+            results.productName = quotedMatch[1];
+            console.log(`[WebScraping] Found product name from DuckDuckGo abstract: ${quotedMatch[1]}`);
+          }
+        }
+      }
+    } catch (error) {
+      // Continue - product name extraction is optional
+    }
+  }
+
+  // Strategy 5: Try to find ingredients and nutrition using multiple web search queries
   if (!results.ingredients || !results.nutrition) {
     const searchQueries = [
-      productName ? `${productName} ingredients nutrition facts` : `${barcode} product ingredients nutrition facts`,
-      productName ? `${productName} ingredients list` : `${barcode} ingredients`,
-      productName ? `${productName} nutrition label` : `${barcode} nutrition`,
+      results.productName ? `${results.productName} ingredients nutrition facts` : `${barcode} product ingredients nutrition facts`,
+      results.productName ? `${results.productName} ingredients list` : `${barcode} ingredients`,
+      results.productName ? `${results.productName} nutrition label` : `${barcode} nutrition`,
     ];
 
     for (const searchQuery of searchQueries) {

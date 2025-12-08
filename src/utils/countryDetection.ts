@@ -6,6 +6,9 @@ import * as Localization from 'expo-localization';
 /**
  * Get user's country code from device locale
  * Returns ISO 3166-1 alpha-2 country code (e.g., 'NZ', 'AU', 'GB', 'TR')
+ * 
+ * This function uses device locale as a fallback when GPS location is unavailable.
+ * It's used for country-specific database access and geo-location logic.
  */
 export function getUserCountryCode(): string | null {
   try {
@@ -16,10 +19,64 @@ export function getUserCountryCode(): string | null {
         return regionCode.toUpperCase();
       }
     }
+    
+    // Fallback: Try to get locale string from locales array and extract country code
+    if (locales && locales.length > 0) {
+      const localeString = locales[0]?.languageTag || locales[0]?.languageCode || '';
+      if (localeString) {
+        const parts = localeString.split('-');
+        if (parts.length >= 2) {
+          const countryCode = parts[parts.length - 1].toUpperCase();
+          if (countryCode.length === 2) {
+            return countryCode;
+          }
+        }
+      }
+    }
   } catch (error) {
-    console.warn('Error detecting country code:', error);
+    console.warn('[countryDetection] Error detecting country code:', error);
   }
   return null;
+}
+
+/**
+ * Check if a country code is a member of the European Union
+ * Returns true if the country is an EU member state
+ */
+export function isEUCountry(countryCode: string | null): boolean {
+  if (!countryCode) return false;
+  
+  const euCountries = [
+    'AT', // Austria
+    'BE', // Belgium
+    'BG', // Bulgaria
+    'HR', // Croatia
+    'CY', // Cyprus
+    'CZ', // Czech Republic
+    'DK', // Denmark
+    'EE', // Estonia
+    'FI', // Finland
+    'FR', // France
+    'DE', // Germany
+    'GR', // Greece
+    'HU', // Hungary
+    'IE', // Ireland
+    'IT', // Italy
+    'LV', // Latvia
+    'LT', // Lithuania
+    'LU', // Luxembourg
+    'MT', // Malta
+    'NL', // Netherlands
+    'PL', // Poland
+    'PT', // Portugal
+    'RO', // Romania
+    'SK', // Slovakia
+    'SI', // Slovenia
+    'ES', // Spain
+    'SE', // Sweden
+  ];
+  
+  return euCountries.includes(countryCode.toUpperCase());
 }
 
 /**

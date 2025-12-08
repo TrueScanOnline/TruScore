@@ -2,6 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { Product } from '../types/product';
+import { logger } from '../utils/logger';
 
 const CACHE_DIR = `${FileSystem.cacheDirectory}truescan/`;
 const CACHE_STORAGE_KEY = '@truescan_product_cache';
@@ -27,7 +28,7 @@ export async function initializeCache(): Promise<void> {
       await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
     }
   } catch (error) {
-    console.error('Error initializing cache directory:', error);
+    logger.error('Error initializing cache directory', error);
   }
 }
 
@@ -61,14 +62,14 @@ export async function getCachedProduct(barcode: string, isPremium: boolean = fal
     const ageInDays = (Date.now() - cached.timestamp) / (1000 * 60 * 60 * 24);
     if (ageInDays > expiryDays) {
       // Remove expired cache
-      console.log(`Cache expired for ${barcode} (${ageInDays.toFixed(1)} days old, expiry: ${expiryDays} days)`);
+      logger.debug(`Cache expired for ${barcode} (${ageInDays.toFixed(1)} days old, expiry: ${expiryDays} days)`);
       await removeCachedProduct(barcode);
       return null;
     }
 
     return cached.product;
   } catch (error) {
-    console.error('Error getting cached product:', error);
+    logger.error('Error getting cached product', error);
     return null;
   }
 }
@@ -112,7 +113,7 @@ export async function cacheProduct(product: Product, isPremium: boolean = false)
       await cacheImage(product.barcode, product.image_url || product.image_front_url || '');
     }
   } catch (error) {
-    console.error('Error caching product:', error);
+    logger.error('Error caching product', error);
   }
 }
 
@@ -125,7 +126,7 @@ async function cacheImage(barcode: string, imageUrl: string): Promise<void> {
 
     // Handle local file:// URIs - copy to cache directory instead of downloading
     if (imageUrl.startsWith('file://')) {
-      console.log(`Image is already local file: ${imageUrl} - copying to cache`);
+      logger.debug(`Image is already local file: ${imageUrl} - copying to cache`);
       try {
         const imagePath = `${CACHE_DIR}${barcode}.jpg`;
         const fileInfo = await FileSystem.getInfoAsync(imagePath);
@@ -136,19 +137,19 @@ async function cacheImage(barcode: string, imageUrl: string): Promise<void> {
             from: imageUrl,
             to: imagePath,
           });
-          console.log(`Copied local image to cache for ${barcode}`);
+          logger.debug(`Copied local image to cache for ${barcode}`);
         } else {
-          console.log(`Image already cached for ${barcode}`);
+          logger.debug(`Image already cached for ${barcode}`);
         }
       } catch (error) {
-        console.error('Error copying local image to cache:', error);
+        logger.error('Error copying local image to cache', error);
       }
       return;
     }
 
     // Skip if it's not an http/https URL
     if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-      console.warn(`Invalid image URL format (not http/https/file): ${imageUrl}`);
+      logger.warn(`Invalid image URL format (not http/https/file): ${imageUrl}`);
       return;
     }
 
@@ -161,20 +162,20 @@ async function cacheImage(barcode: string, imageUrl: string): Promise<void> {
       try {
         const downloadResult = await FileSystem.downloadAsync(imageUrl, imagePath);
         if (downloadResult.status === 200) {
-          console.log(`Cached image for ${barcode}`);
+          logger.debug(`Cached image for ${barcode}`);
         }
       } catch (downloadError: unknown) {
         // If download fails with file:// error, it means URL was incorrectly formatted
         const errorMessage = downloadError instanceof Error ? downloadError.message : String(downloadError);
         if (errorMessage?.includes('file://') || errorMessage?.includes('Expected URL scheme')) {
-          console.warn(`[cacheService] Image URL appears to be file:// but wasn't detected: ${imageUrl}`);
+          logger.warn(`[cacheService] Image URL appears to be file:// but wasn't detected: ${imageUrl}`);
           return; // Skip caching for invalid URLs
         }
         throw downloadError; // Re-throw other errors
       }
     }
   } catch (error) {
-    console.error('Error caching image:', error);
+    logger.error('Error caching image', error);
     // Don't throw - image caching failure shouldn't break the app
   }
 }
@@ -189,7 +190,7 @@ export async function getCachedImagePath(barcode: string): Promise<string | null
     const fileInfo = await FileSystem.getInfoAsync(imagePath);
     return fileInfo.exists ? imagePath : null;
   } catch (error) {
-    console.error('Error getting cached image:', error);
+    logger.error('Error getting cached image', error);
     return null;
   }
 }
@@ -213,7 +214,7 @@ async function removeCachedProduct(barcode: string): Promise<void> {
       await FileSystem.deleteAsync(imagePath);
     }
   } catch (error) {
-    console.error('Error removing cached product:', error);
+    logger.error('Error removing cached product', error);
   }
 }
 
@@ -226,7 +227,7 @@ export async function clearCache(): Promise<void> {
     await FileSystem.deleteAsync(CACHE_DIR, { idempotent: true });
     await initializeCache();
   } catch (error) {
-    console.error('Error clearing cache:', error);
+    logger.error('Error clearing cache', error);
   }
 }
 
@@ -241,7 +242,7 @@ export async function getCacheSize(): Promise<number> {
     const cache: Record<string, CachedProduct> = JSON.parse(cacheData);
     return Object.keys(cache).length;
   } catch (error) {
-    console.error('Error getting cache size:', error);
+    logger.error('Error getting cache size', error);
     return 0;
   }
 }
