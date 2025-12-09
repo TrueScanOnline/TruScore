@@ -4,13 +4,16 @@
  * Base Score: 15/25
  * Adjustments:
  * - Nutri-Score: A=+10, B=+5, C=0, D=-5, E=-10 (from base 15)
- * - Additives: Weighted by safety (safe: -0.5, caution: -1.5, avoid: -3, cap -15)
+ * - Additives: IARC hybrid system (IARC when available, safety rating fallback)
+ *   - IARC Class 1: -10, Class 2A: -5, Class 2B: -3
+ *   - Non-IARC: Avoid=-3, Caution=-1, Safe=0 (food) or -0.5 (non-food)
+ *   - Cap: -15 total (IARC + irritants + non-IARC additives)
  * - Risky tags: -4 each (carcinogenic, endocrine, irritant, EWG high-hazard)
- * - Irritants: -10
- * - Fragrance: -10
- * - NOVA: 1=+3, 2=0, 3=-3, 4=-8
+ * - Universal irritants: -5 each (e.g., phthalates, parabens)
+ * - NOVA: 1=+3, 2=0, 3=-3, 4=-8 (cap -10 total processing penalties)
+ * - EWG: A=+5, B=+2, C=0, D=-3, F=-5 (household products only, cap -10)
  * 
- * Final: Capped at 0-25
+ * Final: Capped at 2-25 (minimum floor of 2)
  */
 
 import { Product } from '../../../types/product';
@@ -19,6 +22,7 @@ import { getUserCountryCode } from '../../../utils/countryDetection';
 import { getCountrySpecificAdditivePenalty } from '../../../services/countrySpecificRegulations';
 import { detectProductCategory } from '../productCategoryDetection';
 import { logger } from '../../../utils/logger';
+import { matchIngredientsAgainstIARC, getIARCPenalty } from '../../../utils/ingredientMatcher';
 
 const IRRITANTS = ['paraben', 'phthalate', 'sulfate', 'triclosan', 'formaldehyde', 'peg', 'silicone', 'phenoxyethanol'];
 
@@ -36,9 +40,9 @@ export interface BodyPillarResult {
     nutriscoreValue?: number;
     additivePenalty: number;
     riskyTagsPenalty: number;
-    irritantPenalty: number;
-    fragrancePenalty: number;
+    universalIrritantPenalty: number;
     novaAdjustment: number;
+    ewgAdjustment: number;
   };
 }
 
@@ -107,7 +111,8 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
     logger.debug('[BodyPillar] No Nutri-Score available, using baseline 15');
   }
   
-  // Additive penalties
+  // Additive penalties - IARC Hybrid System
+  // Priority: IARC classification > Safety rating
   let additivePenalty = 0;
   const userCountry = getUserCountryCode();
   const productCategory = detectProductCategory(product);
@@ -122,32 +127,61 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
       let basePenalty = 0;
       
       if (additiveInfo) {
-        if (additiveInfo.safety === 'avoid') {
-          basePenalty = 3;
-        } else if (additiveInfo.safety === 'caution') {
-          basePenalty = 1.5;
-        } else if (additiveInfo.safety === 'safe') {
-          basePenalty = shouldAdjustAdditiveScoring ? 0 : 0.5;
+        // IARC Hybrid System: Use IARC when available, otherwise use safety rating
+        if (additiveInfo.iarcGroup) {
+          // IARC classification takes priority
+          if (additiveInfo.iarcGroup === '1') {
+            basePenalty = 10; // IARC Class 1: Carcinogenic to humans
+          } else if (additiveInfo.iarcGroup === '2A') {
+            basePenalty = 5; // IARC Class 2A: Probably carcinogenic
+          } else if (additiveInfo.iarcGroup === '2B') {
+            basePenalty = 3; // IARC Class 2B: Possibly carcinogenic
+          }
         } else {
-          basePenalty = 1.5;
+          // Fallback to safety rating when IARC not available
+          if (additiveInfo.safety === 'avoid') {
+            basePenalty = 3;
+          } else if (additiveInfo.safety === 'caution') {
+            basePenalty = 1;
+          } else if (additiveInfo.safety === 'safe') {
+            basePenalty = shouldAdjustAdditiveScoring ? 0 : 0;
+          } else {
+            basePenalty = 1;
+          }
         }
       } else {
+        // Unknown additive - use default penalty
         basePenalty = shouldAdjustAdditiveScoring ? 0.75 : 1.5;
       }
       
       const countryPenalty = getCountrySpecificAdditivePenalty(eNum, userCountry);
       additivePenalty += basePenalty + countryPenalty;
     }
+  }
+  
+  // Universal irritants penalty (-5 each, e.g., phthalates, parabens)
+  // Check for high-risk universal irritants in ingredients text
+  const universalIrritants = ['phthalate', 'paraben', 'bpa', 'pfas'];
+  const irritantCount = universalIrritants.filter((i) => hasTerm(i)).length;
+  let universalIrritantPenalty = irritantCount * 5;
+  
+  // Total additive + irritant penalty (cap at -15)
+  const totalAdditivePenalty = additivePenalty + universalIrritantPenalty;
+  const cappedPenalty = Math.min(totalAdditivePenalty, 15);
+  
+  if (cappedPenalty > 0) {
+    const penaltyDescription = additivePenalty > 0 && universalIrritantPenalty > 0
+      ? `${product.additives_tags?.length || 0} additive(s) + ${irritantCount} universal irritant(s) (IARC hybrid system)`
+      : additivePenalty > 0
+      ? `${product.additives_tags?.length || 0} additive(s) (IARC hybrid system)`
+      : `${irritantCount} universal irritant(s)`;
     
-    const cappedPenalty = Math.min(additivePenalty, 15);
-    if (cappedPenalty > 0) {
-      adjustments.push({
-        description: `${product.additives_tags.length} additive(s) (weighted by safety rating)`,
-        value: -cappedPenalty,
-        type: 'negative',
-      });
-      score -= cappedPenalty;
-    }
+    adjustments.push({
+      description: penaltyDescription,
+      value: -cappedPenalty,
+      type: 'negative',
+    });
+    score -= cappedPenalty;
   }
   
   // Risky tags
@@ -166,54 +200,116 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
     score -= riskyTagsPenalty;
   }
   
-  // EWG Skin Deep enhancement
+  // IARC Ingredient Checking (comprehensive database)
+  // Check ALL ingredients against IARC database (1,055 agents)
+  let iarcIngredientPenalty = 0;
+  const iarcMatchedAgents: string[] = [];
+  
+  if (product.ingredients_text) {
+    try {
+      const matchedAgents = matchIngredientsAgainstIARC(product.ingredients_text);
+      
+      // Deduplicate: Skip if already penalized via E-number
+      const alreadyPenalized = new Set<string>();
+      if (product.additives_tags) {
+        for (const tag of product.additives_tags) {
+          const eNumMatch = tag.toLowerCase().match(/^en:?(e\d+[a-z]?)$/);
+          if (eNumMatch) {
+            const eNum = eNumMatch[1];
+            const additiveInfo = getAdditiveInfo(eNum);
+            if (additiveInfo?.iarcGroup) {
+              // This additive already has IARC penalty, mark as penalized
+              alreadyPenalized.add(additiveInfo.name.toLowerCase());
+            }
+          }
+        }
+      }
+      
+      // Apply penalties for IARC-classified ingredients (only high confidence matches)
+      for (const agent of matchedAgents) {
+        // Skip if already penalized via E-number
+        if (alreadyPenalized.has(agent.agent.toLowerCase())) {
+          continue;
+        }
+        
+        // Only apply penalties for high confidence matches (exact or high)
+        if (agent.confidence === 'exact' || agent.confidence === 'high') {
+          const penalty = getIARCPenalty(agent);
+          if (penalty > 0) {
+            iarcIngredientPenalty += penalty;
+            iarcMatchedAgents.push(`${agent.agent} (IARC Group ${agent.group})`);
+          }
+        }
+      }
+      
+      // Cap IARC ingredient penalties at -10 (similar to NOVA cap)
+      iarcIngredientPenalty = Math.min(iarcIngredientPenalty, 10);
+      
+      if (iarcIngredientPenalty > 0 && iarcMatchedAgents.length > 0) {
+        adjustments.push({
+          description: `IARC-classified ingredient(s): ${iarcMatchedAgents.slice(0, 3).join(', ')}${iarcMatchedAgents.length > 3 ? ` (+${iarcMatchedAgents.length - 3} more)` : ''}`,
+          value: -iarcIngredientPenalty,
+          type: 'negative',
+        });
+        score -= iarcIngredientPenalty;
+      }
+    } catch (error) {
+      logger.debug('[BodyPillar] Error checking IARC ingredients:', error);
+      // Continue without IARC ingredient checking if there's an error
+    }
+  }
+  
+  // EWG Skin Deep enhancement (household products only)
+  // New spec: A=+5, B=+2, C=0, D=-3, F=-5 (cap -10)
   const ewgData = (product as any).ewg_skin_deep;
-  let ewgPenalty = 0;
-  if (ewgData && ewgData.hazardScore) {
-    if (ewgData.hazardScore >= 7) {
-      ewgPenalty = 5;
-    } else if (ewgData.hazardScore >= 4) {
-      ewgPenalty = 3;
-    } else if (ewgData.hazardScore >= 1) {
-      ewgPenalty = 1;
+  const isHousehold = productCategory === 'household' || productCategory === 'cosmetics';
+  let ewgAdjustment = 0;
+  let ewgRating: 'A' | 'B' | 'C' | 'D' | 'F' | undefined;
+  
+  if (ewgData && isHousehold) {
+    // Map hazard score to letter grade (estimated mapping)
+    // A (0-2): Excellent, B (2-4): Good, C (4-6): Moderate, D (6-8): Poor, F (8-10): Very Poor
+    const hazardScore = ewgData.hazardScore || 0;
+    let ewgRating: 'A' | 'B' | 'C' | 'D' | 'F' | undefined;
+    
+    if (hazardScore <= 2) {
+      ewgRating = 'A';
+      ewgAdjustment = 5; // +5
+    } else if (hazardScore <= 4) {
+      ewgRating = 'B';
+      ewgAdjustment = 2; // +2
+    } else if (hazardScore <= 6) {
+      ewgRating = 'C';
+      ewgAdjustment = 0; // 0
+    } else if (hazardScore <= 8) {
+      ewgRating = 'D';
+      ewgAdjustment = -3; // -3
+    } else {
+      ewgRating = 'F';
+      ewgAdjustment = -5; // -5
     }
-    if (ewgPenalty > 0) {
+    
+    // Cap EWG penalties at -10
+    const cappedEwgAdjustment = Math.max(ewgAdjustment, -10);
+    
+    if (cappedEwgAdjustment !== 0) {
       adjustments.push({
-        description: `EWG high-hazard cosmetic (hazard score: ${ewgData.hazardScore})`,
-        value: -ewgPenalty,
-        type: 'negative',
+        description: `EWG rating ${ewgRating} (hazard score: ${hazardScore})`,
+        value: cappedEwgAdjustment,
+        type: cappedEwgAdjustment > 0 ? 'positive' : 'negative',
       });
-      score -= ewgPenalty;
+      score += cappedEwgAdjustment;
     }
   }
   
-  // Irritants
-  const hasIrritants = IRRITANTS.some((i) => hasTerm(i));
-  const irritantPenalty = hasIrritants ? 10 : 0;
-  if (irritantPenalty > 0) {
-    adjustments.push({
-      description: 'Contains irritants (paraben, phthalate, sulfate, etc.)',
-      value: -irritantPenalty,
-      type: 'negative',
-    });
-    score -= irritantPenalty;
-  }
+  // Note: Universal irritants (phthalates, parabens) are now handled in additive penalty section above
+  // Note: Fragrance penalty moved to Open Pillar (transparency issue, not body safety)
   
-  // Fragrance
-  const hasFragrance = ['parfum', 'fragrance', 'aroma'].some((a) => hasTerm(a));
-  const fragrancePenalty = hasFragrance ? 10 : 0;
-  if (fragrancePenalty > 0) {
-    adjustments.push({
-      description: 'Contains fragrance/parfum',
-      value: -fragrancePenalty,
-      type: 'negative',
-    });
-    score -= fragrancePenalty;
-  }
-  
-  // NOVA adjustments
+  // NOVA adjustments (with cap of -10 total processing penalties)
   const nova = product.nova_group;
   let novaAdjustment = 0;
+  let totalProcessingPenalties = 0;
+  
   if (nova === 1) {
     novaAdjustment = 3;
     adjustments.push({
@@ -226,24 +322,33 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
     // No adjustment for NOVA 2
   } else if (nova === 3) {
     novaAdjustment = -3;
+    totalProcessingPenalties = 3;
     adjustments.push({
       description: 'NOVA Group 3 (processed)',
       value: novaAdjustment,
       type: 'negative',
     });
-    score += novaAdjustment; // Already negative
   } else if (nova === 4) {
     novaAdjustment = -8;
+    totalProcessingPenalties = 8;
     adjustments.push({
       description: 'NOVA Group 4 (ultra-processed)',
       value: novaAdjustment,
       type: 'negative',
     });
-    score += novaAdjustment; // Already negative
   }
   
-  // Cap at 0-25
-  score = Math.max(0, Math.min(25, Math.round(score)));
+  // Cap total processing penalties at -10
+  const cappedProcessingPenalty = Math.min(totalProcessingPenalties, 10);
+  if (cappedProcessingPenalty > 0) {
+    score -= cappedProcessingPenalty;
+    if (totalProcessingPenalties > 10) {
+      logger.debug(`[BodyPillar] Processing penalties capped at -10 (total was -${totalProcessingPenalties})`);
+    }
+  }
+  
+  // Cap at 2-25 (minimum floor of 2 per new specification)
+  score = Math.max(2, Math.min(25, Math.round(score)));
   
   return {
     score,
@@ -255,9 +360,9 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
       nutriscoreValue,
       additivePenalty: Math.min(additivePenalty, 15),
       riskyTagsPenalty,
-      irritantPenalty,
-      fragrancePenalty,
+      universalIrritantPenalty: universalIrritantPenalty,
       novaAdjustment,
+      ewgAdjustment: ewgAdjustment,
     },
   };
 }

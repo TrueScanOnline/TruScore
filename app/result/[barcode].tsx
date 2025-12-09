@@ -41,6 +41,7 @@ import InsightsCarousel from '../../src/components/InsightsCarousel';
 import TruScoreInfoModal from '../../src/components/TrustScoreInfoModal';
 import EcoScoreInfoModal from '../../src/components/EcoScoreInfoModal';
 import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModal';
+import AdditivesRiskCard from '../../src/components/AdditivesRiskCard';
 import ProcessingLevelModal from '../../src/components/ProcessingLevelModal';
 import CameraCaptureModal from '../../src/components/CameraCaptureModal';
 import { extractManufacturingCountry, calculateEcoScore } from '../../src/services/openFoodFacts';
@@ -1952,6 +1953,15 @@ function ResultScreenContent() {
             })()}
           </PremiumGate>
         )}
+
+        {/* Additives Risk Card - IARC & EWG Risks */}
+        <AdditivesRiskCard
+          product={product}
+          onPress={() => {
+            // Could open a detailed modal in the future
+            console.log('Additives Risk card pressed');
+          }}
+        />
 
         {/* Bottom spacing */}
         <View style={styles.bottomSpacer} />

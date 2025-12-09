@@ -1,0 +1,29 @@
+{
+  "sheetName": "Sheet1",
+  "totalRows": 1125,
+  "totalColumns": 7,
+  "columns": [
+    "Agents Classified by the IARC Monographs, Volumes 1–140",
+    "__EMPTY",
+    "__EMPTY_1",
+    "__EMPTY_2",
+    "__EMPTY_3",
+    "__EMPTY_4",
+    "__EMPTY_5"
+  ],
+  "sampleRow": {
+    "Agents Classified by the IARC Monographs, Volumes 1–140": "CAS No.",
+    "__EMPTY": "Agent",
+    "__EMPTY_1": "Group",
+    "__EMPTY_2": "Volume",
+    "__EMPTY_3": "Volume publication year",
+    "__EMPTY_4": "Evaluation year",
+    "__EMPTY_5": "Additional information"
+  },
+  "iarcGroups": [
+    "Agents Classified by the IARC Monographs, Volumes 1–140"
+  ],
+  "nameColumns": [
+    "Agents Classified by the IARC Monographs, Volumes 1–140"
+  ]
+}

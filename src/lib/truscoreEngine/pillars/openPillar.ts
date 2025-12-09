@@ -32,6 +32,9 @@ const HIDDEN_TERMS = [
   'proprietary blend',
 ];
 
+// Fragrance terms (moved from BODY Pillar - transparency issue, not body safety)
+const FRAGRANCE_TERMS = ['parfum', 'fragrance', 'aroma'];
+
 export interface OpenPillarResult {
   score: number;
   base: number;
@@ -44,6 +47,7 @@ export interface OpenPillarResult {
     ingredientsScore: number;
     ingredientsLength: number;
     hiddenTermsPenalty: number;
+    fragrancePenalty: number;
     sophisticationBonus: number;
     originPenalty: number;
   };
@@ -145,13 +149,14 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     }
   }
   
-  // Hidden terms penalty
-  const hiddenCount = HIDDEN_TERMS.filter((t) => hasTerm(t)).length;
+  // Hidden terms penalty (excludes fragrance - handled separately)
+  const nonFragranceHiddenTerms = HIDDEN_TERMS.filter(t => !FRAGRANCE_TERMS.includes(t));
+  const hiddenCount = nonFragranceHiddenTerms.filter((t) => hasTerm(t)).length;
   let hiddenTermsPenalty = 0;
   if (hiddenCount >= 3) {
     hiddenTermsPenalty = 20;
     adjustments.push({
-      description: `${hiddenCount} hidden ingredient term(s) (parfum, fragrance, aroma, flavor, proprietary, etc.)`,
+      description: `${hiddenCount} hidden ingredient term(s) (flavor, proprietary, etc.)`,
       value: -hiddenTermsPenalty,
       type: 'negative',
     });
@@ -159,11 +164,23 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   } else if (hiddenCount >= 1) {
     hiddenTermsPenalty = 10;
     adjustments.push({
-      description: `${hiddenCount} hidden ingredient term(s) (parfum, fragrance, aroma, flavor, proprietary, etc.)`,
+      description: `${hiddenCount} hidden ingredient term(s) (flavor, proprietary, etc.)`,
       value: -hiddenTermsPenalty,
       type: 'negative',
     });
     score -= hiddenTermsPenalty;
+  }
+  
+  // Fragrance penalty (moved from BODY Pillar - transparency issue)
+  const hasFragrance = FRAGRANCE_TERMS.some((a) => hasTerm(a));
+  const fragrancePenalty = hasFragrance ? 10 : 0;
+  if (fragrancePenalty > 0) {
+    adjustments.push({
+      description: 'Contains fragrance/parfum (hidden ingredients - transparency issue)',
+      value: -fragrancePenalty,
+      type: 'negative',
+    });
+    score -= fragrancePenalty;
   }
   
   // Sophistication bonus: +5 for zero hidden ingredients + NOVA1-2
@@ -264,6 +281,7 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
       ingredientsScore,
       ingredientsLength,
       hiddenTermsPenalty,
+      fragrancePenalty,
       sophisticationBonus,
       originPenalty,
     },
