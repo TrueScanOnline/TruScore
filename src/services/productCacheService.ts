@@ -21,7 +21,8 @@ import { calculateTrustScore } from '../utils/trustScore';
 import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
 import { isWebSearchFallback } from './webSearchFallback';
 import { logger } from '../utils/logger';
-import { handleError, ErrorCategory, ErrorSeverity } from './errorHandlingService';
+// CRITICAL FIX: Use dynamic import to break require cycle
+// import { handleError, ErrorCategory, ErrorSeverity } from './errorHandlingService';
 
 /**
  * Check if cached product is low quality and should be retried
@@ -126,6 +127,8 @@ export async function mergeUserContributedData(product: Product, barcode: string
     logger.debug(`[ProductCacheService] ✅ User-contributed data merged`);
     return product;
   } catch (error) {
+    // Use dynamic import to break require cycle
+    const { handleError, ErrorCategory, ErrorSeverity } = await import('./errorHandlingService');
     handleError(error, ErrorCategory.DATABASE, ErrorSeverity.LOW, { barcode });
     return product;
   }
@@ -165,13 +168,16 @@ export async function saveProductToCache(product: ProductWithTrustScore, barcode
     
     logger.debug(`[ProductCacheService] ✅ Product cached: ${barcode}`);
   } catch (error) {
+    // Use dynamic import to break require cycle
+    const { handleError, ErrorCategory, ErrorSeverity } = await import('./errorHandlingService');
     handleError(error, ErrorCategory.DATABASE, ErrorSeverity.LOW, { barcode });
     // Non-critical - continue even if caching fails
   }
 }
 
 /**
- * Lookup product from SQLite database
+ * OPTIMIZED: Lookup product from SQLite database
+ * Now uses parallel lookup with cache for faster results
  */
 export async function lookupFromSQLite(barcode: string): Promise<Product | null> {
   try {
@@ -186,6 +192,30 @@ export async function lookupFromSQLite(barcode: string): Promise<Product | null>
     
     return null;
   } catch (error) {
+    // Use dynamic import to break require cycle
+    const { handleError, ErrorCategory, ErrorSeverity } = await import('./errorHandlingService');
+    handleError(error, ErrorCategory.DATABASE, ErrorSeverity.LOW, { barcode });
+    return null;
+  }
+}
+
+/**
+ * OPTIMIZED: Parallel cache lookups for faster results
+ * Checks SQLite and AsyncStorage in parallel
+ */
+export async function lookupProductFast(barcode: string, isPremium: boolean, barcodeVariants: string[]): Promise<Product | null> {
+  try {
+    // Check SQLite and AsyncStorage in parallel for fastest result
+    const [sqliteProduct, cachedProduct] = await Promise.all([
+      lookupFromSQLite(barcode),
+      lookupFromCache(barcode, isPremium, barcodeVariants),
+    ]);
+    
+    // Return fastest result (SQLite is usually faster, but cache might have more recent data)
+    return sqliteProduct || cachedProduct;
+  } catch (error) {
+    // Use dynamic import to break require cycle
+    const { handleError, ErrorCategory, ErrorSeverity } = await import('./errorHandlingService');
     handleError(error, ErrorCategory.DATABASE, ErrorSeverity.LOW, { barcode });
     return null;
   }
@@ -205,6 +235,8 @@ export async function lookupFromCache(barcode: string, isPremium: boolean, barco
     }
     return null;
   } catch (error) {
+    // Use dynamic import to break require cycle
+    const { handleError, ErrorCategory, ErrorSeverity } = await import('./errorHandlingService');
     handleError(error, ErrorCategory.DATABASE, ErrorSeverity.LOW, { barcode });
     return null;
   }

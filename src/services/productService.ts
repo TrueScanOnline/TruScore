@@ -385,17 +385,30 @@ async function executeFetchProduct(barcode: string, useCache = true, isPremium =
     }
   }
 
-  // Ensure we have a product (should always be true now with web search fallback)
+  // CRITICAL FIX: Ensure we ALWAYS have a product (never null)
+  // This matches Yuka's behavior of always showing something
   if (!product) {
-    logger.error(`CRITICAL: All sources including web search failed for barcode: ${barcode}`);
-    // This should never happen, but if it does, create absolute fallback
-    product = {
-      barcode,
-      product_name: `Product ${barcode}`,
-      source: 'web_search',
-      quality: 5,
-      completion: 10,
-    };
+    logger.warn(`No product found in any database for ${barcode}, creating minimal product (Yuka-compatible behavior)`);
+    
+    // Try web search one more time (more aggressive)
+    try {
+      product = await fetchProductFromWebSearch(primaryBarcode, undefined);
+    } catch (webSearchError) {
+      logger.debug('Web search also failed, creating absolute minimal product');
+    }
+    
+    // If web search also fails, create absolute minimal product
+    // This ensures we ALWAYS return a product (never null)
+    if (!product) {
+      product = {
+        barcode: primaryBarcode,
+        product_name: `Product ${primaryBarcode}`, // Generic name (display logic will handle)
+        source: 'fallback',
+        quality: 10,
+        completion: 10,
+      };
+      logger.info(`Created minimal fallback product for ${barcode} (always return product, never null)`);
+    }
   }
 
   // CRITICAL: Query by product name (ALWAYS execute after product found OR if we have a name)

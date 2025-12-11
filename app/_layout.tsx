@@ -97,6 +97,14 @@ function RootLayout() {
             critical: false,
           },
           {
+            name: 'csvDatabases',
+            task: async () => {
+              const { initializeCSVDatabases } = await import('../src/services/csvDatabases/csvDatabaseService');
+              await initializeCSVDatabases();
+            },
+            critical: false, // Non-critical - PLANET Pillar can work without it
+          },
+          {
             name: 'settingsStore',
             task: async () => {
               await initSettings();

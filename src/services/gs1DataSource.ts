@@ -1,102 +1,113 @@
 // GS1 Data Source API client
 // Official GS1 barcode registry (Global Trade Item Number)
+// Uses FREE GS1 Digital Link service (no API key required)
 import { Product } from '../types/product';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { logger } from '../utils/logger';
 
-const GS1_API_BASE = 'https://api.gs1.org/v1';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
 
-// Note: GS1 API requires subscription or 60-day free trial (NOT completely free)
-// Free trial registration: https://store.gs1us.org/view-use-api-trial/p
-// Paid subscription: https://www.gs1us.org/tools/gs1-us-data-hub/gs1-us-apis
-// Developer portal: https://developer.gs1.org/
-// Store in environment variable: EXPO_PUBLIC_GS1_API_KEY
-const GS1_API_KEY = process.env.EXPO_PUBLIC_GS1_API_KEY || '';
-
-export interface GS1ProductResponse {
-  gtin?: string;
-  productName?: string;
-  brandName?: string;
-  description?: string;
-  category?: string;
-  imageUrl?: string;
-  manufacturer?: {
-    name?: string;
-  };
-  attributes?: Array<{
-    name: string;
-    value: string;
-  }>;
-}
+// Note: Using free GS1 Digital Link service (no API key required)
+// GS1 Digital Link is a free, public service that provides product information
+// Not all products have GS1 Digital Links, but it's free to use
 
 /**
- * Fetch product data from GS1 Data Source API
+ * GS1 lookup using free GS1 Digital Link service
+ * No API key required - uses public GS1 Digital Link service
  * Official barcode verification and basic product information
  */
 export async function fetchProductFromGS1(barcode: string): Promise<Product | null> {
-  // Skip if no API key configured
-  // Note: GS1 requires subscription or trial, so this is expected if no key is provided
-  if (!GS1_API_KEY) {
-    logger.debug('GS1 API key not configured (requires subscription or 60-day trial), skipping GS1 lookup');
-    return null;
-  }
-
+  // Use free GS1 Digital Link service (no API key required)
   try {
-    // GS1 API endpoint for product lookup by GTIN
-    const url = `${GS1_API_BASE}/product/gtin/${barcode}`;
+    const digitalLinkProduct = await fetchProductFromGS1DigitalLink(barcode);
+    if (digitalLinkProduct) {
+      return digitalLinkProduct;
+    }
+  } catch (error) {
+    logger.debug('GS1 Digital Link failed:', error);
+  }
+  
+  return null;
+}
+
+/**
+ * Fetch from GS1 Digital Link (free, no API key required)
+ * GS1 Digital Link is a free service that provides product information via QR codes/URLs
+ * Note: Not all products have GS1 Digital Links
+ */
+async function fetchProductFromGS1DigitalLink(barcode: string): Promise<Product | null> {
+  try {
+    // GS1 Digital Link format: https://id.gs1.org/01/{gtin}
+    // This is a free, public service
+    const digitalLinkUrl = `https://id.gs1.org/01/${barcode}`;
     
-    const response = await fetchWithRateLimit(url, {
+    // Try to resolve the Digital Link
+    // Note: This may redirect to manufacturer's product page or return JSON-LD
+    const response = await fetchWithRateLimit(digitalLinkUrl, {
       headers: {
         'User-Agent': USER_AGENT,
-        'Authorization': `Bearer ${GS1_API_KEY}`,
-        'Accept': 'application/json',
+        'Accept': 'application/json, application/ld+json, text/html',
       },
-    }, 'gs1_datasource');
-
+      redirect: 'follow',
+    }, 'gs1_digital_link');
+    
     if (!response.ok) {
-      if (response.status === 404) {
-        logger.debug(`Product not found in GS1: ${barcode}`);
-        return null;
-      }
-      logger.warn(`GS1 API error: ${response.status} ${response.statusText}`);
       return null;
     }
-
-    const data: GS1ProductResponse = await response.json();
-
-    if (!data.gtin) {
-      return null;
-    }
-
-    // Convert GS1 data to Product format
-    const product: Product = {
-      barcode: data.gtin,
-      product_name: data.productName || data.description || `Product ${barcode}`,
-      brands: data.brandName || data.manufacturer?.name || undefined,
-      image_url: data.imageUrl || undefined,
-      source: 'gs1_datasource',
-      // GS1 provides official, verified data
-      quality: 95,
-      completion: 70, // GS1 has basic info, not detailed nutrition
-    };
-
-    // Extract additional attributes if available
-    if (data.attributes && data.attributes.length > 0) {
-      const attributesMap: Record<string, string> = {};
-      data.attributes.forEach(attr => {
-        attributesMap[attr.name] = attr.value;
-      });
+    
+    const contentType = response.headers.get('content-type') || '';
+    
+    // If JSON-LD, parse structured data
+    if (contentType.includes('application/json') || contentType.includes('application/ld+json')) {
+      const data = await response.json();
       
-      // Try to extract category
-      if (data.category) {
-        product.categories_tags = [data.category.toLowerCase()];
+      // Extract product information from JSON-LD
+      if (data.name || data.productName) {
+        const product: Product = {
+          barcode,
+          product_name: data.name || data.productName || `Product ${barcode}`,
+          brands: data.brand?.name || data.manufacturer?.name || undefined,
+          image_url: data.image || data.imageUrl || undefined,
+          source: 'gs1_digital_link',
+          quality: 85, // Digital Link data is official but may be incomplete
+          completion: 60,
+        };
+        
+        return product;
       }
     }
-
-    return product;
+    
+    // If HTML, try to extract product info from page
+    if (contentType.includes('text/html')) {
+      const html = await response.text();
+      
+      // Try to extract JSON-LD from HTML
+      const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i);
+      if (jsonLdMatch) {
+        try {
+          const jsonLd = JSON.parse(jsonLdMatch[1]);
+          if (jsonLd.name || jsonLd.productName) {
+            const product: Product = {
+              barcode,
+              product_name: jsonLd.name || jsonLd.productName || `Product ${barcode}`,
+              brands: jsonLd.brand?.name || jsonLd.manufacturer?.name || undefined,
+              image_url: jsonLd.image || jsonLd.imageUrl || undefined,
+              source: 'gs1_digital_link',
+              quality: 85,
+              completion: 60,
+            };
+            
+            return product;
+          }
+        } catch (e) {
+          // JSON-LD parse failed - continue
+        }
+      }
+    }
+    
+    return null;
   } catch (error) {
-    logger.error(`Error fetching from GS1`, error);
+    logger.debug(`Error fetching from GS1 Digital Link`, error);
     return null;
   }
 }

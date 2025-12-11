@@ -1,0 +1,79 @@
+﻿[
+  [
+    "Pillar (25 pts) ",
+    " Data Element ",
+    " Positive Statement (what high score means) ",
+    " Dimensions / Measures (public third-party source) ",
+    " What it is & why it matters (2025 consumer concern) ",
+    " Exact Free/Public Data Point + API Field ",
+    " Scoring Conversion (to 0-25) ",
+    " Explanation ",
+    " Decision Tree Logic (Order of Priority) "
+  ],
+  [
+    " Planet ",
+    " Base Score ",
+    " Slightly positive neutral; assumes eco until bad ",
+    " Internal Logic (No external source) ",
+    " Scaled WWF global avg ~48/100 (2025 emissions); optimistic fair to indies ",
+    " N/A ",
+    " 15 (uniform) ",
+    " Uniform 15 consistency; WWF defends without negativity. Revalidated: Neutral fair, avoids low starts on unknowns. ",
+    " 1. Always starting point; adjustments added/subtracted. "
+  ],
+  [
+    "",
+    " Eco-Score Grade ",
+    " Top eco; low emissions/deforestation ",
+    " Country/Global OFF + Agribalyse/RIVM/UK Food/Exiobase/Ember/Eaternity CSVs ",
+    " Emissions drive climate anxiety (top X 2025) ",
+    " ecoscore_grade (string a-e) or CSV lookups (e.g., carbon factors) ",
+    " A=+10, B=+5, C=0, D=-5, E=-10 (adj base, direct map); high CSV carbon=-5 if OFF missing ",
+    " Official FR system (G20 push); ADEME LCA cuts emissions 50% for A. CSVs supplement for coverage\\'97public grades defend. ",
+    " 1. Country OFF > 2. Global OFF; overlay CSV lookups if missing (e.g., Exiobase spend-based carbon). "
+  ],
+  [
+    "",
+    " Palm/Deforestation ",
+    " No palm/deforestation links ",
+    " Country/Global OFF + WWF/RSPO CSVs ",
+    " Palm drives 50% deforestation boycotts (X virality 2025) ",
+    " palm_oil (boolean or tags) ",
+    " Non-sust palm=-8; sustainable/cert RSPO=0; brand/parent low WWF/RSPO=-5 overlay (even on clean products\\'97accountability) ",
+    " WWF studies defend; Brand data reliable (53% global volume)\\'97penalize parents for virality. Neutral 0 for cert rewards good actors without over-bonus (greenwashing risk). ",
+    " 1. Country OFF > 2. Global OFF; deduct if flagged without sustainable tag; neutral 0 if RSPO cert or OFF sustainable tag; overlay WWF/RSPO CSV lookup on brands_tags (parent accountable). "
+  ],
+  [
+    "",
+    " Packaging ",
+    " Fully recyclable; low waste ",
+    " Country/Global OFF + Idemat/ECR Guides/ReCoRe/Recycling Partnership CSVs ",
+    " Plastic pollution disgust (30% X concern 2025) ",
+    " packaging_tags (recycling array) ",
+    " Full recycle (local laws)=+5, partial=+2; high eco-cost material=-5 ",
+    " EPA studies defend; Idemat eco-costs reliable. Public grades defend\\'97penalize parents if material from shady supply. Local geo via ECR/ReCoRe CSVs (country/material recyclable per laws)\\'97defensible public. ",
+    " 1. Country OFF > 2. Global OFF; bonus if match recycle (local geo CSV lookup on user location); deduct if high Idemat CSV eco-cost. "
+  ],
+  [
+    "",
+    " Non-Animal Farming ",
+    " Sustainable farming; low water/carbon/land/crop treatment ",
+    " FAO FAOSTAT + Idemat + EWG Dirty Dozen/USDA PDP CSVs ",
+    " Farming shocks/geopolitics (25% distrust 2025) ",
+    " origins_tags (crop filter) ",
+    " High-water/carbon/land/crop treatment (pesticides/herbicides residue)=-5 (e.g., strawberries if origins match high-residue); low-impact=+3; brand/parent high-impact=-3 overlay (accountability). Deduct eco-only (soil/biodiversity loss), not human health (gut/cancer = Body). ",
+    " FAO/Idemat/EWG/USDA studies defend; public stats defend. Penalize parents if origins from high-impact regions. Crop treatment virality on \"Dirty Dozen\" (50% X disgust residues). ",
+    " 1. Country OFF > 2. Global OFF; deduct if high FAO/Idemat/EWG/USDA CSV impact on origins_tags; overlay brand/parent if low. "
+  ],
+  [
+    "",
+    " Overall Pillar Cap ",
+    " N/A ",
+    " Internal Logic (No external source) ",
+    " Allows wake-up viral on zero scores for bad deducts ",
+    " N/A ",
+    " Min 0 (floor after all adjustments) ",
+    " Caps final Planet score at min 0; revalidated: Zero \"eco-poison\" callout on junk\\'97viral boycott rage without nuance loss. ",
+    " 1. Applied after all adjustments; overrides if <0. "
+  ]
+]

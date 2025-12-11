@@ -1,280 +1,120 @@
 /**
- * Centralized Error Handling Service
- * 
- * Provides consistent error handling patterns across the application.
- * Ensures all errors are properly logged, reported, and user-friendly messages are displayed.
- * 
- * @module errorHandlingService
+ * Enhanced Error Handling Service
+ * Provides graceful degradation and better error recovery
  */
 
+import { Product, ProductWithTrustScore } from '../types/product';
 import { logger } from '../utils/logger';
-import { Platform } from 'react-native';
+import { getCachedProduct } from './cacheService';
+// CRITICAL FIX: Remove direct import to break require cycle
+// Use dynamic import instead
 
-/**
- * Error categories for better error classification
- */
 export enum ErrorCategory {
   NETWORK = 'network',
   DATABASE = 'database',
-  VALIDATION = 'validation',
-  PERMISSION = 'permission',
   API = 'api',
+  VALIDATION = 'validation',
   UNKNOWN = 'unknown',
 }
 
-/**
- * Error severity levels
- */
 export enum ErrorSeverity {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
   CRITICAL = 'critical',
+  HIGH = 'high',
+  MEDIUM = 'medium',
+  LOW = 'low',
+}
+
+export interface ErrorContext {
+  barcode?: string;
+  source?: string;
+  [key: string]: unknown;
 }
 
 /**
- * Standardized error structure
- */
-export interface AppError {
-  message: string;
-  category: ErrorCategory;
-  severity: ErrorSeverity;
-  code?: string;
-  originalError?: Error | unknown;
-  context?: Record<string, unknown>;
-  timestamp: number;
-  platform: 'ios' | 'android' | 'web';
-}
-
-/**
- * User-friendly error messages
- */
-const USER_ERROR_MESSAGES: Record<ErrorCategory, string> = {
-  [ErrorCategory.NETWORK]: 'Network connection issue. Please check your internet connection and try again.',
-  [ErrorCategory.DATABASE]: 'Unable to access product database. Please try again.',
-  [ErrorCategory.VALIDATION]: 'Invalid input. Please check your entry and try again.',
-  [ErrorCategory.PERMISSION]: 'Permission required. Please enable in Settings.',
-  [ErrorCategory.API]: 'Service temporarily unavailable. Please try again later.',
-  [ErrorCategory.UNKNOWN]: 'An unexpected error occurred. Please try again.',
-};
-
-/**
- * Create a standardized error object
- */
-export function createAppError(
-  error: Error | unknown,
-  category: ErrorCategory = ErrorCategory.UNKNOWN,
-  severity: ErrorSeverity = ErrorSeverity.MEDIUM,
-  context?: Record<string, unknown>
-): AppError {
-  const message = error instanceof Error ? error.message : String(error);
-  const originalError = error instanceof Error ? error : new Error(String(error));
-
-  return {
-    message,
-    category,
-    severity,
-    originalError,
-    context,
-    timestamp: Date.now(),
-    platform: Platform.OS as 'ios' | 'android' | 'web',
-  };
-}
-
-/**
- * Get user-friendly error message
- */
-export function getUserErrorMessage(error: AppError | ErrorCategory): string {
-  if (typeof error === 'string') {
-    return USER_ERROR_MESSAGES[error] || USER_ERROR_MESSAGES[ErrorCategory.UNKNOWN];
-  }
-  return USER_ERROR_MESSAGES[error.category] || USER_ERROR_MESSAGES[ErrorCategory.UNKNOWN];
-}
-
-/**
- * Log error with appropriate level
- */
-export function logError(error: AppError, additionalContext?: Record<string, unknown>): void {
-  const logContext = {
-    ...error.context,
-    ...additionalContext,
-    platform: error.platform,
-    timestamp: new Date(error.timestamp).toISOString(),
-  };
-
-  switch (error.severity) {
-    case ErrorSeverity.CRITICAL:
-      logger.error(`[CRITICAL] ${error.message}`, logContext);
-      break;
-    case ErrorSeverity.HIGH:
-      logger.error(`[HIGH] ${error.message}`, logContext);
-      break;
-    case ErrorSeverity.MEDIUM:
-      logger.warn(`[MEDIUM] ${error.message}`, logContext);
-      break;
-    case ErrorSeverity.LOW:
-      logger.debug(`[LOW] ${error.message}`, logContext);
-      break;
-  }
-
-  // Log original error if available
-  if (error.originalError instanceof Error && error.originalError.stack) {
-    logger.debug('Original error stack:', error.originalError.stack);
-  }
-}
-
-/**
- * Handle error with logging and optional reporting
+ * Handle error with graceful degradation
  */
 export function handleError(
-  error: Error | unknown,
-  category: ErrorCategory = ErrorCategory.UNKNOWN,
-  severity: ErrorSeverity = ErrorSeverity.MEDIUM,
-  context?: Record<string, unknown>
-): AppError {
-  const appError = createAppError(error, category, severity, context);
-  logError(appError);
-  return appError;
-}
-
-/**
- * Handle network errors specifically
- */
-export function handleNetworkError(error: Error | unknown, context?: Record<string, unknown>): AppError {
-  return handleError(error, ErrorCategory.NETWORK, ErrorSeverity.MEDIUM, context);
-}
-
-/**
- * Handle database errors specifically
- */
-export function handleDatabaseError(error: Error | unknown, context?: Record<string, unknown>): AppError {
-  return handleError(error, ErrorCategory.DATABASE, ErrorSeverity.HIGH, context);
-}
-
-/**
- * Handle validation errors specifically
- */
-export function handleValidationError(error: Error | unknown, context?: Record<string, unknown>): AppError {
-  return handleError(error, ErrorCategory.VALIDATION, ErrorSeverity.LOW, context);
-}
-
-/**
- * Handle permission errors specifically
- */
-export function handlePermissionError(error: Error | unknown, context?: Record<string, unknown>): AppError {
-  return handleError(error, ErrorCategory.PERMISSION, ErrorSeverity.MEDIUM, context);
-}
-
-/**
- * Handle API errors specifically
- */
-export function handleApiError(error: Error | unknown, context?: Record<string, unknown>): AppError {
-  return handleError(error, ErrorCategory.API, ErrorSeverity.MEDIUM, context);
-}
-
-/**
- * Safe async wrapper - catches and handles errors automatically
- */
-export async function safeAsync<T>(
-  fn: () => Promise<T>,
-  fallback: T,
-  category: ErrorCategory = ErrorCategory.UNKNOWN,
-  context?: Record<string, unknown>
-): Promise<T> {
-  try {
-    return await fn();
-  } catch (error) {
-    handleError(error, category, ErrorSeverity.MEDIUM, context);
-    return fallback;
-  }
-}
-
-/**
- * Safe sync wrapper - catches and handles errors automatically
- */
-export function safeSync<T>(
-  fn: () => T,
-  fallback: T,
-  category: ErrorCategory = ErrorCategory.UNKNOWN,
-  context?: Record<string, unknown>
-): T {
-  try {
-    return fn();
-  } catch (error) {
-    handleError(error, category, ErrorSeverity.MEDIUM, context);
-    return fallback;
-  }
-}
-
-/**
- * Check if error is a network error
- */
-export function isNetworkError(error: unknown): boolean {
-  if (error instanceof Error) {
-    const message = error.message.toLowerCase();
-    return (
-      message.includes('network') ||
-      message.includes('fetch') ||
-      message.includes('timeout') ||
-      message.includes('connection') ||
-      message.includes('econnrefused') ||
-      message.includes('enotfound')
-    );
-  }
-  return false;
-}
-
-/**
- * Check if error is a timeout error
- */
-export function isTimeoutError(error: unknown): boolean {
-  if (error instanceof Error) {
-    const message = error.message.toLowerCase();
-    return message.includes('timeout') || message.includes('timed out');
-  }
-  return false;
-}
-
-/**
- * Retry wrapper with exponential backoff
- */
-export async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3,
-  initialDelay: number = 1000,
-  context?: Record<string, unknown>
-): Promise<T> {
-  let lastError: unknown;
+  error: unknown,
+  category: ErrorCategory,
+  severity: ErrorSeverity,
+  context?: ErrorContext
+): void {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorStack = error instanceof Error ? error.stack : undefined;
   
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error;
-      
-      // Don't retry on validation errors
-      if (error instanceof Error && error.message.includes('validation')) {
-        throw error;
-      }
-      
-      // Don't retry on last attempt
-      if (attempt === maxRetries - 1) {
-        break;
-      }
-      
-      // Exponential backoff
-      const delay = initialDelay * Math.pow(2, attempt);
-      logger.debug(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`, context);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-  
-  // All retries failed
-  handleError(lastError, ErrorCategory.API, ErrorSeverity.HIGH, {
+  // Log error with context
+  logger.error(`[${category.toUpperCase()}] ${severity.toUpperCase()}: ${errorMessage}`, {
     ...context,
-    retries: maxRetries,
+    stack: errorStack,
   });
   
-  throw lastError;
+  // For critical errors, also log to crash reporting service
+  if (severity === ErrorSeverity.CRITICAL) {
+    // TODO: Integrate with crash reporting service (e.g., Sentry, Crashlytics)
+    console.error('[CRITICAL ERROR]', errorMessage, context);
+  }
 }
 
+/**
+ * Fetch product with graceful fallback
+ * Tries multiple strategies before giving up
+ */
+export async function fetchProductWithFallback(
+  barcode: string,
+  primaryFetch: () => Promise<ProductWithTrustScore | null>,
+  isPremium: boolean = false
+): Promise<ProductWithTrustScore | null> {
+  try {
+    // Try primary fetch first
+    return await primaryFetch();
+  } catch (error) {
+    handleError(error, ErrorCategory.API, ErrorSeverity.HIGH, { barcode });
+    
+    // Fallback 1: Try cache
+    try {
+      logger.info(`[ErrorHandling] Trying cache as fallback for ${barcode}`);
+      const cached = await getCachedProduct(barcode, isPremium);
+      if (cached) {
+        logger.info(`[ErrorHandling] ✅ Found in cache as fallback`);
+        // Process cached product
+        const { processCachedProduct } = await import('./productCacheService');
+        return await processCachedProduct(cached, barcode);
+      }
+    } catch (cacheError) {
+      handleError(cacheError, ErrorCategory.DATABASE, ErrorSeverity.LOW, { barcode });
+    }
+    
+    // Fallback 2: Try SQLite
+    try {
+      logger.info(`[ErrorHandling] Trying SQLite as fallback for ${barcode}`);
+      // Use dynamic import to break require cycle
+      const { lookupFromSQLite, processSQLiteProduct } = await import('./productCacheService');
+      const sqliteProduct = await lookupFromSQLite(barcode);
+      if (sqliteProduct) {
+        logger.info(`[ErrorHandling] ✅ Found in SQLite as fallback`);
+        return await processSQLiteProduct(sqliteProduct, barcode);
+      }
+    } catch (sqliteError) {
+      handleError(sqliteError, ErrorCategory.DATABASE, ErrorSeverity.LOW, { barcode });
+    }
+    
+    // Last resort: Return null (caller should handle)
+    logger.warn(`[ErrorHandling] All fallbacks failed for ${barcode}`);
+    return null;
+  }
+}
+
+/**
+ * Create minimal product as last resort
+ */
+export function createMinimalProduct(barcode: string): ProductWithTrustScore {
+  return {
+    barcode,
+    product_name: `Product ${barcode}`,
+    source: 'fallback',
+    quality: 10,
+    completion: 10,
+    trust_score: null,
+    trust_score_breakdown: null,
+  };
+}

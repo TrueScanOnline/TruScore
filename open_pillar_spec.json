@@ -1,0 +1,68 @@
+[
+  [
+    "Pillar (25 pts)",
+    "Data Element",
+    "Positive Statement (what high score means)",
+    "Dimensions / Measures (public third-party source)",
+    "What it is & why it matters (2025 consumer concern)",
+    "Exact Free/Public Data Point + API Field",
+    "Scoring Conversion (to 0-25)",
+    "Explanation",
+    "Decision Tree Logic (Order of Priority)"
+  ],
+  [
+    "Open",
+    "Base Score",
+    "Slightly positive neutral; assumes transparent till hidden",
+    "Internal Logic (No external source)",
+    "Scaled OECD G20 avg ~60/100 (2025 supply chains); optimistic fair to indies",
+    "N/A",
+    "15 (uniform, geo regs weight 0.5 if mandates)",
+    "Uniform 15 consistency; OECD defends without negativity; fair to indies avoids X backlash on bias",
+    "1. Always fallback; geo weight if disclosure data."
+  ],
+  [
+    null,
+    "Ingredients Disclosure",
+    "Full list disclosed; no placeholders",
+    "FDA (US labeling), Health Canada, FSANZ (AU/NZ), UK FSA/EFSA, MHLW (Japan), CFS (HK), SFA (SG) > Country/Global OFF",
+    "70% consumers value lists (trust killer X 2025)",
+    "ingredients_text (present)",
+    "Present=+5, partial=5-10 (>80%=10, 50-80%=5), none=-5; +5 if zero hidden & NOVA1-2 (local confirms override)",
+    "Labeling regs defend; rewards purity without char length bias; geo mandates edge",
+    "1. Local govt regs (e.g., MHLW Japan) > 2. Country OFF > 3. Global OFF > 4. User subs if gaps; score based on completeness; add NOVA cross if 1-2 & zero hidden."
+  ],
+  [
+    null,
+    "Hidden Terms",
+    "No hidden terms like parfum/aroma",
+    "FDA (US), Health Canada, FSANZ (AU/NZ), UK FSA/EFSA, MHLW (Japan), CFS (HK irritants), SFA (SG) > Country/Global OFF",
+    "50% disgust on parfum (X sentiment)",
+    "ingredients_text (match count for parfum/aroma/flavor/natural flavor/natural flavour/proprietary blend)",
+    "1=-5, 2=-10, >=3=-15; +1 count if NOVA>=3 & disclosure not full (partial/none)",
+    "Studies/X defend count; geo local tags heavy; NOVA amp only if opacity in processed—avoids hitting clean indies",
+    "1. Local govt (e.g., SFA SG) > 2. Country OFF > 3. Global OFF; deduct if match; conditional NOVA tie."
+  ],
+  [
+    null,
+    "Origins",
+    "Full origins disclosed; supply chain transparency",
+    "GS1 API (2D Sunrise 2027 for origin/supplier/processing), FDA (US), Health Canada, FSANZ (AU/NZ origins), UK FSA/EFSA, MHLW (Japan), CFS (HK), SFA (SG) > Country/Global OFF",
+    "30% origins distrust (geopolitics X concern 2025)",
+    "origins_tags (present and complete)",
+    "No origin=-8, complete via GS1=+5 bonus",
+    "Studies defend; heavy geo for supply chain shocks; GS1 2027 future-proofs",
+    "1. GS1 API if 2D scan > 2. Local govt tags (e.g., FSANZ AU) > 3. Country OFF > 4. Global OFF; deduct if missing, bonus if GS1 complete."
+  ],
+  [
+    null,
+    "Overall Pillar Cap",
+    "N/A",
+    "Internal Logic (No external source)",
+    "Allows wake-up viral on low scores for bad deducts",
+    "N/A",
+    "Min 0 (floor after all adjustments)",
+    "Caps final Open score at min 0; zero \"opacity alert\" callout on hidden crap—viral rage without overkill",
+    "1. Applied after all adjustments; overrides if <0."
+  ]
+]

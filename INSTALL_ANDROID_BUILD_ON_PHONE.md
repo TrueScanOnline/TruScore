@@ -132,3 +132,5 @@ npx eas build -p android --profile preview-apk --non-interactive
 **Status:** Download from web dashboard and enable "Install unknown apps"!
 
 
+
+

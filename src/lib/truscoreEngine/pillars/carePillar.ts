@@ -3,17 +3,20 @@
  * 
  * Base Score: 15/25
  * Adjustments:
- * - Certifications: Fairtrade=+8, Organic=+7, Rainforest Alliance=+6, UTZ=+6, MSC/ASC=+6, RSPCA=+5, B-Corp=+5, Cage-Free/Free-Range=+4
+ * - Certifications: Fairtrade=+8, Organic=+7, Rainforest/UTZ=+6, MSC/ASC=+6, RSPO=+6, RSPCA/Leaping Bunny/B-Corp=+5, Cage-Free/Free-Range=+4
  * - Certification bonus cap: +15 total
- * - Cruel parent: -15
- * - Recalls (within 12 months): -10
+ * - Animal Cruelty: Major=-15, Minor=-5, Brand overlay=-3
+ * - Labor Violations: Minor=-5, Major=-15, Brand overlay=-3
+ * - Recalls (within 12 months): -10, Brand overlay=-3 if recall history
  * 
  * Final: Capped at 0-25
  */
 
 import { Product } from '../../../types/product';
-import { isCruelParent } from '../../../data/brandDatabase';
+import { getBrandData, hasRecallHistory } from '../../../data/brandDatabase';
 import { logger } from '../../../utils/logger';
+import { checkAnimalCruelty, hasHighImpactAnimalCruelty } from '../../../services/animalCrueltyService';
+import { checkLaborViolations, hasHighImpactLaborViolations } from '../../../services/laborViolationsService';
 
 export interface CarePillarResult {
   score: number;
@@ -25,8 +28,10 @@ export interface CarePillarResult {
   }>;
   details: {
     certificationBonus: number;
-    cruelParentPenalty: number;
+    animalCrueltyPenalty: number;
+    laborViolationPenalty: number;
     recallPenalty: number;
+    brandOverlayPenalty: number;
   };
 }
 
@@ -112,10 +117,31 @@ export function calculateCarePillar(product: Product): CarePillarResult {
     });
   }
   
+  // RSPO certification (Roundtable on Sustainable Palm Oil)
+  if (hasLabel('rspo') || hasLabel('roundtable-on-sustainable-palm-oil')) {
+    certificationBonus += 6;
+    adjustments.push({
+      description: 'RSPO certification',
+      value: 6,
+      type: 'positive',
+    });
+  }
+  
   if (hasLabel('rspca')) {
     certificationBonus += 5;
     adjustments.push({
       description: 'RSPCA certification',
+      value: 5,
+      type: 'positive',
+    });
+  }
+  
+  // Leaping Bunny certification (cruelty-free)
+  if (hasLabel('leaping-bunny') || hasLabel('cruelty-free') || 
+      (product as any).leaping_bunny?.isCrueltyFree === true) {
+    certificationBonus += 5;
+    adjustments.push({
+      description: 'Leaping Bunny certification (cruelty-free)',
       value: 5,
       type: 'positive',
     });
@@ -155,20 +181,58 @@ export function calculateCarePillar(product: Product): CarePillarResult {
     }
   }
   
-  // Cruel parent penalty
-  let cruelParentPenalty = 0;
-  if (isCruelParent(brands)) {
-    cruelParentPenalty = 15;
-    adjustments.push({
-      description: 'Cruel parent company (major ethical violation)',
-      value: -cruelParentPenalty,
-      type: 'negative',
-    });
-    score -= cruelParentPenalty;
+  // Animal Cruelty penalties (Major=-15, Minor=-5)
+  const animalCrueltyData = checkAnimalCruelty(product);
+  let animalCrueltyPenalty = 0;
+  
+  if (animalCrueltyData.hasViolations) {
+    if (animalCrueltyData.violationType === 'major') {
+      animalCrueltyPenalty = 15;
+      adjustments.push({
+        description: 'Major animal cruelty violation (factory farming/slaughter/cruelty)',
+        value: -animalCrueltyPenalty,
+        type: 'negative',
+      });
+      score -= animalCrueltyPenalty;
+    } else if (animalCrueltyData.violationType === 'minor') {
+      animalCrueltyPenalty = 5;
+      adjustments.push({
+        description: 'Minor animal cruelty violation',
+        value: -animalCrueltyPenalty,
+        type: 'negative',
+      });
+      score -= animalCrueltyPenalty;
+    }
   }
   
-  // Recalls penalty (within last 12 months)
+  // Labor Violations penalties (Minor=-5, Major=-15)
+  const laborViolationData = checkLaborViolations(product);
+  let laborViolationPenalty = 0;
+  
+  if (laborViolationData.hasViolations) {
+    if (laborViolationData.violationType === 'major') {
+      laborViolationPenalty = 15;
+      adjustments.push({
+        description: 'Major labor violation (child labor/slavery)',
+        value: -laborViolationPenalty,
+        type: 'negative',
+      });
+      score -= laborViolationPenalty;
+    } else if (laborViolationData.violationType === 'minor') {
+      laborViolationPenalty = 5;
+      adjustments.push({
+        description: 'Minor labor violation (under-pay/over-work/min breaks/unpaid overtime)',
+        value: -laborViolationPenalty,
+        type: 'negative',
+      });
+      score -= laborViolationPenalty;
+    }
+  }
+  
+  // Recalls penalty (within last 12 months, universal)
   let recallPenalty = 0;
+  let productHasRecallHistory = false;
+  
   if (product.recalls && Array.isArray(product.recalls) && product.recalls.length > 0) {
     const now = Date.now();
     const twelveMonthsAgo = now - (12 * 30 * 24 * 60 * 60 * 1000);
@@ -181,17 +245,65 @@ export function calculateCarePillar(product: Product): CarePillarResult {
     
     if (recentRecalls.length > 0) {
       recallPenalty = 10;
+      productHasRecallHistory = true;
       adjustments.push({
-        description: `Product recalls (${recentRecalls.length} active recall(s) within last 12 months)`,
+        description: `Product recalls (${recentRecalls.length} active recall(s) within last 12 months, universal)`,
         value: -recallPenalty,
         type: 'negative',
       });
       score -= recallPenalty;
+    } else {
+      // Check if brand has recall history (even if not recent)
+      productHasRecallHistory = product.recalls.length > 0;
     }
+  }
+  
+  // Brand/Parent Overlay Penalty (-3 for high-impact brands)
+  // Applied if brand/parent has:
+  // - High-impact animal cruelty
+  // - High-impact labor violations
+  // - Recall history
+  let brandOverlayPenalty = 0;
+  const brandName = product.brands || '';
+  const brandData = brandName ? getBrandData(brandName) : null;
+  const parentCompany = brandData?.parentCompany || product.brand_owner;
+  
+  // Check for high-impact conditions
+  const hasHighImpactAnimal = hasHighImpactAnimalCruelty(brandName) || 
+    (parentCompany && hasHighImpactAnimalCruelty(parentCompany));
+  const hasHighImpactLabor = hasHighImpactLaborViolations(brandName) || 
+    (parentCompany && hasHighImpactLaborViolations(parentCompany));
+  const hasBrandRecallHistory = productHasRecallHistory || 
+    (brandName ? hasRecallHistory(brandName) : false) ||
+    (parentCompany ? hasRecallHistory(parentCompany) : false);
+  
+  if (hasHighImpactAnimal || hasHighImpactLabor || hasBrandRecallHistory) {
+    brandOverlayPenalty = 3;
+    const reasons: string[] = [];
+    if (hasHighImpactAnimal) reasons.push('animal cruelty');
+    if (hasHighImpactLabor) reasons.push('labor violations');
+    if (hasBrandRecallHistory) reasons.push('recall history');
+    
+    adjustments.push({
+      description: `Brand/parent high-impact overlay (${reasons.join(', ')})`,
+      value: -brandOverlayPenalty,
+      type: 'negative',
+    });
+    score -= brandOverlayPenalty;
   }
   
   // Cap at 0-25
   score = Math.max(0, Math.min(25, Math.round(score)));
+  
+  logger.debug('[CarePillar] Calculation:', {
+    base,
+    certificationBonus: cappedCertBonus,
+    animalCrueltyPenalty,
+    laborViolationPenalty,
+    recallPenalty,
+    brandOverlayPenalty,
+    final: score,
+  });
   
   return {
     score,
@@ -199,8 +311,10 @@ export function calculateCarePillar(product: Product): CarePillarResult {
     adjustments,
     details: {
       certificationBonus: cappedCertBonus,
-      cruelParentPenalty,
+      animalCrueltyPenalty,
+      laborViolationPenalty,
       recallPenalty,
+      brandOverlayPenalty,
     },
   };
 }

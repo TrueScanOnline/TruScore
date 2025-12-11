@@ -27,23 +27,42 @@ interface RateLimitConfig {
   maxBackoffMs: number;
 }
 
+// OPTIMIZED Rate Limits - More aggressive for fast APIs
 const DEFAULT_RATE_LIMITS: Record<string, RateLimitConfig> = {
-  'openfoodfacts': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 10000 },
-  'openbeautyfacts': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 10000 },
-  'openproductsfacts': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 10000 },
-  'openpetfoodfacts': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 10000 },
+  // Open Facts - can handle more requests
+  'openfoodfacts': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 2, maxBackoffMs: 10000 },
+  'openbeautyfacts': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 2, maxBackoffMs: 10000 },
+  'openproductsfacts': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 2, maxBackoffMs: 10000 },
+  'openpetfoodfacts': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 2, maxBackoffMs: 10000 },
+  
+  // Store APIs - already optimized
   'woolworths_nz': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 1.5, maxBackoffMs: 5000 },
   'woolworths_au': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 1.5, maxBackoffMs: 5000 },
   'coles_au': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 1.5, maxBackoffMs: 5000 },
   'iga_au': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 1.5, maxBackoffMs: 5000 },
   'paknsave': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 1.5, maxBackoffMs: 5000 },
   'newworld': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 1.5, maxBackoffMs: 5000 },
-  'usda_fooddata': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 10000 },
-  'gs1_datasource': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 10000 },
-  'open_gtin': { requestsPerSecond: 0.5, maxConcurrent: 1, backoffMultiplier: 2, maxBackoffMs: 15000 },
-  'barcode_monster': { requestsPerSecond: 0.5, maxConcurrent: 1, backoffMultiplier: 2, maxBackoffMs: 15000 },
-  'upcitemdb': { requestsPerSecond: 0.5, maxConcurrent: 1, backoffMultiplier: 2, maxBackoffMs: 15000 },
-  'barcode_spider': { requestsPerSecond: 0.5, maxConcurrent: 1, backoffMultiplier: 2, maxBackoffMs: 15000 },
+  
+  // Government databases - can handle more
+  'usda_fooddata': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 2, maxBackoffMs: 10000 },
+  'gs1_datasource': { requestsPerSecond: 2, maxConcurrent: 3, backoffMultiplier: 2, maxBackoffMs: 10000 },
+  
+  // Fallback APIs - still conservative
+  'open_gtin': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 15000 },
+  'barcode_monster': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 15000 },
+  'upcitemdb': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 15000 },
+  'barcode_spider': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 15000 },
+  
+  // New FREE databases
+  'openean': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 10000 },
+  'product_open_data': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 10000 },
+  'world_food_database': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 10000 },
+  'barcode_lookup_com': { requestsPerSecond: 0.5, maxConcurrent: 1, backoffMultiplier: 2, maxBackoffMs: 15000 }, // Free tier: 100/day
+  
+  // Cache - instant, no rate limit needed but set high
+  'cache': { requestsPerSecond: 100, maxConcurrent: 10, backoffMultiplier: 1, maxBackoffMs: 0 },
+  'sqlite': { requestsPerSecond: 100, maxConcurrent: 10, backoffMultiplier: 1, maxBackoffMs: 0 },
+  
   'default': { requestsPerSecond: 1, maxConcurrent: 2, backoffMultiplier: 2, maxBackoffMs: 10000 },
 };
 

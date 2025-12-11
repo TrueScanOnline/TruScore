@@ -14,6 +14,7 @@ export interface BrandData {
   subsidiaries?: string[]; // Subsidiary brand names
   marketCap?: number; // Market capitalization in billions USD
   certifications?: string[]; // Certifications held
+  recallHistory?: boolean; // Has history of product recalls
   notes?: string; // Additional notes
 }
 
@@ -64,6 +65,7 @@ export const BRAND_DATABASE: Record<string, BrandData> = {
     animalTesting: false,
     palmOilPolicy: 'unsustainable',
     laborPractices: 'poor',
+    recallHistory: true, // Known for multiple product recalls
     subsidiaries: [
       'nescafe', 'nespresso', 'starbucks', 'gerber', 'purina', 'friskies', 'fancy feast',
       'kit kat', 'smarties', 'aero', 'butterfinger', 'crunch', 'wonka', 'poland spring',
@@ -72,7 +74,7 @@ export const BRAND_DATABASE: Record<string, BrandData> = {
       'digiorno', 'tombstone', 'häagen-dazs', 'drumstick', 'outshine'
     ],
     marketCap: 280,
-    notes: 'Controversial company with poor labor practices and water extraction issues.'
+    notes: 'Controversial company with poor labor practices and water extraction issues. History of product recalls.'
   },
   'coca-cola': {
     name: 'Coca-Cola',
@@ -191,6 +193,7 @@ export const BRAND_DATABASE: Record<string, BrandData> = {
     animalTesting: true,
     palmOilPolicy: 'unknown',
     laborPractices: 'poor',
+    recallHistory: true, // Known for major product recalls (Tylenol, talc, etc.)
     subsidiaries: [
       'band-aid', 'tylenol', 'motrin', 'benadryl', 'zyrtec', 'pepcid', 'imodium',
       'mylanta', 'robitussin', 'sudafed', 'visine', 'listerine', 'reach', 'oral-b',
@@ -198,7 +201,7 @@ export const BRAND_DATABASE: Record<string, BrandData> = {
       'one touch', 'lifescan', 'depuy', 'ethicon', 'janssen', 'mcneil'
     ],
     marketCap: 420,
-    notes: 'Major pharmaceutical company. Known for animal testing and legal issues.'
+    notes: 'Major pharmaceutical company. Known for animal testing, legal issues, and major product recalls.'
   },
   'colgate-palmolive': {
     name: 'Colgate-Palmolive',
@@ -526,5 +529,31 @@ export function isCountryLinked(brandName: string, countryCode: string): boolean
   
   const normalizedCountry = countryCode.toUpperCase();
   return brandData.countryOfOrigin.includes(normalizedCountry);
+}
+
+/**
+ * Check if brand has recall history
+ * Used for CARE Pillar brand overlay penalty
+ */
+export function hasRecallHistory(brandName: string): boolean {
+  const brandData = getBrandData(brandName);
+  if (!brandData) {
+    return false;
+  }
+  
+  // Check brand recall history
+  if (brandData.recallHistory === true) {
+    return true;
+  }
+  
+  // Check parent company recall history
+  if (brandData.parentCompany) {
+    const parentData = getBrandData(brandData.parentCompany);
+    if (parentData?.recallHistory === true) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 

@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../_layout';
 import { fetchProduct, refreshProduct } from '../../src/services/productService';
+import { fetchProductOptimized } from '../../src/services/productServiceOptimized';
 import { Product, ProductWithTrustScore } from '../../src/types/product';
 import { useScanStore } from '../../src/store/useScanStore';
 import { useFavoritesStore } from '../../src/store/useFavoritesStore';
@@ -111,6 +112,8 @@ function ResultScreenContent() {
   const [product, setProduct] = useState<ProductWithTrustScore | null>(null);
   const [truScore, setTruScore] = useState<TruScoreResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingPhase, setLoadingPhase] = useState<string>('initializing');
+  const [progressiveProduct, setProgressiveProduct] = useState<ProductWithTrustScore | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [truScoreModalVisible, setTruScoreModalVisible] = useState(false);
@@ -370,11 +373,26 @@ function ResultScreenContent() {
         // Continue to API fetch
       }
 
-      // If not manual, try fetching from APIs
-      console.log('[ResultScreen] Fetching product from APIs...');
+      // OPTIMIZED: Use optimized product service with progressive loading
+      console.log('[ResultScreen] Fetching product from APIs (optimized)...');
       let productData: ProductWithTrustScore | null = null;
+      
+      // Progress callback for progressive loading
+      const onProgress = (progress: { phase: string; product?: Product }) => {
+        setLoadingPhase(progress.phase);
+        if (progress.product) {
+          // Convert Product to ProductWithTrustScore if needed
+          const productWithScore = progress.product as ProductWithTrustScore;
+          setProgressiveProduct(productWithScore);
+          setProduct(productWithScore); // Update main product immediately
+          setLoading(false); // Stop loading spinner - show product immediately
+          console.log(`[ResultScreen] Progressive update: ${progress.phase}`, productWithScore.product_name);
+        }
+      };
+      
       try {
-        productData = await fetchProduct(barcode, true, isPremium, isOffline);
+        // Use optimized service with progressive loading
+        productData = await fetchProductOptimized(barcode, true, isPremium, isOffline, onProgress);
       } catch (fetchError) {
         console.error('[ResultScreen] Error fetching product:', fetchError);
         // Enhanced error logging for iOS
@@ -385,13 +403,30 @@ function ResultScreenContent() {
             stack: fetchError instanceof Error ? fetchError.stack : undefined,
           });
         }
-        // Don't set error yet - try to show something to user
-        productData = null;
+        
+        // Try fallback with graceful degradation
+        try {
+          const { fetchProductWithFallback, createMinimalProduct } = await import('../../src/services/errorHandlingService');
+          productData = await fetchProductWithFallback(
+            barcode,
+            () => fetchProduct(barcode, true, isPremium, isOffline), // Fallback to original service
+            isPremium
+          );
+          
+          if (!productData) {
+            // Last resort: minimal product
+            productData = createMinimalProduct(barcode);
+          }
+        } catch (fallbackError) {
+          console.error('[ResultScreen] Fallback also failed:', fallbackError);
+          productData = null;
+        }
       }
       
       if (productData) {
         console.log('[ResultScreen] Product fetched successfully');
         setProduct(productData);
+        setProgressiveProduct(productData);
         // Update scan history with product name
         try {
           addScan({
@@ -405,7 +440,8 @@ function ResultScreenContent() {
         }
       } else {
         console.warn('[ResultScreen] Product not found');
-        setError('Product not found. Please check your internet connection and try again.');
+        // CRITICAL FIX: Better error message for product not found
+        setError('Product not found in our databases. You can help by adding this product manually.');
       }
     } catch (err) {
       console.error('[ResultScreen] Fatal error loading product:', err);
@@ -484,16 +520,35 @@ function ResultScreenContent() {
     });
   };
 
-  if (loading) {
+  // OPTIMIZED: Progressive loading - show product as soon as available
+  // Only show full loading spinner if we don't have any product data yet
+  if (loading && !product && !progressiveProduct) {
+    const loadingMessages: Record<string, string> = {
+      'initializing': t('result.loading', 'Initializing...'),
+      'fast_sources': t('result.loading', 'Searching databases...'),
+      'enhancement': t('result.loading', 'Enhancing data...'),
+      'fallbacks': t('result.loading', 'Searching additional sources...'),
+    };
+    
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-          {t('result.loading')}
+          {loadingMessages[loadingPhase] || t('result.loading')}
         </Text>
+        {loadingPhase !== 'initializing' && (
+          <Text style={[styles.loadingSubtext, { color: colors.textSecondary }]}>
+            {loadingPhase === 'fast_sources' && 'Checking cache and fast sources...'}
+            {loadingPhase === 'enhancement' && 'Gathering additional information...'}
+            {loadingPhase === 'fallbacks' && 'Trying alternative sources...'}
+          </Text>
+        )}
       </View>
     );
   }
+  
+  // If we have progressive product but still loading, show it with loading indicators
+  // This provides immediate feedback while data continues to load
 
   // Helper function for manual product save
   const handleManualProductSave = async (productData: ManualProductData) => {
@@ -551,26 +606,49 @@ function ResultScreenContent() {
                          (product.brands && product.brands.trim().length > 0 && product.brands !== 'N/A' && product.brands.toLowerCase() !== 'n/a')
                          );
       
-      // Real database products with valid name and ANY real data should ALWAYS be shown
-      // Don't check quality - real database products are valid even if incomplete
-      shouldShowUnknownProductPage = !(hasValidName && hasAnyRealData);
+      // CRITICAL FIX: Show product if it has EITHER a valid name OR any real data
+      // This matches Yuka's behavior of showing products with minimal data
+      // Real database products should be shown even if they only have a name OR only have data
+      const shouldShowProduct = hasValidName || hasAnyRealData;
+      shouldShowUnknownProductPage = !shouldShowProduct;
     } else {
-      // For web search only products, check for minimal data
-      const imageUrl = product.image_url || product.image_front_url || product.image_front_small_url;
-      const hasMinimalData = !imageUrl && 
-                             (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
-                             !product.ingredients_text &&
-                             (!product.product_name || product.product_name.startsWith('Product ') || product.product_name === 'Unknown Product') &&
-                             (!product.generic_name || product.generic_name.length < 20) &&
-                             (!product.brands || product.brands.trim().length === 0);
-      
-      // Show unknown product page for minimal data OR web search products (always show clean page)
+      // CRITICAL FIX: For web search products, accept if they have ANY useful data
+      // This matches Yuka's behavior of showing products even with minimal data
       const isWebSearchProduct = isWebSearchFallback(product);
       
-      shouldShowUnknownProductPage = hasMinimalData || 
-                                     isWebSearchProduct ||
-                                     (product.product_name === 'Unknown Product') ||
-                                     !!(product.product_name && product.product_name.startsWith('Product '));
+      if (isWebSearchProduct) {
+        // Accept web search products if they have:
+        // - A valid product name (not "Product 123" or "Unknown Product")
+        // - OR any data (image, nutrition, ingredients, brand, generic name)
+        const hasValidName = product.product_name && 
+                            product.product_name !== 'Unknown Product' &&
+                            !product.product_name.startsWith('Product ') &&
+                            product.product_name.trim().length > 0;
+        
+        const imageUrl = product.image_url || product.image_front_url || product.image_front_small_url;
+        const hasAnyData = imageUrl || 
+                          (product.nutriments && Object.keys(product.nutriments).length > 0) ||
+                          (product.ingredients_text && product.ingredients_text.trim().length > 10) ||
+                          (product.brands && product.brands.trim().length > 0) ||
+                          (product.generic_name && product.generic_name.length > 20);
+        
+        // Show product if it has valid name OR any data (matches Yuka behavior)
+        // Only show "Unknown Product" if truly empty
+        shouldShowUnknownProductPage = !(hasValidName || hasAnyData);
+      } else {
+        // For non-web-search products, use existing logic
+        const imageUrl = product.image_url || product.image_front_url || product.image_front_small_url;
+        const hasMinimalData = !imageUrl && 
+                               (!product.nutriments || Object.keys(product.nutriments).length === 0) &&
+                               !product.ingredients_text &&
+                               (!product.product_name || product.product_name.startsWith('Product ') || product.product_name === 'Unknown Product') &&
+                               (!product.generic_name || product.generic_name.length < 20) &&
+                               (!product.brands || product.brands.trim().length === 0);
+        
+        shouldShowUnknownProductPage = hasMinimalData ||
+                                       (product.product_name === 'Unknown Product') ||
+                                       !!(product.product_name && product.product_name.startsWith('Product '));
+      }
     }
   }
 
@@ -2187,6 +2265,13 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
+    fontWeight: '500',
+  },
+  loadingSubtext: {
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: '400',
+    opacity: 0.7,
   },
   errorContainer: {
     flex: 1,

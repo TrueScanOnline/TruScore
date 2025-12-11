@@ -697,3 +697,5 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
 4. Test with real products
 5. Document IARC data sources for future additions
 
+
+

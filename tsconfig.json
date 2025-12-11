@@ -16,6 +16,6 @@
     "noEmit": true
   },
   "include": ["**/*.ts", "**/*.tsx", "global.d.ts"],
-  "exclude": ["backend/**/*", "node_modules", "**/__tests__/**/*", "**/*.test.ts", "**/*.test.tsx"]
+  "exclude": ["backend/**/*", "node_modules", "**/__tests__/**/*", "**/*.test.ts", "**/*.test.tsx", "scripts/**/*"]
 }
 

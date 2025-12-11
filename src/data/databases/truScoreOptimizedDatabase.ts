@@ -45,6 +45,11 @@ import { fetchProductFromUPCDatabase } from '../../services/upcDatabaseApi';
 import { fetchProductFromBarcodeLookup } from '../../services/barcodeLookupApi';
 import { fetchProductFromEANData } from '../../services/eanDataApi';
 import { fetchProductFromBestBuy } from '../../services/bestBuyApi';
+// NEW: Additional FREE databases
+import { fetchProductFromOpenEAN } from '../../services/openEanApi';
+import { fetchProductFromProductOpenData } from '../../services/productOpenDataApi';
+import { enhanceProductWithWorldFoodDatabase } from '../../services/worldFoodDatabaseApi';
+import { fetchProductFromBarcodeLookupCom } from '../../services/barcodeLookupComApi';
 // web_search is handled separately in productService.ts as absolute last resort
 // import { fetchProductFromWebSearch } from '../../services/webSearchFallback';
 
@@ -110,7 +115,7 @@ export class TruScoreOptimizedDatabase {
     
     const allProducts: Product[] = [];
     const startTime = Date.now();
-    const MAX_QUERY_TIME = 15000; // 15 seconds max
+    const MAX_QUERY_TIME = 10000; // 10 seconds max (reduced from 15s for faster failure)
     
     // Create timeout promise
     const timeoutPromise = new Promise<Product[]>((_, reject) => {
@@ -197,10 +202,16 @@ export class TruScoreOptimizedDatabase {
     logger.info(`   Found: ${enhancements.length} enhancements`);
     
     // Phase 3: Fallbacks (if no results OR incomplete data)
+    // OPTIMIZED: Smart fallback selection based on product category
     // CRITICAL: Query fallbacks if we have no results OR if existing results are incomplete
     // This ensures we fill data gaps even when we have a partial product
     const hasOpenFoodFacts = openFacts.some(p => p.source === 'openfoodfacts');
     const hasIncompleteData = allProducts.length > 0 && this.hasIncompleteData(allProducts[0]);
+    
+    // Detect product category from existing products for smart database selection
+    const productCategory = allProducts.length > 0 
+      ? allProducts[0].categories?.[0] || allProducts[0].categories_tags?.[0]?.replace('en:', '')
+      : undefined;
     
     if ((allProducts.length === 0 && !hasOpenFoodFacts) || hasIncompleteData) {
       powershellLogger.queryPhase('PHASE 3: Fallbacks', ['Fallback Databases'], []);
@@ -209,7 +220,7 @@ export class TruScoreOptimizedDatabase {
       } else {
         logger.info(`📊 PHASE 3: Fallbacks (No results yet)`);
       }
-      const fallbacks = await this.queryFallbacksParallel(barcode);
+      const fallbacks = await this.queryFallbacksParallel(barcode, productCategory);
       allProducts.push(...fallbacks);
       
       // Log each fallback result
@@ -358,6 +369,7 @@ export class TruScoreOptimizedDatabase {
    * Query Gold Standard databases in parallel
    * Location-specific databases ALWAYS queried
    * NOTE: Some local databases are now in Phase 0 (Local-First)
+   * ENHANCED: Now includes Equadis and Salsify (manufacturer partnerships)
    */
   private async queryGoldStandardParallel(
     barcode: string,
@@ -462,32 +474,91 @@ export class TruScoreOptimizedDatabase {
   }
   
   /**
-   * Query fallback databases in parallel
+   * OPTIMIZED: Query fallback databases in parallel with smart selection
    * Only if no results from previous phases
+   * NEW: Includes additional FREE databases (OpenEAN, Product Open Data)
+   * CRITICAL FIX: Circuit breaker integration to skip failing APIs
    * NOTE: web_search is NOT included here - it's handled separately in productService.ts
    * as an absolute last resort only if all other sources fail
    */
-  private async queryFallbacksParallel(barcode: string): Promise<Product[]> {
-    const queries = [
-      fetchProductFromDatakick(barcode), // NEW: Free, no API key, community-driven
-      fetchProductFromUPCitemdb(barcode),
-      fetchProductFromEANSearch(barcode),
-      fetchProductFromBarcodeSpider(barcode),
-      fetchProductFromGoUpc(barcode),
-      fetchProductFromBuycott(barcode),
-      fetchProductFromOpenGtin(barcode),
-      fetchProductFromBarcodeMonster(barcode),
-      fetchProductFromUPCDatabase(barcode),
-      fetchProductFromBarcodeLookup(barcode),
-      fetchProductFromEANData(barcode),
-      fetchProductFromBestBuy(barcode),
-      // web_search removed - handled separately in productService.ts as absolute last resort
-    ];
+  private async queryFallbacksParallel(barcode: string, productCategory?: string): Promise<Product[]> {
+    // CRITICAL FIX: Circuit breaker integration to skip failing APIs
+    const { isCircuitOpen } = await import('../../services/circuitBreakerService');
     
-    const results = await Promise.allSettled(queries);
-    return results
-      .filter(r => r.status === 'fulfilled' && r.value !== null)
-      .map(r => (r as PromiseFulfilledResult<Product>).value);
+    const queries: Promise<Product | null>[] = [];
+    
+    // High-quality free databases (query first) - with circuit breaker
+    if (!isCircuitOpen('datakick')) {
+      queries.push(fetchProductFromDatakick(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('openean')) {
+      queries.push(fetchProductFromOpenEAN(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('product_open_data')) {
+      queries.push(fetchProductFromProductOpenData(barcode).catch(() => null));
+    }
+    
+    // Standard fallback databases - with circuit breaker
+    if (!isCircuitOpen('upcitemdb')) {
+      queries.push(fetchProductFromUPCitemdb(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('ean_search')) {
+      queries.push(fetchProductFromEANSearch(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('barcode_spider')) {
+      queries.push(fetchProductFromBarcodeSpider(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('goupc')) {
+      queries.push(fetchProductFromGoUpc(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('buycott')) {
+      queries.push(fetchProductFromBuycott(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('open_gtin')) {
+      queries.push(fetchProductFromOpenGtin(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('barcode_monster')) {
+      queries.push(fetchProductFromBarcodeMonster(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('upc_database')) {
+      queries.push(fetchProductFromUPCDatabase(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('barcode_lookup')) {
+      queries.push(fetchProductFromBarcodeLookup(barcode).catch(() => null));
+    }
+    if (!isCircuitOpen('ean_data')) {
+      queries.push(fetchProductFromEANData(barcode).catch(() => null));
+    }
+    
+    // Smart database selection: Only query Best Buy for electronics/tech products
+    // Skip for food/beauty products to save time and API quota
+    if (productCategory && (productCategory.includes('electronics') || productCategory.includes('tech'))) {
+      if (!isCircuitOpen('bestbuy')) {
+        queries.push(fetchProductFromBestBuy(barcode).catch(() => null));
+      }
+    }
+    // Best Buy is skipped for food/beauty products (not relevant)
+    
+    // Barcode Lookup (barcodelookup.com) - free tier, requires API key
+    // Only query if API key is configured (handled inside the service)
+    if (!isCircuitOpen('barcode_lookup_com')) {
+      queries.push(fetchProductFromBarcodeLookupCom(barcode).catch(() => null));
+    }
+    
+    // CRITICAL FIX: Add timeout to fallback queries (5 seconds max)
+    const timeoutPromise = new Promise<Product[]>((resolve) => {
+      setTimeout(() => resolve([]), 5000); // 5 second timeout for fallbacks
+    });
+    
+    const resultsPromise = Promise.allSettled(queries).then(results =>
+      results
+        .filter(r => r.status === 'fulfilled' && r.value !== null)
+        .map(r => (r as PromiseFulfilledResult<Product>).value)
+    );
+    
+    // Race between results and timeout
+    const results = await Promise.race([resultsPromise, timeoutPromise]);
+    return results;
   }
   
   /**
@@ -564,6 +635,12 @@ export class TruScoreOptimizedDatabase {
       })
     );
     
+    // NEW: World Food Database nutrition enhancement (free, public domain)
+    // Enhances products with comprehensive nutrition information
+    queries.push(
+      enhanceProductWithWorldFoodDatabase(product, product.product_name).then(p => p !== product ? p : null)
+    );
+    
     const results = await Promise.allSettled(queries);
     const nameProducts = results
       .filter(r => r.status === 'fulfilled' && r.value !== null)
@@ -625,15 +702,70 @@ export class TruScoreOptimizedDatabase {
       'nutritionix': 0.30,
       'spoonacular': 0.30,
       
-      // Fallback (low)
-      'datakick': 0.25, // NEW: Community-driven, good quality
+      // Fallback (low to medium)
+      'datakick': 0.25, // Community-driven, good quality
+      'openean': 0.22, // NEW: Free EAN database
+      'product_open_data': 0.25, // NEW: Free product database
       'upcitemdb': 0.20,
       'ean_search': 0.20,
       'barcode_spider': 0.20,
-      'foodb': 0.30, // NEW: Good nutrition data
-      'foodatlas': 0.35, // NEW: Excellent nutrition data (local database)
+      'foodb': 0.30, // Good nutrition data
+      'foodatlas': 0.35, // Excellent nutrition data (local database)
+      'world_food_db': 0.30, // NEW: World Food Database (nutrition enhancement)
+      'barcode_lookup_com': 0.25, // NEW: Barcode Lookup (free tier, requires API key)
       'web_search': 0.10,
     };
+  }
+  
+  /**
+   * OPTIMIZED: Smart database selection based on product category
+   * Skips irrelevant databases to save time and API quota
+   */
+  shouldQueryDatabase(source: string, productCategory?: string): boolean {
+    // Always query Open Facts (covers all categories)
+    if (source.includes('openfoodfacts') || 
+        source.includes('openbeautyfacts') || 
+        source.includes('openpetfoodfacts') || 
+        source.includes('openproductsfacts')) {
+      return true;
+    }
+    
+    // Category-specific logic
+    if (productCategory) {
+      const categoryLower = productCategory.toLowerCase();
+      
+      // Food products - skip beauty/pet food specific databases
+      if (categoryLower.includes('food') || categoryLower.includes('drink')) {
+        if (source.includes('openbeautyfacts') || source.includes('openpetfoodfacts')) {
+          return false; // Skip beauty/pet food for food products
+        }
+        return true;
+      }
+      
+      // Beauty products - skip food/pet food specific databases
+      if (categoryLower.includes('beauty') || categoryLower.includes('cosmetic')) {
+        if (source.includes('openfoodfacts') || source.includes('openpetfoodfacts')) {
+          return false; // Skip food/pet food for beauty products
+        }
+        return true;
+      }
+      
+      // Pet food - skip food/beauty specific databases
+      if (categoryLower.includes('pet')) {
+        if (source.includes('openfoodfacts') || source.includes('openbeautyfacts')) {
+          return false; // Skip food/beauty for pet food
+        }
+        return true;
+      }
+      
+      // Electronics/Tech - only query Best Buy
+      if (categoryLower.includes('electronics') || categoryLower.includes('tech')) {
+        return source.includes('bestbuy') || source.includes('openproductsfacts');
+      }
+    }
+    
+    // Default: query all databases if category unknown
+    return true;
   }
 }
 

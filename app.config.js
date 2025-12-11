@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: 'TrueScan',
     slug: 'truescan-food-scanner',
-    version: '1.0.0',
+    version: '10.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -18,7 +18,7 @@ module.exports = {
         backgroundColor: '#16a085',
       },
       package: 'com.truescan.foodscanner',
-      versionCode: 5, // Incremented for production build with UI fixes
+      versionCode: 6, // v10.0.0 - Production build ready for iOS and Android testing
       permissions: ['CAMERA'],
       navigationBar: {
         // Configure navigation bar to work with app tabs
@@ -49,7 +49,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.truescan.foodscanner',
-      buildNumber: '8', // Production build with UI fixes and score highlight rules
+      buildNumber: '10', // v10.0.0 - Production build ready for iOS and Android testing
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,

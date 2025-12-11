@@ -1,0 +1,84 @@
+[
+  {
+    "barcode": "9310055105904",
+    "productName": "Malty flakes with juicy sultanas",
+    "truScore": 37,
+    "breakdown": {
+      "Body": {
+        "pillar": "Body",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Nutri-Score Grade C (average nutrition)",
+            "value": 0,
+            "type": "neutral"
+          }
+        ],
+        "final": 15
+      },
+      "Planet": {
+        "pillar": "Planet",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Eco-Score Grade E (poor environmental impact)",
+            "value": -10,
+            "type": "negative"
+          }
+        ],
+        "final": 5
+      },
+      "Care": {
+        "pillar": "Care",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes ethical until violations)",
+            "value": 0,
+            "type": "neutral"
+          }
+        ],
+        "final": 15
+      },
+      "Open": {
+        "pillar": "Open",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes transparent until hidden)",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "No ingredients listed",
+            "value": -5,
+            "type": "negative"
+          },
+          {
+            "description": "No origin information",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 2
+      }
+    },
+    "productData": {
+      "nutriscore_grade": "c",
+      "ecoscore_grade": "e",
+      "nova_group": null,
+      "additives_count": 0,
+      "additives_tags": [],
+      "hasIngredients": false,
+      "ingredientsLength": 0,
+      "hasPalmOil": false,
+      "certifications": [],
+      "labels": [
+        "en:australian-made",
+        "en:health-star-rating",
+        "en:health-star-rating-4-5"
+      ],
+      "hasOrigin": false
+    }
+  }
+]

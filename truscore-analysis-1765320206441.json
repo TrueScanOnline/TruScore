@@ -1,0 +1,96 @@
+[
+  {
+    "barcode": "9300652014396",
+    "productName": "Weet-Bix Multi-Grain+",
+    "truScore": 39,
+    "breakdown": {
+      "Body": {
+        "pillar": "Body",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Nutri-Score Grade B (excellent nutrition)",
+            "value": 5,
+            "type": "positive"
+          },
+          {
+            "description": "NOVA Group 3 (processed)",
+            "value": -3,
+            "type": "negative"
+          }
+        ],
+        "final": 17
+      },
+      "Planet": {
+        "pillar": "Planet",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Eco-Score Grade E (poor environmental impact)",
+            "value": -10,
+            "type": "negative"
+          },
+          {
+            "description": "Contains palm oil (non-certified, detected from tags)",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 0
+      },
+      "Care": {
+        "pillar": "Care",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes ethical until violations)",
+            "value": 0,
+            "type": "neutral"
+          }
+        ],
+        "final": 15
+      },
+      "Open": {
+        "pillar": "Open",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes transparent until hidden)",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "Complete ingredients disclosure",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "No origin information",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 7
+      }
+    },
+    "productData": {
+      "nutriscore_grade": "b",
+      "ecoscore_grade": "e",
+      "nova_group": 3,
+      "additives_count": 0,
+      "additives_tags": [],
+      "hasIngredients": true,
+      "ingredientsLength": 332,
+      "hasPalmOil": true,
+      "certifications": [],
+      "labels": [
+        "en:australian-made",
+        "en:health-star-rating",
+        "en:health-star-rating-4",
+        "en:health-star-rating-4-5",
+        "fr:entrepreneurs-engages"
+      ],
+      "hasOrigin": false
+    }
+  }
+]

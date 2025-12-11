@@ -1,0 +1,89 @@
+[
+  {
+    "barcode": "9310645244839",
+    "productName": "Tuna in Springwater",
+    "truScore": 62,
+    "breakdown": {
+      "Body": {
+        "pillar": "Body",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Nutri-Score Grade A (excellent nutrition)",
+            "value": 10,
+            "type": "positive"
+          }
+        ],
+        "final": 25
+      },
+      "Planet": {
+        "pillar": "Planet",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Eco-Score Grade UNKNOWN (average environmental impact)",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "Contains palm oil (non-certified, detected from tags)",
+            "value": -8,
+            "type": "negative"
+          }
+        ],
+        "final": 7
+      },
+      "Care": {
+        "pillar": "Care",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes ethical until violations)",
+            "value": 0,
+            "type": "neutral"
+          }
+        ],
+        "final": 15
+      },
+      "Open": {
+        "pillar": "Open",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes transparent until hidden)",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "Complete ingredients disclosure",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "Origin information available",
+            "value": 0,
+            "type": "neutral"
+          }
+        ],
+        "final": 15
+      }
+    },
+    "productData": {
+      "nutriscore_grade": "a",
+      "ecoscore_grade": "unknown",
+      "nova_group": null,
+      "additives_count": 0,
+      "additives_tags": [],
+      "hasIngredients": true,
+      "ingredientsLength": 32,
+      "hasPalmOil": true,
+      "certifications": [],
+      "labels": [
+        "en:sustainable",
+        "en:sustainable-fishery",
+        "en:sustainable-seafood-msc"
+      ],
+      "hasOrigin": true
+    }
+  }
+]

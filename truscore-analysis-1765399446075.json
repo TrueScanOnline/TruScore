@@ -1,0 +1,42 @@
+[
+  {
+    "barcode": "9300675003001",
+    "error": "Product not found",
+    "truScore": 0,
+    "breakdown": {
+      "Body": {
+        "pillar": "Body",
+        "base": 0,
+        "adjustments": [],
+        "final": 0
+      },
+      "Planet": {
+        "pillar": "Planet",
+        "base": 0,
+        "adjustments": [],
+        "final": 0
+      },
+      "Care": {
+        "pillar": "Care",
+        "base": 0,
+        "adjustments": [],
+        "final": 0
+      },
+      "Open": {
+        "pillar": "Open",
+        "base": 0,
+        "adjustments": [],
+        "final": 0
+      }
+    },
+    "productData": {
+      "additives_count": 0,
+      "hasIngredients": false,
+      "ingredientsLength": 0,
+      "hasPalmOil": false,
+      "certifications": [],
+      "labels": [],
+      "hasOrigin": false
+    }
+  }
+]

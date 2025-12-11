@@ -6,8 +6,13 @@
 
 import { calculatePlanetPillar } from '../../../../lib/truscoreEngine/pillars/planetPillar';
 import { Product } from '../../../../types/product';
+import { initializeCSVDatabases } from '../../../../services/csvDatabases/csvDatabaseService';
 
 describe('Planet Pillar Calculation', () => {
+  beforeAll(async () => {
+    await initializeCSVDatabases();
+  });
+
   const baseProduct: Product = {
     barcode: '1234567890123',
     product_name: 'Test Product',
@@ -51,6 +56,8 @@ describe('Planet Pillar Calculation', () => {
         containsPalmOil: true,
         isPalmOilFree: false,
         isCertifiedSustainable: false,
+        isNonSustainable: true,
+        score: -8,
       },
     };
     const result = calculatePlanetPillar(product);
@@ -59,13 +66,35 @@ describe('Planet Pillar Calculation', () => {
     expect(result.score).toBe(7); // 15 - 8
   });
 
-  test('should apply certified sustainable palm oil penalty (-5)', () => {
+  test('should apply 0 penalty for RSPO certified palm oil (Unilever)', () => {
     const product = {
       ...baseProduct,
+      brand_owner: 'Unilever',
       palm_oil_analysis: {
         containsPalmOil: true,
         isPalmOilFree: false,
         isCertifiedSustainable: true,
+        isNonSustainable: false,
+        score: 0,
+      },
+    };
+    const result = calculatePlanetPillar(product);
+    expect(result.base).toBe(15);
+    // RSPO certified should be 0 (neutral), not -5
+    expect(result.details.palmOilPenalty).toBe(0);
+    expect(result.score).toBeGreaterThanOrEqual(15); // No penalty
+  });
+
+  test('should apply -5 for certified sustainable (non-RSPO)', () => {
+    const product = {
+      ...baseProduct,
+      brand_owner: 'Unknown Brand',
+      palm_oil_analysis: {
+        containsPalmOil: true,
+        isPalmOilFree: false,
+        isCertifiedSustainable: true,
+        isNonSustainable: false,
+        score: -5,
       },
     };
     const result = calculatePlanetPillar(product);
@@ -82,6 +111,8 @@ describe('Planet Pillar Calculation', () => {
         containsPalmOil: true,
         isPalmOilFree: false,
         isCertifiedSustainable: false,
+        isNonSustainable: true,
+        score: -8,
       }, // -8
     };
     const result = calculatePlanetPillar(product);

@@ -49,15 +49,28 @@ export async function getCachedProduct(barcode: string, isPremium: boolean = fal
       return null;
     }
 
-    // Check if cache is expired
+    // OPTIMIZED: Extended cache for high-quality sources
+    const highQualitySources = ['openfoodfacts', 'openbeautyfacts', 'usda', 'healthcanada', 'fsanz', 'nzfcd', 'afcd', 'ukfsa', 'efsa'];
+    const isHighQuality = cached.product.source && highQualitySources.some(source => 
+      cached.product.source?.includes(source)
+    );
+    
     // Web search results have shorter expiry (retry more often)
     const isWebSearch = cached.product.source === 'web_search' || 
                         (cached.product.quality && cached.product.quality < 50) ||
                         (cached.product.completion && cached.product.completion < 50);
     
-    const expiryDays = isWebSearch 
-      ? WEB_SEARCH_CACHE_EXPIRY_HOURS / 24  // Web search: 24 hours
-      : (isPremium ? CACHE_EXPIRY_DAYS_PREMIUM : CACHE_EXPIRY_DAYS); // Regular: 7-30 days
+    // High-quality sources get extended cache (30 days for all users, 60 days for premium)
+    // Web search: 24 hours
+    // Regular sources: 7-30 days
+    let expiryDays: number;
+    if (isWebSearch) {
+      expiryDays = WEB_SEARCH_CACHE_EXPIRY_HOURS / 24; // 24 hours
+    } else if (isHighQuality) {
+      expiryDays = isPremium ? 60 : 30; // Extended cache for high-quality sources
+    } else {
+      expiryDays = isPremium ? CACHE_EXPIRY_DAYS_PREMIUM : CACHE_EXPIRY_DAYS; // Regular: 7-30 days
+    }
       
     const ageInDays = (Date.now() - cached.timestamp) / (1000 * 60 * 60 * 24);
     if (ageInDays > expiryDays) {

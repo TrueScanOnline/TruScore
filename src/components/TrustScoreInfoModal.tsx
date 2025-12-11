@@ -138,7 +138,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>3</Text>
             </View>
             <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.step3') || 'Calculate Care score (0-25) using certifications (Fairtrade, Organic, MSC, etc.) with explicit bonuses'}
+              {t('infoModal.trustScore.step3') || 'Calculate Care score (0-25) using certifications, animal cruelty detection, labor violations, and recalls. Base 15, certifications up to +15, penalties for violations.'}
             </Text>
           </View>
           <View style={styles.stepItem}>
@@ -327,19 +327,37 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#ff6b6b" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Fairtrade (+8), EU Organic (+7), MSC/ASC (+6)
+                  Fairtrade (+8), Organic (+7), Rainforest/UTZ (+6), MSC/ASC (+6), RSPO (+6)
                 </Text>
               </View>
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#ff6b6b" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Rainforest Alliance (+6), RSPCA Assured (+5)
+                  RSPCA (+5), Leaping Bunny (+5), B-Corp (+5), Cage-Free/Free-Range (+4)
                 </Text>
               </View>
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#ff6b6b" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
                   Multiple labels stack up to +15 max
+                </Text>
+              </View>
+              <View style={styles.factorTag}>
+                <Ionicons name="close-circle" size={12} color="#ff6b6b" />
+                <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
+                  Major Animal Cruelty (-15), Minor Animal Cruelty (-5)
+                </Text>
+              </View>
+              <View style={styles.factorTag}>
+                <Ionicons name="close-circle" size={12} color="#ff6b6b" />
+                <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
+                  Major Labor Violations (-15), Minor Labor Violations (-5)
+                </Text>
+              </View>
+              <View style={styles.factorTag}>
+                <Ionicons name="close-circle" size={12} color="#ff6b6b" />
+                <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
+                  Active Recalls (-10), Brand/Parent Overlay (-3)
                 </Text>
               </View>
             </View>
@@ -477,13 +495,16 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             {t('infoModal.trustScore.careSource')}
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
+            • Base Score: 15 points (assumes ethical until violations){'\n'}
             • Certifications (Open Food Facts labels_tags) - 1,000+ recognized certifications{'\n'}
-            • Bonus Structure: Fairtrade +8, Organic +7, Rainforest Alliance +6, MSC/ASC +6, RSPCA +5, UTZ +6, B-Corp +5, Cage-Free/Free-Range +4{'\n'}
+            • Bonus Structure: Fairtrade +8, Organic +7, Rainforest/UTZ +6, MSC/ASC +6, RSPO +6, RSPCA +5, Leaping Bunny +5, B-Corp +5, Cage-Free/Free-Range +4{'\n'}
             • Multiple labels can stack up to +15 points maximum (stack cap){'\n'}
-            • Cruel Parent Detection: -15 penalty (cap -20) for products from companies known for animal testing{'\n'}
-            • Recalls: -10 penalty if active recall within last 12 months{'\n'}
-            • Comprehensive brand database (500+ companies) with parent-subsidiary relationships{'\n'}
-            • Source: Open Food Facts API + Brand database with ethical ratings
+            • Animal Cruelty: Major violations (factory farming/slaughter/cruelty) = -15, Minor violations = -5{'\n'}
+            • Labor Violations: Major violations (child labor/slavery) = -15, Minor violations (under-pay/over-work) = -5{'\n'}
+            • Brand/Parent Overlay: -3 penalty for high-impact brands (animal cruelty, labor violations, recall history){'\n'}
+            • Recalls: -10 penalty if active recall within last 12 months (universal){'\n'}
+            • Comprehensive brand database (500+ companies) with parent-subsidiary relationships, labor practices, and recall history{'\n'}
+            • Source: Open Food Facts API + Brand database + Labor violations service + Animal cruelty service
           </Text>
         </View>
 

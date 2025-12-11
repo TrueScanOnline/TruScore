@@ -379,9 +379,70 @@ async function fetchIngredients(productName: string): Promise<string | undefined
  * Try to get product name from barcode using multiple strategies
  * This is critical because we need a product name before we can search for images/nutrition/ingredients
  */
+/**
+ * Enhanced product name discovery - more aggressive strategies
+ * Tries multiple sources in parallel for faster results
+ */
 async function getProductNameFromBarcode(barcode: string): Promise<string | null> {
+  // NEW: Try multiple strategies in parallel for faster results
   const strategies = [
-    // Strategy 1: Try DuckDuckGo with barcode
+    // Strategy 1: Try GS1 Database (if API key available)
+    async () => {
+      try {
+        const { fetchProductFromGS1 } = await import('./gs1DataSource');
+        const product = await fetchProductFromGS1(barcode);
+        if (product?.product_name && !product.product_name.startsWith('Product ')) {
+          return product.product_name;
+        }
+      } catch (e) {
+        // GS1 not available or failed - continue
+      }
+      return null;
+    },
+    
+    // Strategy 2: Try UPCitemdb (free, no API key)
+    async () => {
+      try {
+        const { fetchProductFromUPCitemdb } = await import('./upcitemdb');
+        const product = await fetchProductFromUPCitemdb(barcode);
+        if (product?.product_name && !product.product_name.startsWith('Product ')) {
+          return product.product_name;
+        }
+      } catch (e) {
+        // UPCitemdb failed - continue
+      }
+      return null;
+    },
+    
+    // Strategy 3: Try EAN-Search (free, no API key)
+    async () => {
+      try {
+        const { fetchProductFromEANSearch } = await import('./eanSearchApi');
+        const product = await fetchProductFromEANSearch(barcode);
+        if (product?.product_name && !product.product_name.startsWith('Product ')) {
+          return product.product_name;
+        }
+      } catch (e) {
+        // EAN-Search failed - continue
+      }
+      return null;
+    },
+    
+    // Strategy 4: Try Barcode Lookup (free, no API key)
+    async () => {
+      try {
+        const { fetchProductFromBarcodeLookup } = await import('./barcodeLookupApi');
+        const product = await fetchProductFromBarcodeLookup(barcode);
+        if (product?.product_name && !product.product_name.startsWith('Product ')) {
+          return product.product_name;
+        }
+      } catch (e) {
+        // Barcode Lookup failed - continue
+      }
+      return null;
+    },
+    
+    // Strategy 5: Try DuckDuckGo with barcode
     async () => {
       try {
         const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(barcode)}&format=json&no_html=1&skip_disambig=1`;
@@ -477,7 +538,7 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
       return null;
     },
     
-    // Strategy 4: Try "EAN {barcode}" query
+    // Strategy 9: Try "EAN {barcode}" query
     async () => {
       try {
         const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(`EAN ${barcode}`)}&format=json&no_html=1&skip_disambig=1`;
@@ -493,18 +554,68 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
       } catch {}
       return null;
     },
+    
+    // Strategy 10: Try Google Shopping search (web scraping)
+    async () => {
+      try {
+        const { scrapeProductInfo } = await import('./webScrapingService');
+        const result = await scrapeProductInfo(barcode, `UPC ${barcode}`);
+        if (result.productName && !result.productName.startsWith('Product ')) {
+          return result.productName;
+        }
+      } catch (e) {
+        // Web scraping failed - continue
+      }
+      return null;
+    },
+    
+    // Strategy 11: Try Amazon product page (web scraping)
+    async () => {
+      try {
+        const amazonUrl = `https://www.amazon.com/dp/${barcode}`;
+        const { scrapeProductInfo } = await import('./webScrapingService');
+        const result = await scrapeProductInfo(barcode, undefined);
+        if (result.productName && !result.productName.startsWith('Product ')) {
+          return result.productName;
+        }
+      } catch (e) {
+        // Amazon scraping failed - continue
+      }
+      return null;
+    },
   ];
 
-  // Try each strategy in sequence
-  for (let i = 0; i < strategies.length; i++) {
+  // NEW: Try first 4 strategies in parallel (fast databases)
+  // Then try remaining strategies sequentially (slower web searches)
+  const fastStrategies = strategies.slice(0, 4);
+  const slowStrategies = strategies.slice(4);
+  
+  // Try fast strategies in parallel
+  const fastResults = await Promise.allSettled(
+    fastStrategies.map(strategy => strategy())
+  );
+  
+  // Check fast results first
+  for (const result of fastResults) {
+    if (result.status === 'fulfilled' && result.value && 
+        result.value.length > 2 && result.value !== barcode &&
+        !result.value.startsWith('Product ')) {
+      console.log(`[WebSearch] Found product name via fast strategy: ${result.value} for barcode: ${barcode}`);
+      return result.value;
+    }
+  }
+  
+  // If fast strategies didn't work, try slow strategies sequentially
+  for (let i = 0; i < slowStrategies.length; i++) {
     try {
-      const productName = await strategies[i]();
-      if (productName && productName.length > 2 && productName !== barcode) {
-        console.log(`[WebSearch] Found product name via Strategy ${i + 1}: ${productName} for barcode: ${barcode}`);
+      const productName = await slowStrategies[i]();
+      if (productName && productName.length > 2 && productName !== barcode &&
+          !productName.startsWith('Product ')) {
+        console.log(`[WebSearch] Found product name via Strategy ${i + 5}: ${productName} for barcode: ${barcode}`);
         return productName;
       }
     } catch (error) {
-      console.warn(`[WebSearch] Strategy ${i + 1} failed:`, error);
+      console.warn(`[WebSearch] Strategy ${i + 5} failed:`, error);
       continue;
     }
   }

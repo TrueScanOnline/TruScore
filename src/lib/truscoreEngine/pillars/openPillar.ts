@@ -3,16 +3,19 @@
  * 
  * Base Score: 15/25
  * Adjustments:
- * - Ingredients disclosure: Full (>100 chars)=+0 (stays 15), >80%=+0 (becomes 10), 50-80%=+0 (becomes 5), None=-5
- * - Hidden terms: 1-2=-10, ≥3=-20
- * - Sophistication bonus: +5 (zero hidden + NOVA 1-2)
+ * - Ingredients disclosure: Full (>100 chars)=+0 (stays 15), Partial (50-100 chars)=-5, Minimal (<50 chars)=-5, None=-5
+ * - Hidden terms: 1=-5, 2=-10, ≥3=-15 (cap -20)
+ * - NOVA amplification: +1 to hidden count if NOVA≥3 & disclosure partial/none
+ * - Zero hidden rewards: +5 (zero hidden + NOVA 1-2) OR +2 (zero hidden but not NOVA 1-2)
  * - Origin: No origin=-8
+ * - Brand ownership: Hidden/opaque parent=-5
  * 
  * Final: Capped at 0-25
  */
 
 import { Product } from '../../../types/product';
 import { logger } from '../../../utils/logger';
+import { getBrandData } from '../../../data/brandDatabase';
 
 const HIDDEN_TERMS = [
   'parfum',
@@ -30,10 +33,11 @@ const HIDDEN_TERMS = [
   'artificial flavouring',
   'proprietary',
   'proprietary blend',
+  'secret formula',
+  'essence',
+  'spice',
+  'extract',
 ];
-
-// Fragrance terms (moved from BODY Pillar - transparency issue, not body safety)
-const FRAGRANCE_TERMS = ['parfum', 'fragrance', 'aroma'];
 
 export interface OpenPillarResult {
   score: number;
@@ -47,9 +51,11 @@ export interface OpenPillarResult {
     ingredientsScore: number;
     ingredientsLength: number;
     hiddenTermsPenalty: number;
-    fragrancePenalty: number;
+    hiddenTermsCount: number;
+    effectiveHiddenCount: number;
     sophisticationBonus: number;
     originPenalty: number;
+    brandOwnershipPenalty: number;
   };
 }
 
@@ -149,49 +155,56 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     }
   }
   
-  // Hidden terms penalty (excludes fragrance - handled separately)
-  const nonFragranceHiddenTerms = HIDDEN_TERMS.filter(t => !FRAGRANCE_TERMS.includes(t));
-  const hiddenCount = nonFragranceHiddenTerms.filter((t) => hasTerm(t)).length;
+  // Hidden terms penalty (includes fragrance - merged into main list)
+  const hiddenCount = HIDDEN_TERMS.filter((t) => hasTerm(t)).length;
+  
+  // NOVA amplification: +1 count if NOVA≥3 & disclosure partial/none
+  let effectiveHiddenCount = hiddenCount;
+  if (product.nova_group !== undefined && product.nova_group >= 3) {
+    const isDisclosurePartial = ingredientsLength < 100 || ingredientsScore < 0;
+    if (isDisclosurePartial) {
+      effectiveHiddenCount += 1;
+    }
+  }
+  
+  // Apply penalty based on effective count (per spec: 1=-5, 2=-10, ≥3=-15, cap -20)
   let hiddenTermsPenalty = 0;
-  if (hiddenCount >= 3) {
-    hiddenTermsPenalty = 20;
+  if (effectiveHiddenCount >= 3) {
+    hiddenTermsPenalty = 15; // -15 (cap -20 total)
+  } else if (effectiveHiddenCount === 2) {
+    hiddenTermsPenalty = 10; // -10
+  } else if (effectiveHiddenCount === 1) {
+    hiddenTermsPenalty = 5; // -5
+  }
+  
+  if (hiddenTermsPenalty > 0) {
+    const description = effectiveHiddenCount > hiddenCount
+      ? `${effectiveHiddenCount} hidden ingredient term(s) (${hiddenCount} detected + NOVA amplification)`
+      : `${effectiveHiddenCount} hidden ingredient term(s)`;
     adjustments.push({
-      description: `${hiddenCount} hidden ingredient term(s) (flavor, proprietary, etc.)`,
-      value: -hiddenTermsPenalty,
-      type: 'negative',
-    });
-    score -= hiddenTermsPenalty;
-  } else if (hiddenCount >= 1) {
-    hiddenTermsPenalty = 10;
-    adjustments.push({
-      description: `${hiddenCount} hidden ingredient term(s) (flavor, proprietary, etc.)`,
+      description,
       value: -hiddenTermsPenalty,
       type: 'negative',
     });
     score -= hiddenTermsPenalty;
   }
   
-  // Fragrance penalty (moved from BODY Pillar - transparency issue)
-  const hasFragrance = FRAGRANCE_TERMS.some((a) => hasTerm(a));
-  const fragrancePenalty = hasFragrance ? 10 : 0;
-  if (fragrancePenalty > 0) {
-    adjustments.push({
-      description: 'Contains fragrance/parfum (hidden ingredients - transparency issue)',
-      value: -fragrancePenalty,
-      type: 'negative',
-    });
-    score -= fragrancePenalty;
-  }
-  
-  // Sophistication bonus: +5 for zero hidden ingredients + NOVA1-2
+  // Zero hidden rewards: +5 for NOVA 1-2, +2 for others
   let sophisticationBonus = 0;
-  if (ingredientsScore >= -5 && hiddenCount === 0) {
+  if (hiddenCount === 0) {
     const nova = product.nova_group;
-    const isNOVA12 = nova === 1 || nova === 2;
-    if (isNOVA12) {
-      sophisticationBonus = 5;
+    if (nova === 1 || nova === 2) {
+      sophisticationBonus = 5; // +5 for zero hidden + NOVA 1-2
       adjustments.push({
         description: 'Sophistication bonus (zero hidden ingredients + NOVA 1-2)',
+        value: sophisticationBonus,
+        type: 'positive',
+      });
+      score += sophisticationBonus;
+    } else {
+      sophisticationBonus = 2; // +2 for zero hidden but not NOVA 1-2
+      adjustments.push({
+        description: 'Transparency bonus (zero hidden ingredients)',
         value: sophisticationBonus,
         type: 'positive',
       });
@@ -261,6 +274,50 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     }
   }
   
+  // Brand ownership transparency check
+  // Helper function to check if value is placeholder
+  const isPlaceholderValue = (value: string): boolean => {
+    const placeholderValues = ['unknown', 'n/a', 'not available', 'missing', 'not disclosed', 'not specified'];
+    return placeholderValues.some(placeholder => value.toLowerCase().includes(placeholder));
+  };
+  
+  let brandOwnershipPenalty = 0;
+  const hasBrandOwner = !!(product.brand_owner && 
+    !isPlaceholderValue(product.brand_owner));
+  
+  if (!hasBrandOwner) {
+    // Check if we can determine parent from brand database
+    // Try to get parent company from brand database
+    const brandName = product.brands || '';
+    const brandData = brandName ? getBrandData(brandName) : null;
+    const hasParentInDatabase = !!(brandData?.parentCompany);
+    
+    if (!hasParentInDatabase) {
+      // Parent company is hidden/opaque - apply penalty
+      brandOwnershipPenalty = 5;
+      adjustments.push({
+        description: 'Hidden/opaque parent company',
+        value: -brandOwnershipPenalty,
+        type: 'negative',
+      });
+      score -= brandOwnershipPenalty;
+    } else {
+      // Parent found in database - no penalty
+      adjustments.push({
+        description: 'Parent company identified via brand database',
+        value: 0,
+        type: 'neutral',
+      });
+    }
+  } else {
+    // Brand owner disclosed - no penalty
+    adjustments.push({
+      description: 'Parent company disclosed',
+      value: 0,
+      type: 'neutral',
+    });
+  }
+  
   // Cap at 0-25
   score = Math.max(0, Math.min(25, Math.round(score)));
   
@@ -268,8 +325,11 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     base,
     ingredientsScore,
     hiddenTermsPenalty,
+    hiddenCount,
+    effectiveHiddenCount,
     sophisticationBonus,
     originPenalty,
+    brandOwnershipPenalty,
     final: score,
   });
   
@@ -281,9 +341,11 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
       ingredientsScore,
       ingredientsLength,
       hiddenTermsPenalty,
-      fragrancePenalty,
+      hiddenTermsCount: hiddenCount,
+      effectiveHiddenCount,
       sophisticationBonus,
       originPenalty,
+      brandOwnershipPenalty,
     },
   };
 }

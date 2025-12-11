@@ -38,9 +38,16 @@ export async function fetchProductFromOPF(barcode: string): Promise<Product | nu
 
     const data: OPFResponse = await response.json();
 
-    if (data.status === 0 || !data.product) {
+    // CRITICAL FIX: Accept products even with status: 0 if product data exists
+    // Open Products Facts may return status: 0 with partial product data
+    if (!data.product) {
       console.warn(`Product not found in OPF: ${barcode}`);
       return null;
+    }
+
+    // Log if status was 0 but we're accepting the product anyway (for debugging)
+    if (data.status === 0) {
+      console.log(`OPF API returned status: 0 but product data exists for ${barcode} (accepting product)`);
     }
 
     // Add source and barcode

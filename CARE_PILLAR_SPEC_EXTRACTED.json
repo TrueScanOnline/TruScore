@@ -1,0 +1,70 @@
+{
+  "Sheet1": [
+    {
+      "Pillar (25 pts) ": " Care ",
+      " Data Element ": " Base Score ",
+      " Positive Statement (what high score means) ": " Slightly positive neutral; assumes ethical until violations ",
+      " Dimensions / Measures (public third-party source) ": " Internal Logic (No external source) ",
+      " What it is & why it matters (2025 consumer concern) ": " Scaled HSUS/RSPCA avg ~50/100 (2025 welfare); optimistic fair to indies ",
+      " Exact Free/Public Data Point + API Field ": " N/A ",
+      " Scoring Conversion (to 0-25) ": " 15 (uniform) ",
+      " Explanation ": " Uniform 15 consistency; HSUS defends without negativity. Ditched geo-weight for MVP simplicity\\'97embed rewards in certs/violations. ",
+      " Decision Tree Logic (Order of Priority) ": " 1. Always starting point; adjustments added/subtracted. "
+    },
+    {
+      "Pillar (25 pts) ": "",
+      " Data Element ": " Certifications ",
+      " Positive Statement (what high score means) ": " Strong certs; fair/animal welfare ",
+      " Dimensions / Measures (public third-party source) ": " Fairtrade, RSPO, MSC/ASC, RSPCA, Organic (EU/US/CA/AU), Leaping Bunny, B Corp > Country/Global OFF ",
+      " What it is & why it matters (2025 consumer concern) ": " Welfare boycotts (30% X virality 2025) ",
+      " Exact Free/Public Data Point + API Field ": " labels_tags (array filtered) ",
+      " Scoring Conversion (to 0-25) ": " Fairtrade=+8, Organic=+7, Rainforest/UTZ=+6, MSC/ASC=+6 (sustainable fishing), RSPCA/Leaping Bunny/B Corp=+5, Cage-Free/Free-Range=+4 (animal farming/slaughter) (stack cap +15) ",
+      " Explanation ": " Tiered by impact breadth (holistic high, specific low); studies defend (e.g., Fairtrade 20% poverty cut). Embedded geo-reward here\\'97no base complexity. ",
+      " Decision Tree Logic (Order of Priority) ": " 1. Local govt certs (e.g., USDA Organic US) > 2. Country OFF > 3. Global OFF; bonus if match; +6 MSC/ASC for fishing, +4 cage-free for farming/slaughter. "
+    },
+    {
+      "Pillar (25 pts) ": "",
+      " Data Element ": " Animal Cruelty ",
+      " Positive Statement (what high score means) ": " No animal cruelty ",
+      " Dimensions / Measures (public third-party source) ": " PETA, HSUS, RSPCA > Country/Global OFF + X/Reuters for news tie ",
+      " What it is & why it matters (2025 consumer concern) ": " Animal scandals (50% disgust X 2025) ",
+      " Exact Free/Public Data Point + API Field ": " brands_tags (cruelty filter), violations API, x_semantic_score/news mentions (>10k last 6mo) ",
+      " Scoring Conversion (to 0-25) ": " Major=-15 (e.g., factory farming/slaughter/cruelty/news tie), minor=-5; brand/parent high-impact=-3 overlay. Dedup if news relevance >80% (net -5). ",
+      " Explanation ": " PETA/HSUS/RSPCA scorecards defend; geo local overrides. Embed sentiment/news here\\'97dedup to avoid double-penalty. ",
+      " Decision Tree Logic (Order of Priority) ": " 1. PETA/HSUS/RSPCA > 2. Country OFF > 3. Global OFF; deduct if cruelty match/news tie; overlay brand/parent if low. X/Reuters embed for relevance. "
+    },
+    {
+      "Pillar (25 pts) ": "",
+      " Data Element ": " Labor Violations/Human Exploitation ",
+      " Positive Statement (what high score means) ": " No labor/human exploitation ",
+      " Dimensions / Measures (public third-party source) ": " DOL (US), Buycott, Open Corporates > Country/Global OFF + X/Reuters for news tie ",
+      " What it is & why it matters (2025 consumer concern) ": " Labor scandals (30% distrust X 2025) ",
+      " Exact Free/Public Data Point + API Field ": " brands_tags (labor filter), violations API, x_semantic_score/news mentions (>10k last 6mo) ",
+      " Scoring Conversion (to 0-25) ": " Minor=-5 (e.g., under-pay/over-work/min breaks/unpaid overtime/anti-competitive/predatory/bullying/news tie), major=-15 (e.g., child labor/slavery); brand/parent high-impact=-3 overlay. Dedup if news relevance >80% (net -5). ",
+      " Explanation ": " DOL/Buycott/Open Corporates defend; geo local overrides. Embed sentiment/news here\\'97dedup to avoid double-penalty. ",
+      " Decision Tree Logic (Order of Priority) ": " 1. DOL/Buycott/Open Corporates > 2. Country OFF > 3. Global OFF; deduct if labor match/news tie; overlay brand/parent if low. X/Reuters embed for relevance. "
+    },
+    {
+      "Pillar (25 pts) ": "",
+      " Data Element ": " Recalls ",
+      " Positive Statement (what high score means) ": " No safety recalls ",
+      " Dimensions / Measures (public third-party source) ": " FDA (US recalls), CFIA (CA), FSANZ (AU/NZ), UK FSA/EFSA, MHLW (Japan), CFS (HK), SFA (SG) > Buycott > Country/Global OFF + X/Reuters for news tie ",
+      " What it is & why it matters (2025 consumer concern) ": " 15-25% virality (X spikes on Nestle 2025) ",
+      " Exact Free/Public Data Point + API Field ": " recalls API, x_semantic_score/news mentions (>10k last 6mo) ",
+      " Scoring Conversion (to 0-25) ": " -10 (temp if within last 12mo/news tie, universal); brand/parent high-impact=-3 overlay if recall history ",
+      " Explanation ": " Boycott studies defend; 12mo bound prevents perpetual harshness per sentiment fade. Universal penalties\\'97recall in one location = global deduct (poor care distrib-wide). Embed sentiment/news here\\'97dedup if relevance >80% (net -10). ",
+      " Decision Tree Logic (Order of Priority) ": " 1. Local govt recalls (e.g., FDA/CFIA/FSANZ) > 2. Buycott > 3. Country OFF > 4. Global OFF > 5. User subs if gaps; deduct if flag/news tie and within 12mo (universal); overlay brand/parent if low. X/Reuters embed for relevance. "
+    },
+    {
+      "Pillar (25 pts) ": "",
+      " Data Element ": " Overall Pillar Cap ",
+      " Positive Statement (what high score means) ": " N/A ",
+      " Dimensions / Measures (public third-party source) ": " Internal Logic (No external source) ",
+      " What it is & why it matters (2025 consumer concern) ": " Allows wake-up viral on zero scores for bad deducts ",
+      " Exact Free/Public Data Point + API Field ": " N/A ",
+      " Scoring Conversion (to 0-25) ": " Min 0 (floor after all adjustments) ",
+      " Explanation ": " Caps final Care score at min 0; zero \"unethical\" callout on junk\\'97viral boycott rage. ",
+      " Decision Tree Logic (Order of Priority) ": " 1. Applied after all adjustments; overrides if <0. "
+    }
+  ]
+}

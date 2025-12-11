@@ -385,3 +385,5 @@ npm run analyze-pillar -- planet 9310055105850
 
 **Key Point**: All three scores come from Open Food Facts. We fetch them via their API and use them to adjust our TruScore pillar calculations. We do not calculate these scores ourselves.
 
+
+

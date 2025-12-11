@@ -149,3 +149,5 @@ npm run analyze-pillar -- open <barcode>
 
 3. Both fixes maintain backward compatibility - existing products will continue to work, but simple products and products with origin in text fields will now be scored more accurately.
 
+
+

@@ -10,7 +10,9 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   ERROR: 3,
 };
 
-const isDevelopment = __DEV__ || process.env.NODE_ENV === 'development';
+// Check if __DEV__ is defined (React Native/Expo only)
+// In Node.js environments, this will be undefined
+const isDevelopment = (typeof __DEV__ !== 'undefined' && __DEV__) || process.env.NODE_ENV === 'development';
 const currentLogLevel: LogLevel = isDevelopment ? 'DEBUG' : 'WARN';
 
 class Logger {

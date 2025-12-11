@@ -3,6 +3,7 @@ import { Product, PalmOilAnalysis, PackagingData, PackagingItem, AgribalyseData 
 import { logger } from '../utils/logger';
 import { getUserCountryCode, getCountryCodesToTry, getOFFCountryInstance } from '../utils/countryDetection';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
+import { normalizeBarcode } from '../utils/barcodeNormalization';
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org/api/v2/product';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -36,8 +37,16 @@ async function fetchProductFromOFFInstance(barcode: string, instance: string): P
 
     const data: OFFResponse = await response.json();
 
-    if (data.status === 0 || !data.product) {
+    // CRITICAL FIX: Accept products even with status: 0 if product data exists
+    // Open Food Facts may return status: 0 with partial product data
+    // Yuka accepts these products, so we should too
+    if (!data.product) {
       return null;
+    }
+
+    // Log if status was 0 but we're accepting the product anyway (for debugging)
+    if (data.status === 0) {
+      logger.debug(`OFF API returned status: 0 but product data exists for ${barcode} (accepting product - Yuka-compatible behavior)`);
     }
 
     // Add source and barcode
@@ -63,41 +72,50 @@ async function fetchProductFromOFFInstance(barcode: string, instance: string): P
  * This significantly improves success rate for country-specific products
  */
 export async function fetchProductFromOFF(barcode: string): Promise<Product | null> {
-  // Get country codes to try (user's country first, then common countries)
-  const countriesToTry = getCountryCodesToTry();
+  // Generate barcode variants to try (handles leading zeros, normalization)
+  const barcodeVariants = normalizeBarcode(barcode);
+  const uniqueVariants = Array.from(new Set(barcodeVariants));
   
-  // Build list of instances to try
-  const instancesToTry: string[] = [];
+  logger.debug(`Trying ${uniqueVariants.length} barcode variants for OFF query: ${uniqueVariants.join(', ')}`);
   
-  // Add country-specific instances first
-  for (const countryCode of countriesToTry) {
-    const instance = getOFFCountryInstance(countryCode);
-    if (instance && !instancesToTry.includes(instance)) {
-      instancesToTry.push(instance);
+  // Try each barcode variant
+  for (const variant of uniqueVariants) {
+    // Get country codes to try (user's country first, then common countries)
+    const countriesToTry = getCountryCodesToTry();
+    
+    // Build list of instances to try
+    const instancesToTry: string[] = [];
+    
+    // Add country-specific instances first
+    for (const countryCode of countriesToTry) {
+      const instance = getOFFCountryInstance(countryCode);
+      if (instance && !instancesToTry.includes(instance)) {
+        instancesToTry.push(instance);
+      }
+    }
+    
+    // Always try global instance as fallback
+    instancesToTry.push('world.openfoodfacts.org');
+    
+    // Try instances in parallel for faster lookup
+    // User's country instance will likely respond first if product exists there
+    const results = await Promise.allSettled(
+      instancesToTry.map(instance => fetchProductFromOFFInstance(variant, instance))
+    );
+    
+    // Return first successful result
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === 'fulfilled' && result.value) {
+        const instance = instancesToTry[i];
+        logger.debug(`Found product in OFF (${instance}) with variant ${variant}: ${barcode}`);
+        return result.value;
+      }
     }
   }
   
-  // Always try global instance as fallback
-  instancesToTry.push('world.openfoodfacts.org');
-  
-  // Try instances in parallel for faster lookup
-  // User's country instance will likely respond first if product exists there
-  const results = await Promise.allSettled(
-    instancesToTry.map(instance => fetchProductFromOFFInstance(barcode, instance))
-  );
-  
-  // Return first successful result
-  for (let i = 0; i < results.length; i++) {
-    const result = results[i];
-    if (result.status === 'fulfilled' && result.value) {
-      const instance = instancesToTry[i];
-      logger.debug(`Found product in OFF (${instance}): ${barcode}`);
-      return result.value;
-    }
-  }
-  
-  // No product found in any instance
-  logger.debug(`Product not found in any OFF instance: ${barcode}`);
+  // No product found in any instance with any variant
+  logger.debug(`Product not found in any OFF instance with any variant: ${barcode}`);
   return null;
 }
 
