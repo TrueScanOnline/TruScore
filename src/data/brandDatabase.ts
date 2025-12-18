@@ -443,44 +443,219 @@ export const BRAND_DATABASE: Record<string, BrandData> = {
     marketCap: 15,
     notes: 'Major confectionery company. Palm oil and labor concerns.'
   },
+  // Australian & New Zealand Brands
+  'jalna': {
+    name: 'Jalna',
+    aliases: ['jalna yoghurt', 'jalna yogurt', 'jalna greek yoghurt'],
+    countryOfOrigin: ['AU'],
+    industry: ['Dairy'],
+    ethicalRating: 'good',
+    animalTesting: false,
+    palmOilPolicy: 'unknown',
+    laborPractices: 'good',
+    parentCompany: 'Parmalat',
+    notes: 'Australian dairy brand, owned by Parmalat (Lactalis)'
+  },
+  'norco': {
+    name: 'Norco',
+    aliases: ['norco cooperative', 'norco dairy'],
+    countryOfOrigin: ['AU'],
+    industry: ['Dairy'],
+    ethicalRating: 'good',
+    animalTesting: false,
+    palmOilPolicy: 'unknown',
+    laborPractices: 'good',
+    notes: 'Australian dairy cooperative, member-owned'
+  },
+  // US Organic & Specialty Brands
+  'chobani': {
+    name: 'Chobani',
+    aliases: ['chobani inc', 'chobani greek yogurt'],
+    countryOfOrigin: ['US'],
+    industry: ['Dairy'],
+    ethicalRating: 'good',
+    animalTesting: false,
+    palmOilPolicy: 'unknown',
+    laborPractices: 'good',
+    notes: 'US Greek yogurt brand, known for ethical practices and worker ownership'
+  },
+  "nature's path": {
+    name: "Nature's Path",
+    aliases: ['natures path', 'nature path', 'nature\'s path organic'],
+    countryOfOrigin: ['CA', 'US'],
+    industry: ['Food & Beverages', 'Cereal'],
+    ethicalRating: 'excellent',
+    animalTesting: false,
+    palmOilPolicy: 'sustainable',
+    laborPractices: 'excellent',
+    notes: 'Organic cereal brand, family-owned, B-Corp certified, excellent ethical practices'
+  },
+  "amy's kitchen": {
+    name: "Amy's Kitchen",
+    aliases: ['amys kitchen', 'amy kitchen', 'amys', 'amy\'s'],
+    countryOfOrigin: ['US'],
+    industry: ['Food & Beverages', 'Frozen Foods'],
+    ethicalRating: 'good',
+    animalTesting: false,
+    palmOilPolicy: 'sustainable',
+    laborPractices: 'good',
+    notes: 'Organic frozen foods brand, family-owned, focuses on natural ingredients'
+  },
   // Add more brands as needed...
 };
 
 /**
- * Get brand data by name (case-insensitive, handles aliases)
+ * Normalize brand name for matching
+ * Handles common variations: "Coca-Cola" vs "Coca Cola", "P&G" vs "Procter & Gamble", etc.
+ * Enhanced with: accents, hyphens, US/UK spelling, company suffixes
  */
-export function getBrandData(brandName: string): BrandData | null {
+export function normalizeBrandNameForLookup(brandName: string): string {
+  if (!brandName || typeof brandName !== 'string') {
+    return '';
+  }
+  
+  return brandName
+    .toLowerCase()
+    .trim()
+    // Remove common punctuation (but keep hyphens for now, handle separately)
+    .replace(/[.,;:!?'"()\[\]{}]/g, '')
+    // Normalize hyphens and dashes to spaces (Coca-Cola -> coca cola)
+    .replace(/[-–—]/g, ' ')
+    // Normalize whitespace
+    .replace(/\s+/g, ' ')
+    // Handle common abbreviations
+    .replace(/\b&\b/g, 'and')
+    .replace(/\bp&g\b/g, 'procter and gamble')
+    .replace(/\bj&j\b/g, 'johnson and johnson')
+    // Remove common company suffixes
+    .replace(/\binc\b/g, '')
+    .replace(/\bllc\b/g, '')
+    .replace(/\bltd\b/g, '')
+    .replace(/\bcorp\b/g, '')
+    .replace(/\bcorporation\b/g, '')
+    .replace(/\bco\b/g, '')
+    .replace(/\bcompany\b/g, '')
+    .replace(/\bgroup\b/g, '')
+    .replace(/\bholdings\b/g, '')
+    .replace(/\benterprises\b/g, '')
+    .replace(/\bplc\b/g, '')
+    .replace(/\bsa\b/g, '')
+    .replace(/\bag\b/g, '')
+    // Remove common prefixes
+    .replace(/^the\s+/i, '')
+    // Normalize accented characters (US/UK and international)
+    .replace(/[àáâãäå]/g, 'a')
+    .replace(/[èéêë]/g, 'e')
+    .replace(/[ìíîï]/g, 'i')
+    .replace(/[òóôõö]/g, 'o')
+    .replace(/[ùúûü]/g, 'u')
+    .replace(/[ýÿ]/g, 'y')
+    .replace(/ç/g, 'c')
+    .replace(/ñ/g, 'n')
+    .replace(/ß/g, 'ss')
+    // Remove apostrophes (L'Oréal -> loreal)
+    .replace(/'/g, '')
+    // Normalize whitespace again after all replacements
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Get brand data by name (case-insensitive, handles aliases, optimized for performance)
+ * Enhanced to check parent companies when brand not found directly
+ * 
+ * PERFORMANCE: Uses in-memory lookup - O(1) for direct matches, O(n) for partial matches
+ * Caching could be added if needed, but current implementation is fast enough
+ */
+export function getBrandData(brandName: string, parentCompany?: string): BrandData | null {
   if (!brandName || typeof brandName !== 'string') {
     return null;
   }
 
-  const normalized = brandName.toLowerCase().trim();
+  const normalized = normalizeBrandNameForLookup(brandName);
   
-  // Direct match
+  if (!normalized) {
+    return null;
+  }
+  
+  // Direct match (fastest - O(1))
   if (BRAND_DATABASE[normalized]) {
     return BRAND_DATABASE[normalized];
   }
 
+  // Check aliases (O(n) but n is small ~500 brands)
+  for (const [key, data] of Object.entries(BRAND_DATABASE)) {
+    // Exact alias match
+    if (data.aliases?.some(alias => normalizeBrandNameForLookup(alias) === normalized)) {
+      return data;
+    }
+    
+    // Check if normalized brand matches key exactly
+    if (normalizeBrandNameForLookup(key) === normalized) {
+      return data;
+    }
+  }
+
+  // Partial match (contains) - only if no exact match found
+  // This handles cases like "Coca-Cola" matching "coca cola"
+  for (const [key, data] of Object.entries(BRAND_DATABASE)) {
+    const normalizedKey = normalizeBrandNameForLookup(key);
+    
+    // Check if normalized brand contains key or vice versa
+    if (normalized.includes(normalizedKey) || normalizedKey.includes(normalized)) {
+      // Only return if match is significant (at least 3 characters)
+      if (normalizedKey.length >= 3 && normalized.length >= 3) {
+        return data;
+      }
+    }
+    
+    // Check aliases for partial matches
+    if (data.aliases) {
+      for (const alias of data.aliases) {
+        const normalizedAlias = normalizeBrandNameForLookup(alias);
+        if (normalized.includes(normalizedAlias) || normalizedAlias.includes(normalized)) {
+          // Only return if match is significant
+          if (normalizedAlias.length >= 3 && normalized.length >= 3) {
+            return data;
+          }
+        }
+      }
+    }
+  }
+
+  // ENHANCED: If brand not found, check parent company
+  if (parentCompany) {
+    const parentNormalized = normalizeBrandNameForLookup(parentCompany);
+    if (parentNormalized) {
+      // Try direct parent company lookup
+      const parentData = getBrandDataDirect(parentNormalized);
+      if (parentData) {
+        return parentData;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Direct brand data lookup (internal helper, no parent company check)
+ */
+function getBrandDataDirect(normalized: string): BrandData | null {
+  if (BRAND_DATABASE[normalized]) {
+    return BRAND_DATABASE[normalized];
+  }
+  
   // Check aliases
   for (const [key, data] of Object.entries(BRAND_DATABASE)) {
-    if (data.aliases?.some(alias => alias.toLowerCase() === normalized)) {
+    if (data.aliases?.some(alias => normalizeBrandNameForLookup(alias) === normalized)) {
       return data;
     }
-    if (key === normalized) {
-      return data;
-    }
-  }
-
-  // Partial match (contains)
-  for (const [key, data] of Object.entries(BRAND_DATABASE)) {
-    if (normalized.includes(key) || key.includes(normalized)) {
-      return data;
-    }
-    if (data.aliases?.some(alias => normalized.includes(alias.toLowerCase()) || alias.toLowerCase().includes(normalized))) {
+    if (normalizeBrandNameForLookup(key) === normalized) {
       return data;
     }
   }
-
+  
   return null;
 }
 
@@ -555,5 +730,89 @@ export function hasRecallHistory(brandName: string): boolean {
   }
   
   return false;
+}
+
+/**
+ * Extract brand name from product name when brands field is empty or generic
+ * Handles patterns like: "Brand Name - Product", "Brand Name Product", "Brand Name: Product"
+ */
+export function extractBrandFromProductName(productName?: string, brandOwner?: string): string | null {
+  if (!productName || typeof productName !== 'string') {
+    // Fallback to brand_owner if available
+    if (brandOwner && brandOwner.trim()) {
+      return brandOwner.trim();
+    }
+    return null;
+  }
+  
+  // Pattern 1: "Brand Name - Product Description" or "Brand Name: Product"
+  const pattern1 = /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+[-:]/i;
+  const match1 = productName.match(pattern1);
+  if (match1 && match1[1]) {
+    const potentialBrand = match1[1].trim();
+    if (isLikelyBrandName(potentialBrand)) {
+      return potentialBrand;
+    }
+  }
+  
+  // Pattern 2: "Brand Name Product Description" (brand at start, followed by lowercase product word)
+  const pattern2 = /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+[a-z]/i;
+  const match2 = productName.match(pattern2);
+  if (match2 && match2[1]) {
+    const potentialBrand = match2[1].trim();
+    if (isLikelyBrandName(potentialBrand)) {
+      return potentialBrand;
+    }
+  }
+  
+  // Pattern 3: Extract first 1-3 capitalized words (common brand pattern)
+  const words = productName.split(/\s+/);
+  if (words.length >= 2) {
+    // Check if first 1-2 words look like a brand
+    for (let i = 1; i <= Math.min(3, words.length); i++) {
+      const candidate = words.slice(0, i).join(' ');
+      if (isLikelyBrandName(candidate)) {
+        return candidate;
+      }
+    }
+  }
+  
+  // Fallback: Use brand_owner if available
+  if (brandOwner && brandOwner.trim()) {
+    return brandOwner.trim();
+  }
+  
+  return null;
+}
+
+/**
+ * Check if a string is likely a brand name (heuristics)
+ */
+function isLikelyBrandName(name: string): boolean {
+  if (!name || name.length < 2) return false;
+  
+  const genericWords = new Set([
+    'organic', 'natural', 'premium', 'fresh', 'pure', 'healthy', 'whole', 'free',
+    'range', 'style', 'choice', 'select', 'value', 'best', 'great', 'new', 'old',
+    'original', 'classic', 'traditional', 'authentic', 'artisan', 'gourmet',
+    'farm', 'country', 'home', 'family', 'kitchen', 'garden', 'valley', 'mountain',
+    'river', 'lake', 'spring', 'summer', 'winter', 'autumn', 'fall'
+  ]);
+  
+  const words = name.toLowerCase().split(/\s+/);
+  
+  // Too long to be a brand (usually 1-4 words)
+  if (words.length > 4) return false;
+  
+  // First word is generic
+  if (genericWords.has(words[0])) return false;
+  
+  // All words are generic
+  if (words.every(w => genericWords.has(w))) return false;
+  
+  // Contains numbers (unlikely to be brand at start)
+  if (/^\d/.test(name)) return false;
+  
+  return true;
 }
 

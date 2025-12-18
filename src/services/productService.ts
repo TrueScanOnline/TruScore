@@ -133,6 +133,7 @@ function isProductIncomplete(product: Product): boolean {
  */
 // Query deduplication at productService level
 const activeProductQueries = new Map<string, Promise<ProductWithTrustScore | null>>();
+const QUERY_TIMEOUT = 30000; // 30 seconds timeout to prevent memory leaks
 
 export async function fetchProduct(barcode: string, useCache = true, isPremium = false, isOffline = false): Promise<ProductWithTrustScore | null> {
   // Check if query is already in progress (deduplication)
@@ -142,15 +143,26 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
     return activeProductQueries.get(queryKey)!;
   }
   
-  // Create query promise
-  const queryPromise = executeFetchProduct(barcode, useCache, isPremium, isOffline);
+  // Create query promise with timeout protection to prevent memory leaks
+  const queryPromise = Promise.race([
+    executeFetchProduct(barcode, useCache, isPremium, isOffline),
+    new Promise<ProductWithTrustScore | null>((resolve) => 
+      setTimeout(() => {
+        logger.warn(`Query timeout for ${barcode} after ${QUERY_TIMEOUT}ms`);
+        resolve(null);
+      }, QUERY_TIMEOUT)
+    )
+  ]);
   
   // Store in active queries
   activeProductQueries.set(queryKey, queryPromise);
   
-  // Clean up after query completes
+  // Clean up after query completes (with timeout safety)
   queryPromise.finally(() => {
+    // Small delay to prevent race conditions, then cleanup
+    setTimeout(() => {
     activeProductQueries.delete(queryKey);
+    }, 1000);
   });
   
   return queryPromise;
@@ -206,31 +218,15 @@ async function executeFetchProduct(barcode: string, useCache = true, isPremium =
     }
   }
 
-  // Check for user-contributed products (manual products or from Vercel backend)
-  // This ensures users can access products submitted by other users
-  // Check this BEFORE main database queries to prioritize user contributions
-  try {
-    const userContributedProduct = await getUserContributedProduct(primaryBarcode);
-    if (userContributedProduct) {
-      logger.info(`[ProductService] Found user-contributed product: ${primaryBarcode}`);
-      
-      // Apply confidence score and calculate trust score
-      const productWithConfidence = applyConfidenceScore(userContributedProduct);
-      try {
-        return await calculateTrustScore(productWithConfidence);
-      } catch (error) {
-        logger.error('Error calculating TruScore for user-contributed product (non-critical):', error);
-        return {
-          ...productWithConfidence,
-          trust_score: null,
-          trust_score_breakdown: null,
-        };
-      }
-    }
-  } catch (error) {
+  // OPTIMIZED: Check user-contributed products in PARALLEL with database queries
+  // This eliminates the 5+ second sequential bottleneck
+  // Start user-contributed check immediately, don't wait for it
+  const userContributedPromise = getUserContributedProduct(primaryBarcode).catch(error => {
     logger.debug('[ProductService] Error checking user-contributed products (non-critical):', error);
-    // Continue to main database queries
-  }
+    return null;
+  });
+  
+  // Don't await here - continue with database queries in parallel
 
   // If offline and no cache, return null (premium users should have cache)
   if (isOffline) {
@@ -245,29 +241,76 @@ async function executeFetchProduct(barcode: string, useCache = true, isPremium =
   logger.info(`📋 Barcode Variants: ${barcodeVariants.join(', ')}`);
   logger.info(`🌍 User Country: ${userCountry || 'Unknown'}`);
 
-  // NEW: Early Product Name Discovery
-  // Discover product name early to enable name-based queries (FSANZ, FoodAtlas)
-  // This maximizes query success rates and TruScore quality
+  // OPTIMIZED: Start name discovery and database queries in PARALLEL
+  // This eliminates the sequential bottleneck and displays products faster
+  // Strategy: Start barcode queries immediately, discover name in parallel, trigger name-based queries if needed
   logger.info(`───────────────────────────────────────────────────────────────`);
-  logger.info(`🔍 EARLY PRODUCT NAME DISCOVERY`);
-  logger.info(`───────────────────────────────────────────────────────────────`);
-  const earlyProductName = await discoverProductNameEarly(primaryBarcode, userCountry);
-  if (earlyProductName) {
-    logger.info(`✅ Discovered product name early: "${earlyProductName}"`);
-    logger.info(`   This enables name-based queries (FSANZ, FoodAtlas) in parallel`);
-  } else {
-    logger.info(`⚠️  No product name discovered early - will try after barcode queries`);
-  }
-
-  // TRUSCORE-OPTIMIZED: Query ALL databases in parallel using optimized service
-  // This ensures maximum data quality and completeness for TruScore calculation
-  // NEW: Pass early product name to enable name-based queries
-  logger.info(`───────────────────────────────────────────────────────────────`);
-  logger.info(`📊 TRUSCORE-OPTIMIZED DATABASE QUERY (All Databases in Parallel)`);
+  logger.info(`🚀 OPTIMIZED PARALLEL QUERY STRATEGY`);
   logger.info(`───────────────────────────────────────────────────────────────`);
   
+  // Start name discovery and database queries in parallel (don't wait for name)
+  const nameDiscoveryPromise = discoverProductNameEarly(primaryBarcode, userCountry);
   const databaseService = new TruScoreOptimizedDatabase();
-  const allProducts = await databaseService.queryAllDatabases(primaryBarcode, userCountry, earlyProductName);
+  
+  // Start barcode queries immediately (don't wait for product name)
+  // Most databases (Open Food Facts, USDA, etc.) work with barcode only
+  logger.info(`📊 Starting barcode-based database queries (parallel, no name required)...`);
+  const allProductsPromise = databaseService.queryAllDatabases(primaryBarcode, userCountry, null);
+  
+  // Wait for name discovery (but don't block database queries - they run in parallel)
+  let earlyProductName: string | null = null;
+  try {
+    earlyProductName = await Promise.race([
+      nameDiscoveryPromise,
+      new Promise<string | null>((resolve) => setTimeout(() => resolve(null), 3000)), // 3s timeout for name discovery
+    ]);
+  } catch (error) {
+    logger.debug('Name discovery error (non-critical):', error);
+  }
+  
+  if (earlyProductName) {
+    logger.info(`✅ Discovered product name: "${earlyProductName}"`);
+    logger.info(`   Name-based queries (FSANZ, FoodAtlas) will be triggered in parallel`);
+  } else {
+    logger.info(`⚠️  No product name discovered early - barcode queries continue in parallel`);
+  }
+
+  // Get results from parallel barcode queries
+  let allProducts = await allProductsPromise;
+  
+  // If we found a product name, trigger additional name-based queries
+  // These are valuable sources (FSANZ, FoodAtlas) that require product name
+  if (earlyProductName) {
+    logger.info(`🔄 Triggering name-based queries with discovered name: "${earlyProductName}"`);
+    try {
+      // Query name-based sources in parallel (don't wait for full queryAllDatabases)
+      const { queryFSANZByProductName } = await import('./fsanzQueryService');
+      const { queryFoodAtlasByProductName } = await import('./foodAtlasQueryService');
+  
+      const nameBasedQueries = Promise.allSettled([
+        // FSANZ for AU/NZ users
+        (userCountry === 'AU' || userCountry === 'NZ') 
+          ? queryFSANZByProductName(earlyProductName, userCountry as 'AU' | 'NZ')
+          : Promise.resolve(null),
+        // FoodAtlas (global)
+        queryFoodAtlasByProductName(earlyProductName),
+      ]);
+      
+      const nameBasedResults = await nameBasedQueries;
+      nameBasedResults.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+          const product = result.value;
+          if (product && !product.barcode) {
+            product.barcode = primaryBarcode; // Ensure barcode is set
+          }
+          allProducts.push(product);
+          logger.info(`   ✅ Name-based query ${index + 1} found product`);
+        }
+      });
+    } catch (error) {
+      logger.debug('Name-based queries error (non-critical):', error);
+    }
+  }
   
   let product: Product | null = null;
   
@@ -282,6 +325,20 @@ async function executeFetchProduct(barcode: string, useCache = true, isPremium =
   const bestProductName = earlyProductName || Array.from(extractedProductNames)[0] || null;
   if (bestProductName && !earlyProductName) {
     logger.info(`📝 Extracted product name from results: "${bestProductName}"`);
+  }
+
+  // OPTIMIZED: Check user-contributed product in parallel (already started above)
+  // Merge it with database results if found
+  let userContributedProduct: Product | null = null;
+  try {
+    userContributedProduct = await userContributedPromise;
+    if (userContributedProduct) {
+      logger.info(`[ProductService] Found user-contributed product: ${primaryBarcode}`);
+      // Add to allProducts for merging
+      allProducts.push(userContributedProduct);
+    }
+  } catch (error) {
+    logger.debug('[ProductService] User-contributed check completed (non-critical):', error);
   }
 
   // Merge all products found with TruScore-first strategy
@@ -601,8 +658,87 @@ async function executeFetchProduct(barcode: string, useCache = true, isPremium =
     logger.info(`     ${packagingStatus} Packaging: ${packagingCount} items ${packagingSource}`);
   }
   
+  // CRITICAL FIX: Fetch recalls BEFORE TruScore calculation
+  // This ensures CARE pillar can use recall data for scoring
+  // Use fast timeout (2 seconds) to avoid blocking product display
+  if (productWithConfidence.product_name || productWithConfidence.brands) {
+    try {
+      const userCountry = getUserCountryCode();
+      const recallPromises: Promise<UnifiedRecall[]>[] = [];
+      
+      // Always check FDA recalls (US and global) - fast and reliable
+      recallPromises.push(
+        checkFDARecalls(
+          productWithConfidence.product_name,
+          productWithConfidence.brands,
+          barcode
+        ).then(recalls => recalls.map(convertFDARecall)).catch(() => [])
+      );
+      
+      // Check country-specific recalls (with timeout to avoid blocking)
+      if (userCountry === 'US') {
+        recallPromises.push(
+          checkComprehensiveUSRecalls(
+            productWithConfidence.product_name,
+            productWithConfidence.brands,
+            barcode
+          ).then(recalls => recalls.map(convertComprehensiveUSRecall)).catch(() => [])
+        );
+      }
+      
+      if (isEUCountry(userCountry)) {
+        recallPromises.push(
+          checkRASFFAlerts(
+            productWithConfidence.product_name,
+            productWithConfidence.brands,
+            barcode
+          ).then(alerts => alerts.map(convertRASFFAlert)).catch(() => [])
+        );
+      }
+      
+      if (userCountry === 'CA') {
+        recallPromises.push(
+          checkCFIARecalls(
+            productWithConfidence.product_name,
+            productWithConfidence.brands,
+            barcode
+          ).then(recalls => recalls.map(convertCFIARecall)).catch(() => [])
+        );
+      }
+      
+      // Fast timeout (2 seconds) - don't block product display
+      const timeoutPromise = new Promise<UnifiedRecall[]>((resolve) => 
+        setTimeout(() => resolve([]), 2000)
+      );
+      
+      const recallResults = await Promise.race([
+        Promise.all(recallPromises).then(results => results.flat()),
+        timeoutPromise
+      ]);
+      
+      if (recallResults && recallResults.length > 0) {
+        // Attach recalls to product BEFORE TruScore calculation
+        productWithConfidence.recalls = recallResults.map(recall => ({
+          recallId: recall.recallId,
+          productName: recall.productName,
+          brand: recall.brand,
+          reason: recall.reason,
+          recallDate: recall.recallDate,
+          distribution: recall.distribution,
+          isActive: recall.isActive,
+          url: recall.url,
+        }));
+        logger.info(`⚠️ RECALL ALERT: ${recallResults.length} recall(s) found - will affect CARE pillar score`);
+      }
+    } catch (error) {
+      // Non-blocking - continue without recalls if fetch fails
+      logger.debug('Recall check failed (non-critical, continuing without recalls):', error);
+    }
+  }
+  
   // Calculate trust score (works even for minimal web search products)
   // CRITICAL FIX: Wrap in try-catch to ensure product is always returned even if TruScore calculation fails
+  // Recalls are now attached to product BEFORE this calculation
   let productWithTrustScore: ProductWithTrustScore;
   try {
     productWithTrustScore = await calculateTrustScore(productWithConfidence);
@@ -774,85 +910,9 @@ async function executeFetchProduct(barcode: string, useCache = true, isPremium =
   logger.info(`✅ PRODUCT SCAN COMPLETE`);
   logger.info(`═══════════════════════════════════════════════════════════════`);
   
-  // Check recalls from multiple sources (comprehensive recall system)
-  // This is a quick check that won't block too long
-  if (productWithTrustScore.product_name || productWithTrustScore.brands) {
-    try {
-      const userCountry = getUserCountryCode();
-      
-      // Quick recall check (with timeout to not block)
-      const recallPromises: Promise<UnifiedRecall[]>[] = [];
-      
-      // Always check FDA recalls (US and global)
-      recallPromises.push(
-        checkFDARecalls(
-          productWithTrustScore.product_name,
-          productWithTrustScore.brands,
-          barcode
-        ).then(recalls => recalls.map(convertFDARecall)).catch(() => [])
-      );
-      
-      // Check comprehensive US recalls (Recalls.gov) for US users
-      if (userCountry === 'US') {
-        recallPromises.push(
-          checkComprehensiveUSRecalls(
-            productWithTrustScore.product_name,
-            productWithTrustScore.brands,
-            barcode
-          ).then(recalls => recalls.map(convertComprehensiveUSRecall)).catch(() => [])
-        );
-      }
-      
-      // Check EU RASFF alerts for EU users
-      if (isEUCountry(userCountry)) {
-        recallPromises.push(
-          checkRASFFAlerts(
-            productWithTrustScore.product_name,
-            productWithTrustScore.brands,
-            barcode
-          ).then(alerts => alerts.map(convertRASFFAlert)).catch(() => [])
-        );
-      }
-      
-      // Check CFIA recalls for Canadian users
-      if (userCountry === 'CA') {
-        recallPromises.push(
-          checkCFIARecalls(
-            productWithTrustScore.product_name,
-            productWithTrustScore.brands,
-            barcode
-          ).then(recalls => recalls.map(convertCFIARecall)).catch(() => [])
-        );
-      }
-      
-      const timeoutPromise = new Promise<UnifiedRecall[]>((resolve) => 
-        setTimeout(() => resolve([]), 3000) // 3 second timeout for multiple recall checks
-      );
-      
-      const recallResults = await Promise.race([
-        Promise.all(recallPromises).then(results => results.flat()),
-        timeoutPromise
-      ]);
-      
-      if (recallResults && recallResults.length > 0) {
-        // Convert to FoodRecall format for backward compatibility
-        productWithTrustScore.recalls = recallResults.map(recall => ({
-          recallId: recall.recallId,
-          productName: recall.productName,
-          brand: recall.brand,
-          reason: recall.reason,
-          recallDate: recall.recallDate,
-          distribution: recall.distribution,
-          isActive: recall.isActive,
-          url: recall.url,
-        }));
-        logger.info(`⚠️ RECALL ALERT: ${recallResults.length} recall(s) found for this product`);
-      }
-    } catch (error) {
-      // Non-blocking - recalls will be checked in background
-      logger.debug('Recall check timed out or failed (non-critical):', error);
-    }
-  }
+  // Note: Recalls are now fetched BEFORE TruScore calculation (see above)
+  // This ensures CARE pillar can use recall data for accurate scoring
+  // Additional recall checks can be done here for background updates if needed
   
   // CRITICAL: Merge user-contributed data and save to SQLite before returning
   // This ensures ALL user-entered data persists for future scans

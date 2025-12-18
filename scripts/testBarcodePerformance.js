@@ -256,3 +256,6 @@ async function testBarcode(barcode) {
   process.exit(1);
 });
 
+
+
+

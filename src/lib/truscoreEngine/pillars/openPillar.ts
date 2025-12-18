@@ -54,6 +54,7 @@ export interface OpenPillarResult {
     hiddenTermsCount: number;
     effectiveHiddenCount: number;
     sophisticationBonus: number;
+    nutritionalInfoAdjustment: number;
     originPenalty: number;
     brandOwnershipPenalty: number;
   };
@@ -85,11 +86,10 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   });
   
   // Ingredients disclosure adjustment
-  // IMPORTANT: Simple products (e.g., "99.5% peanuts, 0.05% salt") are complete even if short
-  // We check for completeness indicators rather than just character count
+  // NEW SPEC: Present=+2, none=-3 (simplified binary check)
   let ingredientsScore = 0;
   if (!ingredientsText || ingredientsLength === 0) {
-    ingredientsScore = -5;
+    ingredientsScore = -3;
     adjustments.push({
       description: 'No ingredients listed',
       value: ingredientsScore,
@@ -102,7 +102,7 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
       ingredientsText.trim()
     );
     if (isPlaceholder) {
-      ingredientsScore = -5;
+      ingredientsScore = -3;
       adjustments.push({
         description: 'Ingredients placeholder text (not real ingredients)',
         value: ingredientsScore,
@@ -110,71 +110,35 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
       });
       score += ingredientsScore; // Already negative
     } else {
-      // Check for completeness indicators (percentages, multiple ingredients, etc.)
-      const hasPercentages = /\d+\.?\d*\s*%/.test(ingredientsText);
-      const hasMultipleIngredients = ingredientsText.split(',').length >= 2 || ingredientsText.split(/[,\n;]/).length >= 2;
-      const hasCompleteFormat = hasPercentages || (hasMultipleIngredients && ingredientsLength >= 20);
-      
-      // Simple products with percentages are considered complete even if short
-      // Example: "99.5% peanuts, 0.05% salt" is complete (has percentages, multiple ingredients)
-      if (hasCompleteFormat || (hasPercentages && ingredientsLength >= 15)) {
-        // Complete disclosure - no penalty
-        ingredientsScore = 0;
+      // Present = +2 bonus
+      ingredientsScore = 2;
         adjustments.push({
-          description: 'Complete ingredients disclosure',
-          value: 0,
-          type: 'neutral',
-        });
-      } else if (ingredientsLength >= 100) {
-        // Long list = likely complete
-        ingredientsScore = 0;
-        adjustments.push({
-          description: 'Full ingredients disclosure (>100 characters)',
-          value: 0,
-          type: 'neutral',
-        });
-      } else if (ingredientsLength >= 50) {
-        // Medium length = partial
-        ingredientsScore = -5;
-        adjustments.push({
-          description: 'Partial ingredients disclosure (50-100 characters, may be incomplete)',
+        description: 'Ingredients disclosure present',
           value: ingredientsScore,
-          type: 'negative',
+        type: 'positive',
         });
-        score += ingredientsScore; // Already negative
-      } else {
-        // Short and no completeness indicators = likely incomplete
-        ingredientsScore = -5;
-        adjustments.push({
-          description: 'Minimal ingredients disclosure (<50 characters, likely incomplete)',
-          value: ingredientsScore,
-          type: 'negative',
-        });
-        score += ingredientsScore; // Already negative
-      }
+      score += ingredientsScore;
     }
   }
   
   // Hidden terms penalty (includes fragrance - merged into main list)
+  // NEW SPEC: 1=-4, 2=-8, >=3=-11; if NOVA>=3 add +1 to count; zero hidden & NOVA1-2 = +4; zero hidden & NOVA3-4 = +2
   const hiddenCount = HIDDEN_TERMS.filter((t) => hasTerm(t)).length;
   
-  // NOVA amplification: +1 count if NOVA≥3 & disclosure partial/none
+  // NOVA amplification: +1 count if NOVA≥3
   let effectiveHiddenCount = hiddenCount;
   if (product.nova_group !== undefined && product.nova_group >= 3) {
-    const isDisclosurePartial = ingredientsLength < 100 || ingredientsScore < 0;
-    if (isDisclosurePartial) {
       effectiveHiddenCount += 1;
-    }
   }
   
-  // Apply penalty based on effective count (per spec: 1=-5, 2=-10, ≥3=-15, cap -20)
+  // Apply penalty based on effective count (per spec: 1=-4, 2=-8, >=3=-11)
   let hiddenTermsPenalty = 0;
   if (effectiveHiddenCount >= 3) {
-    hiddenTermsPenalty = 15; // -15 (cap -20 total)
+    hiddenTermsPenalty = 11; // -11
   } else if (effectiveHiddenCount === 2) {
-    hiddenTermsPenalty = 10; // -10
+    hiddenTermsPenalty = 8; // -8
   } else if (effectiveHiddenCount === 1) {
-    hiddenTermsPenalty = 5; // -5
+    hiddenTermsPenalty = 4; // -4
   }
   
   if (hiddenTermsPenalty > 0) {
@@ -189,12 +153,12 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     score -= hiddenTermsPenalty;
   }
   
-  // Zero hidden rewards: +5 for NOVA 1-2, +2 for others
+  // Zero hidden rewards: +4 for NOVA 1-2, +2 for NOVA 3-4
   let sophisticationBonus = 0;
   if (hiddenCount === 0) {
     const nova = product.nova_group;
     if (nova === 1 || nova === 2) {
-      sophisticationBonus = 5; // +5 for zero hidden + NOVA 1-2
+      sophisticationBonus = 4; // +4 for zero hidden + NOVA 1-2
       adjustments.push({
         description: 'Sophistication bonus (zero hidden ingredients + NOVA 1-2)',
         value: sophisticationBonus,
@@ -202,9 +166,9 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
       });
       score += sophisticationBonus;
     } else {
-      sophisticationBonus = 2; // +2 for zero hidden but not NOVA 1-2
+      sophisticationBonus = 2; // +2 for zero hidden but NOVA 3-4
       adjustments.push({
-        description: 'Transparency bonus (zero hidden ingredients)',
+        description: 'Transparency bonus (zero hidden ingredients + NOVA 3-4)',
         value: sophisticationBonus,
         type: 'positive',
       });
@@ -212,7 +176,60 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     }
   }
   
-  // Origin penalty
+  // NEW: Nutritional Information scoring
+  // NEW SPEC: Complete (per 100g/serve benchmarks)=+3, partial=+1, none=-3
+  let nutritionalInfoAdjustment = 0;
+  const nutrients = product.nutriments || {};
+  const hasNutrients = Object.keys(nutrients).length > 0;
+  
+  if (!hasNutrients) {
+    nutritionalInfoAdjustment = -3;
+    adjustments.push({
+      description: 'No nutritional information disclosed',
+      value: nutritionalInfoAdjustment,
+      type: 'negative',
+    });
+    score += nutritionalInfoAdjustment; // Already negative
+  } else {
+    // Check if complete (has _100g keys and serving_size)
+    const hasPer100g = Object.keys(nutrients).some(key => key.includes('_100g'));
+    const hasServingSize = !!product.serving_size || !!nutrients.serving_size;
+    const hasCompleteFormat = hasPer100g && hasServingSize;
+    
+    // Check for key nutrients (energy, fat, carbs, protein, salt, sugars)
+    const keyNutrients = ['energy', 'fat', 'carbohydrates', 'proteins', 'salt', 'sugars'];
+    const hasKeyNutrients = keyNutrients.some(nutrient => 
+      Object.keys(nutrients).some(key => key.toLowerCase().includes(nutrient))
+    );
+    
+    if (hasCompleteFormat && hasKeyNutrients) {
+      nutritionalInfoAdjustment = 3; // Complete = +3
+      adjustments.push({
+        description: 'Complete nutritional information (per 100g/serve benchmarks)',
+        value: nutritionalInfoAdjustment,
+        type: 'positive',
+      });
+      score += nutritionalInfoAdjustment;
+    } else if (hasKeyNutrients) {
+      nutritionalInfoAdjustment = 1; // Partial = +1
+      adjustments.push({
+        description: 'Partial nutritional information disclosed',
+        value: nutritionalInfoAdjustment,
+        type: 'positive',
+      });
+      score += nutritionalInfoAdjustment;
+    } else {
+      // Has nutrients but incomplete - no adjustment (neutral)
+      adjustments.push({
+        description: 'Nutritional information present but incomplete',
+        value: 0,
+        type: 'neutral',
+      });
+    }
+  }
+  
+  // Origin penalty/bonus
+  // NEW SPEC: No origin=-4, complete=+4 bonus
   // Check all possible fields where origin/manufacturing info might be stored
   // This matches the logic in extractManufacturingCountry() to ensure consistency
   const hasOriginTags = Array.isArray(product.origins_tags) && product.origins_tags.length > 0;
@@ -245,29 +262,42 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   // Has origin if found in any field (tags, strings, or text fields)
   const hasOrigin: boolean = hasOriginTags || hasManufacturingTags || hasOriginString || hasManufacturingString || hasOriginInText;
   
-  let originPenalty = 0;
+  // Check if origin is complete (has both tags and string, or multiple tags)
+  const isOriginComplete = (hasOriginTags && hasOriginString) || 
+                          (hasOriginTags && product.origins_tags && product.origins_tags.length > 1) ||
+                          (hasManufacturingTags && hasManufacturingString);
+  
+  let originAdjustment = 0;
   if (!hasOrigin) {
-    originPenalty = 8;
+    originAdjustment = -4; // No origin = -4
     adjustments.push({
       description: 'No origin information',
-      value: -originPenalty,
+      value: originAdjustment,
       type: 'negative',
     });
-    score -= originPenalty;
+    score += originAdjustment; // Already negative
   } else {
     // Check for placeholder values
     if (placeholderValues.some(placeholder => allOriginValues.includes(placeholder))) {
-      originPenalty = 8;
+      originAdjustment = -4; // Placeholder = -4 (same as no origin)
       adjustments.push({
         description: 'Origin information is placeholder text (not real origin)',
-        value: -originPenalty,
+        value: originAdjustment,
         type: 'negative',
       });
-      score -= originPenalty;
-    } else {
-      // Origin found - no penalty
+      score += originAdjustment; // Already negative
+    } else if (isOriginComplete) {
+      originAdjustment = 4; // Complete origin = +4 bonus
       adjustments.push({
-        description: 'Origin information available',
+        description: 'Complete origin information disclosed',
+        value: originAdjustment,
+        type: 'positive',
+      });
+      score += originAdjustment;
+    } else {
+      // Origin found but not complete - no adjustment
+      adjustments.push({
+        description: 'Origin information available (partial)',
         value: 0,
         type: 'neutral',
       });
@@ -281,6 +311,7 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     return placeholderValues.some(placeholder => value.toLowerCase().includes(placeholder));
   };
   
+  // NEW SPEC: Hidden/opaque parent=-3
   let brandOwnershipPenalty = 0;
   const hasBrandOwner = !!(product.brand_owner && 
     !isPlaceholderValue(product.brand_owner));
@@ -294,7 +325,7 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     
     if (!hasParentInDatabase) {
       // Parent company is hidden/opaque - apply penalty
-      brandOwnershipPenalty = 5;
+      brandOwnershipPenalty = 3; // Updated from -5 to -3
       adjustments.push({
         description: 'Hidden/opaque parent company',
         value: -brandOwnershipPenalty,
@@ -328,7 +359,8 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     hiddenCount,
     effectiveHiddenCount,
     sophisticationBonus,
-    originPenalty,
+    nutritionalInfoAdjustment,
+    originPenalty: originAdjustment,
     brandOwnershipPenalty,
     final: score,
   });
@@ -344,7 +376,8 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
       hiddenTermsCount: hiddenCount,
       effectiveHiddenCount,
       sophisticationBonus,
-      originPenalty,
+      nutritionalInfoAdjustment,
+      originPenalty: Math.abs(originAdjustment < 0 ? originAdjustment : 0),
       brandOwnershipPenalty,
     },
   };

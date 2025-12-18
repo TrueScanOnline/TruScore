@@ -13,7 +13,8 @@
  * - Multi-user retrieval (User A submits, User B retrieves)
  */
 
-import { saveManualProduct, ManualProductData } from '../../../src/services/manualProductService';
+import { saveManualProduct } from '../../../src/services/manualProductService';
+import { ManualProductData } from '../../../src/types/manualProduct';
 import { getUserContributedProduct } from '../../../src/services/userContributedProductsService';
 import { submitManufacturingCountry, getManufacturingCountry } from '../../../src/services/manufacturingCountryService';
 import { uploadProductPhoto } from '../../../src/services/photoUploadService';

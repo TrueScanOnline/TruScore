@@ -3,7 +3,7 @@
 // This ensures all user data becomes available to the global community
 
 import { logger } from '../utils/logger';
-import { ManualProductData } from './manualProductService';
+import { ManualProductData } from '../types/manualProduct';
 import * as FileSystem from 'expo-file-system';
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org';

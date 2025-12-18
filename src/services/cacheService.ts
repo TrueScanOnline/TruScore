@@ -18,6 +18,9 @@ interface CachedProduct {
   barcode: string;
 }
 
+// Cache locking mechanism to prevent race conditions
+const cacheLocks = new Map<string, Promise<void>>();
+
 /**
  * Initialize cache directory
  */
@@ -90,8 +93,17 @@ export async function getCachedProduct(barcode: string, isPremium: boolean = fal
 /**
  * Cache a product
  * Premium users get larger cache size
+ * Uses locking mechanism to prevent race conditions
  */
 export async function cacheProduct(product: Product, isPremium: boolean = false): Promise<void> {
+  const lockKey = product.barcode;
+  
+  // Wait for any existing operation on this barcode
+  if (cacheLocks.has(lockKey)) {
+    await cacheLocks.get(lockKey);
+  }
+  
+  const cachePromise = (async () => {
   try {
     await initializeCache();
 
@@ -121,13 +133,34 @@ export async function cacheProduct(product: Product, isPremium: boolean = false)
       await AsyncStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(cache));
     }
 
-    // Cache image if available
+    // Cache image if available (with optimization)
     if (product.image_url || product.image_front_url) {
-      await cacheImage(product.barcode, product.image_url || product.image_front_url || '');
+      const imageUrl = product.image_url || product.image_front_url || '';
+      try {
+        // Optimize image before caching
+        const { optimizeImageForCache } = await import('./imageOptimizationService');
+        const optimizedUrl = await optimizeImageForCache(imageUrl, {
+          maxWidth: 800,
+          maxHeight: 800,
+          quality: 0.8,
+          maxFileSizeMB: 2,
+        });
+        await cacheImage(product.barcode, optimizedUrl);
+      } catch (error) {
+        // Fallback to original image if optimization fails
+        logger.debug('Image optimization failed, using original:', error);
+        await cacheImage(product.barcode, imageUrl);
+      }
     }
   } catch (error) {
     logger.error('Error caching product', error);
+    } finally {
+      cacheLocks.delete(lockKey);
   }
+  })();
+  
+  cacheLocks.set(lockKey, cachePromise);
+  await cachePromise;
 }
 
 /**

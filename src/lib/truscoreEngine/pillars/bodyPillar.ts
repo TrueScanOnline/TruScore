@@ -68,11 +68,13 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
   };
   
   // Nutri-Score adjustment (from base 15)
+  // NEW SPEC: A=+7 (total 22), B=+3 (18), C=0 (15), D=-3 (12), E=-7 (8)
   let nutriscoreValue: number | undefined;
   if (hasNutriScore) {
     const ns = product.nutriscore_grade?.toLowerCase();
     if (ns) {
-      const gradeMapping: Record<string, number> = { a: 25, b: 20, c: 15, d: 10, e: 5 };
+      // Updated mapping: A=22, B=18, C=15, D=12, E=8
+      const gradeMapping: Record<string, number> = { a: 22, b: 18, c: 15, d: 12, e: 8 };
       nutriscoreValue = gradeMapping[ns] || 15;
       const adjustment = nutriscoreValue - 15; // Adjustment from base 15
       
@@ -306,6 +308,7 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
   // Note: Fragrance penalty moved to Open Pillar (transparency issue, not body safety)
   
   // NOVA adjustments (with cap of -10 total processing penalties)
+  // NEW SPEC: 1=+3, 2=+1, 3=-1, 4=-6 (cap -10 total processing penalties)
   const nova = product.nova_group;
   let novaAdjustment = 0;
   let totalProcessingPenalties = 0;
@@ -319,18 +322,24 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
     });
     score += novaAdjustment;
   } else if (nova === 2) {
-    // No adjustment for NOVA 2
+    novaAdjustment = 1;
+    adjustments.push({
+      description: 'NOVA Group 2 (processed culinary ingredients)',
+      value: novaAdjustment,
+      type: 'positive',
+    });
+    score += novaAdjustment;
   } else if (nova === 3) {
-    novaAdjustment = -3;
-    totalProcessingPenalties = 3;
+    novaAdjustment = -1;
+    totalProcessingPenalties = 1;
     adjustments.push({
       description: 'NOVA Group 3 (processed)',
       value: novaAdjustment,
       type: 'negative',
     });
   } else if (nova === 4) {
-    novaAdjustment = -8;
-    totalProcessingPenalties = 8;
+    novaAdjustment = -6;
+    totalProcessingPenalties = 6;
     adjustments.push({
       description: 'NOVA Group 4 (ultra-processed)',
       value: novaAdjustment,

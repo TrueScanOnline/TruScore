@@ -14,10 +14,11 @@ import { fetchProductFromEANSearch } from './eanSearchApi';
  * Discover product name early from multiple sources
  * This enables name-based queries (FSANZ, FoodAtlas) even when barcode queries fail
  * 
- * Strategy:
+ * ENHANCED Strategy:
  * 1. Check SQLite (fastest, offline-first)
  * 2. Check Cache (fast, might have name)
- * 3. Quick API calls (UPCitemdb, Barcode Spider - name only, don't wait for full data)
+ * 3. Quick API calls (UPCitemdb, Barcode Spider, EAN-Search - name only, don't wait for full data)
+ * 4. Try EAN-Search (additional source for better coverage)
  * 
  * Returns the first valid product name found, or null
  */
@@ -59,43 +60,47 @@ export async function discoverProductNameEarly(
     },
     
     // Strategy 3: Quick API calls (name only, timeout quickly)
+    // ENHANCED: Try multiple APIs in parallel for faster discovery
     async (): Promise<string | null> => {
-      // Try UPCitemdb first (often has product names, free tier)
-      try {
-        const upcProduct = await Promise.race([
+      // Try all quick APIs in parallel (faster than sequential)
+      const quickApiPromises = [
+        // UPCitemdb (often has product names, free tier)
+        Promise.race([
           fetchProductFromUPCitemdb(barcode),
           new Promise<Product | null>((resolve) => 
             setTimeout(() => resolve(null), 2000) // 2 second timeout
           ),
-        ]);
+        ]).catch(() => null),
         
-        if (upcProduct?.product_name && 
-            !upcProduct.product_name.startsWith('Product ') &&
-            upcProduct.product_name.length > 3) {
-          logger.debug(`[ProductNameDiscovery] Found name in UPCitemdb: ${upcProduct.product_name}`);
-          return upcProduct.product_name;
-        }
-      } catch (error) {
-        logger.debug('[ProductNameDiscovery] UPCitemdb check failed:', error);
-      }
-      
-      // Try Barcode Spider (free, sometimes has names)
-      try {
-        const spiderProduct = await Promise.race([
+        // Barcode Spider (free, sometimes has names)
+        Promise.race([
           fetchProductFromBarcodeSpider(barcode),
           new Promise<Product | null>((resolve) => 
             setTimeout(() => resolve(null), 2000) // 2 second timeout
           ),
-        ]);
+        ]).catch(() => null),
         
-        if (spiderProduct?.product_name && 
-            !spiderProduct.product_name.startsWith('Product ') &&
-            spiderProduct.product_name.length > 3) {
-          logger.debug(`[ProductNameDiscovery] Found name in Barcode Spider: ${spiderProduct.product_name}`);
-          return spiderProduct.product_name;
+        // EAN-Search (additional source for better coverage)
+        Promise.race([
+          fetchProductFromEANSearch(barcode),
+          new Promise<Product | null>((resolve) => 
+            setTimeout(() => resolve(null), 2000) // 2 second timeout
+          ),
+        ]).catch(() => null),
+      ];
+      
+      const results = await Promise.allSettled(quickApiPromises);
+      
+      // Return first valid product name found
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+          const product = result.value;
+          const productName = extractProductName(product);
+          if (productName) {
+            logger.debug(`[ProductNameDiscovery] Found name in quick API: ${productName}`);
+            return productName;
+          }
         }
-      } catch (error) {
-        logger.debug('[ProductNameDiscovery] Barcode Spider check failed:', error);
       }
       
       return null;
@@ -119,26 +124,43 @@ export async function discoverProductNameEarly(
 /**
  * Extract product name from any product result
  * Handles various product name fields and normalizes them
+ * ENHANCED: More aggressive extraction with better pattern matching
  */
 export function extractProductName(product: Product | null | undefined): string | null {
   if (!product) return null;
   
-  // Try different name fields
-  const name = product.product_name || 
-               product.product_name_en || 
-               product.generic_name ||
-               null;
+  // Try different name fields (in priority order)
+  const nameCandidates = [
+    product.product_name,
+    product.product_name_en,
+    product.generic_name,
+    // Also check raw fields that might have names
+    (product as any).title, // UPCitemdb format
+    (product as any).description, // Some APIs use this
+    (product as any).name, // Generic name field
+  ];
   
-  if (!name) return null;
-  
-  // Reject generic names
-  if (name.startsWith('Product ') || 
-      /^Product\s+\d+$/i.test(name) ||
-      name.length < 3) {
-    return null;
+  for (const candidate of nameCandidates) {
+    if (candidate && typeof candidate === 'string') {
+      const name = candidate.trim();
+      
+      // Reject generic names
+      if (name.startsWith('Product ') || 
+          /^Product\s+\d+$/i.test(name) ||
+          name.length < 3) {
+        continue; // Try next candidate
+      }
+      
+      // Reject if it's just the barcode
+      if (name === product.barcode || name.replace(/\D/g, '') === product.barcode) {
+        continue;
+      }
+      
+      return name;
+    }
   }
   
-  return name.trim();
+  return null;
 }
 
 /**

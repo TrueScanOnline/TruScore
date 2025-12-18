@@ -12,14 +12,14 @@ export function getBackendUrl(): string {
   // Backend URL - Priority:
   // 1. Environment variable (EXPO_PUBLIC_BACKEND_URL from .env)
   // 2. Default fallback (deployed backend URL)
-  // ✅ Using vercel-murex-alpha.vercel.app - verified working (no authentication required)
-  let backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://vercel-murex-alpha.vercel.app';
+  // ✅ Using truscoreapi.vercel.app - verified working with database (no authentication required)
+  let backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://truscoreapi.vercel.app';
   
   // CRITICAL: Reject known preview deployment URLs (they require authentication)
   // Known production URLs (verified working - no authentication):
   const PRODUCTION_URLS = [
-    'https://vercel-murex-alpha.vercel.app', // ✅ Latest production (verified working)
-    'https://truscoreapi.vercel.app', // ✅ Alternative project (verified working)
+    'https://truscoreapi.vercel.app', // ✅ Primary production (verified working with database)
+    'https://vercel-murex-alpha.vercel.app', // ✅ Fallback (verified working)
     'https://vercel-q30j4fdjt-leightons-projects-d328c774.vercel.app', // ⚠️ May require auth
     'https://vercel-48au9bmeu-leightons-projects-d328c774.vercel.app', // ⚠️ May require auth
   ];

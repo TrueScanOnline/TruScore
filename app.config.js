@@ -70,6 +70,13 @@ module.exports = {
     web: {
       favicon: './assets/favicon.png',
     },
+    // Explicitly disable updates for Expo Go development
+    // This prevents "Failed to download remote update" errors
+    updates: {
+      enabled: false,
+      checkAutomatically: 'NEVER',
+      fallbackToCacheTimeout: 0,
+    },
     plugins: [
       'expo-font',
       'expo-sqlite',
@@ -95,9 +102,12 @@ module.exports = {
       ],
     ],
     extra: {
-      eas: {
-        projectId: '1ac14572-9608-42fa-aceb-c0e2a2f60687',
-      },
+      // EAS project ID removed for Expo Go development
+      // Uncomment this block ONLY when building with EAS Build for production
+      // Having this in Expo Go causes "Failed to download remote update" errors
+      // eas: {
+      //   projectId: '1ac14572-9608-42fa-aceb-c0e2a2f60687',
+      // },
       // Qonversion Project Key - same for both iOS and Android
       // Secret Key is for server-side use only (webhooks, backend API)
       // Get keys from: https://dashboard.qonversion.io/settings

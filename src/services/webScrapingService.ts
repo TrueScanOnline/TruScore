@@ -3,6 +3,7 @@
 // Uses multiple strategies including CORS proxies, structured data parsing, and multiple sources
 
 import { Product, ProductNutriments } from '../types/product';
+import { logger } from '../utils/logger';
 
 // Free CORS proxies (public, rate-limited but usable)
 const CORS_PROXIES = [
@@ -117,7 +118,10 @@ function extractStructuredData(html: string): StructuredData | null {
             }
           }
         }
-      } catch {}
+      } catch (error) {
+        logger.debug('Non-critical error in structured data extraction (continuing):', error);
+        // Continue execution - this is acceptable for non-critical operations
+      }
     }
   } catch (error) {
     console.warn('[WebScraping] Error extracting structured data:', error);

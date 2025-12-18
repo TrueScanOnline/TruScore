@@ -247,3 +247,6 @@ hasHighFarmingImpact(cropName: string): boolean {
 
 
 
+
+
+

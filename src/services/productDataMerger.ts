@@ -103,6 +103,11 @@ export function mergeProducts(
   const normalizeNutrition = options.normalizeNutrition !== false; // Default true
   const shouldMergeCertifications = options.shouldMergeCertifications !== false; // Default true
   
+  // OPTIMIZATION: Use Map for faster source weight lookups (O(1) instead of O(n))
+  // This improves merging performance, especially with many products
+  // Works globally on iOS and Android
+  const sourceWeightsMap = new Map(Object.entries(sourceWeights));
+  
   /**
    * Calculate TruScore field completeness score (0-100)
    * Higher score = more TruScore-critical fields present
@@ -135,11 +140,11 @@ export function mergeProducts(
     return Math.min(100, score);
   }
   
-  // Score each product by TruScore completeness
+  // OPTIMIZATION: Score each product by TruScore completeness using Map for faster lookups
   const scoredProducts = products.map(p => ({
     product: p,
     truScoreCompleteness: calculateTruScoreCompleteness(p),
-    sourceWeight: sourceWeights[p.source || 'web_search'] || 0.1,
+    sourceWeight: sourceWeightsMap.get(p.source || 'web_search') || 0.1,
   }));
   
   // Sort by combined score: 60% TruScore completeness + 40% source weight
@@ -187,10 +192,10 @@ export function mergeProducts(
     }
   });
   
-  // Merge fields from other products (weighted)
+  // OPTIMIZATION: Merge fields from other products (weighted) using Map for faster lookups
   // Use source weights from the scored products
   const weights = sortedProducts.map(scored => 
-    sourceWeights[scored.product.source || 'web_search'] || 0.1
+    sourceWeightsMap.get(scored.product.source || 'web_search') || 0.1
   );
   
   // Normalize weights to sum to 1
@@ -205,9 +210,13 @@ export function mergeProducts(
     productsToMerge.find(p => p.product_name)?.product_name || 
     'Unknown Product';
   
-  // Merge brand (use best one)
-  mergedProduct.brands = baseProduct.brands || 
-    productsToMerge.find(p => p.brands)?.brands;
+  // ENHANCED: Merge brands from all sources and all field names
+  // This preserves brand data even when databases use different field names
+  mergedProduct.brands = mergeBrandFields(productsToMerge);
+  
+  // Also merge brand_owner if available
+  mergedProduct.brand_owner = baseProduct.brand_owner || 
+    productsToMerge.find(p => p.brand_owner)?.brand_owner;
   
   // Merge image (use best one - prefer non-null)
   mergedProduct.image_url = baseProduct.image_url || 
@@ -545,6 +554,123 @@ export function mergeProducts(
   logger.info(`═══════════════════════════════════════════════════════════════`);
   
   return mergedProduct;
+}
+
+/**
+ * ENHANCED: Merge brand fields from all products and all field name variations
+ * This is critical because different databases use different field names:
+ * - OFF: brands, brand_owner, brands_tags
+ * - USDA: brandOwner, brandName (converted to brands)
+ * - FSANZ: brand (converted to brands)
+ * - UPCitemdb: brand (converted to brands)
+ * 
+ * This function collects brands from ALL possible field names to prevent data loss
+ */
+function mergeBrandFields(products: Product[]): string | undefined {
+  const brands = new Set<string>();
+  
+  // Collect brands from all products and all field name variations
+  products.forEach(p => {
+    // 1. Primary brands field (may contain comma-separated values)
+    if (p.brands && typeof p.brands === 'string') {
+      const brandList = p.brands.split(',').map(b => b.trim()).filter(Boolean);
+      brandList.forEach(b => {
+        if (b && b !== 'Unknown') {
+          brands.add(b);
+        }
+      });
+    }
+    
+    // 2. Brand owner field
+    if (p.brand_owner && typeof p.brand_owner === 'string') {
+      const brandOwner = p.brand_owner.trim();
+      if (brandOwner && brandOwner !== 'Unknown') {
+        brands.add(brandOwner);
+      }
+    }
+    
+    // 3. Brands tags (OFF-specific field)
+    const brandsTags = (p as any).brands_tags;
+    if (Array.isArray(brandsTags) && brandsTags.length > 0) {
+      brandsTags.forEach((tag: string) => {
+        if (typeof tag === 'string') {
+          // Remove 'en:' prefix if present
+          const brand = tag.replace(/^en:/, '').trim();
+          if (brand && brand !== 'Unknown') {
+            brands.add(brand);
+          }
+        }
+      });
+    }
+    
+    // 4. Brand owner tags (OFF-specific field)
+    const brandOwnerTags = (p as any).brand_owner_tags;
+    if (Array.isArray(brandOwnerTags) && brandOwnerTags.length > 0) {
+      brandOwnerTags.forEach((tag: string) => {
+        if (typeof tag === 'string') {
+          const brand = tag.replace(/^en:/, '').trim();
+          if (brand && brand !== 'Unknown') {
+            brands.add(brand);
+          }
+        }
+      });
+    }
+    
+    // 5. Database-specific field names (check raw data)
+    const rawProduct = p as any;
+    
+    // USDA uses brandOwner or brandName (before conversion)
+    if (rawProduct.brandOwner && typeof rawProduct.brandOwner === 'string') {
+      const brandOwner = rawProduct.brandOwner.trim();
+      if (brandOwner && brandOwner !== 'Unknown') {
+        brands.add(brandOwner);
+      }
+    }
+    if (rawProduct.brandName && typeof rawProduct.brandName === 'string') {
+      const brandName = rawProduct.brandName.trim();
+      if (brandName && brandName !== 'Unknown') {
+        brands.add(brandName);
+      }
+    }
+    
+    // FSANZ/UPCitemdb use 'brand' (before conversion)
+    if (rawProduct.brand && typeof rawProduct.brand === 'string') {
+      const brand = rawProduct.brand.trim();
+      if (brand && brand !== 'Unknown') {
+        brands.add(brand);
+      }
+    }
+    
+    // Manufacturer field (sometimes contains brand info)
+    if (rawProduct.manufacturer && typeof rawProduct.manufacturer === 'string') {
+      const manufacturer = rawProduct.manufacturer.trim();
+      if (manufacturer && manufacturer !== 'Unknown') {
+        brands.add(manufacturer);
+      }
+    }
+  });
+  
+  // Filter out generic terms
+  const validBrands = Array.from(brands).filter(brand => {
+    const brandLower = brand.toLowerCase();
+    const genericTerms = [
+      'unknown', 'n/a', 'not available', 'missing', 'not disclosed',
+      'product', 'food', 'item', 'goods', 'merchandise', 'generic',
+      'store brand', 'private label', 'no name'
+    ];
+    return !genericTerms.some(term => brandLower.includes(term)) && brand.length >= 2;
+  });
+  
+  if (validBrands.length === 0) {
+    return undefined;
+  }
+  
+  // Join unique brands (comma-separated)
+  const mergedBrands = validBrands.join(', ');
+  
+  logger.info(`  Brands: Merged ${validBrands.length} unique brands from ${products.length} sources: ${mergedBrands}`);
+  
+  return mergedBrands;
 }
 
 /**

@@ -1,198 +1,129 @@
-// Performance monitoring utilities
-// Tracks key performance metrics for optimization
+/**
+ * Performance Monitoring Utility
+ * Tracks and logs performance metrics for product scanning
+ * Works globally on iOS and Android platforms
+ * 
+ * @module performanceMonitor
+ */
 
 import { logger } from './logger';
+import { Platform } from 'react-native';
 
-interface PerformanceMetric {
-  name: string;
-  duration: number;
-  timestamp: number;
-  metadata?: Record<string, unknown>;
+export interface PerformanceMetrics {
+  barcode: string;
+  ttf: number; // Time to First Content (ms)
+  tlt: number; // Total Load Time (ms)
+  apiCalls: number;
+  cacheHit: boolean;
+  sources: string[];
+  platform: 'ios' | 'android' | 'web';
+  userCountry?: string | null;
+  networkType?: string;
 }
 
-class PerformanceMonitor {
-  private metrics: PerformanceMetric[] = [];
-  private maxMetrics = 1000;
-  private enabled = __DEV__ || process.env.NODE_ENV === 'development';
-
-  /**
-   * Start timing an operation
-   */
-  start(name: string): (metadata?: Record<string, unknown>) => void {
-    if (!this.enabled) {
-      return () => {}; // No-op if disabled
-    }
-
-    const startTime = performance.now();
-
-    return (metadata?: Record<string, unknown>) => {
-      const duration = performance.now() - startTime;
-      this.record(name, duration, metadata);
-    };
-  }
-
-  /**
-   * Record a performance metric
-   */
-  record(name: string, duration: number, metadata?: Record<string, unknown>): void {
-    if (!this.enabled) {
-      return;
-    }
-
-    const metric: PerformanceMetric = {
-      name,
-      duration,
-      timestamp: Date.now(),
-      metadata,
-    };
-
-    this.metrics.push(metric);
-
-    // Keep only recent metrics
-    if (this.metrics.length > this.maxMetrics) {
-      this.metrics.shift();
-    }
-
-    // Log slow operations
-    if (duration > 1000) {
-      logger.warn(`Slow operation detected: ${name} took ${duration.toFixed(2)}ms`, metadata);
-    }
-  }
-
-  /**
-   * Get metrics for a specific operation
-   */
-  getMetrics(name: string): PerformanceMetric[] {
-    return this.metrics.filter(m => m.name === name);
-  }
-
-  /**
-   * Get average duration for an operation
-   */
-  getAverageDuration(name: string): number {
-    const metrics = this.getMetrics(name);
-    if (metrics.length === 0) {
-      return 0;
-    }
-
-    const sum = metrics.reduce((acc, m) => acc + m.duration, 0);
-    return sum / metrics.length;
-  }
-
-  /**
-   * Get all metrics
-   */
-  getAllMetrics(): PerformanceMetric[] {
-    return [...this.metrics];
-  }
-
-  /**
-   * Clear all metrics
-   */
-  clear(): void {
-    this.metrics = [];
-  }
-
-  /**
-   * Get summary statistics
-   */
-  getSummary(): Record<string, {
-    count: number;
-    average: number;
-    min: number;
-    max: number;
-  }> {
-    const summary: Record<string, {
-      count: number;
-      average: number;
-      min: number;
-      max: number;
-    }> = {};
-
-    for (const metric of this.metrics) {
-      if (!summary[metric.name]) {
-        summary[metric.name] = {
-          count: 0,
-          average: 0,
-          min: Infinity,
-          max: -Infinity,
-        };
-      }
-
-      const stats = summary[metric.name];
-      stats.count++;
-      stats.min = Math.min(stats.min, metric.duration);
-      stats.max = Math.max(stats.max, metric.duration);
-    }
-
-    // Calculate averages
-    for (const name in summary) {
-      const metrics = this.getMetrics(name);
-      const sum = metrics.reduce((acc, m) => acc + m.duration, 0);
-      summary[name].average = sum / summary[name].count;
-    }
-
-    return summary;
-  }
-
-  /**
-   * Log performance summary
-   */
-  logSummary(): void {
-    if (!this.enabled) {
-      return;
-    }
-
-    const summary = this.getSummary();
-    logger.info('Performance Summary:', summary);
-  }
-}
-
-// Global performance monitor instance
-export const performanceMonitor = new PerformanceMonitor();
+// Store metrics for batch reporting (optional)
+const metricsBuffer: PerformanceMetrics[] = [];
+const MAX_BUFFER_SIZE = 100;
 
 /**
- * Measure async function execution time
+ * Log performance metrics for a product scan
+ * Works on both iOS and Android, globally
+ * 
+ * @param metrics - Performance metrics to log
  */
-export async function measureAsync<T>(
-  name: string,
-  fn: () => Promise<T>,
-  metadata?: Record<string, unknown>
-): Promise<T> {
-  const end = performanceMonitor.start(name);
+export function logPerformanceMetrics(metrics: PerformanceMetrics): void {
   try {
-    const result = await fn();
-    if (metadata) {
-      end(metadata);
-    } else {
-      end();
+    const platform = Platform.OS as 'ios' | 'android' | 'web';
+    
+    // Add platform info if not provided
+    const metricsWithPlatform = {
+      ...metrics,
+      platform: metrics.platform || platform,
+    };
+    
+    // Log to console (always available on iOS/Android)
+    logger.info('📊 Performance Metrics:', {
+      barcode: metricsWithPlatform.barcode,
+      timeToFirstContent: `${metricsWithPlatform.ttf}ms`,
+      totalLoadTime: `${metricsWithPlatform.tlt}ms`,
+      apiCalls: metricsWithPlatform.apiCalls,
+      cacheHit: metricsWithPlatform.cacheHit ? 'yes' : 'no',
+      sources: metricsWithPlatform.sources.join(', '),
+      platform: metricsWithPlatform.platform,
+      userCountry: metricsWithPlatform.userCountry || 'unknown',
+    });
+    
+    // Store in buffer for batch reporting (optional)
+    metricsBuffer.push(metricsWithPlatform);
+    if (metricsBuffer.length > MAX_BUFFER_SIZE) {
+      metricsBuffer.shift(); // Remove oldest
     }
-    return result;
+    
+    // TODO: Send to analytics service (Firebase Analytics, Mixpanel, etc.)
+    // This can be implemented later without affecting performance
+    // Example:
+    // if (__DEV__ === false) {
+    //   Analytics.logEvent('product_scan_performance', {
+    //     ttf: metricsWithPlatform.ttf,
+    //     tlt: metricsWithPlatform.tlt,
+    //     apiCalls: metricsWithPlatform.apiCalls,
+    //     cacheHit: metricsWithPlatform.cacheHit,
+    //     platform: metricsWithPlatform.platform,
+    //   });
+    // }
   } catch (error) {
-    end({ ...metadata, error: error instanceof Error ? error.message : String(error) });
-    throw error;
+    // Non-critical - don't break the app if logging fails
+    logger.debug('Error logging performance metrics (non-critical):', error);
   }
 }
 
 /**
- * Measure sync function execution time
+ * Get buffered metrics (for batch reporting)
+ * Useful for sending metrics in batches to reduce network calls
  */
-export function measureSync<T>(
-  name: string,
-  fn: () => T,
-  metadata?: Record<string, unknown>
-): T {
-  const end = performanceMonitor.start(name);
-  try {
-    const result = fn();
-    if (metadata) {
-      end(metadata);
-    } else {
-      end();
-    }
-    return result;
-  } catch (error) {
-    end({ ...metadata, error: error instanceof Error ? error.message : String(error) });
-    throw error;
+export function getBufferedMetrics(): PerformanceMetrics[] {
+  return [...metricsBuffer];
+}
+
+/**
+ * Clear buffered metrics
+ */
+export function clearBufferedMetrics(): void {
+  metricsBuffer.length = 0;
+}
+
+/**
+ * Calculate performance score (0-100)
+ * Higher score = better performance
+ */
+export function calculatePerformanceScore(metrics: PerformanceMetrics): number {
+  let score = 100;
+  
+  // Penalize slow Time to First Content
+  if (metrics.ttf > 2000) {
+    score -= 30; // > 2s is slow
+  } else if (metrics.ttf > 1000) {
+    score -= 15; // > 1s is moderate
   }
+  
+  // Penalize slow Total Load Time
+  if (metrics.tlt > 5000) {
+    score -= 30; // > 5s is slow
+  } else if (metrics.tlt > 3000) {
+    score -= 15; // > 3s is moderate
+  }
+  
+  // Penalize too many API calls
+  if (metrics.apiCalls > 20) {
+    score -= 20; // Too many API calls
+  } else if (metrics.apiCalls > 15) {
+    score -= 10; // Moderate API calls
+  }
+  
+  // Bonus for cache hit
+  if (metrics.cacheHit) {
+    score += 10; // Cache hit is good
+  }
+  
+  return Math.max(0, Math.min(100, score));
 }

@@ -189,11 +189,13 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
   }
   
   // Eco-Score adjustment (from base 15)
+  // NEW SPEC: A=+7, B=+3, C=0, D=-3, E=-7
   let ecoscoreValue: number | undefined;
   if (hasEcoScore) {
     const es = product.ecoscore_grade?.toLowerCase();
     if (es) {
-      const gradeMapping: Record<string, number> = { a: 25, b: 20, c: 15, d: 10, e: 5 };
+      // Updated mapping: A=22, B=18, C=15, D=12, E=8
+      const gradeMapping: Record<string, number> = { a: 22, b: 18, c: 15, d: 12, e: 8 };
       ecoscoreValue = gradeMapping[es] || 15;
       const adjustment = ecoscoreValue - 15; // Adjustment from base 15
       
@@ -232,7 +234,7 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
         const categoryName = categories.split(',')[0]?.trim() || 'unknown';
         
         if (csvService.hasHighCarbonFootprint(categoryName)) {
-          const fallbackAdjustment = -5;
+          const fallbackAdjustment = -5; // NEW SPEC: high CSV carbon=-5 if OFF missing
           adjustments.push({
             description: 'High carbon footprint (CSV fallback, Eco-Score unavailable)',
             value: fallbackAdjustment,
@@ -310,7 +312,7 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
   }
   
   // NEW: Brand/parent overlay penalty for palm oil (accountability)
-  // -5 penalty for brand/parent with low WWF/RSPO score, even on clean products
+  // NEW SPEC: -4 penalty for brand/parent with low WWF/RSPO score, even on clean products
   let brandOverlayPenalty = 0;
   if (csvService) {
     try {
@@ -321,7 +323,7 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
         if (rspoData) {
           const commitment = String(rspoData.commitment || '').toLowerCase();
           if (commitment === 'low' || commitment === 'none') {
-            brandOverlayPenalty = 5;
+            brandOverlayPenalty = 4; // Updated from -5 to -4
             adjustments.push({
               description: `Brand/parent low WWF/RSPO commitment: ${brandName} (accountability penalty)`,
               value: -brandOverlayPenalty,
@@ -337,13 +339,14 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
   }
   
   // Recyclable packaging bonus
+  // NEW SPEC: Full recycle (local laws)=+3, partial=+1
   let recyclableBonus = 0;
   if (packagings.length > 0) {
     const recyclabilityStatus = getLocalRecyclabilityStatus(packagings);
     
     if (recyclabilityStatus.isRecyclable) {
       if (recyclabilityStatus.recyclableItems.length === packagings.length) {
-        recyclableBonus = 5;
+        recyclableBonus = 3; // Updated from +5 to +3
         adjustments.push({
           description: 'All packaging recyclable (meets local requirements)',
           value: recyclableBonus,
@@ -351,7 +354,7 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
         });
         score += recyclableBonus;
       } else if (recyclabilityStatus.recyclableItems.length > 0) {
-        recyclableBonus = 2;
+        recyclableBonus = 1; // Updated from +2 to +1
         adjustments.push({
           description: 'Some packaging recyclable (meets local requirements)',
           value: recyclableBonus,
@@ -362,14 +365,15 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
     }
   }
   
-  // NEW: Packaging eco-cost penalty (-5 for high eco-cost materials)
+  // NEW: Packaging eco-cost penalty
+  // NEW SPEC: -6 for high eco-cost materials
   let packagingEcoCostPenalty = 0;
   if (csvService && packagings.length > 0) {
     try {
       for (const packaging of packagings) {
         const material = packaging.material || '';
         if (csvService.isHighEcoCostMaterial(material)) {
-          packagingEcoCostPenalty = 5; // Apply once if any high eco-cost material found
+          packagingEcoCostPenalty = 6; // Updated from -5 to -6
           adjustments.push({
             description: `High eco-cost packaging material: ${material}`,
             value: -packagingEcoCostPenalty,

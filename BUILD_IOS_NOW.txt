@@ -31,3 +31,6 @@ cd C:\TrueScan-FoodScanner; powershell -NoProfile -ExecutionPolicy Bypass -File 
 
 
 
+
+
+

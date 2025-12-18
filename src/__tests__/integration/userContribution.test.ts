@@ -13,7 +13,8 @@
 
 // Note: These imports will be mocked by jest.config.js moduleNameMapper
 // We import them here for type checking, but they'll be replaced with mocks at runtime
-import { saveManualProduct, ManualProductData } from '../../../src/services/manualProductService';
+import { saveManualProduct } from '../../../src/services/manualProductService';
+import { ManualProductData } from '../../../src/types/manualProduct';
 import { getUserContributedProduct } from '../../../src/services/userContributedProductsService';
 import { submitManufacturingCountry, getManufacturingCountry } from '../../../src/services/manufacturingCountryService';
 import { uploadProductPhoto } from '../../../src/services/photoUploadService';

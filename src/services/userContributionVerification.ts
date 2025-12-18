@@ -2,7 +2,7 @@
 // Automatically verifies user-contributed products (like Yuka)
 // Checks for errors, validates data, and flags suspicious entries
 
-import { ManualProductData } from './manualProductService';
+import { ManualProductData } from '../types/manualProduct';
 import { Product } from '../types/product';
 import { logger } from '../utils/logger';
 

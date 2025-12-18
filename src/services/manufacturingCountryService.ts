@@ -30,7 +30,10 @@ const VERIFICATION_THRESHOLD = 3; // Number of matching submissions needed for v
 
 // Backend API URL for global sharing (set via environment variable or use default)
 import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
-const MANUFACTURING_COUNTRY_API = BackendEndpoints.manufacturingCountry(getBackendUrl());
+// Don't call getBackendUrl() at module load time - call it when needed
+function getManufacturingCountryApi(): string {
+  return BackendEndpoints.manufacturingCountry(getBackendUrl());
+}
 
 /**
  * Get device/user ID (persistent implementation)
@@ -120,7 +123,8 @@ export async function submitManufacturingCountry(
       };
       console.log('[ManufacturingCountryService] POST to backend:', submissionData);
       
-      const response = await fetch(MANUFACTURING_COUNTRY_API, {
+      const manufacturingCountryApi = getManufacturingCountryApi();
+      const response = await fetch(manufacturingCountryApi, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -304,7 +308,8 @@ export async function submitManufacturingCountry(
         
         // Submit to backend if available
         try {
-          const response = await fetch(MANUFACTURING_COUNTRY_API, {
+          const manufacturingCountryApi = getManufacturingCountryApi();
+          const response = await fetch(manufacturingCountryApi, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -511,7 +516,8 @@ export async function getManufacturingCountry(barcode: string): Promise<{
   try {
     // Try to fetch from backend API first (for global data)
     try {
-      const response = await fetch(`${MANUFACTURING_COUNTRY_API}?barcode=${encodeURIComponent(barcode)}`, {
+      const manufacturingCountryApi = getManufacturingCountryApi();
+      const response = await fetch(`${manufacturingCountryApi}?barcode=${encodeURIComponent(barcode)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

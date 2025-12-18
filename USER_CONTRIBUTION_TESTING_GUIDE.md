@@ -1,286 +1,231 @@
-# User Contribution System - Testing Guide
+# User Contribution Function - Complete Testing Guide
 
 ## Overview
+This guide tests all user contribution functions to ensure they work correctly after the bundling fixes.
 
-This guide explains how to test the complete user contribution system to ensure that all user-submitted data (photos, ingredients, country of manufacture, allergens, additives, packaging, etc.) is stored globally and retrievable by all users.
+## Pre-Testing Setup
 
-## Testing Philosophy
+1. **Start Metro in Tunnel Mode:**
+   ```bash
+   npx expo start --tunnel --clear
+   ```
 
-The system follows this priority:
-1. **App Users First** - Data is stored in our backend database for immediate availability to all app users
-2. **Open Food Facts Second** - Data is also submitted to Open Food Facts for broader community benefit
+2. **Load App in Expo Go:**
+   - Scan QR code
+   - Wait for app to load completely
 
-## Test Coverage
+3. **Test with a Test Barcode:**
+   - Use a barcode that doesn't exist in Open Food Facts
+   - Example: `1234567890123` (13 digits) or scan a random product
 
-### Data Types Tested
+## Test Cases
 
-- ✅ **Product Information**
-  - Product name
-  - Brand
-  - Ingredients
-  - Nutrition facts
-  - Serving size
-  - Quantity
-
-- ✅ **Allergens & Additives**
-  - Allergen tags (e.g., `en:milk`, `en:soy`, `en:gluten`)
-  - Additive tags (e.g., `en:e412`, `en:e202`)
-
-- ✅ **Manufacturing Country**
-  - Country of manufacture
-  - Imported ingredients flag
-  - Community verification system
-
-- ✅ **Photos**
-  - Front photo
-  - Ingredients photo
-  - Nutrition label photo
-  - Packaging photo
-  - Country label photo
-
-- ✅ **Packaging Information**
-  - Material (e.g., plastic, glass)
-  - Shape (e.g., bottle, can)
-  - Recycling status
-
-## Running Tests
-
-### Automated Unit/Integration Tests
-
-Run the comprehensive Jest test suite:
-
-```bash
-# Run all user contribution tests
-npm run test:user-contributions
-
-# Run end-to-end tests only
-npm run test:user-contributions-e2e
-```
-
-### Manual End-to-End Test Script
-
-Run the interactive test script that tests against the actual backend:
-
-```bash
-npm run test:user-contributions-script
-```
-
-This script will:
-1. Test backend connectivity
-2. Submit a complete product with all data types
-3. Retrieve the product to verify all data is stored
-4. Submit manufacturing country
-5. Retrieve manufacturing country
-6. Test photo upload
-
-**Expected Output:**
-```
-========================================
-User Contribution System - E2E Tests
-========================================
-Test Barcode: E2E_TEST_1234567890
-Backend URL: https://vercel-leightons-projects-d328c774.vercel.app
-
-🔍 Testing backend connectivity...
-✅ Backend Connectivity: Backend is accessible (Status: 200)
-
-📦 Testing manual product submission...
-✅ Manual Product Submission: Product submitted successfully
-
-🔍 Testing manual product retrieval...
-✅ Manual Product Retrieval: All product data retrieved correctly
-
-🌍 Testing manufacturing country submission...
-✅ Manufacturing Country Submission: Country submitted successfully
-
-🔍 Testing manufacturing country retrieval...
-✅ Manufacturing Country Retrieval: Country retrieved correctly
-
-📸 Testing photo upload...
-✅ Photo Upload: Photo uploaded successfully
-
-========================================
-Test Summary
-========================================
-Total Tests: 6
-✅ Passed: 6
-❌ Failed: 0
-
-🎉 All tests passed! User contribution system is working correctly.
-```
-
-## Test Scenarios
-
-### Scenario 1: Complete Product Submission
-
-**Test:** User submits a product with all possible data fields.
+### Test 1: Photo Capture (Main Product Image)
+**Location:** Product result screen - camera button on image placeholder
 
 **Steps:**
-1. User enters:
-   - Product name: "Test Product"
-   - Brand: "Test Brand"
-   - Ingredients: "Water, Sugar, Salt, E412, E202"
-   - Allergens: Milk, Soy
-   - Additives: E412, E202
-   - Manufacturing country: "New Zealand"
-   - Packaging: Plastic bottle, recyclable
-   - Nutrition facts: Energy, Fat, Carbs, etc.
+1. Scan a barcode (or enter manually)
+2. Wait for product screen to load
+3. Tap the camera icon on the product image placeholder
+4. Take a photo or select from gallery
+5. Tap "Use Photo"
 
-2. System should:
-   - Save to local storage (immediate availability)
-   - Submit to backend API (global storage)
-   - Submit to Open Food Facts (community database)
-
-3. Verification:
-   - Different user scans same barcode
-   - All data should be available immediately
-   - Data source should be `user_contributed`
-
-### Scenario 2: Multi-User Data Sharing
-
-**Test:** User A submits data, User B retrieves it.
-
-**Steps:**
-1. User A submits product data
-2. User B (different device, no local cache) scans same barcode
-3. User B should see all of User A's data
-
-**Expected Result:**
-- User B sees product name, ingredients, allergens, etc.
-- Data is retrieved from backend (not local storage)
-- All fields are preserved
-
-### Scenario 3: Data Priority
-
-**Test:** Verify app users get data before Open Food Facts.
-
-**Steps:**
-1. Submit product data
-2. Check API call order:
-   - Backend API should be called first
-   - Open Food Facts should be called second
-
-**Expected Result:**
-- Backend receives data immediately
-- Open Food Facts receives data as secondary priority
-- App users can retrieve data from backend without waiting for Open Food Facts sync
-
-### Scenario 4: All Data Types
-
-**Test:** Verify all data types are stored and retrieved.
-
-**Data Types to Test:**
-- ✅ Product name
-- ✅ Brand
-- ✅ Ingredients text
-- ✅ Nutrition facts (all fields)
-- ✅ Allergens (array)
-- ✅ Additives (array)
-- ✅ Manufacturing country
-- ✅ Packaging information
-- ✅ Photos (all types)
+**Expected Results:**
+- ✅ Photo appears in product image
+- ✅ Success toast: "Photo Submitted - Your photo will be available to all users"
+- ✅ Check Metro logs for:
+  - `[ResultScreen] 🎯 handleCaptureImage CALLED`
+  - `[ResultScreen] ✅ Photo uploaded`
+  - `[ManualProductService] 🚀 saveManualProduct CALLED`
+  - `[ManualProductService] ✅✅✅ BACKEND SUBMISSION SUCCESS`
 
 **Verification:**
-- Submit product with all data types
-- Retrieve product
-- Verify every field is present and correct
-
-## Troubleshooting
-
-### Backend Not Accessible
-
-**Error:** `Backend is not accessible`
-
-**Solutions:**
-1. Check backend URL in `src/config/backendConfig.ts`
-2. Verify backend is deployed: `cd backend/vercel && vercel ls --prod`
-3. Check environment variables in Vercel Dashboard
-4. Verify database is configured
-
-### Data Not Retrievable
-
-**Error:** `Product not found` or `Country not found`
-
-**Solutions:**
-1. Wait a few seconds after submission (database write may take time)
-2. Check backend logs: `cd backend/vercel && vercel logs`
-3. Verify database connection in Vercel Dashboard
-4. Check that data was actually submitted (verify POST request succeeded)
-
-### Photo Upload Fails
-
-**Error:** `Photo upload failed`
-
-**Solutions:**
-1. Verify `BLOB_READ_WRITE_TOKEN` is set in Vercel environment variables
-2. Check blob storage is configured in Vercel Dashboard
-3. Verify photo is valid base64 format
-4. Check file size limits (Vercel Blob has size limits)
-
-## Test Files
-
-- **Unit/Integration Tests:** `src/__tests__/integration/userContribution.test.ts`
-- **E2E Tests:** `src/__tests__/integration/userContributionE2E.test.ts`
-- **Test Script:** `scripts/test-user-contributions-e2e.ts`
-
-## Continuous Testing
-
-### Pre-Deployment Checklist
-
-Before deploying to production, verify:
-
-- [ ] All automated tests pass: `npm run test:user-contributions-e2e`
-- [ ] Manual test script passes: `npm run test:user-contributions-script`
-- [ ] Backend is deployed and accessible
-- [ ] Database is configured and connected
-- [ ] Photo storage is configured
-- [ ] Environment variables are set in Vercel
-
-### Post-Deployment Verification
-
-After deployment:
-
-1. Run test script: `npm run test:user-contributions-script`
-2. Verify all tests pass
-3. Test in actual app:
-   - Submit a product with all data types
-   - Scan barcode on different device
-   - Verify all data is available
-
-## Success Criteria
-
-The system is working correctly when:
-
-✅ **Data Submission:**
-- All data types can be submitted
-- Data is stored in backend database
-- Data is submitted to Open Food Facts (secondary)
-
-✅ **Data Retrieval:**
-- Data is immediately available to submitting user
-- Data is available to all other users
-- All data fields are preserved
-
-✅ **Data Priority:**
-- App users get data from backend first
-- Open Food Facts is updated as secondary priority
-- No data loss or delay for app users
-
-✅ **Multi-User:**
-- User A submits data
-- User B retrieves same data
-- All fields match exactly
-
-## Support
-
-If tests fail or you encounter issues:
-
-1. Check backend logs: `cd backend/vercel && vercel logs`
-2. Verify environment variables in Vercel Dashboard
-3. Test backend endpoints directly with curl/Postman
-4. Review test output for specific error messages
+- Close and reopen app
+- Scan same barcode again
+- Photo should still appear (from local cache)
+- Another device/user scanning same barcode should see photo (from backend)
 
 ---
 
-**Last Updated:** December 7, 2025
+### Test 2: Manual Product Entry Modal
+**Location:** Product result screen - "Add Product Information" button
 
+**Steps:**
+1. Scan a barcode that has no product data
+2. Tap "Add Product Information" button
+3. Fill in:
+   - Product Name: "Test Product"
+   - Brand: "Test Brand"
+   - Ingredients: "Water, Sugar, Salt"
+   - Optional: Add nutrition info, categories, etc.
+4. Optionally: Take/select photo inside modal
+5. Tap "Save"
+
+**Expected Results:**
+- ✅ Success alert: "Product information saved successfully!"
+- ✅ Modal closes
+- ✅ Product data appears on screen
+- ✅ Check Metro logs for:
+  - `[ManualProductEntryModal] 🎯 SAVE BUTTON CLICKED`
+  - `[ManualProductEntryModal] 📦 Calling saveManualProduct`
+  - `[ManualProductService] 🚀 saveManualProduct CALLED`
+  - `[ManualProductService] ✅✅✅ BACKEND SUBMISSION SUCCESS`
+
+**Verification:**
+- Close and reopen app
+- Scan same barcode
+- All entered data should appear
+- Another device/user should see the data
+
+---
+
+### Test 3: Edit Product (Update Existing Data)
+**Location:** Product result screen - "Edit" button on product card
+
+**Steps:**
+1. Scan a barcode with existing product data (from Test 2 or previous)
+2. Tap "Edit" button
+3. Modify any fields (name, ingredients, nutrition, etc.)
+4. Optionally: Change/update photo
+5. Tap "Save"
+
+**Expected Results:**
+- ✅ Success alert: "Product information saved successfully!"
+- ✅ Updated data appears on screen
+- ✅ Check Metro logs for backend submission success
+
+**Verification:**
+- Close and reopen app
+- Scan same barcode
+- Updated data should appear (not old data)
+- Another device/user should see updated data
+
+---
+
+### Test 4: Manufacturing Country Contribution
+**Location:** Product result screen - "Contribute Country" button
+
+**Steps:**
+1. Scan a barcode
+2. Scroll to Manufacturing Country card
+3. Tap "Contribute Country" button
+4. Enter country name (e.g., "Australia")
+5. Optionally: Check "Has imported ingredients" if applicable
+6. Optionally: Add photo
+7. Tap "Submit"
+
+**Expected Results:**
+- ✅ Success message
+- ✅ Country appears in Manufacturing Country card
+- ✅ Check Metro logs for:
+  - `[ManufacturingCountryService] POST to backend`
+  - `[ManufacturingCountryService] Submitted to backend API`
+
+**Verification:**
+- Close and reopen app
+- Scan same barcode
+- Country should still appear
+- Another device/user should see the country
+
+---
+
+## Backend Verification
+
+### Check Backend Logs
+If you have access to Vercel backend logs, verify:
+
+1. **Photo Upload:**
+   - POST to `/api/manual-products` with `image_url` in payload
+   - Photo uploaded to storage
+
+2. **Product Data:**
+   - POST to `/api/manual-products` with complete product data
+   - Data saved to database
+
+3. **Manufacturing Country:**
+   - POST to `/api/manufacturing-country`
+   - Country data saved
+
+### Test Cross-User Retrieval
+1. **User A:** Submit product data (photo, name, ingredients)
+2. **User B (or same user on different device):**
+   - Scan same barcode
+   - Should see User A's submitted data
+   - Verify photo appears
+   - Verify all product info appears
+
+---
+
+## Troubleshooting
+
+### If Submission Fails:
+
+1. **Check Network:**
+   - Ensure device has internet connection
+   - Tunnel mode should handle this, but verify
+
+2. **Check Backend URL:**
+   - Verify `EXPO_PUBLIC_BACKEND_URL` in `.env` is correct
+   - Backend should be deployed and accessible
+
+3. **Check Metro Logs:**
+   - Look for error messages
+   - Check for network errors
+   - Verify backend URL is being used
+
+4. **Check Backend:**
+   - Verify backend is running
+   - Check backend logs for incoming requests
+   - Verify database is accessible
+
+### Common Issues:
+
+**Issue:** "Photo saved locally" but not submitted
+- **Cause:** Backend submission failed
+- **Fix:** Check backend URL and network connection
+
+**Issue:** Data appears locally but not on other devices
+- **Cause:** Backend submission failed silently
+- **Fix:** Check Metro logs for backend errors
+
+**Issue:** Success message but data doesn't persist
+- **Cause:** Backend save failed
+- **Fix:** Check backend logs and database
+
+---
+
+## Success Criteria
+
+✅ All 4 contribution points work:
+- Photo capture submits to backend
+- Manual product entry submits to backend
+- Edit product updates backend
+- Manufacturing country submits to backend
+
+✅ Data persists:
+- Data appears after app restart
+- Data appears on other devices/users
+
+✅ Backend receives submissions:
+- Backend logs show POST requests
+- Database contains submitted data
+
+---
+
+## Test Checklist
+
+- [ ] Test 1: Photo Capture - Works and submits
+- [ ] Test 2: Manual Product Entry - Works and submits
+- [ ] Test 3: Edit Product - Works and updates
+- [ ] Test 4: Manufacturing Country - Works and submits
+- [ ] Cross-user retrieval - Data appears on other device
+- [ ] Data persistence - Data persists after app restart
+- [ ] Backend verification - Backend receives all submissions
+
+---
+
+## Next Steps After Testing
+
+1. **If all tests pass:** User contribution function is fully working ✅
+2. **If any test fails:** Check Metro logs and backend logs for errors
+3. **Document any issues:** Note which contribution points need fixes

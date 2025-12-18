@@ -14,6 +14,14 @@
 let db: any = null;
 
 /**
+ * Get Postgres connection URL from environment variables
+ * Checks both DATABASE_URL (Neon) and POSTGRES_URL (Supabase/Vercel)
+ */
+function getPostgresUrl(): string | undefined {
+  return process.env.DATABASE_URL || process.env.POSTGRES_URL;
+}
+
+/**
  * Initialize database connection
  * Automatically detects available database type
  */
@@ -23,13 +31,15 @@ async function initDatabase(): Promise<any> {
   }
 
   // Try Postgres (Neon, Supabase, or Vercel Postgres)
-  if (process.env.POSTGRES_URL) {
+  // Neon uses DATABASE_URL, others may use POSTGRES_URL
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
     try {
       // Use pg library for direct connection (works with Neon, Supabase, etc.)
       const { Pool } = await import('pg');
       db = new Pool({
-        connectionString: process.env.POSTGRES_URL,
-        ssl: process.env.POSTGRES_URL.includes('sslmode=require') 
+        connectionString: postgresUrl,
+        ssl: postgresUrl.includes('sslmode=require') 
           ? { rejectUnauthorized: false } 
           : undefined,
         max: 20,
@@ -84,7 +94,8 @@ async function initDatabase(): Promise<any> {
  */
 async function createTables(): Promise<void> {
   try {
-    if (process.env.POSTGRES_URL && db) {
+    const postgresUrl = getPostgresUrl();
+    if (postgresUrl && db) {
       // Use direct pg queries (works with Neon, Supabase, etc.)
       // Manufacturing Country Submissions
       await db.query(`
@@ -211,7 +222,8 @@ export async function saveManufacturingCountrySubmission(data: {
 }): Promise<void> {
   const database = await getDatabase();
   
-  if (process.env.POSTGRES_URL) {
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
     // Use pg library for direct queries (works with Neon, Supabase)
     await database.query(
       `INSERT INTO manufacturing_country_submissions 
@@ -259,7 +271,8 @@ export async function saveManufacturingCountrySubmission(data: {
 export async function getManufacturingCountrySubmissions(barcode: string): Promise<any[]> {
   const database = await getDatabase();
   
-  if (process.env.POSTGRES_URL) {
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
     const result = await database.query(
       `SELECT 
         barcode,
@@ -299,7 +312,8 @@ export async function getManufacturingCountrySubmissions(barcode: string): Promi
 export async function saveManualProduct(barcode: string, productData: any): Promise<void> {
   const database = await getDatabase();
   
-  if (process.env.POSTGRES_URL) {
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
     await database.query(
       `INSERT INTO manual_products (barcode, product_data, submitted_at)
        VALUES ($1, $2::jsonb, $3)
@@ -338,7 +352,8 @@ export async function saveManualProduct(barcode: string, productData: any): Prom
 export async function getManualProduct(barcode: string): Promise<any | null> {
   const database = await getDatabase();
   
-  if (process.env.POSTGRES_URL) {
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
     const result = await database.query(
       `SELECT 
         barcode,
@@ -376,7 +391,8 @@ export async function saveUserPrice(data: {
 }): Promise<void> {
   const database = await getDatabase();
   
-  if (process.env.POSTGRES_URL) {
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
     await database.query(
       `INSERT INTO user_prices 
        (barcode, price, currency, retailer, location, user_id, timestamp, verified)
@@ -415,7 +431,8 @@ export async function saveUserPrice(data: {
 export async function getUserPrices(barcode: string): Promise<any[]> {
   const database = await getDatabase();
   
-  if (process.env.POSTGRES_URL) {
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
     const result = await database.query(
       `SELECT 
         barcode,
@@ -464,7 +481,8 @@ export async function savePhoto(data: {
 }): Promise<string> {
   const database = await getDatabase();
   
-  if (process.env.POSTGRES_URL) {
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
     await database.query(
       `INSERT INTO photos (barcode, image_type, photo_url, photo_data, user_id)
        VALUES ($1, $2, $3, $4, $5)`,
@@ -501,7 +519,8 @@ export async function savePhoto(data: {
 export async function getPhotos(barcode: string, imageType?: string): Promise<any[]> {
   const database = await getDatabase();
   
-  if (process.env.POSTGRES_URL) {
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
     let query = `SELECT * FROM photos WHERE barcode = $1`;
     const params: any[] = [barcode];
     

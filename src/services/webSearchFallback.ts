@@ -6,6 +6,7 @@
 import { Product, ProductNutriments } from '../types/product';
 import * as Linking from 'expo-linking';
 import { scrapeProductInfo } from './webScrapingService';
+import { logger } from '../utils/logger';
 
 /**
  * Create a Google search URL for a barcode
@@ -551,7 +552,10 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
             return data.Heading;
           }
         }
-      } catch {}
+      } catch (error) {
+        logger.debug('Non-critical error in DuckDuckGo search (continuing):', error);
+        // Continue execution - this is acceptable for non-critical operations
+      }
       return null;
     },
     

@@ -43,6 +43,7 @@ interface FDAResponse {
 
 /**
  * Check for FDA food recalls by product name or brand
+ * ENHANCED: Generates multiple query variations for better matching
  * Uses fuzzy matching to find relevant recalls, with improved filtering for product-specific matches
  * CRITICAL: Now uses barcode for more precise matching when available
  */
@@ -66,25 +67,17 @@ export async function checkFDARecalls(
 
     const recalls: FoodRecall[] = [];
 
-    // CRITICAL: If barcode is available, search for exact product matches first
-    // This helps find recalls for the specific product rather than similar products
-    if (barcode) {
-      // Search using barcode + product name for more specific results
-      const barcodeSearchTerm = productName ? `${productName} ${barcode}` : barcode;
-      const barcodeRecalls = await searchFDARecalls(barcodeSearchTerm);
-      recalls.push(...barcodeRecalls);
-    }
+    // ENHANCED: Generate multiple query variations for better matching
+    const searchTerms = generateRecallSearchTerms(productName, brand, barcode);
 
-    // Search by product description
-    if (productName) {
-      const productRecalls = await searchFDARecalls(productName);
-      recalls.push(...productRecalls);
-    }
+    // Search with all terms (in parallel for speed)
+    const searchResults = await Promise.all(
+      searchTerms.map(term => searchFDARecalls(term))
+    );
 
-    // Search by brand if different from product name
-    if (brand && brand.toLowerCase() !== productName?.toLowerCase()) {
-      const brandRecalls = await searchFDARecalls(brand);
-      recalls.push(...brandRecalls);
+    // Flatten and collect all recalls
+    for (const result of searchResults) {
+      recalls.push(...result);
     }
 
     // Remove duplicates
@@ -108,6 +101,127 @@ export async function checkFDARecalls(
 }
 
 /**
+ * Generate multiple search term variations for better recall matching
+ * Handles: brand+product combinations, keyword extraction, US/UK spelling variations
+ */
+function generateRecallSearchTerms(
+  productName?: string,
+  brand?: string,
+  barcode?: string
+): string[] {
+  const searchTerms: string[] = [];
+
+  // 1. Original product name (normalized for US/UK spelling)
+  if (productName) {
+    searchTerms.push(productName);
+    // Also add normalized version (yoghurt -> yogurt, etc.)
+    const normalized = normalizeProductNameForSearch(productName);
+    if (normalized !== productName.toLowerCase()) {
+      searchTerms.push(normalized);
+    }
+  }
+
+  // 2. Brand + product name combinations
+  if (brand && productName) {
+    searchTerms.push(`${brand} ${productName}`);
+    searchTerms.push(`${productName} ${brand}`);
+    // Normalized versions
+    const normalizedProduct = normalizeProductNameForSearch(productName);
+    searchTerms.push(`${brand} ${normalizedProduct}`);
+    searchTerms.push(`${normalizedProduct} ${brand}`);
+  }
+
+  // 3. Extract keywords from product name
+  if (productName) {
+    const keywords = extractKeywords(productName);
+    if (keywords.length > 0) {
+      // Try brand + keywords
+      if (brand) {
+        searchTerms.push(`${brand} ${keywords.join(' ')}`);
+        // Try different keyword combinations
+        if (keywords.length >= 2) {
+          searchTerms.push(`${brand} ${keywords.slice(0, 2).join(' ')}`);
+        }
+      }
+      // Try keywords alone (if significant)
+      if (keywords.length >= 2) {
+        searchTerms.push(keywords.join(' '));
+        searchTerms.push(keywords.slice(0, 2).join(' '));
+      }
+    }
+  }
+
+  // 4. Brand alone (if not already tried)
+  if (brand) {
+    searchTerms.push(brand);
+  }
+
+  // 5. Barcode-based searches
+  if (barcode) {
+    if (productName) {
+      searchTerms.push(`${productName} ${barcode}`);
+    }
+    if (brand) {
+      searchTerms.push(`${brand} ${barcode}`);
+    }
+    // Barcode alone (some recalls may have barcodes)
+    searchTerms.push(barcode);
+  }
+
+  // Remove duplicates and empty terms
+  return Array.from(new Set(searchTerms.filter(term => term && term.trim().length > 0)));
+}
+
+/**
+ * Normalize product name for search (handles US/UK spelling variations)
+ */
+function normalizeProductNameForSearch(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    // US/UK spelling variations
+    .replace(/\byoghurt\b/g, 'yogurt')
+    .replace(/\byoghurts\b/g, 'yogurts')
+    .replace(/\bcolour\b/g, 'color')
+    .replace(/\bcolours\b/g, 'colors')
+    .replace(/\bflavour\b/g, 'flavor')
+    .replace(/\bflavours\b/g, 'flavors')
+    .replace(/\borganised\b/g, 'organized')
+    .replace(/\borganise\b/g, 'organize')
+    .replace(/\bcentre\b/g, 'center')
+    .replace(/\bcentres\b/g, 'centers')
+    .replace(/\btheatre\b/g, 'theater')
+    .replace(/\bfibre\b/g, 'fiber')
+    .replace(/\bfibres\b/g, 'fibers')
+    // Normalize hyphens and dashes
+    .replace(/[-–—]/g, ' ')
+    // Normalize whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Extract meaningful keywords from product name (removes stop words)
+ */
+function extractKeywords(productName: string): string[] {
+  const stopWords = new Set([
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+    'as', 'is', 'was', 'are', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
+    'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those',
+    'from', 'into', 'onto', 'upon', 'over', 'under', 'above', 'below', 'between', 'among', 'during',
+    'before', 'after', 'through', 'across', 'around', 'near', 'far', 'up', 'down', 'out', 'off',
+    'about', 'against', 'along', 'beside', 'beyond', 'inside', 'outside', 'within', 'without'
+  ]);
+
+  const words = normalizeProductNameForSearch(productName)
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !stopWords.has(w));
+
+  // Return top 5 keywords (most significant)
+  return words.slice(0, 5);
+}
+
+/**
  * Filter recalls to be more product-specific
  * Removes generic/too-broad recalls that match on manufacturer only
  * CRITICAL: Now uses barcode for more precise filtering
@@ -122,11 +236,14 @@ function filterProductSpecificRecalls(
     return recalls;
   }
 
-  const productWords = productName?.toLowerCase().split(/\s+/).filter(w => w.length > 2) || [];
+  // ENHANCED: Normalize product name for better matching (US/UK spelling)
+  const normalizedProductName = productName ? normalizeProductNameForSearch(productName) : '';
+  const productWords = normalizedProductName.split(/\s+/).filter(w => w.length > 2) || [];
   const brandLower = brand?.toLowerCase() || '';
 
   return recalls.filter(recall => {
-    const recallProduct = recall.productName.toLowerCase();
+    // Normalize recall product name for comparison
+    const recallProduct = normalizeProductNameForSearch(recall.productName);
     const recallBrand = recall.brand?.toLowerCase() || '';
 
     // CRITICAL: If barcode is available, prioritize exact product matches
@@ -156,6 +273,7 @@ function filterProductSpecificRecalls(
     }
 
     // Keep recalls that match product name significantly (STRICTER)
+    // ENHANCED: Use normalized comparison for better US/UK spelling matching
     if (productWords.length > 0) {
       const matchingWords = productWords.filter(word => recallProduct.includes(word));
       const matchRatio = matchingWords.length / productWords.length;
@@ -252,13 +370,18 @@ async function searchFDARecalls(searchTerm: string): Promise<FoodRecall[]> {
 
 /**
  * Clean search term to improve recall matching
+ * ENHANCED: Better normalization and stop word removal
  */
 function cleanSearchTerm(term: string): string {
   if (!term) return '';
   
+  // Normalize first (US/UK spelling, hyphens, etc.)
+  const normalized = normalizeProductNameForSearch(term);
+  
   // Remove common words that cause false positives
-  const commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'];
-  const words = term.toLowerCase().split(/\s+/);
+  const commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+    'as', 'is', 'was', 'are', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did'];
+  const words = normalized.split(/\s+/);
   const cleaned = words.filter(word => 
     word.length > 2 && !commonWords.includes(word)
   );

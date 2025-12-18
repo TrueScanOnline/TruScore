@@ -53,6 +53,7 @@ import { useTheme } from '../../src/theme';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import { submitManufacturingCountry, getManufacturingCountry, hasUserSubmitted } from '../../src/services/manufacturingCountryService';
+import { uploadProductPhoto } from '../../src/services/photoUploadService';
 import ManufacturingCountryModal from '../../src/components/ManufacturingCountryModal';
 import RecallAlertModal from '../../src/components/RecallAlertModal';
 import PalmOilInfoModal from '../../src/components/PalmOilInfoModal';
@@ -61,7 +62,10 @@ import ErrorBoundary from '../../src/components/ErrorBoundary';
 import { sanitizeText } from '../../src/utils/validation';
 import { logger } from '../../src/utils/logger';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
-import { saveManualProduct, ManualProductData, getManualProduct, isManualProduct } from '../../src/services/manualProductService';
+// import PendingContributionsBanner from '../../src/components/PendingContributionsBanner'; // Temporarily disabled
+import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
+import { ManualProductData } from '../../src/types/manualProduct';
+import { cacheProduct } from '../../src/services/cacheService';
 import { meetsLocalRecyclingRequirements } from '../../src/utils/packagingRecyclability';
 import { getPalmOilStatus, getPalmOilFlagColor } from '../../src/utils/palmOilUtils';
 import { crashReporter } from '../../src/utils/crashReporter';
@@ -377,16 +381,27 @@ function ResultScreenContent() {
       console.log('[ResultScreen] Fetching product from APIs (optimized)...');
       let productData: ProductWithTrustScore | null = null;
       
-      // Progress callback for progressive loading
+      // ULTRA-FAST: Progress callback for instant product display
+      // Product displays immediately (< 100ms) even before TruScore is calculated
       const onProgress = (progress: { phase: string; product?: Product }) => {
         setLoadingPhase(progress.phase);
         if (progress.product) {
           // Convert Product to ProductWithTrustScore if needed
           const productWithScore = progress.product as ProductWithTrustScore;
+          
+          // CRITICAL: Update product IMMEDIATELY - don't wait for anything
+          // This enables instant display (< 100ms) instead of waiting for TruScore
           setProgressiveProduct(productWithScore);
           setProduct(productWithScore); // Update main product immediately
           setLoading(false); // Stop loading spinner - show product immediately
-          console.log(`[ResultScreen] Progressive update: ${progress.phase}`, productWithScore.product_name);
+          
+          console.log(`[ResultScreen] ⚡ INSTANT display: ${progress.phase}`, productWithScore.product_name, 
+            `TruScore: ${productWithScore.trust_score || 'calculating...'}`);
+          
+          // If this is an enhanced product (with TruScore), log it
+          if (progress.phase === 'product_enhanced' || progress.phase === 'complete') {
+            console.log(`[ResultScreen] ✅ Product enhanced with TruScore: ${productWithScore.trust_score}`);
+          }
         }
       };
       
@@ -785,10 +800,76 @@ function ResultScreenContent() {
     
     // Save to cache
     try {
-      const { cacheProduct } = await import('../../src/services/cacheService');
-      await cacheProduct(updatedProduct, isPremium);
+      await cacheProduct(updatedProduct as Product, isPremium);
     } catch (error) {
       console.error('Error caching product with image:', error);
+    }
+    
+    // Submit photo to backend for global sharing
+    try {
+      console.log('[ResultScreen] 🎯 handleCaptureImage CALLED - Starting photo upload and submission');
+      
+      // Upload photo to get public URL
+      const photoResult = await uploadProductPhoto(barcode, imageUri, 'front');
+      const uploadedPhotoUrl = photoResult.success 
+        ? (photoResult.openFoodFactsUrl || photoResult.vercelUrl || imageUri)
+        : imageUri;
+      
+      console.log('[ResultScreen] ✅ Photo uploaded:', {
+        success: photoResult.success,
+        url: uploadedPhotoUrl,
+        openFoodFactsUrl: photoResult.openFoodFactsUrl,
+        vercelUrl: photoResult.vercelUrl,
+      });
+      
+      // Create product data with uploaded photo
+      const productData: ManualProductData = {
+        barcode,
+        product_name: product.product_name || product.product_name_en || 'Unknown Product',
+        brands: product.brands,
+        ingredients_text: product.ingredients_text,
+        image_url: uploadedPhotoUrl,
+        nutriments: product.nutriments,
+        serving_size: product.serving_size,
+        quantity: product.quantity,
+        manufacturing_places: product.manufacturing_places,
+        countries: product.countries,
+        categories: product.categories,
+        allergens_tags: product.allergens_tags,
+        additives_tags: product.additives_tags,
+        packaging_data: product.packaging_data,
+        timestamp: Date.now(),
+      };
+      
+      // Submit to backend for global sharing
+      console.log('[ResultScreen] 📦 Submitting product data to backend...');
+      const saveResult = await saveManualProduct(productData);
+      
+      if (saveResult) {
+        console.log('[ResultScreen] ✅✅✅ Product data submitted successfully');
+        Toast.show({
+          type: 'success',
+          text1: t('result.photoSubmitted') || 'Photo Submitted',
+          text2: t('result.photoSubmittedMessage') || 'Your photo will be available to all users',
+          position: 'bottom',
+        });
+      } else {
+        console.warn('[ResultScreen] ⚠️ Product data submission returned false');
+        Toast.show({
+          type: 'info',
+          text1: t('result.photoSaved') || 'Photo Saved',
+          text2: t('result.photoSavedLocally') || 'Photo saved locally',
+          position: 'bottom',
+        });
+      }
+    } catch (error) {
+      console.error('[ResultScreen] ❌ Error submitting photo:', error);
+      Toast.show({
+        type: 'error',
+        text1: t('result.photoError') || 'Error',
+        text2: t('result.photoErrorMessage') || 'Failed to submit photo. Please try again.',
+        position: 'bottom',
+      });
     }
   };
 
@@ -805,6 +886,15 @@ function ResultScreenContent() {
           />
         }
       >
+        {/* Pending Contributions Banner - Shows when user has unsubmitted contributions */}
+        {/* <PendingContributionsBanner 
+          barcode={barcode}
+          onSubmitted={() => {
+            // Refresh product data after submission
+            handleRefresh();
+          }}
+        /> */}
+        
         {/* Hero Section */}
         <View style={[styles.hero, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
           {imageUrl ? (
@@ -1523,11 +1613,10 @@ function ResultScreenContent() {
                       )}
                     </View>
                   )}
-                </View>
                 
-                {/* ALWAYS show "Update Country" button */}
+                  {/* ALWAYS show "Update Country" button - moved inside card at bottom */}
                 <TouchableOpacity
-                  style={[styles.updateCountryButton, { backgroundColor: colors.primary }]}
+                    style={[styles.updateCountryButton, { backgroundColor: colors.primary, marginTop: 16 }]}
                   onPress={() => setManufacturingCountryModalVisible(true)}
                   activeOpacity={0.8}
                 >
@@ -1536,6 +1625,7 @@ function ResultScreenContent() {
                     {t('manufacturingCountry.updateCountry', 'Update Country')}
                   </Text>
                 </TouchableOpacity>
+                </View>
               </>
               ) : (
                 <TouchableOpacity

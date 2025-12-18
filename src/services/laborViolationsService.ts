@@ -10,7 +10,7 @@
  */
 
 import { Product } from '../types/product';
-import { getBrandData } from '../data/brandDatabase';
+import { getBrandData, normalizeBrandNameForLookup } from '../data/brandDatabase';
 import { logger } from '../utils/logger';
 import { fetchProductFromBuycott } from './buycottApi';
 
@@ -56,14 +56,10 @@ const MINOR_LABOR_VIOLATION_BRANDS: Set<string> = new Set([
 
 /**
  * Normalize brand name for lookup
+ * ENHANCED: Uses shared normalization from brandDatabase for consistency
  */
 function normalizeBrandName(brand: string): string {
-  return brand
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s&'\-]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return normalizeBrandNameForLookup(brand);
 }
 
 /**
@@ -133,7 +129,11 @@ export function checkLaborViolations(product: Product): LaborViolationData {
   const sources: string[] = [];
   let violationType: 'none' | 'minor' | 'major' = 'none';
   
-  if (!product.brands) {
+  // ENHANCED: Use enhanced brand extraction to get all brands
+  const { extractAllBrands } = require('../utils/brandExtraction');
+  const allBrands = extractAllBrands(product);
+  
+  if (allBrands.length === 0) {
     return {
       hasViolations: false,
       violationType: 'none',
@@ -142,30 +142,56 @@ export function checkLaborViolations(product: Product): LaborViolationData {
     };
   }
   
-  const brandName = product.brands.split(',')[0].trim();
+  // Try each brand until we find a match
+  const brandName = allBrands[0]; // Start with primary brand
   const normalized = normalizeBrandName(brandName);
   
-  // 1. Check brand database
-  const dbResult = checkBrandDatabase(brandName);
-  if (dbResult) {
-    violationType = dbResult.type;
-    violations.push(`${dbResult.type} labor violation (brand database)`);
-    sources.push(dbResult.source);
-  }
-  
-  // 2. Check known violations list
-  const knownResult = checkKnownViolations(brandName);
-  if (knownResult) {
-    // Use the more severe violation type
-    if (knownResult.type === 'major' || violationType === 'major') {
-      violationType = 'major';
-    } else if (knownResult.type === 'minor' && violationType === 'none') {
-      violationType = 'minor';
+  // ENHANCED: Check all brands found (not just the first one)
+  // Try each brand until we find violations
+  for (const brand of allBrands) {
+    let foundMajor = false;
+    
+    // 1. Check brand database
+    const dbResult = checkBrandDatabase(brand);
+    if (dbResult) {
+      // Use the more severe violation type
+      if (dbResult.type === 'major') {
+        violationType = 'major';
+        violations.push(`${dbResult.type} labor violation (brand database: ${brand})`);
+        sources.push(dbResult.source);
+        foundMajor = true;
+      } else if (dbResult.type === 'minor' && violationType === 'none') {
+        violationType = 'minor';
+        violations.push(`${dbResult.type} labor violation (brand database: ${brand})`);
+        sources.push(dbResult.source);
+      }
     }
     
-    if (!violations.some(v => v.includes(knownResult.source))) {
-      violations.push(`${knownResult.type} labor violation (${knownResult.source})`);
-      sources.push(knownResult.source);
+    // 2. Check known violations list (only if no major violation found yet)
+    if (!foundMajor) {
+      const knownResult = checkKnownViolations(brand);
+      if (knownResult) {
+        // Use the more severe violation type
+        if (knownResult.type === 'major') {
+          violationType = 'major';
+          if (!violations.some(v => v.includes(knownResult.source))) {
+            violations.push(`${knownResult.type} labor violation (${knownResult.source}: ${brand})`);
+            sources.push(knownResult.source);
+          }
+          foundMajor = true;
+        } else if (knownResult.type === 'minor' && violationType === 'none') {
+          violationType = 'minor';
+          if (!violations.some(v => v.includes(knownResult.source))) {
+            violations.push(`${knownResult.type} labor violation (${knownResult.source}: ${brand})`);
+            sources.push(knownResult.source);
+          }
+        }
+      }
+    }
+    
+    // If we found a major violation, stop checking other brands
+    if (foundMajor) {
+      break;
     }
   }
   
@@ -183,8 +209,9 @@ export function checkLaborViolations(product: Product): LaborViolationData {
     sources.push('buycott_api');
   }
   
-  // 4. Check parent company (if available)
-  const brandData = getBrandData(brandName);
+  // 4. Check parent company (if available) - use primary brand
+  const primaryBrand = allBrands[0];
+  const brandData = getBrandData(primaryBrand);
   if (brandData?.parentCompany) {
     const parentResult = checkBrandDatabase(brandData.parentCompany);
     if (parentResult) {

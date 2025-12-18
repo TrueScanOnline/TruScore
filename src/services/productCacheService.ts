@@ -21,6 +21,7 @@ import { calculateTrustScore } from '../utils/trustScore';
 import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
 import { isWebSearchFallback } from './webSearchFallback';
 import { logger } from '../utils/logger';
+import { powershellLogger } from '../utils/powershellLogger';
 // CRITICAL FIX: Use dynamic import to break require cycle
 // import { handleError, ErrorCategory, ErrorSeverity } from './errorHandlingService';
 
@@ -61,18 +62,85 @@ export function enhanceProductWithComputedFields(product: Product): Product {
  * Merge user-contributed data into product with HIGHEST PRIORITY
  */
 export async function mergeUserContributedData(product: Product, barcode: string): Promise<Product> {
+  // ===== USER CONTRIBUTION FLOW: STEP 5 - MERGING USER-CONTRIBUTED DATA =====
+  // CRITICAL OPTIMIZATION: Use timeout to prevent blocking (5+ second delays)
+  // Display product immediately, merge user data when available
+  powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Starting merge of user-contributed data`, {
+    barcode,
+    step: 'MERGE_START',
+    currentProductHasPhoto: !!product.image_url,
+    currentPhotoUrl: product.image_url || 'NONE',
+  });
+  
   try {
-    const userContributedProduct = await getUserContributedProduct(barcode);
+    // CRITICAL: Add 3-second timeout to prevent blocking on slow backend
+    // If backend is slow, return product immediately and merge in background
+    const userContributedProduct = await Promise.race([
+      getUserContributedProduct(barcode),
+      new Promise<Product | null>((resolve) => 
+        setTimeout(() => {
+          logger.debug(`User-contributed check timeout (3s) - continuing without user data`);
+          resolve(null);
+        }, 3000) // 3 second timeout
+      ),
+    ]);
+    
     if (!userContributedProduct) {
+      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `No user-contributed data to merge`, {
+        barcode,
+        step: 'MERGE_SKIP',
+      });
       return product;
     }
+    
+    powershellLogger.log('INFO', 'USER_CONTRIBUTION', `User-contributed product found - merging`, {
+      barcode,
+      step: 'MERGE_PROCESS',
+      userContributedHasPhoto: !!userContributedProduct.image_url,
+      userContributedPhotoUrl: userContributedProduct.image_url || 'NONE',
+      userContributedHasIngredients: !!userContributedProduct.ingredients_text,
+      userContributedHasNutrition: !!userContributedProduct.nutriments,
+    });
     
     logger.info(`[ProductCacheService] Merging user-contributed data: ${barcode}`);
     
     // Merge ALL user-contributed fields - user data takes priority over database data
-    if (userContributedProduct.image_url) {
-      product.image_url = userContributedProduct.image_url;
-      product.image_front_url = userContributedProduct.image_url;
+    // CRITICAL: Always merge image_url if available (even if product already has one)
+    // User-contributed photos are more accurate (taken from actual product)
+    if (userContributedProduct.image_url && userContributedProduct.image_url.trim().length > 0) {
+      // Only update if the user-contributed URL is a valid public URL (not a local file path)
+      const isPublicUrl = userContributedProduct.image_url.startsWith('http://') || 
+                         userContributedProduct.image_url.startsWith('https://');
+      
+      if (isPublicUrl) {
+        const oldPhotoUrl = product.image_url || 'NONE';
+        product.image_url = userContributedProduct.image_url;
+        product.image_front_url = userContributedProduct.image_url;
+        
+        powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ User-contributed PHOTO merged successfully`, {
+          barcode,
+          step: 'MERGE_PHOTO',
+          oldPhotoUrl,
+          newPhotoUrl: userContributedProduct.image_url,
+          merged: true,
+        });
+        
+        logger.info(`[ProductCacheService] ✅ User-contributed photo merged: ${userContributedProduct.image_url}`);
+      } else {
+        powershellLogger.log('WARN', 'USER_CONTRIBUTION', `Skipping local file path (not public URL)`, {
+          barcode,
+          photoUrl: userContributedProduct.image_url,
+          reason: 'NOT_PUBLIC_URL',
+        });
+        
+        logger.debug(`[ProductCacheService] Skipping local file path (not a public URL): ${userContributedProduct.image_url}`);
+      }
+    } else {
+      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `No photo in user-contributed data`, {
+        barcode,
+        step: 'MERGE_PHOTO',
+        hasOtherData: !!(userContributedProduct.ingredients_text || userContributedProduct.nutriments),
+      });
     }
     
     if (userContributedProduct.nutriments && Object.keys(userContributedProduct.nutriments).length > 0) {
@@ -123,6 +191,18 @@ export async function mergeUserContributedData(product: Product, barcode: string
     if (userContributedProduct.additives_tags && userContributedProduct.additives_tags.length > 0) {
       product.additives_tags = userContributedProduct.additives_tags;
     }
+    
+    powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ MERGE COMPLETE - User-contributed data merged`, {
+      barcode,
+      step: 'MERGE_COMPLETE',
+      finalProductHasPhoto: !!product.image_url,
+      finalPhotoUrl: product.image_url || 'NONE',
+      mergedFields: {
+        photo: !!userContributedProduct.image_url,
+        ingredients: !!userContributedProduct.ingredients_text,
+        nutrition: !!userContributedProduct.nutriments,
+      },
+    });
     
     logger.debug(`[ProductCacheService] ✅ User-contributed data merged`);
     return product;
@@ -252,27 +332,40 @@ export async function processSQLiteProduct(
   // Enhance with computed fields
   enhanceProductWithComputedFields(sqliteProduct);
   
-  // Merge user-contributed data
-  const mergedProduct = await mergeUserContributedData(sqliteProduct, barcode);
+  // CRITICAL OPTIMIZATION: Merge user-contributed data with timeout (non-blocking)
+  // Start merge in parallel, but don't wait more than 3 seconds
+  const mergedProduct = await Promise.race([
+    mergeUserContributedData(sqliteProduct, barcode),
+    new Promise<Product>((resolve) => 
+      setTimeout(() => {
+        logger.debug('User-contributed merge timeout (3s) - using SQLite product');
+        resolve(sqliteProduct); // Return original if merge times out
+      }, 3000)
+    ),
+  ]);
   
-  // Save merged product back to SQLite
+  // Save merged product back to SQLite (non-blocking)
+  Promise.resolve().then(async () => {
   try {
     const userCountry = getUserCountryCode();
     await saveProductToSQLite(mergedProduct, userCountry ?? undefined);
   } catch (error) {
     logger.debug('[ProductCacheService] Failed to save merged product to SQLite (non-critical):', error);
   }
+  });
   
-  // Process and score
+  // Process and score (fast - don't block)
   const scoredProduct = await processAndScoreProduct(mergedProduct);
   
-  // Save final product with TruScore
+  // Save final product with TruScore (non-blocking)
+  Promise.resolve().then(async () => {
   try {
     const userCountry = getUserCountryCode();
     await saveProductToSQLite(scoredProduct, userCountry ?? undefined);
   } catch (error) {
     logger.debug('[ProductCacheService] Failed to save final product to SQLite (non-critical):', error);
   }
+  });
   
   return scoredProduct;
 }
@@ -287,27 +380,40 @@ export async function processCachedProduct(
   // Enhance with computed fields
   enhanceProductWithComputedFields(cachedProduct);
   
-  // Merge user-contributed data
-  const mergedProduct = await mergeUserContributedData(cachedProduct, barcode);
+  // CRITICAL OPTIMIZATION: Merge user-contributed data with timeout (non-blocking)
+  // Start merge in parallel, but don't wait more than 3 seconds
+  const mergedProduct = await Promise.race([
+    mergeUserContributedData(cachedProduct, barcode),
+    new Promise<Product>((resolve) => 
+      setTimeout(() => {
+        logger.debug('User-contributed merge timeout (3s) - using cached product');
+        resolve(cachedProduct); // Return original if merge times out
+      }, 3000)
+    ),
+  ]);
   
-  // Save merged product to SQLite
+  // Save merged product to SQLite (non-blocking)
+  Promise.resolve().then(async () => {
   try {
     const userCountry = getUserCountryCode();
     await saveProductToSQLite(mergedProduct, userCountry ?? undefined);
   } catch (error) {
     logger.debug('[ProductCacheService] Failed to save merged cached product to SQLite (non-critical):', error);
   }
+  });
   
-  // Process and score
+  // Process and score (fast - don't block)
   const scoredProduct = await processAndScoreProduct(mergedProduct);
   
-  // Save final product with TruScore
+  // Save final product with TruScore (non-blocking)
+  Promise.resolve().then(async () => {
   try {
     const userCountry = getUserCountryCode();
     await saveProductToSQLite(scoredProduct, userCountry ?? undefined);
   } catch (error) {
     logger.debug('[ProductCacheService] Failed to save final cached product to SQLite (non-critical):', error);
   }
+  });
   
   return scoredProduct;
 }

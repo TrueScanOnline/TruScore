@@ -21,7 +21,8 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import { saveManualProduct, ManualProductData } from '../services/manualProductService';
+import { saveManualProduct } from '../services/manualProductService';
+import { ManualProductData } from '../types/manualProduct';
 import CameraCaptureModal from './CameraCaptureModal';
 import { parseAllergensAndAdditives, parsePackagingData } from '../utils/manualProductParsing';
 import { Product } from '../types/product';
@@ -300,8 +301,20 @@ export default function ManualProductEntryModal({
   };
 
   const handleSave = async () => {
+    // ===== USER CONTRIBUTION FLOW: UI TRIGGER =====
+    console.log(`[ManualProductEntryModal] 🎯 SAVE BUTTON CLICKED for barcode: ${barcode}`);
+    console.log(`[ManualProductEntryModal] Form data:`, {
+      barcode,
+      productName: productName.trim(),
+      hasPhoto: !!imageUri,
+      photoPath: imageUri || 'NONE',
+      hasIngredients: !!ingredients.trim(),
+      hasNutrition: Object.keys({ energy, fat, carbs, protein }).some(k => !!eval(k)),
+    });
+    
     // Validate required fields (product name only required in add mode, not edit mode)
     if (!editMode && !productName.trim()) {
+      console.warn(`[ManualProductEntryModal] ❌ Validation failed: Product name required`);
       Alert.alert(
         t('manualProduct.validationError') || 'Validation Error',
         t('manualProduct.productNameRequired') || 'Product name is required'
@@ -310,6 +323,7 @@ export default function ManualProductEntryModal({
     }
 
     setLoading(true);
+    console.log(`[ManualProductEntryModal] ✅ Validation passed, calling saveManualProduct...`);
     try {
       // Build nutriments object if nutrition data provided
       const nutriments: Record<string, number> = {};
@@ -351,7 +365,18 @@ export default function ManualProductEntryModal({
         timestamp: Date.now(),
       };
 
+      console.log(`[ManualProductEntryModal] 📦 Calling saveManualProduct with data:`, {
+        barcode: productData.barcode,
+        product_name: productData.product_name,
+        hasPhoto: !!productData.image_url,
+        photoPath: productData.image_url || 'NONE',
+        hasIngredients: !!productData.ingredients_text,
+        hasNutrition: !!productData.nutriments,
+      });
+      
       const success = await saveManualProduct(productData);
+      
+      console.log(`[ManualProductEntryModal] 📦 saveManualProduct returned: ${success}`);
       
       if (success) {
         onSave(productData);

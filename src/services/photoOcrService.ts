@@ -3,7 +3,7 @@
 // Enables photo-based product addition (like Yuka)
 
 import { logger } from '../utils/logger';
-import { ManualProductData } from './manualProductService';
+import { ManualProductData } from '../types/manualProduct';
 import { Product } from '../types/product';
 
 // Note: For production, use a proper OCR library like:

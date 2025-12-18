@@ -16,11 +16,13 @@ export async function createDatabaseIndexes(db: SQLite.SQLiteDatabase): Promise<
 
   logger.info('Creating database indexes for performance optimization...');
 
+  // OPTIMIZED: Comprehensive indexes for faster lookups on iOS and Android
+  // These indexes significantly improve query performance globally
   const indexes = [
     {
       name: 'idx_products_barcode',
       sql: 'CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode)',
-      description: 'barcode lookup',
+      description: 'barcode lookup (primary)',
     },
     {
       name: 'idx_products_country_filter',
@@ -30,7 +32,7 @@ export async function createDatabaseIndexes(db: SQLite.SQLiteDatabase): Promise<
     {
       name: 'idx_products_barcode_country',
       sql: 'CREATE INDEX IF NOT EXISTS idx_products_barcode_country ON products(barcode, country_filter)',
-      description: 'barcode + country filter',
+      description: 'barcode + country filter (composite - optimized for country-specific lookups)',
     },
     {
       name: 'idx_products_source',
@@ -40,7 +42,12 @@ export async function createDatabaseIndexes(db: SQLite.SQLiteDatabase): Promise<
     {
       name: 'idx_products_name',
       sql: 'CREATE INDEX IF NOT EXISTS idx_products_name ON products(product_name)',
-      description: 'product name search',
+      description: 'product name search (for name-based queries like FSANZ)',
+    },
+    {
+      name: 'idx_products_last_updated',
+      sql: 'CREATE INDEX IF NOT EXISTS idx_products_last_updated ON products(last_updated DESC)',
+      description: 'recent products (for cache warming and freshness)',
     },
   ];
 

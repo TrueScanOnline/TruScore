@@ -89,12 +89,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      const productData = await getManualProduct(barcode);
-      const product = productData ? {
-        ...productData.productData,
-        barcode: productData.barcode,
-        submittedAt: productData.submittedAt,
-        source: productData.source,
+      const dbResult = await getManualProduct(barcode);
+      // dbResult structure: { barcode, productData: {...JSONB data...}, submittedAt, source }
+      // The productData field contains the actual product fields as JSONB
+      // Note: If productData is a string (shouldn't happen with Postgres JSONB), we may need to parse it
+      const productDataJson = typeof dbResult?.productData === 'string' 
+        ? JSON.parse(dbResult.productData) 
+        : dbResult?.productData;
+      
+      const product = productDataJson ? {
+        ...productDataJson,
+        barcode: dbResult.barcode,
+        submittedAt: dbResult.submittedAt,
+        source: dbResult.source,
       } : null;
 
       if (!product) {

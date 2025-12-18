@@ -10,7 +10,7 @@
  */
 
 import { Product } from '../types/product';
-import { getBrandData, isCruelParent } from '../data/brandDatabase';
+import { getBrandData, isCruelParent, normalizeBrandNameForLookup } from '../data/brandDatabase';
 import { logger } from '../utils/logger';
 
 export interface AnimalCrueltyData {
@@ -50,14 +50,10 @@ const MINOR_ANIMAL_CRUELTY_BRANDS: Set<string> = new Set([
 
 /**
  * Normalize brand name for lookup
+ * ENHANCED: Uses shared normalization from brandDatabase for consistency
  */
 function normalizeBrandName(brand: string): string {
-  return brand
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s&'\-]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return normalizeBrandNameForLookup(brand);
 }
 
 /**
@@ -128,7 +124,11 @@ export function checkAnimalCruelty(product: Product): AnimalCrueltyData {
   const sources: string[] = [];
   let violationType: 'none' | 'minor' | 'major' = 'none';
   
-  if (!product.brands) {
+  // ENHANCED: Use enhanced brand extraction to get all brands
+  const { extractAllBrands } = require('../utils/brandExtraction');
+  const allBrands = extractAllBrands(product);
+  
+  if (allBrands.length === 0) {
     return {
       hasViolations: false,
       violationType: 'none',
@@ -137,81 +137,106 @@ export function checkAnimalCruelty(product: Product): AnimalCrueltyData {
     };
   }
   
-  const brandName = product.brands.split(',')[0].trim();
-  
-  // 1. Check using existing isCruelParent (major violation)
-  if (isCruelParent(brandName)) {
-    violationType = 'major';
-    violations.push('major animal cruelty (cruel parent)');
-    sources.push('brand_database_cruel_parent');
-  }
-  
-  // 2. Check brand database
-  const dbResult = checkBrandDatabase(brandName);
-  if (dbResult) {
-    // Use the more severe violation type
-    if (dbResult.type === 'major' || violationType === 'major') {
-      violationType = 'major';
-    } else if (dbResult.type === 'minor' && violationType === 'none') {
-      violationType = 'minor';
-    }
+  // ENHANCED: Check all brands found (not just the first one)
+  // Try each brand until we find violations
+  for (const brand of allBrands) {
+    let foundMajor = false;
     
-    if (!violations.some(v => v.includes(dbResult.source))) {
-      violations.push(`${dbResult.type} animal cruelty (${dbResult.source})`);
-      sources.push(dbResult.source);
-    }
-  }
-  
-  // 3. Check known violations list
-  const knownResult = checkKnownViolations(brandName);
-  if (knownResult) {
-    // Use the more severe violation type
-    if (knownResult.type === 'major' || violationType === 'major') {
+    // 1. Check using existing isCruelParent (major violation)
+    if (isCruelParent(brand)) {
       violationType = 'major';
-    } else if (knownResult.type === 'minor' && violationType === 'none') {
-      violationType = 'minor';
-    }
-    
-    if (!violations.some(v => v.includes(knownResult.source))) {
-      violations.push(`${knownResult.type} animal cruelty (${knownResult.source})`);
-      sources.push(knownResult.source);
-    }
-  }
-  
-  // 4. Check parent company (if available)
-  const brandData = getBrandData(brandName);
-  if (brandData?.parentCompany) {
-    if (isCruelParent(brandData.parentCompany)) {
-      violationType = 'major';
-      violations.push('major animal cruelty (parent: cruel parent)');
+      violations.push(`major animal cruelty (cruel parent: ${brand})`);
       sources.push('brand_database_cruel_parent');
+      foundMajor = true;
     }
     
-    const parentDbResult = checkBrandDatabase(brandData.parentCompany);
-    if (parentDbResult) {
-      // Use the more severe violation type
-      if (parentDbResult.type === 'major' || violationType === 'major') {
-        violationType = 'major';
-      } else if (parentDbResult.type === 'minor' && violationType === 'none') {
-        violationType = 'minor';
+    // 2. Check brand database (if no major found yet)
+    if (!foundMajor) {
+      const dbResult = checkBrandDatabase(brand);
+      if (dbResult) {
+        // Use the more severe violation type
+        if (dbResult.type === 'major') {
+          violationType = 'major';
+          if (!violations.some(v => v.includes(dbResult.source))) {
+            violations.push(`${dbResult.type} animal cruelty (${dbResult.source}: ${brand})`);
+            sources.push(dbResult.source);
+          }
+          foundMajor = true;
+        } else if (dbResult.type === 'minor' && violationType === 'none') {
+          violationType = 'minor';
+          if (!violations.some(v => v.includes(dbResult.source))) {
+            violations.push(`${dbResult.type} animal cruelty (${dbResult.source}: ${brand})`);
+            sources.push(dbResult.source);
+          }
+        }
       }
-      
-      violations.push(`${parentDbResult.type} animal cruelty (parent: ${brandData.parentCompany})`);
-      sources.push('brand_database_parent');
     }
     
-    const parentKnownResult = checkKnownViolations(brandData.parentCompany);
-    if (parentKnownResult) {
-      // Use the more severe violation type
-      if (parentKnownResult.type === 'major' || violationType === 'major') {
+    // 3. Check known violations list (only if no major violation found yet)
+    if (!foundMajor) {
+      const knownResult = checkKnownViolations(brand);
+      if (knownResult) {
+        // Use the more severe violation type
+        if (knownResult.type === 'major') {
+          violationType = 'major';
+          if (!violations.some(v => v.includes(knownResult.source))) {
+            violations.push(`${knownResult.type} animal cruelty (${knownResult.source}: ${brand})`);
+            sources.push(knownResult.source);
+          }
+          foundMajor = true;
+        } else if (knownResult.type === 'minor' && violationType === 'none') {
+          violationType = 'minor';
+          if (!violations.some(v => v.includes(knownResult.source))) {
+            violations.push(`${knownResult.type} animal cruelty (${knownResult.source}: ${brand})`);
+            sources.push(knownResult.source);
+          }
+        }
+      }
+    }
+    
+    // If we found a major violation, stop checking other brands
+    if (foundMajor) {
+      break;
+    }
+  }
+  
+  // 4. Check parent company (if available) - only if no violations found yet
+  if (violationType === 'none') {
+    const primaryBrand = allBrands[0];
+    const brandData = getBrandData(primaryBrand);
+    if (brandData?.parentCompany) {
+      if (isCruelParent(brandData.parentCompany)) {
         violationType = 'major';
-      } else if (parentKnownResult.type === 'minor' && violationType === 'none') {
-        violationType = 'minor';
+        violations.push('major animal cruelty (parent: cruel parent)');
+        sources.push('brand_database_cruel_parent');
       }
       
-      if (!violations.some(v => v.includes('parent'))) {
-        violations.push(`${parentKnownResult.type} animal cruelty (parent: ${brandData.parentCompany})`);
-        sources.push('known_violations_parent');
+      const parentDbResult = checkBrandDatabase(brandData.parentCompany);
+      if (parentDbResult) {
+        // Use the more severe violation type
+        if (parentDbResult.type === 'major' || violationType === 'major') {
+          violationType = 'major';
+        } else if (parentDbResult.type === 'minor' && violationType === 'none') {
+          violationType = 'minor';
+        }
+        
+        violations.push(`${parentDbResult.type} animal cruelty (parent: ${brandData.parentCompany})`);
+        sources.push('brand_database_parent');
+      }
+      
+      const parentKnownResult = checkKnownViolations(brandData.parentCompany);
+      if (parentKnownResult) {
+        // Use the more severe violation type
+        if (parentKnownResult.type === 'major' || violationType === 'major') {
+          violationType = 'major';
+        } else if (parentKnownResult.type === 'minor' && violationType === 'none') {
+          violationType = 'minor';
+        }
+        
+        if (!violations.some(v => v.includes('parent'))) {
+          violations.push(`${parentKnownResult.type} animal cruelty (parent: ${brandData.parentCompany})`);
+          sources.push('known_violations_parent');
+        }
       }
     }
   }
