@@ -92,8 +92,10 @@ android {
         applicationId 'com.truescan.foodscanner'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0.0"
+        // Note: versionCode and versionName are managed by Expo via app.config.js
+        // These values are overridden during EAS build, but kept here for local builds
+        versionCode 7
+        versionName "10.0.0"
     }
     signingConfigs {
         debug {

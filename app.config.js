@@ -18,8 +18,19 @@ module.exports = {
         backgroundColor: '#16a085',
       },
       package: 'com.truescan.foodscanner',
-      versionCode: 6, // v10.0.0 - Production build ready for iOS and Android testing
-      permissions: ['CAMERA'],
+      versionCode: 7, // v10.0.0 - Build 7 for Android testing (Samsung phone)
+      permissions: [
+        'CAMERA',
+        'ACCESS_FINE_LOCATION',
+        'ACCESS_COARSE_LOCATION',
+        'READ_EXTERNAL_STORAGE',
+        'WRITE_EXTERNAL_STORAGE',
+        'INTERNET',
+        // Additional permissions from AndroidManifest.xml (may be added by native modules)
+        'RECORD_AUDIO', // Added by expo-camera (optional, not used)
+        'SYSTEM_ALERT_WINDOW', // For overlay windows if needed
+        'VIBRATE', // For haptic feedback
+      ],
       navigationBar: {
         // Configure navigation bar to work with app tabs
         // 'hidden' = hide completely (preferred for full app control)
@@ -49,7 +60,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.truescan.foodscanner',
-      buildNumber: '10', // v10.0.0 - Production build ready for iOS and Android testing
+      buildNumber: '11', // v10.0.0 - Build 11 for iOS testing (iPhone 11) and App Store Connect
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -98,8 +109,15 @@ module.exports = {
             minSdkVersion: 24,
             // buildToolsVersion removed - let AGP auto-select (recommended for Expo SDK 53)
           },
+          ios: {
+            // iOS build settings for SDK 53 - minimum deployment target is 15.1 for SDK 53
+            deploymentTarget: '15.1',
+          },
         },
       ],
+      // react-native-qonversion config plugin (if available)
+      // Note: Qonversion may require manual native setup if config plugin not available
+      // '@qonversion/react-native-plugin', // Uncomment if plugin is installed
     ],
     extra: {
       // EAS project ID removed for Expo Go development

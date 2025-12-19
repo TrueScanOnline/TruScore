@@ -49,6 +49,20 @@ export function normalizeBarcode(barcode: string): string[] {
     // UPC-A: Add leading zero to make EAN-13
     const ean13 = '0' + cleaned;
     variants.push(ean13);
+  } else if (cleaned.length === 14) {
+    // EAN-14 or GTIN-14: Try as-is first, then try truncating to EAN-13
+    // Some systems use 14-digit codes, but OFF typically uses 13-digit EAN-13
+    variants.push(cleaned); // Try 14-digit as-is
+    // Try truncating last digit (might be check digit)
+    if (cleaned.length === 14) {
+      const truncated13 = cleaned.substring(0, 13);
+      variants.push(truncated13);
+    }
+    // Try truncating first digit (might be packaging indicator)
+    if (cleaned.length === 14) {
+      const truncated13FromStart = cleaned.substring(1, 14);
+      variants.push(truncated13FromStart);
+    }
   } else if (cleaned.length < 8) {
     // Very short barcode - pad to EAN-8 first, then to EAN-13
     const paddedTo8 = cleaned.padStart(8, '0');

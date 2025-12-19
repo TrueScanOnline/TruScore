@@ -12,17 +12,22 @@
 import { Product } from '../types/product';
 import { getBrandData, isCruelParent, normalizeBrandNameForLookup } from '../data/brandDatabase';
 import { logger } from '../utils/logger';
+import { checkBBFAWTier, getBBFAWViolationSeverity } from './bbfawService';
+import { checkASPCAAnimalWelfare, getASPCAViolationSeverity } from './aspcaService';
+import { checkEthicalConsumerRating, getEthicalConsumerViolationSeverity } from './ethicalConsumerService';
+import { matchBrands, checkBrandProperty } from './brandMatchingService';
 
 export interface AnimalCrueltyData {
   hasViolations: boolean;
-  violationType: 'none' | 'minor' | 'major';
+  violationType: 'none' | 'limited' | 'moderate' | 'major'; // 3-tier system: Limited=-4, Moderate=-8, Major=-15
   violations: string[];
   sources: string[];
 }
 
 /**
- * Known brands with major animal cruelty violations
- * (factory farming, slaughter, cruelty, news tie)
+ * Known brands with major animal cruelty violations (Class I)
+ * (factory farming, slaughter, cruelty, news tie, BBFAW tier 1-2)
+ * Penalty: -15
  */
 const MAJOR_ANIMAL_CRUELTY_BRANDS: Set<string> = new Set([
   // Major animal testing companies
@@ -39,13 +44,27 @@ const MAJOR_ANIMAL_CRUELTY_BRANDS: Set<string> = new Set([
 ]);
 
 /**
- * Known brands with minor animal cruelty violations
- * (less severe but still concerning practices)
+ * Known brands with moderate animal cruelty violations (Class II)
+ * (overcrowding, poor transport, BBFAW tier 3-4)
+ * Penalty: -8
  */
-const MINOR_ANIMAL_CRUELTY_BRANDS: Set<string> = new Set([
+const MODERATE_ANIMAL_CRUELTY_BRANDS: Set<string> = new Set([
+  // Brands with moderate welfare concerns
+  'tyson', 'jbs', 'cargill', 'smithfield', // Some operations may be moderate
+  'mcdonald\'s', 'mcdonalds', 'burger king', 'kfc', 'subway',
+  'wendy\'s', 'domino\'s', 'pizza hut',
+]);
+
+/**
+ * Known brands with limited animal cruelty violations (Class III)
+ * (minor welfare lapses, BBFAW tier 5-6)
+ * Penalty: -4
+ */
+const LIMITED_ANIMAL_CRUELTY_BRANDS: Set<string> = new Set([
   // Brands with questionable practices but not major violations
   'nestle', 'nestlé', 'mars', 'mondelez', 'hershey',
   'ferrero', 'lindt', 'godiva',
+  // Note: Ben & Jerry's is NOT in this list - it's ethical, only parent Unilever has issues
 ]);
 
 /**
@@ -58,8 +77,9 @@ function normalizeBrandName(brand: string): string {
 
 /**
  * Check brand database for animal testing/cruelty
+ * Returns 3-tier classification: limited, moderate, or major
  */
-function checkBrandDatabase(brandName: string): { type: 'none' | 'minor' | 'major'; source: string } | null {
+function checkBrandDatabase(brandName: string): { type: 'none' | 'limited' | 'moderate' | 'major'; source: string } | null {
   const brandData = getBrandData(brandName);
   if (!brandData) {
     return null;
@@ -70,12 +90,24 @@ function checkBrandDatabase(brandName: string): { type: 'none' | 'minor' | 'majo
     return { type: 'major', source: 'brand_database' };
   }
   
-  // Check ethical rating (poor rating may indicate minor issues)
-  if (brandData.ethicalRating === 'poor' && !brandData.animalTesting) {
-    // Check if in known minor violations
-    const normalized = normalizeBrandName(brandName);
-    if (MINOR_ANIMAL_CRUELTY_BRANDS.has(normalized)) {
-      return { type: 'minor', source: 'brand_database' };
+  // Check ethical rating to determine tier
+  const normalized = normalizeBrandName(brandName);
+  if (brandData.ethicalRating === 'poor') {
+    // Check if in known violation lists
+    if (MAJOR_ANIMAL_CRUELTY_BRANDS.has(normalized)) {
+      return { type: 'major', source: 'brand_database' };
+    } else if (MODERATE_ANIMAL_CRUELTY_BRANDS.has(normalized)) {
+      return { type: 'moderate', source: 'brand_database' };
+    } else if (LIMITED_ANIMAL_CRUELTY_BRANDS.has(normalized)) {
+      return { type: 'limited', source: 'brand_database' };
+    } else {
+      // Poor rating but not in known lists - default to moderate
+      return { type: 'moderate', source: 'brand_database' };
+    }
+  } else if (brandData.ethicalRating === 'fair') {
+    // Fair rating may indicate limited concerns
+    if (LIMITED_ANIMAL_CRUELTY_BRANDS.has(normalized)) {
+      return { type: 'limited', source: 'brand_database' };
     }
   }
   
@@ -84,11 +116,12 @@ function checkBrandDatabase(brandName: string): { type: 'none' | 'minor' | 'majo
 
 /**
  * Check known violation lists
+ * Returns 3-tier classification: limited, moderate, or major
  */
-function checkKnownViolations(brandName: string): { type: 'minor' | 'major'; source: string } | null {
+function checkKnownViolations(brandName: string): { type: 'limited' | 'moderate' | 'major'; source: string } | null {
   const normalized = normalizeBrandName(brandName);
   
-  // Check major violations first
+  // Check major violations first (highest priority)
   if (MAJOR_ANIMAL_CRUELTY_BRANDS.has(normalized)) {
     return { type: 'major', source: 'known_violations' };
   }
@@ -100,15 +133,27 @@ function checkKnownViolations(brandName: string): { type: 'minor' | 'major'; sou
     }
   }
   
-  // Check minor violations
-  if (MINOR_ANIMAL_CRUELTY_BRANDS.has(normalized)) {
-    return { type: 'minor', source: 'known_violations' };
+  // Check moderate violations
+  if (MODERATE_ANIMAL_CRUELTY_BRANDS.has(normalized)) {
+    return { type: 'moderate', source: 'known_violations' };
   }
   
-  // Check partial matches for minor violations
-  for (const minorBrand of MINOR_ANIMAL_CRUELTY_BRANDS) {
-    if (normalized.includes(minorBrand) || minorBrand.includes(normalized)) {
-      return { type: 'minor', source: 'known_violations' };
+  // Check partial matches for moderate violations
+  for (const moderateBrand of MODERATE_ANIMAL_CRUELTY_BRANDS) {
+    if (normalized.includes(moderateBrand) || moderateBrand.includes(normalized)) {
+      return { type: 'moderate', source: 'known_violations' };
+    }
+  }
+  
+  // Check limited violations
+  if (LIMITED_ANIMAL_CRUELTY_BRANDS.has(normalized)) {
+    return { type: 'limited', source: 'known_violations' };
+  }
+  
+  // Check partial matches for limited violations
+  for (const limitedBrand of LIMITED_ANIMAL_CRUELTY_BRANDS) {
+    if (normalized.includes(limitedBrand) || limitedBrand.includes(normalized)) {
+      return { type: 'limited', source: 'known_violations' };
     }
   }
   
@@ -118,17 +163,23 @@ function checkKnownViolations(brandName: string): { type: 'minor' | 'major'; sou
 /**
  * Check for animal cruelty violations in a product
  * Returns violation data for CARE Pillar scoring
+ * 
+ * ENHANCED: Uses fuzzy matching for better brand resolution and confidence scoring
  */
 export function checkAnimalCruelty(product: Product): AnimalCrueltyData {
   const violations: string[] = [];
   const sources: string[] = [];
-  let violationType: 'none' | 'minor' | 'major' = 'none';
+  let violationType: 'none' | 'limited' | 'moderate' | 'major' = 'none';
   
-  // ENHANCED: Use enhanced brand extraction to get all brands
-  const { extractAllBrands } = require('../utils/brandExtraction');
-  const allBrands = extractAllBrands(product);
+  // FUZZY MATCHING: Use fuzzy matching service for all brand lookups
+  // This provides confidence scoring and better matching accuracy
+  const brandMatches = matchBrands(product, 0.75); // 75% threshold
   
-  if (allBrands.length === 0) {
+  if (brandMatches.length === 0) {
+    logger.debug('[AnimalCruelty] No brand matches found (fuzzy matching):', {
+      barcode: product.barcode,
+      brandsField: product.brands || 'N/A',
+    });
     return {
       hasViolations: false,
       violationType: 'none',
@@ -137,59 +188,193 @@ export function checkAnimalCruelty(product: Product): AnimalCrueltyData {
     };
   }
   
-  // ENHANCED: Check all brands found (not just the first one)
-  // Try each brand until we find violations
-  for (const brand of allBrands) {
+  // Helper to determine most severe violation type
+  const getMostSevereType = (current: 'none' | 'limited' | 'moderate' | 'major', newType: 'limited' | 'moderate' | 'major'): 'none' | 'limited' | 'moderate' | 'major' => {
+    if (current === 'major' || newType === 'major') return 'major';
+    if (current === 'moderate' || newType === 'moderate') return 'moderate';
+    if (current === 'limited' || newType === 'limited') return 'limited';
+    return 'none';
+  };
+  
+  // ENHANCED: Check all fuzzy-matched brands (sorted by confidence, highest first)
+  // Only apply violations if confidence is above threshold
+  for (const brandMatch of brandMatches) {
+    const brand = brandMatch.brand;
+    const confidence = brandMatch.confidence;
+    const matchType = brandMatch.matchType;
+    
+    // Skip low-confidence matches (below 75% threshold)
+    if (confidence < 75) {
+      logger.debug('[AnimalCruelty] Skipping low-confidence match:', {
+        brand,
+        confidence,
+        matchType,
+      });
+      continue;
+    }
+    
+    // Log match quality for monitoring
+    logger.debug('[AnimalCruelty] Checking brand match:', {
+      brand,
+      confidence,
+      matchType,
+      matchedBrand: brandMatch.matchedData?.name || 'N/A',
+    });
     let foundMajor = false;
     
+    // FUZZY MATCHING: Use matched brand data from fuzzy matching (more accurate)
+    const matchedBrandData = brandMatch.matchedData;
+    const matchedBrandName = matchedBrandData?.name || brand;
+    
     // 1. Check using existing isCruelParent (major violation)
-    if (isCruelParent(brand)) {
+    // Use matched brand name for better accuracy
+    if (isCruelParent(matchedBrandName)) {
       violationType = 'major';
-      violations.push(`major animal cruelty (cruel parent: ${brand})`);
+      violations.push(`major animal cruelty (cruel parent: ${matchedBrandName}, ${confidence}% confidence)`);
       sources.push('brand_database_cruel_parent');
       foundMajor = true;
     }
     
-    // 2. Check brand database (if no major found yet)
-    if (!foundMajor) {
+    // 2. Check brand database using fuzzy-matched data (if no major found yet)
+    if (!foundMajor && matchedBrandData) {
+      // Use matched brand data directly (more reliable than re-querying)
+      if (matchedBrandData.animalTesting === true) {
+        violationType = 'major';
+        violations.push(`major animal cruelty (brand database: ${matchedBrandName}, ${confidence}% confidence)`);
+        sources.push('brand_database');
+        foundMajor = true;
+      } else {
+        // Fallback to checkBrandDatabase for tier classification
+        const dbResult = checkBrandDatabase(matchedBrandName);
+        if (dbResult && dbResult.type !== 'none') {
+          // Apply confidence-based tier adjustment
+          // High confidence (≥90%): Use full tier
+          // Medium confidence (75-89%): Use one tier lower (major→moderate, moderate→limited)
+          let adjustedType = dbResult.type;
+          if (confidence < 90 && confidence >= 75) {
+            if (dbResult.type === 'major') adjustedType = 'moderate';
+            else if (dbResult.type === 'moderate') adjustedType = 'limited';
+          }
+          
+          violationType = getMostSevereType(violationType, adjustedType);
+          if (!violations.some(v => v.includes(dbResult.source))) {
+            violations.push(`${adjustedType} animal cruelty (${dbResult.source}: ${matchedBrandName}, ${confidence}% confidence)`);
+            sources.push(dbResult.source);
+          }
+          if (adjustedType === 'major') {
+            foundMajor = true;
+          }
+        }
+      }
+    } else if (!foundMajor) {
+      // Fallback: Check original brand if fuzzy match didn't provide data
       const dbResult = checkBrandDatabase(brand);
-      if (dbResult) {
-        // Use the more severe violation type
-        if (dbResult.type === 'major') {
-          violationType = 'major';
-          if (!violations.some(v => v.includes(dbResult.source))) {
-            violations.push(`${dbResult.type} animal cruelty (${dbResult.source}: ${brand})`);
-            sources.push(dbResult.source);
-          }
+      if (dbResult && dbResult.type !== 'none') {
+        // Apply confidence-based adjustment
+        let adjustedType = dbResult.type;
+        if (confidence < 90 && confidence >= 75) {
+          if (dbResult.type === 'major') adjustedType = 'moderate';
+          else if (dbResult.type === 'moderate') adjustedType = 'limited';
+        }
+        
+        violationType = getMostSevereType(violationType, adjustedType);
+        if (!violations.some(v => v.includes(dbResult.source))) {
+          violations.push(`${adjustedType} animal cruelty (${dbResult.source}: ${brand}, ${confidence}% confidence, ${matchType})`);
+          sources.push(dbResult.source);
+        }
+        if (adjustedType === 'major') {
           foundMajor = true;
-        } else if (dbResult.type === 'minor' && violationType === 'none') {
-          violationType = 'minor';
-          if (!violations.some(v => v.includes(dbResult.source))) {
-            violations.push(`${dbResult.type} animal cruelty (${dbResult.source}: ${brand})`);
-            sources.push(dbResult.source);
-          }
         }
       }
     }
     
-    // 3. Check known violations list (only if no major violation found yet)
+    // 3. Check BBFAW tier data (if available) - use matched brand name
     if (!foundMajor) {
-      const knownResult = checkKnownViolations(brand);
-      if (knownResult) {
-        // Use the more severe violation type
-        if (knownResult.type === 'major') {
-          violationType = 'major';
-          if (!violations.some(v => v.includes(knownResult.source))) {
-            violations.push(`${knownResult.type} animal cruelty (${knownResult.source}: ${brand})`);
-            sources.push(knownResult.source);
-          }
+      const bbfawData = checkBBFAWTier(matchedBrandName);
+      if (bbfawData) {
+        const bbfawSeverity = getBBFAWViolationSeverity(bbfawData.tier);
+        // Apply confidence-based adjustment
+        let adjustedSeverity = bbfawSeverity;
+        if (confidence < 90 && confidence >= 75) {
+          if (bbfawSeverity === 'major') adjustedSeverity = 'moderate';
+          else if (bbfawSeverity === 'moderate') adjustedSeverity = 'limited';
+        }
+        
+        violationType = getMostSevereType(violationType, adjustedSeverity);
+        if (!violations.some(v => v.includes('bbfaw'))) {
+          violations.push(`${adjustedSeverity} animal cruelty (BBFAW tier ${bbfawData.tier}: ${matchedBrandName}, ${confidence}% confidence)`);
+          sources.push('bbfaw');
+        }
+        if (adjustedSeverity === 'major') {
           foundMajor = true;
-        } else if (knownResult.type === 'minor' && violationType === 'none') {
-          violationType = 'minor';
-          if (!violations.some(v => v.includes(knownResult.source))) {
-            violations.push(`${knownResult.type} animal cruelty (${knownResult.source}: ${brand})`);
-            sources.push(knownResult.source);
-          }
+        }
+      }
+    }
+    
+    // 4. Check ASPCA data (if available) - use matched brand name
+    if (!foundMajor) {
+      const aspcaData = checkASPCAAnimalWelfare(matchedBrandName);
+      if (aspcaData) {
+        const aspcaSeverity = getASPCAViolationSeverity(aspcaData);
+        // Apply confidence-based adjustment
+        let adjustedSeverity = aspcaSeverity;
+        if (confidence < 90 && confidence >= 75) {
+          if (aspcaSeverity === 'major') adjustedSeverity = 'moderate';
+          else if (aspcaSeverity === 'moderate') adjustedSeverity = 'limited';
+        }
+        
+        violationType = getMostSevereType(violationType, adjustedSeverity);
+        if (!violations.some(v => v.includes('aspca'))) {
+          violations.push(`${adjustedSeverity} animal cruelty (ASPCA: ${matchedBrandName}, ${confidence}% confidence)`);
+          sources.push('aspca');
+        }
+        if (adjustedSeverity === 'major') {
+          foundMajor = true;
+        }
+      }
+    }
+    
+    // 5. Check Ethical Consumer data (if available) - use matched brand name
+    if (!foundMajor) {
+      const ethicalConsumerRating = checkEthicalConsumerRating(matchedBrandName);
+      if (ethicalConsumerRating && ethicalConsumerRating.animalTesting) {
+        const ecSeverity = getEthicalConsumerViolationSeverity(ethicalConsumerRating);
+        // Apply confidence-based adjustment
+        let adjustedSeverity = ecSeverity;
+        if (confidence < 90 && confidence >= 75) {
+          if (ecSeverity === 'major') adjustedSeverity = 'moderate';
+          else if (ecSeverity === 'moderate') adjustedSeverity = 'limited';
+        }
+        
+        violationType = getMostSevereType(violationType, adjustedSeverity);
+        if (!violations.some(v => v.includes('ethical_consumer'))) {
+          violations.push(`${adjustedSeverity} animal cruelty (Ethical Consumer: ${matchedBrandName}, ${confidence}% confidence)`);
+          sources.push('ethical_consumer');
+        }
+        if (adjustedSeverity === 'major') {
+          foundMajor = true;
+        }
+      }
+    }
+    
+    // 6. Check known violations list (only if no major violation found yet) - use matched brand name
+    if (!foundMajor) {
+      const knownResult = checkKnownViolations(matchedBrandName);
+      if (knownResult) {
+        // Apply confidence-based adjustment
+        let adjustedType = knownResult.type;
+        if (confidence < 90 && confidence >= 75) {
+          if (knownResult.type === 'major') adjustedType = 'moderate';
+          else if (knownResult.type === 'moderate') adjustedType = 'limited';
+        }
+        
+        violationType = getMostSevereType(violationType, adjustedType);
+        if (!violations.some(v => v.includes(knownResult.source))) {
+          violations.push(`${adjustedType} animal cruelty (${knownResult.source}: ${matchedBrandName}, ${confidence}% confidence)`);
+          sources.push(knownResult.source);
+        }
+        if (adjustedType === 'major') {
+          foundMajor = true;
         }
       }
     }
@@ -200,45 +385,68 @@ export function checkAnimalCruelty(product: Product): AnimalCrueltyData {
     }
   }
   
-  // 4. Check parent company (if available) - only if no violations found yet
+  // 7. Check parent company (if available) - only if no violations found yet
+  // FUZZY MATCHING: Use fuzzy-matched parent companies
+  // Note: Parent company violations will be handled by brand overlay in CARE pillar
+  // if product itself is ethical (has certifications, etc.)
   if (violationType === 'none') {
-    const primaryBrand = allBrands[0];
-    const brandData = getBrandData(primaryBrand);
-    if (brandData?.parentCompany) {
-      if (isCruelParent(brandData.parentCompany)) {
+    // Get parent companies from fuzzy matches
+    const parentCompanies: string[] = [];
+    for (const match of brandMatches) {
+      if (match.parentCompany && !parentCompanies.includes(match.parentCompany)) {
+        parentCompanies.push(match.parentCompany);
+      }
+      if (match.matchedData?.parentCompany && !parentCompanies.includes(match.matchedData.parentCompany)) {
+        parentCompanies.push(match.matchedData.parentCompany);
+      }
+    }
+    
+    // Check each parent company
+    for (const parentCompany of parentCompanies) {
+      // Check parent but mark as parent-level (will be used for brand overlay if product is ethical)
+      if (isCruelParent(parentCompany)) {
+        // Parent has violations, but product itself doesn't
+        // This will be handled by brand overlay in CARE pillar if product is ethical
         violationType = 'major';
-        violations.push('major animal cruelty (parent: cruel parent)');
+        violations.push(`major animal cruelty (parent: cruel parent: ${parentCompany}) - may use brand overlay if product ethical`);
         sources.push('brand_database_cruel_parent');
+        break; // Found major, no need to check further
       }
       
-      const parentDbResult = checkBrandDatabase(brandData.parentCompany);
-      if (parentDbResult) {
-        // Use the more severe violation type
-        if (parentDbResult.type === 'major' || violationType === 'major') {
-          violationType = 'major';
-        } else if (parentDbResult.type === 'minor' && violationType === 'none') {
-          violationType = 'minor';
-        }
-        
-        violations.push(`${parentDbResult.type} animal cruelty (parent: ${brandData.parentCompany})`);
+      const parentDbResult = checkBrandDatabase(parentCompany);
+      if (parentDbResult && parentDbResult.type !== 'none') {
+        violationType = getMostSevereType(violationType, parentDbResult.type);
+        violations.push(`${parentDbResult.type} animal cruelty (parent: ${parentCompany}) - may use brand overlay if product ethical`);
         sources.push('brand_database_parent');
       }
       
-      const parentKnownResult = checkKnownViolations(brandData.parentCompany);
+      const parentKnownResult = checkKnownViolations(parentCompany);
       if (parentKnownResult) {
-        // Use the more severe violation type
-        if (parentKnownResult.type === 'major' || violationType === 'major') {
-          violationType = 'major';
-        } else if (parentKnownResult.type === 'minor' && violationType === 'none') {
-          violationType = 'minor';
-        }
-        
+        violationType = getMostSevereType(violationType, parentKnownResult.type);
         if (!violations.some(v => v.includes('parent'))) {
-          violations.push(`${parentKnownResult.type} animal cruelty (parent: ${brandData.parentCompany})`);
+          violations.push(`${parentKnownResult.type} animal cruelty (parent: ${parentCompany}) - may use brand overlay if product ethical`);
           sources.push('known_violations_parent');
         }
       }
     }
+  }
+  
+  // Log match quality for monitoring
+  if (violationType !== 'none') {
+    logger.info('[AnimalCruelty] Violations found (fuzzy matching):', {
+      barcode: product.barcode,
+      violationType,
+      violationsCount: violations.length,
+      sources,
+      brandMatchesCount: brandMatches.length,
+      bestMatchConfidence: brandMatches[0]?.confidence || 0,
+    });
+  } else {
+    logger.debug('[AnimalCruelty] No violations found (fuzzy matching):', {
+      barcode: product.barcode,
+      brandMatchesCount: brandMatches.length,
+      bestMatchConfidence: brandMatches[0]?.confidence || 0,
+    });
   }
   
   return {
@@ -251,25 +459,55 @@ export function checkAnimalCruelty(product: Product): AnimalCrueltyData {
 
 /**
  * Check if brand has high-impact animal cruelty (for overlay penalty)
+ * ENHANCED: Uses fuzzy matching for better brand resolution
  */
 export function hasHighImpactAnimalCruelty(brandName: string): boolean {
   if (!brandName) return false;
   
-  // Check using existing isCruelParent
-  if (isCruelParent(brandName)) {
+  // FUZZY MATCHING: Use fuzzy matching to find best brand match
+  // Create a minimal product object for matching
+  const testProduct: Product = {
+    barcode: '',
+    brands: brandName,
+    product_name: '',
+  };
+  
+  const brandMatches = matchBrands(testProduct, 0.75);
+  if (brandMatches.length === 0) {
+    // Fallback to direct lookup if fuzzy matching fails
+    if (isCruelParent(brandName)) {
+      return true;
+    }
+    const brandData = getBrandData(brandName);
+    return brandData?.animalTesting === true;
+  }
+  
+  // Use best match (highest confidence)
+  const bestMatch = brandMatches[0];
+  if (bestMatch.confidence < 75) {
+    // Low confidence - don't apply
+    return false;
+  }
+  
+  const matchedBrandName = bestMatch.matchedData?.name || brandName;
+  
+  // Check using matched brand name
+  if (isCruelParent(matchedBrandName)) {
     return true;
   }
   
-  const brandData = getBrandData(brandName);
+  const brandData = bestMatch.matchedData || getBrandData(matchedBrandName);
   if (brandData?.animalTesting === true) {
     return true;
   }
   
-  if (brandData?.parentCompany) {
-    if (isCruelParent(brandData.parentCompany)) {
+  // Check parent company from fuzzy match
+  const parentCompany = bestMatch.parentCompany || brandData?.parentCompany;
+  if (parentCompany) {
+    if (isCruelParent(parentCompany)) {
       return true;
     }
-    const parentData = getBrandData(brandData.parentCompany);
+    const parentData = getBrandData(parentCompany);
     if (parentData?.animalTesting === true) {
       return true;
     }

@@ -84,18 +84,21 @@ export async function fetchProductFromOFF(barcode: string): Promise<Product | nu
     const countriesToTry = getCountryCodesToTry();
     
     // Build list of instances to try
+    // CRITICAL FIX: Try global instance FIRST (like Yuka does)
+    // Global instance has the most products and is most reliable
+    // Country-specific instances are tried after for local enhancements
     const instancesToTry: string[] = [];
     
-    // Add country-specific instances first
+    // Try global instance FIRST (matches Yuka's strategy)
+    instancesToTry.push('world.openfoodfacts.org');
+    
+    // Add country-specific instances after global (for local enhancements)
     for (const countryCode of countriesToTry) {
       const instance = getOFFCountryInstance(countryCode);
       if (instance && !instancesToTry.includes(instance)) {
         instancesToTry.push(instance);
       }
     }
-    
-    // Always try global instance as fallback
-    instancesToTry.push('world.openfoodfacts.org');
     
     // Try instances in parallel for faster lookup
     // User's country instance will likely respond first if product exists there

@@ -601,3 +601,5 @@ if (!product.brands && product.product_name) {
 5. ⚠️ Track unmapped brands for expansion (RECOMMENDED)
 
 The good news: We've fixed the most critical issue (brand extraction and checking all brands). The remaining issues are about data quality and database coverage, which can be improved incrementally.
+
+

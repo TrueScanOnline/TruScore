@@ -79,3 +79,5 @@ ping 192.168.68.105  # Replace with your computer's IP
 
 ✅ **Tunnel mode works** - App is functional
 ⚠️ **Normal mode blocked** - Network/firewall issue (not code issue)
+
+

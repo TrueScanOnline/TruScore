@@ -13,17 +13,21 @@ import { Product } from '../types/product';
 import { getBrandData, normalizeBrandNameForLookup } from '../data/brandDatabase';
 import { logger } from '../utils/logger';
 import { fetchProductFromBuycott } from './buycottApi';
+import { checkDOLLaborViolations, getDOLViolationSeverity } from './dolLaborDataService';
+import { checkWalkFreeViolations, getWalkFreeViolationSeverity } from './walkFreeService';
+import { matchBrands, getParentCompanies } from './brandMatchingService';
 
 export interface LaborViolationData {
   hasViolations: boolean;
-  violationType: 'none' | 'minor' | 'major';
+  violationType: 'none' | 'limited' | 'moderate' | 'major'; // 3-tier system: Limited=-4, Moderate=-8, Major=-15
   violations: string[];
   sources: string[];
 }
 
 /**
- * Known brands with major labor violations (child labor, slavery)
- * Based on public reports, investigations, and NGO data
+ * Known brands with major labor violations (Class I)
+ * (child labor, slavery, Walk Free high-risk)
+ * Penalty: -15
  */
 const MAJOR_LABOR_VIOLATION_BRANDS: Set<string> = new Set([
   // Cocoa/Chocolate (known child labor issues)
@@ -32,7 +36,7 @@ const MAJOR_LABOR_VIOLATION_BRANDS: Set<string> = new Set([
   
   // Garments/Textiles (known labor issues)
   'nike', 'adidas', 'h&m', 'zara', 'forever 21', 'shein',
-  'boohoo', 'asos', 'primark', 'walmart', 'target',
+  'boohoo', 'asos', 'primark',
   
   // Electronics (known labor issues)
   'apple', 'samsung', 'huawei', 'xiaomi', 'foxconn',
@@ -42,16 +46,28 @@ const MAJOR_LABOR_VIOLATION_BRANDS: Set<string> = new Set([
 ]);
 
 /**
- * Known brands with minor labor violations (under-pay, over-work, etc.)
- * Based on public reports and investigations
+ * Known brands with moderate labor violations (Class II)
+ * (unsafe conditions, Walk Free medium-risk)
+ * Penalty: -8
  */
-const MINOR_LABOR_VIOLATION_BRANDS: Set<string> = new Set([
-  // Retail/Fast Food (wage violations)
+const MODERATE_LABOR_VIOLATION_BRANDS: Set<string> = new Set([
+  // Retail/Fast Food (workplace safety issues)
   'mcdonald\'s', 'mcdonalds', 'starbucks', 'walmart', 'amazon',
   'target', 'home depot', 'lowes', 'kroger', 'albertsons',
   
   // Manufacturing (workplace violations)
   'foxconn', 'pegatron', 'wistron',
+]);
+
+/**
+ * Known brands with limited labor violations (Class III)
+ * (under-pay, over-work, min breaks, unpaid overtime, Walk Free low-risk)
+ * Penalty: -4
+ */
+const LIMITED_LABOR_VIOLATION_BRANDS: Set<string> = new Set([
+  // Retail/Fast Food (wage violations, minor)
+  'mcdonald\'s', 'mcdonalds', 'starbucks', // Some locations may be limited
+  'subway', 'domino\'s', 'pizza hut',
 ]);
 
 /**
@@ -64,21 +80,33 @@ function normalizeBrandName(brand: string): string {
 
 /**
  * Check brand database for labor practices
+ * Returns 3-tier classification: limited, moderate, or major
  */
-function checkBrandDatabase(brandName: string): { type: 'none' | 'minor' | 'major'; source: string } | null {
+function checkBrandDatabase(brandName: string): { type: 'none' | 'limited' | 'moderate' | 'major'; source: string } | null {
   const brandData = getBrandData(brandName);
   if (!brandData) {
     return null;
   }
   
-  // Check labor practices rating
+  // Check labor practices rating to determine tier
+  const normalized = normalizeBrandName(brandName);
   if (brandData.laborPractices === 'poor') {
-    // Poor rating could indicate major or minor - check known violations
-    const normalized = normalizeBrandName(brandName);
+    // Poor rating - check known violation lists
     if (MAJOR_LABOR_VIOLATION_BRANDS.has(normalized)) {
       return { type: 'major', source: 'brand_database' };
+    } else if (MODERATE_LABOR_VIOLATION_BRANDS.has(normalized)) {
+      return { type: 'moderate', source: 'brand_database' };
+    } else if (LIMITED_LABOR_VIOLATION_BRANDS.has(normalized)) {
+      return { type: 'limited', source: 'brand_database' };
+    } else {
+      // Poor rating but not in known lists - default to moderate
+      return { type: 'moderate', source: 'brand_database' };
     }
-    return { type: 'minor', source: 'brand_database' };
+  } else if (brandData.laborPractices === 'fair') {
+    // Fair rating may indicate limited concerns
+    if (LIMITED_LABOR_VIOLATION_BRANDS.has(normalized)) {
+      return { type: 'limited', source: 'brand_database' };
+    }
   }
   
   return null;
@@ -86,11 +114,12 @@ function checkBrandDatabase(brandName: string): { type: 'none' | 'minor' | 'majo
 
 /**
  * Check known violation lists
+ * Returns 3-tier classification: limited, moderate, or major
  */
-function checkKnownViolations(brandName: string): { type: 'minor' | 'major'; source: string } | null {
+function checkKnownViolations(brandName: string): { type: 'limited' | 'moderate' | 'major'; source: string } | null {
   const normalized = normalizeBrandName(brandName);
   
-  // Check major violations first
+  // Check major violations first (highest priority)
   if (MAJOR_LABOR_VIOLATION_BRANDS.has(normalized)) {
     return { type: 'major', source: 'known_violations' };
   }
@@ -102,15 +131,27 @@ function checkKnownViolations(brandName: string): { type: 'minor' | 'major'; sou
     }
   }
   
-  // Check minor violations
-  if (MINOR_LABOR_VIOLATION_BRANDS.has(normalized)) {
-    return { type: 'minor', source: 'known_violations' };
+  // Check moderate violations
+  if (MODERATE_LABOR_VIOLATION_BRANDS.has(normalized)) {
+    return { type: 'moderate', source: 'known_violations' };
   }
   
-  // Check partial matches for minor violations
-  for (const minorBrand of MINOR_LABOR_VIOLATION_BRANDS) {
-    if (normalized.includes(minorBrand) || minorBrand.includes(normalized)) {
-      return { type: 'minor', source: 'known_violations' };
+  // Check partial matches for moderate violations
+  for (const moderateBrand of MODERATE_LABOR_VIOLATION_BRANDS) {
+    if (normalized.includes(moderateBrand) || moderateBrand.includes(normalized)) {
+      return { type: 'moderate', source: 'known_violations' };
+    }
+  }
+  
+  // Check limited violations
+  if (LIMITED_LABOR_VIOLATION_BRANDS.has(normalized)) {
+    return { type: 'limited', source: 'known_violations' };
+  }
+  
+  // Check partial matches for limited violations
+  for (const limitedBrand of LIMITED_LABOR_VIOLATION_BRANDS) {
+    if (normalized.includes(limitedBrand) || limitedBrand.includes(normalized)) {
+      return { type: 'limited', source: 'known_violations' };
     }
   }
   
@@ -121,19 +162,24 @@ function checkKnownViolations(brandName: string): { type: 'minor' | 'major'; sou
  * Check for labor violations in a product
  * Returns violation data for CARE Pillar scoring
  * 
+ * ENHANCED: Uses fuzzy matching for better brand resolution and confidence scoring
+ * 
  * Note: This is synchronous for performance. Buycott API integration
  * would be async and can be added in product enhancement layer.
  */
 export function checkLaborViolations(product: Product): LaborViolationData {
   const violations: string[] = [];
   const sources: string[] = [];
-  let violationType: 'none' | 'minor' | 'major' = 'none';
+  let violationType: 'none' | 'limited' | 'moderate' | 'major' = 'none';
   
-  // ENHANCED: Use enhanced brand extraction to get all brands
-  const { extractAllBrands } = require('../utils/brandExtraction');
-  const allBrands = extractAllBrands(product);
+  // FUZZY MATCHING: Use fuzzy matching service for all brand lookups
+  const brandMatches = matchBrands(product, 0.75); // 75% threshold
   
-  if (allBrands.length === 0) {
+  if (brandMatches.length === 0) {
+    logger.debug('[LaborViolations] No brand matches found (fuzzy matching):', {
+      barcode: product.barcode,
+      brandsField: product.brands || 'N/A',
+    });
     return {
       hasViolations: false,
       violationType: 'none',
@@ -142,49 +188,136 @@ export function checkLaborViolations(product: Product): LaborViolationData {
     };
   }
   
-  // Try each brand until we find a match
-  const brandName = allBrands[0]; // Start with primary brand
-  const normalized = normalizeBrandName(brandName);
+  // Helper to determine most severe violation type
+  const getMostSevereType = (current: 'none' | 'limited' | 'moderate' | 'major', newType: 'limited' | 'moderate' | 'major'): 'none' | 'limited' | 'moderate' | 'major' => {
+    if (current === 'major' || newType === 'major') return 'major';
+    if (current === 'moderate' || newType === 'moderate') return 'moderate';
+    if (current === 'limited' || newType === 'limited') return 'limited';
+    return 'none';
+  };
   
-  // ENHANCED: Check all brands found (not just the first one)
-  // Try each brand until we find violations
-  for (const brand of allBrands) {
+  // ENHANCED: Check all fuzzy-matched brands (sorted by confidence, highest first)
+  // Only apply violations if confidence is above threshold
+  for (const brandMatch of brandMatches) {
+    const brand = brandMatch.brand;
+    const confidence = brandMatch.confidence;
+    const matchType = brandMatch.matchType;
+    
+    // Skip low-confidence matches (below 75% threshold)
+    if (confidence < 75) {
+      logger.debug('[LaborViolations] Skipping low-confidence match:', {
+        brand,
+        confidence,
+        matchType,
+      });
+      continue;
+    }
+    
+    // Log match quality for monitoring
+    logger.debug('[LaborViolations] Checking brand match:', {
+      brand,
+      confidence,
+      matchType,
+      matchedBrand: brandMatch.matchedData?.name || 'N/A',
+    });
     let foundMajor = false;
     
-    // 1. Check brand database
-    const dbResult = checkBrandDatabase(brand);
-    if (dbResult) {
-      // Use the more severe violation type
-      if (dbResult.type === 'major') {
-        violationType = 'major';
-        violations.push(`${dbResult.type} labor violation (brand database: ${brand})`);
-        sources.push(dbResult.source);
-        foundMajor = true;
-      } else if (dbResult.type === 'minor' && violationType === 'none') {
-        violationType = 'minor';
-        violations.push(`${dbResult.type} labor violation (brand database: ${brand})`);
-        sources.push(dbResult.source);
+    // FUZZY MATCHING: Use matched brand data from fuzzy matching (more accurate)
+    const matchedBrandData = brandMatch.matchedData;
+    const matchedBrandName = matchedBrandData?.name || brand;
+    
+    // 1. Check brand database using fuzzy-matched data
+    if (matchedBrandData) {
+      // Use matched brand data directly
+      if (matchedBrandData.laborPractices === 'poor') {
+        // Poor rating - check known violation lists with confidence adjustment
+        let violationTier: 'limited' | 'moderate' | 'major' = 'moderate'; // Default for poor
+        const normalized = normalizeBrandName(matchedBrandName);
+        if (MAJOR_LABOR_VIOLATION_BRANDS.has(normalized)) {
+          violationTier = 'major';
+        } else if (MODERATE_LABOR_VIOLATION_BRANDS.has(normalized)) {
+          violationTier = 'moderate';
+        } else if (LIMITED_LABOR_VIOLATION_BRANDS.has(normalized)) {
+          violationTier = 'limited';
+        }
+        
+        // Apply confidence-based tier adjustment
+        // High confidence (≥90%): Use full tier
+        // Medium confidence (75-89%): Use one tier lower
+        let adjustedTier = violationTier;
+        if (confidence < 90 && confidence >= 75) {
+          if (violationTier === 'major') adjustedTier = 'moderate';
+          else if (violationTier === 'moderate') adjustedTier = 'limited';
+        }
+        
+        violationType = getMostSevereType(violationType, adjustedTier);
+        if (!violations.some(v => v.includes('brand_database'))) {
+          violations.push(`${adjustedTier} labor violation (brand database: ${matchedBrandName}, ${confidence}% confidence)`);
+          sources.push('brand_database');
+        }
+        if (adjustedTier === 'major') {
+          foundMajor = true;
+        }
+      } else if (matchedBrandData.laborPractices === 'fair') {
+        // Fair rating may indicate limited concerns
+        const normalized = normalizeBrandName(matchedBrandName);
+        if (LIMITED_LABOR_VIOLATION_BRANDS.has(normalized)) {
+          let adjustedTier: 'limited' | 'moderate' | 'major' = 'limited';
+          if (confidence < 90 && confidence >= 75) {
+            // Medium confidence - don't apply limited, log for review
+            logger.debug('[LaborViolations] Medium confidence fair rating - not applying:', {
+              brand: matchedBrandName,
+              confidence,
+            });
+          } else {
+            violationType = getMostSevereType(violationType, adjustedTier);
+            if (!violations.some(v => v.includes('brand_database'))) {
+              violations.push(`${adjustedTier} labor violation (brand database: ${matchedBrandName}, ${confidence}% confidence)`);
+              sources.push('brand_database');
+            }
+          }
+        }
+      }
+    } else {
+      // Fallback: Check original brand if fuzzy match didn't provide data
+      const dbResult = checkBrandDatabase(brand);
+      if (dbResult && dbResult.type !== 'none') {
+        // Apply confidence-based adjustment
+        let adjustedType = dbResult.type;
+        if (confidence < 90 && confidence >= 75) {
+          if (dbResult.type === 'major') adjustedType = 'moderate';
+          else if (dbResult.type === 'moderate') adjustedType = 'limited';
+        }
+        
+        violationType = getMostSevereType(violationType, adjustedType);
+        if (!violations.some(v => v.includes(dbResult.source))) {
+          violations.push(`${adjustedType} labor violation (${dbResult.source}: ${brand}, ${confidence}% confidence, ${matchType})`);
+          sources.push(dbResult.source);
+        }
+        if (adjustedType === 'major') {
+          foundMajor = true;
+        }
       }
     }
     
-    // 2. Check known violations list (only if no major violation found yet)
+    // 2. Check known violations list (only if no major violation found yet) - use matched brand name
     if (!foundMajor) {
-      const knownResult = checkKnownViolations(brand);
+      const knownResult = checkKnownViolations(matchedBrandName);
       if (knownResult) {
-        // Use the more severe violation type
-        if (knownResult.type === 'major') {
-          violationType = 'major';
-          if (!violations.some(v => v.includes(knownResult.source))) {
-            violations.push(`${knownResult.type} labor violation (${knownResult.source}: ${brand})`);
-            sources.push(knownResult.source);
-          }
+        // Apply confidence-based adjustment
+        let adjustedType = knownResult.type;
+        if (confidence < 90 && confidence >= 75) {
+          if (knownResult.type === 'major') adjustedType = 'moderate';
+          else if (knownResult.type === 'moderate') adjustedType = 'limited';
+        }
+        
+        violationType = getMostSevereType(violationType, adjustedType);
+        if (!violations.some(v => v.includes(knownResult.source))) {
+          violations.push(`${adjustedType} labor violation (${knownResult.source}: ${matchedBrandName}, ${confidence}% confidence)`);
+          sources.push(knownResult.source);
+        }
+        if (adjustedType === 'major') {
           foundMajor = true;
-        } else if (knownResult.type === 'minor' && violationType === 'none') {
-          violationType = 'minor';
-          if (!violations.some(v => v.includes(knownResult.source))) {
-            violations.push(`${knownResult.type} labor violation (${knownResult.source}: ${brand})`);
-            sources.push(knownResult.source);
-          }
         }
       }
     }
@@ -195,51 +328,71 @@ export function checkLaborViolations(product: Product): LaborViolationData {
     }
   }
   
-  // 3. Check Buycott data (if available in product)
+  // 3. Check DOL (Department of Labor) data
+  // FUZZY MATCHING: Use best matched brand for DOL checks
+  const bestMatchedBrand = brandMatches.length > 0 ? (brandMatches[0].matchedData?.name || brandMatches[0].brand) : null;
+  
+  // Extract product category and origin country
+  const productCategory = product.categories || product.categories_tags?.join(' ') || '';
+  const originCountry = product.origins_tags?.[0] || product.origins || product.manufacturing_places_tags?.[0] || product.manufacturing_places;
+  const dolViolations = checkDOLLaborViolations(bestMatchedBrand || undefined, productCategory, originCountry);
+  if (dolViolations.length > 0) {
+    const dolSeverity = getDOLViolationSeverity(dolViolations);
+    violationType = getMostSevereType(violationType, dolSeverity);
+    violations.push(`${dolSeverity} labor violation (DOL: ${dolViolations.map(v => v.good).join(', ')})`);
+    sources.push('dol');
+  }
+  
+  // 4. Check Walk Free Global Slavery Index data
+  // Extract country code from origins
+  const countryCode = product.countries_tags?.[0] || product.origins_tags?.[0];
+  const countryName = product.countries || product.origins || product.manufacturing_places;
+  const walkFreeViolation = checkWalkFreeViolations(countryCode, countryName);
+  if (walkFreeViolation) {
+    const walkFreeSeverity = getWalkFreeViolationSeverity(walkFreeViolation);
+    violationType = getMostSevereType(violationType, walkFreeSeverity);
+    violations.push(`${walkFreeSeverity} labor violation (Walk Free GSI: ${walkFreeViolation.country}, risk ${walkFreeViolation.riskLevel})`);
+    sources.push('walk_free');
+  }
+  
+  // 5. Check Buycott data (if available in product)
   // Note: Buycott data should be fetched in product enhancement layer
   const buycottData = (product as any).buycott_data;
   if (buycottData && buycottData.laborViolations) {
-    const buycottType = buycottData.laborViolations === 'major' ? 'major' : 'minor';
-    if (buycottType === 'major' || violationType === 'major') {
-      violationType = 'major';
-    } else if (buycottType === 'minor' && violationType === 'none') {
-      violationType = 'minor';
-    }
+    // Map Buycott data to 3-tier system (assume 'major' or 'minor' from Buycott)
+    const buycottType = buycottData.laborViolations === 'major' ? 'major' : 'limited';
+    violationType = getMostSevereType(violationType, buycottType);
     violations.push(`${buycottType} labor violation (Buycott API)`);
     sources.push('buycott_api');
   }
   
-  // 4. Check parent company (if available) - use primary brand
-  const primaryBrand = allBrands[0];
-  const brandData = getBrandData(primaryBrand);
-  if (brandData?.parentCompany) {
-    const parentResult = checkBrandDatabase(brandData.parentCompany);
-    if (parentResult) {
-      // Use the more severe violation type
-      if (parentResult.type === 'major' || violationType === 'major') {
-        violationType = 'major';
-      } else if (parentResult.type === 'minor' && violationType === 'none') {
-        violationType = 'minor';
-      }
-      
-      violations.push(`${parentResult.type} labor violation (parent: ${brandData.parentCompany})`);
+  // 6. Check parent company (if available) - FUZZY MATCHING: Use fuzzy-matched parent companies
+  const parentCompanies = getParentCompanies(product, 0.75);
+  for (const parentCompany of parentCompanies) {
+    const parentResult = checkBrandDatabase(parentCompany);
+    if (parentResult && parentResult.type !== 'none') {
+      violationType = getMostSevereType(violationType, parentResult.type);
+      violations.push(`${parentResult.type} labor violation (parent: ${parentCompany})`);
       sources.push('brand_database_parent');
     }
-    
-    const parentKnownResult = checkKnownViolations(brandData.parentCompany);
-    if (parentKnownResult) {
-      // Use the more severe violation type
-      if (parentKnownResult.type === 'major' || violationType === 'major') {
-        violationType = 'major';
-      } else if (parentKnownResult.type === 'minor' && violationType === 'none') {
-        violationType = 'minor';
-      }
-      
-      if (!violations.some(v => v.includes('parent'))) {
-        violations.push(`${parentKnownResult.type} labor violation (parent: ${brandData.parentCompany})`);
-        sources.push('known_violations_parent');
-      }
-    }
+  }
+  
+  // Log match quality for monitoring
+  if (violationType !== 'none') {
+    logger.info('[LaborViolations] Violations found (fuzzy matching):', {
+      barcode: product.barcode,
+      violationType,
+      violationsCount: violations.length,
+      sources,
+      brandMatchesCount: brandMatches.length,
+      bestMatchConfidence: brandMatches[0]?.confidence || 0,
+    });
+  } else {
+    logger.debug('[LaborViolations] No violations found (fuzzy matching):', {
+      barcode: product.barcode,
+      brandMatchesCount: brandMatches.length,
+      bestMatchConfidence: brandMatches[0]?.confidence || 0,
+    });
   }
   
   return {
@@ -252,26 +405,69 @@ export function checkLaborViolations(product: Product): LaborViolationData {
 
 /**
  * Check if brand has high-impact labor violations (for overlay penalty)
+ * ENHANCED: Uses fuzzy matching for better brand resolution
  */
 export function hasHighImpactLaborViolations(brandName: string): boolean {
   if (!brandName) return false;
   
-  const normalized = normalizeBrandName(brandName);
-  const brandData = getBrandData(brandName);
+  // FUZZY MATCHING: Use fuzzy matching to find best brand match
+  const testProduct: Product = {
+    barcode: '',
+    brands: brandName,
+    product_name: '',
+  };
   
-  // Check if brand or parent has poor labor practices
-  if (brandData?.laborPractices === 'poor') {
+  const brandMatches = matchBrands(testProduct, 0.75);
+  if (brandMatches.length === 0) {
+    // Fallback to direct lookup if fuzzy matching fails
+    const brandData = getBrandData(brandName);
+    if (brandData?.laborPractices === 'poor') {
+      return true;
+    }
+    if (brandData?.parentCompany) {
+      const parentData = getBrandData(brandData.parentCompany);
+      if (parentData?.laborPractices === 'poor') {
+        return true;
+      }
+    }
+    // Check known violations
+    const normalized = normalizeBrandName(brandName);
+    if (MAJOR_LABOR_VIOLATION_BRANDS.has(normalized)) {
+      return true;
+    }
+    for (const majorBrand of MAJOR_LABOR_VIOLATION_BRANDS) {
+      if (normalized.includes(majorBrand) || majorBrand.includes(normalized)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  // Use best match (highest confidence)
+  const bestMatch = brandMatches[0];
+  if (bestMatch.confidence < 75) {
+    // Low confidence - don't apply
+    return false;
+  }
+  
+  const matchedBrandData = bestMatch.matchedData || getBrandData(bestMatch.brand || brandName);
+  if (matchedBrandData?.laborPractices === 'poor') {
     return true;
   }
   
-  if (brandData?.parentCompany) {
-    const parentData = getBrandData(brandData.parentCompany);
+  // Check parent company from fuzzy match
+  const parentCompany = bestMatch.parentCompany || matchedBrandData?.parentCompany;
+  if (parentCompany) {
+    const parentData = getBrandData(parentCompany);
     if (parentData?.laborPractices === 'poor') {
       return true;
     }
   }
   
-  // Check known violations
+  // Check known violations using matched brand name
+  const matchedBrandName = matchedBrandData?.name || bestMatch.brand || brandName;
+  const normalized = normalizeBrandName(matchedBrandName);
+  
   if (MAJOR_LABOR_VIOLATION_BRANDS.has(normalized)) {
     return true;
   }

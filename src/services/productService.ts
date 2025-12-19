@@ -135,7 +135,21 @@ function isProductIncomplete(product: Product): boolean {
 const activeProductQueries = new Map<string, Promise<ProductWithTrustScore | null>>();
 const QUERY_TIMEOUT = 30000; // 30 seconds timeout to prevent memory leaks
 
-export async function fetchProduct(barcode: string, useCache = true, isPremium = false, isOffline = false): Promise<ProductWithTrustScore | null> {
+/**
+ * Progress callback type for progressive product display
+ */
+export type ProductProgressCallback = (progress: { 
+  phase: string; 
+  product?: ProductWithTrustScore;
+}) => void;
+
+export async function fetchProduct(
+  barcode: string, 
+  useCache = true, 
+  isPremium = false, 
+  isOffline = false,
+  onProgress?: ProductProgressCallback
+): Promise<ProductWithTrustScore | null> {
   // Check if query is already in progress (deduplication)
   const queryKey = `${barcode}_${useCache}_${isPremium}_${isOffline}`;
   if (activeProductQueries.has(queryKey)) {
@@ -145,7 +159,7 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
   
   // Create query promise with timeout protection to prevent memory leaks
   const queryPromise = Promise.race([
-    executeFetchProduct(barcode, useCache, isPremium, isOffline),
+    executeFetchProduct(barcode, useCache, isPremium, isOffline, onProgress),
     new Promise<ProductWithTrustScore | null>((resolve) => 
       setTimeout(() => {
         logger.warn(`Query timeout for ${barcode} after ${QUERY_TIMEOUT}ms`);
@@ -168,7 +182,42 @@ export async function fetchProduct(barcode: string, useCache = true, isPremium =
   return queryPromise;
 }
 
-async function executeFetchProduct(barcode: string, useCache = true, isPremium = false, isOffline = false): Promise<ProductWithTrustScore | null> {
+/**
+ * Helper function to process product for progressive display
+ * Calculates TruScore, enhances, and prepares product for UI
+ */
+async function processProductForDisplay(
+  product: Product,
+  barcode: string,
+  databaseService: TruScoreOptimizedDatabase
+): Promise<ProductWithTrustScore> {
+  // Enhance product (format, palm oil, MVP enhancements, etc.)
+  const enhanced = await enhanceProduct(product);
+  
+  // Apply confidence score
+  const withConfidence = applyConfidenceScore(enhanced);
+  
+  // Calculate TruScore
+  try {
+    return await calculateTrustScore(withConfidence);
+  } catch (error) {
+    logger.warn('Error calculating TruScore for progressive display (non-critical):', error);
+    // Return product without TruScore if calculation fails
+    return {
+      ...withConfidence,
+      trust_score: null,
+      trust_score_breakdown: null,
+    } as ProductWithTrustScore;
+  }
+}
+
+async function executeFetchProduct(
+  barcode: string, 
+  useCache = true, 
+  isPremium = false, 
+  isOffline = false,
+  onProgress?: ProductProgressCallback
+): Promise<ProductWithTrustScore | null> {
   // Normalize barcode - try multiple variants (EAN-8 -> EAN-13, etc.)
   const barcodeVariants = normalizeBarcode(barcode);
   const primaryBarcode = getPrimaryBarcode(barcode);
@@ -252,10 +301,80 @@ async function executeFetchProduct(barcode: string, useCache = true, isPremium =
   const nameDiscoveryPromise = discoverProductNameEarly(primaryBarcode, userCountry);
   const databaseService = new TruScoreOptimizedDatabase();
   
+  // Progressive product tracking for callback support
+  let progressiveProduct: Product | null = null;
+  let progressiveProductWithScore: ProductWithTrustScore | null = null;
+  const { mergeProducts } = require('./productDataMerger');
+  
+  // Progressive callback for database queries
+  const onDatabaseProductUpdate = async (product: Product, source: string) => {
+    if (!product) return;
+    
+    const arrivalTime = Date.now();
+    logger.info(`⚡ Progressive update: Product from ${source} arrived`);
+    
+    if (!progressiveProduct) {
+      // FIRST RESULT - Display immediately!
+      progressiveProduct = product;
+      logger.info(`🚀 FIRST RESULT - Processing for immediate display...`);
+      
+      // Process first product for display (calculate TruScore, enhance, etc.)
+      try {
+        // Quick processing for immediate display
+        const processed = await processProductForDisplay(progressiveProduct, primaryBarcode, databaseService);
+        progressiveProductWithScore = processed;
+        
+        // Send to UI immediately via callback
+        if (onProgress) {
+          onProgress({ phase: 'product_found', product: processed });
+          logger.info(`✅ Progressive display: First product sent to UI (${source})`);
+        }
+      } catch (error) {
+        logger.warn('Error processing first product for progressive display:', error);
+      }
+    } else {
+      // MERGE progressively
+      try {
+        if (!progressiveProduct) {
+          logger.warn('Progressive product is null, cannot merge');
+          return;
+        }
+        
+        progressiveProduct = mergeProducts([progressiveProduct, product], {
+          sourceWeights: databaseService.getTruScoreSourceWeights(),
+          normalizeNutrition: true,
+          shouldMergeCertifications: true,
+        });
+        
+        // Re-process merged product (check it's not null after merge)
+        if (progressiveProduct) {
+          const processed = await processProductForDisplay(progressiveProduct, primaryBarcode, databaseService);
+          progressiveProductWithScore = processed;
+          
+          // Update UI via callback
+          if (onProgress) {
+            onProgress({ phase: 'product_enhanced', product: processed });
+            logger.info(`🔄 Progressive update: Product enhanced (merged with ${source})`);
+          }
+        }
+      } catch (error) {
+        logger.warn('Error merging product for progressive display:', error);
+      }
+    }
+  };
+  
   // Start barcode queries immediately (don't wait for product name)
   // Most databases (Open Food Facts, USDA, etc.) work with barcode only
   logger.info(`📊 Starting barcode-based database queries (parallel, no name required)...`);
-  const allProductsPromise = databaseService.queryAllDatabases(primaryBarcode, userCountry, null);
+  if (onProgress) {
+    logger.info(`   Progressive display: ENABLED (product will display as results arrive)`);
+  }
+  const allProductsPromise = databaseService.queryAllDatabases(
+    primaryBarcode, 
+    userCountry, 
+    null,
+    onProgress ? onDatabaseProductUpdate : undefined
+  );
   
   // Wait for name discovery (but don't block database queries - they run in parallel)
   let earlyProductName: string | null = null;
@@ -362,10 +481,12 @@ async function executeFetchProduct(barcode: string, useCache = true, isPremium =
         shouldMergeCertifications: true,
       });
       
-      const completeness = calculateDataCompleteness(product);
-      logger.info(`✅ Merged product: ${product.source} | ${formatCompletenessMetrics(completeness, 'MERGED')}`);
-      powershellLogger.productMerge(allProducts, product, 'TruScore-first');
-      powershellLogger.dataQuality(barcode, product, completeness);
+      if (product) {
+        const completeness = calculateDataCompleteness(product);
+        logger.info(`✅ Merged product: ${product.source} | ${formatCompletenessMetrics(completeness, 'MERGED')}`);
+        powershellLogger.productMerge(allProducts, product, 'TruScore-first');
+        powershellLogger.dataQuality(barcode, product, completeness);
+      }
     }
   } else {
     logger.info(`❌ No products found in optimized database query`);
@@ -504,14 +625,16 @@ async function executeFetchProduct(barcode: string, useCache = true, isPremium =
             shouldMergeCertifications: true,
           });
           
-          // Log after merging
-          const postMergeCompleteness = calculateDataCompleteness(product);
-          const postMergeNutrients = Object.keys(product.nutriments || {}).length;
-          const nutrientsAdded = postMergeNutrients - preMergeNutrients;
-          logger.info(`📊 AFTER PRODUCT NAME MERGE:`);
-          logger.info(`   ${formatCompletenessMetrics(postMergeCompleteness, 'POST-MERGE')}`);
-          logger.info(`   Nutrition: ${postMergeNutrients} nutrients (${nutrientsAdded > 0 ? `+${nutrientsAdded} added` : 'no change'})`);
-          logger.info(`✅ Product name queries enhanced product with additional data`);
+          // Log after merging (check product is not null)
+          if (product) {
+            const postMergeCompleteness = calculateDataCompleteness(product);
+            const postMergeNutrients = Object.keys(product.nutriments || {}).length;
+            const nutrientsAdded = postMergeNutrients - preMergeNutrients;
+            logger.info(`📊 AFTER PRODUCT NAME MERGE:`);
+            logger.info(`   ${formatCompletenessMetrics(postMergeCompleteness, 'POST-MERGE')}`);
+            logger.info(`   Nutrition: ${postMergeNutrients} nutrients (${nutrientsAdded > 0 ? `+${nutrientsAdded} added` : 'no change'})`);
+            logger.info(`✅ Product name queries enhanced product with additional data`);
+          }
         } else {
           // No product yet, but name-based queries found something - use it!
           logger.info(`✅ Product name queries found product when barcode queries failed!`);
@@ -530,10 +653,16 @@ async function executeFetchProduct(barcode: string, useCache = true, isPremium =
     }
   }
 
+  // Ensure product is not null before enhancements
+  if (!product) {
+    logger.error('Product is null before enhancements - cannot proceed');
+    return null;
+  }
+
   // Apply all enhancements: format, palm oil analysis, MVP enhancements, brand enrichment, Eco-Score
   product = await enhanceProduct(product);
 
-  // Ensure product is not null before proceeding
+  // Ensure product is not null after enhancements
   if (!product) {
     logger.error('Product is null after enhancements - cannot proceed');
     return null;

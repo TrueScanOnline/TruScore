@@ -24,6 +24,10 @@ export interface OverrideRuleCondition {
   // Match if additives_tags contain any of these tags (case-insensitive)
   additivesTags?: string[];
   
+  // Match if allergens_tags contain any of these tags (case-insensitive)
+  // Useful for detecting animal products (e.g., 'en:milk', 'en:eggs', 'en:fish')
+  allergensTags?: string[];
+  
   // Match if product has specific NOVA group
   novaGroup?: number;
   
@@ -67,60 +71,86 @@ export interface ScoreHighlightOverrideRule {
 
 /**
  * Check if a product matches a rule condition
+ * Uses PURE OR logic: if ANY condition matches, the rule applies
+ * This means: categories OR productNameKeywords OR ingredientsKeywords OR labelsTags OR 
+ * additivesTags OR allergensTags OR novaGroup OR hasAlcohol - if ANY match, return true
  */
 function matchesCondition(product: ProductWithTrustScore, condition: OverrideRuleCondition): boolean {
+  // Track if ANY condition matches (pure OR logic)
+  let hasAnyMatch = false;
+  let hasAnyCondition = false;
+  
   // Check categories
   if (condition.categories && condition.categories.length > 0) {
+    hasAnyCondition = true;
     const productCategories = product.categories_tags?.map(c => c.toLowerCase()) || [];
     const matchesCategory = condition.categories.some(keyword => 
       productCategories.some(cat => cat.includes(keyword.toLowerCase()))
     );
-    if (!matchesCategory) return false;
+    if (matchesCategory) hasAnyMatch = true;
   }
   
   // Check product name keywords
   if (condition.productNameKeywords && condition.productNameKeywords.length > 0) {
+    hasAnyCondition = true;
     const productName = (product.product_name || product.product_name_en || '').toLowerCase();
     const matchesName = condition.productNameKeywords.some(keyword => 
       productName.includes(keyword.toLowerCase())
     );
-    if (!matchesName) return false;
+    if (matchesName) hasAnyMatch = true;
   }
   
   // Check ingredients keywords
   if (condition.ingredientsKeywords && condition.ingredientsKeywords.length > 0) {
+    hasAnyCondition = true;
     const ingredients = (product.ingredients_text || product.ingredients_text_en || '').toLowerCase();
     const matchesIngredients = condition.ingredientsKeywords.some(keyword => 
       ingredients.includes(keyword.toLowerCase())
     );
-    if (!matchesIngredients) return false;
+    if (matchesIngredients) hasAnyMatch = true;
   }
   
   // Check labels_tags
   if (condition.labelsTags && condition.labelsTags.length > 0) {
+    hasAnyCondition = true;
     const productLabels = product.labels_tags?.map(l => l.toLowerCase()) || [];
     const matchesLabel = condition.labelsTags.some(tag => 
       productLabels.some(label => label.includes(tag.toLowerCase()))
     );
-    if (!matchesLabel) return false;
+    if (matchesLabel) hasAnyMatch = true;
   }
   
   // Check additives_tags
   if (condition.additivesTags && condition.additivesTags.length > 0) {
+    hasAnyCondition = true;
     const productAdditives = product.additives_tags?.map(a => a.toLowerCase()) || [];
     const matchesAdditive = condition.additivesTags.some(tag => 
       productAdditives.some(additive => additive.includes(tag.toLowerCase()))
     );
-    if (!matchesAdditive) return false;
+    if (matchesAdditive) hasAnyMatch = true;
   }
   
-  // Check NOVA group
+  // Check allergens_tags
+  if (condition.allergensTags && condition.allergensTags.length > 0) {
+    hasAnyCondition = true;
+    const productAllergens = product.allergens_tags?.map(a => a.toLowerCase()) || [];
+    const matchesAllergen = condition.allergensTags.some(tag => 
+      productAllergens.some(allergen => allergen.includes(tag.toLowerCase()))
+    );
+    if (matchesAllergen) hasAnyMatch = true;
+  }
+  
+  // Check NOVA group (OR logic - if specified and matches, it's a match)
   if (condition.novaGroup !== undefined) {
-    if (product.nova_group !== condition.novaGroup) return false;
+    hasAnyCondition = true;
+    if (product.nova_group === condition.novaGroup) {
+      hasAnyMatch = true;
+    }
   }
   
-  // Check alcohol content
+  // Check alcohol content (OR logic - if specified and detected, it's a match)
   if (condition.hasAlcohol !== undefined) {
+    hasAnyCondition = true;
     // Check nutriments for alcohol (alcohol_100g or alcohol)
     const alcoholValue = product.nutriments?.['alcohol_100g'] || product.nutriments?.['alcohol'];
     const hasAlcohol = alcoholValue !== undefined && alcoholValue > 0;
@@ -139,10 +169,24 @@ function matchesCondition(product: ProductWithTrustScore, condition: OverrideRul
       .match(/\b(wine|beer|whiskey|whisky|vodka|rum|gin|tequila)\b/);
     
     const detectedAlcohol = hasAlcohol || hasAlcoholInCategories || !!hasAlcoholInName;
-    if (detectedAlcohol !== condition.hasAlcohol) return false;
+    
+    // If condition requires alcohol and we detected it, it's a match
+    // If condition requires no alcohol and we didn't detect it, it's also a match
+    if (condition.hasAlcohol === true && detectedAlcohol) {
+      hasAnyMatch = true;
+    } else if (condition.hasAlcohol === false && !detectedAlcohol) {
+      hasAnyMatch = true;
+    }
   }
   
-  return true;
+  // Pure OR logic: if we have any conditions and at least one matches, return true
+  // If we have conditions but none match, return false
+  // If we have no conditions at all, return true (matches everything - though this shouldn't happen)
+  if (hasAnyCondition) {
+    return hasAnyMatch;
+  }
+  
+  return true; // No conditions specified - matches everything (shouldn't happen in practice)
 }
 
 /**
@@ -277,6 +321,7 @@ export const DEFAULT_OVERRIDE_RULES: ScoreHighlightOverrideRule[] = [
       categories: ['fish', 'seafood', 'tuna', 'salmon', 'sardines', 'anchovies', 'mackerel', 'cod', 'haddock', 'prawns', 'shrimp', 'crab', 'lobster', 'oysters', 'mussels'],
       productNameKeywords: ['tuna', 'salmon', 'fish', 'seafood', 'sardine', 'anchovy', 'mackerel', 'cod', 'haddock', 'prawn', 'shrimp', 'crab', 'lobster', 'oyster', 'mussel'],
       ingredientsKeywords: ['tuna', 'salmon', 'fish', 'seafood', 'sardine', 'anchovy', 'mackerel', 'cod', 'haddock', 'prawn', 'shrimp', 'crab', 'lobster', 'oyster', 'mussel'],
+      allergensTags: ['fish', 'crustaceans', 'shellfish'], // Check allergens_tags for more reliable detection
     },
     action: {
       excludeFlagTitles: ['Vegan Product', 'Vegetarian Product'],
@@ -292,6 +337,7 @@ export const DEFAULT_OVERRIDE_RULES: ScoreHighlightOverrideRule[] = [
       categories: ['meat', 'beef', 'pork', 'chicken', 'lamb', 'turkey', 'duck', 'bacon', 'ham', 'sausage'],
       productNameKeywords: ['beef', 'pork', 'chicken', 'lamb', 'turkey', 'duck', 'bacon', 'ham', 'sausage', 'meat'],
       ingredientsKeywords: ['beef', 'pork', 'chicken', 'lamb', 'turkey', 'duck', 'bacon', 'ham', 'sausage', 'meat'],
+      // Note: Meat products typically don't have allergen tags, so we rely on categories/name/ingredients
     },
     action: {
       excludeFlagTitles: ['Vegan Product', 'Vegetarian Product'],
@@ -307,6 +353,7 @@ export const DEFAULT_OVERRIDE_RULES: ScoreHighlightOverrideRule[] = [
       categories: ['dairy', 'milk', 'cheese', 'yogurt', 'butter', 'cream'],
       productNameKeywords: ['milk', 'cheese', 'yogurt', 'butter', 'cream', 'dairy'],
       ingredientsKeywords: ['milk', 'cheese', 'yogurt', 'butter', 'cream', 'dairy', 'lactose'],
+      allergensTags: ['milk', 'dairy', 'lactose'], // Check allergens_tags for more reliable detection
     },
     action: {
       excludeFlagTitles: ['Vegan Product'],
@@ -322,6 +369,7 @@ export const DEFAULT_OVERRIDE_RULES: ScoreHighlightOverrideRule[] = [
       categories: ['eggs', 'egg'],
       productNameKeywords: ['egg'],
       ingredientsKeywords: ['egg'],
+      allergensTags: ['egg', 'eggs'], // Check allergens_tags for more reliable detection
     },
     action: {
       excludeFlagTitles: ['Vegan Product'],

@@ -249,6 +249,8 @@ export interface TrustScoreBreakdown {
 }
 
 // Food recall data
+export type RecallClassification = 'Class I' | 'Class II' | 'Class III' | 'Unknown';
+
 export interface FoodRecall {
   recallId: string;
   productName: string;
@@ -258,6 +260,7 @@ export interface FoodRecall {
   distribution?: string[];
   isActive: boolean;
   url?: string;
+  classification?: RecallClassification; // FDA Class I/II/III for severity-based scoring
 }
 
 export interface ProductWithTrustScore extends Product {

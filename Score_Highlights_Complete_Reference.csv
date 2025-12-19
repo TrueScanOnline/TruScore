@@ -1,0 +1,31 @@
+Category,Highlight #,Title,Type,Severity,Description,Trigger Condition,Data Source,Override Rules
+Sustainability,1.1,Excellent Eco-Score,Green,High,Eco-Score of [A/B] indicates minimal environmental impact,ecoscore_grade === 'a' || ecoscore_grade === 'b',product.ecoscore_grade,None
+Sustainability,1.2,Poor Eco-Score,Red,High/Medium,Eco-Score of [D/E] indicates significant environmental impact,ecoscore_grade === 'e' || ecoscore_grade === 'd',product.ecoscore_grade,None
+Sustainability,1.3,Palm Oil Free,Green,Low,This product does not contain palm oil,palmOilStatus.isPalmOilFree === true,product.palm_oil_analysis (via getPalmOilStatus()),None
+Sustainability,1.4,Contains Non-Sustainable Palm Oil,Red,High,Palm oil production is linked to deforestation and biodiversity loss,palmOilStatus.isNonSustainable === true,product.palm_oil_analysis (via getPalmOilStatus()),None
+Sustainability,1.5,Contains Palm Oil,Red,Medium,Palm oil production is linked to deforestation and biodiversity loss,palmOilStatus.containsPalmOil === true && !palmOilStatus.isNonSustainable,product.palm_oil_analysis (via getPalmOilStatus()),None
+Sustainability,1.6,Recyclable Packaging,Green,Low,Product packaging is recyclable,product.packaging_data?.isRecyclable === true,product.packaging_data.isRecyclable,None
+Sustainability,1.7,Low Carbon Footprint,Green,Medium,CO2e per kg: [X]kg - below average,ecoscore_data.agribalyse.co2_total < 2,product.ecoscore_data.agribalyse.co2_total,None
+Sustainability,1.8,High Carbon Footprint,Red,Medium,CO2e per kg: [X]kg - above average,ecoscore_data.agribalyse.co2_total > 5,product.ecoscore_data.agribalyse.co2_total,None
+Ethics,2.1,Ethical Certifications,Green,Medium,Certified: [certification names],product.certifications && product.certifications.length > 0,product.certifications[],None
+Ethics,2.2,Fair Trade Certified,Green,High,Supports fair wages and working conditions for producers,labels_tags contains 'fair-trade' or 'fairtrade' (case-insensitive),product.labels_tags[],None
+Ethics,2.3,Organic Certified,Green,Medium,Produced without synthetic pesticides and fertilizers,labels_tags contains 'organic' or 'bio' (case-insensitive),product.labels_tags[],None
+Ethics,2.4,Vegan Product,Green,Low,No animal products or by-products,ingredients_analysis_tags contains 'vegan' (case-insensitive),product.ingredients_analysis_tags[],Rule 2: Excluded for fish/seafood; Rule 3: Excluded for meat; Rule 4: Excluded for dairy; Rule 5: Excluded for eggs
+Ethics,2.5,Vegetarian Product,Green,Low,Suitable for vegetarians,ingredients_analysis_tags contains 'vegetarian' (case-insensitive) AND does NOT contain 'non-vegetarian',product.ingredients_analysis_tags[],Rule 2: Excluded for fish/seafood; Rule 3: Excluded for meat
+Nutrition,3.1,Excellent Nutri-Score,Green,High,Nutri-Score of [A/B] indicates good nutritional quality,nutriscore_grade === 'a' || nutriscore_grade === 'b',product.nutriscore_grade,None
+Nutrition,3.2,Poor Nutri-Score,Red,High,Nutri-Score of [E] indicates low nutritional quality,nutriscore_grade === 'e',product.nutriscore_grade,None
+Nutrition,3.3,High Body Safety Score,Green,Medium,Product is generally safe and nutritious,trust_score_breakdown.body >= 20,product.trust_score_breakdown.body,Rule 1: Excluded for alcohol products
+Nutrition,3.4,Low Body Safety Score,Red,High,Contains ingredients that may be concerning for health,trust_score_breakdown.body <= 10,product.trust_score_breakdown.body,None
+Nutrition,3.5,High Sugar Content,Red,Medium,Contains high levels of sugar,nutrient_levels.sugars === 'high',product.nutrient_levels.sugars,None
+Nutrition,3.6,High Salt Content,Red,Medium,Contains high levels of salt/sodium,nutrient_levels.salt === 'high',product.nutrient_levels.salt,None
+Nutrition,3.7,High Saturated Fat,Red,Medium,Contains high levels of saturated fat,nutrient_levels.saturated_fat === 'high',product.nutrient_levels.saturated_fat,None
+Nutrition,3.8,Contains High-Risk Additives,Red,Medium,Contains [X] additive(s) flagged as potentially harmful,Count of high-risk additives > 0,product.additives_tags[],None
+Nutrition,3.9,Contains Allergens,Red,Low,Contains: [allergen names],allergens_tags.length > 0,product.allergens_tags[],None
+Processing,4.1,Unprocessed or Minimally Processed,Green,High,NOVA Group 1 - natural or minimally processed foods,nova_group === 1,product.nova_group,None
+Processing,4.2,Ultra-Processed Food,Red,High,NOVA Group 4 - highly processed with many additives,nova_group === 4,product.nova_group,None
+Processing,4.3,Many Additives,Red,Medium,Contains [X] additives,additives_tags.length > 5,product.additives_tags[],None
+Processing,4.4,No Additives,Green,Low,Contains no artificial additives,!additives_tags || additives_tags.length === 0,product.additives_tags[],Rule 0: Excluded when Ingredients card not displayed; Rule 1: Excluded for alcohol products
+Geopolitics,5.1,Geopolitical Concerns,Red,Medium,Product origin may be linked to geopolitical issues,Currently not implemented (requires external data source),Would require external API/database,None - PLACEHOLDER (not active)
+Boycott,6.1,Boycotted Brand,Red,High,This brand is subject to consumer boycotts,Currently not implemented (requires external data source),Would require external API/database,None - PLACEHOLDER (not active)
+News,7.1,Product Recall,Red,High,Active recall: [recall reason],product.recalls && product.recalls.length > 0,product.recalls[],None
+

@@ -163,3 +163,5 @@ console.log('Brand data found:', careResult.hasBrandData); // Should be true
 - All existing functionality preserved
 - New logging helps debug brand matching issues
 - Can easily expand to add more brand sources in the future
+
+

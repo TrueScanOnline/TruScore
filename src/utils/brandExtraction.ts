@@ -185,3 +185,5 @@ export function getPrimaryBrand(product: Product): string | null {
 export function normalizeBrand(brand: string): string {
   return normalizeBrandNameForLookup(brand);
 }
+
+

@@ -15,6 +15,7 @@ const EcoScoreGradeSchema = z.enum(['a', 'b', 'c', 'd', 'e']).optional();
 const NovaGroupSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional();
 
 // Product schema with validation
+// CRITICAL FIX: Allow 14-digit barcodes (EAN-14/GTIN-14) to match Yuka's behavior
 export const ProductSchema = z.object({
   code: z.string().min(8).max(14).regex(/^\d+$/).or(z.string().min(8).max(14)),
   product_name: z.string().max(500).optional().nullable(),

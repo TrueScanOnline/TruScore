@@ -74,3 +74,5 @@ The EAS project ID in `app.config.js` causes Expo Go to attempt fetching updates
 
 ✅ **FIXED** - EAS project ID removed and updates disabled for Expo Go
 ✅ **READY TO TEST** - App should now load in Expo Go
+
+

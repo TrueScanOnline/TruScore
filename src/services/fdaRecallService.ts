@@ -1,12 +1,17 @@
 // FDA Food Recall Service
 // Checks for food recalls and safety alerts from FDA Enforcement API
 // FREE API - No key required
+// ENHANCED: Uses fuzzy matching for better brand name matching
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { matchBrands } from './brandMatchingService';
+import { Product } from '../types/product';
 
 const FDA_API_BASE = 'https://api.fda.gov/food/enforcement.json';
 const CACHE_KEY_PREFIX = 'fda_recall_';
 const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days (recalls don't change often)
+
+export type RecallClassification = 'Class I' | 'Class II' | 'Class III' | 'Unknown';
 
 export interface FoodRecall {
   recallId: string;
@@ -17,6 +22,7 @@ export interface FoodRecall {
   distribution?: string[];
   isActive: boolean;
   url?: string;
+  classification?: RecallClassification; // FDA Class I/II/III for severity-based scoring
 }
 
 interface FDAResponse {
@@ -37,6 +43,7 @@ interface FDAResponse {
     product_type?: string;
     event_id?: string;
     recalling_firm?: string;
+    classification?: string; // FDA Class I, II, or III
     [key: string]: unknown;
   }>;
 }
@@ -46,6 +53,7 @@ interface FDAResponse {
  * ENHANCED: Generates multiple query variations for better matching
  * Uses fuzzy matching to find relevant recalls, with improved filtering for product-specific matches
  * CRITICAL: Now uses barcode for more precise matching when available
+ * FUZZY MATCHING: Uses fuzzy brand matching for better recall detection
  */
 export async function checkFDARecalls(
   productName?: string,
@@ -67,8 +75,33 @@ export async function checkFDARecalls(
 
     const recalls: FoodRecall[] = [];
 
+    // FUZZY MATCHING: Enhance brand name with fuzzy matching
+    let enhancedBrand = brand;
+    if (brand) {
+      // Create a minimal product for fuzzy matching
+      const testProduct: Product = {
+        barcode: barcode || '',
+        brands: brand,
+        product_name: productName || '',
+      };
+      
+      const brandMatches = matchBrands(testProduct, 0.75);
+      if (brandMatches.length > 0 && brandMatches[0].confidence >= 75) {
+        // Use matched brand name (more accurate for recall searches)
+        enhancedBrand = brandMatches[0].matchedData?.name || brand;
+        // Also include original brand in search terms for coverage
+      }
+    }
+
     // ENHANCED: Generate multiple query variations for better matching
-    const searchTerms = generateRecallSearchTerms(productName, brand, barcode);
+    // Use both original and fuzzy-matched brand names
+    const searchTerms = generateRecallSearchTerms(productName, enhancedBrand, barcode);
+    
+    // Also include original brand if different from enhanced
+    if (brand && enhancedBrand && brand.toLowerCase() !== enhancedBrand.toLowerCase()) {
+      const originalBrandTerms = generateRecallSearchTerms(productName, brand, barcode);
+      searchTerms.push(...originalBrandTerms);
+    }
 
     // Search with all terms (in parallel for speed)
     const searchResults = await Promise.all(
@@ -350,18 +383,51 @@ async function searchFDARecalls(searchTerm: string): Promise<FoodRecall[]> {
         
         return isActive;
       })
-      .map(result => ({
-        recallId: result.recall_number || result.event_id || 'unknown',
-        productName: result.product_description || 'Unknown Product',
-        brand: result.recalling_firm,
-        reason: result.reason_for_recall || 'No reason provided',
-        recallDate: result.recall_initiation_date || new Date().toISOString(),
-        distribution: result.distribution_pattern
-          ? result.distribution_pattern.split(',').map(d => d.trim())
-          : undefined,
-        isActive: result.status?.toLowerCase() === 'ongoing',
-        url: `https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts`,
-      }));
+      .map(result => {
+        // Extract classification from FDA API response
+        let classification: RecallClassification = 'Unknown';
+        const classificationStr = result.classification?.toString().trim();
+        if (classificationStr) {
+          if (classificationStr.includes('Class I') || classificationStr === 'I') {
+            classification = 'Class I';
+          } else if (classificationStr.includes('Class II') || classificationStr === 'II') {
+            classification = 'Class II';
+          } else if (classificationStr.includes('Class III') || classificationStr === 'III') {
+            classification = 'Class III';
+          }
+        }
+        
+        // If classification not found in field, try to infer from reason text
+        if (classification === 'Unknown' && result.reason_for_recall) {
+          const reasonLower = result.reason_for_recall.toLowerCase();
+          // Class I indicators: death, serious, life-threatening, contamination, listeria, salmonella, e.coli
+          if (reasonLower.match(/\b(death|serious|life-threatening|fatal|contamination|listeria|salmonella|e\.?coli|botulism|lead|mercury|arsenic)\b/)) {
+            classification = 'Class I';
+          }
+          // Class II indicators: temporary, reversible, minor, mislabeling
+          else if (reasonLower.match(/\b(temporary|reversible|minor|mislabeling|undeclared|allergen)\b/)) {
+            classification = 'Class II';
+          }
+          // Class III: unlikely to cause, quality issues
+          else if (reasonLower.match(/\b(unlikely|quality|packaging|cosmetic)\b/)) {
+            classification = 'Class III';
+          }
+        }
+        
+        return {
+          recallId: result.recall_number || result.event_id || 'unknown',
+          productName: result.product_description || 'Unknown Product',
+          brand: result.recalling_firm,
+          reason: result.reason_for_recall || 'No reason provided',
+          recallDate: result.recall_initiation_date || new Date().toISOString(),
+          distribution: result.distribution_pattern
+            ? result.distribution_pattern.split(',').map(d => d.trim())
+            : undefined,
+          isActive: result.status?.toLowerCase() === 'ongoing',
+          url: `https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts`,
+          classification,
+        };
+      });
   } catch (error) {
     console.error('Error searching FDA recalls:', error);
     return [];

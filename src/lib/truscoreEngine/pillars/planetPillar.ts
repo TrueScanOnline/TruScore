@@ -17,6 +17,7 @@ import { Product } from '../../../types/product';
 import { getLocalRecyclabilityStatus } from '../../../utils/packagingRecyclability';
 import { logger } from '../../../utils/logger';
 import { getCSVDatabaseService } from '../../../services/csvDatabases/csvDatabaseService';
+import { matchBrands, getBestBrandMatch } from '../../../services/brandMatchingService';
 
 export interface PlanetPillarResult {
   score: number;
@@ -40,8 +41,17 @@ export interface PlanetPillarResult {
 
 /**
  * Extract brand/parent company name from product
+ * ENHANCED: Uses fuzzy matching for better brand resolution
  */
 function extractBrandOrParent(product: Product): string | null {
+  // FUZZY MATCHING: Use fuzzy matching service for better brand resolution
+  const brandMatch = getBestBrandMatch(product, 0.75);
+  if (brandMatch && brandMatch.matchedData) {
+    // Use matched brand name (more accurate)
+    return brandMatch.matchedData.name;
+  }
+  
+  // Fallback to original extraction logic
   // Priority: brand_owner > brands > first brand from brands_tags
   if (product.brand_owner) {
     return product.brand_owner;
@@ -366,14 +376,14 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
   }
   
   // NEW: Packaging eco-cost penalty
-  // NEW SPEC: -6 for high eco-cost materials
+  // SPEC: -5 for high eco-cost materials (per document)
   let packagingEcoCostPenalty = 0;
   if (csvService && packagings.length > 0) {
     try {
       for (const packaging of packagings) {
         const material = packaging.material || '';
         if (csvService.isHighEcoCostMaterial(material)) {
-          packagingEcoCostPenalty = 6; // Updated from -5 to -6
+          packagingEcoCostPenalty = 5; // Per document spec: -5
           adjustments.push({
             description: `High eco-cost packaging material: ${material}`,
             value: -packagingEcoCostPenalty,

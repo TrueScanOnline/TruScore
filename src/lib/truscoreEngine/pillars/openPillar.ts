@@ -16,6 +16,7 @@
 import { Product } from '../../../types/product';
 import { logger } from '../../../utils/logger';
 import { getBrandData } from '../../../data/brandDatabase';
+import { matchBrands, getBestBrandMatch } from '../../../services/brandMatchingService';
 
 const HIDDEN_TERMS = [
   'parfum',
@@ -122,7 +123,7 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   }
   
   // Hidden terms penalty (includes fragrance - merged into main list)
-  // NEW SPEC: 1=-4, 2=-8, >=3=-11; if NOVA>=3 add +1 to count; zero hidden & NOVA1-2 = +4; zero hidden & NOVA3-4 = +2
+  // SPEC per document: 1=-2, 2=-6, >=3=-11; if NOVA>=3 add +1 to count; zero hidden & NOVA1-2 = +4; zero hidden & NOVA3-4 = +2
   const hiddenCount = HIDDEN_TERMS.filter((t) => hasTerm(t)).length;
   
   // NOVA amplification: +1 count if NOVA≥3
@@ -131,14 +132,14 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
       effectiveHiddenCount += 1;
   }
   
-  // Apply penalty based on effective count (per spec: 1=-4, 2=-8, >=3=-11)
+  // Apply penalty based on effective count (per document spec: 1=-2, 2=-6, >=3=-11)
   let hiddenTermsPenalty = 0;
   if (effectiveHiddenCount >= 3) {
     hiddenTermsPenalty = 11; // -11
   } else if (effectiveHiddenCount === 2) {
-    hiddenTermsPenalty = 8; // -8
+    hiddenTermsPenalty = 6; // -6 (per document spec)
   } else if (effectiveHiddenCount === 1) {
-    hiddenTermsPenalty = 4; // -4
+    hiddenTermsPenalty = 2; // -2 (per document spec)
   }
   
   if (hiddenTermsPenalty > 0) {
@@ -317,11 +318,10 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     !isPlaceholderValue(product.brand_owner));
   
   if (!hasBrandOwner) {
-    // Check if we can determine parent from brand database
-    // Try to get parent company from brand database
-    const brandName = product.brands || '';
-    const brandData = brandName ? getBrandData(brandName) : null;
-    const hasParentInDatabase = !!(brandData?.parentCompany);
+    // FUZZY MATCHING: Use fuzzy matching to find parent company
+    const brandMatch = getBestBrandMatch(product, 0.75);
+    const brandData = brandMatch?.matchedData || null;
+    const hasParentInDatabase = !!(brandData?.parentCompany || brandMatch?.parentCompany);
     
     if (!hasParentInDatabase) {
       // Parent company is hidden/opaque - apply penalty

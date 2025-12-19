@@ -52,3 +52,5 @@ If the script doesn't work, manually add the firewall rule:
 ## Note
 
 If you're happy with tunnel mode, you don't need to fix normal mode. Tunnel mode works perfectly and is often more reliable.
+
+
