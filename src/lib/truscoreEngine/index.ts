@@ -4,7 +4,7 @@
  * This module orchestrates the calculation of all 4 pillars:
  * - Body Pillar (nutrition, additives, processing)
  * - Planet Pillar (environmental impact, palm oil, recyclability)
- * - Care Pillar (ethical certifications, recalls, brand ethics)
+ * - Ethics Pillar (ethical certifications, recalls, brand ethics)
  * - Open Pillar (transparency, ingredients disclosure, origin)
  * 
  * Each pillar is calculated independently and can be tested/modified separately.
@@ -19,7 +19,7 @@ import { powershellLogger } from '../../utils/powershellLogger';
 // Import individual pillar calculators
 import { calculateBodyPillar, BodyPillarResult } from './pillars/bodyPillar';
 import { calculatePlanetPillar, PlanetPillarResult } from './pillars/planetPillar';
-import { calculateCarePillar, CarePillarResult } from './pillars/carePillar';
+import { calculateEthicsPillar, EthicsPillarResult } from './pillars/ethicsPillar';
 import { calculateOpenPillar, OpenPillarResult } from './pillars/openPillar';
 
 export interface Insight {
@@ -34,7 +34,7 @@ export interface TruScoreResult {
   breakdown: {
     Body: number;
     Planet: number;
-    Care: number;
+    Ethics: number;
     Open: number;
   };
   hasNutriScore?: boolean;
@@ -45,7 +45,7 @@ export interface TruScoreResult {
   pillarDetails?: {
     body: BodyPillarResult;
     planet: PlanetPillarResult;
-    care: CarePillarResult;
+        ethics: EthicsPillarResult;
     open: OpenPillarResult;
   };
 }
@@ -68,7 +68,7 @@ export function calculateTruScore(
     logger.warn('[truscoreEngine] Invalid product input: product is null or not an object');
     return {
       truscore: 0,
-      breakdown: { Body: 0, Planet: 0, Care: 0, Open: 0 },
+      breakdown: { Body: 0, Planet: 0, Ethics: 0, Open: 0 },
       hasNutriScore: false,
       hasEcoScore: false,
       hasOrigin: false,
@@ -102,17 +102,17 @@ export function calculateTruScore(
     // Calculate each pillar independently
     const bodyResult = calculateBodyPillar(product);
     const planetResult = calculatePlanetPillar(product);
-    const careResult = calculateCarePillar(product);
+    const ethicsResult = calculateEthicsPillar(product);
     const openResult = calculateOpenPillar(product);
     
-    // Extract scores
-    const body = bodyResult.score;
-    const planet = planetResult.score;
-    const care = careResult.score;
-    const open = openResult.score;
+    // Extract scores - ensure all are valid numbers (safety validation)
+    const body = typeof bodyResult.score === 'number' && !isNaN(bodyResult.score) ? bodyResult.score : 0;
+    const planet = typeof planetResult.score === 'number' && !isNaN(planetResult.score) ? planetResult.score : 0;
+    const ethics = typeof ethicsResult.score === 'number' && !isNaN(ethicsResult.score) ? ethicsResult.score : 0;
+    const open = typeof openResult.score === 'number' && !isNaN(openResult.score) ? openResult.score : 0;
     
     // Total with bounds checking (0-100)
-    const truscore = Math.max(0, Math.min(100, Math.round(body + planet + care + open)));
+    const truscore = Math.max(0, Math.min(100, Math.round(body + planet + ethics + open)));
     
     // Generate insights if preferences provided
     const insights = preferences ? generateInsights(product, preferences) : [];
@@ -141,7 +141,7 @@ export function calculateTruScore(
       breakdown: {
         Body: body,
         Planet: planet,
-        Care: care,
+        Ethics: ethics,
         Open: open,
       },
       hasNutriScore,
@@ -151,7 +151,7 @@ export function calculateTruScore(
       pillarDetails: {
         body: bodyResult,
         planet: planetResult,
-        care: careResult,
+        ethics: ethicsResult,
         open: openResult,
       },
     };
@@ -166,7 +166,7 @@ export function calculateTruScore(
       insightsCount: insights.length,
       bodyDetails: bodyResult.details,
       planetDetails: planetResult.details,
-      careDetails: careResult.details,
+      ethicsDetails: ethicsResult.details,
       openDetails: openResult.details,
     });
     
@@ -185,7 +185,7 @@ export function calculateTruScore(
     // Return safe default with null truscore to indicate calculation failure
     return {
       truscore: 0,
-      breakdown: { Body: 0, Planet: 0, Care: 0, Open: 0 },
+      breakdown: { Body: 0, Planet: 0, Ethics: 0, Open: 0 },
       hasNutriScore: false,
       hasEcoScore: false,
       hasOrigin: false,
@@ -194,6 +194,6 @@ export function calculateTruScore(
 }
 
 // Export individual pillar functions for testing
-export { calculateBodyPillar, calculatePlanetPillar, calculateCarePillar, calculateOpenPillar };
-export type { BodyPillarResult, PlanetPillarResult, CarePillarResult, OpenPillarResult };
+export { calculateBodyPillar, calculatePlanetPillar, calculateEthicsPillar, calculateOpenPillar };
+export type { BodyPillarResult, PlanetPillarResult, EthicsPillarResult, OpenPillarResult };
 

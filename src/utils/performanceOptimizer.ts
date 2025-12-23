@@ -125,8 +125,9 @@ export function trackPerformance(
   performanceMetrics.cacheHitRate = 
     (performanceMetrics.cacheHits / performanceMetrics.totalOperations) * 100;
 
-  // Log slow operations
-  if (duration > 10) {
+  // Log slow operations (increased threshold from 10ms to 100ms to reduce log noise)
+  // Operations under 100ms are considered acceptable performance
+  if (duration > 100) {
     logger.warn('[PerformanceOptimizer] Slow operation detected:', {
       operation,
       durationMs: duration,

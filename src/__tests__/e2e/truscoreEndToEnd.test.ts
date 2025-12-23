@@ -41,7 +41,7 @@ describe('TruScore End-to-End Tests', () => {
       expect(result.truscore).toBeGreaterThanOrEqual(80);
       expect(result.breakdown.Body).toBeGreaterThanOrEqual(20);
       expect(result.breakdown.Planet).toBeGreaterThanOrEqual(20);
-      expect(result.breakdown.Care).toBeGreaterThanOrEqual(20);
+      expect(result.breakdown.Ethics).toBeGreaterThanOrEqual(20);
       // OPEN pillar may be 15 (base) if no special bonuses apply
       expect(result.breakdown.Open).toBeGreaterThanOrEqual(15);
       
@@ -50,8 +50,8 @@ describe('TruScore End-to-End Tests', () => {
       expect(result.breakdown.Body).toBeLessThanOrEqual(25);
       expect(result.breakdown.Planet).toBeGreaterThanOrEqual(0);
       expect(result.breakdown.Planet).toBeLessThanOrEqual(25);
-      expect(result.breakdown.Care).toBeGreaterThanOrEqual(0);
-      expect(result.breakdown.Care).toBeLessThanOrEqual(25);
+      expect(result.breakdown.Ethics).toBeGreaterThanOrEqual(0);
+      expect(result.breakdown.Ethics).toBeLessThanOrEqual(25);
       expect(result.breakdown.Open).toBeGreaterThanOrEqual(0);
       expect(result.breakdown.Open).toBeLessThanOrEqual(25);
     });
@@ -76,7 +76,7 @@ describe('TruScore End-to-End Tests', () => {
       const result = calculateTruScore(product);
       
       // CARE pillar should be reduced due to animal cruelty
-      expect(result.breakdown.Care).toBeLessThan(15);
+      expect(result.breakdown.Ethics).toBeLessThan(15);
       
       // Total score should reflect the penalty
       expect(result.truscore).toBeLessThan(100);
@@ -102,10 +102,10 @@ describe('TruScore End-to-End Tests', () => {
       const result = calculateTruScore(product);
       
       // CARE pillar should be reduced due to labor violations
-      expect(result.breakdown.Care).toBeLessThan(15);
+      expect(result.breakdown.Ethics).toBeLessThan(15);
       
       // Verify score is still valid
-      expect(result.breakdown.Care).toBeGreaterThanOrEqual(0);
+      expect(result.breakdown.Ethics).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -137,7 +137,7 @@ describe('TruScore End-to-End Tests', () => {
       const result = calculateTruScore(product);
       
       // CARE pillar should be reduced by -10 for active recall
-      expect(result.breakdown.Care).toBeLessThan(15);
+      expect(result.breakdown.Ethics).toBeLessThan(15);
       
       // Verify penalty is applied
       const careResult = result.pillarDetails?.care;
@@ -201,7 +201,7 @@ describe('TruScore End-to-End Tests', () => {
       const result = calculateTruScore(product);
       
       // CARE pillar should be 15 (base) + 15 (capped bonus) = 30, but capped at 25
-      expect(result.breakdown.Care).toBe(25);
+      expect(result.breakdown.Ethics).toBe(25);
       
       // Verify cap is applied
       const careResult = result.pillarDetails?.care;
@@ -313,7 +313,7 @@ describe('TruScore End-to-End Tests', () => {
       // Total score should be sum of all pillars
       const calculatedTotal = result.breakdown.Body + 
                               result.breakdown.Planet + 
-                              result.breakdown.Care + 
+                              result.breakdown.Ethics + 
                               result.breakdown.Open;
       
       expect(result.truscore).toBe(calculatedTotal);
@@ -429,7 +429,7 @@ describe('TruScore End-to-End Tests', () => {
       
       expect(result.breakdown.Body).toBeGreaterThanOrEqual(0);
       expect(result.breakdown.Planet).toBeGreaterThanOrEqual(0);
-      expect(result.breakdown.Care).toBeGreaterThanOrEqual(0);
+      expect(result.breakdown.Ethics).toBeGreaterThanOrEqual(0);
       expect(result.breakdown.Open).toBeGreaterThanOrEqual(0);
       expect(result.truscore).toBeGreaterThanOrEqual(0);
     });
@@ -464,7 +464,7 @@ describe('TruScore End-to-End Tests', () => {
       
       expect(result.breakdown.Body).toBeLessThanOrEqual(25);
       expect(result.breakdown.Planet).toBeLessThanOrEqual(25);
-      expect(result.breakdown.Care).toBeLessThanOrEqual(25);
+      expect(result.breakdown.Ethics).toBeLessThanOrEqual(25);
       expect(result.breakdown.Open).toBeLessThanOrEqual(25);
       expect(result.truscore).toBeLessThanOrEqual(100);
     });

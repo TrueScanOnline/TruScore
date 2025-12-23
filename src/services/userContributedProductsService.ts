@@ -55,17 +55,26 @@ export async function getUserContributedProduct(barcode: string): Promise<Produc
     
     try {
       const retrievalStartTime = Date.now();
-      const response = await fetch(`${manualProductsApi}?barcode=${encodeURIComponent(barcode)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
       
-      const retrievalTime = Date.now() - retrievalStartTime;
+      // Add timeout to prevent 30+ second waits (Vercel function timeout is 10s, but we'll use 5s for safety)
+      const TIMEOUT_MS = 5000; // 5 seconds max
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
       
-      // CRITICAL: Get raw response text first for debugging
-      const responseText = await response.text();
+      try {
+        const response = await fetch(`${manualProductsApi}?barcode=${encodeURIComponent(barcode)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        const retrievalTime = Date.now() - retrievalStartTime;
+        
+        // CRITICAL: Get raw response text first for debugging
+        const responseText = await response.text();
       
       powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Backend response received`, {
         barcode,
@@ -196,6 +205,28 @@ export async function getUserContributedProduct(barcode: string): Promise<Produc
           status: response.status,
           statusText: response.statusText,
         });
+      }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        const retrievalTime = Date.now() - retrievalStartTime;
+        
+        // Check if it's a timeout
+        if (fetchError.name === 'AbortError' || fetchError.message?.includes('aborted')) {
+          powershellLogger.log('WARN', 'USER_CONTRIBUTION', `Backend request timeout (${TIMEOUT_MS}ms)`, {
+            barcode,
+            responseTime: `${retrievalTime}ms`,
+            error: 'Request timeout',
+          });
+          logger.debug(`[UserContributedProducts] Backend request timeout for ${barcode} after ${retrievalTime}ms`);
+        } else {
+          powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `Backend retrieval error`, {
+            barcode,
+            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            responseTime: `${retrievalTime}ms`,
+          });
+          logger.debug('[UserContributedProducts] Backend unavailable, using local only:', fetchError);
+        }
+        // Continue - not critical (timeout is handled gracefully)
       }
     } catch (backendError) {
       powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `Backend retrieval error`, {

@@ -1,0 +1,170 @@
+/**
+ * Banner Alerts Card Component
+ * 
+ * Displays alerts above the TruScore card.
+ * Alerts are a combination of APP-generated alerts and User Preference alerts.
+ * 
+ * Styling:
+ * - Red heading "ALERT"
+ * - Red frame/border
+ * - Light red background fill
+ * - Only displays when alerts are present
+ */
+
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import { BannerAlert, BannerAlertsData } from '../types/bannerAlerts';
+import { useTheme } from '../theme';
+
+interface BannerAlertsCardProps {
+  alertsData: BannerAlertsData;
+}
+
+export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+
+  // Don't render if no alerts
+  if (!alertsData.hasAlerts || alertsData.alerts.length === 0) {
+    return null;
+  }
+
+  // Light red background color
+  const lightRedBackground = '#ffebee'; // Material Design light red
+  const redBorder = '#d32f2f'; // Material Design red
+  const redText = '#c62828'; // Darker red for text
+
+  return (
+    <View style={[styles.container, { 
+      backgroundColor: lightRedBackground,
+      borderColor: redBorder,
+      borderWidth: 2,
+    }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Ionicons name="alert-circle" size={24} color={redText} />
+        <Text style={[styles.headerText, { color: redText }]}>ALERT</Text>
+        {alertsData.alertCount > 1 && (
+          <Text style={[styles.alertCount, { color: redText }]}>
+            ({alertsData.alertCount})
+          </Text>
+        )}
+      </View>
+
+      {/* Alerts List */}
+      <ScrollView 
+        style={styles.alertsList}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={true}
+      >
+        {alertsData.alerts.map((alert, index) => (
+          <View 
+            key={alert.id} 
+            style={[
+              styles.alertItem,
+              index < alertsData.alerts.length - 1 && styles.alertItemWithMargin
+            ]}
+          >
+            {/* Alert Icon */}
+            <View style={styles.alertIconContainer}>
+              <Ionicons 
+                name={
+                  alert.category === 'recall' ? 'warning' :
+                  alert.category === 'animal_cruelty' ? 'paw' :
+                  alert.category === 'labor_violations' ? 'people' :
+                  alert.category === 'palm_oil' ? 'leaf' :
+                  alert.category === 'geopolitical' ? 'globe' :
+                  'information-circle'
+                }
+                size={20}
+                color={redText}
+              />
+            </View>
+
+            {/* Alert Content */}
+            <View style={styles.alertContent}>
+              <Text style={[styles.alertTitle, { color: redText }]}>
+                {alert.title}
+              </Text>
+              <Text style={[styles.alertMessage, { color: colors.text }]}>
+                {alert.message}
+              </Text>
+              
+              {/* Source Badge */}
+              {alert.sourceDetails?.organization && (
+                <View style={styles.sourceBadge}>
+                  <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
+                    Source: {alert.sourceDetails.organization}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    padding: 16,
+    maxHeight: 300, // Limit height, allow scrolling if many alerts
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  headerText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 8,
+    textTransform: 'uppercase',
+  },
+  alertCount: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  alertsList: {
+    maxHeight: 250,
+  },
+  alertItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  alertItemWithMargin: {
+    marginBottom: 16,
+  },
+  alertIconContainer: {
+    marginRight: 12,
+    marginTop: 2,
+  },
+  alertContent: {
+    flex: 1,
+  },
+  alertTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  alertMessage: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  sourceBadge: {
+    marginTop: 4,
+  },
+  sourceText: {
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+});

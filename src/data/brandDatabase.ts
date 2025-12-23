@@ -29,14 +29,14 @@ export const BRAND_DATABASE: Record<string, BrandData> = {
     ethicalRating: 'fair',
     animalTesting: true,
     palmOilPolicy: 'mixed',
-    laborPractices: 'good',
+    laborPractices: 'poor', // Updated: Kenyan tea workers violence issue (major labor violation)
     subsidiaries: [
       'dove', 'axe', 'lipton', 'hellmann\'s', 'knorr', 'magnum', 'ben & jerry\'s',
       'breyers', 'talenti', 'sunsilk', 'tresemme', 'vaseline', 'pond\'s', 'clear',
       'surf', 'omo', 'persil', 'comfort', 'cif', 'domestos', 'signal', 'close-up'
     ],
     marketCap: 120,
-    notes: 'One of the largest consumer goods companies. Mixed record on sustainability.'
+    notes: 'One of the largest consumer goods companies. Mixed record on sustainability. Known for labor violations including poor handling of violence against Kenyan tea workers.'
   },
   'procter & gamble': {
     name: 'Procter & Gamble',

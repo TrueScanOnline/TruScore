@@ -165,3 +165,6 @@ console.log('Brand data found:', careResult.hasBrandData); // Should be true
 - Can easily expand to add more brand sources in the future
 
 
+
+
+

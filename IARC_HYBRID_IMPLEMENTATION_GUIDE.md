@@ -704,3 +704,6 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
 
 
 
+
+
+

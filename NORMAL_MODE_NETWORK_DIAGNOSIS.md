@@ -81,3 +81,6 @@ ping 192.168.68.105  # Replace with your computer's IP
 ⚠️ **Normal mode blocked** - Network/firewall issue (not code issue)
 
 
+
+
+

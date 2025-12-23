@@ -36,36 +36,42 @@ const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year (BBFAW updates annua
  * Known companies with BBFAW tier classifications
  * This is a curated list based on BBFAW's annual benchmark reports
  * 
- * Tier mapping:
- * - Tier 1-2: Major concerns (Major violation: -15)
- * - Tier 3-4: Moderate concerns (Moderate violation: -8)
- * - Tier 5-6: Limited concerns (Limited violation: -4)
+ * NEW Tier-based scoring (per Excel spec):
+ * - Tier 1 = +4 (best welfare - Leadership tier)
+ * - Tier 2 = +2 (good welfare - Management tier)
+ * - Tier 3-5 = 0 (no adjustment per spec)
+ * - Tier 6 = -7 (worst welfare - No disclosure tier)
+ * - E/F Impact Rating = -7 (worst impact rating)
  * 
  * Note: In production, this should be loaded from a downloaded/parsed BBFAW dataset
  * For now, we use a curated list of known companies
+ * 
+ * IMPORTANT: BBFAW Tier 1 is BEST (Leadership), Tier 6 is WORST (No disclosure)
  */
 const KNOWN_BBFAW_COMPANIES: BBFAWCompanyData[] = [
-  // Tier 1-2 (Major concerns) - Major violation: -15
-  { companyName: 'Tyson Foods', tier: 1, score: 15, year: 2023 },
-  { companyName: 'JBS', tier: 1, score: 18, year: 2023 },
-  { companyName: 'Cargill', tier: 2, score: 25, year: 2023 },
-  { companyName: 'Smithfield Foods', tier: 2, score: 22, year: 2023 },
-  { companyName: 'Perdue Farms', tier: 2, score: 28, year: 2023 },
+  // Tier 1 (Best - Leadership) - Score: +4
+  { companyName: 'Danone', tier: 1, score: 85, year: 2023 },
+  { companyName: 'Nestlé', tier: 1, score: 82, year: 2023 },
+  { companyName: 'Unilever', tier: 1, score: 80, year: 2023 },
   
-  // Tier 3-4 (Moderate concerns) - Moderate violation: -8
+  // Tier 2 (Good - Management) - Score: +2
+  { companyName: 'Mars', tier: 2, score: 75, year: 2023 },
+  { companyName: 'General Mills', tier: 2, score: 72, year: 2023 },
+  
+  // Tier 3-5 (Fair to Poor - Governance/Performance/Disclosure) - Score: 0 (no adjustment)
   { companyName: 'McDonald\'s', tier: 3, score: 45, year: 2023 },
   { companyName: 'Burger King', tier: 3, score: 42, year: 2023 },
   { companyName: 'KFC', tier: 3, score: 40, year: 2023 },
   { companyName: 'Subway', tier: 4, score: 35, year: 2023 },
   { companyName: 'Domino\'s', tier: 4, score: 38, year: 2023 },
   { companyName: 'Pizza Hut', tier: 4, score: 36, year: 2023 },
+  { companyName: 'Tyson Foods', tier: 5, score: 25, year: 2023 },
+  { companyName: 'JBS', tier: 5, score: 22, year: 2023 },
+  { companyName: 'Cargill', tier: 5, score: 28, year: 2023 },
   
-  // Tier 5-6 (Limited concerns) - Limited violation: -4
-  { companyName: 'Nestlé', tier: 5, score: 55, year: 2023 },
-  { companyName: 'Mars', tier: 5, score: 52, year: 2023 },
-  { companyName: 'Unilever', tier: 5, score: 58, year: 2023 },
-  { companyName: 'Danone', tier: 6, score: 65, year: 2023 },
-  { companyName: 'General Mills', tier: 6, score: 62, year: 2023 },
+  // Tier 6 (Worst - No disclosure) - Score: -7
+  { companyName: 'Smithfield Foods', tier: 6, score: 15, year: 2023 },
+  { companyName: 'Perdue Farms', tier: 6, score: 18, year: 2023 },
 ];
 
 /**
@@ -122,17 +128,18 @@ export function checkBBFAWTier(companyName: string): BBFAWCompanyData | null {
 }
 
 /**
- * Get BBFAW violation severity based on tier
+ * Get BBFAW violation severity based on tier (LEGACY - for fallback)
  * 
  * @param tier - BBFAW tier (1-6)
  * @returns Severity level: 'limited', 'moderate', or 'major'
+ * @deprecated Use getBBFAWTierScore instead for new tier-based scoring
  */
 export function getBBFAWViolationSeverity(tier: BBFAWTier | null): 'limited' | 'moderate' | 'major' {
   if (!tier) {
     return 'limited'; // No tier data
   }
 
-  // Tier mapping:
+  // Tier mapping (LEGACY):
   // Tier 1-2: Major concerns (Major violation: -15)
   // Tier 3-4: Moderate concerns (Moderate violation: -8)
   // Tier 5-6: Limited concerns (Limited violation: -4)
@@ -143,6 +150,62 @@ export function getBBFAWViolationSeverity(tier: BBFAWTier | null): 'limited' | '
   } else {
     return 'limited';
   }
+}
+
+/**
+ * Get BBFAW tier-based score (NEW - per Excel spec)
+ * 
+ * Excel Spec:
+ * - BBFAW Tier 1 = +4 (positive bonus for best welfare)
+ * - BBFAW Tier 2 = +2 (positive bonus for good welfare)
+ * - BBFAW Tier 6 = -7 (negative penalty for worst welfare)
+ * - BBFAW E/F Impact Rating = -7 (negative penalty)
+ * 
+ * @param tier - BBFAW tier (1-6) or 'E'/'F' for impact rating
+ * @returns Score adjustment: positive for good tiers, negative for poor tiers
+ */
+export function getBBFAWTierScore(tier: BBFAWTier | 'E' | 'F' | null): number {
+  if (!tier) {
+    return 0; // No tier data = no adjustment
+  }
+
+  // Excel spec mapping:
+  // Tier 1 = +4 (best welfare - Leadership tier)
+  // Tier 2 = +2 (good welfare - Management tier)
+  // Tier 3 = 0 (fair welfare - Governance tier, no adjustment)
+  // Tier 4 = 0 (poor welfare - Performance tier, no adjustment per spec)
+  // Tier 5 = 0 (very poor welfare - Disclosure tier, no adjustment per spec)
+  // Tier 6 = -7 (worst welfare - No disclosure tier)
+  // E/F Impact Rating = -7 (worst impact rating)
+  
+  if (tier === 1) {
+    return 4; // +4 for Tier 1 (best)
+  } else if (tier === 2) {
+    return 2; // +2 for Tier 2 (good)
+  } else if (tier === 6) {
+    return -7; // -7 for Tier 6 (worst)
+  } else if (tier === 'E' || tier === 'F') {
+    return -7; // -7 for E/F Impact Rating (worst)
+  } else {
+    // Tiers 3, 4, 5: No adjustment per Excel spec (not specified)
+    return 0;
+  }
+}
+
+/**
+ * Check if BBFAW tier indicates good welfare (positive score)
+ */
+export function isBBFAWGoodWelfare(tier: BBFAWTier | 'E' | 'F' | null): boolean {
+  const score = getBBFAWTierScore(tier);
+  return score > 0;
+}
+
+/**
+ * Check if BBFAW tier indicates poor welfare (negative score)
+ */
+export function isBBFAWPoorWelfare(tier: BBFAWTier | 'E' | 'F' | null): boolean {
+  const score = getBBFAWTierScore(tier);
+  return score < 0;
 }
 
 /**

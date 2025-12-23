@@ -92,7 +92,7 @@ export function getShareCardData(
   breakdown?: {
     Body: number;
     Planet: number;
-    Care: number;
+    Ethics: number;
     Open: number;
   };
 } {
@@ -113,7 +113,7 @@ export function getShareCardData(
     breakdown: truScore?.breakdown || (product.trust_score_breakdown ? {
       Body: product.trust_score_breakdown.body,
       Planet: product.trust_score_breakdown.planet,
-      Care: product.trust_score_breakdown.care,
+      Ethics: product.trust_score_breakdown.care ?? 0,
       Open: product.trust_score_breakdown.open,
     } : undefined),
   };
@@ -137,7 +137,7 @@ export function generateShareMessage(
     message += `Breakdown:\n`;
     message += `• Body: ${truScore.breakdown.Body}/25\n`;
     message += `• Planet: ${truScore.breakdown.Planet}/25\n`;
-    message += `• Care: ${truScore.breakdown.Care}/25\n`;
+    message += `• Ethics: ${truScore.breakdown.Ethics}/25\n`;
     message += `• Open: ${truScore.breakdown.Open}/25\n\n`;
   }
   

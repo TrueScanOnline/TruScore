@@ -32,9 +32,11 @@ export function getBackendUrl(): string {
   const isPreviewUrl = backendUrl.includes('truscoreapi-') && backendUrl.includes('-5ziw2940v-'); // Specific preview URL
   
   if (isPreviewUrl) {
-    console.error('[BackendConfig] ❌ Preview deployment URL detected - this requires authentication!');
-    console.error(`[BackendConfig] ❌ Invalid URL: ${backendUrl}`);
-    console.error('[BackendConfig] ✅ Using production URL instead');
+    // Changed from ERROR to DEBUG to reduce log verbosity
+    // This is expected behavior - preview URLs require auth, so we fallback to production
+    if (__DEV__) {
+      console.debug('[BackendConfig] Preview deployment URL detected - using production fallback');
+    }
     // Use latest production URL
     backendUrl = PRODUCTION_URLS[0];
   }
@@ -43,7 +45,10 @@ export function getBackendUrl(): string {
     console.warn('[BackendConfig] ⚠️  Backend URL not configured! Update EXPO_PUBLIC_BACKEND_URL or getBackendUrl() default');
   }
   
-  console.log(`[BackendConfig] ✅ Using backend URL: ${backendUrl}`);
+  // Only log backend URL in debug mode to reduce verbosity
+  if (__DEV__) {
+    console.debug(`[BackendConfig] Using backend URL: ${backendUrl}`);
+  }
   return backendUrl;
 }
 

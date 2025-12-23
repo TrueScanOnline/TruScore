@@ -37,13 +37,16 @@ import { enhanceProductWithAFCD } from './afcdDatabase';
 import { fetchProductFromHealthCanada } from './healthCanadaDatabase';
 import { fetchProductFromUKFSA } from './ukFsaDatabase';
 import { fetchProductFromEFSA } from './efsaDatabase';
-import { fetchProductFromTesco } from './tescoLabsApi';
+// Tesco Labs API removed - service discontinued December 2025
+// import { fetchProductFromTesco } from './tescoLabsApi';
 import { fetchProductFromWalmart } from './walmartOpenApi';
 import { fetchProductFromFoodRepo } from './foodRepoApi';
 import { fetchProductFromOpenNutrition } from './openNutritionApi';
 import { checkComprehensiveUSRecalls } from './recallsGovService';
 import { checkRASFFAlerts } from './rasffService';
 import { checkCFIARecalls } from './cfiaRecallService';
+import { checkCPSCRecalls, convertCPSCRecall } from './cpscRecallService';
+import { checkUKFSARecalls, convertUKFSARecall } from './ukFsaRecallService';
 import { UnifiedRecall, convertFDARecall, convertComprehensiveUSRecall, convertRASFFAlert, convertCFIARecall } from '../types/recall';
 import { enrichProductWithEANSearchBrand } from './eanSearchBrandApi';
 import { enrichProductWithOpenCorporates } from './openCorporatesApi';
@@ -813,6 +816,16 @@ async function executeFetchProduct(
             barcode
           ).then(recalls => recalls.map(convertComprehensiveUSRecall)).catch(() => [])
         );
+        
+        // CPSC recalls (consumer products - may include food-related items)
+        // NON-BLOCKING: Fast timeout, doesn't block product display
+        recallPromises.push(
+          checkCPSCRecalls(
+            productWithConfidence.product_name,
+            productWithConfidence.brands,
+            barcode
+          ).then(recalls => recalls.map(convertCPSCRecall)).catch(() => [])
+        );
       }
       
       if (isEUCountry(userCountry)) {
@@ -822,6 +835,18 @@ async function executeFetchProduct(
             productWithConfidence.brands,
             barcode
           ).then(alerts => alerts.map(convertRASFFAlert)).catch(() => [])
+        );
+      }
+      
+      // UK FSA recalls (for UK users)
+      // Check for GB (ISO code) or UK (common code)
+      if (userCountry === 'GB' || userCountry === 'UK' || userCountry === 'gb' || userCountry === 'uk') {
+        recallPromises.push(
+          checkUKFSARecalls(
+            productWithConfidence.product_name,
+            productWithConfidence.brands,
+            barcode
+          ).then(recalls => recalls.map(convertUKFSARecall)).catch(() => [])
         );
       }
       
@@ -847,6 +872,7 @@ async function executeFetchProduct(
       
       if (recallResults && recallResults.length > 0) {
         // Attach recalls to product BEFORE TruScore calculation
+        // Include classification for banner alerts and ETHICS pillar scoring
         productWithConfidence.recalls = recallResults.map(recall => ({
           recallId: recall.recallId,
           productName: recall.productName,
@@ -856,6 +882,9 @@ async function executeFetchProduct(
           distribution: recall.distribution,
           isActive: recall.isActive,
           url: recall.url,
+          classification: recall.classification, // Include classification for severity-based alerts
+          // Note: Agency info is in UnifiedRecall but not stored in FoodRecall
+          // Banner alerts service infers agency from recallId pattern
         }));
         logger.info(`⚠️ RECALL ALERT: ${recallResults.length} recall(s) found - will affect CARE pillar score`);
       }
@@ -888,7 +917,7 @@ async function executeFetchProduct(
       breakdown: {
         Body: productWithTrustScore.trust_score_breakdown.body,
         Planet: productWithTrustScore.trust_score_breakdown.planet,
-        Care: productWithTrustScore.trust_score_breakdown.care,
+        Ethics: productWithTrustScore.trust_score_breakdown.care ?? 0,
         Open: productWithTrustScore.trust_score_breakdown.open,
       },
       hasNutriScore: productWithTrustScore._truscore_metadata?.hasNutriScore,

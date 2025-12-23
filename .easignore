@@ -1,0 +1,120 @@
+# EAS Build Ignore File
+# Exclude files and directories that are not needed for the build
+
+# Documentation files (not needed for build)
+*.md
+!README.md
+
+# Database files (large, not needed for build)
+Database files/
+*.xlsx
+*.tsv
+*.FT
+*.csv
+*.db
+*.sqlite
+*.sqlite3
+
+# TruScore logic files (documentation/spreadsheets)
+TruScore logic/
+
+# Test files and test builds
+test-build/
+Crash_reports/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__/
+__mocks__/
+
+# Scripts (not needed for build, only for development)
+scripts/
+*.ps1
+*.sh
+*.bat
+
+# Backend files (not needed for mobile build)
+backend/
+
+# Development and build artifacts
+.expo/
+dist/
+web-build/
+build/
+*.log
+*.tmp
+*.temp
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swp
+*~
+.DS_Store
+
+# Large data files - exclude JSON but keep essential ones
+# IMPORTANT: Order matters - exclude first, then include exceptions
+*.json
+# Include essential config files
+!package.json
+!package-lock.json
+!tsconfig.json
+!app.config.js
+!eas.json
+# Include i18n locale files (REQUIRED for app - must be explicit)
+!src/i18n/locales/en.json
+!src/i18n/locales/es.json
+!src/i18n/locales/fr.json
+# Explicitly exclude large data JSON files
+barcode_*.json
+data/*.json
+
+# Excel and Office files
+*.xlsx
+*.xls
+*.docx
+*.doc
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Environment files (should use EAS secrets instead)
+.env
+.env.local
+.env.*.local
+
+# Documentation and analysis files
+docs/
+*.pdf
+
+# Temporary files
+*.orig
+*.bak
+*.backup
+
+# Node modules (should be installed during build)
+node_modules/
+
+# EAS build artifacts
+.eas/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Misc
+.npmrc
+.nvmrc
+.prettierrc
+.prettierignore
+.eslintrc.js
+
+
+

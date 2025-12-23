@@ -9,7 +9,7 @@ export interface UnifiedRecall {
   brand?: string;
   reason: string;
   recallDate: string;
-  agency: 'FDA' | 'USDA_FSIS' | 'CPSC' | 'RASFF' | 'CFIA' | 'OTHER';
+  agency: 'FDA' | 'USDA_FSIS' | 'CPSC' | 'RASFF' | 'CFIA' | 'UK_FSA' | 'OTHER';
   distribution?: string[];
   isActive: boolean;
   url?: string;

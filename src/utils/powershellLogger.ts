@@ -138,7 +138,7 @@ class PowerShellLogger {
       breakdown: {
         Body: breakdown.Body,
         Planet: breakdown.Planet,
-        Care: breakdown.Care,
+        Ethics: breakdown.Ethics,
         Open: breakdown.Open,
       },
       hasNutriScore: result.hasNutriScore,

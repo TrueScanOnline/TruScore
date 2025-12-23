@@ -38,6 +38,9 @@ import UniversalPricingCard from '../../src/components/UniversalPricingCard';
 import NutritionTable from '../../src/components/NutritionTable';
 import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
 import { useValuesStore } from '../../src/store/useValuesStore';
+import BannerAlertsCard from '../../src/components/BannerAlertsCard';
+import { generateBannerAlerts } from '../../src/services/bannerAlertsService';
+import { BannerAlertsData } from '../../src/types/bannerAlerts';
 import InsightsCarousel from '../../src/components/InsightsCarousel';
 import TruScoreInfoModal from '../../src/components/TrustScoreInfoModal';
 import EcoScoreInfoModal from '../../src/components/EcoScoreInfoModal';
@@ -115,6 +118,7 @@ function ResultScreenContent() {
 
   const [product, setProduct] = useState<ProductWithTrustScore | null>(null);
   const [truScore, setTruScore] = useState<TruScoreResult | null>(null);
+  const [bannerAlerts, setBannerAlerts] = useState<BannerAlertsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingPhase, setLoadingPhase] = useState<string>('initializing');
   const [progressiveProduct, setProgressiveProduct] = useState<ProductWithTrustScore | null>(null);
@@ -318,10 +322,10 @@ function ResultScreenContent() {
         const score: TruScoreResult = {
           truscore: product.trust_score,
           breakdown: {
-            Body: product.trust_score_breakdown.body,
-            Planet: product.trust_score_breakdown.planet,
-            Care: product.trust_score_breakdown.care,
-            Open: product.trust_score_breakdown.open,
+            Body: product.trust_score_breakdown.body ?? 0,
+            Planet: product.trust_score_breakdown.planet ?? 0,
+            Ethics: product.trust_score_breakdown.care ?? 0,
+            Open: product.trust_score_breakdown.open ?? 0,
           },
           hasNutriScore: product._truscore_metadata?.hasNutriScore,
           hasEcoScore: product._truscore_metadata?.hasEcoScore,
@@ -336,6 +340,33 @@ function ResultScreenContent() {
     } else {
       setTruScore(null);
     }
+  }, [product, valuesPreferences]);
+
+  // Load banner alerts ASYNCHRONOUSLY after product is displayed (non-blocking)
+  // This ensures banner alerts don't slow down the Product Information page display
+  useEffect(() => {
+    if (!product) {
+      setBannerAlerts(null);
+      return;
+    }
+
+    // Generate banner alerts asynchronously (non-blocking)
+    // Use setTimeout to ensure this runs after the render cycle
+    const loadBannerAlerts = async () => {
+      try {
+        // Small delay to ensure product is already displayed
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Generate alerts (this is fast, but we do it async to not block)
+        const alerts = generateBannerAlerts(product, valuesPreferences);
+        setBannerAlerts(alerts);
+      } catch (error) {
+        console.warn('[ResultScreen] Error generating banner alerts:', error);
+        setBannerAlerts(null);
+      }
+    };
+
+    loadBannerAlerts();
   }, [product, valuesPreferences]);
 
   const loadProduct = async () => {
@@ -1011,6 +1042,14 @@ function ResultScreenContent() {
               <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </View>
           </TouchableOpacity>
+        )}
+
+        {/* Banner Alerts Card - Above TruScore */}
+        {/* Loaded asynchronously to not block product display */}
+        {bannerAlerts && bannerAlerts.hasAlerts && (
+          <BannerAlertsCard 
+            alertsData={bannerAlerts}
+          />
         )}
 
         {/* TruScore Card - v1.4 */}

@@ -237,7 +237,7 @@ export interface Product {
 export interface TrustScoreBreakdown {
   body: number; // 0-25 (Body Safety: Nutri-Score + NOVA + additives + allergens)
   planet: number; // 0-25 (Planet: Eco-Score + packaging + palm oil)
-  care: number; // 0-25 (Care: Certifications + ethical labels)
+  care: number; // 0-25 (Ethics: Certifications + ethical labels) - legacy field name, use breakdown.Ethics for new code
   open: number; // 0-25 (Open: Ingredient disclosure transparency - hidden terms detection)
   // Legacy fields for backward compatibility (still calculated but not used in score)
   sustainability?: number; // Deprecated - use planet

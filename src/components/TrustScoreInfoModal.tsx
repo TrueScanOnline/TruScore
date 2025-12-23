@@ -45,7 +45,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
       iconColor={colors.primary}
     >
       <Text style={[styles.description, { color: colors.textSecondary }]}>
-        {t('infoModal.trustScore.description') || 'TruScore is a comprehensive rating (0-100) based entirely on recognized public systems. Four equal pillars (25 points each): Body, Planet, Care, and Open.'}
+        {t('infoModal.trustScore.description') || 'TruScore is a comprehensive rating (0-100) based entirely on recognized public systems. Four equal pillars (25 points each): Body, Planet, Ethics, and Open.'}
       </Text>
 
       <View style={styles.section}>
@@ -66,7 +66,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           </View>
           <View style={styles.formulaContent}>
             <Text style={[styles.formulaText, { color: colors.text }]}>
-              {t('infoModal.trustScore.formula') || 'TruScore = Body (25) + Planet (25) + Care (25) + Open (25) = 0-100'}
+              {t('infoModal.trustScore.formula') || 'TruScore = Body (25) + Planet (25) + Ethics (25) + Open (25) = 0-100'}
             </Text>
             <Text style={[styles.formulaSubtext, { color: colors.textSecondary }]}>
               100% based on recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels)
@@ -96,7 +96,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                   <Text style={styles.formulaFlagText}>25</Text>
                 </View>
                 <Text style={[styles.formulaLabel, { color: colors.textSecondary }]}>
-                  {t('result.care')} - Certifications + ethical labels
+                  {t('result.ethics')} - Certifications + ethical labels
                 </Text>
               </View>
               <View style={styles.formulaRow}>
@@ -138,7 +138,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>3</Text>
             </View>
             <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.step3') || 'Calculate Care score (0-25) using certifications, animal cruelty detection, labor violations, and recalls. Base 15, certifications up to +15, penalties for violations.'}
+              {t('infoModal.trustScore.step3') || 'Calculate Ethics score (0-25) using certifications, animal cruelty detection, labor violations, and recalls. Base 15, certifications up to +15, penalties for violations.'}
             </Text>
           </View>
           <View style={styles.stepItem}>
@@ -154,7 +154,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>5</Text>
             </View>
             <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.step5') || 'Sum all four pillars: TruScore = Body + Planet + Care + Open (0-100 total)'}
+              {t('infoModal.trustScore.step5') || 'Sum all four pillars: TruScore = Body + Planet + Ethics + Open (0-100 total)'}
             </Text>
           </View>
         </View>
@@ -306,7 +306,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           </View>
         </View>
 
-        {/* Care - TruScore Pillar #3 */}
+        {/* Ethics - TruScore Pillar #3 */}
         <View style={[styles.categoryItem, { backgroundColor: colors.surface }]}>
           <View style={[styles.categoryIconContainer, { backgroundColor: '#ff6b6b' + '30' }]}>
             <Ionicons name="heart" size={24} color="#ff6b6b" />
@@ -314,14 +314,14 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           <View style={styles.categoryContent}>
             <View style={styles.categoryHeader}>
               <Text style={[styles.categoryTitle, { color: colors.text }]}>
-                {t('result.care')}
+                {t('result.ethics')}
               </Text>
               <View style={[styles.categoryWeight, { backgroundColor: '#ff6b6b' }]}>
                 <Text style={styles.categoryWeightText}>25</Text>
               </View>
             </View>
             <Text style={[styles.categoryDescription, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.careDesc')}
+              {t('infoModal.trustScore.ethicsDesc')}
             </Text>
             <View style={styles.categoryFactors}>
               <View style={styles.factorTag}>
@@ -480,7 +480,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
 
         <View style={[styles.sourceBox, { backgroundColor: '#16a085' + '15', borderColor: '#16a085', marginTop: 12 }]}>
           <Text style={[styles.sourceTitle, { color: colors.text }]}>
-            {t('infoModal.trustScore.planetSource')}
+            {t('infoModal.trustScore.planetSource') || 'Planet Pillar (0-25 points)'}
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
             • Eco-Score (French Agence de la Transition Écologique system) - Direct conversion: A=25, B=20, C=15, D=10, E=5{'\n'}
@@ -492,7 +492,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
 
         <View style={[styles.sourceBox, { backgroundColor: '#ff6b6b' + '15', borderColor: '#ff6b6b', marginTop: 12 }]}>
           <Text style={[styles.sourceTitle, { color: colors.text }]}>
-            {t('infoModal.trustScore.careSource')}
+            {t('infoModal.trustScore.ethicsSource')}
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
             • Base Score: 15 points (assumes ethical until violations){'\n'}
@@ -510,7 +510,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
 
         <View style={[styles.sourceBox, { backgroundColor: '#9b59b6' + '15', borderColor: '#9b59b6', marginTop: 12 }]}>
           <Text style={[styles.sourceTitle, { color: colors.text }]}>
-            {t('infoModal.trustScore.openSource')}
+            {t('infoModal.trustScore.openSource') || 'Open Pillar (0-25 points)'}
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
             • Ingredient Text Analysis (Open Food Facts) - Hidden term detection{'\n'}
@@ -547,7 +547,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('trust.excellent') || 'Excellent'} - 80-100 points
             </Text>
             <Text style={[styles.scoreDescription, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.excellentDesc') || 'Outstanding quality across all 4 pillars (Body, Planet, Care, Open). These products excel in nutrition, sustainability, ethics, and transparency.'}
+              {t('infoModal.trustScore.excellentDesc') || 'Outstanding quality across all 4 pillars (Body, Planet, Ethics, Open). These products excel in nutrition, sustainability, ethics, and transparency.'}
             </Text>
           </View>
         </View>
@@ -589,7 +589,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('trust.poor') || 'Poor'} - 0-39 points
             </Text>
             <Text style={[styles.scoreDescription, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.poorDesc') || 'Below-average quality. These products may have significant issues in Body safety, Planet sustainability, Care ethics, or Open transparency.'}
+              {t('infoModal.trustScore.poorDesc') || 'Below-average quality. These products may have significant issues in Body safety, Planet sustainability, Ethics, or Open transparency.'}
             </Text>
           </View>
         </View>

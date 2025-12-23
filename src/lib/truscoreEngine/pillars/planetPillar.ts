@@ -5,7 +5,7 @@
  * Adjustments:
  * - Eco-Score: A=+10, B=+5, C=0, D=-5, E=-10 (from base 15)
  * - Eco-Score CSV fallback: High carbon = -5 if OFF missing
- * - Palm oil: -8 (non-certified), 0 (RSPO certified), -5 (brand/parent low WWF/RSPO overlay)
+ * - Palm oil: -8 (non-certified), 0 (RSPO certified), -4 (brand/parent low WWF/RSPO overlay)
  * - Recyclable packaging: +5 (all) or +2 (some)
  * - Packaging eco-cost: -5 (high eco-cost materials)
  * - Non-Animal Farming: -5 (high-impact), +3 (low-impact), -3 (brand/parent high-impact overlay)

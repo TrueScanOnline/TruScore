@@ -1,0 +1,103 @@
+[
+  {
+    "database": "FDA Recalls",
+    "status": "working",
+    "resultsCount": 9,
+    "responseTime": 1768,
+    "sampleResult": {
+      "recallId": "F-1551-2024",
+      "productName": "Hershey s Ice Cream Vanilla & Chocolate Flavored Ice Cream Sheet Cake 110 fl oz, UPC 24682060152. Packaged in cardboard box, 3 boxes per case.",
+      "brand": "Totally Cool, Inc.",
+      "reason": "Possible contamination with Listeria monocytogenes",
+      "recallDate": "20240613",
+      "distribution": [
+        "Distributed nationwide."
+      ],
+      "isActive": false,
+      "url": "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+      "classification": "Class I"
+    },
+    "testedWith": [
+      "Hershey (034000000000)",
+      "Ferrero (7622210989488)",
+      "Yoplait (030000011000)"
+    ]
+  },
+  {
+    "database": "USDA FSIS Recalls",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 928,
+    "testedWith": [
+      "Hershey (034000000000)",
+      "Ferrero (7622210989488)",
+      "Yoplait (030000011000)"
+    ]
+  },
+  {
+    "database": "RASFF Alerts",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 15218,
+    "testedWith": [
+      "Hershey (034000000000)",
+      "Ferrero (7622210989488)",
+      "Yoplait (030000011000)"
+    ]
+  },
+  {
+    "database": "CFIA Recalls",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 20445,
+    "testedWith": [
+      "Hershey (034000000000)",
+      "Ferrero (7622210989488)",
+      "Yoplait (030000011000)"
+    ]
+  },
+  {
+    "database": "CPSC Recalls",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 112,
+    "testedWith": [
+      "Hershey (034000000000)",
+      "Ferrero (7622210989488)",
+      "Yoplait (030000011000)"
+    ]
+  },
+  {
+    "database": "UK FSA Recalls",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 1,
+    "testedWith": [
+      "Hershey (034000000000)",
+      "Ferrero (7622210989488)",
+      "Yoplait (030000011000)"
+    ]
+  },
+  {
+    "database": "DOL Enforcement",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 2597,
+    "testedWith": [
+      "Hershey (034000000000)",
+      "Ferrero (7622210989488)",
+      "Yoplait (030000011000)"
+    ]
+  },
+  {
+    "database": "ILO Statistics",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 0,
+    "testedWith": [
+      "Hershey (034000000000)",
+      "Ferrero (7622210989488)",
+      "Yoplait (030000011000)"
+    ]
+  }
+]

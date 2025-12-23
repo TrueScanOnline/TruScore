@@ -1,23 +1,31 @@
 /**
- * Care Pillar Calculation
+ * Ethics Pillar Calculation
  * 
- * Base Score: 15/25
+ * IMPLEMENTATION: Directly conforms to ETHICS Pillar.xlsx spec
+ * 
+ * Base Score: 15/25 (uniform)
  * Adjustments:
- * - Certifications: Fairtrade=+8, Organic=+7, Rainforest/UTZ=+6, MSC/ASC=+6, RSPO=+6, Ocean Wise=+5, RSPCA/Leaping Bunny/B-Corp=+5, Free-Roaming=+5, Friend of the Sea=+4, GlobalG.A.P=+4, Free-Range=+3, Cage-Free=+1
+ * - Certifications: Fairtrade=+8, Organic=+7, Rainforest/UTZ=+6, MSC/ASC=+6, Ocean Wise=+5, Friend of the Sea=+4, RSPCA/Leaping Bunny/B-Corp=+5, GlobalG.A.P=+4, Free-Roaming=+5, Free-Range=+3, Cage-Free=+1 (per spec - RSPO removed)
  * - Certification bonus cap: +15 total
- * - Animal Cruelty: 3-tier system - Limited=-4, Moderate=-8, Major=-15 (BBFAW tier-based, ASPCA, Ethical Consumer)
- * - Labor Violations: 3-tier system - Limited=-4, Moderate=-8, Major=-15 (DOL, Walk Free GSI, Buycott)
- * - Recalls (within 3 months): 3-tier system - Class III=-4, Class II=-8, Class I=-15
- * - Brand/Parent Overlay: -3 (mutually exclusive - only if product doesn't have violation)
+ * - Animal Cruelty: BBFAW tier-based ONLY - Tier 1=+4, Tier 2=+2, Tier 6=-7, E/F=-7
+ *   SPEC: "1. BBFAW; if not found nil return (only top 150 food companies currently assessed)"
+ *   NO FALLBACK - If BBFAW not found, return nil (no adjustment, no penalty)
+ *   NGO violations and news → Banner Alerts only (scoring neutral), time-bound <12months
+ * - Labor Violations: 3-tier system - Limited=-4, Moderate=-8, Major=-15 (DOL, Walk Free, Oxfam, ILO)
+ *   Brand/parent assessed separately with same tiers (-4/-8/-15), mutually exclusive
+ * - Recalls (within 3 months, universal): 3-tier system - Class III=-4, Class II=-8, Class I=-15
+ * - Brand/Parent Overlay: Tiered - Limited=-4, Moderate=-8, Major=-15 (mutually exclusive - only if product doesn't have violation)
  * 
- * Final: Capped at 0-25
+ * Final: Capped at 0-25 (min 0, max 25)
  */
 
 import { Product } from '../../../types/product';
 import { getBrandData, hasRecallHistory } from '../../../data/brandDatabase';
 import { logger } from '../../../utils/logger';
-import { checkAnimalCruelty, hasHighImpactAnimalCruelty } from '../../../services/animalCrueltyService';
+// Note: Animal cruelty fallback system removed per spec - BBFAW only
+// import { checkAnimalCruelty, hasHighImpactAnimalCruelty, AnimalCrueltyData } from '../../../services/animalCrueltyService';
 import { checkLaborViolations, hasHighImpactLaborViolations } from '../../../services/laborViolationsService';
+import { checkBBFAWTier, getBBFAWTierScore } from '../../../services/bbfawService';
 import { extractAllBrands, normalizeBrand } from '../../../utils/brandExtraction';
 import { matchBrands, getBestBrandMatch, getParentCompanies, checkBrandProperty } from '../../../services/brandMatchingService';
 
@@ -30,7 +38,7 @@ function getPerformanceNow(): number {
   return Date.now();
 }
 
-export interface CarePillarResult {
+export interface EthicsPillarResult {
   score: number;
   base: number;
   adjustments: Array<{
@@ -40,7 +48,8 @@ export interface CarePillarResult {
   }>;
   details: {
     certificationBonus: number;
-    animalCrueltyPenalty: number;
+    animalCrueltyPenalty: number; // Legacy violation-based penalty (fallback)
+    animalCrueltyAdjustment: number; // BBFAW tier-based adjustment (primary)
     laborViolationPenalty: number;
     recallPenalty: number;
     brandOverlayPenalty: number;
@@ -48,15 +57,15 @@ export interface CarePillarResult {
 }
 
 /**
- * Calculate Care Pillar score
+ * Calculate Ethics Pillar score
  * Always starts at base 15, then applies adjustments
  * 
  * PERFORMANCE: Optimized for fast calculation - all lookups are synchronous
  * and use in-memory brand database (no async API calls)
  */
-export function calculateCarePillar(product: Product): CarePillarResult {
+export function calculateEthicsPillar(product: Product): EthicsPillarResult {
   const startTime = getPerformanceNow();
-  const adjustments: CarePillarResult['adjustments'] = [];
+  const adjustments: EthicsPillarResult['adjustments'] = [];
   let score = 15; // Base score (always 15)
   const base = 15;
   
@@ -75,7 +84,7 @@ export function calculateCarePillar(product: Product): CarePillarResult {
   const bestBrandMatch = brandMatches.length > 0 ? brandMatches[0] : null;
   
   // Logging: Track what data we have
-  logger.debug('[CarePillar] Starting calculation:', {
+  logger.debug('[EthicsPillar] Starting calculation:', {
     barcode: product.barcode,
     productName: product.product_name?.substring(0, 50),
     labelsCount: labels.length,
@@ -149,20 +158,11 @@ export function calculateCarePillar(product: Product): CarePillarResult {
     });
   }
   
-  if (labels.some((l: string) => ['en:msc', 'en:asc', 'en:dolphin-safe'].includes(l))) {
+  // MSC/ASC certification (+6) - sustainable fishing per spec
+  if (labels.some((l: string) => ['en:msc', 'en:asc'].includes(l))) {
     certificationBonus += 6;
     adjustments.push({
-      description: 'MSC/ASC/Dolphin-Safe certification',
-      value: 6,
-      type: 'positive',
-    });
-  }
-  
-  // RSPO certification (Roundtable on Sustainable Palm Oil)
-  if (hasLabel('rspo') || hasLabel('roundtable-on-sustainable-palm-oil')) {
-    certificationBonus += 6;
-    adjustments.push({
-      description: 'RSPO certification',
+      description: 'MSC/ASC certification (sustainable fishing)',
       value: 6,
       type: 'positive',
     });
@@ -278,93 +278,65 @@ export function calculateCarePillar(product: Product): CarePillarResult {
     score += cappedCertBonus;
     if (certificationBonus > 15) {
       // If we hit the cap, note it
-      logger.debug(`[CarePillar] Certification bonus capped at +15 (total was +${certificationBonus})`);
+      logger.debug(`[EthicsPillar] Certification bonus capped at +15 (total was +${certificationBonus})`);
     }
   }
   
-  // Animal Cruelty penalties (Major=-15, Minor=-5)
-  // PERFORMANCE: Synchronous lookup from in-memory brand database
-  // ENHANCED: Check all brands found, not just primary
-  let animalCrueltyData = checkAnimalCruelty(product);
+  // Cap score at 25 after certifications (before penalties are applied)
+  // This ensures adjustments are made from baseline 15, with max of 25 after positive adjustments
+  score = Math.min(score, 25);
   
-  // Try all brands if primary brand didn't match
-  if (!animalCrueltyData.hasViolations && allBrands.length > 1) {
-    // Create a temporary product with each brand to check
-    for (let i = 1; i < allBrands.length; i++) {
-      const testBrand = allBrands[i];
-      const testProduct: Product = {
-        ...product,
-        brands: testBrand,
-      };
-      const testData = checkAnimalCruelty(testProduct);
-      if (testData.hasViolations) {
-        animalCrueltyData = testData;
-        logger.debug('[CarePillar] Animal cruelty found in secondary brand:', {
-          brand: testBrand,
-          violationType: testData.violationType,
+  // Define hasProductCertifications at function scope (used in both animal cruelty and labor violations sections)
+  const hasProductCertifications = cappedCertBonus > 0;
+  
+  // Animal Cruelty scoring (BBFAW tier-based system ONLY per Excel spec)
+  // SPEC: "1. BBFAW; if not found nil return (only top 150 food companies currently assessed)"
+  // NO FALLBACK - If BBFAW not found, return nil (no adjustment, no penalty)
+  // NGO violations and news → Banner Alerts only (scoring neutral), time-bound <12months
+  let animalCrueltyAdjustment = 0;
+  let animalCrueltyPenalty = 0; // Always 0 per spec - BBFAW only, no fallback violation system
+  let bbfawTierApplied = false;
+  
+  // Check BBFAW tier data (ONLY source per spec)
+  // Check all brands for BBFAW data
+  for (const brand of allBrands) {
+    const bbfawData = checkBBFAWTier(brand);
+    if (bbfawData) {
+      const tierScore = getBBFAWTierScore(bbfawData.tier);
+      if (tierScore !== 0) {
+        animalCrueltyAdjustment = tierScore;
+        bbfawTierApplied = true;
+        
+        if (tierScore > 0) {
+          adjustments.push({
+            description: `BBFAW Tier ${bbfawData.tier} (excellent animal welfare)`,
+            value: tierScore,
+            type: 'positive',
+          });
+        } else {
+          adjustments.push({
+            description: `BBFAW Tier ${bbfawData.tier} (poor animal welfare)`,
+            value: tierScore,
+            type: 'negative',
+          });
+        }
+        
+        score += tierScore;
+        logger.debug('[EthicsPillar] BBFAW tier-based scoring applied:', {
+          brand,
+          tier: bbfawData.tier,
+          score: tierScore,
         });
-        break;
+        break; // Use first BBFAW match found
       }
     }
   }
   
-  let animalCrueltyPenalty = 0;
-  
-  // Logging: Track brand lookup results
-  if (brandsLower || allBrands.length > 0) {
-    logger.debug('[CarePillar] Animal cruelty check:', {
-      primaryBrand: brandsLower || 'N/A',
-      allBrandsChecked: allBrands.length,
-      hasViolations: animalCrueltyData.hasViolations,
-      violationType: animalCrueltyData.violationType,
-      sources: animalCrueltyData.sources,
-      violations: animalCrueltyData.violations,
-    });
-  }
-  
-  // 3-TIER SYSTEM: Limited=-4, Moderate=-8, Major=-15
-  // MUTUALLY EXCLUSIVE LOGIC: Check if violation is product-level or parent-level
-  // If product has certifications (indicating ethical product), parent violations should use brand overlay
-  const hasProductCertifications = cappedCertBonus > 0;
-  const isParentLevelViolation = animalCrueltyData.violations.some(v => 
-    v.includes('parent') || v.includes('may use brand overlay')
-  );
-  
-  // Only apply direct penalty if violation is product-level OR product has no certifications
-  // If product is ethical (has certifications) and violation is parent-level, skip direct penalty
-  // (will be handled by brand overlay below)
-  if (animalCrueltyData.hasViolations && !(hasProductCertifications && isParentLevelViolation)) {
-    if (animalCrueltyData.violationType === 'major') {
-      animalCrueltyPenalty = 15;
-      adjustments.push({
-        description: 'Major animal cruelty violation (factory farming/slaughter/cruelty/BBFAW tier 1-2)',
-        value: -animalCrueltyPenalty,
-        type: 'negative',
-      });
-      score -= animalCrueltyPenalty;
-    } else if (animalCrueltyData.violationType === 'moderate') {
-      animalCrueltyPenalty = 8;
-      adjustments.push({
-        description: 'Moderate animal cruelty violation (overcrowding/poor transport/BBFAW tier 3-4)',
-        value: -animalCrueltyPenalty,
-        type: 'negative',
-      });
-      score -= animalCrueltyPenalty;
-    } else if (animalCrueltyData.violationType === 'limited') {
-      animalCrueltyPenalty = 4;
-      adjustments.push({
-        description: 'Limited animal cruelty violation (minor welfare lapses/BBFAW tier 5-6)',
-        value: -animalCrueltyPenalty,
-        type: 'negative',
-      });
-      score -= animalCrueltyPenalty;
-    }
-  } else if (animalCrueltyData.hasViolations && hasProductCertifications && isParentLevelViolation) {
-    // Product is ethical but parent has violations - will be handled by brand overlay
-    logger.debug('[CarePillar] Product is ethical but parent has violations - will use brand overlay instead of direct penalty');
-  } else if (brandsLower) {
-    // Log when no violations found (helps debug brand matching)
-    logger.debug('[CarePillar] No animal cruelty violations found for brand:', brandsLower);
+  // SPEC COMPLIANCE: If BBFAW not found, return nil (no adjustment, no penalty)
+  // NGO violations and news are handled in banner alerts (scoring neutral)
+  if (!bbfawTierApplied) {
+    logger.debug('[EthicsPillar] BBFAW data not found - returning nil (no adjustment, no penalty) per spec');
+    // No adjustment applied - spec says "if not found nil return"
   }
   
   // Labor Violations penalties (Minor=-5, Major=-15)
@@ -384,7 +356,7 @@ export function calculateCarePillar(product: Product): CarePillarResult {
       const testData = checkLaborViolations(testProduct);
       if (testData.hasViolations) {
         laborViolationData = testData;
-        logger.debug('[CarePillar] Labor violation found in secondary brand:', {
+        logger.debug('[EthicsPillar] Labor violation found in secondary brand:', {
           brand: testBrand,
           violationType: testData.violationType,
         });
@@ -397,7 +369,7 @@ export function calculateCarePillar(product: Product): CarePillarResult {
   
   // Logging: Track brand lookup results
   if (brandsLower || allBrands.length > 0) {
-    logger.debug('[CarePillar] Labor violation check:', {
+    logger.debug('[EthicsPillar] Labor violation check:', {
       primaryBrand: brandsLower || 'N/A',
       allBrandsChecked: allBrands.length,
       hasViolations: laborViolationData.hasViolations,
@@ -408,7 +380,23 @@ export function calculateCarePillar(product: Product): CarePillarResult {
   }
   
   // 3-TIER SYSTEM: Limited=-4, Moderate=-8, Major=-15
-  if (laborViolationData.hasViolations) {
+  // MUTUALLY EXCLUSIVE LOGIC: Check if violation is product-level or parent-level
+  // If product has certifications (indicating ethical product), parent violations should use brand overlay
+  // Check if violation is from parent company (even if parent is in brands list)
+  // Use brand_owner for parent detection (parentCompany is defined later)
+  const isParentLevelLaborViolation = laborViolationData.violations.some(v => 
+    v.includes('parent') || v.includes('may use brand overlay') ||
+    // If product is ethical and violating brand matches brand_owner (parent company), treat as parent-level
+    (hasProductCertifications && product.brand_owner && 
+     v.toLowerCase().includes(product.brand_owner.toLowerCase()) &&
+     // Only treat as parent-level if primary brand is different from brand_owner
+     primaryBrand && primaryBrand.toLowerCase() !== product.brand_owner.toLowerCase())
+  );
+  
+  // Only apply direct penalty if violation is product-level OR product has no certifications
+  // If product is ethical (has certifications) and violation is parent-level, skip direct penalty
+  // (will be handled by brand overlay below)
+  if (laborViolationData.hasViolations && !(hasProductCertifications && isParentLevelLaborViolation)) {
     if (laborViolationData.violationType === 'major') {
       laborViolationPenalty = 15;
       adjustments.push({
@@ -434,9 +422,12 @@ export function calculateCarePillar(product: Product): CarePillarResult {
       });
       score -= laborViolationPenalty;
     }
+  } else if (laborViolationData.hasViolations && hasProductCertifications && isParentLevelLaborViolation) {
+    // Product is ethical but parent has violations - will be handled by brand overlay
+    logger.debug('[EthicsPillar] Product is ethical but parent has labor violations - will use brand overlay instead of direct penalty');
   } else if (brandsLower) {
     // Log when no violations found (helps debug brand matching)
-    logger.debug('[CarePillar] No labor violations found for brand:', brandsLower);
+    logger.debug('[EthicsPillar] No labor violations found for brand:', brandsLower);
   }
   
   // Recalls penalty (within last 3 months, universal) - 3-TIER SYSTEM
@@ -448,7 +439,7 @@ export function calculateCarePillar(product: Product): CarePillarResult {
   
   // Logging: Track recall data availability
   const recallsCount = product.recalls?.length || 0;
-  logger.debug('[CarePillar] Recall check:', {
+  logger.debug('[EthicsPillar] Recall check:', {
     recallsAvailable: recallsCount > 0,
     recallsCount,
     recallsData: product.recalls ? 'present' : 'missing',
@@ -526,14 +517,14 @@ export function calculateCarePillar(product: Product): CarePillarResult {
       }
       
       score -= recallPenalty;
-      logger.info(`[CarePillar] Applied recall penalty: -${recallPenalty} (${recentRecalls.length} recent recall(s), highest severity: ${highestSeverity})`);
+      logger.info(`[EthicsPillar] Applied recall penalty: -${recallPenalty} (${recentRecalls.length} recent recall(s), highest severity: ${highestSeverity})`);
     } else {
       // Check if brand has recall history (even if not recent)
       productHasRecallHistory = product.recalls.length > 0;
-      logger.debug('[CarePillar] Recalls found but not recent (outside 3 months):', product.recalls.length);
+      logger.debug('[EthicsPillar] Recalls found but not recent (outside 3 months):', product.recalls.length);
     }
   } else {
-    logger.debug('[CarePillar] No recalls data available - product.recalls is empty or missing');
+    logger.debug('[EthicsPillar] No recalls data available - product.recalls is empty or missing');
   }
   
   // Brand/Parent Overlay Penalty (MUTUALLY EXCLUSIVE LOGIC)
@@ -550,7 +541,7 @@ export function calculateCarePillar(product: Product): CarePillarResult {
   const parentCompany = parentCompanies.length > 0 ? parentCompanies[0] : (brandData?.parentCompany || product.brand_owner);
   
   // Logging: Track brand database lookup with fuzzy matching results
-  logger.debug('[CarePillar] Brand database lookup (fuzzy matching):', {
+  logger.debug('[EthicsPillar] Brand database lookup (fuzzy matching):', {
     allBrandsChecked: allBrands.length,
     fuzzyMatchesCount: brandMatches.length,
     matchedBrand: matchedBrand || 'N/A',
@@ -571,30 +562,56 @@ export function calculateCarePillar(product: Product): CarePillarResult {
   
   // Only check brand overlay if product itself doesn't have the violation
   // Also check if product is ethical (has certifications) - if so, parent violations should use overlay
-  const productHasAnimalCruelty = animalCrueltyPenalty > 0;
+  // Check BBFAW adjustment (can be negative) - no legacy penalty (removed per spec)
+  const productHasAnimalCruelty = animalCrueltyAdjustment < 0;
   const productHasLaborViolations = laborViolationPenalty > 0;
   const productHasRecalls = productHasRecentRecalls; // Only recent recalls (3 months)
   const productIsEthical = cappedCertBonus > 0; // Has certifications indicating ethical product
   
-  // If product is ethical but parent has violations, we should use brand overlay
-  // Check if animal cruelty violation was parent-level
-  const animalCrueltyIsParentLevel = animalCrueltyData.violations.some(v => 
-    v.includes('parent') || v.includes('may use brand overlay')
+  // Check parent company BBFAW tier for brand overlay (if product doesn't have animal cruelty)
+  // SPEC: Brand overlay applies if parent has violations BUT product doesn't have the same violation
+  // For animal cruelty, we check parent company BBFAW tier (not product brand)
+  let parentBBFAWData: { tier: number; score: number } | null = null;
+  if (parentCompany && !productHasAnimalCruelty) {
+    const parentBBFAW = checkBBFAWTier(parentCompany);
+    if (parentBBFAW) {
+      const parentTierScore = getBBFAWTierScore(parentBBFAW.tier);
+      if (parentTierScore < 0) {
+        // Parent has poor BBFAW tier (negative score) - can trigger brand overlay
+        parentBBFAWData = { tier: parentBBFAW.tier, score: parentTierScore };
+      }
+    }
+  }
+  const laborViolationIsParentLevel = laborViolationData.violations.some(v => 
+    v.includes('parent') || v.includes('may use brand overlay') ||
+    // Check if violating brand matches parent company (from brand_owner or parent company detection)
+    (productIsEthical && parentCompany && v.toLowerCase().includes(parentCompany.toLowerCase())) ||
+    (productIsEthical && product.brand_owner && v.toLowerCase().includes(product.brand_owner.toLowerCase()) &&
+     // Only treat as parent-level if primary brand is different from brand_owner
+     primaryBrand && primaryBrand.toLowerCase() !== product.brand_owner.toLowerCase())
   );
   
-  // If product is ethical and violation is parent-level, we should use brand overlay instead
-  if (productIsEthical && animalCrueltyIsParentLevel && !productHasAnimalCruelty) {
-    // Product is ethical, parent has violations - use brand overlay
+  // Brand overlay checks (mutually exclusive - only if product doesn't have the violation)
+  // For animal cruelty: Check parent company BBFAW tier (if product doesn't have negative BBFAW adjustment)
+  if (!productHasAnimalCruelty && parentBBFAWData && parentBBFAWData.score < 0) {
+    // Product doesn't have animal cruelty, but parent has poor BBFAW tier (negative score)
     hasHighImpactAnimal = true;
-    logger.debug('[CarePillar] Product is ethical but parent has animal cruelty - using brand overlay');
+    logger.debug('[EthicsPillar] Product doesn\'t have animal cruelty but parent has poor BBFAW tier - using brand overlay', {
+      parentCompany,
+      parentBBFAWTier: parentBBFAWData.tier,
+      parentBBFAWScore: parentBBFAWData.score,
+    });
   }
   
-  // Check primary brand and all extracted brands
+  // For labor violations: Check parent company (if product doesn't have labor violations)
+  if (productIsEthical && laborViolationIsParentLevel && !productHasLaborViolations) {
+    // Product is ethical, parent has labor violations - use brand overlay
+    hasHighImpactLabor = true;
+    logger.debug('[EthicsPillar] Product is ethical but parent has labor violations - using brand overlay');
+  }
+  
+  // Check primary brand and all extracted brands for labor violations and recalls
   for (const brand of allBrands) {
-    // Animal cruelty: only if product doesn't have it
-    if (!productHasAnimalCruelty && hasHighImpactAnimalCruelty(brand)) {
-      hasHighImpactAnimal = true;
-    }
     // Labor violations: only if product doesn't have it
     if (!productHasLaborViolations && hasHighImpactLaborViolations(brand)) {
       hasHighImpactLabor = true;
@@ -605,11 +622,8 @@ export function calculateCarePillar(product: Product): CarePillarResult {
     }
   }
   
-  // Check parent company
+  // Check parent company for labor violations and recalls
   if (parentCompany) {
-    if (!productHasAnimalCruelty && !hasHighImpactAnimal && hasHighImpactAnimalCruelty(parentCompany)) {
-      hasHighImpactAnimal = true;
-    }
     if (!productHasLaborViolations && !hasHighImpactLabor && hasHighImpactLaborViolations(parentCompany)) {
       hasHighImpactLabor = true;
     }
@@ -619,7 +633,7 @@ export function calculateCarePillar(product: Product): CarePillarResult {
   }
   
   // Logging: Track overlay penalty checks
-  logger.debug('[CarePillar] Brand overlay checks (mutually exclusive):', {
+  logger.debug('[EthicsPillar] Brand overlay checks (mutually exclusive):', {
     productHasAnimalCruelty,
     productHasLaborViolations,
     productHasRecalls,
@@ -630,22 +644,91 @@ export function calculateCarePillar(product: Product): CarePillarResult {
   });
   
   // Apply brand overlay penalty only if product doesn't have the violation
+  // Excel spec: Brand overlay uses same tiers as product violations (-4/-8/-15)
   if (hasHighImpactAnimal || hasHighImpactLabor || hasBrandRecallHistory) {
-    // Excel spec: Brand overlay uses same tiers as product violations (-4/-8/-15)
-    // For simplicity, we use -3 as a general overlay (can be enhanced to use tiers)
-    brandOverlayPenalty = 3;
+    // Determine severity tier for brand overlay (same tiers as product violations)
+    let overlaySeverity: 'limited' | 'moderate' | 'major' = 'limited';
     const reasons: string[] = [];
-    if (hasHighImpactAnimal) reasons.push('animal cruelty');
-    if (hasHighImpactLabor) reasons.push('labor violations');
-    if (hasBrandRecallHistory) reasons.push('recall history');
+    
+    // Check animal cruelty severity from parent company BBFAW tier
+    if (hasHighImpactAnimal && parentBBFAWData) {
+      // Use BBFAW tier to determine severity for brand overlay
+      // SPEC: Brand overlay uses same tiers as product violations (-4/-8/-15)
+      // Map BBFAW tier to severity: Tier 6/E/F = major (-15), Tier 3-5 = moderate (-8), Tier 1-2 = limited (-4) but positive so skip
+      // Since parent has negative BBFAW score, it's a violation
+      if (parentBBFAWData.tier === 6 || parentBBFAWData.score <= -7) {
+        // Tier 6 or E/F = major severity for brand overlay
+        overlaySeverity = 'major';
+        reasons.push('animal cruelty (BBFAW Tier 6/E/F - major)');
+      } else if (parentBBFAWData.tier >= 3 && parentBBFAWData.tier <= 5) {
+        // Tiers 3-5 = moderate severity for brand overlay (conservative approach)
+        if (overlaySeverity === 'limited') {
+          overlaySeverity = 'moderate';
+        }
+        reasons.push(`animal cruelty (BBFAW Tier ${parentBBFAWData.tier} - moderate)`);
+      } else {
+        // Tiers 1-2 are positive, so shouldn't trigger brand overlay
+        // But if we're here, it means hasHighImpactAnimal is true, so use moderate
+        if (overlaySeverity === 'limited') {
+          overlaySeverity = 'moderate';
+        }
+        reasons.push(`animal cruelty (BBFAW Tier ${parentBBFAWData.tier})`);
+      }
+    }
+    
+    // Check labor violations severity from parent company
+    if (hasHighImpactLabor) {
+      // Create a test product with parent company to check severity
+      const parentProduct: Product = {
+        ...product,
+        brands: parentCompany || matchedBrand || primaryBrand || '',
+      };
+      const parentLaborData = checkLaborViolations(parentProduct);
+      if (parentLaborData.violationType === 'major') {
+        overlaySeverity = 'major';
+        reasons.push('labor violations (major)');
+      } else if (parentLaborData.violationType === 'moderate' && overlaySeverity === 'limited') {
+        overlaySeverity = 'moderate';
+        reasons.push('labor violations (moderate)');
+      } else if (parentLaborData.violationType === 'limited' && overlaySeverity === 'limited') {
+        reasons.push('labor violations (limited)');
+      }
+    }
+    
+    // Check recall severity from brand database
+    // Note: Brand database only stores boolean recallHistory, not classification
+    // For brand overlay, we use moderate (-8) as default since we don't have Class I/II/III data
+    // This is conservative - if brand has recall history, it's a moderate concern
+    if (hasBrandRecallHistory) {
+      if (overlaySeverity !== 'major') {
+        // Default to moderate for recall history (conservative approach)
+        // Brand database doesn't store recall classifications, so we use moderate
+        if (overlaySeverity === 'limited') {
+          overlaySeverity = 'moderate';
+        }
+        reasons.push('recall history (moderate)');
+      } else {
+        reasons.push('recall history');
+      }
+    }
+    
+    // Apply tiered penalty based on severity
+    // Limited = -4, Moderate = -8, Major = -15
+    if (overlaySeverity === 'major') {
+      brandOverlayPenalty = 15;
+    } else if (overlaySeverity === 'moderate') {
+      brandOverlayPenalty = 8;
+    } else {
+      brandOverlayPenalty = 4;
+    }
     
     adjustments.push({
-      description: `Brand/parent high-impact overlay (${reasons.join(', ')}) - mutually exclusive`,
+      description: `Brand/parent overlay (${reasons.join(', ')}) - ${overlaySeverity} severity - mutually exclusive`,
       value: -brandOverlayPenalty,
       type: 'negative',
     });
     score -= brandOverlayPenalty;
-    logger.info(`[CarePillar] Applied brand overlay penalty: -${brandOverlayPenalty} (${reasons.join(', ')}) - product doesn't have these violations`);
+    logger.info(`[EthicsPillar] Applied brand overlay penalty: -${brandOverlayPenalty} (${overlaySeverity} severity: ${reasons.join(', ')}) - product doesn't have these violations`);
   }
   
   // Cap at 0-25
@@ -654,13 +737,14 @@ export function calculateCarePillar(product: Product): CarePillarResult {
   const calculationTime = getPerformanceNow() - startTime;
   
   // Comprehensive logging for debugging and analysis
-  logger.info('[CarePillar] Calculation complete:', {
+  logger.info('[EthicsPillar] Calculation complete:', {
     barcode: product.barcode,
     productName: product.product_name?.substring(0, 50),
     base,
     certificationBonus: cappedCertBonus,
     certificationBonusRaw: certificationBonus,
-    animalCrueltyPenalty,
+    animalCrueltyPenalty, // Always 0 per spec - BBFAW only, no fallback violation system
+    animalCrueltyAdjustment, // BBFAW tier-based adjustment only (nil if BBFAW not found)
     laborViolationPenalty,
     recallPenalty,
     brandOverlayPenalty,
@@ -679,14 +763,14 @@ export function calculateCarePillar(product: Product): CarePillarResult {
     // Certification detection
     certificationsFound: adjustments.filter(a => a.type === 'positive').length,
     // Violations detected
-    hasAnimalCruelty: animalCrueltyPenalty > 0,
+    hasAnimalCruelty: animalCrueltyAdjustment < 0, // BBFAW negative adjustment only (no fallback penalty)
     hasLaborViolations: laborViolationPenalty > 0,
     hasRecallsPenalty: recallPenalty > 0,
     hasBrandOverlay: brandOverlayPenalty > 0,
   });
   
   // Detailed debug log with all adjustments
-  logger.debug('[CarePillar] Detailed breakdown:', {
+  logger.debug('[EthicsPillar] Detailed breakdown:', {
     adjustments: adjustments.map(a => ({
       description: a.description,
       value: a.value,
@@ -701,10 +785,10 @@ export function calculateCarePillar(product: Product): CarePillarResult {
     details: {
       certificationBonus: cappedCertBonus,
       animalCrueltyPenalty,
+      animalCrueltyAdjustment,
       laborViolationPenalty,
       recallPenalty,
       brandOverlayPenalty,
     },
   };
 }
-

@@ -93,13 +93,19 @@ export async function checkComprehensiveUSRecalls(
 async function searchUSDAFSISRecalls(searchTerm: string): Promise<ComprehensiveRecall[]> {
   try {
     // USDA FSIS Recall API endpoint
-    const url = `https://api.fsis.usda.gov/recalls/v1/recalls?search=${encodeURIComponent(searchTerm)}&limit=10`;
+    // Note: API returns ALL recalls (large dataset), we filter client-side
+    const url = `https://www.fsis.usda.gov/fsis/api/recall/v/1`;
     
     const response = await fetch(url, {
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'TrueScan-FoodScanner/1.0.0',
       },
+      signal: (() => {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        return controller.signal;
+      })(),
     });
 
     if (!response.ok) {
@@ -115,27 +121,99 @@ async function searchUSDAFSISRecalls(searchTerm: string): Promise<ComprehensiveR
       return [];
     }
 
+    // Filter by search term and date (client-side filtering)
+    const searchLower = searchTerm.toLowerCase().trim();
+    const twoYearsAgo = new Date();
+    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+
     return data
       .filter((recall: any) => {
-        // Only include active or recent recalls (within last 2 years)
-        if (recall.recallDate) {
-          const recallDate = new Date(recall.recallDate);
-          const twoYearsAgo = new Date();
-          twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-          return recallDate >= twoYearsAgo;
+        // Filter by search term (product description, company, recall reason, title)
+        // USDA FSIS uses field_* prefix for most fields
+        const title = (recall.field_title || '').toLowerCase();
+        const productDesc = (recall.field_product_items || recall.productDescription || recall.productName || '').toLowerCase();
+        const company = (recall.field_establishment || recall.companyName || recall.brand || '').toLowerCase();
+        const reason = (recall.field_recall_reason || recall.reasonForRecall || recall.hazard || '').toLowerCase();
+        const summary = (recall.field_summary || recall.summary || '').toLowerCase();
+        
+        // Match search term in any field (more lenient matching)
+        // Also split search term into words for partial matching
+        const searchWords = searchLower.split(/\s+/).filter(w => w.length > 2);
+        let matchesSearch = searchTerm.length === 0;
+        
+        if (searchTerm.length > 0) {
+          // Check if any search word appears in any field
+          matchesSearch = searchWords.some(word => 
+            title.includes(word) ||
+            productDesc.includes(word) || 
+            company.includes(word) || 
+            reason.includes(word) ||
+            summary.includes(word)
+          ) || 
+          // Also check full search term
+          title.includes(searchLower) ||
+          productDesc.includes(searchLower) || 
+          company.includes(searchLower) || 
+          reason.includes(searchLower) ||
+          summary.includes(searchLower);
         }
-        return true;
+        
+        if (!matchesSearch) return false;
+        
+        // Only include active or recent recalls (within last 2 years)
+        // Check field_closed_date and field_recall_date
+        const closedDateStr = recall.field_closed_date;
+        const recallDateStr = recall.field_recall_date || recall.recallDate || recall.field_year;
+        
+        // If closed, check if it's recent
+        if (closedDateStr) {
+          try {
+            const closedDate = new Date(closedDateStr);
+            if (!isNaN(closedDate.getTime()) && closedDate < twoYearsAgo) {
+              return false; // Too old
+            }
+          } catch {
+            // Date parsing failed, continue
+          }
+        }
+        
+        // Check recall date
+        if (recallDateStr) {
+          try {
+            const recallDate = new Date(recallDateStr);
+            if (!isNaN(recallDate.getTime())) {
+              return recallDate >= twoYearsAgo;
+            }
+            // Try parsing year only if full date fails
+            const yearStr = recallDateStr.toString().substring(0, 4);
+            const year = parseInt(yearStr);
+            if (!isNaN(year) && year >= twoYearsAgo.getFullYear() - 1) {
+              return true; // Include if year is recent
+            }
+          } catch {
+            // Date parsing failed, include it anyway
+          }
+        }
+        
+        // Include if no date or date parsing failed (better to show than hide)
+        // Also check if it's an active notice
+        if (recall.field_active_notice === 'True' || recall.field_active_notice === true) {
+          return true; // Active notices are always included
+        }
+        
+        return true; // Default: include it
       })
+      .slice(0, 10) // Limit to 10 results
       .map((recall: any) => ({
-        recallId: recall.recallNumber || recall.id || 'unknown',
-        productName: recall.productDescription || recall.productName || 'Unknown Product',
-        brand: recall.companyName || recall.brand,
-        reason: recall.reasonForRecall || recall.hazard || 'No reason provided',
-        recallDate: recall.recallDate || new Date().toISOString(),
+        recallId: recall.field_recall_number || recall.recallNumber || recall.id || 'unknown',
+        productName: recall.field_product_items || recall.productDescription || recall.productName || 'Unknown Product',
+        brand: recall.field_establishment || recall.companyName || recall.brand,
+        reason: recall.field_recall_reason || recall.reasonForRecall || recall.hazard || 'No reason provided',
+        recallDate: recall.field_recall_date || recall.recallDate || new Date().toISOString(),
         agency: 'USDA_FSIS' as const,
-        distribution: recall.distributionPattern ? recall.distributionPattern.split(',').map((d: string) => d.trim()) : undefined,
-        isActive: recall.status?.toLowerCase() === 'active' || recall.status?.toLowerCase() === 'ongoing',
-        url: recall.url || `https://www.fsis.usda.gov/recalls`,
+        distribution: recall.field_distro_list ? (typeof recall.field_distro_list === 'string' ? recall.field_distro_list.split(',').map((d: string) => d.trim()) : recall.field_distro_list) : undefined,
+        isActive: recall.field_active_notice !== false && recall.field_archive_recall !== true,
+        url: recall.field_recall_url || recall.url || `https://www.fsis.usda.gov/recalls`,
       }));
   } catch (error) {
     logger.debug('Error searching USDA FSIS recalls:', error);

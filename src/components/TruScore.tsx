@@ -58,10 +58,11 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium' }: Tru
       </Text>
       <Text style={[styles.subLabel, { color: colors.textSecondary }]}>TruScore</Text>
 
-      {/* Pillar Bars - Display in consistent order: Body, Planet, Care, Open */}
+      {/* Pillar Bars - Display in consistent order: Body, Planet, Ethics, Open */}
       <View style={styles.pillarsContainer}>
-        {(['Body', 'Planet', 'Care', 'Open'] as const).map((pillar) => {
-          const value = breakdown[pillar];
+        {(['Body', 'Planet', 'Ethics', 'Open'] as const).map((pillar) => {
+          const value = breakdown[pillar] ?? 0;
+          const safeValue = typeof value === 'number' && !isNaN(value) ? value : 0;
           return (
             <View key={pillar} style={styles.pillarRow}>
               <Text style={[styles.pillarLabel, { color: colors.text }]}>{pillar}</Text>
@@ -70,13 +71,13 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium' }: Tru
                   style={[
                     styles.pillarBar,
                     {
-                      width: `${(value / 25) * 100}%`,
-                      backgroundColor: getPillarColor(pillar, value),
+                      width: `${(safeValue / 25) * 100}%`,
+                      backgroundColor: getPillarColor(pillar, safeValue),
                     },
                   ]}
                 />
               </View>
-              <Text style={[styles.pillarValue, { color: colors.text }]}>{value}/25</Text>
+              <Text style={[styles.pillarValue, { color: colors.text }]}>{safeValue}/25</Text>
             </View>
           );
         })}

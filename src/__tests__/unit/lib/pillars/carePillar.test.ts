@@ -1,13 +1,13 @@
 /**
- * Care Pillar Unit Tests
+ * Ethics Pillar Unit Tests
  * 
- * Tests the Care Pillar calculation independently
+ * Tests the Ethics Pillar calculation independently
  */
 
-import { calculateCarePillar } from '../../../../lib/truscoreEngine/pillars/carePillar';
+import { calculateEthicsPillar } from '../../../../lib/truscoreEngine/pillars/ethicsPillar';
 import { Product } from '../../../../types/product';
 
-describe('Care Pillar Calculation', () => {
+describe('Ethics Pillar Calculation', () => {
   const baseProduct: Product = {
     barcode: '1234567890123',
     product_name: 'Test Product',
@@ -23,14 +23,14 @@ describe('Care Pillar Calculation', () => {
   };
 
   test('should start at base score 15', () => {
-    const result = calculateCarePillar(baseProduct);
+    const result = calculateEthicsPillar(baseProduct);
     expect(result.base).toBe(15);
     expect(result.score).toBe(15);
   });
 
   test('should apply Fairtrade certification bonus (+8)', () => {
     const product = { ...baseProduct, labels_tags: ['en:fair-trade'] };
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     expect(result.base).toBe(15);
     expect(result.score).toBe(23); // 15 + 8
     expect(result.details.certificationBonus).toBe(8);
@@ -38,7 +38,7 @@ describe('Care Pillar Calculation', () => {
 
   test('should apply Organic certification bonus (+7)', () => {
     const product = { ...baseProduct, labels_tags: ['en:organic'] };
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     expect(result.base).toBe(15);
     expect(result.score).toBe(22); // 15 + 7
     expect(result.details.certificationBonus).toBe(7);
@@ -49,7 +49,7 @@ describe('Care Pillar Calculation', () => {
       ...baseProduct,
       labels_tags: ['en:fair-trade', 'en:organic', 'en:rainforest-alliance'], // 8 + 7 + 6 = 21, capped at 15
     };
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     expect(result.base).toBe(15);
     expect(result.score).toBe(25); // 15 + 15 = 30, but capped at 25 (pillar max)
     expect(result.score).toBeLessThanOrEqual(25);
@@ -58,7 +58,7 @@ describe('Care Pillar Calculation', () => {
 
   test('should apply major animal cruelty penalty (-15)', () => {
     const product = { ...baseProduct, brands: 'Unilever' }; // Known for animal testing
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     // Note: This test depends on the brand database
     // If Unilever has major animal cruelty, score should be 0 (15 - 15)
     expect(result.base).toBe(15);
@@ -69,7 +69,7 @@ describe('Care Pillar Calculation', () => {
 
   test('should apply major labor violation penalty (-15)', () => {
     const product = { ...baseProduct, brands: 'Nestle' }; // Known for poor labor practices
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     // Note: This test depends on the brand database
     // If Nestle has major labor violations, score should be reduced
     expect(result.base).toBe(15);
@@ -90,7 +90,7 @@ describe('Care Pillar Calculation', () => {
         isActive: true,
       }],
     };
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     expect(result.base).toBe(15);
     expect(result.details.recallPenalty).toBe(10);
     // Score should be reduced by at least 10 (may have additional penalties)
@@ -100,7 +100,7 @@ describe('Care Pillar Calculation', () => {
 
   test('should apply RSPO certification bonus (+6)', () => {
     const product = { ...baseProduct, labels_tags: ['en:rspo', 'en:roundtable-on-sustainable-palm-oil'] };
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     expect(result.base).toBe(15);
     expect(result.score).toBeGreaterThanOrEqual(21); // 15 + 6
     expect(result.details.certificationBonus).toBeGreaterThanOrEqual(6);
@@ -112,7 +112,7 @@ describe('Care Pillar Calculation', () => {
       labels_tags: ['en:leaping-bunny', 'en:cruelty-free'],
       leaping_bunny: { isCrueltyFree: true, certificationStatus: 'certified' } as any,
     };
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     expect(result.base).toBe(15);
     expect(result.score).toBeGreaterThanOrEqual(20); // 15 + 5
     expect(result.details.certificationBonus).toBeGreaterThanOrEqual(5);
@@ -120,7 +120,7 @@ describe('Care Pillar Calculation', () => {
 
   test('should apply brand overlay penalty (-3) for high-impact brands', () => {
     const product = { ...baseProduct, brands: 'Johnson & Johnson' }; // Known for recalls and animal testing
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     // Note: This test depends on the brand database
     // If J&J has high-impact conditions, overlay penalty should apply
     expect(result.base).toBe(15);
@@ -141,7 +141,7 @@ describe('Care Pillar Calculation', () => {
         isActive: true,
       }],
     };
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     expect(result.score).toBeGreaterThanOrEqual(0);
     expect(result.score).toBeLessThanOrEqual(25);
   });
@@ -160,7 +160,7 @@ describe('Care Pillar Calculation', () => {
         'en:cage-free', // +4
       ],
     };
-    const result = calculateCarePillar(product);
+    const result = calculateEthicsPillar(product);
     expect(result.score).toBeLessThanOrEqual(25);
     expect(result.details.certificationBonus).toBeLessThanOrEqual(15);
   });

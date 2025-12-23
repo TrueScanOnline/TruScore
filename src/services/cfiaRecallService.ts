@@ -5,6 +5,52 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '../utils/logger';
 
+// CORS proxy helper for web scraping
+async function fetchWithCorsProxy(url: string, retries = 2): Promise<string | null> {
+  const CORS_PROXIES = [
+    'https://api.allorigins.win/get?url=',
+    'https://corsproxy.io/?',
+    'https://api.codetabs.com/v1/proxy?quest=',
+  ];
+  
+  for (let i = 0; i < Math.min(retries, CORS_PROXIES.length); i++) {
+    const proxy = CORS_PROXIES[i];
+    try {
+      const proxyUrl = proxy + encodeURIComponent(url);
+      const response = await fetch(proxyUrl, {
+        headers: {
+          'Accept': 'text/html',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+        signal: (() => {
+          const controller = new AbortController();
+          setTimeout(() => controller.abort(), 10000);
+          return controller.signal;
+        })(),
+      });
+      
+      if (response.ok) {
+        const text = await response.text();
+        if (text && text.length > 100) {
+          try {
+            const json = JSON.parse(text);
+            if (json.contents) return json.contents; // allorigins format
+            if (json.content) return json.content;
+            if (typeof json === 'string') return json;
+          } catch {
+            return text;
+          }
+          return text;
+        }
+      }
+    } catch (error) {
+      logger.debug(`CFIA CORS proxy ${proxy} failed:`, error);
+      continue;
+    }
+  }
+  return null;
+}
+
 const CACHE_KEY_PREFIX = 'cfia_recall_';
 const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -44,16 +90,118 @@ export async function checkCFIARecalls(
       return filterProductSpecificRecalls(cached, productName, brand, barcode);
     }
 
-    // TODO: CFIA doesn't have a public API
-    // Options:
-    // 1. Web scraping (requires careful implementation and ToS compliance)
-    // 2. Wait for CFIA to provide API access
-    // 3. Use alternative Canadian recall sources if available
+    // CFIA doesn't have a public API, implement web scraping
+    // CFIA Recalls website: https://recalls-rappels.canada.ca/en
+    // Note: Respect ToS and rate limits
     
-    logger.debug(`CFIA: No public API available. Data available at https://recalls-rappels.canada.ca/en`);
+    const recalls: CFIARecall[] = [];
     
-    // For now, return empty array (can be enhanced with web scraping if needed)
-    return [];
+    try {
+      // CFIA Recalls search URL (public access)
+      const searchTerms: string[] = [];
+      if (productName) searchTerms.push(encodeURIComponent(productName));
+      if (brand) searchTerms.push(encodeURIComponent(brand));
+      if (barcode) searchTerms.push(encodeURIComponent(barcode));
+      
+      if (searchTerms.length === 0) {
+        return [];
+      }
+      
+      // Try to scrape CFIA Recalls website
+      // Using CORS proxy for web scraping
+      const cfiaUrl = `https://recalls-rappels.canada.ca/en`;
+      const html = await fetchWithCorsProxy(cfiaUrl);
+      
+      if (html) {
+        // Parse HTML to extract recall data
+        // CFIA website uses structured HTML - try multiple parsing strategies
+        
+        // Strategy 1: Look for JSON-LD structured data
+        const jsonLdMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+        for (const jsonLd of jsonLdMatches) {
+          try {
+            const jsonContent = jsonLd.match(/<script[^>]*>([\s\S]*?)<\/script>/i)?.[1];
+            if (jsonContent) {
+              const parsed = JSON.parse(jsonContent);
+              if (Array.isArray(parsed)) {
+                parsed.forEach((item: any) => {
+                  if (item['@type'] === 'Product' || item.name) {
+                    const productName = item.name || item.productName || '';
+                    if (productName) {
+                      recalls.push({
+                        recallId: item.identifier || `cfia-${Date.now()}-${Math.random()}`,
+                        productName,
+                        brand: brand,
+                        reason: item.description || 'CFIA recall - check details',
+                        recallDate: item.datePublished || new Date().toISOString(),
+                        distribution: undefined,
+                        isActive: true,
+                        url: item.url || `https://recalls-rappels.canada.ca/en`,
+                        barcode: barcode,
+                      });
+                    }
+                  }
+                });
+              }
+            }
+          } catch {
+            // Not valid JSON, continue
+          }
+        }
+        
+        // Strategy 2: Look for table rows or list items (fallback)
+        if (recalls.length === 0) {
+          // Look for links or text that might be product names
+          const linkMatches = html.match(/<a[^>]*href=["'][^"']*recall[^"']*["'][^>]*>([^<]+)<\/a>/gi) || [];
+          const textMatches = html.match(/>([^<]{10,100})</g) || [];
+          const allMatches = [...linkMatches, ...textMatches];
+          
+          for (const match of allMatches.slice(0, 20)) {
+            // Extract text from HTML
+            const textMatch = match.match(/>([^<]+)</);
+            const productText = textMatch?.[1]?.trim() || '';
+            
+            if (productText && productText.length > 5 && productText.length < 100) {
+              // Check if it matches search terms
+              const productLower = productText.toLowerCase();
+              const matchesSearch = searchTerms.length === 0 || searchTerms.some(term => 
+                productLower.includes(decodeURIComponent(term).toLowerCase())
+              );
+              
+              if (matchesSearch) {
+                // Extract date if available
+                const dateMatch = match.match(/(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/);
+                
+                recalls.push({
+                  recallId: `cfia-${Date.now()}-${Math.random()}`,
+                  productName: productText,
+                  brand: brand,
+                  reason: 'CFIA recall - check details',
+                  recallDate: dateMatch?.[1] || new Date().toISOString(),
+                  distribution: undefined,
+                  isActive: true,
+                  url: `https://recalls-rappels.canada.ca/en`,
+                  barcode: barcode,
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logger.debug('CFIA web scraping error (non-critical):', error);
+      // Continue without recalls if scraping fails
+    }
+    
+    // Cache results if any found
+    if (recalls.length > 0) {
+      await cacheRecall(cacheKey, recalls);
+      return filterProductSpecificRecalls(recalls, productName, brand, barcode);
+    }
+    
+    logger.debug(`CFIA: Web scraping attempted, ${recalls.length} recalls found`);
+    
+    return recalls;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Error checking CFIA recalls:`, errorMessage);

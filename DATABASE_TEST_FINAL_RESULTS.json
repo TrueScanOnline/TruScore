@@ -1,0 +1,50 @@
+[
+  {
+    "name": "FDA Recalls",
+    "status": "working",
+    "resultsCount": 17,
+    "responseTime": 1203
+  },
+  {
+    "name": "USDA FSIS Recalls",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 428
+  },
+  {
+    "name": "RASFF Alerts",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 10101
+  },
+  {
+    "name": "CFIA Recalls",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 10083
+  },
+  {
+    "name": "CPSC Recalls",
+    "status": "working",
+    "resultsCount": 10,
+    "responseTime": 83
+  },
+  {
+    "name": "UK FSA Recalls",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 1
+  },
+  {
+    "name": "DOL Enforcement",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 1543
+  },
+  {
+    "name": "ILO Statistics",
+    "status": "not_working",
+    "resultsCount": 0,
+    "responseTime": 0
+  }
+]

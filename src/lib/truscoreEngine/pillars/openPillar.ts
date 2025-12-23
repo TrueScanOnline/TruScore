@@ -8,7 +8,7 @@
  * - NOVA amplification: +1 to hidden count if NOVA≥3 & disclosure partial/none
  * - Zero hidden rewards: +5 (zero hidden + NOVA 1-2) OR +2 (zero hidden but not NOVA 1-2)
  * - Origin: No origin=-8
- * - Brand ownership: Hidden/opaque parent=-5
+ * - Brand ownership: Hidden/opaque parent=-3
  * 
  * Final: Capped at 0-25
  */

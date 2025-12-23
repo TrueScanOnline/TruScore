@@ -80,7 +80,7 @@ export class ShareContentBuilder {
     const scoreLabel = this.getScoreLabel(score);
     const body = truScore?.breakdown.Body ?? product.trust_score_breakdown?.body ?? 0;
     const planet = truScore?.breakdown.Planet ?? product.trust_score_breakdown?.planet ?? 0;
-    const care = truScore?.breakdown.Care ?? product.trust_score_breakdown?.care ?? 0;
+    const ethics = truScore?.breakdown.Ethics ?? product.trust_score_breakdown?.care ?? 0;
     const open = truScore?.breakdown.Open ?? product.trust_score_breakdown?.open ?? 0;
 
     // VIRAL HOOKS - Platform-optimized for maximum engagement
@@ -109,7 +109,7 @@ export class ShareContentBuilder {
       `📊 TruScore: ${score}/100\n` +
       `• Body: ${body}/25\n` +
       `• Planet: ${planet}/25\n` +
-      `• Care: ${care}/25\n` +
+      `• Ethics: ${ethics}/25\n` +
       `• Open: ${open}/25\n\n` +
       `🔍 Tap to see the full breakdown\n` +
       `📱 Free app - no sign-up needed\n\n` +

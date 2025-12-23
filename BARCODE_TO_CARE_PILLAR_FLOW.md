@@ -603,3 +603,6 @@ if (!product.brands && product.product_name) {
 The good news: We've fixed the most critical issue (brand extraction and checking all brands). The remaining issues are about data quality and database coverage, which can be improved incrementally.
 
 
+
+
+

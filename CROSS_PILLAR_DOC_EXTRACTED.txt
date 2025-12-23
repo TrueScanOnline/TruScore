@@ -1,0 +1,924 @@
+
+
+Body Pillar
+
+Data Element
+
+Scoring Measure
+
+Score Value
+
+Highlights Commentary
+
+Explainer
+
+External Resource
+
+Base Score
+
+Uniform default (assumes safe until proven bad; scaled global Nutri avg ~C 60/100)
+
++15
+
+N/A (internal buffer)
+
+Starts neutral—assumes safe till risks show.
+
+Open Food Facts Nutrition (world.openfoodfacts.org/nutrition)
+
+Nutrient Profile
+
+A equiv (nutriscore_grade or local equiv like health_star_rating/traffic_light_scores)
+
++7
+
+Excellent nutrient balance
+
+Balanced nutrition profile boosts health—low sugar/salt/fat, high in fibre/protein.
+
+[Override Rule for Alcoholic Drink Products: Alcohol should always be consumed in moderation and with consideration of your personal health status]
+
+Open Food Facts Nutri-Score (world.openfoodfacts.org/nutri-score)
+
+
+
+B equiv
+
++3
+
+Good nutrient balance
+
+Solid nutrient profile and overall good for your health.
+
+
+
+C equiv
+
+0
+
+Average nutrient balance
+
+Just okay.  Nutritional balance so-so. Watch your portions.
+
+
+
+D equiv
+
+-3
+
+Poor nutrient balance
+
+Unbalanced—high in bad stuff even if there’s some good stuff. Cut back.
+
+
+
+E equiv
+
+-7
+
+Very poor nutrient balance
+
+Risky mix—loaded with sugar/salt/fat. Avoid often.
+
+NOVA Group
+
+NOVA 1 (whole foods; nova_group)
+
++3
+
+Unprocessed or minimally processed
+
+Whole foods—natural, healthiest choice.
+
+Open Food Facts NOVA Groups (world.openfoodfacts.org/nova)
+
+
+
+NOVA 2
+
++1
+
+Processed culinary ingredients
+
+Basic processed oils/sugars/fats/salts, extracted from natural foods or derived from nature, used to season and cook.
+
+
+
+NOVA 3
+
+-1
+
+Processed foods
+
+Combined natural and culinary ingredients.  Okay in moderation.
+
+
+
+NOVA 4 (ultra-processed; cap -10 total processing penalties)
+
+-6
+
+Ultra-processed foods
+
+Engineered foods linked to obesity/gut issues. Limit your intake.
+
+Additives/Risks & Universal Irritants
+
+Safe (non-IARC/EWG flagged) (additives_tags/ingredients_analysis_tags; dedup cap -15 total)
+
+0
+
+Contains additives with no known risks.
+
+[insert flagged additive(s)/irritant(s)] Many additives are considered safe in small quantities for the general population and are vital for food preservation.
+
+Open Food Facts Additives (world.openfoodfacts.org/additives)
+
+
+
+Caution (non-IARC/EWG flagged)
+
+-1
+
+Contains additives with a little caution needed.
+
+[insert flagged additive(s)/irritant(s)] Many additives are considered safe in small quantities for the general population and are vital for food preservation (preventing spoilage and bacterial growth). However, caution is advised for certain individuals (e.g., those with allergies or sensitivities).
+
+
+
+Avoid (non-IARC/EWG flagged)
+
+-3
+
+Contains additives that are better avoided.
+
+[insert flagged additive(s)/irritant(s)] Some additives are widely recommended for avoidance due to significant health concerns, including links to cancer, cardiovascular problems, and other health issues.
+
+
+
+IARC Class 2B
+
+-3
+
+Contains possible carcinogen.
+
+[insert flagged additive(s)/irritant(s)] Suspected cancer link.  Avoid altogether or at least limit exposure/intake. [insert flagged additive(s)]
+
+
+
+IARC Class 2A
+
+-5
+
+Contains probable carcinogen.
+
+[insert flagged additive(s)/irritant(s)] Probable cancer risk.  Avoid altogether or at least be very aware of consumption levels.
+
+
+
+EWG High (e.g., phthalates endocrine)
+
+-5
+
+High concern ingredients and/or processing.
+
+[insert flagged additive(s)/irritant(s)] Indicates significant concerns related to potential health hazards from nutrition, ingredients, and processing including use of pesticides. Limit risk by choosing organic options.
+
+
+
+IARC Class 1 (e.g., local ban/carcinogen)
+
+-10
+
+Contains known carcinogen.
+
+[insert flagged additive(s)/irritant(s)].  Proven cancer risk. Steer clear if you can or absolutely minimise intake.
+
+
+
+
+
+
+
+Planet Pillar
+
+Data Element
+
+Scoring Measure
+
+Score Value
+
+Highlights Commentary
+
+Explainer
+
+External Resource
+
+Base Score
+
+Uniform starting point (assumes eco until bad; scaled WWF global avg ~48/100)
+
++15
+
+N/A (internal buffer)
+
+Starts eco-neutral till impacts appear.
+
+WWF Living Planet Report (wwf.org/livingplanet)
+
+Eco-Score Grade
+
+A grade (ecoscore_grade or CSV lookups like carbon factors)
+
++7
+
+Excellent eco-impact profile.
+
+Low emissions/water use—planet-friendly.
+
+Open Food Facts Eco-Score (world.openfoodfacts.org/eco-score)
+
+
+
+Eco-Score Grade
+
+B grade
+
++3
+
+Better than average  eco-impact profile.
+
+Solid sustainability—minimal harm.
+
+Eco-Score Grade
+
+C grade
+
+0
+
+Average eco-impact
+
+Neutral—standard footprint, could improve.
+
+Eco-Score Grade
+
+D grade
+
+-3
+
+Poor eco-impact
+
+High resource drain—eco concern.
+
+Eco-Score Grade
+
+E grade
+
+-7
+
+Very poor eco-impact
+
+Massive footprint—avoid for planet.
+
+Eco-Score Grade
+
+High CSV carbon (if OFF missing)
+
+-5
+
+High carbon footprint
+
+Carbon-heavy—contributes to climate change.
+
+Palm/Deforestation
+
+Sustainable/cert RSPO or OFF sustainable tag (palm_oil boolean/tags)
+
+0
+
+Sustainable Palm Oil certified.
+
+Certified palm—no deforestation link.
+
+RSPO Standards (rspo.org/standards)
+
+Palm/Deforestation
+
+Non-sustainable palm (deduct if flagged without sustainable tag)
+
+-8
+
+Unsustainable Palm Oil
+
+Linked to habitat loss—avoid for the benefit of the planet.
+
+WWF Palm Oil Scorecard (wwf.org/palmoil)
+
+Palm/Deforestation
+
+Brand/parent low WWF/RSPO (overlay on brands_tags, even on clean products)
+
+-4
+
+Parent/Brand low sustainability rating
+
+Brand or Parent company has a poor environmental track record.
+
+Rainforest Action Network (ran.org/palm)
+
+Packaging
+
+Full recyclable (local laws; packaging_tags recycling array)
+
++3
+
+Fully recyclable
+
+Easy recycle—low waste impact.
+
+Recycling Partnership (recyclingpartnership.org)
+
+Packaging
+
+Partial recyclable
+
++1
+
+Partially recyclable
+
+Some reuse—better than nothing.
+
+Packaging
+
+High eco-cost material (Idemat CSV eco-cost)
+
+-5
+
+High impact packaging
+
+Polluting packaging—eco drain.
+
+Idemat Database (idematapp.com)
+
+Non-Animal Farming
+
+Low impact (origins_tags crop filter; high-water/carbon/land/crop treatment)
+
++3
+
+Low Carbon footprint.
+
+Sustainable crops—minimal eco harm.
+
+FAO Sustainable Ag (fao.org/sustainable-ag)
+
+Non-Animal Farming
+
+Brand/parent high impact (overlay)
+
+-3
+
+Parent/Brand High Carbon footprint farming practices.
+
+Parent's bad farming taints product score.
+
+EWG Dirty Dozen (ewg.org/dirtydozen)
+
+Non-Animal Farming
+
+High-water/carbon/land/crop treatment (e.g., strawberries if origins match high residue; deduct eco-only)
+
+-5
+
+High Carbon footprint.
+
+Resource-heavy—soil/biodiversity loss.
+
+USDA Pesticide Data (usda.gov/pdp)
+
+
+
+
+
+Ethics Pillar
+
+Data Element
+
+Scoring Measure
+
+Score Value
+
+Highlights Commentary
+
+Explainer
+
+External Resource
+
+Base Score
+
+Uniform starting point (assumes ethical until violations; scaled HSUS/RSPCA avg ~50/100)
+
++15
+
+N/A (internal buffer)
+
+Starts just ethical unless violations emerge.  Assumes ethical until violations; scaled HSUS/RSPCA avg ~50/100)
+
+ILO Labor Standards (ilo.org/standards)
+
+Certifications
+
+Fairtrade (labels_tags array filtered; stack cap +15)
+
++8
+
+Fairtrade certified
+
+Supports fair wages and working conditions for producers.   Certified and registered with [Insert certification agency(s)].
+
+Fairtrade International (fairtrade.net)
+
+Certifications
+
+Organic
+
++7
+
+Organic certified
+
+Produced without synthetic pesticides and fertilisers.  Certified Organic registered with [insert certification agency(s)].
+
+IFOAM Organics (ifoam.bio)
+
+Certifications
+
+Rainforest/UTZ Alliance Seal
+
++6
+
+[Seal 1] Rainforest Alliance Sustainable Agriculture Certification.
+
+Certifies ingredients not whole products (e.g. cocoa in a chocolate bar). Certified farms and companies support healthy forests, better farmer livelihoods, human rights, good environmental practices, as well as climate resilience.
+
+Rainforest Alliance (rainforest-alliance.org)
+
+[Seal 2] Rainforest Alliance Regenerative Agriculture Certification
+
+Represents all the most critical elements of the Rainforest Alliance Sustainable Agriculture Certification, with additional requirements for soil health, biodiversity, and climate resilience.
+
+Certifications
+
+MSC/ASC (sustainable fishing)
+
++6
+
+Certified wild-caught sustainable fishing.
+
+MSC certified sustainable wild-caught seafood.  Fully traceable from ocean to plate and verified by independent auditors.
+
+MSC Standards (msc.org/standards)
+
++6
+
+Responsibly farmed seafood certified.
+
+ASC certified responsibly farmed seafood.  Aquaculture operations must meet strict environmental and social standards, protecting water quality, worker welfare and local eco-systems.   
+
+ASC Standards (asc-aqua.org/seafood-lovers-choose-asc/)
+
+Certifications
+
+Ocean Wise
+
++5
+
+Ocean Wise recommended.
+
+Ocean Wise certification signifies that it's an environmentally responsible choice, supporting sustainable fishing and farming practices.
+
+Ocean Wise (ocean.org/overfishing/sustainable-seafood/)
+
+Certifications
+
+Free Roaming
+
++5
+
+Free roaming/pasture raised.
+
+High animal welfare and access to outdoor space supporting natural foraging habits.
+
+Certified Humane (certifiedhumane.org/cage-free-vs-free-range/)
+
+Certifications
+
+RSPCA/Leaping Bunny/B Corp
+
++5
+
+Animal Welfare cruelty free certified
+
+Animal welfare certified product registered with [insert certification agency(s)].
+
+Leaping Bunny (leapingbunny.org)
+
+RSPCA (rspcaapproved.org.au)
+
+B-Corp (bcorporation.com.au/what-bcorp/)
+
+Certifications
+
+Friend of the Sea
+
++4
+
+Friend of the Sea sustainable practices certification.
+
+Certifies sustainable practices for both wild-caught (not overfished, low bycatch, minimal habitat impact) and farmed seafood (no GMOs, habitat protection, fish welfare)
+
+Friend of the Sea (friendofthesea.org/why-friend-of-the-sea/)
+
+Certifications
+
+Global G.A.P
+
++4
+
+Good Agricultural Practices Certified
+
+Voluntary system for certifying of safe, traceable, and sustainably produced food, covering everything from farm to non-processed product across crops, livestock, and aquaculture.  Subject to independent audit.
+
+
+
+Certifications
+
+Free-Range
+
++3
+
+Free Range - often with access to outdoors.  
+
+Meaningful, regular access to an outdoor area for foraging, but standards can vary; some farms have large flocks where few birds go out.  Check for further info on the packaging if you’re keen to know more.
+
+Certified Humane (certifiedhumane.org/cage-free-vs-free-range/)
+
+Certifications
+
+Cage-Free
+
++1
+
+Cage-free - overcrowding and outdoor access uncertain.
+
+Hens are not in cages but live indoors in barns/aviaries with perches, nest boxes, and space to roam, but no guaranteed outdoor access.  Over-crowding risks.
+
+
+
+Ethics Pillar
+
+Data Element
+
+Scoring Measure
+
+Score Value
+
+Highlights Commentary
+
+Explainer
+
+External Resource
+
+Animal Cruelty
+
+BBFAW Tier 1 Rated
+
++4
+
+The company has taken a leadership position in policy and governance for animal welfare.
+
+Business Benchmark on Farm Animal Welfare (BBFAW) provides a leading
+
+global measure of farm animal welfare management, policy commitment,
+
+performance and disclosure in food companies. A Tier 1 classification requires a percentage score > 80%.
+
+Business Benchmark on Farm Animal Welfare (BBFAW) www.bbfaw.com
+
+Animal Cruelty
+
+BBFAW Tier 2 Rated
+
++2
+
+The company has made animal welfare governance and policy a business  priority
+
+Business Benchmark on Farm Animal Welfare (BBFAW) provides a leading
+
+global measure of farm animal welfare management, policy commitment,
+
+performance and disclosure in food companies. Tier 2 classification indicates this company has integrated robust animal welfare policies into its business strategy
+
+Animal Cruelty
+
+BBFAW Tier 6 Rated 
+
+-7
+
+Poor animal welfare governance report card.
+
+Business Benchmark on Farm Animal Welfare (BBFAW) provides a leading
+
+global measure of farm animal welfare management, policy commitment,
+
+performance and disclosure in food companies. This company is currently classified as Tier 6 meaning that the company provides limited if any evidence that it recognises farm animal welfare as a business issue.
+
+Animal Cruelty
+
+BBFAW E/F Impact Rating
+
+-7
+
+No evidence that this company makes improving animal welfare a business priority. 
+
+Business Benchmark on Farm Animal Welfare (BBFAW) provides a leading
+
+global measure of farm animal welfare management, policy commitment,
+
+performance and disclosure in food companies.  This company has been graded E/F due to inadequate demonstration of improved welfare impacts for farm animals in their operations and/or supply chains.
+
+Labor Violations/Human Exploitation
+
+Limited Concerns: Isolated Labor/worker rights lapse e.g. under-pay/over-work at Product level.
+
+-4
+
+Isolated Labor violations identified.
+
+Some fair pay/conditions lapse or other worker rights issues identified. Listed on [Registry].
+
+ILO Labor Standards (ilo.org/standards)
+
+Labor Violations/Human Exploitation
+
+At Brand and/or Parent level overlay.  Not scored if Product hits.
+
+Labor violations identified for the ownership of this product.
+
+The product itself did not trigger a hit, but the brand or Parent Company's Labor violations record taints the product score.  We thought we should let you know so that you can make your own choice. Listed on [Registry].
+
+Labor Violations/Human Exploitation
+
+Moderate Concerns: e.g. unsafe conditions violations at Product level.
+
+-8
+
+Significant Labor violations identified. 
+
+Significant Labor or worker safety violations were flagged for this product.  Listed on [Registry]. 
+
+Labor Violations/Human Exploitation
+
+At Brand and/or Parent level overlay.  Not scored if Product hits.
+
+Significant Labor violations identified for the ownership of this product.
+
+The product itself did not trigger a hit, but the brand or Parent Company's Labor violations record taints the product score.  We thought we should let you know so that you can make your own choice. Listed on [Registry].
+
+Labor Violations/Human Exploitation
+
+Major Concerns: e.g., child Labor/slavery at Product level.
+
+-15
+
+Human exploitation concerns identified.
+
+Significant Labor and human exploitation violations were flagged for this product.  Listed on [Registry].
+
+Labor Violations/Human Exploitation
+
+At Brand and/or Parent level overlay.  Not scored if Product hits.
+
+Human exploitation concerns identified for the ownership of this product.
+
+The product itself did not trigger a hit, but the brand or Parent Company's Labor violations and human rights record taints the product score.  We thought we should let you know so that you can make your own choice. Listed on [Registry].
+
+Recalls 
+
+Limited Concerns – Product Recall
+
+-4
+
+Limited concern - recent product recall history 
+
+Health risk alert - Unlikely harm.  Note: Food recalls may be specific to certain markets and supply chains.  We think you should be aware to make your own decisions. Click <here> for more. [insert recall alert hyperlink]
+
+OECD Global recalls Database (globalrecalls.oecd.org)
+
+Recalls
+
+Moderate Concerns – Product Recall
+
+-8
+
+Moderate concern - recent product recall history.
+
+Health risk alert- possible adverse health impacts.  Note: Food recalls may be specific to certain markets and supply chains.  We think you should be aware to make your own decisions. Click here for more. [insert recall alert hyperlink]
+
+Recalls
+
+Major Concerns – Product Recall
+
+-15
+
+Major concern – recent product recall history
+
+Health risk alert - reasonable probability of serious adverse health impacts.   Note: Food recalls may be specific to certain markets and supply chains.  We think you should be aware to make your own decisions. Click here for more. [insert recall alert hyperlink]
+
+
+
+
+
+Open Pillar
+
+Data Element
+
+Scoring Measure
+
+Score Value
+
+Highlights Commentary
+
+Explainer
+
+External Resource
+
+Base Score
+
+Uniform starting point (assumes transparent till hidden; scaled OECD G20 avg ~60/100)
+
++15
+
+N/A (internal buffer)
+
+Starts transparent till opacity shows.
+
+Open Food Facts Transparency (world.openfoodfacts.org/transparency)
+
+Ingredients Disclosure
+
+Present (full list disclosed digitally; ingredients_text present)
+
++2
+
+Full ingredients listed
+
+Clear ingredient list—no surprises.
+
+Open Food Facts Ingredients (world.openfoodfacts.org/ingredients)
+
+Ingredients Disclosure
+
+None (no list)
+
+-3
+
+No ingredients listed
+
+No ingredients available electronically.  Is it on the packet?  Click here to add. 
+
+Open Food Facts Ingredients (world.openfoodfacts.org/ingredients)
+
+Hidden Terms
+
+Zero hidden terms & NOVA1-2 (ingredients_text match for parfum/aroma etc)
+
++4
+
+Fully transparent label.
+
+No vague terms identified.  Transparent ingredient disclosure.
+
+Open Food Facts Additives (world.openfoodfacts.org/additives)
+
+Hidden Terms
+
+Zero hidden terms & NOVA3-4
+
++2
+
+Seemingly transparent label.
+
+No vague terms identified, but it is a processed product. Take a good look and report any vague terms <here>.
+
+Open Food Facts Additives (world.openfoodfacts.org/additives)
+
+Hidden Terms
+
+1 hidden term (deduct if match)
+
+-2
+
+Possible vague or hidden ingredient terms.
+
+Vague ingredient term; [insert hidden term(s)].  Improved clarity needed. Potentially hides risks.
+
+Open Food Facts Additives (world.openfoodfacts.org/additives)
+
+Hidden Terms
+
+2 hidden terms
+
+-6
+
+Vague or hidden ingredient terms.
+
+Multiple obscure ingredients; [insert hidden term(s)].  Improved clarity needed. Potentially hides risks
+
+Open Food Facts Additives (world.openfoodfacts.org/additives)
+
+Hidden Terms
+
+>=3 hidden terms
+
+-11
+
+Many vague or hidden ingredient terms.  
+
+Heavy ingredient opacity;  [insert hidden term(s)].  Potentially hides risks.
+
+Open Food Facts Additives (world.openfoodfacts.org/additives)
+
+Nutritional Information
+
+Present with geo benchmarking conventions adopted (e.g. per serve / per 100g in EU)
+
++3
+
+Full nutrition disclosed
+
+Nutritional information and benchmarks clear. Easy to compare.
+
+Open Food Facts Nutrition (world.openfoodfacts.org/nutrition)
+
+Nutritional Information
+
+Partial – no benchmarking
+
++1
+
+Partial nutrition info
+
+Basic nutritional recorded, but no benchmarks for ease of comparison.
+
+Open Food Facts Nutrition (world.openfoodfacts.org/nutrition)
+
+Nutritional Information
+
+None (digitally recorded)
+
+-3
+
+No nutrition info
+
+Missing nutritional details.  Difficult to assess nutritional value.
+
+Open Food Facts Nutrition (world.openfoodfacts.org/nutrition)
+
+Origins
+
+Complete origins (present and complete origins_tags)
+
++4
+
+Full origins disclosed
+
+Ingredient origin(s) made available.  
+
+Open Food Facts Origins (world.openfoodfacts.org/origins)
+
+Origins
+
+No origins
+
+-4
+
+No origins disclosed
+
+No ingredients origins available electronically.  Is it on the packet?  Click <here> to add.
+
+Open Food Facts Origins (world.openfoodfacts.org/origins)
+
+Brand Ownership
+
+Hidden/opaque parent (brands_tags parent map present)
+
+-3
+
+Opaque ownership
+
+Covert big corporate product ownership. Small, independent product ‘illusion’ alert.
+
+Open Food Facts Brands (world.openfoodfacts.org/brands)
+
+
+

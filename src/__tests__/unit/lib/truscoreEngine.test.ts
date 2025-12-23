@@ -14,7 +14,7 @@ describe('TruScore Engine', () => {
       expect(result.truscore).toBe(0);
       expect(result.breakdown.Body).toBe(0);
       expect(result.breakdown.Planet).toBe(0);
-      expect(result.breakdown.Care).toBe(0);
+      expect(result.breakdown.Ethics).toBe(0);
       expect(result.breakdown.Open).toBe(0);
     });
 
@@ -93,7 +93,7 @@ describe('TruScore Engine', () => {
       };
 
       const result = calculateTruScore(product);
-      expect(result.breakdown.Care).toBeGreaterThan(15); // Should have bonuses
+      expect(result.breakdown.Ethics).toBeGreaterThan(15); // Should have bonuses
     });
 
     it('should handle missing ingredients (Open pillar penalty)', () => {
@@ -134,7 +134,7 @@ describe('TruScore Engine', () => {
       expect(result.truscore).toBeGreaterThan(60); // Should be a good score
       expect(result.breakdown.Body).toBeGreaterThan(20);
       expect(result.breakdown.Planet).toBeGreaterThan(20);
-      expect(result.breakdown.Care).toBeGreaterThan(20);
+      expect(result.breakdown.Ethics).toBeGreaterThan(20);
       expect(result.breakdown.Open).toBeGreaterThan(15);
     });
   });

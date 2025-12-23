@@ -120,12 +120,12 @@ module.exports = {
       // '@qonversion/react-native-plugin', // Uncomment if plugin is installed
     ],
     extra: {
-      // EAS project ID removed for Expo Go development
-      // Uncomment this block ONLY when building with EAS Build for production
-      // Having this in Expo Go causes "Failed to download remote update" errors
-      // eas: {
-      //   projectId: '1ac14572-9608-42fa-aceb-c0e2a2f60687',
-      // },
+      // EAS project ID - Required for EAS Build
+      // Note: This is commented out for Expo Go development to prevent update errors
+      // Uncomment when building with EAS Build for production
+      eas: {
+        projectId: '1ac14572-9608-42fa-aceb-c0e2a2f60687',
+      },
       // Qonversion Project Key - same for both iOS and Android
       // Secret Key is for server-side use only (webhooks, backend API)
       // Get keys from: https://dashboard.qonversion.io/settings

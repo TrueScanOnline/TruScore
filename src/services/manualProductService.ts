@@ -95,7 +95,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
       const breakdown: TrustScoreBreakdown = {
         body: trustScoreResult.breakdown.Body || 0,
         planet: trustScoreResult.breakdown.Planet || 0,
-        care: trustScoreResult.breakdown.Care || 0,
+        care: trustScoreResult.breakdown.Ethics || 0,
         open: trustScoreResult.breakdown.Open || 0,
         reasons: [],
       };

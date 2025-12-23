@@ -21,7 +21,8 @@ import { fetchProductFromOPFF } from '../../services/openPetFoodFacts';
 import { fetchProductFromOPF } from '../../services/openProductsFacts';
 import { fetchProductFromNZStores } from '../../services/nzStoreApi';
 import { fetchProductFromAURetailers } from '../../services/auRetailerScraping';
-import { fetchProductFromTesco } from '../../services/tescoLabsApi';
+// Tesco Labs API removed - service discontinued December 2025
+// import { fetchProductFromTesco } from '../../services/tescoLabsApi';
 import { fetchProductFromWalmart } from '../../services/walmartOpenApi';
 import { fetchProductFromFoodRepo } from '../../services/foodRepoApi';
 import { fetchProductFromEdamam } from '../../services/edamamApi';
@@ -386,11 +387,12 @@ export class TruScoreOptimizedDatabase {
       logger.debug(`[Smart DB Selection] Skipping AU retailers query for non-AU user (${userCountry})`);
     }
     
-    if (userCountry === 'GB') {
-      queries.push(fetchProductFromTesco(barcode));
-    } else {
-      logger.debug(`[Smart DB Selection] Skipping Tesco query for non-GB user (${userCountry})`);
-    }
+    // Tesco Labs API removed - service discontinued December 2025
+    // if (userCountry === 'GB') {
+    //   queries.push(fetchProductFromTesco(barcode));
+    // } else {
+    //   logger.debug(`[Smart DB Selection] Skipping Tesco query for non-GB user (${userCountry})`);
+    // }
     
     if (userCountry === 'US') {
       queries.push(fetchProductFromWalmart(barcode));

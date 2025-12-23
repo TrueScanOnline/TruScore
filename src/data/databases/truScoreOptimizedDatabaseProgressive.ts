@@ -20,7 +20,8 @@ import { fetchProductFromOPFF } from '../../services/openPetFoodFacts';
 import { fetchProductFromOPF } from '../../services/openProductsFacts';
 import { fetchProductFromNZStores } from '../../services/nzStoreApi';
 import { fetchProductFromAURetailers } from '../../services/auRetailerScraping';
-import { fetchProductFromTesco } from '../../services/tescoLabsApi';
+// Tesco Labs API removed - service discontinued December 2025
+// import { fetchProductFromTesco } from '../../services/tescoLabsApi';
 import { fetchProductFromWalmart } from '../../services/walmartOpenApi';
 import { fetchProductFromFoodRepo } from '../../services/foodRepoApi';
 import { fetchProductFromEdamam } from '../../services/edamamApi';
@@ -117,9 +118,10 @@ export async function queryAllDatabasesProgressive(
   if (userCountry === 'AU') {
     allQueries.push({ name: 'AU Retailers', query: fetchProductFromAURetailers(barcode), tier: 2 });
   }
-  if (userCountry === 'GB') {
-    allQueries.push({ name: 'Tesco', query: fetchProductFromTesco(barcode), tier: 2 });
-  }
+  // Tesco Labs API removed - service discontinued December 2025
+  // if (userCountry === 'GB') {
+  //   allQueries.push({ name: 'Tesco', query: fetchProductFromTesco(barcode), tier: 2 });
+  // }
   if (userCountry === 'US') {
     allQueries.push({ name: 'Walmart', query: fetchProductFromWalmart(barcode), tier: 2 });
     allQueries.push({ name: 'FoodRepo', query: fetchProductFromFoodRepo(barcode), tier: 2 });

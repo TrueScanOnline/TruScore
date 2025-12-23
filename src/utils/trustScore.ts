@@ -92,19 +92,28 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
     await cacheTruScore(product.barcode, truScoreResult);
   }
   
-  const body = truScoreResult.breakdown.Body;
-  const planet = truScoreResult.breakdown.Planet;
-  const care = truScoreResult.breakdown.Care;
-  const open = truScoreResult.breakdown.Open;
+  // Ensure all pillar scores are valid numbers (safety check)
+  const body = typeof truScoreResult.breakdown.Body === 'number' && !isNaN(truScoreResult.breakdown.Body) 
+    ? truScoreResult.breakdown.Body 
+    : 0;
+  const planet = typeof truScoreResult.breakdown.Planet === 'number' && !isNaN(truScoreResult.breakdown.Planet) 
+    ? truScoreResult.breakdown.Planet 
+    : 0;
+  const ethics = typeof truScoreResult.breakdown.Ethics === 'number' && !isNaN(truScoreResult.breakdown.Ethics) 
+    ? truScoreResult.breakdown.Ethics 
+    : 0;
+  const open = typeof truScoreResult.breakdown.Open === 'number' && !isNaN(truScoreResult.breakdown.Open) 
+    ? truScoreResult.breakdown.Open 
+    : 0;
 
   const breakdown: TrustScoreBreakdown = {
     body,
     planet,
-    care,
+    care: ethics, // Map Ethics to legacy 'care' field
     open,
     // Legacy fields (for backward compatibility and display)
     sustainability: (planet / 25) * 100, // Convert to 0-100 for compatibility
-    ethics: (care / 25) * 100,
+    ethics: (ethics / 25) * 100,
     bodySafety: (body / 25) * 100,
     processing: calculateProcessingScore(product), // Still calculated for educational display
     transparency: (open / 25) * 100,
