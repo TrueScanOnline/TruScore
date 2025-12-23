@@ -77,7 +77,7 @@ export function generateBannerAlerts(
                        highestSeverity.recall.recallId?.toUpperCase().startsWith('FSIS-') ? 'USDA FSIS' :
                        highestSeverity.recall.recallId?.toUpperCase().includes('CFIA') ? 'CFIA' :
                        highestSeverity.recall.recallId?.toUpperCase().includes('RASFF') ? 'RASFF' : 'Government Agency',
-          recallClassification: highestSeverity.recall.classification,
+          recallClassification: highestSeverity.recall.classification === 'Unknown' ? undefined : highestSeverity.recall.classification,
         },
       });
     }
@@ -191,6 +191,7 @@ export function generateBannerAlerts(
         },
       });
     }
+    }
   }
 
   // 2. USER PREFERENCE ALERTS
@@ -239,8 +240,7 @@ export function generateBannerAlerts(
     const palmOilStatus = product.ingredients_analysis?.['en:palm-oil'];
     if (palmOilStatus === 'yes' || palmOilStatus === 'maybe') {
       const palmOilAnalysis = product.palm_oil_analysis;
-      const isUnsustainable = palmOilAnalysis?.status === 'unsustainable' || 
-                             palmOilAnalysis?.status === 'mixed';
+      const isUnsustainable = palmOilAnalysis?.isNonSustainable === true;
       
       if (isUnsustainable) {
         alerts.push({

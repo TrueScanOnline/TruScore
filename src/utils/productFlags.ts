@@ -3,6 +3,7 @@ import { Product, ProductWithTrustScore } from '../types/product';
 import { extractManufacturingCountry } from '../services/openFoodFacts';
 import { getPalmOilStatus } from './palmOilUtils';
 import { applyOverrideRules } from '../config/scoreHighlightOverrides';
+import { calculateHighlights, selectHighlights } from './scoreHighlights';
 
 export interface ProductFlag {
   type: 'green' | 'red';
@@ -10,35 +11,29 @@ export interface ProductFlag {
   title: string;
   description: string;
   severity?: 'low' | 'medium' | 'high';
+  externalResource?: string; // External resource URL for highlight details (from spec)
 }
 
 /**
  * Generate all flags for a product based on available data
+ * Uses new spec-based highlight system (v8 specification)
  * Applies override rules to filter out inaccurate or misleading highlights
  */
 export function generateProductFlags(product: ProductWithTrustScore): ProductFlag[] {
-  const flags: ProductFlag[] = [];
-
-  // Sustainability flags
-  flags.push(...generateSustainabilityFlags(product));
-
-  // Ethics flags
-  flags.push(...generateEthicsFlags(product));
-
-  // Nutrition/Body Safety flags
-  flags.push(...generateNutritionFlags(product));
-
-  // Processing flags
-  flags.push(...generateProcessingFlags(product));
-
-  // Geopolitics flags (placeholder - would need external data source)
-  flags.push(...generateGeopoliticsFlags(product));
-
-  // Boycott flags (placeholder - would need external data source)
-  flags.push(...generateBoycottFlags(product));
-
-  // News flags (placeholder - would need external data source)
-  flags.push(...generateNewsFlags(product));
+  // Use new spec-based highlight generation system
+  // Calculate and select highlights based on spec
+  const calculatedHighlights = calculateHighlights(product);
+  const selectedHighlights = selectHighlights(calculatedHighlights);
+  
+  // Convert to ProductFlag format with external resources
+  const flags: ProductFlag[] = selectedHighlights.map(h => ({
+    type: h.type,
+    category: h.category,
+    title: h.title,
+    description: h.description,
+    severity: h.severity,
+    externalResource: h.externalResource,
+  }));
 
   // Apply override rules to filter out inaccurate highlights
   const filteredFlags = applyOverrideRules(flags, product);

@@ -18,7 +18,7 @@ module.exports = {
         backgroundColor: '#16a085',
       },
       package: 'com.truescan.foodscanner',
-      versionCode: 7, // v10.0.0 - Build 7 for Android testing (Samsung phone)
+      versionCode: 12, // v10.0.0 - Build 12 for Android APK testing
       permissions: [
         'CAMERA',
         'ACCESS_FINE_LOCATION',
@@ -57,10 +57,10 @@ module.exports = {
         },
       ],
     },
-    ios: {
+      ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.truescan.foodscanner',
-      buildNumber: '11', // v10.0.0 - Build 11 for iOS testing (iPhone 11) and App Store Connect
+      buildNumber: '12', // v10.0.0 - Build 12 for iOS production build and App Store Connect
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,

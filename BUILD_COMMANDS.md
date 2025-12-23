@@ -1,207 +1,127 @@
-# Build Commands - Step by Step
+# Build Commands for TrueScan App Testing Phase
 
 ## Prerequisites
+- EAS CLI installed: `npm install -g eas-cli`
+- Logged into EAS: `eas login`
+- All environment variables configured in EAS Secrets
+- iOS: Valid Apple Developer account and certificates
+- Android: Signing key configured in EAS
 
-Make sure you're in the project directory:
+## iOS Production Build (App Store / TestFlight)
+
+**Build Profile:** `production`  
+**Build Number:** 12  
+**Distribution:** store
+
 ```powershell
-cd C:\TrueScan-FoodScanner
+# Start iOS production build
+eas build --platform ios --profile production
 ```
 
----
+**Notes:**
+- This will create a production build suitable for App Store Connect
+- Build will be configured as Release mode
+- Build number 12 will be used
+- You can submit directly to App Store Connect after build completes
 
-## Step 1: Start iOS Production Build
+## Android APK Build (Direct Download)
 
-**Command:**
+**Build Profile:** `production-apk`  
+**Version Code:** 8  
+**Distribution:** internal  
+**Build Type:** APK (downloadable file)
+
 ```powershell
-npx eas build -p ios --profile production --non-interactive
+# Start Android APK build
+eas build --platform android --profile production-apk
 ```
 
-**Details:**
-- Platform: iOS
-- Profile: production
-- Build Number: 8
-- Distribution: App Store
-- Expected Time: 30-60 minutes
+**Notes:**
+- This creates an APK file that can be downloaded and installed directly on Android devices
+- APK will be available for download from EAS Build dashboard after completion
+- Version code 8 will be used
+- Users can install by enabling "Install from unknown sources" and downloading the APK
 
-**What it does:**
-- Creates a production iOS build for App Store submission
-- Builds with Release configuration
-- Automatically signs with your App Store Connect credentials
+## Build Both Platforms Sequentially
 
----
-
-## Step 2: Start Android APK Build
-
-**Command:**
 ```powershell
-npx eas build -p android --profile preview-apk --non-interactive
+# Build iOS first
+eas build --platform ios --profile production
+
+# After iOS build completes, build Android
+eas build --platform android --profile production-apk
 ```
 
-**Details:**
-- Platform: Android
-- Profile: preview-apk
-- Version Code: 5
-- Build Type: APK
-- Expected Time: 20-40 minutes
+## Build Status and Download
 
-**What it does:**
-- Creates an Android APK file for testing
-- Builds with Release configuration
-- Internal distribution (not for Play Store)
+After starting a build, you can:
 
----
+1. **Monitor build progress:**
+   ```powershell
+   eas build:list
+   ```
 
-## Step 3: Check Build Status
+2. **View build details:**
+   - Visit: https://expo.dev/accounts/[your-account]/projects/truescan-food-scanner/builds
 
-**Command:**
-```powershell
-npx eas build:list --platform all
-```
+3. **Download builds:**
+   - iOS: Download from EAS Build dashboard or TestFlight
+   - Android APK: Download link provided in build completion email and dashboard
 
-**To check specific platform:**
-```powershell
-# iOS only
-npx eas build:list --platform ios
+## Build Configuration Summary
 
-# Android only
-npx eas build:list --platform android
-```
+### iOS Build
+- **Platform:** iOS
+- **Profile:** production
+- **Build Number:** 12
+- **Bundle ID:** com.truescan.foodscanner
+- **Deployment Target:** iOS 15.1+
+- **Configuration:** Release
 
-**To see latest build details:**
-```powershell
-# iOS
-npx eas build:view --platform ios --latest
-
-# Android
-npx eas build:view --platform android --latest
-```
-
----
-
-## Step 4: Submit iOS Build to App Store Connect
-
-**Wait until iOS build completes (status: "finished"), then run:**
-
-**Command:**
-```powershell
-npx eas submit -p ios --latest --non-interactive
-```
-
-**Alternative (if you know the build ID):**
-```powershell
-npx eas submit -p ios --id <BUILD_ID> --non-interactive
-```
-
-**Details:**
-- Submits the latest iOS build to App Store Connect
-- App Store Connect ID: 6755704230
-- Will automatically upload to App Store Connect
-- Build must be in "finished" status
-
-**What it does:**
-- Uploads the IPA file to App Store Connect
-- Creates a new version in App Store Connect (if needed)
-- Prepares build for TestFlight or App Store review
-
----
-
-## Quick Reference - All Commands
-
-### Build Commands
-```powershell
-# iOS Production Build
-npx eas build -p ios --profile production --non-interactive
-
-# Android APK Build
-npx eas build -p android --profile preview-apk --non-interactive
-```
-
-### Status Commands
-```powershell
-# Check all builds
-npx eas build:list --platform all
-
-# Check iOS builds
-npx eas build:list --platform ios
-
-# Check Android builds
-npx eas build:list --platform android
-```
-
-### Submit Command
-```powershell
-# Submit latest iOS build to App Store Connect
-npx eas submit -p ios --latest --non-interactive
-```
-
----
-
-## Build Process Flow
-
-1. **Start iOS Build** → Wait 30-60 minutes
-2. **Start Android Build** → Wait 20-40 minutes (can run in parallel)
-3. **Check Status** → Monitor progress
-4. **Submit iOS** → After iOS build completes
-
----
+### Android Build
+- **Platform:** Android
+- **Profile:** production-apk
+- **Version Code:** 8
+- **Package:** com.truescan.foodscanner
+- **Min SDK:** 24 (Android 7.0)
+- **Target SDK:** 35 (Android 15)
+- **Build Type:** APK
 
 ## Troubleshooting
 
-### If builds don't start:
-1. Check EAS authentication: `npx eas whoami`
-2. Login if needed: `npx eas login`
-3. Verify project ID in `app.config.js`: `1ac14572-9608-42fa-aceb-c0e2a2f60687`
+If builds fail:
 
-### If submission fails:
-1. Verify build is complete: `npx eas build:list --platform ios`
-2. Check App Store Connect credentials
-3. Verify ascAppId in `eas.json`: `6755704230`
+1. **Check build logs:**
+   ```powershell
+   eas build:view [build-id]
+   ```
 
-### To cancel a build:
-```powershell
-npx eas build:cancel --platform ios --latest
-npx eas build:cancel --platform android --latest
-```
+2. **Verify credentials:**
+   ```powershell
+   eas credentials
+   ```
 
----
+3. **Check environment variables:**
+   ```powershell
+   eas secret:list
+   ```
 
-## Expected Output
+4. **Verify project configuration:**
+   ```powershell
+   npx expo-doctor
+   npx tsc --noEmit
+   ```
 
-### When Build Starts:
-```
-✔ Build started
-  Build ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-  Platform: ios
-  Profile: production
-  Build page: https://expo.dev/accounts/[account]/projects/truescan-food-scanner/builds/[id]
-```
+## Next Steps After Build
 
-### When Build Completes:
-```
-✔ Build finished
-  Build ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-  Status: finished
-  Artifacts: [download links]
-```
+### iOS
+1. Build completes → Download IPA
+2. Submit to App Store Connect (if needed)
+3. Distribute via TestFlight for testing
+4. Submit for App Store review when ready
 
-### When Submission Succeeds:
-```
-✔ Successfully submitted build to App Store Connect
-  Build ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-  App Store Connect: https://appstoreconnect.apple.com/apps/6755704230/testflight/ios
-```
-
----
-
-## Notes
-
-- Builds run on EAS servers (cloud-based)
-- You don't need Xcode or Android Studio installed
-- Builds can take 30-60 minutes each
-- Both builds can run simultaneously
-- iOS submission only works after build completes
-
----
-
-**Last Updated:** 2025-01-05
-
+### Android
+1. Build completes → Download APK
+2. Distribute APK to testers
+3. Testers install APK directly on their devices
+4. For Play Store release, use `production` profile (creates AAB)

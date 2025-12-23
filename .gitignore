@@ -38,3 +38,20 @@ yarn-error.*
 # EAS
 .eas/
 
+# Test data files
+barcode_*.json
+*_TEST_RESULTS.json
+*.test-results.json
+API_TEST_RESULTS.json
+
+# Temporary build command files
+BUILD_*.txt
+COPY_*.txt
+RUN_*.txt
+SUBMIT_*.txt
+*_NOW.txt
+
+# Temporary analysis scripts output
+analyze_*.json
+test-results-*.json
+

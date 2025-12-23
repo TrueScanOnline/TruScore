@@ -37,6 +37,7 @@
       }
     },
     "production": {
+      "distribution": "store",
       "node": "20.19.4",
       "android": {
         "buildType": "app-bundle"
@@ -44,6 +45,13 @@
       "ios": {
         "simulator": false,
         "buildConfiguration": "Release"
+      }
+    },
+    "production-apk": {
+      "distribution": "internal",
+      "node": "20.19.4",
+      "android": {
+        "buildType": "apk"
       }
     }
   },

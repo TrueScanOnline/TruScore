@@ -13,7 +13,8 @@ import { TruScoreCardError } from './TruScoreCardError';
 import TruScore from '../../../../components/TruScore';
 import ConfidenceBadge from '../../../../components/ConfidenceBadge';
 import TruScoreInfoModal from '../../../../components/TrustScoreInfoModal';
-import { generateProductFlags } from '../../../../utils/productFlags';
+import ExplainerModal from '../../../../components/ExplainerModal';
+import { generateProductFlags, ProductFlag } from '../../../../utils/productFlags';
 import { useTheme } from '../../../../theme';
 import { useFavoritesStore } from '../../../../store/useFavoritesStore';
 import { CardPremiumGate } from '../../../premium/CardPremiumGate';
@@ -41,6 +42,8 @@ function TruScoreCardContent({ barcode, product, onShare, premiumFeatures }: Tru
   const { truScore, loading, error } = useTruScoreData({ barcode, product });
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore();
   const [modalVisible, setModalVisible] = useState(false);
+  const [explainerModalVisible, setExplainerModalVisible] = useState(false);
+  const [selectedHighlight, setSelectedHighlight] = useState<ProductFlag | null>(null);
 
   const handleToggleFavorite = () => {
     if (isFavorite(barcode)) {
@@ -115,8 +118,27 @@ function TruScoreCardContent({ barcode, product, onShare, premiumFeatures }: Tru
   } : undefined;
 
   const flags = productForFlags ? generateProductFlags(productForFlags) : [];
-  const greenFlags = flags.filter(f => f.type === 'green');
-  const redFlags = flags.filter(f => f.type === 'red');
+  
+  // Sort flags: green first, then by severity (high > medium > low)
+  const severityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+  const sortedFlags = [...flags].sort((a, b) => {
+    // Green first
+    if (a.type !== b.type) {
+      return a.type === 'green' ? -1 : 1;
+    }
+    // Then by severity (high > medium > low)
+    const severityA = severityOrder[a.severity || 'low'] || 0;
+    const severityB = severityOrder[b.severity || 'low'] || 0;
+    return severityB - severityA;
+  });
+  
+  const greenFlags = sortedFlags.filter(f => f.type === 'green');
+  const redFlags = sortedFlags.filter(f => f.type === 'red');
+  
+  const handleHighlightPress = (flag: ProductFlag) => {
+    setSelectedHighlight(flag);
+    setExplainerModalVisible(true);
+  };
 
   return (
     <>
@@ -191,17 +213,22 @@ function TruScoreCardContent({ barcode, product, onShare, premiumFeatures }: Tru
                     </Text>
                   </View>
                   {greenFlags.map((flag, index) => (
-                    <View key={`green-${index}`} style={styles.flagItem}>
+                    <TouchableOpacity
+                      key={`green-${index}`}
+                      style={styles.flagItem}
+                      onPress={() => handleHighlightPress(flag)}
+                      activeOpacity={0.7}
+                    >
                       <View style={[styles.flagIndicator, { backgroundColor: '#4caf50' + '20' }]}>
                         <Ionicons name="checkmark-circle" size={14} color="#4caf50" />
                       </View>
                       <View style={styles.flagContent}>
                         <Text style={[styles.flagTitle, { color: colors.text }]}>{flag.title}</Text>
-                        <Text style={[styles.flagDescription, { color: colors.textSecondary }]}>
+                        <Text style={[styles.flagDescription, { color: colors.textSecondary }]} numberOfLines={2}>
                           {flag.description}
                         </Text>
                       </View>
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 </View>
               )}
@@ -216,17 +243,22 @@ function TruScoreCardContent({ barcode, product, onShare, premiumFeatures }: Tru
                     </Text>
                   </View>
                   {redFlags.map((flag, index) => (
-                    <View key={`red-${index}`} style={styles.flagItem}>
+                    <TouchableOpacity
+                      key={`red-${index}`}
+                      style={styles.flagItem}
+                      onPress={() => handleHighlightPress(flag)}
+                      activeOpacity={0.7}
+                    >
                       <View style={[styles.flagIndicator, { backgroundColor: '#f44336' + '20' }]}>
                         <Ionicons name="alert-circle" size={14} color="#f44336" />
                       </View>
                       <View style={styles.flagContent}>
                         <Text style={[styles.flagTitle, { color: colors.text }]}>{flag.title}</Text>
-                        <Text style={[styles.flagDescription, { color: colors.textSecondary }]}>
+                        <Text style={[styles.flagDescription, { color: colors.textSecondary }]} numberOfLines={2}>
                           {flag.description}
                         </Text>
                       </View>
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 </View>
               )}
@@ -235,12 +267,24 @@ function TruScoreCardContent({ barcode, product, onShare, premiumFeatures }: Tru
         </TouchableOpacity>
       </CardPremiumGate>
 
-      {/* Modal */}
+      {/* TruScore Info Modal */}
       <TruScoreInfoModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         product={product}
       />
+      
+      {/* Explainer Modal for highlights */}
+      {selectedHighlight && (
+        <ExplainerModal
+          visible={explainerModalVisible}
+          onClose={() => {
+            setExplainerModalVisible(false);
+            setSelectedHighlight(null);
+          }}
+          highlight={selectedHighlight}
+        />
+      )}
     </>
   );
 }

@@ -370,10 +370,12 @@ export function checkLaborViolations(product: Product): LaborViolationData {
       });
   }
   
+  // Extract country code from origins (reused for multiple checks)
+  const countryCode = product.countries_tags?.[0] || product.origins_tags?.[0] || undefined;
+  
   // 3c. Check ILO Statistics (async, non-blocking - runs in background)
-  const countryCode = product.countries_tags?.[0] || product.origins_tags?.[0];
   if (countryCode) {
-    checkILOViolations(countryCode, bestMatchedBrand)
+    checkILOViolations(countryCode, bestMatchedBrand || undefined)
       .then(iloViolations => {
         if (iloViolations.length > 0) {
           // Log for future enhancement - could update violations asynchronously
@@ -389,8 +391,6 @@ export function checkLaborViolations(product: Product): LaborViolationData {
   }
   
   // 4. Check Walk Free Global Slavery Index data
-  // Extract country code from origins
-  const countryCode = product.countries_tags?.[0] || product.origins_tags?.[0];
   const countryName = product.countries || product.origins || product.manufacturing_places;
   const walkFreeViolation = checkWalkFreeViolations(countryCode, countryName);
   if (walkFreeViolation) {
