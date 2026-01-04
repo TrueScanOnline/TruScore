@@ -21,6 +21,8 @@ import { logger } from '../utils/logger';
 import { calculateDataCompleteness, formatCompletenessMetrics } from '../utils/dataCompleteness';
 import { handleError, ErrorCategory, ErrorSeverity } from './errorHandlingService';
 import { trackUnmappedBrand } from '../utils/unmappedBrandTracker';
+import { calculateNutriScoreFromNutrition, hasRequiredNutrientsForNutriScore } from './nutriscoreCalculator';
+import { assignNOVA1IfHighConfidence } from '../utils/novaAssessment';
 
 /**
  * OPTIMIZATION: CDN Support for Product Images
@@ -108,6 +110,22 @@ export function calculateAndSetEcoScore(product: Product): Product {
     }
     if (calculatedEcoScore.score !== undefined) {
       product.ecoscore_score = calculatedEcoScore.score;
+    }
+  }
+  return product;
+}
+
+/**
+ * Calculate and set Nutri-Score on product (ID 8: when OFF is missing)
+ */
+export function calculateAndSetNutriScore(product: Product): Product {
+  // Only calculate if Nutri-Score is missing and we have required nutrition data
+  if (!product.nutriscore_grade && hasRequiredNutrientsForNutriScore(product.nutriments)) {
+    const calculatedNutriScore = calculateNutriScoreFromNutrition(product.nutriments!);
+    if (calculatedNutriScore) {
+      product.nutriscore_grade = calculatedNutriScore.grade;
+      product.nutriscore_score = calculatedNutriScore.score;
+      logger.debug(`[NutriScore] Calculated and set: grade=${calculatedNutriScore.grade}, score=${calculatedNutriScore.score}`);
     }
   }
   return product;
@@ -262,6 +280,12 @@ export async function enhanceProduct(product: Product): Promise<Product> {
   // Calculate and set Eco-Score
   calculateAndSetEcoScore(product);
   
+  // ID 8: Calculate and set Nutri-Score (when OFF is missing)
+  calculateAndSetNutriScore(product);
+  
+  // ID 9: Assign NOVA 1 if high confidence (limited approach)
+  assignNOVA1IfHighConfidence(product);
+  
   return product;
 }
 
@@ -289,4 +313,3 @@ async function checkAndTrackUnmappedBrand(brand: string, barcode: string, source
     logger.debug('[ProductEnhancement] Error checking/tracking brand:', error);
   }
 }
-

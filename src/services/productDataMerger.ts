@@ -5,6 +5,7 @@
 import { Product, ProductNutriments, Certification } from '../types/product';
 import { logger } from '../utils/logger';
 import { calculateDataCompleteness, formatCompletenessMetrics } from '../utils/dataCompleteness';
+import { powershellLogger } from '../utils/powershellLogger';
 
 export interface MergeOptions {
   // Source weights (0-1, where 1 = highest priority)
@@ -89,7 +90,10 @@ const DEFAULT_SOURCE_WEIGHTS: Record<NonNullable<Product['source']>, number> = {
  */
 export function mergeProducts(
   products: Product[],
-  options: MergeOptions = {}
+  options: MergeOptions & { 
+    barcode?: string; // Optional barcode for logging
+    enableFieldTracking?: boolean; // Enable field source tracking and logging
+  } = {}
 ): Product {
   if (products.length === 0) {
     throw new Error('Cannot merge empty product array');
@@ -223,26 +227,21 @@ export function mergeProducts(
     productsToMerge.find(p => p.image_url)?.image_url;
   
   // Merge nutrition data
-  // CRITICAL: User-contributed nutrition data takes absolute priority (from package label)
+  // ID 10: User-contributed nutrition data override REMOVED (use trusted sources only)
+  // User contributions still used for: a) exporting to OFF, b) in-house database for products not found
   const userContributedProduct = productsToMerge.find(p => p.source === 'user_contributed');
-  const allNutriments = productsToMerge
+  // Exclude user-contributed nutrition data from merging (use trusted database sources only)
+  const trustedNutriments = productsToMerge
+    .filter(p => p.source !== 'user_contributed') // Exclude user-contributed
     .map(p => p.nutriments)
     .filter((n): n is ProductNutriments => n !== undefined);
   
-  if (allNutriments.length > 0) {
-    // If user-contributed product has nutrition data, use it exclusively (most accurate)
-    if (userContributedProduct && userContributedProduct.nutriments) {
-      mergedProduct.nutriments = { ...userContributedProduct.nutriments };
-      logger.info(`  Nutrition: Using user-contributed data (from package label) - highest accuracy`);
-    } else {
-      // Otherwise use weighted average from all sources
-      mergedProduct.nutriments = mergeNutriments(allNutriments, normalizedWeights);
-    }
-    
-    // Normalize to per-100g if requested
-    if (normalizeNutrition) {
-      mergedProduct.nutriments = normalizeNutritionToPer100g(mergedProduct.nutriments);
-    }
+  if (trustedNutriments.length > 0) {
+    // ID 11: Golden Source Approach for Nutrition Data
+    // Priority: OFF (golden source) → Government DBs → Commercial APIs → Others
+    // Note: Golden Source function already normalizes to per-100g (retains benchmark conversions)
+    mergedProduct.nutriments = mergeNutrimentsGoldenSource(productsToMerge, trustedNutriments);
+    logger.info(`  Nutrition: Golden Source approach (OFF → Government → Commercial APIs)`);
   }
   
   // Merge ingredients
@@ -521,8 +520,10 @@ export function mergeProducts(
   logger.info(`🔀 MERGING DECISIONS:`);
   logger.info(`  Base Product: ${baseProduct.source} (highest combined score: TruScore completeness + source weight)`);
   
-  if (allNutriments.length > 0) {
-    logger.info(`  Nutrition: Merged from ${allNutriments.length} sources (weighted average)`);
+  // ID 11: Nutrition uses Golden Source approach (OFF → Government → Commercial APIs)
+  const trustedProductsWithNutrition = productsToMerge.filter(p => p.source !== 'user_contributed' && p.nutriments);
+  if (trustedProductsWithNutrition.length > 0) {
+    logger.info(`  Nutrition: Golden Source approach (OFF → Government → Commercial APIs) from ${trustedProductsWithNutrition.length} trusted sources`);
   }
   
   if (ingredientsList.length > 0) {
@@ -553,7 +554,276 @@ export function mergeProducts(
   logger.info(`  Completion: ${mergedProduct.completion || 'N/A'}`);
   logger.info(`═══════════════════════════════════════════════════════════════`);
   
+  // Track field sources if enabled
+  if (options.enableFieldTracking && options.barcode && products.length > 1) {
+    trackFieldSourcesAndLog(
+      options.barcode,
+      productsToMerge,
+      mergedProduct,
+      sourceWeights,
+      options
+    );
+  }
+  
   return mergedProduct;
+}
+
+/**
+ * Track field sources during merging and log field-level source attribution
+ * This helps verify which databases contributed each piece of data to the final product
+ */
+export function trackFieldSourcesAndLog(
+  barcode: string,
+  products: Product[],
+  mergedProduct: Product,
+  sourceWeights: Record<string, number>,
+  options: MergeOptions = {}
+): void {
+  if (products.length === 0) return;
+  
+  const fieldSources: Record<string, {
+    source: string | string[];
+    method?: string;
+    details?: string;
+    weight?: number;
+  }> = {};
+  
+  const fieldMapping: Record<string, {
+    primarySource: string;
+    allSources?: Array<{ source: string; weight?: number; provided?: string }>;
+    mergeMethod?: 'single' | 'weighted_average' | 'longest' | 'union' | 'best_quality';
+    reason?: string;
+  }> = {};
+  
+  const sourceWeightsMap = new Map(Object.entries(sourceWeights));
+  const normalizeWeights = (weights: number[]) => {
+    const total = weights.reduce((sum, w) => sum + w, 0);
+    return weights.map(w => w / total);
+  };
+  
+  const productsWeights = products.map(p => sourceWeightsMap.get(p.source || 'web_search') || 0.1);
+  const normalizedWeights = normalizeWeights(productsWeights);
+  
+  // Track product_name
+  if (mergedProduct.product_name) {
+    const nameSource = products.find(p => p.product_name === mergedProduct.product_name)?.source || 'unknown';
+    fieldSources.product_name = {
+      source: nameSource,
+      method: 'single',
+      details: mergedProduct.product_name,
+    };
+    fieldMapping.product_name = {
+      primarySource: nameSource,
+      mergeMethod: 'single',
+      allSources: products.filter(p => p.product_name).map((p, i) => ({
+        source: p.source || 'unknown',
+        weight: normalizedWeights[i],
+        provided: p.product_name?.substring(0, 50),
+      })),
+    };
+  }
+  
+  // Track nutriments (weighted average from trusted sources only - user-contributed excluded per ID 10)
+  if (mergedProduct.nutriments) {
+    // ID 10: User-contributed nutrition excluded - find trusted sources only
+    const trustedProducts = products.filter(p => p.source !== 'user_contributed' && p.nutriments);
+    const trustedNutritionSources = trustedProducts.map((p, index) => {
+      const sourceIndex = products.findIndex(prod => prod === p);
+      return {
+        source: p.source || 'unknown',
+        weight: sourceIndex >= 0 && sourceIndex < normalizedWeights.length ? normalizedWeights[sourceIndex] : 0.3,
+        provided: `${Object.keys(p.nutriments || {}).length} nutrients`,
+      };
+    });
+    
+    if (trustedNutritionSources.length > 0) {
+      const sourceNames = trustedNutritionSources.map(s => s.source);
+      fieldSources.nutriments = {
+        source: sourceNames,
+        method: 'weighted_average',
+        details: `${trustedNutritionSources.length} trusted sources merged (user-contributed excluded)`,
+      };
+      fieldMapping.nutriments = {
+        primarySource: trustedNutritionSources[0]?.source || 'unknown',
+        allSources: trustedNutritionSources,
+        mergeMethod: 'weighted_average',
+        reason: `Weighted average from ${trustedNutritionSources.length} trusted sources (user-contributed excluded per ID 10)`,
+      };
+    }
+  }
+  
+  // Track ingredients_text (longest or user-contributed)
+  if (mergedProduct.ingredients_text) {
+    const userContributedProduct = products.find(p => p.source === 'user_contributed' && p.ingredients_text);
+    if (userContributedProduct) {
+      fieldSources.ingredients_text = {
+        source: 'user_contributed',
+        method: 'single',
+        details: `User-contributed (${mergedProduct.ingredients_text.length} chars)`,
+      };
+      fieldMapping.ingredients_text = {
+        primarySource: 'user_contributed',
+        mergeMethod: 'single',
+        reason: 'User-contributed data takes absolute priority',
+      };
+    } else {
+      const longestSource = products.find(p => p.ingredients_text === mergedProduct.ingredients_text)?.source || 'unknown';
+      const ingredientsSources = products.filter(p => p.ingredients_text).map((p, i) => ({
+        source: p.source || 'unknown',
+        weight: normalizedWeights[i],
+        provided: `${p.ingredients_text?.length || 0} chars`,
+      }));
+      fieldSources.ingredients_text = {
+        source: longestSource,
+        method: 'longest',
+        details: `Longest/most complete (${mergedProduct.ingredients_text.length} chars)`,
+      };
+      fieldMapping.ingredients_text = {
+        primarySource: longestSource,
+        allSources: ingredientsSources,
+        mergeMethod: 'longest',
+        reason: 'Longest ingredients list (most complete)',
+      };
+    }
+  }
+  
+  // Track categories (most specific/longest)
+  if (mergedProduct.categories) {
+    const longestCategorySource = products.find(p => p.categories === mergedProduct.categories)?.source || 'unknown';
+    const categorySources = products.filter(p => p.categories).map((p, i) => ({
+      source: p.source || 'unknown',
+      weight: normalizedWeights[i],
+      provided: p.categories?.substring(0, 50),
+    }));
+    fieldSources.categories = {
+      source: longestCategorySource,
+      method: 'longest',
+      details: `Most specific (${mergedProduct.categories.length} chars)`,
+    };
+    fieldMapping.categories = {
+      primarySource: longestCategorySource,
+      allSources: categorySources,
+      mergeMethod: 'longest',
+      reason: 'Most specific category (longest path)',
+    };
+  }
+  
+  // Track image_url (best quality)
+  if (mergedProduct.image_url) {
+    const imageSource = products.find(p => p.image_url === mergedProduct.image_url)?.source || 'unknown';
+    fieldSources.image_url = {
+      source: imageSource,
+      method: 'best_quality',
+      details: 'Best quality image',
+    };
+    fieldMapping.image_url = {
+      primarySource: imageSource,
+      allSources: products.filter(p => p.image_url).map((p, i) => ({
+        source: p.source || 'unknown',
+        weight: normalizedWeights[i],
+        provided: 'image available',
+      })),
+      mergeMethod: 'best_quality',
+      reason: 'Best quality image selected',
+    };
+  }
+  
+  // Track nutriscore_grade
+  if (mergedProduct.nutriscore_grade) {
+    const nutriScoreSource = products.find(p => p.nutriscore_grade === mergedProduct.nutriscore_grade)?.source || 'unknown';
+    fieldSources.nutriscore_grade = {
+      source: nutriScoreSource,
+      method: 'single',
+      details: `Grade: ${mergedProduct.nutriscore_grade}`,
+    };
+    fieldMapping.nutriscore_grade = {
+      primarySource: nutriScoreSource,
+      mergeMethod: 'single',
+    };
+  }
+  
+  // Track ecoscore_grade
+  if (mergedProduct.ecoscore_grade) {
+    const ecoScoreSource = products.find(p => p.ecoscore_grade === mergedProduct.ecoscore_grade)?.source || 'unknown';
+    fieldSources.ecoscore_grade = {
+      source: ecoScoreSource,
+      method: 'single',
+      details: `Grade: ${mergedProduct.ecoscore_grade}`,
+    };
+    fieldMapping.ecoscore_grade = {
+      primarySource: ecoScoreSource,
+      mergeMethod: 'single',
+    };
+  }
+  
+  // Track brands (union)
+  if (mergedProduct.brands) {
+    const brandSources = products.filter(p => p.brands).map((p, i) => ({
+      source: p.source || 'unknown',
+      weight: normalizedWeights[i],
+      provided: p.brands?.substring(0, 50),
+    }));
+    const sourceNames = brandSources.map(s => s.source);
+    fieldSources.brands = {
+      source: sourceNames,
+      method: 'union',
+      details: `Merged from ${brandSources.length} sources`,
+    };
+    fieldMapping.brands = {
+      primarySource: brandSources[0]?.source || 'unknown',
+      allSources: brandSources,
+      mergeMethod: 'union',
+      reason: `Union of brands from ${brandSources.length} sources`,
+    };
+  }
+  
+  // Track labels_tags (union)
+  if (mergedProduct.labels_tags && mergedProduct.labels_tags.length > 0) {
+    const labelSources = products.filter(p => p.labels_tags && p.labels_tags.length > 0).map((p, i) => ({
+      source: p.source || 'unknown',
+      weight: normalizedWeights[i],
+      provided: `${p.labels_tags?.length || 0} labels`,
+    }));
+    const sourceNames = labelSources.map(s => s.source);
+    fieldSources.labels_tags = {
+      source: sourceNames,
+      method: 'union',
+      details: `${mergedProduct.labels_tags.length} labels from ${labelSources.length} sources`,
+    };
+    fieldMapping.labels_tags = {
+      primarySource: labelSources[0]?.source || 'unknown',
+      allSources: labelSources,
+      mergeMethod: 'union',
+      reason: `Union of labels from ${labelSources.length} sources`,
+    };
+  }
+  
+  // Track origins_tags (union)
+  if (mergedProduct.origins_tags && mergedProduct.origins_tags.length > 0) {
+    const originSources = products.filter(p => p.origins_tags && p.origins_tags.length > 0).map((p, i) => ({
+      source: p.source || 'unknown',
+      weight: normalizedWeights[i],
+      provided: `${p.origins_tags?.length || 0} origins`,
+    }));
+    const sourceNames = originSources.map(s => s.source);
+    fieldSources.origins_tags = {
+      source: sourceNames,
+      method: 'union',
+      details: `${mergedProduct.origins_tags.length} origins from ${originSources.length} sources`,
+    };
+    fieldMapping.origins_tags = {
+      primarySource: originSources[0]?.source || 'unknown',
+      allSources: originSources,
+      mergeMethod: 'union',
+      reason: `Union of origins from ${originSources.length} sources`,
+    };
+  }
+  
+  // Log field sources
+  if (Object.keys(fieldSources).length > 0) {
+    powershellLogger.finalProductSources(barcode, fieldSources);
+    powershellLogger.fieldSourceMapping(barcode, fieldMapping);
+  }
 }
 
 /**
@@ -674,7 +944,90 @@ function mergeBrandFields(products: Product[]): string | undefined {
 }
 
 /**
- * Merge nutrition data with weighted average
+ * ID 11: Merge nutrition data using Golden Source Approach
+ * Priority: Open Food Facts (golden source) → Government databases → Commercial APIs → Others
+ * 
+ * Step 1: Start with OFF nutrition data (if available)
+ * Step 2: Supplement missing fields from government databases (FSANZ, USDA, Health Canada, UK FSA, EFSA)
+ * Step 3: Supplement missing fields from commercial APIs (Spoonacular, Nutritionix, Edamam)
+ * Step 4: Normalize to per-100g format (retain benchmark conversions functionality)
+ * 
+ * @param products - All products to merge (for source identification)
+ * @param trustedNutriments - Nutrition data from trusted sources (user-contributed excluded)
+ * @returns Merged nutrition data using Golden Source approach
+ */
+function mergeNutrimentsGoldenSource(
+  products: Product[],
+  trustedNutriments: ProductNutriments[]
+): ProductNutriments {
+  // Step 1: Find OFF product (golden source)
+  const offProduct = products.find(p => p.source === 'openfoodfacts' && p.nutriments);
+  
+  let mergedNutriments: ProductNutriments = {};
+  
+  if (offProduct && offProduct.nutriments) {
+    // Start with OFF nutrition data (golden source)
+    mergedNutriments = { ...offProduct.nutriments };
+    logger.debug(`  [Golden Source] Starting with Open Food Facts (${Object.keys(mergedNutriments).length} nutrients)`);
+  } else {
+    // If OFF not available, use Base Product Selection logic (highest combined score)
+    const baseProduct = products.find(p => p.nutriments && p.source !== 'user_contributed');
+    if (baseProduct && baseProduct.nutriments) {
+      mergedNutriments = { ...baseProduct.nutriments };
+      logger.debug(`  [Golden Source] Starting with base product: ${baseProduct.source} (OFF not available)`);
+    }
+  }
+  
+  // Step 2: Supplement missing fields from government databases
+  const governmentSources = ['fsanz_au', 'fsanz_nz', 'nzfcd', 'afcd', 'usda_fooddata', 'health_canada_cnf', 'uk_fsa', 'efsa'];
+  const governmentProducts = products.filter(p => 
+    governmentSources.includes(p.source || '') && p.nutriments
+  );
+  
+  for (const govProduct of governmentProducts) {
+    if (govProduct.nutriments) {
+      let supplemented = false;
+      for (const [key, value] of Object.entries(govProduct.nutriments)) {
+        if (!mergedNutriments[key] && value !== undefined && value !== null) {
+          mergedNutriments[key] = value;
+          supplemented = true;
+        }
+      }
+      if (supplemented) {
+        logger.debug(`  [Golden Source] Supplemented from ${govProduct.source}`);
+      }
+    }
+  }
+  
+  // Step 3: Supplement missing fields from commercial APIs
+  const commercialApiSources = ['spoonacular', 'nutritionix', 'edamam'];
+  const commercialApiProducts = products.filter(p => 
+    commercialApiSources.includes(p.source || '') && p.nutriments
+  );
+  
+  for (const apiProduct of commercialApiProducts) {
+    if (apiProduct.nutriments) {
+      let supplemented = false;
+      for (const [key, value] of Object.entries(apiProduct.nutriments)) {
+        if (!mergedNutriments[key] && value !== undefined && value !== null) {
+          mergedNutriments[key] = value;
+          supplemented = true;
+        }
+      }
+      if (supplemented) {
+        logger.debug(`  [Golden Source] Supplemented from ${apiProduct.source}`);
+      }
+    }
+  }
+  
+  // Step 4: Normalize to per-100g format (retain benchmark conversions functionality)
+  mergedNutriments = normalizeNutritionToPer100g(mergedNutriments);
+  
+  return mergedNutriments;
+}
+
+/**
+ * Merge nutrition data with weighted average (legacy method, kept for backward compatibility)
  */
 function mergeNutriments(
   nutriments: ProductNutriments[],

@@ -1982,6 +1982,10 @@ function ResultScreenContent() {
             return null; // Don't display barcode as ingredients
           }
           
+          // CRITICAL: Strip HTML tags from ingredients_text (e.g., <span class="allergen">)
+          // This handles cases where ingredients contain HTML markup
+          ingredientsText = ingredientsText.replace(/<[^>]*>/g, '').trim();
+          
           // CRITICAL: Remove barcode from ingredients text if it appears within the text
           // This handles cases where barcode is embedded in ingredients_text
           const barcodePattern = new RegExp(`\\b${barcode}\\b`, 'gi');

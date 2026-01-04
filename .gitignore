@@ -54,4 +54,3 @@ SUBMIT_*.txt
 # Temporary analysis scripts output
 analyze_*.json
 test-results-*.json
-

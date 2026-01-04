@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { BannerAlert, BannerAlertsData } from '../types/bannerAlerts';
@@ -59,50 +59,71 @@ export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) 
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
       >
-        {alertsData.alerts.map((alert, index) => (
-          <View 
-            key={alert.id} 
-            style={[
-              styles.alertItem,
-              index < alertsData.alerts.length - 1 && styles.alertItemWithMargin
-            ]}
-          >
-            {/* Alert Icon */}
-            <View style={styles.alertIconContainer}>
-              <Ionicons 
-                name={
-                  alert.category === 'recall' ? 'warning' :
-                  alert.category === 'animal_cruelty' ? 'paw' :
-                  alert.category === 'labor_violations' ? 'people' :
-                  alert.category === 'palm_oil' ? 'leaf' :
-                  alert.category === 'geopolitical' ? 'globe' :
-                  'information-circle'
-                }
-                size={20}
-                color={redText}
-              />
-            </View>
+        {alertsData.alerts.map((alert, index) => {
+          const AlertContainer = alert.actionUrl ? TouchableOpacity : View;
+          const containerProps = alert.actionUrl ? {
+            onPress: () => {
+              if (alert.actionUrl) {
+                Linking.openURL(alert.actionUrl).catch(err => {
+                  console.error('Failed to open URL:', err);
+                });
+              }
+            },
+            activeOpacity: 0.7,
+          } : {};
 
-            {/* Alert Content */}
-            <View style={styles.alertContent}>
-              <Text style={[styles.alertTitle, { color: redText }]}>
-                {alert.title}
-              </Text>
-              <Text style={[styles.alertMessage, { color: colors.text }]}>
-                {alert.message}
-              </Text>
-              
-              {/* Source Badge */}
-              {alert.sourceDetails?.organization && (
-                <View style={styles.sourceBadge}>
-                  <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
-                    Source: {alert.sourceDetails.organization}
+          return (
+            <AlertContainer
+              key={alert.id}
+              style={[
+                styles.alertItem,
+                index < alertsData.alerts.length - 1 && styles.alertItemWithMargin,
+                alert.actionUrl && styles.alertItemClickable,
+              ]}
+              {...containerProps}
+            >
+              {/* Alert Icon */}
+              <View style={styles.alertIconContainer}>
+                <Ionicons 
+                  name={
+                    alert.category === 'recall' ? 'warning' :
+                    alert.category === 'animal_cruelty' ? 'paw' :
+                    alert.category === 'labor_violations' ? 'people' :
+                    alert.category === 'palm_oil' ? 'leaf' :
+                    alert.category === 'geopolitical' ? 'globe' :
+                    'information-circle'
+                  }
+                  size={20}
+                  color={redText}
+                />
+              </View>
+
+              {/* Alert Content */}
+              <View style={styles.alertContent}>
+                <View style={styles.alertTitleRow}>
+                  <Text style={[styles.alertTitle, { color: redText }]}>
+                    {alert.title}
                   </Text>
+                  {alert.actionUrl && (
+                    <Ionicons name="open-outline" size={16} color={colors.primary} style={styles.externalLinkIcon} />
+                  )}
                 </View>
-              )}
-            </View>
-          </View>
-        ))}
+                <Text style={[styles.alertMessage, { color: colors.text }]}>
+                  {alert.message}
+                </Text>
+                
+                {/* Source Badge */}
+                {alert.sourceDetails?.organization && (
+                  <View style={styles.sourceBadge}>
+                    <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
+                      Source: {alert.sourceDetails.organization}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </AlertContainer>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -140,8 +161,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
+  alertItemClickable: {
+    // Style for clickable alerts
+  },
   alertItemWithMargin: {
     marginBottom: 16,
+  },
+  alertTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  externalLinkIcon: {
+    marginLeft: 8,
   },
   alertIconContainer: {
     marginRight: 12,

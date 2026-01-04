@@ -782,7 +782,7 @@ export const OPEN_HIGHLIGHTS: HighlightDefinition[] = [
     type: 'red',
     severity: 'medium',
     title: 'No origins disclosed',
-    description: 'No ingredients origins available electronically. Is it on the packet? Click <here> to add.',
+    description: 'No ingredients origins available electronically. Is it on the packet?',
     externalResource: 'https://world.openfoodfacts.org/origins',
     scoreValue: -4,
     trigger: (product) => {

@@ -18,6 +18,7 @@ import { getLocalRecyclabilityStatus } from '../../../utils/packagingRecyclabili
 import { logger } from '../../../utils/logger';
 import { getCSVDatabaseService } from '../../../services/csvDatabases/csvDatabaseService';
 import { matchBrands, getBestBrandMatch } from '../../../services/brandMatchingService';
+import { powershellLogger } from '../../../utils/powershellLogger';
 
 export interface PlanetPillarResult {
   score: number;
@@ -166,7 +167,8 @@ function extractCropsFromCategories(categories: string[]): string[] {
     });
   });
   
-  return [...new Set(crops)]; // Deduplicate
+  // Deduplicate using Array.from for compatibility
+  return Array.from(new Set(crops));
 }
 
 /**
@@ -174,31 +176,33 @@ function extractCropsFromCategories(categories: string[]): string[] {
  * Always starts at base 15, then applies adjustments
  */
 export function calculatePlanetPillar(product: Product): PlanetPillarResult {
-  const adjustments: PlanetPillarResult['adjustments'] = [];
-  let score = 15; // Base score (always 15)
-  const base = 15;
-  
-  const hasEcoScore = !!product.ecoscore_grade;
-  const analysisTags = (product.ingredients_analysis_tags || []).filter((tag: unknown) => 
-    typeof tag === 'string'
-  ) as string[];
-  const labels = (product.labels_tags || []).map((l: unknown) => 
-    typeof l === 'string' ? l.toLowerCase() : ''
-  ).filter(Boolean) as string[];
-  const packagings = product.packagings || [];
-  const originsTags = (product.origins_tags || []).filter((tag: unknown) => 
-    typeof tag === 'string'
-  ) as string[];
-  
-  // Get CSV database service (may not be initialized, handle gracefully)
-  let csvService: ReturnType<typeof getCSVDatabaseService> | null = null;
+  // Wrap entire function in try-catch to ensure we always return a valid result
   try {
-    csvService = getCSVDatabaseService();
-  } catch (error) {
-    logger.debug('[PlanetPillar] CSV service not available, continuing without CSV lookups');
-  }
-  
-  // Eco-Score adjustment (from base 15)
+    const adjustments: PlanetPillarResult['adjustments'] = [];
+    let score = 15; // Base score (always 15)
+    const base = 15;
+    
+    const hasEcoScore = !!product.ecoscore_grade;
+    const analysisTags = (product.ingredients_analysis_tags || []).filter((tag: unknown) => 
+      typeof tag === 'string'
+    ) as string[];
+    const labels = (product.labels_tags || []).map((l: unknown) => 
+      typeof l === 'string' ? l.toLowerCase() : ''
+    ).filter(Boolean) as string[];
+    const packagings = product.packagings || [];
+    const originsTags = (product.origins_tags || []).filter((tag: unknown) => 
+      typeof tag === 'string'
+    ) as string[];
+    
+    // Get CSV database service (may not be initialized, handle gracefully)
+    let csvService: ReturnType<typeof getCSVDatabaseService> | null = null;
+    try {
+      csvService = getCSVDatabaseService();
+    } catch (error) {
+      logger.debug('[PlanetPillar] CSV service not available, continuing without CSV lookups');
+    }
+    
+    // Eco-Score adjustment (from base 15)
   // NEW SPEC: A=+7, B=+3, C=0, D=-3, E=-7
   let ecoscoreValue: number | undefined;
   if (hasEcoScore) {
@@ -415,7 +419,8 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
       // Also try categories_tags as fallback
       const categories = (product.categories_tags || []).map(c => String(c).toLowerCase());
       const categoryCrops = extractCropsFromCategories(categories);
-      const allCrops = [...new Set([...crops, ...categoryCrops])]; // Deduplicate
+      // Deduplicate using Array.from for compatibility
+      const allCrops = Array.from(new Set([...crops, ...categoryCrops]));
       
       let hasHighImpact = false;
       let hasLowImpact = false;
@@ -477,22 +482,65 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
     }
   }
   
-  // Cap at 0-25 (minimum floor: 0)
-  score = Math.max(0, Math.min(25, Math.round(score)));
-  
-  return {
-    score,
-    base,
-    adjustments,
-    details: {
-      hasEcoScore,
-      ecoscoreGrade: product.ecoscore_grade,
-      ecoscoreValue,
-      palmOilPenalty,
-      recyclableBonus,
-      packagingEcoCostPenalty,
-      farmingImpactAdjustment,
-      brandOverlayPenalty,
-    },
-  };
+    // Cap at 0-25 (minimum floor: 0)
+    score = Math.max(0, Math.min(25, Math.round(score)));
+    
+    const result: PlanetPillarResult = {
+      score,
+      base,
+      adjustments,
+      details: {
+        hasEcoScore,
+        ecoscoreGrade: product.ecoscore_grade,
+        ecoscoreValue,
+        palmOilPenalty,
+        recyclableBonus,
+        packagingEcoCostPenalty,
+        farmingImpactAdjustment,
+        brandOverlayPenalty,
+      },
+    };
+
+    // PowerShell logging for Planet Pillar
+    powershellLogger.pillarCalculation(
+      product.barcode || 'unknown',
+      'Planet',
+      base,
+      score,
+      adjustments.map(adj => ({
+        ...adj,
+        dataSource: adj.description.includes('Eco-Score') ? 'OFF' : undefined,
+      })),
+      result.details
+    );
+
+    return result;
+  } catch (error) {
+    // Error handling - log error and return safe default (base 15)
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('[PlanetPillar] Error calculating Planet pillar score:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      barcode: product?.barcode || 'unknown',
+    });
+    
+    // Return base score (15) with neutral adjustments if calculation fails
+    return {
+      score: 15, // Base score - safe fallback
+      base: 15,
+      adjustments: [{
+        description: 'Planet pillar calculation error - using baseline',
+        value: 0,
+        type: 'neutral',
+      }],
+      details: {
+        hasEcoScore: false,
+        palmOilPenalty: 0,
+        recyclableBonus: 0,
+        packagingEcoCostPenalty: 0,
+        farmingImpactAdjustment: 0,
+        brandOverlayPenalty: 0,
+      },
+    };
+  }
 }

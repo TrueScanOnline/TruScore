@@ -9,6 +9,7 @@ import { lookupProductInSQLite } from './sqliteProductDatabase';
 import { fetchProductFromUPCitemdb } from './upcitemdb';
 import { fetchProductFromBarcodeSpider } from './barcodeSpider';
 import { fetchProductFromEANSearch } from './eanSearchApi';
+import { fetchProductFromBarcodeLookup } from './barcodeLookupApi';
 
 /**
  * Discover product name early from multiple sources
@@ -60,10 +61,10 @@ export async function discoverProductNameEarly(
     },
     
     // Strategy 3: Quick API calls (name only, timeout quickly)
-    // ENHANCED: Try multiple APIs in parallel for faster discovery
+    // ID 12: Enhanced with GS1 and Barcode Lookup API for better coverage
     async (): Promise<string | null> => {
       // Try all quick APIs in parallel (faster than sequential)
-      const quickApiPromises = [
+      const quickApiPromises: Promise<Product | null>[] = [
         // UPCitemdb (often has product names, free tier)
         Promise.race([
           fetchProductFromUPCitemdb(barcode),
@@ -87,7 +88,28 @@ export async function discoverProductNameEarly(
             setTimeout(() => resolve(null), 2000) // 2 second timeout
           ),
         ]).catch(() => null),
+        
+        // ID 12: Barcode Lookup API (free tier, if API key configured)
+        Promise.race([
+          fetchProductFromBarcodeLookup(barcode),
+          new Promise<Product | null>((resolve) => 
+            setTimeout(() => resolve(null), 2000) // 2 second timeout
+          ),
+        ]).catch(() => null),
       ];
+      
+      // ID 12: GS1 (if API key available) - add to quick APIs
+      if (process.env.EXPO_PUBLIC_GS1_API_KEY) {
+        const { fetchProductFromGS1 } = await import('./gs1DataSource');
+        quickApiPromises.push(
+          Promise.race([
+            fetchProductFromGS1(barcode),
+            new Promise<Product | null>((resolve) => 
+              setTimeout(() => resolve(null), 2000) // 2 second timeout
+            ),
+          ]).catch(() => null)
+        );
+      }
       
       const results = await Promise.allSettled(quickApiPromises);
       

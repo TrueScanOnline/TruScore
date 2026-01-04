@@ -2,6 +2,10 @@
 // Ensures maximum data quality and completeness for TruScore calculation
 // Implements parallel querying and location-specific database prioritization
 
+// MVP MODE: Disabled non-consumable and retailer databases for food/drink MVP scope
+// Set to false post-MVP to re-enable for household products and pricing modal
+const MVP_MODE = true;
+
 import { Product, ProductNutriments } from '../../types/product';
 import { getUserCountryCode, isEUCountry } from '../../utils/countryDetection';
 import { logger } from '../../utils/logger';
@@ -129,6 +133,21 @@ export class TruScoreOptimizedDatabase {
     }
     logger.info(`═══════════════════════════════════════════════════════════════`);
     
+    // Log query strategy summary
+    const strategyDatabases = [
+      'Open Food Facts', 'Open Beauty Facts', 'Open Pet Food Facts', 'Open Products Facts',
+      'SQLite', 'Cache',
+      'GS1', 'Spoonacular', 'Barcode Lookup',
+      'USDA', 'Health Canada', 'UK FSA', 'EFSA', 'FSANZ',
+    ];
+    powershellLogger.queryStrategy(
+      barcode,
+      'Parallel Query Strategy - All databases queried simultaneously',
+      strategyDatabases,
+      strategyDatabases.map((_, i) => i + 1),
+      userCountry
+    );
+    
     const allProducts: Product[] = [];
     const startTime = Date.now();
     
@@ -188,10 +207,12 @@ export class TruScoreOptimizedDatabase {
     const queryNames: string[] = [];
     
     // TIER 1: Fast sources (0.5-2s) - Display First
+    powershellLogger.queryPhase(barcode, 1, 'Fast Sources (OFF, Cache, SQLite)', '<2s');
     allQueries.push(this.queryOpenFactsParallel(barcode));
     queryNames.push('Open Facts');
     
     // TIER 2: Medium sources (2-5s) - Enhance
+    powershellLogger.queryPhase(barcode, 2, 'Enhancement Sources (GS1, Spoonacular, etc.)', 'Background');
     allQueries.push(this.queryLocalFirstParallel(barcode, userCountry, earlyProductName));
     queryNames.push('Local');
     allQueries.push(this.queryGoldStandardParallel(barcode, userCountry));
@@ -200,6 +221,7 @@ export class TruScoreOptimizedDatabase {
     queryNames.push('Enhancements');
     
     // TIER 3: Fallbacks (2-10s) - Maximum Coverage
+    powershellLogger.queryPhase(barcode, 3, 'Fallback Sources (if needed)', '2-10s');
     // CRITICAL: Always query fallbacks (no early exit) for maximum success rate
     // Even if we have good data, fallbacks might add missing fields
     const productCategory = allProducts.length > 0 
@@ -299,13 +321,48 @@ export class TruScoreOptimizedDatabase {
     if (userCountry === 'NZ' || userCountry === 'AU') {
       // FSANZ query by product name (if available early)
       if (earlyProductName && !earlyProductName.startsWith('Product ')) {
+        const fsanzStartTime = Date.now();
         const fsanzQuery = queryFSANZByProductName(earlyProductName, userCountry as 'NZ' | 'AU');
         queries.push(fsanzQuery);
-        powershellLogger.databaseQuery(barcode, `FSANZ (${userCountry})`, 'start');
+        // Log database conversion requirement
+        powershellLogger.databaseConversion(barcode, `FSANZ (${userCountry})`, 'product_name', undefined, earlyProductName, 'OFF');
+        
+        powershellLogger.databaseQueryDetailed(barcode, `FSANZ (${userCountry})`, 'start', fsanzStartTime, {
+          dataSource: 'API',
+          requiresProductName: true,
+          productName: earlyProductName,
+        });
         fsanzQuery.then(result => {
-          powershellLogger.databaseQuery(barcode, `FSANZ (${userCountry})`, result ? 'success' : 'error', { found: !!result });
+          const responseTime = Date.now() - fsanzStartTime;
+          if (result) {
+            const hasNutrition = !!result.nutriments && Object.keys(result.nutriments).length > 0;
+            powershellLogger.databaseQueryDetailed(barcode, `FSANZ (${userCountry})`, 'success', fsanzStartTime, {
+              found: true,
+              responseTime,
+              dataSource: 'API',
+              requiresProductName: true,
+              productName: earlyProductName,
+              hasNutrition,
+              nutrientsCount: hasNutrition && result.nutriments ? Object.keys(result.nutriments).length : 0,
+            });
+          } else {
+            powershellLogger.databaseQueryDetailed(barcode, `FSANZ (${userCountry})`, 'error', fsanzStartTime, {
+              found: false,
+              responseTime,
+              dataSource: 'API',
+              requiresProductName: true,
+              productName: earlyProductName,
+            });
+          }
         }).catch(() => {
-          powershellLogger.databaseQuery(barcode, `FSANZ (${userCountry})`, 'error');
+          const responseTime = Date.now() - fsanzStartTime;
+          powershellLogger.databaseQueryDetailed(barcode, `FSANZ (${userCountry})`, 'error', fsanzStartTime, {
+            found: false,
+            responseTime,
+            dataSource: 'API',
+            requiresProductName: true,
+            productName: earlyProductName,
+          });
         });
       }
     } else {
@@ -315,90 +372,196 @@ export class TruScoreOptimizedDatabase {
     
     // USDA - Only for US users
     if (userCountry === 'US') {
+      const usdaStartTime = Date.now();
       const query = fetchProductFromUSDA(barcode);
       queries.push(query);
-      powershellLogger.databaseQuery(barcode, 'USDA', 'start');
+      powershellLogger.databaseQueryDetailed(barcode, 'USDA', 'start', usdaStartTime, {
+        dataSource: 'API',
+      });
       query.then(result => {
-        powershellLogger.databaseQuery(barcode, 'USDA', result ? 'success' : 'error', { found: !!result });
+        const responseTime = Date.now() - usdaStartTime;
+        if (result) {
+          const hasNutrition = !!result.nutriments && Object.keys(result.nutriments).length > 0;
+          powershellLogger.databaseQueryDetailed(barcode, 'USDA', 'success', usdaStartTime, {
+            found: true,
+            responseTime,
+            dataSource: 'API',
+            hasNutrition,
+            nutrientsCount: hasNutrition && result.nutriments ? Object.keys(result.nutriments).length : 0,
+          });
+        } else {
+          powershellLogger.databaseQueryDetailed(barcode, 'USDA', 'error', usdaStartTime, {
+            found: false,
+            responseTime,
+            dataSource: 'API',
+          });
+        }
       }).catch(() => {
-        powershellLogger.databaseQuery(barcode, 'USDA', 'error');
+        const responseTime = Date.now() - usdaStartTime;
+        powershellLogger.databaseQueryDetailed(barcode, 'USDA', 'error', usdaStartTime, {
+          found: false,
+          responseTime,
+          dataSource: 'API',
+        });
       });
     } else {
       // Skip USDA for non-US users (saves time and API calls)
+      powershellLogger.databaseSkipped(barcode, 'USDA', `User country ${userCountry} is not US`);
       logger.debug(`[Smart DB Selection] Skipping USDA query for non-US user (${userCountry})`);
     }
     
     // Health Canada - Only for CA users
     if (userCountry === 'CA') {
+      const hcStartTime = Date.now();
       const query = fetchProductFromHealthCanada(barcode);
       queries.push(query);
-      powershellLogger.databaseQuery(barcode, 'Health Canada', 'start');
+      powershellLogger.databaseQueryDetailed(barcode, 'Health Canada', 'start', hcStartTime, {
+        dataSource: 'API',
+      });
       query.then(result => {
-        powershellLogger.databaseQuery(barcode, 'Health Canada', result ? 'success' : 'error', { found: !!result });
+        const responseTime = Date.now() - hcStartTime;
+        if (result) {
+          const hasNutrition = !!result.nutriments && Object.keys(result.nutriments).length > 0;
+          powershellLogger.databaseQueryDetailed(barcode, 'Health Canada', 'success', hcStartTime, {
+            found: true,
+            responseTime,
+            dataSource: 'API',
+            hasNutrition,
+            nutrientsCount: hasNutrition && result.nutriments ? Object.keys(result.nutriments).length : 0,
+          });
+        } else {
+          powershellLogger.databaseQueryDetailed(barcode, 'Health Canada', 'error', hcStartTime, {
+            found: false,
+            responseTime,
+            dataSource: 'API',
+          });
+        }
       }).catch(() => {
-        powershellLogger.databaseQuery(barcode, 'Health Canada', 'error');
+        const responseTime = Date.now() - hcStartTime;
+        powershellLogger.databaseQueryDetailed(barcode, 'Health Canada', 'error', hcStartTime, {
+          found: false,
+          responseTime,
+          dataSource: 'API',
+        });
       });
     } else {
       // Skip Health Canada for non-CA users (saves time and API calls)
+      powershellLogger.databaseSkipped(barcode, 'Health Canada', `User country ${userCountry} is not CA`);
       logger.debug(`[Smart DB Selection] Skipping Health Canada query for non-CA user (${userCountry})`);
     }
     
     // UK FSA - Only for GB users
     if (userCountry === 'GB') {
+      const ukfsaStartTime = Date.now();
       const query = fetchProductFromUKFSA(barcode);
       queries.push(query);
-      powershellLogger.databaseQuery(barcode, 'UK FSA', 'start');
+      powershellLogger.databaseQueryDetailed(barcode, 'UK FSA', 'start', ukfsaStartTime, {
+        dataSource: 'API',
+      });
       query.then(result => {
-        powershellLogger.databaseQuery(barcode, 'UK FSA', result ? 'success' : 'error', { found: !!result });
+        const responseTime = Date.now() - ukfsaStartTime;
+        if (result) {
+          const hasNutrition = !!result.nutriments && Object.keys(result.nutriments).length > 0;
+          powershellLogger.databaseQueryDetailed(barcode, 'UK FSA', 'success', ukfsaStartTime, {
+            found: true,
+            responseTime,
+            dataSource: 'API',
+            hasNutrition,
+            nutrientsCount: hasNutrition && result.nutriments ? Object.keys(result.nutriments).length : 0,
+          });
+        } else {
+          powershellLogger.databaseQueryDetailed(barcode, 'UK FSA', 'error', ukfsaStartTime, {
+            found: false,
+            responseTime,
+            dataSource: 'API',
+          });
+        }
       }).catch(() => {
-        powershellLogger.databaseQuery(barcode, 'UK FSA', 'error');
+        const responseTime = Date.now() - ukfsaStartTime;
+        powershellLogger.databaseQueryDetailed(barcode, 'UK FSA', 'error', ukfsaStartTime, {
+          found: false,
+          responseTime,
+          dataSource: 'API',
+        });
       });
     } else {
       // Skip UK FSA for non-GB users (saves time and API calls)
+      powershellLogger.databaseSkipped(barcode, 'UK FSA', `User country ${userCountry} is not GB`);
       logger.debug(`[Smart DB Selection] Skipping UK FSA query for non-GB user (${userCountry})`);
     }
     
     // EFSA - Only for EU users
     if (isEUCountry(userCountry)) {
+      const efsaStartTime = Date.now();
       const query = fetchProductFromEFSA(barcode);
       queries.push(query);
-      powershellLogger.databaseQuery(barcode, 'EFSA', 'start');
+      powershellLogger.databaseQueryDetailed(barcode, 'EFSA', 'start', efsaStartTime, {
+        dataSource: 'API',
+      });
       query.then(result => {
-        powershellLogger.databaseQuery(barcode, 'EFSA', result ? 'success' : 'error', { found: !!result });
+        const responseTime = Date.now() - efsaStartTime;
+        if (result) {
+          const hasNutrition = !!result.nutriments && Object.keys(result.nutriments).length > 0;
+          powershellLogger.databaseQueryDetailed(barcode, 'EFSA', 'success', efsaStartTime, {
+            found: true,
+            responseTime,
+            dataSource: 'API',
+            hasNutrition,
+            nutrientsCount: hasNutrition && result.nutriments ? Object.keys(result.nutriments).length : 0,
+          });
+        } else {
+          powershellLogger.databaseQueryDetailed(barcode, 'EFSA', 'error', efsaStartTime, {
+            found: false,
+            responseTime,
+            dataSource: 'API',
+          });
+        }
       }).catch(() => {
-        powershellLogger.databaseQuery(barcode, 'EFSA', 'error');
+        const responseTime = Date.now() - efsaStartTime;
+        powershellLogger.databaseQueryDetailed(barcode, 'EFSA', 'error', efsaStartTime, {
+          found: false,
+          responseTime,
+          dataSource: 'API',
+        });
       });
     } else {
       // Skip EFSA for non-EU users (saves time and API calls)
+      powershellLogger.databaseSkipped(barcode, 'EFSA', `User country ${userCountry} is not EU`);
       logger.debug(`[Smart DB Selection] Skipping EFSA query for non-EU user (${userCountry})`);
     }
     
-    // OPTIMIZATION: Local Store APIs - Only query stores relevant to user's country
-    // This reduces unnecessary API calls and improves performance globally
-    if (userCountry === 'NZ') {
-      queries.push(fetchProductFromNZStores(barcode));
+    // MVP MODE: Retailer APIs disabled (required for pricing modal post-MVP)
+    // Post-MVP: Re-enable for pricing modal implementation
+    if (!MVP_MODE) {
+      // OPTIMIZATION: Local Store APIs - Only query stores relevant to user's country
+      // This reduces unnecessary API calls and improves performance globally
+      if (userCountry === 'NZ') {
+        queries.push(fetchProductFromNZStores(barcode));
+      } else {
+        logger.debug(`[Smart DB Selection] Skipping NZ stores query for non-NZ user (${userCountry})`);
+      }
+      
+      if (userCountry === 'AU') {
+        queries.push(fetchProductFromAURetailers(barcode));
+      } else {
+        logger.debug(`[Smart DB Selection] Skipping AU retailers query for non-AU user (${userCountry})`);
+      }
+      
+      // Tesco Labs API removed - service discontinued December 2025
+      // if (userCountry === 'GB') {
+      //   queries.push(fetchProductFromTesco(barcode));
+      // } else {
+      //   logger.debug(`[Smart DB Selection] Skipping Tesco query for non-GB user (${userCountry})`);
+      // }
+      
+      if (userCountry === 'US') {
+        queries.push(fetchProductFromWalmart(barcode));
+        queries.push(fetchProductFromFoodRepo(barcode));
+      } else {
+        logger.debug(`[Smart DB Selection] Skipping US store APIs for non-US user (${userCountry})`);
+      }
     } else {
-      logger.debug(`[Smart DB Selection] Skipping NZ stores query for non-NZ user (${userCountry})`);
-    }
-    
-    if (userCountry === 'AU') {
-      queries.push(fetchProductFromAURetailers(barcode));
-    } else {
-      logger.debug(`[Smart DB Selection] Skipping AU retailers query for non-AU user (${userCountry})`);
-    }
-    
-    // Tesco Labs API removed - service discontinued December 2025
-    // if (userCountry === 'GB') {
-    //   queries.push(fetchProductFromTesco(barcode));
-    // } else {
-    //   logger.debug(`[Smart DB Selection] Skipping Tesco query for non-GB user (${userCountry})`);
-    // }
-    
-    if (userCountry === 'US') {
-      queries.push(fetchProductFromWalmart(barcode));
-      queries.push(fetchProductFromFoodRepo(barcode));
-    } else {
-      logger.debug(`[Smart DB Selection] Skipping US store APIs for non-US user (${userCountry})`);
+      logger.debug(`[MVP MODE] Retailer APIs disabled - will be re-enabled post-MVP for pricing modal`);
     }
     
     // Early name-based queries (if product name available)
@@ -450,6 +613,7 @@ export class TruScoreOptimizedDatabase {
     
     // Global Gold Standard (always query)
     // CRITICAL OPTIMIZATION: GS1 query with short timeout (2s) - don't block on slow GS1
+    const gs1StartTime = Date.now();
     const gs1Query = Promise.race([
       fetchProductFromGS1(barcode),
       new Promise<Product | null>((resolve) => 
@@ -461,11 +625,34 @@ export class TruScoreOptimizedDatabase {
     ]);
     queries.push(gs1Query);
     databaseNames.push('GS1');
-    powershellLogger.databaseQuery(barcode, 'GS1', 'start');
+    powershellLogger.databaseQueryDetailed(barcode, 'GS1', 'start', gs1StartTime, {
+      dataSource: 'API',
+    });
     gs1Query.then(result => {
-      powershellLogger.databaseQuery(barcode, 'GS1', result ? 'success' : 'error', { found: !!result });
+      const responseTime = Date.now() - gs1StartTime;
+        if (result) {
+          const hasNutrition = !!result.nutriments && Object.keys(result.nutriments).length > 0;
+          powershellLogger.databaseQueryDetailed(barcode, 'GS1', 'success', gs1StartTime, {
+            found: true,
+            responseTime,
+            dataSource: 'API',
+            hasNutrition,
+            nutrientsCount: hasNutrition && result.nutriments ? Object.keys(result.nutriments).length : 0,
+          });
+      } else {
+        powershellLogger.databaseQueryDetailed(barcode, 'GS1', 'error', gs1StartTime, {
+          found: false,
+          responseTime,
+          dataSource: 'API',
+        });
+      }
     }).catch(() => {
-      powershellLogger.databaseQuery(barcode, 'GS1', 'error');
+      const responseTime = Date.now() - gs1StartTime;
+      powershellLogger.databaseQueryDetailed(barcode, 'GS1', 'error', gs1StartTime, {
+        found: false,
+        responseTime,
+        dataSource: 'API',
+      });
     });
     
     const results = await Promise.allSettled(queries);
@@ -482,20 +669,59 @@ export class TruScoreOptimizedDatabase {
    */
   private async queryOpenFactsParallel(barcode: string): Promise<Product[]> {
     const databases = ['Open Food Facts', 'Open Beauty Facts', 'Open Pet Food Facts', 'Open Products Facts'];
-    const queries = [
+    const queryPromises = [
       fetchProductFromOFF(barcode),
       fetchProductFromOBF(barcode),
       fetchProductFromOPFF(barcode),
       fetchProductFromOPF(barcode),
     ];
     
-    // Log each query start
+    // Log each query start and track timing
+    const queryStartTimes = databases.map(db => Date.now());
     databases.forEach((db, index) => {
-      powershellLogger.databaseQuery(barcode, db, 'start');
-      queries[index].then(result => {
-        powershellLogger.databaseQuery(barcode, db, result ? 'success' : 'error', { found: !!result });
-      }).catch(() => {
-        powershellLogger.databaseQuery(barcode, db, 'error');
+      powershellLogger.databaseQueryDetailed(barcode, db, 'start', queryStartTimes[index], {
+        dataSource: 'OFF',
+      });
+    });
+    
+    // Process results with timing
+    const queries = queryPromises.map((query, index) => {
+      const db = databases[index];
+      const startTime = queryStartTimes[index];
+      
+      return query.then(result => {
+        const responseTime = Date.now() - startTime;
+        if (result) {
+          const hasNutrition = !!result.nutriments && Object.keys(result.nutriments).length > 0;
+          powershellLogger.databaseQueryDetailed(barcode, db, 'success', startTime, {
+            found: true,
+            responseTime,
+            dataSource: 'OFF',
+            hasNutrition,
+            hasIngredients: !!result.ingredients_text,
+            hasImage: !!result.image_url,
+            hasNutriScore: !!result.nutriscore_grade,
+            hasEcoScore: !!result.ecoscore_grade,
+            nutrientsCount: hasNutrition && result.nutriments ? Object.keys(result.nutriments).length : 0,
+            ingredientsLength: result.ingredients_text?.length || 0,
+            productName: result.product_name,
+          });
+        } else {
+          powershellLogger.databaseQueryDetailed(barcode, db, 'error', startTime, {
+            found: false,
+            responseTime,
+            dataSource: 'OFF',
+          });
+        }
+        return result;
+      }).catch(error => {
+        const responseTime = Date.now() - startTime;
+        powershellLogger.databaseQueryDetailed(barcode, db, 'error', startTime, {
+          found: false,
+          responseTime,
+          dataSource: 'OFF',
+        });
+        return null;
       });
     });
     
@@ -523,12 +749,16 @@ export class TruScoreOptimizedDatabase {
     queries.push(fetchProductFromNutritionix(barcode));
     queries.push(fetchProductFromSpoonacular(barcode));
     
-    // Additional store APIs (if not already queried in Phase 0)
-    // These are global or secondary store APIs
-    if (userCountry !== 'US') {
-      // Walmart and FoodRepo are US-specific, but try them for other countries too
-      queries.push(fetchProductFromWalmart(barcode).catch(() => null));
-      queries.push(fetchProductFromFoodRepo(barcode).catch(() => null));
+    // MVP MODE: Retailer APIs disabled (required for pricing modal post-MVP)
+    // Post-MVP: Re-enable for pricing modal implementation
+    if (!MVP_MODE) {
+      // Additional store APIs (if not already queried in Phase 0)
+      // These are global or secondary store APIs
+      if (userCountry !== 'US') {
+        // Walmart and FoodRepo are US-specific, but try them for other countries too
+        queries.push(fetchProductFromWalmart(barcode).catch(() => null));
+        queries.push(fetchProductFromFoodRepo(barcode).catch(() => null));
+      }
     }
     
     const results = await Promise.allSettled(queries);

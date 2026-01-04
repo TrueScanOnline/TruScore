@@ -221,6 +221,16 @@ async function executeFetchProduct(
   isOffline = false,
   onProgress?: ProductProgressCallback
 ): Promise<ProductWithTrustScore | null> {
+  // Track overall process timing and component timings
+  const processStartTime = Date.now();
+  const timingBreakdown = {
+    databaseQueries: 0,
+    dataMerging: 0,
+    truScoreCalculation: 0,
+    enhancements: 0,
+    uiRendering: 0,
+  };
+  
   // Normalize barcode - try multiple variants (EAN-8 -> EAN-13, etc.)
   const barcodeVariants = normalizeBarcode(barcode);
   const primaryBarcode = getPrimaryBarcode(barcode);
@@ -372,6 +382,7 @@ async function executeFetchProduct(
   if (onProgress) {
     logger.info(`   Progressive display: ENABLED (product will display as results arrive)`);
   }
+  const databaseQueryStartTime = Date.now();
   const allProductsPromise = databaseService.queryAllDatabases(
     primaryBarcode, 
     userCountry, 
@@ -399,6 +410,7 @@ async function executeFetchProduct(
 
   // Get results from parallel barcode queries
   let allProducts = await allProductsPromise;
+  timingBreakdown.databaseQueries = Date.now() - databaseQueryStartTime;
   
   // If we found a product name, trigger additional name-based queries
   // These are valuable sources (FSANZ, FoodAtlas) that require product name
@@ -470,13 +482,11 @@ async function executeFetchProduct(
       const completeness = calculateDataCompleteness(product);
       logger.info(`✅ Single product found: ${product.source} | ${formatCompletenessMetrics(completeness, product.source || 'unknown')}`);
       powershellLogger.dataQuality(barcode, product, completeness);
+      powershellLogger.dataSource(barcode, product.source === 'openfoodfacts' ? 'OFF' : 'API', product);
     } else {
       logger.info(`🔄 Merging ${allProducts.length} products with TruScore-first strategy...`);
+      const mergeStartTime = Date.now();
       const preMergeCompleteness = calculateDataCompleteness(allProducts[0]);
-      powershellLogger.log('INFO', 'MERGE_START', `Merging ${allProducts.length} products`, {
-        sources: allProducts.map(p => p?.source).filter(Boolean),
-        preMergeCompleteness,
-      });
       
       product = mergeProducts(allProducts, {
         sourceWeights: databaseService.getTruScoreSourceWeights(),
@@ -484,10 +494,13 @@ async function executeFetchProduct(
         shouldMergeCertifications: true,
       });
       
+      const mergeTime = Date.now() - mergeStartTime;
+      timingBreakdown.dataMerging = mergeTime;
+      
       if (product) {
         const completeness = calculateDataCompleteness(product);
         logger.info(`✅ Merged product: ${product.source} | ${formatCompletenessMetrics(completeness, 'MERGED')}`);
-        powershellLogger.productMerge(allProducts, product, 'TruScore-first');
+        powershellLogger.mergeDetailed(barcode, allProducts, product, 'TruScore-first', mergeTime);
         powershellLogger.dataQuality(barcode, product, completeness);
       }
     }
@@ -663,7 +676,9 @@ async function executeFetchProduct(
   }
 
   // Apply all enhancements: format, palm oil analysis, MVP enhancements, brand enrichment, Eco-Score
+  const enhancementStartTime = Date.now();
   product = await enhanceProduct(product);
+  timingBreakdown.enhancements = Date.now() - enhancementStartTime;
 
   // Ensure product is not null after enhancements
   if (!product) {
@@ -898,8 +913,10 @@ async function executeFetchProduct(
   // CRITICAL FIX: Wrap in try-catch to ensure product is always returned even if TruScore calculation fails
   // Recalls are now attached to product BEFORE this calculation
   let productWithTrustScore: ProductWithTrustScore;
+  const truScoreStartTime = Date.now();
   try {
     productWithTrustScore = await calculateTrustScore(productWithConfidence);
+    timingBreakdown.truScoreCalculation = Date.now() - truScoreStartTime;
   } catch (error) {
     // If TruScore calculation fails, return product without TruScore rather than failing entirely
     logger.error('Error calculating TruScore (non-critical, returning product without score):', error);
@@ -1095,6 +1112,16 @@ async function executeFetchProduct(
       await cacheProduct(cachedProduct, isPremium);
     }
   }
+  
+  // Log final process summary with timing breakdown
+  const totalProcessTime = Date.now() - processStartTime;
+  powershellLogger.processComplete(
+    barcode,
+    totalProcessTime,
+    timingBreakdown,
+    productWithTrustScore?.trust_score || null,
+    productWithTrustScore?.source || 'unknown'
+  );
   
   return productWithTrustScore;
   } catch (error) {

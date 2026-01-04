@@ -28,6 +28,7 @@ import { checkLaborViolations, hasHighImpactLaborViolations } from '../../../ser
 import { checkBBFAWTier, getBBFAWTierScore } from '../../../services/bbfawService';
 import { extractAllBrands, normalizeBrand } from '../../../utils/brandExtraction';
 import { matchBrands, getBestBrandMatch, getParentCompanies, checkBrandProperty } from '../../../services/brandMatchingService';
+import { powershellLogger } from '../../../utils/powershellLogger';
 
 // Performance timing helper (works in Node.js, browser, and React Native)
 function getPerformanceNow(): number {
@@ -778,7 +779,7 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     })),
   });
   
-  return {
+  const result: EthicsPillarResult = {
     score,
     base,
     adjustments,
@@ -791,4 +792,19 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
       brandOverlayPenalty,
     },
   };
+
+  // PowerShell logging for Ethics Pillar
+  powershellLogger.pillarCalculation(
+    product.barcode || 'unknown',
+    'Ethics',
+    base,
+    score,
+    adjustments.map(adj => ({
+      ...adj,
+      dataSource: adj.description.includes('certification') ? 'OFF' : undefined,
+    })),
+    result.details
+  );
+
+  return result;
 }

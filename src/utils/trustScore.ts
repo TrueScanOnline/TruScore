@@ -4,6 +4,7 @@ import { extractManufacturingCountry, calculateEcoScore, formatCertifications } 
 import { calculateTruScore } from '../lib/truscoreEngine';
 import { getCachedTruScore, cacheTruScore } from './truScoreCache';
 import { logger } from './logger';
+import { powershellLogger } from './powershellLogger';
 
 /**
  * Check if we have sufficient real data to calculate a meaningful TruScore
@@ -65,6 +66,8 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
   // Check cache first
   const cachedTruScore = await getCachedTruScore(product.barcode);
   let truScoreResult;
+  const isCached = !!cachedTruScore;
+  const calculationStartTime = Date.now();
   
   if (cachedTruScore) {
     truScoreResult = cachedTruScore;
@@ -75,6 +78,101 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
       hasNutriScore: truScoreResult.hasNutriScore,
       hasEcoScore: truScoreResult.hasEcoScore,
     });
+    
+    // Log cached TruScore - if pillarDetails exist, log them; otherwise log simplified breakdown
+    if (truScoreResult.pillarDetails) {
+      // Log each pillar from cached result with full details
+      const { pillarDetails } = truScoreResult;
+      if (pillarDetails.body) {
+        powershellLogger.pillarCalculation(
+          product.barcode || 'unknown',
+          'Body',
+          pillarDetails.body.base || 15,
+          pillarDetails.body.score || truScoreResult.breakdown.Body,
+          pillarDetails.body.adjustments || [],
+          pillarDetails.body.details,
+          0 // Cached - no calculation time
+        );
+      }
+      if (pillarDetails.planet) {
+        powershellLogger.pillarCalculation(
+          product.barcode || 'unknown',
+          'Planet',
+          pillarDetails.planet.base || 15,
+          pillarDetails.planet.score || truScoreResult.breakdown.Planet,
+          pillarDetails.planet.adjustments || [],
+          pillarDetails.planet.details,
+          0
+        );
+      }
+      if (pillarDetails.ethics) {
+        powershellLogger.pillarCalculation(
+          product.barcode || 'unknown',
+          'Ethics',
+          pillarDetails.ethics.base || 15,
+          pillarDetails.ethics.score || truScoreResult.breakdown.Ethics,
+          pillarDetails.ethics.adjustments || [],
+          pillarDetails.ethics.details,
+          0
+        );
+      }
+      if (pillarDetails.open) {
+        powershellLogger.pillarCalculation(
+          product.barcode || 'unknown',
+          'Open',
+          pillarDetails.open.base || 15,
+          pillarDetails.open.score || truScoreResult.breakdown.Open,
+          pillarDetails.open.adjustments || [],
+          pillarDetails.open.details,
+          0
+        );
+      }
+    } else {
+      // Simplified logging for cached results without pillarDetails
+      // Log each pillar with just the score (no adjustments)
+      powershellLogger.log('INFO', 'PILLAR_CACHED', `Body Pillar (CACHED): ${truScoreResult.breakdown.Body}/25`, {
+        barcode: product.barcode,
+        pillar: 'Body',
+        score: truScoreResult.breakdown.Body,
+        base: 15,
+        isCached: true,
+      });
+      powershellLogger.log('INFO', 'PILLAR_CACHED', `Planet Pillar (CACHED): ${truScoreResult.breakdown.Planet}/25`, {
+        barcode: product.barcode,
+        pillar: 'Planet',
+        score: truScoreResult.breakdown.Planet,
+        base: 15,
+        isCached: true,
+      });
+      powershellLogger.log('INFO', 'PILLAR_CACHED', `Ethics Pillar (CACHED): ${truScoreResult.breakdown.Ethics}/25`, {
+        barcode: product.barcode,
+        pillar: 'Ethics',
+        score: truScoreResult.breakdown.Ethics,
+        base: 15,
+        isCached: true,
+      });
+      powershellLogger.log('INFO', 'PILLAR_CACHED', `Open Pillar (CACHED): ${truScoreResult.breakdown.Open}/25`, {
+        barcode: product.barcode,
+        pillar: 'Open',
+        score: truScoreResult.breakdown.Open,
+        base: 15,
+        isCached: true,
+      });
+    }
+    
+    // Log overall TruScore calculation (cached)
+    powershellLogger.truScoreCalculationDetailed(
+      product.barcode || 'unknown',
+      truScoreResult.truscore,
+      truScoreResult.breakdown,
+      {
+        hasNutriScore: truScoreResult.hasNutriScore,
+        hasEcoScore: truScoreResult.hasEcoScore,
+        hasOrigin: truScoreResult.hasOrigin,
+        calculationTime: 0, // Cached
+      },
+      truScoreResult.pillarDetails
+    );
   } else {
     // TruScore v1.4: 4 equal pillars (25 points each = 100 total)
     // 100% based on recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels)

@@ -145,7 +145,30 @@ async function executeFetchProductOptimized(
   let cacheHit = false;
   const sources: string[] = [];
   
+  // Track timing breakdown for process completion summary
+  const timingBreakdown = {
+    databaseQueries: 0,
+    dataMerging: 0,
+    truScoreCalculation: 0,
+    enhancements: 0,
+    uiRendering: 0,
+  };
+  
   logger.info(`🚀 OPTIMIZED PRODUCT FETCH: ${primaryBarcode}`);
+  
+  // ===== QUERY STRATEGY SUMMARY =====
+  // Create database service instance (will be reused later)
+  const databaseService = new TruScoreOptimizedDatabase();
+  // Log query strategy summary
+  const strategyDatabases = ['SQLite', 'Cache', 'Open Food Facts', 'Open Beauty Facts', 'GS1', 'Spoonacular', 'Barcode Lookup', 'FSANZ', 'Fallbacks'];
+  const strategyOrder = [1, 2, 3, 3, 2, 2, 3, 2, 3];
+  powershellLogger.queryStrategy(
+    primaryBarcode,
+    'Parallel queries with progressive display',
+    strategyDatabases,
+    strategyOrder,
+    userCountry || undefined
+  );
   
   // ===== CRITICAL OPTIMIZATION: CHECK CACHE FIRST - INSTANT RETURN =====
   // This matches Yuka's behavior - instant return for cached products (< 100ms)
@@ -222,6 +245,7 @@ async function executeFetchProductOptimized(
   // ===== PHASE 1: FAST SOURCES (Only if cache not found) =====
   // Cache not found - query APIs (Target: < 2 seconds)
   onProgress?.({ phase: 'fast_sources' });
+  powershellLogger.queryPhase(primaryBarcode, 1, 'Fast Sources (SQLite, Cache, OFF, OBF)', '< 2 seconds');
   logger.info(`📊 PHASE 1: Fast Sources (Cache miss - querying APIs - Target: < 2 seconds)`);
   
   const fastSourcesStart = Date.now();
@@ -230,6 +254,49 @@ async function executeFetchProductOptimized(
   // Display product IMMEDIATELY when Open Food Facts returns (don't wait for timeout)
   // Only query APIs if cache was not found
   let progressiveDisplaySent = false;
+  const progressiveDisplayUpdates: Array<{
+    phase: string;
+    timestamp: number;
+    timeFromStart: number;
+    availableFields: string[];
+    missingFields?: string[];
+    source: string;
+    productComplete: boolean;
+  }> = [];
+  
+  // Helper function to get available fields from a product
+  const getAvailableFields = (product: Product): string[] => {
+    const fields: string[] = [];
+    if (product.product_name) fields.push('product_name');
+    if (product.brands) fields.push('brands');
+    if (product.image_url) fields.push('image_url');
+    if (product.nutriments && Object.keys(product.nutriments).length > 0) fields.push('nutriments');
+    if (product.ingredients_text) fields.push('ingredients_text');
+    if (product.categories) fields.push('categories');
+    if (product.nutriscore_grade) fields.push('nutriscore_grade');
+    if (product.ecoscore_grade) fields.push('ecoscore_grade');
+    if (product.labels_tags && product.labels_tags.length > 0) fields.push('labels_tags');
+    if (product.origins_tags && product.origins_tags.length > 0) fields.push('origins_tags');
+    if (product.certifications && product.certifications.length > 0) fields.push('certifications');
+    if (product.additives_tags && product.additives_tags.length > 0) fields.push('additives_tags');
+    return fields;
+  };
+  
+  // Helper function to get all possible fields
+  const getAllPossibleFields = (): string[] => [
+    'product_name',
+    'brands',
+    'image_url',
+    'nutriments',
+    'ingredients_text',
+    'categories',
+    'nutriscore_grade',
+    'ecoscore_grade',
+    'labels_tags',
+    'origins_tags',
+    'certifications',
+    'additives_tags',
+  ];
   
   // Start OFF query immediately (don't wait for Promise.race)
   const offQueryPromise = fetchProductFromOFF(primaryBarcode).then(result => {
@@ -243,8 +310,23 @@ async function executeFetchProductOptimized(
       if (result && hasGoodData(result) && !progressiveDisplaySent) {
         progressiveDisplaySent = true;
         processProductFast(result, primaryBarcode).then(processed => {
+          const timeFromStart = Date.now() - scanStartTime;
+          const availableFields = getAvailableFields(processed);
+          const allPossibleFields = getAllPossibleFields();
+          const missingFields = allPossibleFields.filter(f => !availableFields.includes(f));
+          
+          progressiveDisplayUpdates.push({
+            phase: 'product_ready',
+            timestamp: Date.now(),
+            timeFromStart,
+            availableFields,
+            missingFields,
+            source: result.source || 'openfoodfacts',
+            productComplete: missingFields.length === 0,
+          });
+          
           onProgress?.({ phase: 'product_ready', product: processed });
-          logger.info(`⚡⚡⚡ PROGRESSIVE DISPLAY: Product sent to UI immediately from Open Food Facts (${Date.now() - scanStartTime}ms)`);
+          logger.info(`⚡⚡⚡ PROGRESSIVE DISPLAY: Product sent to UI immediately from Open Food Facts (${timeFromStart}ms)`);
         }).catch(err => {
           logger.debug('Progressive display error (non-critical):', err);
           progressiveDisplaySent = false; // Allow retry
@@ -313,10 +395,51 @@ async function executeFetchProductOptimized(
     if (product && hasGoodData(product)) {
       logger.info(`✅ Good data found in Phase 1 - processing and returning quickly`);
       
+      // CRITICAL FIX: Start Phase 2/3 queries BEFORE returning (run in background)
+      // This ensures maximum data completeness while still providing fast initial display
+      const phase2StartTime = Date.now();
+      timingBreakdown.databaseQueries = Date.now() - fastSourcesStart;
+      
+      // Start Phase 2/3 queries in background (non-blocking)
+      const phase2Promise = (async () => {
+        try {
+          powershellLogger.queryPhase(primaryBarcode, 2, 'Enhancement Sources (GS1, Spoonacular, etc.)', 'Background');
+          const enhancementProducts = await databaseService.queryAllDatabases(primaryBarcode, userCountry, product?.product_name);
+          
+          if (enhancementProducts.length > 0) {
+            logger.info(`📊 Background Phase 2: Found ${enhancementProducts.length} additional products`);
+            return enhancementProducts;
+          }
+          return [];
+        } catch (err) {
+          logger.debug('Background Phase 2 failed (non-critical):', err);
+          return [];
+        }
+      })();
+      
+      // Start Phase 3 queries if needed (background)
+      const phase3Promise = (async () => {
+        try {
+          if (shouldQueryFallbacks(product, hasOpenFoodFacts)) {
+            powershellLogger.queryPhase(primaryBarcode, 3, 'Fallback Sources (if needed)', 'Background');
+            const fallbackProducts = await databaseService.queryAllDatabases(primaryBarcode, userCountry);
+            if (fallbackProducts.length > 0) {
+              logger.info(`📊 Background Phase 3: Found ${fallbackProducts.length} fallback products`);
+              return fallbackProducts;
+            }
+          }
+          return [];
+        } catch (err) {
+          logger.debug('Background Phase 3 failed (non-critical):', err);
+          return [];
+        }
+      })();
+      
       // CRITICAL OPTIMIZATION: Process product WITHOUT waiting for user-contributed merge
       // User-contributed merge has 3s timeout and can block display
       // Process product first, merge user data in background
       let processedProduct: ProductWithTrustScore;
+      const processStartTime = Date.now();
       
       if (product.source === 'sqlite') {
         // For SQLite, merge user data with timeout (non-blocking)
@@ -329,26 +452,65 @@ async function executeFetchProductOptimized(
         processedProduct = await processProductFast(product, primaryBarcode);
       }
       
+      timingBreakdown.truScoreCalculation = Date.now() - processStartTime;
+      
       // Send to UI IMMEDIATELY - product with TruScore ready!
       // User-contributed data will be merged in background if available
-      onProgress?.({ phase: 'product_ready', product: processedProduct });
+      const uiRenderStart = Date.now();
+      const timeFromStart = Date.now() - scanStartTime;
+      const availableFields = getAvailableFields(processedProduct);
+      const allPossibleFields = getAllPossibleFields();
+      const missingFields = allPossibleFields.filter(f => !availableFields.includes(f));
       
-      // Continue enhancement in background (non-blocking)
+      progressiveDisplayUpdates.push({
+        phase: 'product_ready',
+        timestamp: Date.now(),
+        timeFromStart,
+        availableFields,
+        missingFields,
+        source: product.source || 'unknown',
+        productComplete: missingFields.length === 0,
+      });
+      
+      onProgress?.({ phase: 'product_ready', product: processedProduct });
+      timingBreakdown.uiRendering = Date.now() - uiRenderStart;
+      
+      // Continue Phase 2/3 enhancement in background (non-blocking)
+      Promise.all([phase2Promise, phase3Promise]).then(([phase2Products, phase3Products]) => {
+        const allAdditionalProducts = [...phase2Products, ...phase3Products];
+        if (allAdditionalProducts.length > 0) {
+          logger.info(`📊 Background enhancement: Merging ${allAdditionalProducts.length} additional products`);
+          const mergeStartTime = Date.now();
+          enhanceProductWithAdditionalData(processedProduct, allAdditionalProducts, databaseService, primaryBarcode, isPremium)
+            .then(() => {
+              timingBreakdown.dataMerging = Date.now() - mergeStartTime;
+              logger.debug(`✅ Background merge complete for ${primaryBarcode}`);
+            })
+            .catch(err => {
+              logger.debug('Background merge failed (non-critical):', err);
+            });
+        }
+      }).catch(err => {
+        logger.debug('Background Phase 2/3 failed (non-critical):', err);
+      });
+      
+      // Continue standard enhancement in background (non-blocking)
       enhanceProductInBackground(primaryBarcode, processedProduct, userCountry, isPremium).catch(err => {
         logger.debug('Background enhancement failed (non-critical):', err);
       });
       
       // Return product with TruScore - user sees it NOW!
+      // Phase 2/3 will continue in background and enhance product progressively
       return processedProduct;
     }
   }
   
   // ===== PHASE 2: ENHANCEMENT SOURCES (Background) =====
+  powershellLogger.queryPhase(primaryBarcode, 2, 'Enhancement Sources (GS1, Spoonacular, etc.)', 'Background');
   logger.info(`📊 PHASE 2: Enhancement Sources (Background)`);
   onProgress?.({ phase: 'enhancement' });
   
   const enhancementStart = Date.now();
-  const databaseService = new TruScoreOptimizedDatabase();
   
   // Query enhancement sources (non-blocking if we already have a product)
   const enhancementPromise = databaseService.queryAllDatabases(primaryBarcode, userCountry, product?.product_name);
@@ -392,6 +554,8 @@ async function executeFetchProductOptimized(
         sourceWeights: databaseService.getTruScoreSourceWeights(),
         normalizeNutrition: true,
         shouldMergeCertifications: true,
+        barcode: primaryBarcode,
+        enableFieldTracking: true,
       });
     }
     hasOpenFoodFacts = enhancementProducts.some(p => p.source === 'openfoodfacts');
@@ -401,6 +565,7 @@ async function executeFetchProductOptimized(
   const shouldQueryFallback = shouldQueryFallbacks(product, hasOpenFoodFacts);
   
   if (shouldQueryFallback && !product) {
+    powershellLogger.queryPhase(primaryBarcode, 3, 'Fallback Sources (No good data found)', '2-10s');
     logger.info(`📊 PHASE 3: Fallbacks (No good data found)`);
     onProgress?.({ phase: 'fallbacks' });
     
@@ -413,9 +578,12 @@ async function executeFetchProductOptimized(
             sourceWeights: databaseService.getTruScoreSourceWeights(),
             normalizeNutrition: true,
             shouldMergeCertifications: true,
+            barcode: primaryBarcode,
+            enableFieldTracking: true,
           });
     }
   } else if (shouldQueryFallback && product) {
+    powershellLogger.queryPhase(primaryBarcode, 3, 'Fallback Sources (Enhancing incomplete product)', 'Background');
     logger.info(`📊 PHASE 3: Fallbacks (Enhancing incomplete product in background)`);
     // Query fallbacks in background to enhance product
     // First process the product to get ProductWithTrustScore
@@ -444,13 +612,78 @@ async function executeFetchProductOptimized(
   // TruScore calculation is fast (200-500ms) and necessary for display
   // processProductFast already merges user-contributed data (photos, etc.)
   // This ensures user contributions are available to ALL users
+  const truScoreStartTime = Date.now();
   const processedProduct = await processProductFast(product, primaryBarcode);
-  onProgress?.({ phase: 'complete', product: processedProduct });
+  timingBreakdown.truScoreCalculation = Date.now() - truScoreStartTime;
   
-  // OPTIMIZATION: Log performance metrics for monitoring and optimization
+  const uiRenderStartTime = Date.now();
+  const timeFromStart = Date.now() - scanStartTime;
+  const availableFields = getAvailableFields(processedProduct);
+  const allPossibleFields = getAllPossibleFields();
+  const missingFields = allPossibleFields.filter(f => !availableFields.includes(f));
+  
+  progressiveDisplayUpdates.push({
+    phase: 'complete',
+    timestamp: Date.now(),
+    timeFromStart,
+    availableFields,
+    missingFields,
+    source: product.source || 'unknown',
+    productComplete: missingFields.length === 0,
+  });
+  
+  // Log progressive display summary
+  if (progressiveDisplayUpdates.length > 0) {
+    powershellLogger.progressiveDisplaySummary(primaryBarcode, progressiveDisplayUpdates);
+  }
+  
+  onProgress?.({ phase: 'complete', product: processedProduct });
+  timingBreakdown.uiRendering = Date.now() - uiRenderStartTime;
+  
+  // Calculate final timing breakdown
   const totalLoadTime = Date.now() - scanStartTime;
   const timeToFirstContent = processedProduct ? totalLoadTime : totalLoadTime; // TTF = TLT if product found
   
+  // Calculate final metrics
+  const databasesQueried = apiCallCount;
+  const databasesFound = sources.length;
+  const successRate = databasesQueried > 0 ? `${Math.round((databasesFound / databasesQueried) * 100)}%` : '0%';
+  const cacheHits = cacheHit ? 'yes' : 'no';
+  
+  // Calculate final metrics
+  const databasesQueriedCount = apiCallCount || sources.length || 1; // At least 1 if we have a product
+  const databasesFoundCount = sources.length || (processedProduct ? 1 : 0);
+  const databasesSkippedCount = 0; // Could be calculated based on country exclusions
+  const productsMergedCount = sources.length > 1 ? sources.length : 0;
+  
+  // ===== PROCESS COMPLETION SUMMARY =====
+  powershellLogger.processComplete(
+    primaryBarcode,
+    totalLoadTime,
+    {
+      databaseQueries: timingBreakdown.databaseQueries,
+      dataMerging: timingBreakdown.dataMerging,
+      truScoreCalculation: timingBreakdown.truScoreCalculation,
+      enhancements: timingBreakdown.enhancements,
+      uiRendering: timingBreakdown.uiRendering,
+    },
+    processedProduct?.trust_score || null,
+    processedProduct?.source || undefined
+  );
+  
+  // ===== PERFORMANCE METRICS SUMMARY =====
+  powershellLogger.performanceMetrics(primaryBarcode, {
+    totalTime: totalLoadTime,
+    databaseQueries: timingBreakdown.databaseQueries,
+    databasesQueried: databasesQueriedCount,
+    databasesFound: databasesFoundCount,
+    databasesSkipped: databasesSkippedCount,
+    productsMerged: productsMergedCount,
+    truScore: processedProduct?.trust_score || 0,
+    cacheHit,
+  });
+  
+  // OPTIMIZATION: Log performance metrics for monitoring and optimization
   logPerformanceMetrics({
     barcode: primaryBarcode,
     ttf: timeToFirstContent,
@@ -547,6 +780,8 @@ async function enhanceProductWithAdditionalData(
       sourceWeights: databaseService.getTruScoreSourceWeights(),
       normalizeNutrition: true,
       shouldMergeCertifications: true,
+      barcode: barcode,
+      enableFieldTracking: true,
     });
     
     // Recalculate TruScore

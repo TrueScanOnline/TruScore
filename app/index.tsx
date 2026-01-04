@@ -25,6 +25,7 @@ import { useTheme } from '../src/theme';
 import PremiumGate from '../src/components/PremiumGate';
 import { RootStackParamList } from './_layout';
 import { useCameraLifecycle } from '../src/hooks/useCameraLifecycle';
+import { powershellLogger } from '../src/utils/powershellLogger';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -191,6 +192,10 @@ export default function ScanScreen() {
         return;
       }
 
+      // Log barcode scan initiation
+      const scanTimestamp = Date.now();
+      powershellLogger.scanInitiated(barcode, type, scanTimestamp);
+      
       console.log('[ScanScreen] Valid barcode, adding to history:', barcode);
 
       // Add to history

@@ -93,13 +93,20 @@ export async function mergeUserContributedData(product: Product, barcode: string
       return product;
     }
     
-    powershellLogger.log('INFO', 'USER_CONTRIBUTION', `User-contributed product found - merging`, {
+    // Determine database source from product metadata
+    const userContributedDatabase = (userContributedProduct as any)?._source || 
+                                   (userContributedProduct as any)?._database || 
+                                   'Local Storage or Vercel Backend';
+    
+    powershellLogger.log('INFO', 'USER_CONTRIBUTION', `User-contributed product found - merging from ${userContributedDatabase}`, {
       barcode,
       step: 'MERGE_PROCESS',
+      database: userContributedDatabase,
       userContributedHasPhoto: !!userContributedProduct.image_url,
       userContributedPhotoUrl: userContributedProduct.image_url || 'NONE',
       userContributedHasIngredients: !!userContributedProduct.ingredients_text,
       userContributedHasNutrition: !!userContributedProduct.nutriments,
+      dataSource: 'USER_CONTRIBUTED',
     });
     
     logger.info(`[ProductCacheService] Merging user-contributed data: ${barcode}`);
@@ -143,9 +150,9 @@ export async function mergeUserContributedData(product: Product, barcode: string
       });
     }
     
-    if (userContributedProduct.nutriments && Object.keys(userContributedProduct.nutriments).length > 0) {
-      product.nutriments = { ...product.nutriments, ...userContributedProduct.nutriments };
-    }
+    // ID 10: User-contributed nutrition data override REMOVED (use trusted sources only)
+    // User contributions still used for: a) exporting to OFF, b) in-house database for products not found
+    // Nutrition data from user contributions is NOT merged to ensure data quality and safety
     
     if (userContributedProduct.ingredients_text && userContributedProduct.ingredients_text.trim().length > 0) {
       product.ingredients_text = userContributedProduct.ingredients_text;
@@ -260,18 +267,56 @@ export async function saveProductToCache(product: ProductWithTrustScore, barcode
  * Now uses parallel lookup with cache for faster results
  */
 export async function lookupFromSQLite(barcode: string): Promise<Product | null> {
+  const startTime = Date.now();
   try {
     const userCountry = getUserCountryCode();
     const primaryBarcode = getPrimaryBarcode(barcode);
+    
+    powershellLogger.databaseQueryDetailed(barcode, 'SQLite', 'start', startTime, {
+      dataSource: 'SQLite',
+      sqliteCountry: userCountry || undefined,
+    });
+    
     const product = await lookupProductInSQLite(primaryBarcode, userCountry ?? undefined);
+    const responseTime = Date.now() - startTime;
     
     if (product) {
+      const hasNutrition = !!product.nutriments && Object.keys(product.nutriments).length > 0;
+      powershellLogger.dataSource(barcode, 'SQLite', product, {
+        sqliteCountry: userCountry || undefined,
+      });
+      powershellLogger.databaseQueryDetailed(barcode, 'SQLite', 'success', startTime, {
+        found: true,
+        responseTime,
+        dataSource: 'SQLite',
+        sqliteCountry: userCountry || undefined,
+        hasNutrition,
+        hasIngredients: !!product.ingredients_text,
+        hasImage: !!product.image_url,
+        hasNutriScore: !!product.nutriscore_grade,
+        hasEcoScore: !!product.ecoscore_grade,
+        nutrientsCount: hasNutrition && product.nutriments ? Object.keys(product.nutriments).length : 0,
+        ingredientsLength: product.ingredients_text?.length || 0,
+      });
       logger.debug(`[ProductCacheService] Found in SQLite: ${primaryBarcode}`);
       return product;
     }
     
+    powershellLogger.databaseQueryDetailed(barcode, 'SQLite', 'error', startTime, {
+      found: false,
+      responseTime,
+      dataSource: 'SQLite',
+      sqliteCountry: userCountry || undefined,
+    });
+    
     return null;
   } catch (error) {
+    const responseTime = Date.now() - startTime;
+    powershellLogger.databaseQueryDetailed(barcode, 'SQLite', 'error', startTime, {
+      found: false,
+      responseTime,
+      dataSource: 'SQLite',
+    });
     // Use dynamic import to break require cycle
     const { handleError, ErrorCategory, ErrorSeverity } = await import('./errorHandlingService');
     handleError(error, ErrorCategory.DATABASE, ErrorSeverity.LOW, { barcode });
@@ -305,16 +350,62 @@ export async function lookupProductFast(barcode: string, isPremium: boolean, bar
  * Lookup product from AsyncStorage cache
  */
 export async function lookupFromCache(barcode: string, isPremium: boolean, barcodeVariants: string[]): Promise<Product | null> {
+  const startTime = Date.now();
   try {
+    powershellLogger.databaseQueryDetailed(barcode, 'Cache (AsyncStorage)', 'start', startTime, {
+      dataSource: 'Cache',
+      isPremium,
+    });
+    
     for (const variant of barcodeVariants) {
       const cached = await getCachedProduct(variant, isPremium);
       if (cached) {
+        const responseTime = Date.now() - startTime;
+        const hasNutrition = !!cached.nutriments && Object.keys(cached.nutriments).length > 0;
+        
+        // Calculate cache age if available
+        const cacheAge = (cached as any)._cachedAt ? Date.now() - (cached as any)._cachedAt : undefined;
+        
+        powershellLogger.dataSource(barcode, 'Cache', cached, {
+          cacheAge,
+          isPremium,
+        });
+        powershellLogger.databaseQueryDetailed(barcode, 'Cache (AsyncStorage)', 'success', startTime, {
+          found: true,
+          responseTime,
+          dataSource: 'Cache',
+          isPremium,
+          cacheAge,
+          hasNutrition,
+          hasIngredients: !!cached.ingredients_text,
+          hasImage: !!cached.image_url,
+          hasNutriScore: !!cached.nutriscore_grade,
+          hasEcoScore: !!cached.ecoscore_grade,
+          nutrientsCount: hasNutrition && cached.nutriments ? Object.keys(cached.nutriments).length : 0,
+          ingredientsLength: cached.ingredients_text?.length || 0,
+        });
         logger.debug(`[ProductCacheService] Found in cache: ${variant}`);
         return cached;
       }
     }
+    
+    const responseTime = Date.now() - startTime;
+    powershellLogger.databaseQueryDetailed(barcode, 'Cache (AsyncStorage)', 'error', startTime, {
+      found: false,
+      responseTime,
+      dataSource: 'Cache',
+      isPremium,
+    });
+    
     return null;
   } catch (error) {
+    const responseTime = Date.now() - startTime;
+    powershellLogger.databaseQueryDetailed(barcode, 'Cache (AsyncStorage)', 'error', startTime, {
+      found: false,
+      responseTime,
+      dataSource: 'Cache',
+      isPremium,
+    });
     // Use dynamic import to break require cycle
     const { handleError, ErrorCategory, ErrorSeverity } = await import('./errorHandlingService');
     handleError(error, ErrorCategory.DATABASE, ErrorSeverity.LOW, { barcode });

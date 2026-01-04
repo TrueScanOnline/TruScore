@@ -98,6 +98,8 @@ export function calculateTruScore(
     product.packagings = [];
   }
 
+  const calculationStartTime = Date.now();
+  
   try {
     // Calculate each pillar independently
     const bodyResult = calculateBodyPillar(product);
@@ -136,6 +138,8 @@ export function calculateTruScore(
     const hasOrigin: boolean = (hasOriginTags || hasManufacturingTags || hasOriginString || hasManufacturingString) &&
       !placeholderValues.some(placeholder => allOriginValues.includes(placeholder));
     
+    const calculationTime = Date.now() - calculationStartTime;
+    
     const result: TruScoreResult = {
       truscore,
       breakdown: {
@@ -156,19 +160,24 @@ export function calculateTruScore(
       },
     };
     
-    // PowerShell logging for TruScore calculation details
-    powershellLogger.log('SUCCESS', 'TRUSCORE_CALCULATION', `TruScore Calculated: ${result.truscore}/100`, {
-      barcode: product?.barcode,
-      breakdown: result.breakdown,
-      hasNutriScore: result.hasNutriScore,
-      hasEcoScore: result.hasEcoScore,
-      hasOrigin: result.hasOrigin,
-      insightsCount: insights.length,
-      bodyDetails: bodyResult.details,
-      planetDetails: planetResult.details,
-      ethicsDetails: ethicsResult.details,
-      openDetails: openResult.details,
-    });
+    // PowerShell logging for TruScore calculation details with timing
+    powershellLogger.truScoreCalculationDetailed(
+      product?.barcode || 'unknown',
+      truscore,
+      result.breakdown,
+      {
+        hasNutriScore,
+        hasEcoScore,
+        hasOrigin,
+        calculationTime,
+      },
+      {
+        body: bodyResult,
+        planet: planetResult,
+        ethics: ethicsResult,
+        open: openResult,
+      }
+    );
     
     return result;
   } catch (error) {

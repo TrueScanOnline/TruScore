@@ -57,6 +57,28 @@ export function generateBannerAlerts(
       const severity = highestSeverity.recall.classification === 'Class I' ? 'high' :
                       highestSeverity.recall.classification === 'Class II' ? 'medium' : 'low';
 
+      const organization = highestSeverity.recall.recallId?.toUpperCase().includes('FDA') || highestSeverity.recall.recallId?.startsWith('F-') ? 'FDA' :
+                           highestSeverity.recall.recallId?.toUpperCase().includes('USDA') || 
+                           highestSeverity.recall.recallId?.toUpperCase().includes('FSIS') || 
+                           highestSeverity.recall.recallId?.toUpperCase().startsWith('FSIS-') ? 'USDA FSIS' :
+                           highestSeverity.recall.recallId?.toUpperCase().includes('CFIA') ? 'CFIA' :
+                           highestSeverity.recall.recallId?.toUpperCase().includes('RASFF') ? 'RASFF' : 'Government Agency';
+      
+      // Use recall URL if available, otherwise use agency website
+      let actionUrl = highestSeverity.recall.url;
+      if (!actionUrl) {
+        // Fallback to agency website
+        if (organization === 'FDA') {
+          actionUrl = 'https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts';
+        } else if (organization === 'USDA FSIS') {
+          actionUrl = 'https://www.fsis.usda.gov/recalls';
+        } else if (organization === 'CFIA') {
+          actionUrl = 'https://www.inspection.gc.ca/food-recall-warnings-and-allergies/recalls-and-alerts/eng/1351519587174/1351519588221';
+        } else if (organization === 'RASFF') {
+          actionUrl = 'https://webgate.ec.europa.eu/rasff-window/portal/';
+        }
+      }
+
       alerts.push({
         id: `recall-${product.barcode}-${Date.now()}`,
         source: 'app',
@@ -65,18 +87,9 @@ export function generateBannerAlerts(
         message: `${recentRecalls.length} active recall(s) found. ${highestSeverity.recall.reason || 'Safety concern identified.'}`,
         severity,
         timestamp: Date.now(),
+        actionUrl,
         sourceDetails: {
-          // Infer agency from recallId pattern
-          // FDA recalls typically have format like "F-XXXX-XXXX"
-          // USDA FSIS recalls typically have format like "FSIS-RC-XXXX" or contain "USDA"
-          // CFIA recalls typically contain "CFIA"
-          // RASFF alerts typically contain "RASFF"
-          organization: highestSeverity.recall.recallId?.toUpperCase().includes('FDA') || highestSeverity.recall.recallId?.startsWith('F-') ? 'FDA' :
-                       highestSeverity.recall.recallId?.toUpperCase().includes('USDA') || 
-                       highestSeverity.recall.recallId?.toUpperCase().includes('FSIS') || 
-                       highestSeverity.recall.recallId?.toUpperCase().startsWith('FSIS-') ? 'USDA FSIS' :
-                       highestSeverity.recall.recallId?.toUpperCase().includes('CFIA') ? 'CFIA' :
-                       highestSeverity.recall.recallId?.toUpperCase().includes('RASFF') ? 'RASFF' : 'Government Agency',
+          organization,
           recallClassification: highestSeverity.recall.classification === 'Unknown' ? undefined : highestSeverity.recall.classification,
         },
       });
@@ -126,6 +139,22 @@ export function generateBannerAlerts(
       const severity = animalCrueltyData.violationType === 'major' ? 'high' :
                       animalCrueltyData.violationType === 'moderate' ? 'medium' : 'low';
 
+      // Determine action URL based on primary organization
+      let actionUrl: string | undefined;
+      if (hasPETA) {
+        actionUrl = 'https://www.peta.org/';
+      } else if (hasHSUS) {
+        actionUrl = 'https://www.humanesociety.org/';
+      } else if (hasRSPCA) {
+        actionUrl = 'https://www.rspca.org.uk/';
+      } else if (hasASPCA) {
+        actionUrl = 'https://www.aspca.org/';
+      } else if (hasEthicalConsumer) {
+        actionUrl = 'https://www.ethicalconsumer.org/';
+      } else if (hasBuycott) {
+        actionUrl = 'https://www.buycott.com/';
+      }
+
       alerts.push({
         id: `animal-cruelty-${product.barcode}-${Date.now()}`,
         source: 'app',
@@ -134,6 +163,7 @@ export function generateBannerAlerts(
         message: `Recent cruelty concerns reported by ${organizations.join(', ')}. Check sources for details.`,
         severity,
         timestamp: Date.now(),
+        actionUrl,
         sourceDetails: {
           organization: organizations.join(', '),
         },
@@ -178,6 +208,20 @@ export function generateBannerAlerts(
       const severity = laborViolationData.violationType === 'major' ? 'high' :
                       laborViolationData.violationType === 'moderate' ? 'medium' : 'low';
 
+      // Determine action URL based on primary organization (prioritize DOL)
+      let actionUrl: string | undefined;
+      if (hasDOL) {
+        actionUrl = 'https://www.dol.gov/general/topic/youthlabor';
+      } else if (hasWalkFree) {
+        actionUrl = 'https://www.walkfree.org/';
+      } else if (hasOxfam) {
+        actionUrl = 'https://www.oxfam.org/en/what-we-do/work/labour-rights';
+      } else if (hasILO) {
+        actionUrl = 'https://www.ilo.org/global/lang--en/index.htm';
+      } else if (hasBuycott) {
+        actionUrl = 'https://www.buycott.com/';
+      }
+
       alerts.push({
         id: `labor-violations-${product.barcode}-${Date.now()}`,
         source: 'app',
@@ -186,6 +230,7 @@ export function generateBannerAlerts(
         message: `Labor concerns reported by ${organizations.join(', ')}. Verify sources for details.`,
         severity,
         timestamp: Date.now(),
+        actionUrl,
         sourceDetails: {
           organization: organizations.join(', '),
         },

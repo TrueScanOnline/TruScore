@@ -17,6 +17,7 @@ import { Product } from '../../../types/product';
 import { logger } from '../../../utils/logger';
 import { getBrandData } from '../../../data/brandDatabase';
 import { matchBrands, getBestBrandMatch } from '../../../services/brandMatchingService';
+import { powershellLogger } from '../../../utils/powershellLogger';
 
 const HIDDEN_TERMS = [
   'parfum',
@@ -365,7 +366,7 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     final: score,
   });
   
-  return {
+  const result: OpenPillarResult = {
     score,
     base,
     adjustments,
@@ -381,5 +382,17 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
       brandOwnershipPenalty,
     },
   };
+
+  // PowerShell logging for Open Pillar
+  powershellLogger.pillarCalculation(
+    product.barcode || 'unknown',
+    'Open',
+    base,
+    score,
+    adjustments,
+    result.details
+  );
+
+  return result;
 }
 

@@ -1,206 +1,378 @@
-# Database Query Flow & TruScore Logic - Complete Explanation
+# Database Query Flow - Complete Explanation
 
-## When a User Scans a Product Barcode
+## Terminology Clarification
 
-### 🇳🇿 New Zealand Users
+The app uses **BOTH** "Tiers" and "Phases" - they refer to the same concept but at different layers:
 
-#### Step 1: Barcode Lookup (Tier 1 - Primary Sources)
-1. **SQLite Database** (offline-first, country-specific)
-   - Instant lookup if product was previously scanned
-   - Country-specific cache
+- **"TIERS"** = Used in `TruScoreOptimizedDatabase` (internal database organization)
+- **"PHASES"** = Used in `productServiceOptimized` (high-level service flow)
 
-2. **Open Food Facts (OFF)**
-   - Primary global food database
-   - Gets product name, nutrition, ingredients, etc.
-
-3. **Open Beauty Facts (OBF)**
-   - For cosmetics/personal care products
-
-4. **Open Pet Food Facts (OPFF)**
-   - For pet food products
-
-#### Step 2: FSANZ Enhancement (Tier 1.5 - Gold Standard)
-5. **FSANZ NZ Database (Barcode Lookup)**
-   - If product found in OFF, tries to match barcode in FSANZ NZ database
-   - Official New Zealand food composition database
-   - Merges official nutrition data if found
-
-6. **FSANZ Query by Product Name** ⭐ **PRIMARY METHOD**
-   - **Uses product name from OFF** to query FSANZ API
-   - **API Endpoint:** `https://truscoreapi.vercel.app/api/fsanz-query?country=nz&productName={name}`
-   - **Database:** NZFCD (221,851 foods)
-   - **Method:** Fuzzy matching by food name
-   - **Result:** Official nutrition data merged into product
-
-#### Step 3: Additional Sources (Tier 2-3)
-7. Other databases (UPCitemdb, Barcode Spider, etc.)
-8. Web search fallback (ensures always returns something)
+**They are the same thing!** Just different naming conventions in different files.
 
 ---
 
-### 🇦🇺 Australian Users
+## Complete Database Query Flow
 
-#### Step 1: Barcode Lookup (Tier 1 - Primary Sources)
-1. **SQLite Database** (offline-first, country-specific)
-2. **Open Food Facts (OFF)**
-3. **Open Beauty Facts (OBF)**
-4. **Open Pet Food Facts (OPFF)**
+### High-Level Flow (productServiceOptimized.ts)
 
-#### Step 2: FSANZ Enhancement (Tier 1.5 - Gold Standard)
-5. **FSANZ AU Database (Barcode Lookup)**
-   - Tries to match barcode in FSANZ AU database
-   - Official Australian food composition database
-
-6. **FSANZ Query by Product Name** ⭐ **PRIMARY METHOD**
-   - **Uses product name from OFF** to query FSANZ API
-   - **API Endpoint:** `https://truscoreapi.vercel.app/api/fsanz-query?country=au&productName={name}`
-   - **Database:** AFCD (3,422 foods) + **NZFCD Fallback** (221,851 foods)
-   - **Method:** 
-     - First tries AFCD with fuzzy matching
-     - **If not found, automatically falls back to NZFCD**
-   - **Result:** Official nutrition data merged into product
-
-#### Step 3: Additional Sources (Tier 2-3)
-7. Other databases
-8. Web search fallback
-
----
-
-## FSANZ Query Logic (The PRIMARY Method)
-
-### How It Works:
-
-1. **User scans barcode** → App gets product name from Open Food Facts
-2. **App calls FSANZ API** with product name:
-   ```
-   GET /api/fsanz-query?country={nz|au}&productName={name}
-   ```
-3. **API searches database:**
-   - **NZ users:** Searches NZFCD (221,851 foods)
-   - **AU users:** 
-     - First searches AFCD (3,422 foods)
-     - If not found, automatically searches NZFCD (221,851 foods)
-4. **Fuzzy matching** finds closest food name match
-5. **Returns official nutrition data:**
-   - Energy (kcal/kJ)
-   - Protein, Fat, Carbohydrates
-   - Vitamins, Minerals (Calcium, Iron, etc.)
-   - Food Group classification
-6. **App merges FSANZ data** into product:
-   - Fills missing nutrition gaps
-   - Adds official government data
-   - Enhances TruScore accuracy
+```
+User Scans Barcode
+    ↓
+1. Check Cache/SQLite (instant - <100ms)
+    ↓ (if not found)
+2. PHASE 1: Fast Sources (<2s)
+    - Open Food Facts
+    - Open Beauty Facts
+    ↓ (if good data found)
+3. Display Product Immediately (fast UI)
+    ↓ (in background)
+4. PHASE 2: Enhancement Sources (background)
+    - Calls TruScoreOptimizedDatabase.queryAllDatabases()
+    ↓ (in background)
+5. PHASE 3: Fallback Sources (background, if needed)
+    - Calls TruScoreOptimizedDatabase.queryAllDatabases()
+    ↓
+6. Merge all results progressively
+    ↓
+7. Calculate TruScore
+    ↓
+8. Display on Product Information Page
+```
 
 ---
 
-## TruScore Calculation Logic
+## Detailed Database Query Organization (TruScoreOptimizedDatabase)
 
-### Overview
-TruScore is calculated from **4 equal pillars** (25 points each = 100 total):
-- **Body** (25 pts): Nutrition & health
-- **Planet** (25 pts): Environmental impact
-- **Care** (25 pts): Ethics & certifications
-- **Open** (25 pts): Transparency & data completeness
+When `queryAllDatabases()` is called, it organizes databases into **3 TIERS**:
 
-### Data Sources Used:
+### **TIER 1: Fast Sources (0.5-2s) - Display First**
+**Purpose**: Get product data quickly for immediate display
 
-#### 1. Body Pillar (25 points)
-- **Primary:** Nutri-Score grade (if available)
-  - A = 25 pts, B = 20 pts, C = 15 pts, D = 10 pts, E = 5 pts
-- **Fallback:** Calculated from nutrition data
-  - Uses FSANZ nutrition data if available
-  - Uses OFF nutrition data otherwise
-  - Baseline: 12 points if no Nutri-Score
+**Databases**:
+- Open Food Facts (OFF)
+- Open Beauty Facts (OBF)
+- Open Pet Food Facts (OPFF)
+- Open Products Facts (OPF)
 
-#### 2. Planet Pillar (25 points)
-- **Primary:** Eco-Score grade (if available)
-  - A = 25 pts, B = 20 pts, C = 15 pts, D = 10 pts, E = 5 pts
-- **Fallback:** Calculated from:
-  - Packaging materials
-  - Origin information
-  - Certifications (organic, fair trade, etc.)
-  - Baseline: 12 points if no Eco-Score
-
-#### 3. Care Pillar (25 points)
-- Based on certifications and labels:
-  - Organic, Fair Trade, B-Corp, etc.
-  - Palm oil free, Vegan, etc.
-  - Calculated from OFF labels and certifications
-
-#### 4. Open Pillar (25 points)
-- Based on data completeness:
-  - Product name, brand, ingredients
-  - Nutrition facts completeness
-  - Origin information
-  - Certifications available
-  - **FSANZ data enhances this** by providing official nutrition data
+**Query Method**: `queryOpenFactsParallel()`
+- All 4 Open Facts databases queried in parallel
+- First result triggers progressive display
 
 ---
 
-## How FSANZ Data Enhances TruScore
+### **TIER 2: Enhancement Sources (2-5s) - Enhance Data**
+**Purpose**: Add more complete data from reliable sources
 
-### For NZ Users:
-1. **Product scanned** → OFF provides basic data
-2. **FSANZ query** → Gets official NZFCD nutrition data
-3. **Data merged** → Product now has:
-   - Official government nutrition values
-   - Complete nutrient profile (calcium, iron, etc.)
-   - Food group classification
-4. **TruScore calculated** with:
-   - More accurate Body score (official nutrition)
-   - Higher Open score (more complete data)
-   - Better overall accuracy
+**Sub-groups**:
 
-### For AU Users:
-1. **Product scanned** → OFF provides basic data
-2. **FSANZ query** → Tries AFCD first
-3. **If not in AFCD** → Automatically tries NZFCD (fallback)
-4. **Data merged** → Product has official nutrition data
-5. **TruScore calculated** with:
-   - Official government nutrition values
-   - Access to both AU and NZ databases
-   - Maximum data coverage
+#### 2a. Local-First (`queryLocalFirstParallel`)
+**Country-Specific Databases** (prioritized by user country):
+- **NZ Users**: FSANZ (NZFCD), NZ Store APIs
+- **AU Users**: FSANZ (AFCD), AU Retailers
+- **US Users**: USDA, Health Canada (if applicable)
+- **CA Users**: Health Canada
+- **GB Users**: UK FSA
+- **EU Users**: EFSA
 
----
+**Name-Based Queries** (if product name discovered):
+- FSANZ (requires product name)
+- FoodAtlas (requires product name)
 
-## Database Coverage Summary
+#### 2b. Gold Standard (`queryGoldStandardParallel`)
+**High-Quality Government Databases**:
+- GS1 (if API key configured)
+- USDA (US users only)
+- Health Canada (CA users only)
+- UK FSA (GB users only)
+- EFSA (EU users only)
 
-### 🇳🇿 New Zealand
-- **NZFCD:** 221,851 foods
-- **Access:** Direct query by product name
-- **Coverage:** Complete New Zealand food database
-
-### 🇦🇺 Australia
-- **AFCD:** 3,422 foods (Nutrient file + Food Details)
-- **NZFCD Fallback:** 221,851 foods (if not in AFCD)
-- **Total Access:** 225,273+ foods
-- **Coverage:** Complete Australian + New Zealand databases
+#### 2c. Enhancements (`queryEnhancementsParallel`)
+**Nutrition & Enhancement APIs**:
+- Edamam (if API key configured)
+- Nutritionix (if API key configured)
+- Spoonacular (if API key configured)
+- FoodRepo (if API key configured)
+- Walmart Open API (if API key configured)
 
 ---
 
-## Example Flow
+### **TIER 3: Fallback Sources (2-10s) - Maximum Coverage**
+**Purpose**: Fill gaps with additional data sources
 
-### NZ User Scans "Milk"
-1. OFF returns: "Milk, whole, 3.25% fat"
-2. App queries: `FSANZ?country=nz&productName=Milk`
-3. NZFCD finds: "Milk, whole" with official nutrition
-4. Data merged: Product now has official NZ nutrition values
-5. TruScore calculated: Higher Body score (official data), higher Open score (complete data)
+**Databases**:
+- Datakick
+- OpenEAN
+- Product Open Data
+- UPCitemdb
+- EAN-Search
+- Barcode Spider
+- GoUpc
+- Buycott
+- OpenGtin
+- Barcode Monster
+- UPCDatabase
+- Barcode Lookup
+- EANData
+- Best Buy (if API key configured)
+- Barcode Lookup Com (if API key configured)
+- World Food Database
 
-### AU User Scans "Apple"
-1. OFF returns: "Apple, red delicious"
-2. App queries: `FSANZ?country=au&productName=Apple`
-3. AFCD searched: Not found
-4. **NZFCD fallback:** Found "Apple, red delicious" with official nutrition
-5. Data merged: Product has official nutrition (from NZFCD)
-6. TruScore calculated: Accurate score using official data
+**Query Method**: `queryFallbacksParallel()`
+- All fallback databases queried in parallel
+- Circuit breaker prevents querying failing APIs repeatedly
 
 ---
 
-## Key Points
+## Query Execution Strategy
 
-✅ **FSANZ is queried AFTER Open Food Facts** (needs product name)  
-✅ **Uses fuzzy matching** to find closest food name  
-✅ **AU users get NZFCD fallback** automatically  
-✅ **Official government data** enhances TruScore accuracy  
-✅ **Both databases fully deployed** and accessible  
+### **ALL TIERS RUN IN PARALLEL**
+
+The key insight: **All 3 tiers start simultaneously** - there's no sequential waiting!
+
+```
+Time 0ms:  All queries fire at once
+    ├─ TIER 1: OFF, OBF, OPFF, OPF
+    ├─ TIER 2: Local, Gold Standard, Enhancements
+    └─ TIER 3: All fallback databases
+
+Time 500ms: First TIER 1 result arrives → Display immediately
+Time 2000ms: More TIER 1 results → Merge progressively
+Time 3000ms: TIER 2 results start arriving → Merge progressively
+Time 5000ms: TIER 3 results start arriving → Merge progressively
+Time 8000ms: All queries complete → Final merged product
+```
+
+### Progressive Merging
+
+As each tier completes:
+1. Results are merged with existing product
+2. `onProductUpdate` callback is called
+3. UI updates progressively (if callback provided)
+4. Product information page receives updates
+
+---
+
+## Source Weighting System
+
+Each database has a **weight** that determines its priority during merging:
+
+### Weight Values (from `getTruScoreSourceWeights()`)
+
+**Highest Weight (0.50-0.45)**:
+- `openfoodfacts`: 0.50 (highest - most reliable)
+- `usda`: 0.45 (US government - very reliable)
+- `health_canada`: 0.45 (CA government - very reliable)
+- `uk_fsa`: 0.45 (GB government - very reliable)
+- `efsa`: 0.45 (EU government - very reliable)
+- `fsanz`: 0.45 (AU/NZ government - very reliable)
+
+**High Weight (0.40-0.35)**:
+- `gs1`: 0.40 (official barcode registry)
+- `openbeautyfacts`: 0.40
+- `openpetfoodfacts`: 0.40
+- `spoonacular`: 0.35
+- `nutritionix`: 0.35
+- `edamam`: 0.35
+
+**Medium Weight (0.30-0.25)**:
+- `foodrepo`: 0.30
+- `walmart`: 0.30
+- `datakick`: 0.30
+- `barcode_lookup`: 0.25
+- `barcode_lookup_com`: 0.25
+- `upcitemdb`: 0.25
+- `ean_search`: 0.25
+
+**Lower Weight (0.20-0.10)**:
+- `openean`: 0.20
+- `product_open_data`: 0.20
+- `barcode_spider`: 0.20
+- `goupc`: 0.20
+- `buycott`: 0.20
+- `opengtin`: 0.20
+- `barcode_monster`: 0.20
+- `upc_database`: 0.20
+- `eandata`: 0.20
+- `best_buy`: 0.20
+- `web_search`: 0.10 (lowest - last resort)
+
+### How Weights Are Used
+
+During merging (`mergeProducts()`):
+1. **Base Product Selection**: Product with highest combined score (TruScore completeness + source weight) is selected as base
+2. **Field Merging**: 
+   - Nutrition: Weighted average from all sources
+   - Ingredients: Longest/most complete version
+   - Certifications: Merged from all sources
+   - Images: Best quality image
+   - Categories: Most specific categories
+3. **Source Priority**: Higher weight sources override lower weight sources for conflicting data
+
+---
+
+## Data Merging Process
+
+### Merge Strategy (`mergeProducts()`)
+
+1. **Select Base Product**:
+   - Calculate "TruScore Completeness" for each product
+   - Calculate "Combined Score" = (TruScore Completeness × 0.6) + (Source Weight × 0.4)
+   - Select product with highest combined score as base
+
+2. **Merge Fields**:
+   - **Nutrition**: Weighted average (by source weight)
+   - **Ingredients**: Longest text (most complete)
+   - **Certifications**: Union of all certifications
+   - **Images**: Best quality (highest resolution)
+   - **Categories**: Most specific (longest category path)
+   - **Brands**: Merged from all sources
+   - **Labels**: Merged from all sources
+
+3. **Normalization**:
+   - Nutrition values normalized to per-100g
+   - Units standardized
+   - Text fields cleaned and normalized
+
+---
+
+## TruScore Calculation Flow
+
+### How Product Information Page Receives Data
+
+```
+1. productServiceOptimized.fetchProductOptimized()
+    ↓
+2. Queries databases (Phase 1, 2, 3)
+    ↓
+3. Merges all results progressively
+    ↓
+4. Calls processProductFast()
+    ↓
+5. Calls calculateTrustScore() from utils/trustScore.ts
+    ↓
+6. calculateTrustScore() calls truscoreEngine/index.ts
+    ↓
+7. truscoreEngine calculates 4 pillars:
+    - Body Pillar (bodyPillar.ts)
+    - Planet Pillar (planetPillar.ts)
+    - Ethics Pillar (ethicsPillar.ts)
+    - Open Pillar (openPillar.ts)
+    ↓
+8. Returns ProductWithTrustScore with:
+    - trust_score: number (0-100)
+    - trust_score_breakdown: { Body, Planet, Ethics, Open }
+    ↓
+9. Product Information Page receives ProductWithTrustScore
+    ↓
+10. Displays:
+    - TruScore (0-100)
+    - Pillar scores (0-25 each)
+    - All product cards (Nutrition, Ingredients, Certifications, etc.)
+```
+
+### TruScore Calculation Details
+
+**Location**: `src/lib/truscoreEngine/index.ts`
+
+**Process**:
+1. **Body Pillar** (0-25 points):
+   - Nutri-Score grade (from OFF)
+   - Additives (IARC risk assessment)
+   - Risky tags
+   - Universal irritants
+   - NOVA group
+   - EWG rating (household products)
+
+2. **Planet Pillar** (0-25 points):
+   - Eco-Score grade (from OFF)
+   - Palm oil presence
+   - Recyclable packaging
+   - Packaging eco-cost
+   - Non-animal farming impact
+
+3. **Ethics Pillar** (0-25 points):
+   - Certifications (Fairtrade, Organic, etc.)
+   - BBFAW animal cruelty tiers
+   - Labor violations
+   - Product/brand recall history
+
+4. **Open Pillar** (0-25 points):
+   - Ingredients disclosure
+   - Hidden terms (fragrance, flavor, proprietary blends)
+   - Origin transparency
+   - Brand ownership transparency
+
+**Final TruScore** = Body + Planet + Ethics + Open (0-100)
+
+---
+
+## Product Information Page Data Flow
+
+### Cards and Their Data Sources
+
+1. **TruScore Card**:
+   - Data: `product.trust_score` and `product.trust_score_breakdown`
+   - Source: Calculated by `truscoreEngine` from merged product data
+
+2. **Nutrition Card**:
+   - Data: `product.nutriments` (merged from all sources)
+   - Source: Weighted average from all databases with nutrition data
+
+3. **Ingredients Card**:
+   - Data: `product.ingredients_text` (longest/most complete)
+   - Source: Best source (usually OFF or government database)
+
+4. **Certifications Card**:
+   - Data: `product.labels_tags` (merged from all sources)
+   - Source: Union of all databases
+
+5. **Eco-Score Card**:
+   - Data: `product.ecoscore_grade` and `product.ecoscore_score`
+   - Source: Primarily from OFF (highest weight)
+
+6. **Nutri-Score Card**:
+   - Data: `product.nutriscore_grade` and `product.nutriscore_score`
+   - Source: Primarily from OFF (highest weight)
+
+7. **Additives Card**:
+   - Data: `product.additives_tags` (analyzed for IARC risks)
+   - Source: Merged from all sources
+
+8. **Origin Card**:
+   - Data: `product.origins_tags` or `product.manufacturing_places_tags`
+   - Source: Merged from all sources (OFF, government databases)
+
+---
+
+## Summary
+
+### Query Organization:
+- **3 TIERS** (in TruScoreOptimizedDatabase) = **3 PHASES** (in productServiceOptimized)
+- All tiers/phases run **in parallel** (not sequential)
+- Results merge **progressively** as they arrive
+
+### Source Priority:
+- **Highest**: Open Food Facts (0.50), Government databases (0.45)
+- **High**: GS1 (0.40), Nutrition APIs (0.35)
+- **Medium**: Barcode lookup APIs (0.25-0.30)
+- **Low**: Fallback APIs (0.20), Web search (0.10)
+
+### Merging:
+- Base product = highest combined score (TruScore completeness + source weight)
+- Fields merged using weighted averages or best available data
+- Progressive updates sent to UI as data arrives
+
+### TruScore:
+- Calculated from merged product data
+- 4 pillars (Body, Planet, Ethics, Open) = 0-100 total
+- Each pillar uses specific data fields from merged product
+
+---
+
+## Key Files
+
+- **Database Query**: `src/data/databases/truScoreOptimizedDatabase.ts`
+- **Service Flow**: `src/services/productServiceOptimized.ts`
+- **Merging Logic**: `src/services/productDataMerger.ts`
+- **TruScore Calculation**: `src/lib/truscoreEngine/index.ts`
+- **Source Weights**: `src/data/databases/truScoreOptimizedDatabase.ts` (getTruScoreSourceWeights method)

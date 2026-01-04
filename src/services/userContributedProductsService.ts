@@ -34,11 +34,29 @@ export async function getUserContributedProduct(barcode: string): Promise<Produc
     
     const localProduct = await getManualProduct(barcode);
     if (localProduct) {
-      powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ Found local manual product`, {
+      // Mark source for logging
+      (localProduct as any)._source = 'LOCAL';
+      (localProduct as any)._database = 'Local Storage (SQLite/AsyncStorage)';
+      
+      powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ Found user-contributed product from Local Storage (SQLite/AsyncStorage)`, {
         barcode,
         source: 'LOCAL',
+        database: 'Local Storage (SQLite/AsyncStorage)',
         hasPhoto: !!localProduct.image_url,
         photoUrl: localProduct.image_url || 'NONE',
+        hasIngredients: !!localProduct.ingredients_text,
+        hasNutrition: !!localProduct.nutriments,
+        hasProductName: !!localProduct.product_name,
+        productName: localProduct.product_name || 'NONE',
+        dataAccuracy: {
+          hasAllRequiredFields: !!(localProduct.product_name && (localProduct.image_url || localProduct.ingredients_text)),
+          fieldsPresent: {
+            productName: !!localProduct.product_name,
+            photo: !!localProduct.image_url,
+            ingredients: !!localProduct.ingredients_text,
+            nutrition: !!localProduct.nutriments,
+          },
+        },
       });
       
       logger.debug(`[UserContributedProducts] Found local manual product: ${barcode}`);
@@ -122,15 +140,32 @@ export async function getUserContributedProduct(barcode: string): Promise<Produc
           const productData = data.product || data.data?.product || data.result?.product;
           
           if (hasProduct && productData) {
-          powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ Found user-contributed product from backend`, {
+          // Determine database source (Vercel backend)
+          const databaseSource = 'Vercel Backend API';
+          const apiEndpoint = manualProductsApi;
+          
+          powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ Found user-contributed product from ${databaseSource}`, {
             barcode,
             source: 'BACKEND',
+            database: databaseSource,
+            apiEndpoint: apiEndpoint,
             success: data.success,
             hasPhoto: !!productData.image_url,
             photoUrl: productData.image_url || 'NONE',
             hasIngredients: !!productData.ingredients_text,
             hasNutrition: !!productData.nutriments,
+            hasProductName: !!productData.product_name,
+            productName: productData.product_name || 'NONE',
             productKeys: Object.keys(productData),
+            dataAccuracy: {
+              hasAllRequiredFields: !!(productData.product_name && (productData.image_url || productData.ingredients_text)),
+              fieldsPresent: {
+                productName: !!productData.product_name,
+                photo: !!productData.image_url,
+                ingredients: !!productData.ingredients_text,
+                nutrition: !!productData.nutriments,
+              },
+            },
           });
           
           logger.info(`[UserContributedProducts] Found user-contributed product from backend: ${barcode}`);
@@ -177,7 +212,10 @@ export async function getUserContributedProduct(barcode: string): Promise<Produc
             last_modified_t: productData.submittedAt ? Math.floor(productData.submittedAt / 1000) : undefined,
             completion: productData.completion || 50,
             quality: productData.quality || 50,
-          };
+          } as any;
+          // Mark source for logging
+          (product as any)._source = 'BACKEND';
+          (product as any)._database = databaseSource;
           
           powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ USER B RETRIEVAL COMPLETE - Product found`, {
             barcode,

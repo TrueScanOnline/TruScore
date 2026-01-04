@@ -23,6 +23,7 @@ import { getCountrySpecificAdditivePenalty } from '../../../services/countrySpec
 import { detectProductCategory } from '../productCategoryDetection';
 import { logger } from '../../../utils/logger';
 import { matchIngredientsAgainstIARC, getIARCPenalty } from '../../../utils/ingredientMatcher';
+import { powershellLogger } from '../../../utils/powershellLogger';
 
 const IRRITANTS = ['paraben', 'phthalate', 'sulfate', 'triclosan', 'formaldehyde', 'peg', 'silicone', 'phenoxyethanol'];
 
@@ -39,7 +40,6 @@ export interface BodyPillarResult {
     nutriscoreGrade?: string;
     nutriscoreValue?: number;
     additivePenalty: number;
-    riskyTagsPenalty: number;
     universalIrritantPenalty: number;
     novaAdjustment: number;
     ewgAdjustment: number;
@@ -152,8 +152,8 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
           }
         }
       } else {
-        // Unknown additive - use default penalty
-        basePenalty = shouldAdjustAdditiveScoring ? 0.75 : 1.5;
+        // Unknown additive - no penalty (ID 6: only penalize confirmed classifications)
+        basePenalty = 0;
       }
       
       const countryPenalty = getCountrySpecificAdditivePenalty(eNum, userCountry);
@@ -186,21 +186,12 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
     score -= cappedPenalty;
   }
   
-  // Risky tags
-  const riskyCount = analysisTags.filter((t: string) =>
-    ['carcinogenic', 'endocrine', 'irritant', 'ewg-high-hazard'].some((x) =>
-      t.toLowerCase().includes(x)
-    )
-  ).length;
-  const riskyTagsPenalty = riskyCount * 4;
-  if (riskyTagsPenalty > 0) {
-    adjustments.push({
-      description: `${riskyCount} risky tag(s) (carcinogenic, endocrine, irritant, EWG high-hazard)`,
-      value: -riskyTagsPenalty,
-      type: 'negative',
-    });
-    score -= riskyTagsPenalty;
-  }
+  // Risky tags penalty REMOVED (ID 2: Duplicative with IARC and Safety penalties)
+  // Previously: -4 per risky tag (carcinogenic, endocrine, irritant, EWG high-hazard)
+  // This was duplicative since these are already covered by:
+  // - IARC ingredient penalties (carcinogenic)
+  // - Universal irritants penalty (irritant)
+  // - Safety rating penalties (endocrine)
   
   // IARC Ingredient Checking (comprehensive database)
   // Check ALL ingredients against IARC database (1,055 agents)
@@ -358,8 +349,8 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
   
   // Cap at 2-25 (minimum floor of 2 per new specification)
   score = Math.max(2, Math.min(25, Math.round(score)));
-  
-  return {
+
+  const result: BodyPillarResult = {
     score,
     base,
     adjustments,
@@ -368,11 +359,25 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
       nutriscoreGrade: product.nutriscore_grade,
       nutriscoreValue,
       additivePenalty: Math.min(additivePenalty, 15),
-      riskyTagsPenalty,
       universalIrritantPenalty: universalIrritantPenalty,
       novaAdjustment,
       ewgAdjustment: ewgAdjustment,
     },
   };
+
+  // PowerShell logging for Body Pillar
+  powershellLogger.pillarCalculation(
+    product.barcode || 'unknown',
+    'Body',
+    base,
+    score,
+    adjustments.map(adj => ({
+      ...adj,
+      dataSource: adj.description.includes('Nutri-Score') ? 'OFF' : undefined,
+    })),
+    result.details
+  );
+
+  return result;
 }
 
