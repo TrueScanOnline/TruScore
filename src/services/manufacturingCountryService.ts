@@ -96,7 +96,7 @@ export async function submitManufacturingCountry(
     const { country: validatedCountry, photoUrl: validatedPhotoUrl } = validation.data;
     const userId = await getUserId();
     
-    console.log('[ManufacturingCountryService] Submitting:', {
+    logger.debug('[ManufacturingCountryService] Submitting:', {
       barcode,
       country: validatedCountry,
       hasImportedIngredients,
@@ -134,7 +134,7 @@ export async function submitManufacturingCountry(
 
       if (response.ok) {
         const result = await response.json();
-        console.log('[ManufacturingCountryService] Submitted to backend API:', result);
+        logger.debug('[ManufacturingCountryService] Submitted to backend API:', result);
         
         // CRITICAL: Upload photo if provided
         let uploadedPhotoUrl: string | undefined = validatedPhotoUrl || undefined;
@@ -243,7 +243,7 @@ export async function submitManufacturingCountry(
         };
       }
     } catch (apiError) {
-      console.warn('[ManufacturingCountryService] Backend API unavailable, using local storage:', apiError);
+      logger.warn('[ManufacturingCountryService] Backend API unavailable, using local storage:', apiError);
       // Fall back to local storage if backend is unavailable
     }
 
@@ -391,7 +391,7 @@ export async function submitManufacturingCountry(
       photoUrl: validatedPhotoUrl || undefined,
       hasImportedIngredients: hasImportedIngredients || false,
     };
-    console.log('[ManufacturingCountryService] Creating new submission:', {
+    logger.debug('[ManufacturingCountryService] Creating new submission:', {
       barcode,
       country: validatedCountry,
       hasImportedIngredients: newSubmission.hasImportedIngredients,
@@ -453,7 +453,7 @@ export async function submitManufacturingCountry(
       message,
     };
   } catch (error) {
-    console.error('Error submitting manufacturing country:', error);
+    logger.error('Error submitting manufacturing country:', error);
     return {
       success: false,
       verified: false,
@@ -485,7 +485,7 @@ async function saveToLocalStorage(
       photoUrl: (photoUrl && photoUrl !== null) ? photoUrl : undefined,
       hasImportedIngredients: hasImportedIngredients || false,
     };
-    console.log('[ManufacturingCountryService] Saving to local storage:', {
+    logger.debug('[ManufacturingCountryService] Saving to local storage:', {
       barcode,
       country,
       hasImportedIngredients: newSubmission.hasImportedIngredients,
@@ -500,7 +500,7 @@ async function saveToLocalStorage(
     
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSubmissions));
   } catch (error) {
-    console.error('[ManufacturingCountryService] Error saving to local storage:', error);
+    logger.error('[ManufacturingCountryService] Error saving to local storage:', error);
   }
 }
 
@@ -526,7 +526,7 @@ export async function getManufacturingCountry(barcode: string): Promise<{
 
       if (response.ok) {
         const result = await response.json();
-        console.log('[ManufacturingCountryService] Fetched from backend API:', result);
+        logger.debug('[ManufacturingCountryService] Fetched from backend API:', result);
         return {
           country: result.country || null,
           confidence: result.confidence || 'unverified',
@@ -535,7 +535,7 @@ export async function getManufacturingCountry(barcode: string): Promise<{
         };
       }
     } catch (apiError) {
-      console.warn('[ManufacturingCountryService] Backend API unavailable, using local storage:', apiError);
+      logger.warn('[ManufacturingCountryService] Backend API unavailable, using local storage:', apiError);
       // Fall back to local storage if backend is unavailable
     }
 
@@ -562,7 +562,7 @@ export async function getManufacturingCountry(barcode: string): Promise<{
 
     // Check if any submission has imported ingredients flag
     const hasImportedIngredients = submissions.some((s: ManufacturingCountrySubmission) => s.hasImportedIngredients === true);
-    console.log('[ManufacturingCountryService] Aggregated hasImportedIngredients:', hasImportedIngredients);
+    logger.debug('[ManufacturingCountryService] Aggregated hasImportedIngredients:', hasImportedIngredients);
 
     // Find verified submissions
     const verifiedSubmissions = submissions.filter((s: ManufacturingCountrySubmission) => s.verified && !s.disputed);
@@ -632,7 +632,7 @@ export async function getManufacturingCountry(barcode: string): Promise<{
       hasImportedIngredients: false,
     };
   } catch (error) {
-    console.error('Error getting manufacturing country:', error);
+    logger.error('Error getting manufacturing country:', error);
     return {
       country: null,
       confidence: 'unverified',
@@ -665,7 +665,7 @@ export async function hasUserSubmitted(barcode: string): Promise<boolean> {
     const userId = await getUserId();
     return submissions.some((s: ManufacturingCountrySubmission) => s.userId === userId);
   } catch (error) {
-    console.error('Error checking user submission:', error);
+    logger.error('Error checking user submission:', error);
     return false;
   }
 }

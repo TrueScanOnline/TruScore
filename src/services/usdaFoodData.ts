@@ -2,6 +2,7 @@
 // Official US nutritional data for branded products
 import { Product } from '../types/product';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
+import { logger } from '../utils/logger';
 
 const USDA_API_BASE = 'https://api.nal.usda.gov/fdc/v1';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -62,7 +63,7 @@ export async function fetchProductFromUSDA(barcode: string): Promise<Product | n
     }, 'usda_fooddata');
 
     if (!response.ok) {
-      console.warn(`USDA API error: ${response.status} ${response.statusText}`);
+      logger.warn(`USDA API error: ${response.status} ${response.statusText}`);
       return null;
     }
 
@@ -100,7 +101,7 @@ export async function fetchProductFromUSDA(barcode: string): Promise<Product | n
 
     return convertUSDAFoodToProduct(matchedFood, barcode);
   } catch (error) {
-    console.error(`Error fetching from USDA: ${error}`);
+    logger.error(`Error fetching from USDA: ${error}`);
     return null;
   }
 }
@@ -188,7 +189,7 @@ export async function searchUSDAFoodData(query: string, limit = 20): Promise<Pro
       .map(food => convertUSDAFoodToProduct(food, food.gtinUpc!))
       .slice(0, limit);
   } catch (error) {
-    console.error('Error searching USDA FoodData Central:', error);
+    logger.error('Error searching USDA FoodData Central:', error);
     return [];
   }
 }

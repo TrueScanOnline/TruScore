@@ -25,8 +25,8 @@ export type { ManualProductData };
 export async function saveManualProduct(data: ManualProductData): Promise<boolean> {
   // ===== USER CONTRIBUTION FLOW: STEP 1 - USER A SUBMITTING DATA =====
   // CRITICAL: Log at the VERY START - before any try/catch - to catch all attempts
-  console.log(`[ManualProductService] 🚀 saveManualProduct CALLED for barcode: ${data.barcode}`);
-  console.log(`[ManualProductService] Input data:`, {
+  logger.debug(`[ManualProductService] 🚀 saveManualProduct CALLED for barcode: ${data.barcode}`);
+  logger.debug(`[ManualProductService] Input data:`, {
     barcode: data.barcode,
     product_name: data.product_name,
     hasPhoto: !!data.image_url,
@@ -121,14 +121,14 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
     }
 
     // ===== CRITICAL: SAVE LOCALLY FIRST - This ensures data is available even if backend fails =====
-    console.log(`[ManualProductService] 💾 Starting LOCAL SAVE for barcode: ${data.barcode}`);
+    logger.debug(`[ManualProductService] 💾 Starting LOCAL SAVE for barcode: ${data.barcode}`);
     
     // Save to cache (so it appears in app immediately)
     try {
       await cacheProduct(productWithScore, false); // false = not premium
-      console.log(`[ManualProductService] ✅ Saved to cache: ${data.barcode}`);
+      logger.debug(`[ManualProductService] ✅ Saved to cache: ${data.barcode}`);
     } catch (cacheError) {
-      console.error(`[ManualProductService] ❌ Cache save failed:`, cacheError);
+      logger.error(`[ManualProductService] ❌ Cache save failed:`, cacheError);
       logger.warn('[ManualProductService] Failed to save to cache (non-critical):', cacheError);
     }
 
@@ -137,10 +137,10 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
     try {
       const countryCode = await getUserCountryCode();
       await saveProductToSQLite(productWithScore, countryCode ?? undefined);
-      console.log(`[ManualProductService] ✅ Saved to SQLite: ${data.barcode}`);
+      logger.debug(`[ManualProductService] ✅ Saved to SQLite: ${data.barcode}`);
       logger.info(`[ManualProductService] ✅ Saved user-contributed product to SQLite: ${data.barcode}`);
     } catch (sqliteError) {
-      console.error(`[ManualProductService] ❌ SQLite save failed:`, sqliteError);
+      logger.error(`[ManualProductService] ❌ SQLite save failed:`, sqliteError);
       logger.warn('[ManualProductService] Failed to save to SQLite (non-critical):', sqliteError);
       // Continue - cache and AsyncStorage still work
     }
@@ -152,25 +152,25 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
         ...data,
         product: productWithScore,
       }));
-      console.log(`[ManualProductService] ✅ Saved to AsyncStorage: ${data.barcode} (key: ${storageKey})`);
+      logger.debug(`[ManualProductService] ✅ Saved to AsyncStorage: ${data.barcode} (key: ${storageKey})`);
       
       // Add to manual products list
       await addToManualProductsList(data.barcode);
-      console.log(`[ManualProductService] ✅ Added to manual products list: ${data.barcode}`);
+      logger.debug(`[ManualProductService] ✅ Added to manual products list: ${data.barcode}`);
     } catch (storageError) {
-      console.error(`[ManualProductService] ❌ AsyncStorage save failed:`, storageError);
+      logger.error(`[ManualProductService] ❌ AsyncStorage save failed:`, storageError);
       logger.warn('[ManualProductService] Failed to save to AsyncStorage (non-critical):', storageError);
     }
 
     logger.info(`[ManualProductService] ✅ Saved manual product: ${data.barcode} - ${productName}`);
-    console.log(`[ManualProductService] ✅ LOCAL SAVE COMPLETE for barcode: ${data.barcode}`);
+    logger.debug(`[ManualProductService] ✅ LOCAL SAVE COMPLETE for barcode: ${data.barcode}`);
     
     // CRITICAL: Verify local save was successful by reading it back
     try {
       const verificationKey = `${STORAGE_KEY_PREFIX}${data.barcode}`;
       const verificationData = await AsyncStorage.getItem(verificationKey);
       if (verificationData) {
-        console.log(`[ManualProductService] ✅ VERIFICATION: Local data confirmed saved for barcode: ${data.barcode}`);
+        logger.debug(`[ManualProductService] ✅ VERIFICATION: Local data confirmed saved for barcode: ${data.barcode}`);
         powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ LOCAL SAVE VERIFIED`, {
           barcode: data.barcode,
           savedToCache: true,
@@ -179,14 +179,14 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
           verification: 'PASSED',
         });
       } else {
-        console.error(`[ManualProductService] ❌ VERIFICATION FAILED: Local data NOT found after save for barcode: ${data.barcode}`);
+        logger.error(`[ManualProductService] ❌ VERIFICATION FAILED: Local data NOT found after save for barcode: ${data.barcode}`);
         powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `❌ LOCAL SAVE VERIFICATION FAILED`, {
           barcode: data.barcode,
           verification: 'FAILED',
         });
       }
     } catch (verifyError) {
-      console.error(`[ManualProductService] ❌ Verification error:`, verifyError);
+      logger.error(`[ManualProductService] ❌ Verification error:`, verifyError);
     }
     
     // ===== USER CONTRIBUTION FLOW: STEP 2 - PHOTO UPLOAD =====
@@ -199,8 +199,8 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
     // ===== CRITICAL: BACKEND SUBMISSION - MUST HAPPEN =====
     // This is the ONLY way data becomes available to other users
     // If this fails, data is only local and NOT shared globally
-    console.log(`[ManualProductService] 🔥 STARTING BACKEND SUBMISSION - This is CRITICAL for global sharing`);
-    console.log(`[ManualProductService] Backend submission is NOT optional - data must be submitted!`);
+    logger.info(`[ManualProductService] 🔥 STARTING BACKEND SUBMISSION - This is CRITICAL for global sharing`);
+    logger.info(`[ManualProductService] Backend submission is NOT optional - data must be submitted!`);
     
     // CRITICAL: Submit to Open Food Facts and Vercel backend for global sharing
     // This ensures user data becomes available to all users worldwide
@@ -346,7 +346,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
           }
           
           // CRITICAL: Log full request and response for debugging
-          console.log(`[ManualProductService] 📤 Backend request details:`, {
+          logger.debug(`[ManualProductService] 📤 Backend request details:`, {
             endpoint,
             method: 'POST',
             payloadSize: JSON.stringify(submissionPayload).length,
@@ -354,7 +354,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
             photoUrl: productWithScore.image_url || 'NONE',
           });
           
-          console.log(`[ManualProductService] 📥 Backend response details:`, {
+          logger.debug(`[ManualProductService] 📥 Backend response details:`, {
             status: response.status,
             statusText: response.statusText,
             responseTime: `${submissionTime}ms`,
@@ -480,9 +480,9 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
       
       if (!backendSubmissionSuccess) {
         // CRITICAL FAILURE: Backend submission failed - data NOT shared globally!
-        console.error(`[ManualProductService] ❌❌❌ BACKEND SUBMISSION FAILED after ${retryCount + 1} attempts!`);
-        console.error(`[ManualProductService] ❌ Data saved locally ONLY - NOT available to other users!`);
-        console.error(`[ManualProductService] ❌ This is a CRITICAL issue - data is not being shared globally!`);
+        logger.error(`[ManualProductService] ❌❌❌ BACKEND SUBMISSION FAILED after ${retryCount + 1} attempts!`);
+        logger.error(`[ManualProductService] ❌ Data saved locally ONLY - NOT available to other users!`);
+        logger.error(`[ManualProductService] ❌ This is a CRITICAL issue - data is not being shared globally!`);
         
         powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `❌❌❌ CRITICAL: Backend submission FAILED after ${retryCount + 1} attempts`, {
           barcode: data.barcode,
@@ -499,7 +499,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
         // This ensures user knows their data isn't being shared
         // Note: We can't use Alert here (not in React context), but we log it clearly
       } else {
-        console.log(`[ManualProductService] ✅✅✅ BACKEND SUBMISSION SUCCESS! Data now available globally!`);
+        logger.info(`[ManualProductService] ✅✅✅ BACKEND SUBMISSION SUCCESS! Data now available globally!`);
         
         powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅✅✅ USER A CONTRIBUTION COMPLETE - Data now available globally`, {
           barcode: data.barcode,
@@ -511,9 +511,9 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
       }
     } catch (submissionError) {
       // CRITICAL ERROR: Backend submission failed - data is NOT available to other users!
-      console.error(`[ManualProductService] ❌❌❌ CRITICAL: Global submission FAILED!`, submissionError);
-      console.error(`[ManualProductService] ❌ Data saved locally ONLY - NOT available to other users!`);
-      console.error(`[ManualProductService] ❌ Error details:`, {
+      logger.error(`[ManualProductService] ❌❌❌ CRITICAL: Global submission FAILED!`, submissionError);
+      logger.error(`[ManualProductService] ❌ Data saved locally ONLY - NOT available to other users!`);
+      logger.error(`[ManualProductService] ❌ Error details:`, {
         error: submissionError instanceof Error ? submissionError.message : String(submissionError),
         stack: submissionError instanceof Error ? submissionError.stack : undefined,
         barcode: data.barcode,
@@ -533,10 +533,10 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
       // The caller should handle this appropriately
     }
     
-    console.log(`[ManualProductService] ✅ saveManualProduct COMPLETE (success=true) for barcode: ${data.barcode}`);
+    logger.debug(`[ManualProductService] ✅ saveManualProduct COMPLETE (success=true) for barcode: ${data.barcode}`);
     return true;
   } catch (error) {
-    console.error(`[ManualProductService] ❌ CRITICAL ERROR in saveManualProduct:`, error);
+    logger.error(`[ManualProductService] ❌ CRITICAL ERROR in saveManualProduct:`, error);
     logger.error('[ManualProductService] Error saving manual product', error);
     powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `❌ CRITICAL ERROR - saveManualProduct failed`, {
       barcode: data.barcode,

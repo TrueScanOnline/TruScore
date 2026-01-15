@@ -2,6 +2,8 @@
 // Integrates with Sentry for production error tracking
 // Gracefully degrades if Sentry is not configured
 
+import { logger } from '../utils/logger';
+
 interface ErrorContext {
   [key: string]: any;
 }
@@ -43,17 +45,17 @@ class ErrorReportingService {
           
           this.sentry = Sentry;
           this.isInitialized = true;
-          console.log('[ErrorReporting] Sentry initialized successfully');
+          logger.info('[ErrorReporting] Sentry initialized successfully');
           return true;
         } else {
-          console.log('[ErrorReporting] Sentry DSN not configured - error reporting disabled');
+          logger.debug('[ErrorReporting] Sentry DSN not configured - error reporting disabled');
         }
       }
     } catch (error) {
       // Sentry not installed or not available - this is OK for testing
       // App will continue to work, errors will just be logged to console
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.log('[ErrorReporting] Sentry not available (this is OK for testing):', errorMessage);
+      logger.debug('[ErrorReporting] Sentry not available (this is OK for testing):', errorMessage);
       this.sentry = null;
       this.isInitialized = false;
     }
@@ -77,11 +79,11 @@ class ErrorReportingService {
           this.sentry.captureException(error);
         }
       } else {
-        // Fallback to console in development or if Sentry not available
-        console.error('[ErrorReporting] Error captured (Sentry not available):', error, context);
+        // Fallback to logger in development or if Sentry not available
+        logger.error('[ErrorReporting] Error captured (Sentry not available):', { error, context });
       }
     } catch (reportingError) {
-      console.error('[ErrorReporting] Failed to capture error:', reportingError);
+      logger.error('[ErrorReporting] Failed to capture error:', reportingError);
     }
   }
 
@@ -102,11 +104,12 @@ class ErrorReportingService {
           this.sentry.captureMessage(message, level);
         }
       } else {
-        // Fallback to console
-        console.log(`[ErrorReporting] ${level.toUpperCase()}: ${message}`, context);
+        // Fallback to logger
+        const logLevel = level === 'error' ? 'error' : level === 'warning' ? 'warn' : 'info';
+        logger[logLevel](`[ErrorReporting] ${level.toUpperCase()}: ${message}`, context);
       }
     } catch (reportingError) {
-      console.error('[ErrorReporting] Failed to capture message:', reportingError);
+      logger.error('[ErrorReporting] Failed to capture message:', reportingError);
     }
   }
 
@@ -119,7 +122,7 @@ class ErrorReportingService {
         this.sentry.setUser(user);
       }
     } catch (error) {
-      console.error('[ErrorReporting] Failed to set user:', error);
+      logger.error('[ErrorReporting] Failed to set user:', error);
     }
   }
 
@@ -138,7 +141,7 @@ class ErrorReportingService {
         });
       }
     } catch (error) {
-      console.error('[ErrorReporting] Failed to add breadcrumb:', error);
+      logger.error('[ErrorReporting] Failed to add breadcrumb:', error);
     }
   }
 
@@ -151,7 +154,7 @@ class ErrorReportingService {
         this.sentry.setContext(key, context);
       }
     } catch (error) {
-      console.error('[ErrorReporting] Failed to set context:', error);
+      logger.error('[ErrorReporting] Failed to set context:', error);
     }
   }
 

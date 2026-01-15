@@ -187,8 +187,8 @@ export async function submitAllContributions(barcode: string): Promise<{
       return { ...result, success: true }; // No contributions to submit is not an error
     }
     
-    console.log(`[UnifiedContribution] 🚀 Submitting all contributions for barcode: ${barcode}`);
-    console.log(`[UnifiedContribution] Pending contributions:`, {
+    logger.debug(`[UnifiedContribution] 🚀 Submitting all contributions for barcode: ${barcode}`);
+    logger.debug(`[UnifiedContribution] Pending contributions:`, {
       photos: pending.photos.length,
       hasProductData: !!(pending.productData.product_name || pending.productData.ingredients_text),
       hasCountry: !!pending.manufacturingCountry,
@@ -337,7 +337,7 @@ export async function submitAllContributions(barcode: string): Promise<{
           submitted: result.submitted,
         });
         
-        console.log(`[UnifiedContribution] ✅ All contributions submitted for barcode: ${barcode}`);
+        logger.debug(`[UnifiedContribution] ✅ All contributions submitted for barcode: ${barcode}`);
       } catch (error) {
         logger.warn('[UnifiedContribution] Error clearing pending contributions (non-critical):', error);
       }

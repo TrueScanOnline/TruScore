@@ -51,7 +51,7 @@ export function handleError(
   // For critical errors, also log to crash reporting service
   if (severity === ErrorSeverity.CRITICAL) {
     // TODO: Integrate with crash reporting service (e.g., Sentry, Crashlytics)
-    console.error('[CRITICAL ERROR]', errorMessage, context);
+    logger.error('[CRITICAL ERROR]', { errorMessage, context });
   }
 }
 

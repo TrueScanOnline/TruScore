@@ -27,6 +27,7 @@ import CameraCaptureModal from './CameraCaptureModal';
 import { parseAllergensAndAdditives, parsePackagingData } from '../utils/manualProductParsing';
 import { Product } from '../types/product';
 import { extractProductDataFromPhoto, verifyOCRData } from '../services/photoOcrService';
+import { logger } from '../utils/logger';
 
 interface ManualProductEntryModalProps {
   visible: boolean;
@@ -201,7 +202,7 @@ export default function ManualProductEntryModal({
         [{ text: t('common.ok') || 'OK' }]
       );
     } catch (error) {
-      console.warn('[ManualProductEntry] OCR extraction failed (non-critical):', error);
+      logger.warn('[ManualProductEntry] OCR extraction failed (non-critical):', error);
       // Continue - user can manually enter data
     } finally {
       setLoading(false);
@@ -288,22 +289,22 @@ export default function ManualProductEntryModal({
             [{ text: t('common.ok') || 'OK' }]
           );
         } catch (error) {
-          console.warn('[ManualProductEntry] OCR extraction failed (non-critical):', error);
+          logger.warn('[ManualProductEntry] OCR extraction failed (non-critical):', error);
           // Continue - user can manually enter data
         } finally {
           setLoading(false);
         }
       }
     } catch (error) {
-      console.error('Error picking image:', error);
+      logger.error('Error picking image:', error);
       Alert.alert(t('common.error') || 'Error', 'Failed to pick image');
     }
   };
 
   const handleSave = async () => {
     // ===== USER CONTRIBUTION FLOW: UI TRIGGER =====
-    console.log(`[ManualProductEntryModal] 🎯 SAVE BUTTON CLICKED for barcode: ${barcode}`);
-    console.log(`[ManualProductEntryModal] Form data:`, {
+    logger.debug(`[ManualProductEntryModal] 🎯 SAVE BUTTON CLICKED for barcode: ${barcode}`);
+    logger.debug(`[ManualProductEntryModal] Form data:`, {
       barcode,
       productName: productName.trim(),
       hasPhoto: !!imageUri,
@@ -314,7 +315,7 @@ export default function ManualProductEntryModal({
     
     // Validate required fields (product name only required in add mode, not edit mode)
     if (!editMode && !productName.trim()) {
-      console.warn(`[ManualProductEntryModal] ❌ Validation failed: Product name required`);
+      logger.warn(`[ManualProductEntryModal] ❌ Validation failed: Product name required`);
       Alert.alert(
         t('manualProduct.validationError') || 'Validation Error',
         t('manualProduct.productNameRequired') || 'Product name is required'
@@ -323,7 +324,7 @@ export default function ManualProductEntryModal({
     }
 
     setLoading(true);
-    console.log(`[ManualProductEntryModal] ✅ Validation passed, calling saveManualProduct...`);
+    logger.debug(`[ManualProductEntryModal] ✅ Validation passed, calling saveManualProduct...`);
     try {
       // Build nutriments object if nutrition data provided
       const nutriments: Record<string, number> = {};
@@ -365,7 +366,7 @@ export default function ManualProductEntryModal({
         timestamp: Date.now(),
       };
 
-      console.log(`[ManualProductEntryModal] 📦 Calling saveManualProduct with data:`, {
+      logger.debug(`[ManualProductEntryModal] 📦 Calling saveManualProduct with data:`, {
         barcode: productData.barcode,
         product_name: productData.product_name,
         hasPhoto: !!productData.image_url,
@@ -376,7 +377,7 @@ export default function ManualProductEntryModal({
       
       const success = await saveManualProduct(productData);
       
-      console.log(`[ManualProductEntryModal] 📦 saveManualProduct returned: ${success}`);
+      logger.debug(`[ManualProductEntryModal] 📦 saveManualProduct returned: ${success}`);
       
       if (success) {
         onSave(productData);
@@ -396,7 +397,7 @@ export default function ManualProductEntryModal({
         throw new Error('Failed to save product');
       }
     } catch (error) {
-      console.error('Error saving manual product:', error);
+      logger.error('Error saving manual product:', error);
       Alert.alert(
         t('common.error') || 'Error',
         t('manualProduct.saveError') || 'Failed to save product information. Please try again.'

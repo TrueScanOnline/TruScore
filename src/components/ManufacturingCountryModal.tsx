@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
 import CountryPicker from './CountryPicker';
 import { Country, findCountryByName } from '../utils/countries';
+import { logger } from '../utils/logger';
 
 interface ManufacturingCountryModalProps {
   visible: boolean;
@@ -63,7 +64,7 @@ export default function ManufacturingCountryModal({
   useEffect(() => {
     if (visible && !hasInitializedRef.current) {
       // Reset to step 1 and clear selection when modal opens
-      console.log('[ManufacturingCountryModal] Modal opened - resetting state');
+      logger.debug('[ManufacturingCountryModal] Modal opened - resetting state');
       setStep(1);
       setSelectedCountry(null);
       setHasImportedIngredients(false);
@@ -72,7 +73,7 @@ export default function ManufacturingCountryModal({
       hasInitializedRef.current = true;
     } else if (!visible) {
       // Reset initialization flag when modal closes
-      console.log('[ManufacturingCountryModal] Modal closed - resetting flags');
+      logger.debug('[ManufacturingCountryModal] Modal closed - resetting flags');
       hasInitializedRef.current = false;
       isClosingRef.current = false;
     }
@@ -80,7 +81,7 @@ export default function ManufacturingCountryModal({
 
   // Debug: Log step changes and scroll to top when step changes
   useEffect(() => {
-    console.log('[ManufacturingCountryModal] Step changed to:', step);
+    logger.debug('[ManufacturingCountryModal] Step changed to:', step);
     if (step === 2) {
       // Scroll to top when moving to step 2
       setTimeout(() => {
@@ -109,7 +110,7 @@ export default function ManufacturingCountryModal({
     try {
       // Capture the current checkbox state at submission time
       const currentHasImportedIngredients = hasImportedIngredients;
-      console.log('[ManufacturingCountryModal] Submitting with:', {
+      logger.debug('[ManufacturingCountryModal] Submitting with:', {
         country: selectedCountry.name,
         hasImportedIngredients: currentHasImportedIngredients,
         checkboxState: hasImportedIngredients,
@@ -121,7 +122,7 @@ export default function ManufacturingCountryModal({
       isClosingRef.current = true;
       onClose();
     } catch (error) {
-      console.error('Error submitting manufacturing country:', error);
+      logger.error('Error submitting manufacturing country:', error);
       Alert.alert(
         getTranslation('common.error', 'Error'),
         getTranslation('manufacturingCountry.submitError', 'Failed to submit. Please try again.'),
@@ -147,9 +148,9 @@ export default function ManufacturingCountryModal({
 
   // Handler to advance from step 1 to step 2
   const handleNext = useCallback(() => {
-    console.log('[ManufacturingCountryModal] handleNext called, current step:', step, 'submitting:', submitting);
+    logger.debug('[ManufacturingCountryModal] handleNext called, current step:', step, 'submitting:', submitting);
     if (!submitting && step === 1) {
-      console.log('[ManufacturingCountryModal] Directly setting step to 2');
+      logger.debug('[ManufacturingCountryModal] Directly setting step to 2');
       // Direct state update for immediate change
       setStep(2);
       // Scroll to top after state update completes
@@ -157,7 +158,7 @@ export default function ManufacturingCountryModal({
         scrollViewRef.current?.scrollTo({ y: 0, animated: true });
       }, 200);
     } else {
-      console.log('[ManufacturingCountryModal] Next blocked - step:', step, 'submitting:', submitting);
+      logger.debug('[ManufacturingCountryModal] Next blocked - step:', step, 'submitting:', submitting);
     }
   }, [step, submitting]);
 
@@ -350,7 +351,7 @@ export default function ManufacturingCountryModal({
                     style={styles.checkboxRow}
                     onPress={() => {
                       const newValue = !hasImportedIngredients;
-                      console.log('[ManufacturingCountryModal] Checkbox toggled:', {
+                      logger.debug('[ManufacturingCountryModal] Checkbox toggled:', {
                         oldValue: hasImportedIngredients,
                         newValue,
                       });
@@ -394,7 +395,7 @@ export default function ManufacturingCountryModal({
                 <TouchableOpacity
                   style={[styles.nextButton, { backgroundColor: colors.primary }]}
                   onPress={() => {
-                    console.log('[ManufacturingCountryModal] Next button pressed directly, step:', step);
+                    logger.debug('[ManufacturingCountryModal] Next button pressed directly, step:', step);
                     handleNext();
                   }}
                   activeOpacity={0.8}

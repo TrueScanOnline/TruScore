@@ -1,6 +1,7 @@
 // Barcode Spider API client (fallback)
 import { Product } from '../types/product';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
+import { logger } from '../utils/logger';
 
 const BARCODE_SPIDER_API = 'https://api.barcodespider.com/v1/lookup';
 const API_KEY = ''; // Free tier - no key needed for basic lookup
@@ -47,14 +48,14 @@ export async function fetchProductFromBarcodeSpider(barcode: string): Promise<Pr
     const response = await fetchWithRateLimit(url, {}, 'barcode_spider');
 
     if (!response.ok) {
-      console.warn(`Barcode Spider API error: ${response.status}`);
+      logger.warn(`Barcode Spider API error: ${response.status}`);
       return null;
     }
 
     const data: BarcodeSpiderResponse = await response.json();
 
     if (data.item_response.code !== 200 || !data.item_response.item) {
-      console.warn(`Product not found in Barcode Spider: ${barcode}`);
+      logger.debug(`Product not found in Barcode Spider: ${barcode}`);
       return null;
     }
 
@@ -73,7 +74,7 @@ export async function fetchProductFromBarcodeSpider(barcode: string): Promise<Pr
 
     return product;
   } catch (error) {
-    console.error('Error fetching from Barcode Spider:', error);
+    logger.error('Error fetching from Barcode Spider:', error);
     return null;
   }
 }

@@ -135,7 +135,7 @@ export const ENABLE_PREMIUM_GATING = false;
  */
 export const PREMIUM_FEATURES: Record<PremiumFeature, { isPremium: boolean }> = {
   // Tier 1: Core Premium Features
-  [PremiumFeature.OFFLINE_MODE]: { isPremium: true },
+  [PremiumFeature.OFFLINE_MODE]: { isPremium: false }, // Disabled - not yet implemented
   [PremiumFeature.UNLIMITED_HISTORY]: { isPremium: true },
   [PremiumFeature.ADVANCED_SEARCH]: { isPremium: true },
   [PremiumFeature.EXPORT_DATA]: { isPremium: true },

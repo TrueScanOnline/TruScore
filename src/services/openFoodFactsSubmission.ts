@@ -25,8 +25,8 @@ function getOFFCredentials(): { userId?: string; password?: string } {
   // If no credentials, we'll use anonymous submission (limited functionality)
   // Anonymous mode may have rate limits and reduced functionality
   if (!userId || !password) {
-    console.warn('[OFF Submission] ⚠️  Open Food Facts credentials not configured. Using anonymous mode (may have limitations).');
-    console.warn('[OFF Submission] To enable full functionality, add EXPO_PUBLIC_OFF_USER_ID and EXPO_PUBLIC_OFF_PASSWORD to .env');
+    logger.warn('[OFF Submission] ⚠️  Open Food Facts credentials not configured. Using anonymous mode (may have limitations).');
+    logger.warn('[OFF Submission] To enable full functionality, add EXPO_PUBLIC_OFF_USER_ID and EXPO_PUBLIC_OFF_PASSWORD to .env');
   }
   
   return {

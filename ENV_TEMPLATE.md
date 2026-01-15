@@ -106,6 +106,14 @@ EXPO_PUBLIC_OPENCORPORATES_API_KEY=your_opencorporates_key_here
 # ============================================
 # Already configured in app.config.js
 # EXPO_PUBLIC_QONVERSION_PROJECT_KEY=your_project_key
+
+# ============================================
+# SENTRY (Error Reporting - Production)
+# ============================================
+# Get your DSN from: https://sentry.io/settings/projects/
+# Create a project at: https://sentry.io/organizations/
+# Free tier: 5,000 events/month
+EXPO_PUBLIC_SENTRY_DSN=https://your-dsn@sentry.io/project-id
 ```
 
 ---
