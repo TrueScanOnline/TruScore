@@ -304,6 +304,13 @@ export default function SettingsScreen() {
             }}
           />
           <SettingRow
+            icon="list-outline"
+            label={t('settings.methodology') || 'Methodology & How TruScan Scores Work'}
+            onPress={() => {
+              navigation.navigate('Methodology');
+            }}
+          />
+          <SettingRow
             icon="shield-checkmark-outline"
             label={t('settings.privacyPolicy')}
             onPress={() => {

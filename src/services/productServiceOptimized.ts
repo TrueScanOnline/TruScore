@@ -32,6 +32,43 @@ import { TruScoreOptimizedDatabase } from '../data/databases/truScoreOptimizedDa
 import { logPerformanceMetrics } from '../utils/performanceMonitor';
 import { Platform } from 'react-native';
 import { powershellLogger } from '../utils/powershellLogger';
+import type { FetchTraceEntry, QueryKeyType } from '../types/truscoreAnalysis';
+
+/** Display names and query type per source for fetch trace (matches analysis attribution) */
+const SOURCE_TRACE_INFO: Record<string, { displayName: string; queryKeyType: QueryKeyType }> = {
+  openfoodfacts: { displayName: 'Open Food Facts', queryKeyType: 'barcode' },
+  openbeautyfacts: { displayName: 'Open Beauty Facts', queryKeyType: 'barcode' },
+  openpetfoodfacts: { displayName: 'Open Pet Food Facts', queryKeyType: 'barcode' },
+  openproductsfacts: { displayName: 'Open Products Facts', queryKeyType: 'barcode' },
+  sqlite: { displayName: 'SQLite', queryKeyType: 'barcode' },
+  cache: { displayName: 'Cache', queryKeyType: 'barcode' },
+  nzfcd: { displayName: 'FSANZ (NZ)', queryKeyType: 'product_name' },
+  afcd: { displayName: 'FSANZ (AU)', queryKeyType: 'product_name' },
+  fsanz_au: { displayName: 'FSANZ (AU)', queryKeyType: 'product_name' },
+  fsanz_nz: { displayName: 'FSANZ (NZ)', queryKeyType: 'product_name' },
+  spoonacular: { displayName: 'Spoonacular', queryKeyType: 'barcode' },
+  foodatlas: { displayName: 'FoodAtlas', queryKeyType: 'product_name' },
+  gs1: { displayName: 'GS1', queryKeyType: 'barcode' },
+  usda_fooddata: { displayName: 'USDA', queryKeyType: 'barcode' },
+  health_canada_cnf: { displayName: 'Health Canada', queryKeyType: 'barcode' },
+  uk_fsa: { displayName: 'UK FSA', queryKeyType: 'barcode' },
+  efsa: { displayName: 'EFSA', queryKeyType: 'barcode' },
+  rasff: { displayName: 'RASFF', queryKeyType: 'barcode' },
+  web_search: { displayName: 'Web search', queryKeyType: 'barcode' },
+};
+
+function buildFetchTraceForProducts(products: Product[]): FetchTraceEntry[] {
+  return products.map((p, i) => {
+    const key = (p.source || '').toLowerCase();
+    const info = SOURCE_TRACE_INFO[key] || { displayName: p.source || 'Unknown', queryKeyType: 'barcode' as QueryKeyType };
+    return {
+      database: info.displayName,
+      queryKeyType: info.queryKeyType,
+      order: i + 1,
+      hit: true,
+    };
+  });
+}
 
 // Query deduplication
 const activeProductQueries = new Map<string, Promise<ProductWithTrustScore | null>>();
@@ -61,7 +98,17 @@ function hasGoodData(product: Product): boolean {
  * Check if we should query fallback APIs
  * Only query if we don't have good data from primary sources
  */
+// Feature flag: allow disabling slow/low-value fallback APIs entirely unless explicitly enabled
+const ENABLE_FALLBACK_APIS =
+  (process.env.EXPO_PUBLIC_ENABLE_FALLBACK_APIS || '').toLowerCase() === 'true';
+
 function shouldQueryFallbacks(product: Product | null, hasOpenFoodFacts: boolean): boolean {
+  // If fallbacks are not explicitly enabled, skip them to improve performance and reduce noisy logs
+  if (!ENABLE_FALLBACK_APIS) {
+    logger.debug('[ProductServiceOptimized] Fallback APIs disabled by configuration, skipping fallback queries');
+    return false;
+  }
+  
   if (!product) return true; // No product found - need fallbacks
   
   if (hasOpenFoodFacts) {
@@ -183,7 +230,14 @@ async function executeFetchProductOptimized(
         cacheHit = true;
         const cacheTime = Date.now() - cacheCheckStart;
         logger.info(`⚡ INSTANT CACHE HIT: ${primaryBarcode} (${cacheTime}ms) - returning immediately`);
-        
+        const fetchTrace: FetchTraceEntry[] = [{
+          database: cachedProduct.source === 'sqlite' ? 'SQLite' : 'Cache',
+          queryKeyType: 'barcode',
+          order: 1,
+          hit: true,
+          responseTimeMs: cacheTime,
+        }];
+        (cachedProduct as any)._fetchTrace = fetchTrace;
         // Process cached product and return IMMEDIATELY - don't wait for API calls!
         const processedProduct = (cachedProduct.source === 'sqlite')
           ? await processSQLiteProduct(cachedProduct, primaryBarcode)
@@ -227,7 +281,8 @@ async function executeFetchProductOptimized(
         cacheHit = true;
         const cacheTime = Date.now() - cacheCheckStart;
         logger.info(`⚡ INSTANT SQLITE HIT: ${primaryBarcode} (${cacheTime}ms) - returning immediately`);
-        
+        const fetchTrace: FetchTraceEntry[] = [{ database: 'SQLite', queryKeyType: 'barcode', order: 1, hit: true, responseTimeMs: cacheTime }];
+        (cachedProduct as any)._fetchTrace = fetchTrace;
         // Process SQLite product and return IMMEDIATELY
         const processedProduct = await processSQLiteProduct(cachedProduct, primaryBarcode);
         onProgress?.({ phase: 'product_ready', product: processedProduct });
@@ -309,6 +364,11 @@ async function executeFetchProductOptimized(
       // This enables progressive display - user sees product in 1-2 seconds
       if (result && hasGoodData(result) && !progressiveDisplaySent) {
         progressiveDisplaySent = true;
+        const progressiveTrace: FetchTraceEntry[] = [
+          { database: 'Open Food Facts', queryKeyType: 'barcode', order: 1, hit: true },
+          { database: 'Open Beauty Facts', queryKeyType: 'barcode', order: 2, hit: false },
+        ];
+        (result as any)._fetchTrace = progressiveTrace;
         processProductFast(result, primaryBarcode).then(processed => {
           const timeFromStart = Date.now() - scanStartTime;
           const availableFields = getAvailableFields(processed);
@@ -390,7 +450,12 @@ async function executeFetchProductOptimized(
     // Prioritize: Fast Cache (SQLite/Cache) > OFF > OBF
     product = fastCacheProduct || offProduct || obfProduct || fastSources[0];
     hasOpenFoodFacts = !!offProduct;
-    
+    const phase1Trace: FetchTraceEntry[] = [
+      { database: 'Open Food Facts', queryKeyType: 'barcode', order: 1, hit: !!offProduct },
+      { database: 'Open Beauty Facts', queryKeyType: 'barcode', order: 2, hit: !!obfProduct },
+    ];
+    if (product) (product as any)._fetchTrace = phase1Trace;
+
     // Check if we have good data
     if (product && hasGoodData(product)) {
       logger.info(`✅ Good data found in Phase 1 - processing and returning quickly`);
@@ -482,9 +547,15 @@ async function executeFetchProductOptimized(
           logger.info(`📊 Background enhancement: Merging ${allAdditionalProducts.length} additional products`);
           const mergeStartTime = Date.now();
           enhanceProductWithAdditionalData(processedProduct, allAdditionalProducts, databaseService, primaryBarcode, isPremium)
-            .then(() => {
+            .then((enhanced) => {
               timingBreakdown.dataMerging = Date.now() - mergeStartTime;
               logger.debug(`✅ Background merge complete for ${primaryBarcode}`);
+              if (enhanced && onProgress) {
+                onProgress({ phase: 'product_enhanced', product: enhanced });
+                if (enhanced._truscore_analysis) {
+                  powershellLogger.truScoreAnalysis(enhanced._truscore_analysis);
+                }
+              }
             })
             .catch(err => {
               logger.debug('Background merge failed (non-critical):', err);
@@ -530,7 +601,16 @@ async function executeFetchProductOptimized(
     enhancementPromise.then(enhancementProducts => {
       if (enhancementProducts.length > 0) {
         logger.info(`📊 Background enhancement: Found ${enhancementProducts.length} additional products`);
-        enhanceProductWithAdditionalData(processedProduct, enhancementProducts, databaseService, primaryBarcode, isPremium);
+        enhanceProductWithAdditionalData(processedProduct, enhancementProducts, databaseService, primaryBarcode, isPremium)
+          .then((enhanced) => {
+            if (enhanced && onProgress) {
+              onProgress({ phase: 'product_enhanced', product: enhanced });
+              if (enhanced._truscore_analysis) {
+                powershellLogger.truScoreAnalysis(enhanced._truscore_analysis);
+              }
+            }
+          })
+          .catch(() => {});
       }
     }).catch(err => {
       logger.debug('Background enhancement failed (non-critical):', err);
@@ -558,6 +638,7 @@ async function executeFetchProductOptimized(
         enableFieldTracking: true,
       });
     }
+    (product as any)._fetchTrace = buildFetchTraceForProducts(enhancementProducts);
     hasOpenFoodFacts = enhancementProducts.some(p => p.source === 'openfoodfacts');
   }
   
@@ -581,6 +662,7 @@ async function executeFetchProductOptimized(
             barcode: primaryBarcode,
             enableFieldTracking: true,
           });
+      (product as any)._fetchTrace = buildFetchTraceForProducts(fallbackProducts);
     }
   } else if (shouldQueryFallback && product) {
     powershellLogger.queryPhase(primaryBarcode, 3, 'Fallback Sources (Enhancing incomplete product)', 'Background');
@@ -591,7 +673,16 @@ async function executeFetchProductOptimized(
       databaseService.queryAllDatabases(primaryBarcode, userCountry)
         .then(fallbackProducts => {
           if (fallbackProducts.length > 0) {
-            enhanceProductWithAdditionalData(processedProduct, fallbackProducts, databaseService, primaryBarcode, isPremium);
+            enhanceProductWithAdditionalData(processedProduct, fallbackProducts, databaseService, primaryBarcode, isPremium)
+              .then((enhanced) => {
+                if (enhanced && onProgress) {
+                  onProgress({ phase: 'product_enhanced', product: enhanced });
+                  if (enhanced._truscore_analysis) {
+                    powershellLogger.truScoreAnalysis(enhanced._truscore_analysis);
+                  }
+                }
+              })
+              .catch(() => {});
           }
         })
         .catch(err => logger.debug('Background fallback enhancement failed:', err));
@@ -765,7 +856,8 @@ async function enhanceProductInBackground(
 }
 
 /**
- * Enhance product with additional data from other sources
+ * Enhance product with additional data from other sources.
+ * Returns the enhanced product (with extended _fetchTrace and _truscore_analysis) so the UI can refresh.
  */
 async function enhanceProductWithAdditionalData(
   product: ProductWithTrustScore,
@@ -773,7 +865,7 @@ async function enhanceProductWithAdditionalData(
   databaseService: TruScoreOptimizedDatabase,
   barcode: string,
   isPremium: boolean
-): Promise<void> {
+): Promise<ProductWithTrustScore | null> {
   try {
     // Merge additional products
     const merged = mergeProducts([product, ...additionalProducts], {
@@ -783,16 +875,17 @@ async function enhanceProductWithAdditionalData(
       barcode: barcode,
       enableFieldTracking: true,
     });
-    
-    // Recalculate TruScore
+    // Extended fetch trace: all DBs that contributed to the merged product and how each was queried
+    (merged as any)._fetchTrace = buildFetchTraceForProducts([product as Product, ...additionalProducts]);
+    // Recalculate TruScore (analysis is built from merged product, so it includes extended fetch trace)
     const enhanced = await calculateTrustScore(merged);
-    
     // Update cache
     await saveProductToCache(enhanced, barcode, isPremium);
-    
     logger.debug(`✅ Product enhanced with additional data for ${barcode}`);
+    return enhanced;
   } catch (error) {
     logger.debug('Product enhancement error (non-critical):', error);
+    return null;
   }
 }
 

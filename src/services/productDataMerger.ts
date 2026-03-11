@@ -272,16 +272,36 @@ export function mergeProducts(
     mergedProduct.certifications = mergeCertificationsList(allCertifications, normalizedWeights);
   }
   
-  // Merge categories (union)
-  const allCategories = productsToMerge
-    .map(p => p.categories)
-    .filter((c): c is string => !!c);
-  
-  if (allCategories.length > 0) {
-    // Use most specific (longest) category string
-    mergedProduct.categories = allCategories.reduce((longest, current) => 
-      current.length > longest.length ? current : longest
+  // Merge categories: prefer OFF or government valid category, else most specific (longest)
+  const OFF_SOURCES = ['openfoodfacts', 'openbeautyfacts', 'openpetfoodfacts', 'openproductsfacts'];
+  const GOVERNMENT_SOURCES = ['fsanz_au', 'fsanz_nz', 'nzfcd', 'afcd', 'usda_fooddata', 'health_canada_cnf', 'uk_fsa', 'efsa'];
+  const INVALID_CATEGORY_VALUES = new Set(['non food item', 'unknown', 'unknown category', '']);
+  const isValidCategory = (c: string): boolean =>
+    typeof c === 'string' && c.length >= 4 && !INVALID_CATEGORY_VALUES.has(c.trim().toLowerCase());
+  const allCategoriesWithSource = productsToMerge
+    .map(p => ({ categories: p.categories, source: p.source || '' }))
+    .filter((x): x is { categories: string; source: string } => !!x.categories);
+  if (allCategoriesWithSource.length > 0) {
+    const offCat = allCategoriesWithSource.find(
+      x => OFF_SOURCES.includes(x.source) && isValidCategory(x.categories)
     );
+    const govCat = allCategoriesWithSource.find(
+      x => GOVERNMENT_SOURCES.includes(x.source) && isValidCategory(x.categories)
+    );
+    const validCats = allCategoriesWithSource.filter(x => isValidCategory(x.categories)).map(x => x.categories);
+    if (offCat && isValidCategory(offCat.categories)) {
+      mergedProduct.categories = offCat.categories;
+    } else if (govCat && isValidCategory(govCat.categories)) {
+      mergedProduct.categories = govCat.categories;
+    } else if (validCats.length > 0) {
+      mergedProduct.categories = validCats.reduce((longest, current) =>
+        current.length > longest.length ? current : longest
+      );
+    } else {
+      mergedProduct.categories = allCategoriesWithSource.map(x => x.categories).reduce((longest, current) =>
+        current.length > longest.length ? current : longest
+      );
+    }
   }
 
   // ===== CRITICAL: Merge TruScore-critical fields =====
@@ -536,12 +556,11 @@ export function mergeProducts(
   if (allCertifications.length > 0) {
     logger.info(`  Certifications: Merged from ${allCertifications.length} sources (union)`);
   }
-  
-  if (allCategories.length > 0) {
-    const longestCategorySource = productsToMerge.find(p => 
-      p.categories === mergedProduct.categories
-    )?.source || 'unknown';
-    logger.info(`  Categories: Used from ${longestCategorySource} (most specific)`);
+
+  const allCategoriesForLog = productsToMerge.map(p => p.categories).filter((c): c is string => !!c);
+  if (allCategoriesForLog.length > 0 && mergedProduct.categories) {
+    const categorySource = productsToMerge.find(p => p.categories === mergedProduct.categories)?.source || 'unknown';
+    logger.info(`  Categories: Used from ${categorySource} (OFF/government preferred, else most specific)`);
   }
   
   // Log final merged product completeness
@@ -943,15 +962,38 @@ function mergeBrandFields(products: Product[]): string | undefined {
   return mergedBrands;
 }
 
+/** Normalize and tokenize product name for similarity (lowercase, split on non-alpha) */
+function productNameTokens(name: string | undefined): Set<string> {
+  if (!name || typeof name !== 'string') return new Set();
+  const normalized = name.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  return new Set(normalized.split(' ').filter(w => w.length > 1));
+}
+
+/** Word-overlap similarity (Jaccard) between two product names; 0–1. */
+function productNameSimilarity(baseName: string | undefined, candidateName: string | undefined): number {
+  const a = productNameTokens(baseName);
+  const b = productNameTokens(candidateName);
+  if (a.size === 0 || b.size === 0) return 0;
+  let intersection = 0;
+  for (const w of a) {
+    if (b.has(w)) intersection++;
+  }
+  const union = a.size + b.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+const NUTRITION_NAME_SIMILARITY_THRESHOLD = 0.35;
+
 /**
  * ID 11: Merge nutrition data using Golden Source Approach
  * Priority: Open Food Facts (golden source) → Government databases → Commercial APIs → Others
- * 
+ * Excludes/downweights nutrition from sources whose product name is too different from the base.
+ *
  * Step 1: Start with OFF nutrition data (if available)
- * Step 2: Supplement missing fields from government databases (FSANZ, USDA, Health Canada, UK FSA, EFSA)
- * Step 3: Supplement missing fields from commercial APIs (Spoonacular, Nutritionix, Edamam)
+ * Step 2: Supplement missing fields from government databases (only if product name similar to base)
+ * Step 3: Supplement missing fields from commercial APIs (only if product name similar to base)
  * Step 4: Normalize to per-100g format (retain benchmark conversions functionality)
- * 
+ *
  * @param products - All products to merge (for source identification)
  * @param trustedNutriments - Nutrition data from trusted sources (user-contributed excluded)
  * @returns Merged nutrition data using Golden Source approach
@@ -960,31 +1002,35 @@ function mergeNutrimentsGoldenSource(
   products: Product[],
   trustedNutriments: ProductNutriments[]
 ): ProductNutriments {
-  // Step 1: Find OFF product (golden source)
+  // Step 1: Find OFF product (golden source) and base product name
   const offProduct = products.find(p => p.source === 'openfoodfacts' && p.nutriments);
-  
+  const baseProduct = offProduct || products.find(p => p.nutriments && p.source !== 'user_contributed');
+  const baseName = baseProduct
+    ? (baseProduct.product_name || (baseProduct as any).product_name_en || '')
+    : '';
+
   let mergedNutriments: ProductNutriments = {};
-  
+
   if (offProduct && offProduct.nutriments) {
-    // Start with OFF nutrition data (golden source)
     mergedNutriments = { ...offProduct.nutriments };
     logger.debug(`  [Golden Source] Starting with Open Food Facts (${Object.keys(mergedNutriments).length} nutrients)`);
-  } else {
-    // If OFF not available, use Base Product Selection logic (highest combined score)
-    const baseProduct = products.find(p => p.nutriments && p.source !== 'user_contributed');
-    if (baseProduct && baseProduct.nutriments) {
-      mergedNutriments = { ...baseProduct.nutriments };
-      logger.debug(`  [Golden Source] Starting with base product: ${baseProduct.source} (OFF not available)`);
-    }
+  } else if (baseProduct && baseProduct.nutriments) {
+    mergedNutriments = { ...baseProduct.nutriments };
+    logger.debug(`  [Golden Source] Starting with base product: ${baseProduct.source} (OFF not available)`);
   }
-  
-  // Step 2: Supplement missing fields from government databases
+
+  // Step 2: Supplement missing fields from government databases (skip if name too different)
   const governmentSources = ['fsanz_au', 'fsanz_nz', 'nzfcd', 'afcd', 'usda_fooddata', 'health_canada_cnf', 'uk_fsa', 'efsa'];
-  const governmentProducts = products.filter(p => 
+  const governmentProducts = products.filter(p =>
     governmentSources.includes(p.source || '') && p.nutriments
   );
-  
+
   for (const govProduct of governmentProducts) {
+    const candidateName = govProduct.product_name || (govProduct as any).product_name_en || '';
+    if (productNameSimilarity(baseName, candidateName) < NUTRITION_NAME_SIMILARITY_THRESHOLD) {
+      logger.debug(`  [Golden Source] Skipping ${govProduct.source} for nutrition (product name too different)`);
+      continue;
+    }
     if (govProduct.nutriments) {
       let supplemented = false;
       for (const [key, value] of Object.entries(govProduct.nutriments)) {
@@ -998,14 +1044,19 @@ function mergeNutrimentsGoldenSource(
       }
     }
   }
-  
-  // Step 3: Supplement missing fields from commercial APIs
-  const commercialApiSources = ['spoonacular', 'nutritionix', 'edamam'];
-  const commercialApiProducts = products.filter(p => 
+
+  // Step 3: Supplement missing fields from commercial APIs (skip if name too different)
+  const commercialApiSources = ['spoonacular', 'nutritionix', 'edamam', 'foodatlas'];
+  const commercialApiProducts = products.filter(p =>
     commercialApiSources.includes(p.source || '') && p.nutriments
   );
-  
+
   for (const apiProduct of commercialApiProducts) {
+    const candidateName = apiProduct.product_name || (apiProduct as any).product_name_en || '';
+    if (productNameSimilarity(baseName, candidateName) < NUTRITION_NAME_SIMILARITY_THRESHOLD) {
+      logger.debug(`  [Golden Source] Skipping ${apiProduct.source} for nutrition (product name too different)`);
+      continue;
+    }
     if (apiProduct.nutriments) {
       let supplemented = false;
       for (const [key, value] of Object.entries(apiProduct.nutriments)) {
@@ -1019,10 +1070,10 @@ function mergeNutrimentsGoldenSource(
       }
     }
   }
-  
+
   // Step 4: Normalize to per-100g format (retain benchmark conversions functionality)
   mergedNutriments = normalizeNutritionToPer100g(mergedNutriments);
-  
+
   return mergedNutriments;
 }
 

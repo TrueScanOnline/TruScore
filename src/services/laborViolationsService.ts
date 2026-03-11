@@ -1,12 +1,14 @@
 /**
  * Labor Violations Service
- * Detects labor violations and human exploitation for CARE Pillar
- * 
- * Sources:
- * - Brand database (laborPractices field)
- * - Buycott API (ethical data) - FREE tier available
- * - Open Corporates (company data) - FREE tier available
- * - DOL (US Department of Labor) - future integration
+ * Detects labor violations and human exploitation for CARE Pillar.
+ *
+ * Sources: Brand database, known lists, DOL (curated list + enforcement API), Walk Free GSI, Buycott.
+ *
+ * Banner alerts (ID 17): Labor alerts MUST cite the specific violation report with external
+ * hyperlink when available. violationReportUrls is populated from DOL list, Walk Free GSI,
+ * Buycott, or DOL child/forced labor reports (when only brand_database). Use generic org
+ * link only when no specific URL can be provided. Time-bound: 12 months; timestamps come
+ * from violation year (DOL, Walk Free) or current year when not available.
  */
 
 import { Product } from '../types/product';
@@ -19,11 +21,28 @@ import { checkILOViolations } from './iloStatisticsService';
 import { checkWalkFreeViolations, getWalkFreeViolationSeverity } from './walkFreeService';
 import { matchBrands, getParentCompanies } from './brandMatchingService';
 
+/**
+ * Official report URLs for labor sources (used in banner alerts for specific citation).
+ * Banner should link to the actual report/issue when available; fallback to generic org link only when not.
+ */
+export const LABOR_REPORT_URLS = {
+  DOL_LIST_OF_GOODS: 'https://www.dol.gov/agencies/ilab/reports/child-labor/list-of-goods',
+  DOL_ENFORCEMENT: 'https://enforcedata.dol.gov/',
+  DOL_YOUTH_LABOR: 'https://www.dol.gov/general/topic/youthlabor',
+  DOL_CHILD_FORCED_LABOR_REPORTS: 'https://www.dol.gov/agencies/ilab/child-labor-forced-labor-reports',
+  WALK_FREE_GSI: 'https://www.walkfree.org/projects/the-global-slavery-index/',
+  OXFAM_LABOUR: 'https://www.oxfam.org/en/what-we-do/work/labour-rights',
+  ILO: 'https://www.ilo.org/global/lang--en/index.htm',
+  BUYCOTT: 'https://www.buycott.com/',
+} as const;
+
 export interface LaborViolationData {
   hasViolations: boolean;
   violationType: 'none' | 'limited' | 'moderate' | 'major'; // 3-tier system: Limited=-4, Moderate=-8, Major=-15
   violations: string[];
   sources: string[];
+  /** Specific report/issue URLs when available. Banner uses first as actionUrl; only use generic org link when none. */
+  violationReportUrls?: string[];
   timestamp?: number; // Timestamp when violation was reported (for time-bound filtering: within 12 months)
   violationTimestamps?: { [source: string]: number }; // Per-source timestamps for detailed tracking
 }
@@ -343,6 +362,9 @@ export function checkLaborViolations(product: Product): LaborViolationData {
   const productCategory = product.categories || product.categories_tags?.join(' ') || '';
   const originCountry = product.origins_tags?.[0] || product.origins || product.manufacturing_places_tags?.[0] || product.manufacturing_places;
   
+  // violationReportUrls: specific report links for banner (use first as actionUrl when present)
+  const violationReportUrls: string[] = [];
+
   // 3a. Check DOL curated list (synchronous, fast)
   const dolViolations = checkDOLLaborViolations(bestMatchedBrand || undefined, productCategory, originCountry);
   if (dolViolations.length > 0) {
@@ -350,6 +372,7 @@ export function checkLaborViolations(product: Product): LaborViolationData {
     violationType = getMostSevereType(violationType, dolSeverity);
     violations.push(`${dolSeverity} labor violation (DOL: ${dolViolations.map(v => v.good).join(', ')})`);
     sources.push('dol');
+    violationReportUrls.push(LABOR_REPORT_URLS.DOL_LIST_OF_GOODS);
   }
   
   // 3b. Check DOL Enforcement API (async, non-blocking - runs in background)
@@ -398,6 +421,7 @@ export function checkLaborViolations(product: Product): LaborViolationData {
     violationType = getMostSevereType(violationType, walkFreeSeverity);
     violations.push(`${walkFreeSeverity} labor violation (Walk Free GSI: ${walkFreeViolation.country}, risk ${walkFreeViolation.riskLevel})`);
     sources.push('walk_free');
+    violationReportUrls.push(LABOR_REPORT_URLS.WALK_FREE_GSI);
   }
   
   // 5. Check Buycott data (if available in product)
@@ -409,6 +433,7 @@ export function checkLaborViolations(product: Product): LaborViolationData {
     violationType = getMostSevereType(violationType, buycottType);
     violations.push(`${buycottType} labor violation (Buycott API)`);
     sources.push('buycott_api');
+    violationReportUrls.push(LABOR_REPORT_URLS.BUYCOTT);
   }
   
   // 6. Check parent company (if available) - FUZZY MATCHING: Use fuzzy-matched parent companies
@@ -440,25 +465,29 @@ export function checkLaborViolations(product: Product): LaborViolationData {
     });
   }
   
-  // Track timestamps for time-bound filtering (within 12 months)
-  const now = Date.now();
-  const twelveMonthsAgo = now - (12 * 30 * 24 * 60 * 60 * 1000);
-  const violationTimestamps: { [source: string]: number } = {};
-  
-  // Assign timestamps to each source (simulate recent violations within 12 months)
-  // In production, these would come from the actual data sources
-  for (const source of sources) {
-    // Simulate violation date: random date within last 12 months (closer to now for major violations)
-    const monthsAgo = violationType === 'major' 
-      ? Math.random() * 6  // Major violations: within last 6 months
-      : violationType === 'moderate'
-      ? Math.random() * 9  // Moderate violations: within last 9 months
-      : Math.random() * 12; // Limited violations: within last 12 months
-    violationTimestamps[source] = now - (monthsAgo * 30 * 24 * 60 * 60 * 1000);
+  // When only source is brand_database, link to DOL List of Goods (specific official list; we have no single report URL)
+  if (sources.includes('brand_database') && violationReportUrls.length === 0) {
+    violationReportUrls.push(LABOR_REPORT_URLS.DOL_LIST_OF_GOODS);
   }
-  
-  // Overall timestamp: most recent violation timestamp, or current time if no violations
-  const timestamp = sources.length > 0 
+
+  // Time-bound: set timestamps from actual violation dates when available (12-month filter in banner)
+  const now = Date.now();
+  const violationTimestamps: { [source: string]: number } = {};
+  if (dolViolations.length > 0) {
+    const latestYear = Math.max(...dolViolations.map(v => v.year ?? new Date().getFullYear()));
+    violationTimestamps['dol'] = new Date(latestYear, 0, 1).getTime();
+  }
+  if (walkFreeViolation?.year) {
+    violationTimestamps['walk_free'] = new Date(walkFreeViolation.year, 0, 1).getTime();
+  }
+  for (const source of sources) {
+    if (violationTimestamps[source] === undefined) {
+      // No date from source: use start of current year so 12-month filter includes it
+      violationTimestamps[source] = new Date(new Date().getFullYear(), 0, 1).getTime();
+    }
+  }
+
+  const timestamp = sources.length > 0
     ? Math.max(...Object.values(violationTimestamps))
     : undefined;
 
@@ -467,6 +496,7 @@ export function checkLaborViolations(product: Product): LaborViolationData {
     violationType,
     violations,
     sources,
+    violationReportUrls: violationReportUrls.length > 0 ? violationReportUrls : undefined,
     timestamp,
     violationTimestamps: sources.length > 0 ? violationTimestamps : undefined,
   };

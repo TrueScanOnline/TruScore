@@ -43,6 +43,7 @@ import { generateBannerAlerts } from '../../src/services/bannerAlertsService';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
 import InsightsCarousel from '../../src/components/InsightsCarousel';
 import TruScoreInfoModal from '../../src/components/TrustScoreInfoModal';
+import TruScoreAnalysisModal from '../../src/components/TruScoreAnalysisModal';
 import EcoScoreInfoModal from '../../src/components/EcoScoreInfoModal';
 import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModal';
 import AdditivesRiskCard from '../../src/components/AdditivesRiskCard';
@@ -125,6 +126,7 @@ function ResultScreenContent() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [truScoreModalVisible, setTruScoreModalVisible] = useState(false);
+  const [truScoreAnalysisModalVisible, setTruScoreAnalysisModalVisible] = useState(false);
   const [ecoScoreModalVisible, setEcoScoreModalVisible] = useState(false);
   const [allergensAdditivesModalVisible, setAllergensAdditivesModalVisible] = useState(false);
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
@@ -429,9 +431,13 @@ function ResultScreenContent() {
           console.log(`[ResultScreen] ⚡ INSTANT display: ${progress.phase}`, productWithScore.product_name, 
             `TruScore: ${productWithScore.trust_score || 'calculating...'}`);
           
-          // If this is an enhanced product (with TruScore), log it
-          if (progress.phase === 'product_enhanced' || progress.phase === 'complete') {
-            console.log(`[ResultScreen] ✅ Product enhanced with TruScore: ${productWithScore.trust_score}`);
+          // Background merge complete: product now has extended _fetchTrace (all DBs that contributed)
+          if (progress.phase === 'product_enhanced') {
+            const traceLen = productWithScore._truscore_analysis?.fetchTrace?.length ?? 0;
+            console.log(`[ResultScreen] ✅ Product enhanced (merge complete): TruScore ${productWithScore.trust_score}, fetch trace: ${traceLen} source(s) – Score breakdown reflects all DBs used`);
+          }
+          if (progress.phase === 'complete') {
+            console.log(`[ResultScreen] ✅ Product complete with TruScore: ${productWithScore.trust_score}`);
           }
         }
       };
@@ -917,6 +923,63 @@ function ResultScreenContent() {
           />
         }
       >
+        {/* Legal disclaimer banner (for lawyer review) */}
+        <View style={[styles.disclaimerBanner, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Ionicons
+            name="information-circle-outline"
+            size={18}
+            color={colors.textSecondary}
+            style={styles.disclaimerIcon}
+          />
+          <View style={styles.disclaimerTextContainer}>
+            <Text style={[styles.disclaimerTitle, { color: colors.textSecondary }]}>
+              {t('result.disclaimerTitle') || 'Important information'}
+            </Text>
+            <Text style={[styles.disclaimerText, { color: colors.textTertiary }]}>
+              {t('result.disclaimerBody') ||
+                'TruScan scores and insights are informational opinions based on public data. They may be ' +
+                  'incomplete or inaccurate and are not medical, nutritional, or legal advice. Always read the ' +
+                  'product label and consult a qualified professional for personal health or dietary decisions.'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Data limitations note when key fields are missing (for lawyer review) */}
+        {product && (!product.ingredients_text || !product.ingredients_text.trim() || !product.countries || !product.countries.trim()) && (
+          <View style={[styles.dataLimitationsBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Ionicons
+              name="warning-outline"
+              size={16}
+              color={colors.textSecondary}
+              style={styles.dataLimitationsIcon}
+            />
+            <Text style={[styles.dataLimitationsText, { color: colors.textTertiary }]}>
+              {t('result.dataLimitations') ||
+                'Some information such as full ingredients or origin may be missing from public databases. ' +
+                  'When data is incomplete, TruScan reduces the score rather than assuming the product is safe or unsafe.'}
+            </Text>
+          </View>
+        )}
+        {/* Legal disclaimer banner (for lawyer review) */}
+        <View style={[styles.disclaimerBanner, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Ionicons
+            name="information-circle-outline"
+            size={18}
+            color={colors.textSecondary}
+            style={styles.disclaimerIcon}
+          />
+          <View style={styles.disclaimerTextContainer}>
+            <Text style={[styles.disclaimerTitle, { color: colors.textSecondary }]}>
+              {t('result.disclaimerTitle') || 'Important information'}
+            </Text>
+            <Text style={[styles.disclaimerText, { color: colors.textTertiary }]}>
+              {t('result.disclaimerBody') ||
+                'TruScan scores and insights are informational opinions based on public data. They may be ' +
+                  'incomplete or inaccurate and are not medical, nutritional, or legal advice. Always read the ' +
+                  'product label and consult a qualified professional for personal health or dietary decisions.'}
+            </Text>
+          </View>
+        </View>
         {/* Pending Contributions Banner - Shows when user has unsubmitted contributions */}
         {/* <PendingContributionsBanner 
           barcode={barcode}
@@ -1111,6 +1174,18 @@ function ResultScreenContent() {
           
           {/* TruScore Display - v1.4 */}
           <TruScore truScore={truScore} size="medium" />
+
+          {/* Score breakdown - opens analysis modal (DBs, pillars, adjustments) */}
+          <TouchableOpacity
+            onPress={() => setTruScoreAnalysisModalVisible(true)}
+            style={[styles.analysisButton, { borderColor: colors.border }]}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="analytics-outline" size={18} color={colors.primary} />
+            <Text style={[styles.analysisButtonText, { color: colors.primary }]}>
+              How was this scored?
+            </Text>
+          </TouchableOpacity>
           
           {/* Confidence Badge - Data Quality Indicator */}
           {product && product.confidence !== undefined && (
@@ -2188,6 +2263,13 @@ function ResultScreenContent() {
         />
       )}
 
+      {/* TruScore Analysis Modal - Pillar breakdown & data source trace */}
+      <TruScoreAnalysisModal
+        visible={truScoreAnalysisModalVisible}
+        onClose={() => setTruScoreAnalysisModalVisible(false)}
+        analysis={product?._truscore_analysis}
+      />
+
       {/* Eco-Score Info Modal */}
       <EcoScoreInfoModal
         visible={ecoScoreModalVisible}
@@ -2633,6 +2715,21 @@ const styles = StyleSheet.create({
   confidenceBadgeContainer: {
     marginTop: 8,
     alignItems: 'center',
+  },
+  analysisButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  analysisButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   userContributedBadge: {
     flexDirection: 'row',
@@ -3370,6 +3467,51 @@ const styles = StyleSheet.create({
   recyclabilityValue: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  disclaimerBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  disclaimerIcon: {
+    marginRight: 8,
+    marginTop: 2,
+  },
+  disclaimerTextContainer: {
+    flex: 1,
+  },
+  disclaimerTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  disclaimerText: {
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  dataLimitationsBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 8,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  dataLimitationsIcon: {
+    marginRight: 8,
+    marginTop: 2,
+  },
+  dataLimitationsText: {
+    flex: 1,
+    fontSize: 11,
+    lineHeight: 16,
   },
   recallAlertBanner: {
     margin: 16,

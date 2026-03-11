@@ -1,0 +1,61 @@
+{
+  "totalBarcodes": 60,
+  "databaseCounts": [
+    {
+      "db": "Open Food Facts",
+      "count": 60
+    },
+    {
+      "db": "Open Beauty Facts",
+      "count": 60
+    },
+    {
+      "db": "Open Pet Food Facts",
+      "count": 60
+    },
+    {
+      "db": "Open Products Facts",
+      "count": 60
+    },
+    {
+      "db": "SQLite",
+      "count": 60
+    },
+    {
+      "db": "Cache",
+      "count": 60
+    },
+    {
+      "db": "GS1",
+      "count": 60
+    },
+    {
+      "db": "Spoonacular",
+      "count": 60
+    },
+    {
+      "db": "Barcode Lookup",
+      "count": 60
+    },
+    {
+      "db": "USDA",
+      "count": 60
+    },
+    {
+      "db": "Health Canada",
+      "count": 60
+    },
+    {
+      "db": "UK FSA",
+      "count": 60
+    },
+    {
+      "db": "EFSA",
+      "count": 60
+    },
+    {
+      "db": "FSANZ",
+      "count": 60
+    }
+  ]
+}

@@ -2,6 +2,9 @@
 // Based on Score_Highlights_Specification_v8_20251222.docx
 // This file contains all possible highlights verbatim from the spec
 
+import { resolveBrandToParent } from '../services/bbfawBrandResolutionService';
+import { checkBBFAWTier } from '../services/bbfawService';
+
 export type PillarCategory = 'body' | 'planet' | 'ethics' | 'open';
 export type HighlightType = 'green' | 'red';
 export type Severity = 'low' | 'medium' | 'high';
@@ -445,159 +448,83 @@ export const PLANET_HIGHLIGHTS: HighlightDefinition[] = [
   },
 ];
 
-// ETHICS PILLAR highlights
+function getCompanyCandidatesForBBFAW(product: any): string[] {
+  const candidates: string[] = [];
+  if (product.brand_owner && typeof product.brand_owner === 'string') {
+    const t = product.brand_owner.trim();
+    if (t.length >= 2) candidates.push(t);
+  }
+  if (product.brands && typeof product.brands === 'string') {
+    for (const p of product.brands.split(',')) {
+      const t = p.trim();
+      if (t.length >= 2 && t.toLowerCase() !== 'unknown') candidates.push(t);
+    }
+  }
+  return [...new Set(candidates)];
+}
+
+// Helper: Check if product matches BBFAW company (tries all brand candidates + alias resolution)
+function productMatchesBBFAW(product: any, tier?: number, impact?: string): boolean {
+  const candidates = getCompanyCandidatesForBBFAW(product);
+  for (const raw of candidates) {
+    const resolved = resolveBrandToParent(raw);
+    const company = resolved?.parent_entity_exact ?? raw;
+    const data = checkBBFAWTier(company);
+    if (!data) continue;
+    if (tier != null && data.tier !== tier) continue;
+    if (impact != null && data.impactRating !== impact) continue;
+    return true;
+  }
+  return false;
+}
+
+// ETHICS PILLAR highlights - Ethics_Score_and Commentary_Table_20260307.docx (BBFAW only)
 export const ETHICS_HIGHLIGHTS: HighlightDefinition[] = [
-  // Base Score - EXCLUDED (N/A internal buffer)
-  
-  // Fairtrade
-  {
-    id: 'ethics-fairtrade',
-    pillar: 'ethics',
-    type: 'green',
-    severity: 'high',
-    title: 'Fairtrade certified',
-    description: 'Supports fair wages and working conditions for producers. Certified and registered with [Insert certification agency(s)].',
-    externalResource: 'https://www.fairtrade.net',
-    scoreValue: 8,
-    trigger: (product) => {
-      const tags = product.labels_tags || [];
-      return tags.some((tag: string) => 
-        tag.toLowerCase().includes('fair-trade') || 
-        tag.toLowerCase().includes('fairtrade')
-      );
-    },
-  },
-  
-  // Organic
-  {
-    id: 'ethics-organic',
-    pillar: 'ethics',
-    type: 'green',
-    severity: 'high',
-    title: 'Organic certified',
-    description: 'Produced without synthetic pesticides and fertilisers. Certified Organic registered with [insert certification agency(s)].',
-    externalResource: 'https://www.ifoam.bio',
-    scoreValue: 7,
-    trigger: (product) => {
-      const tags = product.labels_tags || [];
-      return tags.some((tag: string) => 
-        tag.toLowerCase().includes('organic') || 
-        tag.toLowerCase().includes('bio')
-      );
-    },
-  },
-  
-  // Rainforest Alliance
-  {
-    id: 'ethics-rainforest',
-    pillar: 'ethics',
-    type: 'green',
-    severity: 'high',
-    title: '[Seal 1] Rainforest Alliance Sustainable Agriculture Certification.',
-    description: 'Certifies ingredients not whole products (e.g. cocoa in a chocolate bar). Certified farms and companies support healthy forests, better farmer livelihoods, human rights, good environmental practices, as well as climate resilience.',
-    externalResource: 'https://www.rainforest-alliance.org',
-    scoreValue: 6,
-    trigger: (product) => {
-      const tags = product.labels_tags || [];
-      return tags.some((tag: string) => 
-        tag.toLowerCase().includes('rainforest-alliance') || 
-        tag.toLowerCase().includes('rainforest alliance') ||
-        tag.toLowerCase().includes('utz')
-      );
-    },
-  },
-  
-  // MSC/ASC - Wild-caught
-  {
-    id: 'ethics-msc',
-    pillar: 'ethics',
-    type: 'green',
-    severity: 'high',
-    title: 'Certified wild-caught sustainable fishing.',
-    description: 'MSC certified sustainable wild-caught seafood. Fully traceable from ocean to plate and verified by independent auditors.',
-    externalResource: 'https://www.msc.org/standards',
-    scoreValue: 6,
-    trigger: (product) => {
-      const tags = product.labels_tags || [];
-      return tags.some((tag: string) => 
-        tag.toLowerCase().includes('msc') && 
-        !tag.toLowerCase().includes('asc')
-      );
-    },
-  },
-  
-  // MSC/ASC - Farmed (ASC)
-  {
-    id: 'ethics-asc',
-    pillar: 'ethics',
-    type: 'green',
-    severity: 'high',
-    title: 'Responsibly farmed seafood certified.',
-    description: 'ASC certified responsibly farmed seafood. Aquaculture operations must meet strict environmental and social standards, protecting water quality, worker welfare and local eco-systems.',
-    externalResource: 'https://www.asc-aqua.org/seafood-lovers-choose-asc/',
-    scoreValue: 6,
-    trigger: (product) => {
-      const tags = product.labels_tags || [];
-      return tags.some((tag: string) => tag.toLowerCase().includes('asc'));
-    },
-  },
-  
-  // RSPCA/Leaping Bunny/B Corp
-  {
-    id: 'ethics-cruelty-free',
-    pillar: 'ethics',
-    type: 'green',
-    severity: 'high',
-    title: 'Animal Welfare cruelty free certified',
-    description: 'Animal welfare certified product registered with [insert certification agency(s)].',
-    externalResource: 'https://www.leapingbunny.org',
-    scoreValue: 5,
-    trigger: (product) => {
-      const tags = product.labels_tags || [];
-      return tags.some((tag: string) => 
-        tag.toLowerCase().includes('rspca') || 
-        tag.toLowerCase().includes('leaping-bunny') ||
-        tag.toLowerCase().includes('b-corp') ||
-        tag.toLowerCase().includes('bcorp')
-      );
-    },
-  },
-  
-  // Cage-Free/Free-Range
-  {
-    id: 'ethics-cage-free',
-    pillar: 'ethics',
-    type: 'green',
-    severity: 'high',
-    title: 'Free roaming/pasture raised.',
-    description: 'High animal welfare and access to outdoor space supporting natural foraging habits.',
-    externalResource: 'https://certifiedhumane.org/cage-free-vs-free-range/',
-    scoreValue: 4,
-    trigger: (product) => {
-      const tags = product.labels_tags || [];
-      return tags.some((tag: string) => 
-        tag.toLowerCase().includes('cage-free') || 
-        tag.toLowerCase().includes('free-range') ||
-        tag.toLowerCase().includes('free-roaming')
-      );
-    },
-  },
-  
-  // Recalls - Recent Product recall
-  {
-    id: 'ethics-recall',
-    pillar: 'ethics',
-    type: 'red',
-    severity: 'high',
-    title: 'Recent Product recall identified.',
-    description: 'Health risk alert. Note: Food recalls may be specific to certain markets and supply chains. We think you should be aware to make your own decisions.',
-    externalResource: 'https://globalrecalls.oecd.org',
-    scoreValue: -10,
-    trigger: (product) => {
-      return product.recalls && product.recalls.length > 0 && 
-        product.recalls.some((recall: any) => recall.isActive);
-    },
-  },
+  { id: 'ethics-bbfaw-tier1', pillar: 'ethics', type: 'green', severity: 'high',
+    title: 'The company has taken a leadership position in policy and governance for animal welfare.',
+    description: 'Business Benchmark on Farm Animal Welfare (BBFAW) provides a leading global measure of farm animal welfare management, policy commitment, performance and disclosure in food companies. A Tier 1 classification requires a percentage score > 80%.',
+    externalResource: 'https://www.bbfaw.com', scoreValue: 6,
+    trigger: (p) => productMatchesBBFAW(p, 1) },
+  { id: 'ethics-bbfaw-tier2', pillar: 'ethics', type: 'green', severity: 'high',
+    title: 'The company has made animal welfare governance and policy a business priority',
+    description: 'BBFAW provides a leading global measure of farm animal welfare. Tier 2 indicates this company has integrated robust animal welfare policies into its business strategy.',
+    externalResource: 'https://www.bbfaw.com', scoreValue: 4,
+    trigger: (p) => productMatchesBBFAW(p, 2) },
+  { id: 'ethics-bbfaw-tier3', pillar: 'ethics', type: 'green', severity: 'medium',
+    title: 'The company has made efforts to establish an approach to animal welfare.',
+    description: 'BBFAW Tier 3 indicates this company has an established approach to farm animal welfare but has more work to do to ensure it is effectively implemented.',
+    externalResource: 'https://www.bbfaw.com', scoreValue: 2,
+    trigger: (p) => productMatchesBBFAW(p, 3) },
+  { id: 'ethics-bbfaw-tier4', pillar: 'ethics', type: 'green', severity: 'low',
+    title: 'The company has made some progress on implementing commitments to animal welfare.',
+    description: 'BBFAW Tier 4 indicates this company is making progress on implementing its policies and commitments on farm animal welfare.',
+    externalResource: 'https://www.bbfaw.com', scoreValue: 1,
+    trigger: (p) => productMatchesBBFAW(p, 4) },
+  { id: 'ethics-bbfaw-tier5', pillar: 'ethics', type: 'red', severity: 'medium',
+    title: 'The company has identified farm animal welfare as a business issue but is not yet evidencing progress.',
+    description: 'BBFAW Tier 5: The company has identified farm animal welfare as a business issue but provides limited evidence that it is managing the issue effectively.',
+    externalResource: 'https://www.bbfaw.com', scoreValue: -4,
+    trigger: (p) => productMatchesBBFAW(p, 5) },
+  { id: 'ethics-bbfaw-tier6', pillar: 'ethics', type: 'red', severity: 'high',
+    title: 'The company provides limited if any evidence that it recognises farm animal welfare as a business issue',
+    description: 'BBFAW Tier 6: The company provides limited if any evidence that it recognises farm animal welfare as a business issue.',
+    externalResource: 'https://www.bbfaw.com', scoreValue: -6,
+    trigger: (p) => productMatchesBBFAW(p, 6) },
+  { id: 'ethics-bbfaw-impact-ab', pillar: 'ethics', type: 'green', severity: 'high',
+    title: 'The company is declaring improved welfare impacts for a reasonable proportion of farm animals in their operations and/or supply chain',
+    description: 'BBFAW Impact Rating A/B: The company is declaring improved welfare impacts for a reasonable proportion of farm animals.',
+    externalResource: 'https://www.bbfaw.com', scoreValue: 3,
+    trigger: (p) => productMatchesBBFAW(p, undefined, 'A') || productMatchesBBFAW(p, undefined, 'B') },
+  { id: 'ethics-bbfaw-impact-cd', pillar: 'ethics', type: 'green', severity: 'low',
+    title: 'The company is declaring improved welfare impacts for at least some farm animals in their operations and/or supply chain',
+    description: 'BBFAW Impact Rating C/D: The company is declaring improved welfare impacts for some farm animals.',
+    externalResource: 'https://www.bbfaw.com', scoreValue: 1,
+    trigger: (p) => productMatchesBBFAW(p, undefined, 'C') || productMatchesBBFAW(p, undefined, 'D') },
+  { id: 'ethics-bbfaw-impact-ef', pillar: 'ethics', type: 'red', severity: 'medium',
+    title: 'Yet to demonstrate that they are delivering improved welfare impacts for farm animals in their operations and/or supply chains.',
+    description: 'BBFAW Impact Rating E/F: The company has yet to demonstrate improved welfare impacts for farm animals.',
+    externalResource: 'https://www.bbfaw.com', scoreValue: -3,
+    trigger: (p) => productMatchesBBFAW(p, undefined, 'E') || productMatchesBBFAW(p, undefined, 'F') },
 ];
 
 // OPEN PILLAR highlights

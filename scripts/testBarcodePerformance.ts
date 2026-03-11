@@ -163,8 +163,10 @@ Module._load = function(request: string, parent: any) {
   
   // Mock expo-localization
   if (request === 'expo-localization') {
+    const testRegion = (process.env.TEST_REGION || 'US').toUpperCase();
+    const langTag = `en-${testRegion}`;
     return {
-      getLocales: () => [{ regionCode: 'US', languageTag: 'en-US' }],
+      getLocales: () => [{ regionCode: testRegion, languageTag: langTag }],
       getCalendars: () => [],
     };
   }

@@ -128,13 +128,13 @@ export function extractAllBrands(product: Product): string[] {
   
   // Convert Set to Array and filter out obviously invalid brands
   const brandArray = Array.from(brands).filter(brand => {
-    // Filter out generic terms that aren't brands
+    // Filter out generic terms that aren't brands (exact match only - avoid filtering "Tyson Foods", "Whole Foods")
     const genericTerms = [
       'unknown', 'n/a', 'not available', 'missing', 'not disclosed',
       'product', 'food', 'item', 'goods', 'merchandise'
     ];
-    const brandLower = brand.toLowerCase();
-    return !genericTerms.some(term => brandLower.includes(term)) && brand.length >= 2;
+    const brandLower = brand.toLowerCase().trim();
+    return !genericTerms.includes(brandLower) && brand.length >= 2;
   });
   
   // Track if any brand was extracted from product name

@@ -1,13 +1,14 @@
 /**
  * Ethics Pillar Unit Tests
- * 
- * Tests the Ethics Pillar calculation independently
+ *
+ * SPEC: Ethics_Scoring_Specification.xlsx + Ethics_Score_and Commentary_Table_20260307.docx
+ * Pillar rebuilt: Base 15 + BBFAW 2024 only. If not found = nil.
  */
 
 import { calculateEthicsPillar } from '../../../../lib/truscoreEngine/pillars/ethicsPillar';
 import { Product } from '../../../../types/product';
 
-describe('Ethics Pillar Calculation', () => {
+describe('Ethics Pillar Calculation (BBFAW 2024 only)', () => {
   const baseProduct: Product = {
     barcode: '1234567890123',
     product_name: 'Test Product',
@@ -22,147 +23,116 @@ describe('Ethics Pillar Calculation', () => {
     source: 'test',
   };
 
-  test('should start at base score 15', () => {
+  test('should start at base score 15 when no BBFAW match', () => {
     const result = calculateEthicsPillar(baseProduct);
     expect(result.base).toBe(15);
     expect(result.score).toBe(15);
+    expect(result.details.bbfawMatchedCompany).toBeNull();
   });
 
-  test('should apply Fairtrade certification bonus (+8)', () => {
-    const product = { ...baseProduct, labels_tags: ['en:fair-trade'] };
+  test('should apply nil return when brand not in BBFAW', () => {
+    const product = { ...baseProduct, brands: 'Unknown Small Brand Ltd' };
     const result = calculateEthicsPillar(product);
     expect(result.base).toBe(15);
-    expect(result.score).toBe(23); // 15 + 8
-    expect(result.details.certificationBonus).toBe(8);
+    expect(result.score).toBe(15);
+    expect(result.details.bbfawMatchedCompany).toBeNull();
   });
 
-  test('should apply Organic certification bonus (+7)', () => {
-    const product = { ...baseProduct, labels_tags: ['en:organic'] };
+  test('should use brand_owner over brands for BBFAW lookup', () => {
+    const product = { ...baseProduct, brand_owner: 'Marks & Spencer PLC', brands: 'Unknown Brand' };
     const result = calculateEthicsPillar(product);
-    expect(result.base).toBe(15);
-    expect(result.score).toBe(22); // 15 + 7
-    expect(result.details.certificationBonus).toBe(7);
+    expect(result.details.bbfawMatchedCompany).toBe('Marks & Spencer PLC');
+    expect(result.score).toBe(22);
   });
 
-  test('should cap certification bonus at +15', () => {
-    const product = {
-      ...baseProduct,
-      labels_tags: ['en:fair-trade', 'en:organic', 'en:rainforest-alliance'], // 8 + 7 + 6 = 21, capped at 15
-    };
+  test('should resolve alias "M&S" to Marks & Spencer PLC via BBFAW mapping', () => {
+    const product = { ...baseProduct, brands: 'M&S' };
     const result = calculateEthicsPillar(product);
-    expect(result.base).toBe(15);
-    expect(result.score).toBe(25); // 15 + 15 = 30, but capped at 25 (pillar max)
-    expect(result.score).toBeLessThanOrEqual(25);
-    expect(result.details.certificationBonus).toBe(15);
+    expect(result.details.bbfawMatchedCompany).toBe('Marks & Spencer PLC');
+    expect(result.details.bbfawTier).toBe(2);
+    expect(result.score).toBe(22);
   });
 
-  test('should apply major animal cruelty penalty (-15)', () => {
-    const product = { ...baseProduct, brands: 'Unilever' }; // Known for animal testing
+  test('should resolve alias "Batchelors" to Premier Foods PLC via BBFAW mapping', () => {
+    const product = { ...baseProduct, brands: 'Batchelors' };
     const result = calculateEthicsPillar(product);
-    // Note: This test depends on the brand database
-    // If Unilever has major animal cruelty, score should be 0 (15 - 15)
-    expect(result.base).toBe(15);
-    if (result.details.animalCrueltyPenalty > 0) {
-      expect(result.score).toBeLessThanOrEqual(15);
-    }
+    expect(result.details.bbfawMatchedCompany).toBe('Premier Foods PLC');
+    expect(result.details.bbfawTier).toBe(2);
   });
 
-  test('should apply major labor violation penalty (-15)', () => {
-    const product = { ...baseProduct, brands: 'Nestle' }; // Known for poor labor practices
+  test('should try second brand when first fails (Unknown, Activia)', () => {
+    const product = { ...baseProduct, brands: 'Unknown, Activia' };
     const result = calculateEthicsPillar(product);
-    // Note: This test depends on the brand database
-    // If Nestle has major labor violations, score should be reduced
-    expect(result.base).toBe(15);
-    if (result.details.laborViolationPenalty > 0) {
-      expect(result.score).toBeLessThanOrEqual(15);
-    }
+    expect(result.details.bbfawMatchedCompany).toBe('Groupe Danone SA');
+    expect(result.details.bbfawTier).toBe(3);
   });
 
-  test('should apply recall penalty (-10) for active recalls within 12 months', () => {
-    const now = Date.now();
-    const product = {
-      ...baseProduct,
-      recalls: [{
-        recallId: 'test-1',
-        productName: 'Test Product',
-        reason: 'Test reason',
-        recallDate: new Date(now - (6 * 30 * 24 * 60 * 60 * 1000)).toISOString(), // 6 months ago
-        isActive: true,
-      }],
-    };
+  test('should match Nestlé with accent via parent_entity_exact indexing', () => {
+    const product = { ...baseProduct, brand_owner: 'Nestlé SA' };
     const result = calculateEthicsPillar(product);
-    expect(result.base).toBe(15);
-    expect(result.details.recallPenalty).toBe(10);
-    // Score should be reduced by at least 10 (may have additional penalties)
-    expect(result.score).toBeLessThanOrEqual(5); // 15 - 10 (may be less if other penalties apply)
-    expect(result.score).toBeGreaterThanOrEqual(0);
+    expect(result.details.bbfawMatchedCompany).toBeTruthy();
   });
 
-  test('should apply RSPO certification bonus (+6)', () => {
-    const product = { ...baseProduct, labels_tags: ['en:rspo', 'en:roundtable-on-sustainable-palm-oil'] };
+  test('should require exact match - Unilever does not match Unilever NV', () => {
+    const product = { ...baseProduct, brands: 'Unilever' };
     const result = calculateEthicsPillar(product);
-    expect(result.base).toBe(15);
-    expect(result.score).toBeGreaterThanOrEqual(21); // 15 + 6
-    expect(result.details.certificationBonus).toBeGreaterThanOrEqual(6);
+    expect(result.details.bbfawMatchedCompany).toBeNull();
+    expect(result.score).toBe(15);
   });
 
-  test('should apply Leaping Bunny certification bonus (+5)', () => {
-    const product = { 
-      ...baseProduct, 
-      labels_tags: ['en:leaping-bunny', 'en:cruelty-free'],
-      leaping_bunny: { isCrueltyFree: true, certificationStatus: 'certified' } as any,
-    };
+  test('should apply BBFAW Tier 2 + Impact B for Marks & Spencer', () => {
+    const product = { ...baseProduct, brands: 'Marks & Spencer PLC' };
     const result = calculateEthicsPillar(product);
     expect(result.base).toBe(15);
-    expect(result.score).toBeGreaterThanOrEqual(20); // 15 + 5
-    expect(result.details.certificationBonus).toBeGreaterThanOrEqual(5);
+    // Tier 2 = +4, Impact B = +3 => 15 + 4 + 3 = 22
+    expect(result.details.bbfawMatchedCompany).toBeTruthy();
+    expect(result.details.bbfawTier).toBe(2);
+    expect(result.details.bbfawTierScore).toBe(4);
+    expect(result.details.bbfawImpactScore).toBe(3);
+    expect(result.score).toBe(22);
   });
 
-  test('should apply brand overlay penalty (-3) for high-impact brands', () => {
-    const product = { ...baseProduct, brands: 'Johnson & Johnson' }; // Known for recalls and animal testing
+  test('should apply BBFAW Tier 2 for Greggs', () => {
+    const product = { ...baseProduct, brands: 'Greggs PLC' };
     const result = calculateEthicsPillar(product);
-    // Note: This test depends on the brand database
-    // If J&J has high-impact conditions, overlay penalty should apply
     expect(result.base).toBe(15);
-    if (result.details.brandOverlayPenalty > 0) {
-      expect(result.details.brandOverlayPenalty).toBe(3);
-      expect(result.score).toBeLessThanOrEqual(15);
-    }
+    expect(result.details.bbfawTier).toBe(2);
+    expect(result.details.bbfawTierScore).toBe(4);
+    // Greggs has Impact C = +1
+    expect(result.details.bbfawImpactScore).toBe(1);
+    expect(result.score).toBe(20); // 15 + 4 + 1
+  });
+
+  test('should apply BBFAW Tier 3 for Groupe Danone', () => {
+    const product = { ...baseProduct, brands: 'Groupe Danone SA' };
+    const result = calculateEthicsPillar(product);
+    expect(result.details.bbfawTier).toBe(3);
+    expect(result.details.bbfawTierScore).toBe(2);
+    // Danone has Impact C = +1
+    expect(result.score).toBe(18); // 15 + 2 + 1
+  });
+
+  test('should apply BBFAW Tier 6 penalty for Tyson Foods', () => {
+    const product = { ...baseProduct, brands: 'Tyson Foods' };
+    const result = calculateEthicsPillar(product);
+    expect(result.details.bbfawMatchedCompany).toBeTruthy();
+    expect(result.details.bbfawTier).toBe(6);
+    expect(result.details.bbfawTierScore).toBe(-6);
+    // Tyson has Impact F = -3
+    expect(result.details.bbfawImpactScore).toBe(-3);
+    expect(result.score).toBe(6); // 15 - 6 - 3
   });
 
   test('should cap score at 0', () => {
-    const product = {
-      ...baseProduct,
-      recalls: [{
-        recallId: 'test-1',
-        productName: 'Test Product',
-        reason: 'Test reason',
-        recallDate: new Date(Date.now() - (6 * 30 * 24 * 60 * 60 * 1000)).toISOString(),
-        isActive: true,
-      }],
-    };
+    const product = { ...baseProduct, brands: 'JBS SA' }; // Tier 6, Impact F
     const result = calculateEthicsPillar(product);
     expect(result.score).toBeGreaterThanOrEqual(0);
-    expect(result.score).toBeLessThanOrEqual(25);
   });
 
   test('should cap score at 25', () => {
-    const product = {
-      ...baseProduct,
-      labels_tags: [
-        'en:fair-trade', // +8
-        'en:organic', // +7
-        'en:rainforest-alliance', // +6
-        'en:rspo', // +6
-        'en:rspca', // +5
-        'en:leaping-bunny', // +5
-        'en:b-corp', // +5
-        'en:cage-free', // +4
-      ],
-    };
+    // Tier 1 + Impact A/B could theoretically exceed 25 - cap applies
+    const product = { ...baseProduct, brands: 'Marks & Spencer PLC' }; // 15+4+3=22, within cap
     const result = calculateEthicsPillar(product);
     expect(result.score).toBeLessThanOrEqual(25);
-    expect(result.details.certificationBonus).toBeLessThanOrEqual(15);
   });
 });
-

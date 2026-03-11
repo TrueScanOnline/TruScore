@@ -1,8 +1,13 @@
 /**
  * Banner Alerts Types
- * 
+ *
  * Defines the structure for banner alerts that appear above the TruScore card.
  * Alerts are a combination of APP-generated alerts and User Preference alerts.
+ *
+ * actionUrl: When present, the banner links to this URL. Per ID 17, this MUST be
+ * the specific report/issue hyperlink when available (e.g. recall notice, DOL
+ * list of goods, Walk Free GSI). Use the generic organization link ONLY when the
+ * exact report URL cannot be provided.
  */
 
 export type AlertSource = 
@@ -32,7 +37,8 @@ export interface BannerAlert {
     // For user preference alerts
     preferenceType?: string; // e.g., "avoidAnimalTesting", "avoidForcedLabour"
   };
-  actionUrl?: string; // Optional URL for more information
+  /** Specific report/issue URL when available; otherwise generic org link. See module comment (ID 17). */
+  actionUrl?: string;
 }
 
 export interface BannerAlertsData {

@@ -29,24 +29,24 @@ export async function initializeFSANZDatabases(): Promise<void> {
     // The server-side API has access to the full 2,857+17,109 food databases
     
     if (userCountry === 'AU' || userCountry === 'NZ') {
-      logger.info(`🌟 User is in ${userCountry} - FSANZ database is CRITICAL for accuracy`);
+      logger.info(`🌟 User is in ${userCountry} - FSANZ data is CRITICAL for accuracy`);
       logger.info(`   ✅ Using server-side API for FSANZ queries (no local download needed)`);
       logger.info(`   📡 API endpoint: /api/fsanz-query (queries both NZFCD and AFCD)`);
       
-      // Check if old local database exists (for backwards compatibility)
+      // Check if old local database exists (for backwards compatibility only)
       const isAvailable = await isFSANZDatabaseAvailable(userCountry as 'AU' | 'NZ');
       if (isAvailable) {
-        logger.info(`   ℹ️  Old local database found (${userCountry}) - will use server API instead`);
+        logger.info(`   ℹ️  Legacy local FSANZ database found (${userCountry}) - server API will be preferred`);
       } else {
-        logger.info(`   ℹ️  No local database needed - using server API`);
+        logger.info(`   ℹ️  No legacy local database installed - relying on server API (recommended configuration)`);
       }
     }
     
-    // Check AU database status
+    // Check AU database status (legacy local DB - optional, informational only)
     const auAvailable = await isFSANZDatabaseAvailable('AU');
     if (auAvailable) {
       const auMetadata = await getFSANZDatabaseMetadata('AU');
-      logger.info(`✅ FSANZ AU Database: AVAILABLE`);
+      logger.info(`✅ FSANZ AU local database: AVAILABLE (legacy enhancement)`);
       if (auMetadata?.productCount) {
         logger.info(`   Products: ${auMetadata.productCount.toLocaleString()}`);
       }
@@ -54,21 +54,16 @@ export async function initializeFSANZDatabases(): Promise<void> {
         const importDate = new Date(auMetadata.importedAt);
         logger.info(`   Imported: ${importDate.toLocaleDateString()}`);
       }
-      logger.info(`   Status: Ready for queries`);
+      logger.info(`   Status: Ready for local lookups (server API still used by default)`);
     } else {
-      logger.warn(`⚠️  FSANZ AU Database: NOT AVAILABLE`);
-      if (userCountry === 'AU') {
-        logger.warn(`   ⚠️  WARNING: AU user without FSANZ database - accuracy reduced`);
-      }
-      logger.info(`   Database will auto-download on next app launch`);
-      logger.info(`   Source: https://www.foodstandards.gov.au/science/monitoringnutrients/afcd/`);
+      logger.info(`ℹ️  FSANZ AU local database: NOT INSTALLED (server API will be used instead)`);
     }
     
-    // Check NZ database status
+    // Check NZ database status (legacy local DB - optional, informational only)
     const nzAvailable = await isFSANZDatabaseAvailable('NZ');
     if (nzAvailable) {
       const nzMetadata = await getFSANZDatabaseMetadata('NZ');
-      logger.info(`✅ FSANZ NZ Database: AVAILABLE`);
+      logger.info(`✅ FSANZ NZ local database: AVAILABLE (legacy enhancement)`);
       if (nzMetadata?.productCount) {
         logger.info(`   Products: ${nzMetadata.productCount.toLocaleString()}`);
       }
@@ -76,29 +71,24 @@ export async function initializeFSANZDatabases(): Promise<void> {
         const importDate = new Date(nzMetadata.importedAt);
         logger.info(`   Imported: ${importDate.toLocaleDateString()}`);
       }
-      logger.info(`   Status: Ready for queries`);
+      logger.info(`   Status: Ready for local lookups (server API still used by default)`);
     } else {
-      logger.warn(`⚠️  FSANZ NZ Database: NOT AVAILABLE`);
-      if (userCountry === 'NZ') {
-        logger.warn(`   ⚠️  WARNING: NZ user without FSANZ database - accuracy reduced`);
-      }
-      logger.info(`   Database will auto-download on next app launch`);
-      logger.info(`   Source: https://www.mpi.govt.nz/food-safety/food-monitoring-and-surveillance/food-composition-database/`);
+      logger.info(`ℹ️  FSANZ NZ local database: NOT INSTALLED (server API will be used instead)`);
     }
     
-    // Log country-specific status
+    // Log country-specific status (clarify that accuracy is provided by server API)
     if (userCountry === 'AU') {
-      if (auAvailable) {
-        logger.info(`✅ AU User: FSANZ database is AVAILABLE - optimal accuracy`);
-      } else {
-        logger.warn(`⚠️  AU User: FSANZ database is MISSING - using fallback databases`);
-      }
+      logger.info(
+        auAvailable
+          ? '✅ AU User: FSANZ data available via server API (local DB also installed)'
+          : '✅ AU User: FSANZ data available via server API (no local DB installed, which is acceptable)',
+      );
     } else if (userCountry === 'NZ') {
-      if (nzAvailable) {
-        logger.info(`✅ NZ User: FSANZ database is AVAILABLE - optimal accuracy`);
-      } else {
-        logger.warn(`⚠️  NZ User: FSANZ database is MISSING - using fallback databases`);
-      }
+      logger.info(
+        nzAvailable
+          ? '✅ NZ User: FSANZ data available via server API (local DB also installed)'
+          : '✅ NZ User: FSANZ data available via server API (no local DB installed, which is acceptable)',
+      );
     }
     
     // Mark as initialized
@@ -108,12 +98,8 @@ export async function initializeFSANZDatabases(): Promise<void> {
     logger.info('✅ FSANZ Database Check Complete');
     logger.info('───────────────────────────────────────────────────────────────');
     
-    // Note: App works perfectly without FSANZ databases
-    // They are an enhancement, not a requirement
-    if (!auAvailable && !nzAvailable) {
-      logger.info('ℹ️  App will use other databases (Open Food Facts, etc.)');
-      logger.info('   FSANZ databases will auto-download when available');
-    }
+    // Note: App works perfectly with the FSANZ server API alone.
+    // Local FSANZ databases are an optional enhancement, not a requirement.
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

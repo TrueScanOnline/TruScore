@@ -272,5 +272,7 @@ export interface ProductWithTrustScore extends Product {
     hasEcoScore?: boolean;
     hasOrigin?: boolean;
   };
+  /** Full TruScore analysis (pillar breakdown + data source trace). Set when score is calculated. */
+  _truscore_analysis?: import('./truscoreAnalysis').TruScoreAnalysis;
 }
 

@@ -1,7 +1,7 @@
 // TruScore calculation
 import { Product, ProductWithTrustScore, TrustScoreBreakdown } from '../types/product';
 import { extractManufacturingCountry, calculateEcoScore, formatCertifications } from '../services/openFoodFacts';
-import { calculateTruScore } from '../lib/truscoreEngine';
+import { calculateTruScore, buildTruScoreAnalysis } from '../lib/truscoreEngine';
 import { getCachedTruScore, cacheTruScore } from './truScoreCache';
 import { logger } from './logger';
 import { powershellLogger } from './powershellLogger';
@@ -233,6 +233,17 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
     }
   );
 
+  // Always build analysis from current product when we have pillar details, so fetch trace
+  // reflects this product (e.g. post-merge OFF+Spoonacular), not a cached analysis from
+  // an earlier product (e.g. progressive OFF+OBF).
+  const analysis =
+    truScoreResult.pillarDetails
+      ? buildTruScoreAnalysis(product, truScoreResult)
+      : (truScoreResult.analysis ?? null);
+  if (analysis) {
+    powershellLogger.truScoreAnalysis(analysis);
+  }
+
   return {
     ...product,
     trust_score: truScore,
@@ -243,6 +254,7 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
       hasEcoScore: truScoreResult.hasEcoScore,
       hasOrigin: truScoreResult.hasOrigin,
     },
+    _truscore_analysis: analysis ?? undefined,
   };
 }
 

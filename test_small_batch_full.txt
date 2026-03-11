@@ -1,0 +1,1209 @@
+﻿[TEST] Testing barcode: 894700010137 9310354982466 9300694335947
+[DEBUG] Barcode variants to try: 89470001013793103549824669300694335947 (primary: 89470001013793103549824669300694335947)
+[1m[2026-01-31T21:45:38.213Z][0m [34m[INFO][0m [1m[DATABASE_QUERY][0m Querying SQLite...
+  barcode:     89470001013793103549824669300694335947
+  database:     SQLite
+  status:     start
+  timestamp:     2026-01-31T21:45:38.213Z
+  responseTime:     0ms
+  dataSource:     SQLite
+  sqliteCountry:     US
+[INFO] [DATABASE_QUERY] Querying SQLite...
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "SQLite",
+  "status": "start",
+  "timestamp": "2026-01-31T21:45:38.213Z",
+  "responseTime": "0ms",
+  "dataSource": "SQLite",
+  "sqliteCountry": "US"
+}
+node.exe : [ERROR] Failed to initialize database connection: {
+At C:\Users\leigh\AppData\Roaming\npm\ts-node.ps1:24 char:5
++     & "node$exe"  "$basedir/node_modules/ts-node/dist/bin.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([ERROR] Failed ...e connection: {:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  message: 'SQLite.openDatabaseAsync is not a function',
+  stack: 'TypeError: SQLite.openDatabaseAsync is not a function\n' +
+    '    at initializeDatabaseConnection 
+(C:\\TrueScan-FoodScanner\\src\\services\\databaseConnectionManager.ts:63:23)\n' +
+    '    at initSQLiteDatabase (C:\\TrueScan-FoodScanner\\src\\services\\sqliteProductDatabase.ts:32:44)\n' +
+    '    at getDatabase (C:\\TrueScan-FoodScanner\\src\\services\\sqliteProductDatabase.ts:152:17)\n' +
+    '    at lookupProductInSQLite (C:\\TrueScan-FoodScanner\\src\\services\\sqliteProductDatabase.ts:179:28)\n' +
+    '    at lookupFromSQLite (C:\\TrueScan-FoodScanner\\src\\services\\productCacheService.ts:280:48)\n' +
+    '    at executeFetchProduct (C:\\TrueScan-FoodScanner\\src\\services\\productService.ts:243:47)\n' +
+    '    at fetchProduct (C:\\TrueScan-FoodScanner\\src\\services\\productService.ts:165:5)\n' +
+    '    at testBarcode (C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:472:39)\n' +
+    '    at C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:738:26\n' +
+    '    at Object.<anonymous> (C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:942:3)'
+}
+[ERROR] Error initializing SQLite database: {
+  message: 'SQLite.openDatabaseAsync is not a function',
+  stack: 'TypeError: SQLite.openDatabaseAsync is not a function\n' +
+    '    at initializeDatabaseConnection 
+(C:\\TrueScan-FoodScanner\\src\\services\\databaseConnectionManager.ts:63:23)\n' +
+    '    at initSQLiteDatabase (C:\\TrueScan-FoodScanner\\src\\services\\sqliteProductDatabase.ts:32:44)\n' +
+    '    at getDatabase (C:\\TrueScan-FoodScanner\\src\\services\\sqliteProductDatabase.ts:152:17)\n' +
+    '    at lookupProductInSQLite (C:\\TrueScan-FoodScanner\\src\\services\\sqliteProductDatabase.ts:179:28)\n' +
+    '    at lookupFromSQLite (C:\\TrueScan-FoodScanner\\src\\services\\productCacheService.ts:280:48)\n' +
+    '    at executeFetchProduct (C:\\TrueScan-FoodScanner\\src\\services\\productService.ts:243:47)\n' +
+    '    at fetchProduct (C:\\TrueScan-FoodScanner\\src\\services\\productService.ts:165:5)\n' +
+    '    at testBarcode (C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:472:39)\n' +
+    '    at C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:738:26\n' +
+    '    at Object.<anonymous> (C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:942:3)'
+}
+[1m[2026-01-31T21:45:38.232Z][0m [33m[WARN][0m [1m[DATABASE_QUERY][0m Γ¥î SQLite: Error or no product found
+  barcode:     89470001013793103549824669300694335947
+  database:     SQLite
+  status:     error
+  timestamp:     2026-01-31T21:45:38.232Z
+  responseTime:     19ms
+  found:     false
+  dataSource:     SQLite
+  sqliteCountry:     US
+[WARN] [DATABASE_QUERY] Γ¥î SQLite: Error or no product found
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "SQLite",
+  "status": "error",
+  "timestamp": "2026-01-31T21:45:38.232Z",
+  "responseTime": "19ms",
+  "found": false,
+  "dataSource": "SQLite",
+  "sqliteCountry": "US"
+}
+[1m[2026-01-31T21:45:38.233Z][0m [34m[INFO][0m [1m[DATABASE_QUERY][0m Querying Cache (AsyncStorage)...
+  barcode:     89470001013793103549824669300694335947
+  database:     Cache (AsyncStorage)
+  status:     start
+  timestamp:     2026-01-31T21:45:38.233Z
+  responseTime:     0ms
+  dataSource:     Cache
+  isPremium:     false
+[INFO] [DATABASE_QUERY] Querying Cache (AsyncStorage)...
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Cache (AsyncStorage)",
+  "status": "start",
+  "timestamp": "2026-01-31T21:45:38.233Z",
+  "responseTime": "0ms",
+  "dataSource": "Cache",
+  "isPremium": false
+}
+[1m[2026-01-31T21:45:38.233Z][0m [33m[WARN][0m [1m[DATABASE_QUERY][0m Γ¥î Cache (AsyncStorage): Error or no product found
+  barcode:     89470001013793103549824669300694335947
+  database:     Cache (AsyncStorage)
+  status:     error
+  timestamp:     2026-01-31T21:45:38.233Z
+  responseTime:     0ms
+  found:     false
+  dataSource:     Cache
+  isPremium:     false
+[WARN] [DATABASE_QUERY] Γ¥î Cache (AsyncStorage): Error or no product found
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Cache (AsyncStorage)",
+  "status": "error",
+  "timestamp": "2026-01-31T21:45:38.233Z",
+  "responseTime": "0ms",
+  "found": false,
+  "dataSource": "Cache",
+  "isPremium": false
+}
+[1m[2026-01-31T21:45:38.234Z][0m [34m[INFO][0m [1m[USER_CONTRIBUTION][0m User B retrieving user-contributed data
+  barcode:     89470001013793103549824669300694335947
+  step:     RETRIEVAL_START
+  timestamp:     2026-01-31T21:45:38.234Z
+[INFO] [USER_CONTRIBUTION] User B retrieving user-contributed data
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "step": "RETRIEVAL_START",
+  "timestamp": "2026-01-31T21:45:38.234Z"
+}
+[1m[2026-01-31T21:45:38.234Z][0m [34m[INFO][0m [1m[USER_CONTRIBUTION][0m Checking local manual products
+  barcode:     89470001013793103549824669300694335947
+  step:     LOCAL_CHECK
+[INFO] [USER_CONTRIBUTION] Checking local manual products
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "step": "LOCAL_CHECK"
+}
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ≡ƒöì PRODUCT SCAN: 894700010137 9310354982466 9300694335947
+[INFO] ≡ƒöì PRODUCT SCAN: 894700010137 9310354982466 9300694335947
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ≡ƒôï Barcode Variants: 89470001013793103549824669300694335947
+[INFO] ≡ƒôï Barcode Variants: 89470001013793103549824669300694335947
+[INFO] ≡ƒîì User Country: US
+[INFO] ≡ƒîì User Country: US
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ≡ƒÜÇ OPTIMIZED PARALLEL QUERY STRATEGY
+[INFO] ≡ƒÜÇ OPTIMIZED PARALLEL QUERY STRATEGY
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[DEBUG] Barcode Spider API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[DEBUG] EAN-Search API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[DEBUG] Barcode Lookup API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[INFO] ≡ƒôè Starting barcode-based database queries (parallel, no name required)...
+[INFO] ≡ƒôè Starting barcode-based database queries (parallel, no name required)...
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  TRUSCORE DATABASE QUERY: 89470001013793103549824669300694335947
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ≡ƒöì TRUSCORE DATABASE QUERY: 89470001013793103549824669300694335947 (US)
+[INFO] ≡ƒöì TRUSCORE DATABASE QUERY: 89470001013793103549824669300694335947 (US)
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  DATABASE QUERY STRATEGY: 89470001013793103549824669300694335947
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_STRATEGY][0m Query Strategy: Parallel Query Strategy - All databases queried simultaneously
+  barcode:     89470001013793103549824669300694335947
+  strategy:     Parallel Query Strategy - All databases queried simultaneously
+  userCountry:     US
+  databaseCount:     14
+  databases:     [0]:       Open Food Facts
+    [1]:       Open Beauty Facts
+    [2]:       Open Pet Food Facts
+    [3]:       Open Products Facts
+    [4]:       SQLite
+    [5]:       Cache
+    [6]:       GS1
+    [7]:       Spoonacular
+    [8]:       Barcode Lookup
+    [9]:       USDA
+    [10]:       Health Canada
+    [11]:       UK FSA
+    [12]:       EFSA
+    [13]:       FSANZ
+  queryOrder:     [0]:       1
+    [1]:       2
+    [2]:       3
+    [3]:       4
+    [4]:       5
+    [5]:       6
+    [6]:       7
+    [7]:       8
+    [8]:       9
+    [9]:       10
+    [10]:       11
+    [11]:       12
+    [12]:       13
+    [13]:       14
+[INFO] [QUERY_STRATEGY] Query Strategy: Parallel Query Strategy - All databases queried simultaneously
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "strategy": "Parallel Query Strategy - All databases queried simultaneously",
+  "userCountry": "US",
+  "databaseCount": 14,
+  "databases": [
+    "Open Food Facts",
+    "Open Beauty Facts",
+    "Open Pet Food Facts",
+    "Open Products Facts",
+    "SQLite",
+    "Cache",
+    "GS1",
+    "Spoonacular",
+    "Barcode Lookup",
+    "USDA",
+    "Health Canada",
+    "UK FSA",
+    "EFSA",
+    "FSANZ"
+  ],
+  "queryOrder": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+  ]
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_PHASES][0m Query Phases:
+  barcode:     89470001013793103549824669300694335947
+  phase1:     Fast Sources (OFF, Cache, SQLite) - Target: <2s
+  phase2:     Enhancement Sources (GS1, Spoonacular, etc.) - Background
+  phase3:     Fallback Sources (if needed)
+  strategy:     All queries run in parallel - no blocking timeouts
+[INFO] [QUERY_PHASES] Query Phases:
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "phase1": "Fast Sources (OFF, Cache, SQLite) - Target: <2s",
+  "phase2": "Enhancement Sources (GS1, Spoonacular, etc.) - Background",
+  "phase3": "Fallback Sources (if needed)",
+  "strategy": "All queries run in parallel - no blocking timeouts"
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 1. Open Food Facts
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Food Facts
+  order:     1
+  position:     1
+[INFO] [QUERY_ORDER] 1. Open Food Facts
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Food Facts",
+  "order": 1,
+  "position": 1
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 2. Open Beauty Facts
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Beauty Facts
+  order:     2
+  position:     2
+[INFO] [QUERY_ORDER] 2. Open Beauty Facts
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Beauty Facts",
+  "order": 2,
+  "position": 2
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 3. Open Pet Food Facts
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Pet Food Facts
+  order:     3
+  position:     3
+[INFO] [QUERY_ORDER] 3. Open Pet Food Facts
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Pet Food Facts",
+  "order": 3,
+  "position": 3
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 4. Open Products Facts
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Products Facts
+  order:     4
+  position:     4
+[INFO] [QUERY_ORDER] 4. Open Products Facts
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Products Facts",
+  "order": 4,
+  "position": 4
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 5. SQLite
+  barcode:     89470001013793103549824669300694335947
+  database:     SQLite
+  order:     5
+  position:     5
+[INFO] [QUERY_ORDER] 5. SQLite
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "SQLite",
+  "order": 5,
+  "position": 5
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 6. Cache
+  barcode:     89470001013793103549824669300694335947
+  database:     Cache
+  order:     6
+  position:     6
+[INFO] [QUERY_ORDER] 6. Cache
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Cache",
+  "order": 6,
+  "position": 6
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 7. GS1
+  barcode:     89470001013793103549824669300694335947
+  database:     GS1
+  order:     7
+  position:     7
+[INFO] [QUERY_ORDER] 7. GS1
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "GS1",
+  "order": 7,
+  "position": 7
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 8. Spoonacular
+  barcode:     89470001013793103549824669300694335947
+  database:     Spoonacular
+  order:     8
+  position:     8
+[INFO] [QUERY_ORDER] 8. Spoonacular
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Spoonacular",
+  "order": 8,
+  "position": 8
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 9. Barcode Lookup
+  barcode:     89470001013793103549824669300694335947
+  database:     Barcode Lookup
+  order:     9
+  position:     9
+[INFO] [QUERY_ORDER] 9. Barcode Lookup
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Barcode Lookup",
+  "order": 9,
+  "position": 9
+}
+[1m[2026-01-31T21:45:38.291Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 10. USDA
+  barcode:     89470001013793103549824669300694335947
+  database:     USDA
+  order:     10
+  position:     10
+[INFO] [QUERY_ORDER] 10. USDA
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "USDA",
+  "order": 10,
+  "position": 10
+}
+[1m[2026-01-31T21:45:38.292Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 11. Health Canada
+  barcode:     89470001013793103549824669300694335947
+  database:     Health Canada
+  order:     11
+  position:     11
+[INFO] [QUERY_ORDER] 11. Health Canada
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Health Canada",
+  "order": 11,
+  "position": 11
+}
+[1m[2026-01-31T21:45:38.292Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 12. UK FSA
+  barcode:     89470001013793103549824669300694335947
+  database:     UK FSA
+  order:     12
+  position:     12
+[INFO] [QUERY_ORDER] 12. UK FSA
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "UK FSA",
+  "order": 12,
+  "position": 12
+}
+[1m[2026-01-31T21:45:38.292Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 13. EFSA
+  barcode:     89470001013793103549824669300694335947
+  database:     EFSA
+  order:     13
+  position:     13
+[INFO] [QUERY_ORDER] 13. EFSA
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "EFSA",
+  "order": 13,
+  "position": 13
+}
+[1m[2026-01-31T21:45:38.292Z][0m [34m[INFO][0m [1m[QUERY_ORDER][0m 14. FSANZ
+  barcode:     89470001013793103549824669300694335947
+  database:     FSANZ
+  order:     14
+  position:     14
+[INFO] [QUERY_ORDER] 14. FSANZ
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "FSANZ",
+  "order": 14,
+  "position": 14
+}
+[INFO] ≡ƒÜÇ OPTIMAL ALGORITHM: No artificial timeout - all queries run to completion
+[INFO] ≡ƒÜÇ OPTIMAL ALGORITHM: No artificial timeout - all queries run to completion
+[INFO]    Individual queries have 30s timeout, but we don't block on slow ones
+[INFO]    Individual queries have 30s timeout, but we don't block on slow ones
+[INFO]    Goal: Maximum success rate (95-98%), minimum time to display (0.5-2s)
+[INFO]    Goal: Maximum success rate (95-98%), minimum time to display (0.5-2s)
+[INFO] ≡ƒÜÇ OPTIMAL ALGORITHM: Querying ALL databases in parallel (no sequential phases)
+[INFO] ≡ƒÜÇ OPTIMAL ALGORITHM: Querying ALL databases in parallel (no sequential phases)
+[INFO]    Strategy: Fire all queries simultaneously, merge results as they arrive
+[INFO]    Strategy: Fire all queries simultaneously, merge results as they arrive
+[INFO]    Goal: Maximum success rate (95-98%), minimum time to display (0.5-2s), maximum information
+[INFO]    Goal: Maximum success rate (95-98%), minimum time to display (0.5-2s), maximum information
+[1m[2026-01-31T21:45:38.292Z][0m [34m[INFO][0m [1m[QUERY_PHASE][0m ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  barcode:     89470001013793103549824669300694335947
+  phase:     PHASE 1
+  description:     Fast Sources (OFF, Cache, SQLite)
+  targetTime:     <2s
+[INFO] [QUERY_PHASE] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "phase": "PHASE 1",
+  "description": "Fast Sources (OFF, Cache, SQLite)",
+  "targetTime": "<2s"
+}
+[1m[2026-01-31T21:45:38.293Z][0m [34m[INFO][0m [1m[QUERY_PHASE_START][0m ≡ƒôè PHASE 1: Fast Sources (OFF, Cache, SQLite)
+  barcode:     89470001013793103549824669300694335947
+  phase:     1
+  description:     Fast Sources (OFF, Cache, SQLite)
+  targetTime:     <2s
+[INFO] [QUERY_PHASE_START] ≡ƒôè PHASE 1: Fast Sources (OFF, Cache, SQLite)
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "phase": 1,
+  "description": "Fast Sources (OFF, Cache, SQLite)",
+  "targetTime": "<2s"
+}
+[DEBUG] Trying 1 barcode variants for OFF query: 89470001013793103549824669300694335947
+[1m[2026-01-31T21:45:38.294Z][0m [34m[INFO][0m [1m[DATABASE_QUERY][0m Querying Open Food Facts...
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Food Facts
+  status:     start
+  timestamp:     2026-01-31T21:45:38.294Z
+  responseTime:     0ms
+  dataSource:     OFF
+[INFO] [DATABASE_QUERY] Querying Open Food Facts...
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Food Facts",
+  "status": "start",
+  "timestamp": "2026-01-31T21:45:38.294Z",
+  "responseTime": "0ms",
+  "dataSource": "OFF"
+}
+[1m[2026-01-31T21:45:38.295Z][0m [34m[INFO][0m [1m[DATABASE_QUERY][0m Querying Open Beauty Facts...
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Beauty Facts
+  status:     start
+  timestamp:     2026-01-31T21:45:38.295Z
+  responseTime:     1ms
+  dataSource:     OFF
+[INFO] [DATABASE_QUERY] Querying Open Beauty Facts...
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Beauty Facts",
+  "status": "start",
+  "timestamp": "2026-01-31T21:45:38.295Z",
+  "responseTime": "1ms",
+  "dataSource": "OFF"
+}
+[1m[2026-01-31T21:45:38.295Z][0m [34m[INFO][0m [1m[DATABASE_QUERY][0m Querying Open Pet Food Facts...
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Pet Food Facts
+  status:     start
+  timestamp:     2026-01-31T21:45:38.295Z
+  responseTime:     1ms
+  dataSource:     OFF
+[INFO] [DATABASE_QUERY] Querying Open Pet Food Facts...
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Pet Food Facts",
+  "status": "start",
+  "timestamp": "2026-01-31T21:45:38.295Z",
+  "responseTime": "1ms",
+  "dataSource": "OFF"
+}
+[1m[2026-01-31T21:45:38.295Z][0m [34m[INFO][0m [1m[DATABASE_QUERY][0m Querying Open Products Facts...
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Products Facts
+  status:     start
+  timestamp:     2026-01-31T21:45:38.295Z
+  responseTime:     1ms
+  dataSource:     OFF
+[INFO] [DATABASE_QUERY] Querying Open Products Facts...
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Products Facts",
+  "status": "start",
+  "timestamp": "2026-01-31T21:45:38.295Z",
+  "responseTime": "1ms",
+  "dataSource": "OFF"
+}
+[1m[2026-01-31T21:45:38.295Z][0m [34m[INFO][0m [1m[QUERY_PHASE][0m ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  barcode:     89470001013793103549824669300694335947
+  phase:     PHASE 2
+  description:     Enhancement Sources (GS1, Spoonacular, etc.)
+  targetTime:     Background
+[INFO] [QUERY_PHASE] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "phase": "PHASE 2",
+  "description": "Enhancement Sources (GS1, Spoonacular, etc.)",
+  "targetTime": "Background"
+}
+[1m[2026-01-31T21:45:38.295Z][0m [34m[INFO][0m [1m[QUERY_PHASE_START][0m ≡ƒôè PHASE 2: Enhancement Sources (GS1, Spoonacular, etc.)
+  barcode:     89470001013793103549824669300694335947
+  phase:     2
+  description:     Enhancement Sources (GS1, Spoonacular, etc.)
+  targetTime:     Background
+[INFO] [QUERY_PHASE_START] ≡ƒôè PHASE 2: Enhancement Sources (GS1, Spoonacular, etc.)
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "phase": 2,
+  "description": "Enhancement Sources (GS1, Spoonacular, etc.)",
+  "targetTime": "Background"
+}
+[DEBUG] [Smart DB Selection] Skipping FSANZ query for non-AU/NZ user (US)
+USDA API key not configured, skipping USDA lookup
+[1m[2026-01-31T21:45:38.295Z][0m [34m[INFO][0m [1m[DATABASE_QUERY][0m Querying USDA...
+  barcode:     89470001013793103549824669300694335947
+  database:     USDA
+  status:     start
+  timestamp:     2026-01-31T21:45:38.295Z
+  responseTime:     0ms
+  dataSource:     API
+[INFO] [DATABASE_QUERY] Querying USDA...
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "USDA",
+  "status": "start",
+  "timestamp": "2026-01-31T21:45:38.295Z",
+  "responseTime": "0ms",
+  "dataSource": "API"
+}
+[1m[2026-01-31T21:45:38.296Z][0m [34m[INFO][0m [1m[DATABASE_SKIPPED][0m ΓÅ¡∩╕Å  Health Canada: Skipped - User country US is not CA
+  barcode:     89470001013793103549824669300694335947
+  database:     Health Canada
+  reason:     User country US is not CA
+[INFO] [DATABASE_SKIPPED] ΓÅ¡∩╕Å  Health Canada: Skipped - User country US is not CA
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Health Canada",
+  "reason": "User country US is not CA"
+}
+[DEBUG] [Smart DB Selection] Skipping Health Canada query for non-CA user (US)
+[1m[2026-01-31T21:45:38.296Z][0m [34m[INFO][0m [1m[DATABASE_SKIPPED][0m ΓÅ¡∩╕Å  UK FSA: Skipped - User country US is not GB
+  barcode:     89470001013793103549824669300694335947
+  database:     UK FSA
+  reason:     User country US is not GB
+[INFO] [DATABASE_SKIPPED] ΓÅ¡∩╕Å  UK FSA: Skipped - User country US is not GB
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "UK FSA",
+  "reason": "User country US is not GB"
+}
+[DEBUG] [Smart DB Selection] Skipping UK FSA query for non-GB user (US)
+[1m[2026-01-31T21:45:38.296Z][0m [34m[INFO][0m [1m[DATABASE_SKIPPED][0m ΓÅ¡∩╕Å  EFSA: Skipped - User country US is not EU
+  barcode:     89470001013793103549824669300694335947
+  database:     EFSA
+  reason:     User country US is not EU
+[INFO] [DATABASE_SKIPPED] ΓÅ¡∩╕Å  EFSA: Skipped - User country US is not EU
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "EFSA",
+  "reason": "User country US is not EU"
+}
+[DEBUG] [Smart DB Selection] Skipping EFSA query for non-EU user (US)
+[DEBUG] [MVP MODE] Retailer APIs disabled - will be re-enabled post-MVP for pricing modal
+[1m[2026-01-31T21:45:38.296Z][0m [34m[INFO][0m [1m[DATABASE_QUERY][0m Querying GS1...
+  barcode:     89470001013793103549824669300694335947
+  database:     GS1
+  status:     start
+  timestamp:     2026-01-31T21:45:38.296Z
+  responseTime:     0ms
+  dataSource:     API
+[INFO] [DATABASE_QUERY] Querying GS1...
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "GS1",
+  "status": "start",
+  "timestamp": "2026-01-31T21:45:38.296Z",
+  "responseTime": "0ms",
+  "dataSource": "API"
+}
+[DEBUG] Edamam API credentials not configured, skipping lookup for 89470001013793103549824669300694335947
+[DEBUG] Nutritionix API credentials not configured, skipping lookup for 89470001013793103549824669300694335947
+[DEBUG] Spoonacular API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[1m[2026-01-31T21:45:38.297Z][0m [34m[INFO][0m [1m[QUERY_PHASE][0m ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  barcode:     89470001013793103549824669300694335947
+  phase:     PHASE 3
+  description:     Fallback Sources (if needed)
+  targetTime:     2-10s
+[INFO] [QUERY_PHASE] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "phase": "PHASE 3",
+  "description": "Fallback Sources (if needed)",
+  "targetTime": "2-10s"
+}
+[1m[2026-01-31T21:45:38.297Z][0m [34m[INFO][0m [1m[QUERY_PHASE_START][0m ≡ƒôè PHASE 3: Fallback Sources (if needed)
+  barcode:     89470001013793103549824669300694335947
+  phase:     3
+  description:     Fallback Sources (if needed)
+  targetTime:     2-10s
+[INFO] [QUERY_PHASE_START] ≡ƒôè PHASE 3: Fallback Sources (if needed)
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "phase": 3,
+  "description": "Fallback Sources (if needed)",
+  "targetTime": "2-10s"
+}
+[INFO]    Fired 5 query groups in parallel
+[INFO]    Fired 5 query groups in parallel
+[1m[2026-01-31T21:45:38.298Z][0m [33m[WARN][0m [1m[DATABASE_QUERY][0m Γ¥î USDA: Error or no product found
+  barcode:     89470001013793103549824669300694335947
+  database:     USDA
+  status:     error
+  timestamp:     2026-01-31T21:45:38.298Z
+  responseTime:     3ms
+  found:     false
+  dataSource:     API
+[WARN] [DATABASE_QUERY] Γ¥î USDA: Error or no product found
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "USDA",
+  "status": "error",
+  "timestamp": "2026-01-31T21:45:38.298Z",
+  "responseTime": "3ms",
+  "found": false,
+  "dataSource": "API"
+}
+[BackendConfig] Using backend URL: https://truscoreapi.vercel.app
+[1m[2026-01-31T21:45:38.299Z][0m [34m[INFO][0m [1m[USER_CONTRIBUTION][0m Checking backend for user-contributed product
+  barcode:     89470001013793103549824669300694335947
+  step:     BACKEND_CHECK
+  endpoint:     https://truscoreapi.vercel.app/api/manual-products
+[INFO] [USER_CONTRIBUTION] Checking backend for user-contributed product
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "step": "BACKEND_CHECK",
+  "endpoint": "https://truscoreapi.vercel.app/api/manual-products"
+}
+[DEBUG] EAN-Search API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[DEBUG] Barcode Spider API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[DEBUG] UPC Database API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[DEBUG] Barcode Lookup API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[DEBUG] EANData API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[INFO] ΓÜá∩╕Å  No product name discovered early - barcode queries continue in parallel
+[INFO] ΓÜá∩╕Å  No product name discovered early - barcode queries continue in parallel
+[DEBUG] GS1 query timeout (2s) - continuing without GS1
+[1m[2026-01-31T21:45:40.301Z][0m [33m[WARN][0m [1m[DATABASE_QUERY][0m Γ¥î GS1: Error or no product found
+  barcode:     89470001013793103549824669300694335947
+  database:     GS1
+  status:     error
+  timestamp:     2026-01-31T21:45:40.301Z
+  responseTime:     2005ms
+  found:     false
+  dataSource:     API
+[WARN] [DATABASE_QUERY] Γ¥î GS1: Error or no product found
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "GS1",
+  "status": "error",
+  "timestamp": "2026-01-31T21:45:40.301Z",
+  "responseTime": "2005ms",
+  "found": false,
+  "dataSource": "API"
+}
+[DEBUG] Product not found in any OFF instance with any variant: 89470001013793103549824669300694335947
+[1m[2026-01-31T21:45:41.644Z][0m [33m[WARN][0m [1m[DATABASE_QUERY][0m Γ¥î Open Food Facts: Error or no product found
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Food Facts
+  status:     error
+  timestamp:     2026-01-31T21:45:41.643Z
+  responseTime:     3349ms
+  found:     false
+  dataSource:     OFF
+[WARN] [DATABASE_QUERY] Γ¥î Open Food Facts: Error or no product found
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Food Facts",
+  "status": "error",
+  "timestamp": "2026-01-31T21:45:41.643Z",
+  "responseTime": "3349ms",
+  "found": false,
+  "dataSource": "OFF"
+}
+[DEBUG] [Datakick] API error for 89470001013793103549824669300694335947: fetch failed
+[DEBUG] Buycott API error for 89470001013793103549824669300694335947: fetch failed
+[DEBUG] Barcode Monster API error for 89470001013793103549824669300694335947: fetch failed
+[OBF] Product not found in beauty database (expected)
+[1m[2026-01-31T21:45:42.137Z][0m [33m[WARN][0m [1m[DATABASE_QUERY][0m Γ¥î Open Beauty Facts: Error or no product found
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Beauty Facts
+  status:     error
+  timestamp:     2026-01-31T21:45:42.137Z
+  responseTime:     3843ms
+  found:     false
+  dataSource:     OFF
+[WARN] [DATABASE_QUERY] Γ¥î Open Beauty Facts: Error or no product found
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Beauty Facts",
+  "status": "error",
+  "timestamp": "2026-01-31T21:45:42.137Z",
+  "responseTime": "3843ms",
+  "found": false,
+  "dataSource": "OFF"
+}
+[OPFF] Product not found in pet food database (expected)
+[1m[2026-01-31T21:45:42.298Z][0m [33m[WARN][0m [1m[DATABASE_QUERY][0m Γ¥î Open Pet Food Facts: Error or no product found
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Pet Food Facts
+  status:     error
+  timestamp:     2026-01-31T21:45:42.298Z
+  responseTime:     4004ms
+  found:     false
+  dataSource:     OFF
+[WARN] [DATABASE_QUERY] Γ¥î Open Pet Food Facts: Error or no product found
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Pet Food Facts",
+  "status": "error",
+  "timestamp": "2026-01-31T21:45:42.298Z",
+  "responseTime": "4004ms",
+  "found": false,
+  "dataSource": "OFF"
+}
+[DEBUG] Error fetching from OpenEAN: {}
+[DEBUG] Error fetching from Product Open Data: {}
+[OPF] Product not found in general products database (expected)
+[1m[2026-01-31T21:45:42.838Z][0m [33m[WARN][0m [1m[DATABASE_QUERY][0m Γ¥î Open Products Facts: Error or no product found
+  barcode:     89470001013793103549824669300694335947
+  database:     Open Products Facts
+  status:     error
+  timestamp:     2026-01-31T21:45:42.838Z
+  responseTime:     4544ms
+  found:     false
+  dataSource:     OFF
+[WARN] [DATABASE_QUERY] Γ¥î Open Products Facts: Error or no product found
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "database": "Open Products Facts",
+  "status": "error",
+  "timestamp": "2026-01-31T21:45:42.838Z",
+  "responseTime": "4544ms",
+  "found": false,
+  "dataSource": "OFF"
+}
+[1m[2026-01-31T21:45:43.319Z][0m [33m[WARN][0m [1m[USER_CONTRIBUTION][0m Backend request timeout (5000ms)
+  barcode:     89470001013793103549824669300694335947
+  responseTime:     5020ms
+  error:     Request timeout
+[WARN] [USER_CONTRIBUTION] Backend request timeout (5000ms)
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "responseTime": "5020ms",
+  "error": "Request timeout"
+}
+[DEBUG] [UserContributedProducts] Backend request timeout for 89470001013793103549824669300694335947 after 5020ms
+[1m[2026-01-31T21:45:43.319Z][0m [34m[INFO][0m [1m[USER_CONTRIBUTION][0m No user-contributed product found
+  barcode:     89470001013793103549824669300694335947
+  checkedSources:     [0]:       LOCAL
+    [1]:       BACKEND
+  result:     NOT_FOUND
+[INFO] [USER_CONTRIBUTION] No user-contributed product found
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "checkedSources": [
+    "LOCAL",
+    "BACKEND"
+  ],
+  "result": "NOT_FOUND"
+}
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] Γ£à ALL DATABASES QUERIED IN PARALLEL: 0 products found in 5139ms
+[INFO] Γ£à ALL DATABASES QUERIED IN PARALLEL: 0 products found in 5139ms
+[INFO]    First result likely arrived in 0.5-2s (Tier 1), all results in 5139ms
+[INFO]    First result likely arrived in 0.5-2s (Tier 1), all results in 5139ms
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[1m[2026-01-31T21:45:43.433Z][0m [32m[SUCCESS][0m [1m[QUERY_COMPLETE][0m All databases queried in parallel: 0 products in 5139ms
+  barcode:     89470001013793103549824669300694335947
+  userCountry:     US
+  totalProducts:     0
+  queryTime:     5139
+  firstResultTime:     null
+  sources: 
+[SUCCESS] [QUERY_COMPLETE] All databases queried in parallel: 0 products in 5139ms
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "userCountry": "US",
+  "totalProducts": 0,
+  "queryTime": 5139,
+  "firstResultTime": null,
+  "sources": []
+}
+[INFO] Γ¥î No products found in optimized database query
+[INFO] Γ¥î No products found in optimized database query
+[1m[2026-01-31T21:45:43.434Z][0m [33m[WARN][0m [1m[NO_PRODUCTS][0m No products found in database query
+  barcode:     894700010137 9310354982466 9300694335947
+[WARN] [NO_PRODUCTS] No products found in database query
+{
+  "barcode": "894700010137 9310354982466 9300694335947"
+}
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ≡ƒôè TIER 4: Web Search (Fallback - Only if Tiers 1-3 found nothing)
+[INFO] ≡ƒôè TIER 4: Web Search (Fallback - Only if Tiers 1-3 found nothing)
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ≡ƒöì No product found in Tiers 1-3, using Web Search as fallback...
+[INFO] ≡ƒöì No product found in Tiers 1-3, using Web Search as fallback...
+[DEBUG] EAN-Search API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[DEBUG] Barcode Lookup API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[WARN] Web search timeout after 15 seconds, skipping...
+[DEBUG] Trying web search with original barcode: 894700010137 9310354982466 9300694335947
+[DEBUG] EAN-Search API key not configured, skipping lookup for 894700010137 9310354982466 9300694335947
+[DEBUG] Barcode Lookup API key not configured, skipping lookup for 894700010137 9310354982466 9300694335947
+[WebSearch] Found product name via fast strategy: NON-FAT PLAIN GREEK YOGURT, PLAIN for barcode: 894700010137 9310354982466 9300694335947
+[WARN] Query timeout for 894700010137 9310354982466 9300694335947 after 30000ms
+
+========================================
+TEST RESULTS (JSON)
+========================================
+
+{
+  "testRun": {
+    "timestamp": "2026-01-31T21:45:38.208Z",
+    "barcodesTested": 1,
+    "totalTime": 30040,
+    "totalTimeFormatted": "30040ms"
+  },
+  "results": [
+    {
+      "barcode": "894700010137 9310354982466 9300694335947",
+      "timestamp": "2026-01-31T21:45:38.210Z",
+      "performance": {
+        "fetchTime": 30039,
+        "fetchTimeFormatted": "30039ms",
+        "truScoreTime": 0,
+        "truScoreTimeFormatted": "",
+        "totalTime": 0,
+        "totalTimeFormatted": ""
+      },
+      "product": null,
+      "truScore": null,
+      "dataSources": {
+        "primarySource": null,
+        "allSources": [],
+        "databasesQueried": [],
+        "nutrition": {
+          "source": null,
+          "sources": [],
+          "fieldsCount": 0,
+          "hasEnergy": false,
+          "hasMacros": false
+        },
+        "ingredients": {
+          "source": null,
+          "sources": [],
+          "length": 0,
+          "hasHiddenTerms": false
+        },
+        "allergensAdditives": {
+          "allergensSource": null,
+          "allergensSources": [],
+          "allergensCount": 0,
+          "additivesSource": null,
+          "additivesSources": [],
+          "additivesCount": 0,
+          "allergensTags": [],
+          "additivesTags": []
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [],
+          "originsTags": [],
+          "manufacturingPlaces": [],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Product not found"
+        }
+      ]
+    }
+  ]
+}
+
+========================================
+TEST SUMMARY
+========================================
+
+
+≡ƒôª Barcode: 894700010137 9310354982466 9300694335947
+   Product: Not found
+   Source: N/A
+
+ΓÅ▒∩╕Å  Performance:
+   Fetch Time: 30039ms
+   TruScore Time: 
+   Total Time: 
+
+≡ƒôï Data Sources:
+   Primary Source: N/A
+   All Sources: N/A
+   Databases Queried: N/A
+
+   Ingredients:
+      Source(s): N/A
+      Length: 0 characters
+      Has Hidden Terms: No
+
+   Nutrition:
+      Source(s): N/A
+      Fields: 0
+      Has Energy: No
+      Has Macros: No
+
+   Allergens & Additives:
+      Allergens Source(s): N/A
+      Allergens Count: 0
+      Allergens Tags: None
+      Additives Source(s): N/A
+      Additives Count: 0
+      Additives Tags: 
+
+   Country of Origin:
+      Source(s): N/A
+      Origins: N/A
+      Origins Tags: None
+      Manufacturing Places: N/A
+      Manufacturing Places Tags: None
+
+   Score Highlights:
+      Source: truScore_engine
+      Insights Count: 0
+
+Γ¥î Errors: 1
+   - Product not found
+
+
+ΓÅ▒∩╕Å  Total Test Time: 30040ms
+≡ƒôè Barcodes Tested: 1
+
+[WARN] ΓÜá∩╕Å Web Search also returned no product for barcode: 894700010137 9310354982466 9300694335947
+[WARN] No product found in any database for 894700010137 9310354982466 9300694335947, creating minimal product 
+(Yuka-compatible behavior)
+[DEBUG] EAN-Search API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[DEBUG] Barcode Lookup API key not configured, skipping lookup for 89470001013793103549824669300694335947
+[WebScraping] Found ingredients from web search
+[WebScraping] Found ingredients from web search
+[WebScraping] Found ingredients from web search
+[WebScraping] Found ingredients from web search
+[WebScraping] Found data from https://www.amazon.com/s?k=89470001013793103549824669300694335947
+[WebScraping] Found ingredients from web search
+[WebScraping] Found data from https://www.amazon.com/s?k=89470001013793103549824669300694335947
+[WebScraping] Found ingredients from web search
+[WebScraping] Found ingredients from web search
+[WebScraping] Found ingredients from web search
+[WebScraping] Found data from https://www.amazon.com/s?k=UPC%2089470001013793103549824669300694335947
+[WebScraping] Found ingredients from web search
+[WebScraping] Found data from https://www.amazon.com/s?k=89470001013793103549824669300694335947
+[WebScraping] Found data from https://www.amazon.com/s?k=barcode%2089470001013793103549824669300694335947
+[WebScraping] Found data from https://www.amazon.com/s?k=89470001013793103549824669300694335947
+[WebScraping] Found data from https://www.amazon.com/s?k=product%2089470001013793103549824669300694335947
+[WebScraping] Found ingredients from web search
+[WebScraping] Found data from https://www.amazon.com/s?k=EAN%2089470001013793103549824669300694335947
+[WebScraping] Found ingredients from web search
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] Γ£¿ ENHANCEMENT LAYER: Applying MVP Enhancements
+[INFO] Γ£¿ ENHANCEMENT LAYER: Applying MVP Enhancements
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ≡ƒôè Before Enhancement: [PRE] | Total: 19% | Nutrition: 0/25 | Ingredients: 15/25 | Certifications: 0/15 | Sustainability: 4/15 | Brand: 0/10 | Images: 0/10
+[INFO] ≡ƒôè Before Enhancement: [PRE] | Total: 19% | Nutrition: 0/25 | Ingredients: 15/25 | Certifications: 0/15 | Sustainability: 4/15 | Brand: 0/10 | Images: 0/10
+[DEBUG] Applying MVP enhancements for product: 89470001013793103549824669300694335947
+[DEBUG] MVP enhancements applied: 89470001013793103549824669300694335947 { ewg: false, wwf: false, leapingBunny: false }
+[INFO] ≡ƒôè After Enhancement: [POST] | Total: 19% | Nutrition: 0/25 | Ingredients: 15/25 | Certifications: 0/15 | Sustainability: 4/15 | Brand: 0/10 | Images: 0/10
+[INFO] ≡ƒôè After Enhancement: [POST] | Total: 19% | Nutrition: 0/25 | Ingredients: 15/25 | Certifications: 0/15 | Sustainability: 4/15 | Brand: 0/10 | Images: 0/10
+[INFO] Γ£à MVP enhancements applied successfully
+[INFO] Γ£à MVP enhancements applied successfully
+[DEBUG] EAN-Search API token not configured, skipping brand lookup
+[DEBUG] Brand enrichment applied successfully
+[DEBUG] [NOVA Assessment] Assigned NOVA 1 (high confidence): No additives, short ingredients list (Γëñ5), natural ingredients only
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ≡ƒôè DATABASE QUERY SUMMARY
+[INFO] ≡ƒôè DATABASE QUERY SUMMARY
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ≡ƒôª Final Product: Unknown
+[INFO] ≡ƒôª Final Product: Unknown
+[INFO] ≡ƒÅ╖∩╕Å  Sources: web_search
+[INFO] ≡ƒÅ╖∩╕Å  Sources: web_search
+[INFO] ≡ƒôè Data Completeness: [FINAL] | Total: 27% | Nutrition: 0/25 | Ingredients: 15/25 | Certifications: 0/15 | Sustainability: 12/15 | Brand: 0/10 | Images: 0/10
+[INFO] ≡ƒôè Data Completeness: [FINAL] | Total: 27% | Nutrition: 0/25 | Ingredients: 15/25 | Certifications: 0/15 | Sustainability: 12/15 | Brand: 0/10 | Images: 0/10
+[INFO] ≡ƒôê Quality: 40, Completion: 50
+[INFO] ≡ƒôê Quality: 40, Completion: 50
+[INFO] ≡ƒöì Databases Queried:
+[INFO] ≡ƒöì Databases Queried:
+[INFO] ≡ƒÑù Nutrition Data: 0 nutrients available
+[INFO] ≡ƒÑù Nutrition Data: 0 nutrients available
+[INFO] ≡ƒÅå Best Database: WEB_SEARCH
+[INFO] ≡ƒÅå Best Database: WEB_SEARCH
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ≡ƒÄ» FINAL PRODUCT DATA (Before Scoring)
+[INFO] ≡ƒÄ» FINAL PRODUCT DATA (Before Scoring)
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO]   [FINAL] | Total: 27% | Nutrition: 0/25 | Ingredients: 15/25 | Certifications: 0/15 | Sustainability: 12/15 | Brand: 0/10 | Images: 0/10
+[INFO]   [FINAL] | Total: 27% | Nutrition: 0/25 | Ingredients: 15/25 | Certifications: 0/15 | Sustainability: 12/15 | Brand: 0/10 | Images: 0/10
+[INFO]   Source: web_search
+[INFO]   Source: web_search
+[INFO]   Product Name: N/A
+[INFO]   Product Name: N/A
+[INFO]   Brand: N/A
+[INFO]   Brand: N/A
+[INFO]   Has Nutrition: No
+[INFO]   Has Nutrition: No
+[INFO]   Has Ingredients: Yes
+[INFO]   Has Ingredients: Yes
+[INFO]   Has Eco-Score: Yes
+[INFO]   Has Eco-Score: Yes
+[INFO]   Has Palm Oil Analysis: Yes
+[INFO]   Has Palm Oil Analysis: Yes
+[INFO]   Has Certifications: No
+[INFO]   Has Certifications: No
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ≡ƒôè TRUSCORE CALCULATION
+[INFO] ≡ƒôè TRUSCORE CALCULATION
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO] ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[INFO]   TruScore: N/A/100
+[INFO]   TruScore: N/A/100
+[INFO]   Breakdown: N/A (insufficient data)
+[INFO]   Breakdown: N/A (insufficient data)
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] Γ£à PRODUCT SCAN COMPLETE
+[INFO] Γ£à PRODUCT SCAN COMPLETE
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[INFO] ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+[1m[2026-01-31T21:55:25.990Z][0m [34m[INFO][0m [1m[USER_CONTRIBUTION][0m Starting merge of user-contributed data
+  barcode:     89470001013793103549824669300694335947
+  step:     MERGE_START
+  currentProductHasPhoto:     false
+  currentPhotoUrl:     NONE
+[INFO] [USER_CONTRIBUTION] Starting merge of user-contributed data
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "step": "MERGE_START",
+  "currentProductHasPhoto": false,
+  "currentPhotoUrl": "NONE"
+}
+[1m[2026-01-31T21:55:25.991Z][0m [34m[INFO][0m [1m[USER_CONTRIBUTION][0m User B retrieving user-contributed data
+  barcode:     89470001013793103549824669300694335947
+  step:     RETRIEVAL_START
+  timestamp:     2026-01-31T21:55:25.991Z
+[INFO] [USER_CONTRIBUTION] User B retrieving user-contributed data
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "step": "RETRIEVAL_START",
+  "timestamp": "2026-01-31T21:55:25.991Z"
+}
+[1m[2026-01-31T21:55:25.991Z][0m [34m[INFO][0m [1m[USER_CONTRIBUTION][0m Checking local manual products
+  barcode:     89470001013793103549824669300694335947
+  step:     LOCAL_CHECK
+[INFO] [USER_CONTRIBUTION] Checking local manual products
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "step": "LOCAL_CHECK"
+}
+[BackendConfig] Using backend URL: https://truscoreapi.vercel.app
+[1m[2026-01-31T21:55:25.992Z][0m [34m[INFO][0m [1m[USER_CONTRIBUTION][0m Checking backend for user-contributed product
+  barcode:     89470001013793103549824669300694335947
+  step:     BACKEND_CHECK
+  endpoint:     https://truscoreapi.vercel.app/api/manual-products
+[INFO] [USER_CONTRIBUTION] Checking backend for user-contributed product
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "step": "BACKEND_CHECK",
+  "endpoint": "https://truscoreapi.vercel.app/api/manual-products"
+}
+[DEBUG] User-contributed check timeout (3s) - continuing without user data
+[1m[2026-01-31T21:55:28.997Z][0m [34m[INFO][0m [1m[USER_CONTRIBUTION][0m No user-contributed data to merge
+  barcode:     89470001013793103549824669300694335947
+  step:     MERGE_SKIP
+[INFO] [USER_CONTRIBUTION] No user-contributed data to merge
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "step": "MERGE_SKIP"
+}
+[INFO] [ProductService] Γ£à Saved final merged product (with user data) to SQLite for future scans
+[INFO] [ProductService] Γ£à Saved final merged product (with user data) to SQLite for future scans
+[DEBUG] [ProductCacheService] Γ£à Product cached: 89470001013793103549824669300694335947
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  PROCESS COMPLETE: 894700010137 9310354982466 9300694335947
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+[1m[2026-01-31T21:55:29.005Z][0m [32m[SUCCESS][0m [1m[PROCESS_COMPLETE][0m Total time from scan to display: 590791ms
+  barcode:     894700010137 9310354982466 9300694335947
+  totalTime:     590791
+  breakdown:     databaseQueries:       5144ms
+    dataMerging:       N/A
+    truScoreCalculation:       1ms
+    enhancements:       14ms
+    uiRendering:       N/A
+    other:       585632ms
+  finalTruScore:     null
+  finalSource:     web_search
+  performance:     excellent:       false
+    good:       false
+    acceptable:       false
+    slow:       true
+[SUCCESS] [PROCESS_COMPLETE] Total time from scan to display: 590791ms
+{
+  "barcode": "894700010137 9310354982466 9300694335947",
+  "totalTime": 590791,
+  "breakdown": {
+    "databaseQueries": "5144ms",
+    "dataMerging": "N/A",
+    "truScoreCalculation": "1ms",
+    "enhancements": "14ms",
+    "uiRendering": "N/A",
+    "other": "585632ms"
+  },
+  "finalTruScore": null,
+  "finalSource": "web_search",
+  "performance": {
+    "excellent": false,
+    "good": false,
+    "acceptable": false,
+    "slow": true
+  }
+}
+[1m[2026-01-31T21:55:30.997Z][0m [33m[WARN][0m [1m[USER_CONTRIBUTION][0m Backend request timeout (5000ms)
+  barcode:     89470001013793103549824669300694335947
+  responseTime:     5005ms
+  error:     Request timeout
+[WARN] [USER_CONTRIBUTION] Backend request timeout (5000ms)
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "responseTime": "5005ms",
+  "error": "Request timeout"
+}
+[DEBUG] [UserContributedProducts] Backend request timeout for 89470001013793103549824669300694335947 after 5005ms
+[1m[2026-01-31T21:55:30.997Z][0m [34m[INFO][0m [1m[USER_CONTRIBUTION][0m No user-contributed product found
+  barcode:     89470001013793103549824669300694335947
+  checkedSources:     [0]:       LOCAL
+    [1]:       BACKEND
+  result:     NOT_FOUND
+[INFO] [USER_CONTRIBUTION] No user-contributed product found
+{
+  "barcode": "89470001013793103549824669300694335947",
+  "checkedSources": [
+    "LOCAL",
+    "BACKEND"
+  ],
+  "result": "NOT_FOUND"
+}

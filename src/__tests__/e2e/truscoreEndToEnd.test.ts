@@ -18,7 +18,7 @@ describe('TruScore End-to-End Tests', () => {
     const product: Product = {
       barcode: '1234567890123',
       product_name: 'Organic Fair Trade Coffee',
-      brands: 'Ethical Coffee Co',
+      brands: 'Marks & Spencer PLC', // BBFAW Tier 2 + Impact B
       labels_tags: [
         'en:organic',
         'en:fair-trade',
@@ -57,11 +57,12 @@ describe('TruScore End-to-End Tests', () => {
     });
   });
 
-  describe('Test Case 2: Product with Animal Cruelty Violation (CARE Pillar)', () => {
+  describe('Test Case 2: Ethics Pillar - BBFAW Tier 6 (Tyson Foods)', () => {
     const product: Product = {
       barcode: '2345678901234',
       product_name: 'Test Product',
-      brands: 'Unilever', // Known for animal testing
+      brand_owner: 'Tyson Foods',
+      brands: 'Tyson Foods',
       labels_tags: [],
       nutriscore_grade: 'b',
       ecoscore_grade: 'b',
@@ -72,22 +73,20 @@ describe('TruScore End-to-End Tests', () => {
       recalls: [],
     };
 
-    test('should apply animal cruelty penalty in CARE pillar', () => {
+    test('should apply BBFAW Tier 6 penalty in Ethics pillar', () => {
       const result = calculateTruScore(product);
-      
-      // CARE pillar should be reduced due to animal cruelty
-      expect(result.breakdown.Ethics).toBeLessThan(15);
-      
-      // Total score should reflect the penalty
+      // Ethics: 15 - 6 (Tier 6) - 3 (Impact F) = 6
+      expect(result.breakdown.Ethics).toBe(6);
       expect(result.truscore).toBeLessThan(100);
     });
   });
 
-  describe('Test Case 3: Product with Labor Violations (CARE Pillar)', () => {
+  describe('Test Case 3: Ethics Pillar - BBFAW Tier 5 (Nestlé SA)', () => {
     const product: Product = {
       barcode: '3456789012345',
       product_name: 'Chocolate Bar',
-      brands: 'Nestle', // Known for poor labor practices
+      brand_owner: 'Nestlé SA',
+      brands: 'Nestlé',
       labels_tags: [],
       nutriscore_grade: 'c',
       ecoscore_grade: 'c',
@@ -98,18 +97,15 @@ describe('TruScore End-to-End Tests', () => {
       recalls: [],
     };
 
-    test('should apply labor violation penalty in CARE pillar', () => {
+    test('should apply BBFAW Tier 5 + Impact F for Nestlé SA', () => {
       const result = calculateTruScore(product);
-      
-      // CARE pillar should be reduced due to labor violations
-      expect(result.breakdown.Ethics).toBeLessThan(15);
-      
-      // Verify score is still valid
+      // Ethics: 15 - 4 (Tier 5) - 3 (Impact F) = 8
+      expect(result.breakdown.Ethics).toBe(8);
       expect(result.breakdown.Ethics).toBeGreaterThanOrEqual(0);
     });
   });
 
-  describe('Test Case 4: Product with Active Recall (CARE Pillar)', () => {
+  describe('Test Case 4: Product with Active Recall (Ethics Pillar - BBFAW only)', () => {
     const now = Date.now();
     const sixMonthsAgo = new Date(now - (6 * 30 * 24 * 60 * 60 * 1000)).toISOString();
     
@@ -133,15 +129,12 @@ describe('TruScore End-to-End Tests', () => {
       }],
     };
 
-    test('should apply recall penalty in CARE pillar', () => {
+    test('Ethics pillar (BBFAW only) unaffected by recalls - stays at base 15', () => {
       const result = calculateTruScore(product);
-      
-      // CARE pillar should be reduced by -10 for active recall
-      expect(result.breakdown.Ethics).toBeLessThan(15);
-      
-      // Verify penalty is applied
-      const careResult = result.pillarDetails?.care;
-      expect(careResult?.details.recallPenalty).toBe(10);
+      // Ethics pillar is BBFAW-only; recalls no longer affect it
+      expect(result.breakdown.Ethics).toBe(15);
+      const ethicsResult = result.pillarDetails?.ethics;
+      expect(ethicsResult?.details.bbfawMatchedCompany).toBeNull();
     });
   });
 
@@ -172,40 +165,30 @@ describe('TruScore End-to-End Tests', () => {
     });
   });
 
-  describe('Test Case 6: Product with Multiple Certifications (CARE Pillar Stack Cap)', () => {
+  describe('Test Case 6: Ethics Pillar BBFAW Match (Marks & Spencer Tier 2)', () => {
     const product: Product = {
       barcode: '6789012345678',
-      product_name: 'Super Certified Product',
-      brands: 'Ethical Brand',
-      labels_tags: [
-        'en:fair-trade',      // +8
-        'en:organic',         // +7
-        'en:rainforest-alliance', // +6
-        'en:rspo',            // +6
-        'en:rspca',           // +5
-        'en:leaping-bunny',   // +5
-        'en:b-corp',          // +5
-        'en:cage-free',       // +4
-        // Total would be 46, but capped at +15
-      ],
+      product_name: 'M&S Product',
+      brands: 'Marks & Spencer PLC',
+      labels_tags: [],
       nutriscore_grade: 'a',
       ecoscore_grade: 'a',
       nova_group: 1,
-      ingredients_text: 'Full ingredient list with all details.',
-      origins: 'USA',
+      ingredients_text: 'Full ingredient list.',
+      origins: 'UK',
       additives_tags: [],
       recalls: [],
     };
 
-    test('should cap certification bonus at +15', () => {
+    test('should apply BBFAW Tier 2 + Impact B for Marks & Spencer', () => {
       const result = calculateTruScore(product);
-      
-      // CARE pillar should be 15 (base) + 15 (capped bonus) = 30, but capped at 25
-      expect(result.breakdown.Ethics).toBe(25);
-      
-      // Verify cap is applied
-      const careResult = result.pillarDetails?.care;
-      expect(careResult?.details.certificationBonus).toBe(15);
+      // Ethics: 15 + 4 (Tier 2) + 3 (Impact B) = 22
+      expect(result.breakdown.Ethics).toBe(22);
+      const ethicsResult = result.pillarDetails?.ethics;
+      expect(ethicsResult?.details.bbfawMatchedCompany).toBeTruthy();
+      expect(ethicsResult?.details.bbfawTier).toBe(2);
+      expect(ethicsResult?.details.bbfawTierScore).toBe(4);
+      expect(ethicsResult?.details.bbfawImpactScore).toBe(3);
     });
   });
 
@@ -322,11 +305,11 @@ describe('TruScore End-to-End Tests', () => {
     });
   });
 
-  describe('Test Case 11: Brand Overlay Penalty (CARE Pillar)', () => {
+  describe('Test Case 11: Ethics Pillar BBFAW Tier 6 (Tyson Foods)', () => {
     const product: Product = {
       barcode: '1111111111111',
-      product_name: 'Brand Overlay Test',
-      brands: 'Johnson & Johnson', // Known for recalls and animal testing
+      product_name: 'Tyson Chicken Product',
+      brands: 'Tyson Foods',
       labels_tags: [],
       nutriscore_grade: 'b',
       ecoscore_grade: 'b',
@@ -337,12 +320,15 @@ describe('TruScore End-to-End Tests', () => {
       recalls: [],
     };
 
-    test('should apply brand overlay penalty', () => {
+    test('should apply BBFAW Tier 6 penalty for Tyson Foods', () => {
       const result = calculateTruScore(product);
-      
-      // Verify brand overlay penalty is applied
-      const careResult = result.pillarDetails?.care;
-      expect(careResult?.details.brandOverlayPenalty).toBeGreaterThanOrEqual(0);
+      // Ethics: 15 - 6 (Tier 6) - 3 (Impact F) = 6
+      expect(result.breakdown.Ethics).toBe(6);
+      const ethicsResult = result.pillarDetails?.ethics;
+      expect(ethicsResult?.details.bbfawMatchedCompany).toBeTruthy();
+      expect(ethicsResult?.details.bbfawTier).toBe(6);
+      expect(ethicsResult?.details.bbfawTierScore).toBe(-6);
+      expect(ethicsResult?.details.bbfawImpactScore).toBe(-3);
     });
   });
 

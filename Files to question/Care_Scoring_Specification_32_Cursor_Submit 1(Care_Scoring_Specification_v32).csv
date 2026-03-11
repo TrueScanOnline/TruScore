@@ -1,0 +1,42 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867,,,,,,,,,
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 Times-Roman;\f1\froman\fcharset0 Times-Bold;},,,,,,,,,
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;},,,,,,,,,
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;},,,,,,,,,
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0,,,,,,,,,
+\deftab720,,,,,,,,,
+\pard\pardeftab720\sa240\partightenfactor0,,,,,,,,,
+,,,,,,,,,
+\f0\fs24 \cf0 \expnd0\expndtw0\kerning0,,,,,,,,,
+\outl0\strokewidth0 \strokec2 \{\\rtf1\\ansi\\ansicpg1252\\cocoartf2867\,,,,,,,,,
+\\cocoatextscaling0\\cocoaplatform0\{\\fonttbl\\f0\\froman\\fcharset0 Times-Roman;\}\,,,,,,,,,
+\{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;\}\,,,,,,,,,
+\{*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;\}\,,,,,,,,,
+\\paperw11900\\paperh16840\\margl1440\\margr1440\\vieww11520\\viewh8400\\viewkind0\,,,,,,,,,
+\\deftab720\,,,,,,,,,
+\\pard\\pardeftab720\\sa240\\partightenfactor0\,,,,,,,,,
+\\f0\\fs24 \\cf0 \\expnd0\\expndtw0\\kerning0\,,,,,,,,,
+\\outl0\\strokewidth0 \\strokec2 \{\\rtf1\\ansi\\ansicpg1252\\cocoartf2867\,,,,,,,,,
+\\cocoatextscaling0\\cocoaplatform0\{\\fonttbl\\f0\\froman\\fcharset0 Times-Roman;\}\,,,,,,,,,
+\{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;\}\,,,,,,,,,
+\{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;\}\,,,,,,,,,
+\\paperw11900\\paperh16840\\margl1440\\margr1440\\vieww21620\\viewh12780\\viewkind0\,,,,,,,,,
+\\deftab720\,,,,,,,,,
+\\pard\\pardeftab720\\sa240\\partightenfactor0\,,,,,,,,,
+\,,,,,,,,,
+\\f0\\fs24 \\cf0 \\expnd0\\expndtw0\\kerning0\,,,,,,,,,
+\\outl0\\strokewidth0 \\strokec2 # TruScore Methodology Specification - Care Pillar (January 2026 Launch v26 - MVP Scope)\\\,,,,,,,,,
+\\\\\,,,,,,,,,
+\pard\pardeftab720\sa298\partightenfactor0,,,,,,,,,
+,,,,,,,,,
+\f1\b\fs36 \cf0 \strokec2 Care Pillar (Human Food/Drink Only - MVP)\\\\\,,,,,,,,,
+\pard\pardeftab720\sa240\partightenfactor0,,,,,,,,,
+,,,,,,,,,
+\f0\b0\fs24 \cf0 \strokec2 , Pillar (25 pts) , Data Element , Positive Statement (what high score means) , Dimensions / Measures (public third-party source) , What it is & why it matters (2025 consumer concern) , Exact Free/Public Data Point + API Field , Scoring Conversion (to 0-25) , Explanation , Decision Tree Logic (Order of Priority) 
+, Care , Base Score , Slightly positive neutral; assumes ethical till violations , Internal Logic (No external source) , Scaled HSUS/RSPCA avg ~50/100 (2025 welfare); optimistic fair to indies , N/A , 15 (uniform) ," Uniform 15 consistency; HSUS defends without negativity; fair to indies avoids X backlash on bias. No data = neutral, prompt user subs for gaps. ", 1. Always starting point; adjustments added/subtracted. 
+,, Certifications , Ethical certifications; fair treatment ," Fairtrade Intl, ACO (AU), USDA Organic, EU Organic (EFSA), IFOAM, Rainforest Alliance, UTZ, MSC/ASC/Ocean Wise/Friend of the Sea, RSPCA/Leaping Bunny/B Corp, GlobalG.A.P, Cage-Free, Free-Range, Free-Roaming > labels_tags array filtered (stack cap +15) ", 40% virality (X spikes on Fairtrade 2025) , labels_tags (array filtered for match) ," Fairtrade=+8, Organic=+7, Rainforest/UTZ=+6, MSC/ASC=+6 (sustainable fishing), Ocean Wise=+5 (sustainable wild catch), Friend of the Sea=+4 (eco-aquaculture), RSPCA/Leaping Bunny/B Corp=+5, GlobalG.A.P=+4, Free-Roaming=+5, Free-Range=+3, Cage-Free=+1 (stack cap +15) "," Boycott studies defend; virality on ""Fairtrade Certified"" shares. Stack cap prevents over-reward. Mandate embed here'97no base complexity. Exhaustive list covers G20 standards (e.g., EU Organic for geo). Fuzzy match >80% on labels for variants. Geo certs apply universally (e.g., EFSA cert on EU product scanned in AU scores full points\'97reliance on any geography's practices for multi-national distribution). Tiered animal welfare (Cage-Free basic no-cages but misleading +1, Free-Range outdoor access but limited +3, Free-Roaming full mobility +5) and fishing (MSC/ASC base +6, Ocean Wise wild +5, Friend of the Sea eco +4) for nuanced ethics. "," 1. Primary cert orgs (e.g., Fairtrade Intl/USDA/EFSA/IFOAM/GlobalG.A.P/RSPCA/MSC/Ocean Wise/Friend of the Sea) > 2. Local govt certs (e.g., ACO AU) > 3. Country OFF > 4. Global OFF; stack bonuses cap +15; geo certs universal. User subs if no data. "
+,, Animal Cruelty , No animal cruelty ,"Pillar Scoring: BBFAW; Banner Alerts: PETA, Ethical Consumer, HSUS/RSPCA/ASPCA/USDA AWA, ALDF, Compassion in World Farming > Buycott >", 50% virality (X spikes on factory farming 2025) ," brands_tags, parent_tags"," BBFAW Tier 1 = +4, BBFAW Tier 2 = +2, BBFAW Tier 6 = -7, BBFAW E/F Impact Rating = =7, based on last report publication by BBFAW. ","Fuzzy matching >80% for better product/brand hits. Parent chaining via fuzzy matching (>80% on brands_tags) and Oxfam CSVs/Open Corporates API for product > brand > parent (depth 3) to ensure accountability.  Alternately, local databse store for Parent > Brand > Product mapping,  Violations Reports/Allegations from NGO's and  Negative news from X/Reuters applied as banner alert (scoring neutral)\'97""Recent cruelty buzz\'97check sources"" to avoid rumor risks, keep time-bound <12months. "," 1. BBFAW; if not found nil return (only top 150 food companies currently assessed).  Violations Reports/Allegations/Litigation from NGO's and  Negative news from X/Reuters applied as banner alert (scoring neutral)\'97""Recent cruelty buzz\'97check sources"" to avoid rumor risks, keep time-bound <12months. "
+,, Labor Violations/Human Exploitation , No labor violations/exploitation ," DOL List of Goods (US child/forced labor), Walk Free Global Slavery Index, Oxfam Behind the Brands, ILO Labor Standards > Buycott/Open Corporates > Country/Global OFF ", 70% virality (X spikes on child labor cocoa 2025) ," brands_tags (labor filter), violations API "," Limited concerns=-4 (e.g., under-pay/over-work), moderate concerns=-8 (e.g., unsafe conditions), major=-15 (e.g., child labor/slavery); brand/parent assessed separately with same tiers (-4/-8/-15), mutually exclusive (no deduct if product hits) "," Boycott studies defend; geo local overrides. Exhaustive list covers G20 (added ILO for global labor). Fuzzy match >80% on labels for better product/brand hits. Parent chaining via fuzzy matching (>80% on brands_tags) and Oxfam CSVs/Open Corporates API for product > brand > parent (depth 3) to ensure accountabilitySeverity from Walk Free/DOL (high-risk major, medium moderate, low limited) for defensibility. No data = neutral, prompt subs. Ties to geopolitics (e.g., palm labor in ID/MY). Negative news from X/Reuters as banner alert (scoring neutral)\'97""Labor concerns in news\'97verify"" to sidestep rumors, keep time-bound <12months. ", 1. DOL/Walk Free/Oxfam/ILO > 2. Buycott/Open Corporates > 3. Country OFF > 4. Global OFF; deduct if labor match (fuzzy >80%); . Time-bound <12months X/Reuters banner for news tie.
+,, Recalls , No safety recalls ,"FDA (US recalls), CFIA (CA), FSANZ (AU/NZ), EFSA/RASFF (EU) > Country/Global OFF", 15-25% virality (X spikes on Nestle 2025) , recalls API,"Limited concerns=-4 (Class III/low risk), major=-15 (Class I/high risk), moderate=-8 (Class II/med risk) ","Boycott studies defend; Universal penalties—recall in one location = global deduct (poor care distrib-wide). Semantic/news carved to banners only (e.g., ""Potential Recall Buzz—Verify Sources"" for shares; >0.3 threshold triggers, no score hit to mitigate fake news, keep time-bound <3months). Severity from FDA/class (Class I major, II moderate, III limited) for defensibility. No data = neutral, prompt subs",1. Local govt recalls (FDA/CFIA/FSANZ/EFSA/RASFF); deduct if flag within 3month (universal); 2. Country OFF  3. Global OFF <3months time-bound for X/Reuters for banner ties only (no scoring).  User subs if no data. 
+,, Overall Pillar Cap , N/A , Internal Logic (No external source) , Allows wake-up viral on zero scores for bad deducts , N/A , Min 0 (floor after all adjustments) ," Caps final Care score at min 0; zero ""unethical"" callout on junk'97viral boycott rage. ", 1. Applied after all adjustments; overrides if <0. 
+,,,,,,,,,
+\\\}\}\\par\}},,,,,,,,,

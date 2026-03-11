@@ -12,7 +12,7 @@
 import { Product } from '../types/product';
 import { getBrandData, isCruelParent, normalizeBrandNameForLookup } from '../data/brandDatabase';
 import { logger } from '../utils/logger';
-import { checkBBFAWTier, getBBFAWViolationSeverity } from './bbfawService';
+import { checkBBFAWTier, getBBFAWTierScore, getBBFAWViolationSeverity } from './bbfawService';
 import { checkASPCAAnimalWelfare, getASPCAViolationSeverity } from './aspcaService';
 import { checkEthicalConsumerRating, getEthicalConsumerViolationSeverity } from './ethicalConsumerService';
 import { matchBrands, checkBrandProperty } from './brandMatchingService';
@@ -22,9 +22,21 @@ export interface AnimalCrueltyData {
   violationType: 'none' | 'limited' | 'moderate' | 'major'; // 3-tier system: Limited=-4, Moderate=-8, Major=-15
   violations: string[];
   sources: string[];
+  /** Specific report/issue URLs when available. Banner uses first as actionUrl; only use generic org link when none. */
+  violationReportUrls?: string[];
   timestamp?: number; // Timestamp when violation was reported (for time-bound filtering: within 12 months)
   violationTimestamps?: { [source: string]: number }; // Per-source timestamps for detailed tracking
 }
+
+/** Official report/source URLs for banner (ID 17: link to actual source when available). */
+export const ANIMAL_CRUELTY_REPORT_URLS = {
+  BBFAW: 'https://www.bbfaw.com/',
+  ASPCA: 'https://www.aspca.org/',
+  ETHICAL_CONSUMER: 'https://www.ethicalconsumer.org/',
+  PETA: 'https://www.peta.org/',
+  HSUS: 'https://www.humanesociety.org/',
+  RSPCA: 'https://www.rspca.org.uk/',
+};
 
 /**
  * Known brands with major animal cruelty violations (Class I)
@@ -291,24 +303,27 @@ export function checkAnimalCruelty(product: Product): AnimalCrueltyData {
     }
     
     // 3. Check BBFAW tier data (if available) - use matched brand name
+    // Only treat BBFAW as a violation when tier implies poor welfare (same as Ethics pillar: Tier 6/E/F = negative).
+    // Tier 1–2 are positive in Ethics (+4/+2), so do not show "animal welfare concerns" for those.
     if (!foundMajor) {
       const bbfawData = checkBBFAWTier(matchedBrandName);
       if (bbfawData) {
-        const bbfawSeverity = getBBFAWViolationSeverity(bbfawData.tier);
-        // Apply confidence-based adjustment
-        let adjustedSeverity = bbfawSeverity;
-        if (confidence < 90 && confidence >= 75) {
-          if (bbfawSeverity === 'major') adjustedSeverity = 'moderate';
-          else if (bbfawSeverity === 'moderate') adjustedSeverity = 'limited';
-        }
-        
-        violationType = getMostSevereType(violationType, adjustedSeverity);
-        if (!violations.some(v => v.includes('bbfaw'))) {
-          violations.push(`${adjustedSeverity} animal cruelty (BBFAW tier ${bbfawData.tier}: ${matchedBrandName}, ${confidence}% confidence)`);
-          sources.push('bbfaw');
-        }
-        if (adjustedSeverity === 'major') {
-          foundMajor = true;
+        const bbfawScore = getBBFAWTierScore(bbfawData.tier);
+        if (bbfawScore < 0) {
+          const bbfawSeverity = getBBFAWViolationSeverity(bbfawData.tier);
+          let adjustedSeverity = bbfawSeverity;
+          if (confidence < 90 && confidence >= 75) {
+            if (bbfawSeverity === 'major') adjustedSeverity = 'moderate';
+            else if (bbfawSeverity === 'moderate') adjustedSeverity = 'limited';
+          }
+          violationType = getMostSevereType(violationType, adjustedSeverity);
+          if (!violations.some(v => v.includes('bbfaw'))) {
+            violations.push(`${adjustedSeverity} animal cruelty (BBFAW tier ${bbfawData.tier}: ${matchedBrandName}, ${confidence}% confidence)`);
+            sources.push('bbfaw');
+          }
+          if (adjustedSeverity === 'major') {
+            foundMajor = true;
+          }
         }
       }
     }
@@ -473,11 +488,40 @@ export function checkAnimalCruelty(product: Product): AnimalCrueltyData {
     ? Math.max(...Object.values(violationTimestamps))
     : undefined;
 
+  // ID 17: Specific report URL for banner (actual source when available; fallback when only brand_database)
+  const violationReportUrls: string[] = [];
+  if (sources.some(s => s.toLowerCase().includes('bbfaw'))) {
+    violationReportUrls.push(ANIMAL_CRUELTY_REPORT_URLS.BBFAW);
+  }
+  if (sources.some(s => s.toLowerCase().includes('aspca'))) {
+    violationReportUrls.push(ANIMAL_CRUELTY_REPORT_URLS.ASPCA);
+  }
+  if (sources.some(s => s.toLowerCase().includes('ethical_consumer'))) {
+    violationReportUrls.push(ANIMAL_CRUELTY_REPORT_URLS.ETHICAL_CONSUMER);
+  }
+  if (sources.some(s => s.toLowerCase().includes('peta'))) {
+    violationReportUrls.push(ANIMAL_CRUELTY_REPORT_URLS.PETA);
+  }
+  if (sources.some(s => s.toLowerCase().includes('hsus'))) {
+    violationReportUrls.push(ANIMAL_CRUELTY_REPORT_URLS.HSUS);
+  }
+  if (sources.some(s => s.toLowerCase().includes('rspca'))) {
+    violationReportUrls.push(ANIMAL_CRUELTY_REPORT_URLS.RSPCA);
+  }
+  const hasExternalSource = sources.some(s => {
+    const l = s.toLowerCase();
+    return l.includes('bbfaw') || l.includes('aspca') || l.includes('ethical_consumer') || l.includes('peta') || l.includes('hsus') || l.includes('rspca');
+  });
+  if (!hasExternalSource && sources.length > 0) {
+    violationReportUrls.push(ANIMAL_CRUELTY_REPORT_URLS.BBFAW);
+  }
+
   return {
     hasViolations: violationType !== 'none',
     violationType,
     violations,
     sources,
+    violationReportUrls: violationReportUrls.length > 0 ? violationReportUrls : undefined,
     timestamp,
     violationTimestamps: sources.length > 0 ? violationTimestamps : undefined,
   };

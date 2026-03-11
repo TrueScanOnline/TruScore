@@ -68,12 +68,20 @@ if (Get-Command ts-node -ErrorAction SilentlyContinue) {
     }
 }
 
-# Build command arguments
-$barcodeArgs = $Barcodes -join " "
+# Build command arguments - ensure each barcode is a separate argument
+# Clean and validate barcodes
+$barcodeArgs = @()
+foreach ($barcode in $Barcodes) {
+    $cleanBarcode = $barcode.ToString().Trim()
+    if ($cleanBarcode -ne '') {
+        $barcodeArgs += $cleanBarcode
+    }
+}
 
 # Run the TypeScript test script
 Write-Host "`n================================================" -ForegroundColor Cyan
 Write-Host "[TEST] Testing Barcodes: $($Barcodes -join ', ')" -ForegroundColor Cyan
+Write-Host "Barcodes Count: $($barcodeArgs.Count)" -ForegroundColor Cyan
 Write-Host "================================================`n" -ForegroundColor Cyan
 
 $testScriptPath = Join-Path $scriptDir "testBarcodePerformance.ts"
@@ -87,14 +95,18 @@ if (-not (Test-Path $testScriptPath)) {
 # MUST use ts-node with scripts/tsconfig.json (handles React Native imports)
 # Use transpileOnly and skipLibCheck to avoid processing node_modules
 # Also set NODE_OPTIONS to disable Node.js v22 type stripping for node_modules
+# CRITICAL: Pass barcodes as separate arguments after the script path
 $env:NODE_OPTIONS = "--no-experimental-strip-types"
 $tsConfigPath = Join-Path $scriptDir "tsconfig.json"
+
+# Build arguments - ts-node options first, then script, then barcodes
 if (Test-Path $tsConfigPath) {
     Write-Host "[INFO] Using tsconfig: $tsConfigPath" -ForegroundColor Gray
-    $output = & $tsRunner --project $tsConfigPath --transpile-only --skip-ignore $testScriptPath $barcodeArgs 2>&1
+    # Use splatting to pass all arguments correctly
+    $output = & $tsRunner --project $tsConfigPath --transpile-only --skip-ignore $testScriptPath @barcodeArgs 2>&1
 } else {
     Write-Host "[WARN] scripts/tsconfig.json not found, using default config" -ForegroundColor Yellow
-    $output = & $tsRunner --transpile-only --skip-ignore $testScriptPath $barcodeArgs 2>&1
+    $output = & $tsRunner --transpile-only --skip-ignore $testScriptPath @barcodeArgs 2>&1
 }
 # Clean up environment variable
 Remove-Item env:NODE_OPTIONS -ErrorAction SilentlyContinue

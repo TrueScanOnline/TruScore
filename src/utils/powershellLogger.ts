@@ -600,6 +600,43 @@ class PowerShellLogger {
   }
   
   /**
+   * Log full TruScore analysis (fetch trace + per-pillar breakdown) for app testing.
+   * Call after score is calculated so logs match exactly what the app shows.
+   */
+  truScoreAnalysis(analysis: {
+    barcode: string;
+    totalScore: number;
+    fetchTrace: Array<{ database: string; queryKeyType: string; order: number; hit: boolean; responseTimeMs?: number }>;
+    pillars: Record<string, { pillarName: string; baseScore: number; finalScore: number; adjustments: Array<{ description: string; value: number; type: string; sourceDatabase?: string; queryKeyType?: string }> }>;
+  }): void {
+    this.section(`TRUSCORE ANALYSIS: ${analysis.barcode}`);
+    this.log('INFO', 'ANALYSIS_TOTAL', `TruScore: ${analysis.totalScore}/100`, {
+      barcode: analysis.barcode,
+      totalScore: analysis.totalScore,
+    });
+    this.log('INFO', 'ANALYSIS_FETCH_TRACE', `Data sources queried (order, hit/miss)`, {
+      barcode: analysis.barcode,
+      queryCount: analysis.fetchTrace.length,
+      trace: analysis.fetchTrace.map(e => `${e.order}. ${e.database} (${e.queryKeyType}): ${e.hit ? 'HIT' : 'MISS'}`),
+    });
+    Object.entries(analysis.pillars).forEach(([key, pillar]) => {
+      this.log('INFO', 'ANALYSIS_PILLAR', `${pillar.pillarName}: ${pillar.finalScore}/25 (base ${pillar.baseScore})`, {
+        barcode: analysis.barcode,
+        pillar: pillar.pillarName,
+        baseScore: pillar.baseScore,
+        finalScore: pillar.finalScore,
+        adjustments: pillar.adjustments.map(a => ({
+          desc: a.description,
+          value: a.value,
+          source: a.sourceDatabase,
+          queryType: a.queryKeyType,
+        })),
+      });
+    });
+    console.log('[TRUSCORE_ANALYSIS_JSON] ' + JSON.stringify(analysis, null, 2));
+  }
+
+  /**
    * Log query phase indicator
    */
   queryPhase(barcode: string, phase: 1 | 2 | 3, description: string, targetTime?: string): void {

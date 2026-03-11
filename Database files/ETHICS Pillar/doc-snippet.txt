@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex" xmlns:cx2="http://schemas.microsoft.com/office/drawing/2015/10/21/chartex" xmlns:cx3="http://schemas.microsoft.com/office/drawing/2016/5/9/chartex" xmlns:cx4="http://schemas.microsoft.com/office/drawing/2016/5/10/chartex" xmlns:cx5="http://schemas.microsoft.com/office/drawing/2016/5/11/chartex" xmlns:cx6="http://schemas.microsoft.com/office/drawing/2016/5/12/chartex" xmlns:cx7="http://schemas.microsoft.com/office/drawing/2016/5/13/chartex" xmlns:cx8="http://schemas.microsoft.com/office/drawing/2016/5/14/chartex" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:aink="http://schemas.microsoft.com/office/drawing/2016/ink" xmlns:am3d="http://schemas.microsoft.com/office/drawing/2017/model3d" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:oel="http://schemas.microsoft.com/office/2019/extlst" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:w16cex="http://schemas.microsoft.com/office/word/2018/wordml/cex" xmlns:w16cid="http://schemas.microsoft.com/office/word/2016/wordml/cid" xmlns:w16="http://schemas.microsoft.com/office/word/2018/wordml" xmlns:w16du="http://schemas.microsoft.com/office/word/2023/wordml/word16du" xmlns:w16sdtdh="http://schemas.microsoft.com/office/word/2020/wordml/sdtdatahash" xmlns:w16sdtfl="http://schemas.microsoft.com/office/word/2024/wordml/sdtformatlock" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 w16se w16cid w16 w16cex w16sdtdh w16sdtfl w16du wp14">
+<w:body>
+<w:p w14:paraId="48C03B0D" w14:textId="77777777" w:rsidR="00460DC3" w:rsidRDefault="00AE4716">
+<w:pPr>
+<w:pStyle w:val="Textkrper"/>
+<w:ind w:left="850"/>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman"/>
+</w:rPr>
+</w:pPr>
+<w:r>
+<w:pict w14:anchorId="20F4AB1C">
+<v:group id="docshapegroup1" o:spid="_x0000_s1740" style="position:absolute;left:0;text-align:left;margin-left:0;margin-top:310.1pt;width:552.8pt;height:531.85pt;z-index:15730176;mso-position-horizontal-relative:page;mso-position-vertical-relative:page" coordorigin=",6202" coordsize="11056,10637">
+<v:rect id="docshape2" o:spid="_x0000_s1743" style="position:absolute;top:6201;width:851;height:10637" fillcolor="#1f477d" stroked="f"/>
+<v:shapetype id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+<v:stroke joinstyle="miter"/>
+<v:formulas>
+<v:f eqn="if lineDrawn pixelLineWidth 0"/>
+<v:f eqn="sum @0 1 0"/>
+<v:f eqn="sum 0 0 @1"/>
+<v:f eqn="prod @2 1 2"/>
+<v:f eqn="prod @3 21600 pixelWidth"/>
+<v:f eqn="prod @3 21600 pixelHeight"/>
+<v:f eqn="sum @0 0 1"/>
+<v:f eqn="prod @6 1 2"/>
+<v:f eqn="prod @7 21600 pixelWidth"/>
+<v:f eqn="sum @8 21600 0"/>
+<v:f eqn="prod @7 21600 pixelHeight"/>
+<v:f eqn="sum @10 21600 0"/>
+</v:formulas>
+<v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+<o:lock v:ext="edit" aspectratio="t"/>
+</v:shapetype>
+<v:shape id="docshape3" o:spid="_x0000_s1742" type="#_x0000_t75" style="position:absolute;left:850;top:6201;width:10205;height:10637">
+<v:imagedata r:id="rId7" o:title=""/>
+</v:shape>
+<v:shape id="docshape4" o:spid="_x0000_s1741" type="#_x0000_t75" style="position:absolute;left:850;top:6201;width:3753;height:10637">
+<v:imagedata r:id="rId8" o:title=""/>
+</v:shape>
+<w10:wrap anchorx="page" anchory="page"/>
+</v:group>
+</w:pict>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman"/>
+</w:rPr>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman"/>
+</w:rPr>
+<w:pict w14:anchorId="0CF01FD4">
+<v:group id="docshapegroup5" o:spid="_x0000_s1738" style="width:78.15pt;height:18.2pt;mso-position-horizontal-relative:char;mso-position-vertical-relative:line" coordsize="1563,364">
+<v:shape id="docshape6" o:spid="_x0000_s1739" style="position:absolute;width:1563;height:364" coordsize="1563,364" o:spt="100" adj="0,,0" path="m300,255r-3,-28l295,220r-5,-16l278,185,260,170r12,-15l280,139r2,-6l285,121r2,-21l285,88,279,59,256,28,221,8

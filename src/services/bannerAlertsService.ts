@@ -1,12 +1,20 @@
 /**
  * Banner Alerts Service
- * 
+ *
  * Collects and generates banner alerts from:
- * 1. APP-generated alerts (recalls, animal cruelty, PETA, Ethical Consumer, HSUS, RSPCA, ASPCA, ALDF, Compassion in World Farming, Buycott, news sources)
+ * 1. APP-generated alerts (recalls, animal cruelty, labor, brand recall history, etc.)
  * 2. User Preference alerts (from Values Preferences card)
- * 
+ *
  * Note: Banner alerts are SCORING NEUTRAL - they don't affect TruScore calculation.
  * They are informational only, displayed to alert users to potential concerns.
+ *
+ * Legal (ID 17): Every negative Ethics pillar factor MUST be surfaced as a banner with:
+ * - Explanation of the specific information used to alter the score (e.g. which database/source).
+ * - Hyperlink to the ACTUAL source when available; when no single report URL exists (e.g. brand
+ *   database only), use the best available official reference and state in the message that we
+ *   do not have a direct link to a single finding.
+ * This applies to: labor (DOL, Walk Free, brand DB), animal welfare (BBFAW, ASPCA, brand DB),
+ * product recalls (FDA/USDA/CFIA/RASFF), and brand overlay (recall history).
  */
 
 import { Product, ProductWithTrustScore } from '../types/product';
@@ -14,6 +22,7 @@ import { BannerAlert, AlertSource, AlertCategory, BannerAlertsData } from '../ty
 import { ValuesPreferences } from '../store/useValuesStore';
 import { checkAnimalCruelty, AnimalCrueltyData } from './animalCrueltyService';
 import { checkLaborViolations, LaborViolationData } from './laborViolationsService';
+import { checkBBFAWTier, getBBFAWTierScore } from './bbfawService';
 import { extractAllBrands } from '../utils/brandExtraction';
 import { getBrandData } from '../data/brandDatabase';
 import { logger } from '../utils/logger';
@@ -64,10 +73,9 @@ export function generateBannerAlerts(
                            highestSeverity.recall.recallId?.toUpperCase().includes('CFIA') ? 'CFIA' :
                            highestSeverity.recall.recallId?.toUpperCase().includes('RASFF') ? 'RASFF' : 'Government Agency';
       
-      // Use recall URL if available, otherwise use agency website
-      let actionUrl = highestSeverity.recall.url;
-      if (!actionUrl) {
-        // Fallback to agency website
+      // Specific report URL first; only use generic agency link when exact URL not available (ID 17)
+      let actionUrl: string | undefined = highestSeverity.recall.url;
+      if (!actionUrl || !actionUrl.startsWith('http')) {
         if (organization === 'FDA') {
           actionUrl = 'https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts';
         } else if (organization === 'USDA FSIS') {
@@ -84,7 +92,7 @@ export function generateBannerAlerts(
         source: 'app',
         category: 'recall',
         title: 'Product Recall',
-        message: `${recentRecalls.length} active recall(s) found. ${highestSeverity.recall.reason || 'Safety concern identified.'}`,
+        message: `${recentRecalls.length} active recall(s) found. ${highestSeverity.recall.reason || 'Safety concern identified.'} This affects your Ethics score.`,
         severity,
         timestamp: Date.now(),
         actionUrl,
@@ -96,11 +104,49 @@ export function generateBannerAlerts(
     }
   }
 
+  // 1.1b Brand recall history (Ethics) – when brand has recall history but product has no active recall
+  // Legal: any negative Ethics scoring must have banner + explanation + link to actual source
+  const hasRecentProductRecalls = product.recalls && product.recalls.some((r: { isActive?: boolean; recallDate?: string }) => {
+    if (!r.isActive) return false;
+    const recallDate = r.recallDate ? new Date(r.recallDate).getTime() : 0;
+    const twelveMonthsAgo = Date.now() - (12 * 30 * 24 * 60 * 60 * 1000);
+    return recallDate >= twelveMonthsAgo;
+  });
+  if (!hasRecentProductRecalls) {
+    const brandsForRecallCheck = extractAllBrands(product);
+    let brandWithRecallHistory: string | null = null;
+    for (const b of brandsForRecallCheck) {
+      const data = getBrandData(b);
+      if (data?.recallHistory === true) {
+        brandWithRecallHistory = (data.name || b).trim();
+        break;
+      }
+    }
+    if (brandWithRecallHistory) {
+      const recallSearchUrl = 'https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts';
+      alerts.push({
+        id: `brand-recall-history-${product.barcode}-${Date.now()}`,
+        source: 'app',
+        category: 'recall',
+        title: 'Brand Recall History (Ethics)',
+        message: `Our Ethics score uses our brand database: ${brandWithRecallHistory} has a history of product recalls. We do not have a direct link to a single finding for this brand. Tap to open the FDA Recalls search (reference).`,
+        severity: 'medium',
+        timestamp: Date.now(),
+        actionUrl: recallSearchUrl,
+        sourceDetails: { organization: 'Brand database (FDA reference)' },
+      });
+    }
+  }
+
   // 1.2 Animal Cruelty Alerts (from PETA, Ethical Consumer, HSUS, RSPCA, ASPCA, ALDF, Compassion in World Farming, Buycott, X/Reuters)
   // Note: These are for banner alerts only (scoring neutral)
   // Time-bound: <12 months per spec
+  // Do not show banner when Ethics pillar gives positive animal welfare (BBFAW Tier 1/2 = +4/+2) to avoid contradicting the score.
   const animalCrueltyData = checkAnimalCruelty(product);
-  if (animalCrueltyData.hasViolations) {
+  const primaryBrandForEthics = (extractAllBrands(product)[0] || product.brands?.split(',')[0]?.trim() || '').trim();
+  const bbfawForPrimary = primaryBrandForEthics ? checkBBFAWTier(primaryBrandForEthics) : null;
+  const ethicsAnimalPositive = bbfawForPrimary != null && getBBFAWTierScore(bbfawForPrimary.tier) > 0; // Tier 1 or 2
+  if (animalCrueltyData.hasViolations && !ethicsAnimalPositive) {
     // Time-bound filtering: Only show alerts from last 12 months
     const now = Date.now();
     const twelveMonthsAgo = now - (12 * 30 * 24 * 60 * 60 * 1000);
@@ -122,6 +168,7 @@ export function generateBannerAlerts(
     const hasBuycott = sources.some(s => s.toLowerCase().includes('buycott'));
     const hasX = sources.some(s => s.toLowerCase().includes('x') || s.toLowerCase().includes('twitter'));
     const hasReuters = sources.some(s => s.toLowerCase().includes('reuters'));
+    const hasBrandDatabase = sources.some(s => s.toLowerCase().includes('brand_database') || s.toLowerCase().includes('known_violations'));
 
     const organizations: string[] = [];
     if (hasPETA) organizations.push('PETA');
@@ -134,33 +181,54 @@ export function generateBannerAlerts(
     if (hasBuycott) organizations.push('Buycott');
     if (hasX) organizations.push('X (Twitter)');
     if (hasReuters) organizations.push('Reuters');
+    if (organizations.length === 0 && hasBrandDatabase) {
+      organizations.push('known animal welfare concerns (brand database)');
+    }
 
     if (organizations.length > 0) {
       const severity = animalCrueltyData.violationType === 'major' ? 'high' :
                       animalCrueltyData.violationType === 'moderate' ? 'medium' : 'low';
 
-      // Determine action URL based on primary organization
-      let actionUrl: string | undefined;
-      if (hasPETA) {
-        actionUrl = 'https://www.peta.org/';
-      } else if (hasHSUS) {
-        actionUrl = 'https://www.humanesociety.org/';
-      } else if (hasRSPCA) {
-        actionUrl = 'https://www.rspca.org.uk/';
-      } else if (hasASPCA) {
-        actionUrl = 'https://www.aspca.org/';
-      } else if (hasEthicalConsumer) {
-        actionUrl = 'https://www.ethicalconsumer.org/';
-      } else if (hasBuycott) {
-        actionUrl = 'https://www.buycott.com/';
+      // ID 17: Specific report URL first; generic org link only when exact URL not available
+      const specificUrl = animalCrueltyData.violationReportUrls?.[0];
+      let actionUrl: string | undefined = specificUrl;
+      if (!actionUrl) {
+        if (hasPETA) {
+          actionUrl = 'https://www.peta.org/';
+        } else if (hasHSUS) {
+          actionUrl = 'https://www.humanesociety.org/';
+        } else if (hasRSPCA) {
+          actionUrl = 'https://www.rspca.org.uk/';
+        } else if (hasASPCA) {
+          actionUrl = 'https://www.aspca.org/';
+        } else if (hasEthicalConsumer) {
+          actionUrl = 'https://www.ethicalconsumer.org/';
+        } else if (hasBrandDatabase) {
+          actionUrl = 'https://www.bbfaw.com/';
+        } else if (hasBuycott) {
+          actionUrl = 'https://www.buycott.com/';
+        }
       }
+
+      const primaryBrand = (extractAllBrands(product)[0] || product.brands?.split(',')[0]?.trim() || 'This brand').trim();
+      const severityLabel = animalCrueltyData.violationType === 'major' ? 'major' :
+                           animalCrueltyData.violationType === 'moderate' ? 'moderate' : 'limited';
+      const onlyBrandDatabase = hasBrandDatabase && !sources.some(s => {
+        const l = s.toLowerCase();
+        return l.includes('bbfaw') || l.includes('aspca') || l.includes('ethical_consumer') || l.includes('peta') || l.includes('hsus') || l.includes('rspca') || l.includes('buycott');
+      });
+      const message = onlyBrandDatabase && actionUrl
+        ? `Our Ethics score uses our brand database: ${primaryBrand} is flagged for ${severityLabel} animal welfare concerns. We do not have a direct link to a single report for this brand. Tap to open the BBFAW Benchmark (reference).`
+        : actionUrl
+          ? `Recent animal welfare concerns reported by ${organizations.join(', ')}. Tap to open the source. This affects your Ethics score.`
+          : `Recent cruelty concerns reported by ${organizations.join(', ')}. Check sources for details.`;
 
       alerts.push({
         id: `animal-cruelty-${product.barcode}-${Date.now()}`,
         source: 'app',
         category: 'animal_cruelty',
-        title: 'Animal Cruelty Concerns',
-        message: `Recent cruelty concerns reported by ${organizations.join(', ')}. Check sources for details.`,
+        title: 'Animal Welfare Concerns (Ethics)',
+        message,
         severity,
         timestamp: Date.now(),
         actionUrl,
@@ -172,70 +240,93 @@ export function generateBannerAlerts(
     }
   }
 
-  // 1.3 Labor Violations Alerts (from DOL, Walk Free, Oxfam, ILO, Buycott, X/Reuters)
-  // Time-bound: <12 months per spec
+  // 1.3 Labor Violations Alerts (from DOL, Walk Free, Oxfam, ILO, Buycott, brand database)
+  // Time-bound: <12 months per spec. ID 17: Link must go to specific report when available.
   const laborViolationData = checkLaborViolations(product);
   if (laborViolationData.hasViolations) {
     // Time-bound filtering: Only show alerts from last 12 months
     const now = Date.now();
     const twelveMonthsAgo = now - (12 * 30 * 24 * 60 * 60 * 1000);
-    
-    // Check if violation has timestamp within 12 months
+
     if (laborViolationData.timestamp && laborViolationData.timestamp < twelveMonthsAgo) {
-      // Violation is older than 12 months, skip alert
       logger.debug('[BannerAlerts] Labor violation older than 12 months, skipping alert');
     } else {
-      // Violation is within 12 months or no timestamp (show for safety)
       const sources = laborViolationData.sources || [];
-    const hasDOL = sources.some(s => s.toLowerCase().includes('dol') || s.toLowerCase().includes('department of labor'));
-    const hasWalkFree = sources.some(s => s.toLowerCase().includes('walk free'));
-    const hasOxfam = sources.some(s => s.toLowerCase().includes('oxfam'));
-    const hasILO = sources.some(s => s.toLowerCase().includes('ilo'));
-    const hasBuycott = sources.some(s => s.toLowerCase().includes('buycott'));
-    const hasX = sources.some(s => s.toLowerCase().includes('x') || s.toLowerCase().includes('twitter'));
-    const hasReuters = sources.some(s => s.toLowerCase().includes('reuters'));
+      const hasDOL = sources.some(s => s.toLowerCase().includes('dol') || s.toLowerCase().includes('department of labor'));
+      const hasWalkFree = sources.some(s => s.toLowerCase().includes('walk free'));
+      const hasOxfam = sources.some(s => s.toLowerCase().includes('oxfam'));
+      const hasILO = sources.some(s => s.toLowerCase().includes('ilo'));
+      const hasBuycott = sources.some(s => s.toLowerCase().includes('buycott'));
+      const hasX = sources.some(s => s.toLowerCase().includes('x') || s.toLowerCase().includes('twitter'));
+      const hasReuters = sources.some(s => s.toLowerCase().includes('reuters'));
+      const hasBrandDatabase = sources.some(s => s.toLowerCase().includes('brand_database'));
 
-    const organizations: string[] = [];
-    if (hasDOL) organizations.push('DOL');
-    if (hasWalkFree) organizations.push('Walk Free');
-    if (hasOxfam) organizations.push('Oxfam');
-    if (hasILO) organizations.push('ILO');
-    if (hasBuycott) organizations.push('Buycott');
-    if (hasX) organizations.push('X (Twitter)');
-    if (hasReuters) organizations.push('Reuters');
-
-    if (organizations.length > 0) {
-      const severity = laborViolationData.violationType === 'major' ? 'high' :
-                      laborViolationData.violationType === 'moderate' ? 'medium' : 'low';
-
-      // Determine action URL based on primary organization (prioritize DOL)
-      let actionUrl: string | undefined;
-      if (hasDOL) {
-        actionUrl = 'https://www.dol.gov/general/topic/youthlabor';
-      } else if (hasWalkFree) {
-        actionUrl = 'https://www.walkfree.org/';
-      } else if (hasOxfam) {
-        actionUrl = 'https://www.oxfam.org/en/what-we-do/work/labour-rights';
-      } else if (hasILO) {
-        actionUrl = 'https://www.ilo.org/global/lang--en/index.htm';
-      } else if (hasBuycott) {
-        actionUrl = 'https://www.buycott.com/';
+      const organizations: string[] = [];
+      if (hasDOL) organizations.push('DOL');
+      if (hasWalkFree) organizations.push('Walk Free');
+      if (hasOxfam) organizations.push('Oxfam');
+      if (hasILO) organizations.push('ILO');
+      if (hasBuycott) organizations.push('Buycott');
+      if (hasX) organizations.push('X (Twitter)');
+      if (hasReuters) organizations.push('Reuters');
+      if (organizations.length === 0 && hasBrandDatabase) {
+        organizations.push('known labor concerns (brand database)');
       }
 
-      alerts.push({
-        id: `labor-violations-${product.barcode}-${Date.now()}`,
-        source: 'app',
-        category: 'labor_violations',
-        title: 'Labor Concerns',
-        message: `Labor concerns reported by ${organizations.join(', ')}. Verify sources for details.`,
-        severity,
-        timestamp: Date.now(),
-        actionUrl,
-        sourceDetails: {
-          organization: organizations.join(', '),
-        },
-      });
-    }
+      if (organizations.length > 0) {
+        const severity = laborViolationData.violationType === 'major' ? 'high' :
+                        laborViolationData.violationType === 'moderate' ? 'medium' : 'low';
+
+        // ID 17: Use specific report URL first so user is taken to the actual issue, not generic org page
+        const specificUrl = laborViolationData.violationReportUrls?.[0];
+        let actionUrl: string | undefined = specificUrl;
+        if (!actionUrl) {
+          if (hasDOL) {
+            actionUrl = 'https://www.dol.gov/general/topic/youthlabor';
+          } else if (hasBrandDatabase && !hasWalkFree) {
+            actionUrl = 'https://www.dol.gov/agencies/ilab/reports/child-labor/list-of-goods';
+          } else if (hasWalkFree) {
+            actionUrl = 'https://www.walkfree.org/';
+          } else if (hasOxfam) {
+            actionUrl = 'https://www.oxfam.org/en/what-we-do/work/labour-rights';
+          } else if (hasILO) {
+            actionUrl = 'https://www.ilo.org/global/lang--en/index.htm';
+          } else if (hasBuycott) {
+            actionUrl = 'https://www.buycott.com/';
+          }
+        }
+        logger.debug('[BannerAlerts] Labor alert actionUrl (specific report when available):', {
+          barcode: product.barcode,
+          actionUrl: actionUrl ?? 'none',
+          hasSpecificUrl: !!specificUrl,
+        });
+
+        const primaryBrand = (extractAllBrands(product)[0] || product.brands?.split(',')[0]?.trim() || 'This brand').trim();
+        const severityLabel = laborViolationData.violationType === 'major' ? 'major' :
+                             laborViolationData.violationType === 'moderate' ? 'moderate' : 'limited';
+        const onlyBrandDatabase = hasBrandDatabase && !hasDOL && !hasWalkFree && !hasOxfam && !hasILO && !hasBuycott;
+        const isDOLListOfGoods = !!actionUrl && actionUrl.includes('list-of-goods');
+        // Legal: when we only use brand database, state explicitly what we used and that no single report link exists
+        const message = onlyBrandDatabase && isDOLListOfGoods && actionUrl
+          ? `Our Ethics score uses our brand database: ${primaryBrand} is flagged for ${severityLabel} labor concerns. We do not have a direct link to a single government finding for this brand. Tap to open the official U.S. DOL List of Goods Produced by Child Labor or Forced Labor (reference).`
+          : actionUrl
+            ? `${primaryBrand} is linked to ${severityLabel} labor concerns in our sources. Tap to open the official report${actionUrl.includes('list-of-goods') ? ' (DOL List of Goods)' : actionUrl.includes('child-labor-forced-labor') ? ' (DOL Child & Forced Labor Reports)' : ''}. This affects your Ethics score.`
+            : `Labor concerns reported by ${organizations.join(', ')}. Verify sources for details.`;
+
+        alerts.push({
+          id: `labor-violations-${product.barcode}-${Date.now()}`,
+          source: 'app',
+          category: 'labor_violations',
+          title: 'Labor Concerns (Ethics)',
+          message,
+          severity,
+          timestamp: Date.now(),
+          actionUrl,
+          sourceDetails: {
+            organization: organizations.join(', '),
+          },
+        });
+      }
     }
   }
 
@@ -265,14 +356,19 @@ export function generateBannerAlerts(
   if (userPreferences.ethicalEnabled && userPreferences.avoidForcedLabour) {
     const laborViolationData = checkLaborViolations(product);
     if (laborViolationData.hasViolations) {
+      let actionUrl = laborViolationData.violationReportUrls?.[0];
+      if (!actionUrl && laborViolationData.sources?.some(s => s.toLowerCase().includes('brand_database'))) {
+        actionUrl = 'https://www.dol.gov/agencies/ilab/reports/child-labor/list-of-goods';
+      }
       alerts.push({
         id: `user-pref-labor-${product.barcode}`,
         source: 'user_preference',
         category: 'labor_violations',
         title: 'Labor Violations Detected',
-        message: 'This product/brand has labor concerns that conflict with your preferences.',
+        message: 'This product/brand has labor concerns that conflict with your preferences. Tap to open the official source.',
         severity: laborViolationData.violationType === 'major' ? 'high' :
                  laborViolationData.violationType === 'moderate' ? 'medium' : 'low',
+        actionUrl,
         sourceDetails: {
           preferenceType: 'avoidForcedLabour',
         },

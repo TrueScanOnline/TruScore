@@ -1,0 +1,23 @@
+﻿node.exe : C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\node_modules\arg\index.js:97
+At C:\Users\leigh\AppData\Roaming\npm\ts-node.ps1:24 char:5
++     & "node$exe"  "$basedir/node_modules/ts-node/dist/bin.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\leigh\...arg\index.js:97:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+					throw new TypeError(`Option requires argument (but was followed by another short argument): ${originalArgName}`);
+					^
+
+TypeError: Option requires argument (but was followed by another short argument): -P
+    at arg (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\node_modules\arg\index.js:97:12)
+    at parseArgv (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\dist\bin.js:69:12)
+    at main (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\dist\bin.js:25:18)
+    at Object.<anonymous> (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\dist\bin.js:579:5)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+
+Node.js v22.19.0

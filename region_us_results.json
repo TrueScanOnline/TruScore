@@ -1,0 +1,993 @@
+﻿{
+  "testRun": {
+    "timestamp": "2026-01-31T22:54:15.355Z",
+    "barcodesTested": 20,
+    "totalTime": 370651,
+    "totalTimeFormatted": "370651ms"
+  },
+  "results": [
+    {
+      "barcode": "034000000000",
+      "timestamp": "2026-01-31T22:54:15.359Z",
+      "performance": {
+        "fetchTime": 30074,
+        "fetchTimeFormatted": "30074ms",
+        "truScoreTime": 0,
+        "truScoreTimeFormatted": "",
+        "totalTime": 0,
+        "totalTimeFormatted": ""
+      },
+      "product": null,
+      "truScore": null,
+      "dataSources": {
+        "primarySource": null,
+        "allSources": [],
+        "databasesQueried": [],
+        "nutrition": {
+          "source": null,
+          "sources": [],
+          "fieldsCount": 0,
+          "hasEnergy": false,
+          "hasMacros": false
+        },
+        "ingredients": {
+          "source": null,
+          "sources": [],
+          "length": 0,
+          "hasHiddenTerms": false
+        },
+        "allergensAdditives": {
+          "allergensSource": null,
+          "allergensSources": [],
+          "allergensCount": 0,
+          "additivesSource": null,
+          "additivesSources": [],
+          "additivesCount": 0,
+          "allergensTags": [],
+          "additivesTags": []
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [],
+          "originsTags": [],
+          "manufacturingPlaces": [],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Product not found"
+        }
+      ]
+    },
+    {
+      "barcode": "030000011000",
+      "timestamp": "2026-01-31T22:54:45.434Z",
+      "performance": {
+        "fetchTime": 30018,
+        "fetchTimeFormatted": "30018ms",
+        "truScoreTime": 0,
+        "truScoreTimeFormatted": "",
+        "totalTime": 0,
+        "totalTimeFormatted": ""
+      },
+      "product": null,
+      "truScore": null,
+      "dataSources": {
+        "primarySource": null,
+        "allSources": [],
+        "databasesQueried": [],
+        "nutrition": {
+          "source": null,
+          "sources": [],
+          "fieldsCount": 0,
+          "hasEnergy": false,
+          "hasMacros": false
+        },
+        "ingredients": {
+          "source": null,
+          "sources": [],
+          "length": 0,
+          "hasHiddenTerms": false
+        },
+        "allergensAdditives": {
+          "allergensSource": null,
+          "allergensSources": [],
+          "allergensCount": 0,
+          "additivesSource": null,
+          "additivesSources": [],
+          "additivesCount": 0,
+          "allergensTags": [],
+          "additivesTags": []
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [],
+          "originsTags": [],
+          "manufacturingPlaces": [],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Product not found"
+        }
+      ]
+    },
+    {
+      "barcode": "038000010000",
+      "timestamp": "2026-01-31T22:55:15.452Z",
+      "performance": {
+        "fetchTime": 30012,
+        "fetchTimeFormatted": "30012ms",
+        "truScoreTime": 0,
+        "truScoreTimeFormatted": "",
+        "totalTime": 0,
+        "totalTimeFormatted": ""
+      },
+      "product": null,
+      "truScore": null,
+      "dataSources": {
+        "primarySource": null,
+        "allSources": [],
+        "databasesQueried": [],
+        "nutrition": {
+          "source": null,
+          "sources": [],
+          "fieldsCount": 0,
+          "hasEnergy": false,
+          "hasMacros": false
+        },
+        "ingredients": {
+          "source": null,
+          "sources": [],
+          "length": 0,
+          "hasHiddenTerms": false
+        },
+        "allergensAdditives": {
+          "allergensSource": null,
+          "allergensSources": [],
+          "allergensCount": 0,
+          "additivesSource": null,
+          "additivesSources": [],
+          "additivesCount": 0,
+          "allergensTags": [],
+          "additivesTags": []
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [],
+          "originsTags": [],
+          "manufacturingPlaces": [],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Product not found"
+        }
+      ]
+    },
+    {
+      "barcode": "041303000000",
+      "timestamp": "2026-01-31T22:55:45.466Z",
+      "performance": {
+        "fetchTime": 30014,
+        "fetchTimeFormatted": "30014ms",
+        "truScoreTime": 0,
+        "truScoreTimeFormatted": "",
+        "totalTime": 0,
+        "totalTimeFormatted": ""
+      },
+      "product": null,
+      "truScore": null,
+      "dataSources": {
+        "primarySource": null,
+        "allSources": [],
+        "databasesQueried": [],
+        "nutrition": {
+          "source": null,
+          "sources": [],
+          "fieldsCount": 0,
+          "hasEnergy": false,
+          "hasMacros": false
+        },
+        "ingredients": {
+          "source": null,
+          "sources": [],
+          "length": 0,
+          "hasHiddenTerms": false
+        },
+        "allergensAdditives": {
+          "allergensSource": null,
+          "allergensSources": [],
+          "allergensCount": 0,
+          "additivesSource": null,
+          "additivesSources": [],
+          "additivesCount": 0,
+          "allergensTags": [],
+          "additivesTags": []
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [],
+          "originsTags": [],
+          "manufacturingPlaces": [],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Product not found"
+        }
+      ]
+    },
+    {
+      "barcode": "5150024024",
+      "timestamp": "2026-01-31T22:56:15.480Z",
+      "performance": {
+        "fetchTime": 30014,
+        "fetchTimeFormatted": "30014ms",
+        "truScoreTime": 0,
+        "truScoreTimeFormatted": "",
+        "totalTime": 0,
+        "totalTimeFormatted": ""
+      },
+      "product": null,
+      "truScore": null,
+      "dataSources": {
+        "primarySource": null,
+        "allSources": [],
+        "databasesQueried": [],
+        "nutrition": {
+          "source": null,
+          "sources": [],
+          "fieldsCount": 0,
+          "hasEnergy": false,
+          "hasMacros": false
+        },
+        "ingredients": {
+          "source": null,
+          "sources": [],
+          "length": 0,
+          "hasHiddenTerms": false
+        },
+        "allergensAdditives": {
+          "allergensSource": null,
+          "allergensSources": [],
+          "allergensCount": 0,
+          "additivesSource": null,
+          "additivesSources": [],
+          "additivesCount": 0,
+          "allergensTags": [],
+          "additivesTags": []
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [],
+          "originsTags": [],
+          "manufacturingPlaces": [],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Product not found"
+        }
+      ]
+    },
+    {
+      "barcode": "034000000001",
+      "timestamp": "2026-01-31T22:56:45.495Z",
+      "performance": {
+        "fetchTime": 30003,
+        "fetchTimeFormatted": "30003ms",
+        "truScoreTime": 0,
+        "truScoreTimeFormatted": "",
+        "totalTime": 0,
+        "totalTimeFormatted": ""
+      },
+      "product": null,
+      "truScore": null,
+      "dataSources": {
+        "primarySource": null,
+        "allSources": [],
+        "databasesQueried": [],
+        "nutrition": {
+          "source": null,
+          "sources": [],
+          "fieldsCount": 0,
+          "hasEnergy": false,
+          "hasMacros": false
+        },
+        "ingredients": {
+          "source": null,
+          "sources": [],
+          "length": 0,
+          "hasHiddenTerms": false
+        },
+        "allergensAdditives": {
+          "allergensSource": null,
+          "allergensSources": [],
+          "allergensCount": 0,
+          "additivesSource": null,
+          "additivesSources": [],
+          "additivesCount": 0,
+          "allergensTags": [],
+          "additivesTags": []
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [],
+          "originsTags": [],
+          "manufacturingPlaces": [],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Product not found"
+        }
+      ]
+    },
+    {
+      "barcode": "034000000002",
+      "timestamp": "2026-01-31T22:57:15.498Z",
+      "performance": {
+        "fetchTime": 30004,
+        "fetchTimeFormatted": "30004ms",
+        "truScoreTime": 0,
+        "truScoreTimeFormatted": "",
+        "totalTime": 0,
+        "totalTimeFormatted": ""
+      },
+      "product": null,
+      "truScore": null,
+      "dataSources": {
+        "primarySource": null,
+        "allSources": [],
+        "databasesQueried": [],
+        "nutrition": {
+          "source": null,
+          "sources": [],
+          "fieldsCount": 0,
+          "hasEnergy": false,
+          "hasMacros": false
+        },
+        "ingredients": {
+          "source": null,
+          "sources": [],
+          "length": 0,
+          "hasHiddenTerms": false
+        },
+        "allergensAdditives": {
+          "allergensSource": null,
+          "allergensSources": [],
+          "allergensCount": 0,
+          "additivesSource": null,
+          "additivesSources": [],
+          "additivesCount": 0,
+          "allergensTags": [],
+          "additivesTags": []
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [],
+          "originsTags": [],
+          "manufacturingPlaces": [],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Product not found"
+        }
+      ]
+    },
+    {
+      "barcode": "13000006408",
+      "timestamp": "2026-01-31T22:57:45.502Z",
+      "performance": {
+        "fetchTime": 7680,
+        "fetchTimeFormatted": "7680ms",
+        "truScoreTime": 141,
+        "truScoreTimeFormatted": "141ms",
+        "totalTime": 7821,
+        "totalTimeFormatted": "7821ms"
+      },
+      "product": {
+        "barcode": "13000006408",
+        "product_name": "Tomato Ketchup",
+        "source": "openfoodfacts",
+        "quality": 0,
+        "completion": 0,
+        "hasNutrition": true,
+        "hasIngredients": true,
+        "hasImage": true,
+        "hasAllergens": false,
+        "hasAdditives": false,
+        "hasOrigin": false,
+        "hasCertifications": false
+      },
+      "truScore": {
+        "overall": 44,
+        "breakdown": {
+          "Body": 6,
+          "Planet": 18,
+          "Ethics": 15,
+          "Open": 5
+        },
+        "hasNutriScore": true,
+        "hasEcoScore": true,
+        "hasOrigin": false,
+        "insights": []
+      },
+      "dataSources": {
+        "primarySource": "openfoodfacts",
+        "allSources": [
+          "openfoodfacts"
+        ],
+        "databasesQueried": [
+          "openfoodfacts"
+        ],
+        "nutrition": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "fieldsCount": 90,
+          "hasEnergy": true,
+          "hasMacros": true
+        },
+        "ingredients": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "length": 151,
+          "hasHiddenTerms": true
+        },
+        "allergensAdditives": {
+          "allergensSource": null,
+          "allergensSources": [],
+          "allergensCount": 0,
+          "additivesSource": null,
+          "additivesSources": [],
+          "additivesCount": 0,
+          "allergensTags": [],
+          "additivesTags": []
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [
+            ""
+          ],
+          "originsTags": [],
+          "manufacturingPlaces": [
+            ""
+          ],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Cannot read properties of undefined (reading 'score')",
+          "stack": "TypeError: Cannot read properties of undefined (reading 'score')\n    at testBarcode (C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:664:52)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:738:20"
+        }
+      ]
+    },
+    {
+      "barcode": "40000511281",
+      "timestamp": "2026-01-31T22:57:53.326Z",
+      "performance": {
+        "fetchTime": 6654,
+        "fetchTimeFormatted": "6654ms",
+        "truScoreTime": 24,
+        "truScoreTimeFormatted": "24ms",
+        "totalTime": 6678,
+        "totalTimeFormatted": "6678ms"
+      },
+      "product": {
+        "barcode": "40000511281",
+        "product_name": "m&m's Dark Chocolate",
+        "source": "openfoodfacts",
+        "quality": 0,
+        "completion": 0,
+        "hasNutrition": true,
+        "hasIngredients": true,
+        "hasImage": false,
+        "hasAllergens": true,
+        "hasAdditives": false,
+        "hasOrigin": true,
+        "hasCertifications": true
+      },
+      "truScore": {
+        "overall": 35,
+        "breakdown": {
+          "Body": 2,
+          "Planet": 18,
+          "Ethics": 2,
+          "Open": 13
+        },
+        "hasNutriScore": true,
+        "hasEcoScore": true,
+        "hasOrigin": true,
+        "insights": []
+      },
+      "dataSources": {
+        "primarySource": "openfoodfacts",
+        "allSources": [
+          "openfoodfacts"
+        ],
+        "databasesQueried": [
+          "openfoodfacts"
+        ],
+        "nutrition": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "fieldsCount": 98,
+          "hasEnergy": true,
+          "hasMacros": true
+        },
+        "ingredients": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "length": 309,
+          "hasHiddenTerms": true
+        },
+        "allergensAdditives": {
+          "allergensSource": "openfoodfacts",
+          "allergensSources": [
+            "openfoodfacts"
+          ],
+          "allergensCount": 2,
+          "additivesSource": "openfoodfacts",
+          "additivesSources": [
+            "openfoodfacts"
+          ],
+          "additivesCount": 10,
+          "allergensTags": [
+            "en:milk",
+            "en:soybeans"
+          ],
+          "additivesTags": [
+            "en:e102",
+            "en:e110",
+            "en:e129",
+            "en:e132",
+            "en:e133",
+            "en:e1400",
+            "en:e322",
+            "en:e322i",
+            "en:e414",
+            "en:e903"
+          ]
+        },
+        "countryOfOrigin": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "origins": [
+            "Estados Unidos"
+          ],
+          "originsTags": [
+            "en:united-states"
+          ],
+          "manufacturingPlaces": [
+            "Hackettstown,New Jersey,Estados Unidos"
+          ],
+          "manufacturingPlacesTags": [
+            "hackettstown",
+            "new-jersey",
+            "estados-unidos"
+          ]
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Cannot read properties of undefined (reading 'score')",
+          "stack": "TypeError: Cannot read properties of undefined (reading 'score')\n    at testBarcode (C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:664:52)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:738:20"
+        }
+      ]
+    },
+    {
+      "barcode": "40000422068",
+      "timestamp": "2026-01-31T22:58:00.006Z",
+      "performance": {
+        "fetchTime": 6892,
+        "fetchTimeFormatted": "6892ms",
+        "truScoreTime": 27,
+        "truScoreTimeFormatted": "27ms",
+        "totalTime": 6919,
+        "totalTimeFormatted": "6919ms"
+      },
+      "product": {
+        "barcode": "40000422068",
+        "product_name": "milkyway",
+        "source": "openfoodfacts",
+        "quality": 0,
+        "completion": 0,
+        "hasNutrition": true,
+        "hasIngredients": true,
+        "hasImage": true,
+        "hasAllergens": true,
+        "hasAdditives": false,
+        "hasOrigin": false,
+        "hasCertifications": true
+      },
+      "truScore": {
+        "overall": 19,
+        "breakdown": {
+          "Body": 2,
+          "Planet": 10,
+          "Ethics": 2,
+          "Open": 5
+        },
+        "hasNutriScore": true,
+        "hasEcoScore": true,
+        "hasOrigin": false,
+        "insights": []
+      },
+      "dataSources": {
+        "primarySource": "openfoodfacts",
+        "allSources": [
+          "openfoodfacts"
+        ],
+        "databasesQueried": [
+          "openfoodfacts"
+        ],
+        "nutrition": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "fieldsCount": 99,
+          "hasEnergy": true,
+          "hasMacros": true
+        },
+        "ingredients": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "length": 273,
+          "hasHiddenTerms": true
+        },
+        "allergensAdditives": {
+          "allergensSource": "openfoodfacts",
+          "allergensSources": [
+            "openfoodfacts"
+          ],
+          "allergensCount": 4,
+          "additivesSource": "openfoodfacts",
+          "additivesSources": [
+            "openfoodfacts"
+          ],
+          "additivesCount": 2,
+          "allergensTags": [
+            "en:eggs",
+            "en:gluten",
+            "en:milk",
+            "en:soybeans"
+          ],
+          "additivesTags": [
+            "en:e322",
+            "en:e322i"
+          ]
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [
+            ""
+          ],
+          "originsTags": [],
+          "manufacturingPlaces": [
+            ""
+          ],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Cannot read properties of undefined (reading 'score')",
+          "stack": "TypeError: Cannot read properties of undefined (reading 'score')\n    at testBarcode (C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:664:52)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:738:20"
+        }
+      ]
+    },
+    {
+      "barcode": "44000032210",
+      "timestamp": "2026-01-31T22:58:06.928Z",
+      "performance": {
+        "fetchTime": 6843,
+        "fetchTimeFormatted": "6843ms",
+        "truScoreTime": 42,
+        "truScoreTimeFormatted": "42ms",
+        "totalTime": 6885,
+        "totalTimeFormatted": "6885ms"
+      },
+      "product": {
+        "barcode": "44000032210",
+        "product_name": "Nabisco chips ahoy! cookies chunky",
+        "source": "openfoodfacts",
+        "quality": 0,
+        "completion": 0,
+        "hasNutrition": true,
+        "hasIngredients": true,
+        "hasImage": true,
+        "hasAllergens": true,
+        "hasAdditives": false,
+        "hasOrigin": false,
+        "hasCertifications": false
+      },
+      "truScore": {
+        "overall": 7,
+        "breakdown": {
+          "Body": 2,
+          "Planet": 0,
+          "Ethics": 0,
+          "Open": 5
+        },
+        "hasNutriScore": true,
+        "hasEcoScore": true,
+        "hasOrigin": false,
+        "insights": []
+      },
+      "dataSources": {
+        "primarySource": "openfoodfacts",
+        "allSources": [
+          "openfoodfacts"
+        ],
+        "databasesQueried": [
+          "openfoodfacts"
+        ],
+        "nutrition": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "fieldsCount": 105,
+          "hasEnergy": true,
+          "hasMacros": true
+        },
+        "ingredients": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "length": 485,
+          "hasHiddenTerms": true
+        },
+        "allergensAdditives": {
+          "allergensSource": "openfoodfacts",
+          "allergensSources": [
+            "openfoodfacts"
+          ],
+          "allergensCount": 3,
+          "additivesSource": "openfoodfacts",
+          "additivesSources": [
+            "openfoodfacts"
+          ],
+          "additivesCount": 6,
+          "allergensTags": [
+            "en:gluten",
+            "en:milk",
+            "en:soybeans"
+          ],
+          "additivesTags": [
+            "en:e150c",
+            "en:e322",
+            "en:e322i",
+            "en:e342",
+            "en:e500",
+            "en:e500ii"
+          ]
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [
+            ""
+          ],
+          "originsTags": [],
+          "manufacturingPlaces": [
+            ""
+          ],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      },
+      "pillarBreakdown": null,
+      "errors": [
+        {
+          "message": "Cannot read properties of undefined (reading 'score')",
+          "stack": "TypeError: Cannot read properties of undefined (reading 'score')\n    at testBarcode (C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:664:52)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async C:\\TrueScan-FoodScanner\\scripts\\testBarcodePerformance.ts:738:20"
+        }
+      ]
+    },
+    {
+      "barcode": "38000845017",
+      "timestamp": "2026-01-31T22:58:13.816Z",
+      "performance": {
+        "fetchTime": 6764,
+        "fetchTimeFormatted": "6764ms",
+        "truScoreTime": 107,
+        "truScoreTimeFormatted": "107ms",
+        "totalTime": 6871,
+        "totalTimeFormatted": "6871ms"
+      },
+      "product": {
+        "barcode": "38000845017",
+        "product_name": "Pringles, jalapeno potato crisp",
+        "source": "openfoodfacts",
+        "quality": 0,
+        "completion": 0,
+        "hasNutrition": true,
+        "hasIngredients": true,
+        "hasImage": false,
+        "hasAllergens": true,
+        "hasAdditives": false,
+        "hasOrigin": false,
+        "hasCertifications": true
+      },
+      "truScore": {
+        "overall": 45,
+        "breakdown": {
+          "Body": 2,
+          "Planet": 18,
+          "Ethics": 15,
+          "Open": 10
+        },
+        "hasNutriScore": true,
+        "hasEcoScore": true,
+        "hasOrigin": false,
+        "insights": []
+      },
+      "dataSources": {
+        "primarySource": "openfoodfacts",
+        "allSources": [
+          "openfoodfacts"
+        ],
+        "databasesQueried": [
+          "openfoodfacts"
+        ],
+        "nutrition": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "fieldsCount": 160,
+          "hasEnergy": true,
+          "hasMacros": true
+        },
+        "ingredients": {
+          "source": "openfoodfacts",
+          "sources": [
+            "openfoodfacts"
+          ],
+          "length": 540,
+          "hasHiddenTerms": true
+        },
+        "allergensAdditives": {
+          "allergensSource": "openfoodfacts",
+          "allergensSources": [
+            "openfoodfacts"
+          ],
+          "allergensCount": 3,
+          "additivesSource": "openfoodfacts",
+          "additivesSources": [
+            "openfoodfacts"
+          ],
+          "additivesCount": 9,
+          "allergensTags": [
+            "en:gluten",
+            "en:milk",
+            "en:soybeans"
+          ],
+          "additivesTags": [
+            "en:e160c",
+            "en:e262",
+            "en:e262ii",
+            "en:e270",
+            "en:e330",
+            "en:e471",
+            "en:e621",
+            "en:e627",
+            "en:e631"
+          ]
+        },
+        "countryOfOrigin": {
+          "source": null,
+          "sources": [],
+          "origins": [
+            ""
+          ],
+          "originsTags": [],
+          "manufacturingPlaces": [
+            ""
+          ],
+          "manufacturingPlacesTags": []
+        },
+        "scoreHighlights": {
+          "source": "truScore_engine",
+          "insights": [],
+          "insightsCount": 0
+        }
+      }

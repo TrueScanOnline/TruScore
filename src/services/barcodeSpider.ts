@@ -4,7 +4,8 @@ import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { logger } from '../utils/logger';
 
 const BARCODE_SPIDER_API = 'https://api.barcodespider.com/v1/lookup';
-const API_KEY = ''; // Free tier - no key needed for basic lookup
+// Require explicit API key configuration; avoid hitting the API with an empty token
+const API_KEY = process.env.EXPO_PUBLIC_BARCODE_SPIDER_API_KEY || '';
 
 export interface BarcodeSpiderResponse {
   item_response: {
@@ -42,6 +43,12 @@ export interface BarcodeSpiderResponse {
  * Fetch basic product info from Barcode Spider (fallback)
  */
 export async function fetchProductFromBarcodeSpider(barcode: string): Promise<Product | null> {
+  // Skip if API key not configured
+  if (!API_KEY || API_KEY.length < 10) {
+    logger.debug(`Barcode Spider API key not configured, skipping lookup for ${barcode}`);
+    return null;
+  }
+  
   try {
     const url = `${BARCODE_SPIDER_API}?token=${API_KEY}&upc=${barcode}`;
     

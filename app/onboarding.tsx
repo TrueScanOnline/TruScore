@@ -190,6 +190,24 @@ export default function OnboardingScreen() {
         ))}
       </View>
 
+      {/* Legal disclaimer / consent (for lawyer review) */}
+      <View style={styles.legalContainer}>
+        <Text style={[styles.legalTitle, { color: colors.text }]}>
+          {t('onboarding.legalTitle') || 'Before you start'}
+        </Text>
+        <Text style={[styles.legalText, { color: colors.textSecondary }]}>
+          {t('onboarding.legalBody') ||
+            'TruScan scores and insights are interpretive opinions based on public data. They may be ' +
+              'incomplete, outdated, or inaccurate and do not replace product labels, medical advice, or ' +
+              'professional guidance. Always read the product packaging and consult a qualified professional ' +
+              'for individual health or dietary decisions. By continuing, you confirm that you understand these limitations.'}
+        </Text>
+        <Text style={[styles.legalLinkText, { color: colors.textTertiary }]}>
+          {t('onboarding.legalFooter') ||
+            'Full Terms, Privacy and Methodology details are available at any time in Settings.'}
+        </Text>
+      </View>
+
       {/* Navigation Buttons */}
       <View style={styles.navigationContainer}>
         {currentSlide > 0 && (
@@ -311,5 +329,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  legalContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  legalTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  legalText: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  legalLinkText: {
+    fontSize: 11,
+    marginTop: 6,
   },
 });

@@ -1,0 +1,25 @@
+﻿node.exe : C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\src\index.ts:859
+At C:\Users\leigh\AppData\Roaming\npm\ts-node.ps1:24 char:5
++     & "node$exe"  "$basedir/node_modules/ts-node/dist/bin.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\leigh\...rc\index.ts:859:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: Γ¿» Unable to compile TypeScript:
+error TS5083: Cannot read file 'C:\TrueScan-FoodScanner\scripts\tsconfig.json --transpile-only --skip-ignore 
+C:\TrueScan-FoodScanner\scripts\testBarcodePerformance.ts 894700010137 9310354982466'.
+
+    at createTSError (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\src\index.ts:863:19)
+    at createFromPreloadedConfig (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\src\index.ts:874:36)
+    at phase4 (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\src\bin.ts:543:44)
+    at bootstrap (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\src\bin.ts:95:10)
+    at main (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\src\bin.ts:55:10)
+    at Object.<anonymous> (C:\Users\leigh\AppData\Roaming\npm\node_modules\ts-node\src\bin.ts:800:3)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32) {
+  diagnosticCodes: [ 5083 ]
+}

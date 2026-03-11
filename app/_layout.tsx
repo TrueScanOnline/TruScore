@@ -18,6 +18,7 @@ import SettingsScreen from './settings';
 import OnboardingScreen from './onboarding';
 import SubscriptionScreen from './subscription';
 import ValuesScreen from './values';
+import MethodologyScreen from './methodology';
 import AppTabs from '../src/navigation/AppTabs';
 
 // Import stores
@@ -47,6 +48,7 @@ export type RootStackParamList = {
   Values: undefined;
   Favourites: undefined;
   Search: undefined;
+  Methodology: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -309,6 +311,15 @@ function RootLayout() {
                     presentation: 'modal',
                     headerShown: true,
                     title: 'Values Preferences',
+                  }}
+                />
+                <Stack.Screen
+                  name="Methodology"
+                  component={MethodologyScreen}
+                  options={{
+                    presentation: 'modal',
+                    headerShown: true,
+                    title: 'TruScan Methodology',
                   }}
                 />
               </Stack.Navigator>

@@ -1,0 +1,1392 @@
+/**
+ * BBFAW 2024 Company-Tier Data
+ * Auto-generated from extractBBFAW2024FromDocx.ts
+ * Source: BBFAW 2024 Report - https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf
+ *
+ * Used by bbfawService for ETHICS PILLAR scoring.
+ * Each entry includes referenceUrl so users can see WHY and WHERE the score came from.
+ */
+
+export const BBFAW_2024_REPORT_URL = 'https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf';
+export const BBFAW_2024_LAST_EXTRACTED = '2026-03-07T21:41:56.294Z';
+
+export interface BBFAW2024CompanyEntry {
+  companyName: string;
+  displayName?: string;
+  tier: 1 | 2 | 3 | 4 | 5 | 6;
+  impactRating?: 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
+  referenceUrl: string;
+  reportSection: string;
+  year: number;
+}
+
+export const BBFAW_2024_COMPANIES: BBFAW2024CompanyEntry[] = [
+  {
+    "companyName": "Greggs PLC",
+    "tier": 2,
+    "impactRating": "C",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Marks & Spencer PLC",
+    "tier": 2,
+    "impactRating": "B",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Premier Foods PLC",
+    "tier": 2,
+    "impactRating": "B",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Waitrose",
+    "tier": 2,
+    "impactRating": "C",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Co-op UK",
+    "tier": 3,
+    "impactRating": "D",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Cranswick PLC",
+    "tier": 3,
+    "impactRating": "D",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Danish Crown AmbA",
+    "tier": 3,
+    "impactRating": "D",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Fonterra",
+    "tier": 3,
+    "impactRating": "B",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Groupe Danone SA",
+    "tier": 3,
+    "impactRating": "C",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Migros-Genossenschafts-Bund",
+    "tier": 3,
+    "impactRating": "C",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Minerva Foods",
+    "tier": 3,
+    "impactRating": "D",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Noble Foods",
+    "tier": 3,
+    "impactRating": "D",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Arla Foods Ltd",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Barilla SpA",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "BRF SA",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Compass Group PLC",
+    "tier": 4,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Groupe Lactalis",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Hershey Co",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Hilton Food Group",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "J Sainsbury PLC",
+    "tier": 4,
+    "impactRating": "D",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "JD Wetherspoon PLC",
+    "tier": 4,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "LDC Groupe",
+    "tier": 4,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Les Mousquetaires",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Marfrig Global Foods SA",
+    "tier": 4,
+    "impactRating": "D",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Mitchells & Butlers PLC",
+    "tier": 4,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Terrena Group",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Tesco PLC",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Unilever NV",
+    "tier": 4,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Whitbread PLC",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Wm Morrison Supermarkets PLC",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Woolworths Limited",
+    "tier": 4,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "ALDI Süd",
+    "tier": 4,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "ALDI Einkauf SE & Co. oHG",
+    "tier": 4,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "(The) Kroger Company",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "2 Sisters Food Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Agro Super",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Ahold Delhaize",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "ALDI Nord",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Aramark Corporation",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Bellis Topco Ltd",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Asda",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Bimbo",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Campbell Soup Company",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Cargill",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Carrefour SA",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Casino Guichard-Perrachon SA",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Charoen Pokphand Foods",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Chipotle Mexican Grill",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Coles Group",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Colruyt",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "ConAgra",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Coop Group",
+    "tier": 5,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Cooperativa Central Aurora Alimentos",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Coopérative U Enseigne",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Cooperl Arc Atlantique",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Cremonini SpA",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Darden Restaurants PLC",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "E.Leclerc",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "EDEKA Group",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Elior Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Elo Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Ferrero Group",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "General Mills Inc",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Gruppo Veronesi",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Hormel Foods Corporation",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "ICA Gruppen AB",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "IKEA",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Inter IKEA Group",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "JBS SA",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Jeronimo Martins",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Kraft Heinz Company",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Maple Leaf Foods",
+    "tier": 5,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "McDonald's Corporation",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "McDonald's",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "METRO AG",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Metro Inc",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Mowi ASA",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Nestlé SA",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Nestlé",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "OSI Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Papa John's Pizza",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Perdue Farms",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Plukon Food Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Restaurant Brands International",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "REWE Group",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Royal FrieslandCampina",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Saputo Inc",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Schwarz Gruppe",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Sodexo",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "SSP Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Sysco Corporation",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "The Cheesecake Factory",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Tönnies Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Tyson Foods Inc",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Tyson Foods",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Vion Food Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Wayne-Sanderson Farms",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Yum! Brands Inc",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Yum! Brands",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Aeon Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Albertsons",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Alimentation Couche-Tard",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Amazon",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Whole Foods Market",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Avolta AG",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Beijing Dabeinong Technology Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "BJ's Wholesale Club Holdings",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Bloomin' Brands Inc",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "C&S Wholesale",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Camst",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Cencosud",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Chick-fil-A",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "China Resources Vanguard",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "China Yurun Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "CKE Restaurants",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Conad",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Cooke Seafood Inc",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Coop Italia",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Costco Wholesale Corporation",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Cracker Barrel",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Dairy Farmers of America",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Dico's",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Ting Hsin International Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Dino Polska SA",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Domino's Pizza Inc",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Domino's",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Empire Company",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Sobey's",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Gategroup Holding AG",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "H E Butt Company",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "H-E-B",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Habib's",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Industrias Bachoco",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "JAB Holding Company",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Kerry Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Lianhua Supermarket Holdings",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Loblaw Companies Limited",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Mars Inc",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Mars",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Maruha Nichiro",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Meiji Holdings",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Mercadona SA",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Mondelēz International",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Müller",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "New Hope Liuhe",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Nippon Ham",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Publix Super Markets Inc",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Roark Capital",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Inspire Brands",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Subway",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Seaboard Corp",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Seven & i Holdings",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Spar Holding AG",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Starbucks Corporation",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Starbucks",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Target Corporation",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "UNFI",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "US Foods",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Walmart Inc",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Walmart",
+    "tier": 5,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Wendy's Company",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Wendy's",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Wens Foodstuff Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "WH Group Ltd",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Yili Group",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Yonghui Superstores",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Yum China Holdings",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Zhongpin Inc",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Huayu Holdings",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Boparan Holdings",
+    "tier": 6,
+    "impactRating": "F",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  },
+  {
+    "companyName": "Genossenschaft",
+    "tier": 4,
+    "impactRating": "E",
+    "referenceUrl": "https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16",
+    "reportSection": "Figure 2.1 - Company Tier Rankings and Impact Ratings",
+    "year": 2024
+  }
+];

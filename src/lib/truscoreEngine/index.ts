@@ -1,12 +1,12 @@
 /**
  * TruScore Engine - Modular Pillar System
- * 
+ *
  * This module orchestrates the calculation of all 4 pillars:
  * - Body Pillar (nutrition, additives, processing)
  * - Planet Pillar (environmental impact, palm oil, recyclability)
- * - Ethics Pillar (ethical certifications, recalls, brand ethics)
+ * - Ethics Pillar (BBFAW 2024 animal welfare only - direct brand_owner/brands match)
  * - Open Pillar (transparency, ingredients disclosure, origin)
- * 
+ *
  * Each pillar is calculated independently and can be tested/modified separately.
  */
 
@@ -15,6 +15,8 @@ import { ValuesPreferences } from '../../store/useValuesStore';
 import { generateInsights } from '../valuesInsights';
 import { logger } from '../../utils/logger';
 import { powershellLogger } from '../../utils/powershellLogger';
+import type { TruScoreAnalysis, FetchTraceEntry, PillarAnalysis, PillarAdjustmentWithSource } from '../../types/truscoreAnalysis';
+import type { QueryKeyType } from '../../types/truscoreAnalysis';
 
 // Import individual pillar calculators
 import { calculateBodyPillar, BodyPillarResult } from './pillars/bodyPillar';
@@ -45,9 +47,11 @@ export interface TruScoreResult {
   pillarDetails?: {
     body: BodyPillarResult;
     planet: PlanetPillarResult;
-        ethics: EthicsPillarResult;
+    ethics: EthicsPillarResult;
     open: OpenPillarResult;
   };
+  /** Full analysis (fetch trace + per-pillar source attribution). Built when pillarDetails exist. */
+  analysis?: TruScoreAnalysis;
 }
 
 /**
@@ -159,7 +163,8 @@ export function calculateTruScore(
         open: openResult,
       },
     };
-    
+    result.analysis = buildTruScoreAnalysis(product, result) ?? undefined;
+
     // PowerShell logging for TruScore calculation details with timing
     powershellLogger.truScoreCalculationDetailed(
       product?.barcode || 'unknown',
@@ -202,7 +207,136 @@ export function calculateTruScore(
   }
 }
 
+/** Map product.source to display name for analysis logs */
+const SOURCE_DISPLAY_NAMES: Record<string, string> = {
+  openfoodfacts: 'Open Food Facts',
+  openbeautyfacts: 'Open Beauty Facts',
+  openpetfoodfacts: 'Open Pet Food Facts',
+  openproductsfacts: 'Open Products Facts',
+  sqlite: 'SQLite',
+  cache: 'Cache',
+  nzfcd: 'FSANZ (NZ)',
+  afcd: 'FSANZ (AU)',
+  spoonacular: 'Spoonacular',
+  foodatlas: 'FoodAtlas',
+  gs1: 'GS1',
+  usda: 'USDA',
+  healthcanada: 'Health Canada',
+  ukfsa: 'UK FSA',
+  efsa: 'EFSA',
+  rasff: 'RASFF',
+  web_search: 'Web search',
+};
+
+/** Best-available reference URLs for Ethics pillar. BBFAW 2024 only; pillar passes company-specific link when available. */
+const ETHICS_REFERENCE_URLS: Record<string, string> = {
+  'BBFAW': 'https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16',
+};
+
+/**
+ * Infer source database and query key type for an adjustment from pillar and description.
+ * productSourceDisplay = which DB provided the product used for scoring (e.g. "Open Food Facts").
+ * For Ethics, also returns referenceUrl when we have a best-available official link (not the exact report).
+ */
+function inferAdjustmentSource(
+  pillar: 'Body' | 'Planet' | 'Ethics' | 'Open',
+  adj: { description: string; value: number; type: string },
+  productSourceDisplay: string
+): { sourceDatabase: string; queryKeyType: QueryKeyType; referenceUrl?: string } {
+  const d = (adj.description || '').toLowerCase();
+  if (pillar === 'Ethics') {
+    if (d.includes('base score') || d.includes('assumes ethical')) return { sourceDatabase: 'Internal', queryKeyType: 'product_field' };
+    if (d.includes('bbfaw')) return { sourceDatabase: 'BBFAW', queryKeyType: 'brand', referenceUrl: ETHICS_REFERENCE_URLS['BBFAW'] };
+    return { sourceDatabase: 'Internal', queryKeyType: 'product_field' };
+  }
+  if (pillar === 'Body') {
+    if (d.includes('base')) return { sourceDatabase: 'Internal', queryKeyType: 'product_field' };
+    if (d.includes('nutri-score') || d.includes('nutriscore')) return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+    if (d.includes('additive') || d.includes('iarc')) return { sourceDatabase: 'Additive DB + ' + productSourceDisplay, queryKeyType: 'product_field' };
+    if (d.includes('nova') || d.includes('processing')) return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+    if (d.includes('ewg')) return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+    return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+  }
+  if (pillar === 'Planet') {
+    if (d.includes('base')) return { sourceDatabase: 'Internal', queryKeyType: 'product_field' };
+    if (d.includes('eco-score') || d.includes('ecoscore')) return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+    if (d.includes('palm') || d.includes('rspo')) return { sourceDatabase: productSourceDisplay + ' + Brand DB', queryKeyType: 'brand' };
+    if (d.includes('recycl') || d.includes('packaging')) return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+    if (d.includes('overlay')) return { sourceDatabase: 'Brand DB', queryKeyType: 'parent' };
+    if (d.includes('farming') || d.includes('low-impact')) return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+    return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+  }
+  if (pillar === 'Open') {
+    if (d.includes('base')) return { sourceDatabase: 'Internal', queryKeyType: 'product_field' };
+    if (d.includes('brand') || d.includes('ownership') || d.includes('parent')) return { sourceDatabase: 'Brand DB', queryKeyType: 'brand' };
+    return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+  }
+  return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+}
+
+/**
+ * Build full TruScore analysis from product (for fetch trace) and TruScore result (for pillar details).
+ * Used for in-app "Score breakdown" and logging. 100% matches the score shown on screen.
+ */
+export function buildTruScoreAnalysis(
+  product: Product | null | undefined,
+  result: TruScoreResult
+): TruScoreAnalysis | null {
+  if (!product || !result.pillarDetails) return null;
+  const fetchTrace: FetchTraceEntry[] = Array.isArray((product as any)._fetchTrace) ? (product as any)._fetchTrace : [];
+  const productSourceDisplay = SOURCE_DISPLAY_NAMES[(product.source || '').toLowerCase()] || (product.source || 'Merged product');
+
+  function toPillarAnalysis(
+    pillarName: 'Body' | 'Planet' | 'Ethics' | 'Open',
+    pr: { base: number; score: number; adjustments: Array<{ description: string; value: number; type: 'positive' | 'negative' | 'neutral'; referenceUrl?: string }> }
+  ): PillarAnalysis {
+    const adjustments: PillarAdjustmentWithSource[] = pr.adjustments.map((adj) => {
+      const inferred = inferAdjustmentSource(pillarName, adj, productSourceDisplay);
+      const referenceUrl = (adj as { referenceUrl?: string }).referenceUrl ?? inferred.referenceUrl;
+      return {
+        description: adj.description,
+        value: adj.value,
+        type: adj.type,
+        sourceDatabase: inferred.sourceDatabase,
+        queryKeyType: inferred.queryKeyType,
+        ...(referenceUrl != null && { referenceUrl }),
+      };
+    });
+    const sourcesUsed = new Map<string, { database: string; queryKeyType: QueryKeyType; returnedResult: boolean; order: number }>();
+    adjustments.forEach((a, i) => {
+      if (a.sourceDatabase && a.queryKeyType) {
+        const key = `${a.sourceDatabase}|${a.queryKeyType}`;
+        if (!sourcesUsed.has(key))
+          sourcesUsed.set(key, { database: a.sourceDatabase, queryKeyType: a.queryKeyType, returnedResult: a.value !== 0, order: i + 1 });
+      }
+    });
+    return {
+      pillarName,
+      baseScore: pr.base,
+      finalScore: pr.score,
+      adjustments,
+      dataSourcesUsed: Array.from(sourcesUsed.values()),
+    };
+  }
+
+  const pd = result.pillarDetails;
+  const analysis: TruScoreAnalysis = {
+    barcode: product.barcode || 'unknown',
+    totalScore: result.truscore,
+    fetchTrace,
+    pillars: {
+      Body: toPillarAnalysis('Body', pd.body),
+      Planet: toPillarAnalysis('Planet', pd.planet),
+      Ethics: toPillarAnalysis('Ethics', pd.ethics),
+      Open: toPillarAnalysis('Open', pd.open),
+    },
+    generatedAt: Date.now(),
+  };
+  return analysis;
+}
+
 // Export individual pillar functions for testing
 export { calculateBodyPillar, calculatePlanetPillar, calculateEthicsPillar, calculateOpenPillar };
 export type { BodyPillarResult, PlanetPillarResult, EthicsPillarResult, OpenPillarResult };
+export type { TruScoreAnalysis, FetchTraceEntry, PillarAnalysis, PillarAdjustmentWithSource } from '../../types/truscoreAnalysis';
 
