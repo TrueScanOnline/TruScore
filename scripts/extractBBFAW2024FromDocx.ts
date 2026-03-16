@@ -1,9 +1,8 @@
 /**
  * Extract BBFAW 2024 company-tier data from the BBFAW 2024 Report (.docx)
  *
- * Outputs:
- * - Database files/ETHICS Pillar/bbfaw-2024-data.json (for app consumption)
- * - src/data/bbfaw2024Data.ts (TypeScript export)
+ * Output: Database files/ETHICS Pillar/bbfaw-2024-data.json (source of truth)
+ * Run: yarn sync-ethics-data to copy to src for app bundle.
  *
  * Run: yarn extract-bbfaw2024
  * Or: npx ts-node --project scripts/tsconfig.json scripts/extractBBFAW2024FromDocx.ts
@@ -16,7 +15,6 @@ import * as cheerio from 'cheerio';
 
 const DOCX_PATH = path.join(__dirname, '..', 'Database files', 'ETHICS Pillar', 'bbfaw-2024-report.docx');
 const OUTPUT_JSON = path.join(__dirname, '..', 'Database files', 'ETHICS Pillar', 'bbfaw-2024-data.json');
-const OUTPUT_TS = path.join(__dirname, '..', 'src', 'data', 'bbfaw2024Data.ts');
 
 /** Official BBFAW 2024 Report - users can see WHY and WHERE the score came from */
 const BBFAW_2024_REPORT_URL = 'https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf';
@@ -135,7 +133,7 @@ const FALLBACK_COMPANIES: Array<{ name: string; tier: 1 | 2 | 3 | 4 | 5 | 6; ir?
   { name: 'Inter IKEA Group', tier: 5, ir: 'F' },
   { name: 'JBS SA', tier: 6, ir: 'F' },
   { name: 'Jeronimo Martins', tier: 5, ir: 'F' },
-  { name: 'Kraft Heinz Company', tier: 6, ir: 'F' },
+  { name: 'Kraft Heinz Company', tier: 5, ir: 'F' },
   { name: 'Maple Leaf Foods', tier: 5, ir: 'E' },
   { name: 'McDonald\'s Corporation', tier: 5, ir: 'F' },
   { name: 'McDonald\'s', tier: 5, ir: 'F' },
@@ -369,41 +367,12 @@ function useFallbackData(): BBFAW2024CompanyEntry[] {
   }));
 }
 
-function writeTypeScriptModule(data: BBFAW2024Data): void {
-  const companiesJson = JSON.stringify(data.companies, null, 2).replace(/"/g, "'");
-  const ts = `/**
- * BBFAW 2024 Company-Tier Data
- * Auto-generated from extractBBFAW2024FromDocx.ts
- * Source: BBFAW 2024 Report - ${data.reportUrl}
- *
- * Used by bbfawService for ETHICS PILLAR scoring.
- * Each entry includes referenceUrl so users can see WHY and WHERE the score came from.
- */
-
-export const BBFAW_2024_REPORT_URL = '${data.reportUrl}';
-export const BBFAW_2024_LAST_EXTRACTED = '${data.lastExtracted}';
-
-export interface BBFAW2024CompanyEntry {
-  companyName: string;
-  displayName?: string;
-  tier: 1 | 2 | 3 | 4 | 5 | 6;
-  impactRating?: 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
-  referenceUrl: string;
-  reportSection: string;
-  year: number;
-}
-
-export const BBFAW_2024_COMPANIES: BBFAW2024CompanyEntry[] = ${JSON.stringify(data.companies, null, 2)};
-`;
-  fs.writeFileSync(OUTPUT_TS, ts, 'utf-8');
-}
-
 async function main(): Promise<void> {
   console.log('BBFAW 2024 Report Extraction');
   console.log('===========================');
   console.log('Input:', DOCX_PATH);
-  console.log('Output JSON:', OUTPUT_JSON);
-  console.log('Output TS:', OUTPUT_TS);
+  console.log('Output:', OUTPUT_JSON);
+  console.log('Run yarn sync-ethics-data to copy to src for app bundle.');
 
   if (!fs.existsSync(DOCX_PATH)) {
     console.error('ERROR: Docx file not found:', DOCX_PATH);
@@ -430,7 +399,6 @@ async function main(): Promise<void> {
 
   const data = buildOutputData(companies);
   fs.writeFileSync(OUTPUT_JSON, JSON.stringify(data, null, 2), 'utf-8');
-  writeTypeScriptModule(data);
 
   console.log('Done. Companies:', data.companies.length);
   console.log('Tier 2:', data.companies.filter((c) => c.tier === 2).length);

@@ -21,6 +21,7 @@ import {
   checkBBFAWTier,
   getBBFAWTierScore,
   getBBFAWImpactScore,
+  type BBFAWTier,
 } from '../../../services/bbfawService';
 import {
   resolveBrandToParent,
@@ -104,51 +105,65 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
   for (const raw of candidates) {
     resolved = resolveBrandToParent(raw);
     const name = resolved?.parent_entity_exact ?? raw;
+    // Resolved mapping has tier/impact; otherwise need BBFAW lookup
+    if (resolved && resolved.tier_2024 >= 1 && resolved.tier_2024 <= 6) {
+      companyName = name;
+      break;
+    }
     if (checkBBFAWTier(name)) {
       companyName = name;
       break;
     }
   }
 
-  let bbfawData = null;
-  if (companyName) {
-    bbfawData = checkBBFAWTier(companyName);
-  }
+  // Use tier/impact from resolved mapping (spec-aligned) when available; else from bbfaw2024Data
+  let bbfawData = companyName ? checkBBFAWTier(companyName) : null;
+  const useResolvedTier =
+    resolved &&
+    resolved.tier_2024 >= 1 &&
+    resolved.tier_2024 <= 6 &&
+    resolved.parent_entity_exact === companyName;
 
   let bbfawTierScore = 0;
   let bbfawImpactScore = 0;
+  const tier: BBFAWTier | null = useResolvedTier
+    ? (resolved!.tier_2024 as BBFAWTier)
+    : bbfawData?.tier ?? null;
+  const impactRating = useResolvedTier
+    ? (resolved!.impact_2024 as 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | undefined)
+    : bbfawData?.impactRating;
 
-  if (bbfawData) {
-    bbfawTierScore = getBBFAWTierScore(bbfawData.tier);
-    bbfawImpactScore = getBBFAWImpactScore(bbfawData.impactRating);
+  if (tier || impactRating) {
+    bbfawTierScore = getBBFAWTierScore(tier);
+    bbfawImpactScore = getBBFAWImpactScore(impactRating);
 
-    if (bbfawTierScore !== 0) {
+    if (bbfawTierScore !== 0 && tier) {
       adjustments.push({
-        description: `BBFAW Tier ${bbfawData.tier} (animal welfare governance)`,
+        description: `BBFAW Tier ${tier} (animal welfare governance)`,
         value: bbfawTierScore,
         type: bbfawTierScore > 0 ? 'positive' : 'negative',
-        ...(bbfawData.referenceUrl && { referenceUrl: bbfawData.referenceUrl }),
+        referenceUrl: 'https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16',
       });
       score += bbfawTierScore;
     }
 
-    if (bbfawImpactScore !== 0) {
-      const ir = bbfawData.impactRating || '—';
+    if (bbfawImpactScore !== 0 && impactRating) {
       adjustments.push({
-        description: `BBFAW Impact Rating ${ir} (welfare outcomes)`,
+        description: `BBFAW Impact Rating ${impactRating} (welfare outcomes)`,
         value: bbfawImpactScore,
         type: bbfawImpactScore > 0 ? 'positive' : 'negative',
-        ...(bbfawData.referenceUrl && { referenceUrl: bbfawData.referenceUrl }),
+        referenceUrl: 'https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16',
       });
       score += bbfawImpactScore;
     }
 
-    logger.debug('[EthicsPillar] BBFAW match (direct):', {
+    logger.debug('[EthicsPillar] BBFAW match:', {
       companyName,
-      tier: bbfawData.tier,
-      impactRating: bbfawData.impactRating,
+      tier,
+      impactRating,
       tierScore: bbfawTierScore,
       impactScore: bbfawImpactScore,
+      source: useResolvedTier ? 'brandAliasMap' : 'bbfaw2024Canonical',
     });
   } else {
     logger.debug('[EthicsPillar] BBFAW not found - nil return (no adjustment)', {
@@ -165,9 +180,9 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     details: {
       bbfawTierScore,
       bbfawImpactScore,
-      bbfawMatchedCompany: bbfawData ? companyName : null,
-      bbfawTier: bbfawData?.tier ?? null,
-      bbfawImpactRating: bbfawData?.impactRating ?? null,
+      bbfawMatchedCompany: companyName && (tier || impactRating) ? companyName : null,
+      bbfawTier: tier ?? null,
+      bbfawImpactRating: impactRating ?? null,
     },
   };
 

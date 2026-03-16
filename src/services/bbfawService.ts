@@ -2,15 +2,26 @@
  * BBFAW (Business Benchmark on Farm Animal Welfare) Service
  * Integrates with Business Benchmark on Farm Animal Welfare data
  *
- * Source: BBFAW 2024 Report - https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf
- * Data: Extracted from bbfaw-2024-report.docx via scripts/extractBBFAW2024FromDocx.ts
+ * SOURCE OF TRUTH: Database files/ETHICS Pillar/bbfaw-2024-data.json
+ * Synced to: src/data/ethics/bbfaw2024Canonical.json (run yarn sync-ethics-data)
  *
  * This service provides animal welfare tier data for ETHICS Pillar scoring.
  * Each match includes referenceUrl so users can see WHY and WHERE the score came from.
  */
 
 import { logger } from '../utils/logger';
-import { BBFAW_2024_COMPANIES } from '../data/bbfaw2024Data';
+
+/** Canonical BBFAW 2024 data - synced from Database files/ETHICS Pillar */
+const BBFAW_CANONICAL = require('../data/ethics/bbfaw2024Canonical.json') as {
+  companies: Array<{
+    companyName: string;
+    tier: number;
+    impactRating?: string;
+    year?: number;
+    referenceUrl?: string;
+    reportSection?: string;
+  }>;
+};
 
 export type BBFAWTier = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -36,11 +47,11 @@ let bbfawDataCache: BBFAWData | null = null;
 let bbfawDataCacheTimestamp: number = 0;
 const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year (BBFAW updates annually)
 
-/** BBFAW 2024 companies - Ethics_Scoring_Specification.xlsx: Tier 1-6 + Impact A-F */
-const BBFAW_COMPANIES: BBFAWCompanyData[] = BBFAW_2024_COMPANIES.map((c) => ({
+/** BBFAW 2024 companies - from canonical JSON (Database files/ETHICS Pillar) */
+const BBFAW_COMPANIES: BBFAWCompanyData[] = BBFAW_CANONICAL.companies.map((c) => ({
   companyName: c.companyName,
   tier: c.tier as BBFAWTier,
-  impactRating: c.impactRating as BBFAWImpactRating | undefined,
+  impactRating: (c.impactRating as BBFAWImpactRating) || undefined,
   year: c.year,
   referenceUrl: c.referenceUrl,
   reportSection: c.reportSection,

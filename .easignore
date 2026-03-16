@@ -67,9 +67,10 @@ build/
 !src/i18n/locales/en.json
 !src/i18n/locales/es.json
 !src/i18n/locales/fr.json
-# Include ETHICS pillar BBFAW brand mapping (required for bbfawBrandResolutionService)
+# Include ETHICS pillar data (synced from Database files/ETHICS Pillar - source of truth)
 !src/data/ethics/brandAliasMap.json
 !src/data/ethics/bbfawParents.json
+!src/data/ethics/bbfaw2024Canonical.json
 # Explicitly exclude large data JSON files
 barcode_*.json
 data/*.json

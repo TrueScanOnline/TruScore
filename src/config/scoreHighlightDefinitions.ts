@@ -464,15 +464,26 @@ function getCompanyCandidatesForBBFAW(product: any): string[] {
 }
 
 // Helper: Check if product matches BBFAW company (tries all brand candidates + alias resolution)
+// Uses same logic as ethicsPillar: prefer brandAliasMap tier/impact when resolved, else BBFAW canonical data
 function productMatchesBBFAW(product: any, tier?: number, impact?: string): boolean {
   const candidates = getCompanyCandidatesForBBFAW(product);
   for (const raw of candidates) {
     const resolved = resolveBrandToParent(raw);
     const company = resolved?.parent_entity_exact ?? raw;
-    const data = checkBBFAWTier(company);
-    if (!data) continue;
-    if (tier != null && data.tier !== tier) continue;
-    if (impact != null && data.impactRating !== impact) continue;
+
+    // Prefer resolved mapping (brandAliasMap from Database) when it has valid tier/impact
+    const useResolved =
+      resolved &&
+      resolved.tier_2024 >= 1 &&
+      resolved.tier_2024 <= 6 &&
+      resolved.impact_2024;
+
+    const effectiveTier = useResolved ? resolved!.tier_2024 : checkBBFAWTier(company)?.tier;
+    const effectiveImpact = useResolved ? resolved!.impact_2024 : checkBBFAWTier(company)?.impactRating;
+
+    if (effectiveTier == null && effectiveImpact == null) continue;
+    if (tier != null && effectiveTier !== tier) continue;
+    if (impact != null && effectiveImpact !== impact) continue;
     return true;
   }
   return false;

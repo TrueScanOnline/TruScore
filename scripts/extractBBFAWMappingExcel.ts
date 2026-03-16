@@ -17,7 +17,8 @@ const EXCEL_PATH = path.join(
   'ETHICS Pillar',
   'BBFAW_2024_Supermarket_Parent_Brand_Mapping_20260311.xlsx'
 );
-const OUT_DIR = path.join(ROOT, 'src', 'data', 'ethics');
+/** Primary output: Database files/ETHICS Pillar (source of truth). Run sync-ethics-data to copy to src. */
+const OUT_DIR = path.join(ROOT, 'Database files', 'ETHICS Pillar');
 
 function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) {
@@ -120,11 +121,13 @@ function main(): void {
 3. Normalize brand (lowercase, &→and, remove punctuation, collapse whitespace)
 4. Match against Brand_Aliases → return canonical_brand
 5. Look up canonical_brand in Brand_Mapping → return parent_company
-6. Pass parent_company to BBFAW scoring engine (bbfaw2024Data.ts)
+6. Pass parent_company to BBFAW scoring engine (bbfaw2024Canonical.json)
 
-## JSON outputs (for app)
-- \`src/data/ethics/bbfawParents.json\`
-- \`src/data/ethics/brandAliasMap.json\`
+## JSON outputs (source of truth)
+- \`Database files/ETHICS Pillar/bbfawParents.json\`
+- \`Database files/ETHICS Pillar/brandAliasMap.json\`
+
+Run \`yarn sync-ethics-data\` to copy these to \`src/data/ethics/\` for app bundle.
 `;
   ensureDir(path.dirname(reportPath));
   fs.writeFileSync(reportPath, report, 'utf-8');
