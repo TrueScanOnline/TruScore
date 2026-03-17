@@ -1,7 +1,7 @@
 
 # BBFAW Parent Mapping Excel Analysis
-**Source:** `Database files/ETHICS Pillar/BBFAW_2024_Supermarket_Parent_Brand_Mapping_20260311.xlsx`
-**Extracted:** 2026-03-14T00:25:14.562Z
+**Source:** `Database files/ETHICS Pillar/BBFAW folder/BBFAW_2024_Supermarket_Parent_Brand_Mapping_20260311.xlsx`
+**Extracted:** 2026-03-17T22:53:03.198Z
 
 ## Tabs Found (actual workbook)
 | Tab | Rows | Purpose |
@@ -21,7 +21,7 @@
 6. Pass parent_company to BBFAW scoring engine (bbfaw2024Canonical.json)
 
 ## JSON outputs (source of truth)
-- `Database files/ETHICS Pillar/bbfawParents.json`
-- `Database files/ETHICS Pillar/brandAliasMap.json`
+- `Database files/ETHICS Pillar/BBFAW folder/bbfawParents.json`
+- `Database files/ETHICS Pillar/BBFAW folder/brandAliasMap.json`
 
 Run `yarn sync-ethics-data` to copy these to `src/data/ethics/` for app bundle.

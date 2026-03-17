@@ -1,0 +1,1186 @@
+[
+  {
+    "benchmark_year_parent_company": "Woolworths Group Limited",
+    "canonical_brand": "Woolworths",
+    "aliases_csv": "woolworths,woolworths food,woolworths brand",
+    "current_parent_company": "Woolworths Group Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Woolworths Group Limited",
+    "canonical_brand": "Woolworths Macro",
+    "aliases_csv": "macro,woolworths macro",
+    "current_parent_company": "Woolworths Group Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Woolworths Group Limited",
+    "canonical_brand": "Woolworths Essentials",
+    "aliases_csv": "essentials,woolworths essentials",
+    "current_parent_company": "Woolworths Group Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Coles Group",
+    "canonical_brand": "Coles",
+    "aliases_csv": "coles,coles brand",
+    "current_parent_company": "Coles Group",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Coles Group",
+    "canonical_brand": "Coles Finest",
+    "aliases_csv": "coles finest",
+    "current_parent_company": "Coles Group",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Coles Group",
+    "canonical_brand": "Coles Nature's Kitchen",
+    "aliases_csv": "coles natures kitchen,coles natures kitchen,natures kitchen",
+    "current_parent_company": "Coles Group",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Tesco PLC",
+    "canonical_brand": "Tesco",
+    "aliases_csv": "tesco,tesco brand",
+    "current_parent_company": "Tesco PLC",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Tesco PLC",
+    "canonical_brand": "Tesco Finest",
+    "aliases_csv": "tesco finest",
+    "current_parent_company": "Tesco PLC",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Tesco PLC",
+    "canonical_brand": "Tesco Value",
+    "aliases_csv": "tesco value",
+    "current_parent_company": "Tesco PLC",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Costco Wholesale Corporation",
+    "canonical_brand": "Kirkland Signature",
+    "aliases_csv": "kirkland,kirkland signature",
+    "current_parent_company": "Costco Wholesale Corporation",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Walmart Inc.",
+    "canonical_brand": "Great Value",
+    "aliases_csv": "great value",
+    "current_parent_company": "Walmart Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Walmart Inc.",
+    "canonical_brand": "Sam's Choice",
+    "aliases_csv": "sams choice,sam's choice",
+    "current_parent_company": "Walmart Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Koninklijke Ahold Delhaize NV",
+    "canonical_brand": "Nature's Promise",
+    "aliases_csv": "natures promise,nature's promise",
+    "current_parent_company": "Koninklijke Ahold Delhaize NV",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Koninklijke Ahold Delhaize NV",
+    "canonical_brand": "Albert Heijn",
+    "aliases_csv": "albert heijn,ah",
+    "current_parent_company": "Koninklijke Ahold Delhaize NV",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Aeon Co., Ltd.",
+    "canonical_brand": "Topvalu",
+    "aliases_csv": "topvalu,top value",
+    "current_parent_company": "Aeon Co., Ltd.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Seven & i Holdings Co Ltd",
+    "canonical_brand": "Seven Premium",
+    "aliases_csv": "7 premium,seven premium",
+    "current_parent_company": "Seven & i Holdings Co Ltd",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Loblaw Companies Limited",
+    "canonical_brand": "President's Choice",
+    "aliases_csv": "presidents choice,president's choice,pc",
+    "current_parent_company": "Loblaw Companies Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Loblaw Companies Limited",
+    "canonical_brand": "No Name",
+    "aliases_csv": "no name",
+    "current_parent_company": "Loblaw Companies Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Kroger Co.",
+    "canonical_brand": "Kroger",
+    "aliases_csv": "kroger,kroger brand",
+    "current_parent_company": "The Kroger Co.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Kroger Co.",
+    "canonical_brand": "Simple Truth",
+    "aliases_csv": "simple truth",
+    "current_parent_company": "The Kroger Co.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Kroger Co.",
+    "canonical_brand": "Private Selection",
+    "aliases_csv": "private selection",
+    "current_parent_company": "The Kroger Co.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Carrefour SA",
+    "canonical_brand": "Carrefour",
+    "aliases_csv": "carrefour,carrefour brand",
+    "current_parent_company": "Carrefour SA",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Carrefour SA",
+    "canonical_brand": "Carrefour Bio",
+    "aliases_csv": "carrefour bio",
+    "current_parent_company": "Carrefour SA",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Metro Inc.",
+    "canonical_brand": "Irresistibles",
+    "aliases_csv": "irresistibles",
+    "current_parent_company": "Metro Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Metro Inc.",
+    "canonical_brand": "Selection",
+    "aliases_csv": "selection metro,selection",
+    "current_parent_company": "Metro Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Empire Co. Ltd.",
+    "canonical_brand": "Compliments",
+    "aliases_csv": "compliments",
+    "current_parent_company": "Empire Co. Ltd.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Empire Co. Ltd.",
+    "canonical_brand": "Panache",
+    "aliases_csv": "panache",
+    "current_parent_company": "Empire Co. Ltd.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Unilever plc",
+    "canonical_brand": "Ben & Jerry's",
+    "aliases_csv": "ben and jerrys,ben & jerry's,ben and jerry's",
+    "current_parent_company": "Unilever plc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Unilever plc",
+    "canonical_brand": "Magnum",
+    "aliases_csv": "magnum,magnum ice cream",
+    "current_parent_company": "The Magnum Ice Cream Company",
+    "ownership_alignment_status": "changed_post_benchmark",
+    "notes": "Current owner differs post-benchmark; use benchmark_year_parent_company for KTC scoring."
+  },
+  {
+    "benchmark_year_parent_company": "Unilever plc",
+    "canonical_brand": "Hellmann's",
+    "aliases_csv": "hellmanns,hellmann's,hellmanns mayonnaise",
+    "current_parent_company": "Unilever plc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Unilever plc",
+    "canonical_brand": "Knorr",
+    "aliases_csv": "knorr,knorr soups",
+    "current_parent_company": "Unilever plc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Unilever plc",
+    "canonical_brand": "Wall's",
+    "aliases_csv": "walls,wall's,walls ice cream",
+    "current_parent_company": "The Magnum Ice Cream Company",
+    "ownership_alignment_status": "changed_post_benchmark",
+    "notes": "Current owner differs post-benchmark; use benchmark_year_parent_company for KTC scoring."
+  },
+  {
+    "benchmark_year_parent_company": "Unilever plc",
+    "canonical_brand": "Streets",
+    "aliases_csv": "streets,streets ice cream",
+    "current_parent_company": "The Magnum Ice Cream Company",
+    "ownership_alignment_status": "changed_post_benchmark",
+    "notes": "Current owner differs post-benchmark; use benchmark_year_parent_company for KTC scoring."
+  },
+  {
+    "benchmark_year_parent_company": "Unilever plc",
+    "canonical_brand": "Paddle Pop",
+    "aliases_csv": "paddle pop,chocolate paddle pop",
+    "current_parent_company": "The Magnum Ice Cream Company",
+    "ownership_alignment_status": "changed_post_benchmark",
+    "notes": "Current owner differs post-benchmark; use benchmark_year_parent_company for KTC scoring."
+  },
+  {
+    "benchmark_year_parent_company": "Unilever plc",
+    "canonical_brand": "Colman's",
+    "aliases_csv": "colmans,colman's",
+    "current_parent_company": "Unilever plc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Hershey Company",
+    "canonical_brand": "Hershey's",
+    "aliases_csv": "hersheys,hershey's",
+    "current_parent_company": "The Hershey Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Hershey Company",
+    "canonical_brand": "Reese's",
+    "aliases_csv": "reeses,reese's",
+    "current_parent_company": "The Hershey Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Hershey Company",
+    "canonical_brand": "Kisses",
+    "aliases_csv": "hersheys kisses,hershey's kisses,kisses",
+    "current_parent_company": "The Hershey Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Hershey Company",
+    "canonical_brand": "Jolly Rancher",
+    "aliases_csv": "jolly rancher,jolly ranchers",
+    "current_parent_company": "The Hershey Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Hershey Company",
+    "canonical_brand": "Twizzlers",
+    "aliases_csv": "twizzlers",
+    "current_parent_company": "The Hershey Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Hershey Company",
+    "canonical_brand": "Ice Breakers",
+    "aliases_csv": "ice breakers,icebreakers",
+    "current_parent_company": "The Hershey Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The J. M. Smucker Company",
+    "canonical_brand": "Smucker's",
+    "aliases_csv": "smuckers,smucker's",
+    "current_parent_company": "The J. M. Smucker Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The J. M. Smucker Company",
+    "canonical_brand": "Jif",
+    "aliases_csv": "jif",
+    "current_parent_company": "The J. M. Smucker Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The J. M. Smucker Company",
+    "canonical_brand": "Folgers",
+    "aliases_csv": "folgers",
+    "current_parent_company": "The J. M. Smucker Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The J. M. Smucker Company",
+    "canonical_brand": "Uncrustables",
+    "aliases_csv": "uncrustables",
+    "current_parent_company": "The J. M. Smucker Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The J. M. Smucker Company",
+    "canonical_brand": "Milk-Bone",
+    "aliases_csv": "milkbone,milk-bone",
+    "current_parent_company": "The J. M. Smucker Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The J. M. Smucker Company",
+    "canonical_brand": "Meow Mix",
+    "aliases_csv": "meow mix",
+    "current_parent_company": "The J. M. Smucker Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Mondelēz International, Inc.",
+    "canonical_brand": "Cadbury",
+    "aliases_csv": "cadbury,cadbury chocolate",
+    "current_parent_company": "Mondelēz International, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Mondelēz International, Inc.",
+    "canonical_brand": "Oreo",
+    "aliases_csv": "oreo,oreo cookies",
+    "current_parent_company": "Mondelēz International, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Mondelēz International, Inc.",
+    "canonical_brand": "Toblerone",
+    "aliases_csv": "toblerone,toblerone chocolate",
+    "current_parent_company": "Mondelēz International, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Mondelēz International, Inc.",
+    "canonical_brand": "Ritz",
+    "aliases_csv": "ritz,ritz crackers",
+    "current_parent_company": "Mondelēz International, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Mondelēz International, Inc.",
+    "canonical_brand": "Belvita",
+    "aliases_csv": "belvita,belvita breakfast biscuits",
+    "current_parent_company": "Mondelēz International, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Mondelēz International, Inc.",
+    "canonical_brand": "Chips Ahoy",
+    "aliases_csv": "chips ahoy,chips ahoy!",
+    "current_parent_company": "Mondelēz International, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Mondelēz International, Inc.",
+    "canonical_brand": "Trident",
+    "aliases_csv": "trident,trident gum",
+    "current_parent_company": "Mondelēz International, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Mondelēz International, Inc.",
+    "canonical_brand": "Halls",
+    "aliases_csv": "halls,halls lozenges",
+    "current_parent_company": "Mondelēz International, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Nestlé S.A.",
+    "canonical_brand": "Maggi",
+    "aliases_csv": "maggi,maggi noodles,maggi seasoning",
+    "current_parent_company": "Nestlé S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Nestlé S.A.",
+    "canonical_brand": "Milo",
+    "aliases_csv": "milo,milo drink,milo powder",
+    "current_parent_company": "Nestlé S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Nestlé S.A.",
+    "canonical_brand": "KitKat",
+    "aliases_csv": "kitkat,kit kat",
+    "current_parent_company": "Nestlé S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Nestlé S.A.",
+    "canonical_brand": "Nescafé",
+    "aliases_csv": "nescafe,nes café",
+    "current_parent_company": "Nestlé S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Nestlé S.A.",
+    "canonical_brand": "Nespresso",
+    "aliases_csv": "nespresso,nespresso capsules",
+    "current_parent_company": "Nestlé S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Nestlé S.A.",
+    "canonical_brand": "Purina",
+    "aliases_csv": "purina,purina one,purina petcare",
+    "current_parent_company": "Nestlé S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Nestlé S.A.",
+    "canonical_brand": "Allen's",
+    "aliases_csv": "allens,allen's",
+    "current_parent_company": "Nestlé S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Nestlé S.A.",
+    "canonical_brand": "Smarties",
+    "aliases_csv": "smarties,nestle smarties",
+    "current_parent_company": "Nestlé S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Nestlé S.A.",
+    "canonical_brand": "Uncle Tobys",
+    "aliases_csv": "uncle tobys,uncle toby's",
+    "current_parent_company": "Nestlé S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Wilmar International Limited",
+    "canonical_brand": "CSR",
+    "aliases_csv": "csr,csr sugar",
+    "current_parent_company": "Wilmar International Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Wilmar International Limited",
+    "canonical_brand": "Chelsea",
+    "aliases_csv": "chelsea,chelsea sugar",
+    "current_parent_company": "Wilmar International Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Wilmar International Limited",
+    "canonical_brand": "Meadow Fresh",
+    "aliases_csv": "meadow fresh",
+    "current_parent_company": "Wilmar International Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Wilmar International Limited",
+    "canonical_brand": "Praise",
+    "aliases_csv": "praise,praise mayonnaise",
+    "current_parent_company": "Wilmar International Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Wilmar International Limited",
+    "canonical_brand": "Helga's",
+    "aliases_csv": "helgas,helga's",
+    "current_parent_company": "Wilmar International Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Wilmar International Limited",
+    "canonical_brand": "Vogel's",
+    "aliases_csv": "vogels,vogel's",
+    "current_parent_company": "Wilmar International Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Danone",
+    "canonical_brand": "Activia",
+    "aliases_csv": "activia,activia yoghurt,activia yogurt",
+    "current_parent_company": "Danone",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Danone",
+    "canonical_brand": "Actimel",
+    "aliases_csv": "actimel",
+    "current_parent_company": "Danone",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Danone",
+    "canonical_brand": "Aptamil",
+    "aliases_csv": "aptamil,aptamil formula",
+    "current_parent_company": "Danone",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Danone",
+    "canonical_brand": "Nutricia",
+    "aliases_csv": "nutricia",
+    "current_parent_company": "Danone",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Danone",
+    "canonical_brand": "Alpro",
+    "aliases_csv": "alpro,alpro plant milk",
+    "current_parent_company": "Danone",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Danone",
+    "canonical_brand": "Silk",
+    "aliases_csv": "silk,silk plant milk",
+    "current_parent_company": "Danone",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "General Mills, Inc.",
+    "canonical_brand": "Cheerios",
+    "aliases_csv": "cheerios,cheerios cereal",
+    "current_parent_company": "General Mills, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "General Mills, Inc.",
+    "canonical_brand": "Nature Valley",
+    "aliases_csv": "nature valley,nature valley bars",
+    "current_parent_company": "General Mills, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "General Mills, Inc.",
+    "canonical_brand": "Old El Paso",
+    "aliases_csv": "old el paso,old el paso mexican",
+    "current_parent_company": "General Mills, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "General Mills, Inc.",
+    "canonical_brand": "Betty Crocker",
+    "aliases_csv": "betty crocker,betty crocker cake mix",
+    "current_parent_company": "General Mills, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "General Mills, Inc.",
+    "canonical_brand": "Häagen-Dazs",
+    "aliases_csv": "haagen dazs,häagen-dazs",
+    "current_parent_company": "General Mills, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Ajinomoto Co., Inc.",
+    "canonical_brand": "Ajinomoto",
+    "aliases_csv": "ajinomoto",
+    "current_parent_company": "Ajinomoto Co., Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Chocoladefabriken Lindt & Sprüngli AG",
+    "canonical_brand": "Lindt",
+    "aliases_csv": "lindt",
+    "current_parent_company": "Chocoladefabriken Lindt & Sprüngli AG",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Chocoladefabriken Lindt & Sprüngli AG",
+    "canonical_brand": "Lindor",
+    "aliases_csv": "lindor",
+    "current_parent_company": "Chocoladefabriken Lindt & Sprüngli AG",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Chocoladefabriken Lindt & Sprüngli AG",
+    "canonical_brand": "Ghirardelli",
+    "aliases_csv": "ghirardelli",
+    "current_parent_company": "Chocoladefabriken Lindt & Sprüngli AG",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Chocoladefabriken Lindt & Sprüngli AG",
+    "canonical_brand": "Russell Stover",
+    "aliases_csv": "russell stover",
+    "current_parent_company": "Chocoladefabriken Lindt & Sprüngli AG",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Associated British Foods plc",
+    "canonical_brand": "Twinings",
+    "aliases_csv": "twinings",
+    "current_parent_company": "Associated British Foods plc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Associated British Foods plc",
+    "canonical_brand": "Patak's",
+    "aliases_csv": "pataks,patak's",
+    "current_parent_company": "Associated British Foods plc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Associated British Foods plc",
+    "canonical_brand": "Kingsmill",
+    "aliases_csv": "kingsmill",
+    "current_parent_company": "Associated British Foods plc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Associated British Foods plc",
+    "canonical_brand": "Jordans",
+    "aliases_csv": "jordans",
+    "current_parent_company": "Associated British Foods plc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Associated British Foods plc",
+    "canonical_brand": "Ryvita",
+    "aliases_csv": "ryvita",
+    "current_parent_company": "Associated British Foods plc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Campbell Soup Company",
+    "canonical_brand": "Campbell's",
+    "aliases_csv": "campbells,campbell's",
+    "current_parent_company": "Campbell Soup Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Campbell Soup Company",
+    "canonical_brand": "Arnott's",
+    "aliases_csv": "arnotts,arnott's",
+    "current_parent_company": "Campbell Soup Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Campbell Soup Company",
+    "canonical_brand": "Prego",
+    "aliases_csv": "prego",
+    "current_parent_company": "Campbell Soup Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Campbell Soup Company",
+    "canonical_brand": "V8",
+    "aliases_csv": "v8",
+    "current_parent_company": "Campbell Soup Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Campbell Soup Company",
+    "canonical_brand": "Pepperidge Farm",
+    "aliases_csv": "pepperidge farm",
+    "current_parent_company": "Campbell Soup Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Meiji Holdings Co., Ltd.",
+    "canonical_brand": "Meiji",
+    "aliases_csv": "meiji",
+    "current_parent_company": "Meiji Holdings Co., Ltd.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Meiji Holdings Co., Ltd.",
+    "canonical_brand": "Hello Panda",
+    "aliases_csv": "hello panda",
+    "current_parent_company": "Meiji Holdings Co., Ltd.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Meiji Holdings Co., Ltd.",
+    "canonical_brand": "Yan Yan",
+    "aliases_csv": "yan yan",
+    "current_parent_company": "Meiji Holdings Co., Ltd.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Hormel Foods Corporation",
+    "canonical_brand": "Spam",
+    "aliases_csv": "spam",
+    "current_parent_company": "Hormel Foods Corporation",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Hormel Foods Corporation",
+    "canonical_brand": "Skippy",
+    "aliases_csv": "skippy,skippy peanut butter",
+    "current_parent_company": "Hormel Foods Corporation",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Hormel Foods Corporation",
+    "canonical_brand": "Applegate",
+    "aliases_csv": "applegate",
+    "current_parent_company": "Hormel Foods Corporation",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Hormel Foods Corporation",
+    "canonical_brand": "Planters",
+    "aliases_csv": "planters",
+    "current_parent_company": "Hormel Foods Corporation",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Kraft Heinz Company",
+    "canonical_brand": "Heinz",
+    "aliases_csv": "heinz,heinz ketchup,heinz beans",
+    "current_parent_company": "The Kraft Heinz Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Kraft Heinz Company",
+    "canonical_brand": "Kraft",
+    "aliases_csv": "kraft,kraft cheese",
+    "current_parent_company": "The Kraft Heinz Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Kraft Heinz Company",
+    "canonical_brand": "Wattie's",
+    "aliases_csv": "watties,wattie's",
+    "current_parent_company": "The Kraft Heinz Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Kraft Heinz Company",
+    "canonical_brand": "Golden Circle",
+    "aliases_csv": "golden circle",
+    "current_parent_company": "The Kraft Heinz Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "The Kraft Heinz Company",
+    "canonical_brand": "Gravox",
+    "aliases_csv": "gravox",
+    "current_parent_company": "The Kraft Heinz Company",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Conagra Brands, Inc.",
+    "canonical_brand": "Healthy Choice",
+    "aliases_csv": "healthy choice",
+    "current_parent_company": "Conagra Brands, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Conagra Brands, Inc.",
+    "canonical_brand": "Birds Eye",
+    "aliases_csv": "birds eye,birdseye",
+    "current_parent_company": "Conagra Brands, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Conagra Brands, Inc.",
+    "canonical_brand": "Hunt's",
+    "aliases_csv": "hunts,hunt's",
+    "current_parent_company": "Conagra Brands, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Conagra Brands, Inc.",
+    "canonical_brand": "Marie Callender's",
+    "aliases_csv": "marie callenders,marie callender's",
+    "current_parent_company": "Conagra Brands, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Conagra Brands, Inc.",
+    "canonical_brand": "Slim Jim",
+    "aliases_csv": "slim jim",
+    "current_parent_company": "Conagra Brands, Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "McCormick & Co Inc",
+    "canonical_brand": "McCormick",
+    "aliases_csv": "mccormick",
+    "current_parent_company": "McCormick & Co Inc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "McCormick & Co Inc",
+    "canonical_brand": "Schwartz",
+    "aliases_csv": "schwartz",
+    "current_parent_company": "McCormick & Co Inc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "McCormick & Co Inc",
+    "canonical_brand": "Lawry's",
+    "aliases_csv": "lawrys,lawry's",
+    "current_parent_company": "McCormick & Co Inc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "McCormick & Co Inc",
+    "canonical_brand": "Old Bay",
+    "aliases_csv": "old bay",
+    "current_parent_company": "McCormick & Co Inc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "McCormick & Co Inc",
+    "canonical_brand": "French's",
+    "aliases_csv": "frenchs,french's",
+    "current_parent_company": "McCormick & Co Inc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "McCormick & Co Inc",
+    "canonical_brand": "Frank's RedHot",
+    "aliases_csv": "franks redhot,frank's redhot",
+    "current_parent_company": "McCormick & Co Inc",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Grupo Bimbo, S.A.B. de C.V.",
+    "canonical_brand": "Bimbo",
+    "aliases_csv": "bimbo",
+    "current_parent_company": "Grupo Bimbo, S.A.B. de C.V.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Grupo Bimbo, S.A.B. de C.V.",
+    "canonical_brand": "Oroweat",
+    "aliases_csv": "oroweat",
+    "current_parent_company": "Grupo Bimbo, S.A.B. de C.V.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Grupo Bimbo, S.A.B. de C.V.",
+    "canonical_brand": "Thomas'",
+    "aliases_csv": "thomas,thomas'",
+    "current_parent_company": "Grupo Bimbo, S.A.B. de C.V.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Grupo Bimbo, S.A.B. de C.V.",
+    "canonical_brand": "Entenmann's",
+    "aliases_csv": "entenmanns,entenmann's",
+    "current_parent_company": "Grupo Bimbo, S.A.B. de C.V.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Yakult Honsha Co.,Ltd.",
+    "canonical_brand": "Yakult",
+    "aliases_csv": "yakult",
+    "current_parent_company": "Yakult Honsha Co.,Ltd.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "China Mengniu Dairy Co Ltd",
+    "canonical_brand": "Mengniu",
+    "aliases_csv": "mengniu",
+    "current_parent_company": "China Mengniu Dairy Co Ltd",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "JBS S.A.",
+    "canonical_brand": "Primo",
+    "aliases_csv": "primo",
+    "current_parent_company": "JBS S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "JBS S.A.",
+    "canonical_brand": "Beehive",
+    "aliases_csv": "beehive",
+    "current_parent_company": "JBS S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "JBS S.A.",
+    "canonical_brand": "Seara",
+    "aliases_csv": "seara",
+    "current_parent_company": "JBS S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "JBS S.A.",
+    "canonical_brand": "Friboi",
+    "aliases_csv": "friboi",
+    "current_parent_company": "JBS S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "JBS S.A.",
+    "canonical_brand": "Swift",
+    "aliases_csv": "swift meats,swift",
+    "current_parent_company": "JBS S.A.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Saputo Inc.",
+    "canonical_brand": "Devondale",
+    "aliases_csv": "devondale",
+    "current_parent_company": "Saputo Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Saputo Inc.",
+    "canonical_brand": "Mersey Valley",
+    "aliases_csv": "mersey valley",
+    "current_parent_company": "Saputo Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Saputo Inc.",
+    "canonical_brand": "Cheer",
+    "aliases_csv": "cheer",
+    "current_parent_company": "Saputo Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Saputo Inc.",
+    "canonical_brand": "Sungold",
+    "aliases_csv": "sungold",
+    "current_parent_company": "Saputo Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Saputo Inc.",
+    "canonical_brand": "South Cape",
+    "aliases_csv": "south cape",
+    "current_parent_company": "Saputo Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Mowi ASA",
+    "canonical_brand": "Mowi",
+    "aliases_csv": "mowi",
+    "current_parent_company": "Mowi ASA",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Tyson Foods Inc.",
+    "canonical_brand": "Tyson",
+    "aliases_csv": "tyson,tyson chicken",
+    "current_parent_company": "Tyson Foods Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Tyson Foods Inc.",
+    "canonical_brand": "Jimmy Dean",
+    "aliases_csv": "jimmy dean",
+    "current_parent_company": "Tyson Foods Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Tyson Foods Inc.",
+    "canonical_brand": "Hillshire Farm",
+    "aliases_csv": "hillshire farm",
+    "current_parent_company": "Tyson Foods Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Tyson Foods Inc.",
+    "canonical_brand": "Ball Park",
+    "aliases_csv": "ball park",
+    "current_parent_company": "Tyson Foods Inc.",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Kikkoman Corp",
+    "canonical_brand": "Kikkoman",
+    "aliases_csv": "kikkoman",
+    "current_parent_company": "Kikkoman Corp",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Inner Mongolia Yili Industrial Group Co., Ltd",
+    "canonical_brand": "Yili",
+    "aliases_csv": "yili",
+    "current_parent_company": "Inner Mongolia Yili Industrial Group Co., Ltd",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Foshan Haitian Flavouring and Food Co Ltd",
+    "canonical_brand": "Haitian",
+    "aliases_csv": "haitian",
+    "current_parent_company": "Foshan Haitian Flavouring and Food Co Ltd",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "Want Want China Holdings Limited",
+    "canonical_brand": "Want Want",
+    "aliases_csv": "want want",
+    "current_parent_company": "Want Want China Holdings Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "WH Group Limited",
+    "canonical_brand": "Smithfield",
+    "aliases_csv": "smithfield",
+    "current_parent_company": "WH Group Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "WH Group Limited",
+    "canonical_brand": "John Morrell",
+    "aliases_csv": "john morrell",
+    "current_parent_company": "WH Group Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "WH Group Limited",
+    "canonical_brand": "Eckrich",
+    "aliases_csv": "eckrich",
+    "current_parent_company": "WH Group Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  },
+  {
+    "benchmark_year_parent_company": "WH Group Limited",
+    "canonical_brand": "Farmland",
+    "aliases_csv": "farmland",
+    "current_parent_company": "WH Group Limited",
+    "ownership_alignment_status": "same",
+    "notes": ""
+  }
+]

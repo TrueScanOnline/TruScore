@@ -4,6 +4,8 @@
 
 import { resolveBrandToParent } from '../services/bbfawBrandResolutionService';
 import { checkBBFAWTier } from '../services/bbfawService';
+import { resolveBrandToKTCParent } from '../services/ktcBrandResolutionService';
+import { checkKTCParent, isKTCHighPerformer, isKTCLowPerformer } from '../services/ktcService';
 
 export type PillarCategory = 'body' | 'planet' | 'ethics' | 'open';
 export type HighlightType = 'green' | 'red';
@@ -489,53 +491,44 @@ function productMatchesBBFAW(product: any, tier?: number, impact?: string): bool
   return false;
 }
 
-// ETHICS PILLAR highlights - Ethics_Score_and Commentary_Table_20260307.docx (BBFAW only)
+// Helper: Check if product matches a KTC benchmark parent
+function productMatchesKTC(product: any): ReturnType<typeof checkKTCParent> {
+  const candidates = getCompanyCandidatesForBBFAW(product);
+  for (const raw of candidates) {
+    const resolved = resolveBrandToKTCParent(raw);
+    const company = resolved?.parentName ?? raw;
+    const ktc = checkKTCParent(company);
+    if (ktc) return ktc;
+  }
+  return null;
+}
+
+// ETHICS PILLAR highlights - presence-based only (no score effect)
 export const ETHICS_HIGHLIGHTS: HighlightDefinition[] = [
-  { id: 'ethics-bbfaw-tier1', pillar: 'ethics', type: 'green', severity: 'high',
-    title: 'The company has taken a leadership position in policy and governance for animal welfare.',
-    description: 'Business Benchmark on Farm Animal Welfare (BBFAW) provides a leading global measure of farm animal welfare management, policy commitment, performance and disclosure in food companies. A Tier 1 classification requires a percentage score > 80%.',
-    externalResource: 'https://www.bbfaw.com', scoreValue: 6,
-    trigger: (p) => productMatchesBBFAW(p, 1) },
-  { id: 'ethics-bbfaw-tier2', pillar: 'ethics', type: 'green', severity: 'high',
-    title: 'The company has made animal welfare governance and policy a business priority',
-    description: 'BBFAW provides a leading global measure of farm animal welfare. Tier 2 indicates this company has integrated robust animal welfare policies into its business strategy.',
-    externalResource: 'https://www.bbfaw.com', scoreValue: 4,
-    trigger: (p) => productMatchesBBFAW(p, 2) },
-  { id: 'ethics-bbfaw-tier3', pillar: 'ethics', type: 'green', severity: 'medium',
-    title: 'The company has made efforts to establish an approach to animal welfare.',
-    description: 'BBFAW Tier 3 indicates this company has an established approach to farm animal welfare but has more work to do to ensure it is effectively implemented.',
-    externalResource: 'https://www.bbfaw.com', scoreValue: 2,
-    trigger: (p) => productMatchesBBFAW(p, 3) },
-  { id: 'ethics-bbfaw-tier4', pillar: 'ethics', type: 'green', severity: 'low',
-    title: 'The company has made some progress on implementing commitments to animal welfare.',
-    description: 'BBFAW Tier 4 indicates this company is making progress on implementing its policies and commitments on farm animal welfare.',
-    externalResource: 'https://www.bbfaw.com', scoreValue: 1,
-    trigger: (p) => productMatchesBBFAW(p, 4) },
-  { id: 'ethics-bbfaw-tier5', pillar: 'ethics', type: 'red', severity: 'medium',
-    title: 'The company has identified farm animal welfare as a business issue but is not yet evidencing progress.',
-    description: 'BBFAW Tier 5: The company has identified farm animal welfare as a business issue but provides limited evidence that it is managing the issue effectively.',
-    externalResource: 'https://www.bbfaw.com', scoreValue: -4,
-    trigger: (p) => productMatchesBBFAW(p, 5) },
-  { id: 'ethics-bbfaw-tier6', pillar: 'ethics', type: 'red', severity: 'high',
-    title: 'The company provides limited if any evidence that it recognises farm animal welfare as a business issue',
-    description: 'BBFAW Tier 6: The company provides limited if any evidence that it recognises farm animal welfare as a business issue.',
-    externalResource: 'https://www.bbfaw.com', scoreValue: -6,
-    trigger: (p) => productMatchesBBFAW(p, 6) },
-  { id: 'ethics-bbfaw-impact-ab', pillar: 'ethics', type: 'green', severity: 'high',
-    title: 'The company is declaring improved welfare impacts for a reasonable proportion of farm animals in their operations and/or supply chain',
-    description: 'BBFAW Impact Rating A/B: The company is declaring improved welfare impacts for a reasonable proportion of farm animals.',
-    externalResource: 'https://www.bbfaw.com', scoreValue: 3,
-    trigger: (p) => productMatchesBBFAW(p, undefined, 'A') || productMatchesBBFAW(p, undefined, 'B') },
-  { id: 'ethics-bbfaw-impact-cd', pillar: 'ethics', type: 'green', severity: 'low',
-    title: 'The company is declaring improved welfare impacts for at least some farm animals in their operations and/or supply chain',
-    description: 'BBFAW Impact Rating C/D: The company is declaring improved welfare impacts for some farm animals.',
-    externalResource: 'https://www.bbfaw.com', scoreValue: 1,
-    trigger: (p) => productMatchesBBFAW(p, undefined, 'C') || productMatchesBBFAW(p, undefined, 'D') },
-  { id: 'ethics-bbfaw-impact-ef', pillar: 'ethics', type: 'red', severity: 'medium',
-    title: 'Yet to demonstrate that they are delivering improved welfare impacts for farm animals in their operations and/or supply chains.',
-    description: 'BBFAW Impact Rating E/F: The company has yet to demonstrate improved welfare impacts for farm animals.',
-    externalResource: 'https://www.bbfaw.com', scoreValue: -3,
-    trigger: (p) => productMatchesBBFAW(p, undefined, 'E') || productMatchesBBFAW(p, undefined, 'F') },
+  {
+    id: 'ethics-bbfaw-present',
+    pillar: 'ethics',
+    type: 'green',
+    severity: 'medium',
+    title: 'This company is assessed by the Business Benchmark on Farm Animal Welfare (BBFAW).',
+    description:
+      'This brand or its parent company appears in the BBFAW benchmark. Tap to view the latest farm animal welfare benchmark information for this company.',
+    externalResource: 'https://www.bbfaw.com/food-companies/',
+    scoreValue: 0,
+    trigger: (p) => productMatchesBBFAW(p),
+  },
+  {
+    id: 'ethics-ktc-present',
+    pillar: 'ethics',
+    type: 'green',
+    severity: 'medium',
+    title: 'This company is assessed by KnowTheChain (KTC) for labour rights in supply chains.',
+    description:
+      'This brand or its parent company appears in the KnowTheChain food & beverage benchmark. Tap to view the latest labour rights benchmark information for this company.',
+    externalResource: 'https://www.business-humanrights.org/en/companies/',
+    scoreValue: 0,
+    trigger: (p) => !!productMatchesKTC(p),
+  },
 ];
 
 // OPEN PILLAR highlights

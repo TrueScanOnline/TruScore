@@ -12,6 +12,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const ROOT = path.join(__dirname, '..');
+// All BBFAW-related ETHICS source files now live under the dedicated BBFAW folder
 const SOURCE_DIR = path.join(ROOT, 'Database files', 'ETHICS Pillar');
 const DEST_DIR = path.join(ROOT, 'src', 'data', 'ethics');
 
@@ -23,19 +24,31 @@ interface SyncEntry {
 
 const SYNC_ENTRIES: SyncEntry[] = [
   {
-    source: path.join(SOURCE_DIR, 'bbfaw-2024-data.json'),
+    source: path.join(SOURCE_DIR, 'BBFAW folder', 'bbfaw-2024-data.json'),
     dest: path.join(DEST_DIR, 'bbfaw2024Canonical.json'),
     required: true,
   },
   {
-    source: path.join(SOURCE_DIR, 'brandAliasMap.json'),
+    source: path.join(SOURCE_DIR, 'BBFAW folder', 'brandAliasMap.json'),
     dest: path.join(DEST_DIR, 'brandAliasMap.json'),
     required: true,
   },
   {
-    source: path.join(SOURCE_DIR, 'bbfawParents.json'),
+    source: path.join(SOURCE_DIR, 'BBFAW folder', 'bbfawParents.json'),
     dest: path.join(DEST_DIR, 'bbfawParents.json'),
     required: true,
+  },
+  // KTC (KnowTheChain) 2026 data – source of truth lives in KTC folder
+  // These entries are optional until KTC is fully wired into the ETHICS pillar.
+  {
+    source: path.join(SOURCE_DIR, 'KTC folder', 'ktcParents.json'),
+    dest: path.join(DEST_DIR, 'ktcParents.json'),
+    required: false,
+  },
+  {
+    source: path.join(SOURCE_DIR, 'KTC folder', 'ktcBrandAliasMap.json'),
+    dest: path.join(DEST_DIR, 'ktcBrandAliasMap.json'),
+    required: false,
   },
 ];
 

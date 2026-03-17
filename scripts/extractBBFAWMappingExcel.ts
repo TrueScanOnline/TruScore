@@ -1,6 +1,6 @@
 /**
  * Extract and analyze the BBFAW Parent Mapping Excel workbook
- * Source: Database files/ETHICS Pillar/BBFAW_2024_Supermarket_Parent_Brand_Mapping_20260311.xlsx
+ * Source: Database files/ETHICS Pillar/BBFAW folder/BBFAW_2024_Supermarket_Parent_Brand_Mapping_20260311.xlsx
  *
  * Tabs: BBFAW_Parents | Brand_Mapping | Brand_Aliases
  * Output: JSON files for app integration
@@ -15,10 +15,11 @@ const EXCEL_PATH = path.join(
   ROOT,
   'Database files',
   'ETHICS Pillar',
+  'BBFAW folder',
   'BBFAW_2024_Supermarket_Parent_Brand_Mapping_20260311.xlsx'
 );
-/** Primary output: Database files/ETHICS Pillar (source of truth). Run sync-ethics-data to copy to src. */
-const OUT_DIR = path.join(ROOT, 'Database files', 'ETHICS Pillar');
+/** Primary output: Database files/ETHICS Pillar/BBFAW folder (source of truth). Run sync-ethics-data to copy to src. */
+const OUT_DIR = path.join(ROOT, 'Database files', 'ETHICS Pillar', 'BBFAW folder');
 
 function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) {
@@ -103,7 +104,7 @@ function main(): void {
   const reportPath = path.join(ROOT, 'docs', 'BBFAW_MAPPING_EXCEL_ANALYSIS.md');
   const report = `
 # BBFAW Parent Mapping Excel Analysis
-**Source:** \`Database files/ETHICS Pillar/BBFAW_2024_Supermarket_Parent_Brand_Mapping_20260311.xlsx\`
+**Source:** \`Database files/ETHICS Pillar/BBFAW folder/BBFAW_2024_Supermarket_Parent_Brand_Mapping_20260311.xlsx\`
 **Extracted:** ${new Date().toISOString()}
 
 ## Tabs Found (actual workbook)
@@ -124,8 +125,8 @@ function main(): void {
 6. Pass parent_company to BBFAW scoring engine (bbfaw2024Canonical.json)
 
 ## JSON outputs (source of truth)
-- \`Database files/ETHICS Pillar/bbfawParents.json\`
-- \`Database files/ETHICS Pillar/brandAliasMap.json\`
+- \`Database files/ETHICS Pillar/BBFAW folder/bbfawParents.json\`
+- \`Database files/ETHICS Pillar/BBFAW folder/brandAliasMap.json\`
 
 Run \`yarn sync-ethics-data\` to copy these to \`src/data/ethics/\` for app bundle.
 `;

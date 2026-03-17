@@ -1,7 +1,7 @@
 /**
  * Extract BBFAW 2024 company-tier data from the BBFAW 2024 Report (.docx)
  *
- * Output: Database files/ETHICS Pillar/bbfaw-2024-data.json (source of truth)
+ * Output: Database files/ETHICS Pillar/BBFAW folder/bbfaw-2024-data.json (source of truth)
  * Run: yarn sync-ethics-data to copy to src for app bundle.
  *
  * Run: yarn extract-bbfaw2024
@@ -13,8 +13,22 @@ import * as path from 'path';
 import * as mammoth from 'mammoth';
 import * as cheerio from 'cheerio';
 
-const DOCX_PATH = path.join(__dirname, '..', 'Database files', 'ETHICS Pillar', 'bbfaw-2024-report.docx');
-const OUTPUT_JSON = path.join(__dirname, '..', 'Database files', 'ETHICS Pillar', 'bbfaw-2024-data.json');
+const DOCX_PATH = path.join(
+  __dirname,
+  '..',
+  'Database files',
+  'ETHICS Pillar',
+  'BBFAW folder',
+  'bbfaw-2024-report.docx'
+);
+const OUTPUT_JSON = path.join(
+  __dirname,
+  '..',
+  'Database files',
+  'ETHICS Pillar',
+  'BBFAW folder',
+  'bbfaw-2024-data.json'
+);
 
 /** Official BBFAW 2024 Report - users can see WHY and WHERE the score came from */
 const BBFAW_2024_REPORT_URL = 'https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf';

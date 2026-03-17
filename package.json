@@ -14,6 +14,7 @@
     "analyze-pillar": "ts-node --project scripts/tsconfig.json scripts/analyze-pillar.ts",
     "extract-bbfaw2024": "ts-node --project scripts/tsconfig.json scripts/extractBBFAW2024FromDocx.ts",
     "extract-bbfaw-mapping": "ts-node --project scripts/tsconfig.json scripts/extractBBFAWMappingExcel.ts",
+    "extract-ktc-mapping": "ts-node --project scripts/tsconfig.json scripts/extractKTCMappingExcel.ts",
     "sync-ethics-data": "ts-node --project scripts/tsconfig.json scripts/syncEthicsPillarData.ts",
     "ethics-pillar:refresh": "npm run extract-bbfaw2024 && npm run extract-bbfaw-mapping && npm run sync-ethics-data",
     "test:barcode-performance": "ts-node --project scripts/tsconfig.json scripts/testBarcodePerformance.ts",

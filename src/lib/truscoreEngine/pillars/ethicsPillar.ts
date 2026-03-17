@@ -1,18 +1,17 @@
 /**
- * ETHICS PILLAR - Rebuilt from ground up (no fuzzy logic)
+ * ETHICS PILLAR
  *
- * SPEC: Ethics_Scoring_Specification.xlsx + Ethics_Score_and Commentary_Table_20260307.docx
- * SOURCE: BBFAW 2024 Report ONLY (single database source)
+ * SPEC: Database files/ETHICS Pillar/KTC folder/KTC scoring spec sheet (Ours).xlsx
+ *       – Ethics_Scoring_Spec_33 tab (Base, KTC, BBFAW, cap).
  *
  * Logic:
  * - Base Score: 15 (uniform)
- * - Animal Welfare (BBFAW): DIRECT link only - product.brand_owner or product.brands
- *   → exact match against BBFAW 2024 company names (no fuzzy, no brand→parent chaining)
- * - If no match: nil (no adjustment), score stays 15
- * - Cap: Min 0, Max 25
+ * - BBFAW (Animal Welfare): product → brand → parent chaining; if match apply Tier + Impact; else nil.
+ * - KTC (Human Welfare): product → brand → parent chaining; if match apply adjustment from Total Benchmark Score band; else nil.
+ * - Cap: Min 0, Max 25 (applied after all adjustments).
  *
- * BBFAW Tier: 1=+6, 2=+4, 3=+2, 4=+1, 5=-4, 6=-6
- * BBFAW Impact: A/B=+3, C/D=+1, E/F=-3
+ * BBFAW: Tier 1=+6, 2=+4, 3=+2, 4=+1, 5=-4, 6=-6; Impact A/B=+3, C/D=+1, E/F=-3.
+ * KTC Total Benchmark Score: 0–10=-10, 11–20=-8, 21–30=-6, 31–50=-3, 51–70=+3, 71–80=+6, 81–90=+8, 91–100=+10.
  */
 
 import { Product } from '../../../types/product';
@@ -27,6 +26,12 @@ import {
   resolveBrandToParent,
   type ResolvedParent,
 } from '../../../services/bbfawBrandResolutionService';
+import {
+  checkKTCParent,
+  getKTCScoreAdjustment,
+  type KTCParentData,
+} from '../../../services/ktcService';
+import { resolveBrandToKTCParent } from '../../../services/ktcBrandResolutionService';
 import { powershellLogger } from '../../../utils/powershellLogger';
 
 function getPerformanceNow(): number {
@@ -50,6 +55,8 @@ export interface EthicsPillarResult {
     bbfawMatchedCompany: string | null;
     bbfawTier: number | null;
     bbfawImpactRating: string | null;
+    ktcScore: number;
+    ktcMatchedCompany: string | null;
   };
 }
 
@@ -142,7 +149,8 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
         description: `BBFAW Tier ${tier} (animal welfare governance)`,
         value: bbfawTierScore,
         type: bbfawTierScore > 0 ? 'positive' : 'negative',
-        referenceUrl: 'https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16',
+        // Prefer Food Companies page for user context; PDF remains available in BBFAW docs
+        referenceUrl: 'https://www.bbfaw.com/food-companies/',
       });
       score += bbfawTierScore;
     }
@@ -152,7 +160,7 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
         description: `BBFAW Impact Rating ${impactRating} (welfare outcomes)`,
         value: bbfawImpactScore,
         type: bbfawImpactScore > 0 ? 'positive' : 'negative',
-        referenceUrl: 'https://www.bbfaw.com/media/2192/bbfaw-2024-report.pdf#page=16',
+        referenceUrl: 'https://www.bbfaw.com/food-companies/',
       });
       score += bbfawImpactScore;
     }
@@ -171,6 +179,39 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     });
   }
 
+  // KTC (KnowTheChain) 2026 – apply in addition to BBFAW, using same brand candidates
+  let ktcMatched: KTCParentData | null = null;
+  let ktcScoreAdjustment = 0;
+  for (const raw of candidates) {
+    const resolvedKTC = resolveBrandToKTCParent(raw);
+    const ktcName = resolvedKTC?.parentName ?? raw;
+    const ktcData = checkKTCParent(ktcName);
+    if (ktcData) {
+      ktcMatched = ktcData;
+      ktcScoreAdjustment = getKTCScoreAdjustment(ktcData.totalBenchmarkScore);
+      break;
+    }
+  }
+
+  if (ktcMatched && ktcScoreAdjustment !== 0) {
+    adjustments.push({
+      description: `KTC 2026 benchmark score ${ktcMatched.totalBenchmarkScore} (labour rights in supply chains)`,
+      value: ktcScoreAdjustment,
+      type: ktcScoreAdjustment > 0 ? 'positive' : 'negative',
+      referenceUrl: 'https://www.business-humanrights.org/en/companies/',
+    });
+    score += ktcScoreAdjustment;
+
+    logger.debug('[EthicsPillar] KTC match:', {
+      companyName: ktcMatched.parentName,
+      totalBenchmarkScore: ktcMatched.totalBenchmarkScore,
+      ktcScoreAdjustment,
+    });
+  } else {
+    logger.debug('[EthicsPillar] KTC not found - nil return (no adjustment)');
+  }
+
+  // Global cap for combined BBFAW + KTC adjustments
   score = Math.max(0, Math.min(25, Math.round(score)));
 
   const result: EthicsPillarResult = {
@@ -183,6 +224,8 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
       bbfawMatchedCompany: companyName && (tier || impactRating) ? companyName : null,
       bbfawTier: tier ?? null,
       bbfawImpactRating: impactRating ?? null,
+      ktcScore: ktcScoreAdjustment,
+      ktcMatchedCompany: ktcMatched ? ktcMatched.parentName : null,
     },
   };
 
