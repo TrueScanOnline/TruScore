@@ -3,9 +3,9 @@
 // This file contains all possible highlights verbatim from the spec
 
 import { resolveBrandToParent } from '../services/bbfawBrandResolutionService';
-import { checkBBFAWTier } from '../services/bbfawService';
+import { checkBBFAWTier, getBBFAWTierScore, getBBFAWImpactScore } from '../services/bbfawService';
 import { resolveBrandToKTCParent } from '../services/ktcBrandResolutionService';
-import { checkKTCParent, isKTCHighPerformer, isKTCLowPerformer } from '../services/ktcService';
+import { checkKTCParent, getKTCScoreAdjustment } from '../services/ktcService';
 
 export type PillarCategory = 'body' | 'planet' | 'ethics' | 'open';
 export type HighlightType = 'green' | 'red';
@@ -503,31 +503,99 @@ function productMatchesKTC(product: any): ReturnType<typeof checkKTCParent> {
   return null;
 }
 
-// ETHICS PILLAR highlights - presence-based only (no score effect)
+// ETHICS PILLAR highlights - mirror ETHICS score adjustments (sign-consistent)
 export const ETHICS_HIGHLIGHTS: HighlightDefinition[] = [
   {
-    id: 'ethics-bbfaw-present',
+    id: 'ethics-bbfaw-tier-positive',
     pillar: 'ethics',
     type: 'green',
     severity: 'medium',
-    title: 'This company is assessed by the Business Benchmark on Farm Animal Welfare (BBFAW).',
+    title: 'BBFAW benchmark – positive animal welfare score.',
     description:
-      'This brand or its parent company appears in the BBFAW benchmark. Tap to view the latest farm animal welfare benchmark information for this company.',
+      'This company appears in the Business Benchmark on Farm Animal Welfare (BBFAW) with an overall positive adjustment to the Ethics score (higher tiers and/or strong welfare impact ratings).',
     externalResource: 'https://www.bbfaw.com/food-companies/',
+    // Highlights are informational only – they must not change the score
     scoreValue: 0,
-    trigger: (p) => productMatchesBBFAW(p),
+    trigger: (p) => {
+      // Compute BBFAW adjustment directly from the current product’s brand/parent mapping,
+      // independent of whether a TruScore analysis object has been attached yet.
+      const candidates = getCompanyCandidatesForBBFAW(p);
+      for (const raw of candidates) {
+        const resolved = resolveBrandToParent(raw);
+        const name = resolved?.parent_entity_exact ?? raw;
+        const data = checkBBFAWTier(name);
+        if (!data) continue;
+        const tierScore = getBBFAWTierScore(data.tier as any);
+        const impactScore = getBBFAWImpactScore(data.impactRating as any);
+        if (tierScore + impactScore > 0) return true;
+      }
+      return false;
+    },
   },
   {
-    id: 'ethics-ktc-present',
+    id: 'ethics-bbfaw-tier-negative',
+    pillar: 'ethics',
+    type: 'red',
+    severity: 'medium',
+    title: 'BBFAW benchmark – negative animal welfare score.',
+    description:
+      'This company appears in the Business Benchmark on Farm Animal Welfare (BBFAW) with an overall negative adjustment to the Ethics score (lower tiers and/or poor welfare impact ratings).',
+    externalResource: 'https://www.bbfaw.com/food-companies/',
+    // Highlights are informational only – they must not change the score
+    scoreValue: 0,
+    trigger: (p) => {
+      // Compute BBFAW adjustment directly from the current product’s brand/parent mapping,
+      // independent of whether a TruScore analysis object has been attached yet.
+      const candidates = getCompanyCandidatesForBBFAW(p);
+      for (const raw of candidates) {
+        const resolved = resolveBrandToParent(raw);
+        const name = resolved?.parent_entity_exact ?? raw;
+        const data = checkBBFAWTier(name);
+        if (!data) continue;
+        const tierScore = getBBFAWTierScore(data.tier as any);
+        const impactScore = getBBFAWImpactScore(data.impactRating as any);
+        if (tierScore + impactScore < 0) return true;
+      }
+      return false;
+    },
+  },
+  {
+    id: 'ethics-ktc-positive',
     pillar: 'ethics',
     type: 'green',
     severity: 'medium',
-    title: 'This company is assessed by KnowTheChain (KTC) for labour rights in supply chains.',
+    title: 'KnowTheChain (KTC) – positive human welfare score.',
     description:
-      'This brand or its parent company appears in the KnowTheChain food & beverage benchmark. Tap to view the latest labour rights benchmark information for this company.',
+      'This company appears in the KnowTheChain Food & Beverage benchmark with a positive adjustment to the Ethics score, indicating stronger protections for workers in its supply chains.',
     externalResource: 'https://www.business-humanrights.org/en/companies/',
+    // Highlights are informational only – they must not change the score
     scoreValue: 0,
-    trigger: (p) => !!productMatchesKTC(p),
+    trigger: (p) => {
+      // Compute KTC adjustment directly from the current product’s brand/parent mapping,
+      // independent of whether a TruScore analysis object has been attached yet.
+      const ktc = productMatchesKTC(p);
+      if (!ktc) return false;
+      return getKTCScoreAdjustment(ktc.totalBenchmarkScore) > 0;
+    },
+  },
+  {
+    id: 'ethics-ktc-negative',
+    pillar: 'ethics',
+    type: 'red',
+    severity: 'medium',
+    title: 'KnowTheChain (KTC) – negative human welfare score.',
+    description:
+      'This company appears in the KnowTheChain Food & Beverage benchmark with a negative adjustment to the Ethics score, indicating weaker performance on labour rights in its supply chains.',
+    externalResource: 'https://www.business-humanrights.org/en/companies/',
+    // Highlights are informational only – they must not change the score
+    scoreValue: 0,
+    trigger: (p) => {
+      // Compute KTC adjustment directly from the current product’s brand/parent mapping,
+      // independent of whether a TruScore analysis object has been attached yet.
+      const ktc = productMatchesKTC(p);
+      if (!ktc) return false;
+      return getKTCScoreAdjustment(ktc.totalBenchmarkScore) < 0;
+    },
   },
 ];
 
