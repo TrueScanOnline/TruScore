@@ -364,27 +364,36 @@ describe('TruScore End-to-End Tests', () => {
       barcode: '3333333333333',
       product_name: 'Transparent Product',
       brands: 'Transparent Brand',
+      brand_owner: 'Transparent Brand Inc',
       labels_tags: [],
       nutriscore_grade: 'a',
       ecoscore_grade: 'a',
-      nova_group: 1, // NOVA 1-2 gets +5 bonus
-      ingredients_text: 'Water, organic sugar, organic vanilla extract. Full disclosure.',
+      nova_group: 1, // NOVA 1–2 + no vague-term matches → +4 sophistication bonus (Open pillar spec)
+      // Avoid words that match Open pillar vague-term list (e.g. "extract" in "vanilla extract").
+      ingredients_text:
+        'Water, organic cane sugar, salt, natural vanilla bean paste. Full disclosure.',
       origins: 'USA',
+      origins_tags: ['en:united-states'],
+      serving_size: '100 g',
+      nutriments: {
+        energy_100g: 80,
+        fat_100g: 0,
+        carbohydrates_100g: 18,
+        proteins_100g: 0,
+        salt_100g: 0.02,
+        sugars_100g: 18,
+      },
       additives_tags: [],
       recalls: [],
     };
 
     test('should apply zero hidden terms reward', () => {
       const result = calculateTruScore(product);
-      
-      // OPEN pillar should have bonus for zero hidden terms
+
       const openResult = result.pillarDetails?.open;
-      // NOVA amplification may add +1 if NOVA >= 3 and disclosure is partial
-      // For NOVA 1, there should be no amplification, so effectiveHiddenCount should be 0
-      // But if there's any amplification logic, it might be 1
-      expect(openResult?.details.effectiveHiddenCount).toBeLessThanOrEqual(1);
-      
-      // Score should be higher than base (with +5 bonus for NOVA 1-2 and zero hidden)
+      expect(openResult?.details.hiddenTermsCount).toBe(0);
+      expect(openResult?.details.sophisticationBonus).toBe(4);
+
       expect(result.breakdown.Open).toBeGreaterThan(15);
     });
   });

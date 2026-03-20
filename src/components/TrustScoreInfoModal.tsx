@@ -327,37 +327,25 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#ff6b6b" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Fairtrade (+8), Organic (+7), Rainforest/UTZ (+6), MSC/ASC (+6), RSPO (+6)
+                  Base 15, then BBFAW (animal welfare), KTC (labour / supply chains), certifications
                 </Text>
               </View>
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#ff6b6b" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  RSPCA (+5), Leaping Bunny (+5), B-Corp (+5), Cage-Free/Free-Range (+4)
+                  Certifications (highest scheme only): Fairtrade +5, Rainforest/UTZ +4, ASC +4, MSC +4, RSPO +3, Organic +2
                 </Text>
               </View>
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#ff6b6b" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Multiple labels stack up to +15 max
+                  Organic requires a recognised certifier; MSC uses the official API when configured
                 </Text>
               </View>
               <View style={styles.factorTag}>
                 <Ionicons name="close-circle" size={12} color="#ff6b6b" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Major Animal Cruelty (-15), Minor Animal Cruelty (-5)
-                </Text>
-              </View>
-              <View style={styles.factorTag}>
-                <Ionicons name="close-circle" size={12} color="#ff6b6b" />
-                <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Major Labor Violations (-15), Minor Labor Violations (-5)
-                </Text>
-              </View>
-              <View style={styles.factorTag}>
-                <Ionicons name="close-circle" size={12} color="#ff6b6b" />
-                <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Active Recalls (-10), Brand/Parent Overlay (-3)
+                  Pillar score capped 0–25 after all adjustments
                 </Text>
               </View>
             </View>
@@ -495,16 +483,13 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             {t('infoModal.trustScore.ethicsSource')}
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
-            • Base Score: 15 points (assumes ethical until violations){'\n'}
-            • Certifications (Open Food Facts labels_tags) - 1,000+ recognized certifications{'\n'}
-            • Bonus Structure: Fairtrade +8, Organic +7, Rainforest/UTZ +6, MSC/ASC +6, RSPO +6, RSPCA +5, Leaping Bunny +5, B-Corp +5, Cage-Free/Free-Range +4{'\n'}
-            • Multiple labels can stack up to +15 points maximum (stack cap){'\n'}
-            • Animal Cruelty: Major violations (factory farming/slaughter/cruelty) = -15, Minor violations = -5{'\n'}
-            • Labor Violations: Major violations (child labor/slavery) = -15, Minor violations (under-pay/over-work) = -5{'\n'}
-            • Brand/Parent Overlay: -3 penalty for high-impact brands (animal cruelty, labor violations, recall history){'\n'}
-            • Recalls: -10 penalty if active recall within last 12 months (universal){'\n'}
-            • Comprehensive brand database (500+ companies) with parent-subsidiary relationships, labor practices, and recall history{'\n'}
-            • Source: Open Food Facts API + Brand database + Labor violations service + Animal cruelty service
+            • Base score: 15 (neutral until data adjusts it){'\n'}
+            • BBFAW 2024: tier and impact rating adjustments (animal welfare governance & outcomes){'\n'}
+            • KnowTheChain Food & Beverage benchmark: total benchmark score bands (labour / supply chain){'\n'}
+            • Certifications (OFF labels + optional MSC API): Fairtrade +5, Rainforest Alliance/UTZ +4, ASC +4, MSC +4, RSPO +3, Organic +2 — highest eligible scheme only in MVP (no stacking){'\n'}
+            • Organic requires a recognised certifier signal; MSC positive credit follows the MSC Data Validation API when enabled{'\n'}
+            • Final Ethics pillar is floored at 0 and capped at 25{'\n'}
+            • Source: ETHICS SPEC sheet + BBFAW report + KnowTheChain + Open Food Facts (+ MSC API when licensed)
           </Text>
         </View>
 

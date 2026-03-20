@@ -126,13 +126,18 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   // Hidden terms penalty (includes fragrance - merged into main list)
   // SPEC per document: 1=-2, 2=-6, >=3=-11; if NOVA>=3 add +1 to count; zero hidden & NOVA1-2 = +4; zero hidden & NOVA3-4 = +2
   const hiddenCount = HIDDEN_TERMS.filter((t) => hasTerm(t)).length;
-  
-  // NOVA amplification: +1 count if NOVA≥3
+
+  /** NOVA≥3 adds +1 to effective hidden-risk count when scoring vague-term disclosure risk. */
+  const novaGroup = product.nova_group;
   let effectiveHiddenCount = hiddenCount;
-  if (product.nova_group !== undefined && product.nova_group >= 3) {
-      effectiveHiddenCount += 1;
+  if (novaGroup !== undefined && novaGroup >= 3) {
+    effectiveHiddenCount += 1;
   }
-  
+
+  /** No literal vague-term hits, only the NOVA-derived unit (spec used to apply −2 then +2; net 0). */
+  const isNovaOnlyDisclosureRisk =
+    hiddenCount === 0 && novaGroup !== undefined && novaGroup >= 3;
+
   // Apply penalty based on effective count (per document spec: 1=-2, 2=-6, >=3=-11)
   let hiddenTermsPenalty = 0;
   if (effectiveHiddenCount >= 3) {
@@ -142,35 +147,46 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   } else if (effectiveHiddenCount === 1) {
     hiddenTermsPenalty = 2; // -2 (per document spec)
   }
-  
+
   if (hiddenTermsPenalty > 0) {
-    const description = effectiveHiddenCount > hiddenCount
-      ? `${effectiveHiddenCount} hidden ingredient term(s) (${hiddenCount} detected + NOVA amplification)`
-      : `${effectiveHiddenCount} hidden ingredient term(s)`;
-    adjustments.push({
-      description,
-      value: -hiddenTermsPenalty,
-      type: 'negative',
-    });
-    score -= hiddenTermsPenalty;
+    if (isNovaOnlyDisclosureRisk) {
+      // Single neutral line instead of opposing −2 / +2 adjustments (same final score, clearer UX)
+      adjustments.push({
+        description:
+          'NOVA 3–4: disclosure-risk weight and listing-clarity credit cancel (net 0; no vague-term matches)',
+        value: 0,
+        type: 'neutral',
+      });
+    } else {
+      const description =
+        effectiveHiddenCount > hiddenCount
+          ? `${effectiveHiddenCount} disclosure-risk unit(s) (${hiddenCount} vague-term match(es) + NOVA ultra-processing weight)`
+          : `${effectiveHiddenCount} vague or hidden-ingredient pattern(s)`;
+      adjustments.push({
+        description,
+        value: -hiddenTermsPenalty,
+        type: 'negative',
+      });
+      score -= hiddenTermsPenalty;
+    }
   }
-  
-  // Zero hidden rewards: +4 for NOVA 1-2, +2 for NOVA 3-4
+
+  // Zero vague-term rewards: +4 for NOVA 1-2, +2 for other cases without NOVA-only netting above
   let sophisticationBonus = 0;
-  if (hiddenCount === 0) {
+  if (hiddenCount === 0 && !isNovaOnlyDisclosureRisk) {
     const nova = product.nova_group;
     if (nova === 1 || nova === 2) {
       sophisticationBonus = 4; // +4 for zero hidden + NOVA 1-2
       adjustments.push({
-        description: 'Sophistication bonus (zero hidden ingredients + NOVA 1-2)',
+        description: 'Sophistication bonus (no vague-term matches + NOVA 1–2)',
         value: sophisticationBonus,
         type: 'positive',
       });
       score += sophisticationBonus;
     } else {
-      sophisticationBonus = 2; // +2 for zero hidden but NOVA 3-4
+      sophisticationBonus = 2; // e.g. NOVA unknown / edge — listing clarity without NOVA 1–2 bonus tier
       adjustments.push({
-        description: 'Transparency bonus (zero hidden ingredients + NOVA 3-4)',
+        description: 'Listing clarity bonus (no vague-term matches; not NOVA 1–2)',
         value: sophisticationBonus,
         type: 'positive',
       });

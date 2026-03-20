@@ -1,17 +1,18 @@
 /**
  * ETHICS PILLAR
  *
- * SPEC: Database files/ETHICS Pillar/KTC folder/KTC scoring spec sheet (Ours).xlsx
- *       – Ethics_Scoring_Spec_33 tab (Base, KTC, BBFAW, cap).
+ * SPEC: Database files/ETHICS Pillar/ETHICS SPEC sheet.xlsx (Ethics_Scoring_Spec tab).
  *
  * Logic:
  * - Base Score: 15 (uniform)
  * - BBFAW (Animal Welfare): product → brand → parent chaining; if match apply Tier + Impact; else nil.
  * - KTC (Human Welfare): product → brand → parent chaining; if match apply adjustment from Total Benchmark Score band; else nil.
+ * - Certifications: highest eligible scheme only (+2..+5); see ethicsCertificationsService (MVP: no stacking).
  * - Cap: Min 0, Max 25 (applied after all adjustments).
  *
  * BBFAW: Tier 1=+6, 2=+4, 3=+2, 4=+1, 5=-4, 6=-6; Impact A/B=+3, C/D=+1, E/F=-3.
  * KTC Total Benchmark Score: 0–10=-10, 11–20=-8, 21–30=-6, 31–50=-3, 51–70=+3, 71–80=+6, 81–90=+8, 91–100=+10.
+ * Certifications: Fairtrade +5, Rainforest Alliance +4, ASC +4, MSC +4, RSPO +3, Organic +2.
  */
 
 import { Product } from '../../../types/product';
@@ -32,6 +33,7 @@ import {
   type KTCParentData,
 } from '../../../services/ktcService';
 import { resolveBrandToKTCParent } from '../../../services/ktcBrandResolutionService';
+import { evaluateEthicsCertifications } from '../../../services/ethicsCertificationsService';
 import { powershellLogger } from '../../../utils/powershellLogger';
 
 function getPerformanceNow(): number {
@@ -57,6 +59,9 @@ export interface EthicsPillarResult {
     bbfawImpactRating: string | null;
     ktcScore: number;
     ktcMatchedCompany: string | null;
+    certificationsAdjustment: number;
+    certificationsWinningScheme: string | null;
+    certificationsEligibleSchemes: string[];
   };
 }
 
@@ -211,7 +216,29 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     logger.debug('[EthicsPillar] KTC not found - nil return (no adjustment)');
   }
 
-  // Global cap for combined BBFAW + KTC adjustments
+  // Certifications (ETHICS SPEC — max single scheme for MVP)
+  const certEval = evaluateEthicsCertifications(product);
+  let certificationsAdjustment = 0;
+  if (certEval.adjustment !== 0 && certEval.winningScheme) {
+    certificationsAdjustment = certEval.adjustment;
+    const labelPretty = certEval.winningScheme
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    adjustments.push({
+      description: `Ethics certifications – ${labelPretty} (+${certificationsAdjustment}, highest eligible scheme; MVP no stacking)`,
+      value: certificationsAdjustment,
+      type: 'positive',
+      referenceUrl: certEval.referenceUrl,
+    });
+    score += certificationsAdjustment;
+    logger.debug('[EthicsPillar] Certifications:', {
+      winningScheme: certEval.winningScheme,
+      adjustment: certificationsAdjustment,
+      eligible: certEval.eligibleSchemes,
+    });
+  }
+
+  // Global cap after Base + BBFAW + KTC + certifications
   score = Math.max(0, Math.min(25, Math.round(score)));
 
   const result: EthicsPillarResult = {
@@ -226,6 +253,9 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
       bbfawImpactRating: impactRating ?? null,
       ktcScore: ktcScoreAdjustment,
       ktcMatchedCompany: ktcMatched ? ktcMatched.parentName : null,
+      certificationsAdjustment,
+      certificationsWinningScheme: certEval.winningScheme,
+      certificationsEligibleSchemes: certEval.eligibleSchemes,
     },
   };
 

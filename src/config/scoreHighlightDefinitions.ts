@@ -6,6 +6,7 @@ import { resolveBrandToParent } from '../services/bbfawBrandResolutionService';
 import { checkBBFAWTier, getBBFAWTierScore, getBBFAWImpactScore } from '../services/bbfawService';
 import { resolveBrandToKTCParent } from '../services/ktcBrandResolutionService';
 import { checkKTCParent, getKTCScoreAdjustment } from '../services/ktcService';
+import { getEthicsCertificationAdjustment } from '../services/ethicsCertificationsService';
 
 export type PillarCategory = 'body' | 'planet' | 'ethics' | 'open';
 export type HighlightType = 'green' | 'red';
@@ -596,6 +597,18 @@ export const ETHICS_HIGHLIGHTS: HighlightDefinition[] = [
       if (!ktc) return false;
       return getKTCScoreAdjustment(ktc.totalBenchmarkScore) < 0;
     },
+  },
+  {
+    id: 'ethics-certifications-positive',
+    pillar: 'ethics',
+    type: 'green',
+    severity: 'medium',
+    title: 'Recognised ethics certification on pack (single highest applies).',
+    description:
+      'This product carries at least one eligible third-party certification mapped from Open Food Facts (and MSC when validated). Only the highest-weight scheme is applied in MVP (no stacking).',
+    externalResource: 'https://world.openfoodfacts.org/',
+    scoreValue: 0,
+    trigger: (p) => getEthicsCertificationAdjustment(p) > 0,
   },
 ];
 

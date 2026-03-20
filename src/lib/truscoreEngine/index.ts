@@ -4,7 +4,7 @@
  * This module orchestrates the calculation of all 4 pillars:
  * - Body Pillar (nutrition, additives, processing)
  * - Planet Pillar (environmental impact, palm oil, recyclability)
- * - Ethics Pillar (BBFAW 2024 animal welfare only - direct brand_owner/brands match)
+ * - Ethics Pillar (base 15 + BBFAW + KTC + certifications, capped 0–25)
  * - Open Pillar (transparency, ingredients disclosure, origin)
  *
  * Each pillar is calculated independently and can be tested/modified separately.
@@ -247,6 +247,14 @@ function inferAdjustmentSource(
   if (pillar === 'Ethics') {
     if (d.includes('base score') || d.includes('assumes ethical')) return { sourceDatabase: 'Internal', queryKeyType: 'product_field' };
     if (d.includes('bbfaw')) return { sourceDatabase: 'BBFAW', queryKeyType: 'brand', referenceUrl: ETHICS_REFERENCE_URLS['BBFAW'] };
+    if (d.includes('ktc') || d.includes('knowthechain') || d.includes('benchmark score'))
+      return {
+        sourceDatabase: 'KnowTheChain',
+        queryKeyType: 'brand',
+        referenceUrl: 'https://www.business-humanrights.org/en/from-us/knowthechain/food-and-beverage-benchmark/',
+      };
+    if (d.includes('ethics certifications') || d.includes('certifications –'))
+      return { sourceDatabase: 'Open Food Facts + MSC API', queryKeyType: 'product_field' };
     return { sourceDatabase: 'Internal', queryKeyType: 'product_field' };
   }
   if (pillar === 'Body') {

@@ -123,18 +123,20 @@ describe('Open Pillar Calculation', () => {
     expect(result.details.sophisticationBonus).toBe(5);
   });
 
-  test('should apply transparency bonus (+2) for zero hidden but not NOVA 1-2', () => {
+  test('NOVA 3–4 with no vague terms: net-neutral disclosure rule (no +2 / −2 pair)', () => {
     const longIngredients = 'Water, Sugar, Salt, '.repeat(50); // Full disclosure
     const product = {
       ...baseProduct,
       ingredients_text: longIngredients,
-      nova_group: 3 as const, // NOVA 3, not 1-2
+      nova_group: 3 as const,
       origins: 'New Zealand',
       brand_owner: 'Test Company',
     };
     const result = calculateOpenPillar(product);
     expect(result.base).toBe(15);
-    expect(result.details.sophisticationBonus).toBe(2);
+    expect(result.details.sophisticationBonus).toBe(0);
+    const neutral = result.adjustments.find((a) => a.description.includes('NOVA 3–4') && a.value === 0);
+    expect(neutral).toBeDefined();
   });
 
   test('should apply brand ownership penalty (-5) for hidden/opaque parent', () => {

@@ -1,14 +1,13 @@
 /**
  * Ethics Pillar Unit Tests
  *
- * SPEC: Ethics_Scoring_Specification.xlsx + Ethics_Score_and Commentary_Table_20260307.docx
- * Pillar rebuilt: Base 15 + BBFAW 2024 only. If not found = nil.
+ * SPEC: Database files/ETHICS Pillar/ETHICS SPEC sheet.xlsx — Base 15 + BBFAW + KTC + certifications (cap 0–25).
  */
 
 import { calculateEthicsPillar } from '../../../../lib/truscoreEngine/pillars/ethicsPillar';
 import { Product } from '../../../../types/product';
 
-describe('Ethics Pillar Calculation (BBFAW 2024 only)', () => {
+describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
   const baseProduct: Product = {
     barcode: '1234567890123',
     product_name: 'Test Product',
@@ -134,5 +133,17 @@ describe('Ethics Pillar Calculation (BBFAW 2024 only)', () => {
     const product = { ...baseProduct, brands: 'Marks & Spencer PLC' }; // 15+4+3=22, within cap
     const result = calculateEthicsPillar(product);
     expect(result.score).toBeLessThanOrEqual(25);
+  });
+
+  test('should add certifications (max scheme) when BBFAW does not apply', () => {
+    const product = {
+      ...baseProduct,
+      brands: 'Totally Unknown Indie Brand',
+      labels_tags: ['en:fair-trade'],
+    };
+    const result = calculateEthicsPillar(product);
+    expect(result.details.certificationsAdjustment).toBe(5);
+    expect(result.details.certificationsWinningScheme).toBe('fairtrade');
+    expect(result.score).toBe(20);
   });
 });

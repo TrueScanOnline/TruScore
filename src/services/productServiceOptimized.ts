@@ -399,23 +399,17 @@ async function executeFetchProductOptimized(
     return null;
   });
   
-  // Query fast APIs in parallel with 3-second timeout (increased from 2s)
-  const fastSourcesPromise = Promise.race([
-    Promise.allSettled([
-      offQueryPromise,
-      // Open Beauty Facts (for cosmetics)
-      fetchProductFromOBF(primaryBarcode).then(result => {
-        apiCallCount++;
-        if (result) sources.push('openbeautyfacts');
-        return result;
-      }),
-    ]),
-    new Promise<PromiseSettledResult<Product | null>[]>((resolve) => {
-      setTimeout(() => resolve([]), 3000); // 3 second timeout (increased to match OFF response time)
+  // IMPORTANT: do NOT Promise.race(allSettled, timeout→[]).
+  // A 3s timeout caused Phase 1 to log "0 products" while OFF was still loading; Phase 2 then
+  // re-ran a full OFF fan-out (~20s+ duplicate work). Wait for real OFF+OBF completion here.
+  const fastSourcesResults = await Promise.allSettled([
+    offQueryPromise,
+    fetchProductFromOBF(primaryBarcode).then(result => {
+      apiCallCount++;
+      if (result) sources.push('openbeautyfacts');
+      return result;
     }),
   ]);
-  
-  const fastSourcesResults = await fastSourcesPromise;
   const fastSources = fastSourcesResults
     .filter((r): r is PromiseFulfilledResult<Product | null> => 
       r.status === 'fulfilled' && r.value !== null)
