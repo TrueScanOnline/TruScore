@@ -5,7 +5,7 @@
  * Source: https://www.ethicalconsumer.org/
  * Data Format: Website/publications
  * 
- * This service provides ethical ratings for CARE Pillar scoring
+ * This service provides ethical ratings for Ethics Pillar scoring
  * ENHANCED: Uses fuzzy matching for better company name matching
  */
 

@@ -15,7 +15,7 @@ import { enhanceWithLeapingBunny } from './leapingBunnyEnhancement';
  * Enhancement order:
  * 1. EWG Skin Deep (Body pillar - cosmetics)
  * 2. WWF Palm Oil (Planet pillar - palm oil sustainability)
- * 3. Leaping Bunny (Care pillar - cruelty-free)
+ * 3. Leaping Bunny (cruelty-free labels)
  */
 export async function applyMVPEnhancements(
   product: Product,
@@ -41,7 +41,7 @@ export async function applyMVPEnhancements(
       );
     }
     
-    // 3. Leaping Bunny Enhancement (Care pillar - cruelty-free)
+    // 3. Leaping Bunny Enhancement (cruelty-free labels)
     // Applies to all products with brand information
     product = await enhanceWithLeapingBunny(product);
     

@@ -1,6 +1,6 @@
 /**
  * Labor Violations Service
- * Detects labor violations and human exploitation for CARE Pillar.
+ * Detects labor violations and human exploitation for Ethics Pillar.
  *
  * Sources: Brand database, known lists, DOL (curated list + enforcement API), Walk Free GSI, Buycott.
  *
@@ -186,7 +186,7 @@ function checkKnownViolations(brandName: string): { type: 'limited' | 'moderate'
 
 /**
  * Check for labor violations in a product
- * Returns violation data for CARE Pillar scoring
+ * Returns violation data for Ethics Pillar scoring
  * 
  * ENHANCED: Uses fuzzy matching for better brand resolution and confidence scoring
  * 

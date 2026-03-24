@@ -2,7 +2,7 @@
  * Enhanced Brand Extraction Utility
  * 
  * This module provides comprehensive brand extraction and matching functionality
- * to improve CARE pillar brand matching rates.
+ * to improve Ethics pillar brand matching rates.
  * 
  * Key improvements:
  * - Splits comma-separated brands

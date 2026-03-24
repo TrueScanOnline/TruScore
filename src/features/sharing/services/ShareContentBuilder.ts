@@ -80,7 +80,7 @@ export class ShareContentBuilder {
     const scoreLabel = this.getScoreLabel(score);
     const body = truScore?.breakdown.Body ?? product.trust_score_breakdown?.body ?? 0;
     const planet = truScore?.breakdown.Planet ?? product.trust_score_breakdown?.planet ?? 0;
-    const ethics = truScore?.breakdown.Ethics ?? product.trust_score_breakdown?.care ?? 0;
+    const ethics = truScore?.breakdown.Ethics ?? product.trust_score_breakdown?.ethics ?? 0;
     const open = truScore?.breakdown.Open ?? product.trust_score_breakdown?.open ?? 0;
 
     // VIRAL HOOKS - Platform-optimized for maximum engagement

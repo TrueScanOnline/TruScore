@@ -284,7 +284,7 @@ interface TestResult {
     breakdown: {
       Body: number;
       Planet: number;
-      Care: number;
+      Ethics: number;
       Open: number;
     };
     hasNutriScore: boolean;
@@ -660,11 +660,11 @@ async function testBarcode(barcode: string): Promise<TestResult> {
             packaging: product.packaging_data ? (product.source || null) : null,
           },
         },
-        care: {
-          score: truScoreResult.pillarDetails.care.score,
-          base: truScoreResult.pillarDetails.care.base,
-          adjustments: truScoreResult.pillarDetails.care.adjustments || [],
-          details: truScoreResult.pillarDetails.care.details || {},
+        ethics: {
+          score: truScoreResult.pillarDetails.ethics.score,
+          base: truScoreResult.pillarDetails.ethics.base,
+          adjustments: truScoreResult.pillarDetails.ethics.adjustments || [],
+          details: truScoreResult.pillarDetails.ethics.details || {},
           dataSources: {
             certifications: product.labels_tags ? (product.source || null) : null,
             recalls: product.recalls ? (product.source || null) : null,
@@ -767,7 +767,7 @@ async function testBarcode(barcode: string): Promise<TestResult> {
       console.log(`\n🏆 TruScore: ${result.truScore.overall}/100`);
       console.log(`   Body: ${result.truScore.breakdown.Body}/25`);
       console.log(`   Planet: ${result.truScore.breakdown.Planet}/25`);
-      console.log(`   Care: ${result.truScore.breakdown.Care}/25`);
+      console.log(`   Ethics: ${result.truScore.breakdown.Ethics}/25`);
       console.log(`   Open: ${result.truScore.breakdown.Open}/25`);
     }
     
@@ -829,33 +829,33 @@ async function testBarcode(barcode: string): Promise<TestResult> {
         }
       }
       
-      console.log(`\n   CARE Pillar (${result.pillarBreakdown.care.score}/25):`);
-      console.log(`      Base Score: ${result.pillarBreakdown.care.base}/25 (starting point)`);
-      console.log(`      Final Score: ${result.pillarBreakdown.care.score}/25`);
+      console.log(`\n   ETHICS Pillar (${result.pillarBreakdown.ethics.score}/25):`);
+      console.log(`      Base Score: ${result.pillarBreakdown.ethics.base}/25 (starting point)`);
+      console.log(`      Final Score: ${result.pillarBreakdown.ethics.score}/25`);
       console.log(`      Calculation:`);
-      console.log(`        1. Start with base score: ${result.pillarBreakdown.care.base}`);
-      result.pillarBreakdown.care.adjustments.forEach((adj, idx) => {
+      console.log(`        1. Start with base score: ${result.pillarBreakdown.ethics.base}`);
+      result.pillarBreakdown.ethics.adjustments.forEach((adj, idx) => {
         const sign = adj.type === 'positive' ? '+' : (adj.value < 0 ? '' : '-');
         const value = Math.abs(adj.value);
         console.log(`        ${idx + 2}. ${sign}${value} points: ${adj.description}`);
       });
       console.log(`      Data Sources Used:`);
-      console.log(`        - Certifications: ${result.pillarBreakdown.care.dataSources.certifications || 'N/A'}`);
-      console.log(`        - Product Recalls: ${result.pillarBreakdown.care.dataSources.recalls || 'N/A'}`);
-      console.log(`        - Brand/Parent Company Data: ${result.pillarBreakdown.care.dataSources.brandData || 'N/A'}`);
-      if (result.pillarBreakdown.care.details) {
+      console.log(`        - Certifications: ${result.pillarBreakdown.ethics.dataSources.certifications || 'N/A'}`);
+      console.log(`        - Product Recalls: ${result.pillarBreakdown.ethics.dataSources.recalls || 'N/A'}`);
+      console.log(`        - Brand/Parent Company Data: ${result.pillarBreakdown.ethics.dataSources.brandData || 'N/A'}`);
+      if (result.pillarBreakdown.ethics.details) {
         console.log(`      Details:`);
-        if (result.pillarBreakdown.care.details.certificationBonus !== undefined && result.pillarBreakdown.care.details.certificationBonus > 0) {
-          console.log(`        - Certification Bonus: +${result.pillarBreakdown.care.details.certificationBonus} points`);
+        if (result.pillarBreakdown.ethics.details.certificationBonus !== undefined && result.pillarBreakdown.ethics.details.certificationBonus > 0) {
+          console.log(`        - Certification Bonus: +${result.pillarBreakdown.ethics.details.certificationBonus} points`);
         }
-        if (result.pillarBreakdown.care.details.animalCrueltyPenalty !== undefined && result.pillarBreakdown.care.details.animalCrueltyPenalty > 0) {
-          console.log(`        - Animal Cruelty Penalty: -${result.pillarBreakdown.care.details.animalCrueltyPenalty} points`);
+        if (result.pillarBreakdown.ethics.details.animalCrueltyPenalty !== undefined && result.pillarBreakdown.ethics.details.animalCrueltyPenalty > 0) {
+          console.log(`        - Animal Cruelty Penalty: -${result.pillarBreakdown.ethics.details.animalCrueltyPenalty} points`);
         }
-        if (result.pillarBreakdown.care.details.laborViolationPenalty !== undefined && result.pillarBreakdown.care.details.laborViolationPenalty > 0) {
-          console.log(`        - Labor Violation Penalty: -${result.pillarBreakdown.care.details.laborViolationPenalty} points`);
+        if (result.pillarBreakdown.ethics.details.laborViolationPenalty !== undefined && result.pillarBreakdown.ethics.details.laborViolationPenalty > 0) {
+          console.log(`        - Labor Violation Penalty: -${result.pillarBreakdown.ethics.details.laborViolationPenalty} points`);
         }
-        if (result.pillarBreakdown.care.details.recallPenalty !== undefined && result.pillarBreakdown.care.details.recallPenalty > 0) {
-          console.log(`        - Recall Penalty: -${result.pillarBreakdown.care.details.recallPenalty} points`);
+        if (result.pillarBreakdown.ethics.details.recallPenalty !== undefined && result.pillarBreakdown.ethics.details.recallPenalty > 0) {
+          console.log(`        - Recall Penalty: -${result.pillarBreakdown.ethics.details.recallPenalty} points`);
         }
       }
       
@@ -883,8 +883,8 @@ async function testBarcode(barcode: string): Promise<TestResult> {
           console.log(`        - Hidden Terms Found: ${result.pillarBreakdown.open.details.hiddenTermsCount}`);
           console.log(`        - Hidden Terms Penalty: -${result.pillarBreakdown.open.details.hiddenTermsPenalty || 0} points`);
         }
-        if (result.pillarBreakdown.open.details.sophisticationBonus !== undefined && result.pillarBreakdown.open.details.sophisticationBonus > 0) {
-          console.log(`        - Transparency Bonus: +${result.pillarBreakdown.open.details.sophisticationBonus} points`);
+        if (result.pillarBreakdown.open.details.listingClarityBonus !== undefined && result.pillarBreakdown.open.details.listingClarityBonus > 0) {
+          console.log(`        - Listing clarity bonus: +${result.pillarBreakdown.open.details.listingClarityBonus} points`);
         }
         if (result.pillarBreakdown.open.details.originPenalty !== undefined && result.pillarBreakdown.open.details.originPenalty > 0) {
           console.log(`        - Origin Penalty: -${result.pillarBreakdown.open.details.originPenalty} points`);

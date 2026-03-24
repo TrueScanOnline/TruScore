@@ -159,25 +159,22 @@ function calculateOpenPillarOld(product: Product) {
   return score;
 }
 
-// NEW LOGIC - Calculate using current implementation
+// NEW LOGIC — delegates to the app TruScore engine (four modular pillars)
+const { calculateTruScore } = require('../src/lib/truscoreEngine/index') as typeof import('../src/lib/truscoreEngine/index');
+
 function calculateTruScoreNew(product: Product) {
   try {
-    const bodyResult = calculateBodyPillarNew(product);
-    const planetResult = calculatePlanetPillarNew(product);
-    const openResult = calculateOpenPillarNew(product);
-    const careResult = calculateCarePillarNew(product);
-    
-    const total = bodyResult.score + planetResult.score + openResult.score + careResult.score;
+    const r = calculateTruScore(product as any);
     return {
-      total: Math.max(0, Math.min(100, Math.round(total))),
-      body: bodyResult.score,
-      planet: planetResult.score,
-      open: openResult.score,
-      care: careResult.score,
+      total: r.truscore,
+      body: r.breakdown.Body,
+      planet: r.breakdown.Planet,
+      open: r.breakdown.Open,
+      ethics: r.breakdown.Ethics,
     };
   } catch (error) {
     console.error('Error calculating new score:', error);
-    return { total: 0, body: 0, planet: 0, open: 0, care: 0 };
+    return { total: 0, body: 0, planet: 0, open: 0, ethics: 0 };
   }
 }
 
@@ -186,15 +183,15 @@ function calculateTruScoreOld(product: Product) {
   const body = calculateBodyPillarOld(product);
   const planet = calculatePlanetPillarOld(product);
   const open = calculateOpenPillarOld(product);
-  const care = 15; // Simplified - Care pillar unchanged
+  const ethics = 15; // Simplified baseline for comparison
   
-  const total = body + planet + open + care;
+  const total = body + planet + open + ethics;
   return {
     total: Math.max(0, Math.min(100, Math.round(total))),
     body,
     planet,
     open,
-    care,
+    ethics,
   };
 }
 
@@ -252,9 +249,9 @@ async function analyzeBarcodes(barcodes: string[]) {
   const results: Array<{
     barcode: string;
     productName: string;
-    oldScore: { total: number; body: number; planet: number; open: number; care: number };
-    newScore: { total: number; body: number; planet: number; open: number; care: number };
-    difference: { total: number; body: number; planet: number; open: number; care: number };
+    oldScore: { total: number; body: number; planet: number; open: number; ethics: number };
+    newScore: { total: number; body: number; planet: number; open: number; ethics: number };
+    difference: { total: number; body: number; planet: number; open: number; ethics: number };
   }> = [];
   
   console.log(`Analyzing ${barcodes.length} barcodes...\n`);
@@ -270,9 +267,9 @@ async function analyzeBarcodes(barcodes: string[]) {
       results.push({
         barcode,
         productName: 'NOT FOUND',
-        oldScore: { total: 0, body: 0, planet: 0, open: 0, care: 0 },
-        newScore: { total: 0, body: 0, planet: 0, open: 0, care: 0 },
-        difference: { total: 0, body: 0, planet: 0, open: 0, care: 0 },
+        oldScore: { total: 0, body: 0, planet: 0, open: 0, ethics: 0 },
+        newScore: { total: 0, body: 0, planet: 0, open: 0, ethics: 0 },
+        difference: { total: 0, body: 0, planet: 0, open: 0, ethics: 0 },
       });
       continue;
     }
@@ -288,12 +285,12 @@ async function analyzeBarcodes(barcodes: string[]) {
       body: newScore.body - oldScore.body,
       planet: newScore.planet - oldScore.planet,
       open: newScore.open - oldScore.open,
-      care: newScore.care - oldScore.care,
+      ethics: newScore.ethics - oldScore.ethics,
     };
     
-    console.log(`  Old: ${oldScore.total} (B:${oldScore.body} P:${oldScore.planet} O:${oldScore.open} C:${oldScore.care})`);
-    console.log(`  New: ${newScore.total} (B:${newScore.body} P:${newScore.planet} O:${newScore.open} C:${newScore.care})`);
-    console.log(`  Diff: ${difference.total > 0 ? '+' : ''}${difference.total} (B:${difference.body > 0 ? '+' : ''}${difference.body} P:${difference.planet > 0 ? '+' : ''}${difference.planet} O:${difference.open > 0 ? '+' : ''}${difference.open} C:${difference.care > 0 ? '+' : ''}${difference.care})\n`);
+    console.log(`  Old: ${oldScore.total} (B:${oldScore.body} P:${oldScore.planet} O:${oldScore.open} E:${oldScore.ethics})`);
+    console.log(`  New: ${newScore.total} (B:${newScore.body} P:${newScore.planet} O:${newScore.open} E:${newScore.ethics})`);
+    console.log(`  Diff: ${difference.total > 0 ? '+' : ''}${difference.total} (B:${difference.body > 0 ? '+' : ''}${difference.body} P:${difference.planet > 0 ? '+' : ''}${difference.planet} O:${difference.open > 0 ? '+' : ''}${difference.open} E:${difference.ethics > 0 ? '+' : ''}${difference.ethics})\n`);
     
     results.push({
       barcode,
@@ -356,9 +353,9 @@ function generateReport(results: any[]) {
   results.forEach((result, index) => {
     report.push(`${index + 1}. Barcode: ${result.barcode}`);
     report.push(`   Product: ${result.productName}`);
-    report.push(`   OLD Score: ${result.oldScore.total}/100 (Body: ${result.oldScore.body}, Planet: ${result.oldScore.planet}, Open: ${result.oldScore.open}, Care: ${result.oldScore.care})`);
-    report.push(`   NEW Score: ${result.newScore.total}/100 (Body: ${result.newScore.body}, Planet: ${result.newScore.planet}, Open: ${result.newScore.open}, Care: ${result.newScore.care})`);
-    report.push(`   DIFFERENCE: ${result.difference.total > 0 ? '+' : ''}${result.difference.total} (Body: ${result.difference.body > 0 ? '+' : ''}${result.difference.body}, Planet: ${result.difference.planet > 0 ? '+' : ''}${result.difference.planet}, Open: ${result.difference.open > 0 ? '+' : ''}${result.difference.open}, Care: ${result.difference.care > 0 ? '+' : ''}${result.difference.care})`);
+    report.push(`   OLD Score: ${result.oldScore.total}/100 (Body: ${result.oldScore.body}, Planet: ${result.oldScore.planet}, Open: ${result.oldScore.open}, Ethics: ${result.oldScore.ethics})`);
+    report.push(`   NEW Score: ${result.newScore.total}/100 (Body: ${result.newScore.body}, Planet: ${result.newScore.planet}, Open: ${result.newScore.open}, Ethics: ${result.newScore.ethics})`);
+    report.push(`   DIFFERENCE: ${result.difference.total > 0 ? '+' : ''}${result.difference.total} (Body: ${result.difference.body > 0 ? '+' : ''}${result.difference.body}, Planet: ${result.difference.planet > 0 ? '+' : ''}${result.difference.planet}, Open: ${result.difference.open > 0 ? '+' : ''}${result.difference.open}, Ethics: ${result.difference.ethics > 0 ? '+' : ''}${result.difference.ethics})`);
     report.push('');
   });
   

@@ -1,6 +1,6 @@
 /**
  * Animal Cruelty Service
- * Detects animal cruelty violations for CARE Pillar
+ * Detects animal cruelty violations for Ethics Pillar
  * Extends existing cruel parent detection with minor violations
  * 
  * Sources:
@@ -176,7 +176,7 @@ function checkKnownViolations(brandName: string): { type: 'limited' | 'moderate'
 
 /**
  * Check for animal cruelty violations in a product
- * Returns violation data for CARE Pillar scoring
+ * Returns violation data for Ethics Pillar scoring
  * 
  * ENHANCED: Uses fuzzy matching for better brand resolution and confidence scoring
  */
@@ -404,7 +404,7 @@ export function checkAnimalCruelty(product: Product): AnimalCrueltyData {
   
   // 7. Check parent company (if available) - only if no violations found yet
   // FUZZY MATCHING: Use fuzzy-matched parent companies
-  // Note: Parent company violations will be handled by brand overlay in CARE pillar
+  // Note: Parent company violations may be reflected via brand-level Ethics data
   // if product itself is ethical (has certifications, etc.)
   if (violationType === 'none') {
     // Get parent companies from fuzzy matches
@@ -423,7 +423,7 @@ export function checkAnimalCruelty(product: Product): AnimalCrueltyData {
       // Check parent but mark as parent-level (will be used for brand overlay if product is ethical)
       if (isCruelParent(parentCompany)) {
         // Parent has violations, but product itself doesn't
-        // This will be handled by brand overlay in CARE pillar if product is ethical
+        // May be reflected in Ethics pillar when brand-level data is applied
         violationType = 'major';
         violations.push(`major animal cruelty (parent: cruel parent: ${parentCompany}) - may use brand overlay if product ethical`);
         sources.push('brand_database_cruel_parent');

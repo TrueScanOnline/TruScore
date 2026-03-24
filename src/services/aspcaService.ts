@@ -5,7 +5,7 @@
  * Source: https://www.aspca.org/
  * Data Format: Website/publications
  * 
- * This service provides animal welfare data for CARE Pillar scoring
+ * This service provides animal welfare data for Ethics Pillar scoring
  */
 
 import { logger } from '../utils/logger';

@@ -806,7 +806,7 @@ async function executeFetchProduct(
   }
   
   // CRITICAL FIX: Fetch recalls BEFORE TruScore calculation
-  // This ensures CARE pillar can use recall data for scoring
+  // This ensures Ethics pillar can use recall data for scoring
   // Use fast timeout (2 seconds) to avoid blocking product display
   if (productWithConfidence.product_name || productWithConfidence.brands) {
     try {
@@ -901,7 +901,7 @@ async function executeFetchProduct(
           // Note: Agency info is in UnifiedRecall but not stored in FoodRecall
           // Banner alerts service infers agency from recallId pattern
         }));
-        logger.info(`⚠️ RECALL ALERT: ${recallResults.length} recall(s) found - will affect CARE pillar score`);
+        logger.info(`⚠️ RECALL ALERT: ${recallResults.length} recall(s) found - will affect Ethics pillar score`);
       }
     } catch (error) {
       // Non-blocking - continue without recalls if fetch fails
@@ -934,7 +934,7 @@ async function executeFetchProduct(
       breakdown: {
         Body: productWithTrustScore.trust_score_breakdown.body,
         Planet: productWithTrustScore.trust_score_breakdown.planet,
-        Ethics: productWithTrustScore.trust_score_breakdown.care ?? 0,
+        Ethics: productWithTrustScore.trust_score_breakdown.ethics ?? 0,
         Open: productWithTrustScore.trust_score_breakdown.open,
       },
       hasNutriScore: productWithTrustScore._truscore_metadata?.hasNutriScore,
@@ -951,7 +951,7 @@ async function executeFetchProduct(
   if (productWithTrustScore.trust_score_breakdown) {
     logger.info(`  Body Pillar: ${productWithTrustScore.trust_score_breakdown.body || 'N/A'}/25`);
     logger.info(`  Planet Pillar: ${productWithTrustScore.trust_score_breakdown.planet || 'N/A'}/25`);
-    logger.info(`  Care Pillar: ${productWithTrustScore.trust_score_breakdown.care || 'N/A'}/25`);
+    logger.info(`  Ethics Pillar: ${productWithTrustScore.trust_score_breakdown.ethics || 'N/A'}/25`);
     logger.info(`  Open Pillar: ${productWithTrustScore.trust_score_breakdown.open || 'N/A'}/25`);
     
     // ===== VERIFICATION: Log FSANZ contribution to TruScore =====
@@ -1024,7 +1024,7 @@ async function executeFetchProduct(
       }
     }
     
-    // Log certifications (Care pillar)
+    // Log certifications (Ethics pillar)
     if (productWithTrustScore.labels_tags && productWithTrustScore.labels_tags.length > 0) {
       const certificationLabels = productWithTrustScore.labels_tags.filter((tag: string) => {
         const lowerTag = tag.toLowerCase();
@@ -1070,12 +1070,12 @@ async function executeFetchProduct(
       }
     }
     
-    // Log cruel parent detection (Care pillar)
+    // Log cruel parent detection (Ethics pillar)
     if (productWithTrustScore.brands) {
       const { isCruelParent } = require('../data/brandDatabase');
       const brands = (productWithTrustScore.brands || '').toLowerCase();
       if (isCruelParent(brands)) {
-        logger.info(`  Cruel Parent: Detected (-30 penalty in Care pillar)`);
+        logger.info(`  Cruel Parent: Detected (-30 penalty in Ethics pillar)`);
       }
     }
   } else {
@@ -1086,7 +1086,7 @@ async function executeFetchProduct(
   logger.info(`═══════════════════════════════════════════════════════════════`);
   
   // Note: Recalls are now fetched BEFORE TruScore calculation (see above)
-  // This ensures CARE pillar can use recall data for accurate scoring
+  // This ensures Ethics pillar can use recall data for accurate scoring
   // Additional recall checks can be done here for background updates if needed
   
   // CRITICAL: Merge user-contributed data and save to SQLite before returning

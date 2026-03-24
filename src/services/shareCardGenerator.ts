@@ -113,7 +113,7 @@ export function getShareCardData(
     breakdown: truScore?.breakdown || (product.trust_score_breakdown ? {
       Body: product.trust_score_breakdown.body,
       Planet: product.trust_score_breakdown.planet,
-      Ethics: product.trust_score_breakdown.care ?? 0,
+      Ethics: product.trust_score_breakdown.ethics ?? 0,
       Open: product.trust_score_breakdown.open,
     } : undefined),
   };

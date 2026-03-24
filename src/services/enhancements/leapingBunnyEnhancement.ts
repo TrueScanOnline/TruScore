@@ -1,5 +1,5 @@
 // Leaping Bunny Enhancement Service
-// Enhances Care pillar for cruelty-free brand detection
+// Enhances product labels for cruelty-free brand detection (supports Ethics-related signals)
 // Expands cruelty-free list from 500 to 2,000+ brands
 
 import { Product } from '../../types/product';
@@ -186,7 +186,7 @@ async function fetchLeapingBunnyData(
 
 /**
  * Enhance product with Leaping Bunny data
- * Adds cruelty-free and vegan labels to Care pillar scoring
+ * Adds cruelty-free and vegan labels for downstream Ethics-related scoring
  */
 export async function enhanceWithLeapingBunny(product: Product): Promise<Product> {
   if (!product.brands) {

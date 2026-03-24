@@ -35,7 +35,7 @@ import { Product } from '../src/types/product';
 import { calculateTruScore } from '../src/lib/truscoreEngine/index';
 import { calculateBodyPillar } from '../src/lib/truscoreEngine/pillars/bodyPillar';
 import { calculatePlanetPillar } from '../src/lib/truscoreEngine/pillars/planetPillar';
-import { calculateCarePillar } from '../src/lib/truscoreEngine/pillars/carePillar';
+import { calculateEthicsPillar } from '../src/lib/truscoreEngine/pillars/ethicsPillar';
 import { calculateOpenPillar } from '../src/lib/truscoreEngine/pillars/openPillar';
 import * as fs from 'fs';
 
@@ -57,7 +57,7 @@ interface AnalysisResult {
   breakdown: {
     Body: DetailedBreakdown;
     Planet: DetailedBreakdown;
-    Care: DetailedBreakdown;
+    Ethics: DetailedBreakdown;
     Open: DetailedBreakdown;
   };
   productData: {
@@ -133,7 +133,7 @@ function calculateDetailedBreakdown(product: Product, result: any): AnalysisResu
   // Use the new modular pillar system for accurate breakdown
   const bodyResult = calculateBodyPillar(product);
   const planetResult = calculatePlanetPillar(product);
-  const careResult = calculateCarePillar(product);
+  const ethicsResult = calculateEthicsPillar(product);
   const openResult = calculateOpenPillar(product);
   
   return {
@@ -149,11 +149,11 @@ function calculateDetailedBreakdown(product: Product, result: any): AnalysisResu
       adjustments: planetResult.adjustments,
       final: planetResult.score,
     },
-    Care: {
-      pillar: 'Care',
-      base: careResult.base,
-      adjustments: careResult.adjustments,
-      final: careResult.score,
+    Ethics: {
+      pillar: 'Ethics',
+      base: ethicsResult.base,
+      adjustments: ethicsResult.adjustments,
+      final: ethicsResult.score,
     },
     Open: {
       pillar: 'Open',
@@ -312,11 +312,11 @@ function calculateDetailedBreakdownLegacy(product: Product, result: any): Analys
     });
   }
   
-  // Care Pillar
-  const careAdjustments: DetailedBreakdown['adjustments'] = [];
-  const careBase = 15;
+  // Ethics Pillar (legacy illustrative breakdown only)
+  const ethicsAdjustments: DetailedBreakdown['adjustments'] = [];
+  const ethicsBase = 15;
   
-  careAdjustments.push({
+  ethicsAdjustments.push({
     description: 'Base score (assumes ethical until violations)',
     value: 15,
     type: 'neutral',
@@ -332,16 +332,16 @@ function calculateDetailedBreakdownLegacy(product: Product, result: any): Analys
   }
   if (productLabels.some(l => l.includes('organic'))) {
     certBonus += 7;
-    careAdjustments.push({ description: 'Organic certification', value: 7, type: 'positive' });
+    ethicsAdjustments.push({ description: 'Organic certification', value: 7, type: 'positive' });
   }
   if (productLabels.some(l => l.includes('rainforest-alliance'))) {
     certBonus += 6;
-    careAdjustments.push({ description: 'Rainforest Alliance', value: 6, type: 'positive' });
+    ethicsAdjustments.push({ description: 'Rainforest Alliance', value: 6, type: 'positive' });
   }
   
   // Recalls
   if (product.recalls && product.recalls.length > 0) {
-    careAdjustments.push({
+    ethicsAdjustments.push({
       description: 'Product recalls',
       value: -10,
       type: 'negative',
@@ -451,11 +451,11 @@ function calculateDetailedBreakdownLegacy(product: Product, result: any): Analys
       adjustments: planetAdjustments,
       final: result.breakdown.Planet,
     },
-    Care: {
-      pillar: 'Care',
-      base: careBase,
-      adjustments: careAdjustments,
-      final: result.breakdown.Care,
+    Ethics: {
+      pillar: 'Ethics',
+      base: ethicsBase,
+      adjustments: ethicsAdjustments,
+      final: result.breakdown.Ethics,
     },
     Open: {
       pillar: 'Open',
@@ -573,7 +573,7 @@ async function analyzeBarcode(barcode: string): Promise<AnalysisResult> {
       breakdown: {
         Body: { pillar: 'Body', base: 0, adjustments: [], final: 0 },
         Planet: { pillar: 'Planet', base: 0, adjustments: [], final: 0 },
-        Care: { pillar: 'Care', base: 0, adjustments: [], final: 0 },
+        Ethics: { pillar: 'Ethics', base: 0, adjustments: [], final: 0 },
         Open: { pillar: 'Open', base: 0, adjustments: [], final: 0 },
       },
       productData: {
@@ -646,7 +646,7 @@ async function main() {
     // Print detailed breakdown for each pillar
     printPillarBreakdown(result.breakdown.Body);
     printPillarBreakdown(result.breakdown.Planet);
-    printPillarBreakdown(result.breakdown.Care);
+    printPillarBreakdown(result.breakdown.Ethics);
     printPillarBreakdown(result.breakdown.Open);
     
     // Product data summary

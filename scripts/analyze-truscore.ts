@@ -23,7 +23,7 @@ interface AnalysisResult {
   breakdown: {
     Body: number;
     Planet: number;
-    Care: number;
+    Ethics: number;
     Open: number;
   };
   hasNutriScore: boolean;
@@ -48,7 +48,7 @@ interface AnalysisResult {
     recyclableBonus: number;
     final: number;
   };
-  careDetails: {
+  ethicsDetails: {
     base: number;
     certificationBonus: number;
     cruelParentPenalty: number;
@@ -59,7 +59,7 @@ interface AnalysisResult {
     base: number;
     ingredientsScore: number;
     hiddenTermsPenalty: number;
-    sophisticationBonus: number;
+    listingClarityBonus: number;
     originPenalty: number;
     final: number;
   };
@@ -127,8 +127,8 @@ function printPillarDetails(
   if (details.recyclableBonus > 0) {
     positives.push(`Recyclable Packaging: +${formatNumber(details.recyclableBonus)}`);
   }
-  if (details.sophisticationBonus > 0) {
-    positives.push(`Sophistication Bonus: +${formatNumber(details.sophisticationBonus)}`);
+  if (details.listingClarityBonus > 0) {
+    positives.push(`Listing clarity bonus: +${formatNumber(details.listingClarityBonus)}`);
   }
   if (details.novaBonus > 0) {
     positives.push(`NOVA Bonus: +${formatNumber(details.novaBonus)}`);
@@ -197,14 +197,14 @@ async function analyzeBarcode(barcode: string): Promise<AnalysisResult> {
         barcode,
         error: 'Product not found',
         truScore: 0,
-        breakdown: { Body: 0, Planet: 0, Care: 0, Open: 0 },
+        breakdown: { Body: 0, Planet: 0, Ethics: 0, Open: 0 },
         hasNutriScore: false,
         hasEcoScore: false,
         hasOrigin: false,
         bodyDetails: { base: 0, additivePenalty: 0, riskyTagsPenalty: 0, irritantPenalty: 0, fragrancePenalty: 0, novaBonus: 0, final: 0 },
         planetDetails: { base: 0, palmOilPenalty: 0, recyclableBonus: 0, final: 0 },
-        careDetails: { base: 0, certificationBonus: 0, cruelParentPenalty: 0, recallPenalty: 0, final: 0 },
-        openDetails: { base: 0, ingredientsScore: 0, hiddenTermsPenalty: 0, sophisticationBonus: 0, originPenalty: 0, final: 0 },
+        ethicsDetails: { base: 0, certificationBonus: 0, cruelParentPenalty: 0, recallPenalty: 0, final: 0 },
+        openDetails: { base: 0, ingredientsScore: 0, hiddenTermsPenalty: 0, listingClarityBonus: 0, originPenalty: 0, final: 0 },
         productData: { additives_count: 0, hasIngredients: false, ingredientsLength: 0, hasPalmOil: false, certifications: [], labels: [], hasOrigin: false },
       };
     }
@@ -241,20 +241,21 @@ async function analyzeBarcode(barcode: string): Promise<AnalysisResult> {
       final: result.breakdown.Planet,
     };
     
-    const careDetails = {
-      base: 15,
+    const ethicsDetails = {
+      base: result.pillarDetails?.ethics?.base ?? 15,
       certificationBonus: 0,
       cruelParentPenalty: 0,
       recallPenalty: product.recalls && product.recalls.length > 0 ? 10 : 0,
-      final: result.breakdown.Care,
+      final: result.breakdown.Ethics,
     };
     
+    const od = result.pillarDetails?.open;
     const openDetails = {
-      base: 15,
-      ingredientsScore: product.ingredients_text ? (product.ingredients_text.length >= 100 ? 15 : product.ingredients_text.length >= 80 ? 10 : product.ingredients_text.length >= 50 ? 5 : -5) : -5,
-      hiddenTermsPenalty: 0,
-      sophisticationBonus: 0,
-      originPenalty: result.hasOrigin ? 0 : 8,
+      base: od?.base ?? 15,
+      ingredientsScore: od?.details?.ingredientsScore ?? 0,
+      hiddenTermsPenalty: od?.details?.hiddenTermsPenalty ?? 0,
+      listingClarityBonus: od?.details?.listingClarityBonus ?? 0,
+      originPenalty: od?.details?.originPenalty ?? 0,
       final: result.breakdown.Open,
     };
     
@@ -268,7 +269,7 @@ async function analyzeBarcode(barcode: string): Promise<AnalysisResult> {
       hasOrigin: result.hasOrigin || false,
       bodyDetails,
       planetDetails,
-      careDetails,
+      ethicsDetails,
       openDetails,
       productData: {
         nutriscore_grade: product.nutriscore_grade,
@@ -290,14 +291,14 @@ async function analyzeBarcode(barcode: string): Promise<AnalysisResult> {
       barcode,
       error: error instanceof Error ? error.message : String(error),
       truScore: 0,
-      breakdown: { Body: 0, Planet: 0, Care: 0, Open: 0 },
+      breakdown: { Body: 0, Planet: 0, Ethics: 0, Open: 0 },
       hasNutriScore: false,
       hasEcoScore: false,
       hasOrigin: false,
       bodyDetails: { base: 0, additivePenalty: 0, riskyTagsPenalty: 0, irritantPenalty: 0, fragrancePenalty: 0, novaBonus: 0, final: 0 },
       planetDetails: { base: 0, palmOilPenalty: 0, recyclableBonus: 0, final: 0 },
-      careDetails: { base: 0, certificationBonus: 0, cruelParentPenalty: 0, recallPenalty: 0, final: 0 },
-      openDetails: { base: 0, ingredientsScore: 0, hiddenTermsPenalty: 0, sophisticationBonus: 0, originPenalty: 0, final: 0 },
+      ethicsDetails: { base: 0, certificationBonus: 0, cruelParentPenalty: 0, recallPenalty: 0, final: 0 },
+      openDetails: { base: 0, ingredientsScore: 0, hiddenTermsPenalty: 0, listingClarityBonus: 0, originPenalty: 0, final: 0 },
       productData: { additives_count: 0, hasIngredients: false, ingredientsLength: 0, hasPalmOil: false, certifications: [], labels: [], hasOrigin: false },
     };
   }
@@ -360,7 +361,7 @@ async function main() {
     // Print detailed breakdown for each pillar
     printPillarDetails('Body', result.breakdown.Body, 25, result.bodyDetails);
     printPillarDetails('Planet', result.breakdown.Planet, 25, result.planetDetails);
-    printPillarDetails('Care', result.breakdown.Care, 25, result.careDetails);
+    printPillarDetails('Ethics', result.breakdown.Ethics, 25, result.ethicsDetails);
     printPillarDetails('Open', result.breakdown.Open, 25, result.openDetails);
     
     // Product data summary

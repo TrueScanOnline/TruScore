@@ -5,7 +5,7 @@
  * Source: https://www.dol.gov/agencies/ilab/reports/child-labor/list-of-goods
  * Data Format: Annual reports (PDF/Excel)
  * 
- * This service provides labor violation data for CARE Pillar scoring
+ * This service provides labor violation data for Ethics Pillar scoring
  */
 
 import { logger } from '../utils/logger';

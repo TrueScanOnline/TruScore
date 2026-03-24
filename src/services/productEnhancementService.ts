@@ -231,7 +231,7 @@ export async function enhanceProduct(product: Product): Promise<Product> {
   formatProductData(product);
   
   // ENHANCED: Add aggressive brand extraction if no brands found
-  // This is critical for CARE pillar matching
+  // This is critical for Ethics pillar brand matching
   if (!product.brands && product.product_name) {
     const extractedBrand = aggressiveBrandExtraction(product);
     if (extractedBrand) {

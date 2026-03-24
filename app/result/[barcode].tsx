@@ -326,7 +326,7 @@ function ResultScreenContent() {
           breakdown: {
             Body: product.trust_score_breakdown.body ?? 0,
             Planet: product.trust_score_breakdown.planet ?? 0,
-            Ethics: product.trust_score_breakdown.care ?? 0,
+            Ethics: product.trust_score_breakdown.ethics ?? 0,
             Open: product.trust_score_breakdown.open ?? 0,
           },
           hasNutriScore: product._truscore_metadata?.hasNutriScore,

@@ -2,6 +2,7 @@
 import { Product, ProductWithTrustScore, TrustScoreBreakdown } from '../types/product';
 import { extractManufacturingCountry, calculateEcoScore, formatCertifications } from '../services/openFoodFacts';
 import { calculateTruScore, buildTruScoreAnalysis } from '../lib/truscoreEngine';
+import { countOpenPillarHiddenTermHits } from '../lib/truscoreEngine/pillars/openPillarHiddenTerms';
 import { getCachedTruScore, cacheTruScore } from './truScoreCache';
 import { logger } from './logger';
 import { powershellLogger } from './powershellLogger';
@@ -207,11 +208,10 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
   const breakdown: TrustScoreBreakdown = {
     body,
     planet,
-    care: ethics, // Map Ethics to legacy 'care' field
+    ethics,
     open,
     // Legacy fields (for backward compatibility and display)
     sustainability: (planet / 25) * 100, // Convert to 0-100 for compatibility
-    ethics: (ethics / 25) * 100,
     bodySafety: (body / 25) * 100,
     processing: calculateProcessingScore(product), // Still calculated for educational display
     transparency: (open / 25) * 100,
@@ -320,7 +320,7 @@ function generateTrustReasons(
     reasons.push('Contains palm oil - deforestation risk');
   }
 
-  // Care (Certifications)
+  // Ethics (certifications on product labels)
   const certifications = formatCertifications(product);
   if (certifications && certifications.length > 0) {
     const certNames = certifications.map((c) => c.name).join(', ');
@@ -366,11 +366,10 @@ function generateTrustReasons(
     reasons.push('High salt content');
   }
 
-  // Open (Ingredient transparency)
-  const ingredientsText = (product.ingredients_text || '').toLowerCase();
-  const hiddenTerms = ['parfum', 'fragrance', 'aroma', 'natural flavor', 'proprietary blend'];
-  const hiddenCount = hiddenTerms.filter(term => ingredientsText.includes(term)).length;
-  
+  // Open (Ingredient transparency — v14 hidden-term count)
+  const ingredientsText = (product.ingredients_text || '').trim();
+  const hiddenCount = countOpenPillarHiddenTermHits(ingredientsText);
+
   if (hiddenCount >= 3) {
     reasons.push('Multiple hidden ingredients - low transparency');
   } else if (hiddenCount >= 1) {

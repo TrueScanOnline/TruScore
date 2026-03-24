@@ -1,7 +1,7 @@
 
 # BBFAW Parent Mapping Excel Analysis
 **Source:** `Database files/ETHICS Pillar/BBFAW folder/BBFAW_2024_Supermarket_Parent_Brand_Mapping_20260311.xlsx`
-**Extracted:** 2026-03-20T00:52:40.083Z
+**Extracted:** 2026-03-24T23:06:18.456Z
 
 ## Tabs Found (actual workbook)
 | Tab | Rows | Purpose |

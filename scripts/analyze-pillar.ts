@@ -6,7 +6,7 @@
  * Usage:
  *   npm run analyze-pillar -- body 9420020300194
  *   npm run analyze-pillar -- planet 9310055105850
- *   npm run analyze-pillar -- care 9310055105850
+ *   npm run analyze-pillar -- ethics 9310055105850
  *   npm run analyze-pillar -- open 9310055105850
  */
 
@@ -33,10 +33,10 @@ Module._load = function(request: string, parent: any) {
 import { Product } from '../src/types/product';
 import { calculateBodyPillar } from '../src/lib/truscoreEngine/pillars/bodyPillar';
 import { calculatePlanetPillar } from '../src/lib/truscoreEngine/pillars/planetPillar';
-import { calculateCarePillar } from '../src/lib/truscoreEngine/pillars/carePillar';
+import { calculateEthicsPillar } from '../src/lib/truscoreEngine/pillars/ethicsPillar';
 import { calculateOpenPillar } from '../src/lib/truscoreEngine/pillars/openPillar';
 
-type PillarType = 'body' | 'planet' | 'care' | 'open';
+type PillarType = 'body' | 'planet' | 'ethics' | 'open';
 
 /**
  * Fetch product from Open Food Facts API directly
@@ -163,7 +163,7 @@ async function main() {
     console.log('Usage:');
     console.log('  npm run analyze-pillar -- body 9420020300194');
     console.log('  npm run analyze-pillar -- planet 9310055105850');
-    console.log('  npm run analyze-pillar -- care 9310055105850');
+    console.log('  npm run analyze-pillar -- ethics 9310055105850');
     console.log('  npm run analyze-pillar -- open 9310055105850');
     process.exit(1);
   }
@@ -171,9 +171,9 @@ async function main() {
   const pillarType = args[0].toLowerCase() as PillarType;
   const barcode = args[1];
   
-  if (!['body', 'planet', 'care', 'open'].includes(pillarType)) {
+  if (!['body', 'planet', 'ethics', 'open'].includes(pillarType)) {
     console.error(`❌ Invalid pillar type: ${pillarType}`);
-    console.error('Valid types: body, planet, care, open');
+    console.error('Valid types: body, planet, ethics, open');
     process.exit(1);
   }
   
@@ -199,8 +199,8 @@ async function main() {
       case 'planet':
         result = calculatePlanetPillar(product);
         break;
-      case 'care':
-        result = calculateCarePillar(product);
+      case 'ethics':
+        result = calculateEthicsPillar(product);
         break;
       case 'open':
         result = calculateOpenPillar(product);

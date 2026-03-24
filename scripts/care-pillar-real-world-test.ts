@@ -5,7 +5,7 @@
  * Run with: npx ts-node scripts/care-pillar-real-world-test.ts
  */
 
-import { calculateCarePillar } from '../src/lib/truscoreEngine/pillars/carePillar';
+import { calculateEthicsPillar } from '../src/lib/truscoreEngine/pillars/ethicsPillar';
 import { calculateTruScore } from '../src/lib/truscoreEngine';
 import { Product } from '../src/types/product';
 import { fetchProduct } from '../src/services/productService';
@@ -146,7 +146,7 @@ async function testBarcodeDetailed(barcode: string, description: string, expecte
 
     // Calculate CARE Pillar
     console.log('\n📊 Calculating CARE Pillar score...');
-    const careResult = calculateCarePillar(product);
+    const careResult = calculateEthicsPillar(product);
 
     // Calculate full TruScore for context
     const truScoreResult = calculateTruScore(product);

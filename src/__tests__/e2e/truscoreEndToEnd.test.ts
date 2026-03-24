@@ -141,13 +141,13 @@ describe('TruScore End-to-End Tests', () => {
   describe('Test Case 5: Product with Hidden Ingredients (OPEN Pillar)', () => {
     const product: Product = {
       barcode: '5678901234567',
-      product_name: 'Fragrance Product',
+      product_name: 'Flavoured Product',
       brands: 'Test Brand',
       labels_tags: [],
       nutriscore_grade: 'c',
       ecoscore_grade: 'c',
       nova_group: 3,
-      ingredients_text: 'Water, parfum, natural flavor, proprietary blend, fragrance.',
+      ingredients_text: 'Water, natural flavor, aroma, smoke flavouring.',
       origins: 'France',
       additives_tags: [],
       recalls: [],
@@ -161,7 +161,7 @@ describe('TruScore End-to-End Tests', () => {
       
       // Verify hidden terms are detected
       const openResult = result.pillarDetails?.open;
-      expect(openResult?.details.effectiveHiddenCount).toBeGreaterThan(0);
+      expect(openResult?.details.hiddenTermsCount).toBeGreaterThan(0);
     });
   });
 
@@ -392,7 +392,7 @@ describe('TruScore End-to-End Tests', () => {
 
       const openResult = result.pillarDetails?.open;
       expect(openResult?.details.hiddenTermsCount).toBe(0);
-      expect(openResult?.details.sophisticationBonus).toBe(4);
+      expect(openResult?.details.listingClarityBonus).toBe(4);
 
       expect(result.breakdown.Open).toBeGreaterThan(15);
     });
@@ -407,7 +407,7 @@ describe('TruScore End-to-End Tests', () => {
       nutriscore_grade: 'e',
       ecoscore_grade: 'e',
       nova_group: 4,
-      ingredients_text: 'parfum, fragrance, proprietary blend, natural flavor, artificial flavor.',
+      ingredients_text: 'natural flavor, artificial flavouring, aroma, colour, preservative (potassium sorbate), E621.',
       origins: undefined,
       additives_tags: ['en:e621', 'en:e951', 'en:e250'],
       recalls: [{

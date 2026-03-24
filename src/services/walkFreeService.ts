@@ -5,7 +5,7 @@
  * Source: https://www.walkfree.org/projects/the-global-slavery-index/
  * Data Format: Dataset downloads (CSV/Excel), annual reports
  * 
- * This service provides modern slavery data for CARE Pillar scoring
+ * This service provides modern slavery data for Ethics Pillar scoring
  */
 
 import { logger } from '../utils/logger';

@@ -708,7 +708,7 @@ export function isCountryLinked(brandName: string, countryCode: string): boolean
 
 /**
  * Check if brand has recall history
- * Used for CARE Pillar brand overlay penalty
+ * Used for brand-level context in Ethics and Planet pillars.
  */
 export function hasRecallHistory(brandName: string): boolean {
   const brandData = getBrandData(brandName);

@@ -83,7 +83,6 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
     const product = { ...baseProduct, brands: 'Marks & Spencer PLC' };
     const result = calculateEthicsPillar(product);
     expect(result.base).toBe(15);
-    // Tier 2 = +4, Impact B = +3 => 15 + 4 + 3 = 22
     expect(result.details.bbfawMatchedCompany).toBeTruthy();
     expect(result.details.bbfawTier).toBe(2);
     expect(result.details.bbfawTierScore).toBe(4);
@@ -97,9 +96,8 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
     expect(result.base).toBe(15);
     expect(result.details.bbfawTier).toBe(2);
     expect(result.details.bbfawTierScore).toBe(4);
-    // Greggs has Impact C = +1
     expect(result.details.bbfawImpactScore).toBe(1);
-    expect(result.score).toBe(20); // 15 + 4 + 1
+    expect(result.score).toBe(20);
   });
 
   test('should apply BBFAW Tier 3 for Groupe Danone', () => {
@@ -107,8 +105,7 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
     const result = calculateEthicsPillar(product);
     expect(result.details.bbfawTier).toBe(3);
     expect(result.details.bbfawTierScore).toBe(2);
-    // Danone has Impact C = +1
-    expect(result.score).toBe(18); // 15 + 2 + 1
+    expect(result.score).toBe(18);
   });
 
   test('should apply BBFAW Tier 6 penalty for Tyson Foods', () => {
@@ -117,20 +114,18 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
     expect(result.details.bbfawMatchedCompany).toBeTruthy();
     expect(result.details.bbfawTier).toBe(6);
     expect(result.details.bbfawTierScore).toBe(-6);
-    // Tyson has Impact F = -3
     expect(result.details.bbfawImpactScore).toBe(-3);
-    expect(result.score).toBe(6); // 15 - 6 - 3
+    expect(result.score).toBe(6);
   });
 
   test('should cap score at 0', () => {
-    const product = { ...baseProduct, brands: 'JBS SA' }; // Tier 6, Impact F
+    const product = { ...baseProduct, brands: 'JBS SA' };
     const result = calculateEthicsPillar(product);
     expect(result.score).toBeGreaterThanOrEqual(0);
   });
 
   test('should cap score at 25', () => {
-    // Tier 1 + Impact A/B could theoretically exceed 25 - cap applies
-    const product = { ...baseProduct, brands: 'Marks & Spencer PLC' }; // 15+4+3=22, within cap
+    const product = { ...baseProduct, brands: 'Marks & Spencer PLC' };
     const result = calculateEthicsPillar(product);
     expect(result.score).toBeLessThanOrEqual(25);
   });

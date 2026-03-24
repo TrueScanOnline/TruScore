@@ -132,7 +132,7 @@ export function mergeProducts(
     if (product.packagings && product.packagings.length > 0) score += 5; // Packaging
     if (product.ingredients_analysis?.['en:palm-oil']) score += 5; // Palm oil tag
     
-    // Care Pillar fields (25 points max)
+    // Ethics Pillar fields (25 points max)
     if (product.labels_tags && product.labels_tags.length > 0) score += 15; // Labels/certifications
     if (product.certifications && product.certifications.length > 0) score += 10; // Certifications
     
@@ -307,7 +307,7 @@ export function mergeProducts(
   // ===== CRITICAL: Merge TruScore-critical fields =====
   // These fields are essential for TruScore calculation and must be explicitly merged
   
-  // Merge labels_tags (Care pillar - certifications)
+  // Merge labels_tags (Ethics pillar — certifications)
   const allLabelsTags = productsToMerge
     .map(p => p.labels_tags)
     .filter((tags): tags is string[] => Array.isArray(tags) && tags.length > 0);

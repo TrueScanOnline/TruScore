@@ -245,11 +245,10 @@ export interface Product {
 export interface TrustScoreBreakdown {
   body: number; // 0-25 (Body Safety: Nutri-Score + NOVA + additives + allergens)
   planet: number; // 0-25 (Planet: Eco-Score + packaging + palm oil)
-  care: number; // 0-25 (Ethics: Certifications + ethical labels) - legacy field name, use breakdown.Ethics for new code
+  ethics: number; // 0-25 (Ethics Pillar: BBFAW + KTC + certifications)
   open: number; // 0-25 (Open: Ingredient disclosure transparency - hidden terms detection)
   // Legacy fields for backward compatibility (still calculated but not used in score)
   sustainability?: number; // Deprecated - use planet
-  ethics?: number; // Deprecated - use care
   bodySafety?: number; // Deprecated - use body
   processing?: number; // Deprecated - NOVA now merged into body (displayed separately for education)
   transparency?: number; // Deprecated - use open

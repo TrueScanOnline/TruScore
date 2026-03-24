@@ -13,7 +13,7 @@ interface ProductPreview {
   trust_score_breakdown?: {
     body: number;
     planet: number;
-    care: number;
+    ethics: number;
     open: number;
   };
   nutriments?: any;
@@ -148,7 +148,7 @@ function calculatePlanetScore(product: any): number {
   return Math.max(0, Math.min(25, score));
 }
 
-function calculateCareScore(product: any): number {
+function calculateEthicsScore(product: any): number {
   let score = 12.5; // Base score
   
   // Check for palm oil

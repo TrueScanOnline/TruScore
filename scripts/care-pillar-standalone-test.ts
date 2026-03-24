@@ -1,12 +1,12 @@
 /**
- * CARE Pillar Standalone Testing
- * Tests real-world product scenarios with new CARE Pillar implementation
+ * Ethics Pillar Standalone Testing
+ * Tests real-world product scenarios with the Ethics Pillar implementation
  * Uses mock product data based on real-world barcodes
  * 
  * Run with: npx ts-node --transpile-only scripts/care-pillar-standalone-test.ts
  */
 
-import { calculateCarePillar } from '../src/lib/truscoreEngine/pillars/carePillar';
+import { calculateEthicsPillar } from '../src/lib/truscoreEngine/pillars/ethicsPillar';
 import { Product } from '../src/types/product';
 
 // Real-world product scenarios based on actual barcodes
@@ -175,9 +175,9 @@ function testScenario(scenario: typeof REAL_WORLD_SCENARIOS[0]): TestResult {
   const databaseIssues: string[] = [];
 
   try {
-    // Calculate CARE Pillar
-    console.log('📊 Calculating CARE Pillar score...');
-    const careResult = calculateCarePillar(scenario.product);
+    // Calculate Ethics Pillar
+    console.log('📊 Calculating Ethics Pillar score...');
+    const careResult = calculateEthicsPillar(scenario.product);
 
     // Extract issues
     const issues: string[] = [];
@@ -220,7 +220,7 @@ function testScenario(scenario: typeof REAL_WORLD_SCENARIOS[0]): TestResult {
     scoreExplanation += ` = ${careResult.score}/25`;
 
     // Display results
-    console.log('📈 CARE Pillar Results:');
+    console.log('📈 Ethics Pillar Results:');
     console.log(`   Base Score: ${careResult.base}`);
     console.log(`   Certification Bonus: +${careResult.details.certificationBonus}`);
     console.log(`   Animal Cruelty Penalty: -${careResult.details.animalCrueltyPenalty}`);
@@ -228,7 +228,7 @@ function testScenario(scenario: typeof REAL_WORLD_SCENARIOS[0]): TestResult {
     console.log(`   Recall Penalty: -${careResult.details.recallPenalty}`);
     console.log(`   Brand Overlay Penalty: -${careResult.details.brandOverlayPenalty}`);
     console.log(`   ─────────────────────────────────────────`);
-    console.log(`   FINAL CARE SCORE: ${careResult.score}/25`);
+    console.log(`   FINAL ETHICS SCORE: ${careResult.score}/25`);
 
     console.log('\n📋 All Adjustments:');
     careResult.adjustments.forEach((adj, idx) => {
@@ -308,8 +308,8 @@ function testScenario(scenario: typeof REAL_WORLD_SCENARIOS[0]): TestResult {
  * Main test runner
  */
 function runStandaloneTests() {
-  console.log('🧪 CARE Pillar Real-World Scenario Testing');
-  console.log('Testing 5 specific product scenarios with new CARE Pillar implementation\n');
+  console.log('🧪 Ethics Pillar Real-World Scenario Testing');
+  console.log('Testing 5 specific product scenarios with the Ethics Pillar implementation\n');
   console.log('New Features Being Tested:');
   console.log('  ✅ 3-tier violation systems (Limited=-4, Moderate=-8, Major=-15)');
   console.log('  ✅ 3-tier recall system (Class III=-4, Class II=-8, Class I=-15)');
@@ -344,7 +344,7 @@ function generateSummary(results: TestResult[]) {
     console.log(`${index + 1}. ${result.name} (${result.brand})`);
     console.log(`   Barcode: ${result.barcode}`);
     console.log(`   Description: ${result.description}`);
-    console.log(`   📊 CARE Score: ${result.careScore}/25`);
+    console.log(`   📊 Ethics Score: ${result.careScore}/25`);
     console.log(`   📊 Score Calculation: ${result.scoreExplanation}`);
     
     if (result.issues.length > 0) {
@@ -371,7 +371,7 @@ function generateSummary(results: TestResult[]) {
   console.log(`${'='.repeat(100)}`);
   console.log('📈 STATISTICS');
   console.log(`${'='.repeat(100)}`);
-  console.log(`Average CARE score: ${averageScore.toFixed(2)}/25`);
+  console.log(`Average Ethics score: ${averageScore.toFixed(2)}/25`);
   console.log(`Products with violations: ${productsWithViolations}/${results.length}`);
   console.log(`Products with labor violations: ${productsWithLaborViolations}`);
   console.log(`Products with animal cruelty: ${productsWithAnimalCruelty}`);
@@ -403,7 +403,7 @@ function generateSummary(results: TestResult[]) {
 
   // Specific Examples
   console.log(`${'='.repeat(100)}`);
-  console.log('📝 SPECIFIC EXAMPLES: How CARE Pillar Scores Are Adjusted');
+  console.log('📝 SPECIFIC EXAMPLES: How Ethics Pillar Scores Are Adjusted');
   console.log(`${'='.repeat(100)}\n`);
 
   results.forEach((result, index) => {
@@ -430,7 +430,7 @@ function generateSummary(results: TestResult[]) {
     
     console.log(`\nFinal Calculation: ${result.scoreExplanation}`);
     console.log(`\nImpact on TruScore:`);
-    console.log(`  • CARE Pillar contributes ${result.careScore}/25 to total TruScore`);
+    console.log(`  • Ethics Pillar contributes ${result.careScore}/25 to total TruScore`);
     console.log(`  • This represents ${((result.careScore / 100) * 100).toFixed(1)}% of maximum TruScore`);
     
     if (result.databaseIssues.length > 0) {
