@@ -1,11 +1,12 @@
 /**
  * Walk Free Global Slavery Index (GSI) Service
  * Integrates with Walk Free Foundation's Global Slavery Index data
- * 
+ *
  * Source: https://www.walkfree.org/projects/the-global-slavery-index/
  * Data Format: Dataset downloads (CSV/Excel), annual reports
- * 
- * This service provides modern slavery data for Ethics Pillar scoring
+ *
+ * Banner / legacy — not used in `calculateEthicsPillar` (BBFAW + KTC + certifications).
+ * Consumed by labour/banner flows such as `laborViolationsService`.
  */
 
 import { logger } from '../utils/logger';

@@ -18,11 +18,16 @@ This backend provides pricing data for New Zealand grocery stores using Playwrig
 npm i -g vercel
 ```
 
-2. Deploy to Vercel:
-```bash
+2. Deploy to Vercel (CLI from this folder **does not** include `../../src`; sync first):
+
+```powershell
 cd backend/vercel
-vercel --prod
+npm run sync-truescan-src
+npm run deploy:prod
+# or: vercel --prod  (after sync)
 ```
+
+**Alternative:** Connect the Git repo in Vercel with **Root Directory** = `backend/vercel` so the full tree (including `src/`) is available; then you can use `vercel --prod` without the sync step.
 
 **Note:** Vercel will automatically detect Playwright and install the required browsers during deployment.
 
@@ -36,6 +41,7 @@ const BACKEND_URL = 'https://your-actual-vercel-url.vercel.app';
 ## 📊 API Endpoint
 
 - `/api/nz-prices?barcode={barcode}` - Fetches prices from all NZ stores
+- `/api/product-preview?barcode={barcode}` - Open Food Facts redirect preview; **TruScore uses the same pillar modules as the mobile app** (`src/lib/truscoreEngine/pillars`). Deploy from a Git repo whose root contains both `backend/vercel` and `src`. Optional: set `TRUESCAN_DEFAULT_COUNTRY_CODE` for country-specific packaging rules (see `ENV_TEMPLATE.md`).
 
 **Example Response:**
 ```json

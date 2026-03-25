@@ -1,11 +1,12 @@
 /**
  * ASPCA (American Society for the Prevention of Cruelty to Animals) Service
  * Integrates with ASPCA data
- * 
+ *
  * Source: https://www.aspca.org/
  * Data Format: Website/publications
- * 
- * This service provides animal welfare data for Ethics Pillar scoring
+ *
+ * Banner / legacy — not used in `calculateEthicsPillar` (BBFAW + KTC + certifications).
+ * Used by animal-welfare / banner flows (e.g. `animalCrueltyService`).
  */
 
 import { logger } from '../utils/logger';

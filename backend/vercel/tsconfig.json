@@ -2,29 +2,25 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "lib": ["ES2020"],
+    "lib": ["ES2020", "DOM"],
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "outDir": "./dist",
-    "rootDir": "./",
-    "types": ["node", "@vercel/node"],
-    "noEmit": false,
+    "noEmit": true,
     "allowSyntheticDefaultImports": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "types": ["node", "@vercel/node"]
   },
-  "include": [
-    "api/**/*",
-    "data/**/*"
-  ],
+  "include": ["api/**/*", "lib/**/*", "data/**/*", "types/**/*.d.ts"],
   "exclude": [
     "node_modules",
-    "dist"
-  ],
-  "extends": null
+    "dist",
+    "lib/database.ts",
+    "lib/databaseNeon.ts",
+    "api/upload-photo.ts",
+    "api/user-prices.ts"
+  ]
 }
-

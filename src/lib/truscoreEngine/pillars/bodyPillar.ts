@@ -10,7 +10,7 @@
  *   - Cap: -15 total (IARC + irritants + non-IARC additives)
  * - Risky tags: -4 each (carcinogenic, endocrine, irritant, EWG high-hazard)
  * - Universal irritants: -5 each (e.g., phthalates, parabens)
- * - NOVA: 1=+3, 2=0, 3=-3, 4=-8 (cap -10 total processing penalties)
+ * - NOVA: 1=+3, 2=+1, 3=−1, 4=−6 (processing penalties capped; see implementation)
  * - EWG: A=+5, B=+2, C=0, D=-3, F=-5 (household products only, cap -10)
  * 
  * Final: Capped at 2-25 (minimum floor of 2)

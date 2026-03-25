@@ -24,6 +24,7 @@
     "test:pillar:ethics": "jest src/__tests__/unit/lib/pillars/ethicsPillar.test.ts",
     "test:pillar:open": "jest src/__tests__/unit/lib/pillars/openPillar.test.ts",
     "test:pillars": "jest src/__tests__/unit/lib/pillars/",
+    "test:e2e:ethics-open-backend": "ts-node --project scripts/tsconfig.json scripts/e2eEthicsOpenBackendVerification.ts",
     "test:csv-database": "jest src/__tests__/unit/services/csvDatabaseService.test.ts",
     "test": "jest",
     "setup-backend": "powershell -ExecutionPolicy Bypass -File scripts/setup-backend.ps1",

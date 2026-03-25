@@ -68,18 +68,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Check verification status (auto-verify if multiple submissions exist)
       const verified = existingPrices.length >= 2;
 
-      // Create price entry
-      const priceEntry = {
-        barcode,
-        price: priceNum,
-        currency: currency.toUpperCase(),
-        retailer: retailer.trim(),
-        location: location?.trim(),
-        userId: userId || 'anonymous',
-        timestamp: Date.now(),
-        verified: existingPrices.length >= 2, // Auto-verify if multiple submissions
-      };
-
       // Save to database
       await saveUserPrice({
         barcode,

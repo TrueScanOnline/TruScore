@@ -28,20 +28,20 @@ describe('ethicsCertificationsService', () => {
     expect(e.winningScheme).toBeNull();
   });
 
-  test('Fairtrade tag → +5', () => {
+  test('Fairtrade tag → +6', () => {
     const p = { ...minimalProduct(), labels_tags: ['en:fair-trade'] };
     const e = evaluateEthicsCertifications(p);
     expect(e.adjustment).toBe(ETHICS_CERTIFICATION_WEIGHTS.fairtrade);
     expect(e.winningScheme).toBe('fairtrade');
   });
 
-  test('Fairtrade + RSPO → max only (Fairtrade 5)', () => {
+  test('Fairtrade + RSPO → max only (Fairtrade 6)', () => {
     const p = {
       ...minimalProduct(),
       labels_tags: ['en:fair-trade', 'en:rspo'],
     };
     const e = evaluateEthicsCertifications(p);
-    expect(e.adjustment).toBe(5);
+    expect(e.adjustment).toBe(6);
     expect(e.winningScheme).toBe('fairtrade');
     expect(e.eligibleSchemes).toContain('rspo');
   });
@@ -51,10 +51,10 @@ describe('ethicsCertificationsService', () => {
     expect(evaluateEthicsCertifications(p).adjustment).toBe(3);
   });
 
-  test('Rainforest Alliance → +4', () => {
+  test('Rainforest Alliance → +5', () => {
     const p = { ...minimalProduct(), labels_tags: ['en:rainforest-alliance'] };
     expect(evaluateEthicsCertifications(p).winningScheme).toBe('rainforest_alliance');
-    expect(evaluateEthicsCertifications(p).adjustment).toBe(4);
+    expect(evaluateEthicsCertifications(p).adjustment).toBe(5);
   });
 
   test('en:organic alone → no organic credit', () => {

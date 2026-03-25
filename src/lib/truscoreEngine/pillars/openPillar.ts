@@ -2,7 +2,9 @@
  * Open Pillar Calculation — Open_Scoring_Specification_v14 (food & beverage MVP)
  *
  * Base: 15/25 (uniform across pillars)
- * - Ingredients: present +2 / none or placeholder −3
+ * - Ingredients: `ingredients_text` if non-empty after trim, else `ingredients_text_en` (OFF English fallback);
+ *   same normalized string for presence, placeholder check, and hidden-term hits
+ * - Presence: present +2 / none or placeholder −3
  * - Hidden / vague terms (tokenized + guardrails): 1 = −4, 2 = −8, ≥3 = −11
  * - Zero vague-term hits + NOVA 1–2: +4; zero hits + NOVA 3–4: +2; unknown NOVA: no listing-clarity bonus
  * - Nutrition: complete +3 / partial +1 / none −3
@@ -14,6 +16,16 @@ import { Product } from '../../../types/product';
 import { logger } from '../../../utils/logger';
 import { powershellLogger } from '../../../utils/powershellLogger';
 import { countOpenPillarHiddenTermHits } from './openPillarHiddenTerms';
+
+/** Primary OFF ingredients field, then English fallback (same normalization across Open pillar). */
+export function getOpenPillarIngredientsText(product: Product): string {
+  const primary =
+    typeof product.ingredients_text === 'string' ? product.ingredients_text.trim() : '';
+  if (primary.length > 0) return primary;
+  const en =
+    typeof product.ingredients_text_en === 'string' ? product.ingredients_text_en.trim() : '';
+  return en;
+}
 
 export interface OpenPillarResult {
   score: number;
@@ -39,8 +51,8 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   let score = 15;
   const base = 15;
 
-  const ingredientsText = product.ingredients_text || '';
-  const ingredientsLength = ingredientsText.trim().length;
+  const ingredientsText = getOpenPillarIngredientsText(product);
+  const ingredientsLength = ingredientsText.length;
 
   adjustments.push({
     description: 'Base score (neutral starting point; uniform across pillars)',
@@ -59,7 +71,7 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     score += ingredientsScore;
   } else {
     const isPlaceholder = /^(product|item|n\/a|not available|unknown|missing|no ingredients|ingredients not listed)/i.test(
-      ingredientsText.trim()
+      ingredientsText
     );
     if (isPlaceholder) {
       ingredientsScore = -3;

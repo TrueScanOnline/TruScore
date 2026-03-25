@@ -1,7 +1,14 @@
-// Product preview API for redirect page
-// Fetches product data to display on the redirect page
+// Product preview API for redirect page — TruScore from shared pillar engine (same as app).
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
+
+import { offJsonProductToTruescan } from '../lib/offToTruescanProduct';
+/** Resolved via `truescan-src/` (synced from repo root `src/` before deploy — see syncTruescanSrc.cjs). */
+import { calculateBodyPillar } from '../truescan-src/lib/truscoreEngine/pillars/bodyPillar';
+import { calculatePlanetPillar } from '../truescan-src/lib/truscoreEngine/pillars/planetPillar';
+import { calculateEthicsPillar } from '../truescan-src/lib/truscoreEngine/pillars/ethicsPillar';
+import { calculateOpenPillar } from '../truescan-src/lib/truscoreEngine/pillars/openPillar';
+import { initializeCSVDatabases } from '../truescan-src/services/csvDatabases/csvDatabaseService';
 
 interface ProductPreview {
   barcode: string;
@@ -31,7 +38,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Try Open Food Facts first (most comprehensive)
     const offUrl = `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`;
     const offResponse = await fetch(offUrl, {
       headers: {
@@ -40,38 +46,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (offResponse.ok) {
-      const offData = await offResponse.json();
+      const offData = (await offResponse.json()) as {
+        status?: number;
+        product?: Record<string, unknown>;
+      };
       if (offData.status === 1 && offData.product) {
-        const product = offData.product;
-        
-        // Calculate TruScore if not present
-        let trustScore = product.trust_score;
-        let trustScoreBreakdown = product.trust_score_breakdown;
-        
-        if (!trustScore && product.nutriments) {
-          // Simple TruScore calculation for preview
-          const body = calculateBodyScore(product);
-          const planet = calculatePlanetScore(product);
-          const ethics = calculateEthicsScore(product);
-          const open = calculateOpenScore(product);
-          
-          trustScore = Math.round(body + planet + ethics + open);
+        const offProduct = offData.product;
+
+        let trustScore: number | null = null;
+        let trustScoreBreakdown: ProductPreview['trust_score_breakdown'];
+
+        try {
+          await initializeCSVDatabases().catch((e) => {
+            console.warn('[product-preview] CSV DB init skipped:', e);
+          });
+
+          const truescanProduct = offJsonProductToTruescan(barcode, offProduct);
+          const body = calculateBodyPillar(truescanProduct).score;
+          const planet = calculatePlanetPillar(truescanProduct).score;
+          const ethics = calculateEthicsPillar(truescanProduct).score;
+          const open = calculateOpenPillar(truescanProduct).score;
+
+          trustScore = Math.max(0, Math.min(100, Math.round(body + planet + ethics + open)));
           trustScoreBreakdown = { body, planet, ethics, open };
+        } catch (e) {
+          console.error('[product-preview] Pillar calculation failed:', e);
         }
 
         const preview: ProductPreview = {
           barcode,
-          product_name: product.product_name || product.product_name_en,
-          product_name_en: product.product_name_en,
-          brands: product.brands,
-          image_url: product.image_url || product.image_front_url || product.image_front_small_url,
+          product_name:
+            typeof offProduct.product_name === 'string'
+              ? offProduct.product_name
+              : typeof offProduct.product_name_en === 'string'
+                ? offProduct.product_name_en
+                : undefined,
+          product_name_en:
+            typeof offProduct.product_name_en === 'string' ? offProduct.product_name_en : undefined,
+          brands: typeof offProduct.brands === 'string' ? offProduct.brands : undefined,
+          image_url:
+            (typeof offProduct.image_url === 'string' && offProduct.image_url) ||
+            (typeof offProduct.image_front_url === 'string' && offProduct.image_front_url) ||
+            (typeof offProduct.image_front_small_url === 'string' && offProduct.image_front_small_url) ||
+            undefined,
           trust_score: trustScore,
           trust_score_breakdown: trustScoreBreakdown,
-          nutriments: product.nutriments,
-          ingredients_text: product.ingredients_text,
-          nova_group: product.nova_group,
-          ecoscore_grade: product.ecoscore_grade,
-          categories: product.categories,
+          nutriments: offProduct.nutriments,
+          ingredients_text:
+            typeof offProduct.ingredients_text === 'string' ? offProduct.ingredients_text : undefined,
+          nova_group:
+            typeof offProduct.nova_group === 'number'
+              ? offProduct.nova_group
+              : typeof offProduct.nova_group === 'string'
+                ? parseInt(offProduct.nova_group, 10)
+                : undefined,
+          ecoscore_grade:
+            typeof offProduct.ecoscore_grade === 'string' ? offProduct.ecoscore_grade : undefined,
+          categories: typeof offProduct.categories === 'string' ? offProduct.categories : undefined,
         };
 
         res.setHeader('Cache-Control', 'public, max-age=3600');
@@ -79,12 +110,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // Fallback: Try UPCitemdb
     const upcUrl = `https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`;
     const upcResponse = await fetch(upcUrl);
 
     if (upcResponse.ok) {
-      const upcData = await upcResponse.json();
+      const upcData = (await upcResponse.json()) as {
+        items?: Array<{ title?: string; brand?: string; images?: string[] }>;
+      };
       if (upcData.items && upcData.items.length > 0) {
         const item = upcData.items[0];
         const preview: ProductPreview = {
@@ -100,78 +132,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // No product found
     return res.status(404).json({ error: 'Product not found' });
   } catch (error) {
     console.error('Error fetching product preview:', error);
     return res.status(500).json({ error: 'Failed to fetch product data' });
   }
-}
-
-// Simplified TruScore calculation for preview
-function calculateBodyScore(product: any): number {
-  if (!product.nutriments) return 0;
-  
-  let score = 12.5; // Base score
-  
-  // Check for high negative nutrients
-  const sugars = product.nutriments['sugars_100g'] || 0;
-  const salt = product.nutriments['salt_100g'] || 0;
-  const saturatedFat = product.nutriments['saturated-fat_100g'] || 0;
-  
-  if (sugars > 22.5) score -= 3;
-  if (salt > 1.5) score -= 3;
-  if (saturatedFat > 5) score -= 3;
-  
-  // Check for positive nutrients
-  const fiber = product.nutriments['fiber_100g'] || 0;
-  const protein = product.nutriments['proteins_100g'] || 0;
-  
-  if (fiber > 3) score += 2;
-  if (protein > 10) score += 2;
-  
-  return Math.max(0, Math.min(25, score));
-}
-
-function calculatePlanetScore(product: any): number {
-  let score = 12.5; // Base score
-  
-  if (product.ecoscore_grade) {
-    const grade = product.ecoscore_grade.toLowerCase();
-    if (grade === 'a') score = 25;
-    else if (grade === 'b') score = 20;
-    else if (grade === 'c') score = 15;
-    else if (grade === 'd') score = 10;
-    else if (grade === 'e') score = 5;
-  }
-  
-  return Math.max(0, Math.min(25, score));
-}
-
-function calculateEthicsScore(product: any): number {
-  let score = 12.5; // Base score
-  
-  // Check for palm oil
-  if (product.ingredients_text) {
-    const hasPalmOil = /palm/i.test(product.ingredients_text);
-    if (hasPalmOil) score -= 5;
-  }
-  
-  // Check NOVA group
-  if (product.nova_group === 4) score -= 5; // Ultra-processed
-  
-  return Math.max(0, Math.min(25, score));
-}
-
-function calculateOpenScore(product: any): number {
-  let score = 0;
-  
-  // Data completeness
-  if (product.product_name) score += 5;
-  if (product.ingredients_text) score += 5;
-  if (product.nutriments && Object.keys(product.nutriments).length > 0) score += 5;
-  if (product.image_url) score += 5;
-  if (product.brands) score += 5;
-  
-  return Math.max(0, Math.min(25, score));
 }

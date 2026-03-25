@@ -1,11 +1,12 @@
 /**
  * Ethical Consumer Service
  * Integrates with Ethical Consumer magazine/website data
- * 
+ *
  * Source: https://www.ethicalconsumer.org/
  * Data Format: Website/publications
- * 
- * This service provides ethical ratings for Ethics Pillar scoring
+ *
+ * Banner / legacy — not used in `calculateEthicsPillar` (BBFAW + KTC + certifications).
+ * Used by animal-welfare / banner flows (e.g. `animalCrueltyService`).
  * ENHANCED: Uses fuzzy matching for better company name matching
  */
 

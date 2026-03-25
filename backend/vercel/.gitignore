@@ -1,2 +1,8 @@
 .vercel
 .env*.local
+
+# Generated copy of monorepo src/ for Vercel CLI deploy (run: npm run sync-truescan-src)
+truescan-src/
+
+.vercel
+.env*.local

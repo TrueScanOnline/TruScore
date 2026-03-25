@@ -1,6 +1,10 @@
 {
   "name": "truescan-backend",
   "version": "1.0.0",
+  "scripts": {
+    "sync-truescan-src": "node scripts/syncTruescanSrc.cjs",
+    "deploy:prod": "npm run sync-truescan-src && vercel --prod"
+  },
   "dependencies": {
     "@vercel/node": "^3.0.0",
     "@vercel/postgres": "^0.5.1",
@@ -12,6 +16,7 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/pg": "^8.10.9",
+    "mongodb": "^6.3.0",
     "typescript": "^5.0.0"
   }
 }

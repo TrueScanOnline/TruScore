@@ -1,7 +1,7 @@
 /**
  * Ethics Pillar Unit Tests
  *
- * SPEC: Database files/ETHICS Pillar/ETHICS SPEC sheet.xlsx — Base 15 + BBFAW + KTC + certifications (cap 0–25).
+ * SPEC: Database files/ETHICS Pillar/ETHICS Pillar spec sheet.xlsx — Base 15 + BBFAW + KTC + certifications (cap 0–25).
  */
 
 import { calculateEthicsPillar } from '../../../../lib/truscoreEngine/pillars/ethicsPillar';
@@ -137,8 +137,8 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
       labels_tags: ['en:fair-trade'],
     };
     const result = calculateEthicsPillar(product);
-    expect(result.details.certificationsAdjustment).toBe(5);
+    expect(result.details.certificationsAdjustment).toBe(6);
     expect(result.details.certificationsWinningScheme).toBe('fairtrade');
-    expect(result.score).toBe(20);
+    expect(result.score).toBe(21);
   });
 });

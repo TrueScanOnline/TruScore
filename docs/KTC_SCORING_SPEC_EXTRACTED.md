@@ -2,6 +2,8 @@
 **File:** `KTC scoring spec sheet (Ours).xlsx`
 **Read:** 2026-03-17T22:07:32.754Z
 
+> **Shipping note:** BBFAW year-on-year (YoY) tier/impact bonus and penalty language in older extracts is **out of scope** in the app and was removed from the live Ethics spec (v36). Tier + Impact tables in this row remain in force; YoY overlays are not implemented.
+
 ## Sheet: "Ethics_Scoring_Spec_33 "
 
  Pillar (25 pts) 	 Data Element 	 Positive Statement (what high score means) 	 Dimensions / Measures (public third-party source) 	 What it is & why it matters (2025 consumer concern) 	 Exact Free/Public Data Point + API Field 	 Scoring Conversion (to 0-25) 	 Explanation 	 Decision Tree Logic (Order of Priority) 

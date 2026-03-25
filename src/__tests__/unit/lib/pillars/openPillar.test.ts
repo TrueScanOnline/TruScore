@@ -2,7 +2,10 @@
  * Open Pillar — Open_Scoring_Specification_v14 (food & beverage)
  */
 
-import { calculateOpenPillar } from '../../../../lib/truscoreEngine/pillars/openPillar';
+import {
+  calculateOpenPillar,
+  getOpenPillarIngredientsText,
+} from '../../../../lib/truscoreEngine/pillars/openPillar';
 import {
   countOpenPillarHiddenTermHits,
   countHiddenTermHitsInToken,
@@ -117,6 +120,18 @@ describe('Open Pillar v14', () => {
     expect(result.details.listingClarityBonus).toBe(2);
   });
 
+  test('zero hidden + NOVA 4: listing clarity +2', () => {
+    const product = {
+      ...baseProduct,
+      ingredients_text: 'Water, organic cane sugar, sea salt.',
+      nova_group: 4,
+      origins: 'New Zealand',
+    };
+    const result = calculateOpenPillar(product);
+    expect(result.details.hiddenTermsCount).toBe(0);
+    expect(result.details.listingClarityBonus).toBe(2);
+  });
+
   test('zero hidden + unknown NOVA: no listing clarity bonus', () => {
     const product = {
       ...baseProduct,
@@ -150,6 +165,40 @@ describe('Open Pillar v14', () => {
   test('E621 and INS 621 count', () => {
     expect(countHiddenTermHitsInToken('E621')).toBe(1);
     expect(countHiddenTermHitsInToken('INS 621')).toBe(1);
+  });
+
+  test('OFF-style en:e621 tag counts as additive code hit', () => {
+    expect(countHiddenTermHitsInToken('en:e621')).toBe(1);
+    expect(countOpenPillarHiddenTermHits('water, en:e621, salt')).toBe(1);
+  });
+
+  test('lemon essence is not a vague-term hit (named essence guardrail)', () => {
+    expect(countHiddenTermHitsInToken('lemon essence')).toBe(0);
+    expect(countOpenPillarHiddenTermHits('water, lemon essence, sugar')).toBe(0);
+  });
+
+  test('monosodium glutamate is not a vague-term hit (named exception)', () => {
+    expect(countHiddenTermHitsInToken('monosodium glutamate')).toBe(0);
+    expect(countOpenPillarHiddenTermHits('salt, monosodium glutamate')).toBe(0);
+  });
+
+  test('caramel colour / caramel color is not a generic colour hit', () => {
+    expect(countOpenPillarHiddenTermHits('caramel colour, water')).toBe(0);
+    expect(countOpenPillarHiddenTermHits('caramel color, water')).toBe(0);
+  });
+
+  test('ingredients_text_en used when ingredients_text empty', () => {
+    const product = {
+      ...baseProduct,
+      ingredients_text: '',
+      ingredients_text_en: 'Water, sugar, salt.',
+      origins: 'France',
+    };
+    expect(getOpenPillarIngredientsText(product)).toBe('Water, sugar, salt.');
+    const result = calculateOpenPillar(product);
+    expect(result.details.ingredientsScore).toBe(2);
+    expect(result.details.ingredientsLength).toBeGreaterThan(0);
+    expect(result.adjustments.some((a) => a.description.includes('No ingredients'))).toBe(false);
   });
 
   test('allspice does not match spice term', () => {

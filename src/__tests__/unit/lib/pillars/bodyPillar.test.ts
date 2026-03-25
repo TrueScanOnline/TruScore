@@ -1,7 +1,8 @@
 /**
  * Body Pillar Unit Tests
- * 
- * Tests the Body Pillar calculation independently
+ *
+ * Aligns with shipped bodyPillar.ts: Nutri-Score A=22/B=18/C=15/D=12/E=8 (from base 15);
+ * NOVA 1=+3, 2=+1, 3=−1 (via processing cap), 4=−6 (via processing cap); floor 2, cap 25.
  */
 
 import { calculateBodyPillar } from '../../../../lib/truscoreEngine/pillars/bodyPillar';
@@ -28,35 +29,35 @@ describe('Body Pillar Calculation', () => {
     expect(result.score).toBe(15);
   });
 
-  test('should apply Nutri-Score A adjustment (+10 from base 15)', () => {
+  test('should apply Nutri-Score A adjustment (+7 from base 15 → 22)', () => {
     const product = { ...baseProduct, nutriscore_grade: 'a' };
     const result = calculateBodyPillar(product);
     expect(result.base).toBe(15);
-    expect(result.score).toBe(25); // 15 + 10
-    expect(result.details.nutriscoreValue).toBe(25);
+    expect(result.score).toBe(22);
+    expect(result.details.nutriscoreValue).toBe(22);
   });
 
-  test('should apply Nutri-Score D adjustment (-5 from base 15)', () => {
+  test('should apply Nutri-Score D adjustment (−3 from base 15 → 12)', () => {
     const product = { ...baseProduct, nutriscore_grade: 'd' };
     const result = calculateBodyPillar(product);
     expect(result.base).toBe(15);
-    expect(result.score).toBe(10); // 15 - 5
-    expect(result.details.nutriscoreValue).toBe(10);
+    expect(result.score).toBe(12);
+    expect(result.details.nutriscoreValue).toBe(12);
   });
 
-  test('should apply Nutri-Score E adjustment (-10 from base 15)', () => {
+  test('should apply Nutri-Score E adjustment (−7 from base 15 → 8)', () => {
     const product = { ...baseProduct, nutriscore_grade: 'e' };
     const result = calculateBodyPillar(product);
     expect(result.base).toBe(15);
-    expect(result.score).toBe(5); // 15 - 10
-    expect(result.details.nutriscoreValue).toBe(5);
+    expect(result.score).toBe(8);
+    expect(result.details.nutriscoreValue).toBe(8);
   });
 
-  test('should apply NOVA Group 4 penalty (-8)', () => {
+  test('should apply NOVA Group 4 processing penalty (−6)', () => {
     const product = { ...baseProduct, nova_group: 4 };
     const result = calculateBodyPillar(product);
     expect(result.base).toBe(15);
-    expect(result.score).toBe(7); // 15 - 8
+    expect(result.score).toBe(9);
   });
 
   test('should apply NOVA Group 1 bonus (+3)', () => {
@@ -88,11 +89,11 @@ describe('Body Pillar Calculation', () => {
   test('should cap score at 25', () => {
     const product = {
       ...baseProduct,
-      nutriscore_grade: 'a', // +10
-      nova_group: 1, // +3
+      nutriscore_grade: 'a', // +7 → 22
+      nova_group: 1, // +3 → 25
     };
     const result = calculateBodyPillar(product);
-    expect(result.score).toBeLessThanOrEqual(25);
+    expect(result.score).toBe(25);
   });
 });
 

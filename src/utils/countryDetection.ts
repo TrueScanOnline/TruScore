@@ -1,27 +1,22 @@
 // Country detection utility
-// Uses device locale to determine user's country for country-specific database lookups
+// Mobile: device locale via expo-localization (when available).
+// Node / Vercel: TRUESCAN_DEFAULT_COUNTRY_CODE (ISO 3166-1 alpha-2) — optional.
 
-import * as Localization from 'expo-localization';
+type ExpoLocalization = typeof import('expo-localization');
 
 /**
- * Get user's country code from device locale
- * Returns ISO 3166-1 alpha-2 country code (e.g., 'NZ', 'AU', 'GB', 'TR')
- * 
- * This function uses device locale as a fallback when GPS location is unavailable.
- * It's used for country-specific database access and geo-location logic.
+ * Get user's country code from device locale (Expo) or server env.
+ * Returns ISO 3166-1 alpha-2 (e.g. 'NZ', 'AU').
  */
 export function getUserCountryCode(): string | null {
   try {
+    const Localization = require('expo-localization') as ExpoLocalization;
     const locales = Localization.getLocales();
     if (locales && locales.length > 0) {
       const regionCode = locales[0]?.regionCode;
       if (regionCode) {
         return regionCode.toUpperCase();
       }
-    }
-    
-    // Fallback: Try to get locale string from locales array and extract country code
-    if (locales && locales.length > 0) {
       const localeString = locales[0]?.languageTag || locales[0]?.languageCode || '';
       if (localeString) {
         const parts = localeString.split('-');
@@ -33,8 +28,13 @@ export function getUserCountryCode(): string | null {
         }
       }
     }
-  } catch (error) {
-    console.warn('[countryDetection] Error detecting country code:', error);
+  } catch {
+    // No expo-localization (Vercel, plain Node, some tests)
+  }
+
+  const env = process.env.TRUESCAN_DEFAULT_COUNTRY_CODE?.trim();
+  if (env && /^[A-Z]{2}$/i.test(env)) {
+    return env.toUpperCase();
   }
   return null;
 }

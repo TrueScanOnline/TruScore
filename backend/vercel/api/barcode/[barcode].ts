@@ -767,8 +767,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             <div class="breakdown-score">${Math.round(trustScoreBreakdown.planet)}/25</div>
           </div>
           <div class="breakdown-item">
-            <div class="breakdown-label">Care</div>
-            <div class="breakdown-score">${Math.round(trustScoreBreakdown.care)}/25</div>
+            <div class="breakdown-label">Ethics</div>
+            <div class="breakdown-score">${Math.round((trustScoreBreakdown.ethics ?? trustScoreBreakdown.care ?? 0))}/25</div>
           </div>
           <div class="breakdown-item">
             <div class="breakdown-label">Open</div>

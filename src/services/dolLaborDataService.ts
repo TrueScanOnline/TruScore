@@ -1,11 +1,12 @@
 /**
  * DOL (US Department of Labor) Labor Data Service
  * Integrates with DOL List of Goods Produced by Child Labor or Forced Labor
- * 
+ *
  * Source: https://www.dol.gov/agencies/ilab/reports/child-labor/list-of-goods
  * Data Format: Annual reports (PDF/Excel)
- * 
- * This service provides labor violation data for Ethics Pillar scoring
+ *
+ * Banner / legacy — not used in `calculateEthicsPillar` (BBFAW + KTC + certifications).
+ * Consumed by labour/banner flows such as `laborViolationsService`.
  */
 
 import { logger } from '../utils/logger';

@@ -1,8 +1,10 @@
 /**
- * ETHICS PILLAR — Certifications element (SPEC: Database files/ETHICS Pillar/ETHICS SPEC sheet.xlsx)
+ * ETHICS PILLAR — Certifications element (SPEC: Database files/ETHICS Pillar/ETHICS Pillar spec sheet.xlsx)
  *
  * - MVP: apply the single highest eligible certification weight only (no stacking).
- * - Weights: Fairtrade +5, Rainforest Alliance +4, ASC +4, MSC +4, RSPO +3, Organic +2
+ * - Weights (v36): Fairtrade +6, Rainforest Alliance (UTZ) +5, ASC +4, MSC +4, RSPO +3, Organic +2.
+ * - ASC vs MSC: spec treats these as mutually exclusive certifications for a product (aquaculture vs wild-catch);
+ *   no tie-break rule. If both ever appear in data, max weight wins (both +4 today).
  * - MSC: official API validation is authoritative for positive hits; OFF cannot override a negative API result.
  *   When `product.ethics_msc_api_validated === true`, MSC is eligible; when `false`, MSC is never credited.
  *   When unset, MSC is not credited unless EXPO_PUBLIC_ETHICS_MSC_OFF_FALLBACK=true (dev / limited rollout only).
@@ -20,10 +22,10 @@ export type EthicsCertificationScheme =
   | 'rspo'
   | 'organic';
 
-/** Relative weights within the certification element only (SPEC). */
+/** Relative weights within the certification element only (SPEC v36). */
 export const ETHICS_CERTIFICATION_WEIGHTS: Record<EthicsCertificationScheme, number> = {
-  fairtrade: 5,
-  rainforest_alliance: 4,
+  fairtrade: 6,
+  rainforest_alliance: 5,
   asc: 4,
   msc: 4,
   rspo: 3,
@@ -116,6 +118,9 @@ function buildHaystack(product: Product): string {
   if (product.labels_en && typeof product.labels_en === 'string') parts.push(product.labels_en);
   if (product.ingredients_text && typeof product.ingredients_text === 'string') {
     parts.push(product.ingredients_text);
+  }
+  if (product.ingredients_text_en && typeof product.ingredients_text_en === 'string') {
+    parts.push(product.ingredients_text_en);
   }
   if (product.product_name && typeof product.product_name === 'string') parts.push(product.product_name);
   if (Array.isArray(product.certifications)) {

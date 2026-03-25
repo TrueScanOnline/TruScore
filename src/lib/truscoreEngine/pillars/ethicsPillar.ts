@@ -1,18 +1,20 @@
 /**
  * ETHICS PILLAR
  *
- * SPEC: Database files/ETHICS Pillar/ETHICS SPEC sheet.xlsx (Ethics_Scoring_Spec tab).
+ * SPEC: Database files/ETHICS Pillar/ETHICS Pillar spec sheet.xlsx (Ethics_Scoring_Spec tab).
  *
- * Logic:
- * - Base Score: 15 (uniform)
- * - BBFAW (Animal Welfare): product → brand → parent chaining; if match apply Tier + Impact; else nil.
- * - KTC (Human Welfare): product → brand → parent chaining; if match apply adjustment from Total Benchmark Score band; else nil.
- * - Certifications: highest eligible scheme only (+2..+5); see ethicsCertificationsService (MVP: no stacking).
- * - Cap: Min 0, Max 25 (applied after all adjustments).
+ * Shipped logic (no YoY BBFAW modifiers):
+ * - Base: 15 (uniform).
+ * - BBFAW: same candidate brands as KTC (`brand_owner` first, then comma-split `brands`); each candidate is
+ *   resolved product → brand → parent (alias map), then canonical BBFAW lookup; apply Tier + Impact when matched,
+ *   else no BBFAW adjustment.
+ * - KTC: same candidate list; resolve product → brand → KTC parent, then benchmark bands; first match wins.
+ * - Certifications: single highest eligible scheme only (no stacking); see ethicsCertificationsService.
+ * - Cap: 0–25 after all adjustments.
  *
  * BBFAW: Tier 1=+6, 2=+4, 3=+2, 4=+1, 5=-4, 6=-6; Impact A/B=+3, C/D=+1, E/F=-3.
  * KTC Total Benchmark Score: 0–10=-10, 11–20=-8, 21–30=-6, 31–50=-3, 51–70=+3, 71–80=+6, 81–90=+8, 91–100=+10.
- * Certifications: Fairtrade +5, Rainforest Alliance +4, ASC +4, MSC +4, RSPO +3, Organic +2.
+ * Certifications: Fairtrade +6, Rainforest Alliance +5, ASC +4, MSC +4, RSPO +3, Organic +2 (per spec v36).
  */
 
 import { Product } from '../../../types/product';
@@ -35,12 +37,6 @@ import {
 import { resolveBrandToKTCParent } from '../../../services/ktcBrandResolutionService';
 import { evaluateEthicsCertifications } from '../../../services/ethicsCertificationsService';
 import { powershellLogger } from '../../../utils/powershellLogger';
-
-function getPerformanceNow(): number {
-  return typeof performance !== 'undefined' && performance?.now
-    ? performance.now()
-    : Date.now();
-}
 
 export interface EthicsPillarResult {
   score: number;
@@ -68,11 +64,11 @@ export interface EthicsPillarResult {
 const SKIP_BRANDS = new Set(['unknown', 'generic', 'no brand', 'sans marque']);
 
 /**
- * Get all candidate company/brand strings from product for BBFAW lookup.
- * Order: brand_owner first, then each value from brands (comma-separated).
- * Tries multiple candidates to maximize match rate when brand_owner is wrong/missing.
+ * Brand strings used for BBFAW and KTC resolution (shared candidate list).
+ * Order: `brand_owner` first, then each comma-separated value from `brands`.
+ * Deduped; skips useless placeholder brand names.
  */
-function getCompanyCandidatesForBBFAW(product: Product): string[] {
+function getEthicsCompanyCandidates(product: Product): string[] {
   const candidates: string[] = [];
   if (product.brand_owner && typeof product.brand_owner === 'string') {
     const t = product.brand_owner.trim();
@@ -91,19 +87,14 @@ function getCompanyCandidatesForBBFAW(product: Product): string[] {
 }
 
 /**
- * Calculate ETHICS Pillar - BBFAW 2024 only, direct match only
- * 1. Base 15
- * 2. BBFAW lookup via product.brand_owner or product.brands (exact match)
- * 3. If found: apply Tier + Impact scores. If not found: nil return.
- * 4. Cap 0-25
+ * ETHICS pillar score: Base 15 + BBFAW + KTC + max one certification, clamped 0–25.
  */
 export function calculateEthicsPillar(product: Product): EthicsPillarResult {
-  const startTime = getPerformanceNow();
   const adjustments: EthicsPillarResult['adjustments'] = [];
   let score = 15;
   const base = 15;
 
-  const candidates = getCompanyCandidatesForBBFAW(product);
+  const candidates = getEthicsCompanyCandidates(product);
 
   adjustments.push({
     description: 'Base score (assumes ethical until poor ratings)',

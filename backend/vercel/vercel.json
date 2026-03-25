@@ -36,6 +36,10 @@
     "api/upload-photo.ts": {
       "maxDuration": 60,
       "memory": 2048
+    },
+    "api/product-preview.ts": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "rewrites": [
