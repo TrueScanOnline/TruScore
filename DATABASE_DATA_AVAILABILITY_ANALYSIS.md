@@ -222,7 +222,7 @@
 
 **Status:** ✅ **FULLY SUPPORTED** - Recalls data is fetched but not used in TruScore
 **Coverage:** ~95% of food products (recalls checked for US, CA, EU)
-**Implementation:** Need to add recall check to Care pillar scoring
+**Implementation:** Need to add recall check to Ethics Pillar scoring
 
 **Current Code:** `productService.ts` lines 1305-1382 - recalls are fetched and stored in `product.recalls` but not used in `truscoreEngine.ts`
 
@@ -370,7 +370,7 @@
 
 **Phase 5.2: Recalls** - ✅ Can implement (data already fetched!)
 - **CRITICAL:** Recalls are fetched but NOT used in scoring
-- **Fix:** Add recall check to Care pillar (simple code change)
+- **Fix:** Add recall check to Ethics Pillar (simple code change)
 
 **Phase 5.3: Sentiment** - ❌ Cannot implement (no API)
 - **Skip for now** - Requires external API integration
@@ -410,7 +410,7 @@
 4. ⚠️ Update scoring to use IARC classes
 
 ### Week 3: Easy Wins (Recalls + Tiered Ingredients)
-1. ✅ Add recalls scoring to Care pillar (-10 if within 12mo)
+1. ✅ Add recalls scoring to Ethics Pillar (-10 if within 12mo)
 2. ✅ Implement tiered ingredients disclosure scoring
 3. ✅ Test with real products
 

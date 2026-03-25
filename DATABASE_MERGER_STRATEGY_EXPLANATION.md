@@ -330,7 +330,7 @@ Source 2: gs1_datasource (Weight: 40.0%)
   TruScore: 72/100
   Body Pillar: 18/25 (Nutri-Score C, some additives)
   Planet Pillar: 20/25 (Eco-Score B, certified sustainable palm oil - reduced penalty)
-  Care Pillar: 15/25 (No cruelty-free, parent company concerns)
+  Ethics Pillar: 15/25 (No cruelty-free, parent company concerns)
   Open Pillar: 19/25 (Good transparency, some hidden terms)
   Trust Score: 90/100 (high data completeness)
 ═══════════════════════════════════════════════════════════════

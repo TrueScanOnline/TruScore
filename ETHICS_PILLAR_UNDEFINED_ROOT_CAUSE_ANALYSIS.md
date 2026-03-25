@@ -116,7 +116,7 @@ const safeValue = typeof value === 'number' && !isNaN(value) ? value : 0;
 ### Ethics Pillar ✅
 - Always returns `score: number` (0-25)
 - Base: 15, adjustments applied
-- **SPEC VERIFIED:** Matches CARE Pillar.xlsx specification
+- **SPEC VERIFIED:** Matches ETHICS Pillar.xlsx specification
 - Validation added in extraction
 
 ### Open Pillar ✅
@@ -128,7 +128,7 @@ const safeValue = typeof value === 'number' && !isNaN(value) ? value : 0;
 
 ## 📝 Spec Compliance Check
 
-### Ethics Pillar Spec (from CARE Pillar.xlsx):
+### Ethics Pillar Spec (from ETHICS Pillar.xlsx):
 - ✅ Base Score: 15 points
 - ✅ Certifications: Stack up to +15 max
 - ✅ Animal Cruelty: BBFAW tier-based (Tier 1=+4, Tier 2=+2, Tier 6=-7, E/F=-7)

@@ -119,7 +119,7 @@ This document defines the **database querying and merging strategy** that serves
 - FSANZ (AU/NZ) - Official data
 - Country-specific regulations
 
-### Care Pillar (25 points)
+### Ethics Pillar (25 points)
 **Critical Fields (in priority order):**
 1. ✅ `labels_tags` - **CRITICAL** (certifications: Fairtrade=+8, Organic=+7, etc.)
 2. ✅ `certifications` - **CRITICAL** (certification objects)
@@ -298,7 +298,7 @@ function calculateTruScoreCompleteness(product: Product): number {
   if (product.palm_oil_analysis) score += 5;
   if (product.packagings?.length) score += 5;
   
-  // Care Pillar (25 points = 25% of total)
+  // Ethics Pillar (25 points = 25% of total)
   if (product.labels_tags?.length) score += 15; // Critical
   if (product.certifications?.length) score += 10;
   
@@ -387,7 +387,7 @@ function mergeTruScoreFields(merged: Product, products: Product[]): void {
     merged.packagings = Array.from(unique.values());
   }
   
-  // CARE PILLAR
+  // Ethics Pillar
   // Labels: UNION ALL (critical for certification bonuses)
   const allLabels = products
     .map(p => p.labels_tags)

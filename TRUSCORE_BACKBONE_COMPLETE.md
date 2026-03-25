@@ -198,7 +198,7 @@
 - ✅ Palm Oil: Open Food Facts, palm oil analysis
 - ✅ Packaging: Open Food Facts, country-specific regulations
 
-### Care Pillar (25 points)
+### Ethics Pillar (25 points)
 **Guaranteed Data Sources:**
 - ✅ Certifications: Open Food Facts, brand database
 - ✅ Cruel Parent: Brand database

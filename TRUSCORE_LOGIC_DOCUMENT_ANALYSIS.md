@@ -85,7 +85,7 @@
 
 ---
 
-## CARE PILLAR Comparison
+## Ethics Pillar Comparison
 
 ### Current Code vs Document
 
@@ -123,7 +123,7 @@
 - ✅ Walk Free Index (walkfree.org/index)
 - ✅ Codex Alimentarius Recalls (fao.org/codex/recalls)
 
-**Status:** ✅ Care Pillar matches document specification
+**Status:** ✅ Ethics Pillar matches document specification
 
 ---
 

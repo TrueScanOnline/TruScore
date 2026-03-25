@@ -43,7 +43,7 @@ This report provides a comprehensive analysis of:
 - **Pillar Distribution:** 4 equal pillars, 25 points each
   - **Body Pillar:** Nutrition, additives, processing (NOVA), allergens
   - **Planet Pillar:** Environmental impact, palm oil, recyclability
-  - **Care Pillar:** Ethical certifications, recalls, brand ethics
+  - **Ethics Pillar:** Ethical certifications, recalls, brand ethics
   - **Open Pillar:** Transparency, ingredients disclosure, origin, brand ownership
 
 **Calculation Flow:**
@@ -51,7 +51,7 @@ This report provides a comprehensive analysis of:
 Product Data → calculateTruScore() → {
   calculateBodyPillar() → 0-25
   calculatePlanetPillar() → 0-25
-  calculateCarePillar() → 0-25
+  calculateEthicsPillar() → 0-25
   calculateOpenPillar() → 0-25
 } → Sum = TruScore (0-100)
 ```
@@ -194,7 +194,7 @@ if (ingredientsScore >= -5 && hiddenCount === 0) {
 **Available Data:**
 - `product.brand_owner?: string` - Parent company (if available from OFF)
 - Brand database exists: `src/data/brandDatabase.ts` with parent-subsidiary relationships
-- Used in Care Pillar for cruel parent detection
+- Used in Ethics Pillar for cruel parent detection
 
 **Spec Requirement:** -5 penalty for hidden/opaque parent company
 
@@ -311,7 +311,7 @@ if (hiddenCount === 0) {
 **Available Infrastructure:**
 - `product.brand_owner` field exists
 - Brand database with parent-subsidiary relationships (`src/data/brandDatabase.ts`)
-- Similar logic already used in Care Pillar for cruel parent detection
+- Similar logic already used in Ethics Pillar for cruel parent detection
 
 **Required Implementation:**
 ```typescript
@@ -552,7 +552,7 @@ const hasBrandOwner = !!(product.brand_owner &&
 
 if (!hasBrandOwner) {
   // Check if we can determine parent from brand database
-  // (Similar to Care Pillar's cruel parent detection)
+  // (Similar to Ethics Pillar's cruel parent detection)
   // For now, if brand_owner is missing, apply penalty
   brandOwnershipPenalty = 5;
   adjustments.push({
@@ -938,7 +938,7 @@ if (hiddenCount === 0) {
 - `src/data/brandDatabase.ts` - Brand/parent company database
 - `src/lib/truscoreEngine/pillars/bodyPillar.ts` - Body Pillar (reference)
 - `src/lib/truscoreEngine/pillars/planetPillar.ts` - Planet Pillar (reference)
-- `src/lib/truscoreEngine/pillars/carePillar.ts` - Care Pillar (reference)
+- `src/lib/truscoreEngine/pillars/ethicsPillar.ts` - Ethics Pillar (reference)
 
 ### Specification Documents
 - `TruScore logic/OPEN Pillar.xlsx` - New specification document

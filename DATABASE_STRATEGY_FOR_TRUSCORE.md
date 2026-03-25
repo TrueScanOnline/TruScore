@@ -110,7 +110,7 @@ This document defines the **database querying and merging strategy** to ensure T
 2. FSANZ (AU/NZ) - Official data
 3. Country-specific regulations
 
-### Care Pillar (25 points)
+### Ethics Pillar (25 points)
 **Critical Fields:**
 - ✅ `labels_tags` - Certifications (Fairtrade=+8, Organic=+7, etc.)
 - ✅ `certifications` - Certification objects
@@ -323,7 +323,7 @@ if (product && product.product_name) {
   - Palm Oil: Use most complete analysis
   - Packaging: Union all packagings
   
-- **Care Pillar:**
+- **Ethics Pillar:**
   - Certifications: Union all labels_tags and certifications
   - Cruel Parent: Check brand database
   
@@ -354,7 +354,7 @@ const MERGING_RULES = {
   palm_oil_analysis: 'most_complete', // Use most detailed analysis
   packagings: 'union', // Combine all packaging items
   
-  // Care Pillar
+  // Ethics Pillar
   labels_tags: 'union', // Combine all certifications
   certifications: 'union',
   
@@ -614,7 +614,7 @@ export class TruScoreOptimizedMerger {
     if (product.palm_oil_analysis) score += 5;
     if (product.packagings?.length) score += 5;
     
-    // Care Pillar (25 points)
+    // Ethics Pillar (25 points)
     if (product.labels_tags?.length) score += 15; // Critical
     if (product.certifications?.length) score += 10;
     
@@ -697,7 +697,7 @@ export class TruScoreOptimizedMerger {
       merged.packagings = Array.from(unique.values());
     }
     
-    // Care Pillar
+    // Ethics Pillar
     // Certifications: Union all
     const allLabels = products
       .map(p => p.labels_tags)
@@ -924,7 +924,7 @@ function calculateTruScoreCompleteness(product: Product): number {
   if (product.palm_oil_analysis) score += 5;
   if (product.packagings?.length) score += 5;
   
-  // Care Pillar (25 points = 25% of total)
+  // Ethics Pillar (25 points = 25% of total)
   if (product.labels_tags?.length) score += 15; // Critical
   if (product.certifications?.length) score += 10;
   

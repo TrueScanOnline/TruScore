@@ -75,7 +75,7 @@ This document analyzes the current brand/company matching approach and proposes 
 
 ### 3. **Inconsistent Matching Across Pillars**
 - **Problem:** Each pillar/service has its own matching logic
-  - CARE Pillar: Uses `normalizeBrandNameForLookup` + partial matching
+  - Ethics Pillar: Uses `normalizeBrandNameForLookup` + partial matching
   - Labor Violations: Uses same normalization
   - Animal Cruelty: Uses same normalization
   - But no centralized fuzzy matching service
@@ -202,7 +202,7 @@ function matchBrand(
 ### Phase 3: Apply to All Pillars
 
 **Files to Update:**
-1. `src/lib/truscoreEngine/pillars/carePillar.ts`
+1. `src/lib/truscoreEngine/pillars/ethicsPillar.ts`
 2. `src/lib/truscoreEngine/pillars/bodyPillar.ts`
 3. `src/lib/truscoreEngine/pillars/planetPillar.ts`
 4. `src/lib/truscoreEngine/pillars/openPillar.ts`
@@ -264,7 +264,7 @@ score = (0.3 × Levenshtein) + (0.4 × Jaro-Winkler) + (0.3 × Token)
 
 ## Specific Enhancements by Pillar
 
-### CARE Pillar
+### Ethics Pillar
 **Current Issues:**
 - Brand matching may miss variations
 - Parent company matching inconsistent
@@ -390,7 +390,7 @@ score = (0.3 × Levenshtein) + (0.4 × Jaro-Winkler) + (0.3 × Token)
 ### Immediate Actions (High Priority)
 1. ✅ **Create Fuzzy Matching Service** - Core infrastructure
 2. ✅ **Enhance Brand Normalization** - Better preprocessing
-3. ✅ **Apply to CARE Pillar** - Highest impact area
+3. ✅ **Apply to Ethics Pillar** - Highest impact area
 4. ✅ **Add Confidence Scoring** - Better decision making
 
 ### Short-term (Medium Priority)

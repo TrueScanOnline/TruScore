@@ -722,7 +722,7 @@ if (product.ingredients_analysis?.['en:palm-oil']) score += 5; // Palm oil tag
 #### Ethics Pillar Fields (25 points max)
 
 ```typescript
-// Care Pillar fields (25 points max)
+// Ethics Pillar fields (25 points max)
 if (product.labels_tags && product.labels_tags.length > 0) score += 15; // Labels/certifications
 if (product.certifications && product.certifications.length > 0) score += 10; // Certifications
 ```

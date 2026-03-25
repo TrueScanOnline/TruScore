@@ -52,7 +52,6 @@ $archivePatterns = @{
     # Pillar analysis
     "pillar-analysis" = @(
         "*_PILLAR_*.md",
-        "CARE_PILLAR*.md",
         "ETHICS_PILLAR*.md",
         "BODY_PILLAR*.md",
         "PLANET_PILLAR*.md",

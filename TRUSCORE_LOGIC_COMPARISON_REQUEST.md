@@ -23,7 +23,7 @@ I've reviewed the current pillar implementation code and found the following str
 - **Farming Impact:** High=-5, Low=+3, Brand overlay=-3
 - **Final:** Capped at 0-25
 
-#### **Care Pillar** (`src/lib/truscoreEngine/pillars/carePillar.ts`)
+#### **Ethics Pillar** (`src/lib/truscoreEngine/pillars/ethicsPillar.ts`)
 - **Base Score:** 15/25
 - **Certifications:** Fairtrade=+8, Organic=+7, Rainforest/UTZ=+6, MSC/ASC=+6, RSPO=+6, RSPCA/Leaping Bunny/B-Corp=+5, Cage-Free/Free-Range=+4 (cap +15)
 - **Animal Cruelty:** Major=-15, Minor=-5, Brand overlay=-3
@@ -61,7 +61,7 @@ I've reviewed the current pillar implementation code and found the following str
 6. **Idemat Eco-Cost** - `src/services/csvDatabases/csvDatabaseService.ts` (packaging materials)
 7. **Agribalyse Fallback** - `src/services/csvDatabases/csvDatabaseService.ts` (carbon footprint)
 
-### **Care Pillar Resources:**
+### **Ethics Pillar Resources:**
 1. **Brand Database** - `src/data/brandDatabase.ts` (animal cruelty, labor violations, recalls)
 2. **Animal Cruelty Service** - `src/services/animalCrueltyService.ts`
 3. **Labor Violations Service** - `src/services/laborViolationsService.ts`

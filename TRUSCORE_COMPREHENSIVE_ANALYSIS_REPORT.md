@@ -551,7 +551,7 @@ Result: 15 - 10 + 5 = 10/25
 
 ---
 
-### 3.4 Care Pillar Calculation (25pts)
+### 3.4 Ethics Pillar Calculation (25pts)
 
 **Base Score:** 18/25 (absence of known cruelty)
 
@@ -864,7 +864,7 @@ Source 2: {source} (Weight: {weight}%)
   TruScore: {score}/100
   Body Pillar: {score}/25
   Planet Pillar: {score}/25
-  Care Pillar: {score}/25
+  Ethics Pillar: {score}/25
   Open Pillar: {score}/25
   
   Data Sources Used:
@@ -1324,7 +1324,7 @@ Additives:
 │    • Penalties: Palm oil (-10 or -5 if certified)           │
 │    • Bonuses: Recyclable packaging (+5 all, +2 some)         │
 │                                                               │
-│  CARE PILLAR (25pts):                                        │
+│  Ethics Pillar (25pts):                                        │
 │    • Base: 18 (absence of known cruelty)                      │
 │    • Bonuses: Fair Trade (+8), Organic (+8), Rainforest      │
 │               (+7), MSC/ASC (+8), RSPCA (+6), Vegan (+10),   │
@@ -1498,7 +1498,7 @@ Additives:
 - Penalties: Palm oil (-10 or -5 if certified)
 - Bonuses: Recyclable packaging (+5 all, +2 some)
 
-**Care Pillar:**
+**Ethics Pillar:**
 - Base: 18
 - Bonuses: Fair Trade (+8), Organic (+8), Rainforest (+7), MSC/ASC (+8), RSPCA (+6), Vegan (+10), UTZ (+7), B-Corp (+5), Non-GMO (+3)
 - Penalties: Cruel parent (-30)

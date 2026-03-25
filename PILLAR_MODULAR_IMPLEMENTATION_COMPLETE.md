@@ -45,7 +45,7 @@ Calculation: 15 - 10 = 5 ✅
 **Note:** Previously showed as "+5.0 Eco-Score Grade E" (wrong)
 **Now:** Shows as "-10.0 Eco-Score Grade E (poor environmental impact)" (correct)
 
-### Care Pillar (Barcode 9310055105850)
+### Ethics Pillar (Barcode 9310055105850)
 ```
 Base Score: 15/25 ✅
 No adjustments ✅
@@ -70,7 +70,7 @@ Calculation: 15 - 8 = 7 ✅
 1. **Pillar Calculation Files:**
    - `src/lib/truscoreEngine/pillars/bodyPillar.ts`
    - `src/lib/truscoreEngine/pillars/planetPillar.ts`
-   - `src/lib/truscoreEngine/pillars/carePillar.ts`
+   - `src/lib/truscoreEngine/pillars/ethicsPillar.ts`
    - `src/lib/truscoreEngine/pillars/openPillar.ts`
 
 2. **Supporting Files:**
@@ -80,7 +80,7 @@ Calculation: 15 - 8 = 7 ✅
 3. **Test Files:**
    - `src/__tests__/unit/lib/pillars/bodyPillar.test.ts`
    - `src/__tests__/unit/lib/pillars/planetPillar.test.ts`
-   - `src/__tests__/unit/lib/pillars/carePillar.test.ts`
+   - `src/__tests__/unit/lib/pillars/ethicsPillar.test.ts`
    - `src/__tests__/unit/lib/pillars/openPillar.test.ts`
 
 4. **Analysis Scripts:**
@@ -99,7 +99,7 @@ npm run analyze-pillar -- body 9420020300194
 # Planet Pillar
 npm run analyze-pillar -- planet 9310055105850
 
-# Care Pillar
+# Ethics Pillar
 npm run analyze-pillar -- care 9310055105850
 
 # Open Pillar
@@ -115,7 +115,7 @@ npm run test:pillar:body
 # Test Planet Pillar
 npm run test:pillar:planet
 
-# Test Care Pillar
+# Test Ethics Pillar
 npm run test:pillar:care
 
 # Test Open Pillar

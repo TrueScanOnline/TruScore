@@ -753,15 +753,15 @@ class GeoLocationAwareScoringEngine {
     // Calculate base scores for each pillar
     const bodyScore = this.calculateBodyScore(product, config);
     const planetScore = this.calculatePlanetScore(product, config, productOrigin);
-    const careScore = this.calculateCareScore(product, config);
+    const ethicsScore = this.calculateEthicsScore(product, config);
     const openScore = this.calculateOpenScore(product, config, productOrigin);
     
     return {
-      truscore: bodyScore + planetScore + careScore + openScore,
+      truscore: bodyScore + planetScore + ethicsScore + openScore,
       breakdown: {
         Body: bodyScore,
         Planet: planetScore,
-        Care: careScore,
+        Care: ethicsScore,
         Open: openScore,
       },
       adjustedFor: userCountry,
@@ -870,9 +870,9 @@ class GeoLocationAwareScoringEngine {
   }
   
   /**
-   * Calculate Care pillar with country-specific certifications
+   * Calculate Ethics Pillar with country-specific certifications
    */
-  private calculateCareScore(
+  private calculateEthicsScore(
     product: Product,
     config: CountryScoringConfig
   ): number {

@@ -288,7 +288,7 @@ TrueScan-FoodScanner/
    - Palm oil penalties (-8 non-certified, -5 certified)
    - Recyclable packaging bonuses (+5 all, +2 partial)
 
-3. **Care Pillar (25pts):**
+3. **Ethics Pillar (25pts):**
    - Baseline: 15
    - Certification bonuses (stacked, cap +15):
      - Fairtrade: +8

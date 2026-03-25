@@ -187,7 +187,7 @@ Same as Body Pillar, with recall fetching integrated before scoring.
 **Code Reference:**
 ```793:895:src/services/productService.ts
 // CRITICAL FIX: Fetch recalls BEFORE TruScore calculation
-// This ensures CARE pillar can use recall data for scoring
+// This ensures Ethics Pillar can use recall data for scoring
 ```
 
 ### Certification Detection

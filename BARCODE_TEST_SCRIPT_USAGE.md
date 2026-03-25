@@ -169,7 +169,7 @@ Measures environmental impact:
 - **Packaging**: Recyclable bonus (+2 to +5)
 - **Farming Impact**: High-impact=-5, Low-impact=+3
 
-### Care Pillar (0-25 points)
+### Ethics Pillar (0-25 points)
 Measures ethical standards:
 - **Base**: 15 points
 - **Certifications**: Fairtrade=+8, Organic=+7, etc. (cap +15)

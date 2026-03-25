@@ -192,7 +192,7 @@
    - Packaging data
    - Sustainability indicators
 
-3. **Care Pillar**:
+3. **Ethics Pillar**:
    - Animal welfare certifications
    - Ethical sourcing
 

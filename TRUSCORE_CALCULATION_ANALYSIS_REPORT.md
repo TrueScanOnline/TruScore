@@ -55,7 +55,7 @@ if (hasEcoScore) {
 - Eco-Score E = 5 becomes the **starting point**, not base 15 + adjustment
 - This is why Eco-Score E appears as "5" instead of "15 - 10 = 5"
 
-#### Care Pillar (Line 442)
+#### Ethics Pillar (Line 442)
 ```typescript
 let care = 15; // Base (spec: 15 uniform, assumes ethical until violations)
 ```
@@ -233,7 +233,7 @@ The code appears to be implementing a **"grade-based starting point"** system ra
 
 1. **Body Pillar**: Uses Nutri-Score grade as the starting point (A=25, B=20, C=15, D=10, E=5)
 2. **Planet Pillar**: Uses Eco-Score grade as the starting point (A=25, B=20, C=15, D=10, E=5)
-3. **Care Pillar**: Always starts at 15 (correct)
+3. **Ethics Pillar**: Always starts at 15 (correct)
 4. **Open Pillar**: Starts at 15, but ingredients score can replace it
 
 ### Why This is Problematic
@@ -388,7 +388,7 @@ Base Score: 15/25
 
 ### Logic Issues
 
-1. ⚠️ **Inconsistent Pillar Logic**: Care pillar uses base 15 + adjustments, but Body/Planet use grade replacement
+1. ⚠️ **Inconsistent Pillar Logic**: Ethics Pillar uses base 15 + adjustments, but Body/Planet use grade replacement
 2. ⚠️ **Open Pillar Special Case**: Ingredients score replaces base instead of being an adjustment
 3. ⚠️ **Negative Grades Confusion**: Low grades (D, E) should be shown as negative adjustments from base 15
 

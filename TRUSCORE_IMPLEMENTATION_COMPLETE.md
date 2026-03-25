@@ -57,7 +57,7 @@
 - Lines 303-346: Certification bonuses with stack cap
 
 ### Phase 5.2: Recalls Scoring ✅
-1. ✅ **Added recalls scoring to Care pillar:**
+1. ✅ **Added recalls scoring to Ethics Pillar:**
    - Checks for active recalls within last 12 months
    - Applies -10 penalty if recall found
    - Uses existing `product.recalls` array
@@ -138,7 +138,7 @@ All certification bonuses now match specification:
 - Uses existing `product.recalls` array
 - Checks `isActive` flag and date
 
-**Impact:** Products with recent recalls now get -10 penalty in Care pillar (previously not scored).
+**Impact:** Products with recent recalls now get -10 penalty in Ethics Pillar (previously not scored).
 
 ### Tiered Ingredients Disclosure
 - **Full (≥100 chars):** 15 points ✅

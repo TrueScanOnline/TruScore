@@ -15,7 +15,7 @@ The TruScore engine (`truscoreEngine.ts`) calculates scores based on merged prod
 - ✅ Weighted priority system ensures government databases (Gold Standard) have highest influence
 - ✅ Nutrition data uses weighted averages (weighted by source reliability)
 - ✅ Ingredients use longest/most complete version (better for TruScore calculation)
-- ✅ Certifications are merged with union (more certifications = higher Care pillar)
+- ✅ Certifications are merged with union (more certifications = higher Ethics Pillar)
 - ✅ Labels use highest-weight source (ensures accurate certification detection)
 
 ---
@@ -61,7 +61,7 @@ When a product is found in multiple databases, the `mergeProducts()` function in
 **Impact on TruScore:**
 - High influence on merged data
 - Open Food Facts provides Nutri-Score and Eco-Score (Body and Planet pillars)
-- Provides certifications and labels (Care pillar)
+- Provides certifications and labels (Ethics Pillar)
 - Provides ingredients text (Open pillar)
 
 ### Medium Priority (Weight: 0.30)
@@ -150,7 +150,7 @@ ingredients_text = "water, sugar, citric acid, natural flavors, preservatives"
 
 ---
 
-### 3.3 Certifications & Labels (Care Pillar)
+### 3.3 Certifications & Labels (Ethics Pillar)
 
 **Merging Method:** Union (All Unique Certifications)
 
@@ -167,7 +167,7 @@ certifications = ["en:organic", "en:fair-trade", "en:rainforest-alliance"]
 
 **Impact on TruScore:**
 - ✅ **More Complete:** Union ensures all certifications are included
-- ✅ **Care Pillar:** More certifications = higher Care score
+- ✅ **Ethics Pillar:** More certifications = higher Care score
   - Fair-trade: +8 points
   - Organic: +8 points
   - Rainforest Alliance: +7 points
@@ -177,11 +177,11 @@ certifications = ["en:organic", "en:fair-trade", "en:rainforest-alliance"]
 **Example:**
 - Product found in OFF (has "organic") and Store API (has "fair-trade")
 - Merged product has both certifications
-- Care pillar: Base 18 + Organic +8 + Fair-trade +8 = 34 → Capped at 25
+- Ethics Pillar: Base 18 + Organic +8 + Fair-trade +8 = 34 → Capped at 25
 
 ---
 
-### 3.4 Labels Tags (Care Pillar)
+### 3.4 Labels Tags (Ethics Pillar)
 
 **Merging Method:** Highest-Weight Source (Base Product)
 
@@ -198,14 +198,14 @@ labels_tags = ["en:vegan", "en:cruelty-free"]
 
 **Impact on TruScore:**
 - ✅ **Accurate:** Highest-weight source labels are used (usually most reliable)
-- ✅ **Care Pillar:** Labels like "vegan" (+10), "cruelty-free" (+10) boost Care score
+- ✅ **Ethics Pillar:** Labels like "vegan" (+10), "cruelty-free" (+10) boost Care score
 - ⚠️ **Potential Issue:** Lower-priority source labels might be missed
   - **Mitigation:** Certifications are merged with union (see above), so important certifications aren't lost
 
 **Example:**
 - Product found in OFF (has "vegan" label) and Store API (has "organic" label)
 - Merged product uses OFF labels (higher weight)
-- Care pillar: Base 18 + Vegan +10 = 28 → Capped at 25
+- Ethics Pillar: Base 18 + Vegan +10 = 28 → Capped at 25
 
 ---
 
@@ -342,7 +342,7 @@ origins_tags = ["en:china"]
 **TruScore Impact:**
 - ✅ **Body Pillar:** 25 points (Nutri-Score A)
 - ✅ **Planet Pillar:** 20 points (Eco-Score B)
-- ✅ **Care Pillar:** Higher (more certifications from union)
+- ✅ **Ethics Pillar:** Higher (more certifications from union)
 - ✅ **Open Pillar:** Better (longer ingredients list)
 
 **Result:** High-quality TruScore with accurate data from both sources
@@ -364,7 +364,7 @@ origins_tags = ["en:china"]
 **TruScore Impact:**
 - ✅ **Body Pillar:** 12 points (no Nutri-Score, baseline)
 - ✅ **Planet Pillar:** 15 points (Eco-Score C)
-- ✅ **Care Pillar:** Higher (more certifications from union)
+- ✅ **Ethics Pillar:** Higher (more certifications from union)
 - ✅ **Open Pillar:** Better (longer ingredients list from Store API)
 
 **Result:** Improved TruScore with more complete data from Store API
@@ -387,7 +387,7 @@ origins_tags = ["en:china"]
 **TruScore Impact:**
 - ⚠️ **Body Pillar:** 12 points (baseline, no Nutri-Score)
 - ⚠️ **Planet Pillar:** 12 points (baseline, no Eco-Score)
-- ⚠️ **Care Pillar:** 18 points (base, no certifications)
+- ⚠️ **Ethics Pillar:** 18 points (base, no certifications)
 - ⚠️ **Open Pillar:** 5-10 points (minimal or no ingredients)
 
 **Result:** Low TruScore (48-57/100) due to insufficient data, but product still returns a score
@@ -416,7 +416,7 @@ origins_tags = ["en:china"]
 
 **Impact:**
 - ✅ More complete ingredients list (better Open pillar)
-- ✅ More certifications (higher Care pillar)
+- ✅ More certifications (higher Ethics Pillar)
 - ✅ More reliable nutrition data (weighted averages)
 
 ---
@@ -440,7 +440,7 @@ origins_tags = ["en:china"]
 - This ensures no certifications are lost
 
 **Impact:**
-- ✅ Higher Care pillar (more certifications = more bonuses)
+- ✅ Higher Ethics Pillar (more certifications = more bonuses)
 - ✅ More accurate ethical score
 
 ---
@@ -489,12 +489,12 @@ origins_tags = ["en:china"]
 
 **Mitigation:**
 - ✅ Certifications are merged with union (important certifications aren't lost)
-- ✅ Labels are less critical than certifications for Care pillar
+- ✅ Labels are less critical than certifications for Ethics Pillar
 - ✅ Highest-weight source is usually most reliable
 
 **Impact on TruScore:**
 - ⚠️ Minor - Some labels might be missed, but certifications are preserved
-- ✅ Care pillar still benefits from certification union
+- ✅ Ethics Pillar still benefits from certification union
 
 ---
 
@@ -522,7 +522,7 @@ origins_tags = ["en:china"]
 4. **TruScore benefits from merging**
    - Body pillar: Better nutrition data → More accurate Nutri-Score
    - Planet pillar: Better Eco-Score and packaging data
-   - Care pillar: More certifications → Higher score
+   - Ethics Pillar: More certifications → Higher score
    - Open pillar: Longer ingredients → Better transparency score
 
 5. **Potential issues are mitigated**

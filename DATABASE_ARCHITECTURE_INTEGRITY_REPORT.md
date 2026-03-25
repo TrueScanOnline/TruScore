@@ -395,7 +395,7 @@ If incomplete, continue querying fallbacks to fill gaps.
 
 Prioritize databases that contribute most to TruScore:
 - Nutrition data → FSANZ, USDA, Health Canada (Body pillar)
-- Certifications → Open Food Facts (Care pillar)
+- Certifications → Open Food Facts (Ethics Pillar)
 - Eco-Score → Open Food Facts (Planet pillar)
 - Ingredients → Open Food Facts (Open pillar)
 

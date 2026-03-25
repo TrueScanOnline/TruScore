@@ -72,7 +72,7 @@ TruScore calculates 4 pillars (25 points each = 100 total):
 - ✅ Packaging: ~35% (OFF products)
 - ❌ WWF Certification: ~2% (enhancement layer, limited coverage)
 
-#### **CARE Pillar (25pts)** - Ethics & Certifications
+#### **Ethics Pillar (25pts)** - Ethics & Certifications
 **Required Data:**
 - ✅ `labels_tags[]` - Certification labels (Fair Trade, Organic, MSC, Vegan, etc.)
 - ✅ `certifications[]` - Structured certification data
@@ -191,14 +191,14 @@ Current completeness calculation weights:
 - ❌ **NO Nutri-Score** (must calculate from nutrition)
 - ❌ **NO NOVA group** (processing level unknown)
 - ❌ **NO ingredients_text** (can't calculate Open pillar)
-- ❌ **NO certifications** (can't calculate Care pillar)
+- ❌ **NO certifications** (can't calculate Ethics Pillar)
 - ❌ **NO packaging data** (can't calculate Planet pillar fully)
 - ❌ **NO Eco-Score** (can't calculate Planet pillar fully)
 
 **Impact on TruScore:**
 - Body Pillar: **12 points** (baseline, no Nutri-Score bonus)
 - Planet Pillar: **12 points** (baseline, no Eco-Score, limited packaging)
-- Care Pillar: **18 points** (baseline, no certifications)
+- Ethics Pillar: **18 points** (baseline, no certifications)
 - Open Pillar: **5-10 points** (no ingredients = major penalty)
 
 **Total TruScore from Government DB alone: ~47-57/100** (vs 60-80 from OFF)
@@ -353,7 +353,7 @@ Ideal Merge:
 **Missing Explicit Merging:**
 ```typescript
 // These fields are NOT explicitly merged:
-- labels_tags (critical for Care pillar)
+- labels_tags (critical for Ethics Pillar)
 - ingredients_analysis_tags (critical for Body/Planet pillars)
 - packagings (critical for Planet pillar)
 - origins_tags (critical for Open pillar)
@@ -431,7 +431,7 @@ Ideal Merge:
 
 #### **Gap 5: Certifications Missing from Government DBs**
 **Impact:** MEDIUM
-- Care pillar gets 18 points (baseline) instead of 18-43 (with certifications)
+- Ethics Pillar gets 18 points (baseline) instead of 18-43 (with certifications)
 - **Loss: 0-25 points per product**
 
 **Solution:**
@@ -588,7 +588,7 @@ const baseProduct = scoredProducts
 Add explicit merging for all TruScore-critical fields:
 
 ```typescript
-// Merge labels_tags (Care pillar)
+// Merge labels_tags (Ethics Pillar)
 const allLabels = sortedProducts
   .map(p => p.labels_tags || [])
   .flat()
@@ -857,7 +857,7 @@ TruScore Calculation
 │   └── packagings (+5 or +2)
 │       └── Requires: packagings OR packaging_tags
 │
-├── Care Pillar (25pts)
+├── Ethics Pillar (25pts)
 │   ├── labels_tags (+3 to +10 each)
 │   │   └── Requires: labels_tags OR certifications
 │   ├── certifications (+5 to +10 each)

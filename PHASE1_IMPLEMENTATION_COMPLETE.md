@@ -28,7 +28,7 @@ After comprehensive research, I identified **5 critical failure points** and imp
 **Problem:** Merger didn't explicitly merge TruScore-critical array fields. Fields like `labels_tags`, `ingredients_analysis_tags`, `packagings`, `origins_tags`, `additives_tags` were lost if base product didn't have them.
 
 **Solution:** Added explicit merging for ALL TruScore-critical fields:
-- ✅ `labels_tags` (Care pillar) - Union merge
+- ✅ `labels_tags` (Ethics Pillar) - Union merge
 - ✅ `ingredients_analysis_tags` (Body/Planet pillars) - Union merge
 - ✅ `packagings` (Planet pillar) - Union with deduplication
 - ✅ `origins_tags` (Open pillar) - Union merge
@@ -57,7 +57,7 @@ After comprehensive research, I identified **5 critical failure points** and imp
 **TruScore Completeness Scoring:**
 - Body Pillar (25pts): Nutri-Score (10), NOVA (5), Nutrition (5), Additives (3), Analysis tags (2)
 - Planet Pillar (25pts): Eco-Score (10), Palm oil (5), Packaging (5), Palm oil tag (5)
-- Care Pillar (25pts): Labels (15), Certifications (10)
+- Ethics Pillar (25pts): Labels (15), Certifications (10)
 - Open Pillar (25pts): Ingredients text (15), Origins (5), Manufacturing (5)
 
 **File:** `src/services/productDataMerger.ts` lines 96-170
@@ -208,7 +208,7 @@ After comprehensive research, I identified **5 critical failure points** and imp
 The completeness score (0-100) is calculated based on presence of:
 - **Body Pillar:** Nutri-Score (10), NOVA (5), Nutrition (5), Additives (3), Analysis tags (2)
 - **Planet Pillar:** Eco-Score (10), Palm oil (5), Packaging (5), Palm oil tag (5)
-- **Care Pillar:** Labels (15), Certifications (10)
+- **Ethics Pillar:** Labels (15), Certifications (10)
 - **Open Pillar:** Ingredients text (15), Origins (5), Manufacturing (5)
 
 ### Combined Score Formula

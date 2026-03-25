@@ -28,7 +28,7 @@ All recommendations from `FUZZY_LOGIC_ANALYSIS_AND_IMPLEMENTATION.md` and `FUZZY
 4. `src/utils/performanceOptimizer.ts` - Performance optimizations
 
 ### Files Updated: 12
-1. `src/lib/truscoreEngine/pillars/carePillar.ts`
+1. `src/lib/truscoreEngine/pillars/ethicsPillar.ts`
 2. `src/lib/truscoreEngine/pillars/planetPillar.ts`
 3. `src/lib/truscoreEngine/pillars/openPillar.ts`
 4. `src/services/animalCrueltyService.ts`
@@ -64,7 +64,7 @@ All recommendations from `FUZZY_LOGIC_ANALYSIS_AND_IMPLEMENTATION.md` and `FUZZY
 - ✅ Caching
 
 #### Phase 3: Apply to All Pillars ✅
-- ✅ CARE Pillar
+- ✅ Ethics Pillar
 - ✅ Planet Pillar
 - ✅ Open Pillar
 - ✅ Body Pillar (no brand matching needed)
@@ -79,7 +79,7 @@ All recommendations from `FUZZY_LOGIC_ANALYSIS_AND_IMPLEMENTATION.md` and `FUZZY
 #### Immediate Actions ✅
 - ✅ Create Fuzzy Matching Service - **DONE**
 - ✅ Create Brand Matching Service - **DONE**
-- ✅ Apply to CARE Pillar - **DONE**
+- ✅ Apply to Ethics Pillar - **DONE**
 
 #### Short-term ✅
 - ✅ Apply to All Pillars - **DONE**

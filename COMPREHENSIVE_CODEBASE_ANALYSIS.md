@@ -507,7 +507,7 @@ const productWithTrustScore = calculateTrustScore(productWithConfidence);
 - **Recyclable Packaging:** +5 (all recyclable) or +2 (some recyclable) using `meetsLocalRecyclingRequirements()`
 - **Bounds:** 0-25
 
-#### **Care Pillar (25 points)**
+#### **Ethics Pillar (25 points)**
 - **Base:** 0 points
 - **Certification Bonuses:**
   - Fairtrade: +5
@@ -544,7 +544,7 @@ const productWithTrustScore = calculateTrustScore(productWithConfidence);
   TruScore: 78/100
   Body Pillar: 20/25
   Planet Pillar: 18/25
-  Care Pillar: 15/25
+  Ethics Pillar: 15/25
   Open Pillar: 25/25
   
   Data Sources Used:
@@ -571,10 +571,10 @@ const productWithTrustScore = calculateTrustScore(productWithConfidence);
 **What's NOT Logged (Potential Gaps):**
 - ⚠️ NOVA group (used in Body pillar calculation)
 - ⚠️ Individual additive penalties (only count logged)
-- ⚠️ Certification details (used in Care pillar)
+- ⚠️ Certification details (used in Ethics Pillar)
 - ⚠️ Hidden terms count (used in Open pillar)
 - ⚠️ Recyclable packaging status (used in Planet pillar)
-- ⚠️ Cruel parent detection (used in Care pillar)
+- ⚠️ Cruel parent detection (used in Ethics Pillar)
 
 ### ✅ **4.5 Log Accuracy Assessment**
 
@@ -586,10 +586,10 @@ const productWithTrustScore = calculateTrustScore(productWithConfidence);
 
 **Recommendations for Enhanced Logging:**
 1. **Add NOVA Group:** Log NOVA group (1-4) and bonus/penalty applied
-2. **Add Certification Details:** Log which certifications contributed to Care pillar
+2. **Add Certification Details:** Log which certifications contributed to Ethics Pillar
 3. **Add Hidden Terms:** Log count of hidden terms found in Open pillar
 4. **Add Recyclable Status:** Log recyclable packaging status for Planet pillar
-5. **Add Cruel Parent:** Log if cruel parent detected (Care pillar penalty)
+5. **Add Cruel Parent:** Log if cruel parent detected (Ethics Pillar penalty)
 6. **Add Individual Penalties:** Log breakdown of penalties (additives, allergens, etc.)
 
 ### 🔄 **4.6 Code vs. Log Comparison**

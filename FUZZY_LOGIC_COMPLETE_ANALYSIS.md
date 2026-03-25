@@ -119,9 +119,9 @@ checkBrandProperty(product, checkFn, threshold = 0.75): boolean
 
 ## How to Apply Across All Pillars
 
-### CARE Pillar (Highest Priority)
+### Ethics Pillar (Highest Priority)
 
-**File:** `src/lib/truscoreEngine/pillars/carePillar.ts`
+**File:** `src/lib/truscoreEngine/pillars/ethicsPillar.ts`
 
 **Current Code:**
 ```typescript
@@ -296,7 +296,7 @@ If brand matching is needed:
 
 1. ✅ **Create Fuzzy Matching Service** - **DONE**
 2. ✅ **Create Brand Matching Service** - **DONE**
-3. 🔲 **Apply to CARE Pillar** - **NEXT** (Highest impact)
+3. 🔲 **Apply to Ethics Pillar** - **NEXT** (Highest impact)
 4. 🔲 **Add Unit Tests** - **REQUIRED**
 
 ### Short-term (Next 2 Weeks)
@@ -324,8 +324,8 @@ If brand matching is needed:
 - [x] Add comprehensive documentation
 - [x] Verify no linter errors
 
-### Phase 2: CARE Pillar Integration 🔲 **NEXT**
-- [ ] Update `carePillar.ts` to use `matchBrands()`
+### Phase 2: Ethics Pillar Integration 🔲 **NEXT**
+- [ ] Update `ethicsPillar.ts` to use `matchBrands()`
 - [ ] Apply confidence thresholds
 - [ ] Test with real product data
 - [ ] Verify accuracy improvements
@@ -352,12 +352,12 @@ If brand matching is needed:
 
 ## Code Examples
 
-### Example: Using in CARE Pillar
+### Example: Using in Ethics Pillar
 
 ```typescript
 import { matchBrands } from '../../../services/brandMatchingService';
 
-// In calculateCarePillar function
+// In calculateEthicsPillar function
 const brandMatches = matchBrands(product, 0.75);
 
 // Check animal cruelty with confidence
@@ -509,7 +509,7 @@ The fuzzy logic system is **complete and ready for integration**. The implementa
 ✅ **Extensible** - Easy to enhance and customize
 
 **Next Steps:**
-1. **Apply to CARE Pillar** - Highest impact area
+1. **Apply to Ethics Pillar** - Highest impact area
 2. **Add Unit Tests** - Ensure quality
 3. **Test with Real Data** - Validate accuracy
 4. **Roll Out Gradually** - Apply to other pillars incrementally
@@ -527,4 +527,4 @@ The fuzzy logic system is **complete and ready for integration**. The implementa
 **Priority:** 🔴 High (affects all pillars and user experience)  
 **Files Created:** 2 (fuzzyMatching.ts, brandMatchingService.ts)  
 **Files to Update:** 12+ (all pillars and services)  
-**Estimated Integration Time:** 1-2 days for CARE Pillar, 1 week for all pillars
+**Estimated Integration Time:** 1-2 days for Ethics Pillar, 1 week for all pillars

@@ -103,7 +103,7 @@ Comprehensive logging has been added to track **exact database query order** and
   TruScore: 78/100
   Body Pillar: 20/25
   Planet Pillar: 18/25
-  Care Pillar: 22/25
+  Ethics Pillar: 22/25
   Open Pillar: 18/25
   Data Sources Used:
     Nutri-Score: Yes

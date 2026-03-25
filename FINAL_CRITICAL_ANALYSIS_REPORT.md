@@ -700,7 +700,7 @@ export interface UnifiedRecall {
 3. ✅ **Regional Store APIs** - Tesco and Walmart fully integrated - Better coverage for UK/US
 4. ✅ **Brand Database Enrichment** - EAN-Search, OpenCorporates, B-Corp all integrated - Auto-updated vs manual
 5. ✅ **Country-Specific Regulations** - Service created with foundation data - Ready for full database expansion
-6. ✅ **Regional Certifications** - B-Corp, Non-GMO, regional Organic detection implemented - Enhanced Care pillar
+6. ✅ **Regional Certifications** - B-Corp, Non-GMO, regional Organic detection implemented - Enhanced Ethics Pillar
 
 ### 14.3 Implementation Completeness
 

@@ -365,7 +365,7 @@ interface TestResult {
         packaging: string | null;
       };
     };
-    care: {
+    ethics: {
       score: number;
       base: number;
       adjustments: Array<{

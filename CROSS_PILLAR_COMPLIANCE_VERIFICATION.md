@@ -29,7 +29,7 @@
 - ✅ Packaging: Full=+3, Partial=+1, High eco-cost=-5
 - ✅ Non-Animal Farming: Low=+3, Brand/parent=-3, High=-5
 
-### ETHICS (CARE) PILLAR ✅
+### ETHICS PILLAR ✅
 - ✅ Base: 15
 - ✅ Certifications: All values match (Fairtrade=+8, Organic=+7, etc., cap +15)
 - ✅ BBFAW: Tier 1=+4, Tier 2=+2, Tier 6=-7, E/F=-7

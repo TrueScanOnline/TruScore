@@ -2,7 +2,7 @@
 
 ## Overview
 
-All recommendations from `BARCODE_TO_CARE_PILLAR_FLOW.md` have been successfully implemented to improve brand matching and CARE pillar calculation reliability.
+All recommendations from the legacy barcode-to-Ethics-pillar flow review have been implemented to improve brand matching and Ethics Pillar calculation reliability.
 
 ---
 
@@ -166,7 +166,7 @@ function mergeBrandFields(products: Product[]): string | undefined {
 
 **Impact:**
 - ✅ Adds missing brands during enhancement
-- ✅ Improves CARE pillar matching rates
+- ✅ Improves Ethics Pillar matching rates
 - ✅ Tracks unmapped brands for systematic expansion
 
 ---
@@ -320,7 +320,7 @@ const topBrands = await getTopUnmappedBrands(50);
 
 ## Conclusion
 
-All 5 recommendations from `BARCODE_TO_CARE_PILLAR_FLOW.md` have been successfully implemented:
+All 5 recommendations from the barcode-to-Ethics-pillar flow review have been successfully implemented:
 
 1. ✅ **Improved Data Merging** - Brand data preserved from all sources
 2. ✅ **Brand Database Expansion** - 5 new brands added, tracking system in place
@@ -329,7 +329,7 @@ All 5 recommendations from `BARCODE_TO_CARE_PILLAR_FLOW.md` have been successful
 5. ✅ **Brand Enrichment Step** - Adds missing brands during enhancement
 6. ✅ **Unmapped Brand Tracking** - System to identify brands for database expansion
 
-**Expected Result:** 15-20x improvement in brand matching rates (from 1.6% to 25-35%), resulting in significantly better CARE pillar scores for products.
+**Expected Result:** 15-20x improvement in brand matching rates (from 1.6% to 25-35%), resulting in significantly better Ethics Pillar scores for products.
 
 
 

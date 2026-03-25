@@ -122,7 +122,7 @@ This report analyzes TruScan's current database implementation against the compr
 | Certification System | Recommended Status | Current Status | Implementation Quality | Gap Analysis |
 |---------------------|-------------------|---------------|----------------------|--------------|
 | **Regional Certifications** | ✅ MEDIUM PRIORITY | ❌ **NOT IMPLEMENTED** | ❌ Missing | ⚠️ **GAP:** Should detect "USDA Organic" vs "EU Organic", "B Corp", "Non-GMO Project Verified" |
-| **Country-Specific Certifications** | ✅ MEDIUM PRIORITY | ❌ **NOT IMPLEMENTED** | ❌ Missing | ⚠️ **GAP:** Should adjust Care pillar based on regional certifications |
+| **Country-Specific Certifications** | ✅ MEDIUM PRIORITY | ❌ **NOT IMPLEMENTED** | ❌ Missing | ⚠️ **GAP:** Should adjust Ethics Pillar based on regional certifications |
 
 ---
 
@@ -242,14 +242,14 @@ This report analyzes TruScan's current database implementation against the compr
 - Missing "USDA Organic" vs "EU Organic" distinction
 - Missing "B Corp" certification detection
 - Missing "Non-GMO Project Verified" detection
-- Care pillar doesn't adjust for regional certifications
+- Ethics Pillar doesn't adjust for regional certifications
 
 **Recommendation:**
 1. **Add regional certification detection** (USDA Organic, EU Organic, B Corp, Non-GMO Project)
-2. **Adjust Care pillar** based on regional certifications
+2. **Adjust Ethics Pillar** based on regional certifications
 3. **Show country-specific certification badges**
 
-**Priority:** MEDIUM (enhances Care pillar accuracy)
+**Priority:** MEDIUM (enhances Ethics Pillar accuracy)
 
 ### 2.7 FoodRepo & OpenNutrition APIs - Missing
 
@@ -442,10 +442,10 @@ if (userCountry === 'US') {
 **Implementation:**
 1. Enhance certification detection in `truscoreEngine.ts`
 2. Add regional certification mapping
-3. Adjust Care pillar based on regional certifications
+3. Adjust Ethics Pillar based on regional certifications
 
 **Impact:**
-- More accurate Care pillar scoring
+- More accurate Ethics Pillar scoring
 - Regional certification awareness
 
 **Cost:** $0
@@ -540,7 +540,7 @@ if (userCountry === 'US') {
 
 #### Month 5-6: Regional Certifications
 - ✅ Implement regional certification detection
-- ✅ Adjust Care pillar for regional certifications
+- ✅ Adjust Ethics Pillar for regional certifications
 
 #### Month 7-8: Enhanced MVP Features
 - ✅ Download full Leaping Bunny database

@@ -124,7 +124,7 @@
 
 ---
 
-### CARE PILLAR (25pts)
+### Ethics Pillar (25pts)
 
 #### 1. Base Score
 **Specification:** 15 (uniform, geo regs weight 0.5 if mandates)
@@ -237,12 +237,12 @@
 
 ### Missing Features
 1. ❌ Pet/Household specifics (all pillars)
-2. ❌ Recalls scoring (Care pillar)
-3. ❌ Sentiment/Negative news (Care pillar)
+2. ❌ Recalls scoring (Ethics Pillar)
+3. ❌ Sentiment/Negative news (Ethics Pillar)
 4. ❌ Origins/Supply chain scoring (Planet pillar)
 5. ❌ LCA blend for Eco-Score (Planet pillar)
 6. ❌ GS1 origin bonus (Open pillar)
-7. ❌ Stack cap for certifications (Care pillar)
+7. ❌ Stack cap for certifications (Ethics Pillar)
 8. ❌ Tiered ingredients disclosure scoring (Open pillar)
 
 ### Correct Implementations

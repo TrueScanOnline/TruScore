@@ -215,7 +215,7 @@ TruScan uses a sophisticated multi-database architecture with **25+ data sources
 | Database | Purpose | Type | Coverage | Reliability | Used For |
 |----------|---------|------|----------|-------------|----------|
 | **Additive Database** | E-numbers | Internal | 400+ additives | 95/100 | Body pillar |
-| **Brand Database** | Company data | Internal | 500+ companies | 90/100 | Care pillar |
+| **Brand Database** | Company data | Internal | 500+ companies | 90/100 | Ethics Pillar |
 | **SQLite Cache** | Offline storage | Internal | Cached products | 100/100 | Offline-first |
 | **Memory Cache** | Fast access | Internal | Recent products | 100/100 | Performance |
 
@@ -447,7 +447,7 @@ async function searchProducts(query: string, options: SearchOptions): Promise<Se
    - Distinguishes certified sustainable vs non-certified
    - Updates `palm_oil_analysis.isCertifiedSustainable`
 
-3. **Leaping Bunny** (Care Pillar)
+3. **Leaping Bunny** (Ethics Pillar)
    - Checks brand against Leaping Bunny database
    - Expands cruelty-free detection (500 → 2,000+ brands)
    - Adds `en:cruelty-free` and `en:vegan` labels
@@ -625,7 +625,7 @@ if (product.palm_oil_analysis) {
 }
 ```
 
-#### Care Pillar (Enhanced by Leaping Bunny)
+#### Ethics Pillar (Enhanced by Leaping Bunny)
 
 ```typescript
 // Base score

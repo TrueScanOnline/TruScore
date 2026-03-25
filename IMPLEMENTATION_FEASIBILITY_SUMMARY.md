@@ -69,7 +69,7 @@
 ### ✅ PHASE 5.2: Recalls Scoring
 **Status:** ✅ **FULLY SUPPORTED** (data already fetched!)
 - Recalls are fetched in `productService.ts` but NOT used in scoring
-- **Fix:** Add recall check to Care pillar (-10 if within 12mo)
+- **Fix:** Add recall check to Ethics Pillar (-10 if within 12mo)
 - **Effort:** 1 hour (simple code change)
 
 ### ✅ PHASE 5.7: Tiered Ingredients Disclosure

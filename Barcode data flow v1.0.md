@@ -360,7 +360,7 @@ This document explains the complete flow of information from when a user scans a
 - Higher-weight sources take priority
 
 **Labels Tags:**
-- **Union** of all labels (Care pillar - certifications)
+- **Union** of all labels (Ethics Pillar - certifications)
 
 **Ingredients Analysis Tags:**
 - **Union** of all analysis tags (Body/Planet pillars - risk tags)
@@ -701,7 +701,7 @@ For each product from different databases:
 1. Calculate **TruScore Completeness** (0-100):
    - Body Pillar fields: Nutri-Score (10pts), NOVA (5pts), Nutrition (5pts), Additives (3pts), Analysis tags (2pts)
    - Planet Pillar fields: Eco-Score (10pts), Palm oil (5pts), Packaging (5pts), Palm oil tag (5pts)
-   - Care Pillar fields: Labels/certifications (15pts), Certifications array (10pts)
+   - Ethics Pillar fields: Labels/certifications (15pts), Certifications array (10pts)
    - Open Pillar fields: Ingredients text (15pts), Origins (5pts), Manufacturing (5pts)
 
 2. Get **Source Weight** (0-1):
@@ -1304,7 +1304,7 @@ truscore = Math.max(0, Math.min(100, Math.round(truscore)))
 - No palm oil data → No penalty (assumes no palm oil)
 - No packaging → No bonus (assumes not recyclable)
 
-**Care Pillar:**
+**Ethics Pillar:**
 - No certifications → Baseline 15 (assumes ethical)
 - No brand data → No cruel parent check (assumes ethical brand)
 - No recall data → No penalty (assumes no recalls)
@@ -1618,7 +1618,7 @@ Each card is conditionally displayed based on available data:
 [13. Calculate TruScore] → 4 Pillars × 25pts
    ├─ Body Pillar
    ├─ Planet Pillar
-   ├─ Care Pillar
+   ├─ Ethics Pillar
    └─ Open Pillar
         ↓
 [14. Generate Flags] → Score Highlights

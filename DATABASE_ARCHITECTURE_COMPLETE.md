@@ -242,7 +242,7 @@ User Scans Barcode
    - Packaging data
    - Sustainability indicators
 
-3. **Care Pillar** (25 points):
+3. **Ethics Pillar** (25 points):
    - Animal welfare certifications
    - Ethical sourcing indicators
 
@@ -335,7 +335,7 @@ User Scans Barcode
 │  STEP 6: TruScore Calculation                               │
 │  • Body Pillar (25 points)                                  │
 │  • Planet Pillar (25 points)                                │
-│  • Care Pillar (25 points)                                  │
+│  • Ethics Pillar (25 points)                                  │
 │  • Open Pillar (25 points)                                  │
 │  • Total: 0-100                                             │
 └──────────────────────┬──────────────────────────────────────┘

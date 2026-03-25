@@ -21,7 +21,7 @@
 - All scoring values match
 - All external resources accessible
 
-#### ✅ **Care Pillar** - Matches Document
+#### ✅ **Ethics Pillar** - Matches Document
 - All scoring values match
 - All external resources accessible
 
@@ -55,7 +55,7 @@
 9. ✅ **EWG Dirty Dozen** - `ewg.org/dirtydozen` (CSV database implemented)
 10. ✅ **USDA Pesticide Data** - `usda.gov/pdp` (CSV database implemented)
 
-#### **Care Pillar Resources:**
+#### **Ethics Pillar Resources:**
 1. ✅ **ILO Labor Standards** - `ilo.org/standards` (Referenced, used in labor violations service)
 2. ✅ **Fairtrade International** - `fairtrade.net` (Detected via labels_tags from OFF)
 3. ✅ **IFOAM Organics** - `ifoam.bio` (Detected via labels_tags from OFF)

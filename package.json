@@ -38,6 +38,7 @@
     "web": "expo start --web",
     "doctor": "expo-doctor",
     "build:apk": "eas build -p android --profile preview",
+    "build:ios": "eas build -p ios --profile preview",
     "build:aab": "eas build -p android --profile production",
     "import-fsanz": "node scripts/importFSANZDatabase.js",
     "download-fsanz": "node scripts/downloadAndConvertFSANZ.js",

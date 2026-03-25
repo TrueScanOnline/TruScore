@@ -598,18 +598,18 @@ npm install
 
 **E2E Tests:** 13/15 passing (87%)
 - ✅ High-Quality Organic Product
-- ✅ Animal Cruelty Violation (CARE Pillar)
-- ✅ Labor Violations (CARE Pillar)
-- ✅ Active Recall (CARE Pillar)
+- ✅ Animal Cruelty Violation (Ethics Pillar)
+- ✅ Labor Violations (Ethics Pillar)
+- ✅ Active Recall (Ethics Pillar)
 - ✅ Hidden Ingredients (OPEN Pillar)
-- ✅ Multiple Certifications Stack Cap (CARE Pillar)
+- ✅ Multiple Certifications Stack Cap (Ethics Pillar)
 - ✅ Poor Nutrition (BODY Pillar)
 - ✅ Palm Oil Detection (PLANET Pillar)
 - ✅ Missing Origin (OPEN Pillar)
 - ✅ And 4 more...
 
 **Unit Tests:**
-- ✅ Pillar tests (BODY, PLANET, CARE, OPEN)
+- ✅ Pillar tests (BODY, PLANET, ETHICS, OPEN)
 - ✅ TruScore engine tests
 - ✅ CSV database service tests
 - ✅ Product data merger tests
@@ -710,7 +710,7 @@ npm install
 - Fallback strategies
 
 **TruScore Calculation:** ✅ Complete
-- 4-pillar system (BODY, PLANET, CARE, OPEN)
+- 4-pillar system (BODY, PLANET, ETHICS, OPEN)
 - Score calculation working
 - Visualization complete
 

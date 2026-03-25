@@ -135,11 +135,11 @@ async function testBarcode(barcode) {
             packaging: product.packaging_data ? product.source : null
           }
         },
-        care: {
-          score: truScoreResult.pillarDetails.care.score,
-          base: truScoreResult.pillarDetails.care.base,
-          adjustments: truScoreResult.pillarDetails.care.adjustments || [],
-          details: truScoreResult.pillarDetails.care.details || {},
+        ethics: {
+          score: truScoreResult.pillarDetails.ethics.score,
+          base: truScoreResult.pillarDetails.ethics.base,
+          adjustments: truScoreResult.pillarDetails.ethics.adjustments || [],
+          details: truScoreResult.pillarDetails.ethics.details || {},
           dataSources: {
             certifications: product.labels_tags ? product.source : null,
             recalls: product.recalls ? product.source : null,

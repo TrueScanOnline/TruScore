@@ -47,7 +47,7 @@ Based on the code in `src/lib/truscoreEngine.ts`, here's what I can analyze:
 - All packaging recyclable (local laws): +5
 - Some packaging recyclable (local laws): +2
 
-#### Care Pillar (25pts) - Current Implementation
+#### Ethics Pillar (25pts) - Current Implementation
 
 **Base Score:**
 - 18 (absence of known cruelty)
@@ -100,7 +100,7 @@ Based on the code in `src/lib/truscoreEngine.ts`, here's what I can analyze:
    - [ ] Are palm oil penalties correct? (non-certified: -10, certified: -5)
    - [ ] Are recyclability bonuses correct? (all: +5, some: +2)
 
-3. **Care Pillar:**
+3. **Ethics Pillar:**
    - [ ] Is base score 18 correct?
    - [ ] Are certification bonuses correct?
      - Fair-trade: +8?
@@ -138,7 +138,7 @@ Based on the code in `src/lib/truscoreEngine.ts`, here's what I can analyze:
 2. **Compare Section by Section:**
    - Body Pillar specifications vs. implementation
    - Planet Pillar specifications vs. implementation
-   - Care Pillar specifications vs. implementation
+   - Ethics Pillar specifications vs. implementation
    - Open Pillar specifications vs. implementation
 
 3. **Create Gap Analysis:**

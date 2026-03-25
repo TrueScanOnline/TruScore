@@ -220,7 +220,7 @@ Comprehensive nutrition data merged with base product
 10. TruScore Calculation
     ├─ Body Pillar (nutrition, additives, NOVA)
     ├─ Planet Pillar (Eco-Score, palm oil, packaging)
-    ├─ Care Pillar (certifications, recalls, cruelty)
+    ├─ Ethics Pillar (certifications, recalls, cruelty)
     └─ Open Pillar (ingredients, transparency)
 
 11. Cache Result
@@ -343,7 +343,7 @@ Time 8.0s: Name-based queries complete → FINAL MERGE & UPDATE
 
 ---
 
-### 4.3 Care Pillar (Ethics, Certifications, Recalls)
+### 4.3 Ethics Pillar (Ethics, Certifications, Recalls)
 
 **Primary Data Sources:**
 - **Certifications:** Open Food Facts (OFF) - labels_tags

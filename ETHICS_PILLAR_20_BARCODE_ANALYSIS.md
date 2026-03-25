@@ -143,5 +143,5 @@ The test script (`scripts/testEthicsPillar20Barcodes.ts`) is ready to run once t
 ## 📚 Related Documents
 
 - `ETHICS_PILLAR_DATABASE_ANALYSIS.md` - Complete database inventory
-- `CARE Pillar.xlsx` - ETHICS Pillar specification
+- `ETHICS Pillar.xlsx` - ETHICS Pillar specification
 - `Cross-Pillar_Score_and Commentary_Table_20251222.docx` - All pillars specification

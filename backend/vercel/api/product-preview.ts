@@ -52,11 +52,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // Simple TruScore calculation for preview
           const body = calculateBodyScore(product);
           const planet = calculatePlanetScore(product);
-          const care = calculateCareScore(product);
+          const ethics = calculateEthicsScore(product);
           const open = calculateOpenScore(product);
           
-          trustScore = Math.round(body + planet + care + open);
-          trustScoreBreakdown = { body, planet, care, open };
+          trustScore = Math.round(body + planet + ethics + open);
+          trustScoreBreakdown = { body, planet, ethics, open };
         }
 
         const preview: ProductPreview = {

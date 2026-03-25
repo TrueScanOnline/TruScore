@@ -65,7 +65,7 @@
 
 ---
 
-## 🔍 ETHICS (CARE) PILLAR Comparison
+## 🔍 ETHICS PILLAR Comparison
 
 | Element | Document Spec | Code Implementation | Status |
 |---------|---------------|---------------------|--------|

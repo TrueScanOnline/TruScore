@@ -28,15 +28,15 @@ This document summarizes the comprehensive end-to-end testing of the TruScore 4-
    - ✅ Verifies high scores across all 4 pillars
    - ✅ Validates score ranges (0-25 per pillar, 0-100 total)
 
-2. **Animal Cruelty Violation (CARE Pillar)**
+2. **Animal Cruelty Violation (Ethics Pillar)**
    - ✅ Correctly applies -15 penalty for major animal cruelty
    - ✅ Verifies brand database integration
 
-3. **Labor Violations (CARE Pillar)**
+3. **Labor Violations (Ethics Pillar)**
    - ✅ Correctly applies -15 penalty for major labor violations
    - ✅ Verifies labor violations service integration
 
-4. **Active Recall (CARE Pillar)**
+4. **Active Recall (Ethics Pillar)**
    - ✅ Correctly applies -10 penalty for active recalls within 12 months
    - ✅ Verifies recall date filtering
 
@@ -44,7 +44,7 @@ This document summarizes the comprehensive end-to-end testing of the TruScore 4-
    - ✅ Correctly detects hidden terms (parfum, fragrance, proprietary blend)
    - ✅ Applies appropriate penalties
 
-6. **Multiple Certifications Stack Cap (CARE Pillar)**
+6. **Multiple Certifications Stack Cap (Ethics Pillar)**
    - ✅ Correctly caps certification bonus at +15
    - ✅ Verifies multiple certifications are processed
 
@@ -64,7 +64,7 @@ This document summarizes the comprehensive end-to-end testing of the TruScore 4-
     - ✅ Verifies total score equals sum of pillars
     - ✅ Validates score bounds (0-100)
 
-11. **Brand Overlay Penalty (CARE Pillar)**
+11. **Brand Overlay Penalty (Ethics Pillar)**
     - ✅ Applies -3 brand overlay penalty
     - ✅ Verifies high-impact brand detection
 
@@ -93,7 +93,7 @@ This document summarizes the comprehensive end-to-end testing of the TruScore 4-
 **Pillar Coverage:**
 - ✅ Body Pillar: 3 tests
 - ✅ Planet Pillar: 3 tests
-- ✅ Care Pillar: 5 tests
+- ✅ Ethics Pillar: 5 tests
 - ✅ Open Pillar: 4 tests
 
 **Feature Coverage:**
@@ -123,7 +123,7 @@ This document summarizes the comprehensive end-to-end testing of the TruScore 4-
   - ✅ Displays all 4 pillars correctly
   - ✅ Shows confidence badge
   - ✅ Generates product flags
-- **Modal:** `TrustScoreInfoModal` - ✅ Updated with latest CARE Pillar information
+- **Modal:** `TrustScoreInfoModal` - ✅ Updated with latest Ethics Pillar information
 
 #### 2. EcoScore Card ✅
 - **Location:** `src/features/product/cards/EcoScoreCard/EcoScoreCard.tsx`
@@ -174,7 +174,7 @@ This document summarizes the comprehensive end-to-end testing of the TruScore 4-
   - ✅ Uses `product.recalls` array
   - ✅ Filters active recalls within 12 months
   - ✅ Uses FDA Recall API and other recall services
-- **Status:** ✅ Correct data sources, updated for CARE Pillar logic
+- **Status:** ✅ Correct data sources, updated for Ethics Pillar logic
 
 #### 9. Country Card ✅
 - **Location:** `src/features/product/cards/CountryCard/CountryCard.tsx`
@@ -189,7 +189,7 @@ This document summarizes the comprehensive end-to-end testing of the TruScore 4-
   - ✅ Uses `product.labels_tags`
   - ✅ Uses `product.certifications`
   - ✅ Displays all certifications including RSPO and Leaping Bunny
-- **Status:** ✅ Updated for new CARE Pillar certifications
+- **Status:** ✅ Updated for new Ethics Pillar certifications
 
 #### 11. Pricing Card ✅
 - **Location:** `src/features/product/cards/PricingCard/PricingCard.tsx`
@@ -205,12 +205,12 @@ This document summarizes the comprehensive end-to-end testing of the TruScore 4-
 ### TrustScoreInfoModal ✅ UPDATED
 
 **Changes Made:**
-1. ✅ Updated CARE Pillar description with latest certifications:
+1. ✅ Updated Ethics Pillar description with latest certifications:
    - Added RSPO (+6)
    - Added Leaping Bunny (+5)
    - Updated certification list
 
-2. ✅ Updated CARE Pillar penalties:
+2. ✅ Updated Ethics Pillar penalties:
    - Major Animal Cruelty (-15)
    - Minor Animal Cruelty (-5)
    - Major Labor Violations (-15)
@@ -226,7 +226,7 @@ This document summarizes the comprehensive end-to-end testing of the TruScore 4-
 4. ✅ Updated calculation steps:
    - Step 3 now includes animal cruelty, labor violations, and recalls
 
-**Status:** ✅ All information is accurate and up-to-date with latest CARE Pillar implementation
+**Status:** ✅ All information is accurate and up-to-date with latest Ethics Pillar implementation
 
 ### Other Modals ✅
 
@@ -304,7 +304,7 @@ This document summarizes the comprehensive end-to-end testing of the TruScore 4-
 
 ### Immediate Actions ✅
 
-1. ✅ **TrustScoreInfoModal Updated** - All CARE Pillar information is accurate
+1. ✅ **TrustScoreInfoModal Updated** - All Ethics Pillar information is accurate
 2. ✅ **End-to-End Tests Created** - Comprehensive test suite covering all scenarios
 3. ✅ **Cards Reviewed** - All cards verified to use correct data sources
 4. ✅ **Platform Compliance Verified** - Android and iOS compatibility confirmed

@@ -59,7 +59,7 @@ TrueScan-FoodScanner/
 │   │       └── pillars/          # Individual pillar calculators
 │   │           ├── bodyPillar.ts
 │   │           ├── planetPillar.ts
-│   │           ├── carePillar.ts
+│   │           ├── ethicsPillar.ts
 │   │           └── openPillar.ts # OPEN Pillar (current)
 │   ├── utils/
 │   │   └── trustScore.ts         # Wrapper/legacy compatibility
@@ -85,7 +85,7 @@ TrueScan-FoodScanner/
 - `calculateTruScore(product, preferences?)` - Main entry point
 - `calculateBodyPillar(product)` - BODY Pillar calculator
 - `calculatePlanetPillar(product)` - Planet Pillar calculator
-- `calculateCarePillar(product)` - Care Pillar calculator
+- `calculateEthicsPillar(product)` - Ethics Pillar calculator
 - `calculateOpenPillar(product)` - Open Pillar calculator
 
 ### 1.3 Product Data Model

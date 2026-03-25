@@ -394,7 +394,7 @@ function mergeTruScoreCriticalFields(
     merged.packagings = Array.from(unique.values());
   }
   
-  // CARE PILLAR
+  // Ethics Pillar
   // Certifications: UNION ALL (critical for bonuses)
   const allLabels = products
     .map(p => p.labels_tags)

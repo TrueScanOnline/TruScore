@@ -64,8 +64,8 @@ hasOrigin: hasValidOrigin,
 **Status:** ✅ **FIXED** - All legacy functions removed
 
 **What was fixed:**
-- Removed all unused legacy functions: `calculatePlanetScore()`, `calculateCareScore()`, `calculateBodyScore()`, `calculateOpenScore()`
-- Removed all legacy wrapper functions: `calculateTransparencyScore()`, `calculateSustainabilityScore()`, `calculateEthicsScore()`, `calculateBodySafetyScore()`
+- Removed all unused legacy functions: `calculatePlanetScore()`, `calculateBodyScore()`, `calculateOpenScore()`, plus obsolete standalone helpers that predated the modular pillar engine
+- Removed all legacy wrapper functions: `calculateTransparencyScore()`, `calculateSustainabilityScore()`, `calculateBodySafetyScore()`, and redundant Ethics-related wrappers superseded by `truscoreEngine`
 - Kept only `calculateProcessingScore()` which is still used for `breakdown.processing` field (educational display)
 - Total removed: ~241 lines of unused code
 
@@ -92,7 +92,7 @@ hasOrigin: hasValidOrigin,
 - All inconsistencies between legacy functions and active engine are eliminated
 
 **Previously identified inconsistencies (now resolved):**
-1. ✅ Care Pillar Base Score - Legacy function removed (was: 0 vs 18)
+1. ✅ Ethics Pillar Base Score - Legacy function removed (was: 0 vs 18)
 2. ✅ Palm Oil Penalty Values - Legacy function removed (was: -8 vs -10/-5)
 3. ✅ Additive Penalty Calculation - Legacy function removed (was: simple list vs weighted)
 
@@ -244,7 +244,7 @@ if (placeholderValues.some(placeholder => allOriginValues.includes(placeholder))
 **Impact on TruScore:**
 - Nutrition data: Merged values used for Nutri-Score calculation → Should be accurate if sources are reliable
 - Ingredients: Longest list used → More complete = better for TruScore calculation
-- Certifications: Union of all → More certifications = higher Care pillar (correct)
+- Certifications: Union of all → More certifications = higher Ethics Pillar (correct)
 - Labels: Uses base product (highest weight) → Should be accurate
 
 **Recommendation:**
@@ -320,7 +320,7 @@ if (placeholderValues.some(placeholder => allOriginValues.includes(placeholder))
 
 ---
 
-### ✅ Care Pillar Logic
+### ✅ Ethics Pillar Logic
 
 **Location:** `src/lib/truscoreEngine.ts` (lines 289-310)
 
@@ -499,7 +499,7 @@ if (placeholderValues.some(placeholder => allOriginValues.includes(placeholder))
 ### Database Merging Tests
 - [ ] Product from multiple sources → Verify TruScore consistency
 - [ ] Product with merged nutrition data → Verify TruScore accuracy
-- [ ] Product with merged certifications → Verify Care pillar accuracy
+- [ ] Product with merged certifications → Verify Ethics Pillar accuracy
 
 ### Global Consistency Tests
 - [ ] Same product scanned in different countries → Verify same TruScore
@@ -525,8 +525,8 @@ if (placeholderValues.some(placeholder => allOriginValues.includes(placeholder))
 
 **Decision Completed:**
 1. ✅ Legacy functions removed - All unused legacy functions removed from trustScore.ts
-   - Removed: `calculatePlanetScore()`, `calculateCareScore()`, `calculateBodyScore()`, `calculateOpenScore()`
-   - Removed: `calculateTransparencyScore()`, `calculateSustainabilityScore()`, `calculateEthicsScore()`, `calculateBodySafetyScore()`
+   - Removed: `calculatePlanetScore()`, `calculateBodyScore()`, `calculateOpenScore()`, and obsolete pre-engine pillar helpers
+   - Removed: `calculateTransparencyScore()`, `calculateSustainabilityScore()`, `calculateBodySafetyScore()`, and redundant wrappers superseded by `truscoreEngine`
    - Kept: `calculateProcessingScore()` (still used for breakdown.processing field)
 
 **Status:**

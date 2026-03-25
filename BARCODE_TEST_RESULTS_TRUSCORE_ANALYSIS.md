@@ -100,7 +100,7 @@ After implementing the critical fixes, **2 out of 4 barcodes** now successfully 
 
 ---
 
-#### **Care Pillar: 15/25** ⚠️ (Baseline - No Certifications)
+#### **Ethics Pillar: 15/25** ⚠️ (Baseline - No Certifications)
 
 **Base Score:** 15/25
 
@@ -115,7 +115,7 @@ After implementing the critical fixes, **2 out of 4 barcodes** now successfully 
 3. **Recalls:** None detected
    - **Penalty:** 0
 
-**Final Care Pillar:** **15/25** (baseline - no certifications)
+**Final Ethics Pillar:** **15/25** (baseline - no certifications)
 
 **Key Factors:**
 - ⚠️ No ethical certifications
@@ -279,7 +279,7 @@ After implementing the critical fixes, **2 out of 4 barcodes** now successfully 
 
 ---
 
-#### **Care Pillar: 15/25** ⚠️ (Baseline - No Certifications)
+#### **Ethics Pillar: 15/25** ⚠️ (Baseline - No Certifications)
 
 **Base Score:** 15/25
 
@@ -294,7 +294,7 @@ After implementing the critical fixes, **2 out of 4 barcodes** now successfully 
 3. **Recalls:** None detected
    - **Penalty:** 0
 
-**Final Care Pillar:** **15/25** (baseline) or **0/25** (if cruel parent)
+**Final Ethics Pillar:** **15/25** (baseline) or **0/25** (if cruel parent)
 
 **Key Factors:**
 - ⚠️ No ethical certifications

@@ -135,7 +135,7 @@ Thread: Just scanned [Product] and here's what TruScore revealed 🧵
 1/5 TruScore: [Score]/100
 2/5 Body Pillar: [Score]/25 (Nutrition, additives, processing)
 3/5 Planet Pillar: [Score]/25 (Eco-Score, palm oil, recyclability)
-4/5 Care Pillar: [Score]/25 (Certifications, recalls, ethics)
+4/5 Ethics Pillar: [Score]/25 (Certifications, recalls, ethics)
 5/5 Open Pillar: [Score]/25 (Transparency, ingredients, origin)
 
 See full breakdown: [Link]

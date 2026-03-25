@@ -136,7 +136,7 @@ The script provides **detailed step-by-step breakdowns** for each barcode:
 
 **Capping:** Final score is capped at 0-25
 
-### Care Pillar (25 points)
+### Ethics Pillar (25 points)
 
 **Base Score:**
 - **15 points** (assumes ethical until violations)

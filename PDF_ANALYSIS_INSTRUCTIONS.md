@@ -42,7 +42,7 @@ Once I have the PDF content, I will:
    - Palm oil penalties
    - Recyclability bonuses
 
-3. **Compare Care Pillar:**
+3. **Compare Ethics Pillar:**
    - Base score
    - Certification bonuses
    - Cruel parent penalty

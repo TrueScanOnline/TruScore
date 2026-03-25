@@ -51,7 +51,7 @@
 - **Before:** `baselines (12 points instead of 25)`
 - **After:** `baselines (15 points instead of 25)`
 
-### 3. Lines 343-349 (Care Pillar Factors) ✅
+### 3. Lines 343-349 (Ethics Pillar Factors) ✅
 - **Status:** Already correct - shows proper certification values
   - Fairtrade (+8), EU Organic (+7), MSC/ASC (+6)
   - Rainforest Alliance (+6), RSPCA Assured (+5)

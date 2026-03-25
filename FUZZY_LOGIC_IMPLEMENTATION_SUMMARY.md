@@ -134,7 +134,7 @@ function matchBrand(
 
 **Files to Update:**
 
-1. **CARE Pillar** (`src/lib/truscoreEngine/pillars/carePillar.ts`)
+1. **Ethics Pillar** (`src/lib/truscoreEngine/pillars/ethicsPillar.ts`)
    - Replace `normalizeBrandNameForLookup` with fuzzy matching
    - Use confidence scores for penalty application
    - Check all brands (not just primary)
@@ -175,7 +175,7 @@ function matchBrand(
 - Integrates fuzzy matching with brand database
 - Provides consistent API
 
-🔲 **Apply to CARE Pillar** - HIGH IMPACT
+🔲 **Apply to Ethics Pillar** - HIGH IMPACT
 - Most critical for user experience
 - Highest visibility
 - Immediate accuracy improvement
@@ -239,7 +239,7 @@ function matchBrand(
 
 ## Specific Enhancements
 
-### CARE Pillar
+### Ethics Pillar
 
 **Current:**
 - Uses basic normalization + partial matching
@@ -328,7 +328,7 @@ function matchBrand(
 ### Immediate (This Week)
 1. ✅ Create fuzzy matching service - **DONE**
 2. 🔲 Create brand matching service - **NEXT**
-3. 🔲 Apply to CARE Pillar - **HIGH PRIORITY**
+3. 🔲 Apply to Ethics Pillar - **HIGH PRIORITY**
 4. 🔲 Add unit tests - **REQUIRED**
 
 ### Short-term (Next 2 Weeks)
@@ -350,7 +350,7 @@ function matchBrand(
 The fuzzy matching system is **ready for implementation**. The core service has been created with all necessary algorithms. The next step is to:
 
 1. **Create Brand Matching Service** - Centralized service using fuzzy matching
-2. **Apply to CARE Pillar** - Highest impact area
+2. **Apply to Ethics Pillar** - Highest impact area
 3. **Test Thoroughly** - Ensure accuracy and performance
 4. **Roll Out Gradually** - Apply to other pillars incrementally
 
@@ -365,4 +365,4 @@ The fuzzy matching system is **ready for implementation**. The core service has 
 
 **Status:** ✅ Core Service Complete - Ready for Integration  
 **Priority:** 🔴 High (affects all pillars and user experience)  
-**Next Action:** Create brand matching service and apply to CARE Pillar
+**Next Action:** Create brand matching service and apply to Ethics Pillar

@@ -196,7 +196,7 @@ src/features/product/cards/
 **Status:** ✅ **ACTIVE**
 - ✅ Body Pillar fields prioritized (nutriscore_grade, nova_group, additives)
 - ✅ Planet Pillar fields prioritized (ecoscore_grade, packaging)
-- ✅ Care Pillar fields prioritized (certifications, palm_oil)
+- ✅ Ethics Pillar fields prioritized (certifications, palm_oil)
 - ✅ Open Pillar fields prioritized (origin, transparency)
 
 ---

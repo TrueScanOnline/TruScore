@@ -526,7 +526,7 @@ planet = Math.max(0, Math.min(25, Math.round(25))); // = 25
 
 ---
 
-#### 12.3 Care Pillar Calculation
+#### 12.3 Ethics Pillar Calculation
 
 **Base Score:** **18/25**
 
@@ -541,7 +541,7 @@ planet = Math.max(0, Math.min(25, Math.round(25))); // = 25
 
 **Code Execution:**
 ```typescript
-// Line 300-348: Care pillar
+// Line 300-348: Ethics Pillar
 care = 18; // Base
 
 // Line 304-317: Organic certification
@@ -701,7 +701,7 @@ Source 2: fsanz_au (Weight: 40.0%)
   TruScore: 98/100
   Body Pillar: 23/25
   Planet Pillar: 25/25
-  Care Pillar: 25/25
+  Ethics Pillar: 25/25
   Open Pillar: 25/25
   
   Data Sources Used:

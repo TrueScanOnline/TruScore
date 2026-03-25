@@ -21,7 +21,7 @@ src/lib/truscoreEngine/
 └── pillars/
     ├── bodyPillar.ts          # Body Pillar calculation
     ├── planetPillar.ts        # Planet Pillar calculation
-    ├── carePillar.ts          # Care Pillar calculation
+    ├── ethicsPillar.ts          # Ethics Pillar calculation
     └── openPillar.ts          # Open Pillar calculation
 ```
 
@@ -98,9 +98,9 @@ interface PillarResult {
 
 ---
 
-## Care Pillar
+## Ethics Pillar
 
-**File:** `src/lib/truscoreEngine/pillars/carePillar.ts`
+**File:** `src/lib/truscoreEngine/pillars/ethicsPillar.ts`
 
 **Base:** 15/25
 
@@ -145,7 +145,7 @@ npm run analyze-pillar -- body 9420020300194
 # Analyze Planet Pillar
 npm run analyze-pillar -- planet 9310055105850
 
-# Analyze Care Pillar
+# Analyze Ethics Pillar
 npm run analyze-pillar -- care 9310055105850
 
 # Analyze Open Pillar
@@ -161,7 +161,7 @@ npm run test:pillar:body
 # Test Planet Pillar
 npm run test:pillar:planet
 
-# Test Care Pillar
+# Test Ethics Pillar
 npm run test:pillar:care
 
 # Test Open Pillar

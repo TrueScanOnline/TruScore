@@ -186,7 +186,7 @@
 5. **Better TruScore Accuracy**
    - More data = better scoring
    - Complete ingredients = better additive detection
-   - Complete certifications = better Care pillar scoring
+   - Complete certifications = better Ethics Pillar scoring
    - Complete nutrition = better Body pillar scoring
 
 ---

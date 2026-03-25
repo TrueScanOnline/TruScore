@@ -1,6 +1,6 @@
-# CARE / ETHICS Pillar – Full Specification vs Code Analysis
+# Ethics Pillar – Full Specification vs Code Analysis
 
-**Purpose:** Entire review and analysis of the CARE Pillar (Ethics Pillar) against the current app code and against the specification documents, with extensive explanation for each of rows 35–40. CARE and ETHICS refer to the same pillar (name was changed from CARE to ETHICS; code and docs may use either term).
+**Purpose:** Full review of the Ethics Pillar against the current app code and specification documents, with explanation for rows 35–40. The app and engine use the name **Ethics** exclusively.
 
 ---
 
@@ -9,7 +9,7 @@
 | Document | Location | How used |
 |----------|----------|----------|
 | **Care_Scoring_Specification_v32** | `Files to question\Care_Scoring_Specification_32_Cursor_Submit 1(Care_Scoring_Specification_v32).csv` | Primary spec. Rows 35–40 define: Base Score, Certifications, Animal Cruelty, Labor Violations, Recalls, Overall Pillar Cap. Content extracted from the RTF-style CSV. |
-| **ETHICS Pillar.xlsx** | `Spec documents\ETHICS Pillar.xlsx` (and/or `TruScore logic\ETHICS Pillar.xlsx` per project script) | The .xlsx file is binary and was not read directly. Its content is taken from existing project analyses that were derived from it: **ETHICS_PILLAR_SPEC_ANALYSIS.md**, **CARE_PILLAR_EXCEL_SPEC_ANALYSIS.md**, and **CARE_PILLAR_SPEC_EXTRACTED.json**. Those documents state they were sourced from `TruScore logic/ETHICS Pillar.xlsx`. The Excel spec aligns with the v32 CSV on scoring values and decision trees; where both exist, the CSV v32 is the row-by-row source below. |
+| **ETHICS Pillar.xlsx** | `Spec documents\ETHICS Pillar.xlsx` (and/or `TruScore logic\ETHICS Pillar.xlsx`) | The .xlsx file is binary and was not read directly. Derived notes live in **ETHICS_PILLAR_SPEC_ANALYSIS.md** and **ETHICS_PILLAR_SPEC_EXTRACTED.json**. The Excel spec aligns with the v32 CSV on scoring values and decision trees; where both exist, the CSV v32 is the row-by-row source below. |
 
 **Implementation:** Ethics pillar logic lives in `src/lib/truscoreEngine/pillars/ethicsPillar.ts`. Supporting code: `bbfawService.ts`, `laborViolationsService.ts`, `brandMatchingService.ts`, `brandDatabase.ts`, `brandExtraction.ts`, `productDataMerger.ts` (labels), `productService.ts` (recalls), `bannerAlertsService.ts`, `truscoreEngine/index.ts`, `trustScore.ts`.
 
@@ -307,7 +307,7 @@ Spec (CSV and Excel) states that brand/parent are assessed separately with the s
 
 | File | Role |
 |------|------|
-| `src/lib/truscoreEngine/pillars/ethicsPillar.ts` | CARE/ETHICS pillar scoring (base, certs, animal, labor, recalls, overlay, cap). |
+| `src/lib/truscoreEngine/pillars/ethicsPillar.ts` | Ethics pillar scoring (base, certs, animal, labor, recalls, overlay, cap). |
 | `src/lib/truscoreEngine/index.ts` | Calls calculateEthicsPillar; builds TruScore breakdown. |
 | `src/utils/trustScore.ts` | calculateTrustScore → calculateTruScore. |
 | `src/services/bbfawService.ts` | BBFAW tier lookup and tier-based score. |
@@ -321,4 +321,4 @@ Spec (CSV and Excel) states that brand/parent are assessed separately with the s
 
 ---
 
-*Document generated from Care_Scoring_Specification_v32 (CSV rows 35–40), ETHICS Pillar spec (via existing project analyses), and full codebase review. CARE and ETHICS refer to the same pillar.*
+*Document generated from Care_Scoring_Specification_v32 (CSV rows 35–40), ETHICS Pillar spec (via existing project analyses), and full codebase review.*

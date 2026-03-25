@@ -40,7 +40,7 @@ This document provides a comprehensive analysis comparing:
 - **Pillar Distribution:** 4 equal pillars, 25 points each
   - **Body Pillar:** Nutrition, additives, processing (NOVA), allergens
   - **Planet Pillar:** Environmental impact, palm oil, recyclability
-  - **Care Pillar:** Ethical certifications, recalls, brand ethics
+  - **Ethics Pillar:** Ethical certifications, recalls, brand ethics
   - **Open Pillar:** Transparency, ingredients disclosure, origin, brand ownership
 
 **Calculation Flow:**
@@ -48,7 +48,7 @@ This document provides a comprehensive analysis comparing:
 Product Data → calculateTruScore() → {
   calculateBodyPillar() → 0-25
   calculatePlanetPillar() → 0-25
-  calculateCarePillar() → 0-25
+  calculateEthicsPillar() → 0-25
   calculateOpenPillar() → 0-25
 } → Sum = TruScore (0-100)
 ```

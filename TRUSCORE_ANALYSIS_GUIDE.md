@@ -129,7 +129,7 @@ Each pillar shows:
 **Negative Adjustments:**
 - Palm oil: -8 (non-certified) or -5 (certified sustainable)
 
-### Care Pillar (25 points)
+### Ethics Pillar (25 points)
 
 **Base:**
 - 15 points (assumes ethical until violations)
