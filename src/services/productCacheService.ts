@@ -63,8 +63,7 @@ export function enhanceProductWithComputedFields(product: Product): Product {
  */
 export async function mergeUserContributedData(product: Product, barcode: string): Promise<Product> {
   // ===== USER CONTRIBUTION FLOW: STEP 5 - MERGING USER-CONTRIBUTED DATA =====
-  // CRITICAL OPTIMIZATION: Use timeout to prevent blocking (5+ second delays)
-  // Display product immediately, merge user data when available
+  // User-contributed merge uses the same timeout as the backend fetch (see userContributedProductsService)
   powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Starting merge of user-contributed data`, {
     barcode,
     step: 'MERGE_START',
@@ -73,17 +72,7 @@ export async function mergeUserContributedData(product: Product, barcode: string
   });
   
   try {
-    // CRITICAL: Add 3-second timeout to prevent blocking on slow backend
-    // If backend is slow, return product immediately and merge in background
-    const userContributedProduct = await Promise.race([
-      getUserContributedProduct(barcode),
-      new Promise<Product | null>((resolve) => 
-        setTimeout(() => {
-          logger.debug(`User-contributed check timeout (3s) - continuing without user data`);
-          resolve(null);
-        }, 3000) // 3 second timeout
-      ),
-    ]);
+    const userContributedProduct = await getUserContributedProduct(barcode);
     
     if (!userContributedProduct) {
       powershellLogger.log('INFO', 'USER_CONTRIBUTION', `No user-contributed data to merge`, {

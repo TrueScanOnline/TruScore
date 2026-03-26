@@ -74,8 +74,8 @@ export async function getUserContributedProduct(barcode: string): Promise<Produc
     try {
       const retrievalStartTime = Date.now();
       
-      // Add timeout to prevent 30+ second waits (Vercel function timeout is 10s, but we'll use 5s for safety)
-      const TIMEOUT_MS = 5000; // 5 seconds max
+      // Allow serverless cold start + DB connect (Vercel route maxDuration is 30s; pool timeout 10s)
+      const TIMEOUT_MS = 12000;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
       

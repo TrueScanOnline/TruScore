@@ -150,6 +150,10 @@
       "source": "/api/manual-products",
       "headers": [
         {
+          "key": "Cache-Control",
+          "value": "public, max-age=60"
+        },
+        {
           "key": "Access-Control-Allow-Origin",
           "value": "*"
         },

@@ -44,7 +44,8 @@ async function initDatabase(): Promise<any> {
           : undefined,
         max: 20,
         idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
+        // Serverless cold starts (Neon/Supabase) often exceed 2s — avoid failing GETs prematurely
+        connectionTimeoutMillis: 10000,
       });
       
       // Test connection
@@ -97,8 +98,8 @@ async function createTables(): Promise<void> {
     const postgresUrl = getPostgresUrl();
     if (postgresUrl && db) {
       // Use direct pg queries (works with Neon, Supabase, etc.)
-      // Manufacturing Country Submissions
-      await db.query(`
+      await Promise.all([
+        db.query(`
         CREATE TABLE IF NOT EXISTS manufacturing_country_submissions (
           id SERIAL PRIMARY KEY,
           barcode VARCHAR(20) NOT NULL,
@@ -113,20 +114,8 @@ async function createTables(): Promise<void> {
           created_at TIMESTAMP DEFAULT NOW(),
           UNIQUE(barcode, user_id)
         )
-      `);
-      
-      await db.query(`
-        CREATE INDEX IF NOT EXISTS idx_manufacturing_country_barcode 
-        ON manufacturing_country_submissions(barcode)
-      `);
-      
-      await db.query(`
-        CREATE INDEX IF NOT EXISTS idx_manufacturing_country_user 
-        ON manufacturing_country_submissions(user_id)
-      `);
-      
-      // Manual Products
-      await db.query(`
+      `),
+        db.query(`
         CREATE TABLE IF NOT EXISTS manual_products (
           id SERIAL PRIMARY KEY,
           barcode VARCHAR(20) UNIQUE NOT NULL,
@@ -135,15 +124,8 @@ async function createTables(): Promise<void> {
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         )
-      `);
-      
-      await db.query(`
-        CREATE INDEX IF NOT EXISTS idx_manual_products_barcode 
-        ON manual_products(barcode)
-      `);
-      
-      // User Prices
-      await db.query(`
+      `),
+        db.query(`
         CREATE TABLE IF NOT EXISTS user_prices (
           id SERIAL PRIMARY KEY,
           barcode VARCHAR(20) NOT NULL,
@@ -156,20 +138,8 @@ async function createTables(): Promise<void> {
           verified BOOLEAN DEFAULT FALSE,
           created_at TIMESTAMP DEFAULT NOW()
         )
-      `);
-      
-      await db.query(`
-        CREATE INDEX IF NOT EXISTS idx_user_prices_barcode 
-        ON user_prices(barcode)
-      `);
-      
-      await db.query(`
-        CREATE INDEX IF NOT EXISTS idx_user_prices_retailer 
-        ON user_prices(retailer)
-      `);
-      
-      // Photos
-      await db.query(`
+      `),
+        db.query(`
         CREATE TABLE IF NOT EXISTS photos (
           id SERIAL PRIMARY KEY,
           barcode VARCHAR(20) NOT NULL,
@@ -179,18 +149,40 @@ async function createTables(): Promise<void> {
           user_id VARCHAR(255),
           created_at TIMESTAMP DEFAULT NOW()
         )
-      `);
-      
-      await db.query(`
+      `),
+      ]);
+
+      await Promise.all([
+        db.query(`
+        CREATE INDEX IF NOT EXISTS idx_manufacturing_country_barcode 
+        ON manufacturing_country_submissions(barcode)
+      `),
+        db.query(`
+        CREATE INDEX IF NOT EXISTS idx_manufacturing_country_user 
+        ON manufacturing_country_submissions(user_id)
+      `),
+        db.query(`
+        CREATE INDEX IF NOT EXISTS idx_manual_products_barcode 
+        ON manual_products(barcode)
+      `),
+        db.query(`
+        CREATE INDEX IF NOT EXISTS idx_user_prices_barcode 
+        ON user_prices(barcode)
+      `),
+        db.query(`
+        CREATE INDEX IF NOT EXISTS idx_user_prices_retailer 
+        ON user_prices(retailer)
+      `),
+        db.query(`
         CREATE INDEX IF NOT EXISTS idx_photos_barcode 
         ON photos(barcode)
-      `);
-      
-      await db.query(`
+      `),
+        db.query(`
         CREATE INDEX IF NOT EXISTS idx_photos_type 
         ON photos(image_type)
-      `);
-      
+      `),
+      ]);
+
       console.log('[Database] ✅ Tables created/verified');
     } else if (process.env.MONGODB_URI) {
       // MongoDB collections are created automatically on first insert

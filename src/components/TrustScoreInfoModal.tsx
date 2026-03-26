@@ -489,7 +489,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             • Certifications (OFF labels + optional MSC API): Fairtrade +6, Rainforest Alliance/UTZ +5, ASC +4, MSC +4, RSPO +3, Organic +2 — highest eligible scheme only in MVP (no stacking){'\n'}
             • Organic requires a recognised certifier signal; MSC positive credit follows the MSC Data Validation API when enabled{'\n'}
             • Final Ethics pillar is floored at 0 and capped at 25{'\n'}
-            • Source: ETHICS SPEC sheet + BBFAW report + KnowTheChain + Open Food Facts (+ MSC API when licensed)
+            • Source: ETHICS Pillar spec sheet + BBFAW report + KnowTheChain + Open Food Facts (+ MSC API when licensed)
           </Text>
         </View>
 

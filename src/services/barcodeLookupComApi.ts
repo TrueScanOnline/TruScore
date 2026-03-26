@@ -12,12 +12,17 @@ import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const BARCODE_LOOKUP_API = 'https://api.barcodelookup.com/v3/products';
 
+let barcodeLookupComAuthRejected = false;
+
 // API key should be stored in environment variables
 // For now, using a placeholder - should be configured in app settings
 const getApiKey = (): string | null => {
-  // TODO: Get from environment variables or app settings
-  // For free tier, users can get their own API key
-  return process.env.BARCODE_LOOKUP_API_KEY || null;
+  const k =
+    process.env.BARCODE_LOOKUP_API_KEY ||
+    process.env.EXPO_PUBLIC_BARCODE_LOOKUP_API_KEY ||
+    '';
+  const t = typeof k === 'string' ? k.trim() : '';
+  return t.length >= 8 ? t : null;
 };
 
 export interface BarcodeLookupResponse {
@@ -55,9 +60,12 @@ export interface BarcodeLookupResponse {
  */
 export async function fetchProductFromBarcodeLookupCom(barcode: string): Promise<Product | null> {
   try {
+    if (barcodeLookupComAuthRejected) {
+      return null;
+    }
+
     const apiKey = getApiKey();
     if (!apiKey) {
-      // API key not configured - skip silently
       return null;
     }
 
@@ -72,8 +80,8 @@ export async function fetchProductFromBarcodeLookupCom(barcode: string): Promise
     }, 'barcode_lookup_com');
 
     if (!response.ok) {
-      if (response.status === 401) {
-        logger.debug('Barcode Lookup API key invalid or expired');
+      if (response.status === 401 || response.status === 403) {
+        barcodeLookupComAuthRejected = true;
         return null;
       }
       if (response.status === 429) {
@@ -81,7 +89,7 @@ export async function fetchProductFromBarcodeLookupCom(barcode: string): Promise
         return null;
       }
       if (response.status === 404) {
-        return null; // Product not found
+        return null;
       }
       logger.debug(`Barcode Lookup API error: ${response.status}`);
       return null;

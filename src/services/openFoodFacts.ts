@@ -99,18 +99,25 @@ export async function fetchProductFromOFF(barcode: string): Promise<Product | nu
         instancesToTry.push(instance);
       }
     }
-    
-    // Try instances in parallel for faster lookup
-    // User's country instance will likely respond first if product exists there
-    const results = await Promise.allSettled(
-      instancesToTry.map(instance => fetchProductFromOFFInstance(variant, instance))
+
+    // Fast path: world first (avoids noisy parallel failures across many regional subdomains)
+    const worldProduct = await fetchProductFromOFFInstance(variant, 'world.openfoodfacts.org');
+    if (worldProduct) {
+      logger.debug(`Found product in OFF (world.openfoodfacts.org) with variant ${variant}: ${barcode}`);
+      return worldProduct;
+    }
+
+    const regionalInstances = instancesToTry.filter((h) => h !== 'world.openfoodfacts.org');
+    const cappedRegional = regionalInstances.slice(0, 4);
+
+    const regionalResults = await Promise.allSettled(
+      cappedRegional.map((instance) => fetchProductFromOFFInstance(variant, instance))
     );
-    
-    // Return first successful result
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i];
+
+    for (let i = 0; i < regionalResults.length; i++) {
+      const result = regionalResults[i];
       if (result.status === 'fulfilled' && result.value) {
-        const instance = instancesToTry[i];
+        const instance = cappedRegional[i];
         logger.debug(`Found product in OFF (${instance}) with variant ${variant}: ${barcode}`);
         return result.value;
       }

@@ -1,7 +1,7 @@
 
 # KTC 2026 Parent & Brand Alias Mapping – Analysis
 **Source:** `Database files/ETHICS Pillar/KTC folder/KTC_2026_Parent_Brand_Alias_Mapping.xlsx`
-**Extracted:** 2026-03-25T07:34:56.614Z
+**Extracted:** 2026-03-25T20:50:11.804Z
 
 ## Tabs Found (actual workbook)
 | Tab | Rows | Notes |

@@ -1,0 +1,5 @@
+Canonical ETHICS pillar spreadsheet for this repo:
+
+  ETHICS Pillar spec sheet.xlsx   (this folder)
+
+Older duplicate names (e.g. "ETHICS SPEC sheet.xlsx") should not be used; remove them from the tree if they appear to avoid confusion.

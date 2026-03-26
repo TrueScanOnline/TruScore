@@ -7,7 +7,32 @@ import { Product } from '../types/product';
 import { logger } from '../utils/logger';
 
 const BARCODE_LOOKUP_API_URL = 'https://api.barcodelookup.com/v3/products';
-const API_KEY = process.env.EXPO_PUBLIC_BARCODE_LOOKUP_API_KEY || '';
+
+/** After 401/403, skip further calls this session to avoid log noise and wasted quota */
+let barcodeLookupAuthRejected = false;
+
+function getBarcodeLookupApiKey(): string {
+  const k =
+    process.env.EXPO_PUBLIC_BARCODE_LOOKUP_API_KEY ||
+    process.env.BARCODE_LOOKUP_API_KEY ||
+    '';
+  return typeof k === 'string' ? k.trim() : '';
+}
+
+function isLikelyRealBarcodeLookupKey(key: string): boolean {
+  if (!key || key.length < 8) return false;
+  const lower = key.toLowerCase();
+  if (
+    lower.includes('your_api') ||
+    lower.includes('your-key') ||
+    lower.includes('placeholder') ||
+    lower.includes('replace_me') ||
+    lower === 'changeme'
+  ) {
+    return false;
+  }
+  return true;
+}
 
 interface BarcodeLookupResponse {
   products?: Array<{
@@ -76,14 +101,17 @@ interface BarcodeLookupResponse {
  * @returns Product object or null if not found
  */
 export async function fetchProductFromBarcodeLookup(barcode: string): Promise<Product | null> {
-  // Skip if API key not configured
-  if (!API_KEY || API_KEY.length < 10) {
-    logger.debug(`Barcode Lookup API key not configured, skipping lookup for ${barcode}`);
+  if (barcodeLookupAuthRejected) {
+    return null;
+  }
+
+  const apiKey = getBarcodeLookupApiKey();
+  if (!isLikelyRealBarcodeLookupKey(apiKey)) {
     return null;
   }
 
   try {
-    const url = `${BARCODE_LOOKUP_API_URL}?barcode=${barcode}&formatted=y&key=${API_KEY}`;
+    const url = `${BARCODE_LOOKUP_API_URL}?barcode=${barcode}&formatted=y&key=${apiKey}`;
     
     logger.debug(`Fetching from Barcode Lookup API: ${barcode}`);
     
@@ -96,7 +124,12 @@ export async function fetchProductFromBarcodeLookup(barcode: string): Promise<Pr
     });
 
     if (!response.ok) {
-      logger.debug(`Barcode Lookup API error: ${response.status} ${response.statusText}`);
+      if (response.status === 401 || response.status === 403) {
+        barcodeLookupAuthRejected = true;
+      }
+      if (response.status !== 401 && response.status !== 403) {
+        logger.debug(`Barcode Lookup API error: ${response.status} ${response.statusText}`);
+      }
       return null;
     }
 

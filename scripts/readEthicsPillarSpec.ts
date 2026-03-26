@@ -6,13 +6,21 @@ import * as XLSX from 'xlsx';
 import * as path from 'path';
 import * as fs from 'fs';
 
-const specPath = path.join(__dirname, '..', 'TruScore logic', 'ETHICS Pillar.xlsx');
+const canonicalSpecPath = path.join(
+  __dirname,
+  '..',
+  'Database files',
+  'ETHICS Pillar',
+  'ETHICS Pillar spec sheet.xlsx'
+);
+const legacySpecPath = path.join(__dirname, '..', 'TruScore logic', 'ETHICS Pillar.xlsx');
 
 async function readSpec() {
+  const specPath = fs.existsSync(canonicalSpecPath) ? canonicalSpecPath : legacySpecPath;
   console.log('Reading ETHICS Pillar spec from:', specPath);
   
   if (!fs.existsSync(specPath)) {
-    console.error('File not found:', specPath);
+    console.error('File not found. Tried:', canonicalSpecPath, legacySpecPath);
     return;
   }
   

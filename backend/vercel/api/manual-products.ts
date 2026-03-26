@@ -106,12 +106,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (!product) {
         console.log(`[ManualProductsAPI] Product not found: ${barcode}`);
+        // Cache misses briefly to reduce duplicate cold hits.
+        res.setHeader(
+          'Cache-Control',
+          'public, max-age=15'
+        );
         return res.status(200).json({
           success: false,
           product: null,
           message: 'Product not found',
         });
       }
+
+      res.setHeader(
+        'Cache-Control',
+        'public, max-age=120'
+      );
 
       console.log(`[ManualProductsAPI] ✅ Product found: ${barcode}`);
       console.log(`[ManualProductsAPI] Product name: ${product.product_name || 'N/A'}`);
