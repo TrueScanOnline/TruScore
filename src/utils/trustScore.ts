@@ -3,6 +3,7 @@ import { Product, ProductWithTrustScore, TrustScoreBreakdown } from '../types/pr
 import { extractManufacturingCountry, calculateEcoScore, formatCertifications } from '../services/openFoodFacts';
 import { calculateTruScore, buildTruScoreAnalysis } from '../lib/truscoreEngine';
 import { countOpenPillarHiddenTermHits } from '../lib/truscoreEngine/pillars/openPillarHiddenTerms';
+import { scoreBodyMvpAdditives } from '../lib/truscoreEngine/pillars/bodyAdditiveScoring';
 import { getCachedTruScore, cacheTruScore } from './truScoreCache';
 import { logger } from './logger';
 import { powershellLogger } from './powershellLogger';
@@ -253,15 +254,18 @@ function generateTrustReasons(
     reasons.push('Ultra-processed food - NOVA Group 4');
   }
 
-  // Risky additives
-  const highRiskAdditives = ['en:e102', 'en:e104', 'en:e110', 'en:e122', 'en:e124', 'en:e129', 
-                             'en:e211', 'en:e250', 'en:e251', 'en:e621', 'en:e951', 'en:e952'];
-  const highRiskCount = product.additives_tags?.filter(tag =>
-    highRiskAdditives.some(risk => tag.toLowerCase().includes(risk))
-  ).length || 0;
-  
-  if (highRiskCount > 0) {
-    reasons.push(`Contains ${highRiskCount} high-risk additive(s)`);
+  const mvpAdditives = scoreBodyMvpAdditives(product);
+  if (mvpAdditives.matches.length > 0) {
+    const red = mvpAdditives.matches.filter((m) => m.tier === 'red').length;
+    const orange = mvpAdditives.matches.filter((m) => m.tier === 'orange').length;
+    const yellow = mvpAdditives.matches.filter((m) => m.tier === 'yellow').length;
+    const parts: string[] = [];
+    if (red) parts.push(`${red} red-tier`);
+    if (orange) parts.push(`${orange} orange-tier`);
+    if (yellow) parts.push(`${yellow} yellow-tier`);
+    reasons.push(
+      `Food additives of concern (MVP registry): ${parts.join(', ') || String(mvpAdditives.matches.length)}`
+    );
   }
 
   const nutrientLevels = product.nutrient_levels || {};

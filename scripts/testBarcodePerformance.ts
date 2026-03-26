@@ -794,8 +794,8 @@ async function testBarcode(barcode: string): Promise<TestResult> {
         if (result.pillarBreakdown.body.details.nutriscoreGrade) {
           console.log(`        - Nutri-Score: ${result.pillarBreakdown.body.details.nutriscoreGrade.toUpperCase()} (value: ${result.pillarBreakdown.body.details.nutriscoreValue || 'N/A'})`);
         }
-        if (result.pillarBreakdown.body.details.additivePenalty !== undefined) {
-          console.log(`        - Additive Penalty: -${result.pillarBreakdown.body.details.additivePenalty} points`);
+        if (result.pillarBreakdown.body.details.additiveElementDeduction !== undefined) {
+          console.log(`        - Additive element (MVP): -${result.pillarBreakdown.body.details.additiveElementDeduction} points`);
         }
         if (result.pillarBreakdown.body.details.novaAdjustment !== undefined && result.pillarBreakdown.body.details.novaAdjustment !== 0) {
           console.log(`        - NOVA Adjustment: ${result.pillarBreakdown.body.details.novaAdjustment > 0 ? '+' : ''}${result.pillarBreakdown.body.details.novaAdjustment} points`);

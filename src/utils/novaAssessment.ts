@@ -1,20 +1,8 @@
 /**
- * NOVA Group Assessment
- * 
- * ID 9: Limited NOVA 1 Detection (High Confidence Only)
- * 
- * Assesses if a product is likely NOVA Group 1 (Unprocessed or Minimally Processed)
- * Only assigns NOVA 1 if confidence is high (≥85% accuracy)
- * 
- * Does NOT attempt to classify NOVA 2, 3, or 4 (too risky)
- * 
- * NOVA Group 1 Criteria (Unprocessed or Minimally Processed):
- * - Natural foods
- * - Cleaned, frozen, dried, pasteurized
- * - No additives (except salt, sugar, oil)
- * - Simple processing (cutting, grinding, freezing, drying)
- * 
- * @module novaAssessment
+ * NOVA Group 1 — limited internal rescue (Implementation Guidance v1.3)
+ *
+ * Only assigns estimated NOVA 1 when OFF nova_group is missing, with whitelist-led rules.
+ * No internal NOVA 2 / 3 / 4. Provenance: _nova_estimated, _nova_confidence.
  */
 
 import { Product } from '../types/product';
@@ -26,169 +14,192 @@ export interface NOVA1Assessment {
   reason: string;
 }
 
-/**
- * Check if ingredient text contains processed ingredients
- * Processed ingredients indicate the product is NOT NOVA 1
- */
-function hasProcessedIngredients(ingredientsText: string): boolean {
-  const processedPatterns = [
-    // Modified starches and thickeners
-    /\bmodified\s+(starch|cornstarch|potato\s+starch|tapioca)\b/i,
-    /\b(corn\s+syrup|high\s+fructose\s+corn\s+syrup|hfcs)\b/i,
-    /\b(hydrogenated|partially\s+hydrogenated)\s+(oil|fat)\b/i,
-    /\binteresterified\s+(oil|fat)\b/i,
-    
-    // Artificial additives (excluding salt, sugar, oil which are allowed)
-    /\b(artificial\s+flavor|artificial\s+flavoring|artificial\s+color|artificial\s+coloring)\b/i,
-    /\b(preservative|sodium\s+benzoate|potassium\s+sorbate|calcium\s+propionate)\b/i,
-    /\b(emulsifier|lecithin|polysorbate|mono\s+and\s+diglycerides)\b/i,
-    /\b(stabilizer|xanthan\s+gum|guar\s+gum|carrageenan)\b/i,
-    
-    // Processed protein sources
-    /\b(textured\s+vegetable\s+protein|tvp|soy\s+protein\s+isolate)\b/i,
-    /\b(whey\s+protein|casein|protein\s+isolate)\b/i,
-    
-    // Processed fats
-    /\b(margarine|vegetable\s+shortening|palm\s+kernel\s+oil)\b/i,
-    
-    // Processing indicators
-    /\b(ultra\s+pasteurized|uht|homogenized)\b/i,
-    /\b(dehydrated|powdered|freeze\s+dried)\s+(milk|egg|fruit)\b/i,
-  ];
-  
-  return processedPatterns.some(pattern => pattern.test(ingredientsText));
+const GROUP2_RE =
+  /\b(salt|sugar|sucrose|glucose|fructose|olive oil|vegetable oil|sunflower oil|canola oil|coconut oil|sesame oil|butter|margarine|lard|cream|honey|maple syrup|molasses|vinegar)\b/i;
+
+const PROCESSED_MARKERS =
+  /\b(modified\s+starch|corn\s+syrup|high\s+fructose|hfcs|hydrogenated|nitrite|nitrate|preservative|colour|color|flavour|flavor|sweetener|emulsifier|stabiliser|stabilizer|isolate|carrageenan|xanthan|msg|maltodextrin)\b/i;
+
+const COMPOSITE_BLOCK =
+  /\b(bread|cracker|biscuit|pasta\s+sauce|soup|seasoned|salted\s+nuts|roasted\s+salted)\b/i;
+
+/** Normalised single-ingredient lines allowed for NOVA 1 rescue (source-anchored examples, v1.3). */
+const NOVA1_SINGLE_WHITELIST = new Set([
+  'peas',
+  'green peas',
+  'corn',
+  'spinach',
+  'blueberries',
+  'strawberries',
+  'mixed vegetables',
+  'broccoli',
+  'carrots',
+  'brown rice',
+  'white rice',
+  'oats',
+  'quinoa',
+  'wheat berries',
+  'lentils',
+  'chickpeas',
+  'black beans',
+  'kidney beans',
+  'split peas',
+  'potatoes',
+  'sweet potatoes',
+  'cassava',
+  'mushrooms',
+  'eggs',
+  'milk',
+  'almonds',
+  'sunflower seeds',
+  'black pepper',
+  'mint',
+  'tea',
+  'coffee',
+  'water',
+  'plain yoghurt',
+  'plain yogurt',
+  'salmon',
+  'tuna',
+  'shrimp',
+  'fish',
+  'chicken',
+  'beef',
+  'pork',
+  'turkey',
+  'poultry',
+  'meat',
+]);
+
+function stripLeadingQualifiers(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/^(organic|fresh|frozen|whole|raw|dried|chilled|natural|pure)\s+/i, '')
+    .trim();
 }
 
-/**
- * Check if ingredient text contains heavily processed ingredients
- * Heavily processed ingredients indicate medium confidence at best
- */
-function hasHeavilyProcessedIngredients(ingredientsText: string): boolean {
-  const heavilyProcessedPatterns = [
-    // Multiple additives
-    /\b(en:\d+|e\d+[a-z]?)\b/i, // E-numbers (more than 2-3 indicate processing)
-    /\b(monosodium\s+glutamate|msg)\b/i,
-    /\b(artificial\s+sweetener|aspartame|sucralose|acesulfame)\b/i,
-    /\b(nitrite|nitrate)\b/i,
-    /\b(sodium\s+nitrite|potassium\s+nitrate)\b/i,
-  ];
-  
-  const matches = heavilyProcessedPatterns.filter(pattern => pattern.test(ingredientsText));
-  return matches.length > 2; // More than 2 heavily processed ingredients
+function splitIngredients(text: string): string[] {
+  return text
+    .split(/[,;]/)
+    .map((p) => p.replace(/\s+/g, ' ').trim())
+    .filter((p) => p.length > 0);
 }
 
-/**
- * Assess if product is likely NOVA Group 1 (Unprocessed or Minimally Processed)
- * ID 9: Only assigns NOVA 1 if confidence is high (≥85% accuracy)
- * 
- * High Confidence Indicators:
- * - No additives
- * - ≤5 ingredients
- * - Natural ingredients only (no processed ingredients)
- * 
- * Medium Confidence Indicators:
- * - ≤2 additives
- * - ≤8 ingredients
- * - Minimal processing
- * 
- * Low Confidence/Not NOVA 1:
- * - >2 additives
- * - >8 ingredients
- * - Processed ingredients detected
- * 
- * @param product - Product to assess
- * @returns Assessment result with confidence level
- */
+function isPlainYoghurtMilkCultures(parts: string[]): boolean {
+  if (parts.length < 2 || parts.length > 3) return false;
+  const joined = parts.join(' ').toLowerCase();
+  const hasMilk = /\bmilk\b/.test(joined);
+  const hasYoghurtWord = /\byoghurt\b|\byogurt\b/.test(joined);
+  const hasCulture =
+    /\bcultures?\b|\bstarter\b|\blactic\s+acid\s+bacteria\b|\bprobiotic\b/.test(joined);
+  if (!hasMilk || !hasCulture) return false;
+  if (/\bsugar\b|\bsweetener\b|\bflavour\b|\bflavor\b|\bhoney\b|\bsyrup\b/i.test(joined)) {
+    return false;
+  }
+  return true;
+}
+
+function isFlourAndWaterOnly(parts: string[]): boolean {
+  if (parts.length !== 2) return false;
+  const [a, b] = parts.map(stripLeadingQualifiers);
+  const flour = /\b(flour|wheat flour|semolina)\b/i.test(a) || /\b(flour|wheat flour|semolina)\b/i.test(b);
+  const water = /\bwater\b/i.test(a) || /\bwater\b/i.test(b);
+  return flour && water;
+}
+
+function isSingleQualifyingIngredient(part: string): boolean {
+  const n = stripLeadingQualifiers(part);
+  if (!n) return false;
+  if (NOVA1_SINGLE_WHITELIST.has(n)) return true;
+  if (n.endsWith(' peas') && NOVA1_SINGLE_WHITELIST.has(n.replace(/^.*?\s/, ''))) return true;
+  return false;
+}
+
+function isWater(part: string): boolean {
+  return stripLeadingQualifiers(part) === 'water';
+}
+
+function passesNova1Whitelist(product: Product): { ok: boolean; reason: string } {
+  const text = product.ingredients_text || '';
+  if (GROUP2_RE.test(text)) {
+    return { ok: false, reason: 'Group 2 culinary ingredient detected' };
+  }
+  if (PROCESSED_MARKERS.test(text)) {
+    return { ok: false, reason: 'Processed marker detected' };
+  }
+  if (COMPOSITE_BLOCK.test(text)) {
+    return { ok: false, reason: 'Composite / processed product pattern' };
+  }
+
+  const parts = splitIngredients(text);
+  if (parts.length === 0) {
+    return { ok: false, reason: 'No ingredient parts' };
+  }
+
+  if (parts.length === 1) {
+    return isSingleQualifyingIngredient(parts[0])
+      ? { ok: true, reason: 'Single qualifying ingredient' }
+      : { ok: false, reason: 'Single ingredient not on NOVA 1 whitelist' };
+  }
+
+  if (parts.length === 2) {
+    const [p0, p1] = parts;
+    if ((isWater(p0) && isSingleQualifyingIngredient(p1)) || (isWater(p1) && isSingleQualifyingIngredient(p0))) {
+      return { ok: true, reason: 'One qualifying ingredient + water' };
+    }
+    if (isFlourAndWaterOnly(parts)) {
+      return { ok: true, reason: 'Flour + water only' };
+    }
+  }
+
+  if (isPlainYoghurtMilkCultures(parts)) {
+    return { ok: true, reason: 'Plain yoghurt (milk + cultures)' };
+  }
+
+  return { ok: false, reason: 'Ingredient pattern does not match whitelist rescue' };
+}
+
 export function assessNOVAGroup1(product: Product): NOVA1Assessment {
-  // If NOVA group is already set, don't override it
   if (product.nova_group !== undefined && product.nova_group !== null) {
     return {
       likelyNOVA1: product.nova_group === 1,
-      confidence: 'high', // Trust existing NOVA classification
+      confidence: 'high',
       reason: 'NOVA group already set by data source',
     };
   }
-  
-  // Need ingredients text to assess
+
+  const additives = product.additives_tags;
+  if (additives && additives.length > 0) {
+    return {
+      likelyNOVA1: false,
+      confidence: 'low',
+      reason: 'Additive tags present — NOVA 1 rescue blocked',
+    };
+  }
+
   if (!product.ingredients_text || product.ingredients_text.trim().length === 0) {
-    return {
-      likelyNOVA1: false,
-      confidence: 'low',
-      reason: 'No ingredients text available',
-    };
+    return { likelyNOVA1: false, confidence: 'low', reason: 'No ingredients text' };
   }
-  
-  const ingredientsText = product.ingredients_text.toLowerCase();
-  const ingredientsCount = ingredientsText.split(',').map(i => i.trim()).filter(i => i.length > 0).length;
-  const additivesCount = product.additives_tags ? product.additives_tags.length : 0;
-  
-  // HIGH CONFIDENCE: No additives + ≤5 ingredients + natural ingredients only
-  if (
-    additivesCount === 0 &&
-    ingredientsCount <= 5 &&
-    !hasProcessedIngredients(product.ingredients_text)
-  ) {
-    return {
-      likelyNOVA1: true,
-      confidence: 'high',
-      reason: 'No additives, short ingredients list (≤5), natural ingredients only',
-    };
+
+  const gate = passesNova1Whitelist(product);
+  if (!gate.ok) {
+    return { likelyNOVA1: false, confidence: 'low', reason: gate.reason };
   }
-  
-  // MEDIUM CONFIDENCE: ≤2 additives + ≤8 ingredients + minimal processing
-  if (
-    additivesCount <= 2 &&
-    ingredientsCount <= 8 &&
-    !hasHeavilyProcessedIngredients(product.ingredients_text) &&
-    !hasProcessedIngredients(product.ingredients_text)
-  ) {
-    return {
-      likelyNOVA1: true,
-      confidence: 'medium',
-      reason: 'Few additives (≤2), moderate ingredients (≤8), minimal processing',
-    };
-  }
-  
-  // LOW CONFIDENCE or NOT NOVA 1: Multiple additives or processed ingredients
-  if (additivesCount > 2 || ingredientsCount > 8 || hasProcessedIngredients(product.ingredients_text)) {
-    return {
-      likelyNOVA1: false,
-      confidence: 'low',
-      reason: additivesCount > 2 
-        ? `Multiple additives (${additivesCount}) indicate processing`
-        : ingredientsCount > 8
-        ? `Long ingredients list (${ingredientsCount}) indicates processing`
-        : 'Processed ingredients detected',
-    };
-  }
-  
-  // Default: Low confidence
+
   return {
-    likelyNOVA1: false,
-    confidence: 'low',
-    reason: 'Insufficient indicators for NOVA 1 classification',
+    likelyNOVA1: true,
+    confidence: 'high',
+    reason: gate.reason,
   };
 }
 
-/**
- * Assign NOVA Group 1 to product if high confidence assessment
- * ID 9: Only assigns if confidence is 'high' (≥85% accuracy)
- * 
- * @param product - Product to potentially assign NOVA 1
- * @returns Product with NOVA 1 assigned (if high confidence), or unchanged
- */
 export function assignNOVA1IfHighConfidence(product: Product): Product {
   const assessment = assessNOVAGroup1(product);
-  
-  // Only assign NOVA 1 if high confidence
   if (assessment.likelyNOVA1 && assessment.confidence === 'high') {
     product.nova_group = 1;
-    // Add metadata for transparency
     (product as any)._nova_estimated = true;
     (product as any)._nova_confidence = 'high';
-    logger.debug(`[NOVA Assessment] Assigned NOVA 1 (high confidence): ${assessment.reason}`);
+    logger.debug(`[NOVA Assessment] Assigned NOVA 1 (whitelist rescue): ${assessment.reason}`);
   }
-  
   return product;
 }
-

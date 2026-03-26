@@ -54,3 +54,6 @@ SUBMIT_*.txt
 *_NOW.txt# Temporary analysis scripts output
 analyze_*.json
 test-results-*.json
+
+# Local scratch / one-off extraction (do not ship)
+.tmp_*

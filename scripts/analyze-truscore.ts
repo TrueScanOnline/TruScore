@@ -144,8 +144,8 @@ function printPillarDetails(
   
   // Show negative contributions
   const negatives: string[] = [];
-  if (details.additivePenalty > 0) {
-    negatives.push(`Additives: -${formatNumber(details.additivePenalty)}`);
+  if (details.additiveElementDeduction > 0) {
+    negatives.push(`Additives (MVP): -${formatNumber(details.additiveElementDeduction)}`);
   }
   if (details.riskyTagsPenalty > 0) {
     negatives.push(`Risky Tags: -${formatNumber(details.riskyTagsPenalty)}`);

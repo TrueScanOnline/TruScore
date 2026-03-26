@@ -1,5 +1,4 @@
-// Additives Risk Card Component
-// Displays IARC and EWG classified ingredients/additives
+// Additives Risk Card — Body Pillar MVP registry (exact tiers) + EWG for cosmetics/household when present
 
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -7,8 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
 import { Product } from '../types/product';
-import { matchIngredientsAgainstIARC, getIARCPenalty, MatchedIARCAgent } from '../utils/ingredientMatcher';
-import { getAdditiveInfo } from '../services/additiveDatabase';
+import { scoreBodyMvpAdditives } from '../lib/truscoreEngine/pillars/bodyAdditiveScoring';
 
 interface AdditivesRiskCardProps {
   product: Product | null;
@@ -19,124 +17,42 @@ export default function AdditivesRiskCard({ product, onPress }: AdditivesRiskCar
   const { t } = useTranslation();
   const { colors } = useTheme();
 
-  // Extract IARC and EWG risks
   const risks = useMemo(() => {
-    if (!product) return { iarc: [], ewg: null, hasRisks: false };
+    if (!product) return { mvp: [], ewg: null, hasRisks: false };
 
-    const iarcRisks: Array<{
-      name: string;
-      group: string;
-      penalty: number;
-      source: 'ingredient' | 'additive';
-      confidence?: string;
-    }> = [];
+    const mvp = scoreBodyMvpAdditives(product);
+    const mvpRisks = mvp.matches.map((m) => ({
+      name: m.name,
+      tier: m.tier,
+      deduction: m.deduction,
+    }));
 
-    // Check IARC-classified ingredients
-    if (product.ingredients_text) {
-      try {
-        const matchedAgents = matchIngredientsAgainstIARC(product.ingredients_text);
-        matchedAgents.forEach(agent => {
-          // Only include high confidence matches
-          if (agent.confidence === 'exact' || agent.confidence === 'high') {
-            const penalty = getIARCPenalty(agent);
-            if (penalty > 0) {
-              iarcRisks.push({
-                name: agent.agent,
-                group: agent.group,
-                penalty,
-                source: 'ingredient',
-                confidence: agent.confidence,
-              });
-            }
-          }
-        });
-      } catch (error) {
-        console.debug('Error matching IARC ingredients:', error);
-      }
-    }
-
-    // Check IARC-classified additives (E-numbers)
-    if (product.additives_tags) {
-      product.additives_tags.forEach(tag => {
-        const eNumMatch = tag.toLowerCase().match(/^en:?(e\d+[a-z]?)$/);
-        if (eNumMatch) {
-          const eNum = eNumMatch[1];
-          const additiveInfo = getAdditiveInfo(eNum);
-          if (additiveInfo?.iarcGroup) {
-            // Check if not already added from ingredient matching
-            const alreadyAdded = iarcRisks.some(
-              risk => risk.name.toLowerCase() === additiveInfo.name.toLowerCase()
-            );
-            if (!alreadyAdded) {
-              let penalty = 0;
-              if (additiveInfo.iarcGroup === '1') penalty = 10;
-              else if (additiveInfo.iarcGroup === '2A') penalty = 5;
-              else if (additiveInfo.iarcGroup === '2B') penalty = 3;
-              
-              if (penalty > 0) {
-                iarcRisks.push({
-                  name: additiveInfo.name,
-                  group: additiveInfo.iarcGroup,
-                  penalty,
-                  source: 'additive',
-                });
-              }
-            }
-          }
-        }
-      });
-    }
-
-    // Check EWG data
     const ewgData = (product as any).ewg_skin_deep;
-    
-    // More robust category detection for cosmetics/household
-    // If EWG data exists, it means the product was already identified as cosmetic/household
-    // So we should trust the EWG enhancement's detection
     const categories = (product.categories || '').toLowerCase();
-    const categoriesTags = (product.categories_tags || []).map(t => t.toLowerCase());
-    const source = (product as any).source || '';
-    
-    const isHousehold = 
-      categories.includes('cosmetic') || 
+    const categoriesTags = (product.categories_tags || []).map((x) => String(x).toLowerCase());
+    const source = String((product as any).source || '');
+
+    const isHousehold =
+      categories.includes('cosmetic') ||
       categories.includes('beauty') ||
       categories.includes('personal care') ||
       categories.includes('household') ||
-      categoriesTags.some(tag => 
-        tag.includes('cosmetic') || 
-        tag.includes('beauty') ||
-        tag.includes('personal-care') ||
-        tag.includes('household')
+      categoriesTags.some(
+        (tag) =>
+          tag.includes('cosmetic') ||
+          tag.includes('beauty') ||
+          tag.includes('personal-care') ||
+          tag.includes('household')
       ) ||
       source === 'openbeautyfacts' ||
       source === 'openproductsfacts' ||
-      !!ewgData; // If EWG data exists, treat as household/cosmetic
+      !!ewgData;
 
-    // Debug logging (can be removed in production)
-    if (__DEV__) {
-      console.log('[AdditivesRiskCard] Product analysis:', {
-        barcode: product.barcode,
-        hasIngredients: !!product.ingredients_text,
-        ingredientsLength: product.ingredients_text?.length || 0,
-        hasAdditives: !!product.additives_tags,
-        additivesCount: product.additives_tags?.length || 0,
-        iarcRisksCount: iarcRisks.length,
-        hasEwgData: !!ewgData,
-        ewgHazardScore: ewgData?.hazardScore,
-        isHousehold,
-        categories: product.categories,
-        categoriesTags: product.categories_tags,
-        source,
-      });
-    }
-
-    // Show card if there are IARC risks OR if EWG data exists (regardless of category)
-    // EWG enhancement only runs for cosmetics, so if data exists, it's valid
-    const hasRisks = iarcRisks.length > 0 || (ewgData && ewgData.hazardScore !== undefined);
+    const hasRisks = mvpRisks.length > 0 || (ewgData && ewgData.hazardScore !== undefined && isHousehold);
 
     return {
-      iarc: iarcRisks,
-      ewg: ewgData && ewgData.hazardScore !== undefined ? ewgData : null,
+      mvp: mvpRisks,
+      ewg: ewgData && ewgData.hazardScore !== undefined && isHousehold ? ewgData : null,
       hasRisks,
     };
   }, [product]);
@@ -145,18 +61,23 @@ export default function AdditivesRiskCard({ product, onPress }: AdditivesRiskCar
     return null;
   }
 
-  // Determine card border color based on highest risk
+  const getTierColor = (tier: string) => {
+    if (tier === 'red') return '#ff6b6b';
+    if (tier === 'orange') return '#ff9500';
+    return '#ffa500';
+  };
+
   const getRiskColor = () => {
-    if (risks.iarc.some(r => r.group === '1')) return '#ff6b6b'; // Red: Group 1
-    if (risks.iarc.some(r => r.group === '2A')) return '#ff9500'; // Orange: Group 2A
-    if (risks.iarc.some(r => r.group === '2B')) return '#ffa500'; // Yellow: Group 2B
-    if (risks.ewg && risks.ewg.hazardScore && risks.ewg.hazardScore >= 8) return '#ff6b6b'; // Red: EWG F
-    if (risks.ewg && risks.ewg.hazardScore && risks.ewg.hazardScore >= 6) return '#ff9500'; // Orange: EWG D
-    return '#ffa500'; // Yellow: Default
+    if (risks.mvp.some((r) => r.tier === 'red')) return '#ff6b6b';
+    if (risks.mvp.some((r) => r.tier === 'orange')) return '#ff9500';
+    if (risks.mvp.length > 0) return '#ffa500';
+    if (risks.ewg && risks.ewg.hazardScore >= 8) return '#ff6b6b';
+    if (risks.ewg && risks.ewg.hazardScore >= 6) return '#ff9500';
+    return '#ffa500';
   };
 
   const riskColor = getRiskColor();
-  const totalRisks = risks.iarc.length + (risks.ewg ? 1 : 0);
+  const totalRisks = risks.mvp.length + (risks.ewg ? 1 : 0);
 
   return (
     <TouchableOpacity
@@ -186,84 +107,67 @@ export default function AdditivesRiskCard({ product, onPress }: AdditivesRiskCar
       </View>
 
       <View style={styles.content}>
-        {/* IARC Risks */}
-        {risks.iarc.length > 0 && (
+        {risks.mvp.length > 0 && (
           <View style={styles.risksSection}>
-            {risks.iarc.slice(0, 3).map((risk, index) => {
-              const groupColor = 
-                risk.group === '1' ? '#ff6b6b' :
-                risk.group === '2A' ? '#ff9500' :
-                risk.group === '2B' ? '#ffa500' :
-                '#999999';
-
+            {risks.mvp.slice(0, 5).map((risk, index) => {
+              const tc = getTierColor(risk.tier);
               return (
                 <View
                   key={index}
-                  style={[
-                    styles.riskItem,
-                    { backgroundColor: groupColor + '15', borderLeftColor: groupColor },
-                  ]}
+                  style={[styles.riskItem, { backgroundColor: tc + '15', borderLeftColor: tc }]}
                 >
-                  <Ionicons name="alert-circle" size={18} color={groupColor} />
+                  <Ionicons name="alert-circle" size={18} color={tc} />
                   <View style={styles.riskItemContent}>
-                    <Text style={[styles.riskName, { color: colors.text }]}>
-                      {risk.name}
-                    </Text>
+                    <Text style={[styles.riskName, { color: colors.text }]}>{risk.name}</Text>
                     <Text style={[styles.riskGroup, { color: colors.textSecondary }]}>
-                      IARC Group {risk.group}
+                      {t('result.bodyAdditiveTier', 'Body concern tier')}: {risk.tier} (−{risk.deduction})
                     </Text>
                   </View>
                 </View>
               );
             })}
-            {risks.iarc.length > 3 && (
+            {risks.mvp.length > 5 && (
               <Text style={[styles.moreText, { color: colors.textSecondary }]}>
-                +{risks.iarc.length - 3} more IARC-classified ingredient(s)
+                +{risks.mvp.length - 5} {t('result.moreAdditives', 'more')}
               </Text>
             )}
           </View>
         )}
 
-        {/* EWG Risk */}
         {risks.ewg && (
           <View style={styles.risksSection}>
             <View
               style={[
                 styles.riskItem,
                 {
-                  backgroundColor: risks.ewg.hazardScore && risks.ewg.hazardScore >= 8 ? '#ff6b6b15' :
-                                   risks.ewg.hazardScore && risks.ewg.hazardScore >= 6 ? '#ff950015' :
-                                   '#ffa50015',
-                  borderLeftColor: risks.ewg.hazardScore && risks.ewg.hazardScore >= 8 ? '#ff6b6b' :
-                                  risks.ewg.hazardScore && risks.ewg.hazardScore >= 6 ? '#ff9500' :
-                                  '#ffa500',
+                  backgroundColor:
+                    risks.ewg.hazardScore && risks.ewg.hazardScore >= 8 ? '#ff6b6b15' : '#ff950015',
+                  borderLeftColor:
+                    risks.ewg.hazardScore && risks.ewg.hazardScore >= 8 ? '#ff6b6b' : '#ff9500',
                 },
               ]}
             >
-              <Ionicons
-                name="shield"
-                size={18}
-                color={risks.ewg.hazardScore && risks.ewg.hazardScore >= 8 ? '#ff6b6b' :
-                       risks.ewg.hazardScore && risks.ewg.hazardScore >= 6 ? '#ff9500' :
-                       '#ffa500'}
-              />
+              <Ionicons name="shield" size={18} color="#ff9500" />
               <View style={styles.riskItemContent}>
                 <Text style={[styles.riskName, { color: colors.text }]}>
-                  EWG Hazard Score: {risks.ewg.hazardScore || 'N/A'}
+                  EWG Hazard Score: {risks.ewg.hazardScore ?? 'N/A'}
                 </Text>
                 <Text style={[styles.riskGroup, { color: colors.textSecondary }]}>
-                  {risks.ewg.hazardScore && risks.ewg.hazardScore <= 2 ? 'Rating: A' :
-                   risks.ewg.hazardScore && risks.ewg.hazardScore <= 4 ? 'Rating: B' :
-                   risks.ewg.hazardScore && risks.ewg.hazardScore <= 6 ? 'Rating: C' :
-                   risks.ewg.hazardScore && risks.ewg.hazardScore <= 8 ? 'Rating: D' :
-                   'Rating: F'}
+                  {risks.ewg.hazardScore && risks.ewg.hazardScore <= 2
+                    ? 'Rating: A'
+                    : risks.ewg.hazardScore && risks.ewg.hazardScore <= 4
+                      ? 'Rating: B'
+                      : risks.ewg.hazardScore && risks.ewg.hazardScore <= 6
+                        ? 'Rating: C'
+                        : risks.ewg.hazardScore && risks.ewg.hazardScore <= 8
+                          ? 'Rating: D'
+                          : 'Rating: F'}
                 </Text>
               </View>
             </View>
           </View>
         )}
 
-        {/* Summary */}
         <View style={[styles.summary, { backgroundColor: riskColor + '10' }]}>
           <Text style={[styles.summaryText, { color: colors.text }]}>
             {totalRisks === 1
@@ -318,37 +222,33 @@ const styles = StyleSheet.create({
   },
   riskItem: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     padding: 12,
     borderRadius: 8,
-    borderLeftWidth: 4,
-    gap: 12,
+    borderLeftWidth: 3,
+    gap: 10,
   },
   riskItemContent: {
     flex: 1,
   },
   riskName: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 2,
+    fontSize: 15,
+    fontWeight: '600',
   },
   riskGroup: {
-    fontSize: 12,
+    fontSize: 13,
+    marginTop: 2,
   },
   moreText: {
-    fontSize: 12,
+    fontSize: 13,
     fontStyle: 'italic',
-    marginTop: 4,
   },
   summary: {
-    padding: 12,
+    padding: 10,
     borderRadius: 8,
-    marginTop: 4,
   },
   summaryText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500',
-    textAlign: 'center',
   },
 });
-
