@@ -1,7 +1,7 @@
 /**
  * ETHICS PILLAR
  *
- * SPEC: Database files/ETHICS Pillar/ETHICS Pillar spec sheet.xlsx (Ethics_Scoring_Spec tab).
+ * SPEC: Database files/ETHICS Pillar/Ethics_Scoring_Specification_37_Cursor_Submit.xlsx (v37).
  *
  * Shipped logic (no YoY BBFAW modifiers):
  * - Base: 15 (uniform).
@@ -14,7 +14,7 @@
  *
  * BBFAW: Tier 1=+6, 2=+4, 3=+2, 4=+1, 5=-4, 6=-6; Impact A/B=+3, C/D=+1, E/F=-3.
  * KTC Total Benchmark Score: 0–10=-10, 11–20=-8, 21–30=-6, 31–50=-3, 51–70=+3, 71–80=+6, 81–90=+8, 91–100=+10.
- * Certifications: Fairtrade +6, Rainforest Alliance +5, ASC +4, MSC +4, RSPO +3, Organic +2 (per spec v36).
+ * Certifications: Fairtrade +6, Rainforest Alliance +5, ASC +4, MSC +4, RSPO +3, Organic +2 (v37).
  */
 
 import { Product } from '../../../types/product';
@@ -58,6 +58,8 @@ export interface EthicsPillarResult {
     certificationsAdjustment: number;
     certificationsWinningScheme: string | null;
     certificationsEligibleSchemes: string[];
+    /** How organic was detected when organic rules matched (diagnostics / UI). */
+    certificationsOrganicMatchSource?: 'off_tags_or_hierarchy' | 'label_or_cert_text' | 'product_name' | null;
   };
 }
 
@@ -215,8 +217,12 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     const labelPretty = certEval.winningScheme
       .replace(/_/g, ' ')
       .replace(/\b\w/g, (c) => c.toUpperCase());
+    const organicHint =
+      certEval.winningScheme === 'organic' && certEval.organicMatchSource
+        ? ` [${certEval.organicMatchSource.replace(/_/g, ' ')}]`
+        : '';
     adjustments.push({
-      description: `Ethics certifications – ${labelPretty} (+${certificationsAdjustment}, highest eligible scheme; MVP no stacking)`,
+      description: `Ethics certifications – ${labelPretty} (+${certificationsAdjustment}, highest eligible scheme; MVP no stacking)${organicHint}`,
       value: certificationsAdjustment,
       type: 'positive',
       referenceUrl: certEval.referenceUrl,
@@ -247,6 +253,7 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
       certificationsAdjustment,
       certificationsWinningScheme: certEval.winningScheme,
       certificationsEligibleSchemes: certEval.eligibleSchemes,
+      certificationsOrganicMatchSource: certEval.organicMatchSource ?? null,
     },
   };
 

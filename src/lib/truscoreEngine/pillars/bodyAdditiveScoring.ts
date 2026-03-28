@@ -2,11 +2,15 @@
  * Body Pillar — Food Additives of Concern (MVP)
  * Body_Scoring_Specification_V12 + Implementation Guidance v1.3
  *
- * Curated registry only (additiveDatabase.ts bodyConcernTier); exact matching only.
+ * MVP subset and label forms: additiveDatabase.ts (bodyConcernTier + bodyMvpLabelForms).
  */
 
 import { Product } from '../../../types/product';
-import { getAdditiveInfo, AdditiveInfo } from '../../../services/additiveDatabase';
+import {
+  getAdditiveInfo,
+  AdditiveInfo,
+  BODY_MVP_TEXT_FORMS_BY_ID,
+} from '../../../services/additiveDatabase';
 
 export type BodyConcernTier = 'yellow' | 'orange' | 'red';
 
@@ -17,6 +21,8 @@ const TIER_DEDUCTION: Record<BodyConcernTier, number> = {
 };
 
 const MVP_ELEMENT_CAP = 8;
+
+const MVP_IDS = Object.freeze(Object.keys(BODY_MVP_TEXT_FORMS_BY_ID));
 
 /** Max total Body score when any Red-tier MVP additive is present (before floor 2). */
 export const BODY_RED_ADDITIVE_SCORE_CEILING = 12;
@@ -30,90 +36,26 @@ export function getBodyConcernTierFromInfo(info: AdditiveInfo | null): BodyConce
 }
 
 /**
- * Normalize Open Food Facts additive tag to canonical e-number key (e.g. e102).
+ * Normalize Open Food Facts additive tag to canonical e-number key (e.g. e102, e150d).
+ * Supports en:e250, en:250, spaced E 250, e-150d.
  */
 export function normalizeOffAdditiveTag(tag: string): string | null {
-  const t = tag.toLowerCase().trim();
-  const m = t.match(/^en:?(e\d+[a-z]?)$/);
-  const eNum = m ? m[1] : t.replace(/^en:/, '');
-  if (/^e\d+[a-z]?$/.test(eNum)) {
-    return eNum;
+  let t = tag.toLowerCase().trim();
+  if (!t) return null;
+  if (t.startsWith('en:')) {
+    t = t.slice(3).trim();
+  }
+  t = t.replace(/\s+/g, '');
+  const withE = t.match(/^e-?(\d+[a-z]?)$/);
+  if (withE) {
+    return `e${withE[1]}`;
+  }
+  const numericOnly = t.match(/^(\d+[a-z]?)$/);
+  if (numericOnly) {
+    return `e${numericOnly[1]}`;
   }
   return null;
 }
-
-/**
- * Phase 1 exact label forms per Body_Scoring_Specification_V12 Additives Registry v1 (MVP core rows).
- * Matching is case-insensitive; implements E-number variants and class+number/name/alias forms.
- */
-const MVP_TEXT_FORMS: Record<string, string[]> = {
-  e250: [
-    'e250',
-    'e 250',
-    'e-250',
-    '250',
-    'sodium nitrite',
-    'preservative (250)',
-    'preservative (sodium nitrite)',
-  ],
-  e171: [
-    'e171',
-    'e 171',
-    'e-171',
-    '171',
-    'titanium dioxide',
-    'colour (171)',
-    'color (171)',
-    'colour (titanium dioxide)',
-    'color (titanium dioxide)',
-  ],
-  e951: [
-    'e951',
-    'e 951',
-    'e-951',
-    '951',
-    'aspartame',
-    'sweetener (951)',
-    'sweetener (aspartame)',
-  ],
-  e102: [
-    'e102',
-    'e 102',
-    'e-102',
-    '102',
-    'tartrazine',
-    'colour (102)',
-    'color (102)',
-    'colour (tartrazine)',
-    'color (tartrazine)',
-  ],
-  e110: [
-    'e110',
-    'e 110',
-    'e-110',
-    '110',
-    'sunset yellow',
-    'sunset yellow fcf',
-    'colour (110)',
-    'color (110)',
-    'colour (sunset yellow fcf)',
-    'color (sunset yellow fcf)',
-  ],
-  e129: [
-    'e129',
-    'e 129',
-    'e-129',
-    '129',
-    'allura red',
-    'allura red ac',
-    'colour (129)',
-    'color (129)',
-    'colour (allura red ac)',
-    'color (allura red ac)',
-  ],
-};
-
-const MVP_IDS = Object.keys(MVP_TEXT_FORMS) as string[];
 
 function normalizeIngredientsForMatching(text: string): string {
   return text
@@ -124,26 +66,25 @@ function normalizeIngredientsForMatching(text: string): string {
 
 /**
  * Exact controlled match for a single label form (Phase 1 — no fuzzy matching).
+ * Bare numeric-only forms are never matched in free text (defense in depth).
  */
 function ingredientsMatchForm(haystackLower: string, form: string): boolean {
   const f = form.trim().toLowerCase();
   if (!f) return false;
 
-  // Bare numeric additive code (e.g. 250) — avoid matching inside longer numbers
-  if (/^\d+[a-z]?$/i.test(f)) {
-    return new RegExp(`(^|[^0-9a-z])${f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^0-9a-z]|$)`, 'i').test(
-      haystackLower
-    );
+  const fCompact = f.replace(/\s/g, '');
+  if (/^\d+[a-z]?$/i.test(fCompact)) {
+    return false;
   }
 
-  // E-number with optional spaces / hyphen (E250, E 250, E-250)
+  // E-number with optional spaces / hyphen (E250, E 250, E-250) — word-boundary style
   const eCompact = f.replace(/\s/g, '');
   if (/^e-?\d+[a-z]?$/i.test(eCompact)) {
     const num = eCompact.replace(/^e-?/i, '');
     return new RegExp(`\\be\\s*-?\\s*${num}\\b`, 'i').test(haystackLower);
   }
 
-  // Phrases (alias, class + name, etc.)
+  // Phrases (alias, class + number in parentheses, etc.)
   const escaped = f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i').test(haystackLower);
 }
@@ -152,7 +93,7 @@ function findMvpIdsInIngredientsText(ingredientsText: string): string[] {
   const hay = normalizeIngredientsForMatching(ingredientsText);
   const found = new Set<string>();
   for (const id of MVP_IDS) {
-    const forms = MVP_TEXT_FORMS[id];
+    const forms = BODY_MVP_TEXT_FORMS_BY_ID[id];
     for (const form of forms) {
       if (ingredientsMatchForm(hay, form)) {
         found.add(id);

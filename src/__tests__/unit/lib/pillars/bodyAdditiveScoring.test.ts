@@ -27,6 +27,18 @@ describe('bodyAdditiveScoring', () => {
     test('normalizes en:e102', () => {
       expect(normalizeOffAdditiveTag('en:e102')).toBe('e102');
     });
+    test('normalizes en:e250', () => {
+      expect(normalizeOffAdditiveTag('en:e250')).toBe('e250');
+    });
+    test('normalizes en:250 to e250', () => {
+      expect(normalizeOffAdditiveTag('en:250')).toBe('e250');
+    });
+    test('normalizes E 250 to e250', () => {
+      expect(normalizeOffAdditiveTag('E 250')).toBe('e250');
+    });
+    test('normalizes e-150d to e150d', () => {
+      expect(normalizeOffAdditiveTag('e-150d')).toBe('e150d');
+    });
     test('returns null for unrecognised tag', () => {
       expect(normalizeOffAdditiveTag('en:unknown')).toBe(null);
     });
@@ -57,6 +69,26 @@ describe('bodyAdditiveScoring', () => {
       const p = baseProduct({
         additives_tags: [],
         ingredients_text: 'Pork, sodium nitrite, salt',
+      });
+      const r = scoreBodyMvpAdditives(p);
+      expect(r.matches.some((m) => m.canonicalId === 'e250')).toBe(true);
+      expect(r.hasRedTier).toBe(true);
+    });
+
+    test('does not treat stray standalone 250 in ingredients as sodium nitrite', () => {
+      const p = baseProduct({
+        additives_tags: [],
+        ingredients_text: 'Water, sugar, 250, acidifier',
+      });
+      const r = scoreBodyMvpAdditives(p);
+      expect(r.matches.some((m) => m.canonicalId === 'e250')).toBe(false);
+      expect(r.elementDeduction).toBe(0);
+    });
+
+    test('numeric-only OFF tag en:250 still scores via tags', () => {
+      const p = baseProduct({
+        additives_tags: ['en:250'],
+        ingredients_text: 'Water, sugar',
       });
       const r = scoreBodyMvpAdditives(p);
       expect(r.matches.some((m) => m.canonicalId === 'e250')).toBe(true);

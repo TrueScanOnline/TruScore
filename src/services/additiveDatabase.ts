@@ -9,6 +9,11 @@ export interface AdditiveInfo {
   iarcGroup?: '1' | '2A' | '2B'; // IARC classification: 1=carcinogenic, 2A=probably carcinogenic, 2B=possibly carcinogenic
   /** Body Pillar MVP — internal mapped concern tier (Body_Scoring_Specification_V12); scoring only when set. */
   bodyConcernTier?: 'yellow' | 'orange' | 'red';
+  /**
+   * Exact strings for Body MVP ingredients_text fallback (Phase 1). Do not list bare numeric-only codes;
+   * use class+number patterns (e.g. colour (102)) and E-number / alias phrases only.
+   */
+  bodyMvpLabelForms?: string[];
   uses?: string[];
   concerns?: string[];
   alternatives?: string;
@@ -18,7 +23,7 @@ export const ADDITIVE_DATABASE: Record<string, AdditiveInfo> = {
   // E100-E199: Colors
   'e100': { name: 'Curcumin (Turmeric)', category: 'Color', description: 'Natural yellow-orange color derived from turmeric root. Used in curry powders, mustard, and processed foods.', safety: 'safe', uses: ['Curry powders', 'Mustard', 'Processed foods'] },
   'e101': { name: 'Riboflavin (Vitamin B2)', category: 'Color', description: 'Natural yellow color and essential vitamin. Found naturally in milk, eggs, and green vegetables.', safety: 'safe', uses: ['Cereals', 'Dairy products', 'Energy drinks'] },
-  'e102': { name: 'Tartrazine', category: 'Color', description: 'Artificial yellow color (FD&C Yellow 5). May cause allergic reactions, hyperactivity in children, and asthma attacks in sensitive individuals.', safety: 'caution', bodyConcernTier: 'orange', concerns: ['Hyperactivity in children', 'Allergic reactions', 'Asthma'], alternatives: 'Natural colors like turmeric' },
+  'e102': { name: 'Tartrazine', category: 'Color', description: 'Artificial yellow color (FD&C Yellow 5). May cause allergic reactions, hyperactivity in children, and asthma attacks in sensitive individuals.', safety: 'caution', bodyConcernTier: 'orange', bodyMvpLabelForms: ['e102', 'e 102', 'e-102', 'tartrazine', 'colour (102)', 'color (102)', 'colour (tartrazine)', 'color (tartrazine)'], concerns: ['Hyperactivity in children', 'Allergic reactions', 'Asthma'], alternatives: 'Natural colors like turmeric' },
   'e103': { name: 'Alkannin / Alkanet', category: 'Color', description: 'Natural red color from alkanet root. Generally safe but rarely used.', safety: 'safe' },
   'e104': { name: 'Quinoline Yellow', category: 'Color', description: 'Artificial yellow-green color. May cause hyperactivity in children and allergic reactions. Banned in some countries.', safety: 'caution', concerns: ['Hyperactivity', 'Allergic reactions'] },
   'e105': { name: 'Fast Yellow AB', category: 'Color', description: 'Artificial yellow color. Banned in most countries due to health concerns.', safety: 'avoid', concerns: ['Banned in most countries'] },
@@ -26,7 +31,7 @@ export const ADDITIVE_DATABASE: Record<string, AdditiveInfo> = {
   'e107': { name: 'Yellow 2G', category: 'Color', description: 'Artificial yellow color. Banned in most countries.', safety: 'avoid', concerns: ['Banned in most countries'] },
   'e108': { name: 'Yellow 2G (variant)', category: 'Color', description: 'Artificial yellow color variant. Banned in most countries.', safety: 'avoid', concerns: ['Banned in most countries'] },
   'e109': { name: 'Yellow 5G', category: 'Color', description: 'Artificial yellow color. Banned in most countries.', safety: 'avoid', concerns: ['Banned in most countries'] },
-  'e110': { name: 'Sunset Yellow FCF', category: 'Color', description: 'Artificial orange color (FD&C Yellow 6). May cause allergic reactions, hyperactivity in children, and skin rashes.', safety: 'caution', bodyConcernTier: 'orange', concerns: ['Hyperactivity', 'Allergic reactions', 'Skin rashes'] },
+  'e110': { name: 'Sunset Yellow FCF', category: 'Color', description: 'Artificial orange color (FD&C Yellow 6). May cause allergic reactions, hyperactivity in children, and skin rashes.', safety: 'caution', bodyConcernTier: 'orange', bodyMvpLabelForms: ['e110', 'e 110', 'e-110', 'sunset yellow', 'sunset yellow fcf', 'colour (110)', 'color (110)', 'colour (sunset yellow fcf)', 'color (sunset yellow fcf)'], concerns: ['Hyperactivity', 'Allergic reactions', 'Skin rashes'] },
   'e111': { name: 'Orange GGN', category: 'Color', description: 'Artificial orange color. Banned in most countries.', safety: 'avoid', concerns: ['Banned in most countries'] },
   'e112': { name: 'Fast Yellow', category: 'Color', description: 'Artificial yellow color. Banned in most countries.', safety: 'avoid', concerns: ['Banned in most countries'] },
   'e113': { name: 'Tartrazine Lake', category: 'Color', description: 'Lake form of tartrazine. Similar concerns to E102.', safety: 'caution', concerns: ['Hyperactivity', 'Allergic reactions'] },
@@ -46,7 +51,7 @@ export const ADDITIVE_DATABASE: Record<string, AdditiveInfo> = {
   'e120': { name: 'Cochineal / Carmine', category: 'Color', description: 'Red color extracted from crushed cochineal insects. May cause severe allergic reactions, especially in asthmatics. Not suitable for vegetarians/vegans.', safety: 'caution', concerns: ['Severe allergic reactions', 'Asthma triggers', 'Not vegetarian'], alternatives: 'Beetroot extract, paprika' },
   'e122': { name: 'Azorubine / Carmoisine', category: 'Color', description: 'Artificial red color. May cause allergic reactions and hyperactivity in children. Banned in some countries.', safety: 'caution', concerns: ['Hyperactivity', 'Allergic reactions'] },
   'e124': { name: 'Ponceau 4R', category: 'Color', description: 'Artificial red color. May cause allergic reactions and hyperactivity in children. Banned in the US.', safety: 'caution', concerns: ['Hyperactivity', 'Allergic reactions'] },
-  'e129': { name: 'Allura Red AC', category: 'Color', description: 'Artificial red color (FD&C Red 40). May cause hyperactivity in children and allergic reactions.', safety: 'caution', bodyConcernTier: 'orange', concerns: ['Hyperactivity', 'Allergic reactions'] },
+  'e129': { name: 'Allura Red AC', category: 'Color', description: 'Artificial red color (FD&C Red 40). May cause hyperactivity in children and allergic reactions.', safety: 'caution', bodyConcernTier: 'orange', bodyMvpLabelForms: ['e129', 'e 129', 'e-129', 'allura red', 'allura red ac', 'colour (129)', 'color (129)', 'colour (allura red ac)', 'color (allura red ac)'], concerns: ['Hyperactivity', 'Allergic reactions'] },
   'e131': { name: 'Patent Blue V', category: 'Color', description: 'Artificial blue color. May cause allergic reactions. Banned in some countries.', safety: 'caution', concerns: ['Allergic reactions'] },
   'e132': { name: 'Indigotine / Indigo Carmine', category: 'Color', description: 'Artificial blue color. May cause allergic reactions, nausea, and skin rashes.', safety: 'caution', concerns: ['Allergic reactions', 'Nausea', 'Skin rashes'] },
   'e133': { name: 'Brilliant Blue FCF', category: 'Color', description: 'Artificial blue color (FD&C Blue 1). Generally considered safe, but may cause allergic reactions in sensitive individuals.', safety: 'safe' },
@@ -105,7 +110,7 @@ export const ADDITIVE_DATABASE: Record<string, AdditiveInfo> = {
   'e177': { name: 'Iron Oxide Red', category: 'Color', description: 'Natural red color from iron oxides. Generally safe.', safety: 'safe' },
   'e178': { name: 'Iron Oxide Black', category: 'Color', description: 'Natural black color from iron oxides. Generally safe.', safety: 'safe' },
   'e179': { name: 'Titanium Dioxide (alternative)', category: 'Color', description: 'White color. Banned in EU (2022). See E171.', safety: 'avoid', concerns: ['Banned in EU'], alternatives: 'Natural alternatives' },
-  'e171': { name: 'Titanium Dioxide', category: 'Color', description: 'White color. Banned in EU (2022) due to potential genotoxicity concerns. Still used in some countries.', safety: 'avoid', bodyConcernTier: 'orange', concerns: ['Potential genotoxicity', 'Banned in EU'], alternatives: 'Natural alternatives' },
+  'e171': { name: 'Titanium Dioxide', category: 'Color', description: 'White color. Banned in EU (2022) due to potential genotoxicity concerns. Still used in some countries.', safety: 'avoid', bodyConcernTier: 'orange', bodyMvpLabelForms: ['e171', 'e 171', 'e-171', 'titanium dioxide', 'colour (171)', 'color (171)', 'colour (titanium dioxide)', 'color (titanium dioxide)'], concerns: ['Potential genotoxicity', 'Banned in EU'], alternatives: 'Natural alternatives' },
   'e172': { name: 'Iron Oxides', category: 'Color', description: 'Natural red, yellow, and black colors. Generally safe in small amounts.', safety: 'safe' },
   'e173': { name: 'Aluminium', category: 'Color', description: 'Metallic silver color. May accumulate in body. Avoid if possible.', safety: 'caution', concerns: ['May accumulate in body'] },
   'e174': { name: 'Silver', category: 'Color', description: 'Metallic silver color for decoration. Generally safe in small amounts.', safety: 'safe' },
@@ -182,7 +187,7 @@ export const ADDITIVE_DATABASE: Record<string, AdditiveInfo> = {
   'e247': { name: 'Sodium Propionate (variant)', category: 'Preservative', description: 'Variant form. Prevents mold in bread. Generally safe.', safety: 'safe', uses: ['Bread'] },
   'e248': { name: 'Potassium Propionate (variant)', category: 'Preservative', description: 'Variant form. Prevents mold in bread. Generally safe.', safety: 'safe', uses: ['Bread'] },
   'e249': { name: 'Potassium Nitrite', category: 'Preservative', description: 'Prevents botulism in cured meats. May form carcinogenic nitrosamines when heated. Use in moderation.', safety: 'caution', iarcGroup: '2A', concerns: ['May form nitrosamines (carcinogens)'], uses: ['Cured meats', 'Bacon'] },
-  'e250': { name: 'Sodium Nitrite', category: 'Preservative', description: 'Prevents botulism in cured meats. May form carcinogenic nitrosamines when heated. Use in moderation.', safety: 'caution', iarcGroup: '2A', bodyConcernTier: 'red', concerns: ['May form nitrosamines (carcinogens)'], uses: ['Cured meats', 'Bacon', 'Hot dogs'] },
+  'e250': { name: 'Sodium Nitrite', category: 'Preservative', description: 'Prevents botulism in cured meats. May form carcinogenic nitrosamines when heated. Use in moderation.', safety: 'caution', iarcGroup: '2A', bodyConcernTier: 'red', bodyMvpLabelForms: ['e250', 'e 250', 'e-250', 'sodium nitrite', 'preservative (250)', 'preservative (sodium nitrite)'], concerns: ['May form nitrosamines (carcinogens)'], uses: ['Cured meats', 'Bacon', 'Hot dogs'] },
   'e251': { name: 'Sodium Nitrate', category: 'Preservative', description: 'Used in cured meats. Converts to nitrite in body. Similar concerns to nitrites.', safety: 'caution', iarcGroup: '2A', concerns: ['Converts to nitrite', 'May form nitrosamines'], uses: ['Cured meats'] },
   'e252': { name: 'Potassium Nitrate', category: 'Preservative', description: 'Used in cured meats. Converts to nitrite in body. Similar concerns to nitrites.', safety: 'caution', iarcGroup: '2A', concerns: ['Converts to nitrite', 'May form nitrosamines'], uses: ['Cured meats'] },
   'e253': { name: 'Calcium Nitrate', category: 'Preservative', description: 'Calcium salt of nitric acid. Used as preservative and firming agent. Generally safe.', safety: 'safe' },
@@ -536,7 +541,7 @@ export const ADDITIVE_DATABASE: Record<string, AdditiveInfo> = {
   'e948': { name: 'Oxygen', category: 'Packaging Gas', description: 'Used in packaging. Completely safe.', safety: 'safe' },
   'e949': { name: 'Hydrogen', category: 'Packaging Gas', description: 'Used in packaging. Completely safe.', safety: 'safe' },
   'e950': { name: 'Acesulfame K / Acesulfame Potassium', category: 'Sweetener', description: 'Artificial sweetener. 200 times sweeter than sugar. Generally safe, but some studies suggest potential concerns.', safety: 'safe', uses: ['Diet drinks', 'Sugar-free products'] },
-  'e951': { name: 'Aspartame', category: 'Sweetener', description: 'Artificial sweetener. Safe for most people, but avoid if you have phenylketonuria (PKU). May cause headaches in sensitive individuals. IARC classified as possibly carcinogenic (Group 2B) in 2023.', safety: 'caution', iarcGroup: '2B', bodyConcernTier: 'orange', concerns: ['Avoid if PKU', 'Headaches in sensitive individuals', 'IARC Group 2B - Possibly carcinogenic'], uses: ['Diet drinks', 'Sugar-free products'] },
+  'e951': { name: 'Aspartame', category: 'Sweetener', description: 'Artificial sweetener. Safe for most people, but avoid if you have phenylketonuria (PKU). May cause headaches in sensitive individuals. IARC classified as possibly carcinogenic (Group 2B) in 2023.', safety: 'caution', iarcGroup: '2B', bodyConcernTier: 'orange', bodyMvpLabelForms: ['e951', 'e 951', 'e-951', 'aspartame', 'sweetener (951)', 'sweetener (aspartame)'], concerns: ['Avoid if PKU', 'Headaches in sensitive individuals', 'IARC Group 2B - Possibly carcinogenic'], uses: ['Diet drinks', 'Sugar-free products'] },
   'e952': { name: 'Cyclamic Acid / Cyclamate', category: 'Sweetener', description: 'Artificial sweetener. Banned in US due to potential carcinogenicity concerns. Still used in some countries.', safety: 'caution', concerns: ['Banned in US', 'Potential carcinogen'], uses: ['Diet drinks'] },
   'e953': { name: 'Isomalt', category: 'Sweetener', description: 'Sugar alcohol. May cause digestive issues in large amounts.', safety: 'caution', concerns: ['Digestive issues'], uses: ['Sugar-free products'] },
   'e954': { name: 'Saccharin', category: 'Sweetener', description: 'Artificial sweetener. 300-400 times sweeter than sugar. Generally safe, though some studies suggest potential concerns.', safety: 'safe', uses: ['Diet drinks', 'Sugar-free products'] },
@@ -1481,6 +1486,17 @@ export const ADDITIVE_DATABASE: Record<string, AdditiveInfo> = {
   'e1517': { name: 'E1517', category: 'Modified Starch / Other', description: 'This E-number is not currently assigned or commonly used in food products. Information may be limited.', safety: 'safe' },
   'e1519': { name: 'E1519', category: 'Modified Starch / Other', description: 'This E-number is not currently assigned or commonly used in food products. Information may be limited.', safety: 'safe' },
 };
+
+/** Body MVP ingredients_text forms: single source of truth from ADDITIVE_DATABASE (bodyConcernTier + bodyMvpLabelForms). */
+export const BODY_MVP_TEXT_FORMS_BY_ID: Readonly<Record<string, readonly string[]>> = (() => {
+  const out: Record<string, string[]> = {};
+  for (const [id, info] of Object.entries(ADDITIVE_DATABASE)) {
+    if (info.bodyConcernTier && info.bodyMvpLabelForms?.length) {
+      out[id] = [...info.bodyMvpLabelForms];
+    }
+  }
+  return out;
+})();
 
 /**
  * Get comprehensive information about an E-number additive

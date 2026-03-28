@@ -1,7 +1,7 @@
 /**
  * Ethics Pillar Unit Tests
  *
- * SPEC: Database files/ETHICS Pillar/ETHICS Pillar spec sheet.xlsx — Base 15 + BBFAW + KTC + certifications (cap 0–25).
+ * SPEC: Ethics_Scoring_Specification_37_Cursor_Submit.xlsx — Base 15 + BBFAW + KTC + certifications (cap 0–25).
  */
 
 import { calculateEthicsPillar } from '../../../../lib/truscoreEngine/pillars/ethicsPillar';

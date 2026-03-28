@@ -81,6 +81,24 @@ describe('Body Pillar Calculation', () => {
     expect(result.score).toBe(12);
   });
 
+  test('applies MVP additives for OFF beverages (still category food)', () => {
+    const product = {
+      ...baseProduct,
+      categories_tags: ['en:beverages', 'en:sodas'],
+      additives_tags: ['en:e102'],
+    };
+    const result = calculateBodyPillar(product);
+    expect(result.details.foodAdditivesApplied).toBe(true);
+    expect(result.details.additiveElementDeduction).toBe(3);
+  });
+
+  test('normalizes en:250 additive tag to e250 for MVP scoring', () => {
+    const product = { ...baseProduct, additives_tags: ['en:250'] };
+    const result = calculateBodyPillar(product);
+    expect(result.details.hasRedBodyAdditive).toBe(true);
+    expect(result.details.additiveElementDeduction).toBe(6);
+  });
+
   test('should apply red additive ceiling (max 12/25)', () => {
     const product = {
       ...baseProduct,

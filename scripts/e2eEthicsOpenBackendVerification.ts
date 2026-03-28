@@ -85,7 +85,7 @@ function baseProduct(over: Partial<Product> = {}): Product {
   };
 }
 
-console.log('\n=== ETHICS PILLAR — constants vs Ethics spec sheet (v36 / shipped code) ===\n');
+console.log('\n=== ETHICS PILLAR — constants vs Ethics spec sheet (v37 / shipped code) ===\n');
 for (const t of [1, 2, 3, 4, 5, 6] as const) {
   ok(
     `BBFAW Tier ${t} = ${SPEC_BBFAW_TIER[t]}`,

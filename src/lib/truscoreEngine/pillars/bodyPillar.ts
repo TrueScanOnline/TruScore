@@ -40,6 +40,7 @@ export interface BodyPillarResult {
   };
 }
 
+/** OFF soft drinks/juices use source openfoodfacts → detectProductCategory is 'food'; beverages are not excluded. */
 function isHumanFoodOrBeverageCategory(product: Product): boolean {
   const cat = detectProductCategory(product);
   return cat === 'food' || cat === 'unknown';

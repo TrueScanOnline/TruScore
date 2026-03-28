@@ -176,6 +176,8 @@ export interface Product {
   // Certifications
   labels?: string;
   labels_tags?: string[];
+  /** OFF label taxonomy hierarchy (e.g. en:organic); used with labels_tags for Ethics certification matching. */
+  labels_hierarchy?: string[];
   labels_en?: string;
   certifications?: Certification[];
 

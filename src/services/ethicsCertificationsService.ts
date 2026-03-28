@@ -1,14 +1,16 @@
 /**
- * ETHICS PILLAR — Certifications element (SPEC: Database files/ETHICS Pillar/ETHICS Pillar spec sheet.xlsx)
+ * ETHICS PILLAR — Certifications element
  *
- * - MVP: apply the single highest eligible certification weight only (no stacking).
- * - Weights (v36): Fairtrade +6, Rainforest Alliance (UTZ) +5, ASC +4, MSC +4, RSPO +3, Organic +2.
- * - ASC vs MSC: spec treats these as mutually exclusive certifications for a product (aquaculture vs wild-catch);
- *   no tie-break rule. If both ever appear in data, max weight wins (both +4 today).
- * - MSC: official API validation is authoritative for positive hits; OFF cannot override a negative API result.
- *   When `product.ethics_msc_api_validated === true`, MSC is eligible; when `false`, MSC is never credited.
- *   When unset, MSC is not credited unless EXPO_PUBLIC_ETHICS_MSC_OFF_FALLBACK=true (dev / limited rollout only).
- * - Organic: not scored on bare "organic" alone; require a recognised certifier tag or text signal per spec.
+ * SPEC: Database files/ETHICS Pillar/Ethics_Scoring_Specification_37_Cursor_Submit.xlsx (v37).
+ * If the workbook’s numeric tables (BBFAW tiers, KTC bands, certification weights) differ from code,
+ * update bbfawService / ktcService / ETHICS_CERTIFICATION_WEIGHTS and re-run `yarn sync-ethics-data` when JSON inputs change.
+ *
+ * - MVP: single highest eligible certification only (no stacking).
+ * - Weights (v37 / unchanged): Fairtrade +6, Rainforest Alliance +5, ASC +4, MSC +4, RSPO +3, Organic +2.
+ * - MSC: API validation rules unchanged (see ethics_msc_api_validated).
+ *
+ * Organic (+2): OFF recognised certifier/mark OR generic en:organic tag OR product-name standalone “organic”.
+ * Generic organic wording in ingredients_text / ingredients_text_en alone does not score.
  */
 
 import type { Product } from '../types/product';
@@ -22,7 +24,12 @@ export type EthicsCertificationScheme =
   | 'rspo'
   | 'organic';
 
-/** Relative weights within the certification element only (SPEC v36). */
+export type EthicsOrganicMatchSource =
+  | 'off_tags_or_hierarchy'
+  | 'label_or_cert_text'
+  | 'product_name';
+
+/** Relative weights within the certification element only (SPEC v37). */
 export const ETHICS_CERTIFICATION_WEIGHTS: Record<EthicsCertificationScheme, number> = {
   fairtrade: 6,
   rainforest_alliance: 5,
@@ -32,10 +39,8 @@ export const ETHICS_CERTIFICATION_WEIGHTS: Record<EthicsCertificationScheme, num
   organic: 2,
 };
 
-const REF_OFF_PRODUCT =
-  'https://world.openfoodfacts.org/';
-const REF_MSC_API =
-  'https://www.msc.org/for-business/msc-data-validation-api';
+const REF_OFF_PRODUCT = 'https://world.openfoodfacts.org/';
+const REF_MSC_API = 'https://www.msc.org/for-business/msc-data-validation-api';
 
 const FAIRTRADE_LABEL_TAGS = new Set([
   'en:fair-trade',
@@ -74,27 +79,82 @@ const RSPO_LABEL_TAGS = new Set([
 ]);
 
 /**
- * Tags that imply a recognised organic certifier / mark (not generic en:organic alone).
+ * Organic: exact OFF tags / hierarchy + legacy aliases. Includes generic en:organic (v37).
  */
-const ORGANIC_CERTIFIER_TAGS = new Set([
+export const ETHICS_ORGANIC_TAG_ALLOWLIST = new Set([
+  'en:organic',
+  'en:aco-certified-organic',
+  'en:australian-certified-organic',
   'en:eu-organic',
   'en:european-organic',
   'en:usda-organic',
-  'en:australian-certified-organic',
-  'en:acos-organic',
-  'en:demeter',
-  'en:biodynamic-agriculture',
-  'en:biodynamic',
-  'en:naturland',
   'en:soil-association-organic',
   'en:organic-food-chain',
+  'en:demeter',
+  'en:biodynamic',
+  'en:biodynamic-agriculture',
+  'en:naturland',
+  'en:ccof-certified-organic',
+  'en:canada-organic',
+  'en:bioland',
+  'en:biokreis',
+  'en:danish-state-controlled-organic',
+  'en:luomu-controlled-organic-production',
+  'en:finnish-organic-association',
+  'en:tun-certified-organic',
+  'en:debio-organic',
+  'en:southern-cross-certified',
   'en:southern-cross-organic',
+  /** Legacy OFF slug; keep for defensive matching. */
+  'en:acos-organic',
 ]);
+
+/** Multi-word phrases for label/cert text (order: longest first for matching). */
+const ORGANIC_LABEL_PHRASES_MULTI: string[] = [
+  'inspection and certification organization of organic products',
+  'catalan council of organic production',
+  'luomu controlled organic production',
+  'farm verified organic',
+  'danish state controlled organic',
+  'ccof certified organic',
+  'finnish organic association',
+  'southern cross certified',
+  'australian certified organic',
+  'tun certified organic',
+  'soil association organic',
+  'aco certified organic',
+  'canada organic',
+  'india organic',
+  'organic food chain',
+  'debio organic',
+  'soil association',
+  'eu organic',
+  'usda organic',
+  'biodynamic agriculture',
+  'biodynamic',
+  'naturland',
+  'demeter',
+  'bioland',
+  'biokreis',
+];
 
 function normalizeTag(tag: string): string {
   return String(tag || '')
     .trim()
     .toLowerCase();
+}
+
+function stripDiacritics(input: string): string {
+  return input.normalize('NFD').replace(/\p{M}/gu, '');
+}
+
+/** Lowercase, collapse whitespace, strip punctuation to spaces, strip diacritics. */
+export function normalizeEthicsOrganicText(input: string): string {
+  return stripDiacritics(input)
+    .toLowerCase()
+    .replace(/[\p{P}\p{S}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function getAllowMscOffFallback(): boolean {
@@ -106,13 +166,28 @@ function getAllowMscOffFallback(): boolean {
   }
 }
 
-function collectLabelTags(product: Product): string[] {
-  if (!Array.isArray(product.labels_tags)) return [];
-  return product.labels_tags.map(normalizeTag).filter(Boolean);
+/**
+ * Union of OFF label signals used for certification tag matching:
+ * labels_tags, labels_hierarchy, formatted certification tags on the product.
+ */
+export function collectEthicsOffLabelTags(product: Product): string[] {
+  const out: string[] = [];
+  if (Array.isArray(product.labels_tags)) {
+    out.push(...product.labels_tags.map(normalizeTag).filter(Boolean));
+  }
+  if (Array.isArray(product.labels_hierarchy)) {
+    out.push(...product.labels_hierarchy.map(normalizeTag).filter(Boolean));
+  }
+  if (Array.isArray(product.certifications)) {
+    for (const c of product.certifications) {
+      if (c?.tag && typeof c.tag === 'string') out.push(normalizeTag(c.tag));
+    }
+  }
+  return [...new Set(out)];
 }
 
-/** Lowercased haystack for substring checks (labels text + cert names + ingredients). */
-function buildHaystack(product: Product): string {
+/** Haystack for non-organic schemes (may include ingredients). */
+function buildGeneralCertHaystack(product: Product): string {
   const parts: string[] = [];
   if (product.labels && typeof product.labels === 'string') parts.push(product.labels);
   if (product.labels_en && typeof product.labels_en === 'string') parts.push(product.labels_en);
@@ -133,20 +208,78 @@ function buildHaystack(product: Product): string {
   return parts.join(' | ').toLowerCase();
 }
 
-const ORGANIC_CERTIFIER_SUBSTRINGS = [
-  'australian certified organic',
-  'australian certified organic.',
-  'acos',
-  'demeter',
-  'bdri',
-  'organic food chain',
-  'southern cross certified',
-  'eu organic',
-  'usda organic',
-  'soil association',
-  'biodynamic',
-  'naturland',
-];
+/** Labels + cert display text only — no ingredients, no product name (organic MVP rule). */
+function buildOrganicLabelCertNormalized(product: Product): string {
+  const parts: string[] = [];
+  if (product.labels && typeof product.labels === 'string') parts.push(product.labels);
+  if (product.labels_en && typeof product.labels_en === 'string') parts.push(product.labels_en);
+  if (Array.isArray(product.certifications)) {
+    for (const c of product.certifications) {
+      if (c?.name) parts.push(c.name);
+      if (c?.tag) parts.push(c.tag);
+      if (c?.description) parts.push(c.description);
+    }
+  }
+  return normalizeEthicsOrganicText(parts.join(' | '));
+}
+
+/** Standalone “organic” in normalized text; exclude non-organic / inorganic false positives. */
+function hasSafeStandaloneOrganicWord(normalized: string): boolean {
+  if (!normalized) return false;
+  if (/\binorganic\b/.test(normalized)) return false;
+  if (/\bnon\s*organic\b/.test(normalized)) return false;
+  if (/\bnonorganic\b/.test(normalized)) return false;
+  return /\borganic\b/.test(normalized);
+}
+
+/** Word-boundary “dio” (requested phrase list). */
+function hasStandaloneDio(normalized: string): boolean {
+  return /\bdio\b/.test(normalized);
+}
+
+function organicMatchesLabelOrCertText(product: Product): boolean {
+  const n = buildOrganicLabelCertNormalized(product);
+  if (!n) return false;
+
+  const phrases = [...ORGANIC_LABEL_PHRASES_MULTI].sort((a, b) => b.length - a.length);
+  for (const phrase of phrases) {
+    const pn = normalizeEthicsOrganicText(phrase);
+    if (pn.length >= 2 && n.includes(pn)) return true;
+  }
+  if (hasSafeStandaloneOrganicWord(n)) return true;
+  if (hasStandaloneDio(n)) return true;
+  return false;
+}
+
+function productNameHasStandaloneOrganic(product: Product): boolean {
+  const parts = [product.product_name, product.product_name_en].filter(
+    (s): s is string => typeof s === 'string' && s.trim().length > 0
+  );
+  if (parts.length === 0) return false;
+  const n = normalizeEthicsOrganicText(parts.join(' '));
+  if (/\binorganic\b/.test(n)) return false;
+  if (/\bnon\s*organic\b/.test(n)) return false;
+  if (/\bnonorganic\b/.test(n)) return false;
+  return /\borganic\b/.test(n);
+}
+
+function evaluateOrganicMatch(
+  product: Product,
+  tagUnion: string[]
+): { matched: boolean; source?: EthicsOrganicMatchSource } {
+  for (const t of tagUnion) {
+    if (ETHICS_ORGANIC_TAG_ALLOWLIST.has(t)) {
+      return { matched: true, source: 'off_tags_or_hierarchy' };
+    }
+  }
+  if (organicMatchesLabelOrCertText(product)) {
+    return { matched: true, source: 'label_or_cert_text' };
+  }
+  if (productNameHasStandaloneOrganic(product)) {
+    return { matched: true, source: 'product_name' };
+  }
+  return { matched: false };
+}
 
 function detectFairtrade(tags: string[], haystack: string): boolean {
   if (tags.some((t) => FAIRTRADE_LABEL_TAGS.has(t))) return true;
@@ -202,39 +335,32 @@ function mscEligible(product: Product, tags: string[]): boolean {
   return false;
 }
 
-/**
- * Organic credit only with a recognised certifier / mark (spec). Bare en:generic organic wording alone is insufficient.
- */
-function detectOrganic(tags: string[], haystack: string): boolean {
-  if (tags.some((t) => ORGANIC_CERTIFIER_TAGS.has(t))) return true;
-  if (ORGANIC_CERTIFIER_SUBSTRINGS.some((s) => haystack.includes(s))) return true;
-  return false;
-}
-
 export interface EthicsCertificationsEvaluation {
-  /** Single adjustment to apply (max weight among eligible schemes). */
   adjustment: number;
   winningScheme: EthicsCertificationScheme | null;
-  /** All schemes that were eligible before max selection (for diagnostics / UI). */
   eligibleSchemes: EthicsCertificationScheme[];
   referenceUrl: string;
+  /** Set when organic rules matched (whether or not it wins max scheme). */
+  organicMatchSource?: EthicsOrganicMatchSource;
 }
 
 /**
- * Evaluate certifications per ETHICS SPEC (max one scheme for MVP).
+ * Evaluate certifications per ETHICS SPEC v37 (max one scheme for MVP).
  */
 export function evaluateEthicsCertifications(product: Product): EthicsCertificationsEvaluation {
-  const tags = collectLabelTags(product);
-  const haystack = buildHaystack(product);
+  const tagUnion = collectEthicsOffLabelTags(product);
+  const haystack = buildGeneralCertHaystack(product);
+
+  const organicEval = evaluateOrganicMatch(product, tagUnion);
 
   const eligible: EthicsCertificationScheme[] = [];
 
-  if (detectFairtrade(tags, haystack)) eligible.push('fairtrade');
-  if (detectRainforestUtz(tags)) eligible.push('rainforest_alliance');
-  if (detectAsc(tags, haystack)) eligible.push('asc');
-  if (mscEligible(product, tags)) eligible.push('msc');
-  if (detectRspo(tags, haystack)) eligible.push('rspo');
-  if (detectOrganic(tags, haystack)) eligible.push('organic');
+  if (detectFairtrade(tagUnion, haystack)) eligible.push('fairtrade');
+  if (detectRainforestUtz(tagUnion)) eligible.push('rainforest_alliance');
+  if (detectAsc(tagUnion, haystack)) eligible.push('asc');
+  if (mscEligible(product, tagUnion)) eligible.push('msc');
+  if (detectRspo(tagUnion, haystack)) eligible.push('rspo');
+  if (organicEval.matched) eligible.push('organic');
 
   if (eligible.length === 0) {
     return {
@@ -242,6 +368,7 @@ export function evaluateEthicsCertifications(product: Product): EthicsCertificat
       winningScheme: null,
       eligibleSchemes: [],
       referenceUrl: REF_OFF_PRODUCT,
+      organicMatchSource: undefined,
     };
   }
 
@@ -263,6 +390,7 @@ export function evaluateEthicsCertifications(product: Product): EthicsCertificat
     winningScheme: winning,
     eligibleSchemes: eligible,
     referenceUrl,
+    organicMatchSource: organicEval.matched ? organicEval.source : undefined,
   };
 }
 

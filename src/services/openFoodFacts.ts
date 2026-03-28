@@ -159,7 +159,67 @@ export function formatCertifications(product: Product): Product['certifications'
   const certificationMap: Record<string, { name: string; icon_url?: string; description?: string }> = {
     'en:organic': {
       name: 'Organic',
+      description: 'Organic (generic OFF label)',
+    },
+    'en:aco-certified-organic': {
+      name: 'ACO Certified Organic',
+      description: 'Australian Certified Organic (ACO)',
+    },
+    'en:australian-certified-organic': {
+      name: 'Australian Certified Organic',
+      description: 'Australian certified organic',
+    },
+    'en:eu-organic': {
+      name: 'EU Organic',
       description: 'EU organic certification',
+    },
+    'en:european-organic': {
+      name: 'European Organic',
+      description: 'European organic',
+    },
+    'en:usda-organic': {
+      name: 'USDA Organic',
+      description: 'USDA organic',
+    },
+    'en:soil-association-organic': {
+      name: 'Soil Association Organic',
+      description: 'Soil Association organic',
+    },
+    'en:organic-food-chain': {
+      name: 'Organic Food Chain',
+      description: 'Organic Food Chain',
+    },
+    'en:demeter': {
+      name: 'Demeter',
+      description: 'Demeter biodynamic',
+    },
+    'en:biodynamic': {
+      name: 'Biodynamic',
+      description: 'Biodynamic agriculture',
+    },
+    'en:biodynamic-agriculture': {
+      name: 'Biodynamic Agriculture',
+      description: 'Biodynamic agriculture',
+    },
+    'en:naturland': {
+      name: 'Naturland',
+      description: 'Naturland organic',
+    },
+    'en:canada-organic': {
+      name: 'Canada Organic',
+      description: 'Canada organic',
+    },
+    'en:ccof-certified-organic': {
+      name: 'CCOF Certified Organic',
+      description: 'CCOF certified organic',
+    },
+    'en:southern-cross-certified': {
+      name: 'Southern Cross Certified',
+      description: 'Southern Cross certified',
+    },
+    'en:southern-cross-organic': {
+      name: 'Southern Cross Organic',
+      description: 'Southern Cross organic',
     },
     'en:fair-trade': {
       name: 'Fair Trade',
