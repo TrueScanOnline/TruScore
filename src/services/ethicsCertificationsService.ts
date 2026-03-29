@@ -180,8 +180,26 @@ export function collectEthicsOffLabelTags(product: Product): string[] {
   }
   if (Array.isArray(product.certifications)) {
     for (const c of product.certifications) {
-      if (c?.tag && typeof c.tag === 'string') out.push(normalizeTag(c.tag));
+      const t = c?.tag && typeof c.tag === 'string' ? normalizeTag(c.tag) : '';
+      if (t && t.startsWith('ts:')) continue; // display-only synthetics (normalizeTag lowercases)
+      if (t) out.push(t);
     }
+  }
+  return [...new Set(out)];
+}
+
+/**
+ * OFF `labels_tags` + `labels_hierarchy` only (excludes `product.certifications`).
+ * Use when building UI badges so we do not read formatted certs (avoids circularity with `formatCertifications`).
+ * Order: tags first, then hierarchy; duplicates removed with first occurrence kept.
+ */
+export function collectOffLabelTagsForCertDisplay(product: Product): string[] {
+  const out: string[] = [];
+  if (Array.isArray(product.labels_tags)) {
+    out.push(...product.labels_tags.map(normalizeTag).filter(Boolean));
+  }
+  if (Array.isArray(product.labels_hierarchy)) {
+    out.push(...product.labels_hierarchy.map(normalizeTag).filter(Boolean));
   }
   return [...new Set(out)];
 }
@@ -215,8 +233,10 @@ function buildOrganicLabelCertNormalized(product: Product): string {
   if (product.labels_en && typeof product.labels_en === 'string') parts.push(product.labels_en);
   if (Array.isArray(product.certifications)) {
     for (const c of product.certifications) {
+      const tag = c?.tag && typeof c.tag === 'string' ? c.tag : '';
+      if (tag.toLowerCase().startsWith('ts:')) continue; // avoid circular match via formatCertifications output
       if (c?.name) parts.push(c.name);
-      if (c?.tag) parts.push(c.tag);
+      if (tag) parts.push(tag);
       if (c?.description) parts.push(c.description);
     }
   }
@@ -279,6 +299,14 @@ function evaluateOrganicMatch(
     return { matched: true, source: 'product_name' };
   }
   return { matched: false };
+}
+
+/** Organic match using OFF label fields only (same rules as scoring, without formatted certifications in the tag union). */
+export function evaluateOrganicMatchForCertDisplay(product: Product): {
+  matched: boolean;
+  source?: EthicsOrganicMatchSource;
+} {
+  return evaluateOrganicMatch(product, collectOffLabelTagsForCertDisplay(product));
 }
 
 function detectFairtrade(tags: string[], haystack: string): boolean {

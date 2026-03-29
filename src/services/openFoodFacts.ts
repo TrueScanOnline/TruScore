@@ -4,6 +4,14 @@ import { logger } from '../utils/logger';
 import { getUserCountryCode, getCountryCodesToTry, getOFFCountryInstance } from '../utils/countryDetection';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { normalizeBarcode } from '../utils/barcodeNormalization';
+import {
+  ETHICS_ORGANIC_TAG_ALLOWLIST,
+  collectOffLabelTagsForCertDisplay,
+  evaluateOrganicMatchForCertDisplay,
+} from './ethicsCertificationsService';
+import { ORGANIC_LABEL_TEXT_CLAIM_TAG, ORGANIC_PRODUCT_NAME_CLAIM_TAG } from '../constants/certDisplay';
+
+export { ORGANIC_LABEL_TEXT_CLAIM_TAG, ORGANIC_PRODUCT_NAME_CLAIM_TAG };
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org/api/v2/product';
 const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
@@ -148,122 +156,187 @@ export function formatIngredients(product: Product): Product['ingredients'] {
   return undefined;
 }
 
+const CERTIFICATION_DISPLAY_MAP: Record<string, { name: string; icon_url?: string; description?: string }> = {
+  // Organic family — aligned with ETHICS_ORGANIC_TAG_ALLOWLIST / ethics scoring
+  'en:organic': {
+    name: 'Organic',
+    description: 'Organic (generic OFF label)',
+  },
+  'en:aco-certified-organic': {
+    name: 'ACO Certified Organic',
+    description: 'Australian Certified Organic (ACO)',
+  },
+  'en:australian-certified-organic': {
+    name: 'Australian Certified Organic',
+    description: 'Australian certified organic',
+  },
+  'en:eu-organic': {
+    name: 'EU Organic',
+    description: 'EU organic certification',
+  },
+  'en:european-organic': {
+    name: 'European Organic',
+    description: 'European organic',
+  },
+  'en:usda-organic': {
+    name: 'USDA Organic',
+    description: 'USDA organic',
+  },
+  'en:soil-association-organic': {
+    name: 'Soil Association Organic',
+    description: 'Soil Association organic',
+  },
+  'en:organic-food-chain': {
+    name: 'Organic Food Chain',
+    description: 'Organic Food Chain',
+  },
+  'en:demeter': {
+    name: 'Demeter',
+    description: 'Demeter biodynamic',
+  },
+  'en:biodynamic': {
+    name: 'Biodynamic',
+    description: 'Biodynamic agriculture',
+  },
+  'en:biodynamic-agriculture': {
+    name: 'Biodynamic Agriculture',
+    description: 'Biodynamic agriculture',
+  },
+  'en:naturland': {
+    name: 'Naturland',
+    description: 'Naturland organic',
+  },
+  'en:ccof-certified-organic': {
+    name: 'CCOF Certified Organic',
+    description: 'CCOF certified organic',
+  },
+  'en:canada-organic': {
+    name: 'Canada Organic',
+    description: 'Canada organic',
+  },
+  'en:bioland': {
+    name: 'Bioland',
+    description: 'Bioland organic association',
+  },
+  'en:biokreis': {
+    name: 'Biokreis',
+    description: 'Biokreis organic',
+  },
+  'en:danish-state-controlled-organic': {
+    name: 'Danish State-Controlled Organic',
+    description: 'Danish state-controlled organic',
+  },
+  'en:luomu-controlled-organic-production': {
+    name: 'Luomu Controlled Organic',
+    description: 'Luomu controlled organic production',
+  },
+  'en:finnish-organic-association': {
+    name: 'Finnish Organic Association',
+    description: 'Finnish organic association',
+  },
+  'en:tun-certified-organic': {
+    name: 'TUN Certified Organic',
+    description: 'TUN certified organic',
+  },
+  'en:debio-organic': {
+    name: 'Debio Organic',
+    description: 'Debio organic',
+  },
+  'en:southern-cross-certified': {
+    name: 'Southern Cross Certified',
+    description: 'Southern Cross certified',
+  },
+  'en:southern-cross-organic': {
+    name: 'Southern Cross Organic',
+    description: 'Southern Cross organic',
+  },
+  'en:acos-organic': {
+    name: 'ACOS Organic',
+    description: 'Legacy OFF organic tag (ACOS)',
+  },
+  'en:fair-trade': {
+    name: 'Fair Trade',
+    description: 'Fair trade certified',
+  },
+  'en:rainforest-alliance': {
+    name: 'Rainforest Alliance',
+    description: 'Rainforest Alliance certified',
+  },
+  'en:utz': {
+    name: 'UTZ Certified',
+    description: 'UTZ certified sustainable',
+  },
+  'en:roundtable-on-sustainable-palm-oil': {
+    name: 'RSPO',
+    description: 'Roundtable on Sustainable Palm Oil',
+  },
+  'en:marine-stewardship-council': {
+    name: 'MSC',
+    description: 'Marine Stewardship Council',
+  },
+  'en:free-range': {
+    name: 'Free Range',
+    description: 'Free range certified',
+  },
+  'en:cage-free': {
+    name: 'Cage Free',
+    description: 'Cage free eggs/poultry',
+  },
+  'en:red-tractor': {
+    name: 'Red Tractor',
+    description: 'Red Tractor assured food',
+  },
+};
+
 /**
- * Format certifications from labels
+ * Format certifications from OFF labels (tags + hierarchy union), plus display-only organic claims when MVP ethics
+ * matches organic via product name or label/cert text but there is no matching OFF tag in the union.
  */
 export function formatCertifications(product: Product): Product['certifications'] {
-  if (!product.labels_tags || product.labels_tags.length === 0) {
-    return undefined;
+  const union = collectOffLabelTagsForCertDisplay(product);
+
+  const certifications: NonNullable<Product['certifications']> = [];
+  let organicBadgeAdded = false;
+
+  for (const tag of union) {
+    const meta = CERTIFICATION_DISPLAY_MAP[tag];
+    if (!meta) continue;
+
+    const isOrganicFamily = ETHICS_ORGANIC_TAG_ALLOWLIST.has(tag);
+    if (isOrganicFamily) {
+      if (organicBadgeAdded) continue;
+      organicBadgeAdded = true;
+    }
+
+    certifications.push({
+      id: tag,
+      name: meta.name,
+      tag,
+      icon_url: meta.icon_url,
+      description: meta.description,
+    });
   }
 
-  const certificationMap: Record<string, { name: string; icon_url?: string; description?: string }> = {
-    'en:organic': {
-      name: 'Organic',
-      description: 'Organic (generic OFF label)',
-    },
-    'en:aco-certified-organic': {
-      name: 'ACO Certified Organic',
-      description: 'Australian Certified Organic (ACO)',
-    },
-    'en:australian-certified-organic': {
-      name: 'Australian Certified Organic',
-      description: 'Australian certified organic',
-    },
-    'en:eu-organic': {
-      name: 'EU Organic',
-      description: 'EU organic certification',
-    },
-    'en:european-organic': {
-      name: 'European Organic',
-      description: 'European organic',
-    },
-    'en:usda-organic': {
-      name: 'USDA Organic',
-      description: 'USDA organic',
-    },
-    'en:soil-association-organic': {
-      name: 'Soil Association Organic',
-      description: 'Soil Association organic',
-    },
-    'en:organic-food-chain': {
-      name: 'Organic Food Chain',
-      description: 'Organic Food Chain',
-    },
-    'en:demeter': {
-      name: 'Demeter',
-      description: 'Demeter biodynamic',
-    },
-    'en:biodynamic': {
-      name: 'Biodynamic',
-      description: 'Biodynamic agriculture',
-    },
-    'en:biodynamic-agriculture': {
-      name: 'Biodynamic Agriculture',
-      description: 'Biodynamic agriculture',
-    },
-    'en:naturland': {
-      name: 'Naturland',
-      description: 'Naturland organic',
-    },
-    'en:canada-organic': {
-      name: 'Canada Organic',
-      description: 'Canada organic',
-    },
-    'en:ccof-certified-organic': {
-      name: 'CCOF Certified Organic',
-      description: 'CCOF certified organic',
-    },
-    'en:southern-cross-certified': {
-      name: 'Southern Cross Certified',
-      description: 'Southern Cross certified',
-    },
-    'en:southern-cross-organic': {
-      name: 'Southern Cross Organic',
-      description: 'Southern Cross organic',
-    },
-    'en:fair-trade': {
-      name: 'Fair Trade',
-      description: 'Fair trade certified',
-    },
-    'en:rainforest-alliance': {
-      name: 'Rainforest Alliance',
-      description: 'Rainforest Alliance certified',
-    },
-    'en:utz': {
-      name: 'UTZ Certified',
-      description: 'UTZ certified sustainable',
-    },
-    'en:roundtable-on-sustainable-palm-oil': {
-      name: 'RSPO',
-      description: 'Roundtable on Sustainable Palm Oil',
-    },
-    'en:marine-stewardship-council': {
-      name: 'MSC',
-      description: 'Marine Stewardship Council',
-    },
-    'en:free-range': {
-      name: 'Free Range',
-      description: 'Free range certified',
-    },
-    'en:cage-free': {
-      name: 'Cage Free',
-      description: 'Cage free eggs/poultry',
-    },
-    'en:red-tractor': {
-      name: 'Red Tractor',
-      description: 'Red Tractor assured food',
-    },
-  };
+  const organicUi = evaluateOrganicMatchForCertDisplay(product);
+  if (organicUi.matched && !organicBadgeAdded) {
+    if (organicUi.source === 'product_name') {
+      certifications.push({
+        id: ORGANIC_PRODUCT_NAME_CLAIM_TAG,
+        tag: ORGANIC_PRODUCT_NAME_CLAIM_TAG,
+        name: 'Organic',
+        description: 'Organic claim detected in product name',
+      });
+    } else if (organicUi.source === 'label_or_cert_text') {
+      certifications.push({
+        id: ORGANIC_LABEL_TEXT_CLAIM_TAG,
+        tag: ORGANIC_LABEL_TEXT_CLAIM_TAG,
+        name: 'Organic',
+        description: 'Organic claim detected in label or certification text',
+      });
+    }
+  }
 
-  return product.labels_tags
-    .filter((tag) => certificationMap[tag])
-    .map((tag) => ({
-      id: tag,
-      name: certificationMap[tag].name,
-      tag,
-      icon_url: certificationMap[tag].icon_url,
-      description: certificationMap[tag].description,
-    }));
+  return certifications.length > 0 ? certifications : undefined;
 }
 
 /**

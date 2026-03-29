@@ -1,0 +1,97 @@
+[
+  {
+    "barcode": "9310354982466",
+    "productName": "Greek Style Yoghurt",
+    "truScore": 79,
+    "breakdown": {
+      "Body": {
+        "pillar": "Body",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Nutri-Score Grade C (poor nutrition)",
+            "value": -1,
+            "type": "negative"
+          },
+          {
+            "description": "NOVA Group 1 (unprocessed / minimally processed)",
+            "value": 3,
+            "type": "positive"
+          }
+        ],
+        "final": 17
+      },
+      "Planet": {
+        "pillar": "Planet",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Eco-Score Grade A (excellent environmental impact)",
+            "value": 7,
+            "type": "positive"
+          }
+        ],
+        "final": 22
+      },
+      "Ethics": {
+        "pillar": "Ethics",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (assumes ethical until poor ratings)",
+            "value": 0,
+            "type": "neutral"
+          }
+        ],
+        "final": 15
+      },
+      "Open": {
+        "pillar": "Open",
+        "base": 15,
+        "adjustments": [
+          {
+            "description": "Base score (neutral starting point; uniform across pillars)",
+            "value": 0,
+            "type": "neutral"
+          },
+          {
+            "description": "Ingredients disclosure present",
+            "value": 2,
+            "type": "positive"
+          },
+          {
+            "description": "Listing clarity bonus (no vague-term matches + NOVA 1–2)",
+            "value": 4,
+            "type": "positive"
+          },
+          {
+            "description": "Partial nutritional information disclosed",
+            "value": 1,
+            "type": "positive"
+          },
+          {
+            "description": "Complete origin information disclosed",
+            "value": 4,
+            "type": "positive"
+          }
+        ],
+        "final": 25
+      }
+    },
+    "productData": {
+      "nutriscore_grade": "c",
+      "ecoscore_grade": "a",
+      "nova_group": 1,
+      "additives_count": 0,
+      "additives_tags": [],
+      "hasIngredients": true,
+      "ingredientsLength": 225,
+      "hasPalmOil": true,
+      "certifications": [],
+      "labels": [
+        "en:aco-certified-organic"
+      ],
+      "hasOrigin": true
+    }
+  }
+]

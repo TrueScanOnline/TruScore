@@ -1,7 +1,7 @@
 # iOS Build – PowerShell Instructions (User Testing / App Store Connect)
 
 **Target:** iPhone 11 user testing (device supports iOS through current releases; app **minimum iOS 15.1** via `expo-build-properties`)  
-**Build number:** See **`expo.ios.buildNumber`** in `app.config.js` (this doc last aligned with **build 21**)  
+**Build number:** See **`expo.ios.buildNumber`** in `app.config.js` (this doc last aligned with **build 22**)  
 **Purpose:** Create a new iOS build and submit to App Store Connect for TestFlight / download  
 
 ---
@@ -118,7 +118,7 @@ eas submit --platform ios --profile preview --latest
 
 | Item | Value |
 |------|--------|
-| **iOS build number** | **`app.config.js` → `expo.ios.buildNumber`** (e.g. **21**) |
+| **iOS build number** | **`app.config.js` → `expo.ios.buildNumber`** (e.g. **22**) |
 | **Marketing version** | 10.0.0 (`app.config.js` → `expo.version`) |
 | **Bundle ID** | `com.truescan.foodscanner` |
 | **Min iOS deployment** | 15.1 (`expo-build-properties` in `app.config.js`) — **iPhone 11 OK** |
