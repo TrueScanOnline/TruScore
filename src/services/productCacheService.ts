@@ -14,10 +14,11 @@ import { Product, ProductWithTrustScore } from '../types/product';
 import { getCachedProduct, cacheProduct } from './cacheService';
 import { lookupProductInSQLite, saveProductToSQLite } from './sqliteProductDatabase';
 import { getUserCountryCode } from '../utils/countryDetection';
-import { getUserContributedProduct } from './userContributedProductsService';
-import { extractPalmOilAnalysis } from './openFoodFacts';
+import { getUserContributedProduct, USER_CONTRIBUTED_MERGE_RACE_MS } from './userContributedProductsService';
+import { extractPalmOilAnalysis, formatCertifications } from './openFoodFacts';
 import { applyConfidenceScore } from '../utils/confidenceScoring';
 import { calculateTrustScore } from '../utils/trustScore';
+import { removeCachedTruScore } from '../utils/truScoreCache';
 import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
 import { isWebSearchFallback } from './webSearchFallback';
 import { logger } from '../utils/logger';
@@ -99,10 +100,12 @@ export async function mergeUserContributedData(product: Product, barcode: string
     });
     
     logger.info(`[ProductCacheService] Merging user-contributed data: ${barcode}`);
-    
-    // Merge ALL user-contributed fields - user data takes priority over database data
-    // CRITICAL: Always merge image_url if available (even if product already has one)
-    // User-contributed photos are more accurate (taken from actual product)
+
+    const mergeSource = (userContributedProduct as any)._source as string | undefined;
+    // Vercel-only response has no ingredients/nutriments; LOCAL and MERGED carry full manual-entry fields
+    const vercelProprietaryOnly = mergeSource === 'BACKEND';
+
+    // Merge community photo from Vercel photos table (when present)
     if (userContributedProduct.image_url && userContributedProduct.image_url.trim().length > 0) {
       // Only update if the user-contributed URL is a valid public URL (not a local file path)
       const isPublicUrl = userContributedProduct.image_url.startsWith('http://') || 
@@ -138,65 +141,133 @@ export async function mergeUserContributedData(product: Product, barcode: string
         hasOtherData: !!(userContributedProduct.ingredients_text || userContributedProduct.nutriments),
       });
     }
-    
-    // ID 10: User-contributed nutrition data override REMOVED (use trusted sources only)
-    // User contributions still used for: a) exporting to OFF, b) in-house database for products not found
-    // Nutrition data from user contributions is NOT merged to ensure data quality and safety
-    
-    if (userContributedProduct.ingredients_text && userContributedProduct.ingredients_text.trim().length > 0) {
-      product.ingredients_text = userContributedProduct.ingredients_text;
-    }
-    
-    if (userContributedProduct.manufacturing_places) {
-      product.manufacturing_places = userContributedProduct.manufacturing_places;
-      if (userContributedProduct.manufacturing_places_tags) {
-        product.manufacturing_places_tags = userContributedProduct.manufacturing_places_tags;
+
+    if (vercelProprietaryOnly) {
+      if (userContributedProduct.manufacturing_places) {
+        product.manufacturing_places = userContributedProduct.manufacturing_places;
+        if (userContributedProduct.manufacturing_places_tags) {
+          product.manufacturing_places_tags = userContributedProduct.manufacturing_places_tags;
+        }
       }
-    }
-    
-    if (userContributedProduct.countries) {
-      product.countries = userContributedProduct.countries;
-      if (userContributedProduct.countries_tags) {
-        product.countries_tags = userContributedProduct.countries_tags;
+      if (userContributedProduct.countries) {
+        product.countries = userContributedProduct.countries;
+        if (userContributedProduct.countries_tags) {
+          product.countries_tags = userContributedProduct.countries_tags;
+        }
       }
-    }
-    
-    if (userContributedProduct.origins) {
-      product.origins = userContributedProduct.origins;
-      if (userContributedProduct.origins_tags) {
-        product.origins_tags = userContributedProduct.origins_tags;
+      if (userContributedProduct.origins) {
+        product.origins = userContributedProduct.origins;
+        if (userContributedProduct.origins_tags) {
+          product.origins_tags = userContributedProduct.origins_tags;
+        }
       }
+      if (userContributedProduct.labels_tags && userContributedProduct.labels_tags.length > 0) {
+        product.labels_tags = [
+          ...new Set([...(product.labels_tags || []), ...userContributedProduct.labels_tags]),
+        ];
+      }
+      if (userContributedProduct.labels_hierarchy && userContributedProduct.labels_hierarchy.length > 0) {
+        product.labels_hierarchy = [
+          ...new Set([...(product.labels_hierarchy || []), ...userContributedProduct.labels_hierarchy]),
+        ];
+      }
+      product.certifications = formatCertifications(product);
+    } else {
+      const ucNut = userContributedProduct.nutriments;
+      if (ucNut && typeof ucNut === 'object' && Object.keys(ucNut).length > 0) {
+        product.nutriments = { ...(product.nutriments || {}), ...ucNut } as Product['nutriments'];
+      }
+
+      if (userContributedProduct.ingredients_text && userContributedProduct.ingredients_text.trim().length > 0) {
+        product.ingredients_text = userContributedProduct.ingredients_text;
+      }
+
+      if (userContributedProduct.manufacturing_places) {
+        product.manufacturing_places = userContributedProduct.manufacturing_places;
+        if (userContributedProduct.manufacturing_places_tags) {
+          product.manufacturing_places_tags = userContributedProduct.manufacturing_places_tags;
+        }
+      }
+
+      if (userContributedProduct.countries) {
+        product.countries = userContributedProduct.countries;
+        if (userContributedProduct.countries_tags) {
+          product.countries_tags = userContributedProduct.countries_tags;
+        }
+      }
+
+      if (userContributedProduct.origins) {
+        product.origins = userContributedProduct.origins;
+        if (userContributedProduct.origins_tags) {
+          product.origins_tags = userContributedProduct.origins_tags;
+        }
+      }
+
+      if (userContributedProduct.packaging_data) {
+        product.packaging_data = userContributedProduct.packaging_data;
+      }
+
+      if (userContributedProduct.packagings) {
+        product.packagings = userContributedProduct.packagings;
+      }
+
+      if (userContributedProduct.serving_size) {
+        product.serving_size = userContributedProduct.serving_size;
+      }
+
+      if (userContributedProduct.allergens_tags && userContributedProduct.allergens_tags.length > 0) {
+        product.allergens_tags = userContributedProduct.allergens_tags;
+      }
+
+      if (userContributedProduct.additives_tags && userContributedProduct.additives_tags.length > 0) {
+        product.additives_tags = userContributedProduct.additives_tags;
+      }
+
+      if (userContributedProduct.labels_tags && userContributedProduct.labels_tags.length > 0) {
+        product.labels_tags = [
+          ...new Set([...(product.labels_tags || []), ...userContributedProduct.labels_tags]),
+        ];
+      }
+      if (userContributedProduct.labels_hierarchy && userContributedProduct.labels_hierarchy.length > 0) {
+        product.labels_hierarchy = [
+          ...new Set([...(product.labels_hierarchy || []), ...userContributedProduct.labels_hierarchy]),
+        ];
+      }
+      product.certifications = formatCertifications(product);
     }
-    
-    if (userContributedProduct.packaging_data) {
-      product.packaging_data = userContributedProduct.packaging_data;
+
+    const mergedAnything =
+      !!userContributedProduct.image_url ||
+      (!vercelProprietaryOnly &&
+        !!(
+          userContributedProduct.ingredients_text ||
+          (userContributedProduct.nutriments && Object.keys(userContributedProduct.nutriments).length > 0) ||
+          userContributedProduct.allergens_tags?.length ||
+          userContributedProduct.additives_tags?.length
+        )) ||
+      !!userContributedProduct.manufacturing_places ||
+      !!userContributedProduct.countries ||
+      !!(userContributedProduct.labels_tags && userContributedProduct.labels_tags.length > 0);
+
+    if (mergedAnything) {
+      await removeCachedTruScore(barcode).catch(() => {});
     }
-    
-    if (userContributedProduct.packagings) {
-      product.packagings = userContributedProduct.packagings;
-    }
-    
-    if (userContributedProduct.serving_size) {
-      product.serving_size = userContributedProduct.serving_size;
-    }
-    
-    if (userContributedProduct.allergens_tags && userContributedProduct.allergens_tags.length > 0) {
-      product.allergens_tags = userContributedProduct.allergens_tags;
-    }
-    
-    if (userContributedProduct.additives_tags && userContributedProduct.additives_tags.length > 0) {
-      product.additives_tags = userContributedProduct.additives_tags;
-    }
-    
+
     powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ MERGE COMPLETE - User-contributed data merged`, {
       barcode,
       step: 'MERGE_COMPLETE',
       finalProductHasPhoto: !!product.image_url,
       finalPhotoUrl: product.image_url || 'NONE',
+      mergeMode: vercelProprietaryOnly ? 'VERCEL_PROPRIETARY_ONLY' : 'LOCAL_FULL',
       mergedFields: {
         photo: !!userContributedProduct.image_url,
-        ingredients: !!userContributedProduct.ingredients_text,
-        nutrition: !!userContributedProduct.nutriments,
+        ingredients: !vercelProprietaryOnly && !!userContributedProduct.ingredients_text,
+        nutrition: !vercelProprietaryOnly && !!userContributedProduct.nutriments,
+        proprietaryCountryOrCerts: !!(
+          userContributedProduct.manufacturing_places ||
+          userContributedProduct.countries ||
+          (userContributedProduct.labels_tags && userContributedProduct.labels_tags.length > 0)
+        ),
       },
     });
     
@@ -416,11 +487,11 @@ export async function processSQLiteProduct(
   // Start merge in parallel, but don't wait more than 3 seconds
   const mergedProduct = await Promise.race([
     mergeUserContributedData(sqliteProduct, barcode),
-    new Promise<Product>((resolve) => 
+    new Promise<Product>((resolve) =>
       setTimeout(() => {
-        logger.debug('User-contributed merge timeout (3s) - using SQLite product');
-        resolve(sqliteProduct); // Return original if merge times out
-      }, 3000)
+        logger.debug('User-contributed merge timeout - using SQLite product without remote manual row');
+        resolve(sqliteProduct);
+      }, USER_CONTRIBUTED_MERGE_RACE_MS)
     ),
   ]);
   
@@ -464,11 +535,11 @@ export async function processCachedProduct(
   // Start merge in parallel, but don't wait more than 3 seconds
   const mergedProduct = await Promise.race([
     mergeUserContributedData(cachedProduct, barcode),
-    new Promise<Product>((resolve) => 
+    new Promise<Product>((resolve) =>
       setTimeout(() => {
-        logger.debug('User-contributed merge timeout (3s) - using cached product');
-        resolve(cachedProduct); // Return original if merge times out
-      }, 3000)
+        logger.debug('User-contributed merge timeout - using cached product without remote manual row');
+        resolve(cachedProduct);
+      }, USER_CONTRIBUTED_MERGE_RACE_MS)
     ),
   ]);
   

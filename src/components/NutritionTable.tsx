@@ -29,6 +29,32 @@ const NutritionTable = React.memo(function NutritionTable({
   if (!nutriments) {
     return (
       <View style={[styles.container, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#16a085' }]}>
+        <View style={styles.titleContainer}>
+          <View style={styles.titleLeft}>
+            <Ionicons name="nutrition" size={24} color={colors.primary} />
+            <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{t('result.nutritionFacts')}</Text>
+          </View>
+          <View style={styles.headerButtons}>
+            {onEdit && (
+              <TouchableOpacity
+                onPress={onEdit}
+                style={styles.editButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="create-outline" size={20} color={colors.primary} />
+              </TouchableOpacity>
+            )}
+            {onShare && (
+              <TouchableOpacity
+                onPress={onShare}
+                style={styles.shareButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="share-outline" size={20} color={colors.primary} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
         <Text style={[styles.noDataText, { color: colors.textTertiary }]}>{t('nutrition.notAvailable')}</Text>
       </View>
     );
@@ -48,25 +74,60 @@ const NutritionTable = React.memo(function NutritionTable({
     return '';
   };
 
-  const formatValue = (value?: number, unit = 'g') => {
-    if (value === undefined || value === null || isNaN(value)) return '-';
+  const toFiniteNumber = (value: unknown): number | undefined => {
+    if (value === undefined || value === null) return undefined;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+    if (typeof value === 'string') {
+      const normalized = value.replace(',', '.').trim();
+      if (!normalized) return undefined;
+      const parsed = Number(normalized);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
+    return undefined;
+  };
+
+  const formatValue = (value: unknown, unit = 'g') => {
+    const numericValue = toFiniteNumber(value);
+    if (numericValue === undefined) return '-';
     
     // Convert units based on settings
     if (unit === 'g') {
-      return formatWeight(value, units);
+      return formatWeight(numericValue, units);
     }
     if (unit === 'ml' || unit === 'L') {
-      const mlValue = unit === 'L' ? value * 1000 : value;
+      const mlValue = unit === 'L' ? numericValue * 1000 : numericValue;
       return formatVolume(mlValue, units);
     }
     // For other units (kcal, etc.), keep original format
-    return `${value.toFixed(1)} ${unit}`;
+    return `${numericValue.toFixed(1)} ${unit}`;
   };
 
   const getValue100g = (key: string) => {
-    const value100g = nutriments?.[`${key}_100g` as keyof ProductNutriments] as number | undefined;
-    const value = nutriments?.[key as keyof ProductNutriments] as number | undefined;
-    return value100g ?? value;
+    // Accept both OFF-style hyphen keys and source-specific underscore keys.
+    const canonical100g = `${key}_100g`;
+    const underscoreKey = key.replace(/-/g, '_');
+    const underscore100g = `${underscoreKey}_100g`;
+    const singularProteinKey = key === 'proteins' ? 'protein' : key;
+    const singularProtein100g = `${singularProteinKey}_100g`;
+
+    const candidates = [
+      canonical100g,
+      key,
+      underscore100g,
+      underscoreKey,
+      singularProtein100g,
+      singularProteinKey,
+    ];
+
+    for (const candidate of candidates) {
+      const rawValue = nutriments?.[candidate as keyof ProductNutriments] as unknown;
+      const numericValue = toFiniteNumber(rawValue);
+      if (numericValue !== undefined) {
+        return numericValue;
+      }
+    }
+
+    return undefined;
   };
 
   const getNutritionRows = () => [

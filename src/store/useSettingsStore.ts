@@ -4,11 +4,14 @@ import i18n from '../i18n';
 
 interface SettingsStore {
   hasCompletedOnboarding: boolean;
+  /** ISO timestamp when user acknowledged legal disclaimers during onboarding; null if not yet accepted */
+  legalDisclaimersAcceptedAt: string | null;
   darkMode: boolean;
   language: 'en' | 'es' | 'fr';
   units: 'metric' | 'imperial';
   analyticsEnabled: boolean;
   setHasCompletedOnboarding: (value: boolean) => Promise<void>;
+  setLegalDisclaimersAcceptedAt: (value: string | null) => Promise<void>;
   setDarkMode: (value: boolean) => Promise<void>;
   setLanguage: (value: 'en' | 'es' | 'fr') => Promise<void>;
   setUnits: (value: 'metric' | 'imperial') => Promise<void>;
@@ -21,6 +24,7 @@ const FIRST_LAUNCH_KEY = '@truescan_first_launch';
 
 const defaultSettings = {
   hasCompletedOnboarding: false,
+  legalDisclaimersAcceptedAt: null as string | null,
   darkMode: false,
   language: 'en' as const,
   units: 'metric' as const,
@@ -30,6 +34,7 @@ const defaultSettings = {
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   // Start with defaults - will be overridden by initializeStore if stored values exist
   hasCompletedOnboarding: false,
+  legalDisclaimersAcceptedAt: null,
   darkMode: false,
   language: 'en' as const,
   units: 'metric' as const,
@@ -40,6 +45,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ hasCompletedOnboarding: value });
     await saveSettings();
     console.log('[SettingsStore] After save, state:', get().hasCompletedOnboarding);
+  },
+
+  setLegalDisclaimersAcceptedAt: async (value) => {
+    set({ legalDisclaimersAcceptedAt: value });
+    await saveSettings();
   },
 
   setDarkMode: async (value) => {
@@ -113,10 +123,20 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         }
         
         // Merge with defaults, but ensure hasCompletedOnboarding is explicitly set
+        let legalDisclaimersAcceptedAt = defaultSettings.legalDisclaimersAcceptedAt;
+        if (
+          'legalDisclaimersAcceptedAt' in parsed &&
+          (typeof parsed.legalDisclaimersAcceptedAt === 'string' ||
+            parsed.legalDisclaimersAcceptedAt === null)
+        ) {
+          legalDisclaimersAcceptedAt = parsed.legalDisclaimersAcceptedAt;
+        }
+
         const settings = { 
           ...defaultSettings, 
           ...parsed,
           hasCompletedOnboarding, // Explicitly use our checked value
+          legalDisclaimersAcceptedAt,
         };
         
         console.log('[SettingsStore] Final merged settings:', {
@@ -155,6 +175,7 @@ async function saveSettings() {
       STORAGE_KEY,
       JSON.stringify({
         hasCompletedOnboarding: state.hasCompletedOnboarding,
+        legalDisclaimersAcceptedAt: state.legalDisclaimersAcceptedAt,
         darkMode: state.darkMode,
         language: state.language,
         units: state.units,

@@ -1,5 +1,16 @@
 module.exports = {
   root: true,
+  // Synced copy of src/ for Vercel bundle — lint src/ only. Archives / one-off scripts excluded from full-repo lint.
+  ignorePatterns: [
+    'backend/vercel/truescan-src/**',
+    'scripts/archive/**',
+    'node_modules/**',
+    '**/node_modules/**',
+    '.expo/**',
+    'dist/**',
+    'build/**',
+    'coverage/**',
+  ],
   extends: [
     'expo',
     'plugin:@typescript-eslint/recommended',

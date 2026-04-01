@@ -60,7 +60,7 @@ import { submitManufacturingCountry, getManufacturingCountry, hasUserSubmitted }
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
 import ManufacturingCountryModal from '../../src/components/ManufacturingCountryModal';
 import RecallAlertModal from '../../src/components/RecallAlertModal';
-import PalmOilInfoModal from '../../src/components/PalmOilInfoModal';
+import { PalmOilCard } from '../../src/features/product/cards/PalmOilCard';
 import PackagingInfoModal from '../../src/components/PackagingInfoModal';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
 import { sanitizeText } from '../../src/utils/validation';
@@ -71,9 +71,10 @@ import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/
 import { ManualProductData } from '../../src/types/manualProduct';
 import { cacheProduct } from '../../src/services/cacheService';
 import { meetsLocalRecyclingRequirements } from '../../src/utils/packagingRecyclability';
-import { getPalmOilStatus, getPalmOilFlagColor } from '../../src/utils/palmOilUtils';
 import { crashReporter } from '../../src/utils/crashReporter';
 import ShareModal from '../../src/components/ShareModal';
+import ProductDisclaimerCard from '../../src/components/productLegal/ProductDisclaimerCard';
+import ProductDataLimitationsCard from '../../src/components/productLegal/ProductDataLimitationsCard';
 import PremiumGate from '../../src/components/PremiumGate';
 import { PremiumFeature, isPremiumFeatureEnabled } from '../../src/utils/premiumFeatures';
 
@@ -133,7 +134,6 @@ function ResultScreenContent() {
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [manufacturingCountryModalVisible, setManufacturingCountryModalVisible] = useState(false);
   const [recallAlertModalVisible, setRecallAlertModalVisible] = useState(false);
-  const [palmOilInfoModalVisible, setPalmOilInfoModalVisible] = useState(false);
   const [packagingInfoModalVisible, setPackagingInfoModalVisible] = useState(false);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
@@ -827,45 +827,48 @@ function ResultScreenContent() {
 
   const handleCaptureImage = async (imageUri: string) => {
     if (!product) return;
-    
-    // Update product with captured image
-    const updatedProduct = {
-      ...product,
-      image_url: imageUri,
-    };
-    setProduct(updatedProduct);
-    
-    // Save to cache
+
     try {
-      await cacheProduct(updatedProduct as Product, isPremium);
-    } catch (error) {
-      console.error('Error caching product with image:', error);
-    }
-    
-    // Submit photo to backend for global sharing
-    try {
-      console.log('[ResultScreen] 🎯 handleCaptureImage CALLED - Starting photo upload and submission');
-      
-      // Upload photo to get public URL
+      console.log('[ResultScreen] handleCaptureImage — upload + Vercel share');
+
       const photoResult = await uploadProductPhoto(barcode, imageUri, 'front');
-      const uploadedPhotoUrl = photoResult.success 
-        ? (photoResult.openFoodFactsUrl || photoResult.vercelUrl || imageUri)
-        : imageUri;
-      
-      console.log('[ResultScreen] ✅ Photo uploaded:', {
-        success: photoResult.success,
-        url: uploadedPhotoUrl,
-        openFoodFactsUrl: photoResult.openFoodFactsUrl,
-        vercelUrl: photoResult.vercelUrl,
-      });
-      
-      // Create product data with uploaded photo
+      const publicUrl =
+        photoResult.vercelUrl ||
+        photoResult.openFoodFactsUrl ||
+        null;
+
+      if (!publicUrl || !photoResult.success) {
+        console.warn('[ResultScreen] Photo upload did not return a public URL', photoResult);
+        Toast.show({
+          type: 'error',
+          text1: t('result.photoError') || 'Upload failed',
+          text2:
+            t('result.photoUploadNeedNetwork') ||
+            'Could not save your photo. Check your connection and try again.',
+          position: 'bottom',
+        });
+        return;
+      }
+
+      const updatedProduct = {
+        ...product,
+        image_url: publicUrl,
+        image_front_url: publicUrl,
+      };
+      setProduct(updatedProduct);
+
+      try {
+        await cacheProduct(updatedProduct as Product, isPremium);
+      } catch (cacheErr) {
+        console.error('[ResultScreen] cache after photo:', cacheErr);
+      }
+
       const productData: ManualProductData = {
         barcode,
         product_name: product.product_name || product.product_name_en || 'Unknown Product',
         brands: product.brands,
         ingredients_text: product.ingredients_text,
-        image_url: uploadedPhotoUrl,
+        image_url: publicUrl,
         nutriments: product.nutriments,
         serving_size: product.serving_size,
         quantity: product.quantity,
@@ -877,30 +880,30 @@ function ResultScreenContent() {
         packaging_data: product.packaging_data,
         timestamp: Date.now(),
       };
-      
-      // Submit to backend for global sharing
-      console.log('[ResultScreen] 📦 Submitting product data to backend...');
+
       const saveResult = await saveManualProduct(productData);
-      
+
       if (saveResult) {
-        console.log('[ResultScreen] ✅✅✅ Product data submitted successfully');
         Toast.show({
           type: 'success',
-          text1: t('result.photoSubmitted') || 'Photo Submitted',
-          text2: t('result.photoSubmittedMessage') || 'Your photo will be available to all users',
+          text1: t('result.photoSubmitted') || 'Photo submitted',
+          text2:
+            t('result.photoSubmittedMessage') ||
+            'Your photo is stored and will appear for other users who scan this product.',
           position: 'bottom',
         });
       } else {
-        console.warn('[ResultScreen] ⚠️ Product data submission returned false');
         Toast.show({
           type: 'info',
-          text1: t('result.photoSaved') || 'Photo Saved',
-          text2: t('result.photoSavedLocally') || 'Photo saved locally',
+          text1: t('result.photoSaved') || 'Photo on device',
+          text2:
+            t('result.photoSavedNotSynced') ||
+            'Image uploaded but product record may not have synced. Pull to refresh later.',
           position: 'bottom',
         });
       }
     } catch (error) {
-      console.error('[ResultScreen] ❌ Error submitting photo:', error);
+      console.error('[ResultScreen] Error submitting photo:', error);
       Toast.show({
         type: 'error',
         text1: t('result.photoError') || 'Error',
@@ -923,63 +926,8 @@ function ResultScreenContent() {
           />
         }
       >
-        {/* Legal disclaimer banner (for lawyer review) */}
-        <View style={[styles.disclaimerBanner, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Ionicons
-            name="information-circle-outline"
-            size={18}
-            color={colors.textSecondary}
-            style={styles.disclaimerIcon}
-          />
-          <View style={styles.disclaimerTextContainer}>
-            <Text style={[styles.disclaimerTitle, { color: colors.textSecondary }]}>
-              {t('result.disclaimerTitle') || 'Important information'}
-            </Text>
-            <Text style={[styles.disclaimerText, { color: colors.textTertiary }]}>
-              {t('result.disclaimerBody') ||
-                'TruScan scores and insights are informational opinions based on public data. They may be ' +
-                  'incomplete or inaccurate and are not medical, nutritional, or legal advice. Always read the ' +
-                  'product label and consult a qualified professional for personal health or dietary decisions.'}
-            </Text>
-          </View>
-        </View>
-
-        {/* Data limitations note when key fields are missing (for lawyer review) */}
-        {product && (!product.ingredients_text || !product.ingredients_text.trim() || !product.countries || !product.countries.trim()) && (
-          <View style={[styles.dataLimitationsBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons
-              name="warning-outline"
-              size={16}
-              color={colors.textSecondary}
-              style={styles.dataLimitationsIcon}
-            />
-            <Text style={[styles.dataLimitationsText, { color: colors.textTertiary }]}>
-              {t('result.dataLimitations') ||
-                'Some information such as full ingredients or origin may be missing from public databases. ' +
-                  'When data is incomplete, TruScan reduces the score rather than assuming the product is safe or unsafe.'}
-            </Text>
-          </View>
-        )}
-        {/* Legal disclaimer banner (for lawyer review) */}
-        <View style={[styles.disclaimerBanner, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Ionicons
-            name="information-circle-outline"
-            size={18}
-            color={colors.textSecondary}
-            style={styles.disclaimerIcon}
-          />
-          <View style={styles.disclaimerTextContainer}>
-            <Text style={[styles.disclaimerTitle, { color: colors.textSecondary }]}>
-              {t('result.disclaimerTitle') || 'Important information'}
-            </Text>
-            <Text style={[styles.disclaimerText, { color: colors.textTertiary }]}>
-              {t('result.disclaimerBody') ||
-                'TruScan scores and insights are informational opinions based on public data. They may be ' +
-                  'incomplete or inaccurate and are not medical, nutritional, or legal advice. Always read the ' +
-                  'product label and consult a qualified professional for personal health or dietary decisions.'}
-            </Text>
-          </View>
-        </View>
+        <ProductDisclaimerCard />
+        <ProductDataLimitationsCard product={product} />
         {/* Pending Contributions Banner - Shows when user has unsubmitted contributions */}
         {/* <PendingContributionsBanner 
           barcode={barcode}
@@ -1196,8 +1144,7 @@ function ResultScreenContent() {
 
           {/* Why this score - Green/Red Flags */}
           {(() => {
-            // Ensure palm_oil_analysis exists before generating flags
-            // This ensures consistency with Palm Oil card and Values Insights
+            // Ensure palm_oil_analysis exists before generating flags (Values Insights / scoring)
             if (product.ingredients_text && !product.palm_oil_analysis) {
               // Re-extract palm oil analysis if missing (shouldn't happen, but safety check)
               const { extractPalmOilAnalysis } = require('../../src/services/openFoodFacts');
@@ -1830,92 +1777,12 @@ function ResultScreenContent() {
           );
         })(        )}
 
-        {/* Palm Oil Analysis */}
-        {product.palm_oil_analysis && (() => {
-          // Use shared utility function to ensure consistency with modal
-          const palmOilStatus = getPalmOilStatus(product.palm_oil_analysis);
-          if (!palmOilStatus) return null;
-          
-          const { flag, isPalmOilFree, containsPalmOil, isNonSustainable, isUnknown } = palmOilStatus;
-          const palmOilFlagColor = getPalmOilFlagColor(flag);
-          return (
-            <TouchableOpacity
-              style={[
-                styles.card, 
-                { 
-                  backgroundColor: colors.card,
-                  borderWidth: 2,
-                  borderColor: palmOilFlagColor,
-                  marginBottom: 16
-                }
-              ]}
-              onPress={() => setPalmOilInfoModalVisible(true)}
-              activeOpacity={0.7}
-            >
-            <View style={styles.cardHeader}>
-              {/* Top line: Icons */}
-              <View style={styles.cardHeaderTop}>
-                <View style={styles.cardHeaderLeft}>
-                  <Ionicons 
-                    name="flag" 
-                    size={24} 
-                    color={palmOilFlagColor} 
-                  />
-                </View>
-                <View style={styles.cardHeaderRight}>
-                  <TouchableOpacity
-                    onPress={() => handleShare('palmOil')}
-                    style={styles.shareButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="share-outline" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              {/* Second line: Heading */}
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
-                {t('result.palmOil')}
-              </Text>
-            </View>
-            <View style={styles.palmOilContent}>
-              {isPalmOilFree ? (
-                <View style={[styles.palmOilStatus, { backgroundColor: palmOilFlagColor + '20', borderLeftWidth: 4, borderLeftColor: palmOilFlagColor }]}>
-                  <Text style={[styles.palmOilFlag, { color: palmOilFlagColor }]}>🟢</Text>
-                  <Text style={[styles.palmOilText, { color: colors.text }]}>
-                    {t('result.greenFlag')} - {t('result.palmOilFree')}
-                  </Text>
-                </View>
-              ) : isNonSustainable ? (
-                <View style={[styles.palmOilStatus, { backgroundColor: palmOilFlagColor + '20', borderLeftWidth: 4, borderLeftColor: palmOilFlagColor }]}>
-                  <Text style={[styles.palmOilFlag, { color: palmOilFlagColor }]}>🔴</Text>
-                  <Text style={[styles.palmOilText, { color: colors.text }]}>
-                    {t('result.redFlag')} - {t('result.nonSustainablePalmOil')}
-                  </Text>
-                </View>
-              ) : containsPalmOil ? (
-                <View style={[styles.palmOilStatus, { backgroundColor: palmOilFlagColor + '20', borderLeftWidth: 4, borderLeftColor: palmOilFlagColor }]}>
-                  <Text style={[styles.palmOilFlag, { color: palmOilFlagColor }]}>🟠</Text>
-                  <Text style={[styles.palmOilText, { color: colors.text }]}>
-                    {t('result.orangeFlag')} - {t('result.containsPalmOil')}
-                  </Text>
-                  {product.palm_oil_analysis?.detectedFromIngredientsText && (
-                    <Text style={[styles.palmOilNote, { color: colors.textSecondary }]}>
-                      {t('result.detectedFromIngredients', 'Detected from ingredients list')}
-                    </Text>
-                  )}
-                </View>
-              ) : isUnknown ? (
-                <View style={[styles.palmOilStatus, { backgroundColor: palmOilFlagColor + '20', borderLeftWidth: 4, borderLeftColor: palmOilFlagColor }]}>
-                  <Text style={[styles.palmOilFlag, { color: palmOilFlagColor }]}>🟢</Text>
-                  <Text style={[styles.palmOilText, { color: colors.text }]}>
-                    {t('result.palmOilUnknown', 'Palm Oil Status Unknown')}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          </TouchableOpacity>
-          );
-        })()}
+        {/* Palm oil: scored in Planet/TruScore and insights; product card hidden (PalmOilCard). */}
+        <PalmOilCard
+          product={product ?? undefined}
+          onShare={() => handleShare('palmOil')}
+          premiumFeatures={[]}
+        />
 
         {/* Packaging Sustainability */}
         {product.packaging_data && product.packaging_data.items.length > 0 && (() => {
@@ -2009,26 +1876,40 @@ function ResultScreenContent() {
           );
         })()}
 
-        {/* Ethics / Certifications */}
-        {product.certifications && product.certifications.length > 0 && (
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <View style={styles.cardHeader}>
-              {/* Top line: Icons */}
-              <View style={styles.cardHeaderTop}>
-                <View style={styles.cardHeaderLeft}>
-                  <Ionicons name="shield-checkmark" size={24} color={colors.primary} />
-                </View>
+        {/* Ethics / Certifications — always show; edit opens manual entry (labels_tags → Vercel manual_products) */}
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderTop}>
+              <View style={styles.cardHeaderLeft}>
+                <Ionicons name="shield-checkmark" size={24} color={colors.primary} />
               </View>
-              {/* Second line: Heading */}
-              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.certifications')}</Text>
+              <View style={styles.cardHeaderRight}>
+                <TouchableOpacity
+                  onPress={handleEditProduct}
+                  style={styles.shareButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="create-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
             </View>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.certifications')}</Text>
+          </View>
+          {product.certifications && product.certifications.length > 0 ? (
             <View style={styles.certificationsContainer}>
               {product.certifications.map((cert) => (
                 <CertBadge key={cert.id} certification={cert} />
               ))}
             </View>
-          </View>
-        )}
+          ) : (
+            <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
+              {t(
+                'result.certificationsEmpty',
+                'No certifications on file. Tap edit to add label tags from the pack (e.g. en:organic, en:fair-trade).'
+              )}
+            </Text>
+          )}
+        </View>
 
         {/* Price Information */}
         <UniversalPricingCard 
@@ -2154,6 +2035,41 @@ function ResultScreenContent() {
           </View>
           );
         })()}
+
+        {(!product.ingredients_text || !product.ingredients_text.trim()) && (
+          <View style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#16a085' }]}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderTop}>
+                <View style={styles.cardHeaderLeft}>
+                  <Ionicons name="flask" size={24} color={colors.primary} />
+                </View>
+                <View style={styles.cardHeaderRight}>
+                  <TouchableOpacity
+                    onPress={handleEditProduct}
+                    style={styles.shareButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="create-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleShare('ingredients')}
+                    style={styles.shareButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="share-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
+            </View>
+            <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
+              {t(
+                'result.ingredientsEmpty',
+                'No ingredients on file. Tap edit to add them from the pack.'
+              )}
+            </Text>
+          </View>
+        )}
 
         {/* Allergens & Additives - Premium Feature */}
         {(product.allergens_tags || product.additives_tags) && (
@@ -2406,15 +2322,6 @@ function ResultScreenContent() {
           visible={recallAlertModalVisible}
           onClose={() => setRecallAlertModalVisible(false)}
           recalls={product.recalls}
-        />
-      )}
-
-      {/* Palm Oil Info Modal */}
-      {product && product.palm_oil_analysis && (
-        <PalmOilInfoModal
-          visible={palmOilInfoModalVisible}
-          onClose={() => setPalmOilInfoModalVisible(false)}
-          product={product}
         />
       )}
 
@@ -3408,29 +3315,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 4,
   },
-  palmOilContent: {
-    marginTop: 12,
-  },
-  palmOilStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    gap: 8,
-  },
-  palmOilFlag: {
-    fontSize: 18,
-  },
-  palmOilText: {
-    fontSize: 14,
-    fontWeight: '600',
-    flex: 1,
-  },
-  palmOilNote: {
-    fontSize: 12,
-    fontStyle: 'italic',
-    marginTop: 4,
-  },
   packagingContent: {
     marginTop: 12,
   },
@@ -3467,51 +3351,6 @@ const styles = StyleSheet.create({
   recyclabilityValue: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  disclaimerBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  disclaimerIcon: {
-    marginRight: 8,
-    marginTop: 2,
-  },
-  disclaimerTextContainer: {
-    flex: 1,
-  },
-  disclaimerTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  disclaimerText: {
-    fontSize: 11,
-    lineHeight: 16,
-  },
-  dataLimitationsBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginHorizontal: 16,
-    marginTop: 4,
-    marginBottom: 8,
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  dataLimitationsIcon: {
-    marginRight: 8,
-    marginTop: 2,
-  },
-  dataLimitationsText: {
-    flex: 1,
-    fontSize: 11,
-    lineHeight: 16,
   },
   recallAlertBanner: {
     margin: 16,

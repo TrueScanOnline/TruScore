@@ -12,6 +12,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Readable } from 'stream';
 import { savePhoto } from '../lib/database';
 
 function handleCORS(res: VercelResponse) {
@@ -37,8 +38,10 @@ async function uploadToCloudStorage(
         const { put } = await import('@vercel/blob');
         const buffer = Buffer.from(imageBase64, 'base64');
         const filename = `${barcode}/${imageType}_${Date.now()}.${mimeType.split('/')[1] || 'jpg'}`;
-        
-        const blob = await put(filename, buffer, {
+        // @vercel/blob typings expect Readable/stream-style bodies in this SDK version, not raw Buffer
+        const body = Readable.from(buffer);
+
+        const blob = await put(filename, body, {
           access: 'public',
           contentType: mimeType,
         });

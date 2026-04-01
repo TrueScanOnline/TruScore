@@ -5,7 +5,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { validateCountrySubmission, RateLimiter } from '../utils/validation';
 import { logger } from '../utils/logger';
-import { submitManufacturingCountryToOpenFoodFacts } from './openFoodFactsSubmission';
 import { uploadProductPhoto } from './photoUploadService';
 
 // Rate limiter: max 1 submission per barcode per user (enforced by userId check)
@@ -142,26 +141,16 @@ export async function submitManufacturingCountry(
           try {
             const photoResult = await uploadProductPhoto(barcode, validatedPhotoUrl, 'country_label');
             if (photoResult.success) {
-              uploadedPhotoUrl = photoResult.openFoodFactsUrl || photoResult.vercelUrl || validatedPhotoUrl;
+              uploadedPhotoUrl = photoResult.vercelUrl || photoResult.openFoodFactsUrl || validatedPhotoUrl;
               logger.info(`[ManufacturingCountryService] Photo uploaded: ${uploadedPhotoUrl}`);
             }
           } catch (photoError) {
             logger.warn('[ManufacturingCountryService] Photo upload failed (non-critical):', photoError);
           }
         }
-        
-        // CRITICAL: Submit to Open Food Facts for global database
-        try {
-          const offResult = await submitManufacturingCountryToOpenFoodFacts(barcode, validatedCountry);
-          if (offResult.success) {
-            logger.info(`[ManufacturingCountryService] ✅ Submitted to Open Food Facts`);
-          } else {
-            logger.warn(`[ManufacturingCountryService] Open Food Facts submission failed: ${offResult.message}`);
-          }
-        } catch (offError) {
-          logger.warn('[ManufacturingCountryService] Open Food Facts submission failed (non-critical):', offError);
-        }
-        
+
+        // Country of manufacture is proprietary (Vercel manufacturing-country API + local cache only; not OFF).
+
         // Also save locally as cache/backup
         // Check if user already has a submission and update it instead of creating duplicate
         const existingSubmissions = await getSubmissionsForBarcode(barcode);
@@ -703,17 +692,19 @@ export async function getCommunityCountryStats(barcode: string): Promise<Array<{
 }
 
 /**
- * Submit verified data to Open Food Facts
- * Now implemented - auto-submission happens in submitManufacturingCountry()
- * 
- * @deprecated Use submitManufacturingCountry() which automatically submits to OFF
+ * Legacy hook — manufacturing country is proprietary (Vercel + app cache only), not Open Food Facts.
+ * @deprecated Use submitManufacturingCountry().
  */
 export async function submitToOpenFoodFacts(
-  barcode: string,
-  country: string
+  _barcode: string,
+  _country: string
 ): Promise<{ success: boolean; message: string }> {
-  // Auto-submission now happens in submitManufacturingCountry()
-  // This function is kept for backward compatibility
-  return await submitManufacturingCountryToOpenFoodFacts(barcode, country);
+  logger.warn(
+    '[ManufacturingCountryService] submitToOpenFoodFacts is obsolete; country is not sent to Open Food Facts.'
+  );
+  return {
+    success: false,
+    message: 'Manufacturing country is stored on TrueScan only.',
+  };
 }
 

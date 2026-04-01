@@ -36,8 +36,8 @@ function getBackendUrl(): string {
     }
   }
   
-  // Default to deployed backend URL
-  const defaultUrl = backendUrl || 'https://vercel-leightons-projects-d328c774.vercel.app';
+  // Default must match src/config/backendConfig.ts production fallback (same host the app uses)
+  const defaultUrl = backendUrl || 'https://truscoreapi.vercel.app';
   
   if (defaultUrl.includes('YOUR-VERCEL-URL')) {
     console.warn('[BackendConfig] ⚠️  Backend URL not configured! Update EXPO_PUBLIC_BACKEND_URL or set it in .env');
@@ -119,6 +119,103 @@ async function verifyBackendUrl(): Promise<void> {
       'Backend URL Configuration',
       'fail',
       'Error checking backend URL',
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+}
+
+/**
+ * Confirms the same path the app uses for community contributions: POST then GET manual-products.
+ * manufacturing-country uses a different table; this validates manual_products read-after-write.
+ * manual-products stores only proprietary fields (e.g. country + certifications).
+ */
+async function verifyManualProductsRoundTrip(): Promise<void> {
+  try {
+    const backendUrl = getBackendUrl();
+    // manual_products.barcode is VARCHAR(20) in Postgres schema
+    const barcode = `M${Date.now()}`;
+    const markerCountry = `Round-trip-country-${barcode}`;
+    const productData = {
+      countries: markerCountry,
+      manufacturing_places: markerCountry,
+      labels_tags: ['en:organic'],
+      labels_hierarchy: ['en:organic'],
+    };
+
+    const postRes = await fetch(BackendEndpoints.manualProducts(backendUrl), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ barcode, productData }),
+    });
+
+    if (!postRes.ok) {
+      const text = await postRes.text();
+      addResult(
+        'Manual Products (submit + recall)',
+        'fail',
+        'POST /api/manual-products did not succeed',
+        `${postRes.status}: ${text.substring(0, 200)}`
+      );
+      return;
+    }
+
+    const postJson = await postRes.json();
+    if (!postJson.success) {
+      addResult(
+        'Manual Products (submit + recall)',
+        'fail',
+        'POST returned success: false',
+        postJson.error || JSON.stringify(postJson).substring(0, 200)
+      );
+      return;
+    }
+
+    const getRes = await fetch(
+      `${BackendEndpoints.manualProducts(backendUrl)}?barcode=${encodeURIComponent(barcode)}`,
+      { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+    );
+
+    if (!getRes.ok) {
+      addResult(
+        'Manual Products (submit + recall)',
+        'fail',
+        'GET /api/manual-products after POST failed',
+        `Status: ${getRes.status}`
+      );
+      return;
+    }
+
+    const getJson = await getRes.json();
+    const p = getJson?.product as Record<string, unknown> | undefined;
+    const countries = String(p?.countries || '');
+    const tags = p?.labels_tags as string[] | undefined;
+    const ok =
+      getJson.success &&
+      p &&
+      countries.includes(markerCountry) &&
+      Array.isArray(tags) &&
+      tags.some((t) => String(t).toLowerCase() === 'en:organic');
+    if (!ok) {
+      addResult(
+        'Manual Products (submit + recall)',
+        'fail',
+        'GET did not return proprietary manual-products fields',
+        p ? JSON.stringify(p).substring(0, 300) : JSON.stringify(getJson).substring(0, 200)
+      );
+      return;
+    }
+
+    addResult(
+      'Manual Products (submit + recall)',
+      'pass',
+      'Proprietary manual-products path works (country + labels)',
+      `Barcode ${barcode}`
+    );
+  } catch (error) {
+    addResult(
+      'Manual Products (submit + recall)',
+      'fail',
+      'Round-trip request failed',
       error instanceof Error ? error.message : String(error)
     );
   }
@@ -219,13 +316,33 @@ async function verifyPhotoStorageConfiguration(): Promise<void> {
 
       if (response.ok) {
         const result = await response.json();
-        if (result.success && result.url) {
-          addResult(
-            'Photo Storage Configuration',
-            'pass',
-            'Photo storage is configured and working',
-            `Photo URL: ${result.url.substring(0, 50)}...`
-          );
+        const url = result.url as string | undefined;
+        if (result.success && url) {
+          const isHttps =
+            url.startsWith('https://') || url.startsWith('http://');
+          const isDataUrl = url.startsWith('data:');
+          if (isHttps) {
+            addResult(
+              'Photo Storage Configuration',
+              'pass',
+              'Photo storage returns a public HTTP(S) URL (OK for all users)',
+              `Sample URL prefix: ${url.substring(0, 64)}...`
+            );
+          } else if (isDataUrl) {
+            addResult(
+              'Photo Storage Configuration',
+              'fail',
+              'Upload returned a data: URL — configure Vercel Blob or Cloudinary',
+              'Other users will not get reliable hero images. Set BLOB_READ_WRITE_TOKEN or Cloudinary env vars on Vercel, redeploy, then re-run this script.'
+            );
+          } else {
+            addResult(
+              'Photo Storage Configuration',
+              'warning',
+              'Photo upload returned an unexpected URL shape',
+              url.substring(0, 80)
+            );
+          }
         } else {
           addResult(
             'Photo Storage Configuration',
@@ -360,6 +477,7 @@ async function main() {
 
   await verifyBackendUrl();
   await verifyDatabaseConfiguration();
+  await verifyManualProductsRoundTrip();
   await verifyPhotoStorageConfiguration();
   await verifyApiEndpoints();
 

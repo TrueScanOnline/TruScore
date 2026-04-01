@@ -13,9 +13,11 @@ import { useNavigation, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSettingsStore } from '../src/store/useSettingsStore';
 import { useTheme } from '../src/theme';
 import { RootStackParamList } from './_layout';
+import OnboardingLegalAcceptanceStep from '../src/components/productLegal/OnboardingLegalAcceptanceStep';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -46,7 +48,10 @@ export default function OnboardingScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { setHasCompletedOnboarding } = useSettingsStore();
+  const { setHasCompletedOnboarding, setLegalDisclaimersAcceptedAt } = useSettingsStore();
+  const [phase, setPhase] = useState<'legal' | 'slides'>(() =>
+    useSettingsStore.getState().legalDisclaimersAcceptedAt ? 'slides' : 'legal'
+  );
   const [currentSlide, setCurrentSlide] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -81,7 +86,13 @@ export default function OnboardingScreen() {
     }
   };
 
+  const handleLegalContinue = async () => {
+    await setLegalDisclaimersAcceptedAt(new Date().toISOString());
+    setPhase('slides');
+  };
+
   const handleSkip = async () => {
+    if (phase !== 'slides') return;
     await handleComplete();
   };
 
@@ -139,12 +150,16 @@ export default function OnboardingScreen() {
     setCurrentSlide(index);
   };
 
+  if (phase === 'legal') {
+    return <OnboardingLegalAcceptanceStep onContinue={handleLegalContinue} />;
+  }
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Skip Button */}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      {/* Skip intro (legal acceptance already recorded) */}
       <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
         <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>
-          {t('common.cancel')}
+          {t('onboarding.skipIntro')}
         </Text>
       </TouchableOpacity>
 
@@ -190,24 +205,6 @@ export default function OnboardingScreen() {
         ))}
       </View>
 
-      {/* Legal disclaimer / consent (for lawyer review) */}
-      <View style={styles.legalContainer}>
-        <Text style={[styles.legalTitle, { color: colors.text }]}>
-          {t('onboarding.legalTitle') || 'Before you start'}
-        </Text>
-        <Text style={[styles.legalText, { color: colors.textSecondary }]}>
-          {t('onboarding.legalBody') ||
-            'TruScan scores and insights are interpretive opinions based on public data. They may be ' +
-              'incomplete, outdated, or inaccurate and do not replace product labels, medical advice, or ' +
-              'professional guidance. Always read the product packaging and consult a qualified professional ' +
-              'for individual health or dietary decisions. By continuing, you confirm that you understand these limitations.'}
-        </Text>
-        <Text style={[styles.legalLinkText, { color: colors.textTertiary }]}>
-          {t('onboarding.legalFooter') ||
-            'Full Terms, Privacy and Methodology details are available at any time in Settings.'}
-        </Text>
-      </View>
-
       {/* Navigation Buttons */}
       <View style={styles.navigationContainer}>
         {currentSlide > 0 && (
@@ -234,7 +231,7 @@ export default function OnboardingScreen() {
           <Ionicons name="arrow-forward" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -244,7 +241,7 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     position: 'absolute',
-    top: 60,
+    top: 8,
     right: 20,
     zIndex: 10,
     padding: 12,
@@ -329,22 +326,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-  },
-  legalContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 8,
-  },
-  legalTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  legalText: {
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  legalLinkText: {
-    fontSize: 11,
-    marginTop: 6,
   },
 });

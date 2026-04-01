@@ -2,8 +2,18 @@
   "name": "truescan-food-scanner",
   "version": "1.0.0",
   "private": true,
+  "expo": {
+    "doctor": {
+      "appConfigFieldsNotSyncedCheck": {
+        "enabled": false
+      }
+    }
+  },
   "scripts": {
     "verify-backend": "ts-node --project scripts/tsconfig.json scripts/verify-backend-config.ts",
+    "verify-off": "ts-node --project scripts/tsconfig.json scripts/verify-off-submission.ts",
+    "check-vercel-env": "powershell -ExecutionPolicy Bypass -File scripts/check-vercel-env.ps1",
+    "check-vercel-env:strict": "powershell -ExecutionPolicy Bypass -File scripts/check-vercel-env.ps1 -RequirePhotoCdn",
     "test:user-contributions": "jest src/__tests__/integration/userContribution.test.ts",
     "test:user-contributions-e2e": "jest src/__tests__/integration/userContributionE2E.test.ts",
     "test:user-contributions-script": "ts-node --project scripts/tsconfig.json scripts/test-user-contributions-e2e.ts",
@@ -25,6 +35,7 @@
     "test:pillar:open": "jest src/__tests__/unit/lib/pillars/openPillar.test.ts",
     "test:pillars": "jest src/__tests__/unit/lib/pillars/",
     "test:e2e:ethics-open-backend": "ts-node --project scripts/tsconfig.json scripts/e2eEthicsOpenBackendVerification.ts",
+    "test:e2e:user-submission-cards": "ts-node --project scripts/tsconfig.json scripts/e2e-user-submission-cards.ts",
     "test:csv-database": "jest src/__tests__/unit/services/csvDatabaseService.test.ts",
     "test": "jest",
     "setup-backend": "powershell -ExecutionPolicy Bypass -File scripts/setup-backend.ps1",
@@ -53,8 +64,11 @@
     "deploy-fsanz": "powershell -ExecutionPolicy Bypass -File scripts/completeFSANZDeployment.ps1",
     "audit": "npm audit --production",
     "audit:fix": "npm audit fix",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "lint": "eslint app src backend/vercel/api backend/vercel/lib backend/vercel/types --ext .ts,.tsx",
+    "lint:ci": "eslint app src backend/vercel/api backend/vercel/lib backend/vercel/types --ext .ts,.tsx",
+    "lint:fix": "eslint app src backend/vercel/api backend/vercel/lib backend/vercel/types --ext .ts,.tsx --fix",
+    "lint:all": "eslint . --ext .ts,.tsx",
+    "lint:fix:all": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\""
   },

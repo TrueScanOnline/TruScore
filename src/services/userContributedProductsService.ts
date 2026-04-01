@@ -8,281 +8,275 @@ import { getManualProduct } from './manualProductService';
 import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
 import { powershellLogger } from '../utils/powershellLogger';
 
-// Don't call getBackendUrl() at module load time - call it when needed
+/** GET /api/manual-products abort timeout (keep in sync with merge waits below). */
+export const USER_CONTRIBUTED_BACKEND_TIMEOUT_MS = 12000;
+
+/**
+ * Max time to wait for mergeUserContributedData before scoring/display.
+ * Must be >= USER_CONTRIBUTED_BACKEND_TIMEOUT_MS so a cold backend can still return a row.
+ */
+export const USER_CONTRIBUTED_MERGE_RACE_MS = USER_CONTRIBUTED_BACKEND_TIMEOUT_MS + 2500;
+
+const VERCEL_USER_CONTRIB_KEYS = [
+  'manufacturing_places',
+  'manufacturing_places_tags',
+  'countries',
+  'countries_tags',
+  'origins',
+  'origins_tags',
+  'labels_tags',
+  'labels_hierarchy',
+] as const;
+
 function getManualProductsApi(): string {
   return BackendEndpoints.manualProducts(getBackendUrl());
 }
 
+/** True when the URL is not a stable network-reachable image (picker URIs, etc.). */
+export function isLocalOnlyImageUrl(url: string | undefined | null): boolean {
+  if (url == null || typeof url !== 'string') return true;
+  const u = url.trim();
+  if (!u) return true;
+  if (/^https?:\/\//i.test(u)) return false;
+  if (u.startsWith('data:image/')) return false;
+  return true;
+}
+
+function parseBackendProductPayload(barcode: string, data: Record<string, unknown>): Product | null {
+  const root = data as {
+    product?: Record<string, unknown>;
+    data?: { product?: Record<string, unknown> };
+    result?: { product?: Record<string, unknown> };
+  };
+  const productData =
+    root.product || root.data?.product || root.result?.product;
+
+  if (!productData || typeof productData !== 'object') {
+    return null;
+  }
+
+  const product: Product = {
+    barcode: (productData.barcode as string) || barcode,
+    image_url: productData.image_url as string | undefined,
+    image_front_url:
+      (productData.image_front_url as string | undefined) ||
+      (productData.image_url as string | undefined),
+    manufacturing_places: productData.manufacturing_places as string | undefined,
+    manufacturing_places_tags: productData.manufacturing_places_tags as string[] | undefined,
+    countries: productData.countries as string | undefined,
+    countries_tags: productData.countries_tags as string[] | undefined,
+    origins: productData.origins as string | undefined,
+    origins_tags: productData.origins_tags as string[] | undefined,
+    labels_tags: Array.isArray(productData.labels_tags)
+      ? (productData.labels_tags as string[])
+      : undefined,
+    labels_hierarchy: Array.isArray(productData.labels_hierarchy)
+      ? (productData.labels_hierarchy as string[])
+      : undefined,
+    source: 'user_contributed' as Product['source'],
+    created_t: productData.submittedAt
+      ? Math.floor(Number(productData.submittedAt) / 1000)
+      : undefined,
+    last_modified_t: productData.submittedAt
+      ? Math.floor(Number(productData.submittedAt) / 1000)
+      : undefined,
+  } as Product;
+
+  (product as ProductWithTrustScore & { _source?: string; _database?: string })._source = 'BACKEND';
+  (product as ProductWithTrustScore & { _source?: string; _database?: string })._database =
+    'Vercel Backend API';
+  return product;
+}
+
+function mergeLocalAndRemoteUserContributed(local: Product, remote: Product): Product {
+  const merged = { ...local } as Product;
+  for (const key of VERCEL_USER_CONTRIB_KEYS) {
+    const v = remote[key as keyof Product];
+    if (v === undefined || v === null) continue;
+    if (typeof v === 'string' && v.trim() === '') continue;
+    if (Array.isArray(v) && v.length === 0) continue;
+    (merged as unknown as Record<string, unknown>)[key] = v;
+  }
+
+  const takeRemoteImage =
+    isLocalOnlyImageUrl(local.image_url) || (!local.image_url && !!remote.image_url);
+
+  if (takeRemoteImage && remote.image_url) {
+    merged.image_url = remote.image_url;
+    merged.image_front_url = remote.image_front_url || remote.image_url;
+  }
+
+  const m = merged as ProductWithTrustScore & { _source?: string; _database?: string };
+  m._source = 'MERGED';
+  m._database = 'Local + Vercel Backend API';
+  return merged;
+}
+
+async function fetchUserContributedFromBackend(barcode: string): Promise<Product | null> {
+  const manualProductsApi = getManualProductsApi();
+
+  const retrievalStartTime = Date.now();
+  const TIMEOUT_MS = USER_CONTRIBUTED_BACKEND_TIMEOUT_MS;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const response = await fetch(`${manualProductsApi}?barcode=${encodeURIComponent(barcode)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    const retrievalTime = Date.now() - retrievalStartTime;
+    const responseText = await response.text();
+
+    powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Vercel GET /api/manual-products complete`, {
+      barcode,
+      step: 'BACKEND_GET',
+      endpoint: manualProductsApi,
+      status: response.status,
+      responseTime: `${retrievalTime}ms`,
+      rawResponsePreview: responseText.substring(0, 500),
+    });
+
+    if (!response.ok) {
+      powershellLogger.log('WARN', 'USER_CONTRIBUTION', `Vercel manual-products returned non-OK status`, {
+        barcode,
+        status: response.status,
+        statusText: response.statusText,
+      });
+      return null;
+    }
+
+    let data: Record<string, unknown> | null = null;
+    try {
+      data = JSON.parse(responseText) as Record<string, unknown>;
+    } catch (parseError) {
+      powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `Failed to parse manual-products JSON`, {
+        barcode,
+        error: parseError instanceof Error ? parseError.message : String(parseError),
+        rawResponse: responseText.substring(0, 1000),
+      });
+      logger.error('[UserContributedProducts] Failed to parse backend response:', parseError);
+      return null;
+    }
+
+    if (!data) return null;
+
+    const product = parseBackendProductPayload(barcode, data);
+    if (product) {
+      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Vercel user-contribution slice parsed`, {
+        barcode,
+        success: data.success,
+        hasProduct: true,
+        hasPhoto: !!product.image_url,
+        photoUrl: product.image_url || 'NONE',
+        productKeys: Object.keys(
+          (data as { product?: Record<string, unknown> }).product || {}
+        ),
+      });
+
+      if (product.image_url) {
+        powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `Hero photo URL present on Vercel merge payload`, {
+          barcode,
+          photoUrlSample: product.image_url.substring(0, 120),
+        });
+      }
+    } else {
+      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Vercel manual-products: no product object in response`, {
+        barcode,
+        success: data.success,
+        responseKeys: Object.keys(data),
+      });
+    }
+
+    return product;
+  } catch (fetchError: unknown) {
+    clearTimeout(timeoutId);
+    const retrievalTime = Date.now() - retrievalStartTime;
+    const err = fetchError as { name?: string; message?: string };
+
+    if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+      powershellLogger.log('WARN', 'USER_CONTRIBUTION', `Vercel manual-products request aborted (timeout ${TIMEOUT_MS}ms)`, {
+        barcode,
+        responseTime: `${retrievalTime}ms`,
+      });
+      logger.debug(`[UserContributedProducts] Backend request timeout for ${barcode} after ${retrievalTime}ms`);
+    } else {
+      powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `Vercel manual-products fetch error`, {
+        barcode,
+        error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+        responseTime: `${retrievalTime}ms`,
+      });
+      logger.debug('[UserContributedProducts] Backend unavailable:', fetchError);
+    }
+    return null;
+  }
+}
+
 /**
- * Get user-contributed product from Vercel backend
- * This retrieves products submitted by other users worldwide
+ * Get user-contributed product: local manual entry + Vercel proprietary slice (always fetched in parallel).
+ * Merges hosted hero photo and country/cert fields from Vercel even when a local manual row exists.
  */
 export async function getUserContributedProduct(barcode: string): Promise<Product | null> {
-  // ===== USER CONTRIBUTION FLOW: STEP 4 - USER B RETRIEVING DATA =====
-  powershellLogger.log('INFO', 'USER_CONTRIBUTION', `User B retrieving user-contributed data`, {
+  powershellLogger.log('INFO', 'USER_CONTRIBUTION', `User-contributed retrieval started (parallel: local AsyncStorage + Vercel)`, {
     barcode,
     step: 'RETRIEVAL_START',
     timestamp: new Date().toISOString(),
   });
-  
+
   try {
-    // First check local manual products (fastest)
-    powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Checking local manual products`, {
-      barcode,
-      step: 'LOCAL_CHECK',
-    });
-    
-    const localProduct = await getManualProduct(barcode);
+    const [localProduct, remoteProduct] = await Promise.all([
+      getManualProduct(barcode),
+      fetchUserContributedFromBackend(barcode),
+    ]);
+
     if (localProduct) {
-      // Mark source for logging
-      (localProduct as any)._source = 'LOCAL';
-      (localProduct as any)._database = 'Local Storage (SQLite/AsyncStorage)';
-      
-      powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ Found user-contributed product from Local Storage (SQLite/AsyncStorage)`, {
+      const lp = localProduct as ProductWithTrustScore & { _source?: string; _database?: string };
+      lp._source = 'LOCAL';
+      lp._database = 'Local Storage (SQLite/AsyncStorage)';
+    }
+
+    if (!localProduct && !remoteProduct) {
+      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `No user-contributed product found`, {
         barcode,
-        source: 'LOCAL',
-        database: 'Local Storage (SQLite/AsyncStorage)',
+        checkedSources: ['LOCAL', 'VERCEL'],
+        result: 'NOT_FOUND',
+      });
+      return null;
+    }
+
+    if (localProduct && remoteProduct) {
+      const merged = mergeLocalAndRemoteUserContributed(localProduct, remoteProduct);
+      powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `Merged LOCAL + VERCEL user contribution`, {
+        barcode,
+        step: 'MERGE_COMPLETE',
+        localPhotoWasDeviceOnly: isLocalOnlyImageUrl(localProduct.image_url),
+        remoteHasPhoto: !!remoteProduct.image_url,
+        finalPhotoIsHosted: !!merged.image_url && !isLocalOnlyImageUrl(merged.image_url),
+        finalPhotoUrl: merged.image_url || 'NONE',
+      });
+      return merged;
+    }
+
+    if (localProduct) {
+      powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `User-contributed from LOCAL only (Vercel empty or unreachable)`, {
+        barcode,
         hasPhoto: !!localProduct.image_url,
         photoUrl: localProduct.image_url || 'NONE',
-        hasIngredients: !!localProduct.ingredients_text,
-        hasNutrition: !!localProduct.nutriments,
-        hasProductName: !!localProduct.product_name,
-        productName: localProduct.product_name || 'NONE',
-        dataAccuracy: {
-          hasAllRequiredFields: !!(localProduct.product_name && (localProduct.image_url || localProduct.ingredients_text)),
-          fieldsPresent: {
-            productName: !!localProduct.product_name,
-            photo: !!localProduct.image_url,
-            ingredients: !!localProduct.ingredients_text,
-            nutrition: !!localProduct.nutriments,
-          },
-        },
+        deviceOnlyPhoto: isLocalOnlyImageUrl(localProduct.image_url),
       });
-      
       logger.debug(`[UserContributedProducts] Found local manual product: ${barcode}`);
       return localProduct;
     }
-    
-    // Then check Vercel backend for global user-contributed products
-    const manualProductsApi = getManualProductsApi();
-    powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Checking backend for user-contributed product`, {
+
+    powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `User-contributed from VERCEL only`, {
       barcode,
-      step: 'BACKEND_CHECK',
-      endpoint: manualProductsApi,
+      hasPhoto: !!remoteProduct!.image_url,
+      photoUrl: remoteProduct!.image_url || 'NONE',
     });
-    
-    try {
-      const retrievalStartTime = Date.now();
-      
-      // Allow serverless cold start + DB connect (Vercel route maxDuration is 30s; pool timeout 10s)
-      const TIMEOUT_MS = 12000;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-      
-      try {
-        const response = await fetch(`${manualProductsApi}?barcode=${encodeURIComponent(barcode)}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId);
-        const retrievalTime = Date.now() - retrievalStartTime;
-        
-        // CRITICAL: Get raw response text first for debugging
-        const responseText = await response.text();
-      
-      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Backend response received`, {
-        barcode,
-        status: response.status,
-        statusText: response.statusText,
-        responseTime: `${retrievalTime}ms`,
-        rawResponseLength: responseText.length,
-        rawResponsePreview: responseText.substring(0, 500), // First 500 chars for debugging
-      });
-      
-      if (response.ok) {
-        let data: any = null;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `Failed to parse backend response as JSON`, {
-            barcode,
-            error: parseError instanceof Error ? parseError.message : String(parseError),
-            rawResponse: responseText.substring(0, 1000),
-          });
-          logger.error('[UserContributedProducts] Failed to parse backend response:', parseError);
-          logger.error('[UserContributedProducts] Raw response:', responseText);
-        }
-        
-        if (data) {
-          powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Backend response parsed`, {
-            barcode,
-            success: data.success,
-            hasProduct: !!data.product,
-            responseKeys: Object.keys(data),
-            productData: data.product ? {
-              hasProductName: !!data.product.product_name,
-              hasPhoto: !!data.product.image_url,
-              photoUrl: data.product.image_url || 'NONE',
-              hasIngredients: !!data.product.ingredients_text,
-              hasNutrition: !!data.product.nutriments,
-              productKeys: Object.keys(data.product),
-            } : null,
-            fullResponse: data, // Log full response for debugging
-          });
-          
-          // CRITICAL FIX: Check if product exists even if success is false
-          // Some backends might return product data even if success is false
-          const hasProduct = data.product || (data.data && data.data.product) || (data.result && data.result.product);
-          const productData = data.product || data.data?.product || data.result?.product;
-          
-          if (hasProduct && productData) {
-          // Determine database source (Vercel backend)
-          const databaseSource = 'Vercel Backend API';
-          const apiEndpoint = manualProductsApi;
-          
-          powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ Found user-contributed product from ${databaseSource}`, {
-            barcode,
-            source: 'BACKEND',
-            database: databaseSource,
-            apiEndpoint: apiEndpoint,
-            success: data.success,
-            hasPhoto: !!productData.image_url,
-            photoUrl: productData.image_url || 'NONE',
-            hasIngredients: !!productData.ingredients_text,
-            hasNutrition: !!productData.nutriments,
-            hasProductName: !!productData.product_name,
-            productName: productData.product_name || 'NONE',
-            productKeys: Object.keys(productData),
-            dataAccuracy: {
-              hasAllRequiredFields: !!(productData.product_name && (productData.image_url || productData.ingredients_text)),
-              fieldsPresent: {
-                productName: !!productData.product_name,
-                photo: !!productData.image_url,
-                ingredients: !!productData.ingredients_text,
-                nutrition: !!productData.nutriments,
-              },
-            },
-          });
-          
-          logger.info(`[UserContributedProducts] Found user-contributed product from backend: ${barcode}`);
-          
-          // CRITICAL: Log image_url to debug photo retrieval
-          if (productData.image_url) {
-            powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ User-contributed PHOTO found`, {
-              barcode,
-              photoUrl: productData.image_url,
-              photoSource: 'BACKEND',
-            });
-            
-            logger.info(`[UserContributedProducts] ✅ User-contributed photo found: ${productData.image_url}`);
-          } else {
-            powershellLogger.log('WARN', 'USER_CONTRIBUTION', `⚠️  No photo in user-contributed product`, {
-              barcode,
-              hasOtherData: !!(productData.product_name || productData.ingredients_text),
-              productKeys: Object.keys(productData),
-            });
-            
-            logger.debug(`[UserContributedProducts] No image_url in user-contributed product: ${barcode}`);
-          }
-          
-          // Use productData instead of data.product
-          const product: Product = {
-            barcode: productData.barcode || barcode,
-            product_name: productData.product_name,
-            product_name_en: productData.product_name_en || productData.product_name,
-            brands: productData.brands,
-            ingredients_text: productData.ingredients_text,
-            image_url: productData.image_url, // CRITICAL: Include image_url from backend
-            image_front_url: productData.image_url, // Also set image_front_url
-            nutriments: productData.nutriments,
-            manufacturing_places: productData.manufacturing_places,
-            countries: productData.countries,
-            categories: productData.categories,
-            allergens_tags: productData.allergens_tags,
-            additives_tags: productData.additives_tags,
-            packaging_data: productData.packaging_data,
-            serving_size: productData.serving_size,
-            quantity: productData.quantity,
-            source: 'user_contributed' as Product['source'],
-            created_t: productData.submittedAt ? Math.floor(productData.submittedAt / 1000) : undefined,
-            last_modified_t: productData.submittedAt ? Math.floor(productData.submittedAt / 1000) : undefined,
-            completion: productData.completion || 50,
-            quality: productData.quality || 50,
-          } as any;
-          // Mark source for logging
-          (product as any)._source = 'BACKEND';
-          (product as any)._database = databaseSource;
-          
-          powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ USER B RETRIEVAL COMPLETE - Product found`, {
-            barcode,
-            status: 'SUCCESS',
-            hasPhoto: !!product.image_url,
-            photoUrl: product.image_url || 'NONE',
-            willBeMerged: true,
-          });
-          
-          return product;
-          } else {
-            // No product found in response
-            powershellLogger.log('INFO', 'USER_CONTRIBUTION', `No product found in backend response`, {
-              barcode,
-              success: data.success,
-              hasProduct: false,
-              responseKeys: Object.keys(data),
-              fullResponse: data, // Log full response to see what backend actually returned
-            });
-          }
-        }
-      } else {
-        powershellLogger.log('WARN', 'USER_CONTRIBUTION', `Backend returned error status`, {
-          barcode,
-          status: response.status,
-          statusText: response.statusText,
-        });
-      }
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-        const retrievalTime = Date.now() - retrievalStartTime;
-        
-        // Check if it's a timeout
-        if (fetchError.name === 'AbortError' || fetchError.message?.includes('aborted')) {
-          powershellLogger.log('WARN', 'USER_CONTRIBUTION', `Backend request timeout (${TIMEOUT_MS}ms)`, {
-            barcode,
-            responseTime: `${retrievalTime}ms`,
-            error: 'Request timeout',
-          });
-          logger.debug(`[UserContributedProducts] Backend request timeout for ${barcode} after ${retrievalTime}ms`);
-        } else {
-          powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `Backend retrieval error`, {
-            barcode,
-            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
-            responseTime: `${retrievalTime}ms`,
-          });
-          logger.debug('[UserContributedProducts] Backend unavailable, using local only:', fetchError);
-        }
-        // Continue - not critical (timeout is handled gracefully)
-      }
-    } catch (backendError) {
-      powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `Backend retrieval error`, {
-        barcode,
-        error: backendError instanceof Error ? backendError.message : String(backendError),
-      });
-      
-      logger.debug('[UserContributedProducts] Backend unavailable, using local only:', backendError);
-      // Continue - not critical
-    }
-    
-    powershellLogger.log('INFO', 'USER_CONTRIBUTION', `No user-contributed product found`, {
-      barcode,
-      checkedSources: ['LOCAL', 'BACKEND'],
-      result: 'NOT_FOUND',
-    });
-    
-    return null;
+    logger.info(`[UserContributedProducts] Found user-contributed product from backend: ${barcode}`);
+    return remoteProduct!;
   } catch (error) {
     logger.error('[UserContributedProducts] Error getting user-contributed product:', error);
     return null;

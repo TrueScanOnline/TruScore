@@ -19,7 +19,7 @@ import { fetchProductFromOBF } from './openBeautyFacts';
 import { fetchProductFromOPF } from './openProductsFacts';
 import { fetchProductFromOPFF } from './openPetFoodFacts';
 import { lookupFromSQLite, lookupFromCache, lookupProductFast, processSQLiteProduct, processCachedProduct, saveProductToCache, mergeUserContributedData } from './productCacheService';
-import { getUserContributedProduct } from './userContributedProductsService';
+import { getUserContributedProduct, USER_CONTRIBUTED_MERGE_RACE_MS } from './userContributedProductsService';
 import { calculateTrustScore } from '../utils/trustScore';
 import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
 import { getUserCountryCode } from '../utils/countryDetection';
@@ -494,9 +494,8 @@ async function executeFetchProductOptimized(
         }
       })();
       
-      // CRITICAL OPTIMIZATION: Process product WITHOUT waiting for user-contributed merge
-      // User-contributed merge has 3s timeout and can block display
-      // Process product first, merge user data in background
+      // processProductFast waits up to USER_CONTRIBUTED_MERGE_RACE_MS for manual-products
+      // so scoring/UI see merged ingredients/nutrition (shallow copy in calculateTrustScore).
       let processedProduct: ProductWithTrustScore;
       const processStartTime = Date.now();
       
@@ -513,8 +512,7 @@ async function executeFetchProductOptimized(
       
       timingBreakdown.truScoreCalculation = Date.now() - processStartTime;
       
-      // Send to UI IMMEDIATELY - product with TruScore ready!
-      // User-contributed data will be merged in background if available
+      // Send to UI — product with TruScore (includes manual-products merge when backend responds in time)
       const uiRenderStart = Date.now();
       const timeFromStart = Date.now() - scanStartTime;
       const availableFields = getAvailableFields(processedProduct);
@@ -793,35 +791,24 @@ async function executeFetchProductOptimized(
  * CRITICAL: User-contributed merge has 3s timeout to prevent blocking
  */
 async function processProductFast(product: Product, barcode: string): Promise<ProductWithTrustScore> {
-  // CRITICAL OPTIMIZATION: Process product FIRST, merge user data in parallel
-  // This prevents 5+ second delays from slow backend user-contributed checks
-  // User data will be merged when available (with 3s timeout)
-  
-  // Start user-contributed merge in parallel (with timeout)
-  const userMergePromise = mergeUserContributedData(product, barcode).catch(error => {
+  // Await merge before scoring: calculateTrustScore returns `{ ...product }` (shallow copy).
+  // If we score first and merge completes later, reassigned fields (ingredients_text, nutriments, …)
+  // on the original object never reach the displayed ProductWithTrustScore.
+  let mergedProduct: Product = product;
+  try {
+    mergedProduct = await Promise.race([
+      mergeUserContributedData(product, barcode),
+      new Promise<Product>((resolve) =>
+        setTimeout(() => resolve(product), USER_CONTRIBUTED_MERGE_RACE_MS)
+      ),
+    ]);
+  } catch (error) {
     logger.debug('User-contributed merge failed (non-critical):', error);
-    return product; // Return original if merge fails
-  });
-  
-  // Process product immediately (don't wait for user merge)
-  // Apply confidence score
-  const productWithConfidence = applyConfidenceScore(product);
-  
-  // Calculate TruScore (fast operation - 200-500ms, necessary for display)
-  const productWithTrustScore = await calculateTrustScore(productWithConfidence);
-  
-  // Merge user data when available (non-blocking - updates in background)
-  userMergePromise.then(userMergedProduct => {
-    if (userMergedProduct !== product) {
-      // User data was merged - update product in background
-      logger.debug('User-contributed data merged in background');
-      // Note: Product already displayed, user data will be in cache for next scan
-    }
-  }).catch(() => {
-    // Ignore errors - product already displayed
-  });
-  
-  return productWithTrustScore;
+    mergedProduct = product;
+  }
+
+  const productWithConfidence = applyConfidenceScore(mergedProduct);
+  return calculateTrustScore(productWithConfidence);
 }
 
 /**
@@ -871,6 +858,8 @@ async function enhanceProductWithAdditionalData(
     });
     // Extended fetch trace: all DBs that contributed to the merged product and how each was queried
     (merged as any)._fetchTrace = buildFetchTraceForProducts([product as Product, ...additionalProducts]);
+    // Manual-products row must win over merge heuristics (e.g. Spoonacular "longest" ingredients).
+    await mergeUserContributedData(merged, barcode);
     // Recalculate TruScore (analysis is built from merged product, so it includes extended fetch trace)
     const enhanced = await calculateTrustScore(merged);
     // Update cache

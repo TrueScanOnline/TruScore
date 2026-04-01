@@ -364,3 +364,27 @@ export function parsePackagingData(text: string): {
     },
   };
 }
+
+/**
+ * Parse free-text certification / label lines into OFF-style tags for Ethics + cert badges.
+ * Accepts comma/semicolon/newline-separated tokens; adds `en:` when missing.
+ */
+export function parseCertificationLabels(text: string): {
+  labels_tags: string[];
+  labels_hierarchy: string[];
+} {
+  if (!text || !text.trim()) {
+    return { labels_tags: [], labels_hierarchy: [] };
+  }
+  const tags = text
+    .split(/[,;\n]+/)
+    .map((s) => {
+      let t = s.trim().toLowerCase().replace(/\s+/g, '-');
+      if (!t) return '';
+      if (!t.startsWith('en:')) t = `en:${t}`;
+      return t;
+    })
+    .filter(Boolean);
+  const unique = [...new Set(tags)];
+  return { labels_tags: unique, labels_hierarchy: unique };
+}

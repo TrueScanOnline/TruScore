@@ -425,3 +425,28 @@ export function evaluateEthicsCertifications(product: Product): EthicsCertificat
 export function getEthicsCertificationAdjustment(product: Product): number {
   return evaluateEthicsCertifications(product).adjustment;
 }
+
+/**
+ * OFF label tags the Ethics / TruScore certification element recognizes (manual product picker).
+ * Union of organic allowlist + fairtrade, Rainforest/UTZ, ASC, MSC, RSPO tag sets.
+ */
+export function getTruscoreCertificationPickerTags(): string[] {
+  const u = new Set<string>();
+  ETHICS_ORGANIC_TAG_ALLOWLIST.forEach((t) => u.add(normalizeTag(t)));
+  FAIRTRADE_LABEL_TAGS.forEach((t) => u.add(normalizeTag(t)));
+  RAINFOREST_UTZ_TAGS.forEach((t) => u.add(normalizeTag(t)));
+  ASC_LABEL_TAGS.forEach((t) => u.add(normalizeTag(t)));
+  MSC_LABEL_TAGS.forEach((t) => u.add(normalizeTag(t)));
+  RSPO_LABEL_TAGS.forEach((t) => u.add(normalizeTag(t)));
+  return Array.from(u).sort((a, b) => formatCertificationTagForPicker(a).localeCompare(formatCertificationTagForPicker(b)));
+}
+
+/** Human-readable label for a normalized `en:` tag (picker UI). */
+export function formatCertificationTagForPicker(tag: string): string {
+  const slug = normalizeTag(tag).replace(/^en:/, '');
+  if (!slug) return tag;
+  return slug
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}

@@ -131,20 +131,19 @@ export async function submitProductToOpenFoodFacts(
       'product_name': data.product_name || '',
     };
     
-    // Add optional fields
+    // Product core only — country / certifications stay on our Vercel API, not OFF
     if (data.brands) productData['brands'] = data.brands;
     if (data.ingredients_text) productData['ingredients_text'] = data.ingredients_text;
-    if (data.manufacturing_places) productData['manufacturing_places'] = data.manufacturing_places;
-    if (data.countries) productData['countries'] = data.countries;
-    if (data.categories) productData['categories'] = data.categories;
     if (data.serving_size) productData['serving_size'] = data.serving_size;
     if (data.quantity) productData['quantity'] = data.quantity;
     
     // Add nutrition data
+    // OFF expects keys in the form `nutriment_<name>` (singular).
+    // Example: nutriment_energy-kcal_100g, nutriment_fat_100g
     if (data.nutriments) {
       Object.entries(data.nutriments).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          productData[`nutriments_${key}`] = String(value);
+          productData[`nutriment_${key}`] = String(value);
         }
       });
     }
@@ -201,17 +200,8 @@ export async function submitProductToOpenFoodFacts(
       const productUrl = `https://world.openfoodfacts.org/product/${data.barcode}`;
       logger.info(`[OFF Submission] Product submitted successfully: ${productUrl}`);
       
-      // Upload photo if available
-      if (data.image_url) {
-        try {
-          const photoUrl = await uploadPhotoToOpenFoodFacts(data.barcode, data.image_url, 'front');
-          if (photoUrl) {
-            logger.info(`[OFF Submission] Product photo uploaded: ${photoUrl}`);
-          }
-        } catch (photoError) {
-          logger.warn('[OFF Submission] Photo upload failed (non-critical):', photoError);
-        }
-      }
+      // Intentionally do NOT upload hero photo to OFF from manual submissions.
+      // Hero/front image is proprietary and stored on Vercel only.
       
       return {
         success: true,

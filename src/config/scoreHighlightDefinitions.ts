@@ -749,8 +749,19 @@ export const OPEN_HIGHLIGHTS: HighlightDefinition[] = [
     externalResource: 'https://world.openfoodfacts.org/nutrition',
     scoreValue: 3,
     trigger: (product) => {
-      // Check if nutriments exist and have standard format (per 100g)
-      return product.nutriments && Object.keys(product.nutriments).length > 0;
+      const nutrients = product.nutriments || {};
+      const nutrientKeys = Object.keys(nutrients);
+      if (nutrientKeys.length === 0) return false;
+
+      const hasPer100g = nutrientKeys.some((key) => key.includes('_100g'));
+      const hasServingSize = !!product.serving_size || !!(nutrients as any).serving_size;
+
+      const keyNutrients = ['energy', 'fat', 'carbohydrates', 'proteins', 'protein', 'salt', 'sugars'];
+      const hasKeyNutrients = keyNutrients.some((nutrient) =>
+        nutrientKeys.some((key) => key.toLowerCase().includes(nutrient))
+      );
+
+      return hasPer100g && hasServingSize && hasKeyNutrients;
     },
   },
   

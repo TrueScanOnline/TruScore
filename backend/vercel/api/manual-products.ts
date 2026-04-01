@@ -11,7 +11,58 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
   saveManualProduct,
   getManualProduct,
+  getPhotos,
 } from '../lib/database';
+
+/** Only these fields are stored for manual edit; core product data lives on Open Food Facts. */
+const PROPRIETARY_KEYS = [
+  'manufacturing_places',
+  'manufacturing_places_tags',
+  'countries',
+  'countries_tags',
+  'origins',
+  'origins_tags',
+  'labels_tags',
+  'labels_hierarchy',
+] as const;
+
+function pickIncomingProprietary(body: Record<string, unknown> | null | undefined): Record<string, unknown> {
+  if (!body || typeof body !== 'object') return {};
+  const out: Record<string, unknown> = {};
+  for (const key of PROPRIETARY_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(body, key) && body[key] !== undefined) {
+      out[key] = body[key];
+    }
+  }
+  return out;
+}
+
+function pickStoredProprietary(row: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const key of PROPRIETARY_KEYS) {
+    if (row[key] !== undefined && row[key] !== null) {
+      out[key] = row[key];
+    }
+  }
+  return out;
+}
+
+/** Strip legacy non-proprietary fields from DB rows before returning to the app. */
+function sanitizeProductForApi(
+  p: Record<string, unknown> | null,
+  barcode: string,
+  submittedAt: unknown,
+  source: unknown
+): Record<string, unknown> | null {
+  if (!p || typeof p !== 'object') return null;
+  const base = pickStoredProprietary(p);
+  return {
+    ...base,
+    barcode,
+    submittedAt,
+    source,
+  };
+}
 
 function handleCORS(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -35,8 +86,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log(`[ManualProductsAPI] POST request received for barcode: ${barcode}`);
       console.log(`[ManualProductsAPI] Product data keys: ${Object.keys(productData || {}).join(', ')}`);
 
-      if (!barcode || !productData) {
-        console.error('[ManualProductsAPI] Missing required fields:', { barcode: !!barcode, productData: !!productData });
+      if (!barcode || productData === undefined || productData === null || typeof productData !== 'object') {
+        console.error('[ManualProductsAPI] Missing required fields:', { barcode: !!barcode, productData: productData != null });
         return res.status(400).json({
           success: false,
           error: 'Missing required fields: barcode, productData',
@@ -46,27 +97,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Check if product already exists (for update vs new submission)
       const existingProduct = await getManualProduct(barcode);
       const isUpdate = existingProduct !== null;
-      
-      console.log(`[ManualProductsAPI] ${isUpdate ? 'UPDATE' : 'NEW'} submission for barcode: ${barcode}`);
-      if (isUpdate) {
-        console.log(`[ManualProductsAPI] Existing product found, updating with new data`);
-        console.log(`[ManualProductsAPI] Existing nutriments keys: ${Object.keys(existingProduct?.productData?.nutriments || {}).join(', ')}`);
-        console.log(`[ManualProductsAPI] New nutriments keys: ${Object.keys(productData?.nutriments || {}).join(', ')}`);
-      }
 
-      // Save to database (ON CONFLICT DO UPDATE handles updates automatically)
-      await saveManualProduct(barcode, {
-        ...productData,
+      const parseProductData = (row: any): Record<string, unknown> => {
+        if (!row?.productData) return {};
+        return typeof row.productData === 'string' ? JSON.parse(row.productData) : row.productData;
+      };
+
+      const existingData = isUpdate ? parseProductData(existingProduct) : {};
+      const existingProprietary = pickStoredProprietary(existingData);
+      const incomingProprietary = pickIncomingProprietary(productData as Record<string, unknown>);
+      const mergedProprietary = { ...existingProprietary, ...incomingProprietary };
+      const mergedPayload = {
+        ...mergedProprietary,
         barcode,
         submittedAt: Date.now(),
         source: 'user_contributed',
-      });
+      };
+
+      console.log(`[ManualProductsAPI] ${isUpdate ? 'UPDATE' : 'NEW'} submission for barcode: ${barcode}`);
+      console.log(`[ManualProductsAPI] Proprietary keys stored: ${Object.keys(mergedProprietary).join(', ') || '(none)'}`);
+
+      await saveManualProduct(barcode, mergedPayload);
 
       console.log(`[ManualProductsAPI] ✅ Product ${isUpdate ? 'updated' : 'saved'} successfully: ${barcode}`);
-      console.log(`[ManualProductsAPI] Product name: ${productData?.product_name || 'N/A'}`);
-      if (productData?.nutriments?.protein) {
-        console.log(`[ManualProductsAPI] Protein value: ${productData.nutriments.protein}g`);
-      }
 
       return res.status(200).json({
         success: true,
@@ -97,20 +150,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ? JSON.parse(dbResult.productData) 
         : dbResult?.productData;
       
-      const product = productDataJson ? {
-        ...productDataJson,
-        barcode: dbResult.barcode,
-        submittedAt: dbResult.submittedAt,
-        source: dbResult.source,
-      } : null;
+      let product = productDataJson
+        ? sanitizeProductForApi(
+            productDataJson as Record<string, unknown>,
+            dbResult.barcode,
+            dbResult.submittedAt,
+            dbResult.source
+          )
+        : null;
+
+      // Community pack/front photo stored via /api/upload-photo (photos table) — merge if manual JSON lacks image
+      const mergeFrontPhotoFromTable = async (
+        p: Record<string, unknown> | null
+      ): Promise<Record<string, unknown> | null> => {
+        try {
+          const rows = await getPhotos(barcode, 'front');
+          const latest = rows[0];
+          if (!latest) return p;
+          const url =
+            latest.photo_url ||
+            latest.photoUrl ||
+            latest.url;
+          if (typeof url !== 'string' || !url.trim()) return p;
+          const u = url.trim();
+          if (!u.startsWith('http') && !u.startsWith('data:')) return p;
+          const next: Record<string, unknown> = { ...(p || {}), barcode };
+          if (!next.image_url) {
+            next.image_url = u;
+            next.image_front_url = u;
+          }
+          return next;
+        } catch (e) {
+          console.warn('[ManualProductsAPI] getPhotos merge failed:', e);
+          return p;
+        }
+      };
 
       if (!product) {
+        const photoOnly = await mergeFrontPhotoFromTable(null);
+        if (photoOnly && photoOnly.image_url) {
+          res.setHeader('Cache-Control', 'public, max-age=60');
+          console.log(`[ManualProductsAPI] ✅ Photo-only contribution for barcode: ${barcode}`);
+          return res.status(200).json({
+            success: true,
+            product: {
+              ...photoOnly,
+              source: 'user_contributed',
+            },
+          });
+        }
         console.log(`[ManualProductsAPI] Product not found: ${barcode}`);
-        // Cache misses briefly to reduce duplicate cold hits.
-        res.setHeader(
-          'Cache-Control',
-          'public, max-age=15'
-        );
+        res.setHeader('Cache-Control', 'public, max-age=15');
         return res.status(200).json({
           success: false,
           product: null,
@@ -118,16 +208,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
+      product = await mergeFrontPhotoFromTable(product);
+
       res.setHeader(
         'Cache-Control',
         'public, max-age=120'
       );
 
       console.log(`[ManualProductsAPI] ✅ Product found: ${barcode}`);
-      console.log(`[ManualProductsAPI] Product name: ${product.product_name || 'N/A'}`);
-      if (product.nutriments?.protein) {
-        console.log(`[ManualProductsAPI] Protein value: ${product.nutriments.protein}g`);
-      }
+      console.log(
+        `[ManualProductsAPI] Proprietary keys in response: ${Object.keys(product).filter((k) => !['barcode', 'submittedAt', 'source', 'image_url', 'image_front_url'].includes(k)).join(', ')}`
+      );
 
       return res.status(200).json({
         success: true,

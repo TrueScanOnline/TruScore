@@ -1,8 +1,17 @@
 // Country detection utility
 // Mobile: device locale via expo-localization (when available).
 // Node / Vercel: TRUESCAN_DEFAULT_COUNTRY_CODE (ISO 3166-1 alpha-2) — optional.
+//
+// Do not use `import('expo-localization')` types here — Vercel bundles `truescan-src/` without Expo
+// packages, and TypeScript would fail the server build on missing module resolution.
 
-type ExpoLocalization = typeof import('expo-localization');
+type ExpoLocalizationShim = {
+  getLocales?: () => Array<{
+    regionCode?: string;
+    languageTag?: string;
+    languageCode?: string;
+  }>;
+};
 
 /**
  * Get user's country code from device locale (Expo) or server env.
@@ -10,8 +19,8 @@ type ExpoLocalization = typeof import('expo-localization');
  */
 export function getUserCountryCode(): string | null {
   try {
-    const Localization = require('expo-localization') as ExpoLocalization;
-    const locales = Localization.getLocales();
+    const Localization = require('expo-localization') as ExpoLocalizationShim;
+    const locales = Localization.getLocales?.();
     if (locales && locales.length > 0) {
       const regionCode = locales[0]?.regionCode;
       if (regionCode) {

@@ -12,6 +12,8 @@ import { uploadProductPhoto } from './photoUploadService';
 import { saveProductToSQLite } from './sqliteProductDatabase';
 import { getUserCountryCode } from '../utils/countryDetection';
 import { powershellLogger } from '../utils/powershellLogger';
+import { buildVercelManualProductPayload } from '../utils/vercelProprietaryManualProduct';
+import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
 
 const STORAGE_KEY_PREFIX = '@truescan_manual_product_';
 const MAX_MANUAL_PRODUCTS = 100; // Limit to prevent storage bloat
@@ -46,6 +48,13 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
   });
   
   try {
+    const nutrimentsEntries = Object.entries(data.nutriments || {});
+    const nutrimentsPreview = nutrimentsEntries.slice(0, 20).reduce<Record<string, unknown>>((acc, [k, v]) => {
+      acc[k] = v;
+      return acc;
+    }, {});
+    const offCredsConfigured = hasOFFCredentials();
+
     // Validate required fields (barcode always required, product_name can be optional for partial updates)
     if (!data.barcode) {
       powershellLogger.log('ERROR', 'USER_CONTRIBUTION', 'Barcode is required', { barcode: data.barcode });
@@ -53,7 +62,8 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
     }
     // Use 'Unknown Product' as fallback if product_name not provided
     const productName = data.product_name || 'Unknown Product';
-    
+    const countryCode = getUserCountryCode();
+
     powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Processing user contribution data`, {
       barcode: data.barcode,
       productName,
@@ -120,6 +130,8 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
       };
     }
 
+    (productWithScore as any)._source = 'LOCAL';
+
     // ===== CRITICAL: SAVE LOCALLY FIRST - This ensures data is available even if backend fails =====
     logger.debug(`[ManualProductService] 💾 Starting LOCAL SAVE for barcode: ${data.barcode}`);
     
@@ -135,7 +147,6 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
     // CRITICAL: Save to SQLite database for persistent storage across app restarts
     // This ensures user-contributed data is available for all future scans
     try {
-      const countryCode = await getUserCountryCode();
       await saveProductToSQLite(productWithScore, countryCode ?? undefined);
       logger.debug(`[ManualProductService] ✅ Saved to SQLite: ${data.barcode}`);
       logger.info(`[ManualProductService] ✅ Saved user-contributed product to SQLite: ${data.barcode}`);
@@ -208,29 +219,66 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
       // Upload photo first if available
       if (data.image_url) {
         try {
-          powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Uploading photo to servers`, {
+          powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Uploading hero photo (Vercel proprietary)`, {
             barcode: data.barcode,
             photoPath: data.image_url,
-            targetServers: ['Open Food Facts', 'Vercel Backend'],
+            targetServers: ['Vercel Backend (proprietary)'],
           });
-          
+
           const photoResult = await uploadProductPhoto(data.barcode, data.image_url, 'front');
-          
+
           if (photoResult.success) {
-            const uploadedUrl = photoResult.openFoodFactsUrl || photoResult.vercelUrl;
+            const uploadedUrl = photoResult.vercelUrl || photoResult.openFoodFactsUrl;
             powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `Photo uploaded successfully`, {
               barcode: data.barcode,
               openFoodFactsUrl: photoResult.openFoodFactsUrl || 'NONE',
               vercelUrl: photoResult.vercelUrl || 'NONE',
               finalUrl: uploadedUrl,
             });
-            
+
             logger.info(`[ManualProductService] Photo uploaded: ${uploadedUrl}`);
-            // Update product with uploaded photo URL
-            if (photoResult.openFoodFactsUrl) {
-              productWithScore.image_url = photoResult.openFoodFactsUrl;
-            } else if (photoResult.vercelUrl) {
-              productWithScore.image_url = photoResult.vercelUrl;
+            if (uploadedUrl) {
+              productWithScore.image_url = uploadedUrl;
+              productWithScore.image_front_url = uploadedUrl;
+              // Critical: first save used local picker URI (file://). Re-persist so later scans use the hosted URL.
+              try {
+                await cacheProduct(productWithScore, false);
+                await saveProductToSQLite(productWithScore, countryCode ?? undefined);
+                const storageKey = `${STORAGE_KEY_PREFIX}${data.barcode}`;
+                await AsyncStorage.setItem(
+                  storageKey,
+                  JSON.stringify({
+                    ...data,
+                    image_url: uploadedUrl,
+                    product: productWithScore,
+                  })
+                );
+                powershellLogger.log(
+                  'SUCCESS',
+                  'USER_CONTRIBUTION',
+                  `USER_SUBMIT: local cache + SQLite + AsyncStorage updated with hosted hero photo URL`,
+                  {
+                    barcode: data.barcode,
+                    storage: ['cache', 'sqlite', 'asyncStorage'],
+                    hostedPhotoHost: (() => {
+                      try {
+                        return /^https?:\/\//i.test(uploadedUrl)
+                          ? new URL(uploadedUrl).hostname
+                          : 'non-http';
+                      } catch {
+                        return 'unknown';
+                      }
+                    })(),
+                    usedVercelBlob: !!photoResult.vercelUrl,
+                  }
+                );
+              } catch (rePersistErr) {
+                logger.warn('[ManualProductService] Post-upload re-persist failed:', rePersistErr);
+                powershellLogger.log('WARN', 'USER_CONTRIBUTION', `Hosted photo saved on server but local re-persist failed`, {
+                  barcode: data.barcode,
+                  error: rePersistErr instanceof Error ? rePersistErr.message : String(rePersistErr),
+                });
+              }
             }
           } else {
             powershellLogger.log('WARN', 'USER_CONTRIBUTION', `Photo upload failed`, {
@@ -251,82 +299,92 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
         });
       }
       
+      powershellLogger.log('INFO', 'USER_CONTRIBUTION', 'Manual Edit nutrition payload prepared for OFF submission', {
+        barcode: data.barcode,
+        hasNutrition: nutrimentsEntries.length > 0,
+        nutrimentsKeyCount: nutrimentsEntries.length,
+        nutrimentsKeys: nutrimentsEntries.map(([key]) => key),
+        nutrimentsPreview,
+        hasServingSize: !!data.serving_size,
+        servingSize: data.serving_size || null,
+        offCredentialsConfigured: offCredsConfigured,
+      });
+
       // Submit to Open Food Facts
       const offResult = await submitProductToOpenFoodFacts(data);
       if (offResult.success) {
+        powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', 'OFF submission accepted for manual edit payload', {
+          barcode: data.barcode,
+          accepted: true,
+          productUrl: offResult.productUrl || null,
+          hasNutritionInPayload: nutrimentsEntries.length > 0,
+          nutrimentsKeyCount: nutrimentsEntries.length,
+          offCredentialsConfigured: offCredsConfigured,
+        });
         logger.info(`[ManualProductService] ✅ Submitted to Open Food Facts: ${offResult.productUrl}`);
       } else {
+        powershellLogger.log('WARN', 'USER_CONTRIBUTION', 'OFF submission rejected/failed for manual edit payload', {
+          barcode: data.barcode,
+          accepted: false,
+          offMessage: offResult.message,
+          hasNutritionInPayload: nutrimentsEntries.length > 0,
+          nutrimentsKeyCount: nutrimentsEntries.length,
+          offCredentialsConfigured: offCredsConfigured,
+        });
         logger.warn(`[ManualProductService] Open Food Facts submission failed: ${offResult.message}`);
         // Continue - local save was successful
       }
       
-      // ===== USER CONTRIBUTION FLOW: STEP 3 - BACKEND SUBMISSION =====
-      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Starting backend submission process`, {
+      // ===== USER CONTRIBUTION FLOW: STEP 3 - VERCEL (PROPRIETARY FIELDS ONLY) =====
+      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Vercel manual-products (country + certifications only)`, {
         barcode: data.barcode,
-        hasPhoto: !!productWithScore.image_url,
-        photoUrl: productWithScore.image_url || 'NONE',
-        hasIngredients: !!data.ingredients_text,
-        hasNutrition: !!data.nutriments,
+        hasManufacturingOrCountry: !!(
+          data.manufacturing_places?.trim() ||
+          data.countries?.trim()
+        ),
+        hasCertTags: !!(data.labels_tags && data.labels_tags.length > 0),
       });
-      
-      // Submit to Vercel backend for global sharing
-      // CRITICAL: This ensures user edits are available to all users worldwide
-      let backendSubmissionSuccess = false;
+
+      const proprietaryPayload = buildVercelManualProductPayload(data);
+      const hasProprietaryForVercel = Object.keys(proprietaryPayload).length > 0;
+
+      let backendSubmissionSuccess = !hasProprietaryForVercel;
       const maxRetries = 3;
       let retryCount = 0;
-      
-      while (!backendSubmissionSuccess && retryCount < maxRetries) {
+
+      if (!hasProprietaryForVercel) {
+        logger.info(
+          `[ManualProductService] Skipping Vercel manual-products POST (no country or certifications to store)`
+        );
+      }
+
+      while (hasProprietaryForVercel && !backendSubmissionSuccess && retryCount < maxRetries) {
         try {
-          const { getBackendUrl, BackendEndpoints } = await import('../config/backendConfig');
           const backendUrl = getBackendUrl();
           const endpoint = BackendEndpoints.manualProducts(backendUrl);
-          
-          powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Submitting to backend (attempt ${retryCount + 1}/${maxRetries})`, {
+
+          powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Submitting proprietary data to backend (attempt ${retryCount + 1}/${maxRetries})`, {
             barcode: data.barcode,
             endpoint,
             backendUrl,
-            payload: {
-              barcode: data.barcode,
-              hasProductName: !!data.product_name,
-              hasPhoto: !!productWithScore.image_url,
-              photoUrl: productWithScore.image_url || 'NONE',
-              hasIngredients: !!data.ingredients_text,
-              hasNutrition: !!data.nutriments,
-            },
+            proprietaryKeys: Object.keys(proprietaryPayload),
           });
-          
-          logger.info(`[ManualProductService] Submitting to backend (attempt ${retryCount + 1}/${maxRetries}): ${endpoint}`);
-          
+
+          logger.info(`[ManualProductService] Submitting proprietary slice to backend (attempt ${retryCount + 1}/${maxRetries}): ${endpoint}`);
+
           const submissionStartTime = Date.now();
-          // CRITICAL: Log what we're about to submit
           const submissionPayload = {
             barcode: data.barcode,
-            productData: {
-              product_name: data.product_name,
-              brands: data.brands,
-              ingredients_text: data.ingredients_text,
-              image_url: productWithScore.image_url,
-              nutriments: data.nutriments,
-              manufacturing_places: data.manufacturing_places,
-              countries: data.countries,
-              categories: data.categories,
-              allergens_tags: data.allergens_tags,
-              additives_tags: data.additives_tags,
-              packaging_data: data.packaging_data,
-              serving_size: data.serving_size,
-              quantity: data.quantity,
-            },
+            productData: proprietaryPayload,
           };
-          
+
           powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Submitting payload to backend`, {
             barcode: data.barcode,
             endpoint,
             payload: submissionPayload,
             payloadSize: JSON.stringify(submissionPayload).length,
-            hasPhoto: !!productWithScore.image_url,
-            photoUrl: productWithScore.image_url || 'NONE',
           });
-          
+
           const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -373,9 +431,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
             parsedResponse: responseData,
             requestPayload: {
               barcode: submissionPayload.barcode,
-              hasProductName: !!submissionPayload.productData.product_name,
-              hasPhoto: !!submissionPayload.productData.image_url,
-              photoUrl: submissionPayload.productData.image_url || 'NONE',
+              proprietaryKeys: Object.keys(submissionPayload.productData as object),
             },
           });
           
@@ -402,16 +458,9 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
             logger.info(`[ManualProductService] Backend response: ${responseText.substring(0, 500)}`);
             
             // Log what was actually submitted
-            powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Data submitted to backend`, {
+            powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Proprietary data submitted to backend`, {
               barcode: data.barcode,
-              submittedData: {
-                barcode: data.barcode,
-                product_name: data.product_name,
-                hasPhoto: !!productWithScore.image_url,
-                photoUrl: productWithScore.image_url || 'NONE',
-                hasIngredients: !!data.ingredients_text,
-                hasNutrition: !!data.nutriments,
-              },
+              proprietaryKeys: Object.keys(proprietaryPayload),
             });
             
             backendSubmissionSuccess = true;
@@ -498,15 +547,13 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
         // CRITICAL: Show alert to user that submission failed
         // This ensures user knows their data isn't being shared
         // Note: We can't use Alert here (not in React context), but we log it clearly
-      } else {
-        logger.info(`[ManualProductService] ✅✅✅ BACKEND SUBMISSION SUCCESS! Data now available globally!`);
-        
-        powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅✅✅ USER A CONTRIBUTION COMPLETE - Data now available globally`, {
+      } else if (hasProprietaryForVercel) {
+        logger.info(
+          `[ManualProductService] ✅ Proprietary fields (country / certifications) saved to Vercel for other users.`
+        );
+        powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ Vercel proprietary sync complete`, {
           barcode: data.barcode,
-          status: 'SUCCESS',
-          availableToOtherUsers: true,
-          hasPhoto: !!productWithScore.image_url,
-          photoUrl: productWithScore.image_url || 'NONE',
+          proprietaryKeys: Object.keys(proprietaryPayload),
         });
       }
     } catch (submissionError) {
@@ -560,7 +607,9 @@ export async function getManualProduct(barcode: string): Promise<ProductWithTrus
     }
 
     const parsed = JSON.parse(data);
-    return parsed.product || null;
+    const p = parsed.product || null;
+    if (p && (p as any)._source == null) (p as any)._source = 'LOCAL';
+    return p;
   } catch (error) {
     logger.error('[ManualProductService] Error getting manual product', error);
     return null;

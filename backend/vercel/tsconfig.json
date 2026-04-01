@@ -20,7 +20,6 @@
     "dist",
     "lib/database.ts",
     "lib/databaseNeon.ts",
-    "api/upload-photo.ts",
     "api/user-prices.ts"
   ]
 }

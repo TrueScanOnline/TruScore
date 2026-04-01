@@ -1,6 +1,10 @@
 // Modular Palm Oil Card Component
+// Hidden on product page: palm oil still drives Planet/TruScore, values insights, and sharing payloads.
 
 import React, { useState, Suspense } from 'react';
+
+/** When true, renders the card + info modal on the product screen. */
+export const PALM_OIL_PRODUCT_CARD_VISIBLE = false;
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +28,10 @@ function PalmOilCardContent({ product, onShare, premiumFeatures }: PalmOilCardPr
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
+
+  if (!PALM_OIL_PRODUCT_CARD_VISIBLE) {
+    return null;
+  }
 
   if (!product || !product.palm_oil_analysis) {
     return null;

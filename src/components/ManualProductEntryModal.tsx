@@ -24,7 +24,11 @@ import * as FileSystem from 'expo-file-system';
 import { saveManualProduct } from '../services/manualProductService';
 import { ManualProductData } from '../types/manualProduct';
 import CameraCaptureModal from './CameraCaptureModal';
-import { parseAllergensAndAdditives, parsePackagingData } from '../utils/manualProductParsing';
+import { parseAllergensAndAdditives } from '../utils/manualProductParsing';
+import CountryPicker from './CountryPicker';
+import CertificationMultiPicker from './CertificationMultiPicker';
+import { findCountryByName, Country } from '../utils/countries';
+import { getTruscoreCertificationPickerTags } from '../services/ethicsCertificationsService';
 import { Product } from '../types/product';
 import { extractProductDataFromPhoto, verifyOCRData } from '../services/photoOcrService';
 import { logger } from '../utils/logger';
@@ -57,8 +61,7 @@ export default function ManualProductEntryModal({
   const [ingredients, setIngredients] = useState('');
   const [servingSize, setServingSize] = useState('');
   const [quantity, setQuantity] = useState('');
-  const [manufacturingCountry, setManufacturingCountry] = useState('');
-  const [categories, setCategories] = useState('');
+  const [selectedManufacturingCountry, setSelectedManufacturingCountry] = useState<Country | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
 
   // Nutrition fields (basic)
@@ -74,8 +77,8 @@ export default function ManualProductEntryModal({
   // Allergens & Additives
   const [allergensAdditives, setAllergensAdditives] = useState('');
 
-  // Recycling/Packaging Information
-  const [recyclingInfo, setRecyclingInfo] = useState('');
+  // Certifications: OFF tags aligned with TruScore ethics picker
+  const [selectedCertificationTags, setSelectedCertificationTags] = useState<string[]>([]);
 
   // Pre-fill form fields when editing existing product
   useEffect(() => {
@@ -85,8 +88,8 @@ export default function ManualProductEntryModal({
       setIngredients(initialProduct.ingredients_text || '');
       setServingSize(initialProduct.serving_size || '');
       setQuantity(initialProduct.quantity || '');
-      setManufacturingCountry(initialProduct.manufacturing_places || initialProduct.countries || '');
-      setCategories(initialProduct.categories || '');
+      const countryRaw = (initialProduct.manufacturing_places || initialProduct.countries || '').trim();
+      setSelectedManufacturingCountry(countryRaw ? findCountryByName(countryRaw) ?? null : null);
       setImageUri(initialProduct.image_url || initialProduct.image_front_url || null);
       
       // Pre-fill nutrition data
@@ -113,19 +116,17 @@ export default function ManualProductEntryModal({
         .join(', ');
       setAllergensAdditives(allergensAdditivesText);
       
-      // Pre-fill packaging info (convert structured data back to text)
-      if (initialProduct.packaging_data) {
-        const packagingItems = initialProduct.packaging_data.items.map(item => {
-          const parts: string[] = [];
-          if (item.material) parts.push(item.material.replace(/^en:/, ''));
-          if (item.shape) parts.push(item.shape.replace(/^en:/, ''));
-          if (item.recycling === 'en:recyclable') parts.push('recyclable');
-          return parts.join(' - ');
-        }).filter(p => p.length > 0);
-        setRecyclingInfo(packagingItems.join(', '));
-      } else if (initialProduct.packaging) {
-        setRecyclingInfo(initialProduct.packaging);
+      const pickerAllow = new Set(getTruscoreCertificationPickerTags());
+      const labelParts: string[] = [];
+      if (Array.isArray(initialProduct.labels_tags)) {
+        labelParts.push(...initialProduct.labels_tags);
+      } else if (Array.isArray(initialProduct.labels_hierarchy)) {
+        labelParts.push(...initialProduct.labels_hierarchy);
       }
+      const normalizedCerts = [...new Set(labelParts.map((t) => t.trim().toLowerCase()).filter(Boolean))].filter((t) =>
+        pickerAllow.has(t)
+      );
+      setSelectedCertificationTags(normalizedCerts.sort());
     } else if (visible && !editMode) {
       // Reset form when opening in add mode
       setProductName('');
@@ -133,8 +134,7 @@ export default function ManualProductEntryModal({
       setIngredients('');
       setServingSize('');
       setQuantity('');
-      setManufacturingCountry('');
-      setCategories('');
+      setSelectedManufacturingCountry(null);
       setImageUri(null);
       setEnergy('');
       setFat('');
@@ -145,7 +145,7 @@ export default function ManualProductEntryModal({
       setProtein('');
       setSalt('');
       setAllergensAdditives('');
-      setRecyclingInfo('');
+      setSelectedCertificationTags([]);
     }
   }, [visible, initialProduct, editMode]);
 
@@ -310,7 +310,7 @@ export default function ManualProductEntryModal({
       hasPhoto: !!imageUri,
       photoPath: imageUri || 'NONE',
       hasIngredients: !!ingredients.trim(),
-      hasNutrition: Object.keys({ energy, fat, carbs, protein }).some(k => !!eval(k)),
+      hasNutrition: [energy, fat, carbs, protein].some((v) => !!String(v || '').trim()),
     });
     
     // Validate required fields (product name only required in add mode, not edit mode)
@@ -326,23 +326,55 @@ export default function ManualProductEntryModal({
     setLoading(true);
     logger.debug(`[ManualProductEntryModal] ✅ Validation passed, calling saveManualProduct...`);
     try {
-      // Build nutriments object if nutrition data provided
+      // Build nutriments (per 100g mirrors so NutritionTable shows community values)
       const nutriments: Record<string, number> = {};
-      if (energy) nutriments.energy = parseFloat(energy) || 0;
-      if (fat) nutriments.fat = parseFloat(fat) || 0;
-      if (saturatedFat) nutriments['saturated-fat'] = parseFloat(saturatedFat) || 0;
-      if (carbs) nutriments.carbohydrates = parseFloat(carbs) || 0;
-      if (sugars) nutriments.sugars = parseFloat(sugars) || 0;
-      if (fiber) nutriments.fiber = parseFloat(fiber) || 0;
-      if (protein) nutriments.proteins = parseFloat(protein) || 0;
-      if (salt) nutriments.salt = parseFloat(salt) || 0;
+      if (energy) {
+        const v = parseFloat(energy) || 0;
+        nutriments['energy-kcal'] = v;
+        nutriments['energy-kcal_100g'] = v;
+      }
+      if (fat) {
+        const v = parseFloat(fat) || 0;
+        nutriments.fat = v;
+        nutriments.fat_100g = v;
+      }
+      if (saturatedFat) {
+        const v = parseFloat(saturatedFat) || 0;
+        nutriments['saturated-fat'] = v;
+        nutriments['saturated-fat_100g'] = v;
+      }
+      if (carbs) {
+        const v = parseFloat(carbs) || 0;
+        nutriments.carbohydrates = v;
+        nutriments.carbohydrates_100g = v;
+      }
+      if (sugars) {
+        const v = parseFloat(sugars) || 0;
+        nutriments.sugars = v;
+        nutriments.sugars_100g = v;
+      }
+      if (fiber) {
+        const v = parseFloat(fiber) || 0;
+        nutriments.fiber = v;
+        nutriments.fiber_100g = v;
+      }
+      if (protein) {
+        const v = parseFloat(protein) || 0;
+        nutriments.proteins = v;
+        nutriments.proteins_100g = v;
+      }
+      if (salt) {
+        const v = parseFloat(salt) || 0;
+        nutriments.salt = v;
+        nutriments.salt_100g = v;
+      }
 
       // Parse allergens/additives text into structured tags
       const { allergens_tags, additives_tags } = parseAllergensAndAdditives(allergensAdditives);
-      
-      // Parse packaging/recycling text into structured data
-      const { packaging_data } = parsePackagingData(recyclingInfo);
-      
+      const labels_tags = [...selectedCertificationTags];
+      const labels_hierarchy = [...selectedCertificationTags];
+      const countryName = selectedManufacturingCountry?.name?.trim() || '';
+
       // Use product name from initialProduct if editing and no name provided
       const finalProductName = editMode && !productName.trim() && initialProduct?.product_name
         ? initialProduct.product_name
@@ -357,12 +389,12 @@ export default function ManualProductEntryModal({
         nutriments: Object.keys(nutriments).length > 0 ? nutriments : undefined,
         serving_size: servingSize.trim() || undefined,
         quantity: quantity.trim() || undefined,
-        manufacturing_places: manufacturingCountry.trim() || undefined,
-        countries: manufacturingCountry.trim() || undefined,
-        categories: categories.trim() || undefined,
+        manufacturing_places: countryName || undefined,
+        countries: countryName || undefined,
         allergens_tags: allergens_tags.length > 0 ? allergens_tags : undefined,
         additives_tags: additives_tags.length > 0 ? additives_tags : undefined,
-        packaging_data: packaging_data,
+        labels_tags: labels_tags.length > 0 ? labels_tags : undefined,
+        labels_hierarchy: labels_hierarchy.length > 0 ? labels_hierarchy : undefined,
         timestamp: Date.now(),
       };
 
@@ -414,8 +446,7 @@ export default function ManualProductEntryModal({
     setIngredients('');
     setServingSize('');
     setQuantity('');
-    setManufacturingCountry('');
-    setCategories('');
+    setSelectedManufacturingCountry(null);
     setImageUri(null);
     setEnergy('');
     setFat('');
@@ -426,7 +457,7 @@ export default function ManualProductEntryModal({
     setProtein('');
     setSalt('');
     setAllergensAdditives('');
-    setRecyclingInfo('');
+    setSelectedCertificationTags([]);
     onClose();
   };
 
@@ -448,10 +479,9 @@ export default function ManualProductEntryModal({
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
             <Text style={[styles.title, { color: colors.text }]}>
-              {editMode 
-                ? (t('manualProduct.editTitle') || 'Edit Product Information')
-                : (t('manualProduct.title') || 'Add Product Information')
-              }
+              {editMode
+                ? t('manualProduct.manualEditPageTitle')
+                : t('manualProduct.title')}
             </Text>
             <View style={styles.placeholder} />
           </View>
@@ -598,26 +628,23 @@ export default function ManualProductEntryModal({
                 <Text style={[styles.label, { color: colors.text }]}>
                   {t('manualProduct.manufacturingCountry') || 'Country of Manufacture'}
                 </Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                  placeholder={t('manualProduct.manufacturingCountryPlaceholder') || 'Enter country name'}
-                  placeholderTextColor={colors.textSecondary}
-                  value={manufacturingCountry}
-                  onChangeText={setManufacturingCountry}
-                  autoCapitalize="words"
+                <CountryPicker
+                  selectedCountry={selectedManufacturingCountry}
+                  onSelect={setSelectedManufacturingCountry}
+                  placeholder={t('manualProduct.manufacturingCountryPlaceholder')}
                 />
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.text }]}>
-                  {t('manualProduct.categories') || 'Categories'}
+                  {t('manualProduct.certificationsLabels') || 'Certifications'}
                 </Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                  placeholder={t('manualProduct.categoriesPlaceholder') || 'e.g., Beverages, Snacks, Dairy'}
-                  placeholderTextColor={colors.textSecondary}
-                  value={categories}
-                  onChangeText={setCategories}
+                <Text style={[styles.sectionSubtitle, { color: colors.textSecondary, marginBottom: 6 }]}>
+                  {t('manualProduct.certificationsLabelsNote')}
+                </Text>
+                <CertificationMultiPicker
+                  selectedTags={selectedCertificationTags}
+                  onChange={setSelectedCertificationTags}
                 />
               </View>
             </View>
@@ -768,26 +795,6 @@ export default function ManualProductEntryModal({
                 onChangeText={setAllergensAdditives}
                 multiline
                 numberOfLines={3}
-                textAlignVertical="top"
-              />
-            </View>
-
-            {/* Recycling/Packaging Information */}
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {t('manualProduct.recyclingInfo') || 'Recycling/Packaging Information (Optional)'}
-              </Text>
-              <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-                {t('manualProduct.recyclingInfoNote') || 'Enter packaging type and recyclability (e.g., Plastic bottle - recyclable, Cardboard box - recyclable)'}
-              </Text>
-              <TextInput
-                style={[styles.textArea, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                placeholder={t('manualProduct.recyclingInfoPlaceholder') || 'e.g., Plastic bottle - recyclable'}
-                placeholderTextColor={colors.textSecondary}
-                value={recyclingInfo}
-                onChangeText={setRecyclingInfo}
-                multiline
-                numberOfLines={2}
                 textAlignVertical="top"
               />
             </View>

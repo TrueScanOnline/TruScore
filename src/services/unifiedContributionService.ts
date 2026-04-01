@@ -210,16 +210,16 @@ export async function submitAllContributions(barcode: string): Promise<{
             const photoResult = await uploadProductPhoto(barcode, photo.path, photo.type);
             photoResults.push(photoResult);
             
-            if (photoResult.success) {
-              // Use the first successfully uploaded photo as the main product image
-              if (!uploadedPhotoUrl && (photoResult.openFoodFactsUrl || photoResult.vercelUrl)) {
-                uploadedPhotoUrl = photoResult.openFoodFactsUrl || photoResult.vercelUrl;
+              if (photoResult.success) {
+              // Prefer proprietary CDN URL when both exist (hero / label shots default to Vercel-only).
+              if (!uploadedPhotoUrl && (photoResult.vercelUrl || photoResult.openFoodFactsUrl)) {
+                uploadedPhotoUrl = photoResult.vercelUrl || photoResult.openFoodFactsUrl;
               }
-              
+
               powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ Photo uploaded successfully`, {
                 barcode,
                 photoType: photo.type,
-                url: photoResult.openFoodFactsUrl || photoResult.vercelUrl,
+                url: photoResult.vercelUrl || photoResult.openFoodFactsUrl,
               });
             }
           } catch (photoError) {

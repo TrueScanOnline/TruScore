@@ -19,8 +19,19 @@ import { getUserContributedProduct } from '../../../src/services/userContributed
 import { submitManufacturingCountry, getManufacturingCountry } from '../../../src/services/manufacturingCountryService';
 import { uploadProductPhoto } from '../../../src/services/photoUploadService';
 
+/** Fetch mock compatible with services that use response.text() (e.g. manual-products POST/GET). */
+function mockFetchResponse(data: unknown, ok = true) {
+  const body = JSON.stringify(data);
+  return {
+    ok,
+    status: ok ? 200 : 400,
+    text: async () => body,
+    json: async () => JSON.parse(body),
+  };
+}
+
 describe('User Contribution System - Complete E2E Tests', () => {
-  const TEST_BARCODE = `E2E_TEST_${Date.now()}`;
+  const TEST_BARCODE = '9300657233358';
   const TEST_USER_A = `user_a_${Date.now()}`;
   const TEST_USER_B = `user_b_${Date.now()}`;
   
@@ -94,44 +105,38 @@ describe('User Contribution System - Complete E2E Tests', () => {
         // Open Food Facts calls (may happen first or after backend)
         if (urlString.includes('openfoodfacts.org')) {
           openFoodFactsCallCount++;
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               status: 1,
               status_verbose: 'fields saved',
-            }),
-          });
+            })
+          );
         }
 
         // Backend API calls - check for manual-products endpoint
         if ((urlString.includes('/api/manual-products') || urlString.includes('manual-products')) && method === 'POST') {
           backendCallCount++;
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               message: 'Product data submitted successfully!',
               barcode: TEST_BARCODE,
-            }),
-          });
+            })
+          );
         }
 
         // Photo upload API
         if ((urlString.includes('/api/upload-photo') || urlString.includes('upload-photo')) && method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               url: 'https://storage.example.com/photos/test.jpg',
-            }),
-          });
+            })
+          );
         }
 
         // Other calls (like getUserCountryCode, etc.)
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({}),
-        });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       // Submit complete product
@@ -161,9 +166,8 @@ describe('User Contribution System - Complete E2E Tests', () => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';
         
         if (urlString.includes('/api/manual-products') && urlString.includes('barcode=')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               product: {
                 barcode: TEST_BARCODE,
@@ -198,31 +202,22 @@ describe('User Contribution System - Complete E2E Tests', () => {
                 },
                 submittedAt: Date.now(),
               },
-            }),
-          });
+            })
+          );
         }
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({}),
-        });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       // User B retrieves product
       const product = await getUserContributedProduct(TEST_BARCODE);
 
-      // Verify all data is present
+      // Backend manual-products only exposes proprietary fields (country / certifications / photo merge).
+      // Name, ingredients, allergens, and scoring fields come from Open Food Facts after merge in the app.
       expect(product).not.toBeNull();
-      expect(product?.product_name).toBe('Complete Test Product');
-      expect(product?.brands).toBe('Test Brand Inc.');
-      expect(product?.ingredients_text).toContain('Water, Sugar, Salt');
-      expect(product?.allergens_tags).toContain('en:milk');
-      expect(product?.allergens_tags).toContain('en:soy');
-      expect(product?.additives_tags).toContain('en:e412');
-      expect(product?.additives_tags).toContain('en:e202');
       expect(product?.manufacturing_places).toBe('New Zealand');
-      expect(product?.packaging_data).toBeDefined();
-      expect(product?.nutriments?.energy_kcal_100g).toBe(150);
+      expect(product?.countries).toBe('New Zealand');
       expect(product?.source).toBe('user_contributed');
+      expect((product as any)._source).toBe('BACKEND');
     });
   });
 
@@ -235,10 +230,11 @@ describe('User Contribution System - Complete E2E Tests', () => {
         timestamp: Date.now(),
       };
 
+      let openFoodFactsCallCount = 0;
       (global.fetch as jest.Mock).mockImplementation((url: string | Request, options?: any) => {
         let urlString = '';
         let method = 'GET';
-        
+
         if (typeof url === 'string') {
           urlString = url;
           method = options?.method || 'GET';
@@ -248,45 +244,40 @@ describe('User Contribution System - Complete E2E Tests', () => {
         }
 
         if (urlString.includes('openfoodfacts.org')) {
-          return Promise.resolve({ ok: true, json: async () => ({ status: 1 }) });
+          openFoodFactsCallCount++;
+          return Promise.resolve(mockFetchResponse({ status: 1 }));
         }
         if ((urlString.includes('/api/manual-products') || urlString.includes('manual-products')) && method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({ success: true, barcode: TEST_BARCODE }),
-          });
+          return Promise.resolve(mockFetchResponse({ success: true, barcode: TEST_BARCODE }));
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const result = await saveManualProduct(productData);
       expect(result).toBe(true);
+      expect(openFoodFactsCallCount).toBeGreaterThan(0);
 
-      // Verify retrieval
+      // Allergens are submitted to OFF for TruScore; Vercel manual-products does not return them here.
       AsyncStorage.getItem.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';
         if (urlString.includes('/api/manual-products') && urlString.includes('barcode=')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               product: {
                 barcode: TEST_BARCODE,
-                product_name: 'Allergen Test Product',
-                allergens_tags: ['en:milk', 'en:eggs', 'en:gluten', 'en:soy'],
                 submittedAt: Date.now(),
               },
-            }),
-          });
+            })
+          );
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const product = await getUserContributedProduct(TEST_BARCODE);
-      expect(product?.allergens_tags).toHaveLength(4);
-      expect(product?.allergens_tags).toContain('en:milk');
-      expect(product?.allergens_tags).toContain('en:eggs');
+      expect(product?.barcode).toBe(TEST_BARCODE);
+      expect(product?.allergens_tags).toBeUndefined();
     });
 
     test('should submit and retrieve additives correctly', async () => {
@@ -297,10 +288,11 @@ describe('User Contribution System - Complete E2E Tests', () => {
         timestamp: Date.now(),
       };
 
+      let openFoodFactsCallCount = 0;
       (global.fetch as jest.Mock).mockImplementation((url: string | Request, options?: any) => {
         let urlString = '';
         let method = 'GET';
-        
+
         if (typeof url === 'string') {
           urlString = url;
           method = options?.method || 'GET';
@@ -310,44 +302,38 @@ describe('User Contribution System - Complete E2E Tests', () => {
         }
 
         if (urlString.includes('openfoodfacts.org')) {
-          return Promise.resolve({ ok: true, json: async () => ({ status: 1 }) });
+          openFoodFactsCallCount++;
+          return Promise.resolve(mockFetchResponse({ status: 1 }));
         }
         if ((urlString.includes('/api/manual-products') || urlString.includes('manual-products')) && method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({ success: true, barcode: TEST_BARCODE }),
-          });
+          return Promise.resolve(mockFetchResponse({ success: true, barcode: TEST_BARCODE }));
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       await saveManualProduct(productData);
+      expect(openFoodFactsCallCount).toBeGreaterThan(0);
 
-      // Verify retrieval
       AsyncStorage.getItem.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';
         if (urlString.includes('/api/manual-products') && urlString.includes('barcode=')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               product: {
                 barcode: TEST_BARCODE,
-                product_name: 'Additive Test Product',
-                additives_tags: ['en:e412', 'en:e202', 'en:e621', 'en:e951'],
                 submittedAt: Date.now(),
               },
-            }),
-          });
+            })
+          );
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const product = await getUserContributedProduct(TEST_BARCODE);
-      expect(product?.additives_tags).toHaveLength(4);
-      expect(product?.additives_tags).toContain('en:e412');
-      expect(product?.additives_tags).toContain('en:e951');
+      expect(product?.barcode).toBe(TEST_BARCODE);
+      expect(product?.additives_tags).toBeUndefined();
     });
   });
 
@@ -376,19 +362,18 @@ describe('User Contribution System - Complete E2E Tests', () => {
         }
 
         if ((urlString.includes('/api/manufacturing-country') || urlString.includes('manufacturing-country')) && method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               verified: false,
               message: 'Thank you for your contribution!',
-            }),
-          });
+            })
+          );
         }
         if (urlString.includes('openfoodfacts.org')) {
-          return Promise.resolve({ ok: true, json: async () => ({ status: 1 }) });
+          return Promise.resolve(mockFetchResponse({ status: 1 }));
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const result = await submitManufacturingCountry(TEST_BARCODE, 'New Zealand');
@@ -398,17 +383,16 @@ describe('User Contribution System - Complete E2E Tests', () => {
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';
         if (urlString.includes('/api/manufacturing-country') && urlString.includes('barcode=')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               country: 'New Zealand',
               confidence: 'community',
               verifiedCount: 1,
               hasImportedIngredients: false,
-            }),
-          });
+            })
+          );
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const countryData = await getManufacturingCountry(TEST_BARCODE);
@@ -426,28 +410,23 @@ describe('User Contribution System - Complete E2E Tests', () => {
       (global.fetch as jest.Mock).mockImplementation((url: string, options?: any) => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';
         if (urlString.includes('openfoodfacts.org')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
-              image_url: 'https://images.openfoodfacts.org/images/products/test/front.jpg',
-            }),
-          });
+          return Promise.resolve(mockFetchResponse({ status: 1 }));
         }
         if (urlString.includes('/api/upload-photo') && options?.method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               url: 'https://storage.example.com/photos/front.jpg',
-            }),
-          });
+            })
+          );
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const result = await uploadProductPhoto(TEST_BARCODE, mockImagePath, 'front');
       expect(result.success).toBe(true);
-      expect(result.openFoodFactsUrl || result.vercelUrl).toBeDefined();
+      expect(result.vercelUrl).toBeDefined();
+      expect(result.openFoodFactsUrl).toBeUndefined();
     });
 
     test('should upload ingredients photo and retrieve globally', async () => {
@@ -458,23 +437,17 @@ describe('User Contribution System - Complete E2E Tests', () => {
       (global.fetch as jest.Mock).mockImplementation((url: string, options?: any) => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';
         if (urlString.includes('openfoodfacts.org')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
-              image_url: 'https://images.openfoodfacts.org/images/products/test/ingredients.jpg',
-            }),
-          });
+          return Promise.resolve(mockFetchResponse({ status: 1 }));
         }
         if (urlString.includes('/api/upload-photo') && options?.method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               url: 'https://storage.example.com/photos/ingredients.jpg',
-            }),
-          });
+            })
+          );
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const result = await uploadProductPhoto(TEST_BARCODE, mockImagePath, 'ingredients');
@@ -489,6 +462,7 @@ describe('User Contribution System - Complete E2E Tests', () => {
         barcode: TEST_BARCODE,
         product_name: 'App User Priority Product',
         ingredients_text: 'App User Ingredients',
+        countries: 'App User Origin',
         timestamp: Date.now(),
       };
 
@@ -508,16 +482,13 @@ describe('User Contribution System - Complete E2E Tests', () => {
 
         if ((urlString.includes('/api/manual-products') || urlString.includes('manual-products')) && method === 'POST') {
           backendCallOrder.push('backend');
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({ success: true, barcode: TEST_BARCODE }),
-          });
+          return Promise.resolve(mockFetchResponse({ success: true, barcode: TEST_BARCODE }));
         }
         if (urlString.includes('openfoodfacts.org')) {
           backendCallOrder.push('openfoodfacts');
-          return Promise.resolve({ ok: true, json: async () => ({ status: 1 }) });
+          return Promise.resolve(mockFetchResponse({ status: 1 }));
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       await saveManualProduct(productData);
@@ -530,24 +501,24 @@ describe('User Contribution System - Complete E2E Tests', () => {
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';
         if (urlString.includes('/api/manual-products') && urlString.includes('barcode=')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               product: {
                 barcode: TEST_BARCODE,
                 product_name: 'App User Priority Product',
                 ingredients_text: 'App User Ingredients',
+                countries: 'App User Origin',
                 submittedAt: Date.now(),
               },
-            }),
-          });
+            })
+          );
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const product = await getUserContributedProduct(TEST_BARCODE);
-      expect(product?.product_name).toBe('App User Priority Product');
+      expect(product?.countries).toBe('App User Origin');
       expect(product?.source).toBe('user_contributed');
     });
   });
@@ -577,15 +548,12 @@ describe('User Contribution System - Complete E2E Tests', () => {
         }
 
         if (urlString.includes('openfoodfacts.org')) {
-          return Promise.resolve({ ok: true, json: async () => ({ status: 1 }) });
+          return Promise.resolve(mockFetchResponse({ status: 1 }));
         }
         if ((urlString.includes('/api/manual-products') || urlString.includes('manual-products')) && method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({ success: true, barcode: TEST_BARCODE }),
-          });
+          return Promise.resolve(mockFetchResponse({ success: true, barcode: TEST_BARCODE }));
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       await saveManualProduct(productData);
@@ -595,9 +563,8 @@ describe('User Contribution System - Complete E2E Tests', () => {
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';
         if (urlString.includes('/api/manual-products') && urlString.includes('barcode=')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               product: {
                 barcode: TEST_BARCODE,
@@ -607,20 +574,20 @@ describe('User Contribution System - Complete E2E Tests', () => {
                 allergens_tags: ['en:milk'],
                 submittedAt: Date.now(),
               },
-            }),
-          });
+            })
+          );
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const product = await getUserContributedProduct(TEST_BARCODE);
 
-      // User B should see User A's data
+      // Vercel GET returns the proprietary slice only; core product fields are loaded from OFF when present.
       expect(product).not.toBeNull();
-      expect(product?.product_name).toBe('Multi-User Test Product');
-      expect(product?.brands).toBe('Test Brand');
-      expect(product?.ingredients_text).toBe('Water, Sugar');
-      expect(product?.allergens_tags).toContain('en:milk');
+      expect(product?.barcode).toBe(TEST_BARCODE);
+      expect(product?.product_name).toBeUndefined();
+      expect(product?.ingredients_text).toBeUndefined();
+      expect(product?.allergens_tags).toBeUndefined();
     });
   });
 
@@ -662,15 +629,12 @@ describe('User Contribution System - Complete E2E Tests', () => {
         }
 
         if (urlString.includes('openfoodfacts.org')) {
-          return Promise.resolve({ ok: true, json: async () => ({ status: 1 }) });
+          return Promise.resolve(mockFetchResponse({ status: 1 }));
         }
         if ((urlString.includes('/api/manual-products') || urlString.includes('manual-products')) && method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({ success: true, barcode: TEST_BARCODE }),
-          });
+          return Promise.resolve(mockFetchResponse({ success: true, barcode: TEST_BARCODE }));
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const saveResult = await saveManualProduct(completeData);
@@ -696,19 +660,18 @@ describe('User Contribution System - Complete E2E Tests', () => {
         }
 
         if ((urlString.includes('/api/manufacturing-country') || urlString.includes('manufacturing-country')) && method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({ 
-              success: true, 
+          return Promise.resolve(
+            mockFetchResponse({
+              success: true,
               verified: false,
               message: 'Thank you for your contribution!',
-            }),
-          });
+            })
+          );
         }
         if (urlString.includes('openfoodfacts.org')) {
-          return Promise.resolve({ ok: true, json: async () => ({ status: 1 }) });
+          return Promise.resolve(mockFetchResponse({ status: 1 }));
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const countryResult = await submitManufacturingCountry(TEST_BARCODE, 'New Zealand');
@@ -719,38 +682,34 @@ describe('User Contribution System - Complete E2E Tests', () => {
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';
         if (urlString.includes('/api/manual-products') && urlString.includes('barcode=')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               product: {
                 ...completeData,
                 submittedAt: Date.now(),
               },
-            }),
-          });
+            })
+          );
         }
         if (urlString.includes('/api/manufacturing-country') && urlString.includes('barcode=')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               country: 'New Zealand',
               confidence: 'community',
               verifiedCount: 1,
-            }),
-          });
+            })
+          );
         }
-        return Promise.resolve({ ok: true, json: async () => ({}) });
+        return Promise.resolve(mockFetchResponse({}));
       });
 
       const product = await getUserContributedProduct(TEST_BARCODE);
       const countryData = await getManufacturingCountry(TEST_BARCODE);
 
-      // Verify all data is available
+      // Proprietary country on Vercel + manufacturing-country API; scoring fields come from OFF elsewhere.
       expect(product).not.toBeNull();
-      expect(product?.product_name).toBe('Complete Workflow Product');
-      expect(product?.allergens_tags).toContain('en:milk');
-      expect(product?.additives_tags).toContain('en:e412');
+      expect(product?.manufacturing_places).toBe('New Zealand');
       expect(countryData.country).toBe('New Zealand');
     });
   });

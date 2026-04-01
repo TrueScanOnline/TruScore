@@ -67,7 +67,6 @@ import ProcessingLevelModal from '../../src/components/ProcessingLevelModal';
 import CameraCaptureModal from '../../src/components/CameraCaptureModal';
 import ManufacturingCountryModal from '../../src/components/ManufacturingCountryModal';
 import RecallAlertModal from '../../src/components/RecallAlertModal';
-import PalmOilInfoModal from '../../src/components/PalmOilInfoModal';
 import PackagingInfoModal from '../../src/components/PackagingInfoModal';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import InsightsCarousel from '../../src/components/InsightsCarousel';
@@ -492,12 +491,6 @@ function ResultScreenContent() {
         visible={recallAlertModalVisible}
         onClose={() => setRecallAlertModalVisible(false)}
         recalls={product?.recalls || []}
-      />
-
-      <PalmOilInfoModal
-        visible={palmOilInfoModalVisible}
-        onClose={() => setPalmOilInfoModalVisible(false)}
-        product={product}
       />
 
       <PackagingInfoModal

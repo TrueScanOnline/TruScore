@@ -21,8 +21,19 @@ import { uploadProductPhoto } from '../../../src/services/photoUploadService';
 
 // Note: AsyncStorage and fetch are mocked in src/__tests__/setup.ts
 
+/** Fetch mock compatible with services that use response.text() (e.g. getUserContributedProduct). */
+function mockFetchResponse(data: unknown) {
+  const body = JSON.stringify(data);
+  return {
+    ok: true,
+    status: 200,
+    text: async () => body,
+    json: async () => JSON.parse(body),
+  };
+}
+
 describe('User Contribution System - Integration Tests', () => {
-  const TEST_BARCODE = `TEST_${Date.now()}`;
+  const TEST_BARCODE = `9300657233358`;
   const TEST_USER_ID = `user_${Date.now()}`;
   
   let AsyncStorage: any;
@@ -49,6 +60,10 @@ describe('User Contribution System - Integration Tests', () => {
           fat_100g: 5,
           carbohydrates_100g: 20,
         },
+        countries: 'Testland',
+        manufacturing_places: 'Testland',
+        labels_tags: ['en:organic'],
+        labels_hierarchy: ['en:organic'],
         timestamp: Date.now(),
       };
 
@@ -113,23 +128,24 @@ describe('User Contribution System - Integration Tests', () => {
       // Mock backend API response - this should be called after getManualProduct returns null
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         if (url && typeof url === 'string' && url.includes('/api/manual-products') && url.includes('barcode=')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               product: {
                 barcode: TEST_BARCODE,
-                product_name: 'Test Product Global',
-                brands: 'Test Brand',
-                ingredients_text: 'Water, Sugar, Salt',
+                countries: 'Testland',
+                manufacturing_places: 'Testland',
+                labels_tags: ['en:organic'],
+                labels_hierarchy: ['en:organic'],
                 submittedAt: Date.now(),
               },
-            }),
-          });
+            })
+          );
         }
         // Allow other calls
         return Promise.resolve({
           ok: true,
+          text: async () => '{}',
           json: async () => ({}),
         });
       });
@@ -138,30 +154,33 @@ describe('User Contribution System - Integration Tests', () => {
       const product = await getUserContributedProduct(TEST_BARCODE);
 
       expect(product).not.toBeNull();
-      expect(product?.product_name).toBe('Test Product Global');
-      expect(product?.ingredients_text).toBe('Water, Sugar, Salt');
+      expect(product?.countries).toBe('Testland');
+      expect(product?.labels_tags).toEqual(expect.arrayContaining(['en:organic']));
       expect(product?.source).toBe('user_contributed');
     });
 
-    test('should prioritize user-contributed data over database data', async () => {
-      // Mock user-contributed product
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          product: {
-            barcode: TEST_BARCODE,
-            product_name: 'User Submitted Name',
-            ingredients_text: 'User Submitted Ingredients',
-            submittedAt: Date.now(),
-          },
-        }),
+    test('should prioritize user-contributed proprietary data from backend', async () => {
+      (global.fetch as jest.Mock).mockImplementation((url: string) => {
+        if (String(url).includes('/api/manual-products') && String(url).includes('barcode=')) {
+          return Promise.resolve(
+            mockFetchResponse({
+              success: true,
+              product: {
+                barcode: TEST_BARCODE,
+                countries: 'User Submitted Country',
+                labels_tags: ['en:organic'],
+                submittedAt: Date.now(),
+              },
+            })
+          );
+        }
+        return Promise.resolve({ ok: true, text: async () => '{}' });
       });
 
       const userProduct = await getUserContributedProduct(TEST_BARCODE);
 
-      expect(userProduct?.product_name).toBe('User Submitted Name');
-      expect(userProduct?.ingredients_text).toBe('User Submitted Ingredients');
+      expect(userProduct?.countries).toBe('User Submitted Country');
+      expect(userProduct?.labels_tags).toEqual(expect.arrayContaining(['en:organic']));
     });
   });
 
@@ -321,27 +340,25 @@ describe('User Contribution System - Integration Tests', () => {
         return Promise.resolve(null);
       });
 
-      // Mock user-contributed product from backend
+      // Mock user-contributed product from backend (Vercel = proprietary only)
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         if (url && typeof url === 'string' && url.includes('/api/manual-products') && url.includes('barcode=')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
+          return Promise.resolve(
+            mockFetchResponse({
               success: true,
               product: {
                 barcode: TEST_BARCODE,
-                product_name: 'User Submitted Name',
-                ingredients_text: 'User Submitted Ingredients',
-                nutriments: {
-                  energy_kcal_100g: 150,
-                },
+                countries: 'User Submitted Country',
+                labels_tags: ['en:organic'],
+                labels_hierarchy: ['en:organic'],
                 submittedAt: Date.now(),
               },
-            }),
-          });
+            })
+          );
         }
         return Promise.resolve({
           ok: true,
+          text: async () => '{}',
           json: async () => ({}),
         });
       });
@@ -351,10 +368,9 @@ describe('User Contribution System - Integration Tests', () => {
       expect(userProduct).not.toBeNull();
       // User-contributed data should have source = 'user_contributed'
       expect(userProduct?.source).toBe('user_contributed');
-      
-      // User data should be preserved
-      expect(userProduct?.product_name).toBe('User Submitted Name');
-      expect(userProduct?.ingredients_text).toBe('User Submitted Ingredients');
+
+      expect(userProduct?.countries).toBe('User Submitted Country');
+      expect(userProduct?.labels_tags).toEqual(expect.arrayContaining(['en:organic']));
     });
   });
 
@@ -435,42 +451,53 @@ describe('User Contribution System - Integration Tests', () => {
 
   describe('Data Consistency', () => {
     test('should ensure data is available to all users', async () => {
-      // User A submits data
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          barcode: TEST_BARCODE,
-        }),
+      (global.fetch as jest.Mock).mockImplementation((url: string, options: any) => {
+        const u = String(url);
+        if (u.includes('openfoodfacts.org')) {
+          return Promise.resolve({ ok: true, text: async () => 'status="ok"' });
+        }
+        if (u.includes('manual-products') && options && options.method === 'POST') {
+          return Promise.resolve(mockFetchResponse({ success: true, barcode: TEST_BARCODE }));
+        }
+        return Promise.resolve({ ok: true, text: async () => '{}' });
       });
 
       const productData: ManualProductData = {
         barcode: TEST_BARCODE,
         product_name: 'Global Product',
+        countries: 'Global Country',
+        manufacturing_places: 'Global Country',
+        labels_tags: ['en:fair-trade'],
+        labels_hierarchy: ['en:fair-trade'],
         timestamp: Date.now(),
       };
 
       await saveManualProduct(productData);
 
-      // User B retrieves data (different device, no local cache)
       AsyncStorage.getItem.mockResolvedValue(null);
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          product: {
-            barcode: TEST_BARCODE,
-            product_name: 'Global Product',
-            submittedAt: Date.now(),
-          },
-        }),
+      (global.fetch as jest.Mock).mockImplementation((url: string) => {
+        if (String(url).includes('/api/manual-products') && String(url).includes('barcode=')) {
+          return Promise.resolve(
+            mockFetchResponse({
+              success: true,
+              product: {
+                barcode: TEST_BARCODE,
+                countries: 'Global Country',
+                manufacturing_places: 'Global Country',
+                labels_tags: ['en:fair-trade'],
+                labels_hierarchy: ['en:fair-trade'],
+                submittedAt: Date.now(),
+              },
+            })
+          );
+        }
+        return Promise.resolve({ ok: true, text: async () => '{}' });
       });
 
       const retrievedProduct = await getUserContributedProduct(TEST_BARCODE);
 
-      // User B should see User A's data
       expect(retrievedProduct).not.toBeNull();
-      expect(retrievedProduct?.product_name).toBe('Global Product');
+      expect(retrievedProduct?.countries).toBe('Global Country');
     });
   });
 });

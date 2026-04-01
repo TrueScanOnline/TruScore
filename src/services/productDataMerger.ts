@@ -227,12 +227,12 @@ export function mergeProducts(
     productsToMerge.find(p => p.image_url)?.image_url;
   
   // Merge nutrition data
-  // ID 10: User-contributed nutrition data override REMOVED (use trusted sources only)
-  // User contributions still used for: a) exporting to OFF, b) in-house database for products not found
+  // Manual-edit nutrition should be visible immediately after submit.
+  // Keep OFF/Gov/API as golden sources, then overlay user-contributed nutrition when present.
   const userContributedProduct = productsToMerge.find(p => p.source === 'user_contributed');
-  // Exclude user-contributed nutrition data from merging (use trusted database sources only)
+  const userContributedNutriments = userContributedProduct?.nutriments;
   const trustedNutriments = productsToMerge
-    .filter(p => p.source !== 'user_contributed') // Exclude user-contributed
+    .filter(p => p.source !== 'user_contributed')
     .map(p => p.nutriments)
     .filter((n): n is ProductNutriments => n !== undefined);
   
@@ -241,7 +241,19 @@ export function mergeProducts(
     // Priority: OFF (golden source) → Government DBs → Commercial APIs → Others
     // Note: Golden Source function already normalizes to per-100g (retains benchmark conversions)
     mergedProduct.nutriments = mergeNutrimentsGoldenSource(productsToMerge, trustedNutriments);
-    logger.info(`  Nutrition: Golden Source approach (OFF → Government → Commercial APIs)`);
+    if (userContributedNutriments && Object.keys(userContributedNutriments).length > 0) {
+      mergedProduct.nutriments = {
+        ...mergedProduct.nutriments,
+        ...userContributedNutriments,
+      };
+      logger.info(`  Nutrition: Golden Source + user-contributed overlay (immediate post-submit display)`);
+    } else {
+      logger.info(`  Nutrition: Golden Source approach (OFF → Government → Commercial APIs)`);
+    }
+  } else if (userContributedNutriments && Object.keys(userContributedNutriments).length > 0) {
+    // Fallback when no trusted source exists (e.g., brand new manual-only product)
+    mergedProduct.nutriments = { ...userContributedNutriments };
+    logger.info(`  Nutrition: Using user-contributed data (no trusted nutrition sources available)`);
   }
   
   // Merge ingredients
@@ -642,10 +654,12 @@ export function trackFieldSourcesAndLog(
     };
   }
   
-  // Track nutriments (weighted average from trusted sources only - user-contributed excluded per ID 10)
+  // Track nutriments (golden-source trusted merge, optionally overlaid by user-contributed)
   if (mergedProduct.nutriments) {
-    // ID 10: User-contributed nutrition excluded - find trusted sources only
     const trustedProducts = products.filter(p => p.source !== 'user_contributed' && p.nutriments);
+    const hasUserNutritionOverlay = !!products.find(
+      (p) => p.source === 'user_contributed' && p.nutriments && Object.keys(p.nutriments).length > 0
+    );
     const trustedNutritionSources = trustedProducts.map((p, index) => {
       const sourceIndex = products.findIndex(prod => prod === p);
       return {
@@ -658,15 +672,21 @@ export function trackFieldSourcesAndLog(
     if (trustedNutritionSources.length > 0) {
       const sourceNames = trustedNutritionSources.map(s => s.source);
       fieldSources.nutriments = {
-        source: sourceNames,
+        source: hasUserNutritionOverlay ? [...sourceNames, 'user_contributed'] : sourceNames,
         method: 'weighted_average',
-        details: `${trustedNutritionSources.length} trusted sources merged (user-contributed excluded)`,
+        details: hasUserNutritionOverlay
+          ? `${trustedNutritionSources.length} trusted sources merged + user-contributed overlay`
+          : `${trustedNutritionSources.length} trusted sources merged`,
       };
       fieldMapping.nutriments = {
-        primarySource: trustedNutritionSources[0]?.source || 'unknown',
-        allSources: trustedNutritionSources,
+        primarySource: hasUserNutritionOverlay ? 'user_contributed' : (trustedNutritionSources[0]?.source || 'unknown'),
+        allSources: hasUserNutritionOverlay
+          ? [...trustedNutritionSources, { source: 'user_contributed', weight: 1, provided: 'overlay values' }]
+          : trustedNutritionSources,
         mergeMethod: 'weighted_average',
-        reason: `Weighted average from ${trustedNutritionSources.length} trusted sources (user-contributed excluded per ID 10)`,
+        reason: hasUserNutritionOverlay
+          ? `Golden Source from ${trustedNutritionSources.length} trusted sources, then user-contributed nutrition overlaid for immediate display`
+          : `Weighted average from ${trustedNutritionSources.length} trusted sources`,
       };
     }
   }
