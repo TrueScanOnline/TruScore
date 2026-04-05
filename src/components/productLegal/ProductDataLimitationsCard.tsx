@@ -1,6 +1,6 @@
 /**
  * Product page — Data limitations teaser card + full legal modal (standalone module).
- * Shown when key product fields are missing from databases. Edit copy in i18n: result.legalDataLimitations*
+ * Edit copy in i18n: result.legalDataLimitations*
  */
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -10,17 +10,56 @@ import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
 import { Product } from '../../types/product';
 
+/** Match disclaimer / alert emphasis red */
+const INCOMPLETE_DATA_CARD_BORDER_RED = '#d32f2f';
+
 type Props = {
   product: Product | null | undefined;
+  /** Opens manual product entry (edit) from the modal — wired on the result screen. */
+  onOpenManualEdit?: () => void;
 };
 
-export default function ProductDataLimitationsCard({ product }: Props) {
+function ManualEditActionRow({
+  onPress,
+  label,
+  accessibilityLabel,
+  primaryColor,
+}: {
+  onPress: () => void;
+  label: string;
+  accessibilityLabel: string;
+  primaryColor: string;
+}) {
+  return (
+    <TouchableOpacity
+      style={[styles.editLinkRow, { borderColor: primaryColor, backgroundColor: primaryColor + '12' }]}
+      onPress={onPress}
+      activeOpacity={0.75}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+    >
+      <Ionicons name="create-outline" size={22} color={primaryColor} />
+      <Text style={[styles.editLinkText, { color: primaryColor }]}>{label}</Text>
+      <Ionicons name="chevron-forward" size={20} color={primaryColor} />
+    </TouchableOpacity>
+  );
+}
+
+export default function ProductDataLimitationsCard({ product, onOpenManualEdit }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
 
   const open = useCallback(() => setModalVisible(true), []);
   const close = useCallback(() => setModalVisible(false), []);
+
+  const handleManualEditPress = useCallback(() => {
+    close();
+    onOpenManualEdit?.();
+  }, [close, onOpenManualEdit]);
+
+  const editLabel = t('result.legalDataLimitationsModalEditLink');
+  const editA11y = t('result.legalDataLimitationsModalEditLinkA11y');
 
   if (!product) {
     return null;
@@ -32,10 +71,15 @@ export default function ProductDataLimitationsCard({ product }: Props) {
     return null;
   }
 
+  const showEdit = onOpenManualEdit != null;
+
   return (
     <>
       <TouchableOpacity
-        style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        style={[
+          styles.card,
+          { backgroundColor: colors.surface, borderColor: INCOMPLETE_DATA_CARD_BORDER_RED },
+        ]}
         onPress={open}
         activeOpacity={0.75}
         accessibilityRole="button"
@@ -65,11 +109,33 @@ export default function ProductDataLimitationsCard({ product }: Props) {
         icon="cloud-offline-outline"
         iconColor={colors.warning || '#ff9800'}
       >
+        {showEdit ? (
+          <View style={styles.editButtonTopWrap}>
+            <ManualEditActionRow
+              onPress={handleManualEditPress}
+              label={editLabel}
+              accessibilityLabel={editA11y}
+              primaryColor={colors.primary}
+            />
+          </View>
+        ) : null}
+
         <LegalParagraph text={t('result.legalDataLimitationsModalP1')} colors={colors} />
         <LegalParagraph text={t('result.legalDataLimitationsModalP2')} colors={colors} />
         <LegalParagraph text={t('result.legalDataLimitationsModalP3')} colors={colors} />
         <LegalParagraph text={t('result.legalDataLimitationsModalP4')} colors={colors} />
         <LegalParagraph text={t('result.legalDataLimitationsModalP5')} colors={colors} />
+
+        {showEdit ? (
+          <View style={styles.editButtonBottomWrap}>
+            <ManualEditActionRow
+              onPress={handleManualEditPress}
+              label={editLabel}
+              accessibilityLabel={editA11y}
+              primaryColor={colors.primary}
+            />
+          </View>
+        ) : null}
       </InfoModal>
     </>
   );
@@ -92,13 +158,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 16,
-    marginTop: 4,
+    marginTop: 20,
     marginBottom: 8,
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 2,
     gap: 10,
+  },
+  editButtonTopWrap: {
+    marginBottom: 16,
+  },
+  editButtonBottomWrap: {
+    marginTop: 4,
   },
   cardIcon: {
     marginTop: 2,
@@ -119,5 +191,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 14,
+  },
+  editLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  editLinkText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

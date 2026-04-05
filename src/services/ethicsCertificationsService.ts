@@ -144,6 +144,20 @@ function normalizeTag(tag: string): string {
     .toLowerCase();
 }
 
+/**
+ * Strip Open Food Facts–style language prefix(es) from a taxonomy tag (e.g. en:, fr:).
+ * Some APIs return duplicate prefixes; strip repeatedly until stable.
+ */
+export function stripOffTagLanguagePrefix(tag: string): string {
+  let s = normalizeTag(tag);
+  let prev = '';
+  while (s !== prev && /^[a-z]{2}:/.test(s)) {
+    prev = s;
+    s = s.replace(/^[a-z]{2}:/, '');
+  }
+  return s;
+}
+
 function stripDiacritics(input: string): string {
   return input.normalize('NFD').replace(/\p{M}/gu, '');
 }
@@ -441,10 +455,10 @@ export function getTruscoreCertificationPickerTags(): string[] {
   return Array.from(u).sort((a, b) => formatCertificationTagForPicker(a).localeCompare(formatCertificationTagForPicker(b)));
 }
 
-/** Human-readable label for a normalized `en:` tag (picker UI). */
+/** Human-readable label for an OFF-style label tag (picker UI, badges). */
 export function formatCertificationTagForPicker(tag: string): string {
-  const slug = normalizeTag(tag).replace(/^en:/, '');
-  if (!slug) return tag;
+  const slug = stripOffTagLanguagePrefix(tag);
+  if (!slug) return String(tag || '').trim();
   return slug
     .split('-')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))

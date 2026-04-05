@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,11 +22,23 @@ interface CameraCaptureModalProps {
   barcode?: string;
 }
 
+/** expo-image-picker allows one fixed aspect per capture; portrait suits product pack shots. */
+const CROP_ASPECT_PORTRAIT: [number, number] = [3, 4];
+const CROP_ASPECT_LANDSCAPE: [number, number] = [4, 3];
+
 export default function CameraCaptureModal({ visible, onClose, onCapture, barcode }: CameraCaptureModalProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cropAspect, setCropAspect] = useState<[number, number]>(CROP_ASPECT_PORTRAIT);
+
+  useEffect(() => {
+    if (!visible) {
+      setCapturedImage(null);
+      setCropAspect(CROP_ASPECT_PORTRAIT);
+    }
+  }, [visible]);
 
   const requestCameraPermission = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -50,7 +62,7 @@ export default function CameraCaptureModal({ visible, onClose, onCapture, barcod
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [4, 3],
+        aspect: cropAspect,
         quality: 0.8,
       });
 
@@ -81,7 +93,7 @@ export default function CameraCaptureModal({ visible, onClose, onCapture, barcod
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [4, 3],
+        aspect: cropAspect,
         quality: 0.8,
       });
 
@@ -179,6 +191,72 @@ export default function CameraCaptureModal({ visible, onClose, onCapture, barcod
               </Text>
             </View>
 
+            <Text style={[styles.cropLabel, { color: colors.textSecondary }]}>
+              {t('camera.cropShapeLabel')}
+            </Text>
+            <View style={styles.aspectRow}>
+              <TouchableOpacity
+                style={[
+                  styles.aspectChip,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor:
+                      cropAspect === CROP_ASPECT_PORTRAIT ? colors.primary : colors.border,
+                    borderWidth: cropAspect === CROP_ASPECT_PORTRAIT ? 2 : 1,
+                  },
+                ]}
+                onPress={() => setCropAspect(CROP_ASPECT_PORTRAIT)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: cropAspect === CROP_ASPECT_PORTRAIT }}
+              >
+                <Ionicons
+                  name="phone-portrait-outline"
+                  size={20}
+                  color={cropAspect === CROP_ASPECT_PORTRAIT ? colors.primary : colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.aspectChipText,
+                    {
+                      color: cropAspect === CROP_ASPECT_PORTRAIT ? colors.primary : colors.text,
+                    },
+                  ]}
+                >
+                  {t('camera.cropPortrait')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.aspectChip,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor:
+                      cropAspect === CROP_ASPECT_LANDSCAPE ? colors.primary : colors.border,
+                    borderWidth: cropAspect === CROP_ASPECT_LANDSCAPE ? 2 : 1,
+                  },
+                ]}
+                onPress={() => setCropAspect(CROP_ASPECT_LANDSCAPE)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: cropAspect === CROP_ASPECT_LANDSCAPE }}
+              >
+                <Ionicons
+                  name="phone-landscape-outline"
+                  size={20}
+                  color={cropAspect === CROP_ASPECT_LANDSCAPE ? colors.primary : colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.aspectChipText,
+                    {
+                      color: cropAspect === CROP_ASPECT_LANDSCAPE ? colors.primary : colors.text,
+                    },
+                  ]}
+                >
+                  {t('camera.cropLandscape')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             {loading ? (
               <ActivityIndicator size="large" color={colors.primary} style={styles.loading} />
             ) : (
@@ -239,7 +317,35 @@ const styles = StyleSheet.create({
   },
   instructionsContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 20,
+  },
+  cropLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+    width: '100%',
+    paddingHorizontal: 4,
+  },
+  aspectRow: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 12,
+    marginBottom: 28,
+  },
+  aspectChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  aspectChipText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   instructionsTitle: {
     fontSize: 24,

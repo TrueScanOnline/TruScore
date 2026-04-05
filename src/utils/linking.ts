@@ -8,20 +8,41 @@ export const linking = {
       Onboarding: 'onboarding',
       Main: {
         screens: {
-          Scan: '',
-          Search: 'search',
-          History: 'history',
-          Favourites: 'favourites',
-          Profile: 'profile',
+          Scan: {
+            screens: {
+              ScanHome: '',
+              Result: {
+                path: 'barcode/:barcode',
+                parse: {
+                  barcode: (barcode: string) => barcode,
+                },
+              },
+            },
+          },
+          Search: {
+            screens: {
+              SearchHome: 'search',
+            },
+          },
+          History: {
+            screens: {
+              HistoryHome: 'history',
+            },
+          },
+          Favourites: {
+            screens: {
+              FavouritesHome: 'favourites',
+            },
+          },
+          Values: {
+            screens: {
+              ValuesHome: 'values',
+            },
+          },
+          Settings: 'profile',
         },
       },
-      Result: {
-        path: 'barcode/:barcode',
-        parse: {
-          barcode: (barcode: string) => barcode,
-        },
-      },
-      Settings: 'settings',
+      DeveloperSettings: 'developer-settings',
     },
   },
 };

@@ -1,5 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigatorScreenParams } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -13,11 +13,9 @@ import ErrorBoundary from '../src/components/ErrorBoundary';
 import { errorReporting } from '../src/services/errorReporting';
 
 // Import screens
-import ResultScreen from './result/[barcode]';
 import SettingsScreen from './settings';
 import OnboardingScreen from './onboarding';
 import SubscriptionScreen from './subscription';
-import ValuesScreen from './values';
 import MethodologyScreen from './methodology';
 import AppTabs from '../src/navigation/AppTabs';
 
@@ -33,21 +31,10 @@ import type { TabParamList } from '../src/navigation/AppTabs';
 // Create stack navigator type
 export type RootStackParamList = {
   Onboarding: undefined;
-  Main: {
-    screens?: {
-      Scan?: undefined;
-      Search?: undefined;
-      History?: undefined;
-      Favourites?: undefined;
-      Profile?: undefined;
-    };
-  } | { screen: keyof TabParamList } | undefined;
-  Result: { barcode: string };
-  Settings: undefined;
+  Main: NavigatorScreenParams<TabParamList> | undefined;
+  /** Advanced / developer tools (FSANZ import, etc.) — not the main Settings tab */
+  DeveloperSettings: undefined;
   Subscription: undefined;
-  Values: undefined;
-  Favourites: undefined;
-  Search: undefined;
   Methodology: undefined;
 };
 
@@ -284,14 +271,7 @@ function RootLayout() {
                 <Stack.Screen name="Onboarding" component={OnboardingScreen} />
                 <Stack.Screen name="Main" component={AppTabs} />
                 <Stack.Screen 
-                  name="Result" 
-                  component={ResultScreen}
-                  options={{
-                    presentation: 'modal', // Makes it a modal so tabs show underneath
-                  }}
-                />
-                <Stack.Screen 
-                  name="Settings" 
+                  name="DeveloperSettings" 
                   component={SettingsScreen}
                   options={{
                     presentation: 'modal',
@@ -302,15 +282,6 @@ function RootLayout() {
                   component={SubscriptionScreen}
                   options={{
                     presentation: 'modal',
-                  }}
-                />
-                <Stack.Screen 
-                  name="Values" 
-                  component={ValuesScreen}
-                  options={{
-                    presentation: 'modal',
-                    headerShown: true,
-                    title: 'Values Preferences',
                   }}
                 />
                 <Stack.Screen

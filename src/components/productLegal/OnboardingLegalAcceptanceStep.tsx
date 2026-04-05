@@ -1,6 +1,7 @@
 /**
- * First-run onboarding: user must scroll, read, and acknowledge Disclaimer + Data limitations
- * before continuing. Copy uses the same i18n keys as the product page (`result.legal*`).
+ * First-run onboarding: after the three intro slides, user must scroll, read, and acknowledge
+ * Disclaimer + Data limitations before entering the app. Copy uses the same i18n keys as the
+ * product page (`result.legal*`).
  */
 import React, { useState } from 'react';
 import {
@@ -18,9 +19,11 @@ import { useTheme } from '../../theme';
 
 type Props = {
   onContinue: () => void;
+  /** Return to intro slides (e.g. user wants to re-read them). */
+  onBack?: () => void;
 };
 
-export default function OnboardingLegalAcceptanceStep({ onContinue }: Props) {
+export default function OnboardingLegalAcceptanceStep({ onContinue, onBack }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [disclaimerAck, setDisclaimerAck] = useState(false);
@@ -35,6 +38,20 @@ export default function OnboardingLegalAcceptanceStep({ onContinue }: Props) {
         showsVerticalScrollIndicator
         keyboardShouldPersistTaps="handled"
       >
+        {onBack ? (
+          <TouchableOpacity
+            style={styles.backRow}
+            onPress={onBack}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+            accessibilityLabel={t('onboarding.legalStepBackA11y', 'Back to introduction')}
+          >
+            <Ionicons name="arrow-back" size={22} color={colors.primary} />
+            <Text style={[styles.backText, { color: colors.primary }]}>
+              {t('onboarding.legalStepBack', 'Back')}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
         <Text style={[styles.screenTitle, { color: colors.text }]}>
           {t('onboarding.legalStepTitle')}
         </Text>
@@ -155,6 +172,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 24,
+  },
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 16,
+    alignSelf: 'flex-start',
+  },
+  backText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   screenTitle: {
     fontSize: 22,

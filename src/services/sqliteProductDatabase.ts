@@ -12,6 +12,30 @@ import { initializeDatabaseConnection, executeWithRetry } from './databaseConnec
 const DB_NAME = 'truescan_products.db';
 let db: SQLite.SQLiteDatabase | null = null;
 
+/** Add columns introduced after v1 schema (OFF packaging + Eco-Score / carbon footprint). */
+async function ensureProductTableColumns(database: SQLite.SQLiteDatabase): Promise<void> {
+  try {
+    const rows = await database.getAllAsync<{ name: string }>('PRAGMA table_info(products)');
+    const existing = new Set(rows.map((r) => r.name));
+    const additions: [string, string][] = [
+      ['ecoscore_data', 'TEXT'],
+      ['packagings', 'TEXT'],
+      ['packaging', 'TEXT'],
+      ['packaging_tags', 'TEXT'],
+      ['url', 'TEXT'],
+    ];
+    for (const [col, sqlType] of additions) {
+      if (!existing.has(col)) {
+        await database.execAsync(`ALTER TABLE products ADD COLUMN ${col} ${sqlType}`);
+        existing.add(col);
+        logger.debug(`SQLite migration: added column products.${col}`);
+      }
+    }
+  } catch (e) {
+    logger.debug('SQLite column migration (non-critical):', e);
+  }
+}
+
 /**
  * Initialize SQLite database
  * Uses proper connection management instead of setTimeout patches
@@ -53,6 +77,11 @@ export async function initSQLiteDatabase(): Promise<void> {
           image_front_small_url TEXT,
           nutriments TEXT,
           packaging_data TEXT,
+          ecoscore_data TEXT,
+          packagings TEXT,
+          packaging TEXT,
+          packaging_tags TEXT,
+          url TEXT,
           manufacturing_places TEXT,
           countries TEXT,
           ecoscore_grade TEXT,
@@ -69,6 +98,11 @@ export async function initSQLiteDatabase(): Promise<void> {
           country_filter TEXT
         )
       `);
+    });
+
+    await executeWithRetry(async () => {
+      if (!db) throw new Error('Database not initialized');
+      await ensureProductTableColumns(db);
     });
     
     // Create basic indexes separately (with retry logic)
@@ -250,6 +284,11 @@ export async function saveProductToSQLite(product: Product, countryCode?: string
       image_front_small_url: product.image_front_small_url || null,
       nutriments: product.nutriments ? JSON.stringify(product.nutriments) : null,
       packaging_data: product.packaging_data ? JSON.stringify(product.packaging_data) : null,
+      ecoscore_data: product.ecoscore_data ? JSON.stringify(product.ecoscore_data) : null,
+      packagings: product.packagings && product.packagings.length > 0 ? JSON.stringify(product.packagings) : null,
+      packaging: product.packaging || null,
+      packaging_tags: product.packaging_tags && product.packaging_tags.length > 0 ? JSON.stringify(product.packaging_tags) : null,
+      url: product.url || null,
       manufacturing_places: product.manufacturing_places || null,
       countries: product.countries || null,
       ecoscore_grade: product.ecoscore_grade || null,
@@ -270,14 +309,20 @@ export async function saveProductToSQLite(product: Product, countryCode?: string
       `INSERT OR REPLACE INTO products (
         barcode, product_name, product_name_en, brands, generic_name, categories, categories_tags,
         ingredients_text, image_url, image_front_url, image_front_small_url, nutriments,
-        packaging_data, manufacturing_places, countries, ecoscore_grade, ecoscore_score,
+        packaging_data, ecoscore_data, packagings, packaging, packaging_tags, url,
+        manufacturing_places, countries, ecoscore_grade, ecoscore_score,
         nutriscore_grade, nutriscore_score, labels_tags, allergens_tags, additives_tags,
         source, quality, completion, last_updated, country_filter
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         row.barcode, row.product_name, row.product_name_en, row.brands, row.generic_name,
         row.categories, row.categories_tags, row.ingredients_text, row.image_url,
         row.image_front_url, row.image_front_small_url, row.nutriments, row.packaging_data,
+        row.ecoscore_data ?? null,
+        row.packagings ?? null,
+        row.packaging ?? null,
+        row.packaging_tags ?? null,
+        row.url ?? null,
         row.manufacturing_places, row.countries, row.ecoscore_grade, row.ecoscore_score,
         row.nutriscore_grade, row.nutriscore_score, row.labels_tags, row.allergens_tags,
         row.additives_tags, row.source, row.quality, row.completion, row.last_updated, row.country_filter
@@ -396,6 +441,13 @@ interface SQLiteProductRow {
   image_front_small_url: string | null;
   nutriments: string | null;
   packaging_data: string | null;
+  /** JSON — added in migration (Eco-Score / carbon from OFF) */
+  ecoscore_data?: string | null;
+  /** JSON array — OFF packagings */
+  packagings?: string | null;
+  packaging?: string | null;
+  packaging_tags?: string | null;
+  url?: string | null;
   manufacturing_places: string | null;
   countries: string | null;
   ecoscore_grade: string | null;
@@ -410,6 +462,16 @@ interface SQLiteProductRow {
   completion: number | null;
   last_updated: number;
   country_filter: string | null;
+}
+
+function parseJsonField<T>(raw: string | null | undefined, field: string): T | undefined {
+  if (raw == null || raw === '') return undefined;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    logger.debug(`SQLite: invalid JSON for ${field}, skipping`);
+    return undefined;
+  }
 }
 
 function convertRowToProduct(row: SQLiteProductRow): Product {
@@ -427,6 +489,11 @@ function convertRowToProduct(row: SQLiteProductRow): Product {
     image_front_small_url: row.image_front_small_url || undefined,
     nutriments: row.nutriments ? JSON.parse(row.nutriments) : undefined,
     packaging_data: row.packaging_data ? JSON.parse(row.packaging_data) : undefined,
+    ecoscore_data: parseJsonField(row.ecoscore_data, 'ecoscore_data'),
+    packagings: parseJsonField(row.packagings, 'packagings'),
+    packaging: row.packaging || undefined,
+    packaging_tags: parseJsonField(row.packaging_tags, 'packaging_tags'),
+    url: row.url || undefined,
     manufacturing_places: row.manufacturing_places || undefined,
     countries: row.countries || undefined,
     ecoscore_grade: (row.ecoscore_grade && ['a', 'b', 'c', 'd', 'e', 'unknown'].includes(row.ecoscore_grade.toLowerCase())) 

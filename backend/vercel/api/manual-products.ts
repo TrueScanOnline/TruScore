@@ -13,6 +13,7 @@ import {
   getManualProduct,
   getPhotos,
 } from '../lib/database';
+import { barcodeLookupKeys, canonicalBarcodeForStorage } from '../lib/barcodeLookupKeys';
 
 /** Only these fields are stored for manual edit; core product data lives on Open Food Facts. */
 const PROPRIETARY_KEYS = [
@@ -94,8 +95,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Check if product already exists (for update vs new submission)
-      const existingProduct = await getManualProduct(barcode);
+      const lookupKeys = barcodeLookupKeys(String(barcode));
+      const canonicalBarcode = canonicalBarcodeForStorage(String(barcode));
+
+      // Match existing row by any GTIN variant (UPC-A vs EAN-13)
+      let existingProduct: Awaited<ReturnType<typeof getManualProduct>> = null;
+      for (const k of lookupKeys) {
+        existingProduct = await getManualProduct(k);
+        if (existingProduct) break;
+      }
       const isUpdate = existingProduct !== null;
 
       const parseProductData = (row: any): Record<string, unknown> => {
@@ -109,22 +117,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const mergedProprietary = { ...existingProprietary, ...incomingProprietary };
       const mergedPayload = {
         ...mergedProprietary,
-        barcode,
+        barcode: canonicalBarcode,
         submittedAt: Date.now(),
         source: 'user_contributed',
       };
 
-      console.log(`[ManualProductsAPI] ${isUpdate ? 'UPDATE' : 'NEW'} submission for barcode: ${barcode}`);
+      console.log(
+        `[ManualProductsAPI] ${isUpdate ? 'UPDATE' : 'NEW'} submission for barcode: ${canonicalBarcode} (incoming: ${barcode}, variants: ${lookupKeys.join(',')})`
+      );
       console.log(`[ManualProductsAPI] Proprietary keys stored: ${Object.keys(mergedProprietary).join(', ') || '(none)'}`);
 
-      await saveManualProduct(barcode, mergedPayload);
+      await saveManualProduct(canonicalBarcode, mergedPayload);
 
-      console.log(`[ManualProductsAPI] ✅ Product ${isUpdate ? 'updated' : 'saved'} successfully: ${barcode}`);
+      console.log(`[ManualProductsAPI] ✅ Product ${isUpdate ? 'updated' : 'saved'} successfully: ${canonicalBarcode}`);
 
       return res.status(200).json({
         success: true,
         message: `Product data ${isUpdate ? 'updated' : 'submitted'} successfully!`,
-        barcode,
+        barcode: canonicalBarcode,
         isUpdate,
       });
 
@@ -142,7 +152,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      const dbResult = await getManualProduct(barcode);
+      const gtinKeys = barcodeLookupKeys(barcode);
+      const canonical = canonicalBarcodeForStorage(barcode);
+
+      let dbResult: Awaited<ReturnType<typeof getManualProduct>> = null;
+      for (const k of gtinKeys) {
+        dbResult = await getManualProduct(k);
+        if (dbResult) break;
+      }
       // dbResult structure: { barcode, productData: {...JSONB data...}, submittedAt, source }
       // The productData field contains the actual product fields as JSONB
       // Note: If productData is a string (shouldn't happen with Postgres JSONB), we may need to parse it
@@ -153,7 +170,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let product = productDataJson
         ? sanitizeProductForApi(
             productDataJson as Record<string, unknown>,
-            dbResult.barcode,
+            canonical,
             dbResult.submittedAt,
             dbResult.source
           )
@@ -164,17 +181,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         p: Record<string, unknown> | null
       ): Promise<Record<string, unknown> | null> => {
         try {
-          const rows = await getPhotos(barcode, 'front');
-          const latest = rows[0];
+          let latest: Record<string, unknown> | undefined;
+          for (const k of gtinKeys) {
+            const rows = await getPhotos(k, 'front');
+            if (rows[0]) {
+              latest = rows[0] as Record<string, unknown>;
+              break;
+            }
+          }
           if (!latest) return p;
           const url =
-            latest.photo_url ||
-            latest.photoUrl ||
-            latest.url;
+            (latest.photo_url as string) ||
+            (latest.photoUrl as string) ||
+            (latest.url as string);
           if (typeof url !== 'string' || !url.trim()) return p;
           const u = url.trim();
           if (!u.startsWith('http') && !u.startsWith('data:')) return p;
-          const next: Record<string, unknown> = { ...(p || {}), barcode };
+          const next: Record<string, unknown> = { ...(p || {}), barcode: canonical };
           if (!next.image_url) {
             next.image_url = u;
             next.image_front_url = u;
@@ -190,7 +213,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const photoOnly = await mergeFrontPhotoFromTable(null);
         if (photoOnly && photoOnly.image_url) {
           res.setHeader('Cache-Control', 'public, max-age=60');
-          console.log(`[ManualProductsAPI] ✅ Photo-only contribution for barcode: ${barcode}`);
+          console.log(`[ManualProductsAPI] ✅ Photo-only contribution for barcode: ${canonical} (query: ${barcode})`);
           return res.status(200).json({
             success: true,
             product: {
@@ -199,7 +222,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
           });
         }
-        console.log(`[ManualProductsAPI] Product not found: ${barcode}`);
+        console.log(`[ManualProductsAPI] Product not found: ${barcode} (tried keys: ${gtinKeys.join(',')})`);
         res.setHeader('Cache-Control', 'public, max-age=15');
         return res.status(200).json({
           success: false,
@@ -208,14 +231,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      product = await mergeFrontPhotoFromTable(product);
+      const merged = await mergeFrontPhotoFromTable(product);
+      product = merged ?? product;
+      if (!product) {
+        return res.status(500).json({
+          success: false,
+          error: 'Internal error: manual product merge failed',
+        });
+      }
 
       res.setHeader(
         'Cache-Control',
         'public, max-age=120'
       );
 
-      console.log(`[ManualProductsAPI] ✅ Product found: ${barcode}`);
+      console.log(`[ManualProductsAPI] ✅ Product found: ${canonical} (query: ${barcode})`);
       console.log(
         `[ManualProductsAPI] Proprietary keys in response: ${Object.keys(product).filter((k) => !['barcode', 'submittedAt', 'source', 'image_url', 'image_front_url'].includes(k)).join(', ')}`
       );

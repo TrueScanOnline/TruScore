@@ -6,7 +6,7 @@ export function PackagingCardSkeleton() {
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.container, { backgroundColor: colors.card, borderColor: '#16a085' }]}>
       <View style={styles.header}>
         <View style={[styles.headerLeft, { backgroundColor: colors.surface }]} />
       </View>
@@ -18,11 +18,13 @@ export function PackagingCardSkeleton() {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    padding: 16,
-    margin: 16,
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
     borderWidth: 2,
-    minHeight: 120,
+    maxHeight: 300,
+    minHeight: 100,
   },
   header: {
     marginBottom: 12,

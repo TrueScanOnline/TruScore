@@ -173,9 +173,6 @@ export default function CertificationMultiPicker({
                       <Text style={[styles.rowTitle, { color: colors.text }]}>
                         {formatCertificationTagForPicker(item)}
                       </Text>
-                      <Text style={[styles.rowTag, { color: colors.textSecondary }]} numberOfLines={1}>
-                        {item}
-                      </Text>
                     </View>
                     {on ? (
                       <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
@@ -312,10 +309,6 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  rowTag: {
-    fontSize: 12,
-    marginTop: 2,
   },
   empty: {
     padding: 24,

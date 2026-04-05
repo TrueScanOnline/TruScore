@@ -49,9 +49,8 @@ export default function OnboardingScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { setHasCompletedOnboarding, setLegalDisclaimersAcceptedAt } = useSettingsStore();
-  const [phase, setPhase] = useState<'legal' | 'slides'>(() =>
-    useSettingsStore.getState().legalDisclaimersAcceptedAt ? 'slides' : 'legal'
-  );
+  // Intro slides always come first; disclaimer/legal step is shown after slide 3 (unless already accepted).
+  const [phase, setPhase] = useState<'legal' | 'slides'>(() => 'slides');
   const [currentSlide, setCurrentSlide] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -71,7 +70,12 @@ export default function OnboardingScreen() {
       });
       setCurrentSlide(nextSlide);
     } else {
-      handleComplete();
+      const alreadyAccepted = !!useSettingsStore.getState().legalDisclaimersAcceptedAt;
+      if (alreadyAccepted) {
+        void handleComplete();
+      } else {
+        setPhase('legal');
+      }
     }
   };
 
@@ -88,6 +92,10 @@ export default function OnboardingScreen() {
 
   const handleLegalContinue = async () => {
     await setLegalDisclaimersAcceptedAt(new Date().toISOString());
+    await handleComplete();
+  };
+
+  const handleLegalBack = () => {
     setPhase('slides');
   };
 
@@ -113,7 +121,12 @@ export default function OnboardingScreen() {
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: 'Main', params: { screen: 'Scan' } }],
+          routes: [
+            {
+              name: 'Main',
+              params: { screen: 'Scan', params: { screen: 'ScanHome' } },
+            },
+          ],
         })
       );
       
@@ -132,11 +145,11 @@ export default function OnboardingScreen() {
         console.error('[Onboarding] Navigation reset error:', navError);
         // Last resort: try replace
         try {
-          navigation.replace('Main', { screen: 'Scan' });
+          navigation.replace('Main', { screen: 'Scan', params: { screen: 'ScanHome' } });
         } catch (replaceError) {
           console.error('[Onboarding] Navigation replace error:', replaceError);
           // Final fallback: navigate
-          navigation.navigate('Main', { screen: 'Scan' });
+          navigation.navigate('Main', { screen: 'Scan', params: { screen: 'ScanHome' } });
         }
       }
     }
@@ -151,12 +164,14 @@ export default function OnboardingScreen() {
   };
 
   if (phase === 'legal') {
-    return <OnboardingLegalAcceptanceStep onContinue={handleLegalContinue} />;
+    return (
+      <OnboardingLegalAcceptanceStep onContinue={handleLegalContinue} onBack={handleLegalBack} />
+    );
   }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* Skip intro (legal acceptance already recorded) */}
+      {/* Skip remaining onboarding and go to Scan (bypasses legal step — same as before) */}
       <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
         <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>
           {t('onboarding.skipIntro')}

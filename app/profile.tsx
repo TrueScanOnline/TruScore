@@ -8,7 +8,7 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../src/navigation/AppTabs';
@@ -24,7 +24,10 @@ import { getSubscriptionStatusMessage, isPremium as checkPremium } from '../src/
 import { getCacheSize, clearCache } from '../src/services/cacheService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList> & BottomTabNavigationProp<TabParamList>;
+type NavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Settings'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -293,13 +296,13 @@ export default function ProfileScreen() {
             icon="time-outline"
             label={t('settings.scanHistory')}
             value={t('settings.scans', { count: recentScans.length })}
-            onPress={() => navigation.navigate('History')}
+            onPress={() => navigation.navigate('History', { screen: 'HistoryHome' })}
           />
           <SettingRow
             icon="heart-outline"
             label={t('favorites.title')}
             value={t('favorites.count', { count: favorites.length })}
-            onPress={() => navigation.navigate('Favourites')}
+            onPress={() => navigation.navigate('Favourites', { screen: 'FavouritesHome' })}
           />
           <SettingRow
             icon="folder-outline"

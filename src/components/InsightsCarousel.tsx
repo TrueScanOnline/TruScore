@@ -1,15 +1,18 @@
-// InsightsCarousel.tsx - Carousel for displaying values insights
+// InsightsCarousel — Values preference matches (full-width, no horizontal scroll)
 import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   Modal,
   Share,
+  Linking,
+  ScrollView,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
 import { Insight } from '../lib/truscoreEngine';
 
@@ -27,6 +30,10 @@ interface InsightDetailModalProps {
   onShare: () => void;
 }
 
+function openReference(url: string) {
+  Linking.openURL(url).catch(() => {});
+}
+
 function InsightDetailModal({
   visible,
   insight,
@@ -36,6 +43,7 @@ function InsightDetailModal({
   onShare,
 }: InsightDetailModalProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   if (!insight) return null;
 
@@ -44,16 +52,18 @@ function InsightDetailModal({
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
           <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Insight Details</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]} numberOfLines={2}>
+              {t('result.valuesPreference')}
+            </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.modalBody}>
+          <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalBody}>
             <View style={[styles.insightBadge, { backgroundColor: insight.color + '20' }]}>
               <Text style={[styles.insightType, { color: insight.color }]}>
-                {insight.type.charAt(0).toUpperCase() + insight.type.slice(1)} Insight
+                {insight.type.charAt(0).toUpperCase() + insight.type.slice(1)}
               </Text>
             </View>
 
@@ -66,12 +76,24 @@ function InsightDetailModal({
               </View>
             )}
 
-            {productName && (
-              <Text style={[styles.productName, { color: colors.textSecondary }]}>
+            {insight.referenceUrl ? (
+              <Pressable
+                onPress={() => openReference(insight.referenceUrl!)}
+                style={({ pressed }) => [styles.modalReferencePress, { opacity: pressed ? 0.75 : 1 }]}
+              >
+                <Text style={[styles.modalReferenceLink, { color: colors.primary }]}>
+                  {insight.referenceLabel ?? t('result.valuesPreferenceOpenReference')}
+                </Text>
+                <Ionicons name="open-outline" size={18} color={colors.primary} />
+              </Pressable>
+            ) : null}
+
+            {productName ? (
+              <Text style={[styles.productName, { color: colors.textSecondary }]} numberOfLines={3}>
                 Product: {productName}
               </Text>
-            )}
-          </View>
+            ) : null}
+          </ScrollView>
 
           <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
             <TouchableOpacity
@@ -97,6 +119,7 @@ function InsightDetailModal({
 
 export default function InsightsCarousel({ insights, productName }: InsightsCarouselProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -105,7 +128,7 @@ export default function InsightsCarousel({ insights, productName }: InsightsCaro
   if (insights.length === 0) return null;
 
   const displayedInsights = showAll ? insights : insights.slice(0, 3);
-  
+
   const toggleExpand = (index: number) => {
     const newExpanded = new Set(expandedInsights);
     if (newExpanded.has(index)) {
@@ -125,8 +148,8 @@ export default function InsightsCarousel({ insights, productName }: InsightsCaro
     if (!selectedInsight) return;
     try {
       await Share.share({
-        message: `${selectedInsight.type.charAt(0).toUpperCase() + selectedInsight.type.slice(1)} Insight: ${selectedInsight.reason}${productName ? ` - ${productName}` : ''}`,
-        title: 'TruScore Insight',
+        message: `${selectedInsight.type.charAt(0).toUpperCase() + selectedInsight.type.slice(1)}: ${selectedInsight.reason}${productName ? ` - ${productName}` : ''}`,
+        title: 'TrueScan',
       });
     } catch (error) {
       console.error('Error sharing insight:', error);
@@ -134,30 +157,22 @@ export default function InsightsCarousel({ insights, productName }: InsightsCaro
   };
 
   const handleIgnore = () => {
-    // TODO: Implement ignore functionality (store ignored insights)
     setModalVisible(false);
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.carousel}
-      >
+      <View style={styles.list}>
         {displayedInsights.map((insight, index) => {
           const isExpanded = expandedInsights.has(index);
-          const shouldTruncate = insight.reason.length > 80; // Truncate if longer than 80 chars
-          
+          const shouldTruncate = insight.reason.length > 80;
+
           return (
             <View
               key={index}
               style={[styles.insightBanner, { backgroundColor: insight.color + '20', borderColor: insight.color }]}
             >
-              <TouchableOpacity
-                onPress={() => handleInsightPress(insight)}
-                activeOpacity={0.7}
-              >
+              <TouchableOpacity onPress={() => handleInsightPress(insight)} activeOpacity={0.7}>
                 <View style={styles.insightContent}>
                   <View style={[styles.insightIcon, { backgroundColor: insight.color }]}>
                     <Ionicons
@@ -165,29 +180,46 @@ export default function InsightsCarousel({ insights, productName }: InsightsCaro
                         insight.type === 'geopolitical'
                           ? 'globe-outline'
                           : insight.type === 'ethical'
-                          ? 'heart-outline'
-                          : 'leaf-outline'
+                            ? 'heart-outline'
+                            : 'leaf-outline'
                       }
                       size={16}
                       color="#fff"
                     />
                   </View>
                   <View style={styles.insightTextContainer}>
-                    <Text style={[styles.insightTypeLabel, { color: insight.color }]}>
+                    <Text style={[styles.insightTypeLabel, { color: insight.color }]} numberOfLines={2}>
                       {insight.type.charAt(0).toUpperCase() + insight.type.slice(1)}
                     </Text>
-                    <Text 
-                      style={[styles.insightReasonText, { color: colors.text }]} 
-                      numberOfLines={isExpanded ? undefined : (shouldTruncate ? 2 : undefined)}
+                    <Text
+                      style={[styles.insightReasonText, { color: colors.text }]}
+                      numberOfLines={isExpanded ? undefined : shouldTruncate ? 3 : undefined}
                       ellipsizeMode="tail"
                     >
                       {insight.reason}
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={insight.color} />
+                  <Ionicons name="chevron-forward" size={20} color={insight.color} style={styles.chevron} />
                 </View>
               </TouchableOpacity>
-              {shouldTruncate && (
+
+              {insight.referenceUrl ? (
+                <TouchableOpacity
+                  onPress={() => openReference(insight.referenceUrl!)}
+                  style={styles.referenceRow}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[styles.referenceLinkText, { color: colors.primary }]}
+                    numberOfLines={2}
+                  >
+                    {insight.referenceLabel ?? t('result.valuesPreferenceOpenReference')}
+                  </Text>
+                  <Ionicons name="open-outline" size={16} color={colors.primary} />
+                </TouchableOpacity>
+              ) : null}
+
+              {shouldTruncate ? (
                 <TouchableOpacity
                   onPress={() => toggleExpand(index)}
                   style={styles.expandButton}
@@ -196,26 +228,24 @@ export default function InsightsCarousel({ insights, productName }: InsightsCaro
                   <Text style={[styles.expandText, { color: insight.color }]}>
                     {isExpanded ? 'Show less' : 'Show more'}
                   </Text>
-                  <Ionicons 
-                    name={isExpanded ? 'chevron-up' : 'chevron-down'} 
-                    size={16} 
-                    color={insight.color} 
-                  />
+                  <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={16} color={insight.color} />
                 </TouchableOpacity>
-              )}
+              ) : null}
             </View>
           );
         })}
-      </ScrollView>
+      </View>
 
-      {insights.length > 3 && !showAll && (
+      {insights.length > 3 && !showAll ? (
         <TouchableOpacity
           style={[styles.showAllButton, { backgroundColor: colors.surface }]}
           onPress={() => setShowAll(true)}
         >
-          <Text style={[styles.showAllText, { color: colors.primary }]}>Show all ({insights.length})</Text>
+          <Text style={[styles.showAllText, { color: colors.primary }]}>
+            Show all ({insights.length})
+          </Text>
         </TouchableOpacity>
-      )}
+      ) : null}
 
       <InsightDetailModal
         visible={modalVisible}
@@ -231,39 +261,31 @@ export default function InsightsCarousel({ insights, productName }: InsightsCaro
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 16,
+    marginTop: 4,
+    marginBottom: 8,
+    width: '100%',
+    alignSelf: 'stretch',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingBottom: 12,
-    marginBottom: 12,
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  headerCount: {
-    fontSize: 14,
-  },
-  carousel: {
-    paddingRight: 16,
+  list: {
+    width: '100%',
     gap: 12,
   },
   insightBanner: {
-    minWidth: 280,
+    width: '100%',
+    maxWidth: '100%',
+    alignSelf: 'stretch',
     borderRadius: 12,
-    padding: 16,
+    padding: 12,
     borderWidth: 2,
-    marginRight: 12,
     overflow: 'hidden',
   },
   insightContent: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  chevron: {
+    marginTop: 2,
   },
   insightIcon: {
     width: 32,
@@ -274,6 +296,7 @@ const styles = StyleSheet.create({
   },
   insightTextContainer: {
     flex: 1,
+    minWidth: 0,
   },
   insightTypeLabel: {
     fontSize: 12,
@@ -284,6 +307,23 @@ const styles = StyleSheet.create({
   insightReasonText: {
     fontSize: 14,
     lineHeight: 20,
+    flexShrink: 1,
+  },
+  referenceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(0,0,0,0.08)',
+    gap: 6,
+  },
+  referenceLinkText: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 13,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   showAllButton: {
     marginTop: 12,
@@ -305,18 +345,24 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '100%',
     maxWidth: 400,
+    maxHeight: '88%',
     borderRadius: 20,
     overflow: 'hidden',
+  },
+  modalScroll: {
+    maxHeight: 360,
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
+    padding: 16,
     borderBottomWidth: 1,
+    gap: 8,
   },
   modalTitle: {
-    fontSize: 20,
+    flex: 1,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   closeButton: {
@@ -324,6 +370,20 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 20,
+    paddingBottom: 8,
+  },
+  modalReferencePress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  modalReferenceLink: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   insightBadge: {
     alignSelf: 'flex-start',
@@ -351,10 +411,12 @@ const styles = StyleSheet.create({
   },
   sourceText: {
     fontSize: 14,
+    flexWrap: 'wrap',
   },
   productName: {
     fontSize: 14,
     fontStyle: 'italic',
+    marginTop: 8,
   },
   modalFooter: {
     flexDirection: 'row',
@@ -388,4 +450,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

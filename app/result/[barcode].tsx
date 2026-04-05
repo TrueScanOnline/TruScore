@@ -7,6 +7,7 @@ import {
   Image,
   ActivityIndicator,
   TouchableOpacity,
+  Pressable,
   RefreshControl,
   Alert,
   Share,
@@ -15,12 +16,12 @@ import {
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-import { useRoute, useNavigation, CommonActions } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { RootStackParamList } from '../_layout';
+import type { TabParamList } from '../../src/navigation/AppTabs';
+import type { ResultScreenRouteProp, ResultScreenNavigationProp } from '../../src/navigation/tabStackParamLists';
 import { fetchProduct, refreshProduct } from '../../src/services/productService';
 import { fetchProductOptimized } from '../../src/services/productServiceOptimized';
 import { Product, ProductWithTrustScore } from '../../src/types/product';
@@ -70,20 +71,42 @@ import ManualProductEntryModal from '../../src/components/ManualProductEntryModa
 import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
 import { ManualProductData } from '../../src/types/manualProduct';
 import { cacheProduct } from '../../src/services/cacheService';
-import { meetsLocalRecyclingRequirements } from '../../src/utils/packagingRecyclability';
+import {
+  getProductPageValuesInsights,
+  shouldShowCarbonFootprintCard,
+  shouldShowEcoScoreCard,
+  shouldShowPackagingCard,
+} from '../../src/utils/productInfoCardVisibility';
+import CarbonFootprintCard from '../../src/features/product/cards/CarbonFootprintCard/CarbonFootprintCard';
+import PackagingOffCardContent from '../../src/components/PackagingOffCardContent';
 import { crashReporter } from '../../src/utils/crashReporter';
+import { getPrimaryBarcode } from '../../src/utils/barcodeNormalization';
 import ShareModal from '../../src/components/ShareModal';
 import ProductDisclaimerCard from '../../src/components/productLegal/ProductDisclaimerCard';
 import ProductDataLimitationsCard from '../../src/components/productLegal/ProductDataLimitationsCard';
 import PremiumGate from '../../src/components/PremiumGate';
 import { PremiumFeature, isPremiumFeatureEnabled } from '../../src/utils/premiumFeatures';
+import type { RootStackParamList } from '../_layout';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-type ResultScreenRouteProp = RouteProp<RootStackParamList, 'Result'>;
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+function getRootStackNavigation(
+  navigation: ResultScreenNavigationProp
+): NativeStackNavigationProp<RootStackParamList> | undefined {
+  return navigation.getParent()?.getParent() as NativeStackNavigationProp<RootStackParamList> | undefined;
+}
+
+function navigateToScanHome(navigation: ResultScreenNavigationProp) {
+  const tabNav = navigation.getParent() as BottomTabNavigationProp<TabParamList> | undefined;
+  try {
+    tabNav?.navigate('Scan', { screen: 'ScanHome' });
+  } catch {
+    navigation.goBack();
+  }
+}
 
 function ResultScreenContent() {
   const route = useRoute<ResultScreenRouteProp>();
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<ResultScreenNavigationProp>();
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { barcode } = route.params;
@@ -99,6 +122,11 @@ function ResultScreenContent() {
   
   // Tab bar height (60px + safe area bottom)
   const tabBarHeight = 60 + insets.bottom;
+
+  const hasValuesMasterEnabled =
+    valuesPreferences.geopoliticalEnabled ||
+    valuesPreferences.ethicalEnabled ||
+    valuesPreferences.environmentalEnabled;
 
   // Helper function to get TruScore color
   const getTruScoreColor = (score: number | null) => {
@@ -759,36 +787,7 @@ function ResultScreenContent() {
             
             <TouchableOpacity 
               style={styles.backButton} 
-              onPress={() => {
-                // Navigate to Scan tab - use reset to ensure proper navigation on iOS
-                try {
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [
-                        {
-                          name: 'Main',
-                          state: {
-                            routes: [{ name: 'Scan' }],
-                            index: 0,
-                          },
-                        },
-                      ],
-                    })
-                  );
-                } catch (error) {
-                  // Fallback: try simple navigate
-                  try {
-                    navigation.navigate('Main', { screen: 'Scan' });
-                  } catch (navError) {
-                    // Last resort: go back and navigate
-                    navigation.goBack();
-                    setTimeout(() => {
-                      navigation.navigate('Main', { screen: 'Scan' });
-                    }, 100);
-                  }
-                }
-              }}
+              onPress={() => navigateToScanHome(navigation)}
             >
               <Text style={[styles.backButtonText, { color: colors.primary }]}>
                 {t('result.scanAnother') || 'Scan Another Product'}
@@ -823,7 +822,7 @@ function ResultScreenContent() {
   
   // Calculate Eco-Score using the proper function to ensure grade is calculated from score if missing
   const calculatedEcoScore = product ? calculateEcoScore(product) : null;
-  
+  const productPageValuesInsights = getProductPageValuesInsights(hasValuesMasterEnabled, truScore);
 
   const handleCaptureImage = async (imageUri: string) => {
     if (!product) return;
@@ -831,7 +830,8 @@ function ResultScreenContent() {
     try {
       console.log('[ResultScreen] handleCaptureImage — upload + Vercel share');
 
-      const photoResult = await uploadProductPhoto(barcode, imageUri, 'front');
+      const contributionBarcode = getPrimaryBarcode(barcode);
+      const photoResult = await uploadProductPhoto(contributionBarcode, imageUri, 'front');
       const publicUrl =
         photoResult.vercelUrl ||
         photoResult.openFoodFactsUrl ||
@@ -864,7 +864,7 @@ function ResultScreenContent() {
       }
 
       const productData: ManualProductData = {
-        barcode,
+        barcode: contributionBarcode,
         product_name: product.product_name || product.product_name_en || 'Unknown Product',
         brands: product.brands,
         ingredients_text: product.ingredients_text,
@@ -918,6 +918,8 @@ function ResultScreenContent() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -927,7 +929,6 @@ function ResultScreenContent() {
         }
       >
         <ProductDisclaimerCard />
-        <ProductDataLimitationsCard product={product} />
         {/* Pending Contributions Banner - Shows when user has unsubmitted contributions */}
         {/* <PendingContributionsBanner 
           barcode={barcode}
@@ -975,55 +976,6 @@ function ResultScreenContent() {
               {sanitizeText(product.brands, 200)}
             </Text>
           )}
-          
-          {/* Action Buttons Row */}
-          <View style={styles.actionButtonsRow}>
-            {/* Scan Another Product Button */}
-            <TouchableOpacity
-              style={[styles.scanAnotherButton, { backgroundColor: colors.primary, flex: 1 }]}
-              onPress={() => {
-                // Navigate to Scan tab - use reset to ensure proper navigation on iOS
-                // This ensures we go back to Main and select the Scan tab
-                try {
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [
-                        {
-                          name: 'Main',
-                          state: {
-                            routes: [{ name: 'Scan' }],
-                            index: 0,
-                          },
-                        },
-                      ],
-                    })
-                  );
-                } catch (error) {
-                  // Fallback: try simple navigate
-                  console.warn('[ResultScreen] Navigation reset failed, trying navigate:', error);
-                  try {
-                    navigation.navigate('Main', { screen: 'Scan' });
-                  } catch (navError) {
-                    // Last resort: go back and navigate
-                    console.warn('[ResultScreen] Navigation navigate failed, trying goBack:', navError);
-                    navigation.goBack();
-                    setTimeout(() => {
-                      navigation.navigate('Main', { screen: 'Scan' });
-                    }, 100);
-                  }
-                }
-              }}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="barcode-outline" size={20} color="#fff" />
-              <Text style={styles.scanAnotherButtonText}>
-                {t('result.scanAnother') || 'Scan Another Product'}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Share button removed - share icons now appear on individual cards */}
-          </View>
         </View>
 
         {/* Food Recall Alert - Compact banner that opens modal */}
@@ -1275,103 +1227,60 @@ function ResultScreenContent() {
           </View>
         )}
 
-        {/* Insights Carousel - Values v1.1 (Collapsible) */}
-        {truScore && truScore.insights && truScore.insights.length > 0 && (
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <View style={[styles.insightsHeader, { borderBottomColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.insightsHeaderLeft}
-                onPress={() => setInsightsExpanded(!insightsExpanded)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="bulb" size={20} color={colors.primary} />
-                <Text style={[styles.insightsHeaderTitle, { color: colors.text }]}>
-                  Insights
-                </Text>
-                <Text style={[styles.insightsHeaderCount, { color: colors.textSecondary }]}>
-                  ({truScore.insights.length})
-                </Text>
-              </TouchableOpacity>
-              <View style={styles.insightsHeaderRight}>
-                <TouchableOpacity
-                  onPress={() => handleShare('insights')}
-                  style={styles.shareButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="share-outline" size={20} color={colors.primary} />
-                </TouchableOpacity>
-                <Ionicons
-                  name={insightsExpanded ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color={colors.textSecondary}
-                />
-              </View>
-            </View>
-            {insightsExpanded && (
-              <InsightsCarousel
-                insights={truScore.insights}
-                productName={product?.product_name || product?.product_name_en}
-              />
-            )}
-          </View>
-        )}
-
-        {/* Values Preferences Card - Link to Values Screen */}
-        {(() => {
-          // Determine border color based on insights
-          // Red if there are negative insights (geopolitical, ethical, environmental concerns)
-          const hasNegativeInsights = truScore?.insights && truScore.insights.length > 0 && 
-            truScore.insights.some(insight => 
-              insight.type === 'geopolitical' || 
-              insight.type === 'ethical' || 
-              insight.type === 'environmental'
-            );
-          
-          const borderColor = hasNegativeInsights ? '#ff6b6b' : '#16a085';
-          
-          return (
-            <TouchableOpacity
-              style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor }]}
-              onPress={() => navigation.navigate('Values')}
-              activeOpacity={0.7}
+        {/* Values preference — only when user enabled Values categories and there is insight content */}
+        {productPageValuesInsights && (
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.card,
+                  borderWidth: 2,
+                  borderColor: '#ff6b6b',
+                },
+              ]}
             >
-              <View style={styles.cardHeader}>
-                {/* Top line: Icons */}
-                <View style={styles.cardHeaderTop}>
-                  <View style={styles.cardHeaderLeft}>
-                    <Ionicons name="heart-outline" size={24} color={colors.primary} />
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+              <View style={[styles.insightsHeader, { borderBottomColor: colors.border }]}>
+                <TouchableOpacity
+                  style={styles.insightsHeaderLeft}
+                  onPress={() => setInsightsExpanded(!insightsExpanded)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="heart-outline" size={20} color="#ff6b6b" />
+                  <Text
+                    style={[styles.insightsHeaderTitle, { color: colors.text }]}
+                    numberOfLines={2}
+                  >
+                    {t('result.valuesPreference')}
+                  </Text>
+                  <Text style={[styles.insightsHeaderCount, { color: colors.textSecondary }]}>
+                    ({productPageValuesInsights.length})
+                  </Text>
+                </TouchableOpacity>
+                <View style={styles.insightsHeaderRight}>
+                  <TouchableOpacity
+                    onPress={() => handleShare('insights')}
+                    style={styles.shareButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="share-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                  <Ionicons
+                    name={insightsExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color={colors.textSecondary}
+                  />
                 </View>
-                {/* Second line: Heading */}
-                <Text style={[styles.cardTitle, { color: colors.text }]}>
-                  Values Preferences
-                </Text>
               </View>
-              <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-                Set preferences for geopolitical, ethical, and environmental insights – These insights do not affect TruScore
-              </Text>
-              {(() => {
-                const activeCount = [
-                  valuesPreferences.geopoliticalEnabled,
-                  valuesPreferences.ethicalEnabled,
-                  valuesPreferences.environmentalEnabled,
-                ].filter(Boolean).length;
-                if (activeCount > 0) {
-                  return (
-                    <View style={[styles.activeBadge, { backgroundColor: colors.primary + '20' }]}>
-                      <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-                      <Text style={[styles.activeBadgeText, { color: colors.primary }]}>
-                        {activeCount} preference{activeCount !== 1 ? 's' : ''} active
-                      </Text>
-                    </View>
-                  );
-                }
-                return null;
-              })()}
-            </TouchableOpacity>
-          );
-        })()}
+              {insightsExpanded ? (
+                <View style={styles.valuesPreferenceBody}>
+                  <InsightsCarousel
+                    insights={productPageValuesInsights}
+                    productName={product?.product_name || product?.product_name_en}
+                  />
+                </View>
+              ) : null}
+            </View>
+          )}
 
         {/* Country of Manufacture */}
         {(() => {
@@ -1719,8 +1628,8 @@ function ResultScreenContent() {
           );
         })()}
 
-        {/* Sustainability Card - Only display if Eco-Score data is available */}
-        {calculatedEcoScore && calculatedEcoScore.score !== undefined && calculatedEcoScore.score > 0 && (() => {
+        {/* Eco-Score — only when OFF provides a numeric score to display */}
+        {product && shouldShowEcoScoreCard(product) && calculatedEcoScore && (() => {
           // Calculate grade from score if missing
           const grade = calculatedEcoScore.grade || 
             (calculatedEcoScore.score >= 80 ? 'a' :
@@ -1784,106 +1693,40 @@ function ResultScreenContent() {
           premiumFeatures={[]}
         />
 
-        {/* Packaging Sustainability */}
-        {product.packaging_data && product.packaging_data.items.length > 0 && (() => {
-          // Determine border color based on local recycling requirements
-          // Check if packaging meets local recycling laws (country-specific)
-          const meetsLocalRequirements = meetsLocalRecyclingRequirements(
-            product.packaging_data.items
-          );
-          
-          // Green if recyclable according to local laws, Red if not recyclable
-          const packagingBorderColor = meetsLocalRequirements
-            ? '#16a085' // Green: Meets local recycling requirements
-            : '#ff6b6b'; // Red: Does not meet local recycling requirements
-          
-          return (
-            <TouchableOpacity 
-              style={[
-                styles.card, 
-                { 
-                  backgroundColor: colors.card,
-                  borderWidth: 2,
-                  borderColor: packagingBorderColor,
-                  marginTop: 16,
-                  marginBottom: 16,
-                }
-              ]}
-              onPress={() => setPackagingInfoModalVisible(true)}
-              activeOpacity={0.7}
-            >
-            <View style={styles.cardHeader}>
-              {/* Top line: Icons */}
-              <View style={styles.cardHeaderTop}>
-                <View style={styles.cardHeaderLeft}>
-                  <Ionicons name="cube-outline" size={24} color={colors.primary} />
-                </View>
-                <View style={styles.cardHeaderRight}>
-                  <TouchableOpacity
-                    onPress={handleEditProduct}
-                    style={styles.shareButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="create-outline" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-                </View>
-              </View>
-              {/* Second line: Heading */}
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
-                {t('result.packaging')}
-              </Text>
-            </View>
-            <View style={styles.packagingContent}>
-              <View style={styles.packagingStatusRow}>
-                {product.packaging_data.isRecyclable && (
-                  <View style={[styles.packagingBadge, { backgroundColor: '#16a085' + '20' }]}>
-                    <Ionicons name="reload-circle" size={16} color="#16a085" />
-                    <Text style={[styles.packagingBadgeText, { color: colors.text }]}>
-                      {t('result.recyclable')}
-                    </Text>
+        {/* Packaging — tap card for modal (OFF + recycling + sources) */}
+        {shouldShowPackagingCard(product) && (
+          <View
+            style={[
+              styles.card,
+              styles.packagingCardCompact,
+              {
+                backgroundColor: colors.card,
+                borderWidth: 2,
+                borderColor: '#16a085',
+                marginTop: 16,
+                marginBottom: 16,
+              },
+            ]}
+          >
+            <View style={styles.packagingCardHeaderSection}>
+              <View style={styles.packagingCardHeaderTop}>
+                <Pressable
+                  onPress={() => setPackagingInfoModalVisible(true)}
+                  style={({ pressed }) => [styles.packagingCardHeaderPressable, { opacity: pressed ? 0.92 : 1 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('result.packaging')}
+                  accessibilityHint={t('result.packagingCardOpenModalA11y')}
+                >
+                  <View style={styles.packagingCardHeaderRow}>
+                    <Ionicons name="cube-outline" size={22} color="#16a085" style={styles.packagingCardHeaderIcon} />
+                    <View style={styles.packagingCardTitleWrap}>
+                      <Text style={[styles.packagingCardTitle, { color: colors.text }]}>
+                        {t('result.packaging')}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                   </View>
-                )}
-                {product.packaging_data.isReusable && (
-                  <View style={[styles.packagingBadge, { backgroundColor: '#4dd09f' + '20' }]}>
-                    <Ionicons name="refresh-circle" size={16} color="#4dd09f" />
-                    <Text style={[styles.packagingBadgeText, { color: colors.text }]}>
-                      {t('result.reusable')}
-                    </Text>
-                  </View>
-                )}
-                {product.packaging_data.isBiodegradable && (
-                  <View style={[styles.packagingBadge, { backgroundColor: '#16a085' + '20' }]}>
-                    <Ionicons name="leaf" size={16} color="#16a085" />
-                    <Text style={[styles.packagingBadgeText, { color: colors.text }]}>
-                      {t('result.biodegradable')}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              {product.packaging_data.recyclabilityScore > 0 && (
-                <View style={styles.recyclabilityScore}>
-                  <Text style={[styles.recyclabilityLabel, { color: colors.textSecondary }]}>
-                    {t('result.recyclabilityScore')}:
-                  </Text>
-                  <Text style={[styles.recyclabilityValue, { color: colors.primary }]}>
-                    {product.packaging_data.recyclabilityScore}/100
-                  </Text>
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
-          );
-        })()}
-
-        {/* Ethics / Certifications — always show; edit opens manual entry (labels_tags → Vercel manual_products) */}
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderTop}>
-              <View style={styles.cardHeaderLeft}>
-                <Ionicons name="shield-checkmark" size={24} color={colors.primary} />
-              </View>
-              <View style={styles.cardHeaderRight}>
+                </Pressable>
                 <TouchableOpacity
                   onPress={handleEditProduct}
                   style={styles.shareButton}
@@ -1891,6 +1734,36 @@ function ResultScreenContent() {
                 >
                   <Ionicons name="create-outline" size={20} color={colors.primary} />
                 </TouchableOpacity>
+              </View>
+            </View>
+            <ScrollView
+              style={styles.packagingCardScroll}
+              contentContainerStyle={styles.packagingCardScrollContent}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator
+            >
+              <PackagingOffCardContent product={product} />
+            </ScrollView>
+          </View>
+        )}
+
+        {shouldShowCarbonFootprintCard(product) && (
+          <CarbonFootprintCard product={product} premiumFeatures={[]} layout="result" />
+        )}
+
+        {/* Ethics / Certifications — always show; update opens manual entry (labels_tags → Vercel manual_products) */}
+        <View
+          style={[
+            styles.card,
+            styles.certificationsCardFrame,
+            { backgroundColor: colors.card, borderColor: '#16a085' },
+          ]}
+        >
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderTop}>
+              <View style={styles.cardHeaderLeft}>
+                <Ionicons name="shield-checkmark" size={24} color="#16a085" />
               </View>
             </View>
             <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.certifications')}</Text>
@@ -1905,10 +1778,22 @@ function ResultScreenContent() {
             <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
               {t(
                 'result.certificationsEmpty',
-                'No certifications on file. Tap edit to add label tags from the pack (e.g. en:organic, en:fair-trade).'
+                'No certifications on file. Use Update certifications to add labels from the pack (e.g. organic, fair trade).'
               )}
             </Text>
           )}
+          <TouchableOpacity
+            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+            onPress={handleEditProduct}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={t('result.updateCertifications', 'Update certifications')}
+          >
+            <Ionicons name="create-outline" size={20} color="#16a085" />
+            <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
+              {t('result.updateCertifications', 'Update certifications')}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Price Information */}
@@ -2095,7 +1980,7 @@ function ResultScreenContent() {
                     if (isPremiumFeatureEnabled(PremiumFeature.ALLERGENS_ADDITIVES, subscriptionInfo)) {
                       setAllergensAdditivesModalVisible(true);
                     } else {
-                      navigation.navigate('Subscription');
+                      getRootStackNavigation(navigation)?.navigate('Subscription');
                     }
                   }}
                   activeOpacity={0.7}
@@ -2164,6 +2049,22 @@ function ResultScreenContent() {
             console.log('Additives Risk card pressed');
           }}
         />
+
+        <ProductDataLimitationsCard product={product} onOpenManualEdit={handleEditProduct} />
+
+        {/* Scan Another Product — bottom of page */}
+        <View style={styles.scanAnotherFooter}>
+          <TouchableOpacity
+            style={[styles.scanAnotherButton, { backgroundColor: colors.primary }]}
+            onPress={() => navigateToScanHome(navigation)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="barcode-outline" size={20} color="#fff" />
+            <Text style={styles.scanAnotherButtonText}>
+              {t('result.scanAnother') || 'Scan Another Product'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Bottom spacing */}
         <View style={styles.bottomSpacer} />
@@ -2326,7 +2227,7 @@ function ResultScreenContent() {
       )}
 
       {/* Packaging Info Modal */}
-      {product && product.packaging_data && (
+      {shouldShowPackagingCard(product) && (
         <PackagingInfoModal
           visible={packagingInfoModalVisible}
           onClose={() => setPackagingInfoModalVisible(false)}
@@ -2481,6 +2382,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  scanAnotherFooter: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+  },
   scanAnotherButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2488,20 +2394,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,
-    marginTop: 16,
-    marginHorizontal: 16,
     gap: 8,
+    alignSelf: 'stretch',
   },
   scanAnotherButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  actionButtonsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-    marginHorizontal: 16,
   },
   shareButtonHero: {
     flexDirection: 'row',
@@ -3195,10 +3094,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
+  certificationsCardFrame: {
+    borderWidth: 2,
+    marginTop: 16,
+    marginBottom: 16,
+  },
   certificationsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: 12,
+  },
+  certificationsUpdateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    backgroundColor: 'transparent',
+  },
+  certificationsUpdateButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   ingredientsText: {
     fontSize: 14,
@@ -3282,10 +3202,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flex: 1,
+    minWidth: 0,
   },
   insightsHeaderTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    flexShrink: 1,
+  },
+  valuesPreferenceBody: {
+    width: '100%',
+    alignSelf: 'stretch',
   },
   insightsHeaderCount: {
     fontSize: 14,
@@ -3317,6 +3244,57 @@ const styles = StyleSheet.create({
   },
   packagingContent: {
     marginTop: 12,
+  },
+  packagingCardCompact: {
+    maxHeight: 288,
+    padding: 12,
+    paddingTop: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  packagingCardHeaderSection: {
+    marginBottom: 10,
+    flexShrink: 0,
+  },
+  packagingCardHeaderTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  packagingCardHeaderPressable: {
+    flex: 1,
+    minWidth: 0,
+  },
+  packagingCardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minWidth: 0,
+  },
+  packagingCardHeaderIcon: {
+    marginTop: 2,
+    flexShrink: 0,
+  },
+  packagingCardTitleWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  packagingCardTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    lineHeight: 22,
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  packagingCardScroll: {
+    flexGrow: 1,
+    minHeight: 72,
+    maxHeight: 188,
+  },
+  packagingCardScrollContent: {
+    paddingTop: 2,
+    paddingBottom: 12,
   },
   packagingStatusRow: {
     flexDirection: 'row',

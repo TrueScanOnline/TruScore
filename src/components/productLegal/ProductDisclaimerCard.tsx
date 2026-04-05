@@ -9,6 +9,9 @@ import { useTranslation } from 'react-i18next';
 import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
 
+/** Product page disclaimer frame — high-visibility red (aligned with alert banner emphasis). */
+const DISCLAIMER_CARD_BORDER_RED = '#d32f2f';
+
 export default function ProductDisclaimerCard() {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -20,7 +23,7 @@ export default function ProductDisclaimerCard() {
   return (
     <>
       <TouchableOpacity
-        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+        style={[styles.card, { backgroundColor: colors.card, borderColor: DISCLAIMER_CARD_BORDER_RED }]}
         onPress={open}
         activeOpacity={0.75}
         accessibilityRole="button"
@@ -84,7 +87,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 2,
     gap: 10,
   },
   cardIcon: {

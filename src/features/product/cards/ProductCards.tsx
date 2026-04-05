@@ -11,6 +11,7 @@ import { EcoScoreCard } from './EcoScoreCard';
 import { NutritionCard } from './NutritionCard';
 import { PalmOilCard } from './PalmOilCard';
 import { PackagingCard } from './PackagingCard';
+import CarbonFootprintCard from './CarbonFootprintCard/CarbonFootprintCard';
 import { AllergensCard } from './AllergensCard';
 import { ProcessingCard } from './ProcessingCard';
 import { RecallsCard } from './RecallsCard';
@@ -80,6 +81,9 @@ export function ProductCards({ barcode, product, truScore, onShare }: ProductCar
         onShare={() => handleShare('productInfo')}
         premiumFeatures={[]}
       />
+
+      {/* Carbon footprint — Open Food Facts; opens OFF product page */}
+      <CarbonFootprintCard product={product} premiumFeatures={[]} />
 
       {/* Allergens & Additives Card */}
       <AllergensCard

@@ -23,11 +23,11 @@ import { isPremiumFeatureEnabled, PremiumFeature } from '../src/utils/premiumFea
 import { useNetworkStatus } from '../src/hooks/useNetworkStatus';
 import { useTheme } from '../src/theme';
 import PremiumGate from '../src/components/PremiumGate';
-import { RootStackParamList } from './_layout';
+import type { ScanStackParamList } from '../src/navigation/tabStackParamLists';
 import { useCameraLifecycle } from '../src/hooks/useCameraLifecycle';
 import { powershellLogger } from '../src/utils/powershellLogger';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = NativeStackNavigationProp<ScanStackParamList>;
 
 export default function ScanScreen() {
   const navigation = useNavigation<NavigationProp>();

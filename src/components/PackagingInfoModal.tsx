@@ -1,11 +1,20 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import InfoModal from './InfoModal';
+import PackagingSourcesModal from './PackagingSourcesModal';
 import { useTheme } from '../theme';
 import { Product, PackagingData } from '../types/product';
 import { getUserCountryCode } from '../utils/countryDetection';
+import {
+  getOffPackagingItems,
+  getOffPackagingImpactRating,
+  getOffPackagingNonRecyclableMaterialsCount,
+  hasOffPackagingDisplay,
+} from '../utils/packagingOffDisplay';
+import * as Linking from 'expo-linking';
+import { openFoodFactsProductUrl } from '../utils/packagingRecyclingSources';
 
 interface PackagingInfoModalProps {
   visible: boolean;
@@ -27,7 +36,6 @@ const getRecyclingInfo = (countryCode: string | null) => {
       icon: string;
     }>;
     tips: string[];
-    resources?: string;
   }> = {
     'NZ': {
       title: 'New Zealand Recycling Guidelines',
@@ -60,7 +68,8 @@ const getRecyclingInfo = (countryCode: string | null) => {
         {
           material: 'Soft Plastics (Bags, Wrappers)',
           recyclable: true,
-          instructions: 'Collect and take to soft plastic recycling bins at supermarkets (RedCycle program).',
+          instructions:
+            'Check the Australasian Recycling Label on pack, your council, and environment.govt.nz — drop-off schemes vary by area.',
           icon: 'reload-circle',
         },
         {
@@ -71,12 +80,11 @@ const getRecyclingInfo = (countryCode: string | null) => {
         },
       ],
       tips: [
-        'Check your local council website for specific recycling guidelines',
-        'Soft plastics can be recycled at most major supermarkets',
-        'Always rinse containers before recycling',
-        'Remove lids and caps - they may be different materials',
+        'Official guidance: environment.govt.nz (recycling & rubbish)',
+        'On-pack rules: Australasian Recycling Label — arl.org.nz',
+        'Always rinse containers before recycling where required',
+        'Remove lids and caps when they are a different material',
       ],
-      resources: 'Check your local council website or visit recyclenow.co.nz',
     },
     'AU': {
       title: 'Australia Recycling Guidelines',
@@ -109,7 +117,8 @@ const getRecyclingInfo = (countryCode: string | null) => {
         {
           material: 'Soft Plastics',
           recyclable: true,
-          instructions: 'Collect and take to soft plastic recycling bins at Coles, Woolworths, and other major retailers.',
+          instructions:
+            'Follow the Australasian Recycling Label on pack, dcceew.gov.au, and your council — store drop-off schemes vary.',
           icon: 'reload-circle',
         },
         {
@@ -120,12 +129,11 @@ const getRecyclingInfo = (countryCode: string | null) => {
         },
       ],
       tips: [
-        'Use the yellow-lid bin for most recyclables',
-        'Soft plastics can be recycled at major supermarkets',
-        'Always rinse containers before recycling',
-        'Check your council website for local variations',
+        'National policy: dcceew.gov.au (waste & recycling)',
+        'On-pack rules: Australasian Recycling Label — arl.org.au',
+        'Use the yellow-lid bin where your council accepts those streams',
+        'Always rinse containers before recycling when required',
       ],
-      resources: 'Check your local council website or visit recycleright.wa.gov.au',
     },
     'US': {
       title: 'United States Recycling Guidelines',
@@ -168,7 +176,6 @@ const getRecyclingInfo = (countryCode: string | null) => {
         'When in doubt, check with your local waste management authority',
         'Plastic bags should never go in curbside recycling',
       ],
-      resources: 'Check your local municipality website or visit earth911.com',
     },
     'GB': {
       title: 'United Kingdom Recycling Guidelines',
@@ -211,7 +218,6 @@ const getRecyclingInfo = (countryCode: string | null) => {
         'Always rinse containers before recycling',
         'Remove lids and caps - they may be different materials',
       ],
-      resources: 'Check your local council website or visit recyclenow.com',
     },
     'GLOBAL': {
       title: 'General Recycling Guidelines',
@@ -257,12 +263,19 @@ const getRecyclingInfo = (countryCode: string | null) => {
 export default function PackagingInfoModal({ visible, onClose, product }: PackagingInfoModalProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const [sourcesVisible, setSourcesVisible] = useState(false);
   const countryCode = getUserCountryCode();
   const recyclingInfo = getRecyclingInfo(countryCode);
 
-  if (!product || !product.packaging_data) return null;
+  if (!product || !hasOffPackagingDisplay(product)) return null;
 
-  const packagingData: PackagingData = product.packaging_data;
+  const packagingData: PackagingData | undefined = product.packaging_data;
+  const offItems = getOffPackagingItems(product);
+  const impactRating = getOffPackagingImpactRating(product);
+  const nonRecyclableMaterials = getOffPackagingNonRecyclableMaterialsCount(product);
+  const showEcoScorePackagingNotes =
+    impactRating != null || (nonRecyclableMaterials != null && nonRecyclableMaterials > 0);
+  const offProductUrl = openFoodFactsProductUrl(product.barcode);
 
   // Extract material types from packaging items
   const getMaterialName = (material?: string): string => {
@@ -286,6 +299,7 @@ export default function PackagingInfoModal({ visible, onClose, product }: Packag
   };
 
   return (
+    <>
     <InfoModal
       visible={visible}
       onClose={onClose}
@@ -294,15 +308,56 @@ export default function PackagingInfoModal({ visible, onClose, product }: Packag
       iconColor={colors.primary}
     >
       <View>
+        <TouchableOpacity
+          style={[styles.offProductLink, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => Linking.openURL(offProductUrl).catch(() => {})}
+          activeOpacity={0.7}
+          accessibilityRole="link"
+        >
+          <Ionicons name="open-outline" size={22} color={colors.primary} />
+          <View style={styles.offProductLinkTextCol}>
+            <Text style={[styles.offProductLinkTitle, { color: colors.primary }]}>
+              {t('result.packagingSourceOffProduct')}
+            </Text>
+            <Text style={[styles.offProductUrl, { color: colors.textTertiary }]} selectable numberOfLines={2}>
+              {offProductUrl}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
+
+        {showEcoScorePackagingNotes ? (
+          <View style={[styles.ecoNoteBlock, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 8 }]}>
+              {t('result.packagingOffImpactRatingTitle')}
+            </Text>
+            {impactRating != null ? (
+              <Text style={[styles.ecoNoteBody, { color: colors.textSecondary }]}>
+                {t('result.packagingOffImpactRatingHint')}
+              </Text>
+            ) : null}
+            {nonRecyclableMaterials != null && nonRecyclableMaterials > 0 ? (
+              <Text
+                style={[
+                  styles.ecoNoteBody,
+                  { color: colors.text, marginTop: impactRating != null ? 10 : 0, fontWeight: '600' },
+                ]}
+              >
+                {t('result.packagingOffImpactNonRecyclable', { count: nonRecyclableMaterials })}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
+
         {/* Current Packaging Status */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {t('result.packagingDetails', 'Packaging Details')}
           </Text>
-          
+
           {/* Status Badges */}
           <View style={styles.badgesContainer}>
-            {packagingData.isRecyclable && (
+            {packagingData?.isRecyclable && (
               <View style={[styles.badge, { backgroundColor: '#16a085' + '20' }]}>
                 <Ionicons name="reload-circle" size={16} color="#16a085" />
                 <Text style={[styles.badgeText, { color: '#16a085' }]}>
@@ -310,7 +365,7 @@ export default function PackagingInfoModal({ visible, onClose, product }: Packag
                 </Text>
               </View>
             )}
-            {packagingData.isReusable && (
+            {packagingData?.isReusable && (
               <View style={[styles.badge, { backgroundColor: '#4dd09f' + '20' }]}>
                 <Ionicons name="refresh-circle" size={16} color="#4dd09f" />
                 <Text style={[styles.badgeText, { color: '#4dd09f' }]}>
@@ -318,7 +373,7 @@ export default function PackagingInfoModal({ visible, onClose, product }: Packag
                 </Text>
               </View>
             )}
-            {packagingData.isBiodegradable && (
+            {packagingData?.isBiodegradable && (
               <View style={[styles.badge, { backgroundColor: '#16a085' + '20' }]}>
                 <Ionicons name="leaf" size={16} color="#16a085" />
                 <Text style={[styles.badgeText, { color: '#16a085' }]}>
@@ -328,25 +383,13 @@ export default function PackagingInfoModal({ visible, onClose, product }: Packag
             )}
           </View>
 
-          {/* Recyclability Score */}
-          {packagingData.recyclabilityScore > 0 && (
-            <View style={[styles.scoreContainer, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>
-                {t('result.recyclabilityScore', 'Recyclability Score')}:
-              </Text>
-              <Text style={[styles.scoreValue, { color: colors.primary }]}>
-                {packagingData.recyclabilityScore}/100
-              </Text>
-            </View>
-          )}
-
-          {/* Packaging Items List */}
-          {packagingData.items && packagingData.items.length > 0 && (
+          {/* Packaging Items List (Open Food Facts) */}
+          {offItems.length > 0 && (
             <View style={styles.itemsContainer}>
               <Text style={[styles.itemsTitle, { color: colors.text }]}>
                 {t('result.packagingComponents', 'Packaging Components')}:
               </Text>
-              {packagingData.items.map((item, index) => (
+              {offItems.map((item, index) => (
                 <View key={index} style={[styles.itemCard, { backgroundColor: colors.surface }]}>
                   <View style={styles.itemHeader}>
                     <Ionicons name="cube" size={20} color={colors.primary} />
@@ -444,23 +487,64 @@ export default function PackagingInfoModal({ visible, onClose, product }: Packag
             </View>
           )}
 
-          {/* Resources */}
-          {recyclingInfo.resources && (
-            <View style={[styles.resourcesCard, { backgroundColor: colors.surface }]}>
-              <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-              <Text style={[styles.resourcesText, { color: colors.textSecondary }]}>
-                <Text style={{ fontWeight: '600' }}>{t('result.moreInfo', 'More Information')}: </Text>
-                {recyclingInfo.resources}
-              </Text>
-            </View>
-          )}
+          <Text style={[styles.sourcesSectionTitle, { color: colors.text }]}>
+            {t('result.packagingOfficialSources', 'Official sources')}
+          </Text>
+          <TouchableOpacity
+            style={[styles.sourcesButton, { backgroundColor: colors.primary + '18', borderColor: colors.primary }]}
+            onPress={() => setSourcesVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="link-outline" size={20} color={colors.primary} />
+            <Text style={[styles.sourcesButtonText, { color: colors.primary }]}>
+              {t('result.packagingOpenSourcesButton')}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </InfoModal>
+
+    <PackagingSourcesModal
+      visible={sourcesVisible}
+      onClose={() => setSourcesVisible(false)}
+      barcode={product.barcode}
+    />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  offProductLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  offProductLinkTextCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  offProductLinkTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  offProductUrl: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  ecoNoteBlock: {
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  ecoNoteBody: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
   section: {
     marginBottom: 24,
   },
@@ -486,22 +570,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 14,
     fontWeight: '600',
-  },
-  scoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  scoreLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  scoreValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
   },
   itemsContainer: {
     marginTop: 16,
@@ -583,6 +651,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 12,
   },
+  sourcesSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 8,
+    marginBottom: 10,
+  },
+  sourcesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  sourcesButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
   tipItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -590,19 +678,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tipText: {
-    fontSize: 14,
-    lineHeight: 20,
-    flex: 1,
-  },
-  resourcesCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 16,
-  },
-  resourcesText: {
     fontSize: 14,
     lineHeight: 20,
     flex: 1,

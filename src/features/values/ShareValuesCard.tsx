@@ -14,9 +14,9 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../theme';
 import { useValuesStore, TOP_BOYCOUTS } from '../../store/useValuesStore';
-import { RootStackParamList } from '../../../app/_layout';
+import type { ValuesStackParamList } from '../../navigation/tabStackParamLists';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = NativeStackNavigationProp<ValuesStackParamList>;
 
 interface ShareValuesCardProps {
   truScore?: number;
@@ -94,7 +94,7 @@ export default function ShareValuesCard({ truScore }: ShareValuesCardProps = {})
             {
               text: 'Set Preferences',
               onPress: () => {
-                navigation.navigate('Values');
+                navigation.navigate('ValuesHome');
               },
             },
           ]

@@ -122,6 +122,8 @@ export interface PackagingData {
 
 export interface Product {
   barcode: string;
+  /** Product page URL from upstream APIs (e.g. Open Food Facts). */
+  url?: string;
   product_name?: string;
   product_name_en?: string;
   generic_name?: string;

@@ -17,11 +17,9 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { RootStackParamList } from '../_layout';
+import type { ResultScreenRouteProp, ResultScreenNavigationProp } from '../../src/navigation/tabStackParamLists';
 import { ProductWithTrustScore } from '../../src/types/product';
 import { useScanStore } from '../../src/store/useScanStore';
 import { useFavoritesStore } from '../../src/store/useFavoritesStore';
@@ -46,6 +44,7 @@ import { EcoScoreCard } from '../../src/features/product/cards/EcoScoreCard';
 import { NutritionCard } from '../../src/features/product/cards/NutritionCard';
 import { PalmOilCard } from '../../src/features/product/cards/PalmOilCard';
 import { PackagingCard } from '../../src/features/product/cards/PackagingCard';
+import CarbonFootprintCard from '../../src/features/product/cards/CarbonFootprintCard/CarbonFootprintCard';
 import { AllergensCard } from '../../src/features/product/cards/AllergensCard';
 import { ProcessingCard } from '../../src/features/product/cards/ProcessingCard';
 import { RecallsCard } from '../../src/features/product/cards/RecallsCard';
@@ -70,13 +69,11 @@ import RecallAlertModal from '../../src/components/RecallAlertModal';
 import PackagingInfoModal from '../../src/components/PackagingInfoModal';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import InsightsCarousel from '../../src/components/InsightsCarousel';
-
-type ResultScreenRouteProp = RouteProp<RootStackParamList, 'Result'>;
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+import { getProductPageValuesInsights } from '../../src/utils/productInfoCardVisibility';
 
 function ResultScreenContent() {
   const route = useRoute<ResultScreenRouteProp>();
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<ResultScreenNavigationProp>();
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { barcode } = route.params;
@@ -86,6 +83,11 @@ function ResultScreenContent() {
   const { isOffline } = useNetworkStatus();
   const insets = useSafeAreaInsets();
   const valuesPreferences = useValuesStore();
+
+  const hasValuesMasterEnabled =
+    valuesPreferences.geopoliticalEnabled ||
+    valuesPreferences.ethicalEnabled ||
+    valuesPreferences.environmentalEnabled;
 
   const isPremium = subscriptionInfo.isPremium &&
     (subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial' || subscriptionInfo.status === 'grace_period');
@@ -267,6 +269,7 @@ function ResultScreenContent() {
   }
 
   const imageUrl = product.image_url;
+  const productPageValuesInsights = getProductPageValuesInsights(hasValuesMasterEnabled, truScore);
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView
@@ -335,8 +338,8 @@ function ResultScreenContent() {
           premiumFeatures={[]}
         />
 
-        {/* Insights Carousel */}
-        {truScore && truScore.insights && truScore.insights.length > 0 && (
+        {/* Values / insights — same visibility as main result screen */}
+        {productPageValuesInsights && (
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <TouchableOpacity
               style={[styles.insightsHeader, { borderBottomColor: colors.border }]}
@@ -347,7 +350,7 @@ function ResultScreenContent() {
                 <Ionicons name="bulb" size={20} color={colors.primary} />
                 <Text style={[styles.insightsHeaderTitle, { color: colors.text }]}>Insights</Text>
                 <Text style={[styles.insightsHeaderCount, { color: colors.textSecondary }]}>
-                  ({truScore.insights.length})
+                  ({productPageValuesInsights.length})
                 </Text>
               </View>
               <Ionicons
@@ -358,32 +361,12 @@ function ResultScreenContent() {
             </TouchableOpacity>
             {insightsExpanded && (
               <InsightsCarousel
-                insights={truScore.insights}
+                insights={productPageValuesInsights}
                 productName={product?.product_name || product?.product_name_en}
               />
             )}
           </View>
         )}
-
-        {/* Values Preferences Card */}
-        <TouchableOpacity
-          style={[styles.card, { backgroundColor: colors.card }]}
-          onPress={() => navigation.navigate('Values')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderLeft}>
-              <Ionicons name="heart-outline" size={24} color={colors.primary} />
-              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-                Values Preferences
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-          </View>
-          <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-            Set preferences for geopolitical, ethical, and environmental insights
-          </Text>
-        </TouchableOpacity>
 
         {/* EcoScore Card */}
         <EcoScoreCard
@@ -412,6 +395,8 @@ function ResultScreenContent() {
           onShare={() => handleShare('productInfo')}
           premiumFeatures={[]}
         />
+
+        <CarbonFootprintCard product={product} premiumFeatures={[]} />
 
         {/* Allergens & Additives Card */}
         <AllergensCard

@@ -3,6 +3,15 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Certification } from '../types/product';
 import { CERT_BADGE_ICONS } from '../constants/certDisplay';
+import { formatCertificationTagForPicker } from '../services/ethicsCertificationsService';
+
+function displayCertificationName(cert: Certification): string {
+  const name = (cert.name || '').trim();
+  if (name && !/^[a-z]{2}:/i.test(name)) {
+    return cert.name!;
+  }
+  return formatCertificationTagForPicker(cert.tag || cert.id || name);
+}
 
 interface CertBadgeProps {
   certification: Certification;
@@ -23,7 +32,7 @@ export default function CertBadge({ certification, onPress }: CertBadgeProps) {
     >
       <Ionicons name={icon as any} size={20} color="#16a085" />
       <Text style={styles.name} numberOfLines={2}>
-        {certification.name}
+        {displayCertificationName(certification)}
       </Text>
     </Component>
   );

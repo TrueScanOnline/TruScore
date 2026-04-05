@@ -10,14 +10,16 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { RootStackParamList } from './_layout';
+import type { TabParamList } from '../src/navigation/AppTabs';
+import type { HistoryStackParamList } from '../src/navigation/tabStackParamLists';
 import { useScanStore, ScanHistoryItem } from '../src/store/useScanStore';
 import { useTheme } from '../src/theme';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = NativeStackNavigationProp<HistoryStackParamList>;
 
 export default function HistoryScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -122,7 +124,10 @@ export default function HistoryScreen() {
         </Text>
         <TouchableOpacity
           style={[styles.scanButton, { backgroundColor: colors.primary }]}
-          onPress={() => navigation.navigate('Main', { screen: 'Scan' })}
+          onPress={() => {
+            const tabNav = navigation.getParent() as BottomTabNavigationProp<TabParamList>;
+            tabNav.navigate('Scan', { screen: 'ScanHome' });
+          }}
         >
           <Ionicons name="camera-outline" size={20} color="#fff" />
           <Text style={styles.scanButtonText}>{t('history.startScanning')}</Text>

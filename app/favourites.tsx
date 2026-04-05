@@ -9,15 +9,17 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { RootStackParamList } from './_layout';
+import type { TabParamList } from '../src/navigation/AppTabs';
+import type { FavouritesStackParamList } from '../src/navigation/tabStackParamLists';
 import { useFavoritesStore } from '../src/store/useFavoritesStore';
 import { fetchProduct } from '../src/services/productService';
 import { useTheme } from '../src/theme';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = NativeStackNavigationProp<FavouritesStackParamList>;
 
 export default function FavouritesScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -122,7 +124,10 @@ export default function FavouritesScreen() {
           </Text>
           <TouchableOpacity
             style={[styles.startButton, { backgroundColor: colors.primary }]}
-            onPress={() => navigation.navigate('Main', { screen: 'Scan' })}
+            onPress={() => {
+              const tabNav = navigation.getParent() as BottomTabNavigationProp<TabParamList>;
+              tabNav.navigate('Scan', { screen: 'ScanHome' });
+            }}
           >
             <Ionicons name="barcode-outline" size={20} color="#fff" />
             <Text style={styles.startButtonText}>{t('favorites.startScanning')}</Text>

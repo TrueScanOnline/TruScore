@@ -30,7 +30,8 @@ export default function ValuesDisclaimerModal({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onDismiss}
+      // Android: require explicit acknowledgment — do not close on hardware back unless Cancel is shown.
+      onRequestClose={onDismiss ?? (() => {})}
     >
       <SafeAreaView style={styles.modalOverlay} edges={['top', 'bottom']}>
         <View style={[styles.modalContent, { backgroundColor: colors.card }]}>

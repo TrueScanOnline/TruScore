@@ -1,5 +1,5 @@
 // ValuesHome.tsx - Main values preferences screen with swipe tabs (v1.3)
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import ShareValuesCard from './ShareValuesCard';
 import { VALUES_COLORS, getValuesColorWithOpacity } from '../../theme/valuesColors';
 import ValuesDisclaimerModal from '../../components/ValuesDisclaimerModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 
 type TabType = 'geopolitical' | 'ethical' | 'environmental';
 
@@ -23,8 +24,11 @@ const DISCLAIMER_KEY = '@truescan_values_disclaimer_accepted';
 
 export default function ValuesHome() {
   const { colors } = useTheme();
+  const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<TabType>('geopolitical');
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+  const [storageHydrated, setStorageHydrated] = useState(false);
   
   const {
     israelPalestine,
@@ -48,29 +52,50 @@ export default function ValuesHome() {
 
   useEffect(() => {
     initializeStore();
-    checkDisclaimer();
+    (async () => {
+      try {
+        const accepted = await AsyncStorage.getItem(DISCLAIMER_KEY);
+        setDisclaimerAccepted(accepted === 'true');
+      } catch (error) {
+        console.error('[ValuesHome] Error checking disclaimer:', error);
+      } finally {
+        setStorageHydrated(true);
+      }
+    })();
   }, []);
 
-  const checkDisclaimer = async () => {
-    try {
-      const accepted = await AsyncStorage.getItem(DISCLAIMER_KEY);
-      if (!accepted) {
-        setShowDisclaimer(true);
-      }
-    } catch (error) {
-      console.error('[ValuesHome] Error checking disclaimer:', error);
+  // With lazy: false on tab navigator, this screen mounts while another tab is visible; only prompt on Values focus.
+  useEffect(() => {
+    if (storageHydrated && isFocused && !disclaimerAccepted) {
+      setShowDisclaimer(true);
     }
-  };
+  }, [storageHydrated, isFocused, disclaimerAccepted]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setShowDisclaimer(false);
+      };
+    }, []),
+  );
 
   const handleAcceptDisclaimer = async () => {
     try {
       await AsyncStorage.setItem(DISCLAIMER_KEY, 'true');
+      setDisclaimerAccepted(true);
       setShowDisclaimer(false);
     } catch (error) {
       console.error('[ValuesHome] Error saving disclaimer:', error);
-      setShowDisclaimer(false);
+      Toast.show({
+        type: 'error',
+        text1: 'Could not save',
+        text2: 'Please try again',
+      });
     }
   };
+
+  const blockInteractionUntilDisclaimer =
+    storageHydrated && isFocused && !disclaimerAccepted;
 
   const renderTriStateRadio = (
     label: string,
@@ -174,7 +199,11 @@ export default function ValuesHome() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <>
+    <View
+      style={[styles.container, { backgroundColor: colors.background }]}
+      pointerEvents={blockInteractionUntilDisclaimer ? 'none' : 'auto'}
+    >
       {/* Header - v1.3 spec */}
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>
@@ -433,14 +462,12 @@ export default function ValuesHome() {
           <ShareValuesCard />
         </View>
       </ScrollView>
-
-      {/* Disclaimer Modal */}
-      <ValuesDisclaimerModal
-        visible={showDisclaimer}
-        onAccept={handleAcceptDisclaimer}
-        onDismiss={handleAcceptDisclaimer}
-      />
     </View>
+    <ValuesDisclaimerModal
+      visible={showDisclaimer}
+      onAccept={handleAcceptDisclaimer}
+    />
+    </>
   );
 }
 

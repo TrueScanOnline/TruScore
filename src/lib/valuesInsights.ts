@@ -30,6 +30,19 @@ const TOP_BOYCOUTS = [
   'Unilever',
 ];
 
+function openFoodFactsProductUrl(barcode: string): string {
+  const b = (barcode || '').trim();
+  return b
+    ? `https://world.openfoodfacts.org/product/${encodeURIComponent(b)}`
+    : 'https://world.openfoodfacts.org/';
+}
+
+const REFERENCE = {
+  crueltyFreeInternational: 'https://www.crueltyfreeinternational.org/',
+  iloForcedLabour: 'https://www.ilo.org/topics/forced-labour',
+  rspo: 'https://rspo.org/',
+} as const;
+
 /**
  * Generate insights based on user preferences and product data
  * Includes input validation and error handling
@@ -49,6 +62,8 @@ export function generateInsights(
 
   try {
     const insights: Insight[] = [];
+    const barcode = (product.barcode || '').trim();
+    const offProductUrl = openFoodFactsProductUrl(barcode);
     const brands = (product.brands || '').toLowerCase();
     const origins = (product.origins_tags || []).map((o: string) => 
       typeof o === 'string' ? o.toLowerCase() : ''
@@ -75,6 +90,8 @@ export function generateInsights(
           reason: 'Geopolitical Insight: Matches Avoid Israel-linked preference',
           source: 'Product origin/brand analysis',
           color: VALUES_COLORS.geopolitical,
+          referenceUrl: offProductUrl,
+          referenceLabel: 'View product on Open Food Facts',
         });
       }
     } else if (preferences.israelPalestine === 'avoid_palestine') {
@@ -86,6 +103,8 @@ export function generateInsights(
           reason: 'Geopolitical Insight: Matches Avoid Palestine-linked preference',
           source: 'Product origin/brand analysis',
           color: VALUES_COLORS.geopolitical,
+          referenceUrl: offProductUrl,
+          referenceLabel: 'View product on Open Food Facts',
         });
       }
     }
@@ -100,6 +119,8 @@ export function generateInsights(
           reason: 'Geopolitical Insight: Matches Avoid China-linked preference',
           source: 'Product origin/brand analysis',
           color: VALUES_COLORS.geopolitical,
+          referenceUrl: offProductUrl,
+          referenceLabel: 'View product on Open Food Facts',
         });
       }
     } else if (preferences.indiaChina === 'avoid_india') {
@@ -111,6 +132,8 @@ export function generateInsights(
           reason: 'Geopolitical Insight: Matches Avoid India-linked preference',
           source: 'Product origin/brand analysis',
           color: VALUES_COLORS.geopolitical,
+          referenceUrl: offProductUrl,
+          referenceLabel: 'View product on Open Food Facts',
         });
       }
     }
@@ -127,6 +150,8 @@ export function generateInsights(
           reason: 'Parent company linked to animal testing/cruelty',
           source: 'Known cruel parent companies database',
           color: VALUES_COLORS.ethical,
+          referenceUrl: REFERENCE.crueltyFreeInternational,
+          referenceLabel: 'Cruelty Free International',
         });
       }
     }
@@ -143,6 +168,8 @@ export function generateInsights(
           reason: 'Potential forced/child labor concerns',
           source: 'Product analysis tags',
           color: VALUES_COLORS.ethical,
+          referenceUrl: REFERENCE.iloForcedLabour,
+          referenceLabel: 'ILO — forced labour',
         });
       }
     }
@@ -167,6 +194,8 @@ export function generateInsights(
               ? 'Ingredients analysis'
               : 'Open Food Facts data',
             color: VALUES_COLORS.environmental,
+            referenceUrl: REFERENCE.rspo,
+            referenceLabel: 'RSPO — sustainable palm oil',
           });
         }
       } else {
@@ -202,6 +231,8 @@ export function generateInsights(
             reason: 'Contains palm oil',
             source: 'Ingredients analysis',
             color: VALUES_COLORS.environmental,
+            referenceUrl: REFERENCE.rspo,
+            referenceLabel: 'RSPO — sustainable palm oil',
           });
         }
       }

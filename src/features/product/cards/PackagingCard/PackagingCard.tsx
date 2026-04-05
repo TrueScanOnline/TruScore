@@ -1,18 +1,22 @@
-// Modular Packaging Card Component
+// Modular Packaging Card — Open Food Facts packaging data only; external links in PackagingSourcesModal.
 
 import React, { useState, Suspense } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import ErrorBoundary from '../../../../components/ErrorBoundary';
 import { ProductWithTrustScore } from '../../../../types/product';
 import PackagingInfoModal from '../../../../components/PackagingInfoModal';
-import { meetsLocalRecyclingRequirements } from '../../../../utils/packagingRecyclability';
+import PackagingOffCardContent from '../../../../components/PackagingOffCardContent';
+import { hasOffPackagingDisplay } from '../../../../utils/packagingOffDisplay';
 import { useTheme } from '../../../../theme';
 import { CardPremiumGate } from '../../../premium/CardPremiumGate';
 import { PremiumFeature } from '../../../../utils/premiumFeatures';
 import { PackagingCardSkeleton } from './PackagingCardSkeleton';
 import { PackagingCardError } from './PackagingCardError';
+
+/** Matches sustainability / recycling green used elsewhere in the app */
+const PACKAGING_CARD_BORDER_GREEN = '#16a085';
 
 interface PackagingCardProps {
   product?: ProductWithTrustScore;
@@ -23,80 +27,60 @@ interface PackagingCardProps {
 function PackagingCardContent({ product, onShare, premiumFeatures }: PackagingCardProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const [modalVisible, setModalVisible] = useState(false);
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
 
-  if (!product || !product.packaging_data || product.packaging_data.items.length === 0) {
+  if (!product || !hasOffPackagingDisplay(product)) {
     return null;
   }
-
-  const meetsLocalRequirements = meetsLocalRecyclingRequirements(product.packaging_data.items);
-  const borderColor = meetsLocalRequirements ? '#16a085' : '#ff6b6b';
 
   return (
     <>
       <CardPremiumGate features={premiumFeatures || []}>
-        <TouchableOpacity
-          style={[styles.card, {
-            backgroundColor: colors.card,
-            borderWidth: 2,
-            borderColor,
-          }]}
-          onPress={() => setModalVisible(true)}
-          activeOpacity={0.7}
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.card,
+              borderWidth: 2,
+              borderColor: PACKAGING_CARD_BORDER_GREEN,
+            },
+          ]}
         >
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderLeft}>
-              <Ionicons name="cube-outline" size={24} color={colors.primary} />
-              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-                {t('result.packaging')}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-          </View>
-          <View style={styles.content}>
-            <View style={styles.badgesRow}>
-              {product.packaging_data.isRecyclable && (
-                <View style={[styles.badge, { backgroundColor: '#16a085' + '20' }]}>
-                  <Ionicons name="reload-circle" size={16} color="#16a085" />
-                  <Text style={[styles.badgeText, { color: colors.text }]}>
-                    {t('result.recyclable')}
-                  </Text>
-                </View>
-              )}
-              {product.packaging_data.isReusable && (
-                <View style={[styles.badge, { backgroundColor: '#4dd09f' + '20' }]}>
-                  <Ionicons name="refresh-circle" size={16} color="#4dd09f" />
-                  <Text style={[styles.badgeText, { color: colors.text }]}>
-                    {t('result.reusable')}
-                  </Text>
-                </View>
-              )}
-              {product.packaging_data.isBiodegradable && (
-                <View style={[styles.badge, { backgroundColor: '#16a085' + '20' }]}>
-                  <Ionicons name="leaf" size={16} color="#16a085" />
-                  <Text style={[styles.badgeText, { color: colors.text }]}>
-                    {t('result.biodegradable')}
-                  </Text>
-                </View>
-              )}
-            </View>
-            {product.packaging_data.recyclabilityScore > 0 && (
-              <View style={styles.scoreRow}>
-                <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>
-                  {t('result.recyclabilityScore')}:
-                </Text>
-                <Text style={[styles.scoreValue, { color: colors.primary }]}>
-                  {product.packaging_data.recyclabilityScore}/100
-                </Text>
+          <Pressable
+            onPress={() => setInfoModalVisible(true)}
+            style={({ pressed }) => [styles.cardHeaderPressable, { opacity: pressed ? 0.92 : 1 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('result.packaging')}
+            accessibilityHint={t('result.packagingCardOpenModalA11y')}
+          >
+            <View style={styles.cardHeader}>
+              <Ionicons
+                name="cube-outline"
+                size={22}
+                color={PACKAGING_CARD_BORDER_GREEN}
+                style={styles.cardHeaderIcon}
+              />
+              <View style={styles.cardTitleWrap}>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.packaging')}</Text>
               </View>
-            )}
-          </View>
-        </TouchableOpacity>
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+            </View>
+          </Pressable>
+          <ScrollView
+            style={styles.scrollBody}
+            contentContainerStyle={styles.scrollBodyContent}
+            nestedScrollEnabled
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator
+          >
+            <PackagingOffCardContent product={product} />
+          </ScrollView>
+        </View>
       </CardPremiumGate>
 
       <PackagingInfoModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
+        visible={infoModalVisible}
+        onClose={() => setInfoModalVisible(false)}
         product={product}
       />
     </>
@@ -115,67 +99,52 @@ export default function PackagingCard(props: PackagingCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
-    padding: 16,
-    margin: 16,
+    borderRadius: 12,
+    padding: 12,
+    paddingTop: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    maxHeight: 288,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
+  cardHeaderPressable: {
+    marginBottom: 10,
+    flexShrink: 0,
+  },
+  scrollBody: {
+    flexGrow: 1,
+    minHeight: 72,
+    maxHeight: 188,
+  },
+  scrollBodyContent: {
+    paddingTop: 2,
+    paddingBottom: 12,
+  },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: 8,
+    minWidth: 0,
   },
-  cardHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  cardHeaderIcon: {
+    flexShrink: 0,
+    marginTop: 2,
+  },
+  cardTitleWrap: {
     flex: 1,
+    minWidth: 0,
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  content: {
-    marginTop: 8,
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  scoreLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  scoreValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '700',
+    lineHeight: 22,
+    marginTop: 0,
+    marginBottom: 0,
+    paddingVertical: 2,
   },
 });
-
-

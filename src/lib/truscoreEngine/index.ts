@@ -29,6 +29,10 @@ export interface Insight {
   reason: string;
   source?: string;
   color: string;
+  /** Optional authoritative link (same pattern as pillar adjustment referenceUrl). */
+  referenceUrl?: string;
+  /** Short label for the link button (default “Open reference” in UI). */
+  referenceLabel?: string;
 }
 
 export interface TruScoreResult {

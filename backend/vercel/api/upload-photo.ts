@@ -14,6 +14,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Readable } from 'stream';
 import { savePhoto } from '../lib/database';
+import { canonicalBarcodeForStorage } from '../lib/barcodeLookupKeys';
 
 function handleCORS(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -133,11 +134,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    const canonicalBarcode = canonicalBarcodeForStorage(String(barcode));
+
     // Upload to cloud storage
     let photoUrl: string;
     try {
       photoUrl = await uploadToCloudStorage(
-        barcode,
+        canonicalBarcode,
         imageType || 'front',
         imageBase64,
         mimeType || 'image/jpeg'
@@ -153,7 +156,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Store photo metadata in database
     try {
       await savePhoto({
-        barcode,
+        barcode: canonicalBarcode,
         imageType: imageType || 'front',
         photoUrl,
         photoData: imageBase64.length < 1024 * 1024 ? imageBase64 : undefined, // Store small images as base64

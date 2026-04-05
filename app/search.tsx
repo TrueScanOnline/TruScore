@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { RootStackParamList } from './_layout';
+import type { SearchStackParamList } from '../src/navigation/tabStackParamLists';
 import { useScanStore } from '../src/store/useScanStore';
 import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
 import { isPremiumFeatureEnabled, PremiumFeature } from '../src/utils/premiumFeatures';
@@ -23,7 +23,7 @@ import { searchProducts } from '../src/services/productSearchService';
 import AdvancedSearchFilters, { SearchFilters } from '../src/components/AdvancedSearchFilters';
 import { useTheme } from '../src/theme';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = NativeStackNavigationProp<SearchStackParamList>;
 
 export default function SearchScreen() {
   const navigation = useNavigation<NavigationProp>();

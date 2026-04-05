@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigatorScreenParams } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,13 +9,22 @@ import { Platform } from 'react-native';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useTheme } from '../theme';
 import ErrorBoundary from '../components/ErrorBoundary';
+import type {
+  ScanStackParamList,
+  SearchStackParamList,
+  HistoryStackParamList,
+  FavouritesStackParamList,
+  ValuesStackParamList,
+} from './tabStackParamLists';
 
 // Import screens
 import ScanScreen from '../../app/index';
 import SearchScreen from '../../app/search';
 import HistoryScreen from '../../app/history';
 import FavouritesScreen from '../../app/favourites';
+import ValuesScreen from '../../app/values';
 import ProfileScreen from '../../app/profile';
+import ResultScreen from '../../app/result/[barcode]';
 
 // Wrap screens with Error Boundaries
 const ScanScreenWithBoundary = (props: any) => {
@@ -56,12 +67,76 @@ const ProfileScreenWithBoundary = (props: any) => {
   );
 };
 
+const ValuesScreenWithBoundary = (props: any) => (
+  <ErrorBoundary>
+    <ValuesScreen {...props} />
+  </ErrorBoundary>
+);
+
+const ResultScreenWithBoundary = (props: any) => (
+  <ErrorBoundary>
+    <ResultScreen {...props} />
+  </ErrorBoundary>
+);
+
+const ScanStack = createNativeStackNavigator<ScanStackParamList>();
+const SearchStack = createNativeStackNavigator<SearchStackParamList>();
+const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
+const FavouritesStack = createNativeStackNavigator<FavouritesStackParamList>();
+const ValuesStack = createNativeStackNavigator<ValuesStackParamList>();
+
+function ScanStackNavigator() {
+  return (
+    <ScanStack.Navigator screenOptions={{ headerShown: false }}>
+      <ScanStack.Screen name="ScanHome" component={ScanScreenWithBoundary} />
+      <ScanStack.Screen name="Result" component={ResultScreenWithBoundary} />
+    </ScanStack.Navigator>
+  );
+}
+
+function SearchStackNavigator() {
+  return (
+    <SearchStack.Navigator screenOptions={{ headerShown: false }}>
+      <SearchStack.Screen name="SearchHome" component={SearchScreenWithBoundary} />
+      <SearchStack.Screen name="Result" component={ResultScreenWithBoundary} />
+    </SearchStack.Navigator>
+  );
+}
+
+function HistoryStackNavigator() {
+  return (
+    <HistoryStack.Navigator screenOptions={{ headerShown: false }}>
+      <HistoryStack.Screen name="HistoryHome" component={HistoryScreenWithBoundary} />
+      <HistoryStack.Screen name="Result" component={ResultScreenWithBoundary} />
+    </HistoryStack.Navigator>
+  );
+}
+
+function FavouritesStackNavigator() {
+  return (
+    <FavouritesStack.Navigator screenOptions={{ headerShown: false }}>
+      <FavouritesStack.Screen name="FavouritesHome" component={FavouritesScreenWithBoundary} />
+      <FavouritesStack.Screen name="Result" component={ResultScreenWithBoundary} />
+    </FavouritesStack.Navigator>
+  );
+}
+
+function ValuesStackNavigator() {
+  return (
+    <ValuesStack.Navigator screenOptions={{ headerShown: false }}>
+      <ValuesStack.Screen name="ValuesHome" component={ValuesScreenWithBoundary} />
+      <ValuesStack.Screen name="Result" component={ResultScreenWithBoundary} />
+    </ValuesStack.Navigator>
+  );
+}
+
 export type TabParamList = {
-  Scan: undefined;
-  Search: undefined;
-  History: undefined;
-  Favourites: undefined;
-  Profile: undefined;
+  Scan: NavigatorScreenParams<ScanStackParamList>;
+  Search: NavigatorScreenParams<SearchStackParamList>;
+  History: NavigatorScreenParams<HistoryStackParamList>;
+  Favourites: NavigatorScreenParams<FavouritesStackParamList>;
+  Values: NavigatorScreenParams<ValuesStackParamList>;
+  Settings: undefined;
 };
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -105,6 +180,7 @@ export default function AppTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarScrollEnabled: true,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
@@ -121,8 +197,11 @@ export default function AppTabs() {
             case 'Favourites':
               iconName = focused ? 'heart' : 'heart-outline';
               break;
-            case 'Profile':
-              iconName = focused ? 'person' : 'person-outline';
+            case 'Values':
+              iconName = focused ? 'leaf' : 'leaf-outline';
+              break;
+            case 'Settings':
+              iconName = focused ? 'settings' : 'settings-outline';
               break;
             default:
               iconName = 'help-circle-outline';
@@ -154,37 +233,44 @@ export default function AppTabs() {
     >
       <Tab.Screen
         name="Scan"
-        component={ScanScreenWithBoundary}
+        component={ScanStackNavigator}
         options={{
           tabBarLabel: t('tabs.scan'),
         }}
       />
       <Tab.Screen
         name="Search"
-        component={SearchScreenWithBoundary}
+        component={SearchStackNavigator}
         options={{
           tabBarLabel: t('tabs.search'),
         }}
       />
       <Tab.Screen
         name="History"
-        component={HistoryScreenWithBoundary}
+        component={HistoryStackNavigator}
         options={{
           tabBarLabel: t('tabs.history'),
         }}
       />
       <Tab.Screen
         name="Favourites"
-        component={FavouritesScreenWithBoundary}
+        component={FavouritesStackNavigator}
         options={{
           tabBarLabel: t('tabs.favourites'),
         }}
       />
       <Tab.Screen
-        name="Profile"
+        name="Values"
+        component={ValuesStackNavigator}
+        options={{
+          tabBarLabel: t('tabs.values'),
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
         component={ProfileScreenWithBoundary}
         options={{
-          tabBarLabel: t('tabs.profile'),
+          tabBarLabel: t('tabs.settings'),
         }}
       />
     </Tab.Navigator>
