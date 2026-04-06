@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   ActivityIndicator,
   TouchableOpacity,
   Pressable,
@@ -65,6 +64,7 @@ import { PalmOilCard } from '../../src/features/product/cards/PalmOilCard';
 import PackagingInfoModal from '../../src/components/PackagingInfoModal';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
 import { sanitizeText } from '../../src/utils/validation';
+import { sanitizeCountryForDisplay } from '../../src/utils/countryDisplayName';
 import { logger } from '../../src/utils/logger';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 // import PendingContributionsBanner from '../../src/components/PendingContributionsBanner'; // Temporarily disabled
@@ -82,6 +82,7 @@ import PackagingOffCardContent from '../../src/components/PackagingOffCardConten
 import { crashReporter } from '../../src/utils/crashReporter';
 import { getPrimaryBarcode } from '../../src/utils/barcodeNormalization';
 import ShareModal from '../../src/components/ShareModal';
+import ProductHeroSection from '../../src/components/product/ProductHeroSection';
 import ProductDisclaimerCard from '../../src/components/productLegal/ProductDisclaimerCard';
 import ProductDataLimitationsCard from '../../src/components/productLegal/ProductDataLimitationsCard';
 import PremiumGate from '../../src/components/PremiumGate';
@@ -108,7 +109,7 @@ function ResultScreenContent() {
   const route = useRoute<ResultScreenRouteProp>();
   const navigation = useNavigation<ResultScreenNavigationProp>();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
   const { barcode } = route.params;
   const { addScan } = useScanStore();
   const { addFavorite, removeFavorite, isFavorite } = useFavoritesStore();
@@ -821,6 +822,13 @@ function ResultScreenContent() {
                                       userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase())
     ? userContributedCountry.country  // User overrode default - show user's country
     : (manufacturingCountry || userContributedCountry?.country || null); // Otherwise use default or user-contributed
+
+  const shareManufacturingCountryLabel = (() => {
+    const raw = displayManufacturingCountry || userContributedCountry?.country;
+    if (!raw) return undefined;
+    const cleaned = sanitizeCountryForDisplay(raw);
+    return cleaned || undefined;
+  })();
   
   // Calculate Eco-Score using the proper function to ensure grade is calculated from score if missing
   const calculatedEcoScore = product ? calculateEcoScore(product) : null;
@@ -940,45 +948,22 @@ function ResultScreenContent() {
           }}
         /> */}
         
-        {/* Hero Section */}
-        <View style={[styles.hero, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.productImage} resizeMode="contain" />
-          ) : (
-            <TouchableOpacity
-              style={[styles.placeholderImage, { backgroundColor: colors.surface }]}
-              onPress={() => setCameraModalVisible(true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="camera-outline" size={64} color={colors.textTertiary} />
-              <Text style={[styles.captureImageText, { color: colors.textSecondary }]}>
-                {t('result.takePhoto')}
-              </Text>
-            </TouchableOpacity>
-          )}
-          <View style={styles.productNameContainer}>
-            <Text 
-              style={[styles.productName, { color: colors.text }]} 
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {product.product_name || product.product_name_en || 'Unknown Product'}
-            </Text>
-            {isUserContributed && (
-              <View style={[styles.userContributedBadge, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}>
-                <Ionicons name="person-circle-outline" size={14} color={colors.primary} />
-                <Text style={[styles.userContributedText, { color: colors.primary }]}>
-                  {t('manualProduct.userContributed') || 'User Contributed'}
-                </Text>
-              </View>
-            )}
-          </View>
-          {product.brands && (
-            <Text style={[styles.brand, { color: colors.textSecondary }]}>
-              {sanitizeText(product.brands, 200)}
-            </Text>
-          )}
-        </View>
+        <ProductHeroSection
+          colors={colors}
+          darkMode={!!darkMode}
+          imageUrl={imageUrl}
+          productName={product.product_name || product.product_name_en || t('result.productUnknown')}
+          brandText={product.brands ? sanitizeText(product.brands, 200) : null}
+          isUserContributed={isUserContributed}
+          onTakePhoto={() => setCameraModalVisible(true)}
+          takePhotoLabel={t('result.takePhoto')}
+          userContributedLabel={t('manualProduct.userContributed')}
+          heroImageA11y={t('result.heroImageA11y')}
+          expandHint={t('result.heroImageExpandHint')}
+          loadErrorLabel={t('result.heroImageLoadError')}
+          retryLabel={t('result.heroImageRetry')}
+          closeLightboxLabel={t('result.heroImageCloseLightbox')}
+        />
 
         {/* Food Recall Alert - Compact banner that opens modal */}
         {product.recalls && product.recalls.length > 0 && (
@@ -1460,7 +1445,7 @@ function ResultScreenContent() {
                                 </Text>
                               </View>
                               <Text style={[styles.communityStatCountry, { color: colors.text }]}>
-                                {stat.country}
+                                {sanitizeCountryForDisplay(stat.country)}
                               </Text>
                             </View>
                             <Text style={[styles.communityStatCount, { color: colors.textSecondary }]}>
@@ -1974,27 +1959,27 @@ function ResultScreenContent() {
               const hasAdditives = product.additives_tags && product.additives_tags.length > 0;
               const hasDetected = hasAllergens || hasAdditives;
               const redColor = '#ff6b6b';
-              
+
+              const openAllergensModal = () => {
+                if (isPremiumFeatureEnabled(PremiumFeature.ALLERGENS_ADDITIVES, subscriptionInfo)) {
+                  setAllergensAdditivesModalVisible(true);
+                } else {
+                  getRootStackNavigation(navigation)?.navigate('Subscription');
+                }
+              };
+
               return (
-                <TouchableOpacity
+                <View
                   style={[
                     styles.card,
                     {
                       backgroundColor: colors.card,
                       borderWidth: hasDetected ? 2 : 0,
                       borderColor: hasDetected ? redColor : 'transparent',
-                    }
+                    },
                   ]}
-                  onPress={() => {
-                    // Check premium status before opening modal
-                    if (isPremiumFeatureEnabled(PremiumFeature.ALLERGENS_ADDITIVES, subscriptionInfo)) {
-                      setAllergensAdditivesModalVisible(true);
-                    } else {
-                      getRootStackNavigation(navigation)?.navigate('Subscription');
-                    }
-                  }}
-                  activeOpacity={0.7}
                 >
+                  <TouchableOpacity onPress={openAllergensModal} activeOpacity={0.7}>
                   <View style={styles.cardHeader}>
                     {/* Top line: Icons */}
                     <View style={styles.cardHeaderTop}>
@@ -2045,7 +2030,20 @@ function ResultScreenContent() {
                     </Text>
                   </View>
                 )}
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={openAllergensModal}
+                    style={styles.allergensLearnMoreButton}
+                    hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('nutrition.burnLearnMore')}
+                  >
+                    <Text style={[styles.allergensLearnMoreText, { color: colors.primary }]}>
+                      {t('nutrition.burnLearnMore')}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
               );
             })()}
           </PremiumGate>
@@ -2270,7 +2268,7 @@ function ResultScreenContent() {
           product={product}
           truScore={truScore || undefined}
           shareType={shareType}
-          country={shareType === 'countryOfManufacture' ? (displayManufacturingCountry || userContributedCountry?.country || undefined) : undefined}
+          country={shareType === 'countryOfManufacture' ? shareManufacturingCountryLabel : undefined}
           initialCustomMessage={shareInitialMessage}
         />
       )}
@@ -2498,41 +2496,6 @@ const styles = StyleSheet.create({
   communityStatCount: {
     fontSize: 14,
   },
-  hero: {
-    alignItems: 'center',
-    padding: 24,
-    borderBottomWidth: 1,
-    marginBottom: 16,
-  },
-  productImage: {
-    width: 200,
-    height: 200,
-    marginBottom: 16,
-  },
-  placeholderImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 8,
-  },
-  captureImageText: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  productNameContainer: {
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  productName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
   confidenceBadgeContainer: {
     marginTop: 8,
     alignItems: 'center',
@@ -2551,24 +2514,6 @@ const styles = StyleSheet.create({
   analysisButtonText: {
     fontSize: 13,
     fontWeight: '600',
-  },
-  userContributedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 4,
-    marginTop: 4,
-  },
-  userContributedText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  brand: {
-    fontSize: 16,
-    textAlign: 'center',
   },
   /** Product page cards: consistent horizontal inset + vertical gap between sections */
   card: {
@@ -3198,6 +3143,18 @@ const styles = StyleSheet.create({
   additivesText: {
     fontSize: 12,
     lineHeight: 18,
+  },
+  allergensLearnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 2,
+    marginTop: 4,
+    paddingVertical: 6,
+  },
+  allergensLearnMoreText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   bottomSpacer: {
     height: 32,

@@ -36,50 +36,68 @@ function AllergensCardContent({ product, onShare, premiumFeatures }: AllergensCa
   return (
     <>
       <CardPremiumGate features={premiumFeatures || []}>
-        <TouchableOpacity
-          style={[styles.card, {
-            backgroundColor: colors.card,
-            borderWidth: hasDetected ? 2 : 0,
-            borderColor: hasDetected ? redColor : 'transparent',
-          }]}
-          onPress={() => setModalVisible(true)}
-          activeOpacity={0.7}
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.card,
+              borderWidth: hasDetected ? 2 : 0,
+              borderColor: hasDetected ? redColor : 'transparent',
+            },
+          ]}
         >
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderLeft}>
-              <Ionicons name="warning" size={24} color={hasDetected ? redColor : colors.primary} />
-              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-                {t('result.allergensAdditives')}
-              </Text>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={t('result.allergensAdditives')}
+          >
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderLeft}>
+                <Ionicons name="warning" size={24} color={hasDetected ? redColor : colors.primary} />
+                <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
+                  {t('result.allergensAdditives')}
+                </Text>
+              </View>
+              <Ionicons name="information-circle-outline" size={20} color={hasDetected ? redColor : colors.primary} />
             </View>
-            <Ionicons name="information-circle-outline" size={20} color={hasDetected ? redColor : colors.primary} />
-          </View>
-          {hasAllergens && product.allergens_tags && (
-            <View style={[styles.warningSection, { backgroundColor: colors.error + '20' }]}>
-              <Ionicons name="warning" size={20} color={colors.error} />
-              <Text style={[styles.warningTitle, { color: colors.error }]}>
-                {t('result.containsAllergens')}
-              </Text>
-              <Text style={[styles.warningText, { color: colors.error }]}>
-                {product.allergens_tags
-                  .map((tag) => tag.replace(/^en:/, '').replace(/-/g, ' '))
-                  .join(', ')}
-              </Text>
-            </View>
-          )}
-          {hasAdditives && product.additives_tags && (
-            <View style={styles.additivesSection}>
-              <Text style={[styles.additivesLabel, { color: colors.text }]}>
-                {t('result.additives')} ({product.additives_tags.length}):
-              </Text>
-              <Text style={[styles.additivesText, { color: colors.textSecondary }]}>
-                {product.additives_tags
-                  .map((tag) => tag.replace(/^en:/, '').toUpperCase())
-                  .join(', ')}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+            {hasAllergens && product.allergens_tags && (
+              <View style={[styles.warningSection, { backgroundColor: colors.error + '20' }]}>
+                <Ionicons name="warning" size={20} color={colors.error} />
+                <Text style={[styles.warningTitle, { color: colors.error }]}>
+                  {t('result.containsAllergens')}
+                </Text>
+                <Text style={[styles.warningText, { color: colors.error }]}>
+                  {product.allergens_tags
+                    .map((tag) => tag.replace(/^en:/, '').replace(/-/g, ' '))
+                    .join(', ')}
+                </Text>
+              </View>
+            )}
+            {hasAdditives && product.additives_tags && (
+              <View style={styles.additivesSection}>
+                <Text style={[styles.additivesLabel, { color: colors.text }]}>
+                  {t('result.additives')} ({product.additives_tags.length}):
+                </Text>
+                <Text style={[styles.additivesText, { color: colors.textSecondary }]}>
+                  {product.additives_tags
+                    .map((tag) => tag.replace(/^en:/, '').toUpperCase())
+                    .join(', ')}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={styles.learnMoreButton}
+            hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+            accessibilityRole="button"
+            accessibilityLabel={t('nutrition.burnLearnMore')}
+          >
+            <Text style={[styles.learnMoreText, { color: colors.primary }]}>{t('nutrition.burnLearnMore')}</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
       </CardPremiumGate>
 
       <AllergensAdditivesModal
@@ -155,6 +173,18 @@ const styles = StyleSheet.create({
   additivesText: {
     fontSize: 12,
     lineHeight: 18,
+  },
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 2,
+    marginTop: 4,
+    paddingVertical: 6,
+  },
+  learnMoreText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
 

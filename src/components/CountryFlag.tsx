@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { sanitizeCountryForDisplay } from '../utils/countryDisplayName';
 
 interface CountryFlagProps {
   country: string;
@@ -72,7 +73,9 @@ function formatCountryName(country: string): string {
 }
 
 export default function CountryFlag({ country, showFlag = true }: CountryFlagProps) {
-  if (!country) {
+  const displayCountry = country ? sanitizeCountryForDisplay(country) : '';
+
+  if (!displayCountry) {
     return (
       <View style={styles.container}>
         <Ionicons name="help-circle-outline" size={24} color="#95a5a6" />
@@ -81,8 +84,8 @@ export default function CountryFlag({ country, showFlag = true }: CountryFlagPro
     );
   }
 
-  const flag = getCountryFlag(country);
-  const formattedName = formatCountryName(country);
+  const flag = getCountryFlag(displayCountry);
+  const formattedName = formatCountryName(displayCountry);
 
   return (
     <View style={styles.container}>
