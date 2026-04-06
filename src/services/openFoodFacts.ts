@@ -10,6 +10,7 @@ import {
   evaluateOrganicMatchForCertDisplay,
 } from './ethicsCertificationsService';
 import { ORGANIC_LABEL_TEXT_CLAIM_TAG, ORGANIC_PRODUCT_NAME_CLAIM_TAG } from '../constants/certDisplay';
+import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
 
 export { ORGANIC_LABEL_TEXT_CLAIM_TAG, ORGANIC_PRODUCT_NAME_CLAIM_TAG };
 
@@ -66,6 +67,8 @@ async function fetchProductFromOFFInstance(barcode: string, instance: string): P
 
     // Enhance product with extracted sustainability data
     enhanceProductWithSustainabilityData(product);
+
+    applyResolvedNutrientLevels(product);
 
     return product;
   } catch (error) {

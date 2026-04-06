@@ -6,6 +6,7 @@ import { ShareContent, ShareOptions, ShareableItem } from '../types';
 import { generateUniversalLink } from '../../../utils/linking';
 import { logger } from '../../../utils/logger';
 import { Platform } from 'react-native';
+import { getNutritionShareBurnData, buildNutritionShareBodyLines } from '../../../utils/nutritionShareCopy';
 
 export class ShareContentBuilder {
   /**
@@ -306,27 +307,21 @@ export class ShareContentBuilder {
     productName: string,
     platform: ShareOptions['platform']
   ): ShareContent {
-    const nutriments = product.nutriments;
-    const energy = nutriments?.['energy-kcal_100g'] || nutriments?.['energy-kcal'];
-    const protein = nutriments?.proteins_100g || nutriments?.proteins;
-    const carbs = nutriments?.carbohydrates_100g || nutriments?.carbohydrates;
-    
-    // VIRAL HOOK - health and nutrition focus
-    const title = `🥗 Nutrition Facts: ${productName}`;
-    const message = `📊 Just checked ${productName}'s nutrition:\n\n` +
-      (energy ? `⚡ Energy: ${energy} kcal\n` : '') +
-      (protein ? `💪 Protein: ${protein}g\n` : '') +
-      (carbs ? `🍞 Carbs: ${carbs}g\n` : '') +
-      `\n🔍 See complete nutrition breakdown\n` +
-      `📱 Free TruScore app - scan any product\n\n` +
-      `#TruScore #Nutrition #HealthyEating #ProductScan #NutritionFacts #HealthCheck`;
+    const { kcalPer100g, burn } = getNutritionShareBurnData(product.nutriments);
+    const title = `🥗 Nutrition: ${productName}`;
+    const message = buildNutritionShareBodyLines({
+      productName,
+      universalLink,
+      kcalPer100g,
+      burn,
+    });
 
     return {
       title,
       message,
       url: universalLink,
       imageUrl: product.image_url,
-      hashtags: ['TruScore', 'Nutrition', 'HealthyEating', 'ProductScan', 'NutritionFacts', 'HealthCheck'],
+      hashtags: ['TruScore', 'Nutrition', 'ProductScan'],
     };
   }
 

@@ -4,6 +4,7 @@
 
 import * as SQLite from 'expo-sqlite';
 import { Product } from '../types/product';
+import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
 import { logger } from '../utils/logger';
 import { normalizeBarcode } from '../utils/barcodeNormalization';
 import { createDatabaseIndexes } from '../utils/databaseIndexes';
@@ -475,7 +476,7 @@ function parseJsonField<T>(raw: string | null | undefined, field: string): T | u
 }
 
 function convertRowToProduct(row: SQLiteProductRow): Product {
-  return {
+  const product: Product = {
     barcode: row.barcode,
     product_name: row.product_name || undefined,
     product_name_en: row.product_name_en || row.product_name || undefined,
@@ -511,5 +512,7 @@ function convertRowToProduct(row: SQLiteProductRow): Product {
     quality: row.quality || undefined,
     completion: row.completion || undefined,
   };
+  applyResolvedNutrientLevels(product);
+  return product;
 }
 

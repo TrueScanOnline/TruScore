@@ -3,6 +3,7 @@
 // Ensures best-quality data is used when multiple sources return results
 
 import { Product, ProductNutriments, Certification } from '../types/product';
+import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
 import { logger } from '../utils/logger';
 import { calculateDataCompleteness, formatCompletenessMetrics } from '../utils/dataCompleteness';
 import { powershellLogger } from '../utils/powershellLogger';
@@ -100,6 +101,7 @@ export function mergeProducts(
   }
   
   if (products.length === 1) {
+    applyResolvedNutrientLevels(products[0]);
     return products[0];
   }
   
@@ -595,7 +597,8 @@ export function mergeProducts(
       options
     );
   }
-  
+
+  applyResolvedNutrientLevels(mergedProduct);
   return mergedProduct;
 }
 

@@ -14,6 +14,7 @@ import { getUserCountryCode } from '../utils/countryDetection';
 import { powershellLogger } from '../utils/powershellLogger';
 import { buildVercelManualProductPayload } from '../utils/vercelProprietaryManualProduct';
 import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
+import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
 
 const STORAGE_KEY_PREFIX = '@truescan_manual_product_';
 const MAX_MANUAL_PRODUCTS = 100; // Limit to prevent storage bloat
@@ -96,6 +97,8 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
       completion: calculateCompletion(data),
       quality: calculateQuality(data),
     };
+
+    applyResolvedNutrientLevels(product);
 
     // Calculate Trust Score if we have enough data
     let productWithScore: ProductWithTrustScore;

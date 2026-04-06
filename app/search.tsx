@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,256 +12,204 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import type { SearchStackParamList } from '../src/navigation/tabStackParamLists';
+import type { TabParamList } from '../src/navigation/AppTabs';
+import type { RootStackParamList } from './_layout';
 import { useScanStore } from '../src/store/useScanStore';
+import { useFavoritesStore } from '../src/store/useFavoritesStore';
 import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
-import { isPremiumFeatureEnabled, PremiumFeature } from '../src/utils/premiumFeatures';
+import { canUseAdvancedSearch } from '../src/utils/premiumFeatures';
 import { fetchProduct } from '../src/services/productService';
 import { searchProducts } from '../src/services/productSearchService';
-import AdvancedSearchFilters, { SearchFilters } from '../src/components/AdvancedSearchFilters';
+import AdvancedSearchFilters from '../src/components/AdvancedSearchFilters';
+import SearchPaywallModal from '../src/components/SearchPaywallModal';
+import BlurredMatchCountTeaser from '../src/components/BlurredMatchCountTeaser';
+import {
+  SearchFilters,
+  DEFAULT_SEARCH_FILTERS,
+  hasActiveSearchFilters,
+  applySearchFilters,
+} from '../src/utils/searchFilterUtils';
 import { useTheme } from '../src/theme';
 
-type NavigationProp = NativeStackNavigationProp<SearchStackParamList>;
+type NavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<SearchStackParamList>,
+  CompositeNavigationProp<BottomTabNavigationProp<TabParamList>, NativeStackNavigationProp<RootStackParamList>>
+>;
 
 export default function SearchScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [fetchedResults, setFetchedResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [paywallVisible, setPaywallVisible] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [filters, setFilters] = useState<SearchFilters>({
-    trustScoreMin: null,
-    trustScoreMax: null,
-    ecoscoreGrade: null,
-    country: null,
-    certification: [],
-    allergenFree: false,
-    novaMax: null,
-    vegan: false,
-    organic: false,
-    local: false,
-  });
+  const [filters, setFilters] = useState<SearchFilters>({ ...DEFAULT_SEARCH_FILTERS });
+
   const { recentScans } = useScanStore();
+  const { favorites } = useFavoritesStore();
   const { subscriptionInfo } = useSubscriptionStore();
-  const canUseAdvancedSearch = isPremiumFeatureEnabled(PremiumFeature.ADVANCED_SEARCH, subscriptionInfo);
+  const premiumSearch = canUseAdvancedSearch(subscriptionInfo);
 
-  const applyFilters = useCallback((results: any[], currentFilters: SearchFilters): any[] => {
-    if (!canUseAdvancedSearch) {
-      return results; // No filtering if not premium
-    }
+  const filterContext = useMemo(() => {
+    const scannedBarcodes = new Set(recentScans.map((s) => s.barcode));
+    const favoriteBarcodes = new Set(favorites.map((f) => f.barcode));
+    return { scannedBarcodes, favoriteBarcodes };
+  }, [recentScans, favorites]);
 
-    return results.filter((item) => {
-      const product = item.product;
-      if (!product) return true; // Keep items without product data
+  const filteredResults = useMemo(
+    () => applySearchFilters(fetchedResults, filters, filterContext),
+    [fetchedResults, filters, filterContext]
+  );
 
-      // Trust Score filter
-      if (currentFilters.trustScoreMin !== null && (product.trust_score || 0) < currentFilters.trustScoreMin) {
-        return false;
-      }
-      if (currentFilters.trustScoreMax !== null && (product.trust_score || 0) > currentFilters.trustScoreMax) {
-        return false;
-      }
+  const filtersActive = hasActiveSearchFilters(filters);
+  const showFilterTeaser = !premiumSearch && filtersActive && fetchedResults.length > 0;
+  const listData = showFilterTeaser ? [] : premiumSearch ? filteredResults : fetchedResults;
 
-      // Eco-Score filter
-      if (currentFilters.ecoscoreGrade && product.ecoscore_grade?.toLowerCase() !== currentFilters.ecoscoreGrade.toLowerCase()) {
-        return false;
-      }
+  const openPaywall = useCallback(() => {
+    setPaywallVisible(true);
+  }, []);
 
-      // NOVA filter
-      if (currentFilters.novaMax !== null && (product.nova_group || 0) > currentFilters.novaMax) {
-        return false;
-      }
+  const goToSubscription = useCallback(() => {
+    setPaywallVisible(false);
+    navigation.navigate('Subscription');
+  }, [navigation]);
 
-      // Allergen free filter
-      if (currentFilters.allergenFree && product.allergens_tags && product.allergens_tags.length > 0) {
-        return false;
-      }
-
-      // Certification filters
-      if (currentFilters.certification && currentFilters.certification.length > 0) {
-        const productCerts = product.certifications?.map((c: any) => c.id?.toLowerCase()) || [];
-        const hasAnyCert = currentFilters.certification.some(cert => 
-          productCerts.includes(cert.toLowerCase())
-        );
-        if (!hasAnyCert) {
-          // If organic filter is on, check labels
-          if (currentFilters.organic && !product.labels_tags?.some((tag: string) => tag.toLowerCase().includes('organic'))) {
-            return false;
-          }
-          if (!currentFilters.organic && !hasAnyCert) {
-            return false;
-          }
-        }
+  const handleSearch = useCallback(
+    async (query: string) => {
+      if (!query.trim()) {
+        setFetchedResults([]);
+        setSearchError(null);
+        return;
       }
 
-      // Quick filters
-      if (currentFilters.organic) {
-        const hasOrganic = product.labels_tags?.some((tag: string) => 
-          tag.toLowerCase().includes('organic') || tag.toLowerCase().includes('bio')
-        ) || product.certifications?.some((c: any) => c.id?.toLowerCase().includes('organic'));
-        if (!hasOrganic) return false;
-      }
-
-      if (currentFilters.vegan) {
-        const hasVegan = product.labels_tags?.some((tag: string) => 
-          tag.toLowerCase().includes('vegan')
-        ) || product.categories_tags?.some((tag: string) => 
-          tag.toLowerCase().includes('vegan')
-        );
-        if (!hasVegan) return false;
-      }
-
-      return true;
-    });
-  }, [canUseAdvancedSearch]);
-
-  const handleSearch = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
+      setLoading(true);
       setSearchError(null);
-      return;
-    }
 
-    setLoading(true);
-    setSearchError(null);
-    // Don't dismiss keyboard here - let user continue typing
-
-    try {
-      const trimmedQuery = query.trim();
-      const results: any[] = [];
-
-      // Search in recent scans first (local)
-      const localResults = recentScans.filter(
-        (scan) =>
-          scan.barcode.includes(trimmedQuery) ||
-          (scan.productName && scan.productName.toLowerCase().includes(trimmedQuery.toLowerCase()))
-      );
-
-      // Convert local results to search format
-      localResults.forEach((scan) => {
-        results.push({
-          barcode: scan.barcode,
-          product: { barcode: scan.barcode, product_name: scan.productName },
-          source: 'local',
-          isLocal: true,
-        });
-      });
-
-      // If query looks like a barcode, try to fetch product
-      if (/^\d{8,14}$/.test(trimmedQuery)) {
-        try {
-          const product = await fetchProduct(trimmedQuery, false, false, false);
-          if (product) {
-            // Check if already in results
-            const exists = results.find(r => r.barcode === trimmedQuery);
-            if (!exists) {
-              results.unshift({ barcode: trimmedQuery, product, isDirect: true });
-            }
-          }
-        } catch {
-          // Continue with search
-        }
-      }
-
-      // Search across all databases (Open Food Facts, Open Beauty Facts, Open Products Facts, Open Pet Food Facts, USDA, UPCitemdb)
       try {
-        const databaseResults = await searchProducts(trimmedQuery, {
-          limit: 20,
-          includeOpenFoodFacts: true,
-          includeOpenBeautyFacts: true,
-          includeOpenProductsFacts: true,
-          includeOpenPetFoodFacts: true,
-          includeUSDA: true,
-          includeUPCitemdb: true,
+        const trimmedQuery = query.trim();
+        const results: any[] = [];
+
+        const localResults = recentScans.filter(
+          (scan) =>
+            scan.barcode.includes(trimmedQuery) ||
+            (scan.productName && scan.productName.toLowerCase().includes(trimmedQuery.toLowerCase()))
+        );
+
+        localResults.forEach((scan) => {
+          results.push({
+            barcode: scan.barcode,
+            product: { barcode: scan.barcode, product_name: scan.productName },
+            source: 'local',
+            isLocal: true,
+          });
         });
 
-        // Merge database results (avoid duplicates)
-        databaseResults.forEach((dbResult) => {
-          const exists = results.find(r => r.barcode === dbResult.barcode);
-          if (!exists) {
-            results.push({
-              barcode: dbResult.barcode,
-              product: dbResult.product,
-              source: dbResult.source,
-              relevance: dbResult.relevance,
-            });
+        if (/^\d{8,14}$/.test(trimmedQuery)) {
+          try {
+            const product = await fetchProduct(trimmedQuery, false, false, false);
+            if (product) {
+              const exists = results.find((r) => r.barcode === trimmedQuery);
+              if (!exists) {
+                results.unshift({ barcode: trimmedQuery, product, isDirect: true });
+              }
+            }
+          } catch {
+            /* continue */
           }
-        });
-      } catch (error) {
-        console.error('Database search error:', error);
-        // Continue with local results even if database search fails
-      }
-
-      // Apply filters if premium
-      const filteredResults = applyFilters(results, filters);
-      
-      // Sort by relevance if available, otherwise keep order
-      const sortedResults = filteredResults.sort((a, b) => {
-        if (a.relevance && b.relevance) {
-          return b.relevance - a.relevance;
         }
-        if (a.isDirect || a.isLocal) return -1;
-        if (b.isDirect || b.isLocal) return 1;
-        return 0;
-      });
 
-      setSearchResults(sortedResults);
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchError(t('search.error'));
-    } finally {
-      setLoading(false);
-    }
-  }, [recentScans, filters, applyFilters, t]);
+        try {
+          const databaseResults = await searchProducts(trimmedQuery, {
+            limit: 20,
+            includeOpenFoodFacts: true,
+            includeOpenBeautyFacts: true,
+            includeOpenProductsFacts: true,
+            includeOpenPetFoodFacts: true,
+            includeUSDA: true,
+            includeUPCitemdb: true,
+          });
+
+          databaseResults.forEach((dbResult) => {
+            const exists = results.find((r) => r.barcode === dbResult.barcode);
+            if (!exists) {
+              results.push({
+                barcode: dbResult.barcode,
+                product: dbResult.product,
+                source: dbResult.source,
+                relevance: dbResult.relevance,
+              });
+            }
+          });
+        } catch (error) {
+          console.error('Database search error:', error);
+        }
+
+        const sortedResults = results.sort((a, b) => {
+          if (a.relevance && b.relevance) {
+            return b.relevance - a.relevance;
+          }
+          if (a.isDirect || a.isLocal) return -1;
+          if (b.isDirect || b.isLocal) return 1;
+          return 0;
+        });
+
+        setFetchedResults(sortedResults);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchError(t('search.error'));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [recentScans, t]
+  );
 
   const handleResultPress = (barcode: string) => {
     navigation.navigate('Result', { barcode });
   };
 
   const handleSubmit = () => {
-    // Dismiss keyboard when user explicitly submits
     Keyboard.dismiss();
     handleSearch(searchQuery);
   };
 
-  // Debounce search to avoid too many requests
   useEffect(() => {
-    // Clear previous timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Don't search if query is empty
     if (!searchQuery.trim()) {
-      setSearchResults([]);
+      setFetchedResults([]);
       setSearchError(null);
       return;
     }
 
-    // Set up debounced search (wait 300ms after user stops typing)
     debounceTimerRef.current = setTimeout(() => {
       handleSearch(searchQuery);
     }, 300);
 
-    // Cleanup timer on unmount or when query changes
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery]); // Only depend on searchQuery, handleSearch is stable via useCallback
+  }, [searchQuery]);
+
+  const filterBadgeVisible = filtersActive;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Search Header */}
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View style={[styles.searchContainer, { backgroundColor: colors.surface }]}>
           <Ionicons name="search-outline" size={24} color={colors.textSecondary} style={styles.searchIcon} />
@@ -271,10 +219,7 @@ export default function SearchScreen() {
             placeholder={t('search.placeholder')}
             placeholderTextColor={colors.textSecondary}
             value={searchQuery}
-            onChangeText={(text) => {
-              setSearchQuery(text);
-              // Don't call handleSearch here - useEffect will handle debounced search
-            }}
+            onChangeText={(text) => setSearchQuery(text)}
             onSubmitEditing={handleSubmit}
             returnKeyType="search"
             autoCapitalize="none"
@@ -287,7 +232,7 @@ export default function SearchScreen() {
             <TouchableOpacity
               onPress={() => {
                 setSearchQuery('');
-                setSearchResults([]);
+                setFetchedResults([]);
                 setSearchError(null);
               }}
               style={styles.clearButton}
@@ -307,50 +252,58 @@ export default function SearchScreen() {
             )}
           </TouchableOpacity>
         </View>
-        {/* Advanced Filters Button */}
-        {canUseAdvancedSearch && (
+
+        {!premiumSearch && (
           <TouchableOpacity
-            style={[styles.filtersButton, { backgroundColor: colors.surface }]}
+            style={[styles.upgradeTeaserRow, { backgroundColor: colors.primary + '14', borderColor: colors.primary + '40' }]}
             onPress={() => setShowFilters(true)}
+            accessibilityRole="button"
           >
-            <Ionicons name="options-outline" size={20} color={colors.primary} />
-            <Text style={[styles.filtersButtonText, { color: colors.primary }]}>
-              {t('search.advancedFilters')}
-            </Text>
-            {(filters.trustScoreMin !== null || 
-              filters.trustScoreMax !== null || 
-              filters.ecoscoreGrade !== null || 
-              filters.novaMax !== null || 
-              filters.vegan || 
-              filters.organic || 
-              filters.local || 
-              filters.allergenFree || 
-              (filters.certification && filters.certification.length > 0)) && (
-              <View style={[styles.filterBadge, { backgroundColor: colors.primary }]}>
-                <Text style={styles.filterBadgeText}>●</Text>
-              </View>
-            )}
+            <Ionicons name="sparkles-outline" size={22} color={colors.primary} />
+            <View style={styles.upgradeTeaserText}>
+              <Text style={[styles.upgradeTeaserTitle, { color: colors.text }]}>{t('search.listTeaser.title')}</Text>
+              <Text style={[styles.upgradeTeaserSub, { color: colors.textSecondary }]} numberOfLines={2}>
+                {t('search.listTeaser.subtitle')}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.primary} />
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity
+          style={[styles.filtersButton, { backgroundColor: colors.surface }]}
+          onPress={() => setShowFilters(true)}
+          accessibilityRole="button"
+          accessibilityLabel={t('search.advancedFilters')}
+        >
+          <Ionicons name="options-outline" size={20} color={colors.primary} />
+          <Text style={[styles.filtersButtonText, { color: colors.primary }]}>{t('search.advancedFilters')}</Text>
+          {filterBadgeVisible && (
+            <View style={[styles.filterBadge, { backgroundColor: colors.primary }]}>
+              <Text style={styles.filterBadgeText}>●</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
-      {/* Search Results */}
       <View style={styles.content}>
-        {loading && searchResults.length === 0 ? (
+        {showFilterTeaser && (
+          <BlurredMatchCountTeaser count={filteredResults.length} onUnlockPress={openPaywall} />
+        )}
+
+        {loading && listData.length === 0 && !showFilterTeaser ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-              {t('search.searching')}
-            </Text>
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t('search.searching')}</Text>
           </View>
         ) : searchError ? (
           <View style={styles.centerContainer}>
             <Ionicons name="alert-circle-outline" size={64} color={colors.error} />
             <Text style={[styles.errorText, { color: colors.text }]}>{searchError}</Text>
           </View>
-        ) : searchResults.length > 0 ? (
+        ) : listData.length > 0 ? (
           <FlatList
-            data={searchResults}
+            data={listData}
             keyExtractor={(item, index) => `${item.barcode}-${index}`}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -372,10 +325,10 @@ export default function SearchScreen() {
                     <Text style={[styles.resultBarcode, { color: colors.textSecondary }]}>
                       {t('search.barcode')}: {item.barcode}
                     </Text>
-                    {item.product?.trust_score !== undefined && (
+                    {item.product?.trust_score !== undefined && item.product?.trust_score !== null && (
                       <View style={styles.resultScore}>
                         <Text style={[styles.resultScoreLabel, { color: colors.textSecondary }]}>
-                          {t('result.trustScore')}: 
+                          {t('result.trustScore')}:
                         </Text>
                         <Text style={[styles.resultScoreValue, { color: colors.primary }]}>
                           {item.product.trust_score}/100
@@ -389,26 +342,27 @@ export default function SearchScreen() {
             )}
             contentContainerStyle={styles.listContent}
           />
+        ) : showFilterTeaser ? (
+          <View style={styles.teaserListPlaceholder}>
+            <Text style={[styles.teaserListHint, { color: colors.textSecondary }]}>
+              {t('search.teaser.listPlaceholder')}
+            </Text>
+          </View>
         ) : searchQuery.length > 0 ? (
           <View style={styles.centerContainer}>
             <Ionicons name="search-outline" size={64} color={colors.textTertiary} />
             <Text style={[styles.emptyText, { color: colors.text }]}>{t('search.noResults')}</Text>
-            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
-              {t('search.noResultsMessage')}
-            </Text>
+            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>{t('search.noResultsMessage')}</Text>
           </View>
         ) : (
           <View style={styles.centerContainer}>
             <Ionicons name="search-outline" size={64} color={colors.textTertiary} />
             <Text style={[styles.emptyText, { color: colors.text }]}>{t('search.startSearch')}</Text>
-            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
-              {t('search.startSearchMessage')}
-            </Text>
+            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>{t('search.startSearchMessage')}</Text>
           </View>
         )}
       </View>
 
-      {/* Advanced Filters Modal */}
       <Modal
         visible={showFilters}
         animationType="slide"
@@ -417,16 +371,14 @@ export default function SearchScreen() {
       >
         <AdvancedSearchFilters
           filters={filters}
-          onFiltersChange={(newFilters) => {
-            setFilters(newFilters);
-            // Re-apply search with new filters
-            if (searchQuery.trim()) {
-              handleSearch(searchQuery);
-            }
-          }}
+          onFiltersChange={setFilters}
           onClose={() => setShowFilters(false)}
+          canUseAdvancedSearch={premiumSearch}
+          onRequestUpgrade={openPaywall}
         />
       </Modal>
+
+      <SearchPaywallModal visible={paywallVisible} onClose={() => setPaywallVisible(false)} onUpgradePress={goToSubscription} />
     </View>
   );
 }
@@ -467,6 +419,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  upgradeTeaserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    minHeight: 48,
+  },
+  upgradeTeaserText: {
+    flex: 1,
+  },
+  upgradeTeaserTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  upgradeTeaserSub: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
   content: {
     flex: 1,
   },
@@ -487,6 +462,16 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    flexGrow: 1,
+  },
+  teaserListPlaceholder: {
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  teaserListHint: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   resultItem: {
     flexDirection: 'row',
@@ -556,6 +541,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     gap: 8,
     position: 'relative',
+    minHeight: 48,
   },
   filtersButtonText: {
     fontSize: 14,
@@ -574,4 +560,3 @@ const styles = StyleSheet.create({
     fontSize: 8,
   },
 });
-

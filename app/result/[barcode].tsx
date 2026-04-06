@@ -168,6 +168,7 @@ function ResultScreenContent() {
   const [editMode, setEditMode] = useState(false);
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [shareType, setShareType] = useState<'truScore' | 'recall' | 'countryOfManufacture' | 'negativeTruScore' | 'productInfo' | 'insights' | 'palmOil' | 'nutrition' | 'ingredients' | 'processing' | 'allergens' | 'ecoscore'>('truScore');
+  const [shareInitialMessage, setShareInitialMessage] = useState('');
   const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number; hasImportedIngredients?: boolean } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isUserContributed, setIsUserContributed] = useState(false);
@@ -573,7 +574,8 @@ function ResultScreenContent() {
   // Handle sharing for specific card types
   const handleShare = (cardType: 'truScore' | 'recall' | 'countryOfManufacture' | 'negativeTruScore' | 'productInfo' | 'insights' | 'palmOil' | 'nutrition' | 'ingredients' | 'processing' | 'allergens' | 'ecoscore') => {
     if (!product) return;
-    
+
+    setShareInitialMessage('');
     setShareType(cardType);
     setShareModalVisible(true);
   };
@@ -1282,6 +1284,25 @@ function ResultScreenContent() {
             </View>
           )}
 
+        {/* Nutrition Facts — after TruScore / Score highlights & Values preference; immediately before Country of Manufacture */}
+        <NutritionTable
+          nutriments={product.nutriments}
+          nutrientLevels={product.nutrient_levels}
+          categoriesTags={product.categories_tags}
+          servingSize={product.serving_size}
+          onShare={() => handleShare('nutrition')}
+          onEdit={handleEditProduct}
+          shareContext={{
+            productName: product.product_name || product.product_name_en || '',
+            barcode: product.barcode,
+          }}
+          onRequestNutritionSharePrefill={(prefill) => {
+            setShareType('nutrition');
+            setShareInitialMessage(prefill);
+            setShareModalVisible(true);
+          }}
+        />
+
         {/* Country of Manufacture */}
         {(() => {
           // Helper function to determine if verify button should be shown
@@ -1703,8 +1724,6 @@ function ResultScreenContent() {
                 backgroundColor: colors.card,
                 borderWidth: 2,
                 borderColor: '#16a085',
-                marginTop: 16,
-                marginBottom: 16,
               },
             ]}
           >
@@ -1799,17 +1818,8 @@ function ResultScreenContent() {
         {/* Price Information */}
         <UniversalPricingCard 
           barcode={barcode} 
-          productName={product?.product_name || product?.product_name_en || undefined}
+          productName={product?.product_name || product.product_name_en || undefined}
           product={product}
-        />
-
-        {/* Nutrition Facts */}
-        <NutritionTable
-          nutriments={product.nutriments}
-          nutrientLevels={product.nutrient_levels}
-          servingSize={product.serving_size}
-          onShare={() => handleShare('nutrition')}
-          onEdit={handleEditProduct}
         />
 
         {/* Ingredients */}
@@ -2253,11 +2263,15 @@ function ResultScreenContent() {
       {product && (
         <ShareModal
           visible={shareModalVisible}
-          onClose={() => setShareModalVisible(false)}
+          onClose={() => {
+            setShareModalVisible(false);
+            setShareInitialMessage('');
+          }}
           product={product}
           truScore={truScore || undefined}
           shareType={shareType}
           country={shareType === 'countryOfManufacture' ? (displayManufacturingCountry || userContributedCountry?.country || undefined) : undefined}
+          initialCustomMessage={shareInitialMessage}
         />
       )}
     </SafeAreaView>
@@ -2488,6 +2502,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
     borderBottomWidth: 1,
+    marginBottom: 16,
   },
   productImage: {
     width: 200,
@@ -2555,11 +2570,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
+  /** Product page cards: consistent horizontal inset + vertical gap between sections */
   card: {
     borderRadius: 16,
     padding: 16,
-    margin: 16,
-    marginBottom: 0,
+    marginHorizontal: 16,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -3331,8 +3347,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   recallAlertBanner: {
-    margin: 16,
-    marginBottom: 0,
+    marginHorizontal: 16,
+    marginBottom: 16,
     padding: 12,
     borderRadius: 12,
     borderWidth: 2,

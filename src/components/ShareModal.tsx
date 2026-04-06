@@ -1,7 +1,7 @@
 // Share Modal - Platform picker for viral sharing
 // Allows users to select platform and customize share content
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,9 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
+import { getNutritionShareBurnData } from '../utils/nutritionShareCopy';
 import { ShareService } from '../features/sharing/services/ShareService';
 import { ShareContentBuilder } from '../features/sharing/services/ShareContentBuilder';
 import { ShareOptions, SharePlatform } from '../features/sharing/types';
@@ -32,6 +34,8 @@ interface ShareModalProps {
   truScore?: TruScoreResult | null;
   shareType?: 'truScore' | 'recall' | 'countryOfManufacture' | 'negativeTruScore' | 'productInfo' | 'insights' | 'palmOil' | 'nutrition' | 'ingredients' | 'processing' | 'allergens' | 'ecoscore';
   country?: string; // Optional country data for countryOfManufacture sharing
+  /** Seeds the optional user message when the modal opens (e.g. nutrition activity-equivalent note). */
+  initialCustomMessage?: string;
 }
 
 const PLATFORMS: Array<{
@@ -106,11 +110,42 @@ export default function ShareModal({
   truScore,
   shareType = 'truScore',
   country,
+  initialCustomMessage,
 }: ShareModalProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [sharing, setSharing] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<SharePlatform | null>(null);
   const [customMessage, setCustomMessage] = useState('');
+
+  const nutritionBurnData = useMemo(
+    () => (shareType === 'nutrition' ? getNutritionShareBurnData(product.nutriments) : null),
+    [shareType, product.nutriments, product.barcode]
+  );
+
+  const defaultNutritionMessage = useMemo(() => {
+    if (shareType !== 'nutrition' || !nutritionBurnData?.burn) return '';
+    const { burn } = nutritionBurnData;
+    return t('shareModal.nutritionDefaultMessage', {
+      walk: burn.walking,
+      run: burn.running,
+      cycle: burn.cycling,
+    });
+  }, [shareType, nutritionBurnData, t]);
+
+  useEffect(() => {
+    if (!visible) return;
+    const external = (initialCustomMessage ?? '').trim();
+    if (external) {
+      setCustomMessage(initialCustomMessage ?? '');
+      return;
+    }
+    if (shareType === 'nutrition' && defaultNutritionMessage) {
+      setCustomMessage(defaultNutritionMessage);
+    } else {
+      setCustomMessage('');
+    }
+  }, [visible, initialCustomMessage, shareType, defaultNutritionMessage]);
 
   const handleShare = async (platform: SharePlatform) => {
     try {
@@ -157,17 +192,25 @@ export default function ShareModal({
     onClose();
   };
 
-  // Preview share content (with custom message if provided)
   const baseContent = ShareContentBuilder.buildContent({
     product,
     truScore,
     item: shareType,
     platform: 'native',
   });
-  
-  const previewMessage = customMessage.trim() 
-    ? `${customMessage.trim()}\n\n${baseContent.message}`
-    : baseContent.message;
+
+  /** Nutrition: hook ("Check this out…") lives only in the message box; Summary shows the structured block below. Share still sends both. */
+  const previewMessage =
+    shareType === 'nutrition'
+      ? baseContent.message
+      : customMessage.trim()
+        ? `${customMessage.trim()}\n\n${baseContent.message}`
+        : baseContent.message;
+
+  const inputPlaceholder =
+    shareType === 'nutrition' && nutritionBurnData && !nutritionBurnData.burn
+      ? t('shareModal.nutritionPlaceholderNoBurn')
+      : t('shareModal.messagePlaceholder');
 
   return (
     <Modal
@@ -183,7 +226,7 @@ export default function ShareModal({
       >
         {/* Header */}
         <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Share Product</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('shareModal.headerTitle')}</Text>
           <TouchableOpacity
             onPress={handleClose}
             style={[styles.closeButton, { backgroundColor: colors.border }]}
@@ -201,20 +244,24 @@ export default function ShareModal({
           {/* Custom Message Input */}
           <View style={[styles.inputContainer, { backgroundColor: colors.card }]}>
             <Text style={[styles.inputLabel, { color: colors.text }]}>
-              Add your message (optional)
+              {t('shareModal.addMessageOptional')}
             </Text>
             <TextInput
-              style={[styles.textInput, { 
-                backgroundColor: colors.surface, 
-                color: colors.text,
-                borderColor: colors.border 
-              }]}
-              placeholder="Share your thoughts about this product..."
+              style={[
+                styles.textInput,
+                shareType === 'nutrition' && styles.textInputNutrition,
+                {
+                  backgroundColor: colors.surface,
+                  color: colors.text,
+                  borderColor: colors.border,
+                },
+              ]}
+              placeholder={inputPlaceholder}
               placeholderTextColor={colors.textSecondary}
               value={customMessage}
               onChangeText={setCustomMessage}
               multiline
-              numberOfLines={4}
+              numberOfLines={shareType === 'nutrition' ? 6 : 4}
               textAlignVertical="top"
               maxLength={500}
             />
@@ -223,10 +270,13 @@ export default function ShareModal({
             </Text>
           </View>
 
-          {/* Preview */}
+          {/* Summary (full outgoing share text) */}
           <View style={[styles.previewContainer, { backgroundColor: colors.card }]}>
-            <Text style={[styles.previewTitle, { color: colors.text }]}>Preview</Text>
-            <Text style={[styles.previewText, { color: colors.textSecondary }]} numberOfLines={8}>
+            <Text style={[styles.previewTitle, { color: colors.text }]}>{t('shareModal.summary')}</Text>
+            <Text
+              style={[styles.previewText, { color: colors.textSecondary }]}
+              {...(shareType === 'nutrition' ? {} : { numberOfLines: 8 })}
+            >
               {previewMessage}
             </Text>
             {baseContent.hashtags && baseContent.hashtags.length > 0 && (
@@ -428,6 +478,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     minHeight: 100,
     maxHeight: 150,
+  },
+  textInputNutrition: {
+    minHeight: 120,
+    maxHeight: 200,
   },
   charCount: {
     fontSize: 12,

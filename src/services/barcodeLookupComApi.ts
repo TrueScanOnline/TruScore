@@ -7,6 +7,7 @@
  */
 
 import { Product } from '../types/product';
+import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
 import { logger } from '../utils/logger';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
@@ -129,6 +130,7 @@ export async function fetchProductFromBarcodeLookupCom(barcode: string): Promise
       completion: 40,
     };
 
+    applyResolvedNutrientLevels(product);
     return product;
   } catch (error) {
     logger.debug('Error fetching from Barcode Lookup:', error);

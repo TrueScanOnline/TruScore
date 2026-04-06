@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     marginHorizontal: 16,
-    marginVertical: 8,
+    marginBottom: 16,
     borderWidth: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -137,8 +137,6 @@ const styles = StyleSheet.create({
   },
   cardResult: {
     maxHeight: 320,
-    marginTop: 16,
-    marginBottom: 16,
   },
   cardHeader: {
     flexDirection: 'row',

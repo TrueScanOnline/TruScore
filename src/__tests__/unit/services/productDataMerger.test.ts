@@ -20,7 +20,7 @@ describe('Product Data Merger', () => {
     const product2: Product = {
       barcode: '1234567890123',
       product_name: 'Test Product',
-      source: 'usda',
+      source: 'usda_fooddata',
       nutriments: {
         'energy-kcal': 100,
         fat: 5,

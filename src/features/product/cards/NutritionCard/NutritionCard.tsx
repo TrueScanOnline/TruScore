@@ -50,7 +50,12 @@ function NutritionCardContent({ product, onShare, premiumFeatures }: NutritionCa
         <NutritionTable
           nutriments={product.nutriments}
           nutrientLevels={product.nutrient_levels}
+          categoriesTags={product.categories_tags}
           servingSize={product.serving_size}
+          shareContext={{
+            productName: product.product_name || product.product_name_en || '',
+            barcode: product.barcode,
+          }}
         />
       </View>
     </CardPremiumGate>

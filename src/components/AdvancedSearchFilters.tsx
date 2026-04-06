@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -6,38 +6,46 @@ import {
   TouchableOpacity,
   ScrollView,
   Switch,
-  Alert,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
-import PremiumGate from './PremiumGate';
-import { PremiumFeature } from '../utils/premiumFeatures';
+import {
+  SearchFilters,
+  DEFAULT_SEARCH_FILTERS,
+  hasActiveSearchFilters,
+} from '../utils/searchFilterUtils';
 
-export interface SearchFilters {
-  trustScoreMin: number | null;
-  trustScoreMax: number | null;
-  ecoscoreGrade: string | null; // 'a' | 'b' | 'c' | 'd' | 'e' | null
-  country: string | null;
-  certification: string[]; // Array of certification IDs
-  allergenFree: boolean;
-  novaMax: number | null; // Max NOVA level (1-4)
-  vegan: boolean;
-  organic: boolean;
-  local: boolean;
-}
+export type { SearchFilters } from '../utils/searchFilterUtils';
 
 interface AdvancedSearchFiltersProps {
   filters: SearchFilters;
   onFiltersChange: (filters: SearchFilters) => void;
   onClose: () => void;
+  canUseAdvancedSearch: boolean;
+  onRequestUpgrade: () => void;
 }
 
-export default function AdvancedSearchFilters({ filters, onFiltersChange, onClose }: AdvancedSearchFiltersProps) {
+function parseTrustInput(raw: string): number | null {
+  const digits = raw.replace(/\D/g, '');
+  if (digits === '') return null;
+  const n = parseInt(digits, 10);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(100, Math.max(0, n));
+}
+
+export default function AdvancedSearchFilters({
+  filters,
+  onFiltersChange,
+  onClose,
+  canUseAdvancedSearch,
+  onRequestUpgrade,
+}: AdvancedSearchFiltersProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
 
-  const updateFilter = (key: keyof SearchFilters, value: any) => {
+  const updateFilter = <K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => {
     onFiltersChange({
       ...filters,
       [key]: value,
@@ -47,292 +55,347 @@ export default function AdvancedSearchFilters({ filters, onFiltersChange, onClos
   const toggleCertification = (certId: string) => {
     const current = filters.certification || [];
     const updated = current.includes(certId)
-      ? current.filter(id => id !== certId)
+      ? current.filter((id) => id !== certId)
       : [...current, certId];
     updateFilter('certification', updated);
   };
 
   const resetFilters = () => {
-    onFiltersChange({
-      trustScoreMin: null,
-      trustScoreMax: null,
-      ecoscoreGrade: null,
-      country: null,
-      certification: [],
-      allergenFree: false,
-      novaMax: null,
-      vegan: false,
-      organic: false,
-      local: false,
-    });
+    onFiltersChange({ ...DEFAULT_SEARCH_FILTERS });
   };
 
-  const hasActiveFilters = 
-    filters.trustScoreMin !== null ||
-    filters.trustScoreMax !== null ||
-    filters.ecoscoreGrade !== null ||
-    filters.country !== null ||
-    (filters.certification && filters.certification.length > 0) ||
-    filters.allergenFree ||
-    filters.novaMax !== null ||
-    filters.vegan ||
-    filters.organic ||
-    filters.local;
+  const active = hasActiveSearchFilters(filters);
 
   return (
-    <PremiumGate feature={PremiumFeature.ADVANCED_SEARCH}>
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>
-            {t('search.advancedFilters')}
-          </Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color={colors.text} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View style={styles.headerTextBlock}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('search.advancedFilters')}</Text>
+          {!canUseAdvancedSearch && (
+            <Text style={[styles.headerHint, { color: colors.textSecondary }]}>{t('search.teaser.modalHint')}</Text>
+          )}
+        </View>
+        <TouchableOpacity
+          onPress={onClose}
+          style={styles.closeButton}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.close')}
+        >
+          <Ionicons name="close" size={24} color={colors.text} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        {!canUseAdvancedSearch && (
+          <TouchableOpacity
+            style={[styles.unlockBanner, { backgroundColor: colors.primary + '18', borderColor: colors.primary + '44' }]}
+            onPress={onRequestUpgrade}
+            accessibilityRole="button"
+          >
+            <Ionicons name="star" size={20} color={colors.primary} />
+            <Text style={[styles.unlockBannerText, { color: colors.primary }]}>{t('search.teaser.unlockBanner')}</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
           </TouchableOpacity>
+        )}
+
+        {/* TruScore */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('result.trustScore')}</Text>
+          <View style={styles.rangeContainer}>
+            <View style={styles.trustInputCol}>
+              <Text style={[styles.rangeLabel, { color: colors.textSecondary }]}>{t('search.min')}</Text>
+              <TextInput
+                style={[
+                  styles.trustInput,
+                  { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface },
+                ]}
+                keyboardType="number-pad"
+                maxLength={3}
+                placeholder="—"
+                placeholderTextColor={colors.textTertiary}
+                value={filters.trustScoreMin != null ? String(filters.trustScoreMin) : ''}
+                onChangeText={(txt) => updateFilter('trustScoreMin', parseTrustInput(txt))}
+              />
+            </View>
+            <Text style={[styles.rangeSeparator, { color: colors.textSecondary }]}>–</Text>
+            <View style={styles.trustInputCol}>
+              <Text style={[styles.rangeLabel, { color: colors.textSecondary }]}>{t('search.max')}</Text>
+              <TextInput
+                style={[
+                  styles.trustInput,
+                  { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface },
+                ]}
+                keyboardType="number-pad"
+                maxLength={3}
+                placeholder="—"
+                placeholderTextColor={colors.textTertiary}
+                value={filters.trustScoreMax != null ? String(filters.trustScoreMax) : ''}
+                onChangeText={(txt) => updateFilter('trustScoreMax', parseTrustInput(txt))}
+              />
+            </View>
+          </View>
         </View>
 
-        <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-          {/* Trust Score Range */}
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t('result.trustScore')}
-            </Text>
-            <View style={styles.rangeContainer}>
+        {/* Nutri-Score */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('search.nutriscoreTitle')}</Text>
+          <View style={styles.gradeContainer}>
+            {(['a', 'b', 'c', 'd', 'e'] as const).map((grade) => (
               <TouchableOpacity
-                style={[styles.rangeButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                onPress={() => {
-                  // TODO: Open number picker for min
-                  Alert.alert(t('search.minTrustScore'), t('search.selectValue'));
-                }}
+                key={grade}
+                style={[
+                  styles.gradeButton,
+                  {
+                    backgroundColor:
+                      filters.nutriscoreGrade === grade ? colors.primary : colors.surface,
+                    borderColor: filters.nutriscoreGrade === grade ? colors.primary : colors.border,
+                  },
+                ]}
+                onPress={() =>
+                  updateFilter('nutriscoreGrade', filters.nutriscoreGrade === grade ? null : grade)
+                }
               >
-                <Text style={[styles.rangeLabel, { color: colors.textSecondary }]}>
-                  {t('search.min')}
-                </Text>
-                <Text style={[styles.rangeValue, { color: colors.text }]}>
-                  {filters.trustScoreMin !== null ? filters.trustScoreMin : '--'}
+                <Text
+                  style={[
+                    styles.gradeText,
+                    {
+                      color: filters.nutriscoreGrade === grade ? '#fff' : colors.text,
+                      fontWeight: filters.nutriscoreGrade === grade ? 'bold' : 'normal',
+                    },
+                  ]}
+                >
+                  {grade.toUpperCase()}
                 </Text>
               </TouchableOpacity>
-              <Text style={[styles.rangeSeparator, { color: colors.textSecondary }]}>-</Text>
+            ))}
+          </View>
+        </View>
+
+        {/* Eco-Score */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ecoscore.title')}</Text>
+          <View style={styles.gradeContainer}>
+            {(['a', 'b', 'c', 'd', 'e'] as const).map((grade) => (
               <TouchableOpacity
-                style={[styles.rangeButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                onPress={() => {
-                  // TODO: Open number picker for max
-                  Alert.alert(t('search.maxTrustScore'), t('search.selectValue'));
-                }}
+                key={grade}
+                style={[
+                  styles.gradeButton,
+                  {
+                    backgroundColor:
+                      filters.ecoscoreGrade === grade ? colors.primary : colors.surface,
+                    borderColor: filters.ecoscoreGrade === grade ? colors.primary : colors.border,
+                  },
+                ]}
+                onPress={() =>
+                  updateFilter('ecoscoreGrade', filters.ecoscoreGrade === grade ? null : grade)
+                }
               >
-                <Text style={[styles.rangeLabel, { color: colors.textSecondary }]}>
-                  {t('search.max')}
-                </Text>
-                <Text style={[styles.rangeValue, { color: colors.text }]}>
-                  {filters.trustScoreMax !== null ? filters.trustScoreMax : '--'}
+                <Text
+                  style={[
+                    styles.gradeText,
+                    {
+                      color: filters.ecoscoreGrade === grade ? '#fff' : colors.text,
+                      fontWeight: filters.ecoscoreGrade === grade ? 'bold' : 'normal',
+                    },
+                  ]}
+                >
+                  {grade.toUpperCase()}
                 </Text>
               </TouchableOpacity>
-            </View>
+            ))}
           </View>
+        </View>
 
-          {/* Eco-Score Grade */}
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t('ecoscore.title')}
-            </Text>
-            <View style={styles.gradeContainer}>
-              {(['a', 'b', 'c', 'd', 'e'] as const).map((grade) => (
-                <TouchableOpacity
-                  key={grade}
-                  style={[
-                    styles.gradeButton,
-                    {
-                      backgroundColor: filters.ecoscoreGrade === grade ? colors.primary : colors.surface,
-                      borderColor: filters.ecoscoreGrade === grade ? colors.primary : colors.border,
-                    },
-                  ]}
-                  onPress={() => {
-                    updateFilter('ecoscoreGrade', filters.ecoscoreGrade === grade ? null : grade);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.gradeText,
-                      {
-                        color: filters.ecoscoreGrade === grade ? '#fff' : colors.text,
-                        fontWeight: filters.ecoscoreGrade === grade ? 'bold' : 'normal',
-                      },
-                    ]}
-                  >
-                    {grade.toUpperCase()}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+        {/* Country tag (OFF-style e.g. en:nz) */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('search.countryFilter')}</Text>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
+            {t('search.countryFilterHint')}
+          </Text>
+          <TextInput
+            style={[
+              styles.countryInput,
+              { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface },
+            ]}
+            placeholder={t('search.countryPlaceholder')}
+            placeholderTextColor={colors.textTertiary}
+            autoCapitalize="none"
+            value={filters.country || ''}
+            onChangeText={(txt) => updateFilter('country', txt.trim() === '' ? null : txt.trim())}
+          />
+        </View>
 
-          {/* Quick Filters */}
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t('search.quickFilters')}
-            </Text>
-            <View style={styles.switchRow}>
+        {/* Quick diet */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('search.quickFilters')}</Text>
+          {(
+            [
+              ['leaf', 'vegan', filters.vegan, () => updateFilter('vegan', !filters.vegan)] as const,
+              ['flower', 'organic', filters.organic, () => updateFilter('organic', !filters.organic)] as const,
+              ['location', 'local', filters.local, () => updateFilter('local', !filters.local)] as const,
+              ['warning', 'allergenFree', filters.allergenFree, () => updateFilter('allergenFree', !filters.allergenFree)] as const,
+              [
+                'nutrition',
+                'glutenFree',
+                filters.glutenFree,
+                () => updateFilter('glutenFree', !filters.glutenFree),
+              ] as const,
+              ['water', 'dairyFree', filters.dairyFree, () => updateFilter('dairyFree', !filters.dairyFree)] as const,
+              [
+                'leaf-outline',
+                'palmOilFree',
+                filters.palmOilFree,
+                () => updateFilter('palmOilFree', !filters.palmOilFree),
+              ] as const,
+            ] as const
+          ).map(([icon, labelKey, value, onToggle]) => (
+            <View key={labelKey} style={[styles.switchRow, { borderBottomColor: colors.border + '33' }]}>
               <View style={styles.switchContent}>
-                <Ionicons name="leaf" size={20} color="#16a085" />
+                <Ionicons name={icon as any} size={20} color={colors.primary} />
                 <Text style={[styles.switchLabel, { color: colors.text }]}>
-                  {t('search.vegan')}
+                  {t(`search.filterLabels.${labelKey}`)}
                 </Text>
               </View>
               <Switch
                 trackColor={{ false: colors.border, true: colors.primary }}
                 thumbColor={colors.card}
                 ios_backgroundColor={colors.border}
-                value={filters.vegan}
-                onValueChange={(value) => updateFilter('vegan', value)}
+                value={value}
+                onValueChange={onToggle}
+                accessibilityLabel={t(`search.filterLabels.${labelKey}`)}
               />
             </View>
+          ))}
+        </View>
 
-            <View style={styles.switchRow}>
-              <View style={styles.switchContent}>
-                <Ionicons name="flower" size={20} color="#16a085" />
-                <Text style={[styles.switchLabel, { color: colors.text }]}>
-                  {t('search.organic')}
-                </Text>
-              </View>
-              <Switch
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={colors.card}
-                ios_backgroundColor={colors.border}
-                value={filters.organic}
-                onValueChange={(value) => updateFilter('organic', value)}
-              />
-            </View>
-
-            <View style={styles.switchRow}>
-              <View style={styles.switchContent}>
-                <Ionicons name="location" size={20} color={colors.primary} />
-                <Text style={[styles.switchLabel, { color: colors.text }]}>
-                  {t('search.local')}
-                </Text>
-              </View>
-              <Switch
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={colors.card}
-                ios_backgroundColor={colors.border}
-                value={filters.local}
-                onValueChange={(value) => updateFilter('local', value)}
-              />
-            </View>
-
-            <View style={styles.switchRow}>
-              <View style={styles.switchContent}>
-                <Ionicons name="warning" size={20} color="#ff6b6b" />
-                <Text style={[styles.switchLabel, { color: colors.text }]}>
-                  {t('search.allergenFree')}
-                </Text>
-              </View>
-              <Switch
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={colors.card}
-                ios_backgroundColor={colors.border}
-                value={filters.allergenFree}
-                onValueChange={(value) => updateFilter('allergenFree', value)}
-              />
-            </View>
-          </View>
-
-          {/* NOVA Processing Level */}
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t('result.processingLevel')}
-            </Text>
-            <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-              {t('search.novaFilterDescription')}
-            </Text>
-            <View style={styles.novaContainer}>
-              {([1, 2, 3, 4] as const).map((level) => (
-                <TouchableOpacity
-                  key={level}
-                  style={[
-                    styles.novaButton,
-                    {
-                      backgroundColor: filters.novaMax !== null && filters.novaMax >= level ? colors.primary : colors.surface,
-                      borderColor: filters.novaMax !== null && filters.novaMax >= level ? colors.primary : colors.border,
-                    },
-                  ]}
-                  onPress={() => {
-                    updateFilter('novaMax', filters.novaMax === level ? null : level);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.novaText,
-                      {
-                        color: filters.novaMax !== null && filters.novaMax >= level ? '#fff' : colors.text,
-                        fontWeight: filters.novaMax !== null && filters.novaMax >= level ? 'bold' : 'normal',
-                      },
-                    ]}
-                  >
-                    NOVA {level}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.novaLabel,
-                      {
-                        color: filters.novaMax !== null && filters.novaMax >= level ? '#fff' : colors.textSecondary,
-                      },
-                    ]}
-                  >
-                    {t(`nova.${level}`)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Certifications */}
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t('result.certifications')}
-            </Text>
-            <View style={styles.certContainer}>
-              {['organic', 'fair-trade', 'rainforest-alliance', 'b-corp', 'non-gmo'].map((cert) => (
-                <TouchableOpacity
-                  key={cert}
-                  style={[
-                    styles.certButton,
-                    {
-                      backgroundColor: filters.certification?.includes(cert) ? colors.primary : colors.surface,
-                      borderColor: filters.certification?.includes(cert) ? colors.primary : colors.border,
-                    },
-                  ]}
-                  onPress={() => toggleCertification(cert)}
-                >
-                  <Text
-                    style={[
-                      styles.certText,
-                      {
-                        color: filters.certification?.includes(cert) ? '#fff' : colors.text,
-                      },
-                    ]}
-                  >
-                    {t(`search.cert.${cert}`)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Reset Button */}
-          {hasActiveFilters && (
-            <TouchableOpacity
-              style={[styles.resetButton, { backgroundColor: colors.surface }]}
-              onPress={resetFilters}
-            >
-              <Ionicons name="refresh-outline" size={20} color={colors.textSecondary} />
-              <Text style={[styles.resetButtonText, { color: colors.textSecondary }]}>
-                {t('search.resetFilters')}
+        {/* My products */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('search.myProductsSection')}</Text>
+          <View style={[styles.switchRow, { borderBottomColor: colors.border + '33' }]}>
+            <View style={styles.switchContent}>
+              <Ionicons name="time-outline" size={20} color={colors.primary} />
+              <Text style={[styles.switchLabel, { color: colors.text }]}>
+                {t('search.filterLabels.previouslyScannedOnly')}
               </Text>
-            </TouchableOpacity>
-          )}
-        </ScrollView>
-      </View>
-    </PremiumGate>
+            </View>
+            <Switch
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.card}
+              ios_backgroundColor={colors.border}
+              value={filters.previouslyScannedOnly}
+              onValueChange={(v) => updateFilter('previouslyScannedOnly', v)}
+            />
+          </View>
+          <View style={styles.switchRow}>
+            <View style={styles.switchContent}>
+              <Ionicons name="heart-outline" size={20} color={colors.primary} />
+              <Text style={[styles.switchLabel, { color: colors.text }]}>
+                {t('search.filterLabels.favoritesOnly')}
+              </Text>
+            </View>
+            <Switch
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.card}
+              ios_backgroundColor={colors.border}
+              value={filters.favoritesOnly}
+              onValueChange={(v) => updateFilter('favoritesOnly', v)}
+            />
+          </View>
+        </View>
+
+        {/* NOVA */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('result.processingLevel')}</Text>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
+            {t('search.novaFilterDescription')}
+          </Text>
+          <View style={styles.novaContainer}>
+            {([1, 2, 3, 4] as const).map((level) => (
+              <TouchableOpacity
+                key={level}
+                style={[
+                  styles.novaButton,
+                  {
+                    backgroundColor:
+                      filters.novaMax !== null && filters.novaMax >= level ? colors.primary : colors.surface,
+                    borderColor:
+                      filters.novaMax !== null && filters.novaMax >= level ? colors.primary : colors.border,
+                  },
+                ]}
+                onPress={() => updateFilter('novaMax', filters.novaMax === level ? null : level)}
+              >
+                <Text
+                  style={[
+                    styles.novaText,
+                    {
+                      color: filters.novaMax !== null && filters.novaMax >= level ? '#fff' : colors.text,
+                      fontWeight: filters.novaMax !== null && filters.novaMax >= level ? 'bold' : 'normal',
+                    },
+                  ]}
+                >
+                  NOVA {level}
+                </Text>
+                <Text
+                  style={[
+                    styles.novaLabel,
+                    {
+                      color:
+                        filters.novaMax !== null && filters.novaMax >= level ? '#fff' : colors.textSecondary,
+                    },
+                  ]}
+                >
+                  {t(`nova.${level}`)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Certifications */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('result.certifications')}</Text>
+          <View style={styles.certContainer}>
+            {['organic', 'fair-trade', 'rainforest-alliance', 'b-corp', 'non-gmo'].map((cert) => (
+              <TouchableOpacity
+                key={cert}
+                style={[
+                  styles.certButton,
+                  {
+                    backgroundColor: filters.certification?.includes(cert) ? colors.primary : colors.surface,
+                    borderColor: filters.certification?.includes(cert) ? colors.primary : colors.border,
+                  },
+                ]}
+                onPress={() => toggleCertification(cert)}
+              >
+                <Text
+                  style={[
+                    styles.certText,
+                    {
+                      color: filters.certification?.includes(cert) ? '#fff' : colors.text,
+                    },
+                  ]}
+                >
+                  {t(`search.cert.${cert}`)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {active && (
+          <TouchableOpacity
+            style={[styles.resetButton, { backgroundColor: colors.surface }]}
+            onPress={resetFilters}
+            accessibilityRole="button"
+          >
+            <Ionicons name="refresh-outline" size={20} color={colors.textSecondary} />
+            <Text style={[styles.resetButtonText, { color: colors.textSecondary }]}>
+              {t('search.resetFilters')}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -343,24 +406,53 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingTop: 50,
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
   },
+  headerTextBlock: {
+    flex: 1,
+    paddingRight: 8,
+  },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
   },
+  headerHint: {
+    fontSize: 13,
+    marginTop: 6,
+    lineHeight: 18,
+  },
   closeButton: {
     padding: 4,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unlockBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+    minHeight: 48,
+  },
+  unlockBannerText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
   },
   content: {
     flex: 1,
   },
   contentContainer: {
     padding: 16,
+    paddingBottom: 32,
   },
   section: {
     borderRadius: 12,
@@ -384,27 +476,36 @@ const styles = StyleSheet.create({
   },
   rangeContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     gap: 12,
   },
-  rangeButton: {
+  trustInputCol: {
     flex: 1,
+  },
+  trustInput: {
     borderWidth: 1,
     borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    minHeight: 48,
   },
   rangeLabel: {
     fontSize: 12,
-    marginBottom: 4,
-  },
-  rangeValue: {
-    fontSize: 16,
-    fontWeight: '600',
+    marginBottom: 6,
   },
   rangeSeparator: {
     fontSize: 18,
     fontWeight: 'bold',
+    paddingBottom: 10,
+  },
+  countryInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 15,
+    minHeight: 48,
   },
   gradeContainer: {
     flexDirection: 'row',
@@ -415,11 +516,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     alignItems: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
   },
   gradeText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   switchRow: {
@@ -428,16 +531,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    minHeight: 48,
   },
   switchContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     flex: 1,
+    paddingRight: 8,
   },
   switchLabel: {
     fontSize: 15,
+    flex: 1,
   },
   novaContainer: {
     flexDirection: 'row',
@@ -451,6 +556,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
+    minHeight: 44,
   },
   novaText: {
     fontSize: 14,
@@ -468,9 +574,11 @@ const styles = StyleSheet.create({
   },
   certButton: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 16,
     borderWidth: 1,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   certText: {
     fontSize: 13,
@@ -484,10 +592,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
     marginTop: 8,
+    minHeight: 48,
   },
   resetButtonText: {
     fontSize: 15,
     fontWeight: '600',
   },
 });
-

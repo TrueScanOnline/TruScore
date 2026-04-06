@@ -18,6 +18,7 @@ import { getUserContributedProduct, USER_CONTRIBUTED_MERGE_RACE_MS } from './use
 import { extractPalmOilAnalysis, formatCertifications } from './openFoodFacts';
 import { applyConfidenceScore } from '../utils/confidenceScoring';
 import { calculateTrustScore } from '../utils/trustScore';
+import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
 import { removeCachedTruScore } from '../utils/truScoreCache';
 import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
 import { isWebSearchFallback } from './webSearchFallback';
@@ -272,6 +273,7 @@ export async function mergeUserContributedData(product: Product, barcode: string
     });
     
     logger.debug(`[ProductCacheService] ✅ User-contributed data merged`);
+    applyResolvedNutrientLevels(product);
     return product;
   } catch (error) {
     // Use dynamic import to break require cycle

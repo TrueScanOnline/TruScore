@@ -174,6 +174,11 @@ export function isFeaturePremium(feature: PremiumFeature): boolean {
  * @param subscriptionInfo - Current subscription status
  * @returns true if feature is enabled, false otherwise
  */
+/** True when the user may apply advanced search filters and see filtered results (respects global gating). */
+export function canUseAdvancedSearch(subscriptionInfo: SubscriptionInfo): boolean {
+  return isPremiumFeatureEnabled(PremiumFeature.ADVANCED_SEARCH, subscriptionInfo);
+}
+
 export function isPremiumFeatureEnabled(
   feature: PremiumFeature,
   subscriptionInfo: SubscriptionInfo

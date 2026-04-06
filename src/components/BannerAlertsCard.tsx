@@ -132,8 +132,7 @@ export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) 
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 8,
+    marginBottom: 16,
     borderRadius: 12,
     padding: 16,
     maxHeight: 300, // Limit height, allow scrolling if many alerts

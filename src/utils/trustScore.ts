@@ -5,6 +5,7 @@ import { calculateTruScore, buildTruScoreAnalysis } from '../lib/truscoreEngine'
 import { countOpenPillarHiddenTermHits } from '../lib/truscoreEngine/pillars/openPillarHiddenTerms';
 import { scoreBodyMvpAdditives } from '../lib/truscoreEngine/pillars/bodyAdditiveScoring';
 import { getCachedTruScore, cacheTruScore } from './truScoreCache';
+import { applyResolvedNutrientLevels } from './resolveNutrientLevels';
 import { logger } from './logger';
 import { powershellLogger } from './powershellLogger';
 
@@ -53,6 +54,10 @@ function hasSufficientDataForTrustScore(product: Product): boolean {
  * Now includes caching to avoid recalculation
  */
 export async function calculateTrustScore(product: Product): Promise<ProductWithTrustScore> {
+  // Fill missing traffic-light levels from per-100g nutriments (OFF often omits nutrient_levels when
+  // server-side compute is skipped; see Open Food Facts Food.pm compute_nutrient_levels).
+  applyResolvedNutrientLevels(product);
+
   // Check if we have sufficient data for a meaningful TruScore
   const hasRealData = hasSufficientDataForTrustScore(product);
   
