@@ -2,6 +2,10 @@
  * Planet v19 — Packaging Fallback (Eco-Score absent only).
  * Jurisdiction rules: Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 (seed rules).
  * Policy: Planet_Scoring_Specification_v19 (Excel).
+ *
+ * Annex alignment: (1) only primary consumer rows — drop explicit `food_contact` “no”;
+ * (2) product-level `packaging_text_in_languages` applies per row only when there is a single
+ * primary component, else use each row’s own `recycling` / `packaging_text_in_languages`.
  */
 
 import type { PackagingItem, Product } from '../../../types/product';
@@ -33,7 +37,7 @@ export function resolvePlanetJurisdiction(product?: Product | null): PlanetJuris
 }
 
 function flattenPackagingTextInLanguages(
-  packagingTextInLanguages: Product['packaging_text_in_languages']
+  packagingTextInLanguages: Record<string, string> | undefined | null
 ): string {
   if (!packagingTextInLanguages || typeof packagingTextInLanguages !== 'object') return '';
   const parts: string[] = [];
@@ -41,6 +45,21 @@ function flattenPackagingTextInLanguages(
     if (typeof v === 'string' && v.trim()) parts.push(v);
   }
   return parts.join(' \n ');
+}
+
+/**
+ * Annex v2: score **primary consumer packaging** only. OFF may list outer/transport rows; drop explicit
+ * non–food-contact components when `food_contact` is present and negative.
+ */
+export function filterPrimaryConsumerPackagingItems(items: PackagingItem[]): PackagingItem[] {
+  return items.filter((item) => {
+    const fc = item.food_contact;
+    if (fc === undefined || fc === null || fc === '') return true;
+    const n = String(fc).toLowerCase().replace(/^en:/g, '');
+    if (n === 'no' || n === 'false') return false;
+    if (n.includes('not-in-contact') || n.includes('non-food-contact')) return false;
+    return true;
+  });
 }
 
 function normaliseEvidence(s: string | undefined | null): string {
@@ -123,10 +142,26 @@ export function dispositionFromRecyclingEvidence(
 
 function dispositionForPackagingItem(
   item: PackagingItem,
-  supplementalBlob: string
+  supplementalForItem: string
 ): PackagingDisposition {
   const recycling = typeof item.recycling === 'string' ? item.recycling : undefined;
-  return dispositionFromRecyclingEvidence(recycling, supplementalBlob);
+  return dispositionFromRecyclingEvidence(recycling, supplementalForItem);
+}
+
+/**
+ * Product-level `packaging_text_in_languages` is document-wide copy; applying it to every row
+ * over-credits multi-pack products. Only smear onto each component when there is a **single**
+ * primary row, or attach per-row text from `item.packaging_text_in_languages` when present.
+ */
+function supplementalTextForPackagingItem(
+  item: PackagingItem,
+  globalPackagingText: string,
+  primaryCount: number
+): string {
+  const perItem = flattenPackagingTextInLanguages(item.packaging_text_in_languages);
+  if (perItem) return perItem;
+  if (primaryCount === 1) return globalPackagingText;
+  return '';
 }
 
 export interface PackagingFallbackResult {
@@ -144,8 +179,9 @@ export interface PackagingFallbackResult {
  */
 export function computePackagingFallback(product: Product): PackagingFallbackResult {
   const jurisdiction = resolvePlanetJurisdiction(product);
-  const items = (product.packagings || []).filter((p) => p && typeof p === 'object') as PackagingItem[];
-  const supplemental = flattenPackagingTextInLanguages(product.packaging_text_in_languages);
+  const rawItems = (product.packagings || []).filter((p) => p && typeof p === 'object') as PackagingItem[];
+  const items = filterPrimaryConsumerPackagingItems(rawItems);
+  const globalPackagingText = flattenPackagingTextInLanguages(product.packaging_text_in_languages);
 
   if (jurisdiction === 'GLOBAL') {
     return {
@@ -153,7 +189,7 @@ export function computePackagingFallback(product: Product): PackagingFallbackRes
       jurisdiction,
       dispositions: [],
       packagingsComplete: product.packagings_complete,
-      structuredPackagingPresent: items.length > 0,
+      structuredPackagingPresent: rawItems.length > 0,
     };
   }
 
@@ -167,7 +203,10 @@ export function computePackagingFallback(product: Product): PackagingFallbackRes
     };
   }
 
-  const dispositions = items.map((it) => dispositionForPackagingItem(it, supplemental));
+  const primaryCount = items.length;
+  const dispositions = items.map((it) =>
+    dispositionForPackagingItem(it, supplementalTextForPackagingItem(it, globalPackagingText, primaryCount))
+  );
   const complete = product.packagings_complete === true;
   const anyNot = dispositions.some((d) => d === 'not_recyclable');
   const anyKerbside = dispositions.some((d) => d === 'kerbside_recyclable');

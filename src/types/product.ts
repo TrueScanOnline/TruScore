@@ -109,6 +109,10 @@ export interface PackagingItem {
   material?: string; // e.g., "en:plastic", "en:cardboard"
   shape?: string; // e.g., "en:bottle", "en:box"
   recycling?: string; // e.g., "en:recyclable", "en:non-recyclable"
+  /** OFF: explicit non–food-contact / outer packaging — excluded from Planet v19 primary fallback. */
+  food_contact?: string;
+  /** Optional per-component packaging notes (structured import / moderation). */
+  packaging_text_in_languages?: Record<string, string>;
   [key: string]: any;
 }
 

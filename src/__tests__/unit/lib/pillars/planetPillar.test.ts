@@ -81,4 +81,18 @@ describe('Planet Pillar (v19)', () => {
     const result = calculatePlanetPillar(product);
     expect(result.score).toBe(15);
   });
+
+  test('product packaging_text_in_languages does not grant +2 across multiple empty-recycling rows', () => {
+    const product: Product = {
+      ...baseProduct,
+      ecoscore_grade: 'unknown',
+      true_scan_market: 'AU',
+      packagings_complete: true,
+      packaging_text_in_languages: { en: 'Widely recycled at kerbside' },
+      packagings: [{ recycling: '' }, { recycling: '' }],
+    };
+    const result = calculatePlanetPillar(product);
+    expect(result.details.packagingFallbackPoints ?? 0).toBe(0);
+    expect(result.score).toBe(15);
+  });
 });
