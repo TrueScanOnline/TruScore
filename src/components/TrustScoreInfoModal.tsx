@@ -87,7 +87,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                   <Text style={styles.formulaFlagText}>25</Text>
                 </View>
                 <Text style={[styles.formulaLabel, { color: colors.textSecondary }]}>
-                  {t('result.planet')} - Eco-Score + packaging + palm oil
+                  {t('result.planet')} - Eco-Score (v19); packaging fallback only if Eco-Score missing
                 </Text>
               </View>
               <View style={styles.formulaRow}>
@@ -130,7 +130,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>2</Text>
             </View>
             <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.step2') || 'Calculate Planet score (0-25) using Eco-Score, packaging recyclability, and palm oil detection'}
+              {t('infoModal.trustScore.step2') || 'Calculate Planet score (0–25): Eco-Score mapping when grade exists; otherwise packaging fallback (+2/+1/0) per Planet v19 Annex v2. Palm is display-only on Planet in MVP.'}
             </Text>
           </View>
           <View style={styles.stepItem}>
@@ -287,19 +287,19 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#16a085" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Eco-Score (A=25, B=20, C=15, D=10, E=5)
+                  Eco-Score A +7, B +3, C −1, D −3, E −7 (from base 15)
                 </Text>
               </View>
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#16a085" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Packaging Recyclability (+5 if fully recyclable)
+                  Packaging fallback +2 / +1 / 0 only when Eco-Score grade is missing (AU/NZ kerbside rules)
                 </Text>
               </View>
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#16a085" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Palm Oil Detection (-8 if non-sustainable)
+                  Palm oil: shown in product context; 0 Planet points in MVP (v19)
                 </Text>
               </View>
             </View>
@@ -471,10 +471,11 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             {t('infoModal.trustScore.planetSource') || 'Planet Pillar (0-25 points)'}
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
-            • Eco-Score (French Agence de la Transition Écologique system) - Direct conversion: A=25, B=20, C=15, D=10, E=5{'\n'}
-            • Packaging Recyclability (Open Food Facts) - Fully recyclable: +5 bonus{'\n'}
-            • Palm Oil Detection (Open Food Facts) - Non-sustainable palm: -8 penalty{'\n'}
-            • Source: Open Food Facts API with Agribalyse LCA database
+            • Planet_Scoring_Specification_v19: base 15; Eco-Score grades A–E adjust by +7, +3, −1, −3, −7 when ecoscore_grade is present{'\n'}
+            • If Eco-Score is applied, packaging is not scored separately on Planet{'\n'}
+            • Packaging fallback (Eco-Score absent): +2 / +1 / 0 from OFF packaging fields per Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 (AU/NZ kerbside; GLOBAL → 0){'\n'}
+            • Palm / deforestation: display only in MVP — no Planet pillar adjustment from palm alone (v19){'\n'}
+            • Source: Open Food Facts (Eco-Score + packaging components)
           </Text>
         </View>
 
@@ -499,7 +500,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
             • Ingredient Text Analysis (Open Food Facts) - Hidden term detection{'\n'}
-            • Hidden Terms: "parfum", "fragrance", "natural flavor", "proprietary blend" - 1-2 terms: -10, ≥3 terms: -20{'\n'}
+            • Hidden Terms: {'\u201c'}parfum{'\u201d'}, {'\u201c'}fragrance{'\u201d'}, {'\u201c'}natural flavor{'\u201d'}, {'\u201c'}proprietary blend{'\u201d'} — 1–2 terms: -10, ≥3 terms: -20{'\n'}
             • Ingredients Disclosure: Full=15, {'>'}80%=10, 50-80%=5, None=-5{'\n'}
             • Origin: No origin = -8 penalty (was -15){'\n'}
             • Percentage Disclosure - Bonus for full ingredient percentages{'\n'}

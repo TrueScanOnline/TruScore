@@ -1,5 +1,4 @@
-// Facebook sharing implementation
-// Uses Facebook SDK or fallback to native share
+// Facebook sharing — link preview comes from the destination URL; optional quote prefills text.
 
 import { ShareContent, ShareResult } from '../types';
 import { Share } from 'react-native';
@@ -7,35 +6,26 @@ import { logger } from '../../../utils/logger';
 import * as Linking from 'expo-linking';
 
 export class FacebookShare {
-  /**
-   * Share to Facebook
-   * Uses Facebook Share Dialog if available, otherwise falls back to native share
-   */
   static async share(content: ShareContent): Promise<ShareResult> {
     try {
-      // Try Facebook Share Dialog URL
-      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(content.url || '')}`;
-      
-      // Check if Facebook app is installed
-      const canOpen = await Linking.canOpenURL(facebookUrl);
-      
-      if (canOpen) {
+      const u = encodeURIComponent(content.url || '');
+      const quote = encodeURIComponent((content.message || '').substring(0, 600));
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${quote}`;
+
+      try {
         await Linking.openURL(facebookUrl);
         return {
           success: true,
           platform: 'facebook',
         };
+      } catch (linkErr) {
+        logger.warn('Facebook sharer URL failed, falling back to native share', linkErr);
       }
 
-      // Fallback to native share
-      // Combine message and URL to prevent auto-append
-      const combinedMessage = content.url 
-        ? `${content.message}\n\n${content.url}`
-        : content.message;
+      const combinedMessage = content.url ? `${content.message}\n\n${content.url}` : content.message;
       const result = await Share.share({
         message: combinedMessage,
         title: content.title,
-        // Don't pass url separately
       });
 
       return {
@@ -52,5 +42,3 @@ export class FacebookShare {
     }
   }
 }
-
-

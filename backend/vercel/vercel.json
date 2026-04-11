@@ -17,10 +17,6 @@
       "maxDuration": 60,
       "memory": 2048
     },
-    "api/fsanz-health.ts": {
-      "maxDuration": 30,
-      "memory": 1024
-    },
     "api/manufacturing-country.ts": {
       "maxDuration": 30,
       "memory": 1024
@@ -48,12 +44,28 @@
       "destination": "/api/fsanz-database?country=:country"
     },
     {
+      "source": "/api/fsanz-health",
+      "destination": "/api/fsanz-database?__health=1"
+    },
+    {
+      "source": "/api/share-event",
+      "destination": "/api/product-preview?__share_event=1"
+    },
+    {
       "source": "/.well-known/apple-app-site-association",
-      "destination": "/api/.well-known/apple-app-site-association"
+      "destination": "/api/well-known-deep-links?kind=apple"
     },
     {
       "source": "/.well-known/assetlinks.json",
-      "destination": "/api/.well-known/assetlinks.json"
+      "destination": "/api/well-known-deep-links?kind=assetlinks"
+    },
+    {
+      "source": "/api/.well-known/apple-app-site-association",
+      "destination": "/api/well-known-deep-links?kind=apple"
+    },
+    {
+      "source": "/api/.well-known/assetlinks.json",
+      "destination": "/api/well-known-deep-links?kind=assetlinks"
     },
     {
       "source": "/barcode/:barcode",

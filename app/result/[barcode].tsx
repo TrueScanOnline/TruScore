@@ -49,7 +49,8 @@ import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModa
 import AdditivesRiskCard from '../../src/components/AdditivesRiskCard';
 import ProcessingLevelModal from '../../src/components/ProcessingLevelModal';
 import CameraCaptureModal from '../../src/components/CameraCaptureModal';
-import { extractManufacturingCountry, calculateEcoScore } from '../../src/services/openFoodFacts';
+import { extractManufacturingCountry, calculateEcoScore, extractPalmOilAnalysis } from '../../src/services/openFoodFacts';
+import { generateInsights } from '../../src/lib/valuesInsights';
 import { generateProductFlags } from '../../src/utils/productFlags';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
@@ -341,7 +342,6 @@ function ResultScreenContent() {
           valuesPreferences.environmentalEnabled
         )) {
           try {
-            const { generateInsights } = require('../../src/lib/valuesInsights');
             const generatedInsights = generateInsights(product, valuesPreferences);
             if (generatedInsights && generatedInsights.length > 0) {
               insights = generatedInsights;
@@ -1086,7 +1086,6 @@ function ResultScreenContent() {
             // Ensure palm_oil_analysis exists before generating flags (Values Insights / scoring)
             if (product.ingredients_text && !product.palm_oil_analysis) {
               // Re-extract palm oil analysis if missing (shouldn't happen, but safety check)
-              const { extractPalmOilAnalysis } = require('../../src/services/openFoodFacts');
               try {
                 product.palm_oil_analysis = extractPalmOilAnalysis(product);
               } catch (error) {
@@ -1263,30 +1262,56 @@ function ResultScreenContent() {
                   <InsightsCarousel
                     insights={productPageValuesInsights}
                     productName={product?.product_name || product?.product_name_en}
+                    onRequestProductShare={() => handleShare('insights')}
                   />
                 </View>
               ) : null}
             </View>
           )}
 
-        {/* Nutrition Facts — after TruScore / Score highlights & Values preference; immediately before Country of Manufacture */}
-        <NutritionTable
-          nutriments={product.nutriments}
-          nutrientLevels={product.nutrient_levels}
-          categoriesTags={product.categories_tags}
-          servingSize={product.serving_size}
-          onShare={() => handleShare('nutrition')}
-          onEdit={handleEditProduct}
-          shareContext={{
-            productName: product.product_name || product.product_name_en || '',
-            barcode: product.barcode,
-          }}
-          onRequestNutritionSharePrefill={(prefill) => {
-            setShareType('nutrition');
-            setShareInitialMessage(prefill);
-            setShareModalVisible(true);
-          }}
-        />
+        {/* Nutrition Facts — tap card or footer to edit; share/edit icons unchanged */}
+        <Pressable
+          onPress={handleEditProduct}
+          style={({ pressed }) => [pressed && { opacity: 0.97 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('result.nutritionFacts')}
+          accessibilityHint={t(
+            'result.nutritionCardOpenEditA11y',
+            'Opens edit product to update nutrition information.'
+          )}
+        >
+          <NutritionTable
+            nutriments={product.nutriments}
+            nutrientLevels={product.nutrient_levels}
+            categoriesTags={product.categories_tags}
+            servingSize={product.serving_size}
+            onShare={() => handleShare('nutrition')}
+            onEdit={handleEditProduct}
+            shareContext={{
+              productName: product.product_name || product.product_name_en || '',
+              barcode: product.barcode,
+            }}
+            onRequestNutritionSharePrefill={(prefill) => {
+              setShareType('nutrition');
+              setShareInitialMessage(prefill);
+              setShareModalVisible(true);
+            }}
+            cardFooter={
+              <TouchableOpacity
+                onPress={handleEditProduct}
+                activeOpacity={0.7}
+                style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('result.addNutritionFactsHere', 'Add nutrition facts here')}
+              >
+                <Ionicons name="add-circle-outline" size={20} color="#16a085" />
+                <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
+                  {t('result.addNutritionFactsHere', 'Add nutrition facts here')}
+                </Text>
+              </TouchableOpacity>
+            }
+          />
+        </Pressable>
 
         {/* Country of Manufacture */}
         {(() => {
@@ -1756,21 +1781,30 @@ function ResultScreenContent() {
           <CarbonFootprintCard product={product} premiumFeatures={[]} layout="result" />
         )}
 
-        {/* Ethics / Certifications — always show; update opens manual entry (labels_tags → Vercel manual_products) */}
-        <View
-          style={[
+        {/* Ethics / Certifications — tap card to edit labels (manual entry modal) */}
+        <Pressable
+          onPress={handleEditProduct}
+          style={({ pressed }) => [
             styles.card,
             styles.certificationsCardFrame,
-            { backgroundColor: colors.card, borderColor: '#16a085' },
+            {
+              backgroundColor: colors.card,
+              borderColor: '#16a085',
+              opacity: pressed ? 0.92 : 1,
+            },
           ]}
+          accessibilityRole="button"
+          accessibilityLabel={t('result.certifications')}
+          accessibilityHint={t('result.certificationsCardOpenEditA11y', 'Opens edit product to update certifications')}
         >
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderTop}>
-              <View style={styles.cardHeaderLeft}>
-                <Ionicons name="shield-checkmark" size={24} color="#16a085" />
-              </View>
+          <View style={styles.certificationsCardHeaderRow}>
+            <View style={styles.certificationsCardTitleRow}>
+              <Ionicons name="shield-checkmark" size={24} color="#16a085" />
+              <Text style={[styles.cardTitle, styles.certificationsCardTitleText, { color: colors.text }]}>
+                {t('result.certifications')}
+              </Text>
             </View>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.certifications')}</Text>
+            <Ionicons name="create-outline" size={22} color={colors.primary} accessibilityLabel={t('common.edit', 'Edit')} />
           </View>
           {product.certifications && product.certifications.length > 0 ? (
             <View style={styles.certificationsContainer}>
@@ -1782,23 +1816,23 @@ function ResultScreenContent() {
             <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
               {t(
                 'result.certificationsEmpty',
-                'No certifications on file. Use Update certifications to add labels from the pack (e.g. organic, fair trade).'
+                'No certifications on file. Tap this card to add labels from the pack (e.g. organic, fair trade).'
               )}
             </Text>
           )}
           <TouchableOpacity
-            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
             onPress={handleEditProduct}
             activeOpacity={0.7}
+            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
             accessibilityRole="button"
-            accessibilityLabel={t('result.updateCertifications', 'Update certifications')}
+            accessibilityLabel={t('result.addCertificationsHere', 'Add certifications here')}
           >
-            <Ionicons name="create-outline" size={20} color="#16a085" />
+            <Ionicons name="add-circle-outline" size={20} color="#16a085" />
             <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
-              {t('result.updateCertifications', 'Update certifications')}
+              {t('result.addCertificationsHere', 'Add certifications here')}
             </Text>
           </TouchableOpacity>
-        </View>
+        </Pressable>
 
         {/* Price Information */}
         <UniversalPricingCard 
@@ -1851,7 +1885,24 @@ function ResultScreenContent() {
           const borderColor = hasNegativeIndicators ? '#ff6b6b' : '#16a085';
           
           return (
-            <View style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor }]}>
+            <Pressable
+              onPress={handleEditProduct}
+              style={({ pressed }) => [
+                styles.card,
+                {
+                  backgroundColor: colors.card,
+                  borderWidth: 2,
+                  borderColor,
+                  opacity: pressed ? 0.96 : 1,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('result.ingredients')}
+              accessibilityHint={t(
+                'result.ingredientsCardOpenEditA11y',
+                'Opens edit product to update ingredients.'
+              )}
+            >
               <View style={styles.cardHeader}>
                 {/* Top line: Icons */}
                 <View style={styles.cardHeaderTop}>
@@ -1912,12 +1963,41 @@ function ResultScreenContent() {
                 </View>
               );
             })()}
-          </View>
+              <TouchableOpacity
+                onPress={handleEditProduct}
+                activeOpacity={0.7}
+                style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('result.addIngredientsHere', 'Add ingredients here')}
+              >
+                <Ionicons name="add-circle-outline" size={20} color="#16a085" />
+                <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
+                  {t('result.addIngredientsHere', 'Add ingredients here')}
+                </Text>
+              </TouchableOpacity>
+          </Pressable>
           );
         })()}
 
         {(!product.ingredients_text || !product.ingredients_text.trim()) && (
-          <View style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#16a085' }]}>
+          <Pressable
+            onPress={handleEditProduct}
+            style={({ pressed }) => [
+              styles.card,
+              {
+                backgroundColor: colors.card,
+                borderWidth: 2,
+                borderColor: '#16a085',
+                opacity: pressed ? 0.96 : 1,
+              },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('result.ingredients')}
+            accessibilityHint={t(
+              'result.ingredientsCardOpenEditA11y',
+              'Opens edit product to update ingredients.'
+            )}
+          >
             <View style={styles.cardHeader}>
               <View style={styles.cardHeaderTop}>
                 <View style={styles.cardHeaderLeft}>
@@ -1945,10 +2025,22 @@ function ResultScreenContent() {
             <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
               {t(
                 'result.ingredientsEmpty',
-                'No ingredients on file. Tap edit to add them from the pack.'
+                'No ingredients on file. Tap this card or the button below to add them from the pack.'
               )}
             </Text>
-          </View>
+            <TouchableOpacity
+              onPress={handleEditProduct}
+              activeOpacity={0.7}
+              style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('result.addIngredientsHere', 'Add ingredients here')}
+            >
+              <Ionicons name="add-circle-outline" size={20} color="#16a085" />
+              <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
+                {t('result.addIngredientsHere', 'Add ingredients here')}
+              </Text>
+            </TouchableOpacity>
+          </Pressable>
         )}
 
         {/* Allergens & Additives - Premium Feature */}
@@ -3059,6 +3151,22 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     marginTop: 16,
     marginBottom: 16,
+  },
+  certificationsCardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  certificationsCardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    minWidth: 0,
+    gap: 8,
+  },
+  certificationsCardTitleText: {
+    flexShrink: 1,
   },
   certificationsContainer: {
     flexDirection: 'row',

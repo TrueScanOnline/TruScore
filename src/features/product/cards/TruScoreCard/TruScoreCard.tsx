@@ -15,6 +15,7 @@ import ConfidenceBadge from '../../../../components/ConfidenceBadge';
 import TruScoreInfoModal from '../../../../components/TrustScoreInfoModal';
 import ExplainerModal from '../../../../components/ExplainerModal';
 import { generateProductFlags, ProductFlag } from '../../../../utils/productFlags';
+import { extractPalmOilAnalysis } from '../../../../services/openFoodFacts';
 import { useTheme } from '../../../../theme';
 import { useFavoritesStore } from '../../../../store/useFavoritesStore';
 import { CardPremiumGate } from '../../../premium/CardPremiumGate';
@@ -113,8 +114,9 @@ function TruScoreCardContent({ barcode, product, onShare, premiumFeatures }: Tru
   // Ensure palm_oil_analysis exists for flag generation
   const productForFlags = product ? {
     ...product,
-    palm_oil_analysis: product.palm_oil_analysis || (product.ingredients_text ? 
-      require('../../../../services/openFoodFacts').extractPalmOilAnalysis(product) : undefined),
+    palm_oil_analysis:
+      product.palm_oil_analysis ||
+      (product.ingredients_text ? extractPalmOilAnalysis(product) : undefined),
   } : undefined;
 
   const flags = productForFlags ? generateProductFlags(productForFlags) : [];

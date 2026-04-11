@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../i18n';
 
+export type PlanetPackagingMarketSetting = 'auto' | 'AU' | 'NZ';
+
 interface SettingsStore {
   hasCompletedOnboarding: boolean;
   /** ISO timestamp when user acknowledged legal disclaimers during onboarding; null if not yet accepted */
@@ -10,12 +12,18 @@ interface SettingsStore {
   language: 'en' | 'es' | 'fr';
   units: 'metric' | 'imperial';
   analyticsEnabled: boolean;
+  /**
+   * When AU/NZ, Planet packaging fallback (Eco-Score absent) uses that kerbside ruleset.
+   * `auto` uses product.true_scan_market if present, else device locale / defaults (see planetPackagingFallback).
+   */
+  planetPackagingMarket: PlanetPackagingMarketSetting;
   setHasCompletedOnboarding: (value: boolean) => Promise<void>;
   setLegalDisclaimersAcceptedAt: (value: string | null) => Promise<void>;
   setDarkMode: (value: boolean) => Promise<void>;
   setLanguage: (value: 'en' | 'es' | 'fr') => Promise<void>;
   setUnits: (value: 'metric' | 'imperial') => Promise<void>;
   setAnalyticsEnabled: (value: boolean) => Promise<void>;
+  setPlanetPackagingMarket: (value: PlanetPackagingMarketSetting) => Promise<void>;
   initializeStore: () => Promise<void>;
 }
 
@@ -29,6 +37,7 @@ const defaultSettings = {
   language: 'en' as const,
   units: 'metric' as const,
   analyticsEnabled: false,
+  planetPackagingMarket: 'auto' as PlanetPackagingMarketSetting,
 };
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
@@ -39,6 +48,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   language: 'en' as const,
   units: 'metric' as const,
   analyticsEnabled: false,
+  planetPackagingMarket: 'auto' as PlanetPackagingMarketSetting,
 
   setHasCompletedOnboarding: async (value) => {
     console.log('[SettingsStore] Setting hasCompletedOnboarding to:', value);
@@ -70,6 +80,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   setAnalyticsEnabled: async (value) => {
     set({ analyticsEnabled: value });
+    await saveSettings();
+  },
+
+  setPlanetPackagingMarket: async (value) => {
+    set({ planetPackagingMarket: value });
     await saveSettings();
   },
 
@@ -132,11 +147,22 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
           legalDisclaimersAcceptedAt = parsed.legalDisclaimersAcceptedAt;
         }
 
+        let planetPackagingMarket: PlanetPackagingMarketSetting = defaultSettings.planetPackagingMarket;
+        if (
+          'planetPackagingMarket' in parsed &&
+          (parsed.planetPackagingMarket === 'auto' ||
+            parsed.planetPackagingMarket === 'AU' ||
+            parsed.planetPackagingMarket === 'NZ')
+        ) {
+          planetPackagingMarket = parsed.planetPackagingMarket;
+        }
+
         const settings = { 
           ...defaultSettings, 
           ...parsed,
           hasCompletedOnboarding, // Explicitly use our checked value
           legalDisclaimersAcceptedAt,
+          planetPackagingMarket,
         };
         
         console.log('[SettingsStore] Final merged settings:', {
@@ -180,6 +206,7 @@ async function saveSettings() {
         language: state.language,
         units: state.units,
         analyticsEnabled: state.analyticsEnabled,
+        planetPackagingMarket: state.planetPackagingMarket,
       })
     );
   } catch (error) {

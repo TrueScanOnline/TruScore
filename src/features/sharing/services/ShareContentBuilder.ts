@@ -2,23 +2,13 @@
 // Creates platform-optimized content for sharing
 // Uses universal links that open the app directly or redirect to app stores
 
-import { ShareContent, ShareOptions, ShareableItem } from '../types';
-import { generateUniversalLink } from '../../../utils/linking';
+import { ShareContent, ShareOptions } from '../types';
+import { buildShareUrl } from '../../../utils/shareUrl';
 import { logger } from '../../../utils/logger';
-import { Platform } from 'react-native';
+import { extractManufacturingCountry, calculateEcoScore } from '../../../services/openFoodFacts';
 import { getNutritionShareBurnData, buildNutritionShareBodyLines } from '../../../utils/nutritionShareCopy';
 
 export class ShareContentBuilder {
-  /**
-   * Generate universal link with app store fallback
-   * Universal links (https://truescan.app) automatically:
-   * - Open app if installed (iOS Universal Links / Android App Links)
-   * - Redirect to App Store/Play Store if app not installed
-   */
-  private static generateUniversalLink(barcode: string): string {
-    return generateUniversalLink(barcode);
-  }
-
   /**
    * Build share content based on item type and platform
    * All share content now uses universal links that open the app directly
@@ -26,8 +16,14 @@ export class ShareContentBuilder {
    */
   static buildContent(options: ShareOptions): ShareContent {
     const { product, truScore, item, platform = 'native' } = options;
-    // Use universal link instead of website URL - opens app directly or redirects to app stores
-    const universalLink = this.generateUniversalLink(product.barcode);
+    const universalLink = buildShareUrl(product.barcode, {
+      context: item,
+      source:
+        platform && platform !== 'native' && platform !== 'moreApps' ? platform : undefined,
+      utmSource: 'app',
+      utmMedium: 'share',
+      utmCampaign: item,
+    });
     const productName = product.product_name || product.product_name_en || 'this product';
 
     switch (item) {
@@ -168,7 +164,6 @@ export class ShareContentBuilder {
       country = options.country;
     } else {
       // Try to extract from product
-      const { extractManufacturingCountry } = require('../../../services/openFoodFacts');
       const extractedCountry = extractManufacturingCountry(product);
       if (extractedCountry) {
         country = extractedCountry;
@@ -413,7 +408,6 @@ export class ShareContentBuilder {
     platform: ShareOptions['platform']
   ): ShareContent {
     // Calculate Eco-Score from product
-    const { calculateEcoScore } = require('../../../services/openFoodFacts');
     const ecoScore = calculateEcoScore(product);
     const score = ecoScore?.score || 0;
     const grade = ecoScore?.grade || (score >= 80 ? 'a' : score >= 70 ? 'b' : score >= 55 ? 'c' : score >= 40 ? 'd' : 'e');
@@ -450,22 +444,28 @@ export class ShareContentBuilder {
    */
   static optimizeForPlatform(content: ShareContent, platform: ShareOptions['platform']): ShareContent {
     switch (platform) {
-      case 'twitter':
-        // Twitter: 280 character limit, hook in first line
-        const twitterMessage = content.message.length > 280 
-          ? content.message.substring(0, 250) + '...\n\n' + content.url
-          : content.message + '\n\n' + content.url;
+      case 'twitter': {
+        let text = content.message;
+        if (content.url) {
+          text = text.split(content.url).join('').replace(/\n{3,}/g, '\n\n').trim();
+        }
+        const max = 220;
+        if (text.length > max) {
+          text = `${text.substring(0, max - 1)}…`;
+        }
         return {
           ...content,
-          message: twitterMessage.substring(0, 280),
-          hashtags: content.hashtags?.slice(0, 3), // Limit hashtags for Twitter
+          message: text,
+          hashtags: content.hashtags?.slice(0, 3),
         };
+      }
       
       case 'facebook':
-        // Facebook: Storytelling, longer format, community feel
         return {
           ...content,
-          message: content.message + '\n\n👥 Join 1M+ users discovering the truth about products\n📱 Free to download - no sign-up required',
+          message:
+            content.message +
+            '\n\n📱 Free to download — see the full story when you open the link.',
         };
       
       case 'instagram':

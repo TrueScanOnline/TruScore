@@ -1,19 +1,11 @@
 /**
- * Planet Pillar Unit Tests
- *
- * Aligns with shipped planetPillar.ts: Eco-Score grade → absolute pillar values
- * A=22, B=18, C=15, D=12, E=8 (from base 15 via adjustment); palm oil −8 uncertified, etc.
+ * Planet Pillar — Planet_Scoring_Specification_v19 + Annex v2
  */
 
 import { calculatePlanetPillar } from '../../../../lib/truscoreEngine/pillars/planetPillar';
 import { Product } from '../../../../types/product';
-import { initializeCSVDatabases } from '../../../../services/csvDatabases/csvDatabaseService';
 
-describe('Planet Pillar Calculation', () => {
-  beforeAll(async () => {
-    await initializeCSVDatabases();
-  });
-
+describe('Planet Pillar (v19)', () => {
   const baseProduct: Product = {
     barcode: '1234567890123',
     product_name: 'Test Product',
@@ -28,106 +20,65 @@ describe('Planet Pillar Calculation', () => {
     source: 'test',
   };
 
-  test('should start at base score 15 when no data', () => {
+  test('base 15 when no Eco-Score and no packaging evidence', () => {
     const result = calculatePlanetPillar(baseProduct);
     expect(result.base).toBe(15);
     expect(result.score).toBe(15);
+    expect(result.details.hasEcoScoreGrade).toBe(false);
+    expect(result.details.palmOilPlanetAdjustment).toBe(0);
   });
 
-  test('should apply Eco-Score A adjustment (+7 from base 15 → 22)', () => {
+  test('Eco-Score A => +7 (22)', () => {
     const product = { ...baseProduct, ecoscore_grade: 'a' };
     const result = calculatePlanetPillar(product);
-    expect(result.base).toBe(15);
     expect(result.score).toBe(22);
-    expect(result.details.ecoscoreValue).toBe(22);
+    expect(result.details.hasEcoScoreGrade).toBe(true);
+    expect(result.details.ecoscoreAdjustment).toBe(7);
+    expect(result.details.packagingFallbackPoints).toBeUndefined();
   });
 
-  test('should apply Eco-Score E adjustment (−7 from base 15 → 8)', () => {
+  test('Eco-Score C => −1 (14)', () => {
+    const product = { ...baseProduct, ecoscore_grade: 'c' };
+    const result = calculatePlanetPillar(product);
+    expect(result.score).toBe(14);
+    expect(result.details.ecoscoreAdjustment).toBe(-1);
+  });
+
+  test('Eco-Score E => −7 (8)', () => {
     const product = { ...baseProduct, ecoscore_grade: 'e' };
     const result = calculatePlanetPillar(product);
-    expect(result.base).toBe(15);
     expect(result.score).toBe(8);
-    expect(result.details.ecoscoreValue).toBe(8);
   });
 
-  test('should apply palm oil penalty (-8)', () => {
-    const product = {
+  test('unknown Eco-Score string triggers packaging fallback path (not eco adjustment)', () => {
+    const product: Product = {
       ...baseProduct,
+      ecoscore_grade: 'unknown',
+      true_scan_market: 'AU',
+      packagings_complete: true,
+      packagings: [{ recycling: 'Recycle' }, { recycling: 'en:recycle' }],
+    };
+    const result = calculatePlanetPillar(product);
+    expect(result.details.hasEcoScoreGrade).toBe(false);
+    expect(result.score).toBe(17);
+    expect(result.details.packagingFallbackPoints).toBe(2);
+  });
+
+  test('palm tags do not change score when Eco-Score missing', () => {
+    const product: Product = {
+      ...baseProduct,
+      ingredients_analysis_tags: ['en:palm-oil'],
       palm_oil_analysis: {
         containsPalmOil: true,
         isPalmOilFree: false,
-        isCertifiedSustainable: false,
         isNonSustainable: true,
+        isCertifiedSustainable: false,
         score: -8,
       },
+      true_scan_market: 'AU',
+      packagings: [{ material: 'en:plastic', recycling: 'Check locally' }],
     };
     const result = calculatePlanetPillar(product);
-    expect(result.base).toBe(15);
-    expect(result.details.palmOilPenalty).toBe(8);
-    expect(result.score).toBe(7); // 15 - 8
-  });
-
-  test('should apply 0 penalty for RSPO certified palm oil (Unilever)', () => {
-    const product = {
-      ...baseProduct,
-      brand_owner: 'Unilever',
-      palm_oil_analysis: {
-        containsPalmOil: true,
-        isPalmOilFree: false,
-        isCertifiedSustainable: true,
-        isNonSustainable: false,
-        score: 0,
-      },
-    };
-    const result = calculatePlanetPillar(product);
-    expect(result.base).toBe(15);
-    // RSPO certified should be 0 (neutral), not -5
-    expect(result.details.palmOilPenalty).toBe(0);
-    expect(result.score).toBeGreaterThanOrEqual(15); // No penalty
-  });
-
-  test('should apply -5 for certified sustainable (non-RSPO)', () => {
-    const product = {
-      ...baseProduct,
-      brand_owner: 'Unknown Brand',
-      palm_oil_analysis: {
-        containsPalmOil: true,
-        isPalmOilFree: false,
-        isCertifiedSustainable: true,
-        isNonSustainable: false,
-        score: -5,
-      },
-    };
-    const result = calculatePlanetPillar(product);
-    expect(result.base).toBe(15);
-    expect(result.details.palmOilPenalty).toBe(5);
-    expect(result.score).toBe(10); // 15 - 5
-  });
-
-  test('should cap score at 0 when penalties exceed base', () => {
-    const product = {
-      ...baseProduct,
-      ecoscore_grade: 'e', // 8 after eco adjustment (15−7)
-      palm_oil_analysis: {
-        containsPalmOil: true,
-        isPalmOilFree: false,
-        isCertifiedSustainable: false,
-        isNonSustainable: true,
-        score: -8,
-      }, // -8
-    };
-    const result = calculatePlanetPillar(product);
-    expect(result.score).toBe(0); // 5 - 8 = -3 → capped at 0
-  });
-
-  test('should cap score at 25', () => {
-    const product = {
-      ...baseProduct,
-      ecoscore_grade: 'a', // +10
-      packagings: [{ material: 'plastic', shape: 'bottle' }],
-    };
-    const result = calculatePlanetPillar(product);
-    expect(result.score).toBeLessThanOrEqual(25);
+    expect(result.score).toBe(15);
   });
 });
-

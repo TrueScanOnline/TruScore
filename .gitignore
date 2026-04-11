@@ -57,3 +57,5 @@ test-results-*.json
 
 # Local scratch / one-off extraction (do not ship)
 .tmp_*
+.vercel
+.env*.local

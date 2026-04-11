@@ -32,6 +32,11 @@ import { getTruscoreCertificationPickerTags } from '../services/ethicsCertificat
 import { Product } from '../types/product';
 import { extractProductDataFromPhoto, verifyOCRData } from '../services/photoOcrService';
 import { logger } from '../utils/logger';
+import { useSettingsStore } from '../store/useSettingsStore';
+import {
+  parseWeightNutrientInputToGramsPer100g,
+  prefillManualNutritionFromProduct,
+} from '../utils/manualEditNutritionPrefill';
 
 interface ManualProductEntryModalProps {
   visible: boolean;
@@ -52,6 +57,7 @@ export default function ManualProductEntryModal({
 }: ManualProductEntryModalProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const units = useSettingsStore((s) => s.units);
   const [loading, setLoading] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
 
@@ -85,24 +91,27 @@ export default function ManualProductEntryModal({
     if (visible && initialProduct && editMode) {
       setProductName(initialProduct.product_name || '');
       setBrand(initialProduct.brands || '');
-      setIngredients(initialProduct.ingredients_text || '');
+      setIngredients(
+        initialProduct.ingredients_text ||
+          initialProduct.ingredients_text_en ||
+          ''
+      );
       setServingSize(initialProduct.serving_size || '');
       setQuantity(initialProduct.quantity || '');
       const countryRaw = (initialProduct.manufacturing_places || initialProduct.countries || '').trim();
       setSelectedManufacturingCountry(countryRaw ? findCountryByName(countryRaw) ?? null : null);
       setImageUri(initialProduct.image_url || initialProduct.image_front_url || null);
-      
-      // Pre-fill nutrition data
-      if (initialProduct.nutriments) {
-        setEnergy(initialProduct.nutriments.energy?.toString() || '');
-        setFat(initialProduct.nutriments.fat?.toString() || '');
-        setSaturatedFat(initialProduct.nutriments['saturated-fat']?.toString() || '');
-        setCarbs(initialProduct.nutriments.carbohydrates?.toString() || '');
-        setSugars(initialProduct.nutriments.sugars?.toString() || '');
-        setFiber(initialProduct.nutriments.fiber?.toString() || '');
-        setProtein(initialProduct.nutriments.proteins?.toString() || '');
-        setSalt(initialProduct.nutriments.salt?.toString() || '');
-      }
+
+      // Nutrition: same per-100g resolution and rounding as NutritionTable (respects metric/imperial)
+      const preNut = prefillManualNutritionFromProduct(initialProduct, units);
+      setEnergy(preNut.energy);
+      setFat(preNut.fat);
+      setSaturatedFat(preNut.saturatedFat);
+      setCarbs(preNut.carbs);
+      setSugars(preNut.sugars);
+      setFiber(preNut.fiber);
+      setProtein(preNut.protein);
+      setSalt(preNut.salt);
       
       // Pre-fill allergens/additives (convert tags back to text for editing)
       const allergenText = initialProduct.allergens_tags?.map(tag => 
@@ -120,11 +129,18 @@ export default function ManualProductEntryModal({
       const labelParts: string[] = [];
       if (Array.isArray(initialProduct.labels_tags)) {
         labelParts.push(...initialProduct.labels_tags);
-      } else if (Array.isArray(initialProduct.labels_hierarchy)) {
+      }
+      if (Array.isArray(initialProduct.labels_hierarchy)) {
         labelParts.push(...initialProduct.labels_hierarchy);
       }
-      const normalizedCerts = [...new Set(labelParts.map((t) => t.trim().toLowerCase()).filter(Boolean))].filter((t) =>
-        pickerAllow.has(t)
+      if (Array.isArray(initialProduct.certifications)) {
+        for (const c of initialProduct.certifications) {
+          const tag = (c.tag || c.id || '').trim();
+          if (tag) labelParts.push(tag);
+        }
+      }
+      const normalizedCerts = [...new Set(labelParts.map((tag) => tag.trim().toLowerCase()).filter(Boolean))].filter(
+        (tag) => pickerAllow.has(tag)
       );
       setSelectedCertificationTags(normalizedCerts.sort());
     } else if (visible && !editMode) {
@@ -147,7 +163,7 @@ export default function ManualProductEntryModal({
       setAllergensAdditives('');
       setSelectedCertificationTags([]);
     }
-  }, [visible, initialProduct, editMode]);
+  }, [visible, initialProduct, editMode, units]);
 
   const handleImageCapture = async (uri: string) => {
     setImageUri(uri);
@@ -328,45 +344,62 @@ export default function ManualProductEntryModal({
     try {
       // Build nutriments (per 100g mirrors so NutritionTable shows community values)
       const nutriments: Record<string, number> = {};
-      if (energy) {
-        const v = parseFloat(energy) || 0;
-        nutriments['energy-kcal'] = v;
-        nutriments['energy-kcal_100g'] = v;
+      const toG = (raw: string) => parseWeightNutrientInputToGramsPer100g(raw, units);
+      if (energy.trim()) {
+        const v = parseFloat(energy.trim().replace(',', '.'));
+        if (!Number.isNaN(v)) {
+          nutriments['energy-kcal'] = v;
+          nutriments['energy-kcal_100g'] = v;
+        }
       }
-      if (fat) {
-        const v = parseFloat(fat) || 0;
-        nutriments.fat = v;
-        nutriments.fat_100g = v;
+      if (fat.trim()) {
+        const v = toG(fat);
+        if (v !== undefined) {
+          nutriments.fat = v;
+          nutriments.fat_100g = v;
+        }
       }
-      if (saturatedFat) {
-        const v = parseFloat(saturatedFat) || 0;
-        nutriments['saturated-fat'] = v;
-        nutriments['saturated-fat_100g'] = v;
+      if (saturatedFat.trim()) {
+        const v = toG(saturatedFat);
+        if (v !== undefined) {
+          nutriments['saturated-fat'] = v;
+          nutriments['saturated-fat_100g'] = v;
+        }
       }
-      if (carbs) {
-        const v = parseFloat(carbs) || 0;
-        nutriments.carbohydrates = v;
-        nutriments.carbohydrates_100g = v;
+      if (carbs.trim()) {
+        const v = toG(carbs);
+        if (v !== undefined) {
+          nutriments.carbohydrates = v;
+          nutriments.carbohydrates_100g = v;
+        }
       }
-      if (sugars) {
-        const v = parseFloat(sugars) || 0;
-        nutriments.sugars = v;
-        nutriments.sugars_100g = v;
+      if (sugars.trim()) {
+        const v = toG(sugars);
+        if (v !== undefined) {
+          nutriments.sugars = v;
+          nutriments.sugars_100g = v;
+        }
       }
-      if (fiber) {
-        const v = parseFloat(fiber) || 0;
-        nutriments.fiber = v;
-        nutriments.fiber_100g = v;
+      if (fiber.trim()) {
+        const v = toG(fiber);
+        if (v !== undefined) {
+          nutriments.fiber = v;
+          nutriments.fiber_100g = v;
+        }
       }
-      if (protein) {
-        const v = parseFloat(protein) || 0;
-        nutriments.proteins = v;
-        nutriments.proteins_100g = v;
+      if (protein.trim()) {
+        const v = toG(protein);
+        if (v !== undefined) {
+          nutriments.proteins = v;
+          nutriments.proteins_100g = v;
+        }
       }
-      if (salt) {
-        const v = parseFloat(salt) || 0;
-        nutriments.salt = v;
-        nutriments.salt_100g = v;
+      if (salt.trim()) {
+        const v = toG(salt);
+        if (v !== undefined) {
+          nutriments.salt = v;
+          nutriments.salt_100g = v;
+        }
       }
 
       // Parse allergens/additives text into structured tags

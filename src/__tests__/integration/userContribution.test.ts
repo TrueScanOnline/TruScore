@@ -18,6 +18,8 @@ import { ManualProductData } from '../../../src/types/manualProduct';
 import { getUserContributedProduct } from '../../../src/services/userContributedProductsService';
 import { submitManufacturingCountry, getManufacturingCountry } from '../../../src/services/manufacturingCountryService';
 import { uploadProductPhoto } from '../../../src/services/photoUploadService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
 
 // Note: AsyncStorage and fetch are mocked in src/__tests__/setup.ts
 
@@ -35,14 +37,11 @@ function mockFetchResponse(data: unknown) {
 describe('User Contribution System - Integration Tests', () => {
   const TEST_BARCODE = `9300657233358`;
   const TEST_USER_ID = `user_${Date.now()}`;
-  
-  let AsyncStorage: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    AsyncStorage = require('@react-native-async-storage/async-storage');
-    AsyncStorage.getItem.mockResolvedValue(null);
-    AsyncStorage.setItem.mockResolvedValue(undefined);
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+    (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
     
     // Reset rate limiter by clearing any stored state
     // The RateLimiter uses an in-memory Map, so it resets between tests
@@ -295,8 +294,7 @@ describe('User Contribution System - Integration Tests', () => {
       const mockBase64 = 'base64encodedimage';
 
       // Mock file system read (expo-file-system is mocked via moduleNameMapper)
-      const FileSystem = require('expo-file-system');
-      FileSystem.readAsStringAsync.mockResolvedValue(mockBase64);
+      (FileSystem.readAsStringAsync as jest.Mock).mockResolvedValue(mockBase64);
 
       // Mock fetch calls - Open Food Facts may be called first, then Vercel backend
       (global.fetch as jest.Mock).mockImplementation((url: string, options?: any) => {

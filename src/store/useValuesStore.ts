@@ -1,6 +1,7 @@
 // Values preferences store - persisted to SecureStore (encrypted)
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type GeopoliticalPreference = 'neutral' | 'avoid_israel' | 'avoid_palestine' | 'avoid_china' | 'avoid_india';
 
@@ -56,7 +57,6 @@ const savePreferences = async (prefs: ValuesPreferences) => {
   } catch (error) {
     // Fallback to AsyncStorage if SecureStore fails (e.g., on web)
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
     } catch (fallbackError) {
       console.error('[ValuesStore] Error saving preferences:', error);
@@ -125,7 +125,6 @@ export const useValuesStore = create<ValuesStore>((set, get) => ({
         stored = await SecureStore.getItemAsync(STORAGE_KEY);
       } catch (secureError) {
         // Fallback to AsyncStorage if SecureStore fails
-        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
         stored = await AsyncStorage.getItem(STORAGE_KEY);
       }
       

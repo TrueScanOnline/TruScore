@@ -40,6 +40,8 @@ export default function SettingsScreen() {
     setUnits,
     setAnalyticsEnabled,
     setHasCompletedOnboarding,
+    planetPackagingMarket,
+    setPlanetPackagingMarket,
   } = useSettingsStore();
   const { recentScans, clearHistory } = useScanStore();
   const [cacheSize, setCacheSize] = React.useState<number>(0);
@@ -131,6 +133,28 @@ export default function SettingsScreen() {
     );
   };
 
+  const handlePlanetPackagingMarketSelect = () => {
+    Alert.alert(
+      t('settings.planetPackagingMarket'),
+      t('settings.planetPackagingMarketHint'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('settings.planetPackagingMarketAuto'),
+          onPress: () => setPlanetPackagingMarket('auto'),
+        },
+        {
+          text: t('settings.planetPackagingMarketAU'),
+          onPress: () => setPlanetPackagingMarket('AU'),
+        },
+        {
+          text: t('settings.planetPackagingMarketNZ'),
+          onPress: () => setPlanetPackagingMarket('NZ'),
+        },
+      ]
+    );
+  };
+
   const getLanguageLabel = (lang: string) => {
     switch (lang) {
       case 'en':
@@ -146,6 +170,12 @@ export default function SettingsScreen() {
 
   const getUnitsLabel = (units: string) => {
     return units === 'metric' ? t('settings.metric') : t('settings.imperial');
+  };
+
+  const getPlanetPackagingMarketLabel = (m: string) => {
+    if (m === 'AU') return t('settings.planetPackagingMarketAU');
+    if (m === 'NZ') return t('settings.planetPackagingMarketNZ');
+    return t('settings.planetPackagingMarketAuto');
   };
 
   const SettingSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -231,6 +261,12 @@ export default function SettingsScreen() {
             label={t('settings.units')}
             value={getUnitsLabel(units)}
             onPress={handleUnitsSelect}
+          />
+          <SettingRow
+            icon="earth-outline"
+            label={t('settings.planetPackagingMarket')}
+            value={getPlanetPackagingMarketLabel(planetPackagingMarket)}
+            onPress={handlePlanetPackagingMarketSelect}
           />
         </SettingSection>
 

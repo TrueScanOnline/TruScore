@@ -10,6 +10,25 @@ interface EnvVarConfig {
   defaultValue?: string;
 }
 
+function readExpoPublicEnv(key: EnvVarConfig['key']): string | undefined {
+  switch (key) {
+    case 'EXPO_PUBLIC_QONVERSION_PROJECT_KEY':
+      return process.env.EXPO_PUBLIC_QONVERSION_PROJECT_KEY;
+    case 'EXPO_PUBLIC_USDA_API_KEY':
+      return process.env.EXPO_PUBLIC_USDA_API_KEY;
+    case 'EXPO_PUBLIC_GS1_API_KEY':
+      return process.env.EXPO_PUBLIC_GS1_API_KEY;
+    default:
+      return undefined;
+  }
+}
+
+/** Keys we read via static `process.env.*` (Expo bundler / expo-doctor). */
+export type KnownConfigurableEnvKey =
+  | 'EXPO_PUBLIC_QONVERSION_PROJECT_KEY'
+  | 'EXPO_PUBLIC_USDA_API_KEY'
+  | 'EXPO_PUBLIC_GS1_API_KEY';
+
 const ENV_VARS: EnvVarConfig[] = [
   {
     key: 'EXPO_PUBLIC_QONVERSION_PROJECT_KEY',
@@ -43,7 +62,7 @@ export function validateEnvironment(): {
   const isProduction = process.env.NODE_ENV === 'production' || !__DEV__;
 
   for (const envVar of ENV_VARS) {
-    const value = process.env[envVar.key];
+    const value = readExpoPublicEnv(envVar.key);
     
     if (!value || value.trim() === '') {
       if (envVar.required) {
@@ -73,10 +92,10 @@ export function validateEnvironment(): {
 }
 
 /**
- * Get environment variable with validation
+ * Get environment variable with validation (static keys only for Expo).
  */
-export function getEnvVar(key: string, defaultValue?: string): string {
-  const value = process.env[key];
+export function getEnvVar(key: KnownConfigurableEnvKey, defaultValue?: string): string {
+  const value = readExpoPublicEnv(key);
   
   if (!value || value.trim() === '') {
     if (defaultValue !== undefined) {
@@ -90,9 +109,9 @@ export function getEnvVar(key: string, defaultValue?: string): string {
 }
 
 /**
- * Check if environment variable is set
+ * Check if environment variable is set (static keys only for Expo).
  */
-export function hasEnvVar(key: string): boolean {
-  const value = process.env[key];
+export function hasEnvVar(key: KnownConfigurableEnvKey): boolean {
+  const value = readExpoPublicEnv(key);
   return !!(value && value.trim() !== '');
 }

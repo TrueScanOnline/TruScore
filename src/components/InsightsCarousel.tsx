@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
-  Share,
   Linking,
   ScrollView,
   Pressable,
@@ -19,6 +18,8 @@ import { Insight } from '../lib/truscoreEngine';
 interface InsightsCarouselProps {
   insights: Insight[];
   productName?: string;
+  /** Opens the main product Share modal (insights template) instead of a raw system share. */
+  onRequestProductShare?: () => void;
 }
 
 interface InsightDetailModalProps {
@@ -117,7 +118,7 @@ function InsightDetailModal({
   );
 }
 
-export default function InsightsCarousel({ insights, productName }: InsightsCarouselProps) {
+export default function InsightsCarousel({ insights, productName, onRequestProductShare }: InsightsCarouselProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null);
@@ -144,15 +145,12 @@ export default function InsightsCarousel({ insights, productName }: InsightsCaro
     setModalVisible(true);
   };
 
-  const handleShare = async () => {
+  const handleShare = () => {
     if (!selectedInsight) return;
-    try {
-      await Share.share({
-        message: `${selectedInsight.type.charAt(0).toUpperCase() + selectedInsight.type.slice(1)}: ${selectedInsight.reason}${productName ? ` - ${productName}` : ''}`,
-        title: 'TrueScan',
-      });
-    } catch (error) {
-      console.error('Error sharing insight:', error);
+    setModalVisible(false);
+    if (onRequestProductShare) {
+      onRequestProductShare();
+      return;
     }
   };
 

@@ -23,6 +23,8 @@ import { handleError, ErrorCategory, ErrorSeverity } from './errorHandlingServic
 import { trackUnmappedBrand } from '../utils/unmappedBrandTracker';
 import { calculateNutriScoreFromNutrition, hasRequiredNutrientsForNutriScore } from './nutriscoreCalculator';
 import { assignNOVA1IfHighConfidence } from '../utils/novaAssessment';
+import { extractBrandFromProductName, getBrandData } from '../data/brandDatabase';
+import { extractAllBrands } from '../utils/brandExtraction';
 
 /**
  * OPTIMIZATION: CDN Support for Product Images
@@ -179,9 +181,6 @@ function aggressiveBrandExtraction(product: Product): string | null {
     return null;
   }
   
-  // Import brand extraction utility
-  const { extractBrandFromProductName } = require('../data/brandDatabase');
-  
   // Try extraction from product name
   const extracted = extractBrandFromProductName(productName, product.brand_owner);
   if (extracted) {
@@ -248,7 +247,6 @@ export async function enhanceProduct(product: Product): Promise<Product> {
   // ENHANCED: Also track existing brands that might not be in database
   // This helps identify brands that need to be added to the database
   if (product.brands) {
-    const { extractAllBrands } = require('../utils/brandExtraction');
     const allBrands = extractAllBrands(product);
     
     // Check each brand (async, don't wait - non-blocking)
@@ -295,8 +293,6 @@ export async function enhanceProduct(product: Product): Promise<Product> {
  */
 async function checkAndTrackUnmappedBrand(brand: string, barcode: string, source: 'product_name' | 'brands_field' | 'brand_owner' | 'brands_tags'): Promise<void> {
   try {
-    // Check if brand is in database
-    const { getBrandData } = require('../data/brandDatabase');
     const brandData = getBrandData(brand);
     
     // If not found, track it for future database expansion

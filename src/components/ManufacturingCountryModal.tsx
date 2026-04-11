@@ -275,19 +275,19 @@ export default function ManufacturingCountryModal({
                   <View style={styles.exampleItem}>
                     <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
                     <Text style={[styles.exampleText, { color: colors.textSecondary }]}>
-                      "Product of China"
+                      {'\u201c'}Product of China{'\u201d'}
                     </Text>
                   </View>
                   <View style={styles.exampleItem}>
                     <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
                     <Text style={[styles.exampleText, { color: colors.textSecondary }]}>
-                      "Made in France"
+                      {'\u201c'}Made in France{'\u201d'}
                     </Text>
                   </View>
                   <View style={styles.exampleItem}>
                     <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
                     <Text style={[styles.exampleText, { color: colors.textSecondary }]}>
-                      "Manufactured in Germany"
+                      {'\u201c'}Manufactured in Germany{'\u201d'}
                     </Text>
                   </View>
                 </View>

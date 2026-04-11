@@ -46,7 +46,7 @@ describe('TruScore Engine', () => {
       expect(result.hasEcoScore).toBe(true);
     });
 
-    it('should apply palm oil penalty', () => {
+    it('Planet v19: palm does not reduce Planet when Eco-Score is present', () => {
       const product: Product = {
         barcode: '1234567890123',
         product_name: 'Test Product',
@@ -60,7 +60,8 @@ describe('TruScore Engine', () => {
       };
 
       const result = calculateTruScore(product);
-      expect(result.breakdown.Planet).toBeLessThan(25); // Should have penalty
+      expect(result.breakdown.Planet).toBe(22);
+      expect(result.pillarDetails?.planet.details.palmOilPlanetAdjustment).toBe(0);
     });
 
     it('should apply additive penalties', () => {

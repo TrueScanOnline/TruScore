@@ -2,6 +2,7 @@
 import { Product, ProductWithTrustScore, TrustScoreBreakdown } from '../types/product';
 import { extractManufacturingCountry, calculateEcoScore, formatCertifications } from '../services/openFoodFacts';
 import { calculateTruScore, buildTruScoreAnalysis } from '../lib/truscoreEngine';
+import { getPlanetScoringContext } from './planetScoringContext';
 import { countOpenPillarHiddenTermHits } from '../lib/truscoreEngine/pillars/openPillarHiddenTerms';
 import { scoreBodyMvpAdditives } from '../lib/truscoreEngine/pillars/bodyAdditiveScoring';
 import { getCachedTruScore, cacheTruScore } from './truScoreCache';
@@ -97,7 +98,7 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
       hasEcoScore: !!product.ecoscore_grade,
       ecoscore_grade: product.ecoscore_grade,
     });
-    truScoreResult = calculateTruScore(product);
+    truScoreResult = calculateTruScore(product, undefined, getPlanetScoringContext());
     
     // Cache the result
     await cacheTruScore(product.barcode, truScoreResult);

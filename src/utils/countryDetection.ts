@@ -19,6 +19,7 @@ type ExpoLocalizationShim = {
  */
 export function getUserCountryCode(): string | null {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- RN-only; avoids bundling expo-localization on Node/Vercel score paths
     const Localization = require('expo-localization') as ExpoLocalizationShim;
     const locales = Localization.getLocales?.();
     if (locales && locales.length > 0) {

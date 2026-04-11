@@ -6,6 +6,8 @@ import { ProductWithTrustScore } from '../../../../../types/product';
 import { calculateTruScore, TruScoreResult } from '../../../../../lib/truscoreEngine';
 import { fetchProduct } from '../../../../../services/productService';
 import { useValuesStore } from '../../../../../store/useValuesStore';
+import { useSettingsStore } from '../../../../../store/useSettingsStore';
+import { getPlanetScoringContext } from '../../../../../utils/planetScoringContext';
 import { logger } from '../../../../../utils/logger';
 
 interface UseTruScoreDataOptions {
@@ -19,12 +21,13 @@ export function useTruScoreData({ barcode, product, autoFetch = true }: UseTruSc
   const [loading, setLoading] = useState(!product);
   const [error, setError] = useState<Error | null>(null);
   const valuesPreferences = useValuesStore();
+  const planetPackagingMarket = useSettingsStore((s) => s.planetPackagingMarket);
 
   useEffect(() => {
     // Props-first: Use provided product if available
     if (product) {
       try {
-        const calculated = calculateTruScore(product, valuesPreferences);
+        const calculated = calculateTruScore(product, valuesPreferences, getPlanetScoringContext());
         setTruScore(calculated);
         setLoading(false);
         setError(null);
@@ -42,7 +45,7 @@ export function useTruScoreData({ barcode, product, autoFetch = true }: UseTruSc
       fetchProduct(barcode)
         .then((fetchedProduct) => {
           if (fetchedProduct) {
-            const calculated = calculateTruScore(fetchedProduct, valuesPreferences);
+            const calculated = calculateTruScore(fetchedProduct, valuesPreferences, getPlanetScoringContext());
             setTruScore(calculated);
             setError(null);
           } else {
@@ -57,7 +60,7 @@ export function useTruScoreData({ barcode, product, autoFetch = true }: UseTruSc
           setLoading(false);
         });
     }
-  }, [barcode, product, autoFetch, valuesPreferences]);
+  }, [barcode, product, autoFetch, valuesPreferences, planetPackagingMarket]);
 
   return { truScore, loading, error };
 }

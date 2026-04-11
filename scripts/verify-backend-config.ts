@@ -54,6 +54,7 @@ const BackendEndpoints = {
   userPrices: (url: string) => `${url}/api/user-prices`,
   uploadPhoto: (url: string) => `${url}/api/upload-photo`,
   manufacturingCountry: (url: string) => `${url}/api/manufacturing-country`,
+  shareEvent: (url: string) => `${url}/api/share-event`,
 };
 
 interface VerificationResult {
@@ -395,6 +396,7 @@ async function verifyApiEndpoints(): Promise<void> {
       { name: 'Manufacturing Country', url: BackendEndpoints.manufacturingCountry(backendUrl) },
       { name: 'Photo Upload', url: BackendEndpoints.uploadPhoto(backendUrl) },
       { name: 'User Prices', url: BackendEndpoints.userPrices(backendUrl) },
+      { name: 'Share Event', url: BackendEndpoints.shareEvent(backendUrl) },
     ];
 
     const endpointResults: string[] = [];
@@ -406,9 +408,11 @@ async function verifyApiEndpoints(): Promise<void> {
           method: 'OPTIONS',
         });
 
-        if (response.ok || response.status === 405) {
-          // 405 (Method Not Allowed) is OK - endpoint exists
+        if (response.ok || response.status === 405 || response.status === 204) {
+          // 405 (Method Not Allowed) is OK - endpoint exists; 204 used by share-event preflight
           endpointResults.push(`✅ ${endpoint.name}`);
+        } else if (response.status === 404 && endpoint.name === 'Share Event') {
+          endpointResults.push(`⚠️ ${endpoint.name} (404 — optional)`);
         } else {
           endpointResults.push(`⚠️ ${endpoint.name} (${response.status})`);
         }
@@ -472,6 +476,63 @@ function printResults(): void {
   }
 }
 
+async function verifyShareEventPost(): Promise<void> {
+  try {
+    const backendUrl = getBackendUrl();
+    if (backendUrl.includes('YOUR-VERCEL-URL') || !backendUrl.startsWith('http')) {
+      addResult(
+        'Share Event (POST)',
+        'warning',
+        'Skipped — backend URL not configured',
+        'Set EXPO_PUBLIC_BACKEND_URL'
+      );
+      return;
+    }
+
+    const response = await fetch(BackendEndpoints.shareEvent(backendUrl), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        barcode: '3017620422003',
+        platform: 'verify-script',
+        itemType: 'productInfo',
+        t: Date.now(),
+      }),
+    });
+
+    if (response.status === 204) {
+      addResult(
+        'Share Event (POST)',
+        'pass',
+        'POST /api/share-event returns 204 (share telemetry route deployed)',
+        'Used by the app after successful shares'
+      );
+    } else if (response.status === 404) {
+      const text = await response.text();
+      addResult(
+        'Share Event (POST)',
+        'warning',
+        'POST /api/share-event returned 404 — optional telemetry not deployed yet (app no-ops safely)',
+        text.substring(0, 120)
+      );
+    } else {
+      addResult(
+        'Share Event (POST)',
+        'warning',
+        `Unexpected status ${response.status} for /api/share-event`,
+        (await response.text()).substring(0, 160)
+      );
+    }
+  } catch (error) {
+    addResult(
+      'Share Event (POST)',
+      'fail',
+      'Could not reach /api/share-event',
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+}
+
 async function main() {
   console.log('Starting backend configuration verification...\n');
 
@@ -480,6 +541,7 @@ async function main() {
   await verifyManualProductsRoundTrip();
   await verifyPhotoStorageConfiguration();
   await verifyApiEndpoints();
+  await verifyShareEventPost();
 
   printResults();
 }

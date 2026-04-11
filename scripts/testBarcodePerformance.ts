@@ -818,15 +818,16 @@ async function testBarcode(barcode: string): Promise<TestResult> {
       console.log(`        - Packaging Information: ${result.pillarBreakdown.planet.dataSources.packaging || 'N/A'}`);
       if (result.pillarBreakdown.planet.details) {
         console.log(`      Details:`);
-        if (result.pillarBreakdown.planet.details.ecoscoreGrade) {
-          console.log(`        - Eco-Score: ${result.pillarBreakdown.planet.details.ecoscoreGrade.toUpperCase()} (value: ${result.pillarBreakdown.planet.details.ecoscoreValue || 'N/A'})`);
+        const pd = result.pillarBreakdown.planet.details as Record<string, unknown>;
+        if (pd.ecoscoreGrade) {
+          console.log(
+            `        - Eco-Score: ${String(pd.ecoscoreGrade).toUpperCase()} (adjustment: ${pd.ecoscoreAdjustment ?? 'N/A'})`
+          );
         }
-        if (result.pillarBreakdown.planet.details.palmOilPenalty !== undefined && result.pillarBreakdown.planet.details.palmOilPenalty > 0) {
-          console.log(`        - Palm Oil Penalty: -${result.pillarBreakdown.planet.details.palmOilPenalty} points`);
+        if (pd.packagingFallbackPoints !== undefined && Number(pd.packagingFallbackPoints) > 0) {
+          console.log(`        - Packaging fallback: +${pd.packagingFallbackPoints} (jurisdiction: ${pd.packagingJurisdiction ?? 'n/a'})`);
         }
-        if (result.pillarBreakdown.planet.details.recyclableBonus !== undefined && result.pillarBreakdown.planet.details.recyclableBonus > 0) {
-          console.log(`        - Recyclable Bonus: +${result.pillarBreakdown.planet.details.recyclableBonus} points`);
-        }
+        console.log(`        - Palm on Planet (MVP): ${pd.palmOilPlanetAdjustment ?? 0} pts`);
       }
       
       console.log(`\n   ETHICS Pillar (${result.pillarBreakdown.ethics.score}/25):`);

@@ -68,12 +68,19 @@ module.exports = {
         NSLocationWhenInUseUsageDescription: 'TrueScan uses your location to show local store prices and provide country-specific product information. This helps you find the best prices and relevant product data for your region.',
         NSLocationAlwaysAndWhenInUseUsageDescription: 'TrueScan uses your location to show local store prices and provide country-specific product information. This helps you find the best prices and relevant product data for your region.',
         // Note: NSMicrophoneUsageDescription not needed since we're not using video recording
-        // URL schemes for sharing (WhatsApp, SMS)
+        // URL schemes for sharing / canOpenURL (iOS). https:// URLs do not need entries; custom schemes do.
         LSApplicationQueriesSchemes: [
           'whatsapp',
           'sms',
           'tel',
           'mailto',
+          'instagram',
+          'snapchat',
+          'tiktok',
+          'fb',
+          'facebook',
+          'twitter',
+          'tg',
         ],
       },
     },
@@ -189,10 +196,10 @@ module.exports = {
       // Register at: https://eandata.com/feed/
       // If you have an EANData API key, add it here: EXPO_PUBLIC_EANDATA_API_KEY
       EXPO_PUBLIC_EANDATA_API_KEY: process.env.EXPO_PUBLIC_EANDATA_API_KEY || '',
-      // Vercel Backend URL
-      // After deploying backend with `vercel --prod`, update this URL
-      // Get your deployment URL from Vercel dashboard or `vercel --prod` output
-      EXPO_PUBLIC_BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://YOUR-VERCEL-URL.vercel.app',
+      // Vercel Backend URL — must match src/config/backendConfig.ts production default unless overridden in .env / EAS.
+      // Used for manual-products, share-event telemetry, etc.
+      EXPO_PUBLIC_BACKEND_URL:
+        process.env.EXPO_PUBLIC_BACKEND_URL || 'https://truscoreapi.vercel.app',
       // Open Food Facts API Credentials (Recommended for full functionality)
       // Create account at: https://world.openfoodfacts.org
       // Use your username (not email) as user_id

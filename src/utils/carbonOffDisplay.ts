@@ -11,6 +11,50 @@ import {
 
 const NUTRIENT_CARBON_CO2 = /carbon|co2/i;
 
+/** OFF-only / developer fields that should never appear in the product UI. */
+function isInternalOnlyCarbonKey(key: string): boolean {
+  const k = key.toLowerCase();
+  return k.includes('debug') || k.includes('_debug') || k.endsWith('-debug');
+}
+
+function normalizeOffKey(key: string): string {
+  return key.toLowerCase().replace(/-/g, '_');
+}
+
+const KNOWN_INGREDIENTS_PERCENT_NORMALIZED = 'carbon_footprint_percent_of_known_ingredients';
+
+function isKnownIngredientsPercentKey(key: string): boolean {
+  return normalizeOffKey(key) === KNOWN_INGREDIENTS_PERCENT_NORMALIZED;
+}
+
+function parsePercentValue(val: unknown): number | null {
+  if (typeof val === 'number' && !Number.isNaN(val)) return val;
+  if (typeof val === 'string' && val.trim()) {
+    const n = parseFloat(val.trim().replace(',', '.'));
+    return Number.isNaN(n) ? null : n;
+  }
+  return null;
+}
+
+function extractKnownIngredientsPercent(
+  nutriments: Record<string, unknown> | undefined,
+  product: Record<string, unknown>
+): number | null {
+  if (nutriments) {
+    for (const key of Object.keys(nutriments)) {
+      if (!isKnownIngredientsPercentKey(key)) continue;
+      const pct = parsePercentValue(nutriments[key]);
+      if (pct != null) return pct;
+    }
+  }
+  for (const key of Object.keys(product)) {
+    if (!isKnownIngredientsPercentKey(key)) continue;
+    const pct = parsePercentValue(product[key]);
+    if (pct != null) return pct;
+  }
+  return null;
+}
+
 export type CarbonFootprintDisplayRow = {
   /** i18n key under `result.*` */
   labelKey: string;
@@ -145,6 +189,7 @@ export function getOffCarbonFootprintRows(
     const sortedKeys = Object.keys(n).sort();
     for (const key of sortedKeys) {
       if (!NUTRIENT_CARBON_CO2.test(key) || usedNutrimentKeys.has(key)) continue;
+      if (isInternalOnlyCarbonKey(key) || isKnownIngredientsPercentKey(key)) continue;
       const val = n[key];
       if (typeof val !== 'number' || Number.isNaN(val)) continue;
       rows.push({
@@ -157,6 +202,18 @@ export function getOffCarbonFootprintRows(
 
   // Top-level OFF fields (e.g. carbon_footprint_percent_of_known_ingredients)
   const p = product as unknown as Record<string, unknown>;
+  const knownIngPct = extractKnownIngredientsPercent(n as Record<string, unknown> | undefined, p);
+  if (knownIngPct != null && knownIngPct >= 0 && knownIngPct <= 100) {
+    const rounded = knownIngPct >= 10 ? Math.round(knownIngPct) : Math.round(knownIngPct * 10) / 10;
+    rows.push({
+      labelKey: 'result.carbonOffKnownIngredientsPercent',
+      labelParams: { percent: rounded },
+      ...(includeHints
+        ? { hintKey: 'result.carbonOffKnownIngredientsPercentHint' as const }
+        : {}),
+    });
+  }
+
   const skipTopLevel = new Set([
     'nutriments',
     'ecoscore_data',
@@ -171,17 +228,13 @@ export function getOffCarbonFootprintRows(
   for (const key of Object.keys(p).sort()) {
     if (key.startsWith('_') || skipTopLevel.has(key)) continue;
     if (!NUTRIENT_CARBON_CO2.test(key)) continue;
+    if (isInternalOnlyCarbonKey(key) || isKnownIngredientsPercentKey(key)) continue;
     const val = p[key];
     if (val !== null && typeof val === 'object') continue;
     if (typeof val === 'number' && !Number.isNaN(val)) {
       rows.push({
         labelKey: 'result.carbonOffNutrimentField',
         labelParams: { field: humanizeOffKey(key), value: String(val) },
-      });
-    } else if (typeof val === 'string' && val.trim()) {
-      rows.push({
-        labelKey: 'result.carbonOffNutrimentField',
-        labelParams: { field: humanizeOffKey(key), value: val.trim() },
       });
     }
   }

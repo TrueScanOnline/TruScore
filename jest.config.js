@@ -23,6 +23,7 @@ module.exports = {
     '^expo-image-picker$': '<rootDir>/src/__tests__/__mocks__/expo-image-picker.ts',
     '^expo-sqlite$': '<rootDir>/src/__tests__/__mocks__/expo-sqlite.ts',
     '^expo-sqlite/build/index$': '<rootDir>/src/__tests__/__mocks__/expo-sqlite.ts',
+    '^expo-linking$': '<rootDir>/src/__tests__/__mocks__/expo-linking.ts',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],

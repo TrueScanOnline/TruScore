@@ -3,12 +3,13 @@ import { NavigationContainer, NavigatorScreenParams } from '@react-navigation/na
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, View, useColorScheme, AppState } from 'react-native';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import '../src/i18n'; // Initialize i18n
-import { linking, parseBarcodeFromUrl } from '../src/utils/linking';
+import { linking, parseProductDeepLink } from '../src/utils/linking';
+import { storeInboundShareAttribution } from '../src/utils/shareInboundAttribution';
 import ErrorBoundary from '../src/components/ErrorBoundary';
 import { errorReporting } from '../src/services/errorReporting';
 
@@ -42,12 +43,14 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function RootLayout() {
   const { initializeStore: initSettings, darkMode } = useSettingsStore();
+  const hasCompletedOnboarding = useSettingsStore((s) => s.hasCompletedOnboarding === true);
   const { initializeStore: initScan } = useScanStore();
   const { initializeStore: initFavorites } = useFavoritesStore();
   const { initialize: initSubscription } = useSubscriptionStore();
   const [isInitializing, setIsInitializing] = useState(true);
   const [initialUrl, setInitialUrl] = useState<string | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState<boolean>(true); // Default to true - show onboarding until we know otherwise
+  const appReadyLoggedRef = useRef(false);
+  const prevCompletedOnboardingRef = useRef<boolean | null>(null);
   const systemColorScheme = useColorScheme();
   
   // Use dark mode from settings, or fallback to system preference
@@ -58,7 +61,6 @@ function RootLayout() {
     // Uses systematic initialization manager instead of uncoordinated .then() chains
     const initialize = async () => {
       console.log('[RootLayout] Starting initialization...');
-      console.log('[RootLayout] Initial showOnboarding state:', showOnboarding);
       
       try {
         // Use systematic initialization manager
@@ -159,35 +161,34 @@ function RootLayout() {
         // FORCE CHECK: Explicitly check if hasCompletedOnboarding is true
         // Show onboarding ONLY if hasCompletedOnboarding is NOT explicitly true
         const hasCompleted = settings.hasCompletedOnboarding === true;
-        const shouldShowOnboarding = !hasCompleted;
         
         console.log('[RootLayout] Onboarding decision:', {
           hasCompletedOnboarding: settings.hasCompletedOnboarding,
-          type: typeof settings.hasCompletedOnboarding,
-          isTrue: hasCompleted,
-          shouldShow: shouldShowOnboarding,
-          willShowOnboarding: shouldShowOnboarding,
-          allSettings: settings,
+          willShowOnboardingFlow: !hasCompleted,
         });
-        
-        // FORCE UPDATE: Set the state explicitly
-        setShowOnboarding(shouldShowOnboarding);
         
         // Check for initial deep link (but don't let it override onboarding)
         const url = await Linking.getInitialURL();
-        if (url && !shouldShowOnboarding) { // Only process deep link if not showing onboarding
-          const barcode = parseBarcodeFromUrl(url);
-          if (barcode) {
-            setInitialUrl(barcode);
+        if (url && hasCompleted) {
+          const parsed = parseProductDeepLink(url);
+          if (parsed.barcode) {
+            setInitialUrl(parsed.barcode);
+            void storeInboundShareAttribution({
+              barcode: parsed.barcode,
+              ctx: parsed.ctx,
+              src: parsed.src,
+              ref: parsed.ref,
+            });
           }
         }
         
         setIsInitializing(false);
-        console.log('[RootLayout] Initialization complete. showOnboarding:', shouldShowOnboarding, 'initialRoute:', shouldShowOnboarding ? 'Onboarding' : 'Scan');
+        console.log('[RootLayout] Initialization complete.', {
+          hasCompletedOnboarding: hasCompleted,
+          initialRoute: hasCompleted ? 'Main' : 'Onboarding',
+        });
       } catch (error) {
         console.error('[RootLayout] Initialization error:', error);
-        // On error, default to showing onboarding
-        setShowOnboarding(true);
         setIsInitializing(false);
       }
     };
@@ -195,9 +196,15 @@ function RootLayout() {
 
     // Listen for deep links while app is running
     const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
-      const barcode = parseBarcodeFromUrl(url);
-      if (barcode) {
-        setInitialUrl(barcode);
+      const parsed = parseProductDeepLink(url);
+      if (parsed.barcode) {
+        setInitialUrl(parsed.barcode);
+        void storeInboundShareAttribution({
+          barcode: parsed.barcode,
+          ctx: parsed.ctx,
+          src: parsed.src,
+          ref: parsed.ref,
+        });
       }
     });
 
@@ -218,6 +225,23 @@ function RootLayout() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isInitializing || appReadyLoggedRef.current) return;
+    appReadyLoggedRef.current = true;
+    console.log('[RootLayout] App shell ready.', {
+      hasCompletedOnboarding,
+      stackInitialRoute: hasCompletedOnboarding ? 'Main' : 'Onboarding',
+    });
+  }, [isInitializing, hasCompletedOnboarding]);
+
+  useEffect(() => {
+    const prev = prevCompletedOnboardingRef.current;
+    prevCompletedOnboardingRef.current = hasCompletedOnboarding;
+    if (prev === false && hasCompletedOnboarding) {
+      console.log('[RootLayout] Onboarding marked complete in settings; universal linking enabled.');
+    }
+  }, [hasCompletedOnboarding]);
+
   if (isInitializing) {
     return (
       <View
@@ -233,29 +257,19 @@ function RootLayout() {
     );
   }
 
-  // Determine initial route based on onboarding status
-  // Default to Onboarding until we know the user has completed it
-  const initialRoute = showOnboarding ? 'Onboarding' : 'Main';
-  
-  console.log('[RootLayout] Rendering navigator with:', {
-    showOnboarding,
-    initialRoute,
-    isInitializing,
-  });
+  const initialRouteName = hasCompletedOnboarding ? 'Main' : 'Onboarding';
 
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
           <NavigationContainer
-            linking={showOnboarding ? undefined : linking as any} // Disable linking during onboarding
+            linking={hasCompletedOnboarding ? (linking as any) : undefined}
             onReady={() => {
-              console.log('[RootLayout] NavigationContainer ready. showOnboarding:', showOnboarding);
-              // Navigate to result if we have a deep link barcode (only after onboarding)
-              if (initialUrl && !showOnboarding) {
-                // Navigation will be handled automatically by the linking config
-                console.log('[RootLayout] Deep link detected:', initialUrl);
-              }
+              console.log('[RootLayout] NavigationContainer ready.', {
+                hasCompletedOnboarding,
+                deepLinkBarcode: initialUrl ?? undefined,
+              });
             }}
             fallback={<ActivityIndicator size="large" color="#16a085" />}
           >
@@ -266,7 +280,7 @@ function RootLayout() {
                   animation: 'slide_from_right',
                   presentation: 'card',
                 }}
-                initialRouteName={initialRoute}
+                initialRouteName={initialRouteName}
               >
                 <Stack.Screen name="Onboarding" component={OnboardingScreen} />
                 <Stack.Screen name="Main" component={AppTabs} />

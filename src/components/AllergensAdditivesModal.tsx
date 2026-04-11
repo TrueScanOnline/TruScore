@@ -215,7 +215,7 @@ export default function AllergensAdditivesModal({ visible, onClose, product }: A
                       {t('additive.noInformation')}
                     </Text>
                     <Text style={[styles.noInfoNote, { color: colors.textSecondary }]}>
-                      This additive code is not yet in our database. We're continuously updating our information.
+                      This additive code is not yet in our database. We are continuously updating our information.
                     </Text>
                   </>
                 )}

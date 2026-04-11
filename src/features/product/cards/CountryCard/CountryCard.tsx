@@ -17,6 +17,11 @@ import { CountryCardSkeleton } from './CountryCardSkeleton';
 import { CountryCardError } from './CountryCardError';
 import { useEffect } from 'react';
 
+/** Imported-ingredients note — orange (distinct from verified-country green). */
+const IMPORTED_INGREDIENTS_BORDER = '#e65100';
+const IMPORTED_INGREDIENTS_FILL = '#fff3e0';
+const IMPORTED_INGREDIENTS_FOREGROUND = '#e65100';
+
 interface CountryCardProps {
   barcode: string;
   product?: ProductWithTrustScore;
@@ -171,9 +176,9 @@ function CountryCardContent({ barcode, product, onShare, premiumFeatures }: Coun
                   shouldShow,
                 });
                 return shouldShow ? (
-                  <View style={[styles.importedIngredientsBadge, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}>
-                    <Ionicons name="globe" size={16} color={colors.primary} />
-                    <Text style={[styles.importedIngredientsText, { color: colors.primary }]}>
+                  <View style={styles.importedIngredientsBadge}>
+                    <Ionicons name="globe" size={16} color={IMPORTED_INGREDIENTS_FOREGROUND} />
+                    <Text style={[styles.importedIngredientsText, { color: IMPORTED_INGREDIENTS_FOREGROUND }]}>
                       {t('manufacturingCountry.withImportedIngredients', 'With some imported ingredients')}
                     </Text>
                   </View>
@@ -348,7 +353,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: 2,
+    borderColor: IMPORTED_INGREDIENTS_BORDER,
+    backgroundColor: IMPORTED_INGREDIENTS_FILL,
     gap: 8,
     marginTop: 8,
   },

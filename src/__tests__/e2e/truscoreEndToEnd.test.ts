@@ -235,15 +235,13 @@ describe('TruScore End-to-End Tests', () => {
       recalls: [],
     };
 
-    test('should apply palm oil penalty in PLANET pillar', () => {
+    test('Planet v19: palm does not reduce Planet score; Eco-Score drives Planet when present', () => {
       const result = calculateTruScore(product);
-      
-      // PLANET pillar should be reduced
-      expect(result.breakdown.Planet).toBeLessThan(15);
-      
-      // Verify palm oil penalty is applied
+
       const planetResult = result.pillarDetails?.planet;
-      expect(planetResult?.details.palmOilPenalty).toBeGreaterThan(0);
+      expect(planetResult?.details.palmOilPlanetAdjustment).toBe(0);
+      // Eco-Score D => 15 - 3 = 12
+      expect(result.breakdown.Planet).toBe(12);
     });
   });
 
@@ -348,14 +346,12 @@ describe('TruScore End-to-End Tests', () => {
       recalls: [],
     };
 
-    test('should not apply palm oil penalty for RSPO certified', () => {
+    test('Planet v19: RSPO / palm context does not change Planet score when Eco-Score is present', () => {
       const result = calculateTruScore(product);
-      
-      // PLANET pillar should have reduced or no palm oil penalty for RSPO certified
+
       const planetResult = result.pillarDetails?.planet;
-      // RSPO certified should result in 0 penalty (neutral), but may still show in details
-      // The important thing is the score reflects the certification
-      expect(planetResult?.details.palmOilPenalty).toBeLessThanOrEqual(5); // Should be 0 or low
+      expect(planetResult?.details.palmOilPlanetAdjustment).toBe(0);
+      expect(result.breakdown.Planet).toBe(18);
     });
   });
 

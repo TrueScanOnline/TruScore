@@ -10,6 +10,23 @@ import { Product, ProductNutriments } from '../../types/product';
 import { getUserCountryCode, isEUCountry } from '../../utils/countryDetection';
 import { logger } from '../../utils/logger';
 import { powershellLogger } from '../../utils/powershellLogger';
+import { calculateDataCompleteness } from '../../utils/dataCompleteness';
+import { isOpenFactsFoodLikeProduct } from '../../utils/openFactsProductKind';
+
+/** When false (default), skip Edamam / Nutritionix / Spoonacular (freemium keys). Set EXPO_PUBLIC_ENABLE_COMMERCIAL_NUTRITION_APIS=true to allow them when nutrition is incomplete. */
+const COMMERCIAL_NUTRITION_APIS_ENABLED =
+  (process.env.EXPO_PUBLIC_ENABLE_COMMERCIAL_NUTRITION_APIS || '').toLowerCase() === 'true';
+
+export type QueryAllDatabasesOptions = {
+  /** Phase-1 hits (e.g. Open Food Facts) — avoids duplicate identical API calls in this session. */
+  seedProducts?: Product[] | null;
+};
+
+function baselineNeedsCommercialNutritionApis(product: Product | null | undefined): boolean {
+  if (!product) return true;
+  const m = calculateDataCompleteness(product);
+  return m.nutrition < 12;
+}
 
 // Import all database services
 // NOTE: fetchProductFromFSANZ is NOT imported because FSANZ databases don't have barcodes.
@@ -38,6 +55,7 @@ import { enhanceProductWithAFCD } from '../../services/afcdDatabase';
 import { enhanceProductWithFooDB } from '../../services/foodbApi';
 import { queryFoodAtlasByProductName } from '../../services/foodAtlasQueryService';
 import { extractProductName } from '../../services/productNameDiscovery';
+import { mergeProducts } from '../../services/productDataMerger';
 import { fetchProductFromDatakick } from '../../services/datakickApi';
 import { fetchProductFromUPCitemdb } from '../../services/upcitemdb';
 import { fetchProductFromEANSearch } from '../../services/eanSearchApi';
@@ -93,17 +111,18 @@ export class TruScoreOptimizedDatabase {
     barcode: string,
     userCountry: string | null,
     earlyProductName?: string | null,
-    onProductUpdate?: (product: Product, source: string) => void
+    onProductUpdate?: (product: Product, source: string) => void,
+    options?: QueryAllDatabasesOptions
   ): Promise<Product[]> {
     // Check if query is already in progress (deduplication)
-    const queryKey = `${barcode}_${userCountry || 'global'}`;
+    const queryKey = `${barcode}_${userCountry || 'global'}_${options?.seedProducts?.length ? 'seed' : 'full'}`;
     if (activeQueries.has(queryKey)) {
       logger.debug(`Query already in progress for ${barcode}, waiting for existing query...`);
       return activeQueries.get(queryKey)!;
     }
     
     // Create query promise with progressive callback support
-    const queryPromise = this.executeQuery(barcode, userCountry, earlyProductName, onProductUpdate);
+    const queryPromise = this.executeQuery(barcode, userCountry, earlyProductName, onProductUpdate, options);
     
     // Store in active queries
     activeQueries.set(queryKey, queryPromise);
@@ -123,7 +142,8 @@ export class TruScoreOptimizedDatabase {
     barcode: string,
     userCountry: string | null,
     earlyProductName?: string | null,
-    onProductUpdate?: (product: Product, source: string) => void
+    onProductUpdate?: (product: Product, source: string) => void,
+    options?: QueryAllDatabasesOptions
   ): Promise<Product[]> {
     powershellLogger.section(`TRUSCORE DATABASE QUERY: ${barcode}`);
     logger.info(`═══════════════════════════════════════════════════════════════`);
@@ -162,7 +182,15 @@ export class TruScoreOptimizedDatabase {
     // Execute all queries - they run in parallel, no timeout blocking
     // Fast queries (0.5-2s) will complete first and can be displayed immediately via callback
     // Slow queries (5-15s) continue in background and merge when ready
-    const queryResult = await this.executeQueryPhases(barcode, userCountry, allProducts, startTime, earlyProductName, onProductUpdate);
+    const queryResult = await this.executeQueryPhases(
+      barcode,
+      userCountry,
+      allProducts,
+      startTime,
+      earlyProductName,
+      onProductUpdate,
+      options
+    );
     return queryResult;
   }
   
@@ -188,7 +216,8 @@ export class TruScoreOptimizedDatabase {
     allProducts: Product[],
     startTime: number,
     earlyProductName?: string | null,
-    onProductUpdate?: (product: Product, source: string) => void
+    onProductUpdate?: (product: Product, source: string) => void,
+    options?: QueryAllDatabasesOptions
   ): Promise<Product[]> {
     logger.info(`🚀 OPTIMAL ALGORITHM: Querying ALL databases in parallel (no sequential phases)`);
     logger.info(`   Strategy: Fire all queries simultaneously, merge results as they arrive`);
@@ -197,10 +226,14 @@ export class TruScoreOptimizedDatabase {
     }
     logger.info(`   Goal: Maximum success rate (95-98%), minimum time to display (0.5-2s), maximum information`);
     
-    // Import mergeProducts for progressive merging
-    const { mergeProducts } = require('../../services/productDataMerger');
     let mergedProduct: Product | null = null;
     let firstResultTime: number | null = null;
+
+    const seedBaseline =
+      options?.seedProducts?.find(p => p.source === 'openfoodfacts') ||
+      options?.seedProducts?.find(p => p.source === 'openbeautyfacts') ||
+      options?.seedProducts?.[0] ||
+      null;
     
     // Build ALL queries simultaneously - they all fire at once
     const allQueries: Promise<Product[]>[] = [];
@@ -208,7 +241,31 @@ export class TruScoreOptimizedDatabase {
     
     // TIER 1: Fast sources (0.5-2s) - Display First
     powershellLogger.queryPhase(barcode, 1, 'Fast Sources (OFF, Cache, SQLite)', '<2s');
-    allQueries.push(this.queryOpenFactsParallel(barcode));
+    const openFactsQuery = this.queryOpenFactsParallel(barcode, options?.seedProducts || null);
+    if (onProductUpdate) {
+      openFactsQuery
+        .then((products) => {
+          if (products.length === 0) return;
+          if (firstResultTime === null) {
+            firstResultTime = Date.now() - startTime;
+            logger.info(`   🚀 FIRST OPEN FACTS TIER in ${firstResultTime}ms (streaming callback)`);
+          }
+          try {
+            const mergedSeed = mergeProducts(products, {
+              sourceWeights: this.getTruScoreSourceWeights(),
+              normalizeNutrition: true,
+              shouldMergeCertifications: true,
+              barcode,
+            });
+            onProductUpdate(mergedSeed, 'openfacts_tier');
+          } catch (error) {
+            logger.warn('   Progressive open-facts merge failed:', error);
+            onProductUpdate(products[0], products[0].source || 'openfacts');
+          }
+        })
+        .catch(() => {});
+    }
+    allQueries.push(openFactsQuery);
     queryNames.push('Open Facts');
     
     // TIER 2: Medium sources (2-5s) - Enhance
@@ -217,7 +274,7 @@ export class TruScoreOptimizedDatabase {
     queryNames.push('Local');
     allQueries.push(this.queryGoldStandardParallel(barcode, userCountry));
     queryNames.push('Gold Standard');
-    allQueries.push(this.queryEnhancementsParallel(barcode, userCountry));
+    allQueries.push(this.queryEnhancementsParallel(barcode, userCountry, seedBaseline));
     queryNames.push('Enhancements');
     
     // TIER 3: Fallbacks (2-10s) - Maximum Coverage
@@ -238,14 +295,16 @@ export class TruScoreOptimizedDatabase {
       allProducts.push(...tierProducts);
       const arrivalTime = Date.now() - startTime;
       logger.info(`   ✅ ${tierName}: ${tierProducts.length} products found (${arrivalTime}ms)`);
+      if (firstResultTime === null) {
+        firstResultTime = arrivalTime;
+      }
       
       // Progressive merging and callback
       if (onProductUpdate) {
         if (!mergedProduct) {
           // FIRST RESULT - Display immediately!
           mergedProduct = tierProducts[0];
-          firstResultTime = arrivalTime;
-          logger.info(`   🚀 FIRST RESULT in ${arrivalTime}ms - Displaying immediately!`);
+          logger.info(`   🚀 FIRST TIER MERGE in ${arrivalTime}ms - Displaying!`);
           onProductUpdate(mergedProduct, tierProducts[0].source || tierName);
         } else {
           // MERGE progressively
@@ -664,71 +723,196 @@ export class TruScoreOptimizedDatabase {
   }
   
   /**
-   * Query Open Facts databases in parallel
-   * ALWAYS query all 4
+   * Query Open Facts databases in parallel.
+   * Uses seedProducts to skip redundant fetches (e.g. OFF already loaded in Phase 1).
+   * Skips beauty/pet/products Open Facts when we already have a food-like OFF hit.
    */
-  private async queryOpenFactsParallel(barcode: string): Promise<Product[]> {
-    const databases = ['Open Food Facts', 'Open Beauty Facts', 'Open Pet Food Facts', 'Open Products Facts'];
-    const queryPromises = [
-      fetchProductFromOFF(barcode),
-      fetchProductFromOBF(barcode),
-      fetchProductFromOPFF(barcode),
-      fetchProductFromOPF(barcode),
-    ];
-    
-    // Log each query start and track timing
-    const queryStartTimes = databases.map(db => Date.now());
-    databases.forEach((db, index) => {
-      powershellLogger.databaseQueryDetailed(barcode, db, 'start', queryStartTimes[index], {
-        dataSource: 'OFF',
-      });
-    });
-    
-    // Process results with timing
-    const queries = queryPromises.map((query, index) => {
-      const db = databases[index];
-      const startTime = queryStartTimes[index];
-      
-      return query.then(result => {
-        const responseTime = Date.now() - startTime;
-        if (result) {
-          const hasNutrition = !!result.nutriments && Object.keys(result.nutriments).length > 0;
-          powershellLogger.databaseQueryDetailed(barcode, db, 'success', startTime, {
+  private async queryOpenFactsParallel(barcode: string, seedProducts?: Product[] | null): Promise<Product[]> {
+    const seedOff = seedProducts?.find(p => p.source === 'openfoodfacts');
+    const seedObf = seedProducts?.find(p => p.source === 'openbeautyfacts');
+    const skipSiblingsForFood = !!(seedOff && isOpenFactsFoodLikeProduct(seedOff));
+
+    type OffRow = { db: string; promise: Promise<Product | null> };
+    const rows: OffRow[] = [];
+
+    if (seedOff) {
+      const seedLoggedAt = Date.now();
+      rows.push({
+        db: 'Open Food Facts',
+        promise: Promise.resolve(seedOff).then((p) => {
+          powershellLogger.databaseQueryDetailed(barcode, 'Open Food Facts', 'success', seedLoggedAt, {
             found: true,
-            responseTime,
+            responseTime: 0,
             dataSource: 'OFF',
-            hasNutrition,
-            hasIngredients: !!result.ingredients_text,
-            hasImage: !!result.image_url,
-            hasNutriScore: !!result.nutriscore_grade,
-            hasEcoScore: !!result.ecoscore_grade,
-            nutrientsCount: hasNutrition && result.nutriments ? Object.keys(result.nutriments).length : 0,
-            ingredientsLength: result.ingredients_text?.length || 0,
-            productName: result.product_name,
+            hasNutrition: !!p.nutriments && Object.keys(p.nutriments).length > 0,
+            hasIngredients: !!p.ingredients_text,
+            hasImage: !!p.image_url,
+            productName: p.product_name,
           });
-        } else {
-          powershellLogger.databaseQueryDetailed(barcode, db, 'error', startTime, {
+          return p;
+        }),
+      });
+    } else {
+      const start = Date.now();
+      powershellLogger.databaseQueryDetailed(barcode, 'Open Food Facts', 'start', start, { dataSource: 'OFF' });
+      rows.push({
+        db: 'Open Food Facts',
+        promise: fetchProductFromOFF(barcode).then((result) => {
+          const responseTime = Date.now() - start;
+          if (result) {
+            const hasNutrition = !!result.nutriments && Object.keys(result.nutriments).length > 0;
+            powershellLogger.databaseQueryDetailed(barcode, 'Open Food Facts', 'success', start, {
+              found: true,
+              responseTime,
+              dataSource: 'OFF',
+              hasNutrition,
+              hasIngredients: !!result.ingredients_text,
+              hasImage: !!result.image_url,
+              hasNutriScore: !!result.nutriscore_grade,
+              hasEcoScore: !!result.ecoscore_grade,
+              nutrientsCount: hasNutrition && result.nutriments ? Object.keys(result.nutriments).length : 0,
+              ingredientsLength: result.ingredients_text?.length || 0,
+              productName: result.product_name,
+            });
+          } else {
+            powershellLogger.databaseQueryDetailed(barcode, 'Open Food Facts', 'error', start, {
+              found: false,
+              responseTime,
+              dataSource: 'OFF',
+            });
+          }
+          return result;
+        }).catch(() => {
+          const responseTime = Date.now() - start;
+          powershellLogger.databaseQueryDetailed(barcode, 'Open Food Facts', 'error', start, {
             found: false,
             responseTime,
             dataSource: 'OFF',
           });
-        }
-        return result;
-      }).catch(error => {
-        const responseTime = Date.now() - startTime;
-        powershellLogger.databaseQueryDetailed(barcode, db, 'error', startTime, {
-          found: false,
-          responseTime,
-          dataSource: 'OFF',
-        });
-        return null;
+          return null;
+        }),
       });
+    }
+
+    const addObf = () => {
+      if (seedObf) {
+        rows.push({
+          db: 'Open Beauty Facts',
+          promise: Promise.resolve(seedObf),
+        });
+        return;
+      }
+      if (skipSiblingsForFood) {
+        logger.debug(`[Open Facts] Skipping OBF — seeded OFF looks like food`);
+        powershellLogger.databaseSkipped(barcode, 'Open Beauty Facts', 'Seeded Open Food Facts product is food');
+        rows.push({ db: 'Open Beauty Facts', promise: Promise.resolve(null) });
+        return;
+      }
+      const start = Date.now();
+      powershellLogger.databaseQueryDetailed(barcode, 'Open Beauty Facts', 'start', start, { dataSource: 'OFF' });
+      rows.push({
+        db: 'Open Beauty Facts',
+        promise: fetchProductFromOBF(barcode).then((result) => {
+          const responseTime = Date.now() - start;
+          if (result) {
+            powershellLogger.databaseQueryDetailed(barcode, 'Open Beauty Facts', 'success', start, {
+              found: true,
+              responseTime,
+              dataSource: 'OFF',
+            });
+          } else {
+            powershellLogger.databaseQueryDetailed(barcode, 'Open Beauty Facts', 'error', start, {
+              found: false,
+              responseTime,
+              dataSource: 'OFF',
+            });
+          }
+          return result;
+        }).catch(() => {
+          powershellLogger.databaseQueryDetailed(barcode, 'Open Beauty Facts', 'error', start, {
+            found: false,
+            responseTime: Date.now() - start,
+            dataSource: 'OFF',
+          });
+          return null;
+        }),
+      });
+    };
+
+    const addOpff = () => {
+      if (skipSiblingsForFood) {
+        logger.debug(`[Open Facts] Skipping OPFF — seeded OFF looks like food`);
+        powershellLogger.databaseSkipped(barcode, 'Open Pet Food Facts', 'Seeded Open Food Facts product is food');
+        rows.push({ db: 'Open Pet Food Facts', promise: Promise.resolve(null) });
+        return;
+      }
+      const start = Date.now();
+      powershellLogger.databaseQueryDetailed(barcode, 'Open Pet Food Facts', 'start', start, { dataSource: 'OFF' });
+      rows.push({
+        db: 'Open Pet Food Facts',
+        promise: fetchProductFromOPFF(barcode).then((result) => {
+          const responseTime = Date.now() - start;
+          powershellLogger.databaseQueryDetailed(
+            barcode,
+            'Open Pet Food Facts',
+            result ? 'success' : 'error',
+            start,
+            { found: !!result, responseTime, dataSource: 'OFF' }
+          );
+          return result;
+        }).catch(() => {
+          powershellLogger.databaseQueryDetailed(barcode, 'Open Pet Food Facts', 'error', start, {
+            found: false,
+            responseTime: Date.now() - start,
+            dataSource: 'OFF',
+          });
+          return null;
+        }),
+      });
+    };
+
+    const addOpf = () => {
+      if (skipSiblingsForFood) {
+        logger.debug(`[Open Facts] Skipping OPF — seeded OFF looks like food`);
+        powershellLogger.databaseSkipped(barcode, 'Open Products Facts', 'Seeded Open Food Facts product is food');
+        rows.push({ db: 'Open Products Facts', promise: Promise.resolve(null) });
+        return;
+      }
+      const start = Date.now();
+      powershellLogger.databaseQueryDetailed(barcode, 'Open Products Facts', 'start', start, { dataSource: 'OFF' });
+      rows.push({
+        db: 'Open Products Facts',
+        promise: fetchProductFromOPF(barcode).then((result) => {
+          const responseTime = Date.now() - start;
+          powershellLogger.databaseQueryDetailed(
+            barcode,
+            'Open Products Facts',
+            result ? 'success' : 'error',
+            start,
+            { found: !!result, responseTime, dataSource: 'OFF' }
+          );
+          return result;
+        }).catch(() => {
+          powershellLogger.databaseQueryDetailed(barcode, 'Open Products Facts', 'error', start, {
+            found: false,
+            responseTime: Date.now() - start,
+            dataSource: 'OFF',
+          });
+          return null;
+        }),
+      });
+    };
+
+    addObf();
+    addOpff();
+    addOpf();
+
+    const settled = await Promise.allSettled(rows.map((r) => r.promise));
+    const out: Product[] = [];
+    settled.forEach((r, i) => {
+      if (r.status === 'fulfilled' && r.value) out.push(r.value);
     });
-    
-    const results = await Promise.allSettled(queries);
-    return results
-      .filter(r => r.status === 'fulfilled' && r.value !== null)
-      .map(r => (r as PromiseFulfilledResult<Product>).value);
+    return out;
   }
   
   /**
@@ -739,15 +923,23 @@ export class TruScoreOptimizedDatabase {
    */
   private async queryEnhancementsParallel(
     barcode: string,
-    userCountry: string | null
+    userCountry: string | null,
+    baselineProduct?: Product | null
   ): Promise<Product[]> {
     const queries: Promise<Product | null>[] = [];
     
-    // Nutrition APIs (always query for enhancement)
-    // These provide nutrition data that can enhance any product
-    queries.push(fetchProductFromEdamam(barcode));
-    queries.push(fetchProductFromNutritionix(barcode));
-    queries.push(fetchProductFromSpoonacular(barcode));
+    // Freemium nutrition APIs: off by default; only when explicitly enabled AND baseline lacks nutrition.
+    const runCommercial =
+      COMMERCIAL_NUTRITION_APIS_ENABLED && baselineNeedsCommercialNutritionApis(baselineProduct ?? null);
+    if (runCommercial) {
+      queries.push(fetchProductFromEdamam(barcode));
+      queries.push(fetchProductFromNutritionix(barcode));
+      queries.push(fetchProductFromSpoonacular(barcode));
+    } else if (!COMMERCIAL_NUTRITION_APIS_ENABLED) {
+      logger.debug('[Enhancements] Commercial nutrition APIs skipped (free-default; set EXPO_PUBLIC_ENABLE_COMMERCIAL_NUTRITION_APIS=true to allow)');
+    } else {
+      logger.debug('[Enhancements] Commercial nutrition APIs skipped (baseline nutrition sufficient)');
+    }
     
     // MVP MODE: Retailer APIs disabled (required for pricing modal post-MVP)
     // Post-MVP: Re-enable for pricing modal implementation

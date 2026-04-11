@@ -3,7 +3,7 @@
  *
  * This module orchestrates the calculation of all 4 pillars:
  * - Body Pillar (nutrition, additives, processing)
- * - Planet Pillar (environmental impact, palm oil, recyclability)
+ * - Planet Pillar (Eco-Score v19 + packaging fallback per Annex v2; palm display-only)
  * - Ethics Pillar (base 15 + BBFAW + KTC + certifications, capped 0–25)
  * - Open Pillar (transparency, ingredients disclosure, origin)
  *
@@ -35,6 +35,12 @@ export interface Insight {
   referenceLabel?: string;
 }
 
+/** Optional overrides for scoring (e.g. user-chosen Planet packaging jurisdiction). */
+export type TruScoreScoringContext = {
+  /** When set, merged onto the product as `true_scan_market` for Planet packaging fallback. */
+  planetMarket?: 'AU' | 'NZ';
+};
+
 export interface TruScoreResult {
   truscore: number;
   breakdown: {
@@ -65,11 +71,13 @@ export interface TruScoreResult {
  * 
  * @param product - Product data to score
  * @param preferences - Optional user values preferences for generating insights
+ * @param scoringContext - Optional scoring overrides (e.g. persisted Planet market AU/NZ)
  * @returns TruScore result with total score, breakdown, and optional insights
  */
 export function calculateTruScore(
   product: Product | null | undefined,
-  preferences?: ValuesPreferences
+  preferences?: ValuesPreferences,
+  scoringContext?: TruScoreScoringContext
 ): TruScoreResult {
   // Input validation
   if (!product || typeof product !== 'object') {
@@ -87,33 +95,40 @@ export function calculateTruScore(
   if (!product.barcode && !product.product_name && !product.product_name_en) {
     logger.warn('[truscoreEngine] Product missing required fields: barcode or product_name');
   }
-  
-  // Validate array types to prevent runtime errors
-  if (product.labels_tags && !Array.isArray(product.labels_tags)) {
-    logger.warn(`[truscoreEngine] Invalid labels_tags: expected array, got ${typeof product.labels_tags}`);
-    product.labels_tags = [];
+
+  const scoringProduct: Product =
+    scoringContext?.planetMarket === 'AU' || scoringContext?.planetMarket === 'NZ'
+      ? { ...product, true_scan_market: scoringContext.planetMarket }
+      : product;
+
+  // Validate array types to prevent runtime errors (mutate scoring copy only when it differs)
+  if (scoringProduct.labels_tags && !Array.isArray(scoringProduct.labels_tags)) {
+    logger.warn(`[truscoreEngine] Invalid labels_tags: expected array, got ${typeof scoringProduct.labels_tags}`);
+    scoringProduct.labels_tags = [];
   }
-  if (product.ingredients_analysis_tags && !Array.isArray(product.ingredients_analysis_tags)) {
-    logger.warn(`[truscoreEngine] Invalid ingredients_analysis_tags: expected array, got ${typeof product.ingredients_analysis_tags}`);
-    product.ingredients_analysis_tags = [];
+  if (scoringProduct.ingredients_analysis_tags && !Array.isArray(scoringProduct.ingredients_analysis_tags)) {
+    logger.warn(
+      `[truscoreEngine] Invalid ingredients_analysis_tags: expected array, got ${typeof scoringProduct.ingredients_analysis_tags}`
+    );
+    scoringProduct.ingredients_analysis_tags = [];
   }
-  if (product.additives_tags && !Array.isArray(product.additives_tags)) {
-    logger.warn(`[truscoreEngine] Invalid additives_tags: expected array, got ${typeof product.additives_tags}`);
-    product.additives_tags = [];
+  if (scoringProduct.additives_tags && !Array.isArray(scoringProduct.additives_tags)) {
+    logger.warn(`[truscoreEngine] Invalid additives_tags: expected array, got ${typeof scoringProduct.additives_tags}`);
+    scoringProduct.additives_tags = [];
   }
-  if (product.packagings && !Array.isArray(product.packagings)) {
-    logger.warn(`[truscoreEngine] Invalid packagings: expected array, got ${typeof product.packagings}`);
-    product.packagings = [];
+  if (scoringProduct.packagings && !Array.isArray(scoringProduct.packagings)) {
+    logger.warn(`[truscoreEngine] Invalid packagings: expected array, got ${typeof scoringProduct.packagings}`);
+    scoringProduct.packagings = [];
   }
 
   const calculationStartTime = Date.now();
   
   try {
     // Calculate each pillar independently
-    const bodyResult = calculateBodyPillar(product);
-    const planetResult = calculatePlanetPillar(product);
-    const ethicsResult = calculateEthicsPillar(product);
-    const openResult = calculateOpenPillar(product);
+    const bodyResult = calculateBodyPillar(scoringProduct);
+    const planetResult = calculatePlanetPillar(scoringProduct);
+    const ethicsResult = calculateEthicsPillar(scoringProduct);
+    const openResult = calculateOpenPillar(scoringProduct);
     
     // Extract scores - ensure all are valid numbers (safety validation)
     const body = typeof bodyResult.score === 'number' && !isNaN(bodyResult.score) ? bodyResult.score : 0;
@@ -125,23 +140,34 @@ export function calculateTruScore(
     const truscore = Math.max(0, Math.min(100, Math.round(body + planet + ethics + open)));
     
     // Generate insights if preferences provided
-    const insights = preferences ? generateInsights(product, preferences) : [];
+    const insights = preferences ? generateInsights(scoringProduct, preferences) : [];
     
     // Determine metadata
-    const hasNutriScore = !!product.nutriscore_grade;
-    const hasEcoScore = !!product.ecoscore_grade;
+    const hasNutriScore = !!scoringProduct.nutriscore_grade;
+    const hasEcoScore = !!scoringProduct.ecoscore_grade;
     
     // Check origin status
-    const hasOriginTags = Array.isArray(product.origins_tags) && product.origins_tags.length > 0;
-    const hasManufacturingTags = Array.isArray(product.manufacturing_places_tags) && product.manufacturing_places_tags.length > 0;
-    const hasOriginString = !!(product.origins && typeof product.origins === 'string' && product.origins.trim().length > 0);
-    const hasManufacturingString = !!(product.manufacturing_places && typeof product.manufacturing_places === 'string' && product.manufacturing_places.trim().length > 0);
+    const hasOriginTags = Array.isArray(scoringProduct.origins_tags) && scoringProduct.origins_tags.length > 0;
+    const hasManufacturingTags =
+      Array.isArray(scoringProduct.manufacturing_places_tags) && scoringProduct.manufacturing_places_tags.length > 0;
+    const hasOriginString = !!(
+      scoringProduct.origins &&
+      typeof scoringProduct.origins === 'string' &&
+      scoringProduct.origins.trim().length > 0
+    );
+    const hasManufacturingString = !!(
+      scoringProduct.manufacturing_places &&
+      typeof scoringProduct.manufacturing_places === 'string' &&
+      scoringProduct.manufacturing_places.trim().length > 0
+    );
     const placeholderValues = ['unknown', 'n/a', 'not available', 'missing', 'not disclosed', 'not specified'];
     const originArrayValues = [
-      ...(Array.isArray(product.origins_tags) ? product.origins_tags.map(v => String(v).toLowerCase()) : []),
-      ...(Array.isArray(product.manufacturing_places_tags) ? product.manufacturing_places_tags.map(v => String(v).toLowerCase()) : []),
+      ...(Array.isArray(scoringProduct.origins_tags) ? scoringProduct.origins_tags.map(v => String(v).toLowerCase()) : []),
+      ...(Array.isArray(scoringProduct.manufacturing_places_tags)
+        ? scoringProduct.manufacturing_places_tags.map(v => String(v).toLowerCase())
+        : []),
     ];
-    const originString = (product.origins || product.manufacturing_places || '').toString().toLowerCase();
+    const originString = (scoringProduct.origins || scoringProduct.manufacturing_places || '').toString().toLowerCase();
     const allOriginValues = [...originArrayValues, originString].join(' ');
     const hasOrigin: boolean = (hasOriginTags || hasManufacturingTags || hasOriginString || hasManufacturingString) &&
       !placeholderValues.some(placeholder => allOriginValues.includes(placeholder));
@@ -167,11 +193,11 @@ export function calculateTruScore(
         open: openResult,
       },
     };
-    result.analysis = buildTruScoreAnalysis(product, result) ?? undefined;
+    result.analysis = buildTruScoreAnalysis(scoringProduct, result) ?? undefined;
 
     // PowerShell logging for TruScore calculation details with timing
     powershellLogger.truScoreCalculationDetailed(
-      product?.barcode || 'unknown',
+      scoringProduct?.barcode || 'unknown',
       truscore,
       result.breakdown,
       {
@@ -272,10 +298,7 @@ function inferAdjustmentSource(
   if (pillar === 'Planet') {
     if (d.includes('base')) return { sourceDatabase: 'Internal', queryKeyType: 'product_field' };
     if (d.includes('eco-score') || d.includes('ecoscore')) return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
-    if (d.includes('palm') || d.includes('rspo')) return { sourceDatabase: productSourceDisplay + ' + Brand DB', queryKeyType: 'brand' };
-    if (d.includes('recycl') || d.includes('packaging')) return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
-    if (d.includes('overlay')) return { sourceDatabase: 'Brand DB', queryKeyType: 'parent' };
-    if (d.includes('farming') || d.includes('low-impact')) return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
+    if (d.includes('packaging fallback')) return { sourceDatabase: `${productSourceDisplay} (Planet Annex v2)`, queryKeyType: 'product_field' };
     return { sourceDatabase: productSourceDisplay, queryKeyType: 'product_field' };
   }
   if (pillar === 'Open') {

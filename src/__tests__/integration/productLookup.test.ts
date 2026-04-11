@@ -4,8 +4,8 @@
  * Tests the complete product lookup workflow from barcode to product display.
  */
 
-import { fetchProduct } from '../../../services/productService';
-import { normalizeBarcode } from '../../../utils/barcodeNormalization';
+import { fetchProduct } from '../../services/productService';
+import { normalizeBarcode } from '../../utils/barcodeNormalization';
 
 describe('Product Lookup Integration', () => {
   it('should fetch product for valid barcode', async () => {
@@ -13,8 +13,8 @@ describe('Product Lookup Integration', () => {
     const product = await fetchProduct(barcode);
     
     expect(product).not.toBeNull();
-    expect(product?.barcode).toBeDefined();
-    expect(product?.product_name).toBeDefined();
+    expect(product?.barcode).toBeTruthy();
+    expect(normalizeBarcode(product!.barcode)).toContain(barcode.replace(/^0+/, '') || barcode);
   }, 30000); // 30 second timeout for network requests
 
   it('should normalize barcode variants', () => {

@@ -14,6 +14,9 @@ interface PowerShellLogEntry {
 class PowerShellLogger {
   private logBuffer: PowerShellLogEntry[] = [];
   private maxBufferSize = 1000;
+  /** Dedupe identical TruScore analysis logs fired in quick succession (progressive UI + merge). */
+  private lastTruScoreAnalysisKey = '';
+  private lastTruScoreAnalysisAt = 0;
 
   /**
    * Format log entry for PowerShell with colors and structure
@@ -101,6 +104,25 @@ class PowerShellLogger {
     if (data) {
       console.log(JSON.stringify(data, null, 2));
     }
+  }
+
+  /**
+   * Single-line console + buffer (used for high-volume TruScore analysis to avoid triple console per field).
+   */
+  private logOneLine(level: LogLevel, category: string, message: string, data?: Record<string, unknown>): void {
+    const entry: PowerShellLogEntry = {
+      timestamp: new Date().toISOString(),
+      level,
+      category,
+      message,
+      data,
+    };
+    this.logBuffer.push(entry);
+    if (this.logBuffer.length > this.maxBufferSize) {
+      this.logBuffer.shift();
+    }
+    const payload = data !== undefined ? ` ${JSON.stringify(data)}` : '';
+    console.log(`[${entry.timestamp}] [${level}] [${category}] ${message}${payload}`);
   }
 
   /**
@@ -608,32 +630,36 @@ class PowerShellLogger {
     totalScore: number;
     fetchTrace: Array<{ database: string; queryKeyType: string; order: number; hit: boolean; responseTimeMs?: number }>;
     pillars: Record<string, { pillarName: string; baseScore: number; finalScore: number; adjustments: Array<{ description: string; value: number; type: string; sourceDatabase?: string; queryKeyType?: string }> }>;
+    generatedAt?: number;
   }): void {
-    this.section(`TRUSCORE ANALYSIS: ${analysis.barcode}`);
-    this.log('INFO', 'ANALYSIS_TOTAL', `TruScore: ${analysis.totalScore}/100`, {
+    const fetchSig = analysis.fetchTrace.map((e) => `${e.order}:${e.database}:${e.hit}`).join('|');
+    const pillarSig = Object.values(analysis.pillars)
+      .map((p) => `${p.pillarName}:${p.finalScore}`)
+      .join(',');
+    const dedupeKey = `${analysis.barcode}|${analysis.totalScore}|${fetchSig}|${pillarSig}`;
+    const now = Date.now();
+    if (dedupeKey === this.lastTruScoreAnalysisKey && now - this.lastTruScoreAnalysisAt < 4500) {
+      return;
+    }
+    this.lastTruScoreAnalysisKey = dedupeKey;
+    this.lastTruScoreAnalysisAt = now;
+
+    const pillarSummary = Object.fromEntries(
+      Object.entries(analysis.pillars).map(([k, p]) => [
+        k,
+        { final: p.finalScore, base: p.baseScore, adj: p.adjustments.length },
+      ])
+    );
+
+    this.logOneLine('INFO', 'TRUSCORE_ANALYSIS', `TruScore ${analysis.totalScore}/100 (${analysis.barcode})`, {
       barcode: analysis.barcode,
       totalScore: analysis.totalScore,
+      fetchTrace: analysis.fetchTrace.map(
+        (e) => `${e.order}. ${e.database} (${e.queryKeyType}): ${e.hit ? 'HIT' : 'MISS'}`
+      ),
+      pillars: pillarSummary,
     });
-    this.log('INFO', 'ANALYSIS_FETCH_TRACE', `Data sources queried (order, hit/miss)`, {
-      barcode: analysis.barcode,
-      queryCount: analysis.fetchTrace.length,
-      trace: analysis.fetchTrace.map(e => `${e.order}. ${e.database} (${e.queryKeyType}): ${e.hit ? 'HIT' : 'MISS'}`),
-    });
-    Object.entries(analysis.pillars).forEach(([key, pillar]) => {
-      this.log('INFO', 'ANALYSIS_PILLAR', `${pillar.pillarName}: ${pillar.finalScore}/25 (base ${pillar.baseScore})`, {
-        barcode: analysis.barcode,
-        pillar: pillar.pillarName,
-        baseScore: pillar.baseScore,
-        finalScore: pillar.finalScore,
-        adjustments: pillar.adjustments.map(a => ({
-          desc: a.description,
-          value: a.value,
-          source: a.sourceDatabase,
-          queryType: a.queryKeyType,
-        })),
-      });
-    });
-    console.log('[TRUSCORE_ANALYSIS_JSON] ' + JSON.stringify(analysis, null, 2));
+    console.log('[TRUSCORE_ANALYSIS_JSON] ' + JSON.stringify(analysis));
   }
 
   /**

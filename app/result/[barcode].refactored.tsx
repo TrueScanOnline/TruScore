@@ -363,6 +363,7 @@ function ResultScreenContent() {
               <InsightsCarousel
                 insights={productPageValuesInsights}
                 productName={product?.product_name || product?.product_name_en}
+                onRequestProductShare={() => handleShare('insights')}
               />
             )}
           </View>

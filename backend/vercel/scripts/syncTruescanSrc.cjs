@@ -1,6 +1,8 @@
 /**
- * Copy repo `src/` into `backend/vercel/truescan-src/` so Vercel CLI deploys
- * (which only uploads this directory) includes TruScore pillar code.
+ * Copy the entire repo `src/` tree into `backend/vercel/truescan-src/` so Vercel CLI
+ * deploys (which only upload this directory) always include the same TruScore modules as
+ * the app — e.g. `lib/truscoreEngine/pillars/planetPillar.ts` and
+ * `lib/truscoreEngine/pillars/planetPackagingFallback.ts` without manual file lists.
  *
  * Run from repo:  npm run sync-truescan-src --prefix backend/vercel
  * Or:            cd backend/vercel && npm run sync-truescan-src

@@ -10,6 +10,47 @@ import { calculateEthicsPillar } from '../truescan-src/lib/truscoreEngine/pillar
 import { calculateOpenPillar } from '../truescan-src/lib/truscoreEngine/pillars/openPillar';
 import { initializeCSVDatabases } from '../truescan-src/services/csvDatabases/csvDatabaseService';
 
+/** Rewritten from /api/share-event (same serverless function on Hobby). */
+function handleShareEventRoute(req: VercelRequest, res: VercelResponse): void | VercelResponse {
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(204).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  const body = req.body as Record<string, unknown> | undefined;
+  const barcode = typeof body?.barcode === 'string' ? body.barcode : '';
+  if (!barcode || !/^\d{8,14}$/.test(barcode)) {
+    return res.status(400).json({ error: 'Invalid barcode' });
+  }
+
+  // eslint-disable-next-line no-console -- intentional serverless telemetry
+  console.log(
+    '[share-event]',
+    JSON.stringify({
+      barcode,
+      platform: body?.platform,
+      itemType: body?.itemType,
+      t: body?.t,
+    })
+  );
+
+  return res.status(204).end();
+}
+
+function isShareEventRewrite(req: VercelRequest): boolean {
+  return req.query.__share_event === '1' || req.query.__share_event === 'true';
+}
+
 interface ProductPreview {
   barcode: string;
   product_name?: string;
@@ -31,6 +72,10 @@ interface ProductPreview {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (isShareEventRewrite(req)) {
+    return handleShareEventRoute(req, res);
+  }
+
   const { barcode } = req.query;
 
   if (!barcode || typeof barcode !== 'string') {

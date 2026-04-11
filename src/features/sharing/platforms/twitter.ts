@@ -1,5 +1,4 @@
-// Twitter/X sharing implementation
-// Uses Twitter API or fallback to native share
+// Twitter / X — intent uses separate text and url so the link is not duplicated in the body.
 
 import { ShareContent, ShareResult } from '../types';
 import { Share } from 'react-native';
@@ -7,37 +6,36 @@ import { logger } from '../../../utils/logger';
 import * as Linking from 'expo-linking';
 
 export class TwitterShare {
-  /**
-   * Share to Twitter/X
-   * Uses Twitter Share URL or fallback to native share
-   */
   static async share(content: ShareContent): Promise<ShareResult> {
     try {
-      // Build Twitter share URL
-      const text = encodeURIComponent(content.message.substring(0, 280));
+      let textBody = (content.message || '').trim();
+      if (content.url) {
+        textBody = textBody.split(content.url).join('').replace(/\n{3,}/g, '\n\n').trim();
+      }
+      const maxText = 240;
+      if (textBody.length > maxText) {
+        textBody = `${textBody.substring(0, maxText - 1)}…`;
+      }
+
+      const text = encodeURIComponent(textBody);
       const url = content.url ? encodeURIComponent(content.url) : '';
       const hashtags = content.hashtags?.join(',') || '';
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=${hashtags}`;
-      
-      const canOpen = await Linking.canOpenURL(twitterUrl);
-      
-      if (canOpen) {
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${text}${url ? `&url=${url}` : ''}${hashtags ? `&hashtags=${hashtags}` : ''}`;
+
+      try {
         await Linking.openURL(twitterUrl);
         return {
           success: true,
           platform: 'twitter',
         };
+      } catch (linkErr) {
+        logger.warn('Twitter intent failed, falling back to native share', linkErr);
       }
 
-      // Fallback to native share
-      // URL already included in Twitter URL above
-      const combinedMessage = content.url 
-        ? `${content.message}\n\n${content.url}`
-        : content.message;
+      const combinedMessage = content.url ? `${textBody}\n\n${content.url}` : textBody;
       const result = await Share.share({
         message: combinedMessage,
         title: content.title,
-        // Don't pass url separately
       });
 
       return {
@@ -54,5 +52,3 @@ export class TwitterShare {
     }
   }
 }
-
-

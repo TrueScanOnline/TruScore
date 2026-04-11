@@ -17,6 +17,12 @@ export const USER_CONTRIBUTED_BACKEND_TIMEOUT_MS = 12000;
  */
 export const USER_CONTRIBUTED_MERGE_RACE_MS = USER_CONTRIBUTED_BACKEND_TIMEOUT_MS + 2500;
 
+/**
+ * First-paint path: do not block the product screen on Vercel manual-products longer than this.
+ * Full merge still runs in the background and triggers a follow-up UI update when it completes.
+ */
+export const USER_CONTRIBUTED_FIRST_PAINT_RACE_MS = 450;
+
 const VERCEL_USER_CONTRIB_KEYS = [
   'manufacturing_places',
   'manufacturing_places_tags',

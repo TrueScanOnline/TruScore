@@ -18,6 +18,8 @@ import { ManualProductData } from '../../../src/types/manualProduct';
 import { getUserContributedProduct } from '../../../src/services/userContributedProductsService';
 import { submitManufacturingCountry, getManufacturingCountry } from '../../../src/services/manufacturingCountryService';
 import { uploadProductPhoto } from '../../../src/services/photoUploadService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
 
 /** Fetch mock compatible with services that use response.text() (e.g. manual-products POST/GET). */
 function mockFetchResponse(data: unknown, ok = true) {
@@ -34,14 +36,11 @@ describe('User Contribution System - Complete E2E Tests', () => {
   const TEST_BARCODE = '9300657233358';
   const TEST_USER_A = `user_a_${Date.now()}`;
   const TEST_USER_B = `user_b_${Date.now()}`;
-  
-  let AsyncStorage: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    AsyncStorage = require('@react-native-async-storage/async-storage');
-    AsyncStorage.getItem.mockResolvedValue(null);
-    AsyncStorage.setItem.mockResolvedValue(undefined);
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+    (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
   });
 
   describe('Complete Product Data Submission and Retrieval', () => {
@@ -404,8 +403,7 @@ describe('User Contribution System - Complete E2E Tests', () => {
   describe('Photo Upload (All Types)', () => {
     test('should upload front photo and retrieve globally', async () => {
       const mockImagePath = '/path/to/front.jpg';
-      const FileSystem = require('expo-file-system');
-      FileSystem.readAsStringAsync.mockResolvedValue('base64encodedimage');
+      (FileSystem.readAsStringAsync as jest.Mock).mockResolvedValue('base64encodedimage');
 
       (global.fetch as jest.Mock).mockImplementation((url: string, options?: any) => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';
@@ -431,8 +429,7 @@ describe('User Contribution System - Complete E2E Tests', () => {
 
     test('should upload ingredients photo and retrieve globally', async () => {
       const mockImagePath = '/path/to/ingredients.jpg';
-      const FileSystem = require('expo-file-system');
-      FileSystem.readAsStringAsync.mockResolvedValue('base64encodedimage');
+      (FileSystem.readAsStringAsync as jest.Mock).mockResolvedValue('base64encodedimage');
 
       (global.fetch as jest.Mock).mockImplementation((url: string, options?: any) => {
         const urlString = typeof url === 'string' ? url : (url as any)?.url || '';

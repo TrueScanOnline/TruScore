@@ -3,6 +3,7 @@
 // Gracefully degrades if Sentry is not configured
 
 import { logger } from '../utils/logger';
+import * as Sentry from '@sentry/react-native';
 
 interface ErrorContext {
   [key: string]: any;
@@ -27,15 +28,12 @@ class ErrorReportingService {
     // 3. Rebuild native code: npx expo prebuild
     
     try {
-      // Try to require Sentry (will fail gracefully if not installed)
-      const Sentry = require('@sentry/react-native');
       if (Sentry && Sentry.init) {
         const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN;
         
         if (SENTRY_DSN && SENTRY_DSN !== 'YOUR_SENTRY_DSN' && SENTRY_DSN.length > 10) {
           Sentry.init({
             dsn: SENTRY_DSN,
-            enableInExpoDevelopment: false,
             debug: __DEV__,
             environment: __DEV__ ? 'development' : 'production',
             tracesSampleRate: __DEV__ ? 1.0 : 0.1,

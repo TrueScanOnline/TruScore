@@ -43,9 +43,8 @@ interface AnalysisResult {
   planetDetails: {
     base: number;
     ecoscoreGrade?: string;
-    ecoscoreValue?: number;
-    palmOilPenalty: number;
-    recyclableBonus: number;
+    ecoscoreAdjustment?: number;
+    packagingFallbackPoints?: number;
     final: number;
   };
   ethicsDetails: {
@@ -121,11 +120,14 @@ function printPillarDetails(
   if (details.ecoscoreValue !== undefined && details.ecoscoreValue > 0) {
     positives.push(`Eco-Score (${details.ecoscoreGrade}): +${formatNumber(details.ecoscoreValue)}`);
   }
+  if (details.ecoscoreAdjustment !== undefined && details.ecoscoreAdjustment > 0) {
+    positives.push(`Eco-Score (${details.ecoscoreGrade}): +${formatNumber(details.ecoscoreAdjustment)}`);
+  }
   if (details.certificationBonus > 0) {
     positives.push(`Certifications: +${formatNumber(details.certificationBonus)}`);
   }
-  if (details.recyclableBonus > 0) {
-    positives.push(`Recyclable Packaging: +${formatNumber(details.recyclableBonus)}`);
+  if (details.packagingFallbackPoints > 0) {
+    positives.push(`Packaging fallback: +${formatNumber(details.packagingFallbackPoints)}`);
   }
   if (details.listingClarityBonus > 0) {
     positives.push(`Listing clarity bonus: +${formatNumber(details.listingClarityBonus)}`);
@@ -156,8 +158,8 @@ function printPillarDetails(
   if (details.fragrancePenalty > 0) {
     negatives.push(`Fragrance: -${formatNumber(details.fragrancePenalty)}`);
   }
-  if (details.palmOilPenalty > 0) {
-    negatives.push(`Palm Oil: -${formatNumber(details.palmOilPenalty)}`);
+  if (details.ecoscoreAdjustment !== undefined && details.ecoscoreAdjustment < 0) {
+    negatives.push(`Eco-Score (${details.ecoscoreGrade}): ${formatNumber(details.ecoscoreAdjustment)}`);
   }
   if (details.cruelParentPenalty > 0) {
     negatives.push(`Cruel Parent: -${formatNumber(details.cruelParentPenalty)}`);
@@ -202,7 +204,7 @@ async function analyzeBarcode(barcode: string): Promise<AnalysisResult> {
         hasEcoScore: false,
         hasOrigin: false,
         bodyDetails: { base: 0, additivePenalty: 0, riskyTagsPenalty: 0, irritantPenalty: 0, fragrancePenalty: 0, novaBonus: 0, final: 0 },
-        planetDetails: { base: 0, palmOilPenalty: 0, recyclableBonus: 0, final: 0 },
+        planetDetails: { base: 0, final: 0 },
         ethicsDetails: { base: 0, certificationBonus: 0, cruelParentPenalty: 0, recallPenalty: 0, final: 0 },
         openDetails: { base: 0, ingredientsScore: 0, hiddenTermsPenalty: 0, listingClarityBonus: 0, originPenalty: 0, final: 0 },
         productData: { additives_count: 0, hasIngredients: false, ingredientsLength: 0, hasPalmOil: false, certifications: [], labels: [], hasOrigin: false },
@@ -231,13 +233,12 @@ async function analyzeBarcode(barcode: string): Promise<AnalysisResult> {
       final: result.breakdown.Body,
     };
     
+    const pPlanet = result.pillarDetails?.planet;
     const planetDetails = {
-      base: result.breakdown.Planet,
-      ecoscoreGrade: product.ecoscore_grade,
-      ecoscoreValue: product.ecoscore_grade ?
-        ({ a: 25, b: 20, c: 15, d: 10, e: 5 } as any)[product.ecoscore_grade.toLowerCase()] : undefined,
-      palmOilPenalty: 0,
-      recyclableBonus: 0,
+      base: pPlanet?.base ?? 15,
+      ecoscoreGrade: pPlanet?.details?.ecoscoreGrade,
+      ecoscoreAdjustment: pPlanet?.details?.ecoscoreAdjustment,
+      packagingFallbackPoints: pPlanet?.details?.packagingFallbackPoints,
       final: result.breakdown.Planet,
     };
     
@@ -296,7 +297,7 @@ async function analyzeBarcode(barcode: string): Promise<AnalysisResult> {
       hasEcoScore: false,
       hasOrigin: false,
       bodyDetails: { base: 0, additivePenalty: 0, riskyTagsPenalty: 0, irritantPenalty: 0, fragrancePenalty: 0, novaBonus: 0, final: 0 },
-      planetDetails: { base: 0, palmOilPenalty: 0, recyclableBonus: 0, final: 0 },
+      planetDetails: { base: 0, final: 0 },
       ethicsDetails: { base: 0, certificationBonus: 0, cruelParentPenalty: 0, recallPenalty: 0, final: 0 },
       openDetails: { base: 0, ingredientsScore: 0, hiddenTermsPenalty: 0, listingClarityBonus: 0, originPenalty: 0, final: 0 },
       productData: { additives_count: 0, hasIngredients: false, ingredientsLength: 0, hasPalmOil: false, certifications: [], labels: [], hasOrigin: false },

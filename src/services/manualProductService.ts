@@ -6,6 +6,7 @@ import { Product, ProductWithTrustScore, TrustScoreBreakdown } from '../types/pr
 import { ManualProductData } from '../types/manualProduct';
 import { cacheProduct } from './cacheService';
 import { calculateTruScore } from '../lib/truscoreEngine';
+import { getPlanetScoringContext } from '../utils/planetScoringContext';
 import { logger } from '../utils/logger';
 import { submitProductToOpenFoodFacts, hasOFFCredentials } from './openFoodFactsSubmission';
 import { uploadProductPhoto } from './photoUploadService';
@@ -103,7 +104,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
     // Calculate Trust Score if we have enough data
     let productWithScore: ProductWithTrustScore;
     try {
-      const trustScoreResult = calculateTruScore(product);
+      const trustScoreResult = calculateTruScore(product, undefined, getPlanetScoringContext());
       // Map TruScoreResult to TrustScoreBreakdown format
       const breakdown: TrustScoreBreakdown = {
         body: trustScoreResult.breakdown.Body || 0,

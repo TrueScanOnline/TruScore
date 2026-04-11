@@ -4,6 +4,14 @@
 // Automatically opens app if installed, redirects to app stores if not
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
+import {
+  absoluteImageUrl,
+  buildLandingPresentation,
+  escapeHtmlAttr,
+  escapeHtmlText,
+  normalizeShareContext,
+  pickQueryString,
+} from '../../lib/shareLandingMeta';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { barcode } = req.query;
@@ -11,6 +19,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!barcode || typeof barcode !== 'string') {
     return res.status(400).send('Invalid barcode');
   }
+
+  const ctxParam = normalizeShareContext(req.query.ctx);
+  const passthrough = pickQueryString(req.query as Record<string, string | string[] | undefined>, [
+    'ctx',
+    'src',
+    'ref',
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+  ]);
+  const canonicalQuery = new URLSearchParams();
+  for (const [k, v] of Object.entries(passthrough)) {
+    canonicalQuery.set(k, v);
+  }
+  const canonicalQs = canonicalQuery.toString();
+  const canonicalPageUrl = `https://truescan.app/barcode/${barcode}${canonicalQs ? `?${canonicalQs}` : ''}`;
 
   // App Store links
   const APP_STORE_ID = process.env.APP_STORE_ID || '[APP_STORE_ID]';
@@ -21,7 +45,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   // Deep link to app
   const deepLink = `truescan://barcode/${barcode}`;
-  const universalLink = `https://truescan.app/barcode/${barcode}`;
   
   // Fetch product data
   let productData: any = null;
@@ -38,12 +61,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('Error fetching product data:', error);
   }
 
-  const productName = productData?.product_name || productData?.product_name_en || 'This Product';
-  const productImage = productData?.image_url || '';
+  const productNamePlain = productData?.product_name || productData?.product_name_en || 'This Product';
+  const productImageRaw = productData?.image_url || '';
+  const productImageAbsolute = absoluteImageUrl(productImageRaw);
   const trustScore = productData?.trust_score;
   const trustScoreBreakdown = productData?.trust_score_breakdown;
   const brands = productData?.brands;
   const categories = productData?.categories;
+
+  const productNameHtml = escapeHtmlText(productNamePlain);
+  const firstBrandPlain = brands ? String(brands).split(',')[0].trim() : '';
+  const firstCategoryPlain = categories ? String(categories).split(',')[0].trim() : '';
+  const firstBrandHtml = firstBrandPlain ? escapeHtmlText(firstBrandPlain) : '';
+  const firstCategoryHtml = firstCategoryPlain ? escapeHtmlText(firstCategoryPlain) : '';
   
   // Calculate score color and emoji with viral messaging
   const getScoreColor = (score: number | null | undefined) => {
@@ -86,24 +116,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   const scoreInfo = getScoreColor(trustScore);
   
-  // Generate viral headline based on score
+  // Generate viral headline based on score (default when no share context)
   const getViralHeadline = () => {
     if (trustScore === null || trustScore === undefined) {
-      return '🔍 Someone Shared This Product With You';
+      return '🔍 Someone shared this product with you';
     }
     if (trustScore >= 80) {
-      return `🌟 ${productName} Got an EXCELLENT Score!`;
+      return `🌟 ${productNamePlain} scored excellent`;
     }
     if (trustScore >= 60) {
-      return `✅ Check Out This Product's TruScore`;
+      return `✅ TruScore for ${productNamePlain}`;
     }
     if (trustScore >= 40) {
-      return `⚠️ You Should See This Product's Score`;
+      return `⚠️ See the TruScore for ${productNamePlain}`;
     }
-    return `❌ This Product's Score Will Surprise You`;
+    return `❌ Low TruScore: ${productNamePlain}`;
   };
-  
-  const viralHeadline = getViralHeadline();
+
+  const defaultHeadline = getViralHeadline();
+  const defaultMetaDescription =
+    trustScore !== null && trustScore !== undefined
+      ? `${scoreInfo.viralMessage} TruScore ${trustScore}/100 — open the free TruScore app for the full breakdown.`
+      : `Discover TruScore, nutrition, and sourcing for ${productNamePlain} — free app, no sign-up required.`;
+
+  const landing = buildLandingPresentation({
+    ctx: ctxParam,
+    productNamePlain,
+    trustScore,
+    defaultHeadline,
+    defaultMetaDescription,
+    scoreHook: scoreInfo.hook,
+    scoreViral: scoreInfo.viralMessage,
+  });
+
+  const pageHeadlineHtml = escapeHtmlText(landing.pageHeadlinePlain);
+  const documentTitleHtml = escapeHtmlText(landing.documentTitlePlain);
+  const metaDescriptionAttr = escapeHtmlAttr(landing.metaDescriptionPlain);
+  const heroTaglineHtml = escapeHtmlText(landing.heroTaglinePlain);
+  const heroViralHtml = escapeHtmlText(landing.heroViralPlain);
+  const ogTitleAttr = escapeHtmlAttr(landing.pageHeadlinePlain);
+  const twitterTitleAttr = escapeHtmlAttr(landing.pageHeadlinePlain);
+  const canonicalUrlAttr = escapeHtmlAttr(canonicalPageUrl);
   
   // World-leading HTML page with premium design
   const html = `<!DOCTYPE html>
@@ -111,22 +164,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>${productName} - TruScore</title>
-  <meta name="description" content="Discover the TruScore for ${productName}. Get detailed product information, nutrition facts, ingredients, and sustainability data with TruScore.">
+  <title>${documentTitleHtml}</title>
+  <meta name="description" content="${metaDescriptionAttr}">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${universalLink}">
-  <meta property="og:title" content="${viralHeadline}">
-  <meta property="og:description" content="${trustScore !== null && trustScore !== undefined ? `${scoreInfo.viralMessage} TruScore: ${trustScore}/100 - See the full breakdown in TruScore app` : 'Discover the truth about products with TruScore - Free app, no sign-up required'}">
-  ${productImage ? `<meta property="og:image" content="${productImage}">` : ''}
+  <meta property="og:url" content="${canonicalUrlAttr}">
+  <meta property="og:title" content="${ogTitleAttr}">
+  <meta property="og:description" content="${metaDescriptionAttr}">
+  ${productImageAbsolute ? `<meta property="og:image" content="${escapeHtmlAttr(productImageAbsolute)}">` : ''}
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${universalLink}">
-  <meta name="twitter:title" content="${viralHeadline}">
-  <meta name="twitter:description" content="${trustScore !== null && trustScore !== undefined ? `${scoreInfo.viralMessage} TruScore: ${trustScore}/100` : 'Discover the truth about products - Free TruScore app'}">
-  ${productImage ? `<meta name="twitter:image" content="${productImage}">` : ''}
+  <meta name="twitter:url" content="${canonicalUrlAttr}">
+  <meta name="twitter:title" content="${twitterTitleAttr}">
+  <meta name="twitter:description" content="${metaDescriptionAttr}">
+  ${productImageAbsolute ? `<meta name="twitter:image" content="${escapeHtmlAttr(productImageAbsolute)}">` : ''}
   
   <!-- iOS Universal Links -->
   <meta property="al:ios:app_store_id" content="${APP_STORE_ID}">
@@ -723,19 +776,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <div class="container">
     <div class="hero">
       <div class="logo">🔍</div>
-      <h1>${viralHeadline}</h1>
-      <div class="tagline">${scoreInfo.hook}</div>
-      <div class="viral-message">${scoreInfo.viralMessage}</div>
+      <h1>${pageHeadlineHtml}</h1>
+      <div class="tagline">${heroTaglineHtml}</div>
+      <div class="viral-message">${heroViralHtml}</div>
       <div class="social-proof">
-        <span class="social-proof-icon">👥</span>
-        <span>Join 1M+ users discovering the truth about products</span>
+        <span class="social-proof-icon">📱</span>
+        <span>Free app — scan any barcode for TruScore, nutrition, and recalls</span>
       </div>
     </div>
     
     <div class="product-section">
-      ${productImage ? `
+      ${productImageAbsolute ? `
       <div class="product-image-container">
-        <img src="${productImage}" alt="${productName}" class="product-image" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'>📦</div>'">
+        <img src="${escapeHtmlAttr(productImageAbsolute)}" alt="${productNameHtml}" class="product-image" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'>📦</div>'">
       </div>
       ` : `
       <div class="product-image-container">
@@ -743,10 +796,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       </div>
       `}
       
-      <h2 class="product-name">${productName}</h2>
+      <h2 class="product-name">${productNameHtml}</h2>
       <div class="product-meta">
-        ${brands ? `<strong>Brand:</strong> ${brands.split(',')[0].trim()}<br>` : ''}
-        ${categories ? `<strong>Category:</strong> ${categories.split(',')[0].trim()}<br>` : ''}
+        ${firstBrandHtml ? `<strong>Brand:</strong> ${firstBrandHtml}<br>` : ''}
+        ${firstCategoryHtml ? `<strong>Category:</strong> ${firstCategoryHtml}<br>` : ''}
         <strong>Barcode:</strong> ${barcode}
       </div>
       
@@ -793,7 +846,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     </div>
     
     <div class="features">
-      <div class="features-title">Why 1M+ Users Trust TruScore</div>
+      <div class="features-title">What you get with TruScore</div>
       <div class="features-grid">
         <div class="feature-item">
           <div class="feature-icon">📊</div>
@@ -822,7 +875,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       </div>
       <div style="text-align: center; margin-top: 20px; padding: 16px; background: rgba(22, 160, 133, 0.1); border-radius: 12px;">
         <div style="font-size: 14px; color: #16a085; font-weight: 600; margin-bottom: 4px;">✨ 100% Free • No Ads • No Sign-Up</div>
-        <div style="font-size: 12px; color: #6c757d;">Join millions discovering the truth about products</div>
+        <div style="font-size: 12px; color: #6c757d;">Scan barcodes in store — see scores before you buy</div>
       </div>
     </div>
     
@@ -831,7 +884,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <div class="cta-subtitle">${trustScore !== null && trustScore !== undefined ? 'Get detailed nutrition, ingredients, sustainability, and safety data' : 'Scan any product to see its complete TruScore breakdown'}</div>
       <div style="background: rgba(255, 255, 255, 0.9); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
         <div style="font-size: 14px; color: #6c757d; margin-bottom: 8px;">✨ Free to download • No sign-up required</div>
-        <div style="font-size: 13px; color: #95a5a6;">Trusted by millions of conscious shoppers</div>
+        <div style="font-size: 13px; color: #95a5a6;">Built for transparency — your data stays on your device</div>
       </div>
       <div class="app-buttons">
         <a href="${appStoreLink}" class="app-button" id="appStoreButton" onclick="tryOpenApp(event, 'ios')">
@@ -852,7 +905,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <script>
     const barcode = '${barcode}';
     const deepLink = '${deepLink}';
-    const universalLink = '${universalLink}';
+    const universalLink = ${JSON.stringify(canonicalPageUrl)};
     const appStoreLink = '${appStoreLink}';
     const playStoreLink = '${playStoreLink}';
     

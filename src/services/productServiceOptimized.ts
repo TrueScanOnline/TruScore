@@ -19,7 +19,8 @@ import { fetchProductFromOBF } from './openBeautyFacts';
 import { fetchProductFromOPF } from './openProductsFacts';
 import { fetchProductFromOPFF } from './openPetFoodFacts';
 import { lookupFromSQLite, lookupFromCache, lookupProductFast, processSQLiteProduct, processCachedProduct, saveProductToCache, mergeUserContributedData } from './productCacheService';
-import { getUserContributedProduct, USER_CONTRIBUTED_MERGE_RACE_MS } from './userContributedProductsService';
+import { USER_CONTRIBUTED_MERGE_RACE_MS, USER_CONTRIBUTED_FIRST_PAINT_RACE_MS } from './userContributedProductsService';
+import { isOpenFactsFoodLikeProduct } from '../utils/openFactsProductKind';
 import { calculateTrustScore } from '../utils/trustScore';
 import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
 import { getUserCountryCode } from '../utils/countryDetection';
@@ -72,6 +73,13 @@ function buildFetchTraceForProducts(products: Product[]): FetchTraceEntry[] {
 
 // Query deduplication
 const activeProductQueries = new Map<string, Promise<ProductWithTrustScore | null>>();
+
+/** Avoid duplicate Open Facts fetches in TruScoreOptimizedDatabase when Phase 1 already returned this product. */
+function enhancementSeedFromPhase1(p: Product | null): Product[] {
+  if (!p) return [];
+  if (p.source === 'openfoodfacts' || p.source === 'openbeautyfacts') return [p];
+  return [];
+}
 
 /**
  * Check if product has sufficient data for immediate display
@@ -207,7 +215,7 @@ async function executeFetchProductOptimized(
   // Create database service instance (will be reused later)
   const databaseService = new TruScoreOptimizedDatabase();
   // Log query strategy summary
-  const strategyDatabases = ['SQLite', 'Cache', 'Open Food Facts', 'Open Beauty Facts', 'GS1', 'Spoonacular', 'Barcode Lookup', 'FSANZ', 'Fallbacks'];
+  const strategyDatabases = ['SQLite', 'Cache', 'Open Food Facts', 'Open Beauty Facts (if needed)', 'GS1', 'FSANZ', 'FoodAtlas', 'Fallbacks'];
   const strategyOrder = [1, 2, 3, 3, 2, 2, 3, 2, 3];
   powershellLogger.queryStrategy(
     primaryBarcode,
@@ -300,7 +308,7 @@ async function executeFetchProductOptimized(
   // ===== PHASE 1: FAST SOURCES (Only if cache not found) =====
   // Cache not found - query APIs (Target: < 2 seconds)
   onProgress?.({ phase: 'fast_sources' });
-  powershellLogger.queryPhase(primaryBarcode, 1, 'Fast Sources (SQLite, Cache, OFF, OBF)', '< 2 seconds');
+  powershellLogger.queryPhase(primaryBarcode, 1, 'Fast Sources (OFF first; OBF only if needed)', '< 2 seconds');
   logger.info(`📊 PHASE 1: Fast Sources (Cache miss - querying APIs - Target: < 2 seconds)`);
   
   const fastSourcesStart = Date.now();
@@ -309,6 +317,8 @@ async function executeFetchProductOptimized(
   // Display product IMMEDIATELY when Open Food Facts returns (don't wait for timeout)
   // Only query APIs if cache was not found
   let progressiveDisplaySent = false;
+  /** When set, reuse this promise for the main return path to avoid a second long user-merge wait. */
+  let firstPaintProductPromise: Promise<ProductWithTrustScore> | null = null;
   const progressiveDisplayUpdates: Array<{
     phase: string;
     timestamp: number;
@@ -353,77 +363,92 @@ async function executeFetchProductOptimized(
     'additives_tags',
   ];
   
-  // Start OFF query immediately (don't wait for Promise.race)
-  const offQueryPromise = fetchProductFromOFF(primaryBarcode).then(result => {
-        apiCallCount++;
-        if (result) {
-          sources.push('openfoodfacts');
-          logger.info(`✅ Open Food Facts found: ${primaryBarcode}`);
-      
-      // CRITICAL: Send to UI IMMEDIATELY when Open Food Facts returns
-      // This enables progressive display - user sees product in 1-2 seconds
-      if (result && hasGoodData(result) && !progressiveDisplaySent) {
-        progressiveDisplaySent = true;
-        const progressiveTrace: FetchTraceEntry[] = [
-          { database: 'Open Food Facts', queryKeyType: 'barcode', order: 1, hit: true },
-          { database: 'Open Beauty Facts', queryKeyType: 'barcode', order: 2, hit: false },
-        ];
-        (result as any)._fetchTrace = progressiveTrace;
-        processProductFast(result, primaryBarcode).then(processed => {
-          const timeFromStart = Date.now() - scanStartTime;
-          const availableFields = getAvailableFields(processed);
-          const allPossibleFields = getAllPossibleFields();
-          const missingFields = allPossibleFields.filter(f => !availableFields.includes(f));
-          
-          progressiveDisplayUpdates.push({
-            phase: 'product_ready',
-            timestamp: Date.now(),
-            timeFromStart,
-            availableFields,
-            missingFields,
-            source: result.source || 'openfoodfacts',
-            productComplete: missingFields.length === 0,
-          });
-          
-          onProgress?.({ phase: 'product_ready', product: processed });
-          logger.info(`⚡⚡⚡ PROGRESSIVE DISPLAY: Product sent to UI immediately from Open Food Facts (${timeFromStart}ms)`);
-        }).catch(err => {
-          logger.debug('Progressive display error (non-critical):', err);
-          progressiveDisplaySent = false; // Allow retry
-        });
-      }
-        }
-        return result;
-  }).catch(err => {
-    logger.debug('OFF query error (non-critical):', err);
-    return null;
-  });
-  
-  // IMPORTANT: do NOT Promise.race(allSettled, timeout→[]).
-  // A 3s timeout caused Phase 1 to log "0 products" while OFF was still loading; Phase 2 then
-  // re-ran a full OFF fan-out (~20s+ duplicate work). Wait for real OFF+OBF completion here.
-  const fastSourcesResults = await Promise.allSettled([
-    offQueryPromise,
-    fetchProductFromOBF(primaryBarcode).then(result => {
+  // Phase 1: Open Food Facts first — do not block on Open Beauty Facts when OFF already returns a food-like product.
+  const offProduct = await fetchProductFromOFF(primaryBarcode)
+    .then((result) => {
       apiCallCount++;
-      if (result) sources.push('openbeautyfacts');
+      if (result) {
+        sources.push('openfoodfacts');
+        logger.info(`✅ Open Food Facts found: ${primaryBarcode}`);
+      }
       return result;
-    }),
-  ]);
-  const fastSources = fastSourcesResults
-    .filter((r): r is PromiseFulfilledResult<Product | null> => 
-      r.status === 'fulfilled' && r.value !== null)
-    .map(r => r.value)
-    .filter((p): p is Product => p !== null);
-  
+    })
+    .catch((err) => {
+      logger.debug('OFF query error (non-critical):', err);
+      return null;
+    });
+
+  if (offProduct && hasGoodData(offProduct)) {
+    progressiveDisplaySent = true;
+    firstPaintProductPromise = processProductForDisplay(offProduct, primaryBarcode, (refined) => {
+      const timeFromStart = Date.now() - scanStartTime;
+      const availableFields = getAvailableFields(refined);
+      const allPossibleFields = getAllPossibleFields();
+      const missingFields = allPossibleFields.filter((f) => !availableFields.includes(f));
+      progressiveDisplayUpdates.push({
+        phase: 'product_refined',
+        timestamp: Date.now(),
+        timeFromStart,
+        availableFields,
+        missingFields,
+        source: refined.source || 'openfoodfacts',
+        productComplete: missingFields.length === 0,
+      });
+      onProgress?.({ phase: 'product_refined', product: refined });
+      logger.info(
+        `[ProductServiceOptimized] User-contributed merge refined UI (${timeFromStart}ms from scan start)`
+      );
+    });
+
+    firstPaintProductPromise
+      .then((processed) => {
+        const timeFromStart = Date.now() - scanStartTime;
+        const availableFields = getAvailableFields(processed);
+        const allPossibleFields = getAllPossibleFields();
+        const missingFields = allPossibleFields.filter((f) => !availableFields.includes(f));
+        progressiveDisplayUpdates.push({
+          phase: 'product_ready',
+          timestamp: Date.now(),
+          timeFromStart,
+          availableFields,
+          missingFields,
+          source: offProduct.source || 'openfoodfacts',
+          productComplete: missingFields.length === 0,
+        });
+        onProgress?.({ phase: 'product_ready', product: processed });
+        logger.info(
+          `⚡⚡⚡ PROGRESSIVE DISPLAY: Product sent to UI from Open Food Facts (${timeFromStart}ms)`
+        );
+      })
+      .catch((err) => {
+        logger.debug('Progressive display error (non-critical):', err);
+        progressiveDisplaySent = false;
+        firstPaintProductPromise = null;
+      });
+  }
+
+  let obfProduct: Product | null = null;
+  const needOpenBeautyInPhase1 = !offProduct || !isOpenFactsFoodLikeProduct(offProduct);
+  if (needOpenBeautyInPhase1) {
+    obfProduct = await fetchProductFromOBF(primaryBarcode)
+      .then((result) => {
+        apiCallCount++;
+        if (result) sources.push('openbeautyfacts');
+        return result;
+      })
+      .catch(() => null);
+  } else {
+    logger.debug('[ProductServiceOptimized] Phase 1: skipping OBF — food-like OFF hit (saves latency + API calls)');
+  }
+
+  const fastSources: Product[] = [];
+  if (offProduct) fastSources.push(offProduct);
+  if (obfProduct) fastSources.push(obfProduct);
+
   const fastSourcesTime = Date.now() - fastSourcesStart;
   logger.info(`✅ PHASE 1 Complete: ${fastSources.length} products found in ${fastSourcesTime}ms`);
-  
-  // OPTIMIZATION: More aggressive early exit detection - faster transition to Phase 2
-  // If we got results quickly (< 1s) but all were null, exit early instead of waiting for timeout
-  // This works globally on iOS/Android and saves 0.5-1 second per scan
-  const allFailedQuickly = fastSourcesTime < 1000 && fastSources.length === 0 && 
-                           fastSourcesResults.every(r => r.status === 'fulfilled' && r.value === null);
+
+  const allFailedQuickly = fastSourcesTime < 1000 && fastSources.length === 0;
   
   if (allFailedQuickly) {
     logger.info(`⚡ Early exit: All fast sources failed quickly (< 1s), skipping to Phase 2 immediately`);
@@ -462,8 +487,14 @@ async function executeFetchProductOptimized(
       // Start Phase 2/3 queries in background (non-blocking)
       const phase2Promise = (async () => {
         try {
-          powershellLogger.queryPhase(primaryBarcode, 2, 'Enhancement Sources (GS1, Spoonacular, etc.)', 'Background');
-          const enhancementProducts = await databaseService.queryAllDatabases(primaryBarcode, userCountry, product?.product_name);
+          powershellLogger.queryPhase(primaryBarcode, 2, 'Enhancement (GS1, regional, name-based)', 'Background');
+          const enhancementProducts = await databaseService.queryAllDatabases(
+            primaryBarcode,
+            userCountry,
+            product?.product_name,
+            undefined,
+            { seedProducts: enhancementSeedFromPhase1(product) }
+          );
           
           if (enhancementProducts.length > 0) {
             logger.info(`📊 Background Phase 2: Found ${enhancementProducts.length} additional products`);
@@ -481,7 +512,13 @@ async function executeFetchProductOptimized(
         try {
           if (shouldQueryFallbacks(product, hasOpenFoodFacts)) {
             powershellLogger.queryPhase(primaryBarcode, 3, 'Fallback Sources (if needed)', 'Background');
-            const fallbackProducts = await databaseService.queryAllDatabases(primaryBarcode, userCountry);
+            const fallbackProducts = await databaseService.queryAllDatabases(
+              primaryBarcode,
+              userCountry,
+              undefined,
+              undefined,
+              { seedProducts: enhancementSeedFromPhase1(product) }
+            );
             if (fallbackProducts.length > 0) {
               logger.info(`📊 Background Phase 3: Found ${fallbackProducts.length} fallback products`);
               return fallbackProducts;
@@ -505,8 +542,13 @@ async function executeFetchProductOptimized(
       } else if (product.source === 'cache') {
         // For cache, merge user data with timeout (non-blocking)
         processedProduct = await processCachedProduct(product, primaryBarcode);
+      } else if (product.source === 'openfoodfacts' && firstPaintProductPromise) {
+        try {
+          processedProduct = await firstPaintProductPromise;
+        } catch {
+          processedProduct = await processProductFast(product, primaryBarcode);
+        }
       } else {
-        // For API products, process fast (user merge happens inside with timeout)
         processedProduct = await processProductFast(product, primaryBarcode);
       }
       
@@ -544,9 +586,6 @@ async function executeFetchProductOptimized(
               logger.debug(`✅ Background merge complete for ${primaryBarcode}`);
               if (enhanced && onProgress) {
                 onProgress({ phase: 'product_enhanced', product: enhanced });
-                if (enhanced._truscore_analysis) {
-                  powershellLogger.truScoreAnalysis(enhanced._truscore_analysis);
-                }
               }
             })
             .catch(err => {
@@ -569,14 +608,20 @@ async function executeFetchProductOptimized(
   }
   
   // ===== PHASE 2: ENHANCEMENT SOURCES (Background) =====
-  powershellLogger.queryPhase(primaryBarcode, 2, 'Enhancement Sources (GS1, Spoonacular, etc.)', 'Background');
+  powershellLogger.queryPhase(primaryBarcode, 2, 'Enhancement (GS1, regional, name-based)', 'Background');
   logger.info(`📊 PHASE 2: Enhancement Sources (Background)`);
   onProgress?.({ phase: 'enhancement' });
   
   const enhancementStart = Date.now();
   
   // Query enhancement sources (non-blocking if we already have a product)
-  const enhancementPromise = databaseService.queryAllDatabases(primaryBarcode, userCountry, product?.product_name);
+  const enhancementPromise = databaseService.queryAllDatabases(
+    primaryBarcode,
+    userCountry,
+    product?.product_name,
+    undefined,
+    { seedProducts: enhancementSeedFromPhase1(product) }
+  );
   
   // FAST: If we have a product, process it quickly with TruScore and return
   // TruScore calculation is fast (200-500ms) and necessary for display
@@ -597,9 +642,6 @@ async function executeFetchProductOptimized(
           .then((enhanced) => {
             if (enhanced && onProgress) {
               onProgress({ phase: 'product_enhanced', product: enhanced });
-              if (enhanced._truscore_analysis) {
-                powershellLogger.truScoreAnalysis(enhanced._truscore_analysis);
-              }
             }
           })
           .catch(() => {});
@@ -642,7 +684,13 @@ async function executeFetchProductOptimized(
     logger.info(`📊 PHASE 3: Fallbacks (No good data found)`);
     onProgress?.({ phase: 'fallbacks' });
     
-    const fallbackProducts = await databaseService.queryAllDatabases(primaryBarcode, userCountry);
+    const fallbackProducts = await databaseService.queryAllDatabases(
+      primaryBarcode,
+      userCountry,
+      undefined,
+      undefined,
+      { seedProducts: enhancementSeedFromPhase1(product) }
+    );
     
     if (fallbackProducts.length > 0) {
       product = fallbackProducts.length === 1 
@@ -662,16 +710,19 @@ async function executeFetchProductOptimized(
     // Query fallbacks in background to enhance product
     // First process the product to get ProductWithTrustScore
     processProductFast(product, primaryBarcode).then(processedProduct => {
-      databaseService.queryAllDatabases(primaryBarcode, userCountry)
+      databaseService.queryAllDatabases(
+        primaryBarcode,
+        userCountry,
+        undefined,
+        undefined,
+        { seedProducts: enhancementSeedFromPhase1(product) }
+      )
         .then(fallbackProducts => {
           if (fallbackProducts.length > 0) {
             enhanceProductWithAdditionalData(processedProduct, fallbackProducts, databaseService, primaryBarcode, isPremium)
               .then((enhanced) => {
                 if (enhanced && onProgress) {
                   onProgress({ phase: 'product_enhanced', product: enhanced });
-                  if (enhanced._truscore_analysis) {
-                    powershellLogger.truScoreAnalysis(enhanced._truscore_analysis);
-                  }
                 }
               })
               .catch(() => {});
@@ -782,13 +833,36 @@ async function executeFetchProductOptimized(
 }
 
 /**
- * FAST: Process product with TruScore calculation
- * CRITICAL: Merges user-contributed data (photos, etc.) before returning
- * This ensures user contributions are available to ALL users
+ * First paint: short user-contributed merge wait, then score. Full merge continues in background
+ * and invokes onFullyMerged when complete (photos / Vercel row).
  */
+async function processProductForDisplay(
+  product: Product,
+  barcode: string,
+  onFullyMerged?: (p: ProductWithTrustScore) => void
+): Promise<ProductWithTrustScore> {
+  const mergePromise = mergeUserContributedData(product, barcode).catch(() => product);
+  const quickMerged = await Promise.race([
+    mergePromise,
+    new Promise<Product>((resolve) =>
+      setTimeout(() => resolve(product), USER_CONTRIBUTED_FIRST_PAINT_RACE_MS)
+    ),
+  ]);
+  mergePromise
+    .then(async (fullyMerged) => {
+      try {
+        const refined = await calculateTrustScore(applyConfidenceScore(fullyMerged));
+        onFullyMerged?.(refined);
+      } catch (e) {
+        logger.debug('Full user-merge refine failed (non-critical):', e);
+      }
+    })
+    .catch(() => {});
+  return calculateTrustScore(applyConfidenceScore(quickMerged));
+}
+
 /**
- * Process product quickly with TruScore calculation
- * CRITICAL: User-contributed merge has 3s timeout to prevent blocking
+ * Process product with TruScore after user-contributed merge (long race for correctness).
  */
 async function processProductFast(product: Product, barcode: string): Promise<ProductWithTrustScore> {
   // Await merge before scoring: calculateTrustScore returns `{ ...product }` (shallow copy).
@@ -860,8 +934,7 @@ async function enhanceProductWithAdditionalData(
     (merged as any)._fetchTrace = buildFetchTraceForProducts([product as Product, ...additionalProducts]);
     // Manual-products row must win over merge heuristics (e.g. Spoonacular "longest" ingredients).
     await mergeUserContributedData(merged, barcode);
-    // Recalculate TruScore (analysis is built from merged product, so it includes extended fetch trace)
-    const enhanced = await calculateTrustScore(merged);
+    const enhanced = await calculateTrustScore(applyConfidenceScore(merged));
     // Update cache
     await saveProductToCache(enhanced, barcode, isPremium);
     logger.debug(`✅ Product enhanced with additional data for ${barcode}`);

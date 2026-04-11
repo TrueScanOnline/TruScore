@@ -10,16 +10,7 @@ import { Product, ProductWithTrustScore } from '../types/product';
 import { TruScoreResult } from '../lib/truscoreEngine';
 import { logger } from '../utils/logger';
 import { Platform } from 'react-native';
-
-// Try to import view-shot (may not be installed)
-let captureRef: any = null;
-try {
-  // Dynamic import to handle if package is not installed
-  captureRef = require('react-native-view-shot').default?.captureRef || 
-               require('react-native-view-shot')?.captureRef;
-} catch {
-  // Package not installed - will use fallback
-}
+import { captureRef } from 'react-native-view-shot';
 
 export interface ShareCardOptions {
   product: ProductWithTrustScore;
@@ -53,12 +44,6 @@ export async function generateShareCard(
   } = options;
 
   try {
-    // If view-shot is not available, return product image as fallback
-    if (!captureRef) {
-      logger.warn('react-native-view-shot not available, using product image as fallback');
-      return product.image_url || product.image_front_url || null;
-    }
-
     // For now, return product image as share card
     // Full implementation would require:
     // 1. Creating a React component with product info
@@ -159,5 +144,5 @@ export function generateShareMessage(
  * Check if share card generation is available
  */
 export function isShareCardGenerationAvailable(): boolean {
-  return captureRef !== null;
+  return typeof captureRef === 'function';
 }

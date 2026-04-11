@@ -59,10 +59,11 @@ export default function MethodologyScreen() {
           </Text>
           <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
             {t('methodology.planetText') ||
-              'The Planet pillar reflects the environmental signals available for a product. Depending on ' +
-                'availability, this may consider elements such as packaging recyclability, palm oil usage, ' +
-                'transport patterns, and third‑party eco indicators. Where data is missing or uncertain, the score ' +
-                'is reduced or marked as incomplete rather than assumed to be positive.'}
+              'Planet pillar (TruScan v19): starts at 15. When Open Food Facts provides an Eco-Score letter (A–E), ' +
+                'the pillar applies the official v19 mapping (+7, +3, −1, −3, −7). Packaging is not scored separately ' +
+                'when Eco-Score is present. If Eco-Score is missing, a conservative packaging fallback (+2, +1, or 0) ' +
+                'may apply using structured packaging data and AU/NZ kerbside recycling rules (Annex v2). Palm oil ' +
+                'may appear in product details but does not change the Planet score in MVP.'}
           </Text>
         </View>
 

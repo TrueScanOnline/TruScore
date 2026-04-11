@@ -221,6 +221,16 @@ export interface Product {
   packaging?: string;
   packaging_tags?: string[];
   packagings?: PackagingItem[]; // Full packaging array from OFF
+  /** OFF: all primary packaging components documented (Planet v19 packaging +2 prerequisite). */
+  packagings_complete?: boolean;
+  /** OFF: free-text packaging labels by language (Planet Annex v2 normalisation input). */
+  packaging_text_in_languages?: Record<string, string>;
+  image_packaging_url?: string;
+  /**
+   * Optional app override for Planet jurisdiction (AU | NZ). When unset, device locale / defaults apply.
+   * @see resolvePlanetJurisdiction in planetPackagingFallback.ts
+   */
+  true_scan_market?: 'AU' | 'NZ';
   serving_size?: string;
   
   // Enhanced sustainability data (extracted from OFF)

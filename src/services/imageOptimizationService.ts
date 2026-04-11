@@ -1,22 +1,16 @@
 /**
  * Image Optimization Service
- * Compresses and optimizes images before caching to reduce memory usage
- * 
- * Note: Requires expo-image-manipulator for full functionality
- * Install: npx expo install expo-image-manipulator
+ * Compresses and optimizes images before caching to reduce memory usage.
+ * Uses expo-image-manipulator (SDK-aligned via `npx expo install expo-image-manipulator`).
  */
 
 import * as FileSystem from 'expo-file-system';
+import {
+  manipulateAsync,
+  SaveFormat,
+  type Action,
+} from 'expo-image-manipulator';
 import { logger } from '../utils/logger';
-
-// Try to import ImageManipulator (may not be installed)
-let ImageManipulator: any = null;
-try {
-  ImageManipulator = require('expo-image-manipulator');
-} catch {
-  // Package not installed - will use fallback
-  logger.debug('expo-image-manipulator not installed, using fallback image handling');
-}
 
 export interface ImageOptimizationOptions {
   maxWidth?: number;
@@ -55,12 +49,6 @@ export async function optimizeImageForCache(
   } = options;
 
   try {
-    // If ImageManipulator is not available, return original URI
-    if (!ImageManipulator) {
-      logger.debug('ImageManipulator not available, returning original image');
-      return uri;
-    }
-
     // Check if image is already local
     if (uri.startsWith('file://')) {
       // Check file size first
@@ -75,13 +63,11 @@ export async function optimizeImageForCache(
       }
     }
 
-    // Convert format string to ImageManipulator format
-    const manipulatorFormat = format === 'png' 
-      ? ImageManipulator.SaveFormat.PNG 
-      : ImageManipulator.SaveFormat.JPEG;
+    const manipulatorFormat =
+      format === 'png' ? SaveFormat.PNG : SaveFormat.JPEG;
 
     // Get image dimensions first
-    const imageInfo = await ImageManipulator.manipulateAsync(
+    const imageInfo = await manipulateAsync(
       uri,
       [], // No manipulation yet, just get info
       { format: manipulatorFormat }
@@ -99,12 +85,12 @@ export async function optimizeImageForCache(
     }
 
     // Manipulate image (resize and compress)
-    const manipulations: any[] = [];
+    const manipulations: Action[] = [];
     if (resize) {
       manipulations.push({ resize });
     }
 
-    const manipulated = await ImageManipulator.manipulateAsync(
+    const manipulated = await manipulateAsync(
       uri,
       manipulations,
       { compress: quality, format: manipulatorFormat }
@@ -121,7 +107,7 @@ export async function optimizeImageForCache(
         if (sizeMB > maxFileSizeMB) {
           logger.warn(`Image still too large after optimization (${sizeMB.toFixed(2)}MB), reducing quality further`);
           const reducedQuality = Math.max(0.5, quality * 0.7);
-          const reOptimized = await ImageManipulator.manipulateAsync(
+          const reOptimized = await manipulateAsync(
             uri,
             manipulations,
             { compress: reducedQuality, format: manipulatorFormat }

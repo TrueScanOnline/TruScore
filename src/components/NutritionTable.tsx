@@ -26,6 +26,8 @@ interface NutritionTableProps {
   onEdit?: () => void;
   shareContext?: NutritionTableShareContext;
   onRequestNutritionSharePrefill?: (prefill: string) => void;
+  /** Optional footer inside the card (e.g. product screen “add nutrition” CTA). */
+  cardFooter?: React.ReactNode;
 }
 
 const NutritionTable = React.memo(function NutritionTable({
@@ -37,6 +39,7 @@ const NutritionTable = React.memo(function NutritionTable({
   onEdit,
   shareContext,
   onRequestNutritionSharePrefill,
+  cardFooter,
 }: NutritionTableProps) {
   const { t } = useTranslation();
   const { units } = useSettingsStore();
@@ -98,6 +101,7 @@ const NutritionTable = React.memo(function NutritionTable({
           </View>
         </View>
         <Text style={[styles.noDataText, { color: colors.textTertiary }]}>{t('nutrition.notAvailable')}</Text>
+        {cardFooter}
       </View>
     );
   }
@@ -263,6 +267,8 @@ const NutritionTable = React.memo(function NutritionTable({
           );
         })}
       </View>
+
+      {cardFooter}
 
       {showBurnStrip && burnMinutes && (
         <View

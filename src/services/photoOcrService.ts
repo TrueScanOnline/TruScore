@@ -76,8 +76,8 @@ export async function extractProductDataFromPhoto(
   barcode: string
 ): Promise<Partial<ManualProductData>> {
   try {
-    // Note: Image preprocessing removed (expo-image-manipulator not available)
-    // In production, preprocess image for better OCR results:
+    // Note: OCR uses the original image; optional preprocessing (e.g. imageOptimizationService) may improve accuracy.
+    // Possible improvements:
     // - Resize to optimal size (2000px width)
     // - Enhance contrast
     // - Crop to product area

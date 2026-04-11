@@ -4,8 +4,8 @@
  * Tests the complete barcode scanning workflow.
  */
 
-import { normalizeBarcode, getPrimaryBarcode } from '../../../utils/barcodeNormalization';
-import { fetchProduct } from '../../../services/productService';
+import { normalizeBarcode, getPrimaryBarcode } from '../../utils/barcodeNormalization';
+import { fetchProduct } from '../../services/productService';
 
 describe('Scanning Workflow Integration', () => {
   it('should handle EAN-8 barcode', () => {

@@ -97,12 +97,12 @@ function CarbonFootprintCardContent({
               </Text>
             </View>
           ))}
-          {drivingKm != null ? (
-            <Text style={[styles.drivingEquiv, { color: colors.textSecondary }]}>
-              {t('result.carbonOffDrivingEquivalence', { km: String(drivingKm) })}
-            </Text>
-          ) : null}
         </ScrollView>
+        {drivingKm != null ? (
+          <Text style={[styles.drivingEquiv, { color: colors.textSecondary }]}>
+            {t('result.carbonOffDrivingEquivalence', { km: String(drivingKm) })}
+          </Text>
+        ) : null}
       </Pressable>
 
       <CarbonFootprintInfoModal
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardResult: {
-    maxHeight: 320,
+    maxHeight: 380,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -157,10 +157,10 @@ const styles = StyleSheet.create({
     maxHeight: 260,
   },
   scrollResult: {
-    maxHeight: 270,
+    maxHeight: 248,
   },
   scrollContent: {
-    paddingBottom: 4,
+    paddingBottom: 8,
   },
   rowBlock: {
     padding: 10,
@@ -174,11 +174,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     lineHeight: 21,
+    flexShrink: 1,
   },
   drivingEquiv: {
     fontSize: 13,
     lineHeight: 18,
     marginTop: 12,
     fontWeight: '500',
+    flexShrink: 1,
+    width: '100%',
   },
 });

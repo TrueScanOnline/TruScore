@@ -7,9 +7,5 @@
  * @deprecated Use src/lib/truscoreEngine/index.ts directly for new code
  */
 
-// Re-export from the new modular system
+// Re-export from the new modular system (includes calculateTruScore)
 export * from './truscoreEngine/index';
-
-// Keep the old export for backward compatibility
-import { calculateTruScore as calculateTruScoreNew } from './truscoreEngine/index';
-export { calculateTruScoreNew as calculateTruScore };

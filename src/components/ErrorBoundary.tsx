@@ -3,10 +3,9 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { logger } from '../utils/logger';
+import { useTheme } from '../theme';
 
-// Theme hook wrapper for class component
 function useThemeHook() {
-  const { useTheme } = require('../theme');
   return useTheme();
 }
 

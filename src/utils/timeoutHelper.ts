@@ -231,13 +231,21 @@ export function getGlobalRateLimiter(): RateLimiter {
  * @param source - Source identifier for rate limiting
  * @returns Fetch response
  */
+/** Tier-2 / community barcode lookups: fail fast instead of hammering retries on flaky Wi‑Fi. */
+export type FetchRetryProfile = 'standard' | 'best_effort';
+
 export async function fetchWithRateLimit(
   url: string,
   options: RequestInit = {},
-  source: string
+  source: string,
+  retryProfile: FetchRetryProfile = 'standard'
 ): Promise<Response> {
   const rateLimiter = getGlobalRateLimiter();
-  
+  const retryOptions =
+    retryProfile === 'best_effort'
+      ? { maxRetries: 0, initialDelay: 0, maxDelay: 0, timeout: 8000 }
+      : { maxRetries: 3, initialDelay: 500, maxDelay: 5000, timeout: 10000 };
+
   return rateLimiter.addRequest(source, async () => {
     // Use retry logic for network errors
     const { fetchWithRetry } = await import('./networkRetry');
@@ -246,12 +254,7 @@ export async function fetchWithRateLimit(
       const response = await fetchWithRetry(
         url,
         options,
-        {
-          maxRetries: 3,
-          initialDelay: 500,
-          maxDelay: 5000,
-          timeout: 10000, // 10 second timeout per request
-        }
+        retryOptions
       );
       
       // Check for rate limit errors

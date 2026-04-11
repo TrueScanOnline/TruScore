@@ -381,6 +381,28 @@ export function mergeProducts(
     logger.info(`  Packagings: Merged ${packagingMap.size} unique items from ${allPackagings.length} sources`);
   }
 
+  const completenessFlags = productsToMerge
+    .map((p) => p.packagings_complete)
+    .filter((x): x is boolean => typeof x === 'boolean');
+  if (completenessFlags.length > 0) {
+    mergedProduct.packagings_complete = completenessFlags.every((c) => c === true);
+  }
+
+  const textLangMaps = productsToMerge
+    .map((p) => p.packaging_text_in_languages)
+    .filter((m): m is Record<string, string> => !!m && typeof m === 'object' && !Array.isArray(m));
+  if (textLangMaps.length > 0) {
+    const mergedLang: Record<string, string> = { ...(mergedProduct.packaging_text_in_languages || {}) };
+    textLangMaps.forEach((m) => {
+      Object.entries(m).forEach(([k, v]) => {
+        if (typeof v === 'string' && v.trim()) mergedLang[k] = v;
+      });
+    });
+    if (Object.keys(mergedLang).length > 0) {
+      mergedProduct.packaging_text_in_languages = mergedLang;
+    }
+  }
+
   // Merge origins_tags (Open pillar - transparency)
   const allOriginsTags = productsToMerge
     .map(p => p.origins_tags)

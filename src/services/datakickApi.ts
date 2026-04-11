@@ -41,12 +41,17 @@ export async function fetchProductFromDatakick(barcode: string): Promise<Product
   try {
     const url = `${DATAKICK_API_BASE}/products/${barcode}`;
     
-    const response = await fetchWithRateLimit(url, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': USER_AGENT,
+    const response = await fetchWithRateLimit(
+      url,
+      {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': USER_AGENT,
+        },
       },
-    }, 'datakick');
+      'datakick',
+      'best_effort'
+    );
 
     if (!response.ok) {
       if (response.status === 404) {

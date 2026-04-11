@@ -6,6 +6,8 @@ import { ProductWithTrustScore } from '../../../types/product';
 import { fetchProduct, refreshProduct } from '../../../services/productService';
 import { calculateTruScore, TruScoreResult } from '../../../lib/truscoreEngine';
 import { useValuesStore } from '../../../store/useValuesStore';
+import { useSettingsStore } from '../../../store/useSettingsStore';
+import { getPlanetScoringContext } from '../../../utils/planetScoringContext';
 import { logger } from '../../../utils/logger';
 import { getManualProduct, isManualProduct } from '../../../services/manualProductService';
 
@@ -27,6 +29,7 @@ export function useProductData({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const valuesPreferences = useValuesStore();
+  const planetPackagingMarket = useSettingsStore((s) => s.planetPackagingMarket);
 
   const loadProduct = async () => {
     setLoading(true);
@@ -36,7 +39,7 @@ export function useProductData({
       const manualProduct = await getManualProduct(barcode);
       if (manualProduct) {
         setProduct(manualProduct);
-        const calculated = calculateTruScore(manualProduct, valuesPreferences);
+        const calculated = calculateTruScore(manualProduct, valuesPreferences, getPlanetScoringContext());
         setTruScore(calculated);
         setLoading(false);
         return;
@@ -46,7 +49,7 @@ export function useProductData({
       const productData = await fetchProduct(barcode, useCache, isPremium, isOffline);
       if (productData) {
         setProduct(productData);
-        const calculated = calculateTruScore(productData, valuesPreferences);
+        const calculated = calculateTruScore(productData, valuesPreferences, getPlanetScoringContext());
         setTruScore(calculated);
       } else {
         setError(new Error('Product not found'));
@@ -65,7 +68,7 @@ export function useProductData({
       const productData = await refreshProduct(barcode);
       if (productData) {
         setProduct(productData);
-        const calculated = calculateTruScore(productData, valuesPreferences);
+        const calculated = calculateTruScore(productData, valuesPreferences, getPlanetScoringContext());
         setTruScore(calculated);
       }
     } catch (err) {
@@ -83,10 +86,10 @@ export function useProductData({
   // Recalculate TruScore when values preferences change
   useEffect(() => {
     if (product) {
-      const calculated = calculateTruScore(product, valuesPreferences);
+      const calculated = calculateTruScore(product, valuesPreferences, getPlanetScoringContext());
       setTruScore(calculated);
     }
-  }, [valuesPreferences, product]);
+  }, [valuesPreferences, product, planetPackagingMarket]);
 
   return {
     product,

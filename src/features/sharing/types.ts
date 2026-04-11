@@ -23,7 +23,7 @@ export type SharePlatform =
   | 'twitter'
   | 'snapchat'
   | 'tiktok'
-  | 'youtube'
+  | 'moreApps'
   | 'whatsapp'
   | 'sms'
   | 'native'; // Fallback to native share sheet

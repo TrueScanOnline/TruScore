@@ -7,6 +7,13 @@ import { checkBBFAWTier, getBBFAWTierScore, getBBFAWImpactScore } from '../servi
 import { resolveBrandToKTCParent } from '../services/ktcBrandResolutionService';
 import { checkKTCParent, getKTCScoreAdjustment } from '../services/ktcService';
 import { getEthicsCertificationAdjustment } from '../services/ethicsCertificationsService';
+import { computePackagingFallback } from '../lib/truscoreEngine/pillars/planetPackagingFallback';
+
+function productHasPlanetEcoScoreGrade(product: { ecoscore_grade?: string }): boolean {
+  const g = product.ecoscore_grade;
+  if (typeof g !== 'string') return false;
+  return ['a', 'b', 'c', 'd', 'e'].includes(g.toLowerCase());
+}
 
 export type PillarCategory = 'body' | 'planet' | 'ethics' | 'open';
 export type HighlightType = 'green' | 'red';
@@ -301,10 +308,10 @@ export const PLANET_HIGHLIGHTS: HighlightDefinition[] = [
     pillar: 'planet',
     type: 'red',
     severity: 'low',
-    title: 'Average eco-impact profile',
-    description: 'Neutral—standard footprint, could improve.',
+    title: 'Average eco-impact profile (slight Planet penalty)',
+    description: 'Eco-Score C applies a small negative adjustment (−1) on Planet, aligned with Body Nutri-Score C handling in MVP.',
     externalResource: 'https://world.openfoodfacts.org/eco-score',
-    scoreValue: 0,
+    scoreValue: -1,
     trigger: (product) => product.ecoscore_grade?.toLowerCase() === 'c',
   },
   
@@ -334,120 +341,65 @@ export const PLANET_HIGHLIGHTS: HighlightDefinition[] = [
     trigger: (product) => product.ecoscore_grade?.toLowerCase() === 'e',
   },
   
-  // High CSV carbon (if OFF missing) - Placeholder, would need carbon data
-  {
-    id: 'planet-carbon-high',
-    pillar: 'planet',
-    type: 'red',
-    severity: 'high',
-    title: 'High carbon footprint',
-    description: 'Carbon-heavy—contributes to climate change.',
-    externalResource: 'https://world.openfoodfacts.org/eco-score',
-    scoreValue: -5,
-    trigger: (product) => {
-      // Would check carbon footprint data if ecoscore missing
-      return false;
-    },
-  },
-  
-  // Sustainable Palm Oil
+  // Sustainable palm (informational — Planet pillar does not score palm in MVP v19)
   {
     id: 'planet-palm-sustainable',
     pillar: 'planet',
     type: 'green',
     severity: 'low',
-    title: 'Sustainable Palm Oil certified.',
-    description: 'Certified palm—no deforestation link.',
+    title: 'Sustainable palm evidence (display)',
+    description: 'Certified or labelled sustainable palm may appear in product details. Planet v19 does not change the Planet score for palm in MVP.',
     externalResource: 'https://www.rspo.org/standards',
-    scoreValue: 0, // Score 0 means no highlight typically, but spec says to show
+    scoreValue: 0,
     trigger: (product) => {
-      // Check for RSPO or sustainable palm oil tags
       const tags = product.ingredients_analysis_tags || [];
-      return tags.some((tag: string) => 
-        tag.toLowerCase().includes('palm-oil') && 
-        (tag.toLowerCase().includes('rspo') || tag.toLowerCase().includes('sustainable'))
+      return tags.some(
+        (tag: string) =>
+          tag.toLowerCase().includes('palm-oil') &&
+          (tag.toLowerCase().includes('rspo') || tag.toLowerCase().includes('sustainable'))
       );
     },
   },
-  
-  // Non-sustainable Palm Oil
+
   {
-    id: 'planet-palm-unsustainable',
+    id: 'planet-palm-detected',
     pillar: 'planet',
     type: 'red',
-    severity: 'high',
-    title: 'Unsustainable Palm Oil',
-    description: 'Linked to habitat loss—avoid for the benefit of the planet.',
+    severity: 'low',
+    title: 'Palm oil noted (not scored on Planet)',
+    description: 'Palm oil may be flagged for transparency. Planet v19 does not apply a palm penalty from OFF alone in MVP.',
     externalResource: 'https://www.wwf.org/palmoil',
-    scoreValue: -8,
+    scoreValue: 0,
     trigger: (product) => {
-      // Use palm oil utility to check
       const status = getPalmOilStatus(product.palm_oil_analysis);
-      return status?.isNonSustainable === true;
+      return status?.containsPalmOil === true && status?.isPalmOilFree !== true;
     },
   },
-  
-  // Brand/parent low WWF/RSPO
+
   {
-    id: 'planet-brand-low-sustainability',
-    pillar: 'planet',
-    type: 'red',
-    severity: 'medium',
-    title: 'Parent/Brand low sustainability rating',
-    description: 'Brand or Parent company has a poor environmental track record.',
-    externalResource: 'https://www.ran.org/palm',
-    scoreValue: -4,
-    trigger: (product) => {
-      // Would need brand sustainability rating data
-      return false;
-    },
-  },
-  
-  // Packaging - Fully recyclable
-  {
-    id: 'planet-packaging-recyclable',
+    id: 'planet-packaging-fallback-plus2',
     pillar: 'planet',
     type: 'green',
     severity: 'medium',
-    title: 'Fully recyclable',
-    description: 'Easy recycle—low waste impact.',
-    externalResource: 'https://recyclingpartnership.org',
-    scoreValue: 3,
-    trigger: (product) => {
-      return product.packaging_data?.isRecyclable === true;
-    },
+    title: 'Packaging fallback +2 (kerbside, complete)',
+    description: 'Eco-Score missing: structured packaging shows all primary components kerbside-recyclable in an approved market, with packagings_complete true (Planet v19 + Annex v2).',
+    externalResource: 'https://world.openfoodfacts.org/eco-score',
+    scoreValue: 2,
+    trigger: (product) =>
+      !productHasPlanetEcoScoreGrade(product) && computePackagingFallback(product).points === 2,
   },
-  
-  // Packaging - Partially recyclable
+
   {
-    id: 'planet-packaging-partial',
+    id: 'planet-packaging-fallback-plus1',
     pillar: 'planet',
     type: 'green',
     severity: 'low',
-    title: 'Partially recyclable',
-    description: 'Some reuse—better than nothing.',
-    externalResource: 'https://recyclingpartnership.org',
+    title: 'Packaging fallback +1 (partial kerbside)',
+    description: 'Eco-Score missing: at least one kerbside-recyclable primary component and none marked not recyclable (Planet v19 + Annex v2).',
+    externalResource: 'https://world.openfoodfacts.org/eco-score',
     scoreValue: 1,
-    trigger: (product) => {
-      // Would need to check if partially recyclable
-      return false;
-    },
-  },
-  
-  // Packaging - High eco-cost material
-  {
-    id: 'planet-packaging-high-impact',
-    pillar: 'planet',
-    type: 'red',
-    severity: 'high',
-    title: 'High impact packaging',
-    description: 'Polluting packaging—eco drain.',
-    externalResource: 'https://idematapp.com',
-    scoreValue: -5,
-    trigger: (product) => {
-      // Would need Idemat eco-cost data
-      return false;
-    },
+    trigger: (product) =>
+      !productHasPlanetEcoScoreGrade(product) && computePackagingFallback(product).points === 1,
   },
 ];
 

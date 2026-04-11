@@ -3,6 +3,7 @@
 // No international pricing - only local prices in local currency
 
 import * as Location from 'expo-location';
+import * as Localization from 'expo-localization';
 import { ProductPricing, PriceEntry, RetailerPrice, LocationInfo } from '../types/pricing';
 import { currencyService } from './currencyService';
 import { priceStorageService } from './priceStorageService';
@@ -310,8 +311,6 @@ export class PricingService {
       // Fallback to device locale if location unavailable
       if (!location || !location.countryCode) {
         console.log('[pricingService] Location unavailable, using device locale');
-        // Use device locale as fallback
-        const Localization = require('expo-localization');
         const locales = Localization.getLocales();
         let countryCode = 'US'; // Default fallback
         if (locales && locales.length > 0) {

@@ -53,6 +53,7 @@ import { enrichProductWithOpenCorporates } from './openCorporatesApi';
 import { enrichProductWithBCorp } from './bCorpApi';
 import { applyConfidenceScore } from '../utils/confidenceScoring';
 import { mergeProducts } from './productDataMerger';
+import { isCruelParent } from '../data/brandDatabase';
 import { lookupProductInSQLite, saveProductToSQLite } from './sqliteProductDatabase';
 import { applyMVPEnhancements } from './enhancements/enhancementLayer';
 import { calculateDataCompleteness, formatCompletenessMetrics } from '../utils/dataCompleteness';
@@ -317,8 +318,6 @@ async function executeFetchProduct(
   // Progressive product tracking for callback support
   let progressiveProduct: Product | null = null;
   let progressiveProductWithScore: ProductWithTrustScore | null = null;
-  const { mergeProducts } = require('./productDataMerger');
-  
   // Progressive callback for database queries
   const onDatabaseProductUpdate = async (product: Product, source: string) => {
     if (!product) return;
@@ -1053,26 +1052,18 @@ async function executeFetchProduct(
       logger.info(`  Hidden Terms: ${hiddenCount} found (${hiddenCount >= 3 ? '-20 penalty' : '-12 penalty'})`);
     }
     
-    // Log recyclable packaging status (Planet pillar)
     if (productWithTrustScore.packagings && productWithTrustScore.packagings.length > 0) {
-      const { getLocalRecyclabilityStatus } = require('../utils/packagingRecyclability');
-      const recyclabilityStatus = getLocalRecyclabilityStatus(productWithTrustScore.packagings);
-      if (recyclabilityStatus.isRecyclable) {
-        const recyclableCount = recyclabilityStatus.recyclableItems.length;
-        const totalCount = productWithTrustScore.packagings.length;
-        if (recyclableCount === totalCount) {
-          logger.info(`  Recyclable Packaging: All ${totalCount} items recyclable (+5 bonus)`);
-        } else {
-          logger.info(`  Recyclable Packaging: ${recyclableCount}/${totalCount} items recyclable (+2 bonus)`);
-        }
-      } else {
-        logger.info(`  Recyclable Packaging: Not recyclable (no bonus)`);
+      const pd = productWithTrustScore.trust_score_breakdown;
+      logger.info(
+        `  Planet packaging (v19): ${productWithTrustScore.packagings.length} OFF packaging component(s); packagings_complete=${String(productWithTrustScore.packagings_complete)}`
+      );
+      if (pd && typeof pd.planet === 'number') {
+        logger.info(`  Planet pillar score (logged): ${pd.planet}/25`);
       }
     }
     
     // Log cruel parent detection (Ethics pillar)
     if (productWithTrustScore.brands) {
-      const { isCruelParent } = require('../data/brandDatabase');
       const brands = (productWithTrustScore.brands || '').toLowerCase();
       if (isCruelParent(brands)) {
         logger.info(`  Cruel Parent: Detected (-30 penalty in Ethics pillar)`);

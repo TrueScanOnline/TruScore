@@ -1,5 +1,15 @@
 // Deep linking configuration
 import * as Linking from 'expo-linking';
+import {
+  buildShareUrl,
+  parseShareQueryParams,
+  SHARE_QUERY_CTX,
+  SHARE_QUERY_REF,
+  SHARE_QUERY_SRC,
+} from './shareUrl';
+
+export { buildShareUrl, parseShareQueryParams, SHARE_QUERY_CTX, SHARE_QUERY_REF, SHARE_QUERY_SRC };
+export type { ShareLinkSource } from './shareUrl';
 
 export const linking = {
   prefixes: ['truescan://', 'https://truescan.app'],
@@ -69,7 +79,7 @@ export function parseBarcodeFromUrl(url: string): string | null {
     if (parsed.scheme === 'https' && parsed.hostname === 'truescan.app') {
       const pathParts = parsed.path?.split('/').filter(Boolean) || [];
       if (pathParts[0] === 'barcode' && pathParts[1]) {
-        const barcode = pathParts[1];
+        const barcode = pathParts[1].split('?')[0];
         if (/^\d{8,14}$/.test(barcode)) {
           return barcode;
         }
@@ -107,9 +117,22 @@ export function parseBarcodeFromUrl(url: string): string | null {
  * 2. Redirects to App Store (iOS) or Play Store (Android) if app not installed
  */
 export function generateUniversalLink(barcode: string): string {
-  // Use universal link format - will open app if installed
-  // Web page at truescan.app should handle app store redirect if app not installed
-  return `https://truescan.app/barcode/${barcode}`;
+  return buildShareUrl(barcode);
+}
+
+/**
+ * Barcode plus optional share attribution from universal links (?ctx=&src=&ref=).
+ */
+export function parseProductDeepLink(url: string): {
+  barcode: string | null;
+  ctx?: string;
+  src?: string;
+  ref?: string;
+} {
+  const parsed = Linking.parse(url);
+  const barcode = parseBarcodeFromUrl(url);
+  const q = parseShareQueryParams(parsed.queryParams ?? undefined);
+  return { barcode, ...q };
 }
 
 /**

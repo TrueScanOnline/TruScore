@@ -30,13 +30,18 @@ export async function fetchProductFromBarcodeMonster(barcode: string): Promise<P
     
     const signal = createTimeoutSignal(5000); // 5 second timeout
     
-    const response = await fetchWithRateLimit(url, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+    const response = await fetchWithRateLimit(
+      url,
+      {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        },
+        signal,
       },
-      signal,
-    }, 'barcode_monster');
+      'barcode_monster',
+      'best_effort'
+    );
 
     if (!response.ok) {
       if (response.status !== 404) {
