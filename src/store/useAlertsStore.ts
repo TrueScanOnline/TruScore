@@ -1,31 +1,26 @@
-// Values preferences store - persisted to SecureStore (encrypted)
+// User alert preferences store — persisted to SecureStore (encrypted).
+// These preferences drive optional scan insights (not TruScore, not spec-driven banner alerts).
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type GeopoliticalPreference = 'neutral' | 'avoid_israel' | 'avoid_palestine' | 'avoid_china' | 'avoid_india';
 
-export interface ValuesPreferences {
-  // Geopolitical
+export interface AlertsPreferences {
   israelPalestine: 'neutral' | 'avoid_israel' | 'avoid_palestine';
   indiaChina: 'neutral' | 'avoid_china' | 'avoid_india';
-  
-  // Ethical
   avoidAnimalTesting: boolean;
   avoidForcedLabour: boolean;
-  
-  // Environmental
   avoidPalmOil: boolean;
-  
-  // Master switches
   geopoliticalEnabled: boolean;
   ethicalEnabled: boolean;
   environmentalEnabled: boolean;
 }
 
-const STORAGE_KEY = '@truescan_values_preferences';
+const STORAGE_KEY = '@truescan_alerts_preferences';
+const LEGACY_STORAGE_KEY = '@truescan_values_preferences';
 
-const defaultPreferences: ValuesPreferences = {
+const defaultPreferences: AlertsPreferences = {
   israelPalestine: 'neutral',
   indiaChina: 'neutral',
   avoidAnimalTesting: false,
@@ -36,7 +31,7 @@ const defaultPreferences: ValuesPreferences = {
   environmentalEnabled: false,
 };
 
-interface ValuesStore extends ValuesPreferences {
+interface AlertsStore extends AlertsPreferences {
   setIsraelPalestine: (value: 'neutral' | 'avoid_israel' | 'avoid_palestine') => Promise<void>;
   setIndiaChina: (value: 'neutral' | 'avoid_china' | 'avoid_india') => Promise<void>;
   setAvoidAnimalTesting: (value: boolean) => Promise<void>;
@@ -49,23 +44,20 @@ interface ValuesStore extends ValuesPreferences {
   resetToDefaults: () => Promise<void>;
 }
 
-const savePreferences = async (prefs: ValuesPreferences) => {
+const savePreferences = async (prefs: AlertsPreferences) => {
   try {
-    // Use SecureStore for encrypted storage
     const serialized = JSON.stringify(prefs);
     await SecureStore.setItemAsync(STORAGE_KEY, serialized);
   } catch (error) {
-    // Fallback to AsyncStorage if SecureStore fails (e.g., on web)
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
     } catch (fallbackError) {
-      console.error('[ValuesStore] Error saving preferences:', error);
-      throw error; // Don't silently fail
+      console.error('[AlertsStore] Error saving preferences:', error);
+      throw error;
     }
   }
 };
 
-// Top 5 boycotts by market cap
 export const TOP_BOYCOUTS = [
   'Procter & Gamble',
   'Coca-Cola',
@@ -74,7 +66,23 @@ export const TOP_BOYCOUTS = [
   'Unilever',
 ];
 
-export const useValuesStore = create<ValuesStore>((set, get) => ({
+async function readStoredPreferencesRaw(): Promise<string | null> {
+  let stored: string | null = null;
+  try {
+    stored = await SecureStore.getItemAsync(STORAGE_KEY);
+  } catch {
+    stored = await AsyncStorage.getItem(STORAGE_KEY);
+  }
+  if (stored) return stored;
+  try {
+    stored = await SecureStore.getItemAsync(LEGACY_STORAGE_KEY);
+  } catch {
+    stored = await AsyncStorage.getItem(LEGACY_STORAGE_KEY);
+  }
+  return stored;
+}
+
+export const useAlertsStore = create<AlertsStore>((set, get) => ({
   ...defaultPreferences,
 
   setIsraelPalestine: async (value) => {
@@ -119,28 +127,18 @@ export const useValuesStore = create<ValuesStore>((set, get) => ({
 
   initializeStore: async () => {
     try {
-      // Try SecureStore first
-      let stored: string | null = null;
-      try {
-        stored = await SecureStore.getItemAsync(STORAGE_KEY);
-      } catch (secureError) {
-        // Fallback to AsyncStorage if SecureStore fails
-        stored = await AsyncStorage.getItem(STORAGE_KEY);
-      }
-      
+      const stored = await readStoredPreferencesRaw();
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Validate parsed data structure
         if (typeof parsed === 'object' && parsed !== null) {
           set({ ...defaultPreferences, ...parsed });
+          await savePreferences(get());
         } else {
-          // Invalid data, reset to defaults
           await savePreferences(defaultPreferences);
         }
       }
     } catch (error) {
-      console.error('[ValuesStore] Error loading preferences:', error);
-      // Reset to defaults on error
+      console.error('[AlertsStore] Error loading preferences:', error);
       set(defaultPreferences);
     }
   },
@@ -150,4 +148,3 @@ export const useValuesStore = create<ValuesStore>((set, get) => ({
     await savePreferences(defaultPreferences);
   },
 }));
-

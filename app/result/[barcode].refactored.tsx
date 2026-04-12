@@ -26,7 +26,7 @@ import { useFavoritesStore } from '../../src/store/useFavoritesStore';
 import { useSubscriptionStore } from '../../src/store/useSubscriptionStore';
 import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
-import { useValuesStore } from '../../src/store/useValuesStore';
+import { useAlertsStore } from '../../src/store/useAlertsStore';
 import { useTheme } from '../../src/theme';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
@@ -69,7 +69,7 @@ import RecallAlertModal from '../../src/components/RecallAlertModal';
 import PackagingInfoModal from '../../src/components/PackagingInfoModal';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import InsightsCarousel from '../../src/components/InsightsCarousel';
-import { getProductPageValuesInsights } from '../../src/utils/productInfoCardVisibility';
+import { getProductPageAlertsInsights } from '../../src/utils/productInfoCardVisibility';
 
 function ResultScreenContent() {
   const route = useRoute<ResultScreenRouteProp>();
@@ -82,12 +82,12 @@ function ResultScreenContent() {
   const { subscriptionInfo } = useSubscriptionStore();
   const { isOffline } = useNetworkStatus();
   const insets = useSafeAreaInsets();
-  const valuesPreferences = useValuesStore();
+  const alertsPreferences = useAlertsStore();
 
-  const hasValuesMasterEnabled =
-    valuesPreferences.geopoliticalEnabled ||
-    valuesPreferences.ethicalEnabled ||
-    valuesPreferences.environmentalEnabled;
+  const hasAlertsMasterEnabled =
+    alertsPreferences.geopoliticalEnabled ||
+    alertsPreferences.ethicalEnabled ||
+    alertsPreferences.environmentalEnabled;
 
   const isPremium = subscriptionInfo.isPremium &&
     (subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial' || subscriptionInfo.status === 'grace_period');
@@ -269,7 +269,7 @@ function ResultScreenContent() {
   }
 
   const imageUrl = product.image_url;
-  const productPageValuesInsights = getProductPageValuesInsights(hasValuesMasterEnabled, truScore);
+  const productPageAlertsInsights = getProductPageAlertsInsights(hasAlertsMasterEnabled, truScore);
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView
@@ -338,8 +338,8 @@ function ResultScreenContent() {
           premiumFeatures={[]}
         />
 
-        {/* Values / insights — same visibility as main result screen */}
-        {productPageValuesInsights && (
+        {/* User alerts / insights — same visibility as main result screen */}
+        {productPageAlertsInsights && (
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <TouchableOpacity
               style={[styles.insightsHeader, { borderBottomColor: colors.border }]}
@@ -350,7 +350,7 @@ function ResultScreenContent() {
                 <Ionicons name="bulb" size={20} color={colors.primary} />
                 <Text style={[styles.insightsHeaderTitle, { color: colors.text }]}>Insights</Text>
                 <Text style={[styles.insightsHeaderCount, { color: colors.textSecondary }]}>
-                  ({productPageValuesInsights.length})
+                  ({productPageAlertsInsights.length})
                 </Text>
               </View>
               <Ionicons
@@ -361,7 +361,7 @@ function ResultScreenContent() {
             </TouchableOpacity>
             {insightsExpanded && (
               <InsightsCarousel
-                insights={productPageValuesInsights}
+                insights={productPageAlertsInsights}
                 productName={product?.product_name || product?.product_name_en}
                 onRequestProductShare={() => handleShare('insights')}
               />

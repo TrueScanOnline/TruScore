@@ -3,7 +3,7 @@
  *
  * Collects and generates banner alerts from:
  * 1. APP-generated alerts (recalls, brand recall transparency note, Ethics pillar BBFAW/KTC mirrors)
- * 2. User Preference alerts (from Values Preferences card)
+ * 2. User preference alerts (from user Alerts tab / alert preferences)
  *
  * Ethics (BBFAW, KTC): Banner copy for animal welfare and supply-chain labour is derived ONLY from
  * `calculateEthicsPillar` (same engine as the Ethics pillar / spec sheet). Legacy NGO/DOL/brand-DB
@@ -17,7 +17,7 @@
 
 import { Product, ProductWithTrustScore } from '../types/product';
 import { BannerAlert, BannerAlertsData } from '../types/bannerAlerts';
-import { ValuesPreferences } from '../store/useValuesStore';
+import { AlertsPreferences } from '../store/useAlertsStore';
 import { extractAllBrands } from '../utils/brandExtraction';
 import { getBrandData } from '../data/brandDatabase';
 import { logger } from '../utils/logger';
@@ -34,7 +34,7 @@ import { calculateEthicsPillar } from '../lib/truscoreEngine/pillars/ethicsPilla
  */
 export function generateBannerAlerts(
   product: Product | ProductWithTrustScore,
-  userPreferences: ValuesPreferences
+  userPreferences: AlertsPreferences
 ): BannerAlertsData {
   const alerts: BannerAlert[] = [];
 

@@ -22,8 +22,8 @@ export type FavouritesStackParamList = {
   Result: { barcode: string };
 };
 
-export type ValuesStackParamList = {
-  ValuesHome: undefined;
+export type AlertsStackParamList = {
+  AlertsHome: undefined;
   Result: { barcode: string };
 };
 
@@ -37,6 +37,7 @@ export type ResultScreenNavigationProp = NativeStackNavigationProp<
     SearchHome?: undefined;
     HistoryHome?: undefined;
     FavouritesHome?: undefined;
+    AlertsHome?: undefined;
   },
   'Result'
 >;

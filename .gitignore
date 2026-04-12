@@ -24,6 +24,9 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+# Microsoft Office lock files (not real documents)
+~$*
+
 # macOS
 .DS_Store
 *.pem

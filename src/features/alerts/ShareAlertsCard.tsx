@@ -1,4 +1,4 @@
-// ShareValuesCard.tsx - Generate and share values preferences card
+// ShareAlertsCard — share a summary of active user alert preferences
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -13,21 +13,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../theme';
-import { useValuesStore, TOP_BOYCOUTS } from '../../store/useValuesStore';
-import type { ValuesStackParamList } from '../../navigation/tabStackParamLists';
+import { useAlertsStore, TOP_BOYCOUTS } from '../../store/useAlertsStore';
+import type { AlertsStackParamList } from '../../navigation/tabStackParamLists';
 
-type NavigationProp = NativeStackNavigationProp<ValuesStackParamList>;
+type NavigationProp = NativeStackNavigationProp<AlertsStackParamList>;
 
-interface ShareValuesCardProps {
+interface ShareAlertsCardProps {
   truScore?: number;
 }
 
-export default function ShareValuesCard({ truScore }: ShareValuesCardProps = {}) {
+export default function ShareAlertsCard({ truScore }: ShareAlertsCardProps = {}) {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const [sharing, setSharing] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const preferences = useValuesStore();
+  const preferences = useAlertsStore();
 
   // Initialize store on mount and ensure it's loaded
   useEffect(() => {
@@ -84,17 +84,17 @@ export default function ShareValuesCard({ truScore }: ShareValuesCardProps = {})
       if (activeToggles.length === 0) {
         setSharing(false);
         Alert.alert(
-          'No Active Preferences',
-          'Enable at least one value preference to share. Set up preferences now?',
+          'No active alerts',
+          'Turn on at least one alert topic to share. Set them up now?',
           [
             {
               text: 'Cancel',
               style: 'cancel',
             },
             {
-              text: 'Set Preferences',
+              text: 'Set alerts',
               onPress: () => {
-                navigation.navigate('ValuesHome');
+                navigation.navigate('AlertsHome');
               },
             },
           ]
@@ -116,7 +116,7 @@ export default function ShareValuesCard({ truScore }: ShareValuesCardProps = {})
         message = `TruScore ${score} – independent breakdown\n\n`;
       }
       
-      message += 'Active Preferences:\n';
+      message += 'Active alert preferences:\n';
       activeToggles.forEach((toggle, index) => {
         message += `${index + 1}. ${toggle}\n`;
       });
@@ -129,15 +129,15 @@ export default function ShareValuesCard({ truScore }: ShareValuesCardProps = {})
         });
       }
 
-      message += '\n#TruScore #EthicalShopping #ValuesBasedShopping';
+      message += '\n#TruScore #EthicalShopping #TrueScanAlerts';
 
       await Share.share({
         message,
         title: 'TruScore Choices',
       });
     } catch (error) {
-      console.error('Error sharing values:', error);
-      Alert.alert('Error', 'Failed to share values. Please try again.');
+      console.error('Error sharing alerts:', error);
+      Alert.alert('Error', 'Could not share. Please try again.');
     } finally {
       setSharing(false);
     }

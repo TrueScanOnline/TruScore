@@ -36,7 +36,7 @@ export function buildEthicsPillarBannerAlerts(
   product: Product | ProductWithTrustScore,
   ethics: EthicsPillarResult,
   opts?: {
-    /** Appends a sentence when user asked to avoid forced/child labour in Values. */
+    /** Appends a sentence when user enabled forced/child labour alert preference. */
     mentionForcedLabourPreference?: boolean;
   }
 ): BannerAlert[] {
@@ -69,7 +69,7 @@ export function buildEthicsPillarBannerAlerts(
     let message = `This matches your TruScore Ethics pillar (KnowTheChain 2026 benchmark used in scoring): ${detail}. Tap for reference.`;
     if (opts?.mentionForcedLabourPreference) {
       message +=
-        ' This also relates to your Values preference to avoid forced or child labour concerns.';
+        ' This also relates to your alert preference to avoid forced or child labour concerns.';
     }
     alerts.push({
       id: `ethics-pillar-ktc-${barcode}`,

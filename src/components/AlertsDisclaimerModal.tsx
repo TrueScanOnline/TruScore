@@ -1,4 +1,4 @@
-// ValuesDisclaimerModal.tsx - Disclaimer modal for first-time Values users (v1.3)
+// First-time disclaimer for the user Alerts tab (preference-driven insights, not banner alerts).
 import React from 'react';
 import {
   View,
@@ -12,17 +12,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-interface ValuesDisclaimerModalProps {
+interface AlertsDisclaimerModalProps {
   visible: boolean;
   onAccept: () => void;
   onDismiss?: () => void;
 }
 
-export default function ValuesDisclaimerModal({
+export default function AlertsDisclaimerModal({
   visible,
   onAccept,
   onDismiss,
-}: ValuesDisclaimerModalProps) {
+}: AlertsDisclaimerModalProps) {
   const { colors } = useTheme();
 
   return (
@@ -30,45 +30,42 @@ export default function ValuesDisclaimerModal({
       visible={visible}
       transparent
       animationType="fade"
-      // Android: require explicit acknowledgment — do not close on hardware back unless Cancel is shown.
       onRequestClose={onDismiss ?? (() => {})}
     >
       <SafeAreaView style={styles.modalOverlay} edges={['top', 'bottom']}>
         <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
           <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
             <Ionicons name="information-circle" size={24} color={colors.primary} />
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
-              User Choice Only
-            </Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>User choice only</Text>
           </View>
 
           <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
             <Text style={[styles.disclaimerText, { color: colors.text }]}>
-              The Values feature provides optional, personalized insights based on preferences. These insights are for informational purposes only and do not affect the TruScore.
+              Alerts let you choose optional topics to highlight on product pages. These insights are informational only
+              and do not change your TruScore. Banner alerts from the app (e.g. recalls) follow separate spec rules.
             </Text>
 
             <View style={[styles.section, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Important Information:
-              </Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Important information</Text>
               <View style={styles.bulletList}>
                 <Text style={[styles.bulletPoint, { color: colors.text }]}>
-                  • Insights are based on publicly available information
+                  • Insights use publicly available product data where possible
                 </Text>
                 <Text style={[styles.bulletPoint, { color: colors.text }]}>
-                  • All preferences are optional and user-controlled
+                  • All alert topics are optional and controlled by you
                 </Text>
                 <Text style={[styles.bulletPoint, { color: colors.text }]}>
-                  • TruScore remains objective and unaffected by Values preferences
+                  • TruScore stays objective and is not driven by these alert preferences
                 </Text>
                 <Text style={[styles.bulletPoint, { color: colors.text }]}>
-                  • Sources are provided for transparency
+                  • References are shown where available for transparency
                 </Text>
               </View>
             </View>
 
             <Text style={[styles.disclaimerText, { color: colors.textSecondary, marginTop: 16 }]}>
-              By continuing, you acknowledge that these are optional insights and that you understand the Values feature is separate from the core TruScore calculation.
+              By continuing, you confirm you understand these alerts are optional extras, separate from the core TruScore
+              calculation and from automatic banner alerts.
             </Text>
           </ScrollView>
 
@@ -85,7 +82,7 @@ export default function ValuesDisclaimerModal({
               style={[styles.footerButton, styles.acceptButton, { backgroundColor: colors.primary }]}
               onPress={onAccept}
             >
-              <Text style={[styles.footerButtonText, { color: '#fff' }]}>I Understand</Text>
+              <Text style={[styles.footerButtonText, { color: '#fff' }]}>I understand</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -160,15 +157,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cancelButton: {
-    // Styled dynamically
-  },
-  acceptButton: {
-    // Styled dynamically
-  },
+  cancelButton: {},
+  acceptButton: {},
   footerButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },
 });
-

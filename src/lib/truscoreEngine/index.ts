@@ -11,8 +11,8 @@
  */
 
 import { Product } from '../../types/product';
-import { ValuesPreferences } from '../../store/useValuesStore';
-import { generateInsights } from '../valuesInsights';
+import { AlertsPreferences } from '../../store/useAlertsStore';
+import { generateInsights } from '../alertsInsights';
 import { logger } from '../../utils/logger';
 import { powershellLogger } from '../../utils/powershellLogger';
 import type { TruScoreAnalysis, FetchTraceEntry, PillarAnalysis, PillarAdjustmentWithSource } from '../../types/truscoreAnalysis';
@@ -70,13 +70,13 @@ export interface TruScoreResult {
  * All pillars start at base 15, then apply adjustments.
  * 
  * @param product - Product data to score
- * @param preferences - Optional user values preferences for generating insights
+ * @param preferences - Optional user alert preferences for generating scan insights (not banner alerts)
  * @param scoringContext - Optional scoring overrides (e.g. persisted Planet market AU/NZ)
  * @returns TruScore result with total score, breakdown, and optional insights
  */
 export function calculateTruScore(
   product: Product | null | undefined,
-  preferences?: ValuesPreferences,
+  preferences?: AlertsPreferences,
   scoringContext?: TruScoreScoringContext
 ): TruScoreResult {
   // Input validation

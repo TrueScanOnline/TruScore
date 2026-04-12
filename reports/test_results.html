@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TrueScan barcode report — 88 items</title>
+  <style>
+    :root { font-family: system-ui, Segoe UI, Roboto, sans-serif; }
+    body { margin: 1rem 1.25rem 3rem; color: #1a1a1a; line-height: 1.45; }
+    h1 { font-size: 1.35rem; margin-bottom: 0.25rem; }
+    .meta { color: #555; font-size: 0.9rem; margin-bottom: 1.25rem; }
+    .meta code { background: #f0f0f0; padding: 0.1em 0.35em; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.82rem; margin: 1rem 0 2rem; }
+    th, td { border: 1px solid #ccc; padding: 0.35rem 0.5rem; text-align: left; vertical-align: top; }
+    th { background: #f5f5f5; position: sticky; top: 0; z-index: 1; }
+    .num { text-align: right; white-space: nowrap; }
+    .mono { font-family: ui-monospace, Consolas, monospace; }
+    .small { font-size: 0.78rem; max-width: 8rem; word-break: break-all; }
+    .ok { color: #0a7; font-weight: 600; }
+    .warn { color: #a60; }
+    .bad { color: #c12; font-weight: 600; }
+    .err { font-size: 0.75rem; color: #666; margin-top: 0.25rem; max-width: 14rem; }
+    details.card { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 0.5rem; padding: 0.35rem 0.6rem; background: #fafafa; }
+    details.card summary { cursor: pointer; }
+    .detail-body { padding: 0.5rem 0 0.25rem 0.5rem; font-size: 0.85rem; }
+    .detail-body h4 { margin: 0.75rem 0 0.25rem; font-size: 0.9rem; }
+    .detail-body ul { margin: 0.25rem 0 0.5rem 1rem; }
+  </style>
+</head>
+<body>
+  <h1>TrueScan barcode batch report</h1>
+  <div class="meta">
+    Generated <strong>2026-04-11T06:58:45.415Z</strong><br />
+    Barcodes: <strong>88</strong> · Total run time: <strong>844142ms</strong><br />
+    Input: <code>C:\TrueScan-FoodScanner\barcodes\barcodes-88.txt</code><br />
+    JSON: <code>C:\TrueScan-FoodScanner\reports\test_results.json</code>
+  </div>
+  <h2>Summary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Barcode</th><th>Product</th><th>Source</th>
+        <th>Fetch</th><th>Score calc</th><th>Total</th>
+        <th>TruScore</th><th>Body</th><th>Planet</th><th>Ethics</th><th>Open</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody><tr>
+  <td>1</td>
+  <td class="mono">9310036039655</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30037ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>2</td>
+  <td class="mono">9300675001113</td>
+  <td>Coca-Cola Classic</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">8579ms</td>
+  <td class="num">16ms</td>
+  <td class="num">8595ms</td>
+  <td class="num">40</td>
+  <td class="num">2</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">8</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>3</td>
+  <td class="mono">5449000000996</td>
+  <td>Original Taste</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7131ms</td>
+  <td class="num">18ms</td>
+  <td class="num">7149ms</td>
+  <td class="num">45</td>
+  <td class="num">2</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">13</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>4</td>
+  <td class="mono">9310232961279</td>
+  <td>Double Espresso Lactose Free</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6042ms</td>
+  <td class="num">16ms</td>
+  <td class="num">6058ms</td>
+  <td class="num">61</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">20</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>5</td>
+  <td class="mono">9310272002253</td>
+  <td>Our Finest Non-Homogenised Milk</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5625ms</td>
+  <td class="num">20ms</td>
+  <td class="num">5645ms</td>
+  <td class="num">72</td>
+  <td class="num">17</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">25</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>6</td>
+  <td class="mono">5060229012371</td>
+  <td>Herbal Collection Assorted Herbal Tea Sachets</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5349ms</td>
+  <td class="num">22ms</td>
+  <td class="num">5371ms</td>
+  <td class="num">64</td>
+  <td class="num">15</td>
+  <td class="num">22</td>
+  <td class="num">21</td>
+  <td class="num">6</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>7</td>
+  <td class="mono">9300675016902</td>
+  <td>Pump Water</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">4625ms</td>
+  <td class="num">13ms</td>
+  <td class="num">4638ms</td>
+  <td class="num">67</td>
+  <td class="num">25</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">12</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>8</td>
+  <td class="mono">611269991000</td>
+  <td>Energy Drink</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">2755ms</td>
+  <td class="num">18ms</td>
+  <td class="num">2773ms</td>
+  <td class="num">41</td>
+  <td class="num">2</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">9</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>9</td>
+  <td class="mono">70177025700</td>
+  <td>Twinings English Breakfast Tea Bags</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">2929ms</td>
+  <td class="num">14ms</td>
+  <td class="num">2943ms</td>
+  <td class="num">65</td>
+  <td class="num">18</td>
+  <td class="num">22</td>
+  <td class="num">7</td>
+  <td class="num">18</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td class="mono">9317557896019</td>
+  <td>Probiotic Drink</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5658ms</td>
+  <td class="num">16ms</td>
+  <td class="num">5674ms</td>
+  <td class="num">27</td>
+  <td class="num">2</td>
+  <td class="num">8</td>
+  <td class="num">5</td>
+  <td class="num">12</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>11</td>
+  <td class="mono">9341650001766</td>
+  <td>Soy Milky Regular</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5815ms</td>
+  <td class="num">14ms</td>
+  <td class="num">5829ms</td>
+  <td class="num">57</td>
+  <td class="num">12</td>
+  <td class="num">18</td>
+  <td class="num">15</td>
+  <td class="num">12</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>12</td>
+  <td class="mono">7622300992675</td>
+  <td>Belvita Milk &amp; Cereals</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5860ms</td>
+  <td class="num">18ms</td>
+  <td class="num">5878ms</td>
+  <td class="num">41</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">0</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>13</td>
+  <td class="mono">9326666610553</td>
+  <td>cranberry &amp; buckwheat flakes</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5928ms</td>
+  <td class="num">12ms</td>
+  <td class="num">5940ms</td>
+  <td class="num">56</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>14</td>
+  <td class="mono">9310055105850</td>
+  <td>NUTRI GRAIN</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6051ms</td>
+  <td class="num">20ms</td>
+  <td class="num">6071ms</td>
+  <td class="num">34</td>
+  <td class="num">6</td>
+  <td class="num">8</td>
+  <td class="num">15</td>
+  <td class="num">5</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>15</td>
+  <td class="mono">9310055105904</td>
+  <td>Sultana Bran</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6013ms</td>
+  <td class="num">19ms</td>
+  <td class="num">6032ms</td>
+  <td class="num">50</td>
+  <td class="num">14</td>
+  <td class="num">12</td>
+  <td class="num">15</td>
+  <td class="num">9</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>16</td>
+  <td class="mono">9300652014396</td>
+  <td>Weet-Bix Multi-Grain+</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6123ms</td>
+  <td class="num">19ms</td>
+  <td class="num">6142ms</td>
+  <td class="num">56</td>
+  <td class="num">17</td>
+  <td class="num">12</td>
+  <td class="num">15</td>
+  <td class="num">12</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>17</td>
+  <td class="mono">9300650022898</td>
+  <td>Strawberry Yoghurt Sandwich</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5889ms</td>
+  <td class="num">21ms</td>
+  <td class="num">5910ms</td>
+  <td class="num">37</td>
+  <td class="num">12</td>
+  <td class="num">14</td>
+  <td class="num">0</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>18</td>
+  <td class="mono">9300652010794</td>
+  <td>West bix</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7590ms</td>
+  <td class="num">21ms</td>
+  <td class="num">7611ms</td>
+  <td class="num">66</td>
+  <td class="num">17</td>
+  <td class="num">14</td>
+  <td class="num">15</td>
+  <td class="num">20</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>19</td>
+  <td class="mono">9300677006437</td>
+  <td>Pure honey</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7935ms</td>
+  <td class="num">17ms</td>
+  <td class="num">7952ms</td>
+  <td class="num">57</td>
+  <td class="num">9</td>
+  <td class="num">18</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>20</td>
+  <td class="mono">9313010000801</td>
+  <td>CSR Brown Sugar 1kg</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">4438ms</td>
+  <td class="num">21ms</td>
+  <td class="num">4459ms</td>
+  <td class="num">46</td>
+  <td class="num">9</td>
+  <td class="num">14</td>
+  <td class="num">9</td>
+  <td class="num">14</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>21</td>
+  <td class="mono">9313010000108</td>
+  <td>White Sugar</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5184ms</td>
+  <td class="num">14ms</td>
+  <td class="num">5198ms</td>
+  <td class="num">48</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">9</td>
+  <td class="num">9</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>22</td>
+  <td class="mono">13000006408</td>
+  <td>Tomato Ketchup</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5984ms</td>
+  <td class="num">16ms</td>
+  <td class="num">6000ms</td>
+  <td class="num">32</td>
+  <td class="num">6</td>
+  <td class="num">18</td>
+  <td class="num">0</td>
+  <td class="num">8</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>23</td>
+  <td class="mono">8715035110304</td>
+  <td>Sauce Soja</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5779ms</td>
+  <td class="num">20ms</td>
+  <td class="num">5799ms</td>
+  <td class="num">58</td>
+  <td class="num">7</td>
+  <td class="num">22</td>
+  <td class="num">5</td>
+  <td class="num">24</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>24</td>
+  <td class="mono">9310061462206</td>
+  <td>McKenzies Bi-Carb Soda</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6141ms</td>
+  <td class="num">15ms</td>
+  <td class="num">6156ms</td>
+  <td class="num">66</td>
+  <td class="num">18</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">18</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>25</td>
+  <td class="mono">9310061550101</td>
+  <td>Fine desiccated coconut</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5826ms</td>
+  <td class="num">12ms</td>
+  <td class="num">5838ms</td>
+  <td class="num">52</td>
+  <td class="num">12</td>
+  <td class="num">14</td>
+  <td class="num">15</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>26</td>
+  <td class="mono">3017620422003</td>
+  <td>Nutella</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5934ms</td>
+  <td class="num">21ms</td>
+  <td class="num">5955ms</td>
+  <td class="num">50</td>
+  <td class="num">2</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">18</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>27</td>
+  <td class="mono">9313958005890</td>
+  <td>Unbleached Self Raising Flour</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6054ms</td>
+  <td class="num">13ms</td>
+  <td class="num">6067ms</td>
+  <td class="num">54</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">9</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>28</td>
+  <td class="mono">9310412003577</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30012ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>29</td>
+  <td class="mono">9352042000281</td>
+  <td>Vegemite</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7974ms</td>
+  <td class="num">15ms</td>
+  <td class="num">7989ms</td>
+  <td class="num">41</td>
+  <td class="num">6</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">5</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>30</td>
+  <td class="mono">9300601249114</td>
+  <td>White vinegar</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5602ms</td>
+  <td class="num">15ms</td>
+  <td class="num">5617ms</td>
+  <td class="num">67</td>
+  <td class="num">16</td>
+  <td class="num">22</td>
+  <td class="num">11</td>
+  <td class="num">18</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>31</td>
+  <td class="mono">9310047207180</td>
+  <td>Flour whole meal</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7633ms</td>
+  <td class="num">16ms</td>
+  <td class="num">7649ms</td>
+  <td class="num">54</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">9</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>32</td>
+  <td class="mono">894700010137</td>
+  <td>Greek Yogurt Nonfat Plain</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7221ms</td>
+  <td class="num">21ms</td>
+  <td class="num">7242ms</td>
+  <td class="num">93</td>
+  <td class="num">25</td>
+  <td class="num">22</td>
+  <td class="num">21</td>
+  <td class="num">25</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>33</td>
+  <td class="mono">9300601002849</td>
+  <td>Sour cream</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6307ms</td>
+  <td class="num">19ms</td>
+  <td class="num">6326ms</td>
+  <td class="num">71</td>
+  <td class="num">14</td>
+  <td class="num">22</td>
+  <td class="num">11</td>
+  <td class="num">24</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>34</td>
+  <td class="mono">9300639100012</td>
+  <td>Spreadable Dairy Soft Original</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">3335ms</td>
+  <td class="num">21ms</td>
+  <td class="num">3356ms</td>
+  <td class="num">37</td>
+  <td class="num">9</td>
+  <td class="num">8</td>
+  <td class="num">0</td>
+  <td class="num">20</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>35</td>
+  <td class="mono">9343787099111</td>
+  <td>GREEK STYLE ORGANIC YOGHURT</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">2511ms</td>
+  <td class="num">19ms</td>
+  <td class="num">2530ms</td>
+  <td class="num">81</td>
+  <td class="num">17</td>
+  <td class="num">22</td>
+  <td class="num">17</td>
+  <td class="num">25</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>36</td>
+  <td class="mono">9343787099104</td>
+  <td>Vanilla Bean Organic Yoghurt</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">2497ms</td>
+  <td class="num">22ms</td>
+  <td class="num">2519ms</td>
+  <td class="num">63</td>
+  <td class="num">16</td>
+  <td class="num">18</td>
+  <td class="num">17</td>
+  <td class="num">12</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>37</td>
+  <td class="mono">9310653105733</td>
+  <td>PASSIONFRUIT TWIST YOGURT</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6926ms</td>
+  <td class="num">12ms</td>
+  <td class="num">6938ms</td>
+  <td class="num">56</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>38</td>
+  <td class="mono">9310354890006</td>
+  <td>Flavoured Yoghurt</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6507ms</td>
+  <td class="num">17ms</td>
+  <td class="num">6524ms</td>
+  <td class="num">63</td>
+  <td class="num">8</td>
+  <td class="num">22</td>
+  <td class="num">15</td>
+  <td class="num">18</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>39</td>
+  <td class="mono">9310354982466</td>
+  <td>Greek Style Yoghurt</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6115ms</td>
+  <td class="num">14ms</td>
+  <td class="num">6129ms</td>
+  <td class="num">81</td>
+  <td class="num">17</td>
+  <td class="num">22</td>
+  <td class="num">17</td>
+  <td class="num">25</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>40</td>
+  <td class="mono">9310052120856</td>
+  <td>Unsalted butter 250g</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5967ms</td>
+  <td class="num">16ms</td>
+  <td class="num">5983ms</td>
+  <td class="num">69</td>
+  <td class="num">16</td>
+  <td class="num">8</td>
+  <td class="num">20</td>
+  <td class="num">25</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>41</td>
+  <td class="mono">9310072028866</td>
+  <td>Shapes Originals Barbecue</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5890ms</td>
+  <td class="num">16ms</td>
+  <td class="num">5906ms</td>
+  <td class="num">44</td>
+  <td class="num">6</td>
+  <td class="num">18</td>
+  <td class="num">7</td>
+  <td class="num">13</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>42</td>
+  <td class="mono">9300830060733</td>
+  <td>Paddle Pop Chocolate</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6053ms</td>
+  <td class="num">18ms</td>
+  <td class="num">6071ms</td>
+  <td class="num">43</td>
+  <td class="num">8</td>
+  <td class="num">18</td>
+  <td class="num">12</td>
+  <td class="num">5</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>43</td>
+  <td class="mono">9300601767762</td>
+  <td>Pain au chocolat</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6031ms</td>
+  <td class="num">22ms</td>
+  <td class="num">6053ms</td>
+  <td class="num">50</td>
+  <td class="num">6</td>
+  <td class="num">14</td>
+  <td class="num">17</td>
+  <td class="num">13</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>44</td>
+  <td class="mono">9310015247828</td>
+  <td>Doritos</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7725ms</td>
+  <td class="num">17ms</td>
+  <td class="num">7742ms</td>
+  <td class="num">48</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">3</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>45</td>
+  <td class="mono">63523614</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30016ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>46</td>
+  <td class="mono">9310988022378</td>
+  <td>Salt And Vin</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7978ms</td>
+  <td class="num">10ms</td>
+  <td class="num">7988ms</td>
+  <td class="num">57</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">12</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>47</td>
+  <td class="mono">40000511281</td>
+  <td>m&amp;m's Dark Chocolate</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7720ms</td>
+  <td class="num">11ms</td>
+  <td class="num">7731ms</td>
+  <td class="num">43</td>
+  <td class="num">2</td>
+  <td class="num">15</td>
+  <td class="num">6</td>
+  <td class="num">20</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>48</td>
+  <td class="mono">9300682059015</td>
+  <td>Mars</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">9167ms</td>
+  <td class="num">17ms</td>
+  <td class="num">9184ms</td>
+  <td class="num">36</td>
+  <td class="num">2</td>
+  <td class="num">15</td>
+  <td class="num">11</td>
+  <td class="num">8</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>49</td>
+  <td class="mono">9300682059015</td>
+  <td>Mars</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">0ms</td>
+  <td class="num">12ms</td>
+  <td class="num">12ms</td>
+  <td class="num">36</td>
+  <td class="num">2</td>
+  <td class="num">15</td>
+  <td class="num">11</td>
+  <td class="num">8</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>50</td>
+  <td class="mono">40000422068</td>
+  <td>milkyway</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7511ms</td>
+  <td class="num">14ms</td>
+  <td class="num">7525ms</td>
+  <td class="num">37</td>
+  <td class="num">2</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">5</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>51</td>
+  <td class="mono">9300682059091</td>
+  <td>Milky way</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">2959ms</td>
+  <td class="num">16ms</td>
+  <td class="num">2975ms</td>
+  <td class="num">40</td>
+  <td class="num">2</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">8</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>52</td>
+  <td class="mono">44000032210</td>
+  <td>Nabisco chips ahoy! cookies chunky</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">3258ms</td>
+  <td class="num">21ms</td>
+  <td class="num">3279ms</td>
+  <td class="num">27</td>
+  <td class="num">2</td>
+  <td class="num">8</td>
+  <td class="num">9</td>
+  <td class="num">8</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>53</td>
+  <td class="mono">930060512652</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30017ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>54</td>
+  <td class="mono">9300650452701</td>
+  <td>OREO Original Choc Cookie Sandwich with Sweet Vanilla Creme</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6493ms</td>
+  <td class="num">16ms</td>
+  <td class="num">6509ms</td>
+  <td class="num">22</td>
+  <td class="num">2</td>
+  <td class="num">12</td>
+  <td class="num">0</td>
+  <td class="num">8</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>55</td>
+  <td class="mono">9310080257418</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30005ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>56</td>
+  <td class="mono">38000845017</td>
+  <td>Pringles, jalapeno potato crisp</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">8743ms</td>
+  <td class="num">19ms</td>
+  <td class="num">8762ms</td>
+  <td class="num">40</td>
+  <td class="num">2</td>
+  <td class="num">18</td>
+  <td class="num">15</td>
+  <td class="num">5</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>57</td>
+  <td class="mono">9310161017603</td>
+  <td>Nutrageous ice cream</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5311ms</td>
+  <td class="num">14ms</td>
+  <td class="num">5325ms</td>
+  <td class="num">52</td>
+  <td class="num">6</td>
+  <td class="num">18</td>
+  <td class="num">15</td>
+  <td class="num">13</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>58</td>
+  <td class="mono">9310645350899</td>
+  <td>Boysenberry Cheesecake</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7455ms</td>
+  <td class="num">10ms</td>
+  <td class="num">7465ms</td>
+  <td class="num">54</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">9</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>59</td>
+  <td class="mono">4008355030495</td>
+  <td>Pfeffernüsse</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6516ms</td>
+  <td class="num">12ms</td>
+  <td class="num">6528ms</td>
+  <td class="num">55</td>
+  <td class="num">9</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">16</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>60</td>
+  <td class="mono">9320802000444</td>
+  <td>Strawberry</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6092ms</td>
+  <td class="num">12ms</td>
+  <td class="num">6104ms</td>
+  <td class="num">68</td>
+  <td class="num">22</td>
+  <td class="num">22</td>
+  <td class="num">15</td>
+  <td class="num">9</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>61</td>
+  <td class="mono">9310645176833</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30003ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>62</td>
+  <td class="mono">9342373000296</td>
+  <td>Blackberries</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5980ms</td>
+  <td class="num">11ms</td>
+  <td class="num">5991ms</td>
+  <td class="num">50</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">5</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>63</td>
+  <td class="mono">9357107000251</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30009ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>64</td>
+  <td class="mono">9320802000482</td>
+  <td>Strawberry</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7987ms</td>
+  <td class="num">18ms</td>
+  <td class="num">8005ms</td>
+  <td class="num">54</td>
+  <td class="num">8</td>
+  <td class="num">22</td>
+  <td class="num">15</td>
+  <td class="num">9</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>65</td>
+  <td class="mono">9342373000395</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30004ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>66</td>
+  <td class="mono">931839007104</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">29995ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>67</td>
+  <td class="mono">793579769781</td>
+  <td>Oats</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6555ms</td>
+  <td class="num">13ms</td>
+  <td class="num">6568ms</td>
+  <td class="num">56</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>68</td>
+  <td class="mono">9315090200102</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30001ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>69</td>
+  <td class="mono">9311208001241</td>
+  <td>Fettucine</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6820ms</td>
+  <td class="num">13ms</td>
+  <td class="num">6833ms</td>
+  <td class="num">56</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>70</td>
+  <td class="mono">58449450023</td>
+  <td>Flax Plus Instant Oatmeal imp</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6208ms</td>
+  <td class="num">14ms</td>
+  <td class="num">6222ms</td>
+  <td class="num">60</td>
+  <td class="num">13</td>
+  <td class="num">12</td>
+  <td class="num">17</td>
+  <td class="num">18</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>71</td>
+  <td class="mono">9310155305037</td>
+  <td>Cous cous</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6511ms</td>
+  <td class="num">13ms</td>
+  <td class="num">6524ms</td>
+  <td class="num">83</td>
+  <td class="num">21</td>
+  <td class="num">22</td>
+  <td class="num">15</td>
+  <td class="num">25</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>72</td>
+  <td class="mono">9310060011030</td>
+  <td>Rolled Oats Traditional</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7178ms</td>
+  <td class="num">13ms</td>
+  <td class="num">7191ms</td>
+  <td class="num">70</td>
+  <td class="num">22</td>
+  <td class="num">15</td>
+  <td class="num">9</td>
+  <td class="num">24</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>73</td>
+  <td class="mono">9339687209279</td>
+  <td>Australian Popping corn</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5546ms</td>
+  <td class="num">13ms</td>
+  <td class="num">5559ms</td>
+  <td class="num">84</td>
+  <td class="num">22</td>
+  <td class="num">22</td>
+  <td class="num">16</td>
+  <td class="num">24</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>74</td>
+  <td class="mono">9315822010863</td>
+  <td>Prawn Gyoza</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">3786ms</td>
+  <td class="num">10ms</td>
+  <td class="num">3796ms</td>
+  <td class="num">51</td>
+  <td class="num">8</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">13</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>75</td>
+  <td class="mono">9310174006403</td>
+  <td>Super Juicy Corn Kernels</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">2781ms</td>
+  <td class="num">10ms</td>
+  <td class="num">2791ms</td>
+  <td class="num">79</td>
+  <td class="num">18</td>
+  <td class="num">22</td>
+  <td class="num">15</td>
+  <td class="num">24</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>76</td>
+  <td class="mono">9310174006021</td>
+  <td>Peas</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5140ms</td>
+  <td class="num">12ms</td>
+  <td class="num">5152ms</td>
+  <td class="num">70</td>
+  <td class="num">22</td>
+  <td class="num">22</td>
+  <td class="num">15</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>77</td>
+  <td class="mono">5052675000989</td>
+  <td>Thai Green Curry</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">5850ms</td>
+  <td class="num">14ms</td>
+  <td class="num">5864ms</td>
+  <td class="num">67</td>
+  <td class="num">14</td>
+  <td class="num">18</td>
+  <td class="num">15</td>
+  <td class="num">20</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>78</td>
+  <td class="mono">9343005001018</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30012ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>79</td>
+  <td class="mono">818411000478</td>
+  <td>Açai Bowl</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">8121ms</td>
+  <td class="num">14ms</td>
+  <td class="num">8135ms</td>
+  <td class="num">62</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">21</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>80</td>
+  <td class="mono">42272005024</td>
+  <td>Lentil Soup</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">8265ms</td>
+  <td class="num">18ms</td>
+  <td class="num">8283ms</td>
+  <td class="num">74</td>
+  <td class="num">17</td>
+  <td class="num">22</td>
+  <td class="num">17</td>
+  <td class="num">18</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>81</td>
+  <td class="mono">9300657003425</td>
+  <td>Killer Beans Smokey Campfire BBQ</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7698ms</td>
+  <td class="num">13ms</td>
+  <td class="num">7711ms</td>
+  <td class="num">54</td>
+  <td class="num">16</td>
+  <td class="num">18</td>
+  <td class="num">15</td>
+  <td class="num">5</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>82</td>
+  <td class="mono">9300657234713</td>
+  <td>Baked beans in a deliciously rich tomato sauce</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7737ms</td>
+  <td class="num">16ms</td>
+  <td class="num">7753ms</td>
+  <td class="num">59</td>
+  <td class="num">16</td>
+  <td class="num">22</td>
+  <td class="num">15</td>
+  <td class="num">6</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>83</td>
+  <td class="mono">9300657235031</td>
+  <td>Spaghetti</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7584ms</td>
+  <td class="num">15ms</td>
+  <td class="num">7599ms</td>
+  <td class="num">39</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">0</td>
+  <td class="num">9</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>84</td>
+  <td class="mono">9300462137582</td>
+  <td>Yellonfin Tuna Italian Oil Style</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">7543ms</td>
+  <td class="num">11ms</td>
+  <td class="num">7554ms</td>
+  <td class="num">56</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">11</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>85</td>
+  <td class="mono">93100062212972</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">29999ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>86</td>
+  <td class="mono">9310645244846</td>
+  <td>Tuna</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">4496ms</td>
+  <td class="num">13ms</td>
+  <td class="num">4509ms</td>
+  <td class="num">54</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">9</td>
+  <td><span class="ok">OK</span></td>
+</tr>
+<tr>
+  <td>87</td>
+  <td class="mono">9310645442532</td>
+  <td>—</td>
+  <td class="mono small">—</td>
+  <td class="num">30003ms</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td class="num">—</td>
+  <td><span class="bad">Error</span><div class="err">Product not found</div></td>
+</tr>
+<tr>
+  <td>88</td>
+  <td class="mono">8801073142312</td>
+  <td>Buldak Spicy Ramen Carbonara</td>
+  <td class="mono small">openfoodfacts</td>
+  <td class="num">6289ms</td>
+  <td class="num">26ms</td>
+  <td class="num">6315ms</td>
+  <td class="num">45</td>
+  <td class="num">2</td>
+  <td class="num">15</td>
+  <td class="num">15</td>
+  <td class="num">13</td>
+  <td><span class="ok">OK</span></td>
+</tr></tbody>
+  </table>
+  <h2>Per-barcode detail</h2>
+  <p style="font-size:0.9rem;color:#555;">Expand a row for pillar adjustments and data-source summary.</p>
+  <details class="card">
+<summary><strong>9310036039655 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>9300675001113 — Coca-Cola Classic</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (8/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>2 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-8)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Origin information is placeholder text (not real origin) <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>5449000000996 — Original Taste</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (13/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>3 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310232961279 — Double Espresso Lactose Free</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (20/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>Ethics certifications – Rainforest Alliance (+5, highest eligible scheme; MVP no stacking) <strong>(5)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310272002253 — Our Finest Non-Homogenised Milk</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (17/25, base 15)</h4><ul><li>Nutri-Score Grade C (poor nutrition) <strong>(-1)</strong></li><li>NOVA Group 1 (unprocessed / minimally processed) <strong>(3)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (25/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>5060229012371 — Herbal Collection Assorted Herbal Tea Sachets</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (21/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>Ethics certifications – Fairtrade (+6, highest eligible scheme; MVP no stacking) <strong>(6)</strong></li></ul><h4>OPEN (6/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>2 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-8)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300675016902 — Pump Water</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (25/25, base 15)</h4><ul><li>Nutri-Score Grade A (excellent nutrition) <strong>(7)</strong></li><li>NOVA Group 1 (unprocessed / minimally processed) <strong>(3)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (12/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Nutritional information present but incomplete <strong>(0)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>611269991000 — Energy Drink</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (9/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>3 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Origin information available (partial) <strong>(0)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>70177025700 — Twinings English Breakfast Tea Bags</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (18/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li><li>NOVA Group 1 (unprocessed / minimally processed) <strong>(3)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (7/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>KTC 2026 benchmark score 13 (labour rights in supply chains) <strong>(-8)</strong></li></ul><h4>OPEN (18/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9317557896019 — Probiotic Drink</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (8/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade E (-7) — Open Food Facts / Eco-Score <strong>(-7)</strong></li></ul><h4>ETHICS (5/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>KTC 2026 benchmark score 4 (labour rights in supply chains) <strong>(-10)</strong></li></ul><h4>OPEN (12/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>1 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9341650001766 — Soy Milky Regular</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (12/25, base 15)</h4><ul><li>Nutri-Score Grade B (excellent nutrition) <strong>(3)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (18/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade B (+3) — Open Food Facts / Eco-Score <strong>(3)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (12/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>1 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>7622300992675 — Belvita Milk &amp; Cereals</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (0/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 6 (animal welfare governance) <strong>(-6)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>KTC 2026 benchmark score 30 (labour rights in supply chains) <strong>(-6)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9326666610553 — cranberry &amp; buckwheat flakes</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310055105850 — NUTRI GRAIN</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (6/25, base 15)</h4><ul><li>Nutri-Score Grade D (poor nutrition) <strong>(-3)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (8/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade E (-7) — Open Food Facts / Eco-Score <strong>(-7)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (5/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>3 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310055105904 — Sultana Bran</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (14/25, base 15)</h4><ul><li>Nutri-Score Grade C (poor nutrition) <strong>(-1)</strong></li></ul><h4>PLANET (12/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade D (-3) — Open Food Facts / Eco-Score <strong>(-3)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (9/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300652014396 — Weet-Bix Multi-Grain+</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (17/25, base 15)</h4><ul><li>Nutri-Score Grade B (excellent nutrition) <strong>(3)</strong></li><li>NOVA Group 3 (processed) <strong>(-1)</strong></li></ul><h4>PLANET (12/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade D (-3) — Open Food Facts / Eco-Score <strong>(-3)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (12/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>1 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300650022898 — Strawberry Yoghurt Sandwich</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (12/25, base 15)</h4><ul><li>Nutri-Score Grade D (poor nutrition) <strong>(-3)</strong></li></ul><h4>PLANET (14/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade C (-1) — Open Food Facts / Eco-Score <strong>(-1)</strong></li></ul><h4>ETHICS (0/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 6 (animal welfare governance) <strong>(-6)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>KTC 2026 benchmark score 30 (labour rights in supply chains) <strong>(-6)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300652010794 — West bix</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (17/25, base 15)</h4><ul><li>Nutri-Score Grade B (excellent nutrition) <strong>(3)</strong></li><li>NOVA Group 3 (processed) <strong>(-1)</strong></li></ul><h4>PLANET (14/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade C (-1) — Open Food Facts / Eco-Score <strong>(-1)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (20/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>1 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300677006437 — Pure honey</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (9/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 2 (processed culinary ingredients) <strong>(1)</strong></li></ul><h4>PLANET (18/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade B (+3) — Open Food Facts / Eco-Score <strong>(3)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (15/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9313010000801 — CSR Brown Sugar 1kg</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (9/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 2 (processed culinary ingredients) <strong>(1)</strong></li></ul><h4>PLANET (14/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade C (-1) — Open Food Facts / Eco-Score <strong>(-1)</strong></li></ul><h4>ETHICS (9/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>KTC 2026 benchmark score 21 (labour rights in supply chains) <strong>(-6)</strong></li></ul><h4>OPEN (14/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>No nutritional information disclosed <strong>(-3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9313010000108 — White Sugar</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (9/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>KTC 2026 benchmark score 21 (labour rights in supply chains) <strong>(-6)</strong></li></ul><h4>OPEN (9/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>13000006408 — Tomato Ketchup</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (6/25, base 15)</h4><ul><li>Nutri-Score Grade D (poor nutrition) <strong>(-3)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (18/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade B (+3) — Open Food Facts / Eco-Score <strong>(3)</strong></li></ul><h4>ETHICS (0/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 5 (animal welfare governance) <strong>(-4)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>KTC 2026 benchmark score 8 (labour rights in supply chains) <strong>(-10)</strong></li></ul><h4>OPEN (8/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>2 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-8)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>8715035110304 — Sauce Soja</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (7/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 3 (processed) <strong>(-1)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (5/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>KTC 2026 benchmark score 1 (labour rights in supply chains) <strong>(-10)</strong></li></ul><h4>OPEN (24/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 3–4) <strong>(2)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310061462206 — McKenzies Bi-Carb Soda</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (18/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li><li>NOVA Group 1 (unprocessed / minimally processed) <strong>(3)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (18/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310061550101 — Fine desiccated coconut</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (12/25, base 15)</h4><ul><li>Nutri-Score Grade D (poor nutrition) <strong>(-3)</strong></li></ul><h4>PLANET (14/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade C (-1) — Open Food Facts / Eco-Score <strong>(-1)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>3017620422003 — Nutella</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (18/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 3–4) <strong>(2)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9313958005890 — Unbleached Self Raising Flour</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (9/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310412003577 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>9352042000281 — Vegemite</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (6/25, base 15)</h4><ul><li>Nutri-Score Grade D (poor nutrition) <strong>(-3)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (5/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>5 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300601249114 — White vinegar</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (16/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li><li>NOVA Group 2 (processed culinary ingredients) <strong>(1)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (11/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 5 (animal welfare governance) <strong>(-4)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>KTC 2026 benchmark score 55 (labour rights in supply chains) <strong>(3)</strong></li></ul><h4>OPEN (18/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310047207180 — Flour whole meal</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (9/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>894700010137 — Greek Yogurt Nonfat Plain</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (25/25, base 15)</h4><ul><li>Nutri-Score Grade A (excellent nutrition) <strong>(7)</strong></li><li>NOVA Group 1 (unprocessed / minimally processed) <strong>(3)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (21/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>Ethics certifications – Fairtrade (+6, highest eligible scheme; MVP no stacking) <strong>(6)</strong></li></ul><h4>OPEN (25/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300601002849 — Sour cream</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (14/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li><li>NOVA Group 3 (processed) <strong>(-1)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (11/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 5 (animal welfare governance) <strong>(-4)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>KTC 2026 benchmark score 55 (labour rights in supply chains) <strong>(3)</strong></li></ul><h4>OPEN (24/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 3–4) <strong>(2)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300639100012 — Spreadable Dairy Soft Original</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (9/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 2 (processed culinary ingredients) <strong>(1)</strong></li></ul><h4>PLANET (8/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade E (-7) — Open Food Facts / Eco-Score <strong>(-7)</strong></li></ul><h4>ETHICS (0/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 5 (animal welfare governance) <strong>(-4)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>KTC 2026 benchmark score 3 (labour rights in supply chains) <strong>(-10)</strong></li></ul><h4>OPEN (20/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9343787099111 — GREEK STYLE ORGANIC YOGHURT</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (17/25, base 15)</h4><ul><li>Nutri-Score Grade C (poor nutrition) <strong>(-1)</strong></li><li>NOVA Group 1 (unprocessed / minimally processed) <strong>(3)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (17/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>Ethics certifications – Organic (+2, highest eligible scheme; MVP no stacking) [off tags or hierarchy] <strong>(2)</strong></li></ul><h4>OPEN (25/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9343787099104 — Vanilla Bean Organic Yoghurt</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (16/25, base 15)</h4><ul><li>Nutri-Score Grade A (excellent nutrition) <strong>(7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (18/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade B (+3) — Open Food Facts / Eco-Score <strong>(3)</strong></li></ul><h4>ETHICS (17/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>Ethics certifications – Organic (+2, highest eligible scheme; MVP no stacking) [off tags or hierarchy] <strong>(2)</strong></li></ul><h4>OPEN (12/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>1 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310653105733 — PASSIONFRUIT TWIST YOGURT</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310354890006 — Flavoured Yoghurt</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (8/25, base 15)</h4><ul><li>Nutri-Score Grade C (poor nutrition) <strong>(-1)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (18/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>1 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-4)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310354982466 — Greek Style Yoghurt</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (17/25, base 15)</h4><ul><li>Nutri-Score Grade C (poor nutrition) <strong>(-1)</strong></li><li>NOVA Group 1 (unprocessed / minimally processed) <strong>(3)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (17/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>Ethics certifications – Organic (+2, highest eligible scheme; MVP no stacking) [off tags or hierarchy] <strong>(2)</strong></li></ul><h4>OPEN (25/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310052120856 — Unsalted butter 250g</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (16/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li><li>NOVA Group 2 (processed culinary ingredients) <strong>(1)</strong></li></ul><h4>PLANET (8/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade E (-7) — Open Food Facts / Eco-Score <strong>(-7)</strong></li></ul><h4>ETHICS (20/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 3 (animal welfare governance) <strong>(2)</strong></li><li>BBFAW Impact Rating B (welfare outcomes) <strong>(3)</strong></li></ul><h4>OPEN (25/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 1–2) <strong>(4)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310072028866 — Shapes Originals Barbecue</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (6/25, base 15)</h4><ul><li>Nutri-Score Grade D (poor nutrition) <strong>(-3)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (18/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade B (+3) — Open Food Facts / Eco-Score <strong>(3)</strong></li></ul><h4>ETHICS (7/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>KTC 2026 benchmark score 11 (labour rights in supply chains) <strong>(-8)</strong></li></ul><h4>OPEN (13/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>4 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300830060733 — Paddle Pop Chocolate</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (8/25, base 15)</h4><ul><li>Nutri-Score Grade C (poor nutrition) <strong>(-1)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (18/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade B (+3) — Open Food Facts / Eco-Score <strong>(3)</strong></li></ul><h4>ETHICS (12/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>KTC 2026 benchmark score 47 (labour rights in supply chains) <strong>(-3)</strong></li></ul><h4>OPEN (5/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>3 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300601767762 — Pain au chocolat</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (6/25, base 15)</h4><ul><li>Nutri-Score Grade D (poor nutrition) <strong>(-3)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (14/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade C (-1) — Open Food Facts / Eco-Score <strong>(-1)</strong></li></ul><h4>ETHICS (17/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 5 (animal welfare governance) <strong>(-4)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>KTC 2026 benchmark score 55 (labour rights in supply chains) <strong>(3)</strong></li><li>Ethics certifications – Fairtrade (+6, highest eligible scheme; MVP no stacking) <strong>(6)</strong></li></ul><h4>OPEN (13/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>9 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310015247828 — Doritos</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (3/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>3 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>63523614 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>9310988022378 — Salt And Vin</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (12/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>1 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>40000511281 — m&amp;m's Dark Chocolate</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li><li>Food additives of concern (MVP registry, max −8): Tartrazine (orange), Sunset Yellow FCF (orange), Allura Red AC (orange) <strong>(-8)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (6/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 6 (animal welfare governance) <strong>(-6)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li></ul><h4>OPEN (20/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>1 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300682059015 — Mars</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (11/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 6 (animal welfare governance) <strong>(-6)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>Ethics certifications – Rainforest Alliance (+5, highest eligible scheme; MVP no stacking) <strong>(5)</strong></li></ul><h4>OPEN (8/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>2 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-8)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300682059015 — Mars</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (11/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 6 (animal welfare governance) <strong>(-6)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>Ethics certifications – Rainforest Alliance (+5, highest eligible scheme; MVP no stacking) <strong>(5)</strong></li></ul><h4>OPEN (8/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>2 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-8)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>40000422068 — milkyway</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (5/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>3 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300682059091 — Milky way</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (8/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>2 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-8)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>44000032210 — Nabisco chips ahoy! cookies chunky</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (8/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade E (-7) — Open Food Facts / Eco-Score <strong>(-7)</strong></li></ul><h4>ETHICS (9/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>KTC 2026 benchmark score 30 (labour rights in supply chains) <strong>(-6)</strong></li></ul><h4>OPEN (8/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>2 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-8)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>930060512652 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>9300650452701 — OREO Original Choc Cookie Sandwich with Sweet Vanilla Creme</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (12/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade D (-3) — Open Food Facts / Eco-Score <strong>(-3)</strong></li></ul><h4>ETHICS (0/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 6 (animal welfare governance) <strong>(-6)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>KTC 2026 benchmark score 30 (labour rights in supply chains) <strong>(-6)</strong></li></ul><h4>OPEN (8/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>2 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-8)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310080257418 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>38000845017 — Pringles, jalapeno potato crisp</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (18/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade B (+3) — Open Food Facts / Eco-Score <strong>(3)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (5/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>5 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310161017603 — Nutrageous ice cream</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (6/25, base 15)</h4><ul><li>Nutri-Score Grade D (poor nutrition) <strong>(-3)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (18/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade B (+3) — Open Food Facts / Eco-Score <strong>(3)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (13/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>5 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310645350899 — Boysenberry Cheesecake</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (9/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>4008355030495 — Pfeffernüsse</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (9/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (16/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 3–4) <strong>(2)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9320802000444 — Strawberry</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (22/25, base 15)</h4><ul><li>Nutri-Score Grade A (excellent nutrition) <strong>(7)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (9/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310645176833 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>9342373000296 — Blackberries</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (5/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>No nutritional information disclosed <strong>(-3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9357107000251 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>9320802000482 — Strawberry</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (8/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (9/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9342373000395 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>931839007104 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>793579769781 — Oats</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9315090200102 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>9311208001241 — Fettucine</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>58449450023 — Flax Plus Instant Oatmeal imp</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (13/25, base 15)</h4><ul><li>Nutri-Score Grade C (poor nutrition) <strong>(-1)</strong></li><li>NOVA Group 3 (processed) <strong>(-1)</strong></li></ul><h4>PLANET (12/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade D (-3) — Open Food Facts / Eco-Score <strong>(-3)</strong></li></ul><h4>ETHICS (17/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>Ethics certifications – Organic (+2, highest eligible scheme; MVP no stacking) [off tags or hierarchy] <strong>(2)</strong></li></ul><h4>OPEN (18/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 3–4) <strong>(2)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310155305037 — Cous cous</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (21/25, base 15)</h4><ul><li>Nutri-Score Grade A (excellent nutrition) <strong>(7)</strong></li><li>NOVA Group 3 (processed) <strong>(-1)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (25/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 3–4) <strong>(2)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310060011030 — Rolled Oats Traditional</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (22/25, base 15)</h4><ul><li>Nutri-Score Grade A (excellent nutrition) <strong>(7)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (9/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>KTC 2026 benchmark score 26 (labour rights in supply chains) <strong>(-6)</strong></li></ul><h4>OPEN (24/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9339687209279 — Australian Popping corn</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (22/25, base 15)</h4><ul><li>Nutri-Score Grade A (excellent nutrition) <strong>(7)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (16/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 4 (animal welfare governance) <strong>(1)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>KTC 2026 benchmark score 56 (labour rights in supply chains) <strong>(3)</strong></li></ul><h4>OPEN (24/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9315822010863 — Prawn Gyoza</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (8/25, base 15)</h4><ul><li>Nutri-Score Grade C (poor nutrition) <strong>(-1)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (13/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>3 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310174006403 — Super Juicy Corn Kernels</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (18/25, base 15)</h4><ul><li>Nutri-Score Grade B (excellent nutrition) <strong>(3)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (24/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310174006021 — Peas</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (22/25, base 15)</h4><ul><li>Nutri-Score Grade A (excellent nutrition) <strong>(7)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>5052675000989 — Thai Green Curry</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (14/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li><li>NOVA Group 3 (processed) <strong>(-1)</strong></li></ul><h4>PLANET (18/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade B (+3) — Open Food Facts / Eco-Score <strong>(3)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (20/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>1 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-4)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9343005001018 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>818411000478 — Açai Bowl</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (21/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>Ethics certifications – Fairtrade (+6, highest eligible scheme; MVP no stacking) <strong>(6)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>42272005024 — Lentil Soup</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (17/25, base 15)</h4><ul><li>Nutri-Score Grade B (excellent nutrition) <strong>(3)</strong></li><li>NOVA Group 3 (processed) <strong>(-1)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (17/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>Ethics certifications – Organic (+2, highest eligible scheme; MVP no stacking) [off tags or hierarchy] <strong>(2)</strong></li></ul><h4>OPEN (18/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>Listing clarity bonus (no vague-term matches + NOVA 3–4) <strong>(2)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300657003425 — Killer Beans Smokey Campfire BBQ</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (16/25, base 15)</h4><ul><li>Nutri-Score Grade A (excellent nutrition) <strong>(7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (18/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade B (+3) — Open Food Facts / Eco-Score <strong>(3)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (5/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>11 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300657234713 — Baked beans in a deliciously rich tomato sauce</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (16/25, base 15)</h4><ul><li>Nutri-Score Grade A (excellent nutrition) <strong>(7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (22/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>Eco-Score grade A (+7) — Open Food Facts / Eco-Score <strong>(7)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (6/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>2 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-8)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300657235031 — Spaghetti</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (0/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li><li>BBFAW Tier 5 (animal welfare governance) <strong>(-4)</strong></li><li>BBFAW Impact Rating F (welfare outcomes) <strong>(-3)</strong></li><li>KTC 2026 benchmark score 8 (labour rights in supply chains) <strong>(-10)</strong></li></ul><h4>OPEN (9/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9300462137582 — Yellonfin Tuna Italian Oil Style</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (11/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>93100062212972 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>9310645244846 — Tuna</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (15/25, base 15)</h4><ul><li>Nutri-Score grade not recognised (baseline) <strong>(0)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): no structured packaging evidence — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (9/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>No ingredients listed <strong>(-3)</strong></li><li>Partial nutritional information disclosed <strong>(1)</strong></li><li>No origin information <strong>(-4)</strong></li></ul></div>
+</details>
+<details class="card">
+<summary><strong>9310645442532 — Not found</strong> · — · sources: —</summary>
+<div class="detail-body"><p class="bad">Product not found</p></div>
+</details>
+<details class="card">
+<summary><strong>8801073142312 — Buldak Spicy Ramen Carbonara</strong> · openfoodfacts · sources: openfoodfacts</summary>
+<div class="detail-body"><h4>BODY (2/25, base 15)</h4><ul><li>Nutri-Score Grade E (poor nutrition) <strong>(-7)</strong></li><li>NOVA Group 4 (ultra-processed) <strong>(-6)</strong></li></ul><h4>PLANET (15/25, base 15)</h4><ul><li>Base score (15) — Planet_Scoring_Specification_v19 <strong>(0)</strong></li><li>No Eco-Score grade on record — no Eco-Score adjustment (per spec) <strong>(0)</strong></li><li>Packaging fallback 0 (GLOBAL): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2 <strong>(0)</strong></li></ul><h4>ETHICS (15/25, base 15)</h4><ul><li>Base score (assumes ethical until poor ratings) <strong>(0)</strong></li></ul><h4>OPEN (13/25, base 15)</h4><ul><li>Base score (neutral starting point; uniform across pillars) <strong>(0)</strong></li><li>Ingredients disclosure present <strong>(2)</strong></li><li>13 vague-ingredient / disclosure-risk pattern(s) (Open v14 list) <strong>(-11)</strong></li><li>Complete nutritional information (per 100g/serve benchmarks) <strong>(3)</strong></li><li>Complete origin information disclosed <strong>(4)</strong></li></ul></div>
+</details>
+</body>
+</html>

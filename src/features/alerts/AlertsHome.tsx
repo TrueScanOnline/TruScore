@@ -1,4 +1,4 @@
-// ValuesHome.tsx - Main values preferences screen with swipe tabs (v1.3)
+// AlertsHome — user-selectable alert preferences (not spec-driven banner alerts)
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -10,19 +10,20 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
-import { useValuesStore } from '../../store/useValuesStore';
+import { useAlertsStore } from '../../store/useAlertsStore';
 import Toast from 'react-native-toast-message';
-import ShareValuesCard from './ShareValuesCard';
-import { VALUES_COLORS, getValuesColorWithOpacity } from '../../theme/valuesColors';
-import ValuesDisclaimerModal from '../../components/ValuesDisclaimerModal';
+import ShareAlertsCard from './ShareAlertsCard';
+import { ALERTS_COLORS, getAlertsColorWithOpacity } from '../../theme/alertsColors';
+import AlertsDisclaimerModal from '../../components/AlertsDisclaimerModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 
 type TabType = 'geopolitical' | 'ethical' | 'environmental';
 
-const DISCLAIMER_KEY = '@truescan_values_disclaimer_accepted';
+const DISCLAIMER_KEY = '@truescan_alerts_disclaimer_accepted';
+const LEGACY_DISCLAIMER_KEY = '@truescan_values_disclaimer_accepted';
 
-export default function ValuesHome() {
+export default function AlertsHome() {
   const { colors } = useTheme();
   const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<TabType>('geopolitical');
@@ -48,23 +49,30 @@ export default function ValuesHome() {
     setEthicalEnabled,
     setEnvironmentalEnabled,
     initializeStore,
-  } = useValuesStore();
+  } = useAlertsStore();
 
   useEffect(() => {
     initializeStore();
     (async () => {
       try {
-        const accepted = await AsyncStorage.getItem(DISCLAIMER_KEY);
+        let accepted = await AsyncStorage.getItem(DISCLAIMER_KEY);
+        if (accepted !== 'true') {
+          const legacy = await AsyncStorage.getItem(LEGACY_DISCLAIMER_KEY);
+          if (legacy === 'true') {
+            await AsyncStorage.setItem(DISCLAIMER_KEY, 'true');
+            accepted = 'true';
+          }
+        }
         setDisclaimerAccepted(accepted === 'true');
       } catch (error) {
-        console.error('[ValuesHome] Error checking disclaimer:', error);
+        console.error('[AlertsHome] Error checking disclaimer:', error);
       } finally {
         setStorageHydrated(true);
       }
     })();
   }, []);
 
-  // With lazy: false on tab navigator, this screen mounts while another tab is visible; only prompt on Values focus.
+  // With lazy: false on tab navigator, this screen mounts while another tab is visible; only prompt on Alerts focus.
   useEffect(() => {
     if (storageHydrated && isFocused && !disclaimerAccepted) {
       setShowDisclaimer(true);
@@ -85,7 +93,7 @@ export default function ValuesHome() {
       setDisclaimerAccepted(true);
       setShowDisclaimer(false);
     } catch (error) {
-      console.error('[ValuesHome] Error saving disclaimer:', error);
+      console.error('[AlertsHome] Error saving disclaimer:', error);
       Toast.show({
         type: 'error',
         text1: 'Could not save',
@@ -106,10 +114,10 @@ export default function ValuesHome() {
   ) => {
     // Get theme color based on active tab
     const themeColor = activeTab === 'geopolitical' 
-      ? VALUES_COLORS.geopolitical 
+      ? ALERTS_COLORS.geopolitical 
       : activeTab === 'ethical'
-      ? VALUES_COLORS.ethical
-      : VALUES_COLORS.environmental;
+      ? ALERTS_COLORS.ethical
+      : ALERTS_COLORS.environmental;
     
     return (
       <View style={[styles.radioGroup, { opacity: enabled ? 1 : 0.5 }]}>
@@ -129,7 +137,7 @@ export default function ValuesHome() {
               { borderColor: colors.border },
               value === option.value && { 
                 borderColor: themeColor, 
-                backgroundColor: getValuesColorWithOpacity(
+                backgroundColor: getAlertsColorWithOpacity(
                   activeTab === 'geopolitical' ? 'geopolitical' : 
                   activeTab === 'ethical' ? 'ethical' : 'environmental',
                   0.1
@@ -164,10 +172,10 @@ export default function ValuesHome() {
   ) => {
     // Get theme color based on active tab
     const themeColor = activeTab === 'geopolitical' 
-      ? VALUES_COLORS.geopolitical 
+      ? ALERTS_COLORS.geopolitical 
       : activeTab === 'ethical'
-      ? VALUES_COLORS.ethical
-      : VALUES_COLORS.environmental;
+      ? ALERTS_COLORS.ethical
+      : ALERTS_COLORS.environmental;
     
     return (
       <View style={[
@@ -207,10 +215,10 @@ export default function ValuesHome() {
       {/* Header - v1.3 spec */}
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>
-          Your Values, Your Choice – Additional Insights for Scans
+          Your alerts, your choice — extra context on scans
         </Text>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          These insights do not affect the TruScore
+          Preference-based insights only; they do not change TruScore (banner alerts follow separate rules)
         </Text>
       </View>
 
@@ -220,8 +228,8 @@ export default function ValuesHome() {
           style={[
             styles.tab,
             activeTab === 'geopolitical' && {
-              borderBottomColor: VALUES_COLORS.geopolitical,
-              backgroundColor: getValuesColorWithOpacity('geopolitical', 0.05),
+              borderBottomColor: ALERTS_COLORS.geopolitical,
+              backgroundColor: getAlertsColorWithOpacity('geopolitical', 0.05),
             },
           ]}
           onPress={() => setActiveTab('geopolitical')}
@@ -229,12 +237,12 @@ export default function ValuesHome() {
           <Ionicons
             name="globe-outline"
             size={20}
-            color={activeTab === 'geopolitical' ? VALUES_COLORS.geopolitical : colors.textSecondary}
+            color={activeTab === 'geopolitical' ? ALERTS_COLORS.geopolitical : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabText,
-              { color: activeTab === 'geopolitical' ? VALUES_COLORS.geopolitical : colors.textSecondary },
+              { color: activeTab === 'geopolitical' ? ALERTS_COLORS.geopolitical : colors.textSecondary },
             ]}
           >
             Geopolitical
@@ -244,8 +252,8 @@ export default function ValuesHome() {
           style={[
             styles.tab,
             activeTab === 'ethical' && {
-              borderBottomColor: VALUES_COLORS.ethical,
-              backgroundColor: getValuesColorWithOpacity('ethical', 0.05),
+              borderBottomColor: ALERTS_COLORS.ethical,
+              backgroundColor: getAlertsColorWithOpacity('ethical', 0.05),
             },
           ]}
           onPress={() => setActiveTab('ethical')}
@@ -253,12 +261,12 @@ export default function ValuesHome() {
           <Ionicons
             name="heart-outline"
             size={20}
-            color={activeTab === 'ethical' ? VALUES_COLORS.ethical : colors.textSecondary}
+            color={activeTab === 'ethical' ? ALERTS_COLORS.ethical : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabText,
-              { color: activeTab === 'ethical' ? VALUES_COLORS.ethical : colors.textSecondary },
+              { color: activeTab === 'ethical' ? ALERTS_COLORS.ethical : colors.textSecondary },
             ]}
           >
             Ethical
@@ -268,8 +276,8 @@ export default function ValuesHome() {
           style={[
             styles.tab,
             activeTab === 'environmental' && {
-              borderBottomColor: VALUES_COLORS.environmental,
-              backgroundColor: getValuesColorWithOpacity('environmental', 0.05),
+              borderBottomColor: ALERTS_COLORS.environmental,
+              backgroundColor: getAlertsColorWithOpacity('environmental', 0.05),
             },
           ]}
           onPress={() => setActiveTab('environmental')}
@@ -277,12 +285,12 @@ export default function ValuesHome() {
           <Ionicons
             name="leaf-outline"
             size={20}
-            color={activeTab === 'environmental' ? VALUES_COLORS.environmental : colors.textSecondary}
+            color={activeTab === 'environmental' ? ALERTS_COLORS.environmental : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabText,
-              { color: activeTab === 'environmental' ? VALUES_COLORS.environmental : colors.textSecondary },
+              { color: activeTab === 'environmental' ? ALERTS_COLORS.environmental : colors.textSecondary },
             ]}
           >
             Environmental
@@ -299,7 +307,7 @@ export default function ValuesHome() {
               styles.masterSwitch, 
               { 
                 backgroundColor: colors.card, 
-                borderColor: geopoliticalEnabled ? VALUES_COLORS.geopolitical : colors.border,
+                borderColor: geopoliticalEnabled ? ALERTS_COLORS.geopolitical : colors.border,
                 borderWidth: geopoliticalEnabled ? 2 : 1,
               }
             ]}>
@@ -315,7 +323,7 @@ export default function ValuesHome() {
                   await setGeopoliticalEnabled(val);
                   Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
                 }}
-                trackColor={{ false: colors.border, true: VALUES_COLORS.geopolitical }}
+                trackColor={{ false: colors.border, true: ALERTS_COLORS.geopolitical }}
                 thumbColor={geopoliticalEnabled ? '#fff' : colors.textSecondary}
               />
             </View>
@@ -363,7 +371,7 @@ export default function ValuesHome() {
               styles.masterSwitch, 
               { 
                 backgroundColor: colors.card, 
-                borderColor: ethicalEnabled ? VALUES_COLORS.ethical : colors.border,
+                borderColor: ethicalEnabled ? ALERTS_COLORS.ethical : colors.border,
                 borderWidth: ethicalEnabled ? 2 : 1,
               }
             ]}>
@@ -379,7 +387,7 @@ export default function ValuesHome() {
                   await setEthicalEnabled(val);
                   Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
                 }}
-                trackColor={{ false: colors.border, true: VALUES_COLORS.ethical }}
+                trackColor={{ false: colors.border, true: ALERTS_COLORS.ethical }}
                 thumbColor={ethicalEnabled ? '#fff' : colors.textSecondary}
               />
             </View>
@@ -419,7 +427,7 @@ export default function ValuesHome() {
               styles.masterSwitch, 
               { 
                 backgroundColor: colors.card, 
-                borderColor: environmentalEnabled ? VALUES_COLORS.environmental : colors.border,
+                borderColor: environmentalEnabled ? ALERTS_COLORS.environmental : colors.border,
                 borderWidth: environmentalEnabled ? 2 : 1,
               }
             ]}>
@@ -435,7 +443,7 @@ export default function ValuesHome() {
                   await setEnvironmentalEnabled(val);
                   Toast.show({ type: 'success', text1: 'Updated', text2: 'Insights updated' });
                 }}
-                trackColor={{ false: colors.border, true: VALUES_COLORS.environmental }}
+                trackColor={{ false: colors.border, true: ALERTS_COLORS.environmental }}
                 thumbColor={environmentalEnabled ? '#fff' : colors.textSecondary}
               />
             </View>
@@ -459,11 +467,11 @@ export default function ValuesHome() {
 
         {/* Share Choices Button */}
         <View style={styles.shareContainer}>
-          <ShareValuesCard />
+          <ShareAlertsCard />
         </View>
       </ScrollView>
     </View>
-    <ValuesDisclaimerModal
+    <AlertsDisclaimerModal
       visible={showDisclaimer}
       onAccept={handleAcceptDisclaimer}
     />

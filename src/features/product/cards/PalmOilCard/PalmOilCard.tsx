@@ -1,5 +1,5 @@
 // Modular Palm Oil Card Component
-// Hidden on product page: palm oil still drives Planet/TruScore, values insights, and sharing payloads.
+// Hidden on product page: palm oil still drives Planet/TruScore, user alert insights, and sharing payloads.
 
 import React, { useState, Suspense } from 'react';
 

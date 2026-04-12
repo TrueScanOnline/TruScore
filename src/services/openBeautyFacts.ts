@@ -75,7 +75,7 @@ export async function fetchProductFromOBF(barcode: string): Promise<Product | nu
  */
 function enhanceProductWithSustainabilityData(product: Product): void {
   // Extract palm oil analysis - always create if we have ingredients data
-  // This ensures consistency with Values Insights (which checks ingredients_text)
+  // This ensures consistency with user alert insights (which checks ingredients_text)
   if (product.ingredients_analysis_tags || product.ingredients_analysis || product.ingredients_text) {
     product.palm_oil_analysis = extractPalmOilAnalysis(product);
   }

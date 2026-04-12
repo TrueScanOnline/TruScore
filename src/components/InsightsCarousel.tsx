@@ -1,4 +1,4 @@
-// InsightsCarousel — Values preference matches (full-width, no horizontal scroll)
+// InsightsCarousel — user alert preference matches (full-width, no horizontal scroll)
 import React, { useState } from 'react';
 import {
   View,
@@ -54,7 +54,7 @@ function InsightDetailModal({
         <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
           <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
             <Text style={[styles.modalTitle, { color: colors.text }]} numberOfLines={2}>
-              {t('result.valuesPreference')}
+              {t('result.alertsPreference')}
             </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={colors.text} />
@@ -83,7 +83,7 @@ function InsightDetailModal({
                 style={({ pressed }) => [styles.modalReferencePress, { opacity: pressed ? 0.75 : 1 }]}
               >
                 <Text style={[styles.modalReferenceLink, { color: colors.primary }]}>
-                  {insight.referenceLabel ?? t('result.valuesPreferenceOpenReference')}
+                  {insight.referenceLabel ?? t('result.alertsPreferenceOpenReference')}
                 </Text>
                 <Ionicons name="open-outline" size={18} color={colors.primary} />
               </Pressable>
@@ -211,7 +211,7 @@ export default function InsightsCarousel({ insights, productName, onRequestProdu
                     style={[styles.referenceLinkText, { color: colors.primary }]}
                     numberOfLines={2}
                   >
-                    {insight.referenceLabel ?? t('result.valuesPreferenceOpenReference')}
+                    {insight.referenceLabel ?? t('result.alertsPreferenceOpenReference')}
                   </Text>
                   <Ionicons name="open-outline" size={16} color={colors.primary} />
                 </TouchableOpacity>

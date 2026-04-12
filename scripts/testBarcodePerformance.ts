@@ -243,16 +243,271 @@ Module._load = function(request: string, parent: any) {
  * 
  * Usage (from PowerShell):
  *   .\scripts\testBarcodePerformance.ps1 -Barcodes "9300633910198","0726684754229"
+ *   .\scripts\testBarcodePerformance.ps1 -InputFile ".\barcodes\barcodes-88.txt"
  * 
  * Or directly with npm:
  *   npm run test:barcode-performance -- 9300633910198 0726684754229
+ *   npm run test:barcode-performance -- --file barcodes/barcodes-88.txt --out reports/test_results.json
+ *   (writes test_results.csv for Excel; test_results.html for browser/Word unless --no-html)
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
 import { fetchProduct } from '../src/services/productService';
-import { fetchProductOptimized } from '../src/services/productServiceOptimized';
 import { calculateTruScore } from '../src/lib/truscoreEngine';
 import { Product, ProductWithTrustScore } from '../src/types/product';
 import { logger } from '../src/utils/logger';
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** One CSV field (quoted) for Excel compatibility. */
+function csvCell(v: string | number | null | undefined): string {
+  const s = v === null || v === undefined ? '' : String(v);
+  return `"${s.replace(/"/g, '""')}"`;
+}
+
+/** Summary table as CSV — open directly in Microsoft Excel. */
+function buildBarcodeSummaryCsv(results: TestResult[]): string {
+  const header = [
+    '#',
+    'Barcode',
+    'Product name',
+    'Primary source',
+    'Fetch ms',
+    'Score calc ms',
+    'Total ms',
+    'TruScore',
+    'Body',
+    'Planet',
+    'Ethics',
+    'Open',
+    'Status',
+    'Errors',
+  ];
+  const lines = [header.map(csvCell).join(',')];
+  results.forEach((r, i) => {
+    const ts = r.truScore;
+    const status =
+      r.errors.length > 0 ? 'Error' : ts ? 'OK' : 'No score';
+    const errText = r.errors.map((e) => e.message).join('; ');
+    lines.push(
+      [
+        i + 1,
+        r.barcode,
+        r.product?.product_name ?? '',
+        r.product?.source ?? '',
+        r.performance.fetchTime,
+        r.performance.truScoreTime,
+        r.performance.totalTime,
+        ts?.overall ?? '',
+        ts?.breakdown.Body ?? '',
+        ts?.breakdown.Planet ?? '',
+        ts?.breakdown.Ethics ?? '',
+        ts?.breakdown.Open ?? '',
+        status,
+        errText,
+      ]
+        .map(csvCell)
+        .join(',')
+    );
+  });
+  // UTF-8 BOM so Excel on Windows shows accents correctly
+  return '\ufeff' + lines.join('\r\n');
+}
+
+/** Single-file HTML report for sharing (all barcodes on one page). */
+function buildBarcodeReportHtml(payload: {
+  testRun: {
+    timestamp: string;
+    barcodesTested: number;
+    totalTime: number;
+    totalTimeFormatted: string;
+    inputFile: string | null;
+    outputFile: string | null;
+  };
+  results: TestResult[];
+}): string {
+  const { testRun, results } = payload;
+  const rows = results
+    .map((r, i) => {
+      const name = r.product?.product_name ?? '—';
+      const src = r.product?.source ?? '—';
+      const err = r.errors.length ? escapeHtml(r.errors.map((e) => e.message).join('; ')) : '';
+      const status =
+        r.errors.length > 0
+          ? `<span class="bad">Error</span><div class="err">${err}</div>`
+          : r.truScore
+            ? '<span class="ok">OK</span>'
+            : '<span class="warn">No score</span>';
+      const ts = r.truScore;
+      return `<tr>
+  <td>${i + 1}</td>
+  <td class="mono">${escapeHtml(r.barcode)}</td>
+  <td>${escapeHtml(name)}</td>
+  <td class="mono small">${escapeHtml(src)}</td>
+  <td class="num">${r.performance.fetchTimeFormatted || '—'}</td>
+  <td class="num">${r.performance.truScoreTimeFormatted || '—'}</td>
+  <td class="num">${r.performance.totalTimeFormatted || '—'}</td>
+  <td class="num">${ts ? ts.overall : '—'}</td>
+  <td class="num">${ts ? ts.breakdown.Body : '—'}</td>
+  <td class="num">${ts ? ts.breakdown.Planet : '—'}</td>
+  <td class="num">${ts ? ts.breakdown.Ethics : '—'}</td>
+  <td class="num">${ts ? ts.breakdown.Open : '—'}</td>
+  <td>${status}</td>
+</tr>`;
+    })
+    .join('\n');
+
+  const detailsBlocks = results
+    .map((r) => {
+      const title = `${r.barcode} — ${r.product?.product_name ?? 'Not found'}`;
+      let inner = '';
+      if (r.pillarBreakdown) {
+        const pillars: Array<keyof TestResult['pillarBreakdown']> = ['body', 'planet', 'ethics', 'open'];
+        for (const key of pillars) {
+          const p = r.pillarBreakdown![key];
+          const label = key.toUpperCase();
+          inner += `<h4>${label} (${p.score}/25, base ${p.base})</h4><ul>`;
+          for (const adj of p.adjustments || []) {
+            inner += `<li>${escapeHtml(adj.description)} <strong>(${adj.value})</strong></li>`;
+          }
+          inner += `</ul>`;
+        }
+      } else if (r.errors.length) {
+        inner = `<p class="bad">${escapeHtml(r.errors.map((e) => e.message).join('; '))}</p>`;
+      } else {
+        inner = '<p>No pillar breakdown.</p>';
+      }
+      const primary = r.dataSources?.primarySource ?? '—';
+      const allSrc = (r.dataSources?.allSources ?? []).join(', ') || '—';
+      return `<details class="card">
+<summary><strong>${escapeHtml(title)}</strong> · ${escapeHtml(primary)} · sources: ${escapeHtml(allSrc)}</summary>
+<div class="detail-body">${inner}</div>
+</details>`;
+    })
+    .join('\n');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TrueScan barcode report — ${testRun.barcodesTested} items</title>
+  <style>
+    :root { font-family: system-ui, Segoe UI, Roboto, sans-serif; }
+    body { margin: 1rem 1.25rem 3rem; color: #1a1a1a; line-height: 1.45; }
+    h1 { font-size: 1.35rem; margin-bottom: 0.25rem; }
+    .meta { color: #555; font-size: 0.9rem; margin-bottom: 1.25rem; }
+    .meta code { background: #f0f0f0; padding: 0.1em 0.35em; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.82rem; margin: 1rem 0 2rem; }
+    th, td { border: 1px solid #ccc; padding: 0.35rem 0.5rem; text-align: left; vertical-align: top; }
+    th { background: #f5f5f5; position: sticky; top: 0; z-index: 1; }
+    .num { text-align: right; white-space: nowrap; }
+    .mono { font-family: ui-monospace, Consolas, monospace; }
+    .small { font-size: 0.78rem; max-width: 8rem; word-break: break-all; }
+    .ok { color: #0a7; font-weight: 600; }
+    .warn { color: #a60; }
+    .bad { color: #c12; font-weight: 600; }
+    .err { font-size: 0.75rem; color: #666; margin-top: 0.25rem; max-width: 14rem; }
+    details.card { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 0.5rem; padding: 0.35rem 0.6rem; background: #fafafa; }
+    details.card summary { cursor: pointer; }
+    .detail-body { padding: 0.5rem 0 0.25rem 0.5rem; font-size: 0.85rem; }
+    .detail-body h4 { margin: 0.75rem 0 0.25rem; font-size: 0.9rem; }
+    .detail-body ul { margin: 0.25rem 0 0.5rem 1rem; }
+  </style>
+</head>
+<body>
+  <h1>TrueScan barcode batch report</h1>
+  <div class="meta">
+    Generated <strong>${escapeHtml(testRun.timestamp)}</strong><br />
+    Barcodes: <strong>${testRun.barcodesTested}</strong> · Total run time: <strong>${escapeHtml(testRun.totalTimeFormatted)}</strong><br />
+    ${testRun.inputFile ? `Input: <code>${escapeHtml(testRun.inputFile)}</code><br />` : ''}
+    ${testRun.outputFile ? `JSON: <code>${escapeHtml(testRun.outputFile)}</code>` : ''}
+  </div>
+  <h2>Summary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Barcode</th><th>Product</th><th>Source</th>
+        <th>Fetch</th><th>Score calc</th><th>Total</th>
+        <th>TruScore</th><th>Body</th><th>Planet</th><th>Ethics</th><th>Open</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <h2>Per-barcode detail</h2>
+  <p style="font-size:0.9rem;color:#555;">Expand a row for pillar adjustments and data-source summary.</p>
+  ${detailsBlocks}
+</body>
+</html>`;
+}
+
+/** Parse CLI: barcodes as positional args; --file / -f / --from-file <path>; --out / -o / --output <path> */
+function parseBarcodeScriptArgs(argv: string[]): {
+  barcodes: string[];
+  inputFile: string | null;
+  outputFile: string | null;
+  htmlFile: string | null;
+  noHtml: boolean;
+} {
+  const positional: string[] = [];
+  let inputFile: string | null = null;
+  let outputFile: string | null = null;
+  let htmlFile: string | null = null;
+  let noHtml = false;
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--file' || a === '-f' || a === '--from-file') {
+      inputFile = argv[++i] ?? null;
+      if (!inputFile) {
+        console.error(`${a} requires a file path`);
+        process.exit(1);
+      }
+    } else if (a === '--out' || a === '-o' || a === '--output') {
+      outputFile = argv[++i] ?? null;
+      if (!outputFile) {
+        console.error(`${a} requires a file path`);
+        process.exit(1);
+      }
+    } else if (a === '--html') {
+      htmlFile = argv[++i] ?? null;
+      if (!htmlFile) {
+        console.error(`${a} requires a file path`);
+        process.exit(1);
+      }
+    } else if (a === '--no-html') {
+      noHtml = true;
+    } else if (a.startsWith('-')) {
+      console.error(`Unknown option: ${a}`);
+      process.exit(1);
+    } else {
+      positional.push(a);
+    }
+  }
+
+  let barcodes = [...positional];
+  if (inputFile) {
+    const resolved = path.resolve(inputFile);
+    if (!fs.existsSync(resolved)) {
+      console.error(`Input file not found: ${resolved}`);
+      process.exit(1);
+    }
+    const content = fs.readFileSync(resolved, 'utf-8');
+    const fromFile = content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith('#'));
+    barcodes = barcodes.concat(fromFile);
+  }
+
+  return { barcodes, inputFile, outputFile, htmlFile, noHtml };
+}
 
 interface TestResult {
   barcode: string;
@@ -467,8 +722,6 @@ async function testBarcode(barcode: string): Promise<TestResult> {
     const fetchStart = Date.now();
     console.log(`[TEST] Testing barcode: ${barcode}`);
     
-    // Use regular fetchProduct for better database tracking
-    // fetchProductOptimized is faster but doesn't track all databases as well
     const product = await fetchProduct(
       barcode,
       true, // useCache
@@ -714,20 +967,29 @@ async function testBarcode(barcode: string): Promise<TestResult> {
 
 // Main execution
 (async () => {
-  const barcodes = process.argv.slice(2);
-  
+  const { barcodes, inputFile, outputFile: outputFileArg, htmlFile: htmlFileArg, noHtml } =
+    parseBarcodeScriptArgs(process.argv.slice(2));
+
   if (barcodes.length === 0) {
-    console.error('Usage: ts-node scripts/testBarcodePerformance.ts <barcode1> [barcode2] [barcode3] ...');
-    console.error('Or: npm run test:barcode-performance -- <barcode1> [barcode2] ...');
+    console.error('Usage: ts-node scripts/testBarcodePerformance.ts <barcode1> [barcode2] ...');
+    console.error('   or: ts-node scripts/testBarcodePerformance.ts --file <path-to-txt> [--out <path.json>]');
+    console.error('Or: npm run test:barcode-performance -- --file barcodes/barcodes-88.txt --out reports/test_results.json');
     process.exit(1);
   }
-  
+
+  const defaultReportPath = path.join(process.cwd(), 'reports', 'test_results.json');
+  const outputFile =
+    outputFileArg ?? (inputFile ? defaultReportPath : null);
+  const writeJsonToDisk = Boolean(outputFile);
+
   const allResults = {
     testRun: {
       timestamp: new Date().toISOString(),
       barcodesTested: barcodes.length,
       totalTime: 0,
       totalTimeFormatted: '',
+      inputFile: inputFile ? path.resolve(inputFile) : null,
+      outputFile: outputFile ? path.resolve(outputFile) : null,
     },
     results: [] as TestResult[],
   };
@@ -742,13 +1004,38 @@ async function testBarcode(barcode: string): Promise<TestResult> {
   const overallTime = Date.now() - overallStart;
   allResults.testRun.totalTime = overallTime;
   allResults.testRun.totalTimeFormatted = `${overallTime}ms`;
-  
-  // Output JSON
-  console.log('\n========================================');
-  console.log('TEST RESULTS (JSON)');
-  console.log('========================================\n');
-  console.log(JSON.stringify(allResults, null, 2));
-  
+
+  if (writeJsonToDisk && outputFile) {
+    const absOut = path.resolve(outputFile);
+    fs.mkdirSync(path.dirname(absOut), { recursive: true });
+    fs.writeFileSync(absOut, JSON.stringify(allResults, null, 2), 'utf-8');
+    console.log(`\n[OK] Wrote JSON report: ${absOut}`);
+    allResults.testRun.outputFile = absOut;
+
+    if (absOut.toLowerCase().endsWith('.json')) {
+      const csvPath = absOut.replace(/\.json$/i, '.csv');
+      fs.writeFileSync(csvPath, buildBarcodeSummaryCsv(allResults.results), 'utf-8');
+      console.log(`[OK] Wrote CSV (open in Excel): ${csvPath}`);
+    }
+
+    if (!noHtml) {
+      const htmlPath = htmlFileArg
+        ? path.resolve(htmlFileArg)
+        : absOut.toLowerCase().endsWith('.json')
+          ? absOut.replace(/\.json$/i, '.html')
+          : null;
+      if (htmlPath) {
+        fs.writeFileSync(htmlPath, buildBarcodeReportHtml(allResults), 'utf-8');
+        console.log(`[OK] Wrote HTML report (single file to share): ${htmlPath}`);
+      }
+    }
+  } else {
+    console.log('\n========================================');
+    console.log('TEST RESULTS (JSON)');
+    console.log('========================================\n');
+    console.log(JSON.stringify(allResults, null, 2));
+  }
+
   // Also output human-readable summary
   console.log('\n========================================');
   console.log('TEST SUMMARY');

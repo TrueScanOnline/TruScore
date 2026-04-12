@@ -10,19 +10,24 @@
 # Usage:
 #   Single barcode:   .\scripts\testBarcodePerformance.ps1 -Barcodes "9300633910198"
 #   Multiple barcodes: .\scripts\testBarcodePerformance.ps1 -Barcodes "9300633910198","0726684754229","1234567890123"
+#   From text file (one barcode per line): .\scripts\testBarcodePerformance.ps1 -InputFile ".\barcodes\barcodes-88.txt"
+#   Writes JSON + a single shareable HTML page (same name, .html next to .json) unless you add --no-html via ts-node.
 #
 # Example:
 #   .\scripts\testBarcodePerformance.ps1 -Barcodes "9300633910198","0726684754229"
 
 param(
-    [Parameter(Mandatory=$true)]
-    [string[]]$Barcodes,
-    
     [Parameter(Mandatory=$false)]
-    [switch]$OutputToFile,
-    
+    [string[]]$Barcodes = @(),
+
     [Parameter(Mandatory=$false)]
-    [string]$OutputPath = "barcode_test_results.json"
+    [string]$InputFile = "",
+
+    [Parameter(Mandatory=$false)]
+    [string]$OutputPath = "reports\test_results.json",
+
+    [Parameter(Mandatory=$false)]
+    [switch]$OutputToFile
 )
 
 # Get script directory
@@ -69,7 +74,6 @@ if (Get-Command ts-node -ErrorAction SilentlyContinue) {
 }
 
 # Build command arguments - ensure each barcode is a separate argument
-# Clean and validate barcodes
 $barcodeArgs = @()
 foreach ($barcode in $Barcodes) {
     $cleanBarcode = $barcode.ToString().Trim()
@@ -78,10 +82,32 @@ foreach ($barcode in $Barcodes) {
     }
 }
 
+$useInputFile = $false
+$resolvedInputFile = $null
+if ($InputFile -ne "" -and $InputFile.Trim() -ne "") {
+    $resolvedInputFile = if ([System.IO.Path]::IsPathRooted($InputFile)) { $InputFile } else { Join-Path $projectRoot $InputFile }
+    if (-not (Test-Path $resolvedInputFile)) {
+        Write-Host "[ERROR] Input file not found: $resolvedInputFile" -ForegroundColor Red
+        exit 1
+    }
+    $useInputFile = $true
+}
+
+if (-not $useInputFile -and $barcodeArgs.Count -eq 0) {
+    Write-Host "[ERROR] Provide -Barcodes and/or -InputFile (one barcode per line in the file)." -ForegroundColor Red
+    exit 1
+}
+
 # Run the TypeScript test script
 Write-Host "`n================================================" -ForegroundColor Cyan
-Write-Host "[TEST] Testing Barcodes: $($Barcodes -join ', ')" -ForegroundColor Cyan
-Write-Host "Barcodes Count: $($barcodeArgs.Count)" -ForegroundColor Cyan
+if ($useInputFile) {
+    Write-Host "[TEST] Input file: $resolvedInputFile" -ForegroundColor Cyan
+    $lineCount = (Get-Content -Path $resolvedInputFile | Where-Object { $_.Trim() -ne '' -and -not $_.Trim().StartsWith('#') }).Count
+    Write-Host "[TEST] Non-empty lines (barcodes): $lineCount" -ForegroundColor Cyan
+} else {
+    Write-Host "[TEST] Testing Barcodes: $($Barcodes -join ', ')" -ForegroundColor Cyan
+    Write-Host "Barcodes Count: $($barcodeArgs.Count)" -ForegroundColor Cyan
+}
 Write-Host "================================================`n" -ForegroundColor Cyan
 
 $testScriptPath = Join-Path $scriptDir "testBarcodePerformance.ts"
@@ -99,15 +125,27 @@ if (-not (Test-Path $testScriptPath)) {
 $env:NODE_OPTIONS = "--no-experimental-strip-types"
 $tsConfigPath = Join-Path $scriptDir "tsconfig.json"
 
-# Build arguments - ts-node options first, then script, then barcodes
+# Resolve output path (JSON report) — under project root if relative
+$resolvedOutputPath = if ([System.IO.Path]::IsPathRooted($OutputPath)) { $OutputPath } else { Join-Path $projectRoot $OutputPath }
+
+# Build arguments - ts-node options first, then script, then flags / barcodes
+$tsArgs = @()
 if (Test-Path $tsConfigPath) {
     Write-Host "[INFO] Using tsconfig: $tsConfigPath" -ForegroundColor Gray
-    # Use splatting to pass all arguments correctly
-    $output = & $tsRunner --project $tsConfigPath --transpile-only --skip-ignore $testScriptPath @barcodeArgs 2>&1
+    $tsArgs = @('--project', $tsConfigPath, '--transpile-only', '--skip-ignore', $testScriptPath)
 } else {
     Write-Host "[WARN] scripts/tsconfig.json not found, using default config" -ForegroundColor Yellow
-    $output = & $tsRunner --transpile-only --skip-ignore $testScriptPath @barcodeArgs 2>&1
+    $tsArgs = @('--transpile-only', '--skip-ignore', $testScriptPath)
 }
+
+if ($useInputFile) {
+    $tsArgs += @('--file', $resolvedInputFile, '--out', $resolvedOutputPath)
+    $tsArgs += $barcodeArgs
+} else {
+    $tsArgs += $barcodeArgs
+}
+
+$output = & $tsRunner @tsArgs 2>&1
 # Clean up environment variable
 Remove-Item env:NODE_OPTIONS -ErrorAction SilentlyContinue
 
@@ -126,13 +164,13 @@ if ($OutputToFile) {
         $jsonMatch = [regex]::Match($jsonContent, '\{.*\}', [System.Text.RegularExpressions.RegexOptions]::Singleline)
         if ($jsonMatch.Success) {
             $jsonContent = $jsonMatch.Value
-            $jsonContent | Out-File -FilePath $OutputPath -Encoding UTF8
-            Write-Host "`n[OK] Results saved to: $OutputPath" -ForegroundColor Green
+            $jsonContent | Out-File -FilePath $resolvedOutputPath -Encoding UTF8
+            Write-Host "`n[OK] Results saved to: $resolvedOutputPath" -ForegroundColor Green
         }
     }
     
     # Also save full output
-    $fullOutputPath = $OutputPath -replace '\.json$', '_full.txt'
+    $fullOutputPath = $resolvedOutputPath -replace '\.json$', '_full.txt'
     $output | Out-File -FilePath $fullOutputPath -Encoding UTF8
     Write-Host "[OK] Full output saved to: $fullOutputPath" -ForegroundColor Green
 }

@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { ProductWithTrustScore } from '../../../../../types/product';
 import { calculateTruScore, TruScoreResult } from '../../../../../lib/truscoreEngine';
 import { fetchProduct } from '../../../../../services/productService';
-import { useValuesStore } from '../../../../../store/useValuesStore';
+import { useAlertsStore } from '../../../../../store/useAlertsStore';
 import { useSettingsStore } from '../../../../../store/useSettingsStore';
 import { getPlanetScoringContext } from '../../../../../utils/planetScoringContext';
 import { logger } from '../../../../../utils/logger';
@@ -20,14 +20,14 @@ export function useTruScoreData({ barcode, product, autoFetch = true }: UseTruSc
   const [truScore, setTruScore] = useState<TruScoreResult | null>(null);
   const [loading, setLoading] = useState(!product);
   const [error, setError] = useState<Error | null>(null);
-  const valuesPreferences = useValuesStore();
+  const alertsPreferences = useAlertsStore();
   const planetPackagingMarket = useSettingsStore((s) => s.planetPackagingMarket);
 
   useEffect(() => {
     // Props-first: Use provided product if available
     if (product) {
       try {
-        const calculated = calculateTruScore(product, valuesPreferences, getPlanetScoringContext());
+        const calculated = calculateTruScore(product, alertsPreferences, getPlanetScoringContext());
         setTruScore(calculated);
         setLoading(false);
         setError(null);
@@ -45,7 +45,7 @@ export function useTruScoreData({ barcode, product, autoFetch = true }: UseTruSc
       fetchProduct(barcode)
         .then((fetchedProduct) => {
           if (fetchedProduct) {
-            const calculated = calculateTruScore(fetchedProduct, valuesPreferences, getPlanetScoringContext());
+            const calculated = calculateTruScore(fetchedProduct, alertsPreferences, getPlanetScoringContext());
             setTruScore(calculated);
             setError(null);
           } else {
@@ -60,7 +60,7 @@ export function useTruScoreData({ barcode, product, autoFetch = true }: UseTruSc
           setLoading(false);
         });
     }
-  }, [barcode, product, autoFetch, valuesPreferences, planetPackagingMarket]);
+  }, [barcode, product, autoFetch, alertsPreferences, planetPackagingMarket]);
 
   return { truScore, loading, error };
 }

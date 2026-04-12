@@ -37,7 +37,7 @@ import EcoScore from '../../src/components/EcoScore';
 import UniversalPricingCard from '../../src/components/UniversalPricingCard';
 import NutritionTable from '../../src/components/NutritionTable';
 import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
-import { useValuesStore } from '../../src/store/useValuesStore';
+import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
 import { generateBannerAlerts } from '../../src/services/bannerAlertsService';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
@@ -50,7 +50,7 @@ import AdditivesRiskCard from '../../src/components/AdditivesRiskCard';
 import ProcessingLevelModal from '../../src/components/ProcessingLevelModal';
 import CameraCaptureModal from '../../src/components/CameraCaptureModal';
 import { extractManufacturingCountry, calculateEcoScore, extractPalmOilAnalysis } from '../../src/services/openFoodFacts';
-import { generateInsights } from '../../src/lib/valuesInsights';
+import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateProductFlags } from '../../src/utils/productFlags';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
@@ -73,7 +73,7 @@ import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/
 import { ManualProductData } from '../../src/types/manualProduct';
 import { cacheProduct } from '../../src/services/cacheService';
 import {
-  getProductPageValuesInsights,
+  getProductPageAlertsInsights,
   shouldShowCarbonFootprintCard,
   shouldShowEcoScoreCard,
   shouldShowPackagingCard,
@@ -117,7 +117,7 @@ function ResultScreenContent() {
   const { subscriptionInfo } = useSubscriptionStore();
   const { isOffline } = useNetworkStatus();
   const insets = useSafeAreaInsets();
-  const valuesPreferences = useValuesStore();
+  const alertsPreferences = useAlertsStore();
   
   const isPremium = subscriptionInfo.isPremium && 
     (subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial' || subscriptionInfo.status === 'grace_period');
@@ -125,10 +125,10 @@ function ResultScreenContent() {
   // Tab bar height (60px + safe area bottom)
   const tabBarHeight = 60 + insets.bottom;
 
-  const hasValuesMasterEnabled =
-    valuesPreferences.geopoliticalEnabled ||
-    valuesPreferences.ethicalEnabled ||
-    valuesPreferences.environmentalEnabled;
+  const hasAlertsMasterEnabled =
+    alertsPreferences.geopoliticalEnabled ||
+    alertsPreferences.ethicalEnabled ||
+    alertsPreferences.environmentalEnabled;
 
   // Helper function to get TruScore color
   const getTruScoreColor = (score: number | null) => {
@@ -325,7 +325,7 @@ function ResultScreenContent() {
 
   // Initialize values store
   useEffect(() => {
-    valuesPreferences.initializeStore();
+    alertsPreferences.initializeStore();
   }, []);
 
   // Use TruScore from product object (already calculated in productService.ts using truscoreEngine.ts)
@@ -336,13 +336,13 @@ function ResultScreenContent() {
       if (product.trust_score !== null && product.trust_score_breakdown) {
         // Generate insights if values preferences are enabled
         let insights: TruScoreResult['insights'] = undefined;
-        if (valuesPreferences && (
-          valuesPreferences.geopoliticalEnabled ||
-          valuesPreferences.ethicalEnabled ||
-          valuesPreferences.environmentalEnabled
+        if (alertsPreferences && (
+          alertsPreferences.geopoliticalEnabled ||
+          alertsPreferences.ethicalEnabled ||
+          alertsPreferences.environmentalEnabled
         )) {
           try {
-            const generatedInsights = generateInsights(product, valuesPreferences);
+            const generatedInsights = generateInsights(product, alertsPreferences);
             if (generatedInsights && generatedInsights.length > 0) {
               insights = generatedInsights;
             }
@@ -372,7 +372,7 @@ function ResultScreenContent() {
     } else {
       setTruScore(null);
     }
-  }, [product, valuesPreferences]);
+  }, [product, alertsPreferences]);
 
   // Load banner alerts ASYNCHRONOUSLY after product is displayed (non-blocking)
   // This ensures banner alerts don't slow down the Product Information page display
@@ -390,7 +390,7 @@ function ResultScreenContent() {
         await new Promise(resolve => setTimeout(resolve, 100));
         
         // Generate alerts (this is fast, but we do it async to not block)
-        const alerts = generateBannerAlerts(product, valuesPreferences);
+        const alerts = generateBannerAlerts(product, alertsPreferences);
         setBannerAlerts(alerts);
       } catch (error) {
         console.warn('[ResultScreen] Error generating banner alerts:', error);
@@ -399,7 +399,7 @@ function ResultScreenContent() {
     };
 
     loadBannerAlerts();
-  }, [product, valuesPreferences]);
+  }, [product, alertsPreferences]);
 
   const loadProduct = async () => {
     setLoading(true);
@@ -832,7 +832,7 @@ function ResultScreenContent() {
   
   // Calculate Eco-Score using the proper function to ensure grade is calculated from score if missing
   const calculatedEcoScore = product ? calculateEcoScore(product) : null;
-  const productPageValuesInsights = getProductPageValuesInsights(hasValuesMasterEnabled, truScore);
+  const productPageAlertsInsights = getProductPageAlertsInsights(hasAlertsMasterEnabled, truScore);
 
   const handleCaptureImage = async (imageUri: string) => {
     if (!product) return;
@@ -1083,7 +1083,7 @@ function ResultScreenContent() {
 
           {/* Why this score - Green/Red Flags */}
           {(() => {
-            // Ensure palm_oil_analysis exists before generating flags (Values Insights / scoring)
+            // Ensure palm_oil_analysis exists before generating flags (user alert insights / scoring)
             if (product.ingredients_text && !product.palm_oil_analysis) {
               // Re-extract palm oil analysis if missing (shouldn't happen, but safety check)
               try {
@@ -1213,8 +1213,8 @@ function ResultScreenContent() {
           </View>
         )}
 
-        {/* Values preference — only when user enabled Values categories and there is insight content */}
-        {productPageValuesInsights && (
+        {/* User alerts — only when user enabled alert categories and there is insight content */}
+        {productPageAlertsInsights && (
             <View
               style={[
                 styles.card,
@@ -1236,10 +1236,10 @@ function ResultScreenContent() {
                     style={[styles.insightsHeaderTitle, { color: colors.text }]}
                     numberOfLines={2}
                   >
-                    {t('result.valuesPreference')}
+                    {t('result.alertsPreference')}
                   </Text>
                   <Text style={[styles.insightsHeaderCount, { color: colors.textSecondary }]}>
-                    ({productPageValuesInsights.length})
+                    ({productPageAlertsInsights.length})
                   </Text>
                 </TouchableOpacity>
                 <View style={styles.insightsHeaderRight}>
@@ -1258,9 +1258,9 @@ function ResultScreenContent() {
                 </View>
               </View>
               {insightsExpanded ? (
-                <View style={styles.valuesPreferenceBody}>
+                <View style={styles.alertsPreferenceBody}>
                   <InsightsCarousel
-                    insights={productPageValuesInsights}
+                    insights={productPageAlertsInsights}
                     productName={product?.product_name || product?.product_name_en}
                     onRequestProductShare={() => handleShare('insights')}
                   />
@@ -3291,7 +3291,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     flexShrink: 1,
   },
-  valuesPreferenceBody: {
+  alertsPreferenceBody: {
     width: '100%',
     alignSelf: 'stretch',
   },

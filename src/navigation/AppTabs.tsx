@@ -14,7 +14,7 @@ import type {
   SearchStackParamList,
   HistoryStackParamList,
   FavouritesStackParamList,
-  ValuesStackParamList,
+  AlertsStackParamList,
 } from './tabStackParamLists';
 
 // Import screens
@@ -22,7 +22,7 @@ import ScanScreen from '../../app/index';
 import SearchScreen from '../../app/search';
 import HistoryScreen from '../../app/history';
 import FavouritesScreen from '../../app/favourites';
-import ValuesScreen from '../../app/values';
+import AlertsScreen from '../../app/alerts';
 import ProfileScreen from '../../app/profile';
 import ResultScreen from '../../app/result/[barcode]';
 
@@ -67,9 +67,9 @@ const ProfileScreenWithBoundary = (props: any) => {
   );
 };
 
-const ValuesScreenWithBoundary = (props: any) => (
+const AlertsScreenWithBoundary = (props: any) => (
   <ErrorBoundary>
-    <ValuesScreen {...props} />
+    <AlertsScreen {...props} />
   </ErrorBoundary>
 );
 
@@ -83,7 +83,7 @@ const ScanStack = createNativeStackNavigator<ScanStackParamList>();
 const SearchStack = createNativeStackNavigator<SearchStackParamList>();
 const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
 const FavouritesStack = createNativeStackNavigator<FavouritesStackParamList>();
-const ValuesStack = createNativeStackNavigator<ValuesStackParamList>();
+const AlertsStack = createNativeStackNavigator<AlertsStackParamList>();
 
 function ScanStackNavigator() {
   return (
@@ -121,12 +121,12 @@ function FavouritesStackNavigator() {
   );
 }
 
-function ValuesStackNavigator() {
+function AlertsStackNavigator() {
   return (
-    <ValuesStack.Navigator screenOptions={{ headerShown: false }}>
-      <ValuesStack.Screen name="ValuesHome" component={ValuesScreenWithBoundary} />
-      <ValuesStack.Screen name="Result" component={ResultScreenWithBoundary} />
-    </ValuesStack.Navigator>
+    <AlertsStack.Navigator screenOptions={{ headerShown: false }}>
+      <AlertsStack.Screen name="AlertsHome" component={AlertsScreenWithBoundary} />
+      <AlertsStack.Screen name="Result" component={ResultScreenWithBoundary} />
+    </AlertsStack.Navigator>
   );
 }
 
@@ -135,7 +135,7 @@ export type TabParamList = {
   Search: NavigatorScreenParams<SearchStackParamList>;
   History: NavigatorScreenParams<HistoryStackParamList>;
   Favourites: NavigatorScreenParams<FavouritesStackParamList>;
-  Values: NavigatorScreenParams<ValuesStackParamList>;
+  Alerts: NavigatorScreenParams<AlertsStackParamList>;
   Settings: undefined;
 };
 
@@ -197,8 +197,8 @@ export default function AppTabs() {
             case 'Favourites':
               iconName = focused ? 'heart' : 'heart-outline';
               break;
-            case 'Values':
-              iconName = focused ? 'leaf' : 'leaf-outline';
+            case 'Alerts':
+              iconName = focused ? 'notifications' : 'notifications-outline';
               break;
             case 'Settings':
               iconName = focused ? 'settings' : 'settings-outline';
@@ -260,10 +260,10 @@ export default function AppTabs() {
         }}
       />
       <Tab.Screen
-        name="Values"
-        component={ValuesStackNavigator}
+        name="Alerts"
+        component={AlertsStackNavigator}
         options={{
-          tabBarLabel: t('tabs.values'),
+          tabBarLabel: t('tabs.alerts'),
         }}
       />
       <Tab.Screen

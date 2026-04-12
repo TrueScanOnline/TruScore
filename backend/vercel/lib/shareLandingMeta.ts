@@ -127,11 +127,11 @@ export function buildLandingPresentation(args: {
       };
     case 'insights':
       return {
-        pageHeadlinePlain: `Values insight: ${pn}`,
-        documentTitlePlain: `${pn} · Values · TruScore`,
-        metaDescriptionPlain: `Ethics and values-related insight for ${pn}. Open TruScore to read more.`,
+        pageHeadlinePlain: `Alert insight: ${pn}`,
+        documentTitlePlain: `${pn} · Alerts · TruScore`,
+        metaDescriptionPlain: `Optional user-alert insight for ${pn}. Open TruScore to read more.`,
         heroTaglinePlain: scoreHook,
-        heroViralPlain: 'See how this product lines up with your values.',
+        heroViralPlain: 'See how this product lines up with your chosen alerts.',
       };
     case 'palmOil':
       return {

@@ -44,9 +44,9 @@ export const linking = {
               FavouritesHome: 'favourites',
             },
           },
-          Values: {
+          Alerts: {
             screens: {
-              ValuesHome: 'values',
+              AlertsHome: 'alerts',
             },
           },
           Settings: 'profile',

@@ -440,7 +440,7 @@ function enhanceProductWithSustainabilityData(product: Product): void {
   }
 
   // Extract palm oil analysis - always create if we have ingredients data
-  // This ensures consistency with Values Insights (which checks ingredients_text)
+  // This ensures consistency with user alert insights (which checks ingredients_text)
   if (product.ingredients_analysis_tags || product.ingredients_analysis || product.ingredients_text) {
     product.palm_oil_analysis = extractPalmOilAnalysis(product);
   }
@@ -519,7 +519,7 @@ export function extractPalmOilAnalysis(product: Product): PalmOilAnalysis {
   let detectedFromIngredientsText = false;
   
   // Fallback: Always check ingredients_text if OFF data doesn't explicitly say palm-oil-free
-  // This ensures consistency with Values Insights detection
+  // This ensures consistency with user alert insight detection
   // Only skip if OFF explicitly says it's palm-oil-free (trust OFF certification)
   if (!isPalmOilFree && ingredientsText) {
     // COMPREHENSIVE PALM OIL DETECTION

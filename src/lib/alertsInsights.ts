@@ -1,8 +1,8 @@
-// Values insights generator - generates insights based on user preferences and product data
+// User alert insights — optional scan insights from user alert preferences (not banner alerts).
 import { Product } from '../types/product';
-import { ValuesPreferences } from '../store/useValuesStore';
+import { AlertsPreferences } from '../store/useAlertsStore';
 import { Insight } from './truscoreEngine';
-import { VALUES_COLORS } from '../theme/valuesColors';
+import { ALERTS_COLORS } from '../theme/alertsColors';
 import { logger } from '../utils/logger';
 
 // Known companies linked to regions (simplified - in production, use comprehensive database)
@@ -49,7 +49,7 @@ const REFERENCE = {
  */
 export function generateInsights(
   product: Product | null | undefined,
-  preferences: ValuesPreferences | null | undefined
+  preferences: AlertsPreferences | null | undefined
 ): Insight[] {
   // Input validation
   if (!product || typeof product !== 'object') {
@@ -89,7 +89,7 @@ export function generateInsights(
           type: 'geopolitical',
           reason: 'Geopolitical Insight: Matches Avoid Israel-linked preference',
           source: 'Product origin/brand analysis',
-          color: VALUES_COLORS.geopolitical,
+          color: ALERTS_COLORS.geopolitical,
           referenceUrl: offProductUrl,
           referenceLabel: 'View product on Open Food Facts',
         });
@@ -102,7 +102,7 @@ export function generateInsights(
           type: 'geopolitical',
           reason: 'Geopolitical Insight: Matches Avoid Palestine-linked preference',
           source: 'Product origin/brand analysis',
-          color: VALUES_COLORS.geopolitical,
+          color: ALERTS_COLORS.geopolitical,
           referenceUrl: offProductUrl,
           referenceLabel: 'View product on Open Food Facts',
         });
@@ -118,7 +118,7 @@ export function generateInsights(
           type: 'geopolitical',
           reason: 'Geopolitical Insight: Matches Avoid China-linked preference',
           source: 'Product origin/brand analysis',
-          color: VALUES_COLORS.geopolitical,
+          color: ALERTS_COLORS.geopolitical,
           referenceUrl: offProductUrl,
           referenceLabel: 'View product on Open Food Facts',
         });
@@ -131,7 +131,7 @@ export function generateInsights(
           type: 'geopolitical',
           reason: 'Geopolitical Insight: Matches Avoid India-linked preference',
           source: 'Product origin/brand analysis',
-          color: VALUES_COLORS.geopolitical,
+          color: ALERTS_COLORS.geopolitical,
           referenceUrl: offProductUrl,
           referenceLabel: 'View product on Open Food Facts',
         });
@@ -149,7 +149,7 @@ export function generateInsights(
           type: 'ethical',
           reason: 'Parent company linked to animal testing/cruelty',
           source: 'Known cruel parent companies database',
-          color: VALUES_COLORS.ethical,
+          color: ALERTS_COLORS.ethical,
           referenceUrl: REFERENCE.crueltyFreeInternational,
           referenceLabel: 'Cruelty Free International',
         });
@@ -167,7 +167,7 @@ export function generateInsights(
           type: 'ethical',
           reason: 'Potential forced/child labor concerns',
           source: 'Product analysis tags',
-          color: VALUES_COLORS.ethical,
+          color: ALERTS_COLORS.ethical,
           referenceUrl: REFERENCE.iloForcedLabour,
           referenceLabel: 'ILO — forced labour',
         });
@@ -193,7 +193,7 @@ export function generateInsights(
             source: palmOilAnalysis.detectedFromIngredientsText 
               ? 'Ingredients analysis'
               : 'Open Food Facts data',
-            color: VALUES_COLORS.environmental,
+            color: ALERTS_COLORS.environmental,
             referenceUrl: REFERENCE.rspo,
             referenceLabel: 'RSPO — sustainable palm oil',
           });
@@ -230,7 +230,7 @@ export function generateInsights(
             type: 'environmental',
             reason: 'Contains palm oil',
             source: 'Ingredients analysis',
-            color: VALUES_COLORS.environmental,
+            color: ALERTS_COLORS.environmental,
             referenceUrl: REFERENCE.rspo,
             referenceLabel: 'RSPO — sustainable palm oil',
           });
@@ -241,7 +241,7 @@ export function generateInsights(
 
     return insights;
   } catch (error) {
-    logger.error('[valuesInsights] Error generating insights', error);
+    logger.error('[alertsInsights] Error generating insights', error);
     return []; // Safe fallback
   }
 }
