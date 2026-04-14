@@ -37,7 +37,7 @@ export function buildNutritionShareBodyLines(options: {
     );
   }
 
-  lines.push('', universalLink, '', '📱 TruScore — scan any product', '', '#TruScore #Nutrition #ProductScan');
+  lines.push('', universalLink, '', '📱 Rveel — scan any product', '', '#RveelScore #Nutrition #ProductScan');
 
   return lines.join('\n');
 }

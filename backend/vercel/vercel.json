@@ -68,6 +68,14 @@
       "destination": "/api/well-known-deep-links?kind=assetlinks"
     },
     {
+      "source": "/terms",
+      "destination": "/api/legal/terms"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/api/legal/privacy"
+    },
+    {
       "source": "/barcode/:barcode",
       "destination": "/api/barcode/:barcode"
     },

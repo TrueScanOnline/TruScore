@@ -86,7 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const offUrl = `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`;
     const offResponse = await fetch(offUrl, {
       headers: {
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
       },
     });
 

@@ -75,7 +75,7 @@ export async function fetchProductFromBestBuy(barcode: string): Promise<Product 
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'TrueScan-FoodScanner/1.0',
+        'User-Agent': 'Rveel/1.0',
       },
     });
 

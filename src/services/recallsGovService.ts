@@ -99,7 +99,7 @@ async function searchUSDAFSISRecalls(searchTerm: string): Promise<ComprehensiveR
     const response = await fetch(url, {
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
       },
       signal: (() => {
         const controller = new AbortController();
@@ -233,7 +233,7 @@ async function searchCPSCRecalls(searchTerm: string): Promise<ComprehensiveRecal
     const response = await fetch(url, {
       headers: {
         'Accept': 'application/xml, application/json',
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
       },
     });
 

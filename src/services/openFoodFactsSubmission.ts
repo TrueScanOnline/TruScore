@@ -9,7 +9,7 @@ import * as FileSystem from 'expo-file-system';
 const OFF_API_BASE = 'https://world.openfoodfacts.org';
 const OFF_EDIT_API = `${OFF_API_BASE}/cgi/product_jqm2.pl`;
 const OFF_IMAGE_UPLOAD_API = `${OFF_API_BASE}/cgi/product_image_upload.pl`;
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0 (truescan@example.com)'; // TODO: Update with actual contact email
+const USER_AGENT = 'Rveel/1.0.0 (truescan@example.com)'; // TODO: Update with actual contact email
 
 // Get Open Food Facts credentials from environment variables
 // Users can optionally provide their OFF credentials to enable auto-submission

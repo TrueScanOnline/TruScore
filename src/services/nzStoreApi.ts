@@ -17,7 +17,7 @@ async function fetchFromWoolworthsNZ(barcode: string): Promise<Product | null> {
     const searchUrl1 = `https://www.woolworths.co.nz/api/v1/products?searchTerm=${barcode}`;
     let response = await fetchWithRateLimit(searchUrl1, {
       headers: {
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
         'Accept': 'application/json',
       },
     }, 'woolworths_nz');
@@ -73,7 +73,7 @@ async function fetchFromFoodstuffs(barcode: string): Promise<Product | null> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
       },
       body: JSON.stringify({ searchTerm: barcode, pageSize: 5 }),
     }, 'paknsave');
@@ -121,7 +121,7 @@ async function fetchFromFoodstuffs(barcode: string): Promise<Product | null> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
       },
       body: JSON.stringify({ searchTerm: barcode, pageSize: 5 }),
     });

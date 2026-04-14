@@ -15,7 +15,7 @@ import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
 export { ORGANIC_LABEL_TEXT_CLAIM_TAG, ORGANIC_PRODUCT_NAME_CLAIM_TAG };
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org/api/v2/product';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 export interface OFFResponse {
   status: number;

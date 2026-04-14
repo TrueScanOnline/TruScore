@@ -151,7 +151,7 @@ export default function CertificationMultiPicker({
             </View>
 
             <Text style={[styles.hint, { color: colors.textSecondary }]}>
-              {t('manualProduct.certificationsPickerHint') || 'Tap rows to select or deselect. Same tags as TruScore ethics certifications.'}
+              {t('manualProduct.certificationsPickerHint') || 'Tap rows to select or deselect. Same tags as Rveel Score ethics certifications.'}
             </Text>
 
             <FlatList

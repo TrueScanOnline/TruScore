@@ -332,7 +332,7 @@ export default function ScanScreen() {
                   cameraLifecycle.handleCameraError(errorObj);
                   
                   const errorMessage = Platform.OS === 'ios' 
-                    ? 'Failed to initialize camera. Please check Settings > TrueScan > Camera and ensure it is enabled. Then restart the app.'
+                    ? 'Failed to initialize camera. Please check Settings > Rveel > Camera and ensure it is enabled. Then restart the app.'
                     : t('scan.cameraErrorMessage') || 'Failed to initialize camera. Please try again.';
                   
                   Alert.alert(
@@ -398,7 +398,7 @@ export default function ScanScreen() {
           <View style={styles.overlay}>
             {/* Top Bar */}
             <View style={styles.topBar}>
-              <Text style={styles.appTitle}>TrueScan</Text>
+              <Text style={styles.appTitle}>Rveel</Text>
               {isOffline && (
                 <View style={[styles.offlineIndicator, { backgroundColor: canUseOfflineMode ? '#ffa500' : '#ff6b6b' }]}>
                   <Ionicons 

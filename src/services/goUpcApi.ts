@@ -38,7 +38,7 @@ export async function fetchProductFromGoUpc(barcode: string): Promise<Product | 
     const response = await fetchWithRateLimit(url, {
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
       },
       signal,
     }, 'go_upc');

@@ -1,0 +1,464 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`scan output contract (golden) matches frozen baseline — NZ market metadata: nz-core-clean 1`] = `
+{
+  "barcode": "9421901881054",
+  "confidence": {
+    "label": "medium",
+    "value": 0.62885,
+  },
+  "coverage": {
+    "completeness": 0.42,
+    "flags": [
+      "low_completeness",
+    ],
+  },
+  "errors": undefined,
+  "market": "NZ",
+  "premium": {
+    "subscriber": false,
+  },
+  "product_stub": {
+    "barcode": "9421901881054",
+    "source": "openfoodfacts",
+  },
+  "scores": {
+    "methodology_version": "v1.4",
+    "pillars": {
+      "body": 18,
+      "ethics": 18,
+      "open": 18,
+      "planet": 18,
+    },
+    "trust": 72,
+  },
+  "signals": {
+    "premium_insight": [],
+    "safety_regulatory": [],
+    "transparency": [
+      {
+        "body_key": "result.signals.limited_data.body",
+        "class": "B",
+        "dedupe_key": "transparency:limited_data:9421901881054",
+        "id": "transparency-limited-data-9421901881054",
+        "links": [],
+        "severity": "low",
+        "title_key": "result.signals.limited_data.title",
+        "why_key": "result.signals.limited_data.why",
+      },
+    ],
+    "user_preference": [],
+  },
+  "sources_trace": [
+    {
+      "id": "openfoodfacts",
+      "status": "hit",
+    },
+  ],
+  "terminal_state": "success",
+}
+`;
+
+exports[`scan output contract (golden) matches frozen baseline — active recall → class A safety signal: recall-class-a 1`] = `
+{
+  "barcode": "9300601249114",
+  "confidence": {
+    "label": "low",
+    "value": 0.465225,
+  },
+  "coverage": {
+    "completeness": 0.07,
+    "flags": [
+      "low_completeness",
+      "missing_nutrition",
+      "missing_ingredients",
+    ],
+  },
+  "errors": undefined,
+  "market": "AU",
+  "premium": {
+    "subscriber": false,
+  },
+  "product_stub": {
+    "barcode": "9300601249114",
+    "source": "openfoodfacts",
+  },
+  "scores": {
+    "methodology_version": "v1.4",
+    "pillars": {
+      "body": 18,
+      "ethics": 18,
+      "open": 18,
+      "planet": 18,
+    },
+    "trust": 72,
+  },
+  "signals": {
+    "premium_insight": [],
+    "safety_regulatory": [
+      {
+        "body_display": "1 active recall(s) found. Test contamination Review official recall notices for safety details.",
+        "body_key": "legacy.banner.recall.body",
+        "class": "A",
+        "dedupe_key": "safety:recall:active:9300601249114",
+        "id": "recall-9300601249114-1781524800000",
+        "links": [
+          {
+            "url": "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+          },
+        ],
+        "severity": "high",
+        "title_display": "Product Recall",
+        "title_key": "legacy.banner.recall.title",
+        "why_key": "legacy.banner.recall.why",
+      },
+    ],
+    "transparency": [
+      {
+        "body_key": "result.signals.limited_data.body",
+        "class": "B",
+        "dedupe_key": "transparency:limited_data:9300601249114",
+        "id": "transparency-limited-data-9300601249114",
+        "links": [],
+        "severity": "low",
+        "title_key": "result.signals.limited_data.title",
+        "why_key": "result.signals.limited_data.why",
+      },
+    ],
+    "user_preference": [],
+  },
+  "sources_trace": [
+    {
+      "id": "openfoodfacts",
+      "status": "hit",
+    },
+  ],
+  "terminal_state": "success",
+}
+`;
+
+exports[`scan output contract (golden) matches frozen baseline — limited data transparency when completeness low: limited-data-transparency 1`] = `
+{
+  "barcode": "9300601249114",
+  "confidence": {
+    "label": "low",
+    "value": 0.4325,
+  },
+  "coverage": {
+    "completeness": 0,
+    "flags": [
+      "low_completeness",
+      "missing_nutrition",
+      "missing_ingredients",
+    ],
+  },
+  "errors": undefined,
+  "market": "AU",
+  "premium": {
+    "subscriber": false,
+  },
+  "product_stub": {
+    "barcode": "9300601249114",
+    "source": "openfoodfacts",
+  },
+  "scores": {
+    "methodology_version": "v1.4",
+    "pillars": {
+      "body": 18,
+      "ethics": 18,
+      "open": 18,
+      "planet": 18,
+    },
+    "trust": 72,
+  },
+  "signals": {
+    "premium_insight": [],
+    "safety_regulatory": [],
+    "transparency": [
+      {
+        "body_key": "result.signals.limited_data.body",
+        "class": "B",
+        "dedupe_key": "transparency:limited_data:9300601249114",
+        "id": "transparency-limited-data-9300601249114",
+        "links": [],
+        "severity": "low",
+        "title_key": "result.signals.limited_data.title",
+        "why_key": "result.signals.limited_data.why",
+      },
+    ],
+    "user_preference": [],
+  },
+  "sources_trace": [
+    {
+      "id": "openfoodfacts",
+      "status": "hit",
+    },
+  ],
+  "terminal_state": "success",
+}
+`;
+
+exports[`scan output contract (golden) matches frozen baseline — no recall, high completeness: no-recall-clean-au 1`] = `
+{
+  "barcode": "9300601249114",
+  "confidence": {
+    "label": "medium",
+    "value": 0.62885,
+  },
+  "coverage": {
+    "completeness": 0.42,
+    "flags": [
+      "low_completeness",
+    ],
+  },
+  "errors": undefined,
+  "market": "AU",
+  "premium": {
+    "subscriber": false,
+  },
+  "product_stub": {
+    "barcode": "9300601249114",
+    "source": "openfoodfacts",
+  },
+  "scores": {
+    "methodology_version": "v1.4",
+    "pillars": {
+      "body": 18,
+      "ethics": 18,
+      "open": 18,
+      "planet": 18,
+    },
+    "trust": 72,
+  },
+  "signals": {
+    "premium_insight": [],
+    "safety_regulatory": [],
+    "transparency": [
+      {
+        "body_key": "result.signals.limited_data.body",
+        "class": "B",
+        "dedupe_key": "transparency:limited_data:9300601249114",
+        "id": "transparency-limited-data-9300601249114",
+        "links": [],
+        "severity": "low",
+        "title_key": "result.signals.limited_data.title",
+        "why_key": "result.signals.limited_data.why",
+      },
+    ],
+    "user_preference": [],
+  },
+  "sources_trace": [
+    {
+      "id": "openfoodfacts",
+      "status": "hit",
+    },
+  ],
+  "terminal_state": "success",
+}
+`;
+
+exports[`scan output contract (golden) matches frozen baseline — partial terminal adds analysis_incomplete flag: partial-terminal 1`] = `
+{
+  "barcode": "9300601249114",
+  "confidence": {
+    "label": "low",
+    "value": 0.465225,
+  },
+  "coverage": {
+    "completeness": 0.07,
+    "flags": [
+      "low_completeness",
+      "missing_nutrition",
+      "missing_ingredients",
+      "analysis_incomplete",
+    ],
+  },
+  "errors": undefined,
+  "market": "AU",
+  "premium": {
+    "subscriber": false,
+  },
+  "product_stub": {
+    "barcode": "9300601249114",
+    "source": "openfoodfacts",
+  },
+  "scores": {
+    "methodology_version": "v1.4",
+    "pillars": {
+      "body": 18,
+      "ethics": 18,
+      "open": 18,
+      "planet": 18,
+    },
+    "trust": 72,
+  },
+  "signals": {
+    "premium_insight": [],
+    "safety_regulatory": [],
+    "transparency": [
+      {
+        "body_key": "result.signals.limited_data.body",
+        "class": "B",
+        "dedupe_key": "transparency:limited_data:9300601249114",
+        "id": "transparency-limited-data-9300601249114",
+        "links": [],
+        "severity": "low",
+        "title_key": "result.signals.limited_data.title",
+        "why_key": "result.signals.limited_data.why",
+      },
+    ],
+    "user_preference": [],
+  },
+  "sources_trace": [
+    {
+      "id": "openfoodfacts",
+      "status": "hit",
+    },
+  ],
+  "terminal_state": "partial",
+}
+`;
+
+exports[`scan output contract (golden) matches frozen baseline — preference hit class C (animal testing): preference-animal-testing 1`] = `
+{
+  "barcode": "9300601249114",
+  "confidence": {
+    "label": "medium",
+    "value": 0.62885,
+  },
+  "coverage": {
+    "completeness": 0.42,
+    "flags": [
+      "low_completeness",
+    ],
+  },
+  "errors": undefined,
+  "market": "AU",
+  "premium": {
+    "subscriber": false,
+  },
+  "product_stub": {
+    "barcode": "9300601249114",
+    "source": "openfoodfacts",
+  },
+  "scores": {
+    "methodology_version": "v1.4",
+    "pillars": {
+      "body": 18,
+      "ethics": 18,
+      "open": 18,
+      "planet": 18,
+    },
+    "trust": 72,
+  },
+  "signals": {
+    "premium_insight": [],
+    "safety_regulatory": [],
+    "transparency": [
+      {
+        "body_key": "result.signals.limited_data.body",
+        "class": "B",
+        "dedupe_key": "transparency:limited_data:9300601249114",
+        "id": "transparency-limited-data-9300601249114",
+        "links": [],
+        "severity": "low",
+        "title_key": "result.signals.limited_data.title",
+        "why_key": "result.signals.limited_data.why",
+      },
+    ],
+    "user_preference": [
+      {
+        "body_display": "This product/brand is known for animal testing, which conflicts with your preferences.",
+        "body_key": "legacy.banner.animal_cruelty.body",
+        "class": "C",
+        "dedupe_key": "preference:animal_testing:9300601249114",
+        "id": "user-pref-animal-testing-9300601249114",
+        "links": [],
+        "severity": "high",
+        "title_display": "Animal Testing Detected",
+        "title_key": "legacy.banner.animal_cruelty.title",
+        "why_key": "legacy.banner.animal_cruelty.why",
+      },
+    ],
+  },
+  "sources_trace": [
+    {
+      "id": "openfoodfacts",
+      "status": "hit",
+    },
+  ],
+  "terminal_state": "success",
+}
+`;
+
+exports[`scan output contract (golden) matches frozen baseline — web_search source adds transparency B: web-search-transparency 1`] = `
+{
+  "barcode": "9300601249114",
+  "confidence": {
+    "label": "low",
+    "value": 0.19655,
+  },
+  "coverage": {
+    "completeness": 0.07,
+    "flags": [
+      "low_completeness",
+      "web_search_fallback",
+      "missing_nutrition",
+      "missing_ingredients",
+    ],
+  },
+  "errors": undefined,
+  "market": "AU",
+  "premium": {
+    "subscriber": false,
+  },
+  "product_stub": {
+    "barcode": "9300601249114",
+    "source": "web_search",
+  },
+  "scores": {
+    "methodology_version": "v1.4",
+    "pillars": {
+      "body": 18,
+      "ethics": 18,
+      "open": 18,
+      "planet": 18,
+    },
+    "trust": 72,
+  },
+  "signals": {
+    "premium_insight": [],
+    "safety_regulatory": [],
+    "transparency": [
+      {
+        "body_key": "result.signals.limited_data.body",
+        "class": "B",
+        "dedupe_key": "transparency:limited_data:9300601249114",
+        "id": "transparency-limited-data-9300601249114",
+        "links": [],
+        "severity": "low",
+        "title_key": "result.signals.limited_data.title",
+        "why_key": "result.signals.limited_data.why",
+      },
+      {
+        "body_key": "result.signals.web_search_source.body",
+        "class": "B",
+        "dedupe_key": "transparency:web_search:9300601249114",
+        "id": "transparency-web-search-9300601249114",
+        "links": [],
+        "severity": "medium",
+        "title_key": "result.signals.web_search_source.title",
+        "why_key": "result.signals.web_search_source.why",
+      },
+    ],
+    "user_preference": [],
+  },
+  "sources_trace": [
+    {
+      "id": "web_search",
+      "status": "hit",
+    },
+  ],
+  "terminal_state": "success",
+}
+`;

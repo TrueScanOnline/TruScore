@@ -4,14 +4,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { FoodRecall } from '../types/product';
 import { useTheme } from '../theme';
+import type { SignalClass } from '../types/scanOutputContract';
 
 interface RecallAlertModalProps {
   visible: boolean;
   onClose: () => void;
   recalls: FoodRecall[];
+  /** Safety / regulatory surface (Phase 5 Signals class A) */
+  signalClass?: SignalClass;
 }
 
-export default function RecallAlertModal({ visible, onClose, recalls }: RecallAlertModalProps) {
+export default function RecallAlertModal({
+  visible,
+  onClose,
+  recalls,
+  signalClass = 'A',
+}: RecallAlertModalProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -25,6 +33,7 @@ export default function RecallAlertModal({ visible, onClose, recalls }: RecallAl
       transparent
       animationType="slide"
       onRequestClose={onClose}
+      accessibilityLabel={`recall-modal-signal-class-${signalClass}`}
     >
       <View style={styles.overlay}>
         <TouchableWithoutFeedback onPress={onClose}>

@@ -37,7 +37,7 @@ while ($fetched -lt $Limit) {
         
         Write-Log "Fetching page $page... ($fetched/$Limit products)"
         
-        $response = Invoke-WebRequest -Uri $url -UserAgent "TrueScan-FoodScanner/1.0.0" -TimeoutSec 30 -UseBasicParsing
+        $response = Invoke-WebRequest -Uri $url -UserAgent "Rveel/1.0.0" -TimeoutSec 30 -UseBasicParsing
         $data = $response.Content | ConvertFrom-Json
         
         if (-not $data.products -or $data.products.Count -eq 0) {

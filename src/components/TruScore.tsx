@@ -1,8 +1,9 @@
-// src/components/TruScore.tsx – TruScore v1.4 Display Component
+// src/components/TruScore.tsx – Rveel Score v1.4 display component
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { TruScoreResult } from '../lib/truscoreEngine';
+import { productIdentity } from '../config/productIdentity';
 import { useTheme } from '../theme';
 
 interface TruScoreProps {
@@ -56,7 +57,7 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium' }: Tru
       <Text style={[styles.label, currentStyles.label, { color: colors.text }]}>
         {getScoreLabel(truscore)}
       </Text>
-      <Text style={[styles.subLabel, { color: colors.textSecondary }]}>TruScore</Text>
+      <Text style={[styles.subLabel, { color: colors.textSecondary }]}>{productIdentity.publicScoreName}</Text>
 
       {/* Pillar Bars - Display in consistent order: Body, Planet, Ethics, Open */}
       <View style={styles.pillarsContainer}>

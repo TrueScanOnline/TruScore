@@ -35,7 +35,7 @@ export async function fetchProductFromBarcodeMonster(barcode: string): Promise<P
       {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+          'User-Agent': 'Rveel/1.0.0',
         },
         signal,
       },

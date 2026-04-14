@@ -83,7 +83,7 @@ export default function ManualProductEntryModal({
   // Allergens & Additives
   const [allergensAdditives, setAllergensAdditives] = useState('');
 
-  // Certifications: OFF tags aligned with TruScore ethics picker
+  // Certifications: OFF tags aligned with Rveel Score ethics picker
   const [selectedCertificationTags, setSelectedCertificationTags] = useState<string[]>([]);
 
   // Pre-fill form fields when editing existing product

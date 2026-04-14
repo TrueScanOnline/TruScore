@@ -56,7 +56,7 @@ async function searchOpenFoodFacts(query: string, limit = 20): Promise<SearchRes
     });
 
     const response = await fetch(`${OFF_SEARCH_API}?${params.toString()}`, {
-      headers: { 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+      headers: { 'User-Agent': 'Rveel/1.0.0' },
     });
 
     if (!response.ok) return [];
@@ -106,7 +106,7 @@ async function searchOpenProductsFacts(query: string, limit = 20): Promise<Searc
     });
 
     const response = await fetch(`${OPF_SEARCH_API}?${params.toString()}`, {
-      headers: { 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+      headers: { 'User-Agent': 'Rveel/1.0.0' },
     });
 
     if (!response.ok) return [];
@@ -153,7 +153,7 @@ async function searchOpenPetFoodFacts(query: string, limit = 20): Promise<Search
     });
 
     const response = await fetch(`${OPFF_SEARCH_API}?${params.toString()}`, {
-      headers: { 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+      headers: { 'User-Agent': 'Rveel/1.0.0' },
     });
 
     if (!response.ok) return [];
@@ -203,7 +203,7 @@ async function searchOpenBeautyFacts(query: string, limit = 20): Promise<SearchR
     });
 
     const response = await fetch(`${OBF_SEARCH_API}?${params.toString()}`, {
-      headers: { 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+      headers: { 'User-Agent': 'Rveel/1.0.0' },
     });
 
     if (!response.ok) return [];

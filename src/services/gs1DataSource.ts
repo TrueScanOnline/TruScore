@@ -5,7 +5,7 @@ import { Product } from '../types/product';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { logger } from '../utils/logger';
 
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 // Note: Using free GS1 Digital Link service (no API key required)
 // GS1 Digital Link is a free, public service that provides product information

@@ -304,7 +304,7 @@ function RootLayout() {
                   options={{
                     presentation: 'modal',
                     headerShown: true,
-                    title: 'TruScan Methodology',
+                    title: 'Rveel methodology',
                   }}
                 />
               </Stack.Navigator>

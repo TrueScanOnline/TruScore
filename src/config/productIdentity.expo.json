@@ -1,0 +1,6 @@
+{
+  "appName": "Rveel",
+  "cameraPermission": "Rveel needs access to your camera to scan product barcodes and identify products. This allows you to quickly get detailed information about food products including ingredients, nutrition, and sustainability data.",
+  "locationWhenInUse": "Rveel uses your location to show local store prices and provide country-specific product information. This helps you find the best prices and relevant product data for your region.",
+  "locationAlways": "Rveel uses your location to show local store prices and provide country-specific product information. This helps you find the best prices and relevant product data for your region."
+}

@@ -8,7 +8,7 @@ import { logger } from '../utils/logger';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const EFSA_API_BASE = 'https://www.efsa.europa.eu';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 /**
  * Fetch product from EFSA database

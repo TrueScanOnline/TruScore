@@ -5,7 +5,7 @@ import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { logger } from '../utils/logger';
 
 const USDA_API_BASE = 'https://api.nal.usda.gov/fdc/v1';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 // Note: USDA API requires free API key registration
 // Get your key at: https://fdc.nal.usda.gov/api-guide.html

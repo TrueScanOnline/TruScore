@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -39,11 +39,15 @@ import NutritionTable from '../../src/components/NutritionTable';
 import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
-import { generateBannerAlerts } from '../../src/services/bannerAlertsService';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
+import { buildProductScanResult } from '../../src/services/buildProductScanResult';
+import { buildBannerAlertsDataFromScanResult } from '../../src/utils/scanResultPresentation';
+import { logScanObs, generateScanId } from '../../src/services/scanObservability';
+import { getUserCountryCode } from '../../src/utils/countryDetection';
 import InsightsCarousel from '../../src/components/InsightsCarousel';
 import TruScoreInfoModal from '../../src/components/TrustScoreInfoModal';
 import TruScoreAnalysisModal from '../../src/components/TruScoreAnalysisModal';
+import { productIdentity } from '../../src/config/productIdentity';
 import EcoScoreInfoModal from '../../src/components/EcoScoreInfoModal';
 import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModal';
 import AdditivesRiskCard from '../../src/components/AdditivesRiskCard';
@@ -118,7 +122,9 @@ function ResultScreenContent() {
   const { isOffline } = useNetworkStatus();
   const insets = useSafeAreaInsets();
   const alertsPreferences = useAlertsStore();
-  
+  const scanIdRef = useRef<string>(generateScanId());
+  const lastBarcodeForScan = useRef<string | null>(null);
+
   const isPremium = subscriptionInfo.isPremium && 
     (subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial' || subscriptionInfo.status === 'grace_period');
   
@@ -150,7 +156,6 @@ function ResultScreenContent() {
 
   const [product, setProduct] = useState<ProductWithTrustScore | null>(null);
   const [truScore, setTruScore] = useState<TruScoreResult | null>(null);
-  const [bannerAlerts, setBannerAlerts] = useState<BannerAlertsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingPhase, setLoadingPhase] = useState<string>('initializing');
   const [progressiveProduct, setProgressiveProduct] = useState<ProductWithTrustScore | null>(null);
@@ -176,6 +181,12 @@ function ResultScreenContent() {
   const [isUserContributed, setIsUserContributed] = useState(false);
   const [insightsExpanded, setInsightsExpanded] = useState(true);
   const [communityCountryStats, setCommunityCountryStats] = useState<Array<{ country: string; count: number }>>([]);
+
+  if (lastBarcodeForScan.current !== barcode) {
+    lastBarcodeForScan.current = barcode;
+    scanIdRef.current = generateScanId();
+    logScanObs({ event: 'scan_started', scan_id: scanIdRef.current, barcode });
+  }
 
   useEffect(() => {
     // Log screen entry (not a crash - just diagnostics)
@@ -374,32 +385,54 @@ function ResultScreenContent() {
     }
   }, [product, alertsPreferences]);
 
-  // Load banner alerts ASYNCHRONOUSLY after product is displayed (non-blocking)
-  // This ensures banner alerts don't slow down the Product Information page display
-  useEffect(() => {
-    if (!product) {
-      setBannerAlerts(null);
-      return;
+  const scanResult = useMemo(() => {
+    const productForScan =
+      product && getPrimaryBarcode(product.barcode) === getPrimaryBarcode(barcode) ? product : null;
+    if (!productForScan && !error) {
+      return null;
     }
+    return buildProductScanResult({
+      barcode,
+      product: productForScan,
+      userPreferences: alertsPreferences,
+      isSubscriber: isPremium,
+      market: getUserCountryCode(),
+      deriveTerminal: true,
+      fetchPhase: loadingPhase,
+      isFetchLoading: loading,
+      isOffline,
+      loadError: error,
+      errors: error ? [{ code: 'product_load', message_key: 'errors.product_load' }] : undefined,
+      scan_id: scanIdRef.current,
+    }).result;
+  }, [
+    product,
+    barcode,
+    error,
+    isOffline,
+    isPremium,
+    alertsPreferences,
+    loading,
+    loadingPhase,
+  ]);
 
-    // Generate banner alerts asynchronously (non-blocking)
-    // Use setTimeout to ensure this runs after the render cycle
-    const loadBannerAlerts = async () => {
-      try {
-        // Small delay to ensure product is already displayed
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Generate alerts (this is fast, but we do it async to not block)
-        const alerts = generateBannerAlerts(product, alertsPreferences);
-        setBannerAlerts(alerts);
-      } catch (error) {
-        console.warn('[ResultScreen] Error generating banner alerts:', error);
-        setBannerAlerts(null);
-      }
-    };
+  const bannerAlerts: BannerAlertsData | null = useMemo(() => {
+    if (!scanResult) return null;
+    return buildBannerAlertsDataFromScanResult(scanResult, t);
+  }, [scanResult, t]);
 
-    loadBannerAlerts();
-  }, [product, alertsPreferences]);
+  useEffect(() => {
+    const sid = scanIdRef.current;
+    if (!sid || !product) return;
+    if (getPrimaryBarcode(product.barcode) !== getPrimaryBarcode(barcode)) return;
+    logScanObs({
+      event: 'score_ready',
+      scan_id: sid,
+      barcode,
+      trust_score: product.trust_score ?? null,
+      terminal_state: scanResult?.terminal_state,
+    });
+  }, [product?.trust_score, product?.barcode, barcode, product, scanResult?.terminal_state]);
 
   const loadProduct = async () => {
     setLoading(true);
@@ -412,6 +445,7 @@ function ResultScreenContent() {
       if (!barcode || typeof barcode !== 'string' || !/^\d{8,14}$/.test(barcode)) {
         console.error('[ResultScreen] Invalid barcode:', barcode);
         setError('Invalid barcode format');
+        setLoadingPhase('not_found');
         setLoading(false);
         return;
       }
@@ -421,7 +455,16 @@ function ResultScreenContent() {
         const manualProduct = await getManualProduct(barcode);
         if (manualProduct) {
           console.log('[ResultScreen] Found manual product');
+          if (scanIdRef.current) {
+            logScanObs({
+              event: 'fetch_complete',
+              scan_id: scanIdRef.current,
+              barcode,
+              trust_score: manualProduct.trust_score ?? null,
+            });
+          }
           setProduct(manualProduct);
+          setLoadingPhase('complete');
           try {
             addScan({
               barcode,
@@ -448,6 +491,14 @@ function ResultScreenContent() {
       // Product displays immediately (< 100ms) even before TruScore is calculated
       const onProgress = (progress: { phase: string; product?: Product }) => {
         setLoadingPhase(progress.phase);
+        if (scanIdRef.current) {
+          logScanObs({
+            event: 'fetch_phase',
+            scan_id: scanIdRef.current,
+            barcode,
+            phase: progress.phase,
+          });
+        }
         if (progress.product) {
           // Convert Product to ProductWithTrustScore if needed
           const productWithScore = progress.product as ProductWithTrustScore;
@@ -507,8 +558,17 @@ function ResultScreenContent() {
       
       if (productData) {
         console.log('[ResultScreen] Product fetched successfully');
+        if (scanIdRef.current) {
+          logScanObs({
+            event: 'fetch_complete',
+            scan_id: scanIdRef.current,
+            barcode,
+            trust_score: productData.trust_score ?? null,
+          });
+        }
         setProduct(productData);
         setProgressiveProduct(productData);
+        setLoadingPhase('complete');
         // Update scan history with product name
         try {
           addScan({
@@ -524,6 +584,7 @@ function ResultScreenContent() {
         console.warn('[ResultScreen] Product not found');
         // CRITICAL FIX: Better error message for product not found
         setError('Product not found in our databases. You can help by adding this product manually.');
+        setLoadingPhase('not_found');
       }
     } catch (err) {
       console.error('[ResultScreen] Fatal error loading product:', err);
@@ -554,6 +615,7 @@ function ResultScreenContent() {
       const productData = await refreshProduct(barcode);
       if (productData) {
         setProduct(productData);
+        setLoadingPhase('complete');
       }
     } catch (err) {
       console.error('Error refreshing product:', err);
@@ -1002,6 +1064,24 @@ function ResultScreenContent() {
           />
         )}
 
+        {scanResult?.terminal_state === 'partial' && (
+          <View
+            style={[styles.partialScanBanner, { backgroundColor: colors.card, borderColor: colors.border }]}
+            accessible
+            accessibilityLabel={`${t('result.analysisPartialTitle')}. ${t('result.analysisPartialSubtitle')}`}
+          >
+            <Ionicons name="time-outline" size={18} color={colors.primary} style={{ marginRight: 8 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.partialScanTitle, { color: colors.text }]}>
+                {t('result.analysisPartialTitle')}
+              </Text>
+              <Text style={[styles.partialScanSubtitle, { color: colors.textSecondary }]}>
+                {t('result.analysisPartialSubtitle')}
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* TruScore Card - v1.4 */}
         {truScore ? (
           <TouchableOpacity
@@ -1056,7 +1136,7 @@ function ResultScreenContent() {
               </View>
             </View>
             {/* Second line: Heading */}
-            <Text style={[styles.cardTitle, { color: colors.text }]}>TruScore</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>{productIdentity.publicScoreName}</Text>
           </View>
           
           {/* TruScore Display - v1.4 */}
@@ -2323,6 +2403,7 @@ function ResultScreenContent() {
           visible={recallAlertModalVisible}
           onClose={() => setRecallAlertModalVisible(false)}
           recalls={product.recalls}
+          signalClass="A"
         />
       )}
 
@@ -3417,6 +3498,24 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     borderWidth: 2,
+  },
+  partialScanBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  partialScanTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  partialScanSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   recallBannerContent: {
     flexDirection: 'row',

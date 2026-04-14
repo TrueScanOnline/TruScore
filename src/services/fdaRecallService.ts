@@ -344,7 +344,7 @@ async function searchFDARecalls(searchTerm: string): Promise<FoodRecall[]> {
     const response = await fetch(url, {
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
       },
     });
 

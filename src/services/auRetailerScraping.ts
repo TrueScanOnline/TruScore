@@ -21,7 +21,7 @@ async function fetchFromWoolworthsAU(barcode: string): Promise<Product | null> {
     
     const response = await fetchWithRateLimit(searchUrl, {
       headers: {
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
         'Accept': 'application/json',
       },
       signal: createTimeoutSignal(REQUEST_TIMEOUT),
@@ -109,7 +109,7 @@ async function fetchFromColes(barcode: string): Promise<Product | null> {
     
     const response = await fetchWithRateLimit(searchUrl, {
       headers: {
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
         'Accept': 'application/json',
       },
       signal: createTimeoutSignal(REQUEST_TIMEOUT),
@@ -200,7 +200,7 @@ async function fetchFromIGA(barcode: string): Promise<Product | null> {
     
     const response = await fetchWithRateLimit(searchUrl, {
       headers: {
-        'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+        'User-Agent': 'Rveel/1.0.0',
         'Accept': 'application/json',
       },
       signal: createTimeoutSignal(REQUEST_TIMEOUT),

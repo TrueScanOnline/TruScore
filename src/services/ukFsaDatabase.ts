@@ -8,7 +8,7 @@ import { logger } from '../utils/logger';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const FSA_API_BASE = 'https://api.ratings.food.gov.uk';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 /**
  * Fetch product from UK FSA database

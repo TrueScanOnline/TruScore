@@ -32,19 +32,25 @@ import { calculateEthicsPillar } from '../lib/truscoreEngine/pillars/ethicsPilla
  * It does NOT make any API calls or web scraping. All async data fetching happens in productService.ts
  * and is non-blocking (with timeouts).
  */
+export interface GenerateBannerAlertsOptions {
+  /** Override clock (golden harness / tests) */
+  now?: () => number;
+}
+
 export function generateBannerAlerts(
   product: Product | ProductWithTrustScore,
-  userPreferences: AlertsPreferences
+  userPreferences: AlertsPreferences,
+  options?: GenerateBannerAlertsOptions
 ): BannerAlertsData {
   const alerts: BannerAlert[] = [];
+  const nowMs = options?.now ? options.now() : Date.now();
 
   // 1. APP-GENERATED ALERTS
 
   // 1.1 Product Recalls
   // Time-bound: <12 months per spec (changed from 3 months to 12 months)
   if (product.recalls && product.recalls.length > 0) {
-    const now = Date.now();
-    const twelveMonthsAgo = now - (12 * 30 * 24 * 60 * 60 * 1000);
+    const twelveMonthsAgo = nowMs - (12 * 30 * 24 * 60 * 60 * 1000);
     
     const recentRecalls = product.recalls.filter(recall => {
       if (!recall.isActive) return false;
@@ -85,13 +91,15 @@ export function generateBannerAlerts(
       }
 
       alerts.push({
-        id: `recall-${product.barcode}-${Date.now()}`,
+        id: `recall-${product.barcode}-${nowMs}`,
         source: 'app',
         category: 'recall',
+        signalClass: 'A',
+        dedupeKey: `safety:recall:active:${product.barcode}`,
         title: 'Product Recall',
         message: `${recentRecalls.length} active recall(s) found. ${highestSeverity.recall.reason || 'Safety concern identified.'} Review official recall notices for safety details.`,
         severity,
-        timestamp: Date.now(),
+        timestamp: nowMs,
         actionUrl,
         sourceDetails: {
           organization,
@@ -114,7 +122,7 @@ export function generateBannerAlerts(
   const hasRecentProductRecalls = product.recalls && product.recalls.some((r: { isActive?: boolean; recallDate?: string }) => {
     if (!r.isActive) return false;
     const recallDate = r.recallDate ? new Date(r.recallDate).getTime() : 0;
-    const twelveMonthsAgo = Date.now() - (12 * 30 * 24 * 60 * 60 * 1000);
+    const twelveMonthsAgo = nowMs - (12 * 30 * 24 * 60 * 60 * 1000);
     return recallDate >= twelveMonthsAgo;
   });
   if (!hasRecentProductRecalls) {
@@ -130,11 +138,13 @@ export function generateBannerAlerts(
     if (brandWithRecallHistory) {
       const recallSearchUrl = 'https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts';
       alerts.push({
-        id: `brand-recall-history-${product.barcode}-${Date.now()}`,
+        id: `brand-recall-history-${product.barcode}-${nowMs}`,
         source: 'app',
         category: 'recall',
+        signalClass: 'B',
+        dedupeKey: `transparency:recall:brand-history:${product.barcode}`,
         title: 'Brand recall history',
-        message: `Our brand database flags ${brandWithRecallHistory} with a history of product recalls (transparency only; not part of the TruScore Ethics pillar BBFAW/KTC calculation). Tap for FDA recalls reference.`,
+        message: `Our brand database flags ${brandWithRecallHistory} with a history of product recalls (transparency only; not part of the Rveel Score Ethics pillar BBFAW/KTC calculation). Tap for FDA recalls reference.`,
         severity: 'medium',
         timestamp: Date.now(),
         actionUrl: recallSearchUrl,
@@ -155,6 +165,8 @@ export function generateBannerAlerts(
         id: `user-pref-animal-testing-${product.barcode}`,
         source: 'user_preference',
         category: 'animal_cruelty',
+        signalClass: 'C',
+        dedupeKey: `preference:animal_testing:${product.barcode}`,
         title: 'Animal Testing Detected',
         message: 'This product/brand is known for animal testing, which conflicts with your preferences.',
         severity: 'high',
@@ -179,6 +191,8 @@ export function generateBannerAlerts(
           id: `user-pref-palm-oil-${product.barcode}`,
           source: 'user_preference',
           category: 'palm_oil',
+          signalClass: 'C',
+          dedupeKey: `preference:palm_oil:${product.barcode}`,
           title: 'Unsustainable Palm Oil Detected',
           message: 'This product contains palm oil that may not be sustainably sourced, which conflicts with your preferences.',
           severity: 'medium',
@@ -206,6 +220,8 @@ export function generateBannerAlerts(
             id: `user-pref-israel-${product.barcode}`,
             source: 'user_preference',
             category: 'geopolitical',
+            signalClass: 'C',
+            dedupeKey: `preference:geopolitical:israel:${product.barcode}`,
             title: 'Israel-Linked Product',
             message: 'This product/brand is linked to Israel, which conflicts with your preferences.',
             severity: 'medium',
@@ -223,6 +239,8 @@ export function generateBannerAlerts(
             id: `user-pref-palestine-${product.barcode}`,
             source: 'user_preference',
             category: 'geopolitical',
+            signalClass: 'C',
+            dedupeKey: `preference:geopolitical:palestine:${product.barcode}`,
             title: 'Palestine-Linked Product',
             message: 'This product/brand is linked to Palestine, which conflicts with your preferences.',
             severity: 'medium',
@@ -243,6 +261,8 @@ export function generateBannerAlerts(
             id: `user-pref-china-${product.barcode}`,
             source: 'user_preference',
             category: 'geopolitical',
+            signalClass: 'C',
+            dedupeKey: `preference:geopolitical:china:${product.barcode}`,
             title: 'China-Linked Product',
             message: 'This product/brand is linked to China, which conflicts with your preferences.',
             severity: 'medium',
@@ -260,6 +280,8 @@ export function generateBannerAlerts(
             id: `user-pref-india-${product.barcode}`,
             source: 'user_preference',
             category: 'geopolitical',
+            signalClass: 'C',
+            dedupeKey: `preference:geopolitical:india:${product.barcode}`,
             title: 'India-Linked Product',
             message: 'This product/brand is linked to India, which conflicts with your preferences.',
             severity: 'medium',

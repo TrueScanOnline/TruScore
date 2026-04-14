@@ -49,7 +49,7 @@ export const PremiumFeatureDescriptions: Record<PremiumFeature, {
   },
   [PremiumFeature.ADVANCED_SEARCH]: {
     title: 'Advanced Search & Filters',
-    description: 'Filter by Trust Score, Eco-Score, NOVA, certifications, and more',
+    description: 'Filter by Rveel Score, Eco-Score, NOVA, certifications, and more',
     icon: 'search-outline',
   },
   [PremiumFeature.EXPORT_DATA]: {
@@ -61,12 +61,13 @@ export const PremiumFeatureDescriptions: Record<PremiumFeature, {
   // Tier 2: Enhanced Features
   [PremiumFeature.ENHANCED_INSIGHTS]: {
     title: 'Enhanced Insights',
-    description: 'Detailed TruScore breakdown, advanced nutrition analytics, and personalized recommendations',
+    description:
+      'Detailed Rveel Score breakdown and deeper nutrition views when data is available in the app (no separate “recommendation engine” today)',
     icon: 'analytics-outline',
   },
   [PremiumFeature.AD_FREE]: {
     title: 'Ad-Free Experience',
-    description: 'Enjoy TrueScan without advertisements',
+    description: 'Enjoy Rveel without advertisements',
     icon: 'close-circle-outline',
   },
   [PremiumFeature.ALLERGENS_ADDITIVES]: {
@@ -78,17 +79,17 @@ export const PremiumFeatureDescriptions: Record<PremiumFeature, {
   // Tier 3: Future Features
   [PremiumFeature.PRODUCT_COMPARISONS]: {
     title: 'Product Comparisons',
-    description: 'Compare multiple products side-by-side',
+    description: 'Side-by-side comparison — planned for a future update (not in the current build)',
     icon: 'git-compare-outline',
   },
   [PremiumFeature.PERSONALIZED_RECOMMENDATIONS]: {
     title: 'Personalized Recommendations',
-    description: 'Get product recommendations based on your preferences',
+    description: 'Preference-based suggestions — planned for a future update (not in the current build)',
     icon: 'bulb-outline',
   },
   [PremiumFeature.HISTORICAL_TRENDS]: {
     title: 'Historical Trends',
-    description: 'Track product changes and trends over time',
+    description: 'Track product changes over time — planned for a future update (not in the current build)',
     icon: 'trending-up-outline',
   },
   
@@ -109,8 +110,8 @@ export const PremiumFeatureDescriptions: Record<PremiumFeature, {
     icon: 'options-outline',
   },
   [PremiumFeature.BETTER_TRUST_SCORE]: {
-    title: 'Enhanced Trust Score',
-    description: 'Detailed trust score breakdown and analysis (merged into Enhanced Insights)',
+    title: 'Enhanced Rveel Score',
+    description: 'Detailed Rveel Score breakdown and analysis (merged into Enhanced Insights)',
     icon: 'shield-checkmark-outline',
   },
 };

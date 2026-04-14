@@ -1,8 +1,8 @@
 /**
- * TruScore Analysis Modal
+ * Rveel Score analysis modal
  * Shows exactly how each of the 4 pillars was scored: which database returned data,
  * query type (barcode/brand/parent/product_field), order queried, and each adjustment with value.
- * 100% matches the TruScore shown on the app.
+ * Matches the Rveel Score shown on the app.
  */
 
 import React from 'react';
@@ -37,13 +37,13 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
     <InfoModal
       visible={visible}
       onClose={onClose}
-      title="TruScore breakdown"
+      title="Rveel Score breakdown"
       icon="analytics-outline"
       iconColor={colors.primary}
     >
       <View style={styles.content}>
         <View style={[styles.totalRow, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}>
-          <Text style={[styles.totalLabel, { color: colors.text }]}>Total TruScore</Text>
+          <Text style={[styles.totalLabel, { color: colors.text }]}>Total Rveel Score</Text>
           <Text style={[styles.totalValue, { color: colors.primary }]}>{totalScore}/100</Text>
         </View>
         <Text style={[styles.meta, { color: colors.textTertiary }]}>Barcode: {barcode}</Text>

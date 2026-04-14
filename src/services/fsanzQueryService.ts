@@ -89,7 +89,7 @@ export async function queryFSANZByProductName(
           method: 'GET',
           headers: {
             'Accept': 'application/json',
-            'User-Agent': 'TrueScan-Mobile/1.0.0',
+            'User-Agent': 'Rveel-Mobile/1.0.0',
           },
         });
 

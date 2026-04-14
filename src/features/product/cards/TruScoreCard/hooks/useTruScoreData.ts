@@ -33,7 +33,7 @@ export function useTruScoreData({ barcode, product, autoFetch = true }: UseTruSc
         setError(null);
       } catch (err) {
         logger.error('Error calculating TruScore from product:', err);
-        setError(err instanceof Error ? err : new Error('Failed to calculate TruScore'));
+        setError(err instanceof Error ? err : new Error('Failed to calculate Rveel Score'));
         setLoading(false);
       }
       return;

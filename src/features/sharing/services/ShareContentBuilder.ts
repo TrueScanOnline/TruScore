@@ -7,6 +7,10 @@ import { buildShareUrl } from '../../../utils/shareUrl';
 import { logger } from '../../../utils/logger';
 import { extractManufacturingCountry, calculateEcoScore } from '../../../services/openFoodFacts';
 import { getNutritionShareBurnData, buildNutritionShareBodyLines } from '../../../utils/nutritionShareCopy';
+import { productIdentity } from '../../../config/productIdentity';
+
+const scoreName = productIdentity.publicScoreName;
+const appName = productIdentity.displayName;
 
 export class ShareContentBuilder {
   /**
@@ -74,7 +78,6 @@ export class ShareContentBuilder {
     platform: ShareOptions['platform']
   ): ShareContent {
     const score = truScore?.truscore ?? product.trust_score ?? 0;
-    const scoreLabel = this.getScoreLabel(score);
     const body = truScore?.breakdown.Body ?? product.trust_score_breakdown?.body ?? 0;
     const planet = truScore?.breakdown.Planet ?? product.trust_score_breakdown?.planet ?? 0;
     const ethics = truScore?.breakdown.Ethics ?? product.trust_score_breakdown?.ethics ?? 0;
@@ -88,36 +91,36 @@ export class ShareContentBuilder {
     let curiosityGap: string;
     
     if (score >= 80) {
-      hook = `🌟 ${productName} scored EXCELLENT!`;
-      curiosityGap = `This is one of the best products I've scanned. See why it got ${score}/100!`;
+      hook = `🌟 ${productName}`;
+      curiosityGap = `Strong ${scoreName} (${score}/100) — open the app for the four-pillar breakdown (Body, Planet, Ethics, Open).`;
     } else if (score >= 60) {
-      hook = `✅ Just scanned ${productName}`;
-      curiosityGap = `Here's what TruScore revealed - you'll want to see this!`;
+      hook = `✅ Scanned ${productName}`;
+      curiosityGap = `${scoreName} ${score}/100 — see nutrition, planet, ethics & transparency details in ${appName}.`;
     } else if (score >= 40) {
-      hook = `⚠️ ${productName} has some concerns`;
-      curiosityGap = `The TruScore breakdown will surprise you...`;
+      hook = `⚠️ ${productName}`;
+      curiosityGap = `${scoreName} ${score}/100 — review what drove the score in the app before you buy.`;
     } else {
-      hook = `❌ You need to see ${productName}'s score`;
-      curiosityGap = `This is why you should check products before buying!`;
+      hook = `📊 ${productName}`;
+      curiosityGap = `Lower ${scoreName} (${score}/100) — check the breakdown; scores are informational from public data.`;
     }
 
-    const title = `${emoji} ${productName} - TruScore ${score}/100`;
+    const title = `${emoji} ${productName} - ${scoreName} ${score}/100`;
     const message = `${hook}\n\n${curiosityGap}\n\n` +
-      `📊 TruScore: ${score}/100\n` +
+      `📊 ${scoreName}: ${score}/100\n` +
       `• Body: ${body}/25\n` +
       `• Planet: ${planet}/25\n` +
       `• Ethics: ${ethics}/25\n` +
       `• Open: ${open}/25\n\n` +
       `🔍 Tap to see the full breakdown\n` +
       `📱 Free app - no sign-up needed\n\n` +
-      `#TruScore #ProductScan #FoodScanner #HealthyEating #EthicalShopping #KnowWhatYouBuy`;
+      `#RveelScore #ProductScan #${appName} #FoodTransparency #KnowWhatYouBuy`;
 
     return {
       title,
       message,
       url: universalLink,
       imageUrl: product.image_url,
-      hashtags: ['TruScore', 'ProductScan', 'FoodScanner', 'HealthyEating', 'EthicalShopping', 'KnowWhatYouBuy'],
+      hashtags: ['RveelScore', 'ProductScan', appName, 'FoodTransparency', 'KnowWhatYouBuy'],
     };
   }
 
@@ -138,14 +141,14 @@ export class ShareContentBuilder {
       (latestRecall ? `🚨 Reason: ${latestRecall.reason}\n` : '') +
       (latestRecall?.recallDate ? `📅 Date: ${latestRecall.recallDate}\n` : '') +
       `\n🔍 Check if you have this product - tap for full details\n` +
-      `📱 Free TruScore app - scan any product for recalls\n\n` +
-      `#FoodRecall #ProductSafety #TruScore #FoodSafetyAlert #RecallAlert`;
+      `📱 Free ${appName} app - scan any product for recalls\n\n` +
+      `#FoodRecall #ProductSafety #RveelScore #FoodSafetyAlert #RecallAlert`;
 
     return {
       title,
       message,
       url: universalLink,
-      hashtags: ['FoodRecall', 'ProductSafety', 'TruScore', 'FoodSafetyAlert', 'RecallAlert'],
+      hashtags: ['FoodRecall', 'ProductSafety', 'RveelScore', 'FoodSafetyAlert', 'RecallAlert'],
     };
   }
 
@@ -177,13 +180,13 @@ export class ShareContentBuilder {
     const title = `Country of Manufacture: ${productName}`;
     const message = `${title}\n\n` +
       `Manufactured in: ${country}\n\n` +
-      `🔍 Tap to view full details in TruScore`;
+      `🔍 Tap to view full details in ${appName}`;
 
     return {
       title,
       message,
       url: universalLink,
-      hashtags: ['CountryOfOrigin', 'Manufacturing', 'TruScore'],
+      hashtags: ['CountryOfOrigin', 'Manufacturing', 'RveelScore'],
     };
   }
 
@@ -196,17 +199,17 @@ export class ShareContentBuilder {
   ): ShareContent {
     const score = truScore?.truscore ?? product.trust_score ?? 0;
 
-    const title = `⚠️ Low TruScore Alert: ${productName}`;
+    const title = `⚠️ Low ${scoreName} alert: ${productName}`;
     const message = `${title}\n\n` +
-      `TruScore: ${score}/100\n\n` +
-      `This product has a low trust score. Check the details to understand why.\n\n` +
-      `🔍 Tap to view breakdown in TruScore`;
+      `${scoreName}: ${score}/100\n\n` +
+      `This product has a low ${scoreName}. Check the details to understand why.\n\n` +
+      `🔍 Tap to view breakdown in ${appName}`;
 
     return {
       title,
       message,
       url: universalLink,
-      hashtags: ['LowTruScore', 'ProductAlert', 'TruScore'],
+      hashtags: ['LowRveelScore', 'ProductAlert', 'RveelScore'],
     };
   }
 
@@ -221,19 +224,19 @@ export class ShareContentBuilder {
     const emoji = score >= 80 ? '🌟' : score >= 60 ? '✅' : score >= 40 ? '⚠️' : '❌';
 
     // VIRAL HOOK - curiosity and discovery
-    const title = `${emoji} Discovered ${productName} on TruScore`;
+    const title = `${emoji} Discovered ${productName} on ${appName}`;
     const message = `🔍 Just scanned ${productName}!\n\n` +
-      `TruScore: ${score}/100\n\n` +
+      `${scoreName}: ${score}/100\n\n` +
       `See nutrition, ingredients, sustainability & more\n` +
       `📱 Free app - scan any product instantly\n\n` +
-      `#TruScore #ProductScan #FoodScanner #KnowWhatYouBuy #ProductDiscovery`;
+      `#RveelScore #ProductScan #${appName} #KnowWhatYouBuy #ProductDiscovery`;
 
     return {
       title,
       message,
       url: universalLink,
       imageUrl: product.image_url,
-      hashtags: ['TruScore', 'ProductScan', 'FoodScanner', 'KnowWhatYouBuy', 'ProductDiscovery'],
+      hashtags: ['RveelScore', 'ProductScan', appName, 'KnowWhatYouBuy', 'ProductDiscovery'],
     };
   }
 
@@ -249,16 +252,16 @@ export class ShareContentBuilder {
     const message = `Interesting insights about ${productName}:\n\n` +
       (insights.length > 0 
         ? insights.slice(0, 3).map(insight => `• ${insight.reason}`).join('\n') + '\n\n'
-        : 'Check out the insights in TruScore!\n\n') +
-      `🔍 Tap to view insights in TruScore\n\n` +
-      `#TruScore #FoodInsights #ProductScan`;
+        : `Check out the insights in ${appName}!\n\n`) +
+      `🔍 Tap to view insights in ${appName}\n\n` +
+      `#RveelScore #FoodInsights #ProductScan`;
 
     return {
       title,
       message,
       url: universalLink,
       imageUrl: product.image_url,
-      hashtags: ['TruScore', 'FoodInsights', 'ProductScan'],
+      hashtags: ['RveelScore', 'FoodInsights', 'ProductScan'],
     };
   }
 
@@ -283,16 +286,16 @@ export class ShareContentBuilder {
     const title = `${status}: ${productName}`;
     const message = `${hook}\n\n` +
       `🌍 Palm oil production impacts rainforests & wildlife\n` +
-      `🔍 See full sustainability breakdown in TruScore\n` +
+      `🔍 See full sustainability breakdown in ${appName}\n` +
       `📱 Free app - scan any product instantly\n\n` +
-      `#TruScore #PalmOil #SustainableShopping #ProductScan #Deforestation #EthicalShopping`;
+      `#RveelScore #PalmOil #Sustainability #ProductScan #Deforestation`;
 
     return {
       title,
       message,
       url: universalLink,
       imageUrl: product.image_url,
-      hashtags: ['TruScore', 'PalmOil', 'SustainableShopping', 'ProductScan', 'Deforestation', 'EthicalShopping'],
+      hashtags: ['RveelScore', 'PalmOil', 'Sustainability', 'ProductScan', 'Deforestation'],
     };
   }
 
@@ -316,7 +319,7 @@ export class ShareContentBuilder {
       message,
       url: universalLink,
       imageUrl: product.image_url,
-      hashtags: ['TruScore', 'Nutrition', 'ProductScan'],
+      hashtags: ['RveelScore', 'Nutrition', 'ProductScan'],
     };
   }
 
@@ -331,15 +334,15 @@ export class ShareContentBuilder {
     
     const title = `🧪 Ingredients: ${productName}`;
     const message = `Ingredients in ${productName}:\n\n${preview}\n\n` +
-      `🔍 Tap to see full ingredients list in TruScore\n\n` +
-      `#TruScore #Ingredients #ProductScan #FoodTransparency`;
+      `🔍 Tap to see full ingredients list in ${appName}\n\n` +
+      `#RveelScore #Ingredients #ProductScan #FoodTransparency`;
 
     return {
       title,
       message,
       url: universalLink,
       imageUrl: product.image_url,
-      hashtags: ['TruScore', 'Ingredients', 'ProductScan', 'FoodTransparency'],
+      hashtags: ['RveelScore', 'Ingredients', 'ProductScan', 'FoodTransparency'],
     };
   }
 
@@ -355,15 +358,15 @@ export class ShareContentBuilder {
     
     const title = `⚙️ Processing Level: ${productName}`;
     const message = `${productName} - ${novaLabel} (NOVA ${novaGroup || '?'})\n\n` +
-      `📊 Tap to learn about processing levels in TruScore\n\n` +
-      `#TruScore #NOVA #FoodProcessing #ProductScan`;
+      `📊 Tap to learn about processing levels in ${appName}\n\n` +
+      `#RveelScore #NOVA #FoodProcessing #ProductScan`;
 
     return {
       title,
       message,
       url: universalLink,
       imageUrl: product.image_url,
-      hashtags: ['TruScore', 'NOVA', 'FoodProcessing', 'ProductScan'],
+      hashtags: ['RveelScore', 'NOVA', 'FoodProcessing', 'ProductScan'],
     };
   }
 
@@ -389,15 +392,15 @@ export class ShareContentBuilder {
       message += `Additives: ${additives.length} detected\n\n`;
     }
     
-    message += `🔍 Tap to view full details in TruScore\n\n` +
-      `#TruScore #Allergens #Additives #ProductScan #FoodSafety`;
+    message += `🔍 Tap to view full details in ${appName}\n\n` +
+      `#RveelScore #Allergens #Additives #ProductScan #FoodSafety`;
 
     return {
       title,
       message,
       url: universalLink,
       imageUrl: product.image_url,
-      hashtags: ['TruScore', 'Allergens', 'Additives', 'ProductScan', 'FoodSafety'],
+      hashtags: ['RveelScore', 'Allergens', 'Additives', 'ProductScan', 'FoodSafety'],
     };
   }
 
@@ -420,23 +423,16 @@ export class ShareContentBuilder {
       `🌍 Environmental impact score based on:\n` +
       (ecoScore?.co2_total ? `• CO₂: ${ecoScore.co2_total.toFixed(1)} kg CO₂e/kg\n` : '') +
       (ecoScore?.water_footprint ? `• Water: ${ecoScore.water_footprint.toFixed(0)} L/kg\n` : '') +
-      `\n🔍 Tap to check full Eco-Score details in TruScore\n\n` +
-      `#TruScore #EcoScore #Sustainability #EnvironmentalImpact #ProductScan`;
+      `\n🔍 Tap to check full Eco-Score details in ${appName}\n\n` +
+      `#RveelScore #EcoScore #Sustainability #EnvironmentalImpact #ProductScan`;
     
     return {
       title,
       message,
       url: universalLink,
       imageUrl: product.image_url,
-      hashtags: ['TruScore', 'EcoScore', 'Sustainability', 'EnvironmentalImpact', 'ProductScan'],
+      hashtags: ['RveelScore', 'EcoScore', 'Sustainability', 'EnvironmentalImpact', 'ProductScan'],
     };
-  }
-
-  private static getScoreLabel(score: number): string {
-    if (score >= 80) return 'Excellent';
-    if (score >= 60) return 'Good';
-    if (score >= 40) return 'Fair';
-    return 'Poor';
   }
 
   /**

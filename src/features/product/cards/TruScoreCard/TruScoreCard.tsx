@@ -13,6 +13,7 @@ import { TruScoreCardError } from './TruScoreCardError';
 import TruScore from '../../../../components/TruScore';
 import ConfidenceBadge from '../../../../components/ConfidenceBadge';
 import TruScoreInfoModal from '../../../../components/TrustScoreInfoModal';
+import { productIdentity } from '../../../../config/productIdentity';
 import ExplainerModal from '../../../../components/ExplainerModal';
 import { generateProductFlags, ProductFlag } from '../../../../utils/productFlags';
 import { extractPalmOilAnalysis } from '../../../../services/openFoodFacts';
@@ -157,7 +158,7 @@ function TruScoreCardContent({ barcode, product, onShare, premiumFeatures }: Tru
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderLeft}>
               <Ionicons name="shield" size={24} color={colors.primary} />
-              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>TruScore</Text>
+              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>{productIdentity.publicScoreName}</Text>
               <TouchableOpacity
                 onPress={() => setModalVisible(true)}
                 style={styles.infoButton}

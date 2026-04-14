@@ -58,7 +58,8 @@ export const BODY_HIGHLIGHTS: HighlightDefinition[] = [
     type: 'green',
     severity: 'high',
     title: 'Excellent nutrient balance',
-    description: 'Balanced nutrition profile boosts health—low sugar/salt/fat, high in fibre/protein.',
+    description:
+      'Nutri-Score A: favourable nutrient profile per public Nutri-Score rules—typically lower sugar/salt/sat. fat and more fibre/protein where data supports it. Informational, not personal dietary advice.',
     externalResource: 'https://world.openfoodfacts.org/nutri-score',
     scoreValue: 7,
     trigger: (product) => product.nutriscore_grade?.toLowerCase() === 'a',
@@ -72,7 +73,8 @@ export const BODY_HIGHLIGHTS: HighlightDefinition[] = [
     type: 'green',
     severity: 'medium',
     title: 'Good nutrient balance',
-    description: 'Solid nutrient profile and overall good for your health.',
+    description:
+      'Nutri-Score B: generally favourable nutrient profile per Nutri-Score methodology. Useful for comparing similar products; not a personal health verdict.',
     externalResource: 'https://world.openfoodfacts.org/nutri-score',
     scoreValue: 3,
     trigger: (product) => product.nutriscore_grade?.toLowerCase() === 'b',
@@ -126,7 +128,8 @@ export const BODY_HIGHLIGHTS: HighlightDefinition[] = [
     type: 'green',
     severity: 'medium',
     title: 'Unprocessed or minimally processed',
-    description: 'Whole foods—natural, healthiest choice.',
+    description:
+      'NOVA 1: unprocessed or minimally processed foods per Open Food Facts NOVA. Often simpler ingredient lists; describes processing class, not a personal “best diet” choice.',
     externalResource: 'https://world.openfoodfacts.org/nova',
     scoreValue: 3,
     trigger: (product) => product.nova_group === 1,
@@ -165,7 +168,8 @@ export const BODY_HIGHLIGHTS: HighlightDefinition[] = [
     type: 'red',
     severity: 'high',
     title: 'Ultra-processed foods',
-    description: 'Engineered foods linked to obesity/gut issues. Limit your intake.',
+    description:
+      'NOVA 4: ultra-processed per OFF NOVA. Population research links high ultra-processed intake with various health concerns—see Open Food Facts for context; not individual medical guidance.',
     externalResource: 'https://world.openfoodfacts.org/nova',
     scoreValue: -6,
     trigger: (product) => product.nova_group === 4,
@@ -198,7 +202,8 @@ export const BODY_HIGHLIGHTS: HighlightDefinition[] = [
     type: 'red',
     severity: 'medium',
     title: 'Contains additives that are better avoided.',
-    description: 'Some additives are widely recommended for avoidance due to significant health concerns, including links to cancer, cardiovascular problems, and other health issues.',
+    description:
+      'Some additives are flagged “avoid” in public additive databases used by the app; authorities and studies vary by substance—see Open Food Facts additive pages for sources.',
     externalResource: 'https://world.openfoodfacts.org/additives',
     scoreValue: -3,
     trigger: (product) => {
@@ -246,7 +251,8 @@ export const BODY_HIGHLIGHTS: HighlightDefinition[] = [
     type: 'red',
     severity: 'high',
     title: 'High concern ingredients and/or processing.',
-    description: 'Indicates significant concerns related to potential health hazards from nutrition, ingredients, and processing including use of pesticides. Limit risk by choosing organic options.',
+    description:
+      'Elevated concern in public ingredient/processing signals (e.g. pesticides/additives) used by the app’s rules. Organic or simpler formulations may reduce some exposures—informational; check label and official sources.',
     externalResource: 'https://world.openfoodfacts.org/additives',
     scoreValue: -5,
     trigger: (product) => {
@@ -262,7 +268,8 @@ export const BODY_HIGHLIGHTS: HighlightDefinition[] = [
     type: 'red',
     severity: 'high',
     title: 'Contains known carcinogen.',
-    description: 'Proven cancer risk. Steer clear if you can or absolutely minimise intake.',
+    description:
+      'IARC Group 1 (known human carcinogen) where applicable additive/substance is present—see authoritative monographs and the product label; not a substitute for professional advice.',
     externalResource: 'https://world.openfoodfacts.org/additives',
     scoreValue: -10,
     trigger: (product) => {

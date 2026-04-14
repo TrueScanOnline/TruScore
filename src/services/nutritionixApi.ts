@@ -71,7 +71,7 @@ export async function fetchProductFromNutritionix(barcode: string): Promise<Prod
         'x-app-key': APP_KEY,
         'x-remote-user-id': '0',
         'Accept': 'application/json',
-        'User-Agent': 'TrueScan-FoodScanner/1.0',
+        'User-Agent': 'Rveel/1.0',
       },
     });
 

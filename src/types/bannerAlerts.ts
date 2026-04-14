@@ -22,10 +22,17 @@ export type AlertCategory =
   | 'geopolitical' // Geopolitical preferences
   | 'other'; // Other concerns
 
+/** Phase 4/5 Signals model — safety (A), transparency (B), preference (C), premium (D) */
+export type BannerSignalClass = 'A' | 'B' | 'C' | 'D';
+
 export interface BannerAlert {
   id: string; // Unique identifier for the alert
   source: AlertSource; // APP or user preference
   category: AlertCategory; // Type of alert
+  /** Maps to ProductScanResult signal buckets */
+  signalClass?: BannerSignalClass;
+  /** Stable key for dedupe / golden baselines (no timestamps) */
+  dedupeKey?: string;
   title: string; // Alert title (e.g., "Product Recall", "Animal Cruelty Concerns")
   message: string; // Alert message/description
   severity: 'high' | 'medium' | 'low'; // Alert severity

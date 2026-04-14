@@ -125,19 +125,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return `🌟 ${productNamePlain} scored excellent`;
     }
     if (trustScore >= 60) {
-      return `✅ TruScore for ${productNamePlain}`;
+      return `✅ Rveel Score for ${productNamePlain}`;
     }
     if (trustScore >= 40) {
-      return `⚠️ See the TruScore for ${productNamePlain}`;
+      return `⚠️ See the Rveel Score for ${productNamePlain}`;
     }
-    return `❌ Low TruScore: ${productNamePlain}`;
+    return `❌ Low Rveel Score: ${productNamePlain}`;
   };
 
   const defaultHeadline = getViralHeadline();
   const defaultMetaDescription =
     trustScore !== null && trustScore !== undefined
-      ? `${scoreInfo.viralMessage} TruScore ${trustScore}/100 — open the free TruScore app for the full breakdown.`
-      : `Discover TruScore, nutrition, and sourcing for ${productNamePlain} — free app, no sign-up required.`;
+      ? `${scoreInfo.viralMessage} Rveel Score ${trustScore}/100 — open the free Rveel app for the full breakdown.`
+      : `Discover Rveel Score, nutrition, and sourcing for ${productNamePlain} — free app, no sign-up required.`;
 
   const landing = buildLandingPresentation({
     ctx: ctxParam,
@@ -183,12 +183,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   <!-- iOS Universal Links -->
   <meta property="al:ios:app_store_id" content="${APP_STORE_ID}">
-  <meta property="al:ios:app_name" content="TruScore">
+  <meta property="al:ios:app_name" content="Rveel">
   <meta property="al:ios:url" content="${deepLink}">
   
   <!-- Android App Links -->
   <meta property="al:android:package" content="com.truescan.foodscanner">
-  <meta property="al:android:app_name" content="TruScore">
+  <meta property="al:android:app_name" content="Rveel">
   <meta property="al:android:url" content="${deepLink}">
   
   <style>
@@ -770,7 +770,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 <body>
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
-    <div class="loading-text">Opening TruScore...</div>
+    <div class="loading-text">Opening Rveel...</div>
   </div>
 
   <div class="container">
@@ -781,7 +781,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <div class="viral-message">${heroViralHtml}</div>
       <div class="social-proof">
         <span class="social-proof-icon">📱</span>
-        <span>Free app — scan any barcode for TruScore, nutrition, and recalls</span>
+        <span>Free app — scan any barcode for Rveel Score, nutrition, and recalls</span>
       </div>
     </div>
     
@@ -807,7 +807,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <div class="truScore-card">
         <div class="truScore-emoji">${scoreInfo.emoji}</div>
         <div class="truScore-number">${trustScore}</div>
-        <div class="truScore-label">TruScore ${scoreInfo.label}</div>
+        <div class="truScore-label">Rveel Score ${scoreInfo.label}</div>
         ${trustScoreBreakdown ? `
         <div style="margin-top: 8px; font-size: 14px; color: #6c757d; font-weight: 600;">See the full breakdown in the app</div>
         <div class="truScore-breakdown">
@@ -836,21 +836,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ` : `
       <div class="truScore-card">
         <div class="truScore-emoji">🔍</div>
-        <div class="truScore-label" style="font-size: 22px; margin-top: 24px; color: #667eea;">Scan to See TruScore</div>
+        <div class="truScore-label" style="font-size: 22px; margin-top: 24px; color: #667eea;">Scan to see Rveel Score</div>
         <div style="color: #6c757d; margin-top: 12px; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">Get detailed product information, nutrition facts, and sustainability data</div>
         <div style="padding: 12px; background: rgba(255, 255, 255, 0.6); border-radius: 12px; font-size: 13px; color: #495057;">
-          📱 <strong>Free app</strong> - Scan any barcode to see its complete TruScore breakdown
+          📱 <strong>Free app</strong> - Scan any barcode to see its complete Rveel Score breakdown
         </div>
       </div>
       `}
     </div>
     
     <div class="features">
-      <div class="features-title">What you get with TruScore</div>
+      <div class="features-title">What you get with Rveel</div>
       <div class="features-grid">
         <div class="feature-item">
           <div class="feature-icon">📊</div>
-          <div class="feature-label">TruScore Rating</div>
+          <div class="feature-label">Rveel Score</div>
         </div>
         <div class="feature-item">
           <div class="feature-icon">🥗</div>
@@ -881,7 +881,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     <div class="cta-section">
       <div class="cta-title">${trustScore !== null && trustScore !== undefined ? 'See the Full Breakdown' : 'Discover What\'s Inside'}</div>
-      <div class="cta-subtitle">${trustScore !== null && trustScore !== undefined ? 'Get detailed nutrition, ingredients, sustainability, and safety data' : 'Scan any product to see its complete TruScore breakdown'}</div>
+      <div class="cta-subtitle">${trustScore !== null && trustScore !== undefined ? 'Get detailed nutrition, ingredients, sustainability, and safety data' : 'Scan any product to see its complete Rveel Score breakdown'}</div>
       <div style="background: rgba(255, 255, 255, 0.9); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
         <div style="font-size: 14px; color: #6c757d; margin-bottom: 8px;">✨ Free to download • No sign-up required</div>
         <div style="font-size: 13px; color: #95a5a6;">Built for transparency — your data stays on your device</div>
@@ -889,11 +889,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <div class="app-buttons">
         <a href="${appStoreLink}" class="app-button" id="appStoreButton" onclick="tryOpenApp(event, 'ios')">
           <span class="app-button-icon">📱</span>
-          <span class="app-button-text">Get TruScore Free</span>
+          <span class="app-button-text">Get Rveel — free</span>
         </a>
         <a href="${playStoreLink}" class="app-button secondary" id="playStoreButton" onclick="tryOpenApp(event, 'android')">
           <span class="app-button-icon">🤖</span>
-          <span class="app-button-text">Get TruScore Free</span>
+          <span class="app-button-text">Get Rveel — free</span>
         </a>
       </div>
       <div style="text-align: center; margin-top: 16px; font-size: 12px; color: #95a5a6;">

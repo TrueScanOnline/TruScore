@@ -36,6 +36,10 @@
     "test:pillar:open": "jest src/__tests__/unit/lib/pillars/openPillar.test.ts",
     "test:pillars": "jest src/__tests__/unit/lib/pillars/",
     "test:share": "jest src/__tests__/unit/utils/buildShareUrl.test.ts",
+    "test:golden": "jest src/__tests__/golden/scanOutputContract.golden.test.ts",
+    "test:phase5b": "jest src/__tests__/golden/scanOutputContract.golden.test.ts src/__tests__/unit/utils/deriveScanTerminalState.test.ts src/__tests__/unit/utils/scanResultPresentation.test.ts",
+    "audit:phase1-names": "node scripts/export-phase1-name-audit.mjs",
+    "export:phase2-claim-registry": "node scripts/generate-phase2-claim-registry.mjs",
     "test:e2e:ethics-open-backend": "ts-node --project scripts/tsconfig.json scripts/e2eEthicsOpenBackendVerification.ts",
     "test:e2e:user-submission-cards": "ts-node --project scripts/tsconfig.json scripts/e2e-user-submission-cards.ts",
     "test:csv-database": "jest src/__tests__/unit/services/csvDatabaseService.test.ts",
@@ -142,11 +146,10 @@
     "mammoth": "^1.11.0",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
-    "xlsx": "^0.18.5"
+    "xlsx": "npm:@e965/xlsx@0.20.3"
   },
   "resolutions": {
     "react-native": "0.79.6",
     "baseline-browser-mapping": "2.10.17"
-  },
-  "packageManager": "yarn@1.22.19"
+  }
 }

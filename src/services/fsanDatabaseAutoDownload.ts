@@ -84,7 +84,7 @@ export async function autoDownloadFSANZDatabase(country: 'AU' | 'NZ'): Promise<{
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'TrueScan-Mobile/1.0.0',
+          'User-Agent': 'Rveel-Mobile/1.0.0',
           'X-Requested-With': 'XMLHttpRequest',
         },
         // Don't include Content-Type for GET requests - can cause issues

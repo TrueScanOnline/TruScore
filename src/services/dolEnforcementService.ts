@@ -56,7 +56,7 @@ export async function checkDOLViolations(
       const response = await fetch(url, {
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+          'User-Agent': 'Rveel/1.0.0',
         },
         signal: (() => {
           const controller = new AbortController();

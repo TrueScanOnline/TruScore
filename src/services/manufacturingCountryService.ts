@@ -704,7 +704,7 @@ export async function submitToOpenFoodFacts(
   );
   return {
     success: false,
-    message: 'Manufacturing country is stored on TrueScan only.',
+    message: 'Manufacturing country is stored on Rveel only.',
   };
 }
 

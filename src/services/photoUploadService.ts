@@ -198,13 +198,13 @@ export async function uploadProductPhoto(
       results.success = true;
       results.message = 'Photo uploaded successfully!';
       if (results.openFoodFactsUrl && results.vercelUrl) {
-        results.message = 'Photo uploaded to Open Food Facts and TrueScan storage!';
+        results.message = 'Photo uploaded to Open Food Facts and Rveel storage!';
       } else if (results.openFoodFactsUrl) {
         results.message = 'Photo uploaded to Open Food Facts!';
       } else if (results.vercelUrl) {
         results.message = proprietaryOnly
-          ? 'Photo saved (TrueScan storage).'
-          : 'Photo uploaded to TrueScan storage!';
+          ? 'Photo saved (Rveel storage).'
+          : 'Photo uploaded to Rveel storage!';
       }
       
       powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `✅ Photo upload COMPLETE`, {

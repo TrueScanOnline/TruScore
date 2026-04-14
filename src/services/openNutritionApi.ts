@@ -6,7 +6,7 @@ import { Product } from '../types/product';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { logger } from '../utils/logger';
 
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 // Note: OpenNutrition may use Open Food Facts as backend or have separate API
 // For now, this is a placeholder that can be enhanced when API details are available

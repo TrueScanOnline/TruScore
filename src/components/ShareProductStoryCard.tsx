@@ -48,7 +48,7 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
     return (
       <View ref={ref} collapsable={false} style={[styles.root, { backgroundColor: surfaceColor }]}>
         <View style={[styles.headerBand, { backgroundColor: brandColor }]}>
-          <Text style={styles.headerText}>TrueScan</Text>
+          <Text style={styles.headerText}>Rveel</Text>
         </View>
         <View style={styles.imageWrap}>
           {imageUrl ? (
@@ -61,7 +61,7 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
           {productName}
         </Text>
         <View style={[styles.scoreRow, { borderColor: brandColor }]}>
-          <Text style={[styles.scoreLabel, { color: textSecondary }]}>TruScore</Text>
+          <Text style={[styles.scoreLabel, { color: textSecondary }]}>Rveel Score</Text>
           <Text style={[styles.scoreValue, { color: brandColor }]}>{scoreLabel}</Text>
         </View>
         <Text style={[styles.link, { color: textSecondary }]} numberOfLines={2}>

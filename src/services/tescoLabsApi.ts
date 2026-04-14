@@ -7,7 +7,7 @@ import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { logger } from '../utils/logger';
 
 const TESCO_API_BASE = 'https://dev.tescolabs.com/grocery/products';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 // Note: Tesco Labs API requires free API key registration
 // Get your key at: https://dev.tescolabs.com/

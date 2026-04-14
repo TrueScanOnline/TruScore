@@ -45,7 +45,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
       iconColor={colors.primary}
     >
       <Text style={[styles.description, { color: colors.textSecondary }]}>
-        {t('infoModal.trustScore.description') || 'TruScore is a comprehensive rating (0-100) based entirely on recognized public systems. Four equal pillars (25 points each): Body, Planet, Ethics, and Open.'}
+        {t('infoModal.trustScore.description') || 'Rveel Score is a comprehensive rating (0-100) based entirely on recognized public systems. Four equal pillars (25 points each): Body, Planet, Ethics, and Open.'}
       </Text>
 
       <View style={styles.section}>
@@ -66,7 +66,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           </View>
           <View style={styles.formulaContent}>
             <Text style={[styles.formulaText, { color: colors.text }]}>
-              {t('infoModal.trustScore.formula') || 'TruScore = Body (25) + Planet (25) + Ethics (25) + Open (25) = 0-100'}
+              {t('infoModal.trustScore.formula') || 'Rveel Score = Body (25) + Planet (25) + Ethics (25) + Open (25) = 0-100'}
             </Text>
             <Text style={[styles.formulaSubtext, { color: colors.textSecondary }]}>
               100% based on recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels)
@@ -112,10 +112,10 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           </View>
         </View>
 
-        {/* Calculation Steps - TruScore Methodology */}
+        {/* Calculation steps — Rveel Score methodology */}
         <View style={[styles.stepsBox, { backgroundColor: colors.surface }]}>
           <Text style={[styles.stepsTitle, { color: colors.text }]}>
-            {t('infoModal.trustScore.calculationSteps') || 'How TruScore is Calculated'}
+            {t('infoModal.trustScore.calculationSteps') || 'How Rveel Score is calculated'}
           </Text>
           <View style={styles.stepItem}>
             <View style={[styles.stepNumber, { backgroundColor: '#4dd09f' }]}>
@@ -154,7 +154,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>5</Text>
             </View>
             <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.step5') || 'Sum all four pillars: TruScore = Body + Planet + Ethics + Open (0-100 total)'}
+              {t('infoModal.trustScore.step5') || 'Sum all four pillars: Rveel Score = Body + Planet + Ethics + Open (0-100 total)'}
             </Text>
           </View>
         </View>
@@ -255,7 +255,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           <View style={[styles.noteBox, { backgroundColor: colors.surface, marginTop: 12 }]}>
             <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
             <Text style={[styles.noteText, { color: colors.textSecondary, fontSize: 13, lineHeight: 18 }]}>
-              {t('infoModal.trustScore.confidenceScoreNote') || 'You\'ll see the confidence score as a badge next to the TruScore on the product page. This helps you know how much you can trust the information shown. Higher confidence means the data is more reliable and complete.'}
+              {t('infoModal.trustScore.confidenceScoreNote') || 'You\'ll see the confidence score as a badge next to the Rveel Score on the product page. This helps you know how much you can trust the information shown. Higher confidence means the data is more reliable and complete.'}
             </Text>
           </View>
         </View>
@@ -266,7 +266,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           {t('infoModal.trustScore.categories')}
         </Text>
 
-        {/* Planet - TruScore Pillar #2 */}
+        {/* Planet — Rveel Score pillar #2 */}
         <View style={[styles.categoryItem, { backgroundColor: colors.surface }]}>
           <View style={[styles.categoryIconContainer, { backgroundColor: '#16a085' + '30' }]}>
             <Ionicons name="leaf" size={24} color="#16a085" />
@@ -306,7 +306,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           </View>
         </View>
 
-        {/* Ethics - TruScore Pillar #3 */}
+        {/* Ethics — Rveel Score pillar #3 */}
         <View style={[styles.categoryItem, { backgroundColor: colors.surface }]}>
           <View style={[styles.categoryIconContainer, { backgroundColor: '#ff6b6b' + '30' }]}>
             <Ionicons name="heart" size={24} color="#ff6b6b" />
@@ -352,7 +352,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           </View>
         </View>
 
-        {/* Body - TruScore Pillar #1 */}
+        {/* Body — Rveel Score pillar #1 */}
         <View style={[styles.categoryItem, { backgroundColor: colors.surface }]}>
           <View style={[styles.categoryIconContainer, { backgroundColor: '#4dd09f' + '30' }]}>
             <Ionicons name="shield" size={24} color="#4dd09f" />
@@ -518,10 +518,10 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          {t('infoModal.trustScore.scoring') || 'TruScore Ranges'}
+          {t('infoModal.trustScore.scoring') || 'Rveel Score ranges'}
         </Text>
         <Text style={[styles.sectionText, { color: colors.textSecondary, marginBottom: 16 }]}>
-          {t('infoModal.trustScore.scoringDescription') || 'TruScore ranges from 0-100, with each of the 4 pillars contributing 0-25 points. Higher scores indicate better overall product quality across all dimensions.'}
+          {t('infoModal.trustScore.scoringDescription') || 'Rveel Score ranges from 0-100, with each of the 4 pillars contributing 0-25 points. Higher scores indicate better overall product quality across all dimensions.'}
         </Text>
         
         <View style={styles.scoreItem}>
@@ -829,7 +829,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             {t('infoModal.trustScore.transparencyTitle') || '100% Transparent Methodology'}
           </Text>
           <Text style={[styles.noteText, { color: colors.textSecondary }]}>
-            {t('infoModal.trustScore.note') || 'TruScore v1.4 is calculated based on available product data from Open Food Facts, Open Beauty Facts, and UPCitemdb. The score uses recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) combined with comprehensive databases (400+ E-number additives, 500+ brand/company database). Additive penalties are weighted by safety rating (safe: -0.5, caution: -1.5, avoid: -3). Brand detection uses parent-subsidiary relationships for accurate cruel parent identification. When Nutri-Score or Eco-Score are missing, scores are calculated from available data with appropriate baselines (25 points base).'}
+            {t('infoModal.trustScore.note') || 'Rveel Score v1.4 is calculated based on available product data from Open Food Facts, Open Beauty Facts, and UPCitemdb. The score uses recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) combined with comprehensive databases (400+ E-number additives, 500+ brand/company database). Additive penalties are weighted by safety rating (safe: -0.5, caution: -1.5, avoid: -3). Brand detection uses parent-subsidiary relationships for accurate cruel parent identification. When Nutri-Score or Eco-Score are missing, scores are calculated from available data with appropriate baselines (25 points base).'}
           </Text>
           <Text style={[styles.noteText, { color: colors.textSecondary, marginTop: 8 }]}>
             {t('infoModal.trustScore.dataSourceNote') || 'Data Sources: Open Food Facts (world.openfoodfacts.org), Open Beauty Facts (world.openbeautyfacts.org), UPCitemdb (api.upcitemdb.com), Barcode Spider, FDA Food Recall API (fda.gov/food/recalls). All calculations are transparent and verifiable.'}

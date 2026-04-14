@@ -7,7 +7,7 @@ import { logger } from '../utils/logger';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const EAN_SEARCH_API_BASE = 'https://api.ean-search.org/api';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 // Note: EAN-Search requires API access token
 // Get your token at: https://www.ean-search.org/

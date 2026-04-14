@@ -10,7 +10,7 @@ import { RootStackParamList } from './_layout';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 /**
- * High-level methodology explainer for TruScan / TruScore.
+ * High-level methodology explainer for Rveel / Rveel Score.
  * Text is intentionally verbose so legal counsel can red-line and adjust.
  */
 export default function MethodologyScreen() {
@@ -25,7 +25,7 @@ export default function MethodologyScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>
-          {t('methodology.title') || 'How TruScan Scores Work'}
+          {t('methodology.title') || 'How Rveel Score works'}
         </Text>
         <View style={styles.headerPlaceholder} />
       </View>
@@ -33,7 +33,7 @@ export default function MethodologyScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <Text style={[styles.intro, { color: colors.textSecondary }]}>
           {t('methodology.intro') ||
-            'TruScan calculates a 0–100 TruScore for each product based on public data sources and a ' +
+            'Rveel calculates a 0–100 Rveel Score for each product based on public data sources and a ' +
               'transparent, rule-based scoring framework. The score is an interpretive opinion intended to help ' +
               'you think critically about products. It is not a medical, nutritional, or regulatory certification.'}
         </Text>
@@ -47,7 +47,7 @@ export default function MethodologyScreen() {
             {t('methodology.bodyText') ||
               'The Body pillar estimates how well the product aligns with widely-accepted nutrition guidance. ' +
                 'Inputs may include energy density, saturated fat, sugar, salt, fibre and other nutrients, as well ' +
-                'as the presence of certain additives or allergens. TruScan uses public frameworks and regulatory ' +
+                'as the presence of certain additives or allergens. Rveel uses public frameworks and regulatory ' +
                 'thresholds as references, but does not claim to be an official Nutri-Score or any government rating.'}
           </Text>
         </View>
@@ -59,7 +59,7 @@ export default function MethodologyScreen() {
           </Text>
           <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
             {t('methodology.planetText') ||
-              'Planet pillar (TruScan v19): starts at 15. When Open Food Facts provides an Eco-Score letter (A–E), ' +
+              'Planet pillar (Rveel v19): starts at 15. When Open Food Facts provides an Eco-Score letter (A–E), ' +
                 'the pillar applies the official v19 mapping (+7, +3, −1, −3, −7). Packaging is not scored separately ' +
                 'when Eco-Score is present. If Eco-Score is missing, a conservative packaging fallback (+2, +1, or 0) ' +
                 'may apply using structured packaging data and AU/NZ kerbside recycling rules (Annex v2). Palm oil ' +
@@ -76,7 +76,7 @@ export default function MethodologyScreen() {
             {t('methodology.ethicsText') ||
               'The Ethics pillar reflects signals about company and brand behaviour. This may include public ' +
                 'information about recalls, labour controversies, animal welfare certifications, and other ' +
-                'documented issues or recognitions. TruScan does not conduct its own investigations; it organises ' +
+                'documented issues or recognitions. Rveel does not conduct its own investigations; it organises ' +
                 'and weights information from public, cited sources and applies precautionary penalties where there ' +
                 'are credible concerns.'}
           </Text>
@@ -103,7 +103,7 @@ export default function MethodologyScreen() {
           </Text>
           <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
             {t('methodology.combinedText') ||
-              'TruScore is calculated by combining the four pillars into a single 0–100 score. If data is missing ' +
+              'Rveel Score is calculated by combining the four pillars into a single 0–100 score. If data is missing ' +
                 'or incomplete for one or more pillars, the score may be reduced or marked as having insufficient ' +
                 'data. Scores may change over time as new studies, databases, or regulatory information become ' +
                 'available.'}
@@ -116,7 +116,7 @@ export default function MethodologyScreen() {
           </Text>
           <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
             {t('methodology.limitationsText') ||
-              'TruScan does not provide medical, nutritional, or legal advice and is not a substitute for a doctor, ' +
+              'Rveel does not provide medical, nutritional, or legal advice and is not a substitute for a doctor, ' +
                 'dietitian, or other qualified professional. Data may be incomplete, delayed, or incorrect despite ' +
                 'best efforts. Users should always read official product labelling and consult appropriate ' +
                 'professionals when making health or dietary decisions. The methodology may evolve, and any changes ' +

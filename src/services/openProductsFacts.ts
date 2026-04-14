@@ -3,7 +3,7 @@ import { Product } from '../types/product';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const OPF_API_BASE = 'https://world.openproductsfacts.org/api/v2/product';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 export interface OPFResponse {
   status: number;

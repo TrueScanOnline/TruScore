@@ -1,0 +1,4 @@
+artifact,description
+name-readiness-audit-full.csv,"Exhaustive machine-generated inventory: every line in app/, src/, backend/vercel/, android/.../strings.xml, app.config.js, and eas.json matching TrueScan | TruScan | TruScore | TrueScore | Trust Score | TrueScan-FoodScanner | TrueScan-Mobile. Regenerate with: npm run audit:phase1-names"
+stable-technical-identifiers.md,"Layer B identifiers and infrastructure notes (bundle ID, slug, hosts, legal routing caveat, support email env)."
+scripts/export-phase1-name-audit.mjs,"Source for the full CSV; extend PATTERNS or roots if new surfaces must be audited."

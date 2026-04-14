@@ -7,7 +7,7 @@ import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { logger } from '../utils/logger';
 
 const FOODREPO_API_BASE = 'https://www.foodrepo.org/api/v3';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 export interface FoodRepoProductResponse {
   id?: string;

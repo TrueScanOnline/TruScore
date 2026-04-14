@@ -109,7 +109,7 @@ export class ShareService {
     try {
       const appCTA = content.url
         ? `\n\n🔍 See full details → ${content.url}\n📱 Free app - opens instantly if installed`
-        : `\n\n📱 Get TruScore free - scan any product`;
+        : `\n\n📱 Get Rveel free - scan any product`;
 
       const combinedMessage = `${content.message}${appCTA}`;
 

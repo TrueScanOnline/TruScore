@@ -1,7 +1,7 @@
 /**
  * Banner Alerts Card Component
  * 
- * Displays alerts above the TruScore card.
+ * Displays alerts above the main score card.
  * Alerts are a combination of APP-generated alerts and User Preference alerts.
  * 
  * Styling:
@@ -75,6 +75,7 @@ export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) 
           return (
             <AlertContainer
               key={alert.id}
+              accessibilityLabel={`banner-signal-${alert.signalClass ?? 'B'}`}
               style={[
                 styles.alertItem,
                 index < alertsData.alerts.length - 1 && styles.alertItemWithMargin,

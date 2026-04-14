@@ -102,7 +102,7 @@ export default function ShareAlertsCard({ truScore }: ShareAlertsCardProps = {})
         return;
       }
 
-      // Build share message - v1.3 spec: objective "TruScore 78 + insights" format
+      // Build share message - v1.3 spec: objective "Rveel Score 78 + insights" format
       const score = truScore || 0;
       const hasInsights = activeToggles.length > 0;
       
@@ -111,9 +111,9 @@ export default function ShareAlertsCard({ truScore }: ShareAlertsCardProps = {})
         const insightTypes = activeToggles.filter(t => t.includes('cruelty') || t.includes('Cruelty')).length > 0 ? 'cruelty' : '';
         const bdsTypes = activeToggles.filter(t => t.includes('Israel') || t.includes('Palestine')).length > 0 ? 'BDS' : '';
         const flags = [insightTypes, bdsTypes].filter(Boolean).join(' & ');
-        message = `TruScore ${score} + insights flagged ${flags}\n\n`;
+        message = `Rveel Score ${score} + insights flagged ${flags}\n\n`;
       } else {
-        message = `TruScore ${score} – independent breakdown\n\n`;
+        message = `Rveel Score ${score} – independent breakdown\n\n`;
       }
       
       message += 'Active alert preferences:\n';
@@ -129,11 +129,11 @@ export default function ShareAlertsCard({ truScore }: ShareAlertsCardProps = {})
         });
       }
 
-      message += '\n#TruScore #EthicalShopping #TrueScanAlerts';
+      message += '\n#RveelScore #EthicalShopping #RveelAlerts';
 
       await Share.share({
         message,
-        title: 'TruScore Choices',
+        title: 'Rveel — alert choices',
       });
     } catch (error) {
       console.error('Error sharing alerts:', error);

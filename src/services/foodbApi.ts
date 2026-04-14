@@ -9,7 +9,7 @@ import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { logger } from '../utils/logger';
 
 const FOODB_API_BASE = 'http://foodb.ca/api/v1';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 export interface FooDBResponse {
   foods?: Array<{

@@ -1,6 +1,6 @@
 // Web Search Pricing Modal
 // Shows Google search results for product pricing (Android = Google, iOS = Safari)
-// Displays search results in WebView with "Return to TruScore" button
+// Displays search results in WebView with a return-to-app control
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -233,7 +233,7 @@ export default function GoogleSearchPricingModal({
             activeOpacity={0.8}
           >
             <Ionicons name="arrow-back" size={20} color="#fff" />
-            <Text style={styles.returnButtonText}>Return to TruScore</Text>
+            <Text style={styles.returnButtonText}>Return to Rveel Score</Text>
           </TouchableOpacity>
         </View>
       </View>

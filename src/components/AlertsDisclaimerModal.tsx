@@ -42,7 +42,7 @@ export default function AlertsDisclaimerModal({
           <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
             <Text style={[styles.disclaimerText, { color: colors.text }]}>
               Alerts let you choose optional topics to highlight on product pages. These insights are informational only
-              and do not change your TruScore. Banner alerts from the app (e.g. recalls) follow separate spec rules.
+              and do not change your Rveel Score. Banner alerts from the app (e.g. recalls) follow separate spec rules.
             </Text>
 
             <View style={[styles.section, { backgroundColor: colors.surface }]}>
@@ -55,7 +55,7 @@ export default function AlertsDisclaimerModal({
                   • All alert topics are optional and controlled by you
                 </Text>
                 <Text style={[styles.bulletPoint, { color: colors.text }]}>
-                  • TruScore stays objective and is not driven by these alert preferences
+                  • Rveel Score stays objective and is not driven by these alert preferences
                 </Text>
                 <Text style={[styles.bulletPoint, { color: colors.text }]}>
                   • References are shown where available for transparency
@@ -64,7 +64,7 @@ export default function AlertsDisclaimerModal({
             </View>
 
             <Text style={[styles.disclaimerText, { color: colors.textSecondary, marginTop: 16 }]}>
-              By continuing, you confirm you understand these alerts are optional extras, separate from the core TruScore
+              By continuing, you confirm you understand these alerts are optional extras, separate from the core Rveel Score
               calculation and from automatic banner alerts.
             </Text>
           </ScrollView>

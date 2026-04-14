@@ -56,7 +56,7 @@
     "platformTiktokDesc": "Accroche + lien — coller dans TikTok",
     "sharing": "Partage…",
     "tipsTitle": "Conseils",
-    "tipsBody": "Dites pourquoi c'est important. Rappels et allergènes aident les autres. Le lien ouvre le produit dans TrueScan.",
+    "tipsBody": "Dites pourquoi c'est important. Rappels et allergènes aident les autres. Le lien ouvre le produit dans Rveel.",
     "shareOpenedTitle": "Partage ouvert",
     "shareOpenedBody": "Terminez dans l'app ouverte.",
     "shareFailedTitle": "Partage incomplet",
@@ -64,7 +64,7 @@
     "productFallback": "Ce produit"
   },
   "onboarding": {
-    "title": "Bienvenue sur TrueScan",
+    "title": "Bienvenue sur Rveel",
     "subtitle": "Découvrez la vraie histoire de votre alimentation",
     "getStarted": "Commencer",
     "slide1": {
@@ -72,8 +72,8 @@
       "description": "Découvrez l'origine de vos aliments, leur impact sur l'environnement et leur mode de production."
     },
     "slide2": {
-      "title": "Score de Confiance",
-      "description": "Obtenez un score de confiance instantané basé sur la durabilité, l'éthique, la nutrition et la transparence."
+      "title": "Rveel Score",
+      "description": "Obtenez un Rveel Score instantané basé sur la durabilité, l'éthique, la nutrition et la transparence."
     },
     "slide3": {
       "title": "Confidentialité d'Abord",
@@ -90,11 +90,11 @@
     "skipIntro": "Passer l'introduction"
   },
   "scan": {
-    "title": "TrueScan",
+    "title": "Rveel",
     "scanning": "Pointez votre caméra vers le code-barres du produit",
     "manualEntry": "Saisir Manuellement",
     "permissionRequired": "Autorisation Caméra Requise",
-    "permissionText": "TrueScan a besoin d'accéder à votre caméra pour scanner les codes-barres.",
+    "permissionText": "Rveel a besoin d'accéder à votre caméra pour scanner les codes-barres.",
     "grantPermission": "Accorder l'Autorisation",
     "invalidBarcode": "Code-Barres Invalide",
     "invalidBarcodeMessage": "Veuillez scanner un code-barres UPC ou EAN valide (8-14 chiffres).",
@@ -107,18 +107,33 @@
     "contribute": "Contribuer à Open Food Facts",
     "contributeMessage": "Aidez à améliorer la transparence alimentaire ! Vous pouvez ajouter ou mettre à jour les informations du produit sur Open Food Facts.",
     "scanAnother": "Scanner un Autre Produit",
+    "analysisPartialTitle": "Analyse en cours de mise à jour",
+    "analysisPartialSubtitle": "Les scores ou détails peuvent changer lorsque d'autres sources auront fini de charger.",
+    "signals": {
+      "limited_data": {
+        "title": "Données produit limitées",
+        "body": "Certains champs utilisés pour la notation sont manquants. Les résultats peuvent se mettre à jour lorsque l'enrichissement sera terminé.",
+        "why": "Affiché lorsque l'exhaustivité des données est inférieure au seuil utilisé pour une analyse complète."
+      },
+      "web_search_source": {
+        "title": "Source recherche web",
+        "body": "Certains détails peuvent provenir de sources de secours par recherche web. Vérifiez toujours ingrédients, allergènes et rappels sur l'emballage et les avis officiels.",
+        "why": "Affiché lorsque la fiche produit est liée à des chemins de consultation à faible confiance ou complétés par le web."
+      },
+      "preferenceBasedFooter": "Selon vos préférences d'alertes dans Réglages."
+    },
     "alertsPreference": "Alertes",
     "alertsPreferenceOpenReference": "Ouvrir la référence",
     "legalDisclaimerTeaserTitle": "Avertissement",
     "legalDisclaimerTeaserBody": "Appuyez ici pour plus d'informations sur la notation, les données et les informations affichées.",
     "legalDisclaimerTeaserA11y": "Ouvrir l'avertissement",
     "legalDisclaimerModalTitle": "Avertissement",
-    "legalDisclaimerModalP1": "L'application TruScan fournit uniquement des informations générales et éducatives. Elle ne constitue pas un avis médical, un diagnostic ou un traitement ; ne constitue pas un conseil nutritionnel, diététique ou juridique ; et ne remplace pas une consultation avec un professionnel de santé qualifié, un diététicien ou un avocat.",
-    "legalDisclaimerModalP2": "Les scores et analyses (y compris TruScore et autres évaluations) sont des interprétations automatisées fondées sur des données publiques ou tierces, des algorithmes et des préférences utilisateur optionnelles. Il s'agit d'opinions informatives uniquement et elles peuvent être incomplètes, inexactes ou obsolètes.",
+    "legalDisclaimerModalP1": "L'application Rveel fournit uniquement des informations générales et éducatives. Elle ne constitue pas un avis médical, un diagnostic ou un traitement ; ne constitue pas un conseil nutritionnel, diététique ou juridique ; et ne remplace pas une consultation avec un professionnel de santé qualifié, un diététicien ou un avocat.",
+    "legalDisclaimerModalP2": "Les scores et analyses (y compris Rveel Score et autres évaluations) sont des interprétations automatisées fondées sur des données publiques ou tierces, des algorithmes et des préférences utilisateur optionnelles. Il s'agit d'opinions informatives uniquement et elles peuvent être incomplètes, inexactes ou obsolètes.",
     "legalDisclaimerModalP3": "Les fabricants et l'étiquetage du produit font foi pour les ingrédients, allergènes, nutrition, origine et rappels. Vous devez toujours lire et respecter l'étiquette officielle et toute réglementation applicable avant l'achat ou la consommation.",
-    "legalDisclaimerModalP4": "TrueScan et ses sociétés affiliées, concédants, développeurs, opérateurs et fournisseurs (collectivement « TrueScan ») n'offrent aucune garantie ni déclaration, expresse ou implicite, quant à l'exactitude, l'exhaustivité, la fiabilité, l'actualité ou l'adéquation à un usage particulier du contenu de cette application.",
-    "legalDisclaimerModalP5": "Dans la mesure maximale permise par la loi applicable, TrueScan décline toute responsabilité pour tout dommage direct, indirect, accessoire, spécial, consécutif ou exemplaire, ou toute perte de profits, de données, de clientèle ou d'autres pertes immatérielles, résultant de votre accès ou utilisation de l'application, ou de votre confiance en tout score, analyse, alerte ou recommandation.",
-    "legalDisclaimerModalP6": "Vous utilisez TruScan volontairement et à vos propres risques. Rien dans l'application ne crée un devoir de diligence ni une relation professionnelle entre vous et TrueScan.",
+    "legalDisclaimerModalP4": "Rveel et ses sociétés affiliées, concédants, développeurs, opérateurs et fournisseurs (collectivement « Rveel ») n'offrent aucune garantie ni déclaration, expresse ou implicite, quant à l'exactitude, l'exhaustivité, la fiabilité, l'actualité ou l'adéquation à un usage particulier du contenu de cette application.",
+    "legalDisclaimerModalP5": "Dans la mesure maximale permise par la loi applicable, Rveel décline toute responsabilité pour tout dommage direct, indirect, accessoire, spécial, consécutif ou exemplaire, ou toute perte de profits, de données, de clientèle ou d'autres pertes immatérielles, résultant de votre accès ou utilisation de l'application, ou de votre confiance en tout score, analyse, alerte ou recommandation.",
+    "legalDisclaimerModalP6": "Vous utilisez Rveel volontairement et à vos propres risques. Rien dans l'application ne crée un devoir de diligence ni une relation professionnelle entre vous et Rveel.",
     "legalDisclaimerModalP7": "En cas d'allergies alimentaires, d'intolérances, de conditions médicales ou d'exigences alimentaires spécifiques, consultez un professionnel qualifié avant de vous fier aux informations produit de cette application.",
     "legalDataLimitationsTeaserTitle": "Données produit incomplètes ?",
     "legalDataLimitationsTeaserBody": "Certaines informations peuvent manquer pour cet article. Appuyez ici pour en savoir plus ...",
@@ -127,11 +142,11 @@
     "legalDataLimitationsModalEditLinkA11y": "Ouvrir l’édition manuelle pour ajouter ou corriger les données produit",
     "legalDataLimitationsModalTitle": "Limites des données",
     "legalDataLimitationsModalP1": "Les bases publiques et sources tierces peuvent ne pas lister tous les ingrédients, le pays de fabrication, l'origine ou d'autres champs pour chaque produit. Certaines données sont collaboratives et peuvent contenir des erreurs ou omissions.",
-    "legalDataLimitationsModalP2": "Lorsque l'information est manquante ou incomplète, TruScan peut ne pas afficher certaines analyses, réduire les scores ou ajuster les évaluations, ou afficher des messages de prudence. Ces mesures sont purement informatives et n'affirment pas qu'un produit est sûr, dangereux, sain ou inadapté pour vous.",
+    "legalDataLimitationsModalP2": "Lorsque l'information est manquante ou incomplète, Rveel peut ne pas afficher certaines analyses, réduire les scores ou ajuster les évaluations, ou afficher des messages de prudence. Ces mesures sont purement informatives et n'affirment pas qu'un produit est sûr, dangereux, sain ou inadapté pour vous.",
     "legalDataLimitationsModalP3": "Des données incomplètes ou absentes ne signifient pas qu'un produit est exempt d'allergènes, d'additifs, de contaminants ou d'autres problèmes ; cela signifie seulement que l'information n'était pas disponible dans l'application au moment de l'affichage.",
-    "legalDataLimitationsModalP4": "TrueScan ne garantit pas qu'une fiche produit soit complète, exacte ou à jour. Vous restez seul responsable de vérifier toute information sur l'étiquette physique et l'emballage.",
-    "legalDataLimitationsModalP5": "Dans la mesure maximale permise par la loi applicable, TrueScan décline toute responsabilité pour toute confiance accordée à des données incomplètes ou manquantes affichées dans l'application.",
-    "trustScore": "Score de Confiance",
+    "legalDataLimitationsModalP4": "Rveel ne garantit pas qu'une fiche produit soit complète, exacte ou à jour. Vous restez seul responsable de vérifier toute information sur l'étiquette physique et l'emballage.",
+    "legalDataLimitationsModalP5": "Dans la mesure maximale permise par la loi applicable, Rveel décline toute responsabilité pour toute confiance accordée à des données incomplètes ou manquantes affichées dans l'application.",
+    "trustScore": "Rveel Score",
     "sustainability": "Durabilité",
     "planet": "Planète",
     "ethics": "Éthique",
@@ -254,7 +269,7 @@
     "planetPackagingMarketHint": "Sans Eco-Score, le pilier Planète applique des règles d’emballage type collecte AU ou NZ. Automatique suit votre réglage enregistré, les données produit puis la langue de l’appareil.",
     "privacy": "Confidentialité",
     "analytics": "Analyses",
-    "privacyNote": "TrueScan respecte votre vie privée. Les analyses nous aident à améliorer l'application mais peuvent être désactivées à tout moment.",
+    "privacyNote": "Rveel respecte votre vie privée. Les analyses nous aident à améliorer l'application mais peuvent être désactivées à tout moment.",
     "data": "Données",
     "scanHistory": "Historique des Scans",
     "scans": "{{count}} scans",
@@ -266,7 +281,7 @@
     "about": "À Propos",
     "version": "Version",
     "openSource": "Open Source",
-    "openSourceMessage": "TrueScan utilise les données d'Open Food Facts, une base de données gratuite et ouverte.",
+    "openSourceMessage": "Rveel utilise les données d'Open Food Facts, une base de données gratuite et ouverte.",
     "privacyPolicy": "Politique de Confidentialité",
     "privacyPolicyMessage": "Confidentialité d'abord : aucun compte requis, pas de suivi sans consentement.",
     "helpSupport": "Aide et Support",
@@ -275,7 +290,8 @@
     "showOnboardingMessage": "Voulez-vous voir les écrans d'introduction à nouveau au prochain lancement de l'application ?",
     "onboardingResetMessage": "L'introduction sera affichée au prochain lancement de l'application. Veuillez redémarrer l'application.",
     "footer": "Fait avec ❤️ pour la transparence alimentaire",
-    "footerSubtext": "Alimenté par Open Food Facts"
+    "footerSubtext": "Alimenté par Open Food Facts",
+    "methodology": "Méthodologie et Rveel Score"
   },
   "trust": {
     "excellent": "Excellent",
@@ -357,17 +373,18 @@
   },
   "infoModal": {
     "trustScore": {
-      "title": "Comprendre le Score de Confiance",
-      "description": "Le Score de Confiance est une évaluation complète (0-100) qui évalue les produits alimentaires sur quatre dimensions clés : durabilité, éthique, nutrition et transformation. Ce score vous aide à prendre des décisions éclairées sur les aliments que vous consommez.",
+      "title": "Comprendre le Rveel Score",
+      "description": "Le Rveel Score est une note agrégée (0 à 100) fondée sur des systèmes publics reconnus : quatre piliers égaux (25 points chacun) — Corps, Planète, Éthique et Ouverture. Méthodologie explicite dans l’app, sans formule propriétaire opaque.",
       "howItWorks": "Comment ça Fonctionne",
-      "howItWorksText": "Chaque produit est évalué dans quatre catégories, chacune contribuant au Score de Confiance global. Le score final est calculé comme une moyenne de ces quatre dimensions, vous offrant une vision holistique de la qualité et de la fiabilité du produit.",
+      "howItWorksText": "Chaque produit reçoit jusqu’à 25 points par pilier (Corps, Planète, Éthique, Ouverture), pour un total de 0 à 100. Les conversions s’appuient sur Nutri-Score, Éco-Score, NOVA, étiquettes Open Food Facts et règles documentées dans le moteur.",
       "calculationFormula": "Formule de Calcul",
-      "formula": "Score de Confiance = (Durabilité × 25%) + (Éthique × 25%) + (Nutrition × 25%) + (Transformation × 25%)",
+      "formula": "Rveel Score = Corps (2–25) + Planète (0–25) + Éthique (0–25) + Ouverture (0–25) = 0 à 100. Le pilier Corps a un plancher minimal de 2 points pour équité.",
       "calculationSteps": "Comment il est Calculé",
-      "step1": "Les données sont collectées d'Open Food Facts pour chaque catégorie",
-      "step2": "Chaque catégorie est notée individuellement (0-100 points)",
-      "step3": "Les scores de catégorie sont pondérés de manière égale (25% chacun)",
-      "step4": "Le score final est la moyenne : (D + É + N + T) ÷ 4",
+      "step1": "Pilier Corps (2–25) : Nutri-Score, classification NOVA, additifs et allergènes selon les règles documentées.",
+      "step2": "Pilier Planète (0–25) : Éco-Score v19 lorsque la note existe ; sinon repli emballage (+2/+1/0) selon l’annexe v2. L’huile de palme ne modifie pas ce score en MVP.",
+      "step3": "Pilier Éthique (0–25) : certifications (commerce équitable, bio, MSC, etc.) et paramètres publiés.",
+      "step4": "Pilier Ouverture (0–25) : transparence des ingrédients (ex. parfum, arôme, « proprietary blend »).",
+      "step5": "Somme des quatre piliers : Rveel Score = Corps + Planète + Éthique + Ouverture (0 à 100).",
       "categories": "Catégories de Score",
       "carbonFootprint": "Empreinte Carbone",
       "waterUsage": "Utilisation de l'Eau",
@@ -383,14 +400,14 @@
       "freshness": "Indicateurs de Fraîcheur",
       "sustainabilityDesc": "Évalue l'impact environnemental, y compris l'empreinte carbone, l'utilisation de l'eau, la durabilité de l'emballage et les pratiques agricoles. Des scores plus élevés indiquent des méthodes de production plus durables.",
       "ethicsDesc": "Évalue les considérations éthiques telles que les pratiques du commerce équitable, le bien-être animal, les conditions de travail et la transparence de la chaîne d'approvisionnement. Les produits avec de solides standards éthiques reçoivent des scores plus élevés.",
-      "nutritionDesc": "Mesure la qualité nutritionnelle basée sur les ingrédients, les additifs, la densité nutritionnelle et les impacts sur la santé. Se concentre sur les aliments entiers, la transformation minimale et les nutriments bénéfiques.",
+      "nutritionDesc": "Mesure la qualité nutritionnelle d’après les ingrédients, additifs, Nutri-Score, NOVA et densité des nutriments lorsque les données sont disponibles (informationnel, pas un avis diététique personnel).",
       "processingDesc": "Analyse le niveau de transformation des aliments en utilisant le système de classification NOVA. Les niveaux de transformation plus faibles (frais, minimalement transformés) reçoivent des scores plus élevés que les aliments ultra-transformés.",
       "scoring": "Plages de Score",
       "excellentDesc": "Qualité exceptionnelle dans toutes les dimensions. Ces produits excellent en durabilité, éthique, nutrition et transformation minimale.",
       "goodDesc": "Qualité supérieure à la moyenne avec de bonnes performances dans la plupart des catégories. Bon choix pour les consommateurs conscients.",
       "fairDesc": "Qualité modérée avec de la marge d'amélioration. Acceptable mais pas exceptionnel dans les domaines clés.",
       "poorDesc": "Qualité inférieure à la moyenne. Ces produits peuvent avoir des problèmes importants en durabilité, éthique, nutrition ou transformation.",
-      "note": "Le Score de Confiance est calculé sur la base des données produits disponibles d'Open Food Facts. Certains produits peuvent avoir des informations limitées, ce qui peut affecter la précision du score."
+      "note": "Rveel Score v1.4 — calcul à partir des données disponibles (Open Food Facts, Open Beauty Facts, UPCitemdb). Le score n’est affiché que lorsque les données suffisantes sont disponibles. 100 % du barème provient de systèmes publics reconnus (Nutri-Score, Éco-Score, NOVA, étiquettes OFF) — pas de formules propriétaires. Chaque pilier utilise des conversions directes des systèmes officiels (ex. A=25, B=20). Si Nutri-Score ou Éco-Score manque, des plafonds de base (ex. 15 points au lieu de 25) s’appliquent selon les règles du moteur."
     },
     "ecoscore": {
       "title": "Comprendre l'Éco-Score",

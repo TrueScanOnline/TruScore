@@ -7,7 +7,7 @@ import { logger } from '../utils/logger';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 
 const OPENCORPORATES_API_BASE = 'https://api.opencorporates.com/v0.4';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 // Note: OpenCorporates API requires API key (free tier available)
 // Get your key at: https://opencorporates.com/api_accounts/new

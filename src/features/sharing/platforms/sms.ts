@@ -20,7 +20,7 @@ export class SMSShare {
       // Format it cleanly
       let smsMessage = content.message;
       if (content.url) {
-        smsMessage += `\n\n📱 Open in TruScore:\n${content.url}`;
+        smsMessage += `\n\n📱 Open in Rveel:\n${content.url}`;
       }
       
       // Encode the message for URL

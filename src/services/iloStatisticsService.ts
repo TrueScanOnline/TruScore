@@ -73,7 +73,7 @@ export async function checkILOViolations(
       const response = await fetch(dataflowUrl, {
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+          'User-Agent': 'Rveel/1.0.0',
         },
         signal: (() => {
           const controller = new AbortController();

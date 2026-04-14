@@ -90,7 +90,7 @@ async function fetchProductImage(productName: string, barcode?: string): Promise
       const response = await fetch(imageUrl, {
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+          'User-Agent': 'Rveel/1.0.0',
         },
       });
 
@@ -151,7 +151,7 @@ async function fetchNutritionInfo(productName: string): Promise<ProductNutriment
       const response = await fetch(ddgUrl, {
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+          'User-Agent': 'Rveel/1.0.0',
         },
       });
 
@@ -309,7 +309,7 @@ async function fetchIngredients(productName: string): Promise<string | undefined
       const response = await fetch(ddgUrl, {
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'TrueScan-FoodScanner/1.0.0',
+          'User-Agent': 'Rveel/1.0.0',
         },
       });
 
@@ -448,7 +448,7 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
       try {
         const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(barcode)}&format=json&no_html=1&skip_disambig=1`;
         const response = await fetch(ddgUrl, {
-          headers: { 'Accept': 'application/json', 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+          headers: { 'Accept': 'application/json', 'User-Agent': 'Rveel/1.0.0' },
         });
         if (response.ok) {
           const data = await response.json();
@@ -482,7 +482,7 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
       try {
         const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(`UPC ${barcode}`)}&format=json&no_html=1&skip_disambig=1`;
         const response = await fetch(ddgUrl, {
-          headers: { 'Accept': 'application/json', 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+          headers: { 'Accept': 'application/json', 'User-Agent': 'Rveel/1.0.0' },
         });
         if (response.ok) {
           const data = await response.json();
@@ -501,7 +501,7 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
       try {
         const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(`barcode ${barcode}`)}&format=json&no_html=1&skip_disambig=1`;
         const response = await fetch(ddgUrl, {
-          headers: { 'Accept': 'application/json', 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+          headers: { 'Accept': 'application/json', 'User-Agent': 'Rveel/1.0.0' },
         });
         if (response.ok) {
           const data = await response.json();
@@ -544,7 +544,7 @@ async function getProductNameFromBarcode(barcode: string): Promise<string | null
       try {
         const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(`EAN ${barcode}`)}&format=json&no_html=1&skip_disambig=1`;
         const response = await fetch(ddgUrl, {
-          headers: { 'Accept': 'application/json', 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+          headers: { 'Accept': 'application/json', 'User-Agent': 'Rveel/1.0.0' },
         });
         if (response.ok) {
           const data = await response.json();
@@ -653,7 +653,7 @@ export async function fetchProductFromWebSearch(barcode: string, suggestedProduc
       try {
         const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(barcode)}&format=json&no_html=1&skip_disambig=1`;
         const response = await fetch(ddgUrl, {
-          headers: { 'Accept': 'application/json', 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+          headers: { 'Accept': 'application/json', 'User-Agent': 'Rveel/1.0.0' },
         });
         
         if (response.ok) {

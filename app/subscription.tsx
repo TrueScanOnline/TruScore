@@ -21,6 +21,7 @@ import { QonversionProduct } from '../src/services/subscriptionService';
 import { PremiumFeature, PremiumFeatureDescriptions } from '../src/utils/premiumFeatures';
 import { useTheme } from '../src/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { productIdentity } from '../src/config/productIdentity';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -405,13 +406,13 @@ export default function SubscriptionScreen() {
             {t('subscription.cancelMessage')}
           </Text>
           <View style={styles.footerLinks}>
-            <TouchableOpacity onPress={() => Linking.openURL('https://truescan.app/terms')}>
+            <TouchableOpacity onPress={() => Linking.openURL(productIdentity.termsOfServiceUrl)}>
               <Text style={[styles.footerLink, { color: colors.primary }]}>
                 {t('subscription.terms')}
               </Text>
             </TouchableOpacity>
             <Text style={[styles.footerText, { color: colors.textTertiary }]}> • </Text>
-            <TouchableOpacity onPress={() => Linking.openURL('https://truescan.app/privacy')}>
+            <TouchableOpacity onPress={() => Linking.openURL(productIdentity.privacyPolicyUrl)}>
               <Text style={[styles.footerLink, { color: colors.primary }]}>
                 {t('subscription.privacy')}
               </Text>

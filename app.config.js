@@ -1,6 +1,8 @@
+const nativeIdentity = require('./src/config/productIdentity.expo.json');
+
 module.exports = {
   expo: {
-    name: 'TrueScan',
+    name: nativeIdentity.appName,
     slug: 'truescan-food-scanner',
     version: '10.0.0',
     orientation: 'portrait',
@@ -9,7 +11,7 @@ module.exports = {
     splash: {
       image: './assets/splash.png',
       resizeMode: 'contain',
-      backgroundColor: '#16a085', // TrueScan brand color
+      backgroundColor: '#16a085', // Rveel brand color
     },
     assetBundlePatterns: ['**/*'],
     android: {
@@ -64,9 +66,9 @@ module.exports = {
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        NSCameraUsageDescription: 'TrueScan needs access to your camera to scan product barcodes and identify products. This allows you to quickly get detailed information about food products including ingredients, nutrition, and sustainability data.',
-        NSLocationWhenInUseUsageDescription: 'TrueScan uses your location to show local store prices and provide country-specific product information. This helps you find the best prices and relevant product data for your region.',
-        NSLocationAlwaysAndWhenInUseUsageDescription: 'TrueScan uses your location to show local store prices and provide country-specific product information. This helps you find the best prices and relevant product data for your region.',
+        NSCameraUsageDescription: nativeIdentity.cameraPermission,
+        NSLocationWhenInUseUsageDescription: nativeIdentity.locationWhenInUse,
+        NSLocationAlwaysAndWhenInUseUsageDescription: nativeIdentity.locationAlways,
         // Note: NSMicrophoneUsageDescription not needed since we're not using video recording
         // URL schemes for sharing / canOpenURL (iOS). https:// URLs do not need entries; custom schemes do.
         LSApplicationQueriesSchemes: [
@@ -101,7 +103,7 @@ module.exports = {
       [
         'expo-camera',
         {
-          cameraPermission: 'TrueScan needs access to your camera to scan product barcodes and identify products. This allows you to quickly get detailed information about food products including ingredients, nutrition, and sustainability data.',
+          cameraPermission: nativeIdentity.cameraPermission,
           // Note: Microphone permission is optional - only needed if using video recording
           // Setting to false prevents microphone permission request
           microphonePermission: false,
@@ -127,6 +129,8 @@ module.exports = {
       // '@qonversion/react-native-plugin', // Uncomment if plugin is installed
     ],
     extra: {
+      /** Public support inbox; set EXPO_PUBLIC_SUPPORT_EMAIL in EAS env / .env before store submission */
+      supportEmail: process.env.EXPO_PUBLIC_SUPPORT_EMAIL || '',
       // EAS project ID - Required for EAS Build
       // Note: This is commented out for Expo Go development to prevent update errors
       // Uncomment when building with EAS Build for production

@@ -341,7 +341,7 @@ export default function SettingsScreen() {
           />
           <SettingRow
             icon="list-outline"
-            label={t('settings.methodology') || 'Methodology & How TruScan Scores Work'}
+            label={t('settings.methodology')}
             onPress={() => {
               navigation.navigate('Methodology');
             }}

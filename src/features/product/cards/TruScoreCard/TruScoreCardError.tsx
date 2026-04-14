@@ -21,7 +21,7 @@ export function TruScoreCardError({ error, onRetry }: TruScoreCardErrorProps) {
       <View style={styles.content}>
         <Ionicons name="alert-circle" size={32} color={colors.error || '#ff6b6b'} />
         <Text style={[styles.title, { color: colors.text }]}>
-          {t('result.errorLoadingTruScore', 'Error Loading TruScore')}
+          {t('result.errorLoadingTruScore', 'Error loading Rveel Score')}
         </Text>
         <Text style={[styles.message, { color: colors.textSecondary }]}>
           {error.message || t('result.unknownError', 'An unknown error occurred')}

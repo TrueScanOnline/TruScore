@@ -7,7 +7,7 @@ import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { logger } from '../utils/logger';
 
 const WALMART_API_BASE = 'https://api.walmartlabs.com/v1';
-const USER_AGENT = 'TrueScan-FoodScanner/1.0.0';
+const USER_AGENT = 'Rveel/1.0.0';
 
 // Note: Walmart Open API requires free API key registration
 // Get your key at: https://developer.walmartlabs.com/

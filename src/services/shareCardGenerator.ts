@@ -1,6 +1,6 @@
 /**
  * Share Card Generator
- * Creates visual share cards with product image, TruScore, and key insights
+ * Creates visual share cards with product image, Rveel Score, and key insights
  * 
  * Note: Requires react-native-view-shot for image capture
  * Install: npm install react-native-view-shot
@@ -11,6 +11,7 @@ import { TruScoreResult } from '../lib/truscoreEngine';
 import { logger } from '../utils/logger';
 import { Platform } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
+import { productIdentity } from '../config/productIdentity';
 
 export interface ShareCardOptions {
   product: ProductWithTrustScore;
@@ -83,7 +84,7 @@ export function getShareCardData(
 } {
   const insights: string[] = [];
   
-  // Extract insights from TruScore
+  // Extract insights from score engine
   if (truScore?.insights) {
     truScore.insights.forEach(insight => {
       insights.push(insight.reason);
@@ -116,7 +117,7 @@ export function generateShareMessage(
   const productName = product.product_name || `Product ${product.barcode}`;
   
   let message = `🔍 ${productName}\n\n`;
-  message += `TruScore: ${score}/100\n\n`;
+  message += `${productIdentity.publicScoreName}: ${score}/100\n\n`;
   
   if (truScore?.breakdown) {
     message += `Breakdown:\n`;
@@ -134,8 +135,8 @@ export function generateShareMessage(
     message += `\n`;
   }
   
-  message += `📱 Scan with TrueScan to see full details\n`;
-  message += `#TruScore #FoodTransparency #TrueScan`;
+  message += `📱 Scan with ${productIdentity.displayName} to see full details\n`;
+  message += `#${productIdentity.publicScoreHashtag} #FoodTransparency #${productIdentity.displayName}`;
   
   return message;
 }

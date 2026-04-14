@@ -78,7 +78,7 @@ export async function fetchProductFromSpoonacular(barcode: string): Promise<Prod
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'TrueScan-FoodScanner/1.0',
+        'User-Agent': 'Rveel/1.0',
       },
     });
 

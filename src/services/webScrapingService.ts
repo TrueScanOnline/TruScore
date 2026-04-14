@@ -367,7 +367,7 @@ export async function scrapeProductInfo(barcode: string, productName?: string): 
   try {
     const offUrl = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
     const response = await fetch(offUrl, {
-      headers: { 'Accept': 'application/json', 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+      headers: { 'Accept': 'application/json', 'User-Agent': 'Rveel/1.0.0' },
     });
     
     if (response.ok) {
@@ -453,7 +453,7 @@ export async function scrapeProductInfo(barcode: string, productName?: string): 
       // Try DuckDuckGo Instant Answer for product name
       const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(barcode)}&format=json&no_html=1&skip_disambig=1`;
       const response = await fetch(ddgUrl, {
-        headers: { 'Accept': 'application/json', 'User-Agent': 'TrueScan-FoodScanner/1.0.0' },
+        headers: { 'Accept': 'application/json', 'User-Agent': 'Rveel/1.0.0' },
       });
       
       if (response.ok) {
