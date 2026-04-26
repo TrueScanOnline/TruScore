@@ -84,6 +84,13 @@ export interface BuildProductScanResultOptions {
    */
   dynamicSignalRecords?: DynamicSignalPublicationRecord[];
 
+  /**
+   * Slice 7 seam-control mode:
+   * - `transitional`: keep legacy/synthetic feeders (current MVP transitional mode)
+   * - `governed_5b_only`: exclude legacy/synthetic feeders; only 5B publication records feed signals
+   */
+  phase6SignalSourceMode?: 'transitional' | 'governed_5b_only';
+
 }
 
 
@@ -327,6 +334,7 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
 } {
 
   const { product, barcode, userPreferences, isSubscriber, errors, nowMs, scan_id } = opts;
+  const signalSourceMode = opts.phase6SignalSourceMode ?? 'transitional';
 
   const marketHint = opts.market ?? getUserCountryCode();
   let market: ProductScanResult['market'] = (() => {
@@ -404,9 +412,10 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
 
 
 
-  const bannerAlerts = generateBannerAlerts(product, userPreferences, { now: nowFn });
-
-  const fromBanners = bannerAlerts.alerts.map(bannerToSignalCard);
+  const fromBanners =
+    signalSourceMode === 'governed_5b_only'
+      ? []
+      : generateBannerAlerts(product, userPreferences, { now: nowFn }).alerts.map(bannerToSignalCard);
 
 
 
@@ -428,7 +437,10 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
 
 
 
-  const synthetic = syntheticTransparencyCards(product, completeness01, barcode);
+  const synthetic =
+    signalSourceMode === 'governed_5b_only'
+      ? []
+      : syntheticTransparencyCards(product, completeness01, barcode);
 
   const publicationCards = publicationCardsFromRecords(
     opts.dynamicSignalRecords ??

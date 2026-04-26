@@ -1,0 +1,67 @@
+{
+  "fixture_pack_version": "phase6.pack.v1.0.0",
+  "fixture_schema_id": "phase6.fixture.schema.v1",
+  "fixtures": [
+    {
+      "fixture_id": "p0-frozen-eligibility-gate-b",
+      "passed": true,
+      "output": {
+        "market": "AU",
+        "signal_ids_ordered": [],
+        "has_legacy_banner_signals": false
+      }
+    },
+    {
+      "fixture_id": "p0-identity-au-nz-public-no-leak",
+      "passed": true,
+      "output": {
+        "market": "UNKNOWN",
+        "signal_ids_ordered": [],
+        "has_legacy_banner_signals": false
+      }
+    },
+    {
+      "fixture_id": "p0-dynamic-blocked-never-public",
+      "passed": true,
+      "output": {
+        "market": "AU",
+        "signal_ids_ordered": [],
+        "has_legacy_banner_signals": false
+      }
+    },
+    {
+      "fixture_id": "p0-publication-order-deterministic",
+      "passed": true,
+      "output": {
+        "market": "AU",
+        "signal_ids_ordered": [
+          "a1",
+          "a2",
+          "c1"
+        ],
+        "has_legacy_banner_signals": false
+      }
+    },
+    {
+      "fixture_id": "p0-release-mode-disables-legacy-feeders",
+      "passed": true,
+      "output": {
+        "market": "AU",
+        "signal_ids_ordered": [],
+        "has_legacy_banner_signals": false
+      }
+    },
+    {
+      "fixture_id": "p1-transitional-mode-allows-legacy-feeders",
+      "passed": true,
+      "output": {
+        "market": "AU",
+        "signal_ids_ordered": [
+          "transparency-limited-data-9300633072391",
+          "transparency-web-search-9300633072391"
+        ],
+        "has_legacy_banner_signals": true
+      }
+    }
+  ]
+}
