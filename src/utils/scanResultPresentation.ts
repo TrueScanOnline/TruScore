@@ -5,6 +5,7 @@
 import type { TFunction } from 'i18next';
 import type { ProductScanResult, SignalCard } from '../types/scanOutputContract';
 import type { BannerAlert, BannerAlertsData, AlertCategory } from '../types/bannerAlerts';
+import { signalClassOrder } from '../signals/signalRenderMapping';
 
 const SEVERITY_RANK: Record<string, number> = { high: 3, medium: 2, low: 1 };
 
@@ -33,12 +34,6 @@ export function dedupeSignalCards(cards: SignalCard[]): SignalCard[] {
 
 /** P0–P3 order: all A, then B, C, D; soft cap applies only to non-A when capNonA is set */
 export function flattenSignalsOrdered(signals: ProductScanResult['signals']): SignalCard[] {
-  const rank = (c: SignalCard) => {
-    if (c.class === 'A') return 0;
-    if (c.class === 'B') return 1;
-    if (c.class === 'C') return 2;
-    return 3;
-  };
   const flat = [
     ...signals.safety_regulatory,
     ...signals.transparency,
@@ -46,7 +41,7 @@ export function flattenSignalsOrdered(signals: ProductScanResult['signals']): Si
     ...signals.premium_insight,
   ];
   flat.sort((a, b) => {
-      const dr = rank(a) - rank(b);
+      const dr = signalClassOrder(a.class) - signalClassOrder(b.class);
       if (dr !== 0) return dr;
       return severityRank(b) - severityRank(a);
     });

@@ -32,6 +32,15 @@ import { deriveScanTerminalState } from '../utils/deriveScanTerminalState';
 import { dedupeSignalCards } from '../utils/scanResultPresentation';
 
 import { getSourceConfidence } from '../utils/confidenceScoring';
+import {
+  emptySignalsBuckets,
+  isPublicationRecordPubliclyRenderable,
+  mapPublicationRecordToSignalCard,
+  mapSignalCardToBucket,
+  sortPublicationRecordsForRender,
+} from '../signals/signalRenderMapping';
+import { resolveSharedIdentityContext } from '../identity/resolveSharedIdentityContext';
+import type { DynamicSignalPublicationRecord } from '../dynamicSignals/publish/types';
 
 
 
@@ -69,17 +78,11 @@ export interface BuildProductScanResultOptions {
 
   scan_id?: string;
 
-}
-
-
-
-function marketFromCountry(code: string | null | undefined): ProductScanResult['market'] {
-
-  if (code === 'AU') return 'AU';
-
-  if (code === 'NZ') return 'NZ';
-
-  return 'UNKNOWN';
+  /**
+   * Slice 6 input from 5B publication engine. Builder maps these through the owner mapping module;
+   * no builder-side class-gate reinterpretation.
+   */
+  dynamicSignalRecords?: DynamicSignalPublicationRecord[];
 
 }
 
@@ -179,32 +182,24 @@ function bannerToSignalCard(alert: BannerAlert): SignalCard {
 
 function partitionSignals(cards: SignalCard[]): ProductScanResult['signals'] {
 
-  const out: ProductScanResult['signals'] = {
-
-    safety_regulatory: [],
-
-    transparency: [],
-
-    user_preference: [],
-
-    premium_insight: [],
-
-  };
+  const out: ProductScanResult['signals'] = emptySignalsBuckets();
 
   for (const c of cards) {
-
-    if (c.class === 'A') out.safety_regulatory.push(c);
-
-    else if (c.class === 'B') out.transparency.push(c);
-
-    else if (c.class === 'C') out.user_preference.push(c);
-
-    else out.premium_insight.push(c);
+    out[mapSignalCardToBucket(c)].push(c);
 
   }
 
   return out;
 
+}
+
+function publicationCardsFromRecords(
+  records: DynamicSignalPublicationRecord[] | undefined
+): SignalCard[] {
+  if (!records?.length) return [];
+  return sortPublicationRecordsForRender(records)
+    .filter(isPublicationRecordPubliclyRenderable)
+    .map(mapPublicationRecordToSignalCard);
 }
 
 
@@ -333,7 +328,21 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
 
   const { product, barcode, userPreferences, isSubscriber, errors, nowMs, scan_id } = opts;
 
-  const market = marketFromCountry(opts.market ?? getUserCountryCode());
+  const marketHint = opts.market ?? getUserCountryCode();
+  let market: ProductScanResult['market'] = (() => {
+    if (marketHint === 'AU') return 'AU';
+    if (marketHint === 'NZ') return 'NZ';
+    return 'UNKNOWN';
+  })();
+  if (product) {
+    const identityResolution = resolveSharedIdentityContext({
+      gtin: barcode,
+      product,
+      marketHint,
+    });
+    market = identityResolution.public_market;
+    (product as ProductWithTrustScore)._shared_identity_context = identityResolution.context;
+  }
 
   const nowFn = nowMs !== undefined ? () => nowMs : undefined;
 
@@ -356,15 +365,7 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
       scores: null,
 
       signals: {
-
-        safety_regulatory: [],
-
-        transparency: [],
-
-        user_preference: [],
-
-        premium_insight: [],
-
+        ...emptySignalsBuckets(),
       },
 
       confidence: { value: 0, label: 'low' },
@@ -429,7 +430,13 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
 
   const synthetic = syntheticTransparencyCards(product, completeness01, barcode);
 
-  const allCards = dedupeSignalCards([...fromBanners, ...synthetic]);
+  const publicationCards = publicationCardsFromRecords(
+    opts.dynamicSignalRecords ??
+      ((product as ProductWithTrustScore)._dynamic_signal_publication_records as
+        | DynamicSignalPublicationRecord[]
+        | undefined)
+  );
+  const allCards = dedupeSignalCards([...fromBanners, ...publicationCards, ...synthetic]);
 
   const signals = partitionSignals(allCards);
 

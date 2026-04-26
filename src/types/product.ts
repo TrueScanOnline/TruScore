@@ -258,6 +258,10 @@ export interface Product {
   
   // API source
   source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'go_upc' | 'buycott' | 'open_gtin' | 'barcode_monster' | 'web_search' | 'woolworths_nz' | 'paknsave' | 'newworld' | 'woolworths_au' | 'coles_au' | 'iga_au' | 'fsanz_au' | 'fsanz_nz' | 'nz_store_api' | 'afcd' | 'nzfcd' | 'barcode_lookup' | 'bestbuy' | 'eandata' | 'ean_search' | 'edamam' | 'nutritionix' | 'upc_database' | 'sqlite' | 'health_canada_cnf' | 'uk_fsa' | 'efsa' | 'tesco_labs' | 'walmart_open' | 'foodrepo' | 'opennutrition' | string; // Allow string for composite sources like 'openfoodfacts+afcd'
+  /** Phase 6 internal hints for benchmark-owner divergence modeling (Slice 3). */
+  phase6_current_owner_effective_date?: string;
+  phase6_previous_owner_entity_id?: string;
+  phase6_benchmark_owner_entity_id?: string;
 }
 
 export interface TrustScoreBreakdown {
@@ -299,5 +303,22 @@ export interface ProductWithTrustScore extends Product {
   };
   /** Full TruScore analysis (pillar breakdown + data source trace). Set when score is calculated. */
   _truscore_analysis?: import('./truscoreAnalysis').TruScoreAnalysis;
+  /**
+   * Phase 6 Slice 1 transitional runtime attachment (internal only; not public contract).
+   * This is temporary plumbing for early slices and not the long-term authoritative handoff pattern.
+   */
+  _shared_identity_context?: import('../identity/types').SharedIdentityContext;
+  /**
+   * Transitional runtime plumbing: attached frozen benchmark shape for the ethics adapter when a
+   * precomputed object is available. Not the target authoritative persistence model — replace or
+   * formalize when Slice 4+ persistence/governance architecture lands.
+   */
+  _frozen_benchmark_attribution?: import('../benchmark/types').FrozenBenchmarkAttributionObject;
+  /**
+   * Slice 6 transitional handoff: 5B publication records attached for builder mapping into
+   * ProductScanResult.signals. This is internal plumbing (not public contract) until persistence-layer
+   * ownership is finalized.
+   */
+  _dynamic_signal_publication_records?: import('../dynamicSignals/publish/types').DynamicSignalPublicationRecord[];
 }
 

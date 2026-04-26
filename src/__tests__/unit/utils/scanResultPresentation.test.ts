@@ -1,6 +1,7 @@
 import type { ProductScanResult } from '../../../types/scanOutputContract';
-import { buildBannerAlertsDataFromScanResult, dedupeSignalCards } from '../../../utils/scanResultPresentation';
+import { buildBannerAlertsDataFromScanResult, dedupeSignalCards, flattenSignalsOrdered } from '../../../utils/scanResultPresentation';
 import type { SignalCard } from '../../../types/scanOutputContract';
+import * as signalRenderMapping from '../../../signals/signalRenderMapping';
 
 const t = (key: string, opts?: { defaultValue?: string }) => {
   const map: Record<string, string> = {
@@ -61,5 +62,32 @@ describe('scanResultPresentation', () => {
     const data = buildBannerAlertsDataFromScanResult(scan, t as any);
     expect(data.hasAlerts).toBe(true);
     expect(data.alerts[0].title).toBe('Limited product data');
+  });
+
+  it('uses owner module for class ordering (anti-drift)', () => {
+    const orderSpy = jest.spyOn(signalRenderMapping, 'signalClassOrder');
+    const scan: ProductScanResult = {
+      terminal_state: 'success',
+      barcode: '1',
+      market: 'AU',
+      product: null,
+      scores: null,
+      signals: {
+        safety_regulatory: [],
+        transparency: [
+          { id: 'b', class: 'B', title_key: 'k', body_key: 'b', why_key: 'w', severity: 'low', links: [], dedupe_key: 'b' },
+        ],
+        user_preference: [
+          { id: 'c', class: 'C', title_key: 'k', body_key: 'b', why_key: 'w', severity: 'low', links: [], dedupe_key: 'c' },
+        ],
+        premium_insight: [],
+      },
+      confidence: { value: 0.8, label: 'high' },
+      coverage: { completeness: 1, flags: [] },
+      sources_trace: [],
+      premium: { subscriber: false },
+    };
+    flattenSignalsOrdered(scan.signals);
+    expect(orderSpy).toHaveBeenCalled();
   });
 });

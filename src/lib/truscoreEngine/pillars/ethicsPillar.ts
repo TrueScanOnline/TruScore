@@ -37,6 +37,7 @@ import {
 import { resolveBrandToKTCParent } from '../../../services/ktcBrandResolutionService';
 import { evaluateEthicsCertifications } from '../../../services/ethicsCertificationsService';
 import { powershellLogger } from '../../../utils/powershellLogger';
+import { resolveEthicsBenchmarkContext } from './ethicsBenchmarkAdapter';
 
 export interface EthicsPillarResult {
   score: number;
@@ -96,7 +97,10 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
   let score = 15;
   const base = 15;
 
-  const candidates = getEthicsCompanyCandidates(product);
+  const benchmarkCtx = resolveEthicsBenchmarkContext(product);
+  const candidates = benchmarkCtx.benchmarkOwnerHint
+    ? [benchmarkCtx.benchmarkOwnerHint, ...getEthicsCompanyCandidates(product)]
+    : getEthicsCompanyCandidates(product);
 
   adjustments.push({
     description: 'Base score (assumes ethical until poor ratings)',
@@ -104,90 +108,86 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     type: 'neutral',
   });
 
-  // Try each candidate: resolve via mapping, then BBFAW lookup; use first match
+  // Try each candidate: resolve via mapping, then BBFAW lookup; use first match.
+  // If frozen benchmark eligibility is false, benchmark adjustments are deterministically disabled.
   let companyName: string | null = null;
   let resolved: ResolvedParent | null = null;
-  for (const raw of candidates) {
-    resolved = resolveBrandToParent(raw);
-    const name = resolved?.parent_entity_exact ?? raw;
-    // Resolved mapping has tier/impact; otherwise need BBFAW lookup
-    if (resolved && resolved.tier_2024 >= 1 && resolved.tier_2024 <= 6) {
-      companyName = name;
-      break;
-    }
-    if (checkBBFAWTier(name)) {
-      companyName = name;
-      break;
-    }
-  }
-
-  // Use tier/impact from resolved mapping (spec-aligned) when available; else from bbfaw2024Data
-  let bbfawData = companyName ? checkBBFAWTier(companyName) : null;
-  const useResolvedTier =
-    resolved &&
-    resolved.tier_2024 >= 1 &&
-    resolved.tier_2024 <= 6 &&
-    resolved.parent_entity_exact === companyName;
-
+  let bbfawData = null as ReturnType<typeof checkBBFAWTier>;
   let bbfawTierScore = 0;
   let bbfawImpactScore = 0;
-  const tier: BBFAWTier | null = useResolvedTier
-    ? (resolved!.tier_2024 as BBFAWTier)
-    : bbfawData?.tier ?? null;
-  const impactRating = useResolvedTier
-    ? (resolved!.impact_2024 as 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | undefined)
-    : bbfawData?.impactRating;
-
-  if (tier || impactRating) {
-    bbfawTierScore = getBBFAWTierScore(tier);
-    bbfawImpactScore = getBBFAWImpactScore(impactRating);
-
-    if (bbfawTierScore !== 0 && tier) {
-      adjustments.push({
-        description: `BBFAW Tier ${tier} (animal welfare governance)`,
-        value: bbfawTierScore,
-        type: bbfawTierScore > 0 ? 'positive' : 'negative',
-        // Prefer Food Companies page for user context; PDF remains available in BBFAW docs
-        referenceUrl: 'https://www.bbfaw.com/food-companies/',
-      });
-      score += bbfawTierScore;
+  let tier: BBFAWTier | null = null;
+  let impactRating: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | undefined;
+  if (benchmarkCtx.benchmarkEligible) {
+    for (const raw of candidates) {
+      resolved = resolveBrandToParent(raw);
+      const name = resolved?.parent_entity_exact ?? raw;
+      if (resolved && resolved.tier_2024 >= 1 && resolved.tier_2024 <= 6) {
+        companyName = name;
+        break;
+      }
+      if (checkBBFAWTier(name)) {
+        companyName = name;
+        break;
+      }
     }
 
-    if (bbfawImpactScore !== 0 && impactRating) {
-      adjustments.push({
-        description: `BBFAW Impact Rating ${impactRating} (welfare outcomes)`,
-        value: bbfawImpactScore,
-        type: bbfawImpactScore > 0 ? 'positive' : 'negative',
-        referenceUrl: 'https://www.bbfaw.com/food-companies/',
-      });
-      score += bbfawImpactScore;
-    }
+    // Use tier/impact from resolved mapping (spec-aligned) when available; else from bbfaw2024Data
+    bbfawData = companyName ? checkBBFAWTier(companyName) : null;
+    const useResolvedTier =
+      resolved &&
+      resolved.tier_2024 >= 1 &&
+      resolved.tier_2024 <= 6 &&
+      resolved.parent_entity_exact === companyName;
+    tier = useResolvedTier ? (resolved!.tier_2024 as BBFAWTier) : bbfawData?.tier ?? null;
+    impactRating = useResolvedTier
+      ? (resolved!.impact_2024 as 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | undefined)
+      : bbfawData?.impactRating;
 
-    logger.debug('[EthicsPillar] BBFAW match:', {
-      companyName,
-      tier,
-      impactRating,
-      tierScore: bbfawTierScore,
-      impactScore: bbfawImpactScore,
-      source: useResolvedTier ? 'brandAliasMap' : 'bbfaw2024Canonical',
-    });
+    if (tier || impactRating) {
+      bbfawTierScore = getBBFAWTierScore(tier);
+      bbfawImpactScore = getBBFAWImpactScore(impactRating);
+
+      if (bbfawTierScore !== 0 && tier) {
+        adjustments.push({
+          description: `BBFAW Tier ${tier} (animal welfare governance)`,
+          value: bbfawTierScore,
+          type: bbfawTierScore > 0 ? 'positive' : 'negative',
+          referenceUrl: 'https://www.bbfaw.com/food-companies/',
+        });
+        score += bbfawTierScore;
+      }
+
+      if (bbfawImpactScore !== 0 && impactRating) {
+        adjustments.push({
+          description: `BBFAW Impact Rating ${impactRating} (welfare outcomes)`,
+          value: bbfawImpactScore,
+          type: bbfawImpactScore > 0 ? 'positive' : 'negative',
+          referenceUrl: 'https://www.bbfaw.com/food-companies/',
+        });
+        score += bbfawImpactScore;
+      }
+    }
   } else {
-    logger.debug('[EthicsPillar] BBFAW not found - nil return (no adjustment)', {
-      companyName: companyName || 'none',
+    adjustments.push({
+      description: 'Frozen benchmark not eligible for ethics scoring (deterministic zero benchmark movement)',
+      value: 0,
+      type: 'neutral',
     });
   }
 
   // KTC (KnowTheChain) 2026 – apply in addition to BBFAW, using same brand candidates
   let ktcMatched: KTCParentData | null = null;
   let ktcScoreAdjustment = 0;
-  for (const raw of candidates) {
-    const resolvedKTC = resolveBrandToKTCParent(raw);
-    const ktcName = resolvedKTC?.parentName ?? raw;
-    const ktcData = checkKTCParent(ktcName);
-    if (ktcData) {
-      ktcMatched = ktcData;
-      ktcScoreAdjustment = getKTCScoreAdjustment(ktcData.totalBenchmarkScore);
-      break;
+  if (benchmarkCtx.benchmarkEligible) {
+    for (const raw of candidates) {
+      const resolvedKTC = resolveBrandToKTCParent(raw);
+      const ktcName = resolvedKTC?.parentName ?? raw;
+      const ktcData = checkKTCParent(ktcName);
+      if (ktcData) {
+        ktcMatched = ktcData;
+        ktcScoreAdjustment = getKTCScoreAdjustment(ktcData.totalBenchmarkScore);
+        break;
+      }
     }
   }
 
@@ -270,6 +270,7 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     barcode: product.barcode,
     score,
     bbfawMatched: !!bbfawData,
+    benchmarkEligible: benchmarkCtx.benchmarkEligible,
   });
 
   return result;
