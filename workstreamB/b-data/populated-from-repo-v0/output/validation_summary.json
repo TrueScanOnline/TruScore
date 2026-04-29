@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "issue_counts": {
+    "errors": 0,
+    "warnings": 1
+  },
+  "correction_row_count": 0,
+  "crosswalk_absent": true,
+  "generated_at": "2026-04-29T21:40:23.303Z"
+}

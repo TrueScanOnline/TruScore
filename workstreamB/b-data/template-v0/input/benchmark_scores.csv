@@ -1,0 +1,2 @@
+entity_id,benchmark_name,snapshot_version,bbfaw_tier,bbfaw_impact_rating,ktc_total_benchmark_score,ktc_rank,reference_url,year,source_lineage
+TEMPLATE_BBFAW_ENTITY,BBFAW,bbfaw-2024-v1,2,B,,,,2024,template

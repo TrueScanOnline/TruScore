@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-29T21:39:52.065Z",
+  "row_counts": {
+    "bbfaw2024Canonical_companies": 171,
+    "brandAliasMap_rows": 106,
+    "ktcParents_rows": 42,
+    "ktcBrandAliasMap_rows": 148,
+    "benchmark_entities_written": 235,
+    "benchmark_scores_written": 213
+  },
+  "assumptions": [
+    "entity_id is synthetic stable slug (BBFAW-C-#### / KTC-C-####) plus MAP-* rows for parents only present in mapping JSON.",
+    "Frozen benchmark owner fields mirror display_name from source JSON (no Workstream A inference).",
+    "BBFAW score rows map 1:1 with bbfaw2024Canonical.companies order.",
+    "KTC score rows map 1:1 with ktcParents order."
+  ]
+}

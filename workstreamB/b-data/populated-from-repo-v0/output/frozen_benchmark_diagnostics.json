@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-04-29T21:40:23.316Z",
+  "freeze_guards": {
+    "register_initial_ok": true,
+    "in_place_blocked": true,
+    "supersede_ok": true,
+    "correction_rows_processed": 0,
+    "event_tail_count": 3
+  },
+  "scoring_read": {
+    "cases": [
+      {
+        "label": "ineligible_frozen_blocks_benchmark_movement",
+        "benchmark_eligible_from_adapter": false,
+        "score": 15,
+        "frozen_gate_adjustment_applied": true
+      }
+    ],
+    "all_deterministic_when_ineligible": true
+  }
+}

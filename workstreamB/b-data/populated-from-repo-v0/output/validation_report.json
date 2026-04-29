@@ -1,0 +1,26 @@
+{
+  "validation": {
+    "ok": true,
+    "issues": [
+      {
+        "level": "warning",
+        "rule": "crosswalk_optional_absent",
+        "file": "benchmark_to_a_identity_crosswalk.csv",
+        "message": "benchmark_to_a_identity_crosswalk.csv absent — A-linked checks skipped"
+      }
+    ],
+    "missing_required_files": [],
+    "correction_row_count": 0,
+    "crosswalk_absent": true
+  },
+  "validationSummary": {
+    "ok": true,
+    "issue_counts": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "correction_row_count": 0,
+    "crosswalk_absent": true,
+    "generated_at": "2026-04-29T21:40:23.303Z"
+  }
+}

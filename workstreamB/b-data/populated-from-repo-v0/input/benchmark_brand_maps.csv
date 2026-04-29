@@ -1,0 +1,107 @@
+row_index,benchmark_name,snapshot_version,parent_entity_exact,canonical_brand,aliases_csv,brand_type,au_nz_relevance,mapping_confidence,seed_status,tier_2024,impact_2024,notes
+0,BBFAW,bbfaw-2024-v1,Marks & Spencer PLC,M&S Food,"marks and spencer,m&s,marks & spencer,m&s food",Own-label / retailer banner,High,High,Seeded,2,B,Retailer own-brand packaged food
+1,BBFAW,bbfaw-2024-v1,Premier Foods PLC,Batchelors,"batchelors,bisto,oxo,mr kipling,sharwoods",Consumer brand / producer label,High,High,Seeded,2,B,Multiple major grocery brands
+2,BBFAW,bbfaw-2024-v1,Waitrose,Waitrose,"waitrose,essential waitrose,waitrose no 1,waitrose no.1",Own-label / retailer banner,High,High,Seeded,2,C,Retailer own-brand packaged food
+3,BBFAW,bbfaw-2024-v1,Danish Crown AmbA,Tulip,"tulip,danish crown",Consumer brand / producer label,High,High,Seeded,3,D,Packaged meat brands
+4,BBFAW,bbfaw-2024-v1,Fonterra,Anchor,"anchor,mainland,anlene,anmum,western star",Consumer brand / producer label,High,High,Seeded,3,B,Major AU/NZ dairy brands
+5,BBFAW,bbfaw-2024-v1,Groupe Danone SA,Activia,"activia,actimel,alpro,aptamil,nutricia",Consumer brand / producer label,High,High,Seeded,3,C,Major grocery/infant nutrition brands
+6,BBFAW,bbfaw-2024-v1,Migros-Genossenschafts-Bund,Migros,"migros,m-budget,m budget,selection",Own-label / retailer banner,Medium,Medium,Seeded,3,C,Retailer own-brand packaged food
+7,BBFAW,bbfaw-2024-v1,Minerva Foods,Minerva,"minerva foods,minerva,swift?",Consumer brand / producer label,Low,Low,Seeded,3,D,Brand exposure varies by market
+8,BBFAW,bbfaw-2024-v1,Noble Foods,The Happy Egg Co.,"the happy egg co,the happy egg company",Consumer brand / producer label,Medium,Medium,Seeded,3,D,Egg-focused grocery brands
+9,BBFAW,bbfaw-2024-v1,ALDI Süd/ALDI Einkauf SE & Co. oHG,ALDI,"aldi,specially selected,just organic",Own-label / retailer banner,Medium,Medium,Seeded,4,F,Retailer own-brand packaged food
+10,BBFAW,bbfaw-2024-v1,Arla Foods Ltd.,Arla,"arla,lurpak,castello",Consumer brand / producer label,High,High,Seeded,4,E,Major dairy brands
+11,BBFAW,bbfaw-2024-v1,Barilla SpA,Barilla,"barilla,wasa,mulino bianco",Consumer brand / producer label,High,High,Seeded,4,E,Major grocery brands
+12,BBFAW,bbfaw-2024-v1,BRF SA,Sadia,"sadia,perdigao,perdigão,qualy",Consumer brand / producer label,High,High,Seeded,4,E,Major Brazilian grocery brands
+13,BBFAW,bbfaw-2024-v1,Groupe Lactalis,Président,"president,président,galbani,parmalat,zymil,lactel",Consumer brand / producer label,High,High,Seeded,4,E,Major dairy brands
+14,BBFAW,bbfaw-2024-v1,Hershey Co.,Hershey's,"hersheys,hershey's,reese's,jolly rancher",Consumer brand / producer label,High,High,Seeded,4,E,Major confectionery brands
+15,BBFAW,bbfaw-2024-v1,Hilton Food Group,Hilton Food Group Private Label,hilton food group,Consumer brand / producer label,Low,Low,Seeded,4,E,Primarily private-label protein supplier
+16,BBFAW,bbfaw-2024-v1,J Sainsbury PLC,Sainsbury's,"sainsburys,sainsbury's,taste the difference,by sainsbury's",Own-label / retailer banner,High,High,Seeded,4,D,Retailer own-brand packaged food
+17,BBFAW,bbfaw-2024-v1,Les Mousquetaires,Intermarché,"intermarche,intermarché,netto,monique ranou",Own-label / retailer banner,Medium,Medium,Seeded,4,E,Retailer own-brand packaged food
+18,BBFAW,bbfaw-2024-v1,Marfrig Global Foods SA,Marfrig,"marfrig,bassi,national beef",Consumer brand / producer label,Low,Low,Seeded,4,D,Brand exposure varies by market
+19,BBFAW,bbfaw-2024-v1,Terrena Group.,Terrena,"terrena,paysan breton,pere dodu,père dodu",Consumer brand / producer label,High,Low,Seeded,4,E,French agri-food brands
+20,BBFAW,bbfaw-2024-v1,Tesco PLC,Tesco,"tesco,tesco finest,tesco finest.,tesco own brand",Own-label / retailer banner,High,High,Seeded,4,E,Retailer own-brand packaged food
+21,BBFAW,bbfaw-2024-v1,Unilever NV,Hellmann's,"hellmanns,hellmann's,ben and jerrys,ben & jerry's,magnum,walls",Consumer brand / producer label,High,High,Seeded,4,F,Packaged food/ice cream brands
+22,BBFAW,bbfaw-2024-v1,Wm Morrison Supermarkets PLC.,Morrisons,"morrisons,morrisons the best,morrisons own brand",Own-label / retailer banner,High,High,Seeded,4,E,Retailer own-brand packaged food
+23,BBFAW,bbfaw-2024-v1,Woolworths Limited,Woolworths,"woolworths,woolworths food,woolworths macro,macro,woolworths essentials",Own-label / retailer banner,High,High,Seeded,4,F,AU/NZ retailer own-brand packaged food
+24,BBFAW,bbfaw-2024-v1,(The) Kroger Company,Kroger,"kroger,simple truth,private selection",Own-label / retailer banner,High,High,Seeded,5,F,Retailer own-brand packaged food
+25,BBFAW,bbfaw-2024-v1,2 Sisters Food Group (Boparan Holdings Ltd),2 Sisters,"2 sisters,foxs,fox's",Consumer brand / producer label,Low,Low,Seeded,5,F,Mainly private label plus selected brands
+26,BBFAW,bbfaw-2024-v1,Agro Super,Super Pollo,"super pollo,super cerdo",Consumer brand / producer label,High,Low,Seeded,5,F,Chile poultry/meat brands
+27,BBFAW,bbfaw-2024-v1,Ahold Delhaize,Albert Heijn,"albert heijn,ah,delhaize,food lion,hannaford",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer and banner brands
+28,BBFAW,bbfaw-2024-v1,ALDI Einkauf SE & Co. oHG (ALDI Nord),ALDI,"aldi,specially selected,aldi own brand",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+29,BBFAW,bbfaw-2024-v1,Bellis Topco Ltd./Asda,Asda,"asda,just essentials by asda,extra special",Own-label / retailer banner,High,High,Seeded,5,F,Retailer own-brand packaged food
+30,BBFAW,bbfaw-2024-v1,Bimbo,Bimbo,"bimbo,thomas',entenmanns,sara lee,oroweat",Consumer brand / producer label,High,High,Seeded,5,F,Major bakery brands
+31,BBFAW,bbfaw-2024-v1,Campbell Soup Company,Campbell's,"campbells,campbell's,prego,v8,pace",Consumer brand / producer label,High,High,Seeded,5,F,Major grocery brands
+32,BBFAW,bbfaw-2024-v1,Cargill,Cargill House Brand,cargill,Consumer brand / producer label,Low,Low,Coverage Gap,5,F,Primarily B2B ingredient/protein supplier
+33,BBFAW,bbfaw-2024-v1,Carrefour SA.,Carrefour,"carrefour,carrefour bio,reflets de france",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+34,BBFAW,bbfaw-2024-v1,Casino Guichard-Perrachon SA,Casino,"casino,monoprix,franprix,casino bio",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retail banners and own-brand
+35,BBFAW,bbfaw-2024-v1,Charoen Pokphand Foods,CP,"cp,cpf,cp foods",Consumer brand / producer label,Low,Medium,Seeded,5,F,Regional packaged food/meat brands
+36,BBFAW,bbfaw-2024-v1,Coles Group,Coles,"coles,coles finest,coles organic,coles kitchen,natures kitchen",Own-label / retailer banner,High,High,Seeded,5,F,AU retailer own-brand packaged food
+37,BBFAW,bbfaw-2024-v1,Colruyt,Boni Selection,"boni selection,bio-time,graindor",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+38,BBFAW,bbfaw-2024-v1,Coop Group (Switzerland)/Coop Genossenschaft,Coop,"coop,naturaplan,prix garantie",Own-label / retailer banner,Medium,Medium,Seeded,5,E,Retailer own-brand packaged food
+39,BBFAW,bbfaw-2024-v1,Cooperativa Central Aurora Alimentos,Aurora,"aurora,aurora alimentos",Consumer brand / producer label,Medium,Medium,Seeded,5,F,Brazilian meat brands
+40,BBFAW,bbfaw-2024-v1,Coopérative U Enseigne,U,"u,u bio,u saveurs",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+41,BBFAW,bbfaw-2024-v1,Cooperl Arc Atlantique,Cooperl,"cooperl,broceliande,brocéliande",Consumer brand / producer label,Low,Low,Seeded,5,F,Pork/private label exposure
+42,BBFAW,bbfaw-2024-v1,Cremonini SpA,Inalca,"inalca,montana",Consumer brand / producer label,High,Low,Seeded,5,F,Italian meat brands
+43,BBFAW,bbfaw-2024-v1,E.Leclerc,Marque Repère,"marque repere,marque repère,eco+,nos regions ont du talent",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+44,BBFAW,bbfaw-2024-v1,EDEKA Group,EDEKA,"edeka,gut & gnstig,gut and gunstig,edeka bio",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+45,BBFAW,bbfaw-2024-v1,Elo Group,Auchan,"auchan,auchan bio,mmm!",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+46,BBFAW,bbfaw-2024-v1,Ferrero Group,Nutella,"nutella,ferrero rocher,kinder,tic tac",Consumer brand / producer label,High,High,Seeded,5,F,Major confectionery brands
+47,BBFAW,bbfaw-2024-v1,General Mills Inc,Cheerios,"cheerios,nature valley,old el paso,haagen-dazs,betty crocker",Consumer brand / producer label,High,High,Seeded,5,F,Major grocery brands
+48,BBFAW,bbfaw-2024-v1,Gruppo Veronesi,AIA,"aia,negroni,veronesi",Consumer brand / producer label,Medium,Medium,Seeded,5,F,Italian meat brands
+49,BBFAW,bbfaw-2024-v1,Hormel Foods Corporation,SPAM,"spam,skippy,applegate,hormel",Consumer brand / producer label,High,High,Seeded,5,F,Major grocery brands
+50,BBFAW,bbfaw-2024-v1,ICA Gruppen AB,ICA,"ica,ica basic,i love eco",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+51,BBFAW,bbfaw-2024-v1,JBS SA,Swift,"swift,primo,fraser?",Consumer brand / producer label,Low,Medium,Seeded,5,F,Brand exposure varies by market; AU includes Primo
+52,BBFAW,bbfaw-2024-v1,Jeronimo Martins,Pingo Doce,"pingo doce,recheio,go active",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+53,BBFAW,bbfaw-2024-v1,Kraft Heinz Company,Heinz,"heinz,watties,wattie's,kraft,gravox,golden circle",Consumer brand / producer label,High,High,Seeded,5,F,Major grocery brands incl AU/NZ
+54,BBFAW,bbfaw-2024-v1,Maple Leaf Foods,Maple Leaf,"maple leaf,schneiders,greenfield natural meat co",Consumer brand / producer label,High,High,Seeded,5,E,Major meat brands
+55,BBFAW,bbfaw-2024-v1,METRO AG,METRO Chef,"metro chef,metro professional,aro",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Cash-and-carry own-brand food
+56,BBFAW,bbfaw-2024-v1,Metro Inc,Selection,"selection,irresistibles,metro",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+57,BBFAW,bbfaw-2024-v1,Mowi ASA,Mowi,mowi,Consumer brand / producer label,High,High,Seeded,5,F,Packaged salmon brand
+58,BBFAW,bbfaw-2024-v1,Nestlé SA,Maggi,"maggi,kitkat,kit kat,milo,nescafe,nescaf,purina",Consumer brand / producer label,High,High,Seeded,5,F,Major grocery brands
+59,BBFAW,bbfaw-2024-v1,Perdue Farms,Perdue,perdue,Consumer brand / producer label,High,High,Seeded,5,F,Packaged poultry brand
+60,BBFAW,bbfaw-2024-v1,Plukon Food Group,Plukon,plukon,Consumer brand / producer label,Low,Low,Coverage Gap,5,F,Primarily private label poultry supplier
+61,BBFAW,bbfaw-2024-v1,REWE Group,REWE,"rewe,rewe bio,ja!,beste wahl",Own-label / retailer banner,Medium,Medium,Seeded,5,F,Retailer own-brand packaged food
+62,BBFAW,bbfaw-2024-v1,Royal FrieslandCampina.,Friso,"friso,dutch lady,chocomel,frieslandcampina",Consumer brand / producer label,Medium,Medium,Seeded,5,F,Dairy brands
+63,BBFAW,bbfaw-2024-v1,Saputo Inc,Devondale,"devondale,mersey valley,sungold,south cape,cheer",Consumer brand / producer label,High,High,Seeded,5,F,AU/NZ dairy brands
+64,BBFAW,bbfaw-2024-v1,Schwarz Gruppe,Lidl,"lidl,kaufland,deluxe,cien?",Own-label / retailer banner,High,Low,Seeded,5,F,Retail banners and own-brand food
+65,BBFAW,bbfaw-2024-v1,Tönnies Group,Tönnies,"tnnies,tönnies,gutfried",Consumer brand / producer label,High,Low,Seeded,5,F,Packaged meat brands
+66,BBFAW,bbfaw-2024-v1,Tyson Foods Inc,Tyson,"tyson,jimmy dean,hillshire farm,aidells",Consumer brand / producer label,High,High,Seeded,5,F,Major meat brands
+67,BBFAW,bbfaw-2024-v1,Vion Food Group,Vion,"vion,tilmans",Consumer brand / producer label,Low,Low,Seeded,5,F,Meat/private label exposure
+68,BBFAW,bbfaw-2024-v1,Wayne-Sanderson Farms.,Sanderson Farms,"sanderson farms,wayne-sanderson",Consumer brand / producer label,Medium,Medium,Seeded,5,F,Poultry brands
+69,BBFAW,bbfaw-2024-v1,Aeon Group,Topvalu,"topvalu,top value,aeon topvalu",Own-label / retailer banner,High,High,Seeded,6,F,Retailer own-brand packaged food
+70,BBFAW,bbfaw-2024-v1,Albertsons,Signature Select,"signature select,o organics,lucerne",Own-label / retailer banner,High,High,Seeded,6,F,Retailer own-brand packaged food
+71,BBFAW,bbfaw-2024-v1,Alimentation Couche-Tard,Circle K,"circle k,circle k own brand",Own-label / retailer banner,Medium,Medium,Seeded,6,F,Convenience own-brand packaged food
+72,BBFAW,bbfaw-2024-v1,Amazon/Whole Foods Market,365 by Whole Foods Market,"365,365 by whole foods market",Own-label / retailer banner,High,High,Seeded,6,F,Retail own-brand packaged food
+73,BBFAW,bbfaw-2024-v1,BJ’s Wholesale Club Holdings,Wellsley Farms,"wellsley farms,berkley jensen",Own-label / retailer banner,High,High,Seeded,6,F,Club retail own-brand packaged food
+74,BBFAW,bbfaw-2024-v1,Cencosud,Jumbo,"jumbo,santa isabel,jumbo own label",Own-label / retailer banner,Low,Low,Seeded,6,F,Retail banners / private label
+75,BBFAW,bbfaw-2024-v1,China Resources Vanguard,Vanguard,"vanguard,ole,blt",Own-label / retailer banner,Low,Low,Seeded,6,F,Retail banner / private label
+76,BBFAW,bbfaw-2024-v1,China Yurun Group Limited,Yurun,yurun,Consumer brand / producer label,Medium,Medium,Seeded,6,F,Packaged meat brand
+77,BBFAW,bbfaw-2024-v1,Conad Consorzio Nazionale,Conad,"conad,sapori & dintorni,verso natura",Own-label / retailer banner,Medium,Medium,Seeded,6,F,Retailer own-brand packaged food
+78,BBFAW,bbfaw-2024-v1,Cooke Seafood Inc,True North Seafood,"true north seafood,cooke seafood",Consumer brand / producer label,Medium,Medium,Seeded,6,F,Seafood brand
+79,BBFAW,bbfaw-2024-v1,Costco Wholesale Corporation,Kirkland Signature,"kirkland,kirkland signature",Own-label / retailer banner,High,High,Seeded,6,F,Retailer own-brand packaged food
+80,BBFAW,bbfaw-2024-v1,Dairy Farmers of America,Kemps,"kemps,smithfield?",Consumer brand / producer label,Low,Low,Seeded,6,F,Dairy co-op brand exposure varies
+81,BBFAW,bbfaw-2024-v1,Dino Polska SA,Dino,"dino,delikate?",Own-label / retailer banner,High,Low,Seeded,6,F,Retail banner / limited branded seed
+82,BBFAW,bbfaw-2024-v1,Empire Company/Sobey’s,Compliments,"compliments,sensations by compliments,sobeys",Own-label / retailer banner,High,High,Seeded,6,F,Retailer own-brand packaged food
+83,BBFAW,bbfaw-2024-v1,H E Butt Company,H-E-B,"h-e-b,heb,central market,hill country fare",Own-label / retailer banner,High,High,Seeded,6,F,Retailer own-brand packaged food
+84,BBFAW,bbfaw-2024-v1,Industrias Bachoco,Bachoco,bachoco,Consumer brand / producer label,High,High,Seeded,6,F,Poultry brand
+85,BBFAW,bbfaw-2024-v1,JAB Holding Company,Krispy Kreme Packaged,krispy kreme,Consumer brand / producer label,High,Low,Coverage Gap,6,F,Mostly out-of-home; limited supermarket packaged mapping
+86,BBFAW,bbfaw-2024-v1,Lianhua Supermarket Holdings Co,Lianhua,lianhua,Own-label / retailer banner,Low,Low,Seeded,6,F,Retail banner / private label
+87,BBFAW,bbfaw-2024-v1,Loblaw Companies Limited,President's Choice,"presidents choice,president's choice,no name,pc",Own-label / retailer banner,High,High,Seeded,6,F,Retailer own-brand packaged food
+88,BBFAW,bbfaw-2024-v1,Mars Inc,Mars,"mars,snickers,m&ms,m and ms,twix,ben's original,bens original,pedigree,whiskas",Consumer brand / producer label,High,High,Seeded,6,F,Major grocery and pet brands
+89,BBFAW,bbfaw-2024-v1,Maruha Nichiro,Maruha Nichiro,maruha nichiro,Consumer brand / producer label,Medium,Medium,Seeded,6,F,Seafood/grocery brand
+90,BBFAW,bbfaw-2024-v1,Meiji Holdings,Meiji,"meiji,yan yan,hello panda",Consumer brand / producer label,Medium,Medium,Seeded,6,F,Confectionery/dairy brands
+91,BBFAW,bbfaw-2024-v1,Mercadona SA,Hacendado,"hacendado,mercadona,deliplus,bosque verde",Own-label / retailer banner,High,High,Seeded,6,F,Retailer own-brand packaged food
+92,BBFAW,bbfaw-2024-v1,Mondelēz International,Cadbury,"cadbury,oreo,toblerone,belvita,belvita,ritz",Consumer brand / producer label,High,High,Seeded,6,F,Major grocery brands
+93,BBFAW,bbfaw-2024-v1,Müller UTM,Müller,"muller,müller",Consumer brand / producer label,High,High,Seeded,6,F,Dairy brand
+94,BBFAW,bbfaw-2024-v1,New Hope Liuhe Co Ltd,Liuhe,"liuhe,new hope",Consumer brand / producer label,Low,Low,Seeded,6,F,Regional meat brand
+95,BBFAW,bbfaw-2024-v1,Nippon Ham,Nippon Ham,"nippon ham,schau essen?",Consumer brand / producer label,High,Low,Seeded,6,F,Packaged meat brands
+96,BBFAW,bbfaw-2024-v1,Publix Super Markets Inc,Publix,"publix,greenwise",Own-label / retailer banner,High,High,Seeded,6,F,Retailer own-brand packaged food
+97,BBFAW,bbfaw-2024-v1,Seven & i Holdings,7 Premium,"7 premium,seven premium,7-eleven,7 eleven",Own-label / retailer banner,Low,High,Seeded,6,F,Convenience/private-label packaged food
+98,BBFAW,bbfaw-2024-v1,Spar Holding AG,SPAR,"spar,spar natur*pur,s-budget",Own-label / retailer banner,Medium,Medium,Seeded,6,F,Retailer own-brand packaged food
+99,BBFAW,bbfaw-2024-v1,Target Corporation,Good & Gather,"good and gather,good & gather,market pantry,favorite day",Own-label / retailer banner,High,High,Seeded,6,F,Retailer own-brand packaged food
+100,BBFAW,bbfaw-2024-v1,Walmart Inc,Great Value,"great value,marketside,sams choice,sam's choice",Own-label / retailer banner,High,High,Seeded,6,F,Retailer own-brand packaged food
+101,BBFAW,bbfaw-2024-v1,Wens Foodstuff Group,Wens,wens,Consumer brand / producer label,High,Low,Seeded,6,F,Packaged meat brand
+102,BBFAW,bbfaw-2024-v1,WH Group Ltd,Smithfield,"smithfield,nathan's famous,kretschmar",Consumer brand / producer label,High,High,Seeded,6,F,Packaged meat brands
+103,BBFAW,bbfaw-2024-v1,Yili Group,Yili,"yili,joyday,ambrosial",Consumer brand / producer label,Medium,Medium,Seeded,6,F,Dairy brands
+104,BBFAW,bbfaw-2024-v1,Yonghui Superstores Co Ltd,Yonghui,"yonghui,bravo y h",Own-label / retailer banner,Low,Low,Seeded,6,F,Retail banner / private label
+105,BBFAW,bbfaw-2024-v1,Zhongpin Inc (Huayu Holdings),Zhongpin,zhongpin,Consumer brand / producer label,High,Low,Seeded,6,F,Packaged meat brand

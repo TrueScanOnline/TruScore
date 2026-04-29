@@ -1,0 +1,3 @@
+benchmark_name,benchmark_cycle,snapshot_version,ownership_cutoff_date,freeze_status,methodology_ref,seed_ref
+BBFAW,2024,bbfaw-2024-v1,2024-06-30,frozen,bbfaw-2024-method,bbfaw2024Canonical
+KTC,2026,ktc-2026-v1,2026-06-30,frozen,ktc-2026-method,ktcParents

@@ -1,0 +1,236 @@
+entity_id,benchmark_name,entity_kind,display_name,benchmark_owner_entity_id,benchmark_owner_legal_name,notes
+BBFAW-C-0000,BBFAW,parent_company,Greggs PLC,frozen:bbfaw:BBFAW-C-0000,Greggs PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0001,BBFAW,parent_company,Marks & Spencer PLC,frozen:bbfaw:BBFAW-C-0001,Marks & Spencer PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0002,BBFAW,parent_company,Premier Foods PLC,frozen:bbfaw:BBFAW-C-0002,Premier Foods PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0003,BBFAW,parent_company,Waitrose,frozen:bbfaw:BBFAW-C-0003,Waitrose,from_bbfaw2024Canonical.json
+BBFAW-C-0004,BBFAW,parent_company,Co-op UK,frozen:bbfaw:BBFAW-C-0004,Co-op UK,from_bbfaw2024Canonical.json
+BBFAW-C-0005,BBFAW,parent_company,Cranswick PLC,frozen:bbfaw:BBFAW-C-0005,Cranswick PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0006,BBFAW,parent_company,Danish Crown AmbA,frozen:bbfaw:BBFAW-C-0006,Danish Crown AmbA,from_bbfaw2024Canonical.json
+BBFAW-C-0007,BBFAW,parent_company,Fonterra,frozen:bbfaw:BBFAW-C-0007,Fonterra,from_bbfaw2024Canonical.json
+BBFAW-C-0008,BBFAW,parent_company,Groupe Danone SA,frozen:bbfaw:BBFAW-C-0008,Groupe Danone SA,from_bbfaw2024Canonical.json
+BBFAW-C-0009,BBFAW,parent_company,Migros-Genossenschafts-Bund,frozen:bbfaw:BBFAW-C-0009,Migros-Genossenschafts-Bund,from_bbfaw2024Canonical.json
+BBFAW-C-0010,BBFAW,parent_company,Minerva Foods,frozen:bbfaw:BBFAW-C-0010,Minerva Foods,from_bbfaw2024Canonical.json
+BBFAW-C-0011,BBFAW,parent_company,Noble Foods,frozen:bbfaw:BBFAW-C-0011,Noble Foods,from_bbfaw2024Canonical.json
+BBFAW-C-0012,BBFAW,parent_company,Arla Foods Ltd,frozen:bbfaw:BBFAW-C-0012,Arla Foods Ltd,from_bbfaw2024Canonical.json
+BBFAW-C-0013,BBFAW,parent_company,Barilla SpA,frozen:bbfaw:BBFAW-C-0013,Barilla SpA,from_bbfaw2024Canonical.json
+BBFAW-C-0014,BBFAW,parent_company,BRF SA,frozen:bbfaw:BBFAW-C-0014,BRF SA,from_bbfaw2024Canonical.json
+BBFAW-C-0015,BBFAW,parent_company,Compass Group PLC,frozen:bbfaw:BBFAW-C-0015,Compass Group PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0016,BBFAW,parent_company,Groupe Lactalis,frozen:bbfaw:BBFAW-C-0016,Groupe Lactalis,from_bbfaw2024Canonical.json
+BBFAW-C-0017,BBFAW,parent_company,Hershey Co,frozen:bbfaw:BBFAW-C-0017,Hershey Co,from_bbfaw2024Canonical.json
+BBFAW-C-0018,BBFAW,parent_company,Hilton Food Group,frozen:bbfaw:BBFAW-C-0018,Hilton Food Group,from_bbfaw2024Canonical.json
+BBFAW-C-0019,BBFAW,parent_company,J Sainsbury PLC,frozen:bbfaw:BBFAW-C-0019,J Sainsbury PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0020,BBFAW,parent_company,JD Wetherspoon PLC,frozen:bbfaw:BBFAW-C-0020,JD Wetherspoon PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0021,BBFAW,parent_company,LDC Groupe,frozen:bbfaw:BBFAW-C-0021,LDC Groupe,from_bbfaw2024Canonical.json
+BBFAW-C-0022,BBFAW,parent_company,Les Mousquetaires,frozen:bbfaw:BBFAW-C-0022,Les Mousquetaires,from_bbfaw2024Canonical.json
+BBFAW-C-0023,BBFAW,parent_company,Marfrig Global Foods SA,frozen:bbfaw:BBFAW-C-0023,Marfrig Global Foods SA,from_bbfaw2024Canonical.json
+BBFAW-C-0024,BBFAW,parent_company,Mitchells & Butlers PLC,frozen:bbfaw:BBFAW-C-0024,Mitchells & Butlers PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0025,BBFAW,parent_company,Terrena Group,frozen:bbfaw:BBFAW-C-0025,Terrena Group,from_bbfaw2024Canonical.json
+BBFAW-C-0026,BBFAW,parent_company,Tesco PLC,frozen:bbfaw:BBFAW-C-0026,Tesco PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0027,BBFAW,parent_company,Unilever NV,frozen:bbfaw:BBFAW-C-0027,Unilever NV,from_bbfaw2024Canonical.json
+BBFAW-C-0028,BBFAW,parent_company,Whitbread PLC,frozen:bbfaw:BBFAW-C-0028,Whitbread PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0029,BBFAW,parent_company,Wm Morrison Supermarkets PLC,frozen:bbfaw:BBFAW-C-0029,Wm Morrison Supermarkets PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0030,BBFAW,parent_company,Woolworths Limited,frozen:bbfaw:BBFAW-C-0030,Woolworths Limited,from_bbfaw2024Canonical.json
+BBFAW-C-0031,BBFAW,parent_company,ALDI Süd,frozen:bbfaw:BBFAW-C-0031,ALDI Süd,from_bbfaw2024Canonical.json
+BBFAW-C-0032,BBFAW,parent_company,ALDI Einkauf SE & Co. oHG,frozen:bbfaw:BBFAW-C-0032,ALDI Einkauf SE & Co. oHG,from_bbfaw2024Canonical.json
+BBFAW-C-0033,BBFAW,parent_company,(The) Kroger Company,frozen:bbfaw:BBFAW-C-0033,(The) Kroger Company,from_bbfaw2024Canonical.json
+BBFAW-C-0034,BBFAW,parent_company,2 Sisters Food Group,frozen:bbfaw:BBFAW-C-0034,2 Sisters Food Group,from_bbfaw2024Canonical.json
+BBFAW-C-0035,BBFAW,parent_company,Agro Super,frozen:bbfaw:BBFAW-C-0035,Agro Super,from_bbfaw2024Canonical.json
+BBFAW-C-0036,BBFAW,parent_company,Ahold Delhaize,frozen:bbfaw:BBFAW-C-0036,Ahold Delhaize,from_bbfaw2024Canonical.json
+BBFAW-C-0037,BBFAW,parent_company,ALDI Nord,frozen:bbfaw:BBFAW-C-0037,ALDI Nord,from_bbfaw2024Canonical.json
+BBFAW-C-0038,BBFAW,parent_company,Aramark Corporation,frozen:bbfaw:BBFAW-C-0038,Aramark Corporation,from_bbfaw2024Canonical.json
+BBFAW-C-0039,BBFAW,parent_company,Bellis Topco Ltd,frozen:bbfaw:BBFAW-C-0039,Bellis Topco Ltd,from_bbfaw2024Canonical.json
+BBFAW-C-0040,BBFAW,parent_company,Asda,frozen:bbfaw:BBFAW-C-0040,Asda,from_bbfaw2024Canonical.json
+BBFAW-C-0041,BBFAW,parent_company,Bimbo,frozen:bbfaw:BBFAW-C-0041,Bimbo,from_bbfaw2024Canonical.json
+BBFAW-C-0042,BBFAW,parent_company,Campbell Soup Company,frozen:bbfaw:BBFAW-C-0042,Campbell Soup Company,from_bbfaw2024Canonical.json
+BBFAW-C-0043,BBFAW,parent_company,Cargill,frozen:bbfaw:BBFAW-C-0043,Cargill,from_bbfaw2024Canonical.json
+BBFAW-C-0044,BBFAW,parent_company,Carrefour SA,frozen:bbfaw:BBFAW-C-0044,Carrefour SA,from_bbfaw2024Canonical.json
+BBFAW-C-0045,BBFAW,parent_company,Casino Guichard-Perrachon SA,frozen:bbfaw:BBFAW-C-0045,Casino Guichard-Perrachon SA,from_bbfaw2024Canonical.json
+BBFAW-C-0046,BBFAW,parent_company,Charoen Pokphand Foods,frozen:bbfaw:BBFAW-C-0046,Charoen Pokphand Foods,from_bbfaw2024Canonical.json
+BBFAW-C-0047,BBFAW,parent_company,Chipotle Mexican Grill,frozen:bbfaw:BBFAW-C-0047,Chipotle Mexican Grill,from_bbfaw2024Canonical.json
+BBFAW-C-0048,BBFAW,parent_company,Coles Group,frozen:bbfaw:BBFAW-C-0048,Coles Group,from_bbfaw2024Canonical.json
+BBFAW-C-0049,BBFAW,parent_company,Colruyt,frozen:bbfaw:BBFAW-C-0049,Colruyt,from_bbfaw2024Canonical.json
+BBFAW-C-0050,BBFAW,parent_company,ConAgra,frozen:bbfaw:BBFAW-C-0050,ConAgra,from_bbfaw2024Canonical.json
+BBFAW-C-0051,BBFAW,parent_company,Coop Group,frozen:bbfaw:BBFAW-C-0051,Coop Group,from_bbfaw2024Canonical.json
+BBFAW-C-0052,BBFAW,parent_company,Cooperativa Central Aurora Alimentos,frozen:bbfaw:BBFAW-C-0052,Cooperativa Central Aurora Alimentos,from_bbfaw2024Canonical.json
+BBFAW-C-0053,BBFAW,parent_company,Coopérative U Enseigne,frozen:bbfaw:BBFAW-C-0053,Coopérative U Enseigne,from_bbfaw2024Canonical.json
+BBFAW-C-0054,BBFAW,parent_company,Cooperl Arc Atlantique,frozen:bbfaw:BBFAW-C-0054,Cooperl Arc Atlantique,from_bbfaw2024Canonical.json
+BBFAW-C-0055,BBFAW,parent_company,Cremonini SpA,frozen:bbfaw:BBFAW-C-0055,Cremonini SpA,from_bbfaw2024Canonical.json
+BBFAW-C-0056,BBFAW,parent_company,Darden Restaurants PLC,frozen:bbfaw:BBFAW-C-0056,Darden Restaurants PLC,from_bbfaw2024Canonical.json
+BBFAW-C-0057,BBFAW,parent_company,E.Leclerc,frozen:bbfaw:BBFAW-C-0057,E.Leclerc,from_bbfaw2024Canonical.json
+BBFAW-C-0058,BBFAW,parent_company,EDEKA Group,frozen:bbfaw:BBFAW-C-0058,EDEKA Group,from_bbfaw2024Canonical.json
+BBFAW-C-0059,BBFAW,parent_company,Elior Group,frozen:bbfaw:BBFAW-C-0059,Elior Group,from_bbfaw2024Canonical.json
+BBFAW-C-0060,BBFAW,parent_company,Elo Group,frozen:bbfaw:BBFAW-C-0060,Elo Group,from_bbfaw2024Canonical.json
+BBFAW-C-0061,BBFAW,parent_company,Ferrero Group,frozen:bbfaw:BBFAW-C-0061,Ferrero Group,from_bbfaw2024Canonical.json
+BBFAW-C-0062,BBFAW,parent_company,General Mills Inc,frozen:bbfaw:BBFAW-C-0062,General Mills Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0063,BBFAW,parent_company,Gruppo Veronesi,frozen:bbfaw:BBFAW-C-0063,Gruppo Veronesi,from_bbfaw2024Canonical.json
+BBFAW-C-0064,BBFAW,parent_company,Hormel Foods Corporation,frozen:bbfaw:BBFAW-C-0064,Hormel Foods Corporation,from_bbfaw2024Canonical.json
+BBFAW-C-0065,BBFAW,parent_company,ICA Gruppen AB,frozen:bbfaw:BBFAW-C-0065,ICA Gruppen AB,from_bbfaw2024Canonical.json
+BBFAW-C-0066,BBFAW,parent_company,IKEA,frozen:bbfaw:BBFAW-C-0066,IKEA,from_bbfaw2024Canonical.json
+BBFAW-C-0067,BBFAW,parent_company,Inter IKEA Group,frozen:bbfaw:BBFAW-C-0067,Inter IKEA Group,from_bbfaw2024Canonical.json
+BBFAW-C-0068,BBFAW,parent_company,JBS SA,frozen:bbfaw:BBFAW-C-0068,JBS SA,from_bbfaw2024Canonical.json
+BBFAW-C-0069,BBFAW,parent_company,Jeronimo Martins,frozen:bbfaw:BBFAW-C-0069,Jeronimo Martins,from_bbfaw2024Canonical.json
+BBFAW-C-0070,BBFAW,parent_company,Kraft Heinz Company,frozen:bbfaw:BBFAW-C-0070,Kraft Heinz Company,from_bbfaw2024Canonical.json
+BBFAW-C-0071,BBFAW,parent_company,Maple Leaf Foods,frozen:bbfaw:BBFAW-C-0071,Maple Leaf Foods,from_bbfaw2024Canonical.json
+BBFAW-C-0072,BBFAW,parent_company,McDonald's Corporation,frozen:bbfaw:BBFAW-C-0072,McDonald's Corporation,from_bbfaw2024Canonical.json
+BBFAW-C-0073,BBFAW,parent_company,McDonald's,frozen:bbfaw:BBFAW-C-0073,McDonald's,from_bbfaw2024Canonical.json
+BBFAW-C-0074,BBFAW,parent_company,METRO AG,frozen:bbfaw:BBFAW-C-0074,METRO AG,from_bbfaw2024Canonical.json
+BBFAW-C-0075,BBFAW,parent_company,Metro Inc,frozen:bbfaw:BBFAW-C-0075,Metro Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0076,BBFAW,parent_company,Mowi ASA,frozen:bbfaw:BBFAW-C-0076,Mowi ASA,from_bbfaw2024Canonical.json
+BBFAW-C-0077,BBFAW,parent_company,Nestlé SA,frozen:bbfaw:BBFAW-C-0077,Nestlé SA,from_bbfaw2024Canonical.json
+BBFAW-C-0078,BBFAW,parent_company,Nestlé,frozen:bbfaw:BBFAW-C-0078,Nestlé,from_bbfaw2024Canonical.json
+BBFAW-C-0079,BBFAW,parent_company,OSI Group,frozen:bbfaw:BBFAW-C-0079,OSI Group,from_bbfaw2024Canonical.json
+BBFAW-C-0080,BBFAW,parent_company,Papa John's Pizza,frozen:bbfaw:BBFAW-C-0080,Papa John's Pizza,from_bbfaw2024Canonical.json
+BBFAW-C-0081,BBFAW,parent_company,Perdue Farms,frozen:bbfaw:BBFAW-C-0081,Perdue Farms,from_bbfaw2024Canonical.json
+BBFAW-C-0082,BBFAW,parent_company,Plukon Food Group,frozen:bbfaw:BBFAW-C-0082,Plukon Food Group,from_bbfaw2024Canonical.json
+BBFAW-C-0083,BBFAW,parent_company,Restaurant Brands International,frozen:bbfaw:BBFAW-C-0083,Restaurant Brands International,from_bbfaw2024Canonical.json
+BBFAW-C-0084,BBFAW,parent_company,REWE Group,frozen:bbfaw:BBFAW-C-0084,REWE Group,from_bbfaw2024Canonical.json
+BBFAW-C-0085,BBFAW,parent_company,Royal FrieslandCampina,frozen:bbfaw:BBFAW-C-0085,Royal FrieslandCampina,from_bbfaw2024Canonical.json
+BBFAW-C-0086,BBFAW,parent_company,Saputo Inc,frozen:bbfaw:BBFAW-C-0086,Saputo Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0087,BBFAW,parent_company,Schwarz Gruppe,frozen:bbfaw:BBFAW-C-0087,Schwarz Gruppe,from_bbfaw2024Canonical.json
+BBFAW-C-0088,BBFAW,parent_company,Sodexo,frozen:bbfaw:BBFAW-C-0088,Sodexo,from_bbfaw2024Canonical.json
+BBFAW-C-0089,BBFAW,parent_company,SSP Group,frozen:bbfaw:BBFAW-C-0089,SSP Group,from_bbfaw2024Canonical.json
+BBFAW-C-0090,BBFAW,parent_company,Sysco Corporation,frozen:bbfaw:BBFAW-C-0090,Sysco Corporation,from_bbfaw2024Canonical.json
+BBFAW-C-0091,BBFAW,parent_company,The Cheesecake Factory,frozen:bbfaw:BBFAW-C-0091,The Cheesecake Factory,from_bbfaw2024Canonical.json
+BBFAW-C-0092,BBFAW,parent_company,Tönnies Group,frozen:bbfaw:BBFAW-C-0092,Tönnies Group,from_bbfaw2024Canonical.json
+BBFAW-C-0093,BBFAW,parent_company,Tyson Foods Inc,frozen:bbfaw:BBFAW-C-0093,Tyson Foods Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0094,BBFAW,parent_company,Tyson Foods,frozen:bbfaw:BBFAW-C-0094,Tyson Foods,from_bbfaw2024Canonical.json
+BBFAW-C-0095,BBFAW,parent_company,Vion Food Group,frozen:bbfaw:BBFAW-C-0095,Vion Food Group,from_bbfaw2024Canonical.json
+BBFAW-C-0096,BBFAW,parent_company,Wayne-Sanderson Farms,frozen:bbfaw:BBFAW-C-0096,Wayne-Sanderson Farms,from_bbfaw2024Canonical.json
+BBFAW-C-0097,BBFAW,parent_company,Yum! Brands Inc,frozen:bbfaw:BBFAW-C-0097,Yum! Brands Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0098,BBFAW,parent_company,Yum! Brands,frozen:bbfaw:BBFAW-C-0098,Yum! Brands,from_bbfaw2024Canonical.json
+BBFAW-C-0099,BBFAW,parent_company,Aeon Group,frozen:bbfaw:BBFAW-C-0099,Aeon Group,from_bbfaw2024Canonical.json
+BBFAW-C-0100,BBFAW,parent_company,Albertsons,frozen:bbfaw:BBFAW-C-0100,Albertsons,from_bbfaw2024Canonical.json
+BBFAW-C-0101,BBFAW,parent_company,Alimentation Couche-Tard,frozen:bbfaw:BBFAW-C-0101,Alimentation Couche-Tard,from_bbfaw2024Canonical.json
+BBFAW-C-0102,BBFAW,parent_company,Amazon,frozen:bbfaw:BBFAW-C-0102,Amazon,from_bbfaw2024Canonical.json
+BBFAW-C-0103,BBFAW,parent_company,Whole Foods Market,frozen:bbfaw:BBFAW-C-0103,Whole Foods Market,from_bbfaw2024Canonical.json
+BBFAW-C-0104,BBFAW,parent_company,Avolta AG,frozen:bbfaw:BBFAW-C-0104,Avolta AG,from_bbfaw2024Canonical.json
+BBFAW-C-0105,BBFAW,parent_company,Beijing Dabeinong Technology Group,frozen:bbfaw:BBFAW-C-0105,Beijing Dabeinong Technology Group,from_bbfaw2024Canonical.json
+BBFAW-C-0106,BBFAW,parent_company,BJ's Wholesale Club Holdings,frozen:bbfaw:BBFAW-C-0106,BJ's Wholesale Club Holdings,from_bbfaw2024Canonical.json
+BBFAW-C-0107,BBFAW,parent_company,Bloomin' Brands Inc,frozen:bbfaw:BBFAW-C-0107,Bloomin' Brands Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0108,BBFAW,parent_company,C&S Wholesale,frozen:bbfaw:BBFAW-C-0108,C&S Wholesale,from_bbfaw2024Canonical.json
+BBFAW-C-0109,BBFAW,parent_company,Camst,frozen:bbfaw:BBFAW-C-0109,Camst,from_bbfaw2024Canonical.json
+BBFAW-C-0110,BBFAW,parent_company,Cencosud,frozen:bbfaw:BBFAW-C-0110,Cencosud,from_bbfaw2024Canonical.json
+BBFAW-C-0111,BBFAW,parent_company,Chick-fil-A,frozen:bbfaw:BBFAW-C-0111,Chick-fil-A,from_bbfaw2024Canonical.json
+BBFAW-C-0112,BBFAW,parent_company,China Resources Vanguard,frozen:bbfaw:BBFAW-C-0112,China Resources Vanguard,from_bbfaw2024Canonical.json
+BBFAW-C-0113,BBFAW,parent_company,China Yurun Group,frozen:bbfaw:BBFAW-C-0113,China Yurun Group,from_bbfaw2024Canonical.json
+BBFAW-C-0114,BBFAW,parent_company,CKE Restaurants,frozen:bbfaw:BBFAW-C-0114,CKE Restaurants,from_bbfaw2024Canonical.json
+BBFAW-C-0115,BBFAW,parent_company,Conad,frozen:bbfaw:BBFAW-C-0115,Conad,from_bbfaw2024Canonical.json
+BBFAW-C-0116,BBFAW,parent_company,Cooke Seafood Inc,frozen:bbfaw:BBFAW-C-0116,Cooke Seafood Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0117,BBFAW,parent_company,Coop Italia,frozen:bbfaw:BBFAW-C-0117,Coop Italia,from_bbfaw2024Canonical.json
+BBFAW-C-0118,BBFAW,parent_company,Costco Wholesale Corporation,frozen:bbfaw:BBFAW-C-0118,Costco Wholesale Corporation,from_bbfaw2024Canonical.json
+BBFAW-C-0119,BBFAW,parent_company,Cracker Barrel,frozen:bbfaw:BBFAW-C-0119,Cracker Barrel,from_bbfaw2024Canonical.json
+BBFAW-C-0120,BBFAW,parent_company,Dairy Farmers of America,frozen:bbfaw:BBFAW-C-0120,Dairy Farmers of America,from_bbfaw2024Canonical.json
+BBFAW-C-0121,BBFAW,parent_company,Dico's,frozen:bbfaw:BBFAW-C-0121,Dico's,from_bbfaw2024Canonical.json
+BBFAW-C-0122,BBFAW,parent_company,Ting Hsin International Group,frozen:bbfaw:BBFAW-C-0122,Ting Hsin International Group,from_bbfaw2024Canonical.json
+BBFAW-C-0123,BBFAW,parent_company,Dino Polska SA,frozen:bbfaw:BBFAW-C-0123,Dino Polska SA,from_bbfaw2024Canonical.json
+BBFAW-C-0124,BBFAW,parent_company,Domino's Pizza Inc,frozen:bbfaw:BBFAW-C-0124,Domino's Pizza Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0125,BBFAW,parent_company,Domino's,frozen:bbfaw:BBFAW-C-0125,Domino's,from_bbfaw2024Canonical.json
+BBFAW-C-0126,BBFAW,parent_company,Empire Company,frozen:bbfaw:BBFAW-C-0126,Empire Company,from_bbfaw2024Canonical.json
+BBFAW-C-0127,BBFAW,parent_company,Sobey's,frozen:bbfaw:BBFAW-C-0127,Sobey's,from_bbfaw2024Canonical.json
+BBFAW-C-0128,BBFAW,parent_company,Gategroup Holding AG,frozen:bbfaw:BBFAW-C-0128,Gategroup Holding AG,from_bbfaw2024Canonical.json
+BBFAW-C-0129,BBFAW,parent_company,H E Butt Company,frozen:bbfaw:BBFAW-C-0129,H E Butt Company,from_bbfaw2024Canonical.json
+BBFAW-C-0130,BBFAW,parent_company,H-E-B,frozen:bbfaw:BBFAW-C-0130,H-E-B,from_bbfaw2024Canonical.json
+BBFAW-C-0131,BBFAW,parent_company,Habib's,frozen:bbfaw:BBFAW-C-0131,Habib's,from_bbfaw2024Canonical.json
+BBFAW-C-0132,BBFAW,parent_company,Industrias Bachoco,frozen:bbfaw:BBFAW-C-0132,Industrias Bachoco,from_bbfaw2024Canonical.json
+BBFAW-C-0133,BBFAW,parent_company,JAB Holding Company,frozen:bbfaw:BBFAW-C-0133,JAB Holding Company,from_bbfaw2024Canonical.json
+BBFAW-C-0134,BBFAW,parent_company,Kerry Group,frozen:bbfaw:BBFAW-C-0134,Kerry Group,from_bbfaw2024Canonical.json
+BBFAW-C-0135,BBFAW,parent_company,Lianhua Supermarket Holdings,frozen:bbfaw:BBFAW-C-0135,Lianhua Supermarket Holdings,from_bbfaw2024Canonical.json
+BBFAW-C-0136,BBFAW,parent_company,Loblaw Companies Limited,frozen:bbfaw:BBFAW-C-0136,Loblaw Companies Limited,from_bbfaw2024Canonical.json
+BBFAW-C-0137,BBFAW,parent_company,Mars Inc,frozen:bbfaw:BBFAW-C-0137,Mars Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0138,BBFAW,parent_company,Mars,frozen:bbfaw:BBFAW-C-0138,Mars,from_bbfaw2024Canonical.json
+BBFAW-C-0139,BBFAW,parent_company,Maruha Nichiro,frozen:bbfaw:BBFAW-C-0139,Maruha Nichiro,from_bbfaw2024Canonical.json
+BBFAW-C-0140,BBFAW,parent_company,Meiji Holdings,frozen:bbfaw:BBFAW-C-0140,Meiji Holdings,from_bbfaw2024Canonical.json
+BBFAW-C-0141,BBFAW,parent_company,Mercadona SA,frozen:bbfaw:BBFAW-C-0141,Mercadona SA,from_bbfaw2024Canonical.json
+BBFAW-C-0142,BBFAW,parent_company,Mondelēz International,frozen:bbfaw:BBFAW-C-0142,Mondelēz International,from_bbfaw2024Canonical.json
+BBFAW-C-0143,BBFAW,parent_company,Müller,frozen:bbfaw:BBFAW-C-0143,Müller,from_bbfaw2024Canonical.json
+BBFAW-C-0144,BBFAW,parent_company,New Hope Liuhe,frozen:bbfaw:BBFAW-C-0144,New Hope Liuhe,from_bbfaw2024Canonical.json
+BBFAW-C-0145,BBFAW,parent_company,Nippon Ham,frozen:bbfaw:BBFAW-C-0145,Nippon Ham,from_bbfaw2024Canonical.json
+BBFAW-C-0146,BBFAW,parent_company,Publix Super Markets Inc,frozen:bbfaw:BBFAW-C-0146,Publix Super Markets Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0147,BBFAW,parent_company,Roark Capital,frozen:bbfaw:BBFAW-C-0147,Roark Capital,from_bbfaw2024Canonical.json
+BBFAW-C-0148,BBFAW,parent_company,Inspire Brands,frozen:bbfaw:BBFAW-C-0148,Inspire Brands,from_bbfaw2024Canonical.json
+BBFAW-C-0149,BBFAW,parent_company,Subway,frozen:bbfaw:BBFAW-C-0149,Subway,from_bbfaw2024Canonical.json
+BBFAW-C-0150,BBFAW,parent_company,Seaboard Corp,frozen:bbfaw:BBFAW-C-0150,Seaboard Corp,from_bbfaw2024Canonical.json
+BBFAW-C-0151,BBFAW,parent_company,Seven & i Holdings,frozen:bbfaw:BBFAW-C-0151,Seven & i Holdings,from_bbfaw2024Canonical.json
+BBFAW-C-0152,BBFAW,parent_company,Spar Holding AG,frozen:bbfaw:BBFAW-C-0152,Spar Holding AG,from_bbfaw2024Canonical.json
+BBFAW-C-0153,BBFAW,parent_company,Starbucks Corporation,frozen:bbfaw:BBFAW-C-0153,Starbucks Corporation,from_bbfaw2024Canonical.json
+BBFAW-C-0154,BBFAW,parent_company,Starbucks,frozen:bbfaw:BBFAW-C-0154,Starbucks,from_bbfaw2024Canonical.json
+BBFAW-C-0155,BBFAW,parent_company,Target Corporation,frozen:bbfaw:BBFAW-C-0155,Target Corporation,from_bbfaw2024Canonical.json
+BBFAW-C-0156,BBFAW,parent_company,UNFI,frozen:bbfaw:BBFAW-C-0156,UNFI,from_bbfaw2024Canonical.json
+BBFAW-C-0157,BBFAW,parent_company,US Foods,frozen:bbfaw:BBFAW-C-0157,US Foods,from_bbfaw2024Canonical.json
+BBFAW-C-0158,BBFAW,parent_company,Walmart Inc,frozen:bbfaw:BBFAW-C-0158,Walmart Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0159,BBFAW,parent_company,Walmart,frozen:bbfaw:BBFAW-C-0159,Walmart,from_bbfaw2024Canonical.json
+BBFAW-C-0160,BBFAW,parent_company,Wendy's Company,frozen:bbfaw:BBFAW-C-0160,Wendy's Company,from_bbfaw2024Canonical.json
+BBFAW-C-0161,BBFAW,parent_company,Wendy's,frozen:bbfaw:BBFAW-C-0161,Wendy's,from_bbfaw2024Canonical.json
+BBFAW-C-0162,BBFAW,parent_company,Wens Foodstuff Group,frozen:bbfaw:BBFAW-C-0162,Wens Foodstuff Group,from_bbfaw2024Canonical.json
+BBFAW-C-0163,BBFAW,parent_company,WH Group Ltd,frozen:bbfaw:BBFAW-C-0163,WH Group Ltd,from_bbfaw2024Canonical.json
+BBFAW-C-0164,BBFAW,parent_company,Yili Group,frozen:bbfaw:BBFAW-C-0164,Yili Group,from_bbfaw2024Canonical.json
+BBFAW-C-0165,BBFAW,parent_company,Yonghui Superstores,frozen:bbfaw:BBFAW-C-0165,Yonghui Superstores,from_bbfaw2024Canonical.json
+BBFAW-C-0166,BBFAW,parent_company,Yum China Holdings,frozen:bbfaw:BBFAW-C-0166,Yum China Holdings,from_bbfaw2024Canonical.json
+BBFAW-C-0167,BBFAW,parent_company,Zhongpin Inc,frozen:bbfaw:BBFAW-C-0167,Zhongpin Inc,from_bbfaw2024Canonical.json
+BBFAW-C-0168,BBFAW,parent_company,Huayu Holdings,frozen:bbfaw:BBFAW-C-0168,Huayu Holdings,from_bbfaw2024Canonical.json
+BBFAW-C-0169,BBFAW,parent_company,Boparan Holdings,frozen:bbfaw:BBFAW-C-0169,Boparan Holdings,from_bbfaw2024Canonical.json
+BBFAW-C-0170,BBFAW,parent_company,Genossenschaft,frozen:bbfaw:BBFAW-C-0170,Genossenschaft,from_bbfaw2024Canonical.json
+BBFAW-MAP-0000,BBFAW,parent_company,ALDI Süd/ALDI Einkauf SE & Co. oHG,frozen:bbfaw:BBFAW-MAP-0000,ALDI Süd/ALDI Einkauf SE & Co. oHG,from_brandAliasMap_only
+BBFAW-MAP-0001,BBFAW,parent_company,Arla Foods Ltd.,frozen:bbfaw:BBFAW-MAP-0001,Arla Foods Ltd.,from_brandAliasMap_only
+BBFAW-MAP-0002,BBFAW,parent_company,Hershey Co.,frozen:bbfaw:BBFAW-MAP-0002,Hershey Co.,from_brandAliasMap_only
+BBFAW-MAP-0003,BBFAW,parent_company,Terrena Group.,frozen:bbfaw:BBFAW-MAP-0003,Terrena Group.,from_brandAliasMap_only
+BBFAW-MAP-0004,BBFAW,parent_company,Wm Morrison Supermarkets PLC.,frozen:bbfaw:BBFAW-MAP-0004,Wm Morrison Supermarkets PLC.,from_brandAliasMap_only
+BBFAW-MAP-0005,BBFAW,parent_company,2 Sisters Food Group (Boparan Holdings Ltd),frozen:bbfaw:BBFAW-MAP-0005,2 Sisters Food Group (Boparan Holdings Ltd),from_brandAliasMap_only
+BBFAW-MAP-0006,BBFAW,parent_company,ALDI Einkauf SE & Co. oHG (ALDI Nord),frozen:bbfaw:BBFAW-MAP-0006,ALDI Einkauf SE & Co. oHG (ALDI Nord),from_brandAliasMap_only
+BBFAW-MAP-0007,BBFAW,parent_company,Bellis Topco Ltd./Asda,frozen:bbfaw:BBFAW-MAP-0007,Bellis Topco Ltd./Asda,from_brandAliasMap_only
+BBFAW-MAP-0008,BBFAW,parent_company,Carrefour SA.,frozen:bbfaw:BBFAW-MAP-0008,Carrefour SA.,from_brandAliasMap_only
+BBFAW-MAP-0009,BBFAW,parent_company,Coop Group (Switzerland)/Coop Genossenschaft,frozen:bbfaw:BBFAW-MAP-0009,Coop Group (Switzerland)/Coop Genossenschaft,from_brandAliasMap_only
+BBFAW-MAP-0010,BBFAW,parent_company,Royal FrieslandCampina.,frozen:bbfaw:BBFAW-MAP-0010,Royal FrieslandCampina.,from_brandAliasMap_only
+BBFAW-MAP-0011,BBFAW,parent_company,Wayne-Sanderson Farms.,frozen:bbfaw:BBFAW-MAP-0011,Wayne-Sanderson Farms.,from_brandAliasMap_only
+BBFAW-MAP-0012,BBFAW,parent_company,Amazon/Whole Foods Market,frozen:bbfaw:BBFAW-MAP-0012,Amazon/Whole Foods Market,from_brandAliasMap_only
+BBFAW-MAP-0013,BBFAW,parent_company,BJ’s Wholesale Club Holdings,frozen:bbfaw:BBFAW-MAP-0013,BJ’s Wholesale Club Holdings,from_brandAliasMap_only
+BBFAW-MAP-0014,BBFAW,parent_company,China Yurun Group Limited,frozen:bbfaw:BBFAW-MAP-0014,China Yurun Group Limited,from_brandAliasMap_only
+BBFAW-MAP-0015,BBFAW,parent_company,Conad Consorzio Nazionale,frozen:bbfaw:BBFAW-MAP-0015,Conad Consorzio Nazionale,from_brandAliasMap_only
+BBFAW-MAP-0016,BBFAW,parent_company,Empire Company/Sobey’s,frozen:bbfaw:BBFAW-MAP-0016,Empire Company/Sobey’s,from_brandAliasMap_only
+BBFAW-MAP-0017,BBFAW,parent_company,Lianhua Supermarket Holdings Co,frozen:bbfaw:BBFAW-MAP-0017,Lianhua Supermarket Holdings Co,from_brandAliasMap_only
+BBFAW-MAP-0018,BBFAW,parent_company,Müller UTM,frozen:bbfaw:BBFAW-MAP-0018,Müller UTM,from_brandAliasMap_only
+BBFAW-MAP-0019,BBFAW,parent_company,New Hope Liuhe Co Ltd,frozen:bbfaw:BBFAW-MAP-0019,New Hope Liuhe Co Ltd,from_brandAliasMap_only
+BBFAW-MAP-0020,BBFAW,parent_company,Yonghui Superstores Co Ltd,frozen:bbfaw:BBFAW-MAP-0020,Yonghui Superstores Co Ltd,from_brandAliasMap_only
+BBFAW-MAP-0021,BBFAW,parent_company,Zhongpin Inc (Huayu Holdings),frozen:bbfaw:BBFAW-MAP-0021,Zhongpin Inc (Huayu Holdings),from_brandAliasMap_only
+KTC-C-0000,KTC,parent_company,"Aeon Co., Ltd.",frozen:ktc:KTC-C-0000,"Aeon Co., Ltd.",from_ktcParents.json
+KTC-C-0001,KTC,parent_company,"Ajinomoto Co., Inc.",frozen:ktc:KTC-C-0001,"Ajinomoto Co., Inc.",from_ktcParents.json
+KTC-C-0002,KTC,parent_company,Associated British Foods plc,frozen:ktc:KTC-C-0002,Associated British Foods plc,from_ktcParents.json
+KTC-C-0003,KTC,parent_company,Campbell Soup Company,frozen:ktc:KTC-C-0003,Campbell Soup Company,from_ktcParents.json
+KTC-C-0004,KTC,parent_company,Carrefour SA,frozen:ktc:KTC-C-0004,Carrefour SA,from_ktcParents.json
+KTC-C-0005,KTC,parent_company,China Mengniu Dairy Co Ltd,frozen:ktc:KTC-C-0005,China Mengniu Dairy Co Ltd,from_ktcParents.json
+KTC-C-0006,KTC,parent_company,Chocoladefabriken Lindt & Sprüngli AG,frozen:ktc:KTC-C-0006,Chocoladefabriken Lindt & Sprüngli AG,from_ktcParents.json
+KTC-C-0007,KTC,parent_company,Coles Group,frozen:ktc:KTC-C-0007,Coles Group,from_ktcParents.json
+KTC-C-0008,KTC,parent_company,"Conagra Brands, Inc.",frozen:ktc:KTC-C-0008,"Conagra Brands, Inc.",from_ktcParents.json
+KTC-C-0009,KTC,parent_company,Costco Wholesale Corporation,frozen:ktc:KTC-C-0009,Costco Wholesale Corporation,from_ktcParents.json
+KTC-C-0010,KTC,parent_company,Danone,frozen:ktc:KTC-C-0010,Danone,from_ktcParents.json
+KTC-C-0011,KTC,parent_company,Empire Co. Ltd.,frozen:ktc:KTC-C-0011,Empire Co. Ltd.,from_ktcParents.json
+KTC-C-0012,KTC,parent_company,Foshan Haitian Flavouring and Food Co Ltd,frozen:ktc:KTC-C-0012,Foshan Haitian Flavouring and Food Co Ltd,from_ktcParents.json
+KTC-C-0013,KTC,parent_company,"General Mills, Inc.",frozen:ktc:KTC-C-0013,"General Mills, Inc.",from_ktcParents.json
+KTC-C-0014,KTC,parent_company,"Grupo Bimbo, S.A.B. de C.V.",frozen:ktc:KTC-C-0014,"Grupo Bimbo, S.A.B. de C.V.",from_ktcParents.json
+KTC-C-0015,KTC,parent_company,Hormel Foods Corporation,frozen:ktc:KTC-C-0015,Hormel Foods Corporation,from_ktcParents.json
+KTC-C-0016,KTC,parent_company,"Inner Mongolia Yili Industrial Group Co., Ltd",frozen:ktc:KTC-C-0016,"Inner Mongolia Yili Industrial Group Co., Ltd",from_ktcParents.json
+KTC-C-0017,KTC,parent_company,JBS S.A.,frozen:ktc:KTC-C-0017,JBS S.A.,from_ktcParents.json
+KTC-C-0018,KTC,parent_company,Kikkoman Corp,frozen:ktc:KTC-C-0018,Kikkoman Corp,from_ktcParents.json
+KTC-C-0019,KTC,parent_company,Koninklijke Ahold Delhaize NV,frozen:ktc:KTC-C-0019,Koninklijke Ahold Delhaize NV,from_ktcParents.json
+KTC-C-0020,KTC,parent_company,Loblaw Companies Limited,frozen:ktc:KTC-C-0020,Loblaw Companies Limited,from_ktcParents.json
+KTC-C-0021,KTC,parent_company,McCormick & Co Inc,frozen:ktc:KTC-C-0021,McCormick & Co Inc,from_ktcParents.json
+KTC-C-0022,KTC,parent_company,"Meiji Holdings Co., Ltd.",frozen:ktc:KTC-C-0022,"Meiji Holdings Co., Ltd.",from_ktcParents.json
+KTC-C-0023,KTC,parent_company,Metro Inc.,frozen:ktc:KTC-C-0023,Metro Inc.,from_ktcParents.json
+KTC-C-0024,KTC,parent_company,"Mondelēz International, Inc.",frozen:ktc:KTC-C-0024,"Mondelēz International, Inc.",from_ktcParents.json
+KTC-C-0025,KTC,parent_company,Mowi ASA,frozen:ktc:KTC-C-0025,Mowi ASA,from_ktcParents.json
+KTC-C-0026,KTC,parent_company,Nestlé S.A.,frozen:ktc:KTC-C-0026,Nestlé S.A.,from_ktcParents.json
+KTC-C-0027,KTC,parent_company,Saputo Inc.,frozen:ktc:KTC-C-0027,Saputo Inc.,from_ktcParents.json
+KTC-C-0028,KTC,parent_company,Seven & i Holdings Co Ltd,frozen:ktc:KTC-C-0028,Seven & i Holdings Co Ltd,from_ktcParents.json
+KTC-C-0029,KTC,parent_company,Tesco PLC,frozen:ktc:KTC-C-0029,Tesco PLC,from_ktcParents.json
+KTC-C-0030,KTC,parent_company,The Hershey Company,frozen:ktc:KTC-C-0030,The Hershey Company,from_ktcParents.json
+KTC-C-0031,KTC,parent_company,The J. M. Smucker Company,frozen:ktc:KTC-C-0031,The J. M. Smucker Company,from_ktcParents.json
+KTC-C-0032,KTC,parent_company,The Kraft Heinz Company,frozen:ktc:KTC-C-0032,The Kraft Heinz Company,from_ktcParents.json
+KTC-C-0033,KTC,parent_company,The Kroger Co.,frozen:ktc:KTC-C-0033,The Kroger Co.,from_ktcParents.json
+KTC-C-0034,KTC,parent_company,Tyson Foods Inc.,frozen:ktc:KTC-C-0034,Tyson Foods Inc.,from_ktcParents.json
+KTC-C-0035,KTC,parent_company,Unilever plc,frozen:ktc:KTC-C-0035,Unilever plc,from_ktcParents.json
+KTC-C-0036,KTC,parent_company,WH Group Limited,frozen:ktc:KTC-C-0036,WH Group Limited,from_ktcParents.json
+KTC-C-0037,KTC,parent_company,Walmart Inc.,frozen:ktc:KTC-C-0037,Walmart Inc.,from_ktcParents.json
+KTC-C-0038,KTC,parent_company,Want Want China Holdings Limited,frozen:ktc:KTC-C-0038,Want Want China Holdings Limited,from_ktcParents.json
+KTC-C-0039,KTC,parent_company,Wilmar International Limited,frozen:ktc:KTC-C-0039,Wilmar International Limited,from_ktcParents.json
+KTC-C-0040,KTC,parent_company,Woolworths Group Limited,frozen:ktc:KTC-C-0040,Woolworths Group Limited,from_ktcParents.json
+KTC-C-0041,KTC,parent_company,"Yakult Honsha Co.,Ltd.",frozen:ktc:KTC-C-0041,"Yakult Honsha Co.,Ltd.",from_ktcParents.json

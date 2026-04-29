@@ -1,0 +1,2 @@
+entity_id,benchmark_name,entity_kind,display_name,benchmark_owner_entity_id,benchmark_owner_legal_name,notes
+TEMPLATE_BBFAW_ENTITY,BBFAW,parent_company,Example Parent PLC,frozen_owner:template_bbfaw,Example Parent PLC,template_only

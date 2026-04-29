@@ -1,0 +1,10 @@
+{
+  "report_generated_at": "2026-04-29T21:40:23.316Z",
+  "ok": true,
+  "missing_required_input_files": [],
+  "missing_optional_input_files": [
+    "benchmark_correction_log.csv",
+    "benchmark_to_a_identity_crosswalk.csv",
+    "benchmark_exceptions.csv"
+  ]
+}
