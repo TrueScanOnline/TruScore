@@ -1,0 +1,1 @@
+audit_row_id,retailer,retailer_country,department,category_path,product_title_raw,extracted_brand_candidate,normalized_brand_candidate,match_status,matched_brand_id,matched_alias_id,parent_extension_candidate_id,audit_date,notes_internal

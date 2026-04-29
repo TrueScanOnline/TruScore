@@ -44,6 +44,8 @@
     "test:phase6:gate:merge": "powershell -Command \"$env:PHASE6_GATE_LEVEL='merge'; npx jest src/__tests__/golden/phase6.releaseHardening.test.ts\"",
     "test:phase6:gate:rc": "powershell -Command \"$env:PHASE6_GATE_LEVEL='release_candidate'; npx jest src/__tests__/golden/phase6.releaseHardening.test.ts\"",
     "test:phase6:gate:public": "powershell -Command \"$env:PHASE6_GATE_LEVEL='public_release'; npx jest src/__tests__/golden/phase6.releaseHardening.test.ts\"",
+    "test:workstreamA:scaffold": "jest src/__tests__/unit/identity/workstreamA.specPack.test.ts src/__tests__/unit/identity/workstreamA.scaffoldRunner.test.ts",
+    "workstreamA:smoke": "ts-node --project scripts/tsconfig.json scripts/workstreamA-scaffold-smoke.ts",
     "audit:phase1-names": "node scripts/export-phase1-name-audit.mjs",
     "export:phase2-claim-registry": "node scripts/generate-phase2-claim-registry.mjs",
     "test:e2e:ethics-open-backend": "ts-node --project scripts/tsconfig.json scripts/e2eEthicsOpenBackendVerification.ts",
