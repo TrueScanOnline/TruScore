@@ -1,4 +1,4 @@
-import Qonversion, { Product } from 'react-native-qonversion';
+import Qonversion, { Product } from '@qonversion/react-native-sdk';
 import { Platform } from 'react-native';
 import * as Localization from 'expo-localization';
 

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Qonversion, { QonversionConfigBuilder, LaunchMode, Environment } from 'react-native-qonversion';
+import Qonversion, { QonversionConfigBuilder, LaunchMode, Environment } from '@qonversion/react-native-sdk';
 import { Platform } from 'react-native';
 
 export type SubscriptionStatus = 'active' | 'expired' | 'trial' | 'grace_period' | 'billing_issue' | null;

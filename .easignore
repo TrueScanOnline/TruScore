@@ -63,6 +63,7 @@ build/
 !tsconfig.json
 !app.config.js
 !eas.json
+!src/config/productIdentity.expo.json
 # Include i18n locale files (REQUIRED for app - must be explicit)
 !src/i18n/locales/en.json
 !src/i18n/locales/es.json
