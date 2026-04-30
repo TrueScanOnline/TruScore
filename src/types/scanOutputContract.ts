@@ -27,6 +27,8 @@ export interface SignalCard {
   /** Until all copy moves to i18n keys */
   title_display?: string;
   body_display?: string;
+  /** Optional skeleton / pack-supplied “why” line (Phase 6 Workstream C Option A). */
+  why_display?: string;
 }
 
 export interface ProductScanResult {

@@ -1,0 +1,8 @@
+expectation_id,rule,treatment
+RT001,Only reviewed A chains trigger public parent/brand Signals,Resolved GTIN link + brand + parent must be review_state=reviewed in A-Data; or approved injected UAT chain for tests. Provisional/disputed/archived chain → no skeleton signal.
+RT002,Architecture labels reused,Use pack signal_class and publication_state; no new review_state enum literals (rejected is editorial_review_state only).
+RT003,UAT trigger fields in subject links are provisional test helpers,Not final Workstream C schema.
+RT004,Recall scope is source-supported,Product-family token SOURCE_PRODUCT_ALFAMINO_400G is a documented local UAT identifier.
+RT005,Retailer conduct not store-wide,Parent link requires brand under same parent as reviewed chain.
+RT006,NGO global rows use GLOBAL_CONTEXT as narrow eligibility after chain match,Does not replace market_key on publication records; does not bypass gating.
+RT007,Frozen benchmark non-corruption,This module does not write Workstream B objects.

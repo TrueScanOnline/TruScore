@@ -90,6 +90,8 @@ export function sortPublicationRecordsForRender(
 export function mapPublicationRecordToSignalCard(r: DynamicSignalPublicationRecord): SignalCard {
   const view = NORMATIVE_TO_PRESENTATION_DEFAULT[r.signal_class];
   const severity = PUBLICATION_SIGNAL_SEVERITY_BY_CLASS[r.signal_class];
+  const sk = r.skeleton_card_copy;
+  const fallbackTitle = r.source_record_id ? `${r.signal_class}:${r.source_record_id}` : r.signal_class;
   return {
     id: r.signal_id,
     class: view.signalClass,
@@ -99,7 +101,9 @@ export function mapPublicationRecordToSignalCard(r: DynamicSignalPublicationReco
     severity,
     links: [],
     dedupe_key: r.dedupe_key,
-    title_display: r.source_record_id ? `${r.signal_class}:${r.source_record_id}` : r.signal_class,
+    title_display: sk?.title_display ?? fallbackTitle,
+    body_display: sk?.body_display,
+    why_display: sk?.why_display,
   };
 }
 

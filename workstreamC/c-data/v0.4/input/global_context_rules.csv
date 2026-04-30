@@ -1,0 +1,4 @@
+rule_id,rule,must_not_do
+GC-001,GLOBAL_CONTEXT may be eligible for AU/NZ scans only after normal scan resolution reaches the reviewed subject chain referenced by signal_subject_links.csv.,"Do not use GLOBAL_CONTEXT as a market override, direct trigger, or substitute for reviewed A-chain matching."
+GC-002,GLOBAL_CONTEXT does not broaden subject scope beyond the explicit subject link and UAT trigger notes.,Do not turn a cocoa/category link into a parent-wide or store-wide alert.
+GC-003,GLOBAL_CONTEXT rows still require publication_state eligibility and editorial_review_state approval/not_required as applicable.,Do not bypass editorial/publication gates.

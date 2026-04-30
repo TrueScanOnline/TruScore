@@ -1,0 +1,12 @@
+test_id,market_key,scan_example,expected_signal_ids,expected_outcome,expected_rationale
+UAT_C_001,AU,MILO Dipped Snack Bars,SIG_REG_AU_001,positive,Exact/source-named product-family recall match.
+UAT_C_002,AU,KitKat chocolate bar,SIG_NEWS_GLOBAL_001,positive,Chocolate/cocoa brand match to Global Witness fixture; Alfamino/MILO recalls must not trigger.
+UAT_C_003,AU,Nestlé Alfamino Infant Formula 400g,SIG_REG_AU_002,positive,Exact product/batch recall match; cocoa/chocolate signals must not trigger.
+UAT_C_004,NZ,Pams Onion Sprouts Combo,SIG_REG_NZ_001,positive,MPI source-named product recall match.
+UAT_C_005,NZ,PAK'nSAVE Moorhouse Turkish Bread,SIG_REG_NZ_002,positive,Store-specific MPI recall match.
+UAT_C_006,AU,Woolworths Essentials pasta,SIG_NEWS_AU_001,positive,Retailer conduct signal triggered only for retailer own-label / retailer-branded product.
+UAT_C_007,AU,Coca-Cola sold at Woolworths,,negative,Retailer conduct signal must not trigger merely because product is sold at Woolworths.
+UAT_C_008,AU,Cadbury Dairy Milk,SIG_NEWS_GLOBAL_001;SIG_NEWS_GLOBAL_002,positive,Reviewed chocolate/cocoa Mondelez brand; global NGO fixtures use attribution-safe wording; two distinct signals.
+UAT_C_009,AU,Ritz crackers,,negative,Mondelēz-owned but not chocolate/cocoa/named relevant category in skeleton. No parent-wide NGO trigger.
+UAT_C_010,AU,Philadelphia cream cheese,,negative,Mondelēz-owned but not source-supported skeleton category. No parent-wide NGO trigger.
+UAT_C_011,NZ,Countdown Greek Style Yoghurt,SIG_NEWS_NZ_001,positive,NZ In the News — reviewed Woolworths Group/Countdown chain; 1News retailer-conduct fixture; not third-party-only sold-in-store.

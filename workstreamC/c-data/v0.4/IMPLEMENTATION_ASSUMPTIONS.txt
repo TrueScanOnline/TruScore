@@ -1,0 +1,13 @@
+Workstream C skeleton v0.4 — implementation assumptions (repo)
+
+1) GLOBAL_CONTEXT (signal_subject_links.market_key): Eligibility only. An AU or NZ scan may match NGO rows after the product’s reviewed A-Data brand/parent chain matches the link. No market_key mutation on DynamicSignalPublicationRecord; resolution_key uses normal AU/NZ/AU+NZ internal market from the scan.
+
+2) Option A UX: When skeleton_card_copy is set on publication records, SignalCard title_display/body_display/why_display use pack + ux_copy_skeleton.csv; class-level i18n keys remain on title_key/body_key/why_key for any caller using t() without display overrides.
+
+3) GTIN path: If gtin_brand_links has a row with link_review_state=reviewed and brand/parent reviewed, the real chain is used. Otherwise tests may pass injectedChain (in-code UAT only) — not a CLI binding.
+
+4) v0.4 pack delta: SL011 subject_id set to B0241 (was B0067) so UAT_C_008 dual NGO signals both match the same Cadbury Dairy Milk reviewed row (distinct signal_id + dedupe_key).
+
+5) Staleness: valid_until set far-future on skeleton records; full lifecycle not in scope for this pass.
+
+6) XLSX: Canonical pack is CSV under workstreamC/c-data/v0.4/input. Compare row counts/IDs to any XLSX review copy manually if used offline.

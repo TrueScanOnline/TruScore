@@ -50,6 +50,8 @@
     "workstreamB:validate": "ts-node --project scripts/tsconfig.json scripts/workstreamB-validate-pack.ts",
     "workstreamB:smoke": "ts-node --project scripts/tsconfig.json scripts/workstreamB-scaffold-smoke.ts",
     "workstreamB:generate-from-repo": "ts-node --project scripts/tsconfig.json scripts/generate-workstreamB-bdata-from-repo.ts",
+    "test:workstreamC:skeleton": "jest src/__tests__/unit/workstreamC/skeletonPublicationRecords.test.ts",
+    "workstreamC:verify-subjects": "ts-node --project scripts/tsconfig.json scripts/workstreamC-verify-subject-links-against-a-data.ts",
     "audit:phase1-names": "node scripts/export-phase1-name-audit.mjs",
     "export:phase2-claim-registry": "node scripts/generate-phase2-claim-registry.mjs",
     "test:e2e:ethics-open-backend": "ts-node --project scripts/tsconfig.json scripts/e2eEthicsOpenBackendVerification.ts",

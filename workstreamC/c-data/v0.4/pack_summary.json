@@ -1,0 +1,13 @@
+{
+  "pack_name": "Workstream C — Signals Skeleton Test Pack",
+  "version": "v0.4",
+  "date": "2026-04-30",
+  "basis": "v0.3 row universe + founder-aligned patch (NZ UAT, verification file, editorial UX)",
+  "signal_records": 8,
+  "sources": 6,
+  "subject_links": 13,
+  "uat_rows": 11,
+  "signal_classes": ["safety_regulatory", "in_the_news"],
+  "canonical_root": "workstreamC/c-data/v0.4/input",
+  "status": "skeleton_uat_only_not_final_schema"
+}

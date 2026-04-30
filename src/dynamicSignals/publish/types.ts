@@ -47,6 +47,15 @@ export interface DynamicSignalPublicationRecord {
     open_report_count: number;
     last_event_at: string | null;
   };
+  /**
+   * Workstream C skeleton (v0.4+): optional pack UX for Option A display. Not a general 5B field;
+   * when set, `mapPublicationRecordToSignalCard` maps into `SignalCard` display fields.
+   */
+  skeleton_card_copy?: {
+    title_display: string;
+    body_display: string;
+    why_display: string;
+  };
 }
 
 export type MyChoicesChainContext = {

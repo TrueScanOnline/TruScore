@@ -1,0 +1,4 @@
+copy_id,signal_id,card_class,scope_badge,example_headline,why_shown,caveat
+UX001,SIG_NEWS_GLOBAL_001,In the News,Supply chain context,Global Witness links major chocolate brands to deforestation-risk cocoa supply chains.,Shown because this product is a reviewed chocolate/cocoa brand in the affected supply-chain context.,"This is an NGO investigation signal, not a product safety recall. It should not imply the specific product is unsafe."
+UX002,SIG_REG_AU_002,Safety & Regulatory,Exact product recall,FSANZ recall for Nestlé Alfamino Infant Formula 400g.,Shown because the official recall applies to this named product and listed batches.,Does not apply to unrelated Nestlé products.
+UX003,SIG_NEWS_AU_001,In the News,Retailer conduct,ABC reports ACCC allegations about Woolworths discount pricing practices.,Shown because the scanned item is a reviewed Woolworths own-label or retailer-branded product.,Does not apply to third-party products merely sold at Woolworths.

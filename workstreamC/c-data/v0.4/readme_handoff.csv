@@ -1,0 +1,7 @@
+field,value
+pack_name,Workstream C — Signals Skeleton Test Pack v0.4 founder-aligned patch
+date,2026-04-30
+role,Patch/handoff pack applied to Cursor-reviewed v0.3; preserves v0.3 row universe rather than replacing it.
+canonical_position,CSV/JSON canonical; XLSX review-only.
+v0_3_shape_to_preserve,8 signal records; 6 sources; 13 subject links; 10 UAT rows; classes safety_regulatory and in_the_news only.
+v0_4_delta,One positive NZ In the News UAT row UAT_C_011 for SIG_NEWS_NZ_001; signal_subject_a_data_verification.csv; editorial_review_state normalisation; stable readme_handoff.csv; GLOBAL_CONTEXT + dual-signal rules documented in repo implementation.

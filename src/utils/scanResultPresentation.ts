@@ -62,7 +62,7 @@ export function resolveSignalCopy(card: SignalCard, t: TFunction): { title: stri
   const message =
     t(card.body_key, { defaultValue: card.body_display ?? '' }) || card.body_display || '';
   const why =
-    t(card.why_key, { defaultValue: '' }) || '';
+    t(card.why_key, { defaultValue: card.why_display ?? '' }) || card.why_display || '';
   return { title, message, why };
 }
 
