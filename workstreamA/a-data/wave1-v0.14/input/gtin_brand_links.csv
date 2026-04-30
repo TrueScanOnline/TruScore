@@ -2,3 +2,5 @@ gtin,brand_id,parent_id,link_review_state,source_type,source_reference,product_n
 9310354982466,B0197,P0055,provisional,manual_review,Known AU UAT example; product name Jalna Greek Style Yoghurt. OFF/product evidence to be rechecked during UAT load.,,2026-04-28,
 5052675000989,B0158,P0031,provisional,manual_review,Known UAT example; product name The Spice Tailor by Anjum Anand Thai Green Curry. Ownership chain requires review.,,2026-04-28,
 894700010137,B0198,P0056,provisional,manual_review,Known AU UAT example; product name Chobani Greek Yoghurt. OFF/product evidence to be rechecked during UAT load.,,2026-04-28,
+9310051000015,B0241,P0009,reviewed,manual_review,AU supermarket Workstream C anchor — Cadbury Dairy Milk–family chocolate/cocoa context; founders MUST verify GTIN vs shelf pack / OFF before external claims.,Cadbury Dairy Milk,,2026-05-01,
+9310047230518,B0069,P0009,reviewed,manual_review,AU supermarket negative control — Ritz crackers (Mondelez); founders MUST verify GTIN vs shelf pack / OFF; expect no SIG_NEWS_GLOBAL_* NGO rows.,Ritz Original Crackers,,2026-05-01,

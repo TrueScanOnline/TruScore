@@ -3,7 +3,11 @@
 // Implements selection logic: >=7 abs(value) first, then top 2 pos/neg per pillar
 
 import { ProductWithTrustScore } from '../types/product';
-import { ALL_HIGHLIGHT_DEFINITIONS, HighlightDefinition, isAlcoholicProduct } from '../config/scoreHighlightDefinitions';
+import {
+  ALL_HIGHLIGHT_DEFINITIONS,
+  HighlightDefinition,
+  isAlcoholicProduct,
+} from '../config/scoreHighlightDefinitions';
 import { ProductFlag } from './productFlags';
 
 export interface ScoreHighlight extends ProductFlag {
@@ -11,6 +15,7 @@ export interface ScoreHighlight extends ProductFlag {
   scoreValue: number;
   externalResource: string;
   severity: 'low' | 'medium' | 'high';
+  highlightId: string;
 }
 
 /**
@@ -43,6 +48,7 @@ export function calculateHighlights(product: ProductWithTrustScore): ScoreHighli
           pillar: definition.pillar,
           scoreValue: definition.scoreValue,
           externalResource: definition.externalResource,
+          highlightId: definition.id,
         });
       }
     } catch (error) {

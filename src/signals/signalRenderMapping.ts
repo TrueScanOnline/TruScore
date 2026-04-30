@@ -92,6 +92,9 @@ export function mapPublicationRecordToSignalCard(r: DynamicSignalPublicationReco
   const severity = PUBLICATION_SIGNAL_SEVERITY_BY_CLASS[r.signal_class];
   const sk = r.skeleton_card_copy;
   const fallbackTitle = r.source_record_id ? `${r.signal_class}:${r.source_record_id}` : r.signal_class;
+  const evidence = r.source_record_url?.trim();
+  const evidenceLinks =
+    evidence && /^https?:\/\//i.test(evidence) ? [{ url: evidence }] : ([] as SignalCard['links']);
   return {
     id: r.signal_id,
     class: view.signalClass,
@@ -99,7 +102,7 @@ export function mapPublicationRecordToSignalCard(r: DynamicSignalPublicationReco
     body_key: `phase6.dynamic.${r.signal_class}.body`,
     why_key: `phase6.dynamic.${r.signal_class}.why`,
     severity,
-    links: [],
+    links: evidenceLinks,
     dedupe_key: r.dedupe_key,
     title_display: sk?.title_display ?? fallbackTitle,
     body_display: sk?.body_display,

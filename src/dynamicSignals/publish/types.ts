@@ -30,6 +30,8 @@ export interface DynamicSignalPublicationRecord {
   ingestion_candidate_lineage_ref?: string;
   source_system?: string;
   source_record_id?: string;
+  /** Exact evidence URL from upstream record (recall page, article, NGO report). Prefer over generic portal links. */
+  source_record_url?: string;
   /** Trace back to 5A identity for dedupe analysis (not a secret key). */
   source_idempotency_key: string;
   /** 5B staleness: relative to this class; evaluated with injected clock, not `Date.now()` in tests. */

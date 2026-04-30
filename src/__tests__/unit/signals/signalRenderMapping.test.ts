@@ -78,6 +78,14 @@ describe('signalRenderMapping (Slice 0 foundation)', () => {
     const card = mapPublicationRecordToSignalCard(base);
     expect(card.class).toBe('B');
     expect(card.dedupe_key).toBe('k1');
+    expect(card.links).toEqual([]);
+    const withEvidence: DynamicSignalPublicationRecord = {
+      ...base,
+      source_record_url: 'https://example.org/evidence/article',
+    };
+    expect(mapPublicationRecordToSignalCard(withEvidence).links).toEqual([
+      { url: 'https://example.org/evidence/article' },
+    ]);
   });
 
   it('sorts publication records deterministically by owner precedence', () => {

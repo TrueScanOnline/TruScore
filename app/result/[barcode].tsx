@@ -42,7 +42,8 @@ import BannerAlertsCard from '../../src/components/BannerAlertsCard';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
 import { buildProductScanResult } from '../../src/services/buildProductScanResult';
 import { buildBannerAlertsDataFromScanResult } from '../../src/utils/scanResultPresentation';
-import { buildWorkstreamCSkeletonRecordsForRuntime } from '../../src/workstreamC/skeleton/runtimeUatFeed';
+import { buildWorkstreamCRuntimePublicationRecords } from '../../src/workstreamC/runtime/workstreamCRuntimePublicationRecords';
+import { resolveSharedIdentityContext } from '../../src/identity/resolveSharedIdentityContext';
 import { logScanObs, generateScanId } from '../../src/services/scanObservability';
 import { getUserCountryCode } from '../../src/utils/countryDetection';
 import InsightsCarousel from '../../src/components/InsightsCarousel';
@@ -387,28 +388,36 @@ function ResultScreenContent() {
   }, [product, alertsPreferences]);
 
   const scanResult = useMemo(() => {
+    const primaryBc = getPrimaryBarcode(barcode);
     const productForScan =
-      product && getPrimaryBarcode(product.barcode) === getPrimaryBarcode(barcode) ? product : null;
+      product && getPrimaryBarcode(product.barcode) === primaryBc ? product : null;
     if (!productForScan && !error) {
       return null;
     }
     const workstreamCLogs: string[] = [];
     const country = getUserCountryCode();
-    const publicMarket: 'AU' | 'NZ' | 'UNKNOWN' =
-      country === 'AU' || country === 'NZ' ? country : 'UNKNOWN';
+    const scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN' = productForScan
+      ? resolveSharedIdentityContext({
+          gtin: primaryBc,
+          product: productForScan,
+          marketHint: country,
+        }).public_market
+      : country === 'AU' || country === 'NZ'
+        ? country
+        : 'UNKNOWN';
     const dynamicSignalRecords = productForScan
-      ? buildWorkstreamCSkeletonRecordsForRuntime({
-          barcode,
+      ? buildWorkstreamCRuntimePublicationRecords({
+          barcode: primaryBc,
           productName: productForScan.product_name ?? productForScan.product_name_en ?? productForScan.brands ?? '',
-          scanMarketPublic: publicMarket,
+          scanMarketPublic,
           logLines: workstreamCLogs,
         })
       : [];
     if (workstreamCLogs.length > 0) {
-      console.log('[WorkstreamC skeleton runtime]', { barcode, logs: workstreamCLogs });
+      console.log('[WorkstreamC runtime signals]', { barcode: primaryBc, logs: workstreamCLogs });
     }
     return buildProductScanResult({
-      barcode,
+      barcode: primaryBc,
       product: productForScan,
       userPreferences: alertsPreferences,
       isSubscriber: isPremium,
@@ -1190,7 +1199,7 @@ function ResultScreenContent() {
               }
             }
             
-            const flags = generateProductFlags(product);
+            const flags = generateProductFlags(product, { suppressBbfawKtcScoreHighlights: true });
             const greenFlags = flags.filter(f => f.type === 'green');
             const redFlags = flags.filter(f => f.type === 'red');
             

@@ -571,6 +571,14 @@ export const ETHICS_HIGHLIGHTS: HighlightDefinition[] = [
   },
 ];
 
+/** BBFAW/KTC benchmark highlights — omit from Result screen “Score highlights” strip only (still allowed in TruScore explanation modals/cards). */
+export const ETHICS_BBFAW_KTC_SCORE_HIGHLIGHT_IDS = new Set<string>([
+  'ethics-bbfaw-tier-positive',
+  'ethics-bbfaw-tier-negative',
+  'ethics-ktc-positive',
+  'ethics-ktc-negative',
+]);
+
 // OPEN PILLAR highlights
 export const OPEN_HIGHLIGHTS: HighlightDefinition[] = [
   // Base Score - EXCLUDED (N/A internal buffer)

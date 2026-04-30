@@ -6,6 +6,8 @@ Workstream C skeleton v0.4 — implementation assumptions (repo)
 
 3) GTIN path: If gtin_brand_links has a row with link_review_state=reviewed and brand/parent reviewed, the real chain is used. Otherwise tests may pass injectedChain (in-code UAT only) — not a CLI binding.
 
+3b) App runtime (Expo): No barcode fixture map. The scan screen uses `buildWorkstreamCRuntimePublicationRecords` + embedded bundle `src/workstreamC/runtime/workstreamCRuntimePack.generated.ts`, regenerated via `npm run workstreamC:generate-runtime-bundle` after CSV changes. Runtime never passes injectedChain — only reviewed GTIN→chain rows qualify.
+
 4) v0.4 pack delta: SL011 subject_id set to B0241 (was B0067) so UAT_C_008 dual NGO signals both match the same Cadbury Dairy Milk reviewed row (distinct signal_id + dedupe_key).
 
 5) Staleness: valid_until set far-future on skeleton records; full lifecycle not in scope for this pass.

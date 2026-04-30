@@ -7,3 +7,8 @@ export {
   type ResolvedRetailChain,
   type InjectedUatChain,
 } from './buildSkeletonPublicationRecords';
+
+export {
+  buildADataMapsFromCsvRecords,
+  buildWorkstreamCPublicationRecordsFromParsedPack,
+} from './workstreamCPublicationCore';

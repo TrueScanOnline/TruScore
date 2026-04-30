@@ -2,16 +2,12 @@
  * Banner Alerts Service
  *
  * Collects and generates banner alerts from:
- * 1. APP-generated alerts (recalls, brand recall transparency note, Ethics pillar BBFAW/KTC mirrors)
+ * 1. APP-generated alerts (recalls, brand recall transparency note)
  * 2. User preference alerts (from user Alerts tab / alert preferences)
  *
- * Ethics (BBFAW, KTC): Banner copy for animal welfare and supply-chain labour is derived ONLY from
- * `calculateEthicsPillar` (same engine as the Ethics pillar / spec sheet). Legacy NGO/DOL/brand-DB
- * “ethics” banners were removed so the UI cannot contradict the pillar.
+ * BBFAW/KTC: intentionally NOT surfaced as banner / Signal-style alerts here — remain in TruScore Ethics
+ * pillar calculation and explanation surfaces (e.g. Trust Score modal / pillar breakdown), not recall-style banners.
  *
- * Note: Banner text explains scoring sources; TruScore is still computed in the TruScore engine.
- *
- * Legal (ID 17): Negative Ethics pillar factors (BBFAW, KTC) are surfaced with explanation + link.
  * Product recalls (FDA/USDA/CFIA/RASFF) keep specific/generic links as before.
  */
 
@@ -21,8 +17,6 @@ import { AlertsPreferences } from '../store/useAlertsStore';
 import { extractAllBrands } from '../utils/brandExtraction';
 import { getBrandData } from '../data/brandDatabase';
 import { logger } from '../utils/logger';
-import { buildEthicsPillarBannerAlerts } from './ethicsPillarBannerAlerts';
-import { calculateEthicsPillar } from '../lib/truscoreEngine/pillars/ethicsPillar';
 
 /**
  * Generate banner alerts for a product
@@ -108,15 +102,6 @@ export function generateBannerAlerts(
       });
     }
   }
-
-  // 1.1a Ethics pillar mirrors — BBFAW & KTC only (same `calculateEthicsPillar` as TruScore Ethics)
-  const ethicsPillarResult = calculateEthicsPillar(product);
-  alerts.push(
-    ...buildEthicsPillarBannerAlerts(product, ethicsPillarResult, {
-      mentionForcedLabourPreference:
-        userPreferences.ethicalEnabled && userPreferences.avoidForcedLabour,
-    })
-  );
 
   // 1.1b Brand recall history — informational only (not part of Ethics pillar v37 BBFAW/KTC)
   const hasRecentProductRecalls = product.recalls && product.recalls.some((r: { isActive?: boolean; recallDate?: string }) => {

@@ -3,6 +3,7 @@ import { Product, ProductWithTrustScore } from '../types/product';
 import { extractManufacturingCountry } from '../services/openFoodFacts';
 import { getPalmOilStatus } from './palmOilUtils';
 import { applyOverrideRules } from '../config/scoreHighlightOverrides';
+import { ETHICS_BBFAW_KTC_SCORE_HIGHLIGHT_IDS } from '../config/scoreHighlightDefinitions';
 import { calculateHighlights, selectHighlights } from './scoreHighlights';
 
 export interface ProductFlag {
@@ -19,10 +20,23 @@ export interface ProductFlag {
  * Uses new spec-based highlight system (v8 specification)
  * Applies override rules to filter out inaccurate or misleading highlights
  */
-export function generateProductFlags(product: ProductWithTrustScore): ProductFlag[] {
+export interface GenerateProductFlagsOptions {
+  /** Omit BBFAW/KTC benchmark rows from highlights (Result screen strip — ethics explanation modals unchanged). */
+  suppressBbfawKtcScoreHighlights?: boolean;
+}
+
+export function generateProductFlags(
+  product: ProductWithTrustScore,
+  options?: GenerateProductFlagsOptions
+): ProductFlag[] {
   // Use new spec-based highlight generation system
   // Calculate and select highlights based on spec
-  const calculatedHighlights = calculateHighlights(product);
+  let calculatedHighlights = calculateHighlights(product);
+  if (options?.suppressBbfawKtcScoreHighlights) {
+    calculatedHighlights = calculatedHighlights.filter(
+      (h) => !ETHICS_BBFAW_KTC_SCORE_HIGHLIGHT_IDS.has(h.highlightId)
+    );
+  }
   const selectedHighlights = selectHighlights(calculatedHighlights);
   
   // Convert to ProductFlag format with external resources
