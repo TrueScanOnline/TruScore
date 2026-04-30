@@ -1,0 +1,20 @@
+{
+  "report_generated_at": "2026-04-29T06:11:36.298Z",
+  "unmapped_gtin_count": 0,
+  "high_priority_brand_gap_count": 0,
+  "high_priority_parent_gap_count": 0,
+  "open_dispute_count": 0,
+  "review_backlog_count": 0,
+  "candidate_parent_count": 31,
+  "candidate_alias_count": 5,
+  "top_gap_notes": [
+    "gtin_brand_links.csv and operational_entities.csv: only scaffold header placeholders were supplied (not present in v0.11 handoff list).",
+    "enum_dictionary.csv: code-parity file from template pack (A5) — founder pack used separate alias_enums etc.",
+    "Founder CSV column naming may differ from A3/A5 required columns; see validation_report.json."
+  ],
+  "candidate_queue_summary": {
+    "alias_harvest_candidates": 5,
+    "parent_extension_candidates": 31,
+    "ownership_change_candidates": 3
+  }
+}

@@ -1,0 +1,683 @@
+{
+  "validation": {
+    "ok": false,
+    "issues": [
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "required_column_presence",
+        "message": "Missing column 'enum_name'."
+      },
+      {
+        "level": "warning",
+        "file": "brand_aliases.csv",
+        "rule": "source_registry_linkage",
+        "message": "A0083 is reviewed but has no source_id linkage."
+      },
+      {
+        "level": "warning",
+        "file": "brand_aliases.csv",
+        "rule": "source_registry_linkage",
+        "message": "A0084 is reviewed but has no source_id linkage."
+      },
+      {
+        "level": "warning",
+        "file": "brand_aliases.csv",
+        "rule": "source_registry_linkage",
+        "message": "A0085 is reviewed but has no source_id linkage."
+      },
+      {
+        "level": "warning",
+        "file": "brand_aliases.csv",
+        "rule": "source_registry_linkage",
+        "message": "A0086 is reviewed but has no source_id linkage."
+      },
+      {
+        "level": "warning",
+        "file": "brand_aliases.csv",
+        "rule": "source_registry_linkage",
+        "message": "A0087 is reviewed but has no source_id linkage."
+      },
+      {
+        "level": "warning",
+        "file": "brand_aliases.csv",
+        "rule": "source_registry_linkage",
+        "message": "A0088 is reviewed but has no source_id linkage."
+      },
+      {
+        "level": "warning",
+        "file": "brand_aliases.csv",
+        "rule": "source_registry_linkage",
+        "message": "A0089 is reviewed but has no source_id linkage."
+      },
+      {
+        "level": "warning",
+        "file": "brand_aliases.csv",
+        "rule": "source_registry_linkage",
+        "message": "A0103 is reviewed but has no source_id linkage."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'review_state|seeded'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'review_state|provisional'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'review_state|reviewed'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'review_state|disputed'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'review_state|archived'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_type|public_company'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_type|private_company'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_type|cooperative'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_type|state_owned'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_type|other'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_operating_role|retailer'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_operating_role|manufacturer'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_operating_role|brand_owner'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_operating_role|mixed'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_operating_role|other'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_cohort_category|supermarket_retailer_parent'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_cohort_category|global_food_beverage_parent'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_cohort_category|regional_food_beverage_parent'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'parent_cohort_category|category_specialist_parent'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'brand_type|global_brand'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'brand_type|local_brand'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'brand_type|retailer_own_label'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'brand_type|brand_family'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|spelling_variation'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|punctuation_variation'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|casing_variation'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|short_form'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|common_shorthand'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|packaging_variation'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|retailer_listing_variation'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|local_market_variant'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|legacy_brand_name'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|imported_seed_alias'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_type|off_observed_alias'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|official_parent_brand_page'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|official_brand_page'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|retailer_product_page'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|retailer_own_brand_page'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|off_brand_field'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|off_product_name_field'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|off_packaging_or_label_text'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|off_user_submission_observation'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|packaging_observation'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|imported_bbfaw_seed'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|imported_ktc_seed'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|manual_stewardship'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|product_specification_document'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|retailer_catalogue_audit'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'alias_source_type|other'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'product_link_source_type|off'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'product_link_source_type|manual_review'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'product_link_source_type|retailer_data'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'product_link_source_type|packaging_observation'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'product_link_source_type|imported_seed'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'product_link_source_type|retailer_catalogue_audit'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'product_link_source_type|other'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'operational_entity_type|manufacturer'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'operational_entity_type|importer'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'operational_entity_type|distributor'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'operational_entity_type|licensee'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'operational_use_case_reason|recall_matching'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'operational_use_case_reason|safety_regulatory_matching'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'operational_use_case_reason|major_signal_relevance'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_trigger_source_type|corporate_press_release'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_trigger_source_type|stock_exchange_announcement'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_trigger_source_type|official_brand_page'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_trigger_source_type|official_company_portfolio_page'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_trigger_source_type|analyst_or_manual_detection'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_trigger_source_type|other'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_candidate_state|detected'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_candidate_state|under_review'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_candidate_state|approved'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_candidate_state|rejected'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'change_candidate_state|archived'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'candidate_state|candidate'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'candidate_state|promoted'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'candidate_state|rejected'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'candidate_state|parked'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'candidate_state|insufficient_source'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|create'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|update'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|alias_add'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|alias_remove'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|ownership_change_approved'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|ownership_change_rejected'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|archive'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|review_state_change'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|merge_entities'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|split_entities'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|candidate_promoted'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'stewardship_action_type|candidate_rejected'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|matched_canonical_brand'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|matched_alias'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|parent_known_brand_missing'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|parent_unknown'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|insufficient_source'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|excluded_non_food_beverage'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|duplicate_or_rejected'."
+      }
+    ],
+    "missing_required_files": [],
+    "missing_optional_files": []
+  },
+  "validationSummary": {
+    "report_generated_at": "2026-04-29T06:11:36.284Z",
+    "rows": [
+      {
+        "report_generated_at": "2026-04-29T06:11:36.284Z",
+        "file_name": "enum_dictionary.csv",
+        "validation_rule": "required_column_presence",
+        "status": "fail",
+        "issue_count": 1,
+        "issue_examples": "Missing column 'enum_name'.",
+        "blocking_y_n": "Y"
+      },
+      {
+        "report_generated_at": "2026-04-29T06:11:36.284Z",
+        "file_name": "brand_aliases.csv",
+        "validation_rule": "source_registry_linkage",
+        "status": "warning",
+        "issue_count": 8,
+        "issue_examples": "A0083 is reviewed but has no source_id linkage. | A0084 is reviewed but has no source_id linkage. | A0085 is reviewed but has no source_id linkage.",
+        "blocking_y_n": "N"
+      },
+      {
+        "report_generated_at": "2026-04-29T06:11:36.284Z",
+        "file_name": "enum_dictionary.csv",
+        "validation_rule": "enum_dictionary_drift",
+        "status": "fail",
+        "issue_count": 98,
+        "issue_examples": "Missing enum dictionary row 'review_state|seeded'. | Missing enum dictionary row 'review_state|provisional'. | Missing enum dictionary row 'review_state|reviewed'.",
+        "blocking_y_n": "Y"
+      }
+    ]
+  }
+}

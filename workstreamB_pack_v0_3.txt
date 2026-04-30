@@ -1,0 +1,306 @@
+Workstream B — Frozen Benchmark Asset Hardening Pack
+
+BBFAW / KnowTheChain Frozen Benchmark Layer | 20260429 | v0.3Status: Founder draft — compact consolidated B1–B5 pack; not coding authority until founder approval
+
+Purpose: define the lightweight Workstream B implementation/hardening approach for existing founder-reviewed BBFAW and KTC benchmark assets, while preserving the Phase 6 frozen benchmark architecture and avoiding unnecessary re-engineering.
+
+Revision note — v0.3
+
+Clarifies that existing BBFAW/KTC parent > brand mapping assets are already founder-reviewed for their benchmark reporting periods and are not subject to fresh methodology review.
+
+Incorporates Cursor’s alignment response and repo inventory: existing benchmark modules should be retained or lightly wrapped, not replaced, unless a concrete validation defect is found.
+
+Adds an explicit pre-coding repo inventory step before any B5 scaffold build.
+
+Clarifies that freeze/write protections should continue to use the existing benchmark-layer APIs where aligned.
+
+Keeps Workstream B deliberately lightweight: templates, loader, validation, freeze guards, scoring-read checks, generated reports, and tests only.
+
+Controlling and reference documents
+
+Layer
+
+File / title / version
+
+Workstream B role
+
+Post-Phase-6 Register
+
+Document_Register_Post_Phase6_Workstreams_A_B_20260428_v0.3.docx — Document Register — Post-Phase-6 Workstreams A and B — v0.3
+
+Defines B1–B5 and B-Data packaging discipline.
+
+Phase 6 Document 1
+
+Rveel_Chaining_and_Signals_Architecture_Lock_Memo_Document_1_20260423_v0.1.docx — Architecture Lock Memo — Document 1 — v0.1
+
+Locks shared identity plus separate frozen benchmark and dynamic signals layers.
+
+Phase 6 Document 3
+
+Rveel_Chaining_and_Signals_Frozen_Benchmark_Attribution_Layer_Specification_Document_3_20260424_v0.4.docx — Frozen Benchmark Attribution Layer Specification — Document 3 — v0.4
+
+Primary architecture baseline for Workstream B.
+
+Phase 6 Document 5
+
+Rveel_Chaining_and_Signals_Field_Level_Implementation_Annex_Document_5_20260424_v0.4.docx — Field-Level Implementation Annex — Document 5 — v0.4
+
+Machine-readable naming, enums, transitions, freeze/write restrictions, and cross-layer boundaries.
+
+Phase 6 Document 6
+
+Rveel_Chaining_and_Signals_Golden_Fixtures_UAT_and_Release_Comparison_Gates_Document_6_20260424_v0.3.docx — Golden Fixtures, UAT, and Release-Comparison Gates — Document 6 — v0.3
+
+Fixture/release-comparison guidance for frozen benchmark protections.
+
+Current Workstream A asset
+
+Workstream_A_A_Data_Wave1_Seed_Pack_20260428_v0_14.zip — A-Data Wave 1 Seed Pack — v0.14
+
+Current approved Shared Identity seed pack; B may crosswalk to A IDs but must not mutate A.
+
+B1 — Charter and requirements
+
+Workstream B exists to harden the existing BBFAW and KTC benchmark-based Ethics scoring assets into a governed frozen benchmark asset layer. It is not a new current-state ownership graph and not a repeat of Workstream A.
+
+Retain existing working BBFAW/KTC scoring model where aligned.
+
+Separate benchmark-period attribution from Workstream A current ownership.
+
+Preserve existing founder-reviewed benchmark parent > brand mappings.
+
+Prevent dynamic current-state updates or Signals workflows from mutating frozen benchmark outputs.
+
+Provide enough scaffolding for validation, repeatable loading, freeze guard checks, generated reports, and tests.
+
+B2 — Functional specification
+
+BBFAW and KTC benchmark assets SHALL remain cycle/version-specific frozen attribution products.
+
+A current Workstream A parent ID may be referenced for lookup/crosswalk support, but Workstream B SHALL preserve benchmark owner as a cycle-scoped fact.
+
+A current-owner change in A SHALL NOT rewrite benchmark owner in B.
+
+Ethics scoring SHALL consume the frozen benchmark attribution object or existing equivalent adapter output, not an ad hoc current-owner lookup.
+
+Any correction to frozen benchmark attribution SHALL use a superseding correction path and preserve prior versions.
+
+Concept
+
+Workstream B treatment
+
+Existing benchmark mapping files
+
+Already founder-reviewed for benchmark reporting period. Validate against drift; do not reopen mapping methodology.
+
+Existing scoring services
+
+Retain unless a concrete validation defect is found.
+
+A-Data v0.14
+
+Crosswalk/reference only; not mutated by B.
+
+Current ownership divergence
+
+Comparison/explanation only; cannot rewrite frozen benchmark owner.
+
+Signals
+
+Out of scope; no Dynamic Signals publication or ingestion logic in B.
+
+B3 — Field-level schema annex (minimal MVP shape)
+
+B-Data should be file-oriented and compact. The following files are sufficient for the first hardening pass unless Cursor identifies a concrete repo-alignment reason to retain an existing generated format internally.
+
+File
+
+Purpose
+
+benchmark_releases.csv
+
+Benchmark snapshot metadata: benchmark_name, cycle, snapshot_version, ownership_cutoff_date, freeze_status, source file, methodology reference.
+
+benchmark_entities.csv
+
+Benchmark subject/entity names as represented in BBFAW/KTC source assets.
+
+benchmark_scores.csv
+
+Benchmark score/tier/rank fields required by the existing Ethics scoring services.
+
+benchmark_brand_maps.csv
+
+Founder-reviewed benchmark-period parent > brand rows derived from existing BBFAW/KTC mapping assets.
+
+benchmark_alias_maps.csv
+
+Founder-reviewed benchmark-period alias support from existing mapping assets, if required by current scoring/resolution services.
+
+benchmark_to_a_identity_crosswalk.csv
+
+Optional crosswalk from benchmark entity/brand to A parent_id/brand_id for lookup/explanation; must not mutate A.
+
+benchmark_exceptions.csv
+
+Explicit benchmark-period exceptions, blocked cases, or ownership divergence notes.
+
+benchmark_correction_log.csv
+
+Superseding correction records if and only if a correction is approved.
+
+validation_summary.json
+
+Generated output, not hand-maintained source truth.
+
+B4 — Population and asset build rules
+
+Start from the existing founder-reviewed BBFAW and KTC benchmark mapping assets, not from a new source harvest.
+
+Do not re-review or reinterpret the approved benchmark-period parent > brand mappings unless a concrete defect is identified.
+
+When converting to B-Data, preserve source row lineage and enough identifiers to compare against the original founder-reviewed files.
+
+Do not import current Workstream A ownership as benchmark owner.
+
+Where A-current owner differs from benchmark owner, record divergence/explanation; do not overwrite benchmark owner.
+
+Do not perform catalogue audits, GTIN expansion, current-ownership refresh, Signals ingestion, or broad alias expansion in Workstream B.
+
+B5 — Scaffolding build specification
+
+B5 authorizes only lightweight scaffolding after founder approval. Cursor should retain or lightly adapt existing benchmark modules where aligned.
+
+Cursor-identified repo module
+
+Expected B treatment
+
+src/benchmark/types.ts
+
+Retain; align B-Data contracts to existing FrozenBenchmarkAttributionObject/enums where feasible.
+
+src/benchmark/snapshotSelect.ts
+
+Retain; use for bounded snapshot registry / scoring read selection.
+
+src/benchmark/materializeFrozenBenchmarkAttribution.ts
+
+Retain; wrap/load B-Data inputs into existing materialization path where feasible.
+
+src/benchmark/frozenAttributionRowKey.ts
+
+Retain; preserve deterministic row key behavior.
+
+src/benchmark/frozenAttributionRowStore.ts
+
+Retain; use existing supersede/invariant behavior.
+
+src/benchmark/freezeGuards.ts and src/benchmark/freezeGuardEventKinds.ts
+
+Retain; freeze/write protection should remain enforced here rather than reimplemented inconsistently.
+
+src/benchmark/auditAttributionDiff.ts
+
+Retain; use for comparison-oriented audit diff where useful.
+
+src/lib/truscoreEngine/pillars/ethicsBenchmarkAdapter.ts
+
+Retain; do not reopen scoring methodology.
+
+src/lib/truscoreEngine/pillars/ethicsPillar.ts
+
+Retain integration behavior unless validation exposes a defect.
+
+src/services/bbfawService.ts and src/services/ktcService.ts
+
+Retain scoring services; B hardening should validate inputs, not redesign scoring math.
+
+src/services/bbfawBrandResolutionService.ts and src/services/ktcBrandResolutionService.ts
+
+Retain resolution services where aligned; wrap with B-Data validation/crosswalk only as needed.
+
+src/utils/brandNormalizer.ts
+
+Retain shared normalization support; no fuzzy/promotion expansion in B.
+
+Pre-coding repo inventory step
+
+Before coding, Cursor SHALL perform and report a short repo inventory identifying any existing benchmark asset loaders/templates/tests that should be retained, wrapped, or replaced. This inventory is not coding authority; it is an alignment checkpoint to avoid duplicate scaffolding.
+
+Inventory output
+
+Required detail
+
+Existing loaders/templates
+
+Whether present; file path; retain/wrap/replace recommendation.
+
+Existing tests
+
+Which tests already cover freeze guards, materialization, scoring adapters, BBFAW/KTC services.
+
+Asset file locations
+
+Current repo paths for BBFAW/KTC data files and generated artifacts.
+
+Minimal scaffold delta
+
+Smallest implementation change required to load/validate B-Data without scoring-methodology change.
+
+Authorized scaffold scope
+
+Generate B-Data templates aligned to this pack and Phase 6 Documents 3/5.
+
+Build or adapt a loader for the approved B-Data files.
+
+Validate required columns, enums, benchmark cycles, snapshot versions, score fields, and crosswalk references to A where supplied.
+
+Validate drift against the founder-reviewed source mapping files.
+
+Run freeze/write guard checks using existing benchmark-layer APIs where feasible.
+
+Run scoring-read checks proving Ethics scoring consumes frozen benchmark attribution / existing equivalent adapter outputs.
+
+Generate validation, drift, coverage/crosswalk, and exception reports.
+
+Add unit/smoke tests using existing benchmark tests where possible.
+
+Explicit out of scope
+
+No new benchmark scoring methodology.
+
+No current-state ownership graph build.
+
+No Workstream A mutation.
+
+No Dynamic Signals ingestion, moderation, or publication behavior.
+
+No catalogue audits or GTIN mapping.
+
+No broad alias expansion beyond founder-reviewed benchmark assets.
+
+No automatic correction or superseding version creation without founder approval.
+
+Acceptance checklist
+
+B-Data files/templates exist and are loadable.
+
+Existing founder-reviewed BBFAW/KTC mappings are preserved without inadvertent drift.
+
+Existing BBFAW/KTC scoring services continue to pass tests.
+
+Frozen benchmark attribution remains protected from current-state and Dynamic Signals writes.
+
+Scoring read path is deterministic and uses frozen benchmark attribution / approved existing adapter equivalent.
+
+A crosswalk to Workstream A IDs, if present, is validated as reference-only and does not mutate A.
+
+Generated reports identify drift, unresolved crosswalks, blocked cases, and correction candidates without applying corrections automatically.
+
+All relevant tests pass, including freeze guard and materialization tests.
+
+Final founder instruction
+
+Workstream B should be a controlled, lightweight hardening of the frozen benchmark layer. The benchmark source mappings have already been founder-reviewed for their reporting periods. Cursor should preserve, validate, and protect them; not reopen methodology, rebuild ownership, or broaden scope.
+

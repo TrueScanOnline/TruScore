@@ -1,0 +1,24 @@
+{
+  "report_generated_at": "2026-04-29T07:37:35.362Z",
+  "canonical_parent_count": 156,
+  "canonical_brand_count": 647,
+  "alias_count": 174,
+  "gtin_link_count": 3,
+  "operational_entity_count": 5,
+  "open_change_candidate_count": 0,
+  "review_state_summary": {
+    "reviewed": 645,
+    "provisional": 2
+  },
+  "wave_status_summary": {
+    "brand_rows_present": 90,
+    "parent_only_seeded": 66
+  },
+  "catalogue_audit_summary": {
+    "total_rows": 41,
+    "matched_canonical_brand": 27,
+    "matched_alias": 0,
+    "unmatched_rows": 14
+  },
+  "launch_usefulness_note": "Founder A-Data Wave 1 v0.11 — validation run (diagnostics only)."
+}

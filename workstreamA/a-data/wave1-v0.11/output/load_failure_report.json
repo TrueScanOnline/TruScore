@@ -1,0 +1,10 @@
+{
+  "report_generated_at": "2026-04-29T05:36:00.566Z",
+  "ok": true,
+  "missing_required_input_files": [],
+  "missing_optional_input_files": [
+    "wave1_control_surface.csv"
+  ],
+  "missing_required_files_from_validation": [],
+  "load_errors": []
+}

@@ -1,0 +1,4 @@
+gtin,brand_id,parent_id,link_review_state,source_type,source_reference,product_name,last_reviewed_at,notes_internal
+9310354982466,B0197,P0055,provisional,manual_review,Known AU UAT example; product name Jalna Greek Style Yoghurt. OFF/product evidence to be rechecked during UAT load.,,2026-04-28,
+5052675000989,B0158,P0031,provisional,manual_review,Known UAT example; product name The Spice Tailor by Anjum Anand Thai Green Curry. Ownership chain requires review.,,2026-04-28,
+894700010137,B0198,P0056,provisional,manual_review,Known AU UAT example; product name Chobani Greek Yoghurt. OFF/product evidence to be rechecked during UAT load.,,2026-04-28,

@@ -1,0 +1,65 @@
+{
+  "validation": {
+    "ok": false,
+    "issues": [
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|matched_canonical_brand'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|matched_alias'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|parent_known_brand_missing'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|parent_unknown'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|insufficient_source'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|excluded_non_food_beverage'."
+      },
+      {
+        "level": "error",
+        "file": "enum_dictionary.csv",
+        "rule": "enum_dictionary_drift",
+        "message": "Missing enum dictionary row 'catalogue_match_status|duplicate_or_rejected'."
+      }
+    ],
+    "missing_required_files": [],
+    "missing_optional_files": []
+  },
+  "validationSummary": {
+    "report_generated_at": "2026-04-29T06:39:48.535Z",
+    "rows": [
+      {
+        "report_generated_at": "2026-04-29T06:39:48.535Z",
+        "file_name": "enum_dictionary.csv",
+        "validation_rule": "enum_dictionary_drift",
+        "status": "fail",
+        "issue_count": 7,
+        "issue_examples": "Missing enum dictionary row 'catalogue_match_status|matched_canonical_brand'. | Missing enum dictionary row 'catalogue_match_status|matched_alias'. | Missing enum dictionary row 'catalogue_match_status|parent_known_brand_missing'.",
+        "blocking_y_n": "Y"
+      }
+    ]
+  }
+}

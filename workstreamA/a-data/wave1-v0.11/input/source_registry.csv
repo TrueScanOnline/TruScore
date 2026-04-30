@@ -1,0 +1,119 @@
+source_id,source_type,source_name,source_url_or_reference,source_harvest_date,source_status,notes
+SRC_WOOLWORTHS_GROUP_BRANDS,official_parent_brand_page,Woolworths Group — Our Brands,https://www.woolworthsgroup.com.au/au/en/who-we-are/our-brands.html,2026-04-28,active,Official group/store brand page
+SRC_COLES_OWN_BRANDS,retailer_own_brand_page,Coles — Our Brands,https://www.coles.com.au/about/who-we-are/our-brands,2026-04-28,active,Retailer own-brand source
+SRC_FOODSTUFFS_OUR_BRANDS,official_parent_brand_page,Foodstuffs — Our Brands,https://www.foodstuffs.co.nz/our-brands,2026-04-28,active,Official NZ retailer group / own brands page
+SRC_ALDI_AU_BRANDS,retailer_product_page,ALDI Australia — Brands/Product Pages,https://www.aldi.com.au/brands/Choceur,2026-04-28,active,ALDI brand/product evidence
+SRC_METCASH_IGA_BRANDS,manual_stewardship,Metcash/IGA own-label stewardship seed,https://www.iga.com.au/,2026-04-28,active,Seeded pending full official source harvesting
+SRC_COSTCO_KIRKLAND,retailer_own_brand_page,Costco Australia — Kirkland Signature,https://www.costco.com.au/kirkland-signature,2026-04-28,active,Costco private-label source
+SRC_MARS_AU_BRANDS,official_parent_brand_page,Mars Australia — A-Z Brands,https://www.mars.com/en-au/our-brands/all-brands,2026-04-28,active,Official AU Mars brand portfolio
+SRC_NESTLE_AU_BRANDS,official_parent_brand_page,Nestlé Australia — Brands,https://www.nestle.com.au/en/brands,2026-04-28,active,Official AU Nestlé brand page
+SRC_MONDELEZ_BRANDS,official_parent_brand_page,Mondelēz International — Our Brands,https://www.mondelezinternational.com/Our-Brands/,2026-04-28,active,Official Mondelēz brand page
+SRC_PEPSICO_AU_BRANDS,official_parent_brand_page,PepsiCo Australia — Our Brands,https://pepsico.com.au/our-brands,2026-04-28,active,Official PepsiCo Australia brand page
+SRC_COCA_COLA_AU_BRANDS,official_parent_brand_page,Coca‑Cola Australia — Brands,https://www.coca-cola.com/au/en/brands,2026-04-28,active,Official Coca‑Cola Australia brand page
+SRC_DANONE_GLOBAL_BRANDS,official_parent_brand_page,Danone — Brands,https://www.danone.com/brands.html,2026-04-28,active,Official Danone brand page
+SRC_UNILEVER_AU_BRANDS,official_parent_brand_page,Unilever Australia & New Zealand,https://www.unilever.com.au/,2026-04-28,active,Official Unilever AU/NZ page; detailed food brand confirmation limited
+SRC_STREETS_BRANDS,official_brand_page,Streets Ice Cream — Brands,https://www.streetsicecream.com.au/brands.html,2026-04-28,active,Official Streets/TMICC ice-cream brand page
+SRC_GENERAL_MILLS_AU_BRANDS,official_parent_brand_page,General Mills Australia — Brands,https://www.generalmills.com.au/brands,2026-04-28,active,Official General Mills Australia brand page
+SRC_KRAFT_HEINZ_BRANDS,official_parent_brand_page,Kraft Heinz — Beloved Global Brands,https://www.kraftheinzcompany.com/brands.html,2026-04-28,active,Official Kraft Heinz brand portfolio
+SRC_FERRERO_AU_BRANDS,official_parent_brand_page,Ferrero Australia & New Zealand — Brands,https://www.ferrero.com/au/en/our-brands,2026-04-28,active,Official Ferrero AU/NZ brand page
+SRC_ABF_BRANDS,official_parent_brand_page,Associated British Foods — Our Businesses,https://www.abf.co.uk/our-businesses,2026-04-28,active,Official ABF businesses/brands page
+SRC_BARILLA_GROUP_BRANDS,official_parent_brand_page,Barilla Group — Brands,https://www.barillagroup.com/en/brands/,2026-04-28,active,Official Barilla group brands page
+SRC_LACTALIS_AU_BRANDS,official_parent_brand_page,Lactalis Australia — Brands,https://lactalis.com.au/brand/,2026-04-28,active,Official Lactalis Australia brand page
+SRC_ARLA_BRANDS,official_parent_brand_page,Arla Foods — Brands,https://www.arla.com/brands/,2026-04-28,active,Official Arla brand page
+SRC_FONTERRA_AU_BRANDS,official_parent_brand_page,Fonterra Australia — Our Brands,https://www.fonterra.com/au/en/about-us/our-brands.html,2026-04-28,active,Official Fonterra Australia brands page
+SRC_BEGA_GROUP_BRANDS,official_parent_brand_page,Bega Group — About/Brands,https://begagroup.com.au/,2026-04-28,active,Bega Group official source / brand references
+SRC_A2_MILK_BRANDS,official_parent_brand_page,The a2 Milk Company,https://thea2milkcompany.com/,2026-04-28,active,Official a2 Milk Company source
+SRC_SANITARIUM_BRANDS,official_brand_page,Sanitarium brand stewardship seed,https://www.sanitarium.com/au/,2026-04-28,active,Official Sanitarium source; brand detail to verify
+SRC_INGHAMS_BRANDS,official_parent_brand_page,Ingham's — Our Brands,https://inghams.com.au/,2026-04-28,active,Official Ingham's source
+SRC_JBS_FOODS_BRANDS,official_parent_brand_page,JBS Foods — Our Brands,https://jbsfoodsgroup.com/our-brands,2026-04-28,active,Official JBS Foods brand page
+SRC_BRF_BRANDS,official_parent_brand_page,BRF — Our Brands,https://www.mbrf.com/en/our-brands/,2026-04-28,active,Official MBRF/BRF brands page
+SRC_TYSON_BRANDS,official_parent_brand_page,Tyson Foods — Our Brands,https://www.tysonfoods.com/our-brands,2026-04-28,active,Official Tyson Foods brand page
+SRC_MAPLE_LEAF_BRANDS,official_parent_brand_page,Maple Leaf Foods — Brands,https://www.mapleleaffoods.com/brands/,2026-04-28,active,Official Maple Leaf Foods brand page
+SRC_PREMIER_FOODS_BRANDS,official_parent_brand_page,Premier Foods — Our Brands,https://www.premierfoods.co.uk/our-brands/,2026-04-28,active,Official Premier Foods brands page
+SRC_CAMPBELLS_ANZ_PRODUCTS,official_brand_page,Campbell's ANZ — Products,https://www.campbellsanz.com/products,2026-04-28,active,Official Campbell's Australia/NZ products source
+SRC_HERSHEY_BRANDS,official_parent_brand_page,The Hershey Company — Brands,https://www.thehersheycompany.com/en_us/home/brands.html,2026-04-28,active,Official Hershey brands page
+SRC_MCCORMICK_CORP_BRANDS,official_parent_brand_page,McCormick Corporation — Brands,https://www.mccormickcorporation.com/brands,2026-04-28,active,Official McCormick brand page
+SRC_GRUPO_BIMBO_BRANDS,official_parent_brand_page,Grupo Bimbo — Brands,https://grupobimbo.com/en/brands,2026-04-28,active,Official Grupo Bimbo brand page
+SRC_KDP_BRANDS,official_parent_brand_page,Keurig Dr Pepper — Brands,https://www.keurigdrpepper.com/brands/,2026-04-28,active,Official KDP brands page
+SRC_SUNTORY_OCEANIA_BRANDS,official_parent_brand_page,Suntory Oceania — Brands,https://www.suntoryoceania.com/brands/,2026-04-28,active,Official Suntory Oceania brand page
+SRC_ASAHI_BEVERAGES_BRANDS,official_parent_brand_page,Asahi Beverages — About/Brands,https://www.asahibeverages.com/about-us,2026-04-28,active,Official Asahi Beverages brand source
+SRC_KIRIN_BRANDS,manual_stewardship,Kirin non-alcohol shelf relevance seed,https://www.kirinholdings.com/en/,2026-04-28,active,Seed/limited source; AU food relevance needs review
+SRC_GOODMAN_FIELDER_BRANDS,official_parent_brand_page,Goodman Fielder — Brands,https://goodmanfielder.com/brands/,2026-04-28,active,Official Goodman Fielder brand page
+SRC_SIMPLOT_BRANDS,official_parent_brand_page,Simplot Australia — Brands,https://simplot.com.au/brands,2026-04-28,active,Official Simplot Australia brand page
+SRC_PATTIES_BRANDS,official_parent_brand_page,Patties Food Group — Brands,https://pattiesfoodgroup.com/brands,2026-04-28,active,Official Patties brands page
+SRC_ARNOTTS_BRANDS,official_brand_page,Arnott's — Our Brands,https://www.arnotts.com/,2026-04-28,active,Official Arnott's brand page
+SRC_OETKER_AU_BRANDS,official_brand_page,Dr. Oetker Australia,https://www.oetker.com.au/,2026-04-28,active,Official Dr. Oetker Australia page
+SRC_MCCAIN_AU_BRANDS,official_brand_page,McCain Australia,https://mccain.com.au/,2026-04-28,active,Official McCain Australia page
+SRC_SAPUTO_AU_BRANDS,official_parent_brand_page,Saputo Dairy Australia — Consumer Brands,https://www.saputodairyaustralia.com.au/en/our-products/consumer-brands,2026-04-28,active,Official Saputo Dairy Australia consumer brands page
+SRC_WILMAR_SUGAR_BRANDS,official_parent_brand_page,Wilmar Sugar ANZ — Consumer Products,https://www.wilmarsugar-anz.com/what-we-do/consumer-products,2026-04-28,active,Official Wilmar sugar consumer brands source
+SRC_M_AND_S_FOOD,retailer_own_brand_page,M&S Food,https://www.marksandspencer.com/food,2026-04-28,active,M&S Food catalogue source
+SRC_WAITROSE_DUCHY,retailer_own_brand_page,Waitrose Duchy Organic,https://www.waitrose.com/ecom/shop/browse/groceries/organic_shop/duchy_organic,2026-04-28,active,Waitrose/Duchy own-label product source
+SRC_TESCO_OWN_LABEL,retailer_own_brand_page,Tesco own-label product ranges,https://www.tesco.com/shop/en-GB/zone/tesco-finest,2026-04-28,active,Tesco own-label product source
+SRC_SAINSBURYS_OWN_LABEL,retailer_own_brand_page,Sainsbury's own-label stewardship seed,https://www.sainsburys.co.uk/,2026-04-28,active,Seeded pending official page verification
+SRC_AHOLD_DELHAIZE_BRANDS,official_parent_brand_page,Ahold Delhaize — Brands,https://www.aholddelhaize.com/brands/,2026-04-28,active,Official Ahold Delhaize brand page
+SRC_WALMART_PRIVATE_BRANDS,retailer_own_brand_page,Walmart private brands stewardship seed,https://www.walmart.com/cp/food/976759,2026-04-28,active,Seeded pending official private-brand source verification
+SRC_CARREFOUR_BRANDS,retailer_own_brand_page,Carrefour private-label stewardship seed,https://www.carrefour.com/en/group/food-transition,2026-04-28,active,Seeded pending official private-brand source verification
+SRC_JALNA_SOURCE,official_brand_page,Jalna Dairy Foods,https://jalna.com.au/,2026-04-28,active,Official Jalna source
+SRC_CHOBANI_SOURCE,official_brand_page,Chobani Australia,https://www.chobani.com.au/,2026-04-28,active,Official Chobani Australia source
+SRC_BBFAW_REPO_FOLDER,imported_seed,Existing BBFAW project seed folder,https://github.com/TrueScanOnline/TruScore/tree/main/Database%20files/ETHICS%20Pillar/BBFAW%20folder,2026-04-28,active,Existing repo seed asset
+SRC_KTC_REPO_FOLDER,imported_seed,Existing KTC project seed folder,https://github.com/TrueScanOnline/TruScore/tree/main/Database%20files/ETHICS%20Pillar/KTC%20folder,2026-04-28,active,Existing repo seed asset
+SRC_REGISTER_A_DOCS,manual_stewardship,Workstream A documents / founder stewardship,Workstream A Register + A1-A4,2026-04-28,active,Founder-controlled seed/workbook stewardship
+SRC_CAPTAINS_TABLE_MONDELEZ_PRODUCT_SPEC,packaging_observation,Captain's Table Mondelez product summary report,https://www.mocofoodservices.com.au/globalassets/related-items-import/30701-psr---125g-captains-table-classic-water-crackers.pdf,2026-04-28,active,Product-level supplier/specification PDF with Mondelēz Australia Biscuits signature line and GTIN.
+SRC_CAPTAINS_TABLE_WOOLWORTHS_PRODUCT_PAGE,retailer_product_page,Woolworths Captain's Table product page,https://www.woolworths.com.au/shop/productdetails/140784/captain-s-table-classic-water-crackers,2026-04-28,active,Retailer product title evidence for Captain's Table Classic Water Crackers.
+SRC_KELLOGGS_AU_FOOD_BRANDS,official_brand_page,Kellogg's Australia Food brand list,https://www.kelloggs.com.au/en_AU/food.html,2026-04-28,active,AU cereal/snack brand source; v0.5 parent treatment approved under Mars/Kellanova ownership change.
+SRC_MARS_KELLANOVA_COMPLETION,corporate_press_release,Mars completes acquisition of Kellanova,https://www.mars.com/en-au/news-and-stories/press-releases-statements/mars-completes-acquisition-of-kellanova,2026-04-28,active,Official Mars release; v0.5 founder approval supports current-chain promotion.
+SRC_COLES_CRACKERS_CRISPBREADS,retailer_category_page,Coles Crackers & Crispbreads category,https://www.coles.com.au/browse/chips-chocolates-snacks/crackers-rice-cakes/crackers-crispbreads,2026-04-28,active,Search-indexed Coles category evidence used for catalogue audit pilot.
+SRC_COLES_ARNOTTS_BRAND_PAGE,retailer_brand_page,Coles Arnott's brand page,https://www.coles.com.au/brands/arnotts-1655129700,2026-04-28,active,Search-indexed Coles brand page evidence used for Savoy/Arnott's audit rows.
+SRC_COLES_BREAKFAST_PAGE5,retailer_category_page,Coles Breakfast category page 5,https://www.coles.com.au/browse/pantry/breakfast?page=5,2026-04-28,active,Search-indexed Coles breakfast category evidence.
+SRC_COLES_DRINKS_PAGE4,retailer_category_page,Coles Drinks category page 4,https://www.coles.com.au/browse/drinks?page=4,2026-04-28,active,Search-indexed Coles drinks category evidence.
+SRC_COLES_YOGHURT_TUBS,retailer_category_page,Coles Yoghurt Tubs category,https://www.coles.com.au/browse/dairy-eggs-fridge/yoghurt/yoghurt-tubs,2026-04-28,active,Search-indexed Coles yoghurt category evidence.
+SRC_COLES_DAIRY_PAGE23,retailer_category_page,Coles Dairy Eggs & Fridge page 23,https://www.coles.com.au/browse/dairy-eggs-fridge?page=23,2026-04-28,active,Search-indexed Coles dairy category evidence.
+SRC_COLES_PIZZA_PASTA_SAUCES,retailer_category_page,Coles Pizza & Pasta Sauces category,https://www.coles.com.au/browse/pantry/sauces/pizza-pasta,2026-04-28,active,Search-indexed Coles pasta sauce category evidence.
+SRC_COLES_MICROWAVE_RICE,retailer_category_page,Coles Microwave Rice category,https://www.coles.com.au/browse/pantry/pasta-rice-legumes-grains/microwave-rice,2026-04-28,active,Search-indexed Coles microwave rice category evidence.
+SRC_COLES_PACKAGED_BREADS,retailer_category_page,Coles Packaged Breads category,https://www.coles.com.au/browse/bakery/packaged-breads,2026-04-28,active,Search-indexed Coles bakery category evidence.
+SRC_MAGGIE_BEER_HOLDINGS_WHO_WE_ARE,official_company_page,Maggie Beer Holdings — Who We Are,https://www.maggiebeerholdings.com.au/about-us/who-we-are/,2026-04-28,active,Source support for Maggie Beer Products ownership by Longtable/Maggie Beer Holdings.
+SRC_VAL_VERDE_PRIVACY_DISCLAIMER,official_brand_page,Val Verde privacy/disclaimer,https://www.discovervalverde.com.au/privacy-disclaimer/,2026-04-28,active,Identifies Conga Foods as owner/operator and brand owner of Val Verde.
+SRC_EBRO_TILDA_ACQUISITION,corporate_press_release,Ebro Foods buys Tilda,https://www.ebrofoods.es/en/news/ebro-foods-buys-the-premium-rice-brand-tilda/,2026-04-28,active,Official Ebro Foods source for Tilda acquisition.
+SRC_CHOBANI_AU_PRODUCTS,official_brand_page,Chobani Australia products page,https://www.chobani.com.au/our-products/,2026-04-28,active,Lists Gippsland Dairy under Chobani Australia products.
+SRC_COLES_CANNED_FOOD_SOUPS_NOODLES,retailer_category_page,"Coles — Canned Food, Soups & Noodles",https://www.coles.com.au/browse/pantry/canned-food-soups-noodles,2026-04-28,active,Used for v0.7 category audit proof-of-method.
+SRC_COLES_READY_TO_EAT_MEALS,retailer_category_page,Coles — Ready to Eat Meals,https://www.coles.com.au/browse/dairy-eggs-fridge/ready-to-eat-meals,2026-04-28,active,Used for v0.7 category audit proof-of-method.
+SRC_COLES_INSTANT_MEALS_SIDES,retailer_category_page,Coles — Instant Meals & Sides,https://www.coles.com.au/browse/pantry/canned-food-soups-noodles/instant-meals-sides,2026-04-28,active,Used for v0.7 category audit proof-of-method.
+SRC_COLES_NOODLES,retailer_category_page,Coles — Noodles,https://www.coles.com.au/browse/pantry/canned-food-soups-noodles/noodles,2026-04-28,active,Used for v0.7 category audit proof-of-method.
+SRC_COLES_CHIPS,retailer_category_page,Coles — Chips,https://www.coles.com.au/browse/chips-chocolates-snacks/chips,2026-04-28,active,Used for v0.7 snacks category audit proof-of-method.
+SRC_COLES_SNACKS,retailer_category_page,Coles — Snacks,https://www.coles.com.au/browse/chips-chocolates-snacks/snacks,2026-04-28,active,Used for v0.7 snacks category audit proof-of-method.
+SRC_MAGGIE_BEER_HOLDINGS_BRAND,official_parent_brand_page,Maggie Beer Holdings — Maggie Beer brand,https://www.maggiebeerholdings.com.au/our-brands/maggie-beer/,2026-04-28,active,Source confirms Maggie Beer Holdings has 100% equity stake in Maggie Beer.
+SRC_ARNOTTS_SAVOY,official_brand_page,Arnott's — Savoy brand page,https://www.arnotts.com/brands/savoy,2026-04-28,active,Source confirms Savoy as an Arnott's brand.
+SRC_CHOBANI_GIPPSLAND_DAIRY,official_brand_page,Chobani Australia — Gippsland Dairy product page,https://www.chobani.com.au/our-products/,2026-04-28,active,Source lists Gippsland Dairy within Chobani Australia's product family.
+SRC_VAL_VERDE_CONGA,official_brand_page,Val Verde — Privacy & Disclaimer,https://www.discovervalverde.com.au/privacy-disclaimer/,2026-04-28,active,Source states Conga Foods is brand owner of Val Verde.
+SRC_EBRO_TILDA,official_parent_brand_page,Ebro Foods — Tilda acquisition announcement,https://www.ebrofoods.es/en/news/ebro-foods-buys-the-premium-rice-brand-tilda/,2026-04-28,active,Source confirms Ebro Foods purchased Tilda.
+SRC_SPC_GLOBAL,official_parent_brand_page,SPC Global / SPC Australia,https://spcglobalgroup.com/,2026-04-28,active,Candidate source for SPC parent/brand review.
+SRC_COBS,official_brand_page,Cobs Popcorn,https://cobs.com.au/,2026-04-28,active,Candidate source for Cobs brand review; parent ownership requires confirmation.
+SRC_INDOMIE_AU,official_brand_page,Indomie Australia — About,https://indomie.com.au/about/,2026-04-28,active,Candidate source for Indomie brand review.
+SRC_FANTASTIC_SNACKS,official_brand_page,Fantastic Snacks — About,https://fantasticsnacks.com.au/about-us,2026-04-28,active,Candidate source for Fantastic brand review; parent ownership requires confirmation.
+SRC_SUPERNATURE_VESCO,official_brand_page,Super Nature Foods,https://supernaturefoods.com.au/,2026-04-28,active,Candidate source states Super Nature trademarks and contact via Vesco Foods.
+SRC_PATTIES_ON_THE_MENU,official_brand_page,Patties Food Group — On The Menu,https://pattiesfoodgroup.com/brands/on-the-menu,2026-04-28,active,Source confirms On The Menu is a Patties Food Group brand.
+SRC_YOUFOODZ_HELLOFRESH,corporate_press_release,HelloFresh — Youfoodz acquisition press release,https://assets.ctfassets.net/irplh84t0tdt/4xkJwmAtSgYrI7tZ6J1TTg/cb42e689560e2ae306cde8857ee3acb8/HelloFresh_Press_Release_Youfoods_acquisition.pdf,2026-04-28,active,Candidate source for Youfoodz parent ownership.
+SRC_MY_MUSCLE_CHEF_OFFICIAL,official_brand_page,My Muscle Chef — About Us,https://www.mymusclechef.com/about-us,2026-04-28,active,Source confirms My Muscle Chef brand and ready-meal business; top ownership remains provisional.
+SRC_SAN_REMO_FANTASTIC_PARENT,other,San Remo / Fantastic parent stewardship source,https://sanremo.com.au/content/uploads/2024/04/SR-NZ-Food-Service-Cat-2024.pdf,2026-04-28,active,Supports San Remo/Fantastic stewardship review; retained as provisional source support.
+SRC_BBFAW_2024_PARENT_MAPPING_FILE,imported_seed,BBFAW 2024 supermarket parent-brand mapping file,BBFAW_2024_Supermarket_Parent_Brand_Mapping_20260311.xlsx,2026-04-29,active,"Founder-supplied benchmark seed asset; used as current-state identity seed input only, not scoring attribution."
+SRC_KTC_2026_PARENT_MAPPING_FILE,imported_seed,KTC 2026 parent-brand-alias mapping file,KTC_2026_Parent_Brand_Alias_Mapping.xlsx,2026-04-29,active,"Founder-supplied benchmark seed asset; used as current-state identity seed input only, not scoring attribution."
+SRC_UAT_AU_TEST_PACK_20260417,imported_seed,MaG UAT AU Test Pack - food and drink category only,Tru_Score_Engine_Detailed_Specification_20260417.xlsx#MaG_UAT_AU_Test_Pack,2026-04-29,active,"Founder-supplied UAT product pack; used selectively to identify high-value parent/brand additions, not exhaustive coverage."
+SRC_GS1_NPC_FUTURE_PROVIDER,future_data_provider,GS1 Australia National Product Catalogue / OneSource future-provider path,https://www.gs1au.org/services/data-and-content/national-product-catalogue,2026-04-29,active,Post-MVP investigation candidate only; no active connector or GTIN override strategy in MVP.
+SRC_WOOLWORTHS_API_FUTURE_PROVIDER,future_data_provider,Woolworths API portal future-provider path,https://apiportal.woolworths.com.au/getting-started,2026-04-29,active,Post-MVP investigation candidate only; gated access likely requires registration/approval.
+SRC_COLES_NPC_SUPPLIER_DATA_FUTURE_PROVIDER,future_data_provider,Coles supplier/NPC product-data pathway future-provider note,https://suppliercentral.coles.com.au/,2026-04-29,active,"Post-MVP investigation candidate only; supplier/trading-partner data model, not assumed open consumer-app feed."
+SRC_NORCO_OFFICIAL,official_brand_page,Norco official site,https://norcofoods.com.au/,2026-04-29,active,Official source for Norco brand; UAT-led promotion.
+SRC_REDBULL_AU,official_brand_page,Red Bull Australia energy drink page,https://www.redbull.com/au-en/energydrink,2026-04-29,active,Official source for Red Bull AU product range; UAT-led promotion.
+SRC_YAKULT_AU_HISTORY,official_brand_page,Yakult Australia history and parent company page,https://www.yakult.com.au/our-story/yakult-history-and-timeline/,2026-04-29,active,Official source identifies Yakult Honsha as parent company; UAT-led promotion.
+SRC_VITASOY_AU,official_brand_page,Vitasoy Australia official site,https://soy.com.au/,2026-04-29,active,Official Australian Vitasoy brand site; parent chain requires review if needed.
+SRC_HIVE_WELLNESS_BRANDS,official_parent_brand_page,Hive + Wellness Australia brands page,https://hiveandwellness.com/brands/,2026-04-29,active,Official brand portfolio page listing Capilano; UAT-led promotion.
+SRC_KIKKOMAN_AU,official_brand_page,Kikkoman Australia official site,https://kikkoman.com.au/,2026-04-29,active,Official Australian Kikkoman brand site; UAT-led promotion.
+SRC_MCKENZIES_FOODS,official_brand_page,McKenzie's Foods official site,https://www.mckenziesfoods.com.au/,2026-04-29,active,Official Australian McKenzie’s brand site; UAT-led promotion.
+SRC_SAXA_UAT_REVIEW,imported_seed,Saxa UAT ownership review source,Tru_Score_Engine_Detailed_Specification_20260417.xlsx#MaG_UAT_AU_Test_Pack,2026-04-29,active,UAT-led promotion under Kraft Heinz as provisional; ownership/source verification remains reviewable.
+SRC_INTERSNACK_BRANDS,official_parent_brand_page,Intersnack Group — Brands Overview,https://www.intersnackgroup.com/brands/overview,2026-04-29,active,Founder-provided source for Kettle ownership exception resolution.
+SRC_SNACKBRANDS_AU,official_brand_page,Snackbrands Australia,https://www.snackbrands.com.au/,2026-04-29,active,Local entity note for Kettle / Intersnack AU context.
+SRC_CONAGRA_BRANDS,official_parent_brand_page,Conagra Brands — Brands,https://www.conagrabrands.com/brands,2026-04-29,active,Founder-provided comparative source noting Healthy Choice ownership in US/Canada; not AU canonical chain.
+SRC_MCCAIN_HEALTHY_CHOICE,official_brand_page,McCain Australia — Products,https://mccain.com.au/products/,2026-04-29,active,Founder-provided source for McCain Healthy Choice AU treatment.
+SRC_MONDELEZ_GFH_ACQUISITION,corporate_press_release,Mondelēz International — Gourmet Food Holdings acquisition,https://ir.mondelezinternational.com/news-releases/news-release-details/mondelez-international-acquires-australian-premium-cracker/,2026-04-29,active,Source supporting Captain's Table / Gourmet Food Holdings acquisition context.
+SRC_FANTASTIC_PRIVACY_POLICY,official_brand_page,Fantastic Snacks — Privacy Policy,https://fantasticsnacks.com.au/privacy-policy/,2026-04-29,active,Founder-provided source supporting San Remo / Fantastic ownership treatment.
+SRC_TMICC_DEMERGER_INFO,corporate_press_release,The Magnum Ice Cream Company — Demerger Information,https://corporate.magnumicecream.com/en/investors/demerger-information.html,2026-04-29,active,Founder-provided source for TMICC demerger/current ownership treatment.
+SRC_TMICC_BRANDS,official_parent_brand_page,The Magnum Ice Cream Company — Brands,https://corporate.magnumicecream.com/en/brands.html,2026-04-29,active,Founder-provided source for TMICC brand portfolio.

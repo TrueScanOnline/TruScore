@@ -1,0 +1,122 @@
+{
+  "fixture_pack_version": "phase6.pack.v1.0.0",
+  "fixture_schema_id": "phase6.fixture.schema.v1",
+  "gate_level": "public_release",
+  "totals": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "p0_failed": 0,
+    "p1_failed": 0
+  },
+  "gate_status": {
+    "A": true,
+    "B": true,
+    "C": true,
+    "D": true,
+    "E": true
+  },
+  "fixtures": [
+    {
+      "fixture_id": "p0-frozen-eligibility-gate-b",
+      "severity": "P0",
+      "layer": "frozen_benchmark",
+      "gate_tags": [
+        "B"
+      ],
+      "passed": true,
+      "reasons": [],
+      "output": {
+        "market": "AU",
+        "signal_ids_ordered": [],
+        "has_legacy_banner_signals": false
+      }
+    },
+    {
+      "fixture_id": "p0-identity-au-nz-public-no-leak",
+      "severity": "P0",
+      "layer": "identity",
+      "gate_tags": [
+        "A",
+        "E"
+      ],
+      "passed": true,
+      "reasons": [],
+      "output": {
+        "market": "UNKNOWN",
+        "signal_ids_ordered": [],
+        "has_legacy_banner_signals": false
+      }
+    },
+    {
+      "fixture_id": "p0-dynamic-blocked-never-public",
+      "severity": "P0",
+      "layer": "dynamic_signals",
+      "gate_tags": [
+        "C",
+        "E"
+      ],
+      "passed": true,
+      "reasons": [],
+      "output": {
+        "market": "AU",
+        "signal_ids_ordered": [],
+        "has_legacy_banner_signals": false
+      }
+    },
+    {
+      "fixture_id": "p0-publication-order-deterministic",
+      "severity": "P0",
+      "layer": "cross_layer",
+      "gate_tags": [
+        "D",
+        "E"
+      ],
+      "passed": true,
+      "reasons": [],
+      "output": {
+        "market": "AU",
+        "signal_ids_ordered": [
+          "a1",
+          "a2",
+          "c1"
+        ],
+        "has_legacy_banner_signals": false
+      }
+    },
+    {
+      "fixture_id": "p0-release-mode-disables-legacy-feeders",
+      "severity": "P0",
+      "layer": "cross_layer",
+      "gate_tags": [
+        "E"
+      ],
+      "passed": true,
+      "reasons": [],
+      "output": {
+        "market": "AU",
+        "signal_ids_ordered": [],
+        "has_legacy_banner_signals": false
+      }
+    },
+    {
+      "fixture_id": "p1-transitional-mode-allows-legacy-feeders",
+      "severity": "P1",
+      "layer": "cross_layer",
+      "gate_tags": [
+        "E"
+      ],
+      "passed": true,
+      "reasons": [],
+      "output": {
+        "market": "AU",
+        "signal_ids_ordered": [
+          "transparency-limited-data-9300633072391",
+          "transparency-web-search-9300633072391"
+        ],
+        "has_legacy_banner_signals": true
+      }
+    }
+  ],
+  "generated_at": "2026-04-26T01:19:01.553Z"
+}
