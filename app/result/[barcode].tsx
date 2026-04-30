@@ -42,6 +42,7 @@ import BannerAlertsCard from '../../src/components/BannerAlertsCard';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
 import { buildProductScanResult } from '../../src/services/buildProductScanResult';
 import { buildBannerAlertsDataFromScanResult } from '../../src/utils/scanResultPresentation';
+import { buildWorkstreamCSkeletonRecordsForRuntime } from '../../src/workstreamC/skeleton/runtimeUatFeed';
 import { logScanObs, generateScanId } from '../../src/services/scanObservability';
 import { getUserCountryCode } from '../../src/utils/countryDetection';
 import InsightsCarousel from '../../src/components/InsightsCarousel';
@@ -391,12 +392,28 @@ function ResultScreenContent() {
     if (!productForScan && !error) {
       return null;
     }
+    const workstreamCLogs: string[] = [];
+    const country = getUserCountryCode();
+    const publicMarket: 'AU' | 'NZ' | 'UNKNOWN' =
+      country === 'AU' || country === 'NZ' ? country : 'UNKNOWN';
+    const dynamicSignalRecords = productForScan
+      ? buildWorkstreamCSkeletonRecordsForRuntime({
+          barcode,
+          productName: productForScan.product_name ?? productForScan.product_name_en ?? productForScan.brands ?? '',
+          scanMarketPublic: publicMarket,
+          logLines: workstreamCLogs,
+        })
+      : [];
+    if (workstreamCLogs.length > 0) {
+      console.log('[WorkstreamC skeleton runtime]', { barcode, logs: workstreamCLogs });
+    }
     return buildProductScanResult({
       barcode,
       product: productForScan,
       userPreferences: alertsPreferences,
       isSubscriber: isPremium,
-      market: getUserCountryCode(),
+      market: country,
+      dynamicSignalRecords,
       deriveTerminal: true,
       fetchPhase: loadingPhase,
       isFetchLoading: loading,
