@@ -1,7 +1,26 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Qonversion, { QonversionConfigBuilder, LaunchMode, Environment } from '@qonversion/react-native-sdk';
 import { Platform } from 'react-native';
+
+let Qonversion: any;
+let QonversionConfigBuilder: any;
+let LaunchMode: any;
+let Environment: any;
+
+try {
+  const qonversionModule = require('@qonversion/react-native-sdk');
+  Qonversion = qonversionModule.default;
+  QonversionConfigBuilder = qonversionModule.QonversionConfigBuilder;
+  LaunchMode = qonversionModule.LaunchMode;
+  Environment = qonversionModule.Environment;
+} catch {
+  // Native module is unavailable in some runtimes (e.g. Expo Go / stale dev client).
+  // We handle this gracefully and keep app functionality in free mode.
+  Qonversion = undefined;
+  QonversionConfigBuilder = undefined;
+  LaunchMode = undefined;
+  Environment = undefined;
+}
 
 export type SubscriptionStatus = 'active' | 'expired' | 'trial' | 'grace_period' | 'billing_issue' | null;
 export type SubscriptionPeriod = 'monthly' | 'annual' | null;

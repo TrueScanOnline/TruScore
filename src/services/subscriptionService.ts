@@ -1,6 +1,13 @@
-import Qonversion, { Product } from '@qonversion/react-native-sdk';
 import { Platform } from 'react-native';
 import * as Localization from 'expo-localization';
+
+let Qonversion: any;
+try {
+  Qonversion = require('@qonversion/react-native-sdk').default;
+} catch {
+  Qonversion = undefined;
+}
+type Product = any;
 
 export interface QonversionProduct {
   qonversionId: string;
@@ -29,6 +36,9 @@ export interface QonversionOfferings {
  */
 export async function getAvailableProducts(retryCount = 0): Promise<QonversionProduct[]> {
   try {
+    if (!Qonversion?.getSharedInstance) {
+      return [];
+    }
     const offerings = await Qonversion.getSharedInstance().offerings();
     
     if (!offerings || !offerings.main || offerings.main.products.length === 0) {
@@ -109,6 +119,12 @@ export async function getAvailableProducts(retryCount = 0): Promise<QonversionPr
  */
 export async function getOfferings(): Promise<QonversionOfferings> {
   try {
+    if (!Qonversion?.getSharedInstance) {
+      return {
+        main: null,
+        available: [],
+      };
+    }
     const offerings = await Qonversion.getSharedInstance().offerings();
     if (!offerings) {
       return {
