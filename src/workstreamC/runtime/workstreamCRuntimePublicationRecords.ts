@@ -1,14 +1,17 @@
 /**
  * Expo/React Native runtime: Workstream C governed signals via embedded CSV bundle +
- * reviewed GTIN→brand→parent chain only (no barcode fixture map, no injected chain).
+ * identity-first reviewed chain (canonical_brands + brand_aliases + Product fields), with GTIN fallback
+ * only when no Product is supplied (scripts). No barcode fixture map; no injected chain in production.
  */
 
 import type { DynamicSignalPublicationRecord } from '../../dynamicSignals/publish/types';
+import type { Product } from '../../types/product';
 import {
   buildADataMapsFromCsvRecords,
   buildWorkstreamCPublicationRecordsFromParsedPack,
 } from '../skeleton/workstreamCPublicationCore';
 import {
+  WORKSTREAM_C_RUNTIME_BRAND_ALIASES,
   WORKSTREAM_C_RUNTIME_CANONICAL_BRANDS,
   WORKSTREAM_C_RUNTIME_CANONICAL_PARENTS,
   WORKSTREAM_C_RUNTIME_GTIN_BRAND_LINKS,
@@ -44,11 +47,14 @@ export function isWorkstreamCSkeletonUatEnabled(): boolean {
 
 /**
  * Builds publishable-only Workstream C records for `buildProductScanResult({ dynamicSignalRecords })`.
- * Requires a reviewed row in bundled `gtin_brand_links.csv` for the scanned GTIN.
+ * With `product`, resolves chain from bundled canonical_brands + brand_aliases (+ optional Cadbury→B0241 bridge).
+ * Without `product`, falls back to reviewed bundled `gtin_brand_links` only (non-app harness).
  */
 export function buildWorkstreamCRuntimePublicationRecords(input: {
   barcode: string;
   productName: string;
+  /** Pass for supermarket path — enables identity-first chain resolution (preferred). */
+  product?: Product | null;
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
   logLines?: string[];
 }): DynamicSignalPublicationRecord[] {
@@ -61,6 +67,9 @@ export function buildWorkstreamCRuntimePublicationRecords(input: {
     aData: runtimeADataMaps(),
     barcode: input.barcode,
     productName: input.productName,
+    product: input.product ?? null,
+    canonicalBrandRows: WORKSTREAM_C_RUNTIME_CANONICAL_BRANDS,
+    brandAliasRows: WORKSTREAM_C_RUNTIME_BRAND_ALIASES,
     scanMarketPublic: input.scanMarketPublic,
     logLines: input.logLines,
     injectedChain: null,

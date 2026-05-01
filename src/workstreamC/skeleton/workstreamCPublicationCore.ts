@@ -6,6 +6,8 @@
 import type { DynamicSignalPublicationRecord } from '../../dynamicSignals/publish/types';
 import type { MarketKeyResolution } from '../../contracts/phase6/enums';
 import type { CsvRecord } from '../../identity/workstreamA/csv';
+import type { Product } from '../../types/product';
+import { resolveReviewedRetailChainUnified } from './resolveWorkstreamCRetailChain';
 
 const VALID_FAR = '2099-12-31T00:00:00.000Z';
 
@@ -46,12 +48,13 @@ export function buildADataMapsFromCsvRecords(
 export interface ResolvedRetailChain {
   brand_id: string;
   parent_id: string;
-  source: 'gtin_link' | 'injected_uat_fixture';
+  source: 'gtin_link' | 'injected_uat_fixture' | 'identity_resolution';
 }
 
 /** Tests / scripts only: when GTIN is absent from reviewed `gtin_brand_links`. App runtime must not inject. */
 export type InjectedUatChain = { brand_id: string; parent_id: string };
 
+/** Scripts/tests without a Product payload — GTIN reviewed rows + optional injected chain only (no identity path). */
 export function resolveReviewedRetailChain(input: {
   barcode: string;
   productName: string;
@@ -59,28 +62,15 @@ export function resolveReviewedRetailChain(input: {
   /** Unit tests and developer harnesses only — never pass from app screens. */
   injected?: InjectedUatChain | null;
 }): ResolvedRetailChain | null {
-  const g = input.aData.gtinRows.get(input.barcode);
-  if (g) {
-    if (g.link_review_state !== 'reviewed') return null;
-    const b = input.aData.brandsById.get(g.brand_id);
-    const p = input.aData.parentsById.get(g.parent_id);
-    if (!b || b.review_state !== 'reviewed') return null;
-    if (!p || p.review_state !== 'reviewed') return null;
-    return { brand_id: g.brand_id, parent_id: g.parent_id, source: 'gtin_link' };
-  }
-  if (input.injected) {
-    const b = input.aData.brandsById.get(input.injected.brand_id);
-    const p = input.aData.parentsById.get(input.injected.parent_id);
-    if (!b || b.review_state !== 'reviewed') return null;
-    if (!p || p.review_state !== 'reviewed') return null;
-    if (b.parent_id !== input.injected.parent_id) return null;
-    return {
-      brand_id: input.injected.brand_id,
-      parent_id: input.injected.parent_id,
-      source: 'injected_uat_fixture',
-    };
-  }
-  return null;
+  return resolveReviewedRetailChainUnified({
+    barcode: input.barcode,
+    productName: input.productName,
+    product: null,
+    aData: input.aData,
+    canonicalBrandRows: [],
+    brandAliasRows: [],
+    injected: input.injected ?? null,
+  });
 }
 
 function marketMatchesLink(mk: MarketKeyResolution, scanPublic: 'AU' | 'NZ' | 'UNKNOWN', linkMarket: string): boolean {
@@ -154,6 +144,12 @@ export interface BuildPublicationRecordsFromParsedPackInput {
   logLines?: string[];
   /** Omit or null in production app runtime — reviewed GTIN chain only. */
   injectedChain?: InjectedUatChain | null;
+  /** Supermarket runtime: OFF/product fields → reviewed canonical chain (preferred over GTIN when present). */
+  product?: Product | null;
+  /** Frozen v0.14 `canonical_brands.csv` rows — defaults empty when omitted (GTIN/script path only). */
+  canonicalBrandRows?: CsvRecord[];
+  /** Frozen v0.14 `brand_aliases.csv` rows — defaults empty when omitted. */
+  brandAliasRows?: CsvRecord[];
 }
 
 export function buildWorkstreamCPublicationRecordsFromParsedPack(
@@ -165,21 +161,22 @@ export function buildWorkstreamCPublicationRecordsFromParsedPack(
   const uxMap = buildUxCopyMaps(input.uxRows);
   const signalById = new Map(input.signals.map((r) => [r.signal_id ?? '', r]));
 
-  const chain = resolveReviewedRetailChain({
+  const chain = resolveReviewedRetailChainUnified({
     barcode: input.barcode,
     productName: input.productName,
+    product: input.product ?? null,
     aData: input.aData,
+    canonicalBrandRows: input.canonicalBrandRows ?? [],
+    brandAliasRows: input.brandAliasRows ?? [],
     injected: input.injectedChain ?? null,
+    logLines: log,
   });
   if (!chain) {
     push(
-      'chain_resolve: no reviewed GTIN→brand→parent chain (and no test-only injected chain) — RT001 blocks Workstream C signals'
+      'chain_resolve: no reviewed retail chain from identity fields (when product provided), bundled GTIN reviewed rows, or test injected chain — RT001 blocks Workstream C signals'
     );
     return [];
   }
-  push(
-    `chain_resolve: brand_id=${chain.brand_id} parent_id=${chain.parent_id} source=${chain.source} (RT001 reviewed A-Data chain)`
-  );
 
   const internalMarket = toInternalMarket(input.scanMarketPublic);
   const out: DynamicSignalPublicationRecord[] = [];

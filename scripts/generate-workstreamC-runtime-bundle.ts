@@ -21,6 +21,8 @@ function readCsv(filePath: string) {
 
 function main(): void {
   const brands = readCsv(path.join(A_INPUT, 'canonical_brands.csv'));
+  const aliasesPath = path.join(A_INPUT, 'brand_aliases.csv');
+  const aliases = fs.existsSync(aliasesPath) ? readCsv(aliasesPath) : [];
   const parents = readCsv(path.join(A_INPUT, 'canonical_parents.csv'));
   const gtins = readCsv(path.join(A_INPUT, 'gtin_brand_links.csv'));
   const links = readCsv(path.join(C_INPUT, 'signal_subject_links.csv'));
@@ -36,6 +38,7 @@ import type { CsvRecord } from '../../identity/workstreamA/csv';
 
   const body = [
     `export const WORKSTREAM_C_RUNTIME_CANONICAL_BRANDS: CsvRecord[] = ${JSON.stringify(brands)};`,
+    `export const WORKSTREAM_C_RUNTIME_BRAND_ALIASES: CsvRecord[] = ${JSON.stringify(aliases)};`,
     `export const WORKSTREAM_C_RUNTIME_CANONICAL_PARENTS: CsvRecord[] = ${JSON.stringify(parents)};`,
     `export const WORKSTREAM_C_RUNTIME_GTIN_BRAND_LINKS: CsvRecord[] = ${JSON.stringify(gtins)};`,
     `export const WORKSTREAM_C_RUNTIME_SIGNAL_SUBJECT_LINKS: CsvRecord[] = ${JSON.stringify(links)};`,
@@ -45,7 +48,9 @@ import type { CsvRecord } from '../../identity/workstreamA/csv';
 
   fs.mkdirSync(path.dirname(OUT_FILE), { recursive: true });
   fs.writeFileSync(OUT_FILE, `${banner}${body}\n`, 'utf8');
-  console.log(`Wrote ${OUT_FILE} (${brands.length} brands, ${gtins.length} gtin links, ${signals.length} signals)`);
+  console.log(
+    `Wrote ${OUT_FILE} (${brands.length} brands, ${aliases.length} brand aliases, ${gtins.length} gtin links, ${signals.length} signals)`
+  );
 }
 
 main();

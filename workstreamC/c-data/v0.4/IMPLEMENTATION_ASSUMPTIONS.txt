@@ -4,9 +4,9 @@ Workstream C skeleton v0.4 — implementation assumptions (repo)
 
 2) Option A UX: When skeleton_card_copy is set on publication records, SignalCard title_display/body_display/why_display use pack + ux_copy_skeleton.csv; class-level i18n keys remain on title_key/body_key/why_key for any caller using t() without display overrides.
 
-3) GTIN path: If gtin_brand_links has a row with link_review_state=reviewed and brand/parent reviewed, the real chain is used. Otherwise tests may pass injectedChain (in-code UAT only) — not a CLI binding.
+3) GTIN path (harness only): If gtin_brand_links has a row with link_review_state=reviewed and brand/parent reviewed, scripts/tests that omit `product` may resolve the chain via GTIN. The app scan screen always passes `product` — identity resolution runs first and does not fall back to GTIN when a product payload is present.
 
-3b) App runtime (Expo): No barcode fixture map. The scan screen uses `buildWorkstreamCRuntimePublicationRecords` + embedded bundle `src/workstreamC/runtime/workstreamCRuntimePack.generated.ts`, regenerated via `npm run workstreamC:generate-runtime-bundle` after CSV changes. Runtime never passes injectedChain — only reviewed GTIN→chain rows qualify.
+3b) App runtime (Expo): No barcode fixture map. The scan screen uses `buildWorkstreamCRuntimePublicationRecords` with the real `Product` + embedded bundle `src/workstreamC/runtime/workstreamCRuntimePack.generated.ts` (canonical_brands, brand_aliases, gtin_brand_links, C-pack). Regenerate via `npm run workstreamC:generate-runtime-bundle` after CSV changes. Chain = reviewed alias/canonical identity match (+ optional app-only B0067→B0241 bridge in chocolate/cocoa context for SL008/SL011). Runtime never passes injectedChain.
 
 4) v0.4 pack delta: SL011 subject_id set to B0241 (was B0067) so UAT_C_008 dual NGO signals both match the same Cadbury Dairy Milk reviewed row (distinct signal_id + dedupe_key).
 

@@ -2,13 +2,14 @@
  * Banner Alerts Service
  *
  * Collects and generates banner alerts from:
- * 1. APP-generated alerts (recalls, brand recall transparency note)
- * 2. User preference alerts (from user Alerts tab / alert preferences)
+ * 1. User preference alerts (from user Alerts tab / alert preferences)
  *
- * BBFAW/KTC: intentionally NOT surfaced as banner / Signal-style alerts here — remain in TruScore Ethics
- * pillar calculation and explanation surfaces (e.g. Trust Score modal / pillar breakdown), not recall-style banners.
+ * Legacy `product.recalls` (FDA/USDA/CFIA/RASFF) and brand “recall history” FDA homepage links are NOT surfaced
+ * on the product result screen. Safety/regulatory notices use governed Workstream C `ProductScanResult.signals`
+ * with exact `source_record_url` only.
  *
- * Product recalls (FDA/USDA/CFIA/RASFF) keep specific/generic links as before.
+ * BBFAW/KTC: intentionally NOT surfaced as banner / Signal-style alerts — remain in TruScore Ethics pillar
+ * calculation and explanation surfaces (e.g. Trust Score modal / pillar breakdown).
  */
 
 import { Product, ProductWithTrustScore } from '../types/product';
@@ -39,106 +40,7 @@ export function generateBannerAlerts(
   const alerts: BannerAlert[] = [];
   const nowMs = options?.now ? options.now() : Date.now();
 
-  // 1. APP-GENERATED ALERTS
-
-  // 1.1 Product Recalls
-  // Time-bound: <12 months per spec (changed from 3 months to 12 months)
-  if (product.recalls && product.recalls.length > 0) {
-    const twelveMonthsAgo = nowMs - (12 * 30 * 24 * 60 * 60 * 1000);
-    
-    const recentRecalls = product.recalls.filter(recall => {
-      if (!recall.isActive) return false;
-      const recallDate = new Date(recall.recallDate).getTime();
-      return recallDate >= twelveMonthsAgo;
-    });
-
-    if (recentRecalls.length > 0) {
-      const highestSeverity = recentRecalls.reduce((highest, recall) => {
-        const priority = recall.classification === 'Class I' ? 3 :
-                        recall.classification === 'Class II' ? 2 :
-                        recall.classification === 'Class III' ? 1 : 0;
-        return priority > highest.priority ? { priority, recall } : highest;
-      }, { priority: 0, recall: recentRecalls[0] });
-
-      const severity = highestSeverity.recall.classification === 'Class I' ? 'high' :
-                      highestSeverity.recall.classification === 'Class II' ? 'medium' : 'low';
-
-      const organization = highestSeverity.recall.recallId?.toUpperCase().includes('FDA') || highestSeverity.recall.recallId?.startsWith('F-') ? 'FDA' :
-                           highestSeverity.recall.recallId?.toUpperCase().includes('USDA') || 
-                           highestSeverity.recall.recallId?.toUpperCase().includes('FSIS') || 
-                           highestSeverity.recall.recallId?.toUpperCase().startsWith('FSIS-') ? 'USDA FSIS' :
-                           highestSeverity.recall.recallId?.toUpperCase().includes('CFIA') ? 'CFIA' :
-                           highestSeverity.recall.recallId?.toUpperCase().includes('RASFF') ? 'RASFF' : 'Government Agency';
-      
-      // Specific report URL first; only use generic agency link when exact URL not available (ID 17)
-      let actionUrl: string | undefined = highestSeverity.recall.url;
-      if (!actionUrl || !actionUrl.startsWith('http')) {
-        if (organization === 'FDA') {
-          actionUrl = 'https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts';
-        } else if (organization === 'USDA FSIS') {
-          actionUrl = 'https://www.fsis.usda.gov/recalls';
-        } else if (organization === 'CFIA') {
-          actionUrl = 'https://www.inspection.gc.ca/food-recall-warnings-and-allergies/recalls-and-alerts/eng/1351519587174/1351519588221';
-        } else if (organization === 'RASFF') {
-          actionUrl = 'https://webgate.ec.europa.eu/rasff-window/portal/';
-        }
-      }
-
-      alerts.push({
-        id: `recall-${product.barcode}-${nowMs}`,
-        source: 'app',
-        category: 'recall',
-        signalClass: 'A',
-        dedupeKey: `safety:recall:active:${product.barcode}`,
-        title: 'Product Recall',
-        message: `${recentRecalls.length} active recall(s) found. ${highestSeverity.recall.reason || 'Safety concern identified.'} Review official recall notices for safety details.`,
-        severity,
-        timestamp: nowMs,
-        actionUrl,
-        sourceDetails: {
-          organization,
-          recallClassification: highestSeverity.recall.classification === 'Unknown' ? undefined : highestSeverity.recall.classification,
-        },
-      });
-    }
-  }
-
-  // 1.1b Brand recall history — informational only (not part of Ethics pillar v37 BBFAW/KTC)
-  const hasRecentProductRecalls = product.recalls && product.recalls.some((r: { isActive?: boolean; recallDate?: string }) => {
-    if (!r.isActive) return false;
-    const recallDate = r.recallDate ? new Date(r.recallDate).getTime() : 0;
-    const twelveMonthsAgo = nowMs - (12 * 30 * 24 * 60 * 60 * 1000);
-    return recallDate >= twelveMonthsAgo;
-  });
-  if (!hasRecentProductRecalls) {
-    const brandsForRecallCheck = extractAllBrands(product);
-    let brandWithRecallHistory: string | null = null;
-    for (const b of brandsForRecallCheck) {
-      const data = getBrandData(b);
-      if (data?.recallHistory === true) {
-        brandWithRecallHistory = (data.name || b).trim();
-        break;
-      }
-    }
-    if (brandWithRecallHistory) {
-      const recallSearchUrl = 'https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts';
-      alerts.push({
-        id: `brand-recall-history-${product.barcode}-${nowMs}`,
-        source: 'app',
-        category: 'recall',
-        signalClass: 'B',
-        dedupeKey: `transparency:recall:brand-history:${product.barcode}`,
-        title: 'Brand recall history',
-        message: `Our brand database flags ${brandWithRecallHistory} with a history of product recalls (transparency only; not part of the Rveel Score Ethics pillar BBFAW/KTC calculation). Tap for FDA recalls reference.`,
-        severity: 'medium',
-        timestamp: Date.now(),
-        actionUrl: recallSearchUrl,
-        sourceDetails: { organization: 'Brand database (FDA reference)' },
-      });
-    }
-  }
-
-  // 2. USER PREFERENCE ALERTS
+  // 1. USER PREFERENCE ALERTS
 
   // 2.1 Animal Testing Preference
   if (userPreferences.ethicalEnabled && userPreferences.avoidAnimalTesting) {

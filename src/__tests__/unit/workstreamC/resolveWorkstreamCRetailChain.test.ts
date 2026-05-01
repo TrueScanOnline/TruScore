@@ -1,0 +1,87 @@
+import path from 'path';
+import fs from 'fs';
+import { parseCsv } from '../../../identity/workstreamA/csv';
+import { buildADataMapsFromCsvRecords } from '../../../workstreamC/skeleton/workstreamCPublicationCore';
+import { isChocolateOrCocoaContext, resolveReviewedRetailChainUnified } from '../../../workstreamC/skeleton/resolveWorkstreamCRetailChain';
+
+const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
+const A_DATA = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.14', 'input');
+
+function loadFrozenADataMaps() {
+  const brandRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'canonical_brands.csv'), 'utf8'));
+  const parentRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'canonical_parents.csv'), 'utf8'));
+  const gtinRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'gtin_brand_links.csv'), 'utf8'));
+  const aliasRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'brand_aliases.csv'), 'utf8'));
+  return {
+    aData: buildADataMapsFromCsvRecords(brandRows, parentRows, gtinRows),
+    brandRows,
+    aliasRows,
+  };
+}
+
+describe('resolveWorkstreamCRetailChain', () => {
+  it('isChocolateOrCocoaContext true for chocolates category', () => {
+    expect(
+      isChocolateOrCocoaContext({
+        categories_tags: ['en:chocolates'],
+      } as any)
+    ).toBe(true);
+  });
+
+  it('isChocolateOrCocoaContext false for plain cracker / biscuit products without chocolate cues', () => {
+    expect(
+      isChocolateOrCocoaContext({
+        categories_tags: ['en:biscuits-and-crackers'],
+        product_name: 'Ritz Original Crackers',
+        brands: 'Ritz',
+      } as any)
+    ).toBe(false);
+    expect(
+      isChocolateOrCocoaContext({
+        categories_tags: ['en:biscuits-and-crackers'],
+        product_name: 'Cadbury Biscuits',
+        brands: 'Cadbury',
+      } as any)
+    ).toBe(false);
+  });
+
+  it('Cadbury chocolate product resolves to B0241 chain for NGO subject links', () => {
+    const { aData, brandRows, aliasRows } = loadFrozenADataMaps();
+    const chain = resolveReviewedRetailChainUnified({
+      barcode: '9300601234567',
+      productName: 'Cadbury Dairy Milk',
+      product: {
+        barcode: '9300601234567',
+        brands: 'Cadbury',
+        product_name: 'Cadbury Dairy Milk',
+        categories_tags: ['en:chocolates'],
+      } as any,
+      aData,
+      canonicalBrandRows: brandRows,
+      brandAliasRows: aliasRows,
+    });
+    expect(chain).not.toBeNull();
+    expect(chain?.brand_id).toBe('B0241');
+    expect(chain?.parent_id).toBe('P0009');
+    expect(chain?.source).toBe('identity_resolution');
+  });
+
+  it('Ritz cracker resolves to B0069 — not bridged to B0241', () => {
+    const { aData, brandRows, aliasRows } = loadFrozenADataMaps();
+    const chain = resolveReviewedRetailChainUnified({
+      barcode: '9310123456789',
+      productName: 'Ritz Original',
+      product: {
+        barcode: '9310123456789',
+        brands: 'Ritz',
+        product_name: 'Ritz Original Crackers',
+        categories_tags: ['en:biscuits-and-crackers'],
+      } as any,
+      aData,
+      canonicalBrandRows: brandRows,
+      brandAliasRows: aliasRows,
+    });
+    expect(chain?.brand_id).toBe('B0069');
+    expect(chain?.source).toBe('identity_resolution');
+  });
+});

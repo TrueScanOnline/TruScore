@@ -72,6 +72,27 @@ describe('Workstream C v0.4 skeleton publication records', () => {
     expect(recs.every((r) => r.signal_publication_state === 'publishable')).toBe(true);
   });
 
+  it('Cadbury chocolate — identity-only chain (no injectedChain) still matches SL008/SL011', () => {
+    expectPackFiles();
+    const recs = buildWorkstreamCSkeletonPublicationRecords({
+      packInputRoot: PACK,
+      aDataInputRoot: A_DATA,
+      barcode: '9300601234567',
+      productName: 'Cadbury Dairy Milk Chocolate Bar',
+      scanMarketPublic: 'AU',
+      product: {
+        barcode: '9300601234567',
+        product_name: 'Cadbury Dairy Milk Chocolate Bar',
+        brands: 'Cadbury',
+        categories_tags: ['en:chocolates'],
+        source: 'test',
+      } as any,
+    });
+    const ids = new Set(recs.map((r) => r.signal_id));
+    expect(ids.has('SIG_NEWS_GLOBAL_001')).toBe(true);
+    expect(ids.has('SIG_NEWS_GLOBAL_002')).toBe(true);
+  });
+
   it('Negative: Ritz — no NGO global signals (AU)', () => {
     expectPackFiles();
     const recs = buildWorkstreamCSkeletonPublicationRecords({

@@ -6,6 +6,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { DynamicSignalPublicationRecord } from '../../dynamicSignals/publish/types';
+import type { Product } from '../../types/product';
 import { parseCsv } from '../../identity/workstreamA/csv';
 import {
   buildADataMapsFromCsvRecords,
@@ -39,6 +40,8 @@ export interface BuildSkeletonPublicationRecordsInput {
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
   logLines?: string[];
   injectedChain?: InjectedUatChain | null;
+  /** When set with no injectedChain, resolves retail chain from frozen CSV canonical + alias rows. */
+  product?: Product | null;
 }
 
 export function buildWorkstreamCSkeletonPublicationRecords(
@@ -50,6 +53,10 @@ export function buildWorkstreamCSkeletonPublicationRecords(
   const uxPath = path.join(packRoot, 'ux_copy_skeleton.csv');
   const uxRows = fs.existsSync(uxPath) ? parseCsv(fs.readFileSync(uxPath, 'utf8')) : [];
   const aData = loadADataMaps(input.aDataInputRoot);
+  const brandsPath = path.join(input.aDataInputRoot, 'canonical_brands.csv');
+  const aliasPath = path.join(input.aDataInputRoot, 'brand_aliases.csv');
+  const canonicalBrandRows = fs.existsSync(brandsPath) ? parseCsv(fs.readFileSync(brandsPath, 'utf8')) : [];
+  const brandAliasRows = fs.existsSync(aliasPath) ? parseCsv(fs.readFileSync(aliasPath, 'utf8')) : [];
 
   return buildWorkstreamCPublicationRecordsFromParsedPack({
     links,
@@ -61,5 +68,8 @@ export function buildWorkstreamCSkeletonPublicationRecords(
     scanMarketPublic: input.scanMarketPublic,
     logLines: input.logLines,
     injectedChain: input.injectedChain ?? null,
+    product: input.product ?? null,
+    canonicalBrandRows,
+    brandAliasRows,
   });
 }

@@ -6,8 +6,9 @@ import {
 } from '../../../workstreamC/runtime/workstreamCRuntimePublicationRecords';
 
 /**
- * Runtime path = reviewed GTIN in bundled `gtin_brand_links` + embedded C-pack only.
- * Injected-chain / artificial barcode scenarios stay in `skeletonPublicationRecords.test.ts`.
+ * Runtime path = bundled canonical_brands + brand_aliases + Product identity (preferred).
+ * GTIN reviewed rows apply only when `product` is omitted (non-screen harness).
+ * Injected-chain scenarios stay in `skeletonPublicationRecords.test.ts`.
  */
 
 describe('Workstream C runtime publication records', () => {
@@ -23,25 +24,35 @@ describe('Workstream C runtime publication records', () => {
     expect(isWorkstreamCSignalsRuntimeEnabled()).toBe(true);
   });
 
-  it('AU Cadbury Dairy Milk reviewed GTIN resolves chain via gtin_link and yields both NGO globals', () => {
+  it('AU Cadbury chocolate resolves chain via identity_resolution and yields SL008/SL011 NGO globals', () => {
     const logs: string[] = [];
+    const bc = '9300601234567';
     const recs = buildWorkstreamCRuntimePublicationRecords({
-      barcode: '9310051000015',
+      barcode: bc,
       productName: 'Cadbury Dairy Milk Chocolate Bar',
+      product: {
+        barcode: bc,
+        product_name: 'Cadbury Dairy Milk Chocolate Bar',
+        brands: 'Cadbury',
+        categories_tags: ['en:chocolates'],
+        source: 'openfoodfacts',
+      } as any,
       scanMarketPublic: 'AU',
       logLines: logs,
     });
     const ids = new Set(recs.map((r) => r.signal_id));
     expect(ids.has('SIG_NEWS_GLOBAL_001')).toBe(true);
     expect(ids.has('SIG_NEWS_GLOBAL_002')).toBe(true);
-    expect(logs.some((l) => l.includes('source=gtin_link'))).toBe(true);
+    expect(logs.some((l) => l.includes('source=identity_resolution'))).toBe(true);
+    expect(logs.some((l) => l.includes('source=gtin_link'))).toBe(false);
 
     const { result } = buildProductScanResult({
-      barcode: '9310051000015',
+      barcode: bc,
       product: {
-        barcode: '9310051000015',
+        barcode: bc,
         product_name: 'Cadbury Dairy Milk Chocolate Bar',
         brands: 'Cadbury',
+        categories_tags: ['en:chocolates'],
         source: 'openfoodfacts',
         trust_score: 42,
         trust_score_breakdown: { body: 10, planet: 10, ethics: 10, open: 12 },
@@ -60,12 +71,74 @@ describe('Workstream C runtime publication records', () => {
     expect(flatIds).toContain('SIG_NEWS_GLOBAL_002');
     const gw = flat.find((c) => c.id === 'SIG_NEWS_GLOBAL_001');
     expect(gw?.links?.[0]?.url).toMatch(/^https:\/\/globalwitness\.org\//);
+    const ran = flat.find((c) => c.id === 'SIG_NEWS_GLOBAL_002');
+    expect(ran?.links?.[0]?.url).toMatch(/^https:\/\/www\.ran\.org\//);
   });
 
-  it('AU Ritz reviewed GTIN stays negative for NGO global signals (brand-scoped links)', () => {
+  it('AU Ritz crackers — identity Mondelez Ritz brand, no SIG_NEWS_GLOBAL (negative control)', () => {
     const recs = buildWorkstreamCRuntimePublicationRecords({
-      barcode: '9310047230518',
+      barcode: '9310123456789',
       productName: 'Ritz Original Crackers',
+      product: {
+        barcode: '9310123456789',
+        product_name: 'Ritz Original Crackers',
+        brands: 'Ritz',
+        categories_tags: ['en:biscuits-and-crackers'],
+        source: 'openfoodfacts',
+      } as any,
+      scanMarketPublic: 'AU',
+    });
+    expect(recs.filter((r) => r.signal_id.startsWith('SIG_NEWS_GLOBAL'))).toHaveLength(0);
+  });
+
+  it('logs Cadbury B0067→B0241 bridge when chocolate wording present (SL008/SL011 subject row)', () => {
+    const logs: string[] = [];
+    buildWorkstreamCRuntimePublicationRecords({
+      barcode: '9300111222333',
+      productName: 'Cadbury Dark Chocolate Block',
+      product: {
+        barcode: '9300111222333',
+        brands: 'Cadbury',
+        product_name: 'Cadbury Dark Chocolate Block',
+        categories_tags: [],
+        source: 'openfoodfacts',
+      } as any,
+      scanMarketPublic: 'AU',
+      logLines: logs,
+    });
+    expect(logs.some((l) => l.includes('cadbury_ngo_subject_bridge: applied'))).toBe(true);
+  });
+
+  it('AU ambiguous Cadbury biscuit — bridge not applied, no SIG_NEWS_GLOBAL', () => {
+    const logs: string[] = [];
+    const recs = buildWorkstreamCRuntimePublicationRecords({
+      barcode: '9300999999999',
+      productName: 'Cadbury Biscuits',
+      product: {
+        barcode: '9300999999999',
+        brands: 'Cadbury',
+        product_name: 'Cadbury Biscuits',
+        categories_tags: ['en:biscuits-and-crackers'],
+        source: 'openfoodfacts',
+      } as any,
+      scanMarketPublic: 'AU',
+      logLines: logs,
+    });
+    expect(recs.filter((r) => r.signal_id.startsWith('SIG_NEWS_GLOBAL'))).toHaveLength(0);
+    expect(logs.some((l) => l.includes('cadbury_ngo_subject_bridge: not applied'))).toBe(true);
+  });
+
+  it('AU Philadelphia cream cheese — Mondelez brand, no SIG_NEWS_GLOBAL (negative control)', () => {
+    const recs = buildWorkstreamCRuntimePublicationRecords({
+      barcode: '9410001234567',
+      productName: 'Philadelphia Cream Cheese',
+      product: {
+        barcode: '9410001234567',
+        product_name: 'Philadelphia Cream Cheese',
+        brands: 'Philadelphia',
+        categories_tags: ['en:dairies'],
+        source: 'openfoodfacts',
+      } as any,
       scanMarketPublic: 'AU',
     });
     expect(recs.filter((r) => r.signal_id.startsWith('SIG_NEWS_GLOBAL'))).toHaveLength(0);
@@ -75,7 +148,7 @@ describe('Workstream C runtime publication records', () => {
     process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = '0';
     expect(
       buildWorkstreamCRuntimePublicationRecords({
-        barcode: '9310051000015',
+        barcode: '9300601234567',
         productName: 'Cadbury Dairy Milk Chocolate Bar',
         scanMarketPublic: 'AU',
       })

@@ -66,7 +66,6 @@ import Toast from 'react-native-toast-message';
 import { submitManufacturingCountry, getManufacturingCountry, hasUserSubmitted } from '../../src/services/manufacturingCountryService';
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
 import ManufacturingCountryModal from '../../src/components/ManufacturingCountryModal';
-import RecallAlertModal from '../../src/components/RecallAlertModal';
 import { PalmOilCard } from '../../src/features/product/cards/PalmOilCard';
 import PackagingInfoModal from '../../src/components/PackagingInfoModal';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
@@ -170,13 +169,24 @@ function ResultScreenContent() {
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [manufacturingCountryModalVisible, setManufacturingCountryModalVisible] = useState(false);
-  const [recallAlertModalVisible, setRecallAlertModalVisible] = useState(false);
   const [packagingInfoModalVisible, setPackagingInfoModalVisible] = useState(false);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
   const [editMode, setEditMode] = useState(false);
   const [shareModalVisible, setShareModalVisible] = useState(false);
-  const [shareType, setShareType] = useState<'truScore' | 'recall' | 'countryOfManufacture' | 'negativeTruScore' | 'productInfo' | 'insights' | 'palmOil' | 'nutrition' | 'ingredients' | 'processing' | 'allergens' | 'ecoscore'>('truScore');
+  const [shareType, setShareType] = useState<
+    | 'truScore'
+    | 'countryOfManufacture'
+    | 'negativeTruScore'
+    | 'productInfo'
+    | 'insights'
+    | 'palmOil'
+    | 'nutrition'
+    | 'ingredients'
+    | 'processing'
+    | 'allergens'
+    | 'ecoscore'
+  >('truScore');
   const [shareInitialMessage, setShareInitialMessage] = useState('');
   const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number; hasImportedIngredients?: boolean } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -409,6 +419,7 @@ function ResultScreenContent() {
       ? buildWorkstreamCRuntimePublicationRecords({
           barcode: primaryBc,
           productName: productForScan.product_name ?? productForScan.product_name_en ?? productForScan.brands ?? '',
+          product: productForScan,
           scanMarketPublic,
           logLines: workstreamCLogs,
         })
@@ -661,7 +672,20 @@ function ResultScreenContent() {
   };
 
   // Handle sharing for specific card types
-  const handleShare = (cardType: 'truScore' | 'recall' | 'countryOfManufacture' | 'negativeTruScore' | 'productInfo' | 'insights' | 'palmOil' | 'nutrition' | 'ingredients' | 'processing' | 'allergens' | 'ecoscore') => {
+  const handleShare = (
+    cardType:
+      | 'truScore'
+      | 'countryOfManufacture'
+      | 'negativeTruScore'
+      | 'productInfo'
+      | 'insights'
+      | 'palmOil'
+      | 'nutrition'
+      | 'ingredients'
+      | 'processing'
+      | 'allergens'
+      | 'ecoscore'
+  ) => {
     if (!product) return;
 
     setShareInitialMessage('');
@@ -1052,35 +1076,6 @@ function ResultScreenContent() {
           retryLabel={t('result.heroImageRetry')}
           closeLightboxLabel={t('result.heroImageCloseLightbox')}
         />
-
-        {/* Food Recall Alert - Compact banner that opens modal */}
-        {product.recalls && product.recalls.length > 0 && (
-          <TouchableOpacity
-            style={[styles.recallAlertBanner, { backgroundColor: '#ff6b6b' + '20', borderColor: '#ff6b6b' }]}
-            onPress={() => setRecallAlertModalVisible(true)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.recallBannerContent}>
-              <View style={styles.recallBannerLeft}>
-                <View style={[styles.recallBannerIconContainer, { backgroundColor: '#ff6b6b' + '30' }]}>
-                  <Ionicons name="warning" size={20} color="#ff6b6b" />
-                </View>
-                <View style={styles.recallBannerText}>
-                  <Text style={[styles.recallBannerTitle, { color: colors.text }]}>
-                    {t('result.foodRecall', 'Food Recall Alert')}
-                  </Text>
-                  <Text style={[styles.recallBannerSubtitle, { color: colors.textSecondary }]}>
-                    {product.recalls.length === 1 
-                      ? t('result.recallCountSingle', '1 recall found - Tap for details')
-                      : t('result.recallCountMultiple', `${product.recalls.length} recalls found - Tap for details`)
-                    }
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-            </View>
-          </TouchableOpacity>
-        )}
 
         {/* Banner Alerts Card - Above TruScore */}
         {/* Loaded asynchronously to not block product display */}
@@ -2423,16 +2418,6 @@ function ResultScreenContent() {
         productName={product?.product_name}
       />
 
-      {/* Recall Alert Modal */}
-      {product && product.recalls && product.recalls.length > 0 && (
-        <RecallAlertModal
-          visible={recallAlertModalVisible}
-          onClose={() => setRecallAlertModalVisible(false)}
-          recalls={product.recalls}
-          signalClass="A"
-        />
-      )}
-
       {/* Packaging Info Modal */}
       {shouldShowPackagingCard(product) && (
         <PackagingInfoModal
@@ -3518,13 +3503,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  recallAlertBanner: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 2,
-  },
   partialScanBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -3542,35 +3520,5 @@ const styles = StyleSheet.create({
   partialScanSubtitle: {
     fontSize: 12,
     lineHeight: 16,
-  },
-  recallBannerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  recallBannerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 12,
-  },
-  recallBannerIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  recallBannerText: {
-    flex: 1,
-  },
-  recallBannerTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  recallBannerSubtitle: {
-    fontSize: 13,
-    lineHeight: 18,
   },
 });
