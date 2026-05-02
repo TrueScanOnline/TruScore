@@ -17,7 +17,6 @@ import { BannerAlert, BannerAlertsData } from '../types/bannerAlerts';
 import { AlertsPreferences } from '../store/useAlertsStore';
 import { extractAllBrands } from '../utils/brandExtraction';
 import { getBrandData } from '../data/brandDatabase';
-import { logger } from '../utils/logger';
 
 /**
  * Generate banner alerts for a product
@@ -35,10 +34,10 @@ export interface GenerateBannerAlertsOptions {
 export function generateBannerAlerts(
   product: Product | ProductWithTrustScore,
   userPreferences: AlertsPreferences,
-  options?: GenerateBannerAlertsOptions
+  /** Reserved for tests / future time-bound banners (recall path removed). */
+  _options?: GenerateBannerAlertsOptions
 ): BannerAlertsData {
   const alerts: BannerAlert[] = [];
-  const nowMs = options?.now ? options.now() : Date.now();
 
   // 1. USER PREFERENCE ALERTS
 

@@ -8,11 +8,22 @@ Write-Host ""
 Write-Host "=== One-time (only if you linked Vercel at repo root by mistake) ===" -ForegroundColor DarkGray
 Write-Host "npm run clean:vercel-root-link"
 Write-Host ""
+Write-Host "=== Dependencies + track (npm audit) ===" -ForegroundColor Cyan
+Write-Host 'Set-Location "C:\TrueScan-FoodScanner"'
+Write-Host "npm install"
+Write-Host "npm audit"
+Write-Host ""
 Write-Host "=== Core quality gates ===" -ForegroundColor Cyan
 Write-Host 'Set-Location "C:\TrueScan-FoodScanner"'
+Write-Host "npm run typecheck"
 Write-Host "npm run test:pillars"
 Write-Host "npm run test:share"
+Write-Host "npm run test:workstreamC"
 Write-Host "npm run lint"
+Write-Host ""
+Write-Host "=== One-shot automated verify (same gates + backend + contributions + OFF + doctor) ===" -ForegroundColor Green
+Write-Host "npm run release:verify:windows:no-deploy"
+Write-Host "# Or with production deploy: npm run release:verify:windows"
 Write-Host ""
 Write-Host "=== Vercel env (strict) ===" -ForegroundColor Cyan
 Write-Host "npm run check-vercel-env:strict"

@@ -3,6 +3,8 @@ import * as Localization from 'expo-localization';
 
 let Qonversion: any;
 try {
+  // Dynamic require: optional native SDK (Expo Go / missing module must not crash at import time).
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- optional native dependency
   Qonversion = require('@qonversion/react-native-sdk').default;
 } catch {
   Qonversion = undefined;

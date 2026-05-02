@@ -8,6 +8,7 @@ let LaunchMode: any;
 let Environment: any;
 
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- optional native dependency (see subscriptionService)
   const qonversionModule = require('@qonversion/react-native-sdk');
   Qonversion = qonversionModule.default;
   QonversionConfigBuilder = qonversionModule.QonversionConfigBuilder;
