@@ -1,4 +1,5 @@
 # Full pre-release verification for Windows (npm install + gates + optional backend deploy).
+# Use ASCII in user-visible strings only; Windows PowerShell 5.1 can mis-parse UTF-8 em dashes as mojibake.
 # Run from repo root: powershell -ExecutionPolicy Bypass -File scripts/run-windows-release-verify.ps1
 # Options:
 #   -SkipInstall       Skip npm install
@@ -29,8 +30,8 @@ if (-not $SkipInstall) {
   npm install
 }
 
-Step "npm audit (informational — track vulns; avoid npm audit fix --force without testing)"
-npm audit 2>$null
+Step "npm audit (informational - track vulns; avoid npm audit fix --force without testing)"
+npm audit
 if ($LASTEXITCODE -ne 0) {
   Write-Host "npm audit reported findings. Review and plan remediation; continuing verification." -ForegroundColor Yellow
 }
@@ -51,7 +52,7 @@ npm run test:share
 Step "Workstream C (Signals / identity / legacy recall suppression)"
 npm run test:workstreamC
 
-Step "Vercel env (strict — Blob + DB)"
+Step "Vercel env (strict - Blob + DB)"
 npm run check-vercel-env:strict
 
 if (-not $SkipDeploy) {

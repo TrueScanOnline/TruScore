@@ -97,6 +97,8 @@
     "checklist:windows": "powershell -ExecutionPolicy Bypass -File scripts/print-windows-release-checklist.ps1",
     "release:verify:windows": "powershell -ExecutionPolicy Bypass -File scripts/run-windows-release-verify.ps1",
     "release:verify:windows:no-deploy": "powershell -ExecutionPolicy Bypass -File scripts/run-windows-release-verify.ps1 -SkipDeploy",
+    "release:verify:windows:skip-install": "powershell -ExecutionPolicy Bypass -File scripts/run-windows-release-verify.ps1 -SkipInstall",
+    "release:verify:windows:skip-install-no-deploy": "powershell -ExecutionPolicy Bypass -File scripts/run-windows-release-verify.ps1 -SkipInstall -SkipDeploy",
     "deploy:vercel:prod": "npm run sync-truescan-src --prefix backend/vercel && cd backend/vercel && npx vercel --prod",
     "clean:vercel-root-link": "powershell -ExecutionPolicy Bypass -File scripts/remove-root-vercel-link.ps1"
   },
