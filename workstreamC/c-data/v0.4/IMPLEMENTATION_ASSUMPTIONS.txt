@@ -13,3 +13,11 @@ Workstream C skeleton v0.4 — implementation assumptions (repo)
 5) Staleness: valid_until set far-future on skeleton records; full lifecycle not in scope for this pass.
 
 6) XLSX: Canonical pack is CSV under workstreamC/c-data/v0.4/input. Compare row counts/IDs to any XLSX review copy manually if used offline.
+
+7) iOS / TestFlight supermarket aisle UAT: Cut builds from commit a3da516840f4826c90c6e5fcd188c89bb252966b or later on main. Set EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT=1 so Workstream C runtime publication records and scan UI gating align with the Skeleton Signals UAT pack.
+
+8) Skeleton-UAT limitation — subject links vs general relevance:
+   - The Cadbury B0067→B0241 bridge is a Skeleton-UAT-only app-layer helper so generic Cadbury + Mondelez (P0009) + chocolate/cocoa/confectionery context can match reviewed SL008/SL011 subject rows (B0241) without mutating closed Workstream A v0.14 or hard-wiring a Signal ID in CSV. It is not a general Dynamic Signals relevance engine.
+   - Curated subject-link behaviour for supermarket UAT: Cadbury chocolate/cocoa products should match the reviewed Cadbury/Mondelēz links where identity + bridge apply. KitKat should match SIG_NEWS_GLOBAL_001 only when identity resolves to the reviewed KitKat/Nestlé subject link (SL009). Mars chocolate should match SIG_NEWS_GLOBAL_001 only when identity resolves to the reviewed Mars subject link (SL010). Unrelated Nestlé, Mars, or Mondelēz products must not trigger NGO globals merely because they share a parent — matching is brand-scoped per signal_subject_links.csv.
+   - SIG_NEWS_GLOBAL_002 in v0.4 is tied to reviewed Mondelēz brand subjects only (Cadbury Dairy Milk B0241, Oreo, Toblerone per pack rows); it is not a Mars/Nestlé umbrella signal.
+   - Full production Signals build-out will require a broader source-subject relevance model; one-off bridges are not the long-term architecture.
