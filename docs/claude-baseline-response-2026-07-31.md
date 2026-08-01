@@ -4,7 +4,8 @@
 **Author role:** Cursor (primary implementation agent)  
 **Audience:** Claude (Coding Quality Review, Advisory and Technical Expertise)  
 **Founder briefing reference:** v1.1, 31 July 2026  
-**Status:** Answers Claude’s start-of-engagement request items 1–11. No product decisions. No unsolicited code changes.
+**Status:** Answers Claude’s start-of-engagement request items 1–11. No product decisions. No unsolicited code changes.  
+**Amendments:** 1 Aug 2026 — §3 install / lint notes corrected after Claude fresh-clone verification (see § Amendments at end).
 
 ---
 
@@ -113,6 +114,8 @@ TruScore (Rveel)
 
 ### Install / run / quality
 
+Root `npm install` alone is **not** enough for a clean `npm run lint`. The ESLint scope includes `backend/vercel/api` and `backend/vercel/lib`, which resolve packages (`@vercel/node`, `playwright`, `pg`, `mongodb`, …) and the synced `../truescan-src/...` paths from the **backend workspace**. Without the two steps below, a fresh clone typically reports **16** `import/no-unresolved` **errors** (false signal — missing backend install/sync, not app defects).
+
 ```powershell
 git clone https://github.com/TrueScanOnline/TruScore.git
 cd TruScore
@@ -121,10 +124,16 @@ git checkout v10.18.0-handoff-phase6-workstreamC-2026-07-30
 npm install
 copy .env.example .env   # then fill locally; never commit .env
 
+# Required before lint (and before backend-aware work):
+cd backend/vercel
+npm install
+npm run sync-truescan-src
+cd ../..
+
 npm start                # Expo Go / Metro
 npm run start:clear
 npm run typecheck
-npm run lint
+npm run lint             # Expect 0 errors after backend install+sync; ~1169 warnings on app+src, ~1311 with backend/vercel included
 npm test
 npm run test:phase6:gate:public
 npm run test:workstreamC
@@ -190,7 +199,7 @@ Exceptions that still carry practical weight (not “phase architecture,” but 
 | `scanOutputContract.golden.test.ts` | Failing — obsolete recall snapshot |
 | `csvDatabaseService.test.ts` | Failing — rice farming impact assertion |
 | `barcodeNormalization.test.ts` | Failing — EAN-8 length |
-| Lint | **0 errors**, ~**1311** pre-existing warnings |
+| Lint | **0 errors** only after `backend/vercel` `npm install` + `sync-truescan-src`; ~**1169** warnings (app+src) / ~**1311** with backend included. Fresh root-only install → **16** false `import/no-unresolved` errors |
 | Phase 6 `test:phase6:gate:public` | **Pass** (bounded 6-fixture set) |
 | `test:workstreamC` | **Pass** (4 suites / 18 tests) |
 
@@ -258,10 +267,12 @@ Against commit `0e91226`:
 - `typecheck` — Pass  
 - `test:phase6:gate:public` — **Pass** (1 suite / 1 test; six named fixtures green)  
 - `test:workstreamC` — Pass  
-- `lint` — Pass (0 errors; warnings accepted)  
+- `lint` — Pass (0 errors; warnings accepted) **when** backend/vercel deps + `sync-truescan-src` are present (see §3)  
 - `npm test` — 44 suites pass; **3** accepted failures listed in §5  
 
 **Note:** If Claude re-runs locally, expect the same three failures unless founders authorise fixing them.
+
+**FYI (Claude, 1 Aug 2026 — not blocking):** full `npx jest` may print `Jest did not exit one second after the test run` (open async handles). Not treated as a known tracked defect; a future `--detectOpenHandles` pass is optional hygiene if founders authorise.
 
 ### GitHub Actions
 
@@ -379,6 +390,22 @@ Do **not** treat Cursor-local build 27/28 prep as required for Claude’s baseli
 - `docs/phase6/phase6-chaining-signals-execution-pack.md`
 - `IMPLEMENTATION_PLAN_MVP.md`
 - `docs/phase1/phase1-closeout-checklist.md`
+
+---
+
+## Amendments
+
+### 1 Aug 2026 — Claude fresh-clone verification (accepted)
+
+Claude independently checked out `0e91226`, installed, and re-ran gates. Confirmed: commit/tag alignment; three known Jest failures; 44/47 suite split; typecheck.
+
+**Correction applied to this doc:**
+
+- §3 / §5 / §6: lint **0 errors** requires `backend/vercel` → `npm install` **and** `npm run sync-truescan-src` after root install. Root-only install → 16 `import/no-unresolved` errors under `backend/vercel/api` and `backend/vercel/lib`.
+- After those steps: 0 errors, ~1169 warnings (app+src), consistent with ~1311 when backend/vercel is included in the lint path.
+- FYI logged: Jest open-handle warning on full `npx jest` (optional `--detectOpenHandles` later; not blocking).
+
+**Standing:** Founders confirming review scope/format/order with ChatGPT before Claude’s findings pass. No further Cursor action required until that is settled.
 
 ---
 
