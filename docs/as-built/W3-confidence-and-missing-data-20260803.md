@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Module:** W3 / Critical Output Integrity **#8** — Confidence & missing-data disclosure  
-**Authority:** MVP Launch Plan v0.4 §5 Decision 4 / §8 / §12; Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`  
+**Authority:** MVP Launch Plan v0.4 §5 Decision 4 / §8 / §12; Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Depends on:** W0 (journey), W1 (identity/merge), W2 (pillar maths)  
 **Code baseline:** Behaviour under `src/utils/confidenceScoring.ts`, `buildProductScanResult.ts`, Result UI  
 **Status:** **Demonstrate only.** Existing confidence build is **not founder-accepted**. No Confidence Spec yet — **do not** implement new confidence rules from this note.
@@ -232,3 +234,70 @@ This is the core tension with v0.4’s “default must not masquerade as confide
 ---
 
 *End of W3. No implementation changes were made for this demonstration.*
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling scope outcome** | *MVP Launch Plan and Scope Baseline* v0.4 §3.1 **Confidence & missing-data disclosure**; §4 Critical Output **#8**; §5 Decision **4**; §8 “Confidence — Existing build not accepted”; §12 **Confidence and Evidence Specification** (follow-on) |
+| **Approved Confidence Spec** | **None** — deliberately pending |
+| **Instruction** | Founder response 3 Aug 2026 concern **7**; Cursor acceptance §3 Confidence row |
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| Source-tier `product.confidence` from `Product.source` table | **Inferred / historical** — not founder-accepted Confidence model |
+| Scan-contract confidence blend / web-search cap | Engineering contract field — **not** accepted consumer Confidence |
+| Mid-range pillar totals from base 15 looking “neutral” | Exactly the risk v0.4 Decision 4 targets — **demo finding**, Spec will govern remediation |
+
+### C. Terminology and version position
+
+| Legacy / alternate | Current | Naming only or functional? |
+|--------------------|---------|----------------------------|
+| CoM “verified / community / disputed” | Contribution verification state (W4/W7) | **Functional different concept** from Critical Output #8 Confidence — do not treat as Confidence Spec |
+| Body 12/25 additive ceiling | Score ceiling | **Not** Confidence — naming confusion risk only |
+
+### D. Current alignment assessment
+
+**Not aligned** with the v0.4 §3.1 MVP Required outcome (confidence separate at pillar **and** overall; weak evidence explained; no confident-neutral masquerade).
+
+**Unable to determine** detailed thresholds/evidence rules — **no approved Confidence Spec**.
+
+### E. Effect on original W3 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| As-built source-tier confidence inventory | **Remain valid** |
+| “Existing build not accepted” | **Confirmed** by controlling Scope §8 — **specification gap** (and current misalignment), not a claim that no code exists |
+| Remediation details | **Must wait** for Confidence and Evidence Specification — not inventable |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Follow-on specification** — Confidence and Evidence Specification | Founders + ChatGPT |
+| **Claude technical review** — confidence vs score ceilings presentation | Claude after Spec / with Spec draft |
+| **Approved implementation** — only after Spec | Cursor |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*

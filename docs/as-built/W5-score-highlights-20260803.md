@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Module:** W5 / Critical Output Integrity **#9** — Score Highlights Commentary  
-**Authority:** MVP Launch Plan v0.4 §3.1 / §4 / §8 (Partially built — review for priority, brevity, factual restraint)  
+**Authority:** MVP Launch Plan v0.4 §3.1 / §4 / §8 (Partially built — review for priority, brevity, factual restraint)
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Depends on:** W2 (pillar maths), W3 (confidence is separate), W0 (Result layout)  
 **Not this module:** Signal Alert Commentary (#10) / `InsightsCarousel` / preference-driven insights  
 **Code baseline:** `scoreHighlightDefinitions.ts` + `generateProductFlags` path  
@@ -206,3 +208,68 @@ This is a material integrity gap for a consumer-facing commentary layer.
 ---
 
 *End of W5. No implementation changes were made for this demonstration.*
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling scope outcome** | *MVP Launch Plan and Scope Baseline* v0.4 §3.1 **Score Highlights Commentary**; §4 Critical Output **#9**; §8 Partially built; C11 separation from Signal Alert Commentary |
+| **Existing Spec artefacts** | Score Highlights Specification **v8** (22 Dec 2025) + `Score_Highlights_Complete_Rules.csv` under `Spec documents/` — treat as **candidate** Spec for mapping; product acceptance still per v0.4 review outcome |
+| **Instruction** | Founder response 3 Aug 2026 §3 (Highlights ≠ Signal Alert Commentary) |
+
+**Document-control note:** Acceptance walkthrough table W4/W5 labels are swapped vs as-built filenames; Critical Output **#9** controls this file (W5).
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| Embedded `scoreHighlightDefinitions` / `generateProductFlags` priority | Implementation of Highlights library — must be reviewed for priority, brevity, factual restraint per §3.1 |
+| Suppression flags (e.g. BBFAW/KTC on Result) | Engineering choices — confirm against Highlights Spec v8 + founder review |
+
+### C. Terminology and version position
+
+| Legacy / alternate | Current | Naming only or functional? |
+|--------------------|---------|----------------------------|
+| “Insights” / Alerts carousel | Signal Alert Commentary (#10) / preference Insights | **Functional separation** (C11) — not Highlights |
+| Score drivers / flags | Score Highlights Commentary (#9) | Current term |
+
+### D. Current alignment assessment
+
+**Partially aligned** — commentary library and Result placement exist; v0.4 requires review/refinement not yet closed.
+
+### E. Effect on original W5 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| Separation from Insights/Signals | **Remain valid** and **required** by C11 |
+| Gaps vs priority/brevity | **Specification/product review gap**, not automatic defect until review dispositions |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Founder decision** / content review — priority, brevity, restraint | Founders + ChatGPT |
+| **Further evidence** — example cards on real products | Cursor + UAT |
+| **Approved implementation** — wording/priority fixes after review | Cursor |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*

@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Module:** W1 / Critical Output Integrity **#12** — Product identity and data-source retrieval/merging  
-**Authority:** MVP Launch Plan v0.4 §4; Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`  
+**Authority:** MVP Launch Plan v0.4 §4; Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Depends on:** W0 (`docs/as-built/W0-end-to-end-consumer-journey-20260803.md`)  
 **Code baseline:** Behaviour described against the `0e91226` product tree (identity/merge code). Docs-only commits on `main` do not change this behaviour.  
 **Status:** As-built facts only. **Not** product acceptance. **Not** authority to change merge rules, A-data, or identity policy.
@@ -309,3 +311,71 @@ Phase 6 golden gate (uses identity resolution).
 ---
 
 *End of W1. No implementation changes were made for this demonstration.*
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling specification (scope outcome)** | *Rveel MVP Launch Plan and Scope Baseline* v0.4 §3.1 **Product identity resolution**; §4 Critical Output **#12**; §2 principles (existing code ≠ approved outcome) |
+| **Architecture Specs (identity / Signals chain)** | Chaining & Signals **Documents 1–6** (esp. Doc 2 Shared Identity v0.3, Doc 2A, Doc 5 Field Annex v0.4) — normative filenames in `docs/phase6/phase6-chaining-signals-execution-pack.md` (pack v0.3, 26 Apr 2026); external `.docx` files |
+| **Where product merge priority Spec is absent** | No founder-approved “data merge / source priority” product Spec covering OFF vs FSANZ vs manual overlay order for all fields |
+| **Instruction relied upon** | Founder response 3 Aug 2026 (demonstrate before remediation; no inference). Cursor acceptance W1 evidence line. |
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| Dual identity systems (Phase-6 soft identity vs Workstream C hard B####/P#### gate) | **Engineered under Docs 1–6 / Workstream packs**; consumer-facing merge of those systems into one “identity story” remains partially transitional |
+| `mergeUserContributedData` overlay rules; first-paint races; Vercel proprietary vs OFF field split | **Largely inferred / historical implementation** pending explicit merge/source-priority product rules |
+| Manual product short-circuit before remote fetch | Implementation choice — confirm against Community Verification / merge Spec later |
+
+### C. Terminology and version position
+
+| Legacy / alternate | Current | Naming only or functional? |
+|--------------------|---------|----------------------------|
+| SharedIdentity / brand:… synthetic IDs | Workstream C B#### / P#### reviewed chain | **Functional dual path** — not mere rename; fail-closed C Signals vs soft Phase-6 ambiguity |
+| “Care” | Ethics | Naming only (pillar), not identity |
+
+### D. Current alignment assessment
+
+**Partially aligned** with v0.4 §3.1 identity resolution and Critical Output #12 (retrieval/merge exist; fail-closed for C Signals path).
+
+**Unable to determine** full “best available source without inappropriate overwriting” compliance — **no approved merge Spec**; behaviour is as-built.
+
+### E. Effect on original W1 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| Dual identity + merge overlay inventory | **Remain valid** |
+| Gaps needing Community Verification / Origins Specs | **Confirmed as specification gaps**, not automatic code defects |
+| Acceptance table W-number ordering vs as-built filenames | N/A to W1 (#12). Critical Output **#** controls over acceptance walkthrough letter codes |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Follow-on specification** — merge/source-priority / contribution overwrite rules (via Community Verification Spec and/or dedicated data rules) | Founders + ChatGPT |
+| **Claude technical review** — contribution overwrite / spam / silent field loss (acceptance Claude Q) | Claude after handoff pack |
+| **Further evidence** — representative AU/NZ barcode merge cases | Cursor + founders UAT |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*

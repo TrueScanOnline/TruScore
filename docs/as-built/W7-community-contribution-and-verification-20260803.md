@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Module:** W7 / Critical Output Integrity **#13** — Community contribution and verification  
-**Authority:** MVP Launch Plan v0.4 §12 (Community Verification Spec **pending**); Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`  
+**Authority:** MVP Launch Plan v0.4 §12 (Community Verification Spec **pending**); Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Depends on:** W0 (skippable contribute CTAs), W1 (identity + merge / scoring overlays), W4 (CoM contribution ≠ scored Product fields)  
 **Code baseline:** Manual entry, photo upload, CoM threshold path, OFF submission as implemented today  
 **Status:** **Demonstrate only.** Do **not** invent ongoing confirmation/dispute rules, admin moderation workflows, or confidence effects of contributions. Community Verification Spec required before expansion.
@@ -297,3 +299,72 @@ docs/cursor-acceptance-mvp-v0.4-20260803.md
 **What “verification” means today:** Only CoM has a coded multi-user threshold / dispute preview. Everything else is one-shot. Client “verification” helpers and the pending-contributions banner are not live on the Result path.
 
 **What is not decided here:** Cross-field ongoing confirmation, when community data may change scores under Spec rules, confidence effects, packaging contribute UX, and founder moderation — all wait on the Community Verification Spec (and related Specs).
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling scope outcome** | *MVP Launch Plan and Scope Baseline* v0.4 §3.1 User data contributions + Community verification; §4 Critical Output **#13**; §5 Decision **5**; §8 Partially built; §12 **Community Verification Specification** |
+| **Approved Verification Spec** | **None** — pending |
+| **Instruction** | Founder response 3 Aug 2026 concern **2** |
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| One-shot manual/photo/cert writes affecting scores via merge | Historical contribution path — score-use rules reserved to Spec |
+| CoM threshold-3 only multi-user confirm/dispute | Preview algorithm — **not** the Community Verification Spec |
+| Dormant pending banner / unwired client “verification” helpers | Incomplete historical UX — not approved Spec |
+
+### C. Terminology and version position
+
+| Legacy / alternate | Current | Naming only or functional? |
+|--------------------|---------|----------------------------|
+| CoM verified/community/disputed | Contribution verification preview | Not the full #13 Spec model |
+| “User contribution” vs community verification | Both in §3.1 as related but distinct MVP Required rows | Functional: submit vs ongoing confirm/dispute |
+
+### D. Current alignment assessment
+
+**Partially aligned** — skippable contribution paths exist (§3.1 user data contributions).
+
+**Not aligned** with ongoing confirmation/dispute across contribution types and Spec-governed score use.
+
+**Unable to determine** detailed moderation/confidence coupling — **Community Verification Spec** absent.
+
+### E. Effect on original W7 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| Path inventory; CoM-only threshold | **Remain valid** |
+| Missing cross-field ongoing verification | **Specification gap** (and current partial build), not inventable as code “bugfix Spec |
+| Admin moderation absent | Cross-ref W10 — MVP Required minimum admin after inventory |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Follow-on specification** — Community Verification Specification | Founders + ChatGPT |
+| **Claude technical review** — write-path safety / overwrite | Claude |
+| **Approved implementation** — after Spec | Cursor |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*

@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Module:** W11 — Monitoring (acceptance series; supports Monitoring and Analytics Minimum Spec later)  
-**Authority:** MVP Launch Plan v0.4 §12 (Monitoring detailed rules **pending**); Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`  
+**Authority:** MVP Launch Plan v0.4 §12 (Monitoring detailed rules **pending**); Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Depends on:** W8 (share-event telemetry), W9 (scan obs on Result)  
 **Code baseline:** `errorReporting.ts`, share-event rewrite, local loggers as implemented today  
 **Status:** **Inventory only.** Do **not** invent privacy disclosure rules, analytics provider choice, or crash-vs-funnel policy from this note. Monitoring Spec + Claude privacy pass follow.
@@ -226,3 +228,75 @@ docs/cursor-acceptance-mvp-v0.4-20260803.md
 **What does not exist:** Active Sentry from repo build config; productised analytics suite; founder monitoring dashboard; Monitoring Spec privacy disclosures.
 
 **Next decision (founders + Claude privacy pass):** crash-only vs crash + lean funnel; whether to wire optional Sentry; disclosure obligations — then Monitoring and Analytics Minimum Spec before coding.
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling scope outcome** | *MVP Launch Plan and Scope Baseline* v0.4 §3.1 **Monitoring & operational insight**; §5 Decision **3**; §7 Monitoring & analytics; §8 Security, privacy, monitoring & data — independent assessment required; §12 **Monitoring and Analytics Minimum** (after assessment + privacy review) |
+| **Approved Monitoring Spec** | **None** — provider/event design outside Scope plan |
+| **Instruction** | Founder response 3 Aug 2026 concern **4** |
+
+**Post-MVP:** Advanced personalisation & analytics; broader behavioural analytics; detailed user profiling (§3.3 / §13). Lean crash + core-journey view remains MVP Required principle.
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| Sentry wrapper installed but `initialize()` never called; no EAS DSN | Incomplete historical wiring — **not** an approved monitoring solution |
+| Share-event barcode/platform/itemType to Vercel logs | Lean telemetry experiment — privacy disposition pending Claude |
+| Device-only shareAnalytics / powershellLogger | Local UAT aids — not founder monitoring |
+
+### C. Terminology and version position
+
+| Legacy / alternate | Current | Naming only or functional? |
+|--------------------|---------|----------------------------|
+| “Optional Sentry” | Crash/error monitoring principle | Provider TBD — naming of vendor ≠ Spec |
+| scan_obs / SCAN_OBS | Local scan observability | Not product analytics suite |
+
+### D. Current alignment assessment
+
+**Not aligned** with active, tested, disclosed crash/error monitoring + lean core-use view (§7) — Sentry not activated; no founder view.
+
+**Partially aligned** with “lean” intent of share-event (no PII fields by design) as a candidate input to Spec.
+
+**Unable to determine** final vendor/event set — **Monitoring and Analytics Minimum** Spec pending + Claude privacy pass.
+
+### E. Effect on original W11 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| Sentry unwired; share-event logs; no dashboard | **Remain valid** |
+| Enabling Sentry or expanding analytics from this note | Still **not authorised** — Spec + privacy review required |
+| Absence of Amplitude/etc. | **Post-MVP** advanced analytics — not an MVP defect |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Founder decision** — crash-only vs crash + lean funnel | Founders |
+| **Claude technical review** — privacy of Sentry + share-event | Claude |
+| **Follow-on specification** — Monitoring and Analytics Minimum | Founders + ChatGPT |
+| **Approved implementation** — after Spec | Cursor |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*

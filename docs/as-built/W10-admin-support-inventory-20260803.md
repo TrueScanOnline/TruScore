@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Module:** W10 — Admin / support inventory (acceptance series; supports Minimum Founder/Admin Requirements Spec later)  
-**Authority:** MVP Launch Plan v0.4 §12 (Admin detailed rules **pending**); Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`  
+**Authority:** MVP Launch Plan v0.4 §12 (Admin detailed rules **pending**); Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Depends on:** W6 (Signals founder ops absent), W7 (contribution moderation absent)  
 **Code baseline:** Expo app + `backend/vercel` + Workstream A/C pack tooling as of handoff lineage  
 **Status:** **Inventory only.** Expect thin. Do **not** invent admin roles, queues, SSO, or suppress workflows from this note. Minimum Founder/Admin Requirements Spec follows founder shape preference.
@@ -247,3 +249,74 @@ docs/cursor-acceptance-mvp-v0.4-20260803.md
 **What does not exist:** Any founder-facing admin UI, admin API, role gating, contribution moderation queue, or emergency Signal suppress path in production.
 
 **Next decision (founders, not Cursor):** Admin shape preference after this inventory — then Minimum Founder/Admin Requirements Spec before coding.
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling scope outcome** | *MVP Launch Plan and Scope Baseline* v0.4 §3.1 **Founder/admin controls**; §5 Decision **2**; §7 Support & administration; §8 Admin & support — Not assessed → inventory first; §12 **Minimum Founder/Admin Requirements** (after inventory) |
+| **Approved Admin Spec** | **None** yet — this inventory is the prerequisite |
+| **Instruction** | Founder response 3 Aug 2026 concern **1** |
+
+**Post-MVP:** Advanced Signals operational tooling beyond bounded MVP; community hub moderation products (§3.3 / §13) — not substitutes for minimum MVP founder controls.
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| Phase 4 data-ops admin/moderation markdown | **Design-only** — not runtime authority |
+| publicationStateEngine suppress/expire intents | Library only — not founder ops product |
+| Pack CSV `editorial_review_state` | Offline content ops — not in-app admin |
+
+### C. Terminology and version position
+
+| Legacy / alternate | Current | Naming only or functional? |
+|--------------------|---------|----------------------------|
+| “Not assessed” (v0.4 §8 before inventory) | Inventory complete (this W10) | Status update: assessment of *current* capability done; minimum *solution* still pending Spec |
+| review_state (identity CSV) | Stewardship enum | Not founder admin UI |
+
+### D. Current alignment assessment
+
+**Not aligned** with v0.4 §3.1 MVP Required founder/admin controls (runtime UI/API **absent**).
+
+**Aligned** with the interim instruction to **inventory first** before finalising the minimum solution.
+
+**Unable to determine** detailed control set — awaits Minimum Founder/Admin Requirements after founder shape preference.
+
+### E. Effect on original W10 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| Thin/absent admin inventory | **Remain valid** |
+| Absence of admin | Now framed as **MVP Required gap** awaiting Spec — not Post-MVP, and not a licence to invent admin UX |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Founder decision** — admin shape (web ops vs DB/script vs in-app) | Founders |
+| **Follow-on specification** — Minimum Founder/Admin Requirements | Founders + ChatGPT |
+| **Claude technical review** — security of chosen approach | Claude |
+| **Approved implementation** — after Spec | Cursor |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*

@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Modules:** W6 / Critical Output Integrity **#7** (Chaining & Signals) and **#10** (Signal Alert Commentary)  
-**Authority:** MVP Launch Plan v0.4 §6 layered Signals status; Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`  
+**Authority:** MVP Launch Plan v0.4 §6 layered Signals status; Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Depends on:** W1 (dual identity), W0 (Result placement), W5 (Score Highlights ≠ this module)  
 **Code baseline:** Phase 6 engine + Workstream C Skeleton path at handoff lineage  
 **Status:** As-built facts only. Engine/Skeleton ≠ MVP Signals operating capability. **Not** launch certification.
@@ -270,3 +272,78 @@ This matches v0.4: Cursor must **inventory** admin first; founders approve minim
 ---
 
 *End of W6. No implementation changes were made for this demonstration.*
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling scope outcome** | *MVP Launch Plan and Scope Baseline* v0.4 §3.1 Chaining, Safety & Regulatory Signals, In the News Signals, Signal Alert Commentary; §4 Critical Outputs **#7** and **#10**; §5 Decision **7**; **§6 layered readiness** (controlling clarification); §8 Chaining & Signals status |
+| **Architecture Specs** | Chaining & Signals **Documents 1–6** (external `.docx`; listed in `docs/phase6/phase6-chaining-signals-execution-pack.md` v0.3, 26 Apr 2026) |
+| **Instruction** | Founder response 3 Aug 2026 §§1–2 concerns 6 & 10; Cursor acceptance §2 layered language |
+
+**Post-MVP (do not treat as MVP defects for absence):** Automated scraping; MyChoices Signals; Advanced Signals (§3.3 / §13).
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| Default `phase6SignalSourceMode = transitional` | Transitional engineering — production governed-only path not certified |
+| `InsightsCarousel` / Alerts preferences as “Signal Alert Commentary” | **Ambiguous mapping** — v0.4 #10 requires neutral third-party Signal summaries; preference Insights may be a **different** surface (as-built W6 already flagged) |
+| Cadbury Skeleton bridge | UAT helper — not production architecture |
+
+### C. Terminology and version position
+
+| Legacy / alternate | Current | Naming only or functional? |
+|--------------------|---------|----------------------------|
+| “Phase 6 complete” / “Signals built” | Layered §6 statuses | **Forbidden broad labels** — not a code defect, a reporting rule |
+| BannerAlerts / ProductScanResult.signals | Safety & Regulatory / In the News Signals | Current consumer Signal cards |
+| Insights / Alerts preferences | Possibly #10 or separate | **Needs founder clarification** — may be functional mismatch if treated as #10 |
+
+### D. Current alignment assessment
+
+**Partially aligned** with Docs 1–6 architecture and Skeleton proof.
+
+**Not aligned** with full MVP Signals operating capability (§6: founder ops, AU/NZ corpus, governed runtime, renewed UAT).
+
+**Unable to determine** #10 compliance until founders confirm whether InsightsCarousel is in-scope for Signal Alert Commentary.
+
+### E. Effect on original W6 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| Layered status table; Skeleton flag; transitional mode | **Remain valid** |
+| Founder ops absent | **Confirmed** MVP Required gap (also W10) — **not** Post-MVP |
+| Advanced/MyChoices Signals absent | **Post-MVP** — not an MVP code defect |
+| #10 vs Insights ambiguity | **Specification / product-definition gap** |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Founder decision** — #10 scope (Signal-card UX vs Insights vs both) | Founders + ChatGPT |
+| **Follow-on** — Minimum Founder/Admin Requirements (Signal lifecycle) | After W10 |
+| **Claude technical review** — transitional feeders → governed-only | Claude |
+| **Further evidence** — renewed Skeleton/device UAT | Founders + Cursor |
+| **Approved implementation** — only after Specs/decisions | Cursor |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*

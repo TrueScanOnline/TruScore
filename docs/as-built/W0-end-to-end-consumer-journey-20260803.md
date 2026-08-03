@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Module:** W0 — Scan → Result → Explore → Contribute / Share (+ shell tabs)  
-**Authority:** MVP Launch Plan v0.4 §4 (demonstrate before remediation); Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`  
+**Authority:** MVP Launch Plan v0.4 §4 (demonstrate before remediation); Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Code baseline:** `0e91226` / tag `v10.18.0-handoff-phase6-workstreamC-2026-07-30` for product behaviour; this note authored on `main` after docs-only commits  
 **Status:** As-built facts only. **Not** product acceptance. **Not** authority to change Confidence, Origins, Admin, or other §12-spec areas.
 
@@ -275,3 +277,77 @@ Unless founders reorder:
 ---
 
 *End of W0. No implementation changes were made for this demonstration.*
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling specification** | *Rveel MVP Launch Plan and Scope Baseline* v0.4 (3 August 2026) |
+| **Relevant sections** | §1 experience promise; §2 launch principles; §3.1 Barcode scan & product retrieval, Past Scans, Consumer UI & end-to-end experience, Parallel iOS & Android; §3.3 / §13 **Post-MVP** (Paywall & subscriptions commercial activation; Allergens & Dietary Needs; MyChoices); §7 Consumer UI & workflow, Paywall isolation; §4 Cross-cutting UI requirement; §14 as-built demos |
+| **Where detailed Spec is absent** | No separate “Journey Spec.” UI polish detail awaits **UI and Content Acceptance Plan** (v0.4 §12). |
+| **Instruction relied upon** | Founder response letter 3 Aug 2026 §§3–4 (UI elevated; Allergens removed to Post-MVP; park deferred UI; demonstrate before remediation). Cursor acceptance 3 Aug 2026 Q2–Q4. |
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| Full tab shell (Search / Favourites / Alerts / Subscription) beyond scan→result→share/contribute | **Inferred / historical product surface** — not authorised as MVP Required experience; unfinished premium paths must be isolated for MVP |
+| Allergens & Additives section still on Result | **Legacy surface still live** — v0.4 places Allergens & Dietary Needs in **Post-MVP**; presence in public MVP UX is a scope-isolation gap, not a licence to expand |
+| Paywall/upgrade UI still reachable while gating flag is off | **Partial isolation** — v0.4 requires unfinished subscription/upgrade/premium paths **hidden or disabled** for MVP (§3.3, §7 Paywall isolation); commercial paywall itself remains **Post-MVP** |
+
+### C. Terminology and version position
+
+| Legacy / alternate term | Current v0.4 / product term | Naming only or functional? |
+|-------------------------|----------------------------|----------------------------|
+| TrueScan / TruScore (repo/legacy brand) | Rveel (public) / TruScore (score system) | Naming / brand — not treated as defect |
+| “Care” pillar (older specs/logs) | **Ethics** pillar (v0.4 §1 / §3.1) | **Naming only** if referring to the same Ethics scoring path; not a second pillar |
+| Trust Score vs TruScore / Rveel Score | TruScore / overall score | Naming drift in UI strings — verify consistency in UI Acceptance Plan |
+
+### D. Current alignment assessment
+
+**Partially aligned** with v0.4 §3.1 scan→result→contribute/share and Past Scans outcomes.
+
+**Not aligned** on public exposure of **Post-MVP** Allergens capability and unfinished paywall/premium journeys (MVP isolation obligation).
+
+**Unable to determine** full UI polish readiness — awaits UI and Content Acceptance Plan + device UAT evidence.
+
+### E. Effect on original W0 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| Journey map, unknown-product CTAs, share/contribute skippability | **Remain valid** as as-built facts |
+| Allergens section “still present” | **Revised conclusion:** this is a **specification/scope isolation gap** (capability is **Post-MVP**), not an approved MVP feature and not a scoring-spec defect |
+| Paywall UI still reachable | **Revised conclusion:** **MVP Required isolation** not yet done; commercial paywall remains **Post-MVP** |
+| Offline-first incomplete | Remains a readiness/reliability finding pending severity disposition |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Approved implementation** — park/hide unfinished paywall/premium UI | Founder authorisation → Cursor |
+| **Approved implementation** — isolate/hide Allergens & Dietary Needs from public MVP UX (**Post-MVP**) | Founder authorisation → Cursor |
+| **Further evidence or testing** — physical UAT of journey on iOS/Android baseline | Founders |
+| **Follow-on specification** — UI and Content Acceptance Plan | Founders + ChatGPT |
+| **Claude technical review** — not primary for W0 unless isolation changes raise navigation risk | Optional after park task |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*

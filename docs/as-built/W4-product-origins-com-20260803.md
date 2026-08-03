@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Module:** W4 / Critical Output Integrity **#6** — Product Origins  
-**Authority:** MVP Launch Plan v0.4 §3.1 / §5 Decision 6 / §12 (Product Origins Specification pending)  
+**Authority:** MVP Launch Plan v0.4 §3.1 / §5 Decision 6 / §12 (Product Origins Specification pending)
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Depends on:** W0 (journey), W1 (merge/overlays), W2 (Open pillar), W3 (confidence ≠ CoM verification)  
 **Code baseline:** CoM UI + contribution + Open origin disclosure scoring as implemented today  
 **Status:** **Demonstrate only.** As-built ≈ **Country of Manufacture**. **Do not** extend structured multi-claim Origins from inference. Product Origins Spec required first.
@@ -245,3 +247,72 @@ v0.4 explicitly removed detailed schema from the launch plan and deferred it to 
 ---
 
 *End of W4. No implementation changes were made for this demonstration.*
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling scope outcome** | *MVP Launch Plan and Scope Baseline* v0.4 §3.1 **Product Origins**; §4 Critical Output **#6**; §5 Decision **6**; §8 Partially built; §12 **Product Origins Specification** |
+| **Approved Origins Spec** | **None** — detailed schema removed from launch plan (C05); Spec pending |
+| **Instruction** | Founder response 3 Aug 2026 concern **3**: demonstrate CoM only; **do not** extend from inference |
+
+**Document-control note:** Cursor acceptance walkthrough table labelled W4 as Score Highlights and W5 as Origins; **as-built filenames use W4 = Origins (#6)** and **W5 = Highlights (#9)**. Critical Output **#** is authoritative; walkthrough letter codes are sequencing labels only.
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| CoM threshold-3 / dispute UI | Historical contribution preview — **not** Product Origins Spec; **not** full Community Verification Spec |
+| Priority-5 label regex in country extractor | **Historical as-built** — not licence to expand multi-claim Origins |
+| CoM not auto-writing scored manufacturing fields | As-built split — Spec must decide score coupling |
+
+### C. Terminology and version position
+
+| Legacy / alternate | Current | Naming only or functional? |
+|--------------------|---------|----------------------------|
+| Country of Manufacture / manufacturing_places | Product Origins (multi-claim MVP outcome) | **Functional gap** — CoM is a subset/baseline, not rename-equivalent to full Origins |
+| `countries` / sold-in | Not CoM | Functional field distinction (W4 body) |
+
+### D. Current alignment assessment
+
+**Partially aligned** — CoM consumer surface exists as the approved demonstration baseline.
+
+**Unable to determine** multi-claim Origins compliance — **Product Origins Specification** not yet issued.
+
+### E. Effect on original W4 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| CoM as-built inventory | **Remain valid** |
+| “Do not extend from inference” | **Reinforced** — expansion is a **specification gap**, not a code defect for missing multi-claim Origins |
+| CoM≠scored fields | Remains for Spec + Community Verification interaction |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Follow-on specification** — Product Origins Specification | Founders + ChatGPT |
+| **Founder decision** — whether/when CoM verification feeds scores | Specs |
+| **Approved implementation** — after Spec | Cursor |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*

@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Modules:** W2 / Critical Output Integrity **#1–5** — Body, Planet, Ethics, Open, Overall TruScore  
-**Authority:** MVP Launch Plan v0.4 §4; Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`  
+**Authority:** MVP Launch Plan v0.4 §4; Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md`
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Depends on:** W0 (journey), W1 (identity & data merge)  
 **Code baseline:** Scoring behaviour as implemented under `src/lib/truscoreEngine/` (aligned with handoff baseline `0e91226`)  
 **Status:** As-built facts only. **Not** product acceptance of scores. Spec mapping to founder-approved Body/Planet/Ethics/Open documents still required for certification.
@@ -310,3 +312,72 @@ v0.4 workstream status remains: **Built but unverified** — next is explicit co
 ---
 
 *End of W2. No implementation changes were made for this demonstration.*
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling scope outcome** | *MVP Launch Plan and Scope Baseline* v0.4 §1 / §3.1 Body, Planet, Ethics, Open, Overall TruScore; §4 Critical Outputs **#1–5**; §8 workstream “Four pillars & TruScore — Built but unverified” |
+| **Approved scoring specifications (how)** | Body Scoring Spec **V12**; Planet Scoring Spec **v19** (+ packaging annex v2); Ethics Scoring Spec **37**; OPEN Pillar workbook; Cross-Pillar Score & Commentary table **2025-12-22** (paths under `Spec documents/` and `Database files/ETHICS Pillar/`) |
+| **Instruction** | Founder response 3 Aug 2026 §3 Critical Output programme; Cursor acceptance W2. Do not treat code presence as acceptance. |
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| Base **15** per pillar and some floor/cap interactions | Must be verified against approved scoring Specs — treat unverified deltas as **spec-mapping work**, not automatic defects |
+| Body red-additive ceiling **12/25** | Spec/code interaction; **not** Confidence (v0.4 Decision 4 / founder concern 7) |
+| Methodology version string `RVEEL_SCORE_METHODOLOGY_VERSION` 1.4 | Engineering lock — confirm vs Spec versions in certification |
+
+### C. Terminology and version position
+
+| Legacy / alternate | Current | Naming only or functional? |
+|--------------------|---------|----------------------------|
+| **Care** (Care Scoring Spec v32 CSV; older logs “Care Pillar”) | **Ethics** (v0.4; `ethicsPillar.ts`; Ethics Spec 37) | **Naming only** for the same Ethics pillar path — **not** a defect if logs/docs say Care historically. Functional inconsistency only if a second Care scorer still diverges from Ethics Spec 37 |
+| Trust Score | TruScore / Rveel Score | Naming |
+| Planet Eco-Score display vs Planet pillar | Related but distinct OFF Eco-Score card vs pillar maths | **Functional distinction** — do not conflate |
+
+### D. Current alignment assessment
+
+**Partially aligned** — implementation present for #1–5; v0.4 status remains **Built but unverified** until code↔Spec mapping and founder acceptance.
+
+**Unable to determine** full numeric Spec conformance without completed Cursor+Claude Spec mapping (especially Body/Planet).
+
+### E. Effect on original W2 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| Four-pillar assembly, base 15, confidence not in pillar maths | **Remain valid** |
+| “Not product acceptance” | **Reinforced** by v0.4 §8 |
+| Care vs Ethics | **Clarify:** historical Care = Ethics naming; not a Critical Output defect by itself |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Claude technical review** — Body/Planet data→score integrity | Claude |
+| **Further evidence** — representative AU/NZ outcomes vs Spec | Cursor + founders |
+| **Founder decision** — accept pillar outputs after mapping | Founders |
+| **Approved implementation** — only after Spec deltas are dispositioned | Cursor |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*

@@ -2,7 +2,9 @@
 
 **Document type:** Critical Output Integrity as-built demonstration (plain language)  
 **Module:** W9 / Critical Output Integrity **#14** — Scan-result assembly  
-**Authority:** MVP Launch Plan v0.4; Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md` (W9 evidence line)  
+**Authority:** MVP Launch Plan v0.4; Cursor acceptance `docs/cursor-acceptance-mvp-v0.4-20260803.md` (W9 evidence line)
+**Document-control addendum:** 4 August 2026 (authority & alignment for Claude review) — see end of this note.
+
 **Depends on:** W0–W8 (this is the **composition** module — how prior modules meet on one Result screen)  
 **Code baseline:** Live `app/result/[barcode].tsx` + `buildProductScanResult` → presentation  
 **Status:** As-built facts only. Demonstrates the acceptance evidence path. **Not** launch certification of Confidence / Origins / Signals ops / Verification Specs.
@@ -321,3 +323,73 @@ docs/cursor-acceptance-mvp-v0.4-20260803.md
 **Acceptance evidence path:** `buildProductScanResult` → `scanResultPresentation` → `BannerAlertsCard` on `app/result/[barcode].tsx` is **live**.
 
 **What assembly does not decide:** Whether Confidence, Origins, Signals ops, or Community Verification are MVP-ready — those remain Spec / ops work. W9 only shows **how today’s pieces are wired together**.
+
+---
+
+## Document-control addendum — Authority & alignment (4 August 2026)
+
+**Addendum type:** Document-control and review preparation for Claude (not a re-implementation).  
+**Scope of change:** Authority citation, terminology position, alignment assessment, effect on original findings, outstanding authority.  
+**Original technical evidence:** Remains the body of this note unless expressly revised below.  
+**Implementation authority:** None — this addendum does **not** authorise code changes, inferred requirements, or redesign.
+
+**Controlling scope document (shared):**  
+*Rveel MVP Launch Plan and Scope Baseline* (**v0.4**, **3 August 2026**) — external file `Rveel_MVP_Launch_Plan_and_Scope_Baseline_20260803_v0_4.docx` (Desktop; not stored in this repo). Also referred to by founders as the MVP Scope Document v0.4.
+
+**Companion founder/ChatGPT instruction:**  
+*Rveel Response to Cursor Review and Submission of MVP Scope v0.4* (**3 August 2026**) — `Rveel_Response_to_Cursor_and_v0_4_Submission_20260803.docx`.
+
+**In-repo acceptance mirror:** `docs/cursor-acceptance-mvp-v0.4-20260803.md` (**3 August 2026**).
+
+**Status vocabulary:** Use **Post-MVP** for capability expressly excluded from the current MVP plan in v0.4 §3.3 / §13 (do not use alternate labels such as “deferred cosmetic” for those items).
+
+
+### A. Controlling specification / instruction for this workstream
+
+| Field | Value |
+|-------|-------|
+| **Controlling scope outcome** | *MVP Launch Plan and Scope Baseline* v0.4 §4 Critical Output **#14** (faithfully carry scores, confidence, Highlights, Signals, Origins and sources into consistent consumer output); §3.1 Consumer UI; §4 Cross-cutting UI requirement |
+| **Engineering contract** | `ProductScanResult` / `buildProductScanResult` (Phase 4/6 scan contract) — engineering, not substitute for product Specs |
+| **Instruction** | Cursor acceptance W9 evidence line |
+
+### B. Inferred during development (not expressly specified)
+
+| Behaviour | Classification |
+|-----------|----------------|
+| Card order / visibility helpers | Historical UX composition — UI Acceptance Plan will govern polish |
+| Allergens section still assembled on Result | **Post-MVP** capability still composed into MVP Result — isolation gap (W0) |
+| Palm product card hidden constant | Implementation park — confirm vs Planet/Highlights intent |
+
+### C. Terminology and version position
+
+| Legacy / alternate | Current | Naming only or functional? |
+|--------------------|---------|----------------------------|
+| TrustScoreInfoModal / TruScore naming | TruScore | Naming |
+| Banner alerts vs Signals | Signals (#7) | Prefer Signals language in founder reporting |
+
+### D. Current alignment assessment
+
+**Partially aligned** — acceptance spine `buildProductScanResult` → presentation → Result is live.
+
+**Not aligned** with #14 “faithfully carry … confidence … Origins and sources” as a complete consumer honesty outcome (confidence/Origins Specs pending; share stripping is W8).
+
+**Post-MVP isolation gap:** Allergens still in assembly.
+
+### E. Effect on original W9 findings
+
+| Original finding | Effect |
+|------------------|--------|
+| Pipeline + card stack inventory | **Remain valid** |
+| Composition ≠ Spec acceptance | **Reinforced** |
+| Allergens live on Result | **Revised:** treat as **Post-MVP isolation** issue |
+
+### F. Outstanding authority required
+
+| Need | Owner |
+|------|--------|
+| **Follow-on specifications** — Confidence, Origins, Verification (feed assembly honesty) | Founders + ChatGPT |
+| **UI and Content Acceptance Plan** | Founders + ChatGPT |
+| **Approved implementation** — allergen/paywall isolation | Founder auth → Cursor |
+| **Claude technical review** — after Specs where material | Claude |
+
+*End of document-control addendum for this workstream. No implementation changes were authorised or made.*
