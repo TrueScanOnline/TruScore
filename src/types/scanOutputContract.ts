@@ -31,6 +31,8 @@ export interface SignalCard {
   why_display?: string;
   /** Stage 2 food-recall: show manual batch / best-before entry under the alert. */
   food_recall_needs_batch_entry?: boolean;
+  /** Stage 2 food-recall match state (for edit/re-check UI). */
+  food_recall_match_state?: string;
 }
 
 export interface ProductScanResult {

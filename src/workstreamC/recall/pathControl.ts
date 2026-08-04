@@ -1,25 +1,28 @@
 /**
- * Stage 2 path control: corrected matcher vs legacy subject-link Safety publish.
+ * Stage 2 path control: exact matcher vs fail-closed (no legacy broad Safety publish).
  */
 
 /**
- * When true (default), MILO uses exact matcher and SIG_REG_AU_001 legacy link is suppressed.
- * Set EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH=0 to simulate rollback (legacy MILO only).
+ * When true, MILO uses the exact-GTIN matcher.
+ * When false, MILO is unavailable for scan-triggered alerts — legacy brand-wide path is NEVER restored.
+ *
+ * UAT profiles (eas.json):
+ * - uat-ios-flag-off (BN 29): EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH=0
+ * - uat-ios-flag-on (BN 30): EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH=1
  */
 export function isFoodRecallCorrectedPathEnabled(): boolean {
-  return process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH !== '0';
+  return process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH === '1';
 }
 
-/** Legacy Safety signal_ids always suppressed in Stage 2 corrected consumer pathway (unavailable / held). */
-export function alwaysSuppressedLegacySafetySignalIds(): string[] {
-  return ['SIG_REG_AU_002', 'SIG_REG_NZ_001', 'SIG_REG_NZ_002'];
-}
-
-/** When corrected path on, also suppress MILO broad brand link. */
+/**
+ * All four legacy Safety recall subject-link IDs — always suppressed from scan publication
+ * once Stage 2 controls are present (corrected path on or off).
+ */
 export function suppressedLegacySafetySignalIds(): string[] {
-  const base = alwaysSuppressedLegacySafetySignalIds();
-  if (isFoodRecallCorrectedPathEnabled()) {
-    return ['SIG_REG_AU_001', ...base];
-  }
-  return base;
+  return ['SIG_REG_AU_001', 'SIG_REG_AU_002', 'SIG_REG_NZ_001', 'SIG_REG_NZ_002'];
+}
+
+/** @deprecated Alias — same as suppressedLegacySafetySignalIds (always all four). */
+export function alwaysSuppressedLegacySafetySignalIds(): string[] {
+  return suppressedLegacySafetySignalIds();
 }

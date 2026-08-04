@@ -52,6 +52,8 @@ export interface FoodRecallMatchResult {
   evaluated_at: string;
   /** Stable public card identity — must NOT include match_state */
   dedupe_key: string;
+  /** Present when GTIN is on pack / related list — drives publication metadata */
+  gtin_verification_status?: GtinVerificationStatus;
 }
 
 export interface FoodRecallEvaluationClock {

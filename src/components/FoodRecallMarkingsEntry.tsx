@@ -1,13 +1,18 @@
 /**
  * Stage 2 MVP — manual batch + best-before month/year entry for food recalls.
  * Provisional UI — founder/legal copy approval required before launch.
+ *
+ * Internal field state resets whenever `barcode` changes so prior product markings
+ * never carry across scans.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import type { FoodRecallSubmittedMarkings } from '../workstreamC/recall';
 
 type Props = {
+  /** Scanned barcode — changing this clears all field state */
+  barcode: string;
   visible: boolean;
   officialSourceUrl?: string;
   initial?: FoodRecallSubmittedMarkings | null;
@@ -29,10 +34,32 @@ const MONTHS = [
   { v: 12, l: 'Dec' },
 ];
 
-export default function FoodRecallMarkingsEntry({ visible, initial, onApply }: Props) {
+export default function FoodRecallMarkingsEntry({
+  barcode,
+  visible,
+  initial,
+  onApply,
+}: Props) {
   const [batch, setBatch] = useState(initial?.batchCodeRaw ?? '');
   const [month, setMonth] = useState<number | null>(initial?.bestBeforeMonth ?? null);
-  const [year, setYear] = useState(initial?.bestBeforeYear != null ? String(initial.bestBeforeYear) : '');
+  const [year, setYear] = useState(
+    initial?.bestBeforeYear != null ? String(initial.bestBeforeYear) : ''
+  );
+
+  // Reset fields on every barcode change (do not retain prior product values)
+  useEffect(() => {
+    setBatch(initial?.batchCodeRaw ?? '');
+    setMonth(initial?.bestBeforeMonth ?? null);
+    setYear(initial?.bestBeforeYear != null ? String(initial.bestBeforeYear) : '');
+  }, [barcode]); // eslint-disable-line react-hooks/exhaustive-deps -- intentional: barcode-only reset
+
+  // When opening edit mode with prior markings, seed fields once visible becomes true
+  useEffect(() => {
+    if (!visible) return;
+    if (initial?.batchCodeRaw != null) setBatch(initial.batchCodeRaw);
+    if (initial?.bestBeforeMonth != null) setMonth(initial.bestBeforeMonth);
+    if (initial?.bestBeforeYear != null) setYear(String(initial.bestBeforeYear));
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const yearNum = useMemo(() => {
     const n = parseInt(year, 10);
@@ -94,6 +121,25 @@ export default function FoodRecallMarkingsEntry({ visible, initial, onApply }: P
         <Text style={styles.applyText}>Check against recall notice</Text>
       </TouchableOpacity>
     </View>
+  );
+}
+
+/** Pure helpers for unit tests — entry visibility and re-check after terminal states */
+export function foodRecallMarkingsEntryVisible(opts: {
+  needsBatchEntry: boolean;
+  editing: boolean;
+}): boolean {
+  return opts.needsBatchEntry || opts.editing;
+}
+
+export function foodRecallShowEditDetails(opts: {
+  matchState?: string | null;
+  editing: boolean;
+  needsBatchEntry: boolean;
+}): boolean {
+  if (opts.editing || opts.needsBatchEntry) return false;
+  return (
+    opts.matchState === 'confirmed_affected' || opts.matchState === 'batch_not_listed'
   );
 }
 

@@ -67,6 +67,14 @@ export interface DynamicSignalPublicationRecord {
     severity_override?: 'high' | 'medium' | 'low';
     needs_batch_entry?: boolean;
     recall_notice_id?: string;
+    /** GTIN verification status from recall pack — not consumer-verified unless verified_for_consumer */
+    gtin_verification_status?: string;
+    /**
+     * When true, record is Skeleton-UAT-only visibility for controlled/synthetic GTINs.
+     * Must not be treated as production consumer-verified publication metadata.
+     * Production profiles do not enable WORKSTREAMC_SKELETON_UAT, so this cannot enter production.
+     */
+    uat_only_override?: boolean;
   };
 }
 

@@ -109,6 +109,7 @@ export function mapPublicationRecordToSignalCard(r: DynamicSignalPublicationReco
     body_display: sk?.body_display,
     why_display: sk?.why_display,
     food_recall_needs_batch_entry: r.food_recall?.needs_batch_entry === true,
+    food_recall_match_state: r.food_recall?.match_state,
   };
 }
 

@@ -129,11 +129,12 @@ export function buildWorkstreamCRuntimePublicationRecords(input: {
   );
 
   const miloRecord = corrected ? mapFoodRecallMatchToPublicationRecord(miloMatch) : null;
+  // Ensure no dual publish and never restore legacy AU_001 subject-link path
   if (miloRecord) {
-    // Ensure no dual publish: drop any residual AU_001 from subject links (belt-and-braces)
     const withoutMiloLegacy = withoutSuppressedLegacy.filter((r) => r.signal_id !== 'SIG_REG_AU_001');
     return [...withoutMiloLegacy, miloRecord];
   }
 
+  // Fail-closed: corrected path off → no MILO card; legacy already stripped
   return withoutSuppressedLegacy;
 }

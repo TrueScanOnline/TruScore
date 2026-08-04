@@ -1,20 +1,22 @@
 /**
  * Stage 2 MVP — exact-GTIN food recall matcher (MILO reference case).
+ * Confirmation requires exact affected GTIN + that variant's listed batches ∧ Aug 2026 BB.
  */
 
 import {
-  MILO_AFFECTED_VARIANTS,
+  findMiloAffectedVariant,
+  isBatchListedForVariant,
   MILO_BB_MONTH,
   MILO_BB_YEAR,
   MILO_CONSUMER_ACTION,
   MILO_FAMILY_ID,
   MILO_HAZARD,
-  MILO_LISTED_BATCH_CODES,
   MILO_NOTICE_ACTIVATION,
   MILO_OFFICIAL_SOURCE_URL,
   MILO_RECALL_NOTICE_ID,
   MILO_RELATED_FAMILY_GTINS,
   MILO_SIGNAL_ID,
+  type MiloAffectedVariant,
 } from './miloRecallPack';
 import { isAugust2026BestBefore, normalizeBatchCode, normalizeBestBeforeMonthYear } from './normalizeBatchDate';
 import type {
@@ -23,9 +25,8 @@ import type {
   FoodRecallMatchResult,
   FoodRecallMatchState,
   FoodRecallSubmittedMarkings,
+  GtinVerificationStatus,
 } from './types';
-
-const LISTED = new Set(MILO_LISTED_BATCH_CODES.map((b) => b.toUpperCase()));
 
 function stableDedupeKey(noticeId: string, gtin: string): string {
   return `p6|food_recall|${noticeId}|${gtin}`;
@@ -51,7 +52,10 @@ function messageKey(state: FoodRecallMatchState): string {
 }
 
 function baseResult(
-  partial: Omit<FoodRecallMatchResult, 'dedupe_key' | 'severity' | 'consumer_message_key' | 'needs_batch_entry'> & {
+  partial: Omit<
+    FoodRecallMatchResult,
+    'dedupe_key' | 'severity' | 'consumer_message_key' | 'needs_batch_entry'
+  > & {
     needs_batch_entry?: boolean;
   }
 ): FoodRecallMatchResult {
@@ -95,15 +99,22 @@ export function classifyMiloMarkingInput(markings?: FoodRecallSubmittedMarkings 
   };
 }
 
+export type MiloMatchPackOverrides = {
+  affectedVariants?: readonly MiloAffectedVariant[];
+  relatedFamilyGtins?: readonly { gtin: string; gtin_verification_status: GtinVerificationStatus }[];
+};
+
 export function evaluateMiloFoodRecallMatch(input: {
   gtin: string;
   markings?: FoodRecallSubmittedMarkings | null;
   clock: FoodRecallEvaluationClock;
   /**
-   * When false, matcher does not publish (caller may use legacy path for MILO only).
-   * Default: notice activation is corrected_matcher_active.
+   * When false, matcher does not publish — MILO is unavailable (fail-closed).
+   * Legacy broad brand matching is never restored.
    */
   correctedPathEnabled?: boolean;
+  /** Test-only pack overrides (e.g. same-GTIN related→affected transition). */
+  packOverrides?: MiloMatchPackOverrides;
 }): FoodRecallMatchResult {
   const gtin = (input.gtin || '').trim();
   const evaluated_at = input.clock.nowIso();
@@ -125,9 +136,10 @@ export function evaluateMiloFoodRecallMatch(input: {
     });
   }
 
-  const affected = MILO_AFFECTED_VARIANTS.find((v) => v.gtin === gtin);
-  // Consumer activation gate: unverified_for_consumer GTINs allowed only as controlled test
-  // under Skeleton UAT (caller already gated). Never treat as verified_for_consumer.
+  const affectedVariants = input.packOverrides?.affectedVariants;
+  const relatedList = input.packOverrides?.relatedFamilyGtins ?? MILO_RELATED_FAMILY_GTINS;
+
+  const affected = findMiloAffectedVariant(gtin, affectedVariants);
   if (affected) {
     const classified = classifyMiloMarkingInput(input.markings);
     if (classified.status !== 'complete') {
@@ -140,6 +152,7 @@ export function evaluateMiloFoodRecallMatch(input: {
         matched_gtin: gtin,
         recall_variant_id: affected.recall_variant_id,
         recall_product_family_id: MILO_FAMILY_ID,
+        gtin_verification_status: affected.gtin_verification_status,
         submitted_batch_raw: input.markings?.batchCodeRaw ?? undefined,
         submitted_batch_normalized: classified.batchNormalized,
         submitted_bb_month: classified.bbMonth,
@@ -153,7 +166,7 @@ export function evaluateMiloFoodRecallMatch(input: {
       });
     }
 
-    const batchOk = LISTED.has(classified.batchNormalized!);
+    const batchOk = isBatchListedForVariant(classified.batchNormalized!, affected);
     const bbOk = isAugust2026BestBefore(classified.bbMonth!, classified.bbYear!);
     if (batchOk && bbOk) {
       return baseResult({
@@ -165,11 +178,12 @@ export function evaluateMiloFoodRecallMatch(input: {
         matched_gtin: gtin,
         recall_variant_id: affected.recall_variant_id,
         recall_product_family_id: MILO_FAMILY_ID,
+        gtin_verification_status: affected.gtin_verification_status,
         submitted_batch_raw: input.markings?.batchCodeRaw ?? undefined,
         submitted_batch_normalized: classified.batchNormalized,
         submitted_bb_month: classified.bbMonth,
         submitted_bb_year: classified.bbYear,
-        match_reason_code: 'batch_and_bb_match_rule_group',
+        match_reason_code: 'variant_batch_and_bb_match',
         official_source_url: MILO_OFFICIAL_SOURCE_URL,
         hazard: MILO_HAZARD,
         consumer_action: MILO_CONSUMER_ACTION,
@@ -187,11 +201,14 @@ export function evaluateMiloFoodRecallMatch(input: {
       matched_gtin: gtin,
       recall_variant_id: affected.recall_variant_id,
       recall_product_family_id: MILO_FAMILY_ID,
+      gtin_verification_status: affected.gtin_verification_status,
       submitted_batch_raw: input.markings?.batchCodeRaw ?? undefined,
       submitted_batch_normalized: classified.batchNormalized,
       submitted_bb_month: classified.bbMonth,
       submitted_bb_year: classified.bbYear,
-      match_reason_code: 'complete_nonmatching_rule_group',
+      match_reason_code: batchOk
+        ? 'complete_bb_nonmatching'
+        : 'complete_batch_not_on_this_variant',
       official_source_url: MILO_OFFICIAL_SOURCE_URL,
       hazard: MILO_HAZARD,
       consumer_action: MILO_CONSUMER_ACTION,
@@ -200,7 +217,7 @@ export function evaluateMiloFoodRecallMatch(input: {
     });
   }
 
-  const related = MILO_RELATED_FAMILY_GTINS.find((r) => r.gtin === gtin);
+  const related = relatedList.find((r) => r.gtin === gtin);
   if (related) {
     return baseResult({
       match_state: 'related_recall_variant_unconfirmed',
@@ -208,6 +225,7 @@ export function evaluateMiloFoodRecallMatch(input: {
       recall_notice_id: MILO_RECALL_NOTICE_ID,
       scanned_gtin: gtin,
       recall_product_family_id: MILO_FAMILY_ID,
+      gtin_verification_status: related.gtin_verification_status,
       match_reason_code: 'reviewed_family_membership_not_affected_variant',
       official_source_url: MILO_OFFICIAL_SOURCE_URL,
       hazard: MILO_HAZARD,
@@ -243,7 +261,7 @@ export function provisionalCopyForMatchState(state: FoodRecallMatchState): {
         title_display: 'Food recall — this batch is affected',
         body_display: `${MILO_HAZARD} ${MILO_CONSUMER_ACTION}`,
         why_display:
-          'Shown because the scanned barcode matches an affected MILO Snack Bar product and the entered batch and best-before marking match the official notice. Provisional wording — founder/legal approval required before launch.',
+          'Shown because the scanned barcode matches an affected MILO Snack Bar product and the entered batch and best-before marking match the official notice for that pack. Provisional wording — founder/legal approval required before launch.',
       };
     case 'batch_check_required':
       return {
@@ -257,9 +275,9 @@ export function provisionalCopyForMatchState(state: FoodRecallMatchState): {
       return {
         title_display: 'Other batches of this product were recalled',
         body_display:
-          'The batch details entered are not listed in the current official recall notice. This does not independently confirm that the product is safe. Check the official notice for updates.',
+          'The batch details entered are not listed in the current official recall notice for this pack. This does not independently confirm that the product is safe. Check the official notice for updates.',
         why_display:
-          'Shown because the barcode matches an affected variant, but the entered batch and/or best-before marking are not listed. Provisional wording — founder/legal approval required before launch.',
+          'Shown because the barcode matches an affected variant, but the entered batch and/or best-before marking are not listed for that pack. Provisional wording — founder/legal approval required before launch.',
       };
     case 'related_recall_variant_unconfirmed':
       return {
@@ -274,5 +292,4 @@ export function provisionalCopyForMatchState(state: FoodRecallMatchState): {
   }
 }
 
-// Retain month/year constants for tests
 export const MILO_MVP_BB = { month: MILO_BB_MONTH, year: MILO_BB_YEAR };

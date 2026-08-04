@@ -39,7 +39,10 @@ import NutritionTable from '../../src/components/NutritionTable';
 import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
-import FoodRecallMarkingsEntry from '../../src/components/FoodRecallMarkingsEntry';
+import FoodRecallMarkingsEntry, {
+  foodRecallMarkingsEntryVisible,
+  foodRecallShowEditDetails,
+} from '../../src/components/FoodRecallMarkingsEntry';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
 import { buildProductScanResult } from '../../src/services/buildProductScanResult';
 import { buildBannerAlertsDataFromScanResult } from '../../src/utils/scanResultPresentation';
@@ -191,6 +194,7 @@ function ResultScreenContent() {
   >('truScore');
   const [shareInitialMessage, setShareInitialMessage] = useState('');
   const [foodRecallMarkings, setFoodRecallMarkings] = useState<FoodRecallSubmittedMarkings | null>(null);
+  const [foodRecallEditing, setFoodRecallEditing] = useState(false);
   const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number; hasImportedIngredients?: boolean } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isUserContributed, setIsUserContributed] = useState(false);
@@ -205,6 +209,7 @@ function ResultScreenContent() {
 
   useEffect(() => {
     setFoodRecallMarkings(null);
+    setFoodRecallEditing(false);
   }, [barcode]);
 
   useEffect(() => {
@@ -465,6 +470,22 @@ function ResultScreenContent() {
   const foodRecallNeedsBatchEntry = useMemo(() => {
     return !!scanResult?.signals?.safety_regulatory?.some((c) => c.food_recall_needs_batch_entry);
   }, [scanResult]);
+
+  const foodRecallMatchState = useMemo(() => {
+    return scanResult?.signals?.safety_regulatory?.find((c) => c.food_recall_match_state)
+      ?.food_recall_match_state;
+  }, [scanResult]);
+
+  const showFoodRecallEntry = foodRecallMarkingsEntryVisible({
+    needsBatchEntry: foodRecallNeedsBatchEntry,
+    editing: foodRecallEditing,
+  });
+
+  const showFoodRecallEditDetails = foodRecallShowEditDetails({
+    matchState: foodRecallMatchState,
+    editing: foodRecallEditing,
+    needsBatchEntry: foodRecallNeedsBatchEntry,
+  });
 
   const bannerAlerts: BannerAlertsData | null = useMemo(() => {
     if (!scanResult) return null;
@@ -1099,10 +1120,26 @@ function ResultScreenContent() {
         )}
 
         <FoodRecallMarkingsEntry
-          visible={foodRecallNeedsBatchEntry}
-          initial={foodRecallMarkings}
-          onApply={setFoodRecallMarkings}
+          key={barcode}
+          barcode={barcode}
+          visible={showFoodRecallEntry}
+          initial={foodRecallEditing ? foodRecallMarkings : null}
+          onApply={(m) => {
+            setFoodRecallMarkings(m);
+            setFoodRecallEditing(false);
+          }}
         />
+        {showFoodRecallEditDetails ? (
+          <TouchableOpacity
+            style={{ marginHorizontal: 16, marginBottom: 12, paddingVertical: 8 }}
+            onPress={() => setFoodRecallEditing(true)}
+            accessibilityLabel="food-recall-edit-details"
+          >
+            <Text style={{ color: '#c62828', fontWeight: '600', fontSize: 14 }}>
+              Edit details / Check again
+            </Text>
+          </TouchableOpacity>
+        ) : null}
 
         {scanResult?.terminal_state === 'partial' && (
           <View
