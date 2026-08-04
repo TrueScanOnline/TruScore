@@ -14,7 +14,8 @@
  *
  * BBFAW: Tier 1=+6, 2=+4, 3=+2, 4=+1, 5=-4, 6=-6; Impact A/B=+3, C/D=+1, E/F=-3.
  * KTC Total Benchmark Score: 0–10=-10, 11–20=-8, 21–30=-6, 31–50=-3, 51–70=+3, 71–80=+6, 81–90=+8, 91–100=+10.
- * Certifications: Fairtrade +6, Rainforest Alliance +5, ASC +4, MSC +4, RSPO +3, Organic +2 (v37).
+ * Certifications: Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Organic +2.
+ * RSPO does not contribute Ethics points (Currency Note / founder disposition 2026-08-04).
  */
 
 import { Product } from '../../../types/product';

@@ -36,7 +36,7 @@ describe('ethicsCertificationsService', () => {
     expect(e.winningScheme).toBe('fairtrade');
   });
 
-  test('Fairtrade + RSPO → max only (Fairtrade 6)', () => {
+  test('Fairtrade + RSPO → Fairtrade 6; RSPO not Ethics-eligible', () => {
     const p = {
       ...minimalProduct(),
       labels_tags: ['en:fair-trade', 'en:rspo'],
@@ -44,19 +44,31 @@ describe('ethicsCertificationsService', () => {
     const e = evaluateEthicsCertifications(p);
     expect(e.adjustment).toBe(6);
     expect(e.winningScheme).toBe('fairtrade');
-    expect(e.eligibleSchemes).toContain('rspo');
+    expect(e.eligibleSchemes).not.toContain('rspo');
   });
 
-  test('RSPO only → +3', () => {
+  test('RSPO only → no Ethics certification points', () => {
     const p = { ...minimalProduct(), labels_tags: ['en:roundtable-on-sustainable-palm-oil'] };
-    expect(evaluateEthicsCertifications(p).adjustment).toBe(3);
+    const e = evaluateEthicsCertifications(p);
+    expect(e.adjustment).toBe(0);
+    expect(e.winningScheme).toBeNull();
+    expect(e.eligibleSchemes).not.toContain('rspo');
+    expect(ETHICS_CERTIFICATION_WEIGHTS.rspo).toBe(0);
   });
 
-  test('Rainforest Alliance → +5', () => {
+  test('Rainforest Alliance → +6', () => {
     const p = { ...minimalProduct(), labels_tags: ['en:rainforest-alliance'] };
     const e = evaluateEthicsCertifications(p);
     expect(e.winningScheme).toBe('rainforest_alliance');
-    expect(e.adjustment).toBe(5);
+    expect(e.adjustment).toBe(6);
+    expect(ETHICS_CERTIFICATION_WEIGHTS.rainforest_alliance).toBe(6);
+  });
+
+  test('UTZ → +6 (same Rainforest Alliance/UTZ scheme)', () => {
+    const p = { ...minimalProduct(), labels_tags: ['en:utz-certified'] };
+    const e = evaluateEthicsCertifications(p);
+    expect(e.winningScheme).toBe('rainforest_alliance');
+    expect(e.adjustment).toBe(6);
   });
 
   test('en:organic → +2', () => {

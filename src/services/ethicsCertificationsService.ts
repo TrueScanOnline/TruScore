@@ -6,7 +6,8 @@
  * update bbfawService / ktcService / ETHICS_CERTIFICATION_WEIGHTS and re-run `yarn sync-ethics-data` when JSON inputs change.
  *
  * - MVP: single highest eligible certification only (no stacking).
- * - Weights (v37 / unchanged): Fairtrade +6, Rainforest Alliance +5, ASC +4, MSC +4, RSPO +3, Organic +2.
+ * - Weights (Currency Note / founder disposition 2026-08-04): Fairtrade +6, Rainforest Alliance/UTZ +6,
+ *   ASC +4, MSC +4, Organic +2. RSPO does not contribute Ethics points (not an eligible scoring scheme).
  * - MSC: API validation rules unchanged (see ethics_msc_api_validated).
  *
  * Organic (+2): OFF recognised certifier/mark OR generic en:organic tag OR product-name standalone “organic”.
@@ -29,13 +30,16 @@ export type EthicsOrganicMatchSource =
   | 'label_or_cert_text'
   | 'product_name';
 
-/** Relative weights within the certification element only (SPEC v37). */
+/**
+ * Relative weights within the certification element only.
+ * `rspo` remains a typed key for detection/picker, but weight 0 and is excluded from scoring eligibility.
+ */
 export const ETHICS_CERTIFICATION_WEIGHTS: Record<EthicsCertificationScheme, number> = {
   fairtrade: 6,
-  rainforest_alliance: 5,
+  rainforest_alliance: 6,
   asc: 4,
   msc: 4,
-  rspo: 3,
+  rspo: 0,
   organic: 2,
 };
 
@@ -345,15 +349,6 @@ function detectAsc(tags: string[], haystack: string): boolean {
   );
 }
 
-function detectRspo(tags: string[], haystack: string): boolean {
-  if (tags.some((t) => RSPO_LABEL_TAGS.has(t))) return true;
-  return (
-    haystack.includes('rspo') ||
-    haystack.includes('roundtable on sustainable palm') ||
-    haystack.includes('certified sustainable palm oil')
-  );
-}
-
 function offSuggestsMsc(tags: string[]): boolean {
   return tags.some((t) => MSC_LABEL_TAGS.has(t));
 }
@@ -401,7 +396,7 @@ export function evaluateEthicsCertifications(product: Product): EthicsCertificat
   if (detectRainforestUtz(tagUnion)) eligible.push('rainforest_alliance');
   if (detectAsc(tagUnion, haystack)) eligible.push('asc');
   if (mscEligible(product, tagUnion)) eligible.push('msc');
-  if (detectRspo(tagUnion, haystack)) eligible.push('rspo');
+  // RSPO: detect for display/picker elsewhere; do not add to Ethics scoring eligibility (Currency Note).
   if (organicEval.matched) eligible.push('organic');
 
   if (eligible.length === 0) {

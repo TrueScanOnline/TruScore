@@ -333,7 +333,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#ff6b6b" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Certifications (highest scheme only): Fairtrade +6, Rainforest/UTZ +5, ASC +4, MSC +4, RSPO +3, Organic +2
+                  Certifications (highest scheme only): Fairtrade +6, Rainforest/UTZ +6, ASC +4, MSC +4, Organic +2 (RSPO does not score)
                 </Text>
               </View>
               <View style={styles.factorTag}>
@@ -487,7 +487,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             • Base score: 15 (neutral until data adjusts it){'\n'}
             • BBFAW 2024: tier and impact rating adjustments (animal welfare governance & outcomes){'\n'}
             • KnowTheChain Food & Beverage benchmark: total benchmark score bands (labour / supply chain){'\n'}
-            • Certifications (OFF labels + optional MSC API): Fairtrade +6, Rainforest Alliance/UTZ +5, ASC +4, MSC +4, RSPO +3, Organic +2 — highest eligible scheme only in MVP (no stacking){'\n'}
+            • Certifications (OFF labels + optional MSC API): Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Organic +2 — highest eligible scheme only in MVP (no stacking); RSPO does not contribute Ethics points{'\n'}
             • Organic requires a recognised certifier signal; MSC positive credit follows the MSC Data Validation API when enabled{'\n'}
             • Final Ethics pillar is floored at 0 and capped at 25{'\n'}
             • Source: ETHICS Pillar spec sheet + BBFAW report + KnowTheChain + Open Food Facts (+ MSC API when licensed)
