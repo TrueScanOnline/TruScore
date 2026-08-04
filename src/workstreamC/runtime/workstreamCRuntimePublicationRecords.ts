@@ -2,6 +2,9 @@
  * Expo/React Native runtime: Workstream C governed signals via embedded CSV bundle +
  * identity-first reviewed chain (canonical_brands + brand_aliases + Product fields), with GTIN fallback
  * only when no Product is supplied (scripts). No barcode fixture map; no injected chain in production.
+ *
+ * Stage 2: Safety recalls for SIG_REG_* use the food-recall matcher path (MILO) and suppress
+ * legacy broad subject-link publish for suppressed signal IDs. In the News unchanged.
  */
 
 import type { DynamicSignalPublicationRecord } from '../../dynamicSignals/publish/types';
@@ -10,6 +13,14 @@ import {
   buildADataMapsFromCsvRecords,
   buildWorkstreamCPublicationRecordsFromParsedPack,
 } from '../skeleton/workstreamCPublicationCore';
+import {
+  createFixedFoodRecallClock,
+  evaluateMiloFoodRecallMatch,
+  isFoodRecallCorrectedPathEnabled,
+  mapFoodRecallMatchToPublicationRecord,
+  suppressedLegacySafetySignalIds,
+  type FoodRecallSubmittedMarkings,
+} from '../recall';
 import {
   WORKSTREAM_C_RUNTIME_BRAND_ALIASES,
   WORKSTREAM_C_RUNTIME_CANONICAL_BRANDS,
@@ -45,10 +56,29 @@ export function isWorkstreamCSkeletonUatEnabled(): boolean {
   return isWorkstreamCSignalsRuntimeEnabled();
 }
 
+function filterSuppressedLegacySafety(
+  records: DynamicSignalPublicationRecord[],
+  logLines?: string[]
+): DynamicSignalPublicationRecord[] {
+  const suppressed = new Set(suppressedLegacySafetySignalIds());
+  const out: DynamicSignalPublicationRecord[] = [];
+  for (const r of records) {
+    if (r.signal_class === 'safety_regulatory' && suppressed.has(r.signal_id)) {
+      logLines?.push(`legacy_safety_suppressed: ${r.signal_id}`);
+      continue;
+    }
+    out.push(r);
+  }
+  return out;
+}
+
 /**
  * Builds publishable-only Workstream C records for `buildProductScanResult({ dynamicSignalRecords })`.
  * With `product`, resolves chain from bundled canonical_brands + brand_aliases (+ optional Cadbury→B0241 bridge).
  * Without `product`, falls back to reviewed bundled `gtin_brand_links` only (non-app harness).
+ *
+ * @param foodRecallMarkings Optional manual batch / best-before for Stage 2 MILO matcher.
+ * @param evaluationClockIso Injected clock for deterministic tests (default fixed UAT clock).
  */
 export function buildWorkstreamCRuntimePublicationRecords(input: {
   barcode: string;
@@ -57,10 +87,15 @@ export function buildWorkstreamCRuntimePublicationRecords(input: {
   product?: Product | null;
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
   logLines?: string[];
+  foodRecallMarkings?: FoodRecallSubmittedMarkings | null;
+  /** Injected evaluation time (ISO). Defaults to a fixed Stage 2 test clock. */
+  evaluationClockIso?: string;
 }): DynamicSignalPublicationRecord[] {
   if (!isWorkstreamCSignalsRuntimeEnabled()) return [];
 
-  return buildWorkstreamCPublicationRecordsFromParsedPack({
+  const log = input.logLines;
+
+  const subjectLinkRecords = buildWorkstreamCPublicationRecordsFromParsedPack({
     links: WORKSTREAM_C_RUNTIME_SIGNAL_SUBJECT_LINKS,
     signals: WORKSTREAM_C_RUNTIME_SIGNAL_RECORDS,
     uxRows: WORKSTREAM_C_RUNTIME_UX_COPY_SKELETON,
@@ -71,7 +106,34 @@ export function buildWorkstreamCRuntimePublicationRecords(input: {
     canonicalBrandRows: WORKSTREAM_C_RUNTIME_CANONICAL_BRANDS,
     brandAliasRows: WORKSTREAM_C_RUNTIME_BRAND_ALIASES,
     scanMarketPublic: input.scanMarketPublic,
-    logLines: input.logLines,
+    logLines: log,
     injectedChain: null,
   });
+
+  const withoutSuppressedLegacy = filterSuppressedLegacySafety(subjectLinkRecords, log);
+
+  const clock = createFixedFoodRecallClock(
+    input.evaluationClockIso ?? '2026-08-05T00:00:00.000Z'
+  );
+  const corrected = isFoodRecallCorrectedPathEnabled();
+  log?.push(`food_recall_corrected_path=${corrected ? '1' : '0'}`);
+
+  const miloMatch = evaluateMiloFoodRecallMatch({
+    gtin: input.barcode,
+    markings: input.foodRecallMarkings,
+    clock,
+    correctedPathEnabled: corrected,
+  });
+  log?.push(
+    `food_recall_milo: state=${miloMatch.match_state} reason=${miloMatch.match_reason_code}`
+  );
+
+  const miloRecord = corrected ? mapFoodRecallMatchToPublicationRecord(miloMatch) : null;
+  if (miloRecord) {
+    // Ensure no dual publish: drop any residual AU_001 from subject links (belt-and-braces)
+    const withoutMiloLegacy = withoutSuppressedLegacy.filter((r) => r.signal_id !== 'SIG_REG_AU_001');
+    return [...withoutMiloLegacy, miloRecord];
+  }
+
+  return withoutSuppressedLegacy;
 }

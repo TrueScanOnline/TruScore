@@ -39,10 +39,12 @@ import NutritionTable from '../../src/components/NutritionTable';
 import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
+import FoodRecallMarkingsEntry from '../../src/components/FoodRecallMarkingsEntry';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
 import { buildProductScanResult } from '../../src/services/buildProductScanResult';
 import { buildBannerAlertsDataFromScanResult } from '../../src/utils/scanResultPresentation';
 import { buildWorkstreamCRuntimePublicationRecords } from '../../src/workstreamC/runtime/workstreamCRuntimePublicationRecords';
+import type { FoodRecallSubmittedMarkings } from '../../src/workstreamC/recall';
 import { resolveSharedIdentityContext } from '../../src/identity/resolveSharedIdentityContext';
 import { logScanObs, generateScanId } from '../../src/services/scanObservability';
 import { getUserCountryCode } from '../../src/utils/countryDetection';
@@ -188,6 +190,7 @@ function ResultScreenContent() {
     | 'ecoscore'
   >('truScore');
   const [shareInitialMessage, setShareInitialMessage] = useState('');
+  const [foodRecallMarkings, setFoodRecallMarkings] = useState<FoodRecallSubmittedMarkings | null>(null);
   const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number; hasImportedIngredients?: boolean } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isUserContributed, setIsUserContributed] = useState(false);
@@ -199,6 +202,10 @@ function ResultScreenContent() {
     scanIdRef.current = generateScanId();
     logScanObs({ event: 'scan_started', scan_id: scanIdRef.current, barcode });
   }
+
+  useEffect(() => {
+    setFoodRecallMarkings(null);
+  }, [barcode]);
 
   useEffect(() => {
     // Log screen entry (not a crash - just diagnostics)
@@ -422,6 +429,7 @@ function ResultScreenContent() {
           product: productForScan,
           scanMarketPublic,
           logLines: workstreamCLogs,
+          foodRecallMarkings,
         })
       : [];
     if (workstreamCLogs.length > 0) {
@@ -451,7 +459,12 @@ function ResultScreenContent() {
     alertsPreferences,
     loading,
     loadingPhase,
+    foodRecallMarkings,
   ]);
+
+  const foodRecallNeedsBatchEntry = useMemo(() => {
+    return !!scanResult?.signals?.safety_regulatory?.some((c) => c.food_recall_needs_batch_entry);
+  }, [scanResult]);
 
   const bannerAlerts: BannerAlertsData | null = useMemo(() => {
     if (!scanResult) return null;
@@ -1084,6 +1097,12 @@ function ResultScreenContent() {
             alertsData={bannerAlerts}
           />
         )}
+
+        <FoodRecallMarkingsEntry
+          visible={foodRecallNeedsBatchEntry}
+          initial={foodRecallMarkings}
+          onApply={setFoodRecallMarkings}
+        />
 
         {scanResult?.terminal_state === 'partial' && (
           <View

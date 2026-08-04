@@ -58,6 +58,16 @@ export interface DynamicSignalPublicationRecord {
     body_display: string;
     why_display: string;
   };
+  /**
+   * Stage 2 food-recall matcher metadata (optional). Severity/presentation driven by match_state,
+   * not by individual signal_id branching in UI.
+   */
+  food_recall?: {
+    match_state: string;
+    severity_override?: 'high' | 'medium' | 'low';
+    needs_batch_entry?: boolean;
+    recall_notice_id?: string;
+  };
 }
 
 export type MyChoicesChainContext = {

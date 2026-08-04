@@ -50,7 +50,7 @@
     "workstreamB:validate": "ts-node --project scripts/tsconfig.json scripts/workstreamB-validate-pack.ts",
     "workstreamB:smoke": "ts-node --project scripts/tsconfig.json scripts/workstreamB-scaffold-smoke.ts",
     "workstreamB:generate-from-repo": "ts-node --project scripts/tsconfig.json scripts/generate-workstreamB-bdata-from-repo.ts",
-    "test:workstreamC": "jest src/__tests__/unit/workstreamC/workstreamCRuntimePublicationRecords.test.ts src/__tests__/unit/workstreamC/skeletonPublicationRecords.test.ts src/__tests__/unit/workstreamC/resolveWorkstreamCRetailChain.test.ts src/__tests__/unit/services/bannerAlertsService.workstreamCRecall.test.ts",
+    "test:workstreamC": "jest src/__tests__/unit/workstreamC/workstreamCRuntimePublicationRecords.test.ts src/__tests__/unit/workstreamC/skeletonPublicationRecords.test.ts src/__tests__/unit/workstreamC/resolveWorkstreamCRetailChain.test.ts src/__tests__/unit/workstreamC/foodRecallMatcher.stage2.test.ts src/__tests__/unit/services/bannerAlertsService.workstreamCRecall.test.ts",
     "test:workstreamC:skeleton": "npm run test:workstreamC",
     "workstreamC:verify-subjects": "ts-node --project scripts/tsconfig.json scripts/workstreamC-verify-subject-links-against-a-data.ts",
     "workstreamC:generate-runtime-bundle": "ts-node --project scripts/tsconfig.json scripts/generate-workstreamC-runtime-bundle.ts",

@@ -89,7 +89,8 @@ export function sortPublicationRecordsForRender(
 
 export function mapPublicationRecordToSignalCard(r: DynamicSignalPublicationRecord): SignalCard {
   const view = NORMATIVE_TO_PRESENTATION_DEFAULT[r.signal_class];
-  const severity = PUBLICATION_SIGNAL_SEVERITY_BY_CLASS[r.signal_class];
+  const severity =
+    r.food_recall?.severity_override ?? PUBLICATION_SIGNAL_SEVERITY_BY_CLASS[r.signal_class];
   const sk = r.skeleton_card_copy;
   const fallbackTitle = r.source_record_id ? `${r.signal_class}:${r.source_record_id}` : r.signal_class;
   const evidence = r.source_record_url?.trim();
@@ -107,6 +108,7 @@ export function mapPublicationRecordToSignalCard(r: DynamicSignalPublicationReco
     title_display: sk?.title_display ?? fallbackTitle,
     body_display: sk?.body_display,
     why_display: sk?.why_display,
+    food_recall_needs_batch_entry: r.food_recall?.needs_batch_entry === true,
   };
 }
 

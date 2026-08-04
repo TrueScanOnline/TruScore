@@ -29,6 +29,8 @@ export interface SignalCard {
   body_display?: string;
   /** Optional skeleton / pack-supplied “why” line (Phase 6 Workstream C Option A). */
   why_display?: string;
+  /** Stage 2 food-recall: show manual batch / best-before entry under the alert. */
+  food_recall_needs_batch_entry?: boolean;
 }
 
 export interface ProductScanResult {
