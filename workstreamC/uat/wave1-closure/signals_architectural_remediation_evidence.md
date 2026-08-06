@@ -2,15 +2,15 @@
 
 **Instruction:** `20260806_Signals_UAT_Skeleton_Build_30_Feedback_and_Cursor_Instruction`  
 **Build 30 baseline:** `1c12e339edcaa39572f107a49e906473ba117e38`  
-**Remediation commit:** _(filled at commit)_  
+**Remediation commit:** `f5927ed935fbd31a275d34e9de99b48a652890b8`  
 
 ## Implementation summary
 
-1. **Governed-only public Signals** — `buildProductScanResult` default `phase6SignalSourceMode` changed from `transitional` → `governed_5b_only`. Omission cannot restore legacy/synthetic cards. Live Result screen passes `governed_5b_only` explicitly.
-2. **Non-governed producers unreachable** — Limited Product Data, Web Search Source, and preference Class C banners only emit when `phase6SignalSourceMode: 'transitional'` (controlled tests). Coverage flags remain internal.
-3. **KitKat AU-02** — reviewed alias/canonical **exact token** match on `product_name`/`generic_name`; prefer name-token hits over brands-only umbrella so Nestlé-only OFF brands + KitKat title → **B0060** → `SIG_NEWS_GLOBAL_001`. Preserves Cadbury dual-positive, Ritz/Philadelphia/Coca-Cola negatives. No A-data mutation, Nestlé-parent SL, force-hit, or synthetic GTIN.
-4. **Safety assurance** — retained Stage 2 deterministic MILO/path-control tests; no manufactured on-device recall.
-5. **No** Launch Corpus / Workstream A–B / TruScore changes. No Build 31 skeleton cycle.
+1. **Governed-only public Signals** â€” `buildProductScanResult` default `phase6SignalSourceMode` changed from `transitional` â†’ `governed_5b_only`. Omission cannot restore legacy/synthetic cards. Live Result screen passes `governed_5b_only` explicitly.
+2. **Non-governed producers unreachable** â€” Limited Product Data, Web Search Source, and preference Class C banners only emit when `phase6SignalSourceMode: 'transitional'` (controlled tests). Coverage flags remain internal.
+3. **KitKat AU-02** â€” reviewed alias/canonical **exact token** match on `product_name`/`generic_name`; prefer name-token hits over brands-only umbrella so NestlÃ©-only OFF brands + KitKat title â†’ **B0060** â†’ `SIG_NEWS_GLOBAL_001`. Preserves Cadbury dual-positive, Ritz/Philadelphia/Coca-Cola negatives. No A-data mutation, NestlÃ©-parent SL, force-hit, or synthetic GTIN.
+4. **Safety assurance** â€” retained Stage 2 deterministic MILO/path-control tests; no manufactured on-device recall.
+5. **No** Launch Corpus / Workstream Aâ€“B / TruScore changes. No Build 31 skeleton cycle.
 
 ## Changed-file manifest
 
@@ -19,7 +19,7 @@
 | `src/services/buildProductScanResult.ts` | Default governed_5b_only |
 | `app/result/[barcode].tsx` | Explicit governed_5b_only |
 | `src/workstreamC/skeleton/resolveWorkstreamCRetailChain.ts` | KitKat/name-token identity preference |
-| `src/__tests__/unit/workstreamC/resolveWorkstreamCRetailChain.test.ts` | KitKat + Nestlé-only controls |
+| `src/__tests__/unit/workstreamC/resolveWorkstreamCRetailChain.test.ts` | KitKat + NestlÃ©-only controls |
 | `src/__tests__/unit/workstreamC/workstreamCRuntimePublicationRecords.test.ts` | KitKat publication |
 | `src/__tests__/golden/scanOutputContract.golden.test.ts` | Governed-default expectations |
 | `src/__tests__/golden/__snapshots__/scanOutputContract.golden.test.ts.snap` | Updated |
@@ -27,7 +27,7 @@
 
 ## Producer dispositions (final)
 
-See `build30_signal_producer_matrix.csv` — all synthetic/preference public producers **removed** from default path; governed Workstream C + Stage 2 MILO **retained**.
+See `build30_signal_producer_matrix.csv` â€” all synthetic/preference public producers **removed** from default path; governed Workstream C + Stage 2 MILO **retained**.
 
 ## Tests and commands
 
@@ -46,7 +46,7 @@ npx jest src/__tests__/golden/scanOutputContract.golden.test.ts src/__tests__/go
 | Displayed count governed-record-only on public Result | Yes (default + explicit mode) |
 | Limited Product Data / Web Search Source not public by default | Yes |
 | Preference banners not public by default | Yes |
-| KitKat Nestlé-only brands → GLOBAL_001 | Yes |
+| KitKat NestlÃ©-only brands â†’ GLOBAL_001 | Yes |
 | Cadbury dual / Ritz / Philadelphia negatives preserved | Yes |
 | Closed A/B assets unchanged | Yes |
 | TruScore scoring unchanged | Yes (Stage 2 + no score edits) |
@@ -58,15 +58,15 @@ npx jest src/__tests__/golden/scanOutputContract.golden.test.ts src/__tests__/go
 - No Android parity binary at Build 30 SHA.
 - No on-device positive Safety & Recalls until catalogue-resolvable recall + verified GTIN.
 - TestFlight submit still requires signed ASC agreements (prior 403).
-- Umbrella public Signals heading still under founder consideration — not hardcoded.
+- Umbrella public Signals heading still under founder consideration â€” not hardcoded.
 - product_family assessment is read-only; not implemented.
 - Next step for Claude: review this package; then integrate founder Launch Corpus (separate thread).
 
 ## Claude package contents
 
-1. Build 30 baseline — `build30_runtime_and_release_baseline.md`  
-2. As-built inventory — `build30_as_built_signals_alerts_inventory.md`  
-3. Producer matrix — `build30_signal_producer_matrix.csv`  
-4. Subject scope + product_family assessment — `build30_subject_scope_and_product_family_assessment.md`  
+1. Build 30 baseline â€” `build30_runtime_and_release_baseline.md`  
+2. As-built inventory â€” `build30_as_built_signals_alerts_inventory.md`  
+3. Producer matrix â€” `build30_signal_producer_matrix.csv`  
+4. Subject scope + product_family assessment â€” `build30_subject_scope_and_product_family_assessment.md`  
 5. This remediation evidence + git diff vs `1c12e33`  
 6. Tests/commands above  
