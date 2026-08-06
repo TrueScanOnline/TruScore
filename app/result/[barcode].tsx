@@ -454,6 +454,8 @@ function ResultScreenContent() {
       loadError: error,
       errors: error ? [{ code: 'product_load', message_key: 'errors.product_load' }] : undefined,
       scan_id: scanIdRef.current,
+      // Wave 1 closure: public Signals are governed-only by construction (no transitional blend).
+      phase6SignalSourceMode: 'governed_5b_only',
     }).result;
   }, [
     product,

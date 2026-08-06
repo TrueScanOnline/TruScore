@@ -84,4 +84,40 @@ describe('resolveWorkstreamCRetailChain', () => {
     expect(chain?.brand_id).toBe('B0069');
     expect(chain?.source).toBe('identity_resolution');
   });
+
+  it('KitKat: Nestlé-only brands + KitKat in product_name resolves to B0060 (not umbrella B0066)', () => {
+    const { aData, brandRows, aliasRows } = loadFrozenADataMaps();
+    const chain = resolveReviewedRetailChainUnified({
+      barcode: '9300605012345',
+      productName: 'KitKat Chunky Milk Chocolate',
+      product: {
+        barcode: '9300605012345',
+        brands: 'Nestlé',
+        product_name: 'KitKat Chunky Milk Chocolate',
+        categories_tags: ['en:chocolates'],
+      } as any,
+      aData,
+      canonicalBrandRows: brandRows,
+      brandAliasRows: aliasRows,
+    });
+    expect(chain?.brand_id).toBe('B0060');
+    expect(chain?.parent_id).toBe('P0008');
+  });
+
+  it('Nestlé-only brands without KitKat/Milo title stays B0066 (no uncontrolled name matching)', () => {
+    const { aData, brandRows, aliasRows } = loadFrozenADataMaps();
+    const chain = resolveReviewedRetailChainUnified({
+      barcode: '9300605099999',
+      productName: 'Nestlé Sweetened Condensed Milk',
+      product: {
+        barcode: '9300605099999',
+        brands: 'Nestlé',
+        product_name: 'Nestlé Sweetened Condensed Milk',
+      } as any,
+      aData,
+      canonicalBrandRows: brandRows,
+      brandAliasRows: aliasRows,
+    });
+    expect(chain?.brand_id).toBe('B0066');
+  });
 });

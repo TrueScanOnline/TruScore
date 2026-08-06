@@ -88,7 +88,30 @@ describe('Workstream C runtime publication records', () => {
       } as any,
       scanMarketPublic: 'AU',
     });
-    expect(recs.filter((r) => r.signal_id.startsWith('SIG_NEWS_GLOBAL'))).toHaveLength(0);
+    expect(recs.some((r) => r.signal_id.startsWith('SIG_NEWS_GLOBAL'))).toBe(false);
+  });
+
+  it('AU KitKat — Nestlé-only brands + KitKat title yields SIG_NEWS_GLOBAL_001 only (not GLOBAL_002)', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const logs: string[] = [];
+    const bc = '9300650123456';
+    const recs = buildWorkstreamCRuntimePublicationRecords({
+      barcode: bc,
+      productName: 'KitKat Chunky Milk Chocolate',
+      product: {
+        barcode: bc,
+        product_name: 'KitKat Chunky Milk Chocolate',
+        brands: 'Nestlé',
+        categories_tags: ['en:chocolates'],
+        source: 'openfoodfacts',
+      } as any,
+      scanMarketPublic: 'AU',
+      logLines: logs,
+    });
+    const ids = recs.map((r) => r.signal_id);
+    expect(ids).toContain('SIG_NEWS_GLOBAL_001');
+    expect(ids).not.toContain('SIG_NEWS_GLOBAL_002');
+    expect(logs.some((l) => l.includes('brand_id=B0060'))).toBe(true);
   });
 
   it('logs Cadbury B0067→B0241 bridge when chocolate wording present (SL008/SL011 subject row)', () => {

@@ -79,13 +79,26 @@ function applyCadburyNgoSubjectBridge(
   return chain;
 }
 
+/** Compact tokens from a free-text field (product_name / generic_name), for exact alias hits only. */
+function splitNameTokens(raw?: string | null): string[] {
+  if (!raw || !raw.trim()) return [];
+  return raw
+    .split(/[^a-zA-Z0-9]+/)
+    .map((t) => normalizeCompact(t))
+    .filter((t) => t.length > 0);
+}
+
 function collectCandidateBrandIds(
   product: Product,
   aliasRows: CsvRecord[],
   canonicalRows: CsvRecord[]
 ): Set<string> {
   const ids = new Set<string>();
-  const tokens = splitBrandCandidates(product).map((s) => normalizeCompact(s));
+  const brandTokens = splitBrandCandidates(product).map((s) => normalizeCompact(s));
+  const nameTokens = [
+    ...splitNameTokens(product.product_name),
+    ...splitNameTokens(product.generic_name),
+  ];
   const blob = normalizeCompact(
     [...splitBrandCandidates(product), product.product_name ?? '', product.generic_name ?? ''].join(' ')
   );
@@ -98,12 +111,24 @@ function collectCandidateBrandIds(
     const at = normalizeCompact(row.alias_text ?? '');
     if (!an && !at) continue;
     let hit = false;
-    for (const tok of tokens) {
+    // Exact token match on brands/brand_owner (any length)
+    for (const tok of brandTokens) {
       if (tok && (tok === an || tok === at)) {
         hit = true;
         break;
       }
     }
+    // Exact token match on product_name / generic_name — reviewed aliases only (e.g. kitkat → B0060)
+    // when OFF leaves brands as Nestlé-only. Not free-text / uncontrolled name matching.
+    if (!hit) {
+      for (const tok of nameTokens) {
+        if (tok && (tok === an || tok === at)) {
+          hit = true;
+          break;
+        }
+      }
+    }
+    // Long alias substring in blob (existing Dairy Milk-style path; length gate unchanged)
     if (!hit && an.length >= 8 && blob.includes(an)) hit = true;
     if (hit) ids.add(bid);
   }
@@ -114,10 +139,19 @@ function collectCandidateBrandIds(
     if (!bid) continue;
     const c1 = normalizeCompact(row.canonical_brand_name ?? '');
     const c2 = normalizeCompact(row.display_brand_name ?? '');
-    for (const tok of tokens) {
+    for (const tok of brandTokens) {
       if (tok && ((c1 && tok === c1) || (c2 && tok === c2))) {
         ids.add(bid);
         break;
+      }
+    }
+    // Exact canonical/display name as a product_name token (same reviewed-table bound)
+    if (!ids.has(bid)) {
+      for (const tok of nameTokens) {
+        if (tok && ((c1 && tok === c1) || (c2 && tok === c2))) {
+          ids.add(bid);
+          break;
+        }
       }
     }
   }
@@ -125,15 +159,57 @@ function collectCandidateBrandIds(
   return ids;
 }
 
-function pickLongestCanonicalBrand(candidateIds: Set<string>, canonicalRows: CsvRecord[]): string | null {
+/**
+ * Prefer a brand that exact-matches a product_name token over one that only matches brands/owner,
+ * so Nestlé-only OFF brands + "KitKat …" title resolve to B0060 (not umbrella B0066).
+ * Still reviewed-table bound; no parent-wide or free-text matching.
+ */
+function pickPreferredBrand(
+  candidateIds: Set<string>,
+  canonicalRows: CsvRecord[],
+  aliasRows: CsvRecord[],
+  product: Product
+): string | null {
+  if (candidateIds.size === 0) return null;
+  const brandTokens = new Set(splitBrandCandidates(product).map((s) => normalizeCompact(s)));
+  const nameTokens = new Set([
+    ...splitNameTokens(product.product_name),
+    ...splitNameTokens(product.generic_name),
+  ]);
+
+  const aliasByBrand = new Map<string, string[]>();
+  for (const row of aliasRows) {
+    if ((row.review_state ?? '').trim() !== 'reviewed') continue;
+    const bid = row.brand_id ?? '';
+    if (!bid || !candidateIds.has(bid)) continue;
+    const forms = [normalizeCompact(row.alias_normalized ?? ''), normalizeCompact(row.alias_text ?? '')].filter(
+      Boolean
+    );
+    aliasByBrand.set(bid, [...(aliasByBrand.get(bid) ?? []), ...forms]);
+  }
+
   let bestId: string | null = null;
-  let bestLen = -1;
+  let bestScore = -1;
   for (const id of candidateIds) {
     const row = canonicalRows.find((r) => r.brand_id === id);
     if (!row) continue;
-    const len = Math.max((row.canonical_brand_name ?? '').length, (row.display_brand_name ?? '').length);
-    if (len > bestLen) {
-      bestLen = len;
+    const forms = [
+      normalizeCompact(row.canonical_brand_name ?? ''),
+      normalizeCompact(row.display_brand_name ?? ''),
+      ...(aliasByBrand.get(id) ?? []),
+    ].filter(Boolean);
+    let nameHitLen = 0;
+    let brandHitLen = 0;
+    for (const f of forms) {
+      if (nameTokens.has(f)) nameHitLen = Math.max(nameHitLen, f.length);
+      if (brandTokens.has(f)) brandHitLen = Math.max(brandHitLen, f.length);
+    }
+    // Name-token hits outrank brands-only (KitKat in title vs Nestlé in brands)
+    const score = nameHitLen > 0 ? 1000 + nameHitLen : brandHitLen > 0 ? 100 + brandHitLen : 0;
+    const nameLen = Math.max((row.canonical_brand_name ?? '').length, (row.display_brand_name ?? '').length);
+    const tieBreak = score * 1000 + nameLen;
+    if (tieBreak > bestScore) {
+      bestScore = tieBreak;
       bestId = id;
     }
   }
@@ -179,7 +255,12 @@ export function resolveReviewedRetailChainUnified(input: {
 
   if (input.product) {
     const candidates = collectCandidateBrandIds(input.product, input.brandAliasRows, input.canonicalBrandRows);
-    const best = pickLongestCanonicalBrand(candidates, input.canonicalBrandRows);
+    const best = pickPreferredBrand(
+      candidates,
+      input.canonicalBrandRows,
+      input.brandAliasRows,
+      input.product
+    );
     if (best) {
       const validated = validateReviewedChain(best, input.aData);
       if (validated) {

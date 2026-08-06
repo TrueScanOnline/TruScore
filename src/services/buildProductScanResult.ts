@@ -85,9 +85,10 @@ export interface BuildProductScanResultOptions {
   dynamicSignalRecords?: DynamicSignalPublicationRecord[];
 
   /**
-   * Slice 7 seam-control mode:
-   * - `transitional`: keep legacy/synthetic feeders (current MVP transitional mode)
-   * - `governed_5b_only`: exclude legacy/synthetic feeders; only 5B publication records feed signals
+   * Public Signals source mode:
+   * - `governed_5b_only` (default): only DynamicSignalPublicationRecord cards feed public Signals
+   * - `transitional`: legacy preference banners + synthetic transparency (controlled tests only)
+   * Omission / undefined must NOT restore transitional behaviour.
    */
   phase6SignalSourceMode?: 'transitional' | 'governed_5b_only';
 
@@ -334,7 +335,7 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
 } {
 
   const { product, barcode, userPreferences, isSubscriber, errors, nowMs, scan_id } = opts;
-  const signalSourceMode = opts.phase6SignalSourceMode ?? 'transitional';
+  const signalSourceMode = opts.phase6SignalSourceMode ?? 'governed_5b_only';
 
   const marketHint = opts.market ?? getUserCountryCode();
   let market: ProductScanResult['market'] = (() => {

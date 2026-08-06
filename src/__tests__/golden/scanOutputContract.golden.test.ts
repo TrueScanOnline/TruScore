@@ -1,5 +1,6 @@
 /**
- * Phase 5 / 5B golden baselines: deterministic clock + mocked recall / prefs → diffable scan contract.
+ * Phase 5 / 5B golden baselines: deterministic clock + prefs → diffable scan contract.
+ * Wave 1 closure: default public mode is governed_5b_only (no synthetic/legacy Signal cards).
  */
 import type { ProductWithTrustScore } from '../../types/product';
 import type { AlertsPreferences } from '../../store/useAlertsStore';
@@ -46,7 +47,7 @@ function baseProduct(over: Partial<ProductWithTrustScore>): ProductWithTrustScor
 }
 
 describe('scan output contract (golden)', () => {
-  it('matches frozen baseline — active recall → class A safety signal', () => {
+  it('default / omitted mode is governed-only — legacy product.recalls do not become Signal cards', () => {
     const product = baseProduct({
       recalls: [
         {
@@ -69,9 +70,9 @@ describe('scan output contract (golden)', () => {
       terminal_state: 'success',
       nowMs: FROZEN_NOW_MS,
     });
-    expect(result.signals.safety_regulatory.length).toBeGreaterThanOrEqual(1);
-    expect(result.signals.safety_regulatory[0].class).toBe('A');
-    expect(stripForGolden(result)).toMatchSnapshot('recall-class-a');
+    expect(result.signals.safety_regulatory).toEqual([]);
+    expect(result.signals.transparency.some((s) => s.dedupe_key.includes('limited_data'))).toBe(false);
+    expect(stripForGolden(result)).toMatchSnapshot('governed-default-no-legacy-recall');
   });
 
   it('matches frozen baseline — no recall, high completeness', () => {
@@ -90,6 +91,7 @@ describe('scan output contract (golden)', () => {
       nowMs: FROZEN_NOW_MS,
     });
     expect(result.signals.safety_regulatory).toEqual([]);
+    expect(result.signals.transparency).toEqual([]);
     expect(stripForGolden(result)).toMatchSnapshot('no-recall-clean-au');
   });
 
@@ -113,7 +115,7 @@ describe('scan output contract (golden)', () => {
     expect(stripForGolden(result)).toMatchSnapshot('nz-core-clean');
   });
 
-  it('matches frozen baseline — web_search source adds transparency B', () => {
+  it('governed default — web_search does not add public transparency Signal (coverage flag only)', () => {
     const product = baseProduct({
       source: 'web_search',
       recalls: [],
@@ -127,12 +129,34 @@ describe('scan output contract (golden)', () => {
       terminal_state: 'success',
       nowMs: FROZEN_NOW_MS,
     });
-    const web = result.signals.transparency.find((s) => s.dedupe_key.includes('web_search'));
-    expect(web?.class).toBe('B');
-    expect(stripForGolden(result)).toMatchSnapshot('web-search-transparency');
+    expect(result.signals.transparency.find((s) => s.dedupe_key.includes('web_search'))).toBeUndefined();
+    expect(result.coverage.flags).toContain('web_search_fallback');
+    expect(stripForGolden(result)).toMatchSnapshot('web-search-coverage-flag-only');
   });
 
-  it('matches frozen baseline — limited data transparency when completeness low', () => {
+  it('transitional mode still emits web_search / limited_data cards (controlled tests only)', () => {
+    const product = baseProduct({
+      source: 'web_search',
+      recalls: [],
+      nutriments: {},
+      ingredients_text: '',
+      brands: '',
+    });
+    const { result } = buildProductScanResult({
+      barcode: product.barcode,
+      product,
+      userPreferences: defaultPrefs,
+      isSubscriber: false,
+      market: 'AU',
+      terminal_state: 'success',
+      nowMs: FROZEN_NOW_MS,
+      phase6SignalSourceMode: 'transitional',
+    });
+    expect(result.signals.transparency.some((s) => s.dedupe_key.includes('web_search'))).toBe(true);
+    expect(result.signals.transparency.some((s) => s.dedupe_key.includes('limited_data'))).toBe(true);
+  });
+
+  it('governed default — low completeness does not add Limited Product Data Signal', () => {
     const product = baseProduct({
       recalls: [],
       nutriments: {},
@@ -148,9 +172,9 @@ describe('scan output contract (golden)', () => {
       terminal_state: 'success',
       nowMs: FROZEN_NOW_MS,
     });
-    const lim = result.signals.transparency.find((s) => s.dedupe_key.includes('limited_data'));
-    expect(lim?.class).toBe('B');
-    expect(stripForGolden(result)).toMatchSnapshot('limited-data-transparency');
+    expect(result.signals.transparency.find((s) => s.dedupe_key.includes('limited_data'))).toBeUndefined();
+    expect(result.coverage.flags).toContain('low_completeness');
+    expect(stripForGolden(result)).toMatchSnapshot('limited-data-coverage-flag-only');
   });
 
   it('matches frozen baseline — partial terminal adds analysis_incomplete flag', () => {
@@ -169,7 +193,7 @@ describe('scan output contract (golden)', () => {
     expect(stripForGolden(result)).toMatchSnapshot('partial-terminal');
   });
 
-  it('matches frozen baseline — preference hit class C (animal testing)', () => {
+  it('governed default — preference hits do not become public Signal cards', () => {
     const prefs: AlertsPreferences = {
       ...defaultPrefs,
       ethicalEnabled: true,
@@ -190,7 +214,7 @@ describe('scan output contract (golden)', () => {
       terminal_state: 'success',
       nowMs: FROZEN_NOW_MS,
     });
-    expect(result.signals.user_preference.some((s) => s.class === 'C')).toBe(true);
-    expect(stripForGolden(result)).toMatchSnapshot('preference-animal-testing');
+    expect(result.signals.user_preference).toEqual([]);
+    expect(stripForGolden(result)).toMatchSnapshot('preference-not-public-signal');
   });
 });

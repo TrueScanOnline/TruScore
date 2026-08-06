@@ -1,7 +1,7 @@
 {
   "fixture_pack_version": "phase6.pack.v1.0.0",
   "fixture_schema_id": "phase6.fixture.schema.v1",
-  "gate_level": "public_release",
+  "gate_level": "merge",
   "totals": {
     "total": 6,
     "passed": 6,
@@ -118,5 +118,5 @@
       }
     }
   ],
-  "generated_at": "2026-04-26T01:19:01.553Z"
+  "generated_at": "2026-08-06T19:18:03.740Z"
 }
