@@ -1,6 +1,9 @@
 /**
  * App/runtime entry for Dynamic Signals Asset v0.2.
  * Respects structural mutual exclusion vs Skeleton (Asset is production successor).
+ *
+ * Dynamic Signals Asset is the sole production Signal-content authority.
+ * Food Recall Matcher is eligibility-only and cannot originate public Signals alone.
  */
 
 import fs from 'fs';
@@ -15,7 +18,7 @@ import {
 } from './matchDynamicSignalsAsset';
 import { isDynamicSignalsAssetRuntimeEnabled, loadDynamicSignalsAssetPackFromDisk } from './loadDynamicSignalsAssetPack';
 import { reviewedFamilyIdsForGtin } from '../../../identity/chaining/productFamilyMaps';
-import { buildFoodRecallSafetyPublicationRecords } from './buildFoodRecallSafetyPublicationRecords';
+import { buildAssetGovernedFoodRecallPublicationRecords } from './buildAssetGovernedFoodRecallPublicationRecords';
 import { resolveActiveSignalsProducer } from './signalsProducerGuard';
 import type { DynamicSignalPublicationRecord } from '../../publish/types';
 import type { FoodRecallSubmittedMarkings } from '../../../workstreamC/recall';
@@ -25,11 +28,28 @@ export { isDynamicSignalsAssetRuntimeEnabled };
 function loadADataForChain() {
   const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
   const aRoot = path.join(repoRoot, 'workstreamA', 'a-data', 'wave1-v0.14', 'input');
-  const read = (name: string) => parseCsv(fs.readFileSync(path.join(aRoot, name), 'utf8'));
-  const brandRows = read('canonical_brands.csv');
-  const parentRows = read('canonical_parents.csv');
-  const gtinRows = read('gtin_brand_links.csv');
-  const aliasRows = read('brand_aliases.csv');
+  const extRoot = path.join(repoRoot, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.1');
+  const read = (dir: string, name: string) => {
+    const p = path.join(dir, name);
+    return fs.existsSync(p) ? parseCsv(fs.readFileSync(p, 'utf8')) : [];
+  };
+  // Additive Shared Identity enrichment — wave1-v0.14 remains immutable baseline.
+  const brandRows = [
+    ...read(aRoot, 'canonical_brands.csv'),
+    ...read(extRoot, 'canonical_brands_extension.csv'),
+  ];
+  const parentRows = [
+    ...read(aRoot, 'canonical_parents.csv'),
+    ...read(extRoot, 'canonical_parents_extension.csv'),
+  ];
+  const gtinRows = [
+    ...read(aRoot, 'gtin_brand_links.csv'),
+    ...read(extRoot, 'gtin_brand_links_extension.csv'),
+  ];
+  const aliasRows = [
+    ...read(aRoot, 'brand_aliases.csv'),
+    ...read(extRoot, 'brand_aliases_extension.csv'),
+  ];
   return {
     aData: buildADataMapsFromCsvRecords(brandRows, parentRows, gtinRows),
     brandRows,
@@ -39,7 +59,7 @@ function loadADataForChain() {
 
 /**
  * Returns [] unless Asset is the active producer (or `pack` injected for tests).
- * Appends Food Recall Matcher Safety records (at most one per notice) — never via Asset exact_only.
+ * Appends Asset-governed Food Recall Matcher Safety records only — never MILO-originated content.
  */
 export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
   barcode: string;
@@ -55,6 +75,7 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
   evaluationClockIso?: string;
   /** Tests: bypass producer guard */
   forceRun?: boolean;
+  includeNonPublishable?: boolean;
 }): DynamicSignalPublicationRecord[] {
   const testingOverride = input.pack !== undefined || input.forceRun === true;
   if (!testingOverride) {
@@ -98,17 +119,20 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
       scanMarketPublic: input.scanMarketPublic,
     },
     logLines: logs,
-    includeNonPublishable: false,
+    includeNonPublishable: input.includeNonPublishable ?? false,
   });
 
-  const recallRecords = buildFoodRecallSafetyPublicationRecords({
+  const recallRecords = buildAssetGovernedFoodRecallPublicationRecords({
+    pack,
     barcode: input.barcode,
+    scanMarketPublic: input.scanMarketPublic,
     foodRecallMarkings: input.foodRecallMarkings,
     evaluationClockIso: input.evaluationClockIso,
     logLines: logs,
+    includeNonPublishable: input.includeNonPublishable ?? false,
   });
 
-  // Dedupe by signal_id — Food Recall Matcher wins for Safety notices it owns
+  // Dedupe by signal_id — Asset-governed recall eligibility wins for Safety notices it owns
   const seen = new Set(recallRecords.map((r) => r.signal_id));
   const merged = [...recallRecords];
   for (const r of assetRecords) {

@@ -5,3 +5,4 @@ PF_COLES_ITALIAN_TOMATO_PASTE_AU,Coles Italian Tomato Paste — AU,AU,B0013,P000
 PF_WOOLWORTHS_CAGEFREE_EGGS_SA,Woolworths Cage-Free Eggs — SA tested range,AU,B0001,P0001,seeded,strong,DSA-v0.2|TGT-013,SA-only; no national propagation without matching identity evidence
 PF_KERI_FRUIT_JUICE_NZ,Keri Fruit Juice — pack transition,NZ,B0268,P0011,seeded,strong,DSA-v0.2|TGT-017,Only flavours/GTINs in documented 3L→2.4L transition
 PF_ANCHOR_BUTTER_NZ,Anchor Butter — historical grass-fed label,NZ,B0139,P0022,seeded,strong,DSA-v0.2|TGT-026,Historical label-period membership only
+PF_HOYTS_TURMERIC_AU,Hoyt's Turmeric — AU tested packs,AU,B0653,P0157,reviewed,strong,DSA-v0.2|TGT-012,Family definition reviewed under Hoyt's (B0653); membership empty until ABC-tested pack GTINs are verified — fail closed

@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { parseCsv } from '../../../identity/workstreamA/csv';
+import { parseCsv, type CsvRecord } from '../../../identity/workstreamA/csv';
 import {
   buildProductFamilyMapsFromCsvRecords,
   type ProductFamilyMaps,
@@ -13,10 +13,94 @@ import {
   buildBrandHierarchyMapsFromCsvRecords,
   buildEntityHierarchyMapsFromCsvRecords,
 } from '../../../identity/chaining/brandEntityHierarchyMaps';
-import type { AssetPackParsed } from './matchDynamicSignalsAsset';
+import type {
+  AssetPackParsed,
+  AssetRecallEligibilityBinding,
+} from './matchDynamicSignalsAsset';
+import type {
+  GtinVerificationStatus,
+  StructuredFoodRecallNotice,
+} from '../../../workstreamC/recall';
 
 export function isDynamicSignalsAssetRuntimeEnabled(): boolean {
   return process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET === '1';
+}
+
+function parseBatchList(raw: string): string[] {
+  return (raw || '')
+    .split('|')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+export function parseAssetRecallEligibility(rows: CsvRecord[]): AssetRecallEligibilityBinding[] {
+  return rows
+    .map((r) => ({
+      signal_id: (r.signal_id ?? '').trim(),
+      recall_notice_id: (r.recall_notice_id ?? '').trim(),
+      eligibility_status: (r.eligibility_status ?? '').trim(),
+    }))
+    .filter((b) => b.signal_id && b.recall_notice_id);
+}
+
+export function parseAssetRecallNotices(
+  noticeRows: CsvRecord[],
+  variantRows: CsvRecord[],
+  relatedRows: CsvRecord[] = []
+): StructuredFoodRecallNotice[] {
+  const variantsByNotice = new Map<string, StructuredFoodRecallNotice['affected_variants'][number][]>();
+  for (const r of variantRows) {
+    const noticeId = (r.recall_notice_id ?? '').trim();
+    const gtin = (r.gtin ?? '').trim();
+    if (!noticeId || !gtin) continue;
+    const list = variantsByNotice.get(noticeId) ?? [];
+    list.push({
+      recall_variant_id: (r.recall_variant_id ?? '').trim() || `RV_${noticeId}_${gtin}`,
+      gtin,
+      listed_batch_codes: parseBatchList(r.listed_batch_codes ?? ''),
+      gtin_verification_status: ((r.gtin_verification_status ??
+        'controlled_test_awaiting_external_verification') as GtinVerificationStatus),
+      official_product_name: (r.official_product_name ?? '').trim() || undefined,
+      pack_size: (r.pack_size ?? '').trim() || undefined,
+    });
+    variantsByNotice.set(noticeId, list);
+  }
+
+  const relatedByNotice = new Map<string, StructuredFoodRecallNotice['related_family_gtins']>();
+  for (const r of relatedRows) {
+    const noticeId = (r.recall_notice_id ?? '').trim();
+    const gtin = (r.gtin ?? '').trim();
+    if (!noticeId || !gtin) continue;
+    const list = [...(relatedByNotice.get(noticeId) ?? [])];
+    list.push({
+      gtin,
+      gtin_verification_status: ((r.gtin_verification_status ??
+        'controlled_test_awaiting_external_verification') as GtinVerificationStatus),
+    });
+    relatedByNotice.set(noticeId, list);
+  }
+
+  return noticeRows
+    .map((r) => {
+      const recall_notice_id = (r.recall_notice_id ?? '').trim();
+      if (!recall_notice_id) return null;
+      const bb_month = Number.parseInt((r.bb_month ?? '').trim(), 10);
+      const bb_year = Number.parseInt((r.bb_year ?? '').trim(), 10);
+      if (!Number.isInteger(bb_month) || !Number.isInteger(bb_year)) return null;
+      return {
+        recall_notice_id,
+        signal_id: (r.signal_id ?? '').trim(),
+        official_source_url: (r.official_source_url ?? '').trim(),
+        hazard: (r.hazard ?? '').trim(),
+        consumer_action: (r.consumer_action ?? '').trim(),
+        bb_month,
+        bb_year,
+        recall_product_family_id: (r.recall_product_family_id ?? '').trim() || undefined,
+        affected_variants: variantsByNotice.get(recall_notice_id) ?? [],
+        related_family_gtins: relatedByNotice.get(recall_notice_id),
+      } satisfies StructuredFoodRecallNotice;
+    })
+    .filter((n): n is StructuredFoodRecallNotice => n != null);
 }
 
 export function loadDynamicSignalsAssetPackFromDisk(roots?: {
@@ -47,6 +131,14 @@ export function loadDynamicSignalsAssetPackFromDisk(roots?: {
     ),
     entityHierarchy: buildEntityHierarchyMapsFromCsvRecords(
       read(path.join(famRoot, 'entity_child_of_entity.csv'))
+    ),
+    recallEligibility: parseAssetRecallEligibility(
+      read(path.join(packRoot, 'food_recall_eligibility.csv'))
+    ),
+    recallNotices: parseAssetRecallNotices(
+      read(path.join(packRoot, 'food_recall_notices.csv')),
+      read(path.join(packRoot, 'food_recall_affected_variants.csv')),
+      read(path.join(packRoot, 'food_recall_related_gtins.csv'))
     ),
   };
 }

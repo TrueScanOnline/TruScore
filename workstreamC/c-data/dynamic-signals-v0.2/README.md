@@ -16,6 +16,19 @@
 
 All Signal `signal_publication_state` values remain **`candidate`** (not promoted).
 
+## Food Recall eligibility (Asset-governed only)
+
+| File | Role |
+|------|------|
+| `input/food_recall_eligibility.csv` | signal_id → recall_notice_id (`reviewed` only) |
+| `input/food_recall_notices.csv` | Structured notice criteria (date month/year, hazard text for matcher) |
+| `input/food_recall_affected_variants.csv` | Exact GTINs + listed batches |
+| `input/food_recall_related_gtins.csv` | Optional related-family GTINs |
+
+Production rows are empty until a Safety Signal is onboarded with verified structured data. Historical MILO Stage 2 pack is **not** production Asset content.
+
+**Authority:** Dynamic Signals Asset is the sole production Signal-content authority. `EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH` is a matcher kill-switch only.
+
 ## Schema mapping
 
 | Workbook | Repo |

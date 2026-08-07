@@ -19,6 +19,7 @@ import {
   entityOwnsOrIsAncestorOf,
 } from '../../../identity/chaining/brandEntityHierarchyMaps';
 import type { ResolutionStatus } from '../../../contracts/phase6/enums';
+import type { StructuredFoodRecallNotice } from '../../../workstreamC/recall';
 
 const VALID_FAR = '2099-12-31T23:59:59.000Z';
 
@@ -30,6 +31,14 @@ export type AssetScanIdentity = {
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
 };
 
+/** Signal ↔ structured recall eligibility (smallest durable contract). */
+export type AssetRecallEligibilityBinding = {
+  signal_id: string;
+  recall_notice_id: string;
+  /** Only `reviewed` may evaluate; held/unavailable fail closed. */
+  eligibility_status: string;
+};
+
 export type AssetPackParsed = {
   sources: CsvRecord[];
   signals: CsvRecord[];
@@ -37,6 +46,10 @@ export type AssetPackParsed = {
   familyMaps: ProductFamilyMaps;
   brandHierarchy: BrandHierarchyMaps;
   entityHierarchy: EntityHierarchyMaps;
+  /** Asset-authorised recall bindings — empty unless structured eligibility onboarded. */
+  recallEligibility?: AssetRecallEligibilityBinding[];
+  /** Structured packs for bound notices — never the historical MILO Stage 2 pack by default. */
+  recallNotices?: StructuredFoodRecallNotice[];
 };
 
 function marketAllows(scan: 'AU' | 'NZ' | 'UNKNOWN', linkMarket: string): boolean {

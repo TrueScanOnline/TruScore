@@ -12,7 +12,7 @@
 |------|--------|
 | `src/dynamicSignals/asset/v0.2/matchDynamicSignalsAsset.ts` | Food-recall gate; resolution_status pass-through; brand/entity hierarchy propagation |
 | `src/dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords.ts` | Mutual-exclusion; Food Recall Matcher merge |
-| `src/dynamicSignals/asset/v0.2/buildFoodRecallSafetyPublicationRecords.ts` | **New** — Safety via Food Recall Matcher |
+| `src/dynamicSignals/asset/v0.2/buildAssetGovernedFoodRecallPublicationRecords.ts` | Asset-governed Safety via Food Recall Matcher (supersedes independent MILO production path) |
 | `src/dynamicSignals/asset/v0.2/signalsProducerGuard.ts` | **New** — Skeleton/Asset mutual exclusion |
 | `src/dynamicSignals/asset/v0.2/loadDynamicSignalsAssetPack.ts` | Load hierarchy CSVs |
 | `src/identity/chaining/brandEntityHierarchyMaps.ts` | **New** |

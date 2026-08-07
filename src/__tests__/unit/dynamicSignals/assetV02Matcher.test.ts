@@ -11,6 +11,7 @@ import {
   requiresFoodRecallMatcherEligibility,
   type AssetPackParsed,
 } from '../../../dynamicSignals/asset/v0.2/matchDynamicSignalsAsset';
+import { buildDynamicSignalsAssetRuntimePublicationRecords } from '../../../dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords';
 import { buildProductScanResult } from '../../../services/buildProductScanResult';
 import { flattenSignalsOrdered, dedupeSignalCards } from '../../../utils/scanResultPresentation';
 import { resolveReviewedRetailChainUnified } from '../../../workstreamC/skeleton/resolveWorkstreamCRetailChain';
@@ -18,6 +19,10 @@ import { buildADataMapsFromCsvRecords } from '../../../workstreamC/skeleton/work
 import { resolveActiveSignalsProducer } from '../../../dynamicSignals/asset/v0.2/signalsProducerGuard';
 import { buildWorkstreamCRuntimePublicationRecords } from '../../../workstreamC/runtime/workstreamCRuntimePublicationRecords';
 import { isPublicationRecordPubliclyRenderable } from '../../../signals/signalRenderMapping';
+import {
+  MILO_AFFECTED_VARIANTS,
+  MILO_SIGNAL_ID,
+} from '../../../workstreamC/recall/miloRecallPack';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const PACK = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.2', 'input');
@@ -40,6 +45,8 @@ function loadBasePack(): AssetPackParsed {
     entityHierarchy: buildEntityHierarchyMapsFromCsvRecords(
       read(path.join(FAM, 'entity_child_of_entity.csv'))
     ),
+    recallEligibility: [],
+    recallNotices: [],
   };
 }
 
@@ -511,5 +518,176 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
     });
     expect(chain?.brand_id).toBe('B0060');
     expect(logs.some((l) => l.includes('gtin_link_supplementary'))).toBe(true);
+  });
+});
+
+describe('Dynamic Signals Asset v0.2 — sole production Signal-content authority', () => {
+  const prevAsset = process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET;
+  const prevSkel = process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT;
+  const prevRecall = process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH;
+
+  afterEach(() => {
+    process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = prevAsset;
+    process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = prevSkel;
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = prevRecall;
+  });
+
+  const governedFixtureGtin = '9410000002701';
+  const governedNoticeId = 'RN_TEST_ASSET_GOVERNED_2026';
+
+  function packWithGovernedRecall(overrides?: {
+    eligibility_status?: string;
+    includeVariants?: boolean;
+    publishable?: boolean;
+  }): AssetPackParsed {
+    const pack = loadBasePack();
+    const publishable = overrides?.publishable !== false;
+    return {
+      ...pack,
+      signals: publishable ? withPublishable(pack.signals, ['SIG-SR-AU-002']) : pack.signals,
+      recallEligibility: [
+        {
+          signal_id: 'SIG-SR-AU-002',
+          recall_notice_id: governedNoticeId,
+          eligibility_status: overrides?.eligibility_status ?? 'reviewed',
+        },
+      ],
+      recallNotices:
+        overrides?.includeVariants === false
+          ? []
+          : [
+              {
+                recall_notice_id: governedNoticeId,
+                signal_id: 'SIG-SR-AU-002',
+                official_source_url:
+                  'https://www.foodstandards.gov.au/food-recalls/recall-alert/nestle-australia-ltd-allens-inside-outs-130g',
+                hazard: 'May contain plastic.',
+                consumer_action: 'Do not eat. Return for refund.',
+                bb_month: 6,
+                bb_year: 2027,
+                affected_variants: [
+                  {
+                    recall_variant_id: 'RV_TEST_ALLENS_130G',
+                    gtin: governedFixtureGtin,
+                    listed_batch_codes: ['6072T941', '6088T941'],
+                    gtin_verification_status: 'controlled_test_synthetic',
+                    official_product_name: 'Allen\'s iNSiDE OUTS 130g (test fixture)',
+                    pack_size: '130g',
+                  },
+                ],
+              },
+            ],
+    };
+  }
+
+  it('Asset disabled / no governed recall → no production Safety Signal', () => {
+    process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '0';
+    process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = '0';
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const logs: string[] = [];
+    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
+      barcode: governedFixtureGtin,
+      productName: 'Test',
+      scanMarketPublic: 'AU',
+      foodRecallMarkings: { batchCodeRaw: '6072T941', bestBeforeMonth: 6, bestBeforeYear: 2027 },
+      logLines: logs,
+    });
+    expect(recs).toHaveLength(0);
+    expect(recs.some((r) => r.signal_class === 'safety_regulatory')).toBe(false);
+  });
+
+  it('Asset active + historical MILO pack present → MILO does not surface unless MILO is a governed Asset Signal', () => {
+    process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '1';
+    process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = '0';
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const miloGtin = MILO_AFFECTED_VARIANTS[0].gtin;
+    const logs: string[] = [];
+    // Production disk pack has empty recall_eligibility — MILO Stage 2 pack still exists in code.
+    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
+      barcode: miloGtin,
+      productName: 'MILO Dipped',
+      scanMarketPublic: 'AU',
+      foodRecallMarkings: {
+        batchCodeRaw: MILO_AFFECTED_VARIANTS[0].listed_batch_codes[0],
+        bestBeforeMonth: 8,
+        bestBeforeYear: 2026,
+      },
+      pack: loadBasePack(),
+      forceRun: true,
+      logLines: logs,
+    });
+    expect(recs.some((r) => r.signal_id === MILO_SIGNAL_ID)).toBe(false);
+    expect(recs.some((r) => r.signal_id === 'SIG_REG_AU_001')).toBe(false);
+    expect(logs.some((l) => l.includes('no Asset recall_eligibility') || l.includes('no governed'))).toBe(
+      true
+    );
+  });
+
+  it('governed Asset Safety Signal + structured recall + affected GTIN/batch/date → applicable Safety Signal', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const pack = packWithGovernedRecall();
+    const logs: string[] = [];
+    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
+      barcode: governedFixtureGtin,
+      productName: "Allen's iNSiDE OUTS",
+      scanMarketPublic: 'AU',
+      foodRecallMarkings: {
+        batchCodeRaw: '6072T941',
+        bestBeforeMonth: 6,
+        bestBeforeYear: 2027,
+      },
+      pack,
+      forceRun: true,
+      logLines: logs,
+    });
+    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-002')).toBe(true);
+    const safety = recs.find((r) => r.signal_id === 'SIG-SR-AU-002')!;
+    expect(safety.signal_class).toBe('safety_regulatory');
+    expect(safety.food_recall?.match_state).toBe('confirmed_affected');
+    expect(safety.skeleton_card_copy?.title_display).toContain("Allen's");
+    expect(logs.some((l) => l.includes('food_recall_asset'))).toBe(true);
+  });
+
+  it('same governed recall + non-affected batch/date → no recall Signal', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const pack = packWithGovernedRecall();
+    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
+      barcode: governedFixtureGtin,
+      productName: "Allen's iNSiDE OUTS",
+      scanMarketPublic: 'AU',
+      foodRecallMarkings: {
+        batchCodeRaw: '9999XXXX',
+        bestBeforeMonth: 6,
+        bestBeforeYear: 2027,
+      },
+      pack,
+      forceRun: true,
+    });
+    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-002')).toBe(false);
+    expect(recs.some((r) => r.signal_class === 'safety_regulatory')).toBe(false);
+  });
+
+  it('kill-switch alone cannot activate Safety content without governed Asset eligibility', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const pack = loadBasePack(); // empty eligibility
+    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
+      barcode: governedFixtureGtin,
+      productName: 'Test',
+      scanMarketPublic: 'AU',
+      foodRecallMarkings: { batchCodeRaw: '6072T941', bestBeforeMonth: 6, bestBeforeYear: 2027 },
+      pack,
+      forceRun: true,
+    });
+    expect(recs.some((r) => r.signal_class === 'safety_regulatory')).toBe(false);
+  });
+
+  it('Talley entity target resolves via enrichment parent P0158', () => {
+    const pack = loadBasePack();
+    const tgt = pack.targets.find((t) => t.signal_target_id === 'TGT-027');
+    expect(tgt?.canonical_target_id).toBe('P0158');
+    expect(tgt?.resolution_status).toBe('resolved_with_warning');
+    const hoyt = pack.targets.find((t) => t.signal_target_id === 'TGT-012');
+    expect(hoyt?.canonical_target_id).toBe('PF_HOYTS_TURMERIC_AU');
+    expect(hoyt?.resolution_status).toBe('resolved_with_warning');
   });
 });

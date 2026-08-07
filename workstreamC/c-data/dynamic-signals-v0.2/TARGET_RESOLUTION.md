@@ -1,17 +1,17 @@
 # Signal_Targets — canonical_target_id resolution (Asset v0.2)
 
-**Remediation note (2026-08-07):** Safety product/`exact_only` targets are **Food Recall Matcher only** — Asset will not publish them via generic barcode match even if `canonical_target_id` is later filled. Chickadees / Allen’s / Pams Lasagne remain non-public until structured recall packs exist.
+**Single-authority note (2026-08-08):** Dynamic Signals Asset is the sole production Signal-content authority. Safety product/`exact_only` targets publish only via Asset-governed Food Recall Matcher eligibility (`food_recall_eligibility` + structured variants). Historical MILO Stage 2 pack cannot originate production Signals. Chickadees / Allen’s / Pams Lasagne remain non-public until structured recall packs with verified GTINs exist.
 
 | signal_target_id | canonical_target_id | resolution_status | Notes |
 |------------------|---------------------|-------------------|-------|
-| TGT-001–004 | _(empty)_ | needs_review | **UNRESOLVED** — Chickadees absent from A-data; Food Recall Matcher pack required |
-| TGT-005 | _(empty)_ | needs_review | **UNRESOLVED** — Allen's brand B0059 OK; Food Recall Matcher pack + GTIN required |
-| TGT-007 | _(empty)_ | needs_review | **UNRESOLVED** — Pams brand B0024 OK; Food Recall Matcher pack + GTIN required |
+| TGT-001–004 | _(empty)_ | needs_review | Chickadees brand **B0654** reviewed; **UNRESOLVED** exact GTINs (FSANZ dates only) + no Asset recall_eligibility |
+| TGT-005 | _(empty)_ | needs_review | Allen's B0059 OK; **UNRESOLVED** GTIN (FSANZ batch/date only) + no recall_eligibility |
+| TGT-007 | _(empty)_ | needs_review | Pams B0024 OK; **UNRESOLVED** GTIN (MPI date criteria) + no recall_eligibility |
 | TGT-008 | `P0002` | resolved_with_warning | Coles Group Limited parent (entity_descendants — not a product recall) |
 | TGT-009 | `PF_LEGGOS_TOMATO_PASTE_AU` | resolved_with_warning | Family stub; membership empty until reviewed GTINs (brand anchor B0179) |
 | TGT-010 | `PF_REMANO_TOMATO_PASTE_AU` | resolved_with_warning | Family stub; membership empty until reviewed GTINs (brand anchor B0032) |
 | TGT-011 | `PF_COLES_ITALIAN_TOMATO_PASTE_AU` | resolved_with_warning | Family stub; membership empty until reviewed GTINs (brand anchor B0013) |
-| TGT-012 | _(empty)_ | needs_review | **UNRESOLVED** — Hoyt's brand absent from Workstream A wave1-v0.14 |
+| TGT-012 | `PF_HOYTS_TURMERIC_AU` | resolved_with_warning | Brand **B0653** / parent **P0157** reviewed; membership empty until tested turmeric GTINs |
 | TGT-013 | `PF_WOOLWORTHS_CAGEFREE_EGGS_SA` | resolved_with_warning | Family stub; membership empty until reviewed SA GTINs (brand anchor B0001) |
 | TGT-014 | `B0067` | resolved | Cadbury AU — `brand_descendants` includes reviewed child **B0241** |
 | TGT-015 | `B0067` | resolved | Cadbury NZ — same hierarchy |
@@ -25,8 +25,8 @@
 | TGT-024 | `B0105` | resolved | Magnum |
 | TGT-025 | `B0164` | resolved | Hershey's |
 | TGT-026 | `PF_ANCHOR_BUTTER_NZ` | resolved_with_warning | Family stub; membership empty until reviewed GTINs (brand anchor B0139) |
-| TGT-027 | _(empty)_ | needs_review | **UNRESOLVED** — Talley's Group absent from Workstream A wave1-v0.14 |
+| TGT-027 | `P0158` | resolved_with_warning | Talley's Group Limited entity + brand **B0655**; company-context only |
 
-## Founder disposition
+## Enrichment applied (bounded)
 
-Enrichment proposal (not applied): `ENRICHMENT_PROPOSAL_20260807.md`.
+See `ENRICHMENT_APPLIED_20260808.md`. Identity added via chaining-extensions (wave1-v0.14 not mutated). Exact Safety GTINs and family memberships left unresolved where source evidence lacked barcodes.

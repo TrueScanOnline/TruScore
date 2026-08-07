@@ -1,6 +1,8 @@
 # Dynamic Signals Asset v0.2 — bounded source-backed enrichment proposal
 
-**Status:** Proposal only — **not applied** to governed A-data or pack CSVs.  
+**Status:** **Partially applied** 2026-08-08 — see `ENRICHMENT_APPLIED_20260808.md`.  
+Exact-product Safety GTINs and family memberships remain proposal-only where barcodes were not source-verified.
+
 **Constraint:** No synthetic identity; founders approve semantic scope + evidence as a set.
 
 Evidence hierarchy (Shared Identity): official brand/parent pages → regulator recall pages → national news naming → shelf/pack observation. Confidence must be `reviewed` before production membership or exact GTINs.
