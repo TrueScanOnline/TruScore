@@ -64,7 +64,20 @@ Includes: KitKat / Kit Kat; generic_name non-override; fail-closed ambiguity; si
 
 Adversarial architecture / code-quality / assurance review. Classify: blocker | material non-blocking | architectural weakness | inadequate test | confirmed safeguard | acceptance condition.
 
-**Do not create tag `wave1-signals-skeleton-closure-20260807` until accepted Claude blockers are resolved.**
+## Closure (2026-08-07)
+
+**Milestone:** Wave 1 — Signals Skeleton UAT & Remediation: **CLOSED / ACCEPTED**  
+**Wave 1 overall (Chaining & Signals MVP):** **ACTIVE** — not closed.
+
+Claude determination: accept remediation for closure/tagging; **no closure-blocker findings.**  
+Full report: `claude_wave1_signals_closure_assurance_review_20260807.md` (+ original `.docx`).  
+Closure record: `WAVE1_SIGNALS_SKELETON_UAT_REMEDIATION_CLOSED_ACCEPTED.md`  
+Tag: `wave1-signals-skeleton-uat-remediation-closure-20260807`
+
+### Carry-forward (not Skeleton blockers)
+
+- **Finding B:** When primary identity resolution fails, consult existing reviewed GTIN relationship as supplementary evidence before unresolved — smallest safe fix during **integrated Dynamic Signals** MVP (must not create GTIN programme / weaker fail-closed).
+- **Finding C:** Delete or quarantine unmounted `app/result/[barcode].refactored.tsx` RecallsCard path during integrated work (low priority housekeeping).
 
 ## Pending for integrated Dynamic Signals build (presentation)
 
