@@ -8,7 +8,7 @@
 | Item | Value |
 |------|--------|
 | Base commit used | `2d5e6e2361525c98ba299647756160b06e3f9239` |
-| Resulting commit SHA | *(filled after commit)* |
+| Resulting commit SHA | 52f3283c46fec41d36ba83051deb198d71b4f503 |
 | Proposed tag | `dynamic-signals-asset-v0.2-impl-20260807` |
 | Skeleton closure (preserved) | `wave1-signals-skeleton-uat-remediation-closure-20260807` |
 
