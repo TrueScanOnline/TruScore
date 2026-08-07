@@ -27,7 +27,7 @@ No additional Skeleton-only build or on-device Skeleton UAT cycle is authorised.
 |--------|--------|
 | Build 30 baseline SHA | `1c12e339edcaa39572f107a49e906473ba117e38` |
 | Final remediation code SHA | `a92be423535c8137bc56b3455e0ed45a7e74c95f` |
-| Closure evidence tip SHA | 8e4c3a77b1c503909e343b6e34c7299d6f2993bf |
+| Closure evidence tip SHA | `dece45db6137a3cf5323a4b35d6411d1e97e6a33` |
 | Closure tag | `wave1-signals-skeleton-uat-remediation-closure-20260807` |
 
 ## Claude assurance outcome
