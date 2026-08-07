@@ -2,7 +2,7 @@
 
 **Baseline tag:** `dynamic-signals-asset-v0.2-uat-20260808`  
 **Production baseline commit:** `a574254071e68959177b21025d542ec6afc1ffac`  
-**Governed UAT commit:** *(set after promotion commit)*  
+**Governed UAT commit:** 4e867c6250d6c2660b676db6acbac3abf7d5f114  
 **Asset flag:** `EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET=1`  
 **Skeleton:** retired — must not activate  
 **Naming:** existing Signal UI only — no “Beyond the Label”
