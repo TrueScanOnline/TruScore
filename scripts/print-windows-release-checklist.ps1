@@ -56,7 +56,7 @@ Write-Host 'powershell -ExecutionPolicy Bypass -File "C:\TrueScan-FoodScanner\sc
 Write-Host 'powershell -ExecutionPolicy Bypass -File "C:\TrueScan-FoodScanner\scripts\run-windows-release-verify.ps1" -SkipInstall -SkipDeploy'
 Write-Host 'powershell -ExecutionPolicy Bypass -File "C:\TrueScan-FoodScanner\scripts\run-windows-release-verify.ps1" -AuditOnly'
 Write-Host ""
-Write-Host "=== EAS production (Skeleton Signals UAT: set EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT=1 in EAS env) ===" -ForegroundColor Cyan
+Write-Host "=== EAS production (Dynamic Signals Asset: enablement is founder-gated; do not bake Skeleton UAT) ===" -ForegroundColor Cyan
 Write-Host 'npx eas build -p android --profile production'
 Write-Host 'npx eas build -p ios --profile production'
 Write-Host ""

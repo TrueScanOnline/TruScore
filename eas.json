@@ -58,7 +58,6 @@
       "distribution": "store",
       "node": "20.19.4",
       "env": {
-        "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
         "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "0",
         "RVEEL_IOS_BUILD_NUMBER": "29"
       },
@@ -73,8 +72,7 @@
       "distribution": "store",
       "node": "20.19.4",
       "env": {
-        "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "1",
-        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
+        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "0",
         "RVEEL_IOS_BUILD_NUMBER": "30"
       },
       "ios": {

@@ -1,14 +1,16 @@
-export {
-  buildWorkstreamCSkeletonPublicationRecords,
-  loadADataMaps,
-  resolveReviewedRetailChain,
-  type ADataMaps,
-  type BuildSkeletonPublicationRecordsInput,
-  type ResolvedRetailChain,
-  type InjectedUatChain,
-} from './buildSkeletonPublicationRecords';
+/**
+ * Shared identity helpers used by Dynamic Signals Asset.
+ * Skeleton pack publisher / runtime producer removed from production.
+ */
 
 export {
   buildADataMapsFromCsvRecords,
-  buildWorkstreamCPublicationRecordsFromParsedPack,
+  type ADataMaps,
+  type InjectedUatChain,
+  type ResolvedRetailChain,
 } from './workstreamCPublicationCore';
+
+export {
+  resolveReviewedRetailChainUnified,
+  isChocolateOrCocoaContext,
+} from './resolveWorkstreamCRetailChain';

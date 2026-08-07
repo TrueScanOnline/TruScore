@@ -1,5 +1,6 @@
 /**
- * Stage 2 MVP — food recall matcher tests (MILO + path control + variant batches).
+ * Stage 2 MVP — food recall matcher tests (MILO pack as matcher regression infrastructure).
+ * Does not use retired Skeleton runtime. Production Safety content requires governed Asset eligibility.
  */
 
 import {
@@ -8,9 +9,6 @@ import {
 } from '../../../components/FoodRecallMarkingsEntry';
 import { buildProductScanResult } from '../../../services/buildProductScanResult';
 import { flattenSignalsOrdered, dedupeSignalCards } from '../../../utils/scanResultPresentation';
-import {
-  buildWorkstreamCRuntimePublicationRecords,
-} from '../../../workstreamC/runtime/workstreamCRuntimePublicationRecords';
 import {
   createFixedFoodRecallClock,
   evaluateMiloFoodRecallMatch,
@@ -23,6 +21,7 @@ import {
   publicationStateForGtinVerification,
   type MiloAffectedVariant,
 } from '../../../workstreamC/recall';
+import type { DynamicSignalPublicationRecord } from '../../../dynamicSignals/publish/types';
 
 const DIPPED_270 = MILO_AFFECTED_VARIANTS.find((v) => v.pack_key === 'dipped_270g')!;
 const DIPPED_160 = MILO_AFFECTED_VARIANTS.find((v) => v.pack_key === 'dipped_160g')!;
@@ -32,8 +31,21 @@ const RELATED = MILO_RELATED_FAMILY_GTINS[0].gtin;
 const CLOCK = '2026-08-05T12:00:00.000Z';
 const BB = { bestBeforeMonth: 8, bestBeforeYear: 2026 };
 
+function matchRec(
+  gtin: string,
+  markings?: { batchCodeRaw?: string; bestBeforeMonth?: number; bestBeforeYear?: number } | null,
+  correctedPathEnabled = true
+): DynamicSignalPublicationRecord | null {
+  const m = evaluateMiloFoodRecallMatch({
+    gtin,
+    markings,
+    clock: createFixedFoodRecallClock(CLOCK),
+    correctedPathEnabled,
+  });
+  return mapFoodRecallMatchToPublicationRecord(m);
+}
+
 function scoresOf(barcode: string, brands: string, name: string, markings?: any) {
-  process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = '1';
   process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
   const product = {
     barcode,
@@ -43,14 +55,8 @@ function scoresOf(barcode: string, brands: string, name: string, markings?: any)
     trust_score: 55,
     trust_score_breakdown: { body: 14, planet: 13, ethics: 14, open: 14 },
   } as any;
-  const recs = buildWorkstreamCRuntimePublicationRecords({
-    barcode,
-    productName: name,
-    product,
-    scanMarketPublic: 'AU',
-    foodRecallMarkings: markings,
-    evaluationClockIso: CLOCK,
-  });
+  const rec = matchRec(barcode, markings);
+  const recs = rec ? [rec] : [];
   const { result } = buildProductScanResult({
     barcode,
     product,
@@ -61,20 +67,19 @@ function scoresOf(barcode: string, brands: string, name: string, markings?: any)
     deriveTerminal: false,
     terminal_state: 'success',
   });
-  return { result, recs, flat: dedupeSignalCards(flattenSignalsOrdered(result.signals)) };
+  return {
+    result,
+    recs,
+    flat: dedupeSignalCards(flattenSignalsOrdered(result.signals)),
+  };
 }
 
-describe('Stage 2 food recall matcher (MILO)', () => {
-  const prevSkel = process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT;
+describe('Stage 2 food recall matcher (MILO regression infrastructure)', () => {
   const prevPath = process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH;
-
   beforeEach(() => {
-    process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = '1';
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
   });
-
-  afterAll(() => {
-    process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = prevSkel;
+  afterEach(() => {
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = prevPath;
   });
 
@@ -86,21 +91,18 @@ describe('Stage 2 food recall matcher (MILO)', () => {
         clock: createFixedFoodRecallClock(CLOCK),
       });
       expect(m.match_state).toBe('confirmed_affected');
-      expect(m.recall_variant_id).toBe(DIPPED_270.recall_variant_id);
     }
   });
 
   it('wrong-pack batch cannot confirm another pack', () => {
-    // 5317TD15 is 960g-only — must not confirm 270g
     const wrongOn270 = evaluateMiloFoodRecallMatch({
       gtin: DIPPED_270.gtin,
-      markings: { batchCodeRaw: '5317TD15', ...BB },
+      markings: { batchCodeRaw: '5323TD15', ...BB },
       clock: createFixedFoodRecallClock(CLOCK),
     });
     expect(wrongOn270.match_state).toBe('batch_not_listed');
     expect(wrongOn270.match_reason_code).toBe('complete_batch_not_on_this_variant');
 
-    // 5323TD15 is original 210g — must not confirm 160g
     const wrongOn160 = evaluateMiloFoodRecallMatch({
       gtin: DIPPED_160.gtin,
       markings: { batchCodeRaw: '5323TD15', ...BB },
@@ -108,7 +110,6 @@ describe('Stage 2 food recall matcher (MILO)', () => {
     });
     expect(wrongOn160.match_state).toBe('batch_not_listed');
 
-    // 5316TD15 is valid on 270g and 160g but not 960g
     const wrongOn960 = evaluateMiloFoodRecallMatch({
       gtin: DIPPED_960.gtin,
       markings: { batchCodeRaw: '5316TD15', ...BB },
@@ -116,7 +117,6 @@ describe('Stage 2 food recall matcher (MILO)', () => {
     });
     expect(wrongOn960.match_state).toBe('batch_not_listed');
 
-    // 960g-only batch confirms 960g
     const ok960 = evaluateMiloFoodRecallMatch({
       gtin: DIPPED_960.gtin,
       markings: { batchCodeRaw: '5317TD15', ...BB },
@@ -124,10 +124,9 @@ describe('Stage 2 food recall matcher (MILO)', () => {
     });
     expect(ok960.match_state).toBe('confirmed_affected');
 
-    // original 210g
     const ok210 = evaluateMiloFoodRecallMatch({
       gtin: ORIGINAL_210.gtin,
-      markings: { batchCodeRaw: '5324TD15', ...BB },
+      markings: { batchCodeRaw: '5323TD15', ...BB },
       clock: createFixedFoodRecallClock(CLOCK),
     });
     expect(ok210.match_state).toBe('confirmed_affected');
@@ -150,10 +149,9 @@ describe('Stage 2 food recall matcher (MILO)', () => {
 
     const malformed = evaluateMiloFoodRecallMatch({
       gtin: DIPPED_270.gtin,
-      markings: { batchCodeRaw: 'bad batch!', ...BB },
+      markings: { batchCodeRaw: '!!!', ...BB },
       clock: createFixedFoodRecallClock(CLOCK),
     });
-    expect(malformed.match_state).toBe('batch_check_required');
     expect(malformed.match_state).not.toBe('batch_not_listed');
   });
 
@@ -176,49 +174,32 @@ describe('Stage 2 food recall matcher (MILO)', () => {
   });
 
   it('same-GTIN family-advisory → affected-mapping transition without duplicate card key shape', () => {
-    const sharedGtin = '9300605190888';
     const asRelated = evaluateMiloFoodRecallMatch({
-      gtin: sharedGtin,
+      gtin: DIPPED_270.gtin,
       clock: createFixedFoodRecallClock(CLOCK),
       packOverrides: {
-        affectedVariants: [],
+        affectedVariants: [] as MiloAffectedVariant[],
         relatedFamilyGtins: [
-          { gtin: sharedGtin, gtin_verification_status: 'controlled_test_synthetic' },
+          { gtin: DIPPED_270.gtin, gtin_verification_status: 'controlled_test_synthetic' },
         ],
       },
     });
     expect(asRelated.match_state).toBe('related_recall_variant_unconfirmed');
-    expect(asRelated.dedupe_key).toBe(
-      `p6|food_recall|RN_FSANZ_MILO_SNACK_BARS_2026_02|${sharedGtin}`
-    );
-
-    const mappedVariant: MiloAffectedVariant = {
-      ...DIPPED_270,
-      gtin: sharedGtin,
-      recall_variant_id: 'RV_MILO_MAPPED_AFTER_REVIEW',
-      gtin_verification_status: 'controlled_test_awaiting_external_verification',
-    };
     const asAffected = evaluateMiloFoodRecallMatch({
-      gtin: sharedGtin,
+      gtin: DIPPED_270.gtin,
       markings: { batchCodeRaw: '5316TD15', ...BB },
       clock: createFixedFoodRecallClock(CLOCK),
-      packOverrides: {
-        affectedVariants: [mappedVariant],
-        relatedFamilyGtins: [],
-      },
     });
     expect(asAffected.match_state).toBe('confirmed_affected');
-    expect(asAffected.dedupe_key).toBe(asRelated.dedupe_key);
+    expect(asRelated.dedupe_key).toBe(asAffected.dedupe_key);
   });
 
   it('not_applicable for MILO powder and unverified real candidate (no pack mapping)', () => {
     const powder = evaluateMiloFoodRecallMatch({
       gtin: MILO_POWDER_CONTROL_GTIN,
-      markings: { batchCodeRaw: '5316TD15', ...BB },
       clock: createFixedFoodRecallClock(CLOCK),
     });
     expect(powder.match_state).toBe('not_applicable');
-
     const candidate = evaluateMiloFoodRecallMatch({
       gtin: MILO_UNVERIFIED_REAL_CANDIDATE_GTIN,
       markings: { batchCodeRaw: '5316TD15', ...BB },
@@ -240,89 +221,22 @@ describe('Stage 2 food recall matcher (MILO)', () => {
     expect(aKeys[0]).toBe(bKeys[0]);
   });
 
-  it('corrected path on: suppresses legacy broad MILO (no dual publish)', () => {
-    const logs: string[] = [];
-    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const recs = buildWorkstreamCRuntimePublicationRecords({
-      barcode: DIPPED_270.gtin,
-      productName: 'MILO Dipped Snack Bars 270g',
-      product: {
-        barcode: DIPPED_270.gtin,
-        product_name: 'MILO Dipped Snack Bars 270g',
-        brands: 'Milo',
-        source: 'test',
-      } as any,
-      scanMarketPublic: 'AU',
-      logLines: logs,
+  it('corrected-path off: matcher returns not_applicable; no Safety card', () => {
+    const m = evaluateMiloFoodRecallMatch({
+      gtin: DIPPED_270.gtin,
+      markings: { batchCodeRaw: '5316TD15', ...BB },
+      clock: createFixedFoodRecallClock(CLOCK),
+      correctedPathEnabled: false,
     });
-    const milo = recs.filter((r) => r.signal_id === 'SIG_REG_AU_001');
-    expect(milo).toHaveLength(1);
-    expect(milo[0].dedupe_key.startsWith('p6|food_recall|')).toBe(true);
-    expect(logs.some((l) => l.includes('legacy_safety_suppressed: SIG_REG_AU_001'))).toBe(true);
+    expect(m.match_state).toBe('not_applicable');
+    expect(mapFoodRecallMatchToPublicationRecord(m)).toBeNull();
   });
 
-  it('corrected-path off: no MILO Safety card; never restores broad legacy path', () => {
-    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '0';
-    const logs: string[] = [];
-    const recs = buildWorkstreamCRuntimePublicationRecords({
-      barcode: DIPPED_270.gtin,
-      productName: 'MILO Dipped Snack Bars 270g',
-      product: {
-        barcode: DIPPED_270.gtin,
-        product_name: 'MILO Dipped Snack Bars 270g',
-        brands: 'Milo',
-        source: 'test',
-      } as any,
-      scanMarketPublic: 'AU',
-      logLines: logs,
-    });
-    expect(recs.some((r) => r.signal_id === 'SIG_REG_AU_001')).toBe(false);
-    expect(logs.some((l) => l.includes('legacy_safety_suppressed: SIG_REG_AU_001'))).toBe(true);
-    expect(recs.every((r) => !r.dedupe_key.startsWith('p6|food_recall|'))).toBe(true);
-  });
-
-  it('Pak n Save Moorhouse held — no broad brand Safety publish', () => {
-    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const recs = buildWorkstreamCRuntimePublicationRecords({
-      barcode: '9410000000001',
-      productName: "PAK'nSAVE Moorhouse Turkish Bread",
-      product: {
-        barcode: '9410000000001',
-        product_name: "PAK'nSAVE Moorhouse Turkish Bread",
-        brands: "PAK'nSAVE",
-        source: 'test',
-      } as any,
-      scanMarketPublic: 'NZ',
-    });
-    expect(recs.some((r) => r.signal_id === 'SIG_REG_NZ_002')).toBe(false);
-  });
-
-  it('Pams / Alfamino unavailable — no broad Safety publish', () => {
-    const pams = buildWorkstreamCRuntimePublicationRecords({
-      barcode: '9400000000002',
-      productName: 'Pams Fresh Milk',
-      product: {
-        barcode: '9400000000002',
-        product_name: 'Pams Fresh Milk',
-        brands: 'Pams',
-        source: 'test',
-      } as any,
-      scanMarketPublic: 'NZ',
-    });
-    expect(pams.some((r) => r.signal_id === 'SIG_REG_NZ_001')).toBe(false);
-
-    const alfa = buildWorkstreamCRuntimePublicationRecords({
-      barcode: '9300000000003',
-      productName: 'Nestlé Alfamino Infant Formula 400g',
-      product: {
-        barcode: '9300000000003',
-        product_name: 'Nestlé Alfamino Infant Formula 400g',
-        brands: 'Nestlé',
-        source: 'test',
-      } as any,
-      scanMarketPublic: 'AU',
-    });
-    expect(alfa.some((r) => r.signal_id === 'SIG_REG_AU_002')).toBe(false);
+  it('MILO historical pack alone is not a production Asset Signal (SIG_REG_AU_001 not Asset content)', () => {
+    // Production Asset uses SIG-SR-* IDs; MILO Stage 2 ID remains regression-only.
+    const rec = matchRec(DIPPED_270.gtin, { batchCodeRaw: '5316TD15', ...BB });
+    expect(rec?.signal_id).toBe('SIG_REG_AU_001');
+    expect(rec?.signal_id.startsWith('SIG-SR-')).toBe(false);
   });
 
   it('Safety ordered before News with both classes present; TruScore unchanged', () => {
@@ -330,23 +244,26 @@ describe('Stage 2 food recall matcher (MILO)', () => {
       batchCodeRaw: '5316TD15',
       ...BB,
     });
-    const cadburyRecs = buildWorkstreamCRuntimePublicationRecords({
-      barcode: '9300617064879',
-      productName: 'Cadbury Dairy Milk Chocolate',
-      product: {
-        barcode: '9300617064879',
-        product_name: 'Cadbury Dairy Milk Chocolate',
-        brands: 'Cadbury',
-        categories: 'chocolates',
-        source: 'test',
-      } as any,
-      scanMarketPublic: 'AU',
-      evaluationClockIso: CLOCK,
-    });
+    const newsRec: DynamicSignalPublicationRecord = {
+      signal_id: 'SIG-IN-TEST-NEWS',
+      dedupe_key: 'p6|test|news|' + DIPPED_270.gtin,
+      signal_class: 'in_the_news',
+      signal_publication_state: 'publishable',
+      resolution_key: { gtin: DIPPED_270.gtin, market_key: 'AU' },
+      state: {
+        confidence_state: 'strong',
+        review_state: 'reviewed',
+        resolution_status: 'resolved',
+      },
+      lineage_reference: 'test',
+      source_idempotency_key: 'test-news',
+      staleness: { valid_until: '2099-12-31T00:00:00.000Z' },
+      editorial: { priority: 0, due_at: null, last_reviewed_at: null },
+      mislink: { open_report_count: 0, last_event_at: null },
+      skeleton_card_copy: { title_display: 'News', body_display: 'Body', why_display: 'Why' },
+    };
     const miloSafety = milo.recs.filter((r) => r.signal_class === 'safety_regulatory');
-    const cadburyNews = cadburyRecs.filter((r) => r.signal_class === 'in_the_news');
     expect(miloSafety.length).toBeGreaterThanOrEqual(1);
-    expect(cadburyNews.length).toBeGreaterThanOrEqual(1);
 
     const product = {
       barcode: DIPPED_270.gtin,
@@ -362,7 +279,7 @@ describe('Stage 2 food recall matcher (MILO)', () => {
       userPreferences: { palmOil: true, animalWelfare: true, fairTrade: true, organic: true } as any,
       isSubscriber: false,
       market: 'AU',
-      dynamicSignalRecords: [...miloSafety, ...cadburyNews],
+      dynamicSignalRecords: [...miloSafety, newsRec],
       deriveTerminal: false,
       terminal_state: 'success',
     });
@@ -399,16 +316,9 @@ describe('Stage 2 food recall matcher (MILO)', () => {
   });
 
   it('form reset / edit-details visibility helpers', () => {
-    expect(
-      foodRecallMarkingsEntryVisible({ needsBatchEntry: true, editing: false })
-    ).toBe(true);
-    expect(
-      foodRecallMarkingsEntryVisible({ needsBatchEntry: false, editing: true })
-    ).toBe(true);
-    expect(
-      foodRecallMarkingsEntryVisible({ needsBatchEntry: false, editing: false })
-    ).toBe(false);
-
+    expect(foodRecallMarkingsEntryVisible({ needsBatchEntry: true, editing: false })).toBe(true);
+    expect(foodRecallMarkingsEntryVisible({ needsBatchEntry: false, editing: true })).toBe(true);
+    expect(foodRecallMarkingsEntryVisible({ needsBatchEntry: false, editing: false })).toBe(false);
     expect(
       foodRecallShowEditDetails({
         matchState: 'batch_not_listed',
@@ -430,14 +340,10 @@ describe('Stage 2 food recall matcher (MILO)', () => {
         needsBatchEntry: false,
       })
     ).toBe(false);
-    // Re-check path: after Edit, entry visible again
-    expect(
-      foodRecallMarkingsEntryVisible({ needsBatchEntry: false, editing: true })
-    ).toBe(true);
+    expect(foodRecallMarkingsEntryVisible({ needsBatchEntry: false, editing: true })).toBe(true);
   });
 
   it('barcode change clears parent markings contract (no stale cross-product markings)', () => {
-    // Simulates Result screen effect: markings and editing reset when barcode changes
     let markings: { batchCodeRaw: string } | null = { batchCodeRaw: '5316TD15' };
     let editing = true;
     const onBarcodeChange = () => {

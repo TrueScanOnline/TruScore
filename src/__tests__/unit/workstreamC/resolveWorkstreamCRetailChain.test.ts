@@ -45,7 +45,7 @@ describe('resolveWorkstreamCRetailChain', () => {
     ).toBe(false);
   });
 
-  it('Cadbury chocolate product resolves to B0241 chain for NGO subject links', () => {
+  it('Cadbury Dairy Milk product_name refines to reviewed child brand B0241 (not UAT bridge)', () => {
     const { aData, brandRows, aliasRows } = loadFrozenADataMaps();
     const chain = resolveReviewedRetailChainUnified({
       barcode: '9300601234567',
@@ -59,11 +59,33 @@ describe('resolveWorkstreamCRetailChain', () => {
       aData,
       canonicalBrandRows: brandRows,
       brandAliasRows: aliasRows,
+      applyCadburyUatBridge: false,
     });
     expect(chain).not.toBeNull();
     expect(chain?.brand_id).toBe('B0241');
     expect(chain?.parent_id).toBe('P0009');
     expect(chain?.source).toBe('identity_resolution');
+  });
+
+  it('umbrella Cadbury chocolate stays B0067 when UAT bridge off; opt-in bridge → B0241', () => {
+    const { aData, brandRows, aliasRows } = loadFrozenADataMaps();
+    const base = {
+      barcode: '9300601234568',
+      productName: 'Cadbury Chocolate Block',
+      product: {
+        barcode: '9300601234568',
+        brands: 'Cadbury',
+        product_name: 'Cadbury Chocolate Block',
+        categories_tags: ['en:chocolates'],
+      } as any,
+      aData,
+      canonicalBrandRows: brandRows,
+      brandAliasRows: aliasRows,
+    };
+    const without = resolveReviewedRetailChainUnified({ ...base, applyCadburyUatBridge: false });
+    expect(without?.brand_id).toBe('B0067');
+    const withBridge = resolveReviewedRetailChainUnified({ ...base, applyCadburyUatBridge: true });
+    expect(withBridge?.brand_id).toBe('B0241');
   });
 
   it('Ritz cracker resolves to B0069 — not bridged to B0241', () => {

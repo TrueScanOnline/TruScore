@@ -81,4 +81,4 @@ Step "Expo doctor"
 npm run doctor
 
 Write-Host "`n=== All release verification steps completed successfully ===" -ForegroundColor Green
-Write-Host "Next: EAS builds with EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT=1 for Skeleton Signals UAT, e.g.`n  npx eas build -p ios --profile production`n  npx eas build -p android --profile production" -ForegroundColor Gray
+Write-Host "Next: After founder acceptance of the Dynamic Signals Asset production baseline, tag and EAS-build that exact baseline (Asset enablement is a separate founder instruction)." -ForegroundColor Gray

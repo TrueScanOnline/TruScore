@@ -273,13 +273,13 @@ export function resolveReviewedRetailChainUnified(input: {
   injected?: InjectedUatChain | null;
   logLines?: string[];
   /**
-   * Skeleton UAT Cadbury→B0241 bridge. Default true for historical Skeleton path.
-   * Production Dynamic Signals Asset matching must pass false.
+   * Historical Skeleton UAT Cadbury→B0241 bridge. Default **false** (production).
+   * Pass true only in explicit historical regression tests.
    */
   applyCadburyUatBridge?: boolean;
 }): ResolvedRetailChain | null {
   const push = (s: string) => input.logLines?.push(s);
-  const useCadburyBridge = input.applyCadburyUatBridge !== false;
+  const useCadburyBridge = input.applyCadburyUatBridge === true;
 
   if (input.injected) {
     const b = input.aData.brandsById.get(input.injected.brand_id);

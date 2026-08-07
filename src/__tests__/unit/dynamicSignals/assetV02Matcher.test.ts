@@ -17,7 +17,6 @@ import { flattenSignalsOrdered, dedupeSignalCards } from '../../../utils/scanRes
 import { resolveReviewedRetailChainUnified } from '../../../workstreamC/skeleton/resolveWorkstreamCRetailChain';
 import { buildADataMapsFromCsvRecords } from '../../../workstreamC/skeleton/workstreamCPublicationCore';
 import { resolveActiveSignalsProducer } from '../../../dynamicSignals/asset/v0.2/signalsProducerGuard';
-import { buildWorkstreamCRuntimePublicationRecords } from '../../../workstreamC/runtime/workstreamCRuntimePublicationRecords';
 import { isPublicationRecordPubliclyRenderable } from '../../../signals/signalRenderMapping';
 import {
   MILO_AFFECTED_VARIANTS,
@@ -397,21 +396,16 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
     expect(nestleSoldAtColes.some((r) => r.signal_id === 'SIG-SR-AU-003')).toBe(false);
   });
 
-  it('Skeleton/Asset mutual-exclusion guard: both flags → Asset only', () => {
+  it('Skeleton flag retired: Asset-only producer guard (legacy Skeleton flag ignored)', () => {
     process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '1';
     process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = '1';
     const logs: string[] = [];
     expect(resolveActiveSignalsProducer(logs)).toBe('asset');
-    expect(logs.some((l) => l.includes('BOTH Asset and Skeleton'))).toBe(true);
+    expect(logs.some((l) => l.includes('retired') || l.includes('Skeleton'))).toBe(true);
 
-    const skel = buildWorkstreamCRuntimePublicationRecords({
-      barcode: '9300601234567',
-      productName: 'Cadbury',
-      product: { barcode: '9300601234567', brands: 'Cadbury', categories_tags: ['en:chocolates'] } as any,
-      scanMarketPublic: 'AU',
-      logLines: [],
-    });
-    expect(skel).toHaveLength(0);
+    process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '0';
+    const logs2: string[] = [];
+    expect(resolveActiveSignalsProducer(logs2)).toBe('none');
   });
 
   it('AU/NZ market isolation', () => {

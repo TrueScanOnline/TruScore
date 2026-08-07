@@ -1,33 +1,26 @@
 /**
- * Structural mutual exclusion: Skeleton (historical UAT) vs Dynamic Signals Asset (production successor).
- * Reads env flags directly to avoid circular imports with runtime builders.
+ * Signals producer selection for production.
+ * Dynamic Signals Asset is the sole production Signal-content authority.
+ * Workstream C Skeleton runtime producer is retired.
  */
 
-export type ActiveSignalsProducer = 'asset' | 'skeleton' | 'none';
+export type ActiveSignalsProducer = 'asset' | 'none';
 
 function assetFlagOn(): boolean {
   return process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET === '1';
 }
 
-function skeletonFlagOn(): boolean {
-  return process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT === '1';
-}
-
 /**
- * When both env flags are on, Asset wins and Skeleton is structurally suppressed.
- * Callers must not merge both producer outputs.
+ * Returns `asset` when EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET=1, else `none`.
+ * Legacy EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT is ignored (logged if set).
  */
 export function resolveActiveSignalsProducer(logLines?: string[]): ActiveSignalsProducer {
-  const asset = assetFlagOn();
-  const skeleton = skeletonFlagOn();
-  if (asset && skeleton) {
+  if (process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT === '1') {
     logLines?.push(
-      'signals_producer_guard: BOTH Asset and Skeleton flags enabled — Asset path only; Skeleton suppressed'
+      'signals_producer_guard: EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT is retired — Skeleton runtime ignored; Asset-only production path'
     );
-    return 'asset';
   }
-  if (asset) return 'asset';
-  if (skeleton) return 'skeleton';
+  if (assetFlagOn()) return 'asset';
   return 'none';
 }
 

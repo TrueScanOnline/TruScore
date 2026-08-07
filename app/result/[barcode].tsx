@@ -46,7 +46,6 @@ import FoodRecallMarkingsEntry, {
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
 import { buildProductScanResult } from '../../src/services/buildProductScanResult';
 import { buildBannerAlertsDataFromScanResult } from '../../src/utils/scanResultPresentation';
-import { buildWorkstreamCRuntimePublicationRecords } from '../../src/workstreamC/runtime/workstreamCRuntimePublicationRecords';
 import { buildDynamicSignalsAssetRuntimePublicationRecords } from '../../src/dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords';
 import { resolveActiveSignalsProducer } from '../../src/dynamicSignals/asset/v0.2/signalsProducerGuard';
 import type { FoodRecallSubmittedMarkings } from '../../src/workstreamC/recall';
@@ -430,25 +429,14 @@ function ResultScreenContent() {
         : 'UNKNOWN';
     const producerLogs: string[] = [];
     const producer = resolveActiveSignalsProducer(producerLogs);
-    const workstreamCLogs: string[] = [...producerLogs];
-    const assetLogs: string[] = [];
+    const assetLogs: string[] = [...producerLogs];
     const productName =
       productForScan?.product_name ??
       productForScan?.product_name_en ??
       productForScan?.brands ??
       '';
-    const skeletonRecords =
-      producer === 'skeleton' && productForScan
-        ? buildWorkstreamCRuntimePublicationRecords({
-            barcode: primaryBc,
-            productName,
-            product: productForScan,
-            scanMarketPublic,
-            logLines: workstreamCLogs,
-            foodRecallMarkings,
-          })
-        : [];
-    const assetRecords =
+    // Dynamic Signals Asset is the sole production Signal-content authority.
+    const dynamicSignalRecords =
       producer === 'asset' && productForScan
         ? buildDynamicSignalsAssetRuntimePublicationRecords({
             barcode: primaryBc,
@@ -459,11 +447,6 @@ function ResultScreenContent() {
             foodRecallMarkings,
           })
         : [];
-    // Single active producer only — never merge Skeleton + Asset.
-    const dynamicSignalRecords = producer === 'asset' ? assetRecords : skeletonRecords;
-    if (workstreamCLogs.length > 0) {
-      console.log('[WorkstreamC runtime signals]', { barcode: primaryBc, logs: workstreamCLogs });
-    }
     if (assetLogs.length > 0) {
       console.log('[Dynamic Signals Asset v0.2]', { barcode: primaryBc, logs: assetLogs });
     }
