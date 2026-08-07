@@ -120,22 +120,46 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
   });
 
   it('candidate Signals do not render publicly even when target would match', () => {
-    const pack = loadBasePack();
+    let pack = loadBasePack();
+    // SIG-IN-AU-001 remains candidate/held — family membership reviewed only in fixture
+    pack = withMembership(pack, [
+      { gtin: '9300000000999', family_id: 'PF_LEGGOS_TOMATO_PASTE_AU', market_key: 'AU' },
+    ]);
+    pack = {
+      ...pack,
+      targets: pack.targets.map((t) =>
+        t.signal_target_id === 'TGT-009' ? { ...t, resolution_status: 'resolved' } : t
+      ),
+    };
     const logs: string[] = [];
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack,
       identity: {
-        barcode: '9300000000001',
-        brand_id: 'B0067',
-        parent_id: 'P0009',
-        product_family_ids: [],
+        barcode: '9300000000999',
+        brand_id: 'B0179',
+        parent_id: 'P0041',
+        product_family_ids: ['PF_LEGGOS_TOMATO_PASTE_AU'],
         scanMarketPublic: 'AU',
       },
       logLines: logs,
       includeNonPublishable: false,
     });
-    expect(recs).toHaveLength(0);
+    expect(recs.some((r) => r.signal_id === 'SIG-IN-AU-001')).toBe(false);
     expect(logs.some((l) => l.includes('candidate_hold'))).toBe(true);
+  });
+
+  it('founder-authorised UAT Signals are publishable in pack', () => {
+    const pack = loadBasePack();
+    const ids = ['SIG-SR-AU-003', 'SIG-IN-GL-001', 'SIG-IN-GL-002', 'SIG-IN-NZ-005'];
+    for (const id of ids) {
+      const s = pack.signals.find((r) => r.signal_id === id)!;
+      expect(s.signal_publication_state).toBe('publishable');
+      expect(s.review_state).toBe('reviewed');
+    }
+    // Held Signals remain candidate
+    expect(pack.signals.find((r) => r.signal_id === 'SIG-IN-AU-001')?.signal_publication_state).toBe(
+      'candidate'
+    );
   });
 
   it('positive publish lifecycle: resolved reviewed Signal reaches publishable with target resolution_status', () => {

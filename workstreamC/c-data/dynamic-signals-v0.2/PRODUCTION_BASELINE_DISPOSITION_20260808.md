@@ -38,7 +38,7 @@
 | SIG-IN-NZ-004 | TGT-026 PF_ANCHOR_BUTTER… | Family stub; B0139 exists | No reviewed butter GTINs | **candidate / held** | Historical label membership empty |
 | SIG-IN-NZ-005 | TGT-027 entity P0158 | **resolved_with_warning** | Talley's brand B0655 under P0158 | **resolved — eligible for later publication** | Company-context only |
 
-**Rollup:** 4 Signals resolved-eligible · 12 candidate/held · 0 forced publishable · 0 GTINs invented for Signals.
+**Rollup:** 4 Signals **publishable** for UAT · 12 candidate/held · 0 GTINs invented for Signals.
 
 ## Identity changes in this production pass
 

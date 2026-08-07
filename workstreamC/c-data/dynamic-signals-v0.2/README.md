@@ -14,7 +14,7 @@
 | Signal_Targets → `input/signal_targets.csv` | 25 |
 | Controlled_Values → `input/controlled_values.csv` | 54 |
 
-All Signal `signal_publication_state` values remain **`candidate`** (not promoted).
+All Signal `signal_publication_state` values remain **`candidate`** except the four founder-authorised UAT Signals promoted to **`publishable`**: `SIG-SR-AU-003`, `SIG-IN-GL-001`, `SIG-IN-GL-002`, `SIG-IN-NZ-005`. See `UAT_MATRIX_PRODUCTION_ASSET_20260808.md`.
 
 ## Food Recall eligibility (Asset-governed only)
 

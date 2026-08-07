@@ -53,6 +53,34 @@
         "buildType": "apk"
       }
     },
+    "uat-dynamic-signals-ios": {
+      "extends": "preview",
+      "distribution": "store",
+      "node": "20.19.4",
+      "env": {
+        "EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET": "1",
+        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
+        "RVEEL_IOS_BUILD_NUMBER": "31"
+      },
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release",
+        "image": "macos-sequoia-15.6-xcode-26.0"
+      }
+    },
+    "uat-dynamic-signals-android": {
+      "extends": "preview-apk",
+      "distribution": "internal",
+      "node": "20.19.4",
+      "env": {
+        "EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET": "1",
+        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
+        "RVEEL_ANDROID_VERSION_CODE": "14"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "uat-ios-flag-off": {
       "extends": "preview",
       "distribution": "store",

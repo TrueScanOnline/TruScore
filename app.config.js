@@ -20,7 +20,7 @@ module.exports = {
         backgroundColor: '#16a085',
       },
       package: 'com.truescan.foodscanner',
-      versionCode: 13, // v10.0.0 - Build 13 for Android APK testing
+      versionCode: Number(process.env.RVEEL_ANDROID_VERSION_CODE || 13), // UAT profiles may override via EAS env
       permissions: [
         'CAMERA',
         'ACCESS_FINE_LOCATION',
@@ -62,9 +62,6 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.truescan.foodscanner',
-      // UAT dual builds: RVEEL_IOS_BUILD_NUMBER is set per profile in committed eas.json
-      // (uat-ios-flag-off=29, uat-ios-flag-on=30). Do not patch this file locally for UAT builds.
-      // Fallback is last committed non-UAT default when the env var is unset (local/dev).
       buildNumber: process.env.RVEEL_IOS_BUILD_NUMBER || '26',
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
