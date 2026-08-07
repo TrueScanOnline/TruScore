@@ -6,7 +6,7 @@
 
 **Build 30 baseline:** `1c12e339edcaa39572f107a49e906473ba117e38`  
 **Prior remediation:** `f5927ed935fbd31a275d34e9de99b48a652890b8`  
-**This clarification tip:** *(fill after commit)*
+**This clarification tip:** `a92be423535c8137bc56b3455e0ed45a7e74c95f`
 
 ## Terminology
 
