@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-07  
 **Base (held):** implementation `52f3283…` / tip `250c53e…`  
-**Remediation commit:** *(filled after commit)*  
+**Remediation commit:** 7fbfaceda14f17cb887583267282fa527fb358f9  
 
 **Not done (per instruction):** tag, `EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET` enablement, Signal promotion, device/TestFlight UAT, synthetic identity enrichment.
 
