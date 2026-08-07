@@ -1,25 +1,31 @@
 /**
- * Rveel Dynamic Signals Asset v0.2 — deterministic target matcher.
+ * Rveel Dynamic Signals Asset v0.2 — deterministic target matcher (remediation).
  *
  * Eligibility: market_key + target_type + canonical_target_id + propagation_mode only.
- * target_label / scope_review_summary never participate in matching.
- * No free-text / keyword / Cadbury-bridge production matching.
+ * Safety & Regulatory product recalls with exact/batch/date scope are NOT published here —
+ * they must go through the Food Recall Matcher.
  */
 
-import type { CsvRecord } from '../../identity/workstreamA/csv';
-import type { DynamicSignalPublicationRecord } from '../publish/types';
+import type { CsvRecord } from '../../../identity/workstreamA/csv';
+import type { DynamicSignalPublicationRecord } from '../../publish/types';
 import type { ProductFamilyMaps } from '../../../identity/chaining/productFamilyMaps';
 import { reviewedFamilyIdsForGtin } from '../../../identity/chaining/productFamilyMaps';
+import type {
+  BrandHierarchyMaps,
+  EntityHierarchyMaps,
+} from '../../../identity/chaining/brandEntityHierarchyMaps';
+import {
+  brandIsDescendantOf,
+  entityOwnsOrIsAncestorOf,
+} from '../../../identity/chaining/brandEntityHierarchyMaps';
+import type { ResolutionStatus } from '../../../contracts/phase6/enums';
 
 const VALID_FAR = '2099-12-31T23:59:59.000Z';
 
 export type AssetScanIdentity = {
   barcode: string;
-  /** Reviewed chaining brand_id (B####), when resolved */
   brand_id: string | null;
-  /** Reviewed chaining parent_id (P####), when resolved */
   parent_id: string | null;
-  /** Reviewed product_family_ids from chaining membership */
   product_family_ids: string[];
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
 };
@@ -29,6 +35,8 @@ export type AssetPackParsed = {
   signals: CsvRecord[];
   targets: CsvRecord[];
   familyMaps: ProductFamilyMaps;
+  brandHierarchy: BrandHierarchyMaps;
+  entityHierarchy: EntityHierarchyMaps;
 };
 
 function marketAllows(scan: 'AU' | 'NZ' | 'UNKNOWN', linkMarket: string): boolean {
@@ -51,11 +59,28 @@ function targetResolutionAllowsMatch(status: string): boolean {
   return status === 'resolved' || status === 'resolved_with_warning';
 }
 
+/**
+ * Product-scoped Safety & Regulatory recalls (batch/date/variant eligible) must not use
+ * generic Asset exact_only / product matching. Food Recall Matcher is the sole eligibility layer.
+ */
+export function requiresFoodRecallMatcherEligibility(
+  signalClass: string,
+  targetType: string,
+  propagationMode: string
+): boolean {
+  if (signalClass !== 'safety_regulatory') return false;
+  if (targetType === 'product' || propagationMode === 'exact_only') return true;
+  if (targetType === 'product_family' && propagationMode === 'family_members') return true;
+  return false;
+}
+
 function propagationMatches(
   mode: string,
   targetType: string,
   canonicalId: string,
-  identity: AssetScanIdentity
+  identity: AssetScanIdentity,
+  brandHierarchy: BrandHierarchyMaps,
+  entityHierarchy: EntityHierarchyMaps
 ): boolean {
   if (!canonicalId) return false;
   switch (mode) {
@@ -64,13 +89,16 @@ function propagationMatches(
     case 'family_members':
       return targetType === 'product_family' && identity.product_family_ids.includes(canonicalId);
     case 'brand_descendants':
-      // MVP: exact reviewed brand_id. Child-brand hierarchy table not yet in Chaining.
-      return targetType === 'brand' && identity.brand_id === canonicalId;
+      return (
+        targetType === 'brand' &&
+        brandIsDescendantOf(brandHierarchy, identity.brand_id, canonicalId)
+      );
     case 'entity_descendants':
-      // Own-label / ownership chain via reviewed parent_id — not retailer stocking.
-      return targetType === 'entity' && identity.parent_id === canonicalId;
+      return (
+        targetType === 'entity' &&
+        entityOwnsOrIsAncestorOf(entityHierarchy, identity.parent_id, canonicalId)
+      );
     case 'operational_descendants':
-      // Operational entity table not yet populated — fail closed.
       return false;
     default:
       return false;
@@ -80,7 +108,8 @@ function propagationMatches(
 function signalToPublicationRecord(
   signal: CsvRecord,
   barcode: string,
-  market: AssetScanIdentity['scanMarketPublic']
+  market: AssetScanIdentity['scanMarketPublic'],
+  targetResolutionStatus: ResolutionStatus
 ): DynamicSignalPublicationRecord {
   const sigId = signal.signal_id ?? '';
   const internalMarket = market === 'UNKNOWN' ? 'AU' : market;
@@ -93,10 +122,12 @@ function signalToPublicationRecord(
       'candidate',
     resolution_key: { gtin: barcode, market_key: internalMarket },
     state: {
-      confidence_state: (signal.confidence_state as DynamicSignalPublicationRecord['state']['confidence_state']) ??
+      confidence_state:
+        (signal.confidence_state as DynamicSignalPublicationRecord['state']['confidence_state']) ??
         'strong',
-      review_state: (signal.review_state as DynamicSignalPublicationRecord['state']['review_state']) ?? 'seeded',
-      resolution_status: 'needs_review',
+      review_state:
+        (signal.review_state as DynamicSignalPublicationRecord['state']['review_state']) ?? 'seeded',
+      resolution_status: targetResolutionStatus,
     },
     lineage_reference: signal.lineage_reference ?? `dsa_v0_2:signal:${sigId}`,
     source_record_id: signal.source_record_id ?? undefined,
@@ -121,17 +152,10 @@ function signalToPublicationRecord(
   };
 }
 
-/**
- * Build matched publication records for a scan identity.
- * Candidate / non-publishable signals are included in the returned list for tests/diagnostics
- * when `includeNonPublishable` is true; production callers must leave it false and rely on
- * `isPublicationRecordPubliclyRenderable` (publishable-only).
- */
 export function buildDynamicSignalsAssetPublicationRecords(input: {
   pack: AssetPackParsed;
   identity: AssetScanIdentity;
   logLines?: string[];
-  /** Test-only: include candidate rows that matched targets (still not public via render gate). */
   includeNonPublishable?: boolean;
 }): DynamicSignalPublicationRecord[] {
   const push = (s: string) => input.logLines?.push(s);
@@ -140,7 +164,6 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
   const out: DynamicSignalPublicationRecord[] = [];
   const seen = new Set<string>();
 
-  // Refresh family ids from maps if caller left them empty but GTIN membership exists
   const familyIds =
     input.identity.product_family_ids.length > 0
       ? input.identity.product_family_ids
@@ -164,11 +187,31 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
     const canonicalId = (tgt.canonical_target_id ?? '').trim();
     const targetType = (tgt.target_type ?? '').trim();
     const mode = (tgt.propagation_mode ?? '').trim();
-    if (!propagationMatches(mode, targetType, canonicalId, identity)) continue;
 
     const sigId = (tgt.signal_id ?? '').trim();
     const signal = signalById.get(sigId);
     if (!signal) continue;
+
+    const signalClass = (signal.signal_class ?? '').trim();
+    if (requiresFoodRecallMatcherEligibility(signalClass, targetType, mode)) {
+      push(
+        `food_recall_matcher_required: skip Asset publish for ${sigId} via ${tgt.signal_target_id} (class=${signalClass} type=${targetType} mode=${mode})`
+      );
+      continue;
+    }
+
+    if (
+      !propagationMatches(
+        mode,
+        targetType,
+        canonicalId,
+        identity,
+        input.pack.brandHierarchy,
+        input.pack.entityHierarchy
+      )
+    ) {
+      continue;
+    }
 
     const sourceId = (signal.source_channel_id ?? '').trim();
     if (!authSources.has(sourceId)) {
@@ -187,9 +230,16 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
       continue;
     }
     seen.add(sigId);
-    out.push(signalToPublicationRecord(signal, identity.barcode, identity.scanMarketPublic));
+    out.push(
+      signalToPublicationRecord(
+        signal,
+        identity.barcode,
+        identity.scanMarketPublic,
+        resStatus as ResolutionStatus
+      )
+    );
     push(
-      `match: target=${tgt.signal_target_id} signal=${sigId} type=${targetType} id=${canonicalId} mode=${mode}`
+      `match: target=${tgt.signal_target_id} signal=${sigId} type=${targetType} id=${canonicalId} mode=${mode} resolution=${resStatus}`
     );
   }
 

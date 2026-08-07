@@ -1,6 +1,5 @@
 /**
  * Runtime loader for Dynamic Signals Asset v0.2 (Node/tests + optional app wiring).
- * Pack lives at workstreamC/c-data/dynamic-signals-v0.2/ — not a rewrite of Skeleton v0.4.
  */
 
 import fs from 'fs';
@@ -10,6 +9,10 @@ import {
   buildProductFamilyMapsFromCsvRecords,
   type ProductFamilyMaps,
 } from '../../../identity/chaining/productFamilyMaps';
+import {
+  buildBrandHierarchyMapsFromCsvRecords,
+  buildEntityHierarchyMapsFromCsvRecords,
+} from '../../../identity/chaining/brandEntityHierarchyMaps';
 import type { AssetPackParsed } from './matchDynamicSignalsAsset';
 
 export function isDynamicSignalsAssetRuntimeEnabled(): boolean {
@@ -39,5 +42,11 @@ export function loadDynamicSignalsAssetPackFromDisk(roots?: {
     signals: read(path.join(packRoot, 'signals.csv')),
     targets: read(path.join(packRoot, 'signal_targets.csv')),
     familyMaps,
+    brandHierarchy: buildBrandHierarchyMapsFromCsvRecords(
+      read(path.join(famRoot, 'brand_child_of_brand.csv'))
+    ),
+    entityHierarchy: buildEntityHierarchyMapsFromCsvRecords(
+      read(path.join(famRoot, 'entity_child_of_entity.csv'))
+    ),
   };
 }

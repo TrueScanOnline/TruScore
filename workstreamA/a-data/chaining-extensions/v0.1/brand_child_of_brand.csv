@@ -1,0 +1,2 @@
+brand_id,parent_brand_id,review_state,confidence_state,lineage_reference,notes
+B0241,B0067,reviewed,strong,DSA-v0.2-remediation|cadbury-dairy-milk,Cadbury Dairy Milk is a reviewed child brand of Cadbury (B0067); supports brand_descendants for Cadbury-wide Signals. Ritz (B0069) is a sibling under Mondelez parent only — not a Cadbury brand child.

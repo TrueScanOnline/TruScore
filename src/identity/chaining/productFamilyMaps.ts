@@ -52,7 +52,9 @@ export function buildProductFamilyMapsFromCsvRecords(
     const gtin = (r.gtin ?? '').trim();
     const fid = (r.product_family_id ?? '').trim();
     if (!gtin || !fid) continue;
-    if (!familiesById.has(fid)) continue;
+    const fam = familiesById.get(fid);
+    // Both family and membership must be reviewed before matching.
+    if (!fam || fam.review_state !== 'reviewed') continue;
     const prev = familyIdsByGtin.get(gtin) ?? [];
     if (!prev.includes(fid)) prev.push(fid);
     familyIdsByGtin.set(gtin, prev);
@@ -70,7 +72,7 @@ export function reviewedFamilyIdsForGtin(
   const ids = maps.familyIdsByGtin.get(gtin) ?? [];
   return ids.filter((id) => {
     const fam = maps.familiesById.get(id);
-    if (!fam) return false;
+    if (!fam || fam.review_state !== 'reviewed') return false;
     const mk = fam.market_key;
     if (mk === 'AU+NZ') return scanMarketPublic === 'AU' || scanMarketPublic === 'NZ';
     if (scanMarketPublic === 'UNKNOWN') return false;

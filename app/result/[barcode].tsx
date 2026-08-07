@@ -48,6 +48,7 @@ import { buildProductScanResult } from '../../src/services/buildProductScanResul
 import { buildBannerAlertsDataFromScanResult } from '../../src/utils/scanResultPresentation';
 import { buildWorkstreamCRuntimePublicationRecords } from '../../src/workstreamC/runtime/workstreamCRuntimePublicationRecords';
 import { buildDynamicSignalsAssetRuntimePublicationRecords } from '../../src/dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords';
+import { resolveActiveSignalsProducer } from '../../src/dynamicSignals/asset/v0.2/signalsProducerGuard';
 import type { FoodRecallSubmittedMarkings } from '../../src/workstreamC/recall';
 import { resolveSharedIdentityContext } from '../../src/identity/resolveSharedIdentityContext';
 import { logScanObs, generateScanId } from '../../src/services/scanObservability';
@@ -417,7 +418,6 @@ function ResultScreenContent() {
     if (!productForScan && !error) {
       return null;
     }
-    const workstreamCLogs: string[] = [];
     const country = getUserCountryCode();
     const scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN' = productForScan
       ? resolveSharedIdentityContext({
@@ -428,33 +428,39 @@ function ResultScreenContent() {
       : country === 'AU' || country === 'NZ'
         ? country
         : 'UNKNOWN';
-    const skeletonRecords = productForScan
-      ? buildWorkstreamCRuntimePublicationRecords({
-          barcode: primaryBc,
-          productName: productForScan.product_name ?? productForScan.product_name_en ?? productForScan.brands ?? '',
-          product: productForScan,
-          scanMarketPublic,
-          logLines: workstreamCLogs,
-          foodRecallMarkings,
-        })
-      : [];
+    const producerLogs: string[] = [];
+    const producer = resolveActiveSignalsProducer(producerLogs);
+    const workstreamCLogs: string[] = [...producerLogs];
     const assetLogs: string[] = [];
-    const assetRecords = productForScan
-      ? buildDynamicSignalsAssetRuntimePublicationRecords({
-          barcode: primaryBc,
-          productName: productForScan.product_name ?? productForScan.product_name_en ?? productForScan.brands ?? '',
-          product: productForScan,
-          scanMarketPublic,
-          logLines: assetLogs,
-        })
-      : [];
-    // Merge: Asset + Skeleton; prefer first occurrence of each signal_id (no cross-engine dupes).
-    const seenSig = new Set<string>();
-    const dynamicSignalRecords = [...assetRecords, ...skeletonRecords].filter((r) => {
-      if (seenSig.has(r.signal_id)) return false;
-      seenSig.add(r.signal_id);
-      return true;
-    });
+    const productName =
+      productForScan?.product_name ??
+      productForScan?.product_name_en ??
+      productForScan?.brands ??
+      '';
+    const skeletonRecords =
+      producer === 'skeleton' && productForScan
+        ? buildWorkstreamCRuntimePublicationRecords({
+            barcode: primaryBc,
+            productName,
+            product: productForScan,
+            scanMarketPublic,
+            logLines: workstreamCLogs,
+            foodRecallMarkings,
+          })
+        : [];
+    const assetRecords =
+      producer === 'asset' && productForScan
+        ? buildDynamicSignalsAssetRuntimePublicationRecords({
+            barcode: primaryBc,
+            productName,
+            product: productForScan,
+            scanMarketPublic,
+            logLines: assetLogs,
+            foodRecallMarkings,
+          })
+        : [];
+    // Single active producer only — never merge Skeleton + Asset.
+    const dynamicSignalRecords = producer === 'asset' ? assetRecords : skeletonRecords;
     if (workstreamCLogs.length > 0) {
       console.log('[WorkstreamC runtime signals]', { barcode: primaryBc, logs: workstreamCLogs });
     }

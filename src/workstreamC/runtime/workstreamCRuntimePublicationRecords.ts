@@ -32,6 +32,7 @@ import {
 } from './workstreamCRuntimePack.generated';
 
 import type { ADataMaps } from '../skeleton/workstreamCPublicationCore';
+import { resolveActiveSignalsProducer } from '../../dynamicSignals/asset/v0.2/signalsProducerGuard';
 
 let cachedADataMaps: ADataMaps | null = null;
 
@@ -91,6 +92,14 @@ export function buildWorkstreamCRuntimePublicationRecords(input: {
   /** Injected evaluation time (ISO). Defaults to a fixed Stage 2 test clock. */
   evaluationClockIso?: string;
 }): DynamicSignalPublicationRecord[] {
+  // Structural mutual exclusion: when Asset is active, Skeleton must not produce.
+  const producer = resolveActiveSignalsProducer(input.logLines);
+  if (producer !== 'skeleton') {
+    if (producer === 'asset') {
+      input.logLines?.push('skeleton_suppressed: Asset producer active (mutual exclusion)');
+    }
+    return [];
+  }
   if (!isWorkstreamCSignalsRuntimeEnabled()) return [];
 
   const log = input.logLines;

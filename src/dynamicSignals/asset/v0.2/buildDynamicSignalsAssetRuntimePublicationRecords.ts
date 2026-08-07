@@ -1,5 +1,6 @@
 /**
  * App/runtime entry for Dynamic Signals Asset v0.2.
+ * Respects structural mutual exclusion vs Skeleton (Asset is production successor).
  */
 
 import fs from 'fs';
@@ -14,7 +15,10 @@ import {
 } from './matchDynamicSignalsAsset';
 import { isDynamicSignalsAssetRuntimeEnabled, loadDynamicSignalsAssetPackFromDisk } from './loadDynamicSignalsAssetPack';
 import { reviewedFamilyIdsForGtin } from '../../../identity/chaining/productFamilyMaps';
+import { buildFoodRecallSafetyPublicationRecords } from './buildFoodRecallSafetyPublicationRecords';
+import { resolveActiveSignalsProducer } from './signalsProducerGuard';
 import type { DynamicSignalPublicationRecord } from '../../publish/types';
+import type { FoodRecallSubmittedMarkings } from '../../../workstreamC/recall';
 
 export { isDynamicSignalsAssetRuntimeEnabled };
 
@@ -34,9 +38,8 @@ function loadADataForChain() {
 }
 
 /**
- * Returns [] when Asset runtime flag is off (unless `pack` is injected for tests).
- * Uses chaining brand/parent without Skeleton Cadbury UAT bridge.
- * Candidate Signals do not become public (builder omits non-publishable).
+ * Returns [] unless Asset is the active producer (or `pack` injected for tests).
+ * Appends Food Recall Matcher Safety records (at most one per notice) — never via Asset exact_only.
  */
 export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
   barcode: string;
@@ -48,10 +51,15 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
   injectedBrandId?: string | null;
   injectedParentId?: string | null;
   productFamilyIds?: string[];
+  foodRecallMarkings?: FoodRecallSubmittedMarkings | null;
+  evaluationClockIso?: string;
+  /** Tests: bypass producer guard */
+  forceRun?: boolean;
 }): DynamicSignalPublicationRecord[] {
-  const testingWithPack = input.pack !== undefined;
-  if (!testingWithPack && !isDynamicSignalsAssetRuntimeEnabled()) {
-    return [];
+  const testingOverride = input.pack !== undefined || input.forceRun === true;
+  if (!testingOverride) {
+    const producer = resolveActiveSignalsProducer(input.logLines);
+    if (producer !== 'asset') return [];
   }
 
   const pack = input.pack ?? loadDynamicSignalsAssetPackFromDisk();
@@ -80,7 +88,7 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     input.productFamilyIds ??
     reviewedFamilyIdsForGtin(pack.familyMaps, input.barcode, input.scanMarketPublic);
 
-  return buildDynamicSignalsAssetPublicationRecords({
+  const assetRecords = buildDynamicSignalsAssetPublicationRecords({
     pack,
     identity: {
       barcode: input.barcode,
@@ -92,4 +100,21 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     logLines: logs,
     includeNonPublishable: false,
   });
+
+  const recallRecords = buildFoodRecallSafetyPublicationRecords({
+    barcode: input.barcode,
+    foodRecallMarkings: input.foodRecallMarkings,
+    evaluationClockIso: input.evaluationClockIso,
+    logLines: logs,
+  });
+
+  // Dedupe by signal_id — Food Recall Matcher wins for Safety notices it owns
+  const seen = new Set(recallRecords.map((r) => r.signal_id));
+  const merged = [...recallRecords];
+  for (const r of assetRecords) {
+    if (seen.has(r.signal_id)) continue;
+    seen.add(r.signal_id);
+    merged.push(r);
+  }
+  return merged;
 }
