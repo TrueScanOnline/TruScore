@@ -1,0 +1,215 @@
+﻿Subject: Wave 1 Signals Skeleton Closure â€” Final Remediation Clarification and Claude Assurance Requirements
+Cursor,
+Thank you. The Wave 1 delivery is materially responsive, but the remediation is not yet accepted for integration. Please complete the narrow clarification, code-hardening and assurance work below before submitting the final package to Claude.
+No new skeleton build, Build 31 release or further skeleton-only on-device UAT is requested.
+Wave 1 Signals Skeleton remains closed as a proof-of-concept.
+1. Correct governing terminology
+Replace forward references to:
+Launch Corpus;
+Signals Corpus;
+full-corpus Signals build;
+with:
+Rveel Dynamic Signals Asset;
+founder-approved Rveel Dynamic Signals Asset;
+integrated Dynamic Signals build.
+The separate founder-controlled project thread governing the Rveel Dynamic Signals Asset is already well advanced and remains authoritative.
+Do not duplicate, revise, originate or pre-empt that work under this instruction.
+2. MVP identity and Signal-scope contract
+The KitKat correction should be assessed against the following simple MVP model.
+A product should resolve through a governed identity chain such as:
+Product / GTIN â†’ Product Family, where reviewed â†’ Brand or Sub-brand â†’ Parent / Responsible Entity
+These levels are not competing alternatives.
+For the AU-02 case, the intended chain is:
+KitKat product â†’ KitKat brand â†’ NestlÃ© S.A.
+KitKat should not replace NestlÃ©, and NestlÃ© should not replace KitKat. The specific product-facing brand and the parent entity must both remain available in the resolved chain.
+Dynamic Signal eligibility is then evaluated only at the approved scope of each governed Signal record.
+For example:
+a product-scoped Signal may match the exact governed product or GTIN;
+a product-family Signal may match reviewed members of that governed family;
+a KitKat brand Signal may match KitKat products;
+a NestlÃ© entity-wide Signal may match products whose governed chain reaches NestlÃ©;
+a KitKat-specific Signal must not automatically apply to unrelated NestlÃ© brands.
+Where the same governed Signal is reachable through more than one legitimate level or path, it must displayÂ once, deduplicated by the governed Signal or incident identifier.
+3. KitKat root cause and required correction
+The founders understand the Build 30 problem as:
+the Chaining Asset already contained the governed KitKat brand and its NestlÃ© parent relationship;
+the product source returned the broaderÂ NestlÃ©Â brand value;
+the product title carried the more specificÂ KitKatÂ identity;
+the former runtime resolver did not recognise the short reviewed KitKat alias from the product title;
+the KitKat-scoped Signal therefore failed because the runtime stopped at the broader NestlÃ© brand node.
+The appropriate correction is not to make KitKat and NestlÃ© compete for a single winning identity.
+The required outcome is:
+recognise the reviewed KitKat brand from the product record, retain the governed KitKat â†’ NestlÃ© chain, and evaluate Signal eligibility at the Signalâ€™s approved scope.
+Please confirm whether the current remediation does exactly this. If not, revise it accordingly.
+The correction must remain generic to the governed Chaining contract and must not be implemented as a KitKat-specific exception.
+4. Product text usage
+Product text may assist in resolving an identity already recognised by the governed Chaining Asset, but product wording must not become a direct Signal-triggering keyword mechanism.
+Required behaviour:
+Reviewed exact GTIN or product links, where available, take precedence.
+A reviewed product-name alias may refine a broad same-entity brand value to a more specific governed brand.
+The more specific brand and its parent entity must both remain in the resolved chain.
+A descriptiveÂ generic_nameÂ field must not independently establish or override the primary product brand.
+An unreviewed name or phrase must not create a new brand, family or entity relationship.
+Ambiguous identity must fail closed rather than selecting an arbitrary Signal pathway.
+Multiword aliases such asÂ Kit KatÂ and joined forms such asÂ KitKatÂ must resolve consistently where both are covered by reviewed alias data.
+Resolution evidence must state how the brand and entity chain was established.
+Do not introduce:
+a KitKat force-hit;
+a synthetic retail GTIN;
+broad NestlÃ© publication;
+direct product-name-to-Signal keyword logic;
+an unapproved Workstream A mutation.
+5. Multiple reviewed brand pathways
+The MVP identity contract should permit a product to have more than one legitimate governed brand pathway where that relationship is explicitly reviewed.
+For example:
+Product â†’ Brand A â†’ Entity AProduct â†’ Brand B â†’ Entity B
+In that situation, a governed Signal may qualify through either reviewed pathway at its approved product, family, brand or entity scope.
+However:
+do not infer a second brand pathway merely because a name occurs somewhere in descriptive product text;
+do not create a speculative co-branding taxonomy under this instruction;
+do not add hypothetical collaboration or ingredient-brand records merely for test coverage.
+For the current KitKat case, only the normal KitKat â†’ NestlÃ© chain is required.
+Please state whether the current resolver and Chaining contract already support multiple reviewed brand paths. If not, record this as a requirement for the later Chaining Asset recalibration rather than expanding the present remediation unnecessarily.
+6. Product-family position
+The Wave 1 Execution addendum established that product-family scope must be implemented through a governed Chaining extension, not through runtime keyword choreography.
+The Rveel Dynamic Signals Asset may target an approved product family, but reviewed product-family membership belongs in the governed Chaining Asset.
+Under this instruction:
+do not implement a broad product-family expansion;
+do not infer family membership from loose product names;
+retain the read-only product-family assessment;
+record any specific data-model or runtime requirements for the later Chaining Asset recalibration.
+The planned recalibration should eventually confirm consistent support for:
+product/GTIN â†’ product family;
+product â†’ brand/sub-brand â†’ entity;
+more than one reviewed brand path where genuinely required;
+deterministic Signal evaluation at the approved target level.
+7. Safety & Recalls scope remains product-specific by default
+The wider level-based matching described above applies particularly toÂ In the News, where a governed story may legitimately concern a product, family, brand or entity.
+Product recalls should remain narrower by default.
+A Safety & Recalls publication must normally depend on the exact governed affected-product conditions, including as applicable:
+GTIN or exact product;
+pack size or variant;
+batch or lot;
+date marking;
+market or country;
+active publication period.
+A recall must not propagate merely because another product shares a brand, family or parent entity.
+No synthetic on-device recall result is required for Wave 1 closure. Deterministic automated tests and Claude review remain the assurance mechanism until a legitimate, catalogue-resolvable recall becomes available during broader Dynamic Signals testing.
+8. Minimum KitKat and scope tests
+Add or confirm deterministic tests proving:
+A NestlÃ©-labelled KitKat product resolves to the governed KitKat â†’ NestlÃ© chain.
+A KitKat-scoped In the News Signal qualifies.
+A genuinely NestlÃ©-entity-wide Signal can also qualify for the same product.
+An unrelated NestlÃ© sibling brand does not receive a KitKat-scoped Signal.
+The same Signal displays only once if multiple legitimate identity levels reach the same Signal record.
+KitKatÂ and reviewedÂ Kit KatÂ forms resolve consistently.
+A KitKat reference appearing only inÂ generic_nameÂ does not override the governed product brand.
+An ambiguous identity blocks publication rather than selecting an arbitrary chain.
+A product-specific recall does not propagate to sibling products, brands or the wider parent entity.
+Avoid speculative tests centred on unlikely collaboration products unless they expose an actual architectural weakness in the current implementation.
+The purpose is to prove the MVP chain and Signal-scope contract, not to design a full co-branding ontology.
+9. Remove transitional behaviour from production-callable code
+The governed-only default and explicit Result-screen setting address the observed Build 30 exposure, but they are not sufficient as the final architecture.
+buildProductScanResultÂ still appears capable of accepting a transitional mode that restores non-governed public cards.
+There is no acceptable ongoing production purpose for retaining a callable pathway that can repopulate public Signals with:
+Limited Product Data;
+Web Search Source;
+preference alerts;
+legacy or synthetic warning cards;
+confidence, completeness or search-quality commentary.
+The required production end state is:
+The production Signals assembly path has one public behaviour: governed publication records only.
+No production caller, runtime option, feature flag or environment setting can restore transitional blending.
+Legacy behaviour required solely for historical tests is isolated in test-only support code or frozen fixtures.
+Obsolete public-card generation or conversion code is deleted where it has no legitimate remaining production purpose.
+Useful completeness, source-quality or coverage measurements may remain internal, but cannot produce or enter public Signal cards.
+Automated architecture tests prove that non-governed producers cannot reach the public Signals collection or displayed count.
+Clean coding, architectural separation and removal of liability-relevant legacy pathways are non-negotiable requirements for this product.
+Do not retain a production escape hatch merely for backwards compatibility or convenience.
+10. Full as-built evidence completion
+Add a concise evidence supplement covering:
+everyÂ buildProductScanResultÂ call site;
+every current or former call site capable of choosing a Signal source mode;
+repository-wide search commands and material results used to identify Signal/Alert producers;
+all components capable of rendering Signal or Alert content;
+relevant translation keys and hardcoded display copy;
+evidence supporting each statement that a producer is not mounted, has no live call site or is unreachable;
+any iOS/Android implementation differences affecting the Signals contract.
+Also reconcile the Android NZ-01 execution record by documenting the artifact actually tested:
+artifact or EAS build identifier;
+Android version code;
+source SHA;
+build profile;
+relevant environment flags;
+whether it was an exact-SHA or functionally equivalent parity build.
+Do not produce another Android build or reopen NZ-01.
+Suggested file:
+workstreamC/uat/wave1-closure/build30_repository_search_and_callsites.md
+The objective is evidence of completeness, not additional narrative.
+11. Presentation status
+The public umbrella heading remains under founder consideration.
+Beyond the labelÂ remains the leading candidate but is not yet authorised.
+Do not hardcode a replacement umbrella heading until the founders confirm the decision.
+Record as pending for the integrated Dynamic Signals build:
+public class labelÂ Safety & Recalls;
+public class labelÂ In the News;
+removal of the legacy universalÂ ALERTÂ heading;
+removal of universal red styling;
+severity-appropriate treatment for individual governed records;
+implementation of the separately founder-approved headline and Reveal Domain schema.
+Do not create another skeleton build for presentation changes.
+12. Claude review standard
+Once the corrections and evidence are complete, provide Claude with:
+Build 30 immutable baseline;
+complete as-built producer and rendering inventory;
+call-site and repository-search evidence;
+full remediation diff;
+all relevant source files;
+automated tests and outputs;
+identity-resolution evidence;
+unresolved technical risks.
+Claude is not being asked whether the implementation â€œlooks okay.â€
+Claude must conduct anÂ adversarial architecture, code-quality and assurance reviewÂ against the following non-negotiable standards:
+deterministic and auditable product â†’ family â†’ brand â†’ entity resolution;
+preservation of both specific-brand and parent-entity identity levels;
+Signal matching only at explicitly governed scope levels;
+deduplication where multiple valid paths reach one Signal;
+fail-closed ambiguity handling;
+no uncontrolled product-text-to-Signal logic;
+exact-product recall safeguards and prevention of recall over-fire;
+no production-callable transitional or legacy public mode;
+no non-governed producer capable of reaching public Signals;
+no alternate screen, flag or configuration that weakens publication governance;
+clean separation of Chaining, Dynamic Signals, Confidence Assessment and TruScore;
+strong positive, negative, ambiguity and regression testing;
+removal or strict isolation of liability-relevant dead and legacy code;
+equivalent iOS and Android contract behaviour;
+no unauthorised mutation of closed Workstream A, Workstream B or scoring assets.
+Claude must classify findings as:
+blocker;
+material non-blocking concern;
+architectural weakness;
+inadequate or misleading test;
+confirmed safeguard;
+condition required for acceptance.
+Any disagreement with Claude must be answered with specific code, architecture and test evidence.
+Accepted blockers must be resolved before the remediation is approved for integration.
+13. Final closure anchor and delivery sequence
+After accepted Claude blockers are resolved, create one final immutable Wave 1 closure tag.
+Report separately:
+Build 30 baseline SHA;
+remediation code SHA or SHAs;
+final closure tip SHA;
+final closure tag.
+Suggested tag:
+wave1-signals-skeleton-closure-20260807
+The approved sequence is:
+Complete the narrow corrections and evidence above.
+Submit the full assurance package to Claude.
+Resolve accepted Claude blockers.
+Freeze and tag Wave 1 closure.
+Integrate the remediated architecture with the separately supplied founder-approvedÂ Rveel Dynamic Signals Asset.
+Proceed to the next meaningful integrated Dynamic Signals build and broader testing.
+No Build 31 skeleton cycle, synthetic recall choreography, live scraping, automated ingestion, automated publication, broad Chaining refresh, scoring change or unrelated refactor is authorised.
+
+

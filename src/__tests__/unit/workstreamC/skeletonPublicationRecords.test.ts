@@ -48,7 +48,6 @@ describe('Workstream C v0.4 skeleton publication records', () => {
       deriveTerminal: false,
       terminal_state: 'success',
       dynamicSignalRecords: recs,
-      phase6SignalSourceMode: 'governed_5b_only',
     });
     const flat = dedupeSignalCards(flattenSignalsOrdered(result.signals));
     const bySig = flat.filter((c) => c.id === 'SIG_NEWS_GLOBAL_001' || c.id === 'SIG_NEWS_GLOBAL_002');

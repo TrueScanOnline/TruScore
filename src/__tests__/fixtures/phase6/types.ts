@@ -18,7 +18,6 @@ export interface Phase6FixtureCase {
     marketHint: 'AU' | 'NZ' | 'AU+NZ';
     product: ProductWithTrustScore;
     dynamic_records?: DynamicSignalPublicationRecord[];
-    phase6SignalSourceMode?: 'transitional' | 'governed_5b_only';
     frozen_probe?: {
       benchmark_name: 'BBFAW' | 'KTC';
       review_state?: 'seeded' | 'provisional' | 'reviewed' | 'disputed' | 'archived';

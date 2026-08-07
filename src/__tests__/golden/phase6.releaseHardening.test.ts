@@ -67,7 +67,6 @@ function runFixture(fx: Phase6FixtureCase): FixtureResult {
     terminal_state: 'success',
     nowMs,
     dynamicSignalRecords: fx.input.dynamic_records,
-    phase6SignalSourceMode: fx.input.phase6SignalSourceMode,
   });
   const signalIds = flattenSignalIds(result);
   const reasons: string[] = [];

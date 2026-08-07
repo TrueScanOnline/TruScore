@@ -205,7 +205,13 @@ export function buildWorkstreamCPublicationRecordsFromParsedPack(
     const why = sk?.why || row.skeleton_notes || '';
 
     const linkId = link.link_id ?? '';
-    const dedupe_key = `p6|workstream_c_skeleton|${sigId}|${linkId}|${input.barcode}`;
+    // Deduplicate by governed signal_id: brand-scoped and parent-scoped paths to the same
+    // Signal must display once (MVP Signal-scope contract, 2026-08-07).
+    if (out.some((r) => r.signal_id === sigId)) {
+      push(`dedupe: skip duplicate signal=${sigId} via additional link=${linkId}`);
+      continue;
+    }
+    const dedupe_key = `p6|workstream_c_skeleton|${sigId}|${input.barcode}`;
 
     const evidenceUrl = (row.source_record_url ?? '').trim();
     const rec: DynamicSignalPublicationRecord = {
@@ -223,7 +229,7 @@ export function buildWorkstreamCPublicationRecordsFromParsedPack(
       source_record_id: row.source_id ?? undefined,
       source_system: row.source_id ?? undefined,
       source_record_url: evidenceUrl && /^https?:\/\//i.test(evidenceUrl) ? evidenceUrl : undefined,
-      source_idempotency_key: `workstream_c_skeleton|${sigId}|${linkId}`,
+      source_idempotency_key: `workstream_c_skeleton|${sigId}|${input.barcode}`,
       staleness: { valid_until: VALID_FAR },
       editorial: { priority: 0, due_at: null, last_reviewed_at: null },
       mislink: { open_report_count: 0, last_event_at: null },

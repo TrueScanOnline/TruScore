@@ -46,6 +46,19 @@ Latest listed Android `preview` artifacts on the Expo project are older commits 
 | OS-specific Signals code | **None** — shared React Native path only |
 | Difference | Env/profile gating only (EAS); no iOS/Android producer fork |
 
+## Android NZ-01 / partner artifact (reconcile — do not rebuild)
+
+| Field | Value |
+|-------|--------|
+| EAS build ID | `113a38a4-a5dd-47c3-ade0-63d8a8813474` |
+| Profile | `preview` |
+| Version code | **13** |
+| Source SHA | `70a05ea889df8ff43b53d7455c11375df89d131d` |
+| Exact Build 30 SHA parity? | **No** — earlier functionally equivalent era build only |
+| Build 30 Android | **None** |
+
+See also `build30_repository_search_and_callsites.md`.
+
 ## Environment flags (Build 30)
 
 | Flag | Value |

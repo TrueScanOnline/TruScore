@@ -52,15 +52,12 @@
       }
     },
     {
-      "fixture_id": "p1-transitional-mode-allows-legacy-feeders",
+      "fixture_id": "p1-governed-only-blocks-legacy-feeders",
       "passed": true,
       "output": {
         "market": "AU",
-        "signal_ids_ordered": [
-          "transparency-limited-data-9300633072391",
-          "transparency-web-search-9300633072391"
-        ],
-        "has_legacy_banner_signals": true
+        "signal_ids_ordered": [],
+        "has_legacy_banner_signals": false
       }
     }
   ]

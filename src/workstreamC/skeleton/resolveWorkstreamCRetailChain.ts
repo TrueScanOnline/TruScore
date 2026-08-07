@@ -2,11 +2,13 @@
  * Maps a real scanned product + frozen Workstream A v0.14 CSV snapshots (read-only) to a reviewed
  * retail chain for Workstream C subject-link matching. Does not mutate A-data on disk.
  *
- * Identity path: OFF/product brand strings → alias + canonical brand rows → validated brand_id/parent_id.
- * Optional app-layer bridge: generic Cadbury (B0067) + chocolate/cocoa context → B0241 for NGO links
- * that target Cadbury Dairy Milk (SL008/SL011), without editing closed A-data.
+ * MVP identity contract (Wave 1 clarification 2026-08-07):
+ * Product → Brand/Sub-brand → Parent/Responsible Entity — levels coexist, they do not compete.
+ * Resolved chain exposes brand_id (specific) + parent_id (entity). Signal eligibility is evaluated
+ * only at each Signal’s approved subject scope (brand vs parent vs product_family vs product).
  *
- * GTIN→chain remains a non-runtime fallback when `product` is absent (scripts only).
+ * Product title may refine a broad same-entity brand (e.g. Nestlé → KitKat) via reviewed aliases.
+ * generic_name must not independently establish or override the primary brand.
  */
 
 import type { Product } from '../../types/product';
@@ -39,7 +41,6 @@ function splitBrandCandidates(product: Product): string[] {
 /**
  * Tight heuristic for the B0067→B0241 NGO subject bridge only.
  * Fails closed: ambiguous snack/cracker categories without chocolate/cocoa/confectionery cues → false.
- * Does not treat all Mondelez products as chocolate (Ritz/Philadelphia resolve to other brand_ids).
  */
 export function isChocolateOrCocoaContext(product: Product): boolean {
   const tags = product.categories_tags ?? [];
@@ -54,17 +55,13 @@ export function isChocolateOrCocoaContext(product: Product): boolean {
       return true;
     }
   }
-  const blob = `${product.product_name ?? ''} ${product.brands ?? ''} ${product.generic_name ?? ''}`.toLowerCase();
+  const blob = `${product.product_name ?? ''} ${product.brands ?? ''}`.toLowerCase();
   if (/\b(chocolate|cocoa)\b/.test(blob)) return true;
   if (/\bconfectionery\b/.test(blob)) return true;
   if (/\bdairy\s*milk\b/.test(blob) || blob.includes('dairymilk')) return true;
   return false;
 }
 
-/**
- * NGO subject links SL008/SL011 target B0241. Plain OFF "Cadbury" often resolves to B0067; bridge only when
- * Mondelez parent P0009 + reviewed Cadbury B0067 + chocolate/cocoa/confectionery context (app layer only).
- */
 function applyCadburyNgoSubjectBridge(
   chain: ResolvedRetailChain,
   product: Product,
@@ -79,8 +76,8 @@ function applyCadburyNgoSubjectBridge(
   return chain;
 }
 
-/** Compact tokens from a free-text field (product_name / generic_name), for exact alias hits only. */
-function splitNameTokens(raw?: string | null): string[] {
+/** Compact tokens from product_name only (not generic_name). */
+function splitProductNameTokens(raw?: string | null): string[] {
   if (!raw || !raw.trim()) return [];
   return raw
     .split(/[^a-zA-Z0-9]+/)
@@ -88,109 +85,148 @@ function splitNameTokens(raw?: string | null): string[] {
     .filter((t) => t.length > 0);
 }
 
+function reviewedAliasForms(row: CsvRecord): string[] {
+  return [normalizeCompact(row.alias_normalized ?? ''), normalizeCompact(row.alias_text ?? '')].filter(Boolean);
+}
+
+/**
+ * Brands/owner exact tokens → brand candidates.
+ * product_name may refine via reviewed aliases (exact token OR contiguous compact match for
+ * multiword forms e.g. "Kit Kat" → kitkat). generic_name is never used for brand establishment.
+ */
 function collectCandidateBrandIds(
   product: Product,
   aliasRows: CsvRecord[],
   canonicalRows: CsvRecord[]
-): Set<string> {
-  const ids = new Set<string>();
+): { fromBrands: Set<string>; fromProductName: Set<string> } {
+  const fromBrands = new Set<string>();
+  const fromProductName = new Set<string>();
   const brandTokens = splitBrandCandidates(product).map((s) => normalizeCompact(s));
-  const nameTokens = [
-    ...splitNameTokens(product.product_name),
-    ...splitNameTokens(product.generic_name),
-  ];
-  const blob = normalizeCompact(
-    [...splitBrandCandidates(product), product.product_name ?? '', product.generic_name ?? ''].join(' ')
-  );
+  const nameTokens = splitProductNameTokens(product.product_name);
+  const nameCompact = normalizeCompact(product.product_name ?? '');
 
   for (const row of aliasRows) {
     if ((row.review_state ?? '').trim() !== 'reviewed') continue;
     const bid = row.brand_id ?? '';
     if (!bid) continue;
-    const an = normalizeCompact(row.alias_normalized ?? '');
-    const at = normalizeCompact(row.alias_text ?? '');
-    if (!an && !at) continue;
-    let hit = false;
-    // Exact token match on brands/brand_owner (any length)
+    const forms = reviewedAliasForms(row);
+    if (forms.length === 0) continue;
+
     for (const tok of brandTokens) {
-      if (tok && (tok === an || tok === at)) {
-        hit = true;
+      if (tok && forms.includes(tok)) {
+        fromBrands.add(bid);
         break;
       }
     }
-    // Exact token match on product_name / generic_name — reviewed aliases only (e.g. kitkat → B0060)
-    // when OFF leaves brands as Nestlé-only. Not free-text / uncontrolled name matching.
-    if (!hit) {
-      for (const tok of nameTokens) {
-        if (tok && (tok === an || tok === at)) {
-          hit = true;
+    // product_name refinement: exact token OR contiguous compact alias (Kit Kat / KitKat)
+    let nameHit = false;
+    for (const tok of nameTokens) {
+      if (tok && forms.includes(tok)) {
+        nameHit = true;
+        break;
+      }
+    }
+    if (!nameHit && nameCompact) {
+      for (const f of forms) {
+        if (f.length >= 5 && nameCompact.includes(f)) {
+          nameHit = true;
           break;
         }
       }
     }
-    // Long alias substring in blob (existing Dairy Milk-style path; length gate unchanged)
-    if (!hit && an.length >= 8 && blob.includes(an)) hit = true;
-    if (hit) ids.add(bid);
+    // Long Dairy Milk-style substring remains for aliases ≥8 (brand+name compact joined for that path only)
+    if (!nameHit) {
+      const an = normalizeCompact(row.alias_normalized ?? '');
+      const blob = normalizeCompact(
+        [...splitBrandCandidates(product), product.product_name ?? ''].join(' ')
+      );
+      if (an.length >= 8 && blob.includes(an)) nameHit = true;
+    }
+    if (nameHit) fromProductName.add(bid);
   }
 
   for (const row of canonicalRows) {
     if ((row.review_state ?? '').trim() !== 'reviewed') continue;
     const bid = row.brand_id ?? '';
     if (!bid) continue;
-    const c1 = normalizeCompact(row.canonical_brand_name ?? '');
-    const c2 = normalizeCompact(row.display_brand_name ?? '');
+    const forms = [
+      normalizeCompact(row.canonical_brand_name ?? ''),
+      normalizeCompact(row.display_brand_name ?? ''),
+    ].filter(Boolean);
     for (const tok of brandTokens) {
-      if (tok && ((c1 && tok === c1) || (c2 && tok === c2))) {
-        ids.add(bid);
+      if (tok && forms.includes(tok)) {
+        fromBrands.add(bid);
         break;
       }
     }
-    // Exact canonical/display name as a product_name token (same reviewed-table bound)
-    if (!ids.has(bid)) {
-      for (const tok of nameTokens) {
-        if (tok && ((c1 && tok === c1) || (c2 && tok === c2))) {
-          ids.add(bid);
+    let nameHit = false;
+    for (const tok of nameTokens) {
+      if (tok && forms.includes(tok)) {
+        nameHit = true;
+        break;
+      }
+    }
+    if (!nameHit && nameCompact) {
+      for (const f of forms) {
+        if (f.length >= 5 && nameCompact.includes(f)) {
+          nameHit = true;
           break;
         }
       }
     }
+    if (nameHit) fromProductName.add(bid);
   }
 
-  return ids;
+  return { fromBrands, fromProductName };
 }
 
 /**
- * Prefer a brand that exact-matches a product_name token over one that only matches brands/owner,
- * so Nestlé-only OFF brands + "KitKat …" title resolve to B0060 (not umbrella B0066).
- * Still reviewed-table bound; no parent-wide or free-text matching.
+ * Select primary brand_id for the chain. Same-entity product_name refinement (Nestlé brands +
+ * KitKat title → B0060) keeps parent_id from that brand’s governed parent (Nestlé S.A.).
+ * Cross-parent conflict between brands-field and product_name refinements → fail closed (null).
  */
-function pickPreferredBrand(
-  candidateIds: Set<string>,
+function pickPrimaryBrandId(
+  fromBrands: Set<string>,
+  fromProductName: Set<string>,
+  aData: ADataMaps,
   canonicalRows: CsvRecord[],
   aliasRows: CsvRecord[],
-  product: Product
+  product: Product,
+  push?: (s: string) => void
 ): string | null {
-  if (candidateIds.size === 0) return null;
+  const parentOf = (id: string) => aData.brandsById.get(id)?.parent_id;
+
+  // Fail closed: product_name refinement must not invent a different-entity chain vs brands field
+  if (fromBrands.size > 0 && fromProductName.size > 0) {
+    const brandParents = new Set([...fromBrands].map(parentOf).filter(Boolean) as string[]);
+    const nameParents = new Set([...fromProductName].map(parentOf).filter(Boolean) as string[]);
+    const overlap = [...nameParents].some((p) => brandParents.has(p));
+    if (!overlap) {
+      push?.(
+        'chain_resolve: fail_closed — product_name brand refinement conflicts with brands-field parent entity'
+      );
+      return null;
+    }
+  }
+
+  const candidates = new Set<string>([...fromBrands, ...fromProductName]);
+  if (candidates.size === 0) return null;
+
   const brandTokens = new Set(splitBrandCandidates(product).map((s) => normalizeCompact(s)));
-  const nameTokens = new Set([
-    ...splitNameTokens(product.product_name),
-    ...splitNameTokens(product.generic_name),
-  ]);
+  const nameTokens = new Set(splitProductNameTokens(product.product_name));
+  const nameCompact = normalizeCompact(product.product_name ?? '');
 
   const aliasByBrand = new Map<string, string[]>();
   for (const row of aliasRows) {
     if ((row.review_state ?? '').trim() !== 'reviewed') continue;
     const bid = row.brand_id ?? '';
-    if (!bid || !candidateIds.has(bid)) continue;
-    const forms = [normalizeCompact(row.alias_normalized ?? ''), normalizeCompact(row.alias_text ?? '')].filter(
-      Boolean
-    );
-    aliasByBrand.set(bid, [...(aliasByBrand.get(bid) ?? []), ...forms]);
+    if (!bid || !candidates.has(bid)) continue;
+    aliasByBrand.set(bid, [...(aliasByBrand.get(bid) ?? []), ...reviewedAliasForms(row)]);
   }
 
   let bestId: string | null = null;
   let bestScore = -1;
-  for (const id of candidateIds) {
+  for (const id of candidates) {
     const row = canonicalRows.find((r) => r.brand_id === id);
     if (!row) continue;
     const forms = [
@@ -201,11 +237,14 @@ function pickPreferredBrand(
     let nameHitLen = 0;
     let brandHitLen = 0;
     for (const f of forms) {
-      if (nameTokens.has(f)) nameHitLen = Math.max(nameHitLen, f.length);
+      if (nameTokens.has(f) || (f.length >= 5 && nameCompact.includes(f))) {
+        nameHitLen = Math.max(nameHitLen, f.length);
+      }
       if (brandTokens.has(f)) brandHitLen = Math.max(brandHitLen, f.length);
     }
-    // Name-token hits outrank brands-only (KitKat in title vs Nestlé in brands)
-    const score = nameHitLen > 0 ? 1000 + nameHitLen : brandHitLen > 0 ? 100 + brandHitLen : 0;
+    // Prefer same-entity product_name refinement over umbrella brands-only node
+    const fromName = fromProductName.has(id);
+    const score = fromName && nameHitLen > 0 ? 1000 + nameHitLen : brandHitLen > 0 ? 100 + brandHitLen : 0;
     const nameLen = Math.max((row.canonical_brand_name ?? '').length, (row.display_brand_name ?? '').length);
     const tieBreak = score * 1000 + nameLen;
     if (tieBreak > bestScore) {
@@ -226,7 +265,6 @@ function validateReviewedChain(brand_id: string, aData: ADataMaps): ResolvedReta
 
 export function resolveReviewedRetailChainUnified(input: {
   barcode: string;
-  /** Real product — supermarket runtime always passes this; omit for script/injected-only harnesses. */
   product?: Product | null;
   productName: string;
   aData: ADataMaps;
@@ -254,12 +292,19 @@ export function resolveReviewedRetailChainUnified(input: {
   }
 
   if (input.product) {
-    const candidates = collectCandidateBrandIds(input.product, input.brandAliasRows, input.canonicalBrandRows);
-    const best = pickPreferredBrand(
-      candidates,
+    const { fromBrands, fromProductName } = collectCandidateBrandIds(
+      input.product,
+      input.brandAliasRows,
+      input.canonicalBrandRows
+    );
+    const best = pickPrimaryBrandId(
+      fromBrands,
+      fromProductName,
+      input.aData,
       input.canonicalBrandRows,
       input.brandAliasRows,
-      input.product
+      input.product,
+      push
     );
     if (best) {
       const validated = validateReviewedChain(best, input.aData);
@@ -275,7 +320,7 @@ export function resolveReviewedRetailChainUnified(input: {
         }
         const bridged = applyCadburyNgoSubjectBridge(validated, input.product, push);
         push?.(
-          `chain_resolve: brand_id=${bridged.brand_id} parent_id=${bridged.parent_id} source=identity_resolution`
+          `chain_resolve: brand_id=${bridged.brand_id} parent_id=${bridged.parent_id} source=identity_resolution (specific_brand+parent_entity; product_name_refine=${fromProductName.has(bridged.brand_id) ? '1' : '0'})`
         );
         return bridged;
       }

@@ -60,7 +60,6 @@ function scoresOf(barcode: string, brands: string, name: string, markings?: any)
     dynamicSignalRecords: recs,
     deriveTerminal: false,
     terminal_state: 'success',
-    phase6SignalSourceMode: 'governed_5b_only',
   });
   return { result, recs, flat: dedupeSignalCards(flattenSignalsOrdered(result.signals)) };
 }
@@ -366,7 +365,6 @@ describe('Stage 2 food recall matcher (MILO)', () => {
       dynamicSignalRecords: [...miloSafety, ...cadburyNews],
       deriveTerminal: false,
       terminal_state: 'success',
-      phase6SignalSourceMode: 'governed_5b_only',
     });
     const flat = dedupeSignalCards(flattenSignalsOrdered(result.signals));
     const order = flat.map((c) => c.class);

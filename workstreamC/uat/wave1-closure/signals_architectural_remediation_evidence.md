@@ -1,80 +1,74 @@
-# Signals architectural remediation evidence (Wave 1 closure)
+# Signals architectural remediation evidence (Wave 1 closure — 2026-08-07 clarification)
 
-**Instruction:** `20260806_Signals_UAT_Skeleton_Build_30_Feedback_and_Cursor_Instruction`  
+**Instructions:**  
+- `20260806_Signals_UAT_Skeleton_Build_30_Feedback_and_Cursor_Instruction`  
+- `20260807_Signals_UAT_Skeleton_Build_30_Feedback_and_Cursor_Reply`  
+
 **Build 30 baseline:** `1c12e339edcaa39572f107a49e906473ba117e38`  
-**Remediation commit:** `f5927ed935fbd31a275d34e9de99b48a652890b8`  
-**Tip (evidence SHA fill):** `fdd6048ff056c5bc752fbd8d748163302f313f40`
+**Prior remediation:** `f5927ed935fbd31a275d34e9de99b48a652890b8`  
+**This clarification tip:** *(fill after commit)*
 
-## Implementation summary
+## Terminology
 
-1. **Governed-only public Signals** — `buildProductScanResult` default `phase6SignalSourceMode` changed from `transitional` to `governed_5b_only`. Omission cannot restore legacy/synthetic cards. Live Result screen passes `governed_5b_only` explicitly.
-2. **Non-governed producers unreachable** — Limited Product Data, Web Search Source, and preference Class C banners only emit when `phase6SignalSourceMode: 'transitional'` (controlled tests). Coverage flags remain internal.
-3. **KitKat AU-02** — reviewed alias/canonical exact token match on `product_name`/`generic_name`; prefer name-token hits over brands-only umbrella so Nestle-only OFF brands + KitKat title resolve to **B0060** then `SIG_NEWS_GLOBAL_001`. Preserves Cadbury dual-positive, Ritz/Philadelphia/Coca-Cola negatives. No A-data mutation, Nestle-parent SL, force-hit, or synthetic GTIN.
-4. **Safety assurance** — retained Stage 2 deterministic MILO/path-control tests; no manufactured on-device recall.
-5. **No** Launch Corpus / Workstream A/B / TruScore changes. No Build 31 skeleton cycle.
+Forward references use:
 
-## Changed-file manifest
+- **Rveel Dynamic Signals Asset**
+- **founder-approved Rveel Dynamic Signals Asset**
+- **integrated Dynamic Signals build**
 
-| File | Change |
-|------|--------|
-| `src/services/buildProductScanResult.ts` | Default governed_5b_only |
-| `app/result/[barcode].tsx` | Explicit governed_5b_only |
-| `src/workstreamC/skeleton/resolveWorkstreamCRetailChain.ts` | KitKat/name-token identity preference |
-| `src/__tests__/unit/workstreamC/resolveWorkstreamCRetailChain.test.ts` | KitKat + Nestle-only controls |
-| `src/__tests__/unit/workstreamC/workstreamCRuntimePublicationRecords.test.ts` | KitKat publication |
-| `src/__tests__/golden/scanOutputContract.golden.test.ts` | Governed-default expectations |
-| `src/__tests__/golden/__snapshots__/scanOutputContract.golden.test.ts.snap` | Updated |
-| `workstreamC/uat/wave1-closure/*` | Disclosure + this evidence |
+Do **not** use Launch Corpus / Signals Corpus / full-corpus Signals build for forward work. Asset authorship remains in the separate founder-controlled thread.
 
-## Producer dispositions (final)
+## Implementation summary (clarification)
 
-See `build30_signal_producer_matrix.csv` — all synthetic/preference public producers removed from default path; governed Workstream C + Stage 2 MILO retained.
+1. **MVP identity chain** — Product text may **refine** a same-entity brand (Nestlé → KitKat **B0060**) while retaining governed **parent** Nestlé S.A. (**P0008**). Brand and parent coexist; they do not compete as a single winning node. Signal eligibility is evaluated only at each Signal’s approved subject scope.
+2. **Product text rules** — Reviewed `product_name` alias/canonical refine only. **`generic_name` cannot establish/override brand.** Multiword Kit Kat / KitKat via reviewed alias compact forms. Cross-parent ambiguity **fails closed**. Evidence logged on `chain_resolve:`.
+3. **Dedupe** — Same `signal_id` reachable via brand + parent links publishes **once** (`dedupe_key` = signal + barcode).
+4. **Production transitional removed** — `phase6SignalSourceMode` deleted. Builder emits **governed publication records only**. No production caller/flag/env restores Limited Product Data / Web Search Source / preference cards. Stale option props are ignored.
+5. **Safety** — Remains exact-product / Stage 2 MILO path; no brand/parent recall over-fire. No synthetic on-device recall for Wave 1.
+6. **Multiple brand pathways** — Current resolver returns **one** `brand_id` + `parent_id`. Explicit multi-path co-branding is **not** implemented; recorded for later **Chaining Asset recalibration** (do not expand ontology here).
+7. **product_family** — Read-only assessment retained; no implementation under this instruction.
+8. **No** Build 31, skeleton UAT cycle, A/B mutation, TruScore change, or Dynamic Signals Asset authorship.
 
-## Tests and commands
+## Confirmations vs founders’ KitKat root cause
+
+| Required outcome | Status |
+|------------------|--------|
+| Recognise KitKat from product record (reviewed alias on title) | Yes — B0060 |
+| Retain KitKat → Nestlé chain (brand + parent both available) | Yes — `brand_id=B0060`, `parent_id=P0008` |
+| Evaluate Signal eligibility at approved scope only | Yes — `linkMatchesChain` |
+| Not “KitKat wins vs Nestlé” single identity | Yes — levels coexist; parent-scoped Signals can still match P0008 |
+| No KitKat force-hit / synthetic GTIN / Nestlé-parent-wide pack mutation | Confirmed |
+
+## Tests
 
 ```powershell
 cd C:\TrueScan-FoodScanner
-npm run test:workstreamC -- --no-coverage
+npx jest src/__tests__/unit/workstreamC --no-coverage
 npx jest src/__tests__/golden/scanOutputContract.golden.test.ts src/__tests__/golden/phase6.releaseHardening.test.ts --no-coverage
 ```
 
-**Results (this pass):** workstreamC **38/38 PASS**; golden + phase6 hardening **9/9 PASS**.
+Includes: KitKat / Kit Kat; generic_name non-override; fail-closed ambiguity; sibling Nestlé no KitKat Signal; parent-scoped qualify; brand+parent dedupe; Stage 2 recall; transitional escape-hatch negative.
 
-## Confirmations
+## Evidence pack for Claude
 
-| Claim | Status |
-|-------|--------|
-| Displayed count governed-record-only on public Result | Yes (default + explicit mode) |
-| Limited Product Data / Web Search Source not public by default | Yes |
-| Preference banners not public by default | Yes |
-| KitKat Nestle-only brands to GLOBAL_001 | Yes |
-| Cadbury dual / Ritz / Philadelphia negatives preserved | Yes |
-| Closed A/B assets unchanged | Yes |
-| TruScore scoring unchanged | Yes |
-| Android/iOS producer fork | None (shared RN) |
-| No Build 31 / no Launch Corpus duplication | Confirmed |
+1. `build30_runtime_and_release_baseline.md`
+2. `build30_as_built_signals_alerts_inventory.md`
+3. `build30_signal_producer_matrix.csv`
+4. `build30_subject_scope_and_product_family_assessment.md`
+5. `build30_repository_search_and_callsites.md` ← **new**
+6. This file + git diff vs Build 30 baseline
+7. Tests/commands above
 
-## Unresolved risks / limitations
+## Claude review standard (non-negotiable)
 
-- No Android parity binary at Build 30 SHA.
-- No on-device positive Safety & Recalls until catalogue-resolvable recall + verified GTIN.
-- TestFlight submit still requires signed ASC agreements (prior 403).
-- Umbrella public Signals heading still under founder consideration — not hardcoded.
-- product_family assessment is read-only; not implemented.
-- Next step for Claude: review this package; then integrate founder Launch Corpus (separate thread).
+Adversarial architecture / code-quality / assurance review. Classify: blocker | material non-blocking | architectural weakness | inadequate test | confirmed safeguard | acceptance condition.
 
-## Claude package contents
+**Do not create tag `wave1-signals-skeleton-closure-20260807` until accepted Claude blockers are resolved.**
 
-1. Build 30 baseline — `build30_runtime_and_release_baseline.md`  
-2. As-built inventory — `build30_as_built_signals_alerts_inventory.md`  
-3. Producer matrix — `build30_signal_producer_matrix.csv`  
-4. Subject scope + product_family assessment — `build30_subject_scope_and_product_family_assessment.md`  
-5. This remediation evidence + git diff vs `1c12e33`  
-6. Tests/commands above  
+## Pending for integrated Dynamic Signals build (presentation)
 
-## Immutable links
-
-- Remediation: https://github.com/TrueScanOnline/TruScore/commit/f5927ed935fbd31a275d34e9de99b48a652890b8  
-- Tip: https://github.com/TrueScanOnline/TruScore/commit/fdd6048ff056c5bc752fbd8d748163302f313f40  
-- Closure folder: https://github.com/TrueScanOnline/TruScore/tree/fdd6048ff056c5bc752fbd8d748163302f313f40/workstreamC/uat/wave1-closure  
-- Diff vs Build 30: https://github.com/TrueScanOnline/TruScore/compare/1c12e339edcaa39572f107a49e906473ba117e38...f5927ed935fbd31a275d34e9de99b48a652890b8  
+- Public labels Safety & Recalls / In the News  
+- Remove legacy universal ALERT heading and universal red  
+- Severity-appropriate treatment per governed record  
+- Founder-approved headline / Reveal Domain schema  
+- Umbrella heading still under consideration (“Beyond the label” candidate only)

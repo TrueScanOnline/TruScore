@@ -51,7 +51,6 @@ export const PHASE6_FIXTURES: Phase6FixtureCase[] = [
       marketHint: 'AU',
       product: baseProduct(),
       dynamic_records: [],
-      phase6SignalSourceMode: 'governed_5b_only',
       frozen_probe: {
         benchmark_name: 'BBFAW',
         review_state: 'provisional',
@@ -79,7 +78,6 @@ export const PHASE6_FIXTURES: Phase6FixtureCase[] = [
       marketHint: 'AU+NZ',
       product: baseProduct(),
       dynamic_records: [],
-      phase6SignalSourceMode: 'governed_5b_only',
     },
     expected: {
       public_market: 'UNKNOWN',
@@ -107,7 +105,6 @@ export const PHASE6_FIXTURES: Phase6FixtureCase[] = [
           signal_publication_state: 'suppressed',
         }),
       ],
-      phase6SignalSourceMode: 'governed_5b_only',
     },
     expected: {
       public_market: 'AU',
@@ -147,7 +144,6 @@ export const PHASE6_FIXTURES: Phase6FixtureCase[] = [
           signal_publication_state: 'publishable',
         }),
       ],
-      phase6SignalSourceMode: 'governed_5b_only',
     },
     expected: {
       public_market: 'AU',
@@ -168,7 +164,6 @@ export const PHASE6_FIXTURES: Phase6FixtureCase[] = [
       marketHint: 'AU',
       product: baseProduct({ source: 'web_search', trust_score: 65 }),
       dynamic_records: [],
-      phase6SignalSourceMode: 'governed_5b_only',
     },
     expected: {
       public_market: 'AU',
@@ -178,8 +173,8 @@ export const PHASE6_FIXTURES: Phase6FixtureCase[] = [
     },
   },
   {
-    id: 'p1-transitional-mode-allows-legacy-feeders',
-    title: 'Transitional mode retains legacy feeder behavior as bounded MVP condition',
+    id: 'p1-governed-only-blocks-legacy-feeders',
+    title: 'Production builder never emits Limited Product Data / Web Search Source as Signals',
     severity: 'P1',
     layer: 'cross_layer',
     gate_tags: ['E'],
@@ -189,16 +184,15 @@ export const PHASE6_FIXTURES: Phase6FixtureCase[] = [
       marketHint: 'AU',
       product: baseProduct({ source: 'web_search', trust_score: 65 }),
       dynamic_records: [],
-      phase6SignalSourceMode: 'transitional',
     },
     expected: {
       public_market: 'AU',
-      publishable_signal_ids: [
+      publishable_signal_ids: [],
+      disallowed_signal_ids: [
         'transparency-limited-data-9300633072391',
         'transparency-web-search-9300633072391',
       ],
-      disallowed_signal_ids: [],
-      has_legacy_banner_signals: true,
+      has_legacy_banner_signals: false,
     },
   },
 ];

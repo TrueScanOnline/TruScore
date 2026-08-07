@@ -67,3 +67,17 @@ Subject links: `subject_type=product_family`, `subject_id=<family id>` — one l
 Positive member; negative sibling/same-parent non-member; Cadbury dual + Ritz − regressions; KitKat B0060; fail-closed unreviewed membership; no legacy Safety brand-wide restore.
 
 **No implementation in this instruction.**
+
+## 5. Multiple reviewed brand pathways (clarification 2026-08-07)
+
+**Current runtime:** `resolveReviewedRetailChainUnified` returns a **single** `{ brand_id, parent_id }` chain. Signal matching then uses that brand and parent at each link’s `subject_type`.
+
+**MVP required for KitKat:** KitKat brand + Nestlé parent only — supported.
+
+**Not supported yet:** simultaneous Product → Brand A → Entity A **and** Product → Brand B → Entity B co-brand paths. Do **not** infer a second brand from descriptive text alone.
+
+**Recorded for later Chaining Asset recalibration** (with product_family membership): multi-path reviewed brand relationships; deterministic evaluation at each approved target level. Do not expand remediation into co-branding ontology under Wave 1 closure.
+
+## 6. Terminology
+
+Next integrated work consumes the **founder-approved Rveel Dynamic Signals Asset** / **integrated Dynamic Signals build** — not “Launch Corpus”.

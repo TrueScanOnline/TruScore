@@ -10,12 +10,9 @@
 
 import type { Product, ProductWithTrustScore } from '../types/product';
 
-import type { ProductScanResult, SignalCard, SignalClass } from '../types/scanOutputContract';
+import type { ProductScanResult, SignalCard } from '../types/scanOutputContract';
 
 import type { AlertsPreferences } from '../store/useAlertsStore';
-import type { BannerAlert } from '../types/bannerAlerts';
-
-import { generateBannerAlerts } from './bannerAlertsService';
 
 import { calculateDataCompleteness } from '../utils/dataCompleteness';
 
@@ -81,16 +78,12 @@ export interface BuildProductScanResultOptions {
   /**
    * Slice 6 input from 5B publication engine. Builder maps these through the owner mapping module;
    * no builder-side class-gate reinterpretation.
+   *
+   * Public Signals have one production behaviour: governed publication records only.
+   * No runtime option, flag, or caller can restore Limited Product Data / Web Search Source /
+   * preference banners / synthetic warning cards into public Signals.
    */
   dynamicSignalRecords?: DynamicSignalPublicationRecord[];
-
-  /**
-   * Public Signals source mode:
-   * - `governed_5b_only` (default): only DynamicSignalPublicationRecord cards feed public Signals
-   * - `transitional`: legacy preference banners + synthetic transparency (controlled tests only)
-   * Omission / undefined must NOT restore transitional behaviour.
-   */
-  phase6SignalSourceMode?: 'transitional' | 'governed_5b_only';
 
 }
 
@@ -154,40 +147,6 @@ function sourcesTraceFromProduct(product: Product | ProductWithTrustScore | null
 
 
 
-function bannerToSignalCard(alert: BannerAlert): SignalCard {
-
-  const cls: SignalClass = alert.signalClass ?? 'B';
-
-  const slug = alert.category.replace(/[^a-z0-9]+/gi, '_').toLowerCase();
-
-  return {
-
-    id: alert.id,
-
-    class: cls,
-
-    title_key: `legacy.banner.${slug}.title`,
-
-    body_key: `legacy.banner.${slug}.body`,
-
-    why_key: `legacy.banner.${slug}.why`,
-
-    severity: alert.severity,
-
-    links: alert.actionUrl ? [{ url: alert.actionUrl }] : [],
-
-    dedupe_key: alert.dedupeKey ?? `banner:${alert.category}:${alert.source}:${alert.title.slice(0, 48)}`,
-
-    title_display: alert.title,
-
-    body_display: alert.message,
-
-  };
-
-}
-
-
-
 function partitionSignals(cards: SignalCard[]): ProductScanResult['signals'] {
 
   const out: ProductScanResult['signals'] = emptySignalsBuckets();
@@ -208,72 +167,6 @@ function publicationCardsFromRecords(
   return sortPublicationRecordsForRender(records)
     .filter(isPublicationRecordPubliclyRenderable)
     .map(mapPublicationRecordToSignalCard);
-}
-
-
-
-function syntheticTransparencyCards(
-
-  product: Product | ProductWithTrustScore,
-
-  completeness01: number,
-
-  barcode: string
-
-): SignalCard[] {
-
-  const cards: SignalCard[] = [];
-
-  if (completeness01 < 0.7) {
-
-    cards.push({
-
-      id: `transparency-limited-data-${barcode}`,
-
-      class: 'B',
-
-      title_key: 'result.signals.limited_data.title',
-
-      body_key: 'result.signals.limited_data.body',
-
-      why_key: 'result.signals.limited_data.why',
-
-      severity: 'low',
-
-      links: [],
-
-      dedupe_key: `transparency:limited_data:${barcode}`,
-
-    });
-
-  }
-
-  if (isWebSearchFallback(product)) {
-
-    cards.push({
-
-      id: `transparency-web-search-${barcode}`,
-
-      class: 'B',
-
-      title_key: 'result.signals.web_search_source.title',
-
-      body_key: 'result.signals.web_search_source.body',
-
-      why_key: 'result.signals.web_search_source.why',
-
-      severity: 'medium',
-
-      links: [],
-
-      dedupe_key: `transparency:web_search:${barcode}`,
-
-    });
-
-  }
-
-  return cards;
-
 }
 
 
@@ -334,8 +227,7 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
 
 } {
 
-  const { product, barcode, userPreferences, isSubscriber, errors, nowMs, scan_id } = opts;
-  const signalSourceMode = opts.phase6SignalSourceMode ?? 'governed_5b_only';
+  const { product, barcode, isSubscriber, errors, scan_id } = opts;
 
   const marketHint = opts.market ?? getUserCountryCode();
   let market: ProductScanResult['market'] = (() => {
@@ -352,8 +244,6 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
     market = identityResolution.public_market;
     (product as ProductWithTrustScore)._shared_identity_context = identityResolution.context;
   }
-
-  const nowFn = nowMs !== undefined ? () => nowMs : undefined;
 
   const terminal_state = resolveTerminalState(opts);
 
@@ -411,14 +301,8 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
 
   }
 
-
-
-  const fromBanners =
-    signalSourceMode === 'governed_5b_only'
-      ? []
-      : generateBannerAlerts(product, userPreferences, { now: nowFn }).alerts.map(bannerToSignalCard);
-
-
+  // userPreferences / nowMs remain on the options type for call-site stability but must not
+  // feed public Signals (no preference banners or time-gated synthetic cards).
 
   const metrics = calculateDataCompleteness(product);
 
@@ -436,20 +320,15 @@ export function buildProductScanResult(opts: BuildProductScanResultOptions): {
 
   if (terminal_state === 'partial') flags.push('analysis_incomplete');
 
-
-
-  const synthetic =
-    signalSourceMode === 'governed_5b_only'
-      ? []
-      : syntheticTransparencyCards(product, completeness01, barcode);
-
+  // Governed publication records only — no preference banners, Limited Product Data,
+  // Web Search Source, or other synthetic public cards.
   const publicationCards = publicationCardsFromRecords(
     opts.dynamicSignalRecords ??
       ((product as ProductWithTrustScore)._dynamic_signal_publication_records as
         | DynamicSignalPublicationRecord[]
         | undefined)
   );
-  const allCards = dedupeSignalCards([...fromBanners, ...publicationCards, ...synthetic]);
+  const allCards = dedupeSignalCards([...publicationCards]);
 
   const signals = partitionSignals(allCards);
 

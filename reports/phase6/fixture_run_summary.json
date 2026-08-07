@@ -100,7 +100,7 @@
       }
     },
     {
-      "fixture_id": "p1-transitional-mode-allows-legacy-feeders",
+      "fixture_id": "p1-governed-only-blocks-legacy-feeders",
       "severity": "P1",
       "layer": "cross_layer",
       "gate_tags": [
@@ -110,13 +110,10 @@
       "reasons": [],
       "output": {
         "market": "AU",
-        "signal_ids_ordered": [
-          "transparency-limited-data-9300633072391",
-          "transparency-web-search-9300633072391"
-        ],
-        "has_legacy_banner_signals": true
+        "signal_ids_ordered": [],
+        "has_legacy_banner_signals": false
       }
     }
   ],
-  "generated_at": "2026-08-06T19:18:03.740Z"
+  "generated_at": "2026-08-07T02:53:29.426Z"
 }

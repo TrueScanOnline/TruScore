@@ -134,7 +134,7 @@ describe('scan output contract (golden)', () => {
     expect(stripForGolden(result)).toMatchSnapshot('web-search-coverage-flag-only');
   });
 
-  it('transitional mode still emits web_search / limited_data cards (controlled tests only)', () => {
+  it('production builder has no transitional escape hatch — unknown mode props cannot restore legacy cards', () => {
     const product = baseProduct({
       source: 'web_search',
       recalls: [],
@@ -150,10 +150,19 @@ describe('scan output contract (golden)', () => {
       market: 'AU',
       terminal_state: 'success',
       nowMs: FROZEN_NOW_MS,
-      phase6SignalSourceMode: 'transitional',
-    });
-    expect(result.signals.transparency.some((s) => s.dedupe_key.includes('web_search'))).toBe(true);
-    expect(result.signals.transparency.some((s) => s.dedupe_key.includes('limited_data'))).toBe(true);
+      // Intentional: prove obsolete option is ignored if still passed at runtime
+      ...({ phase6SignalSourceMode: 'transitional' } as object),
+    } as any);
+    expect(result.signals.transparency.some((s) => s.dedupe_key.includes('web_search'))).toBe(false);
+    expect(result.signals.transparency.some((s) => s.dedupe_key.includes('limited_data'))).toBe(false);
+    expect(Object.keys(result.signals).every((k) => Array.isArray((result.signals as any)[k]))).toBe(true);
+    const flat = [
+      ...result.signals.safety_regulatory,
+      ...result.signals.transparency,
+      ...result.signals.user_preference,
+      ...result.signals.premium_insight,
+    ];
+    expect(flat).toHaveLength(0);
   });
 
   it('governed default — low completeness does not add Limited Product Data Signal', () => {

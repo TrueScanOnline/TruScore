@@ -63,7 +63,6 @@ describe('Workstream C runtime publication records', () => {
       dynamicSignalRecords: recs,
       deriveTerminal: false,
       terminal_state: 'success',
-      phase6SignalSourceMode: 'governed_5b_only',
     });
     const flat = dedupeSignalCards(flattenSignalsOrdered(result.signals));
     const flatIds = flat.map((c) => c.id);
@@ -111,7 +110,23 @@ describe('Workstream C runtime publication records', () => {
     const ids = recs.map((r) => r.signal_id);
     expect(ids).toContain('SIG_NEWS_GLOBAL_001');
     expect(ids).not.toContain('SIG_NEWS_GLOBAL_002');
-    expect(logs.some((l) => l.includes('brand_id=B0060'))).toBe(true);
+    expect(ids.filter((id) => id === 'SIG_NEWS_GLOBAL_001')).toHaveLength(1);
+    expect(logs.some((l) => l.includes('brand_id=B0060') && l.includes('parent_id=P0008'))).toBe(true);
+  });
+
+  it('AU Nestlé sibling (condensed milk) — no KitKat-scoped SIG_NEWS_GLOBAL_001', () => {
+    const recs = buildWorkstreamCRuntimePublicationRecords({
+      barcode: '9300605099999',
+      productName: 'Nestlé Sweetened Condensed Milk',
+      product: {
+        barcode: '9300605099999',
+        product_name: 'Nestlé Sweetened Condensed Milk',
+        brands: 'Nestlé',
+        source: 'openfoodfacts',
+      } as any,
+      scanMarketPublic: 'AU',
+    });
+    expect(recs.some((r) => r.signal_id === 'SIG_NEWS_GLOBAL_001')).toBe(false);
   });
 
   it('logs Cadbury B0067→B0241 bridge when chocolate wording present (SL008/SL011 subject row)', () => {
