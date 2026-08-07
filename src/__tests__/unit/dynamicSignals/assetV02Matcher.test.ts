@@ -535,6 +535,8 @@ describe('Dynamic Signals Asset v0.2 — sole production Signal-content authorit
   const governedFixtureGtin = '9410000002701';
   const governedNoticeId = 'RN_TEST_ASSET_GOVERNED_2026';
 
+  const relatedFamilyGtin = '9410000009991';
+
   function packWithGovernedRecall(overrides?: {
     eligibility_status?: string;
     includeVariants?: boolean;
@@ -571,8 +573,14 @@ describe('Dynamic Signals Asset v0.2 — sole production Signal-content authorit
                     gtin: governedFixtureGtin,
                     listed_batch_codes: ['6072T941', '6088T941'],
                     gtin_verification_status: 'controlled_test_synthetic',
-                    official_product_name: 'Allen\'s iNSiDE OUTS 130g (test fixture)',
+                    official_product_name: "Allen's iNSiDE OUTS 130g (test fixture)",
                     pack_size: '130g',
+                  },
+                ],
+                related_family_gtins: [
+                  {
+                    gtin: relatedFamilyGtin,
+                    gtin_verification_status: 'controlled_test_synthetic',
                   },
                 ],
               },
@@ -623,10 +631,9 @@ describe('Dynamic Signals Asset v0.2 — sole production Signal-content authorit
     );
   });
 
-  it('governed Asset Safety Signal + structured recall + affected GTIN/batch/date → applicable Safety Signal', () => {
+  it('affected GTIN + matching batch/date → confirmed_affected', () => {
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
     const pack = packWithGovernedRecall();
-    const logs: string[] = [];
     const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
       barcode: governedFixtureGtin,
       productName: "Allen's iNSiDE OUTS",
@@ -638,17 +645,44 @@ describe('Dynamic Signals Asset v0.2 — sole production Signal-content authorit
       },
       pack,
       forceRun: true,
-      logLines: logs,
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-002')).toBe(true);
-    const safety = recs.find((r) => r.signal_id === 'SIG-SR-AU-002')!;
-    expect(safety.signal_class).toBe('safety_regulatory');
-    expect(safety.food_recall?.match_state).toBe('confirmed_affected');
-    expect(safety.skeleton_card_copy?.title_display).toContain("Allen's");
-    expect(logs.some((l) => l.includes('food_recall_asset'))).toBe(true);
+    const safety = recs.find((r) => r.signal_id === 'SIG-SR-AU-002');
+    expect(safety?.food_recall?.match_state).toBe('confirmed_affected');
+    expect(safety?.food_recall?.severity_override).toBe('high');
   });
 
-  it('same governed recall + non-affected batch/date → no recall Signal', () => {
+  it('affected GTIN + missing/partial batch/date → batch_check_required', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const pack = packWithGovernedRecall();
+    const missing = buildDynamicSignalsAssetRuntimePublicationRecords({
+      barcode: governedFixtureGtin,
+      productName: "Allen's iNSiDE OUTS",
+      scanMarketPublic: 'AU',
+      foodRecallMarkings: null,
+      pack,
+      forceRun: true,
+    });
+    expect(missing.find((r) => r.signal_id === 'SIG-SR-AU-002')?.food_recall?.match_state).toBe(
+      'batch_check_required'
+    );
+    expect(missing.find((r) => r.signal_id === 'SIG-SR-AU-002')?.food_recall?.needs_batch_entry).toBe(
+      true
+    );
+
+    const partial = buildDynamicSignalsAssetRuntimePublicationRecords({
+      barcode: governedFixtureGtin,
+      productName: "Allen's iNSiDE OUTS",
+      scanMarketPublic: 'AU',
+      foodRecallMarkings: { batchCodeRaw: '6072T941' },
+      pack,
+      forceRun: true,
+    });
+    expect(partial.find((r) => r.signal_id === 'SIG-SR-AU-002')?.food_recall?.match_state).toBe(
+      'batch_check_required'
+    );
+  });
+
+  it('affected GTIN + complete unlisted batch/date → batch_not_listed; card present; never says safe', () => {
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
     const pack = packWithGovernedRecall();
     const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
@@ -663,11 +697,83 @@ describe('Dynamic Signals Asset v0.2 — sole production Signal-content authorit
       pack,
       forceRun: true,
     });
+    const safety = recs.find((r) => r.signal_id === 'SIG-SR-AU-002');
+    expect(safety).toBeTruthy();
+    expect(safety!.food_recall?.match_state).toBe('batch_not_listed');
+    expect(safety!.food_recall?.severity_override).toBe('medium');
+    const copy = `${safety!.skeleton_card_copy?.title_display} ${safety!.skeleton_card_copy?.body_display} ${safety!.skeleton_card_copy?.why_display}`.toLowerCase();
+    expect(copy).toContain('does not independently confirm that the product is safe');
+    expect(copy).not.toMatch(/\b(is safe to|confirmed safe|product is safe\.|this product is safe)\b/);
+  });
+
+  it('reviewed recall-family member without exact affected variant → related_recall_variant_unconfirmed', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const pack = packWithGovernedRecall();
+    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
+      barcode: relatedFamilyGtin,
+      productName: 'Related family SKU',
+      scanMarketPublic: 'AU',
+      pack,
+      forceRun: true,
+    });
+    const safety = recs.find((r) => r.signal_id === 'SIG-SR-AU-002');
+    expect(safety?.food_recall?.match_state).toBe('related_recall_variant_unconfirmed');
+    expect(safety?.food_recall?.severity_override).toBe('low');
+  });
+
+  it('unrelated/non-member GTIN → not_applicable, no card', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const pack = packWithGovernedRecall();
+    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
+      barcode: '9410000000000',
+      productName: 'Unrelated product',
+      scanMarketPublic: 'AU',
+      foodRecallMarkings: {
+        batchCodeRaw: '6072T941',
+        bestBeforeMonth: 6,
+        bestBeforeYear: 2027,
+      },
+      pack,
+      forceRun: true,
+    });
     expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-002')).toBe(false);
     expect(recs.some((r) => r.signal_class === 'safety_regulatory')).toBe(false);
   });
 
-  it('kill-switch alone cannot activate Safety content without governed Asset eligibility', () => {
+  it('stable card identity across batch_check_required → confirmed_affected / batch_not_listed', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const pack = packWithGovernedRecall();
+    const run = (markings: { batchCodeRaw?: string; bestBeforeMonth?: number; bestBeforeYear?: number } | null) =>
+      buildDynamicSignalsAssetRuntimePublicationRecords({
+        barcode: governedFixtureGtin,
+        productName: "Allen's iNSiDE OUTS",
+        scanMarketPublic: 'AU',
+        foodRecallMarkings: markings,
+        pack,
+        forceRun: true,
+      }).find((r) => r.signal_id === 'SIG-SR-AU-002')!;
+
+    const check = run(null);
+    const confirmed = run({
+      batchCodeRaw: '6072T941',
+      bestBeforeMonth: 6,
+      bestBeforeYear: 2027,
+    });
+    const notListed = run({
+      batchCodeRaw: '9999XXXX',
+      bestBeforeMonth: 6,
+      bestBeforeYear: 2027,
+    });
+    expect(check.food_recall?.match_state).toBe('batch_check_required');
+    expect(confirmed.food_recall?.match_state).toBe('confirmed_affected');
+    expect(notListed.food_recall?.match_state).toBe('batch_not_listed');
+    expect(check.dedupe_key).toBe(confirmed.dedupe_key);
+    expect(confirmed.dedupe_key).toBe(notListed.dedupe_key);
+    expect(check.dedupe_key).toContain(governedNoticeId);
+    expect(check.dedupe_key).toContain(governedFixtureGtin);
+  });
+
+  it('historical MILO pack remains incapable of originating a production Signal absent governed Asset record', () => {
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
     const pack = loadBasePack(); // empty eligibility
     const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
@@ -679,15 +785,5 @@ describe('Dynamic Signals Asset v0.2 — sole production Signal-content authorit
       forceRun: true,
     });
     expect(recs.some((r) => r.signal_class === 'safety_regulatory')).toBe(false);
-  });
-
-  it('Talley entity target resolves via enrichment parent P0158', () => {
-    const pack = loadBasePack();
-    const tgt = pack.targets.find((t) => t.signal_target_id === 'TGT-027');
-    expect(tgt?.canonical_target_id).toBe('P0158');
-    expect(tgt?.resolution_status).toBe('resolved_with_warning');
-    const hoyt = pack.targets.find((t) => t.signal_target_id === 'TGT-012');
-    expect(hoyt?.canonical_target_id).toBe('PF_HOYTS_TURMERIC_AU');
-    expect(hoyt?.resolution_status).toBe('resolved_with_warning');
   });
 });

@@ -15,6 +15,7 @@ import {
   createFixedFoodRecallClock,
   evaluateStructuredFoodRecallMatch,
   isFoodRecallCorrectedPathEnabled,
+  provisionalCopyForMatchState,
   type FoodRecallSubmittedMarkings,
   type StructuredFoodRecallNotice,
 } from '../../../workstreamC/recall';
@@ -39,14 +40,10 @@ function mapAssetGovernedMatchToPublicationRecord(input: {
   scanMarket: 'AU' | 'NZ' | 'UNKNOWN';
 }): DynamicSignalPublicationRecord | null {
   const { signal, match } = input;
-  // Production Asset path: only confirmed / markings-required states publish.
-  // Non-affected batch/date and related-unconfirmed must not introduce a Safety Signal.
-  if (
-    match.match_state !== 'confirmed_affected' &&
-    match.match_state !== 'batch_check_required'
-  ) {
-    return null;
-  }
+  // Approved five-state Food Recall Matcher contract:
+  // confirmed_affected | batch_check_required | batch_not_listed | related_recall_variant_unconfirmed → card
+  // not_applicable → no card (batch_not_listed is never treated as not_applicable)
+  if (match.match_state === 'not_applicable') return null;
 
   const sigId = (signal.signal_id ?? '').trim();
   const market = input.scanMarket === 'UNKNOWN' ? 'AU' : input.scanMarket;
@@ -54,6 +51,13 @@ function mapAssetGovernedMatchToPublicationRecord(input: {
     const u = (signal.source_url ?? match.official_source_url ?? '').trim();
     return u && /^https?:\/\//i.test(u) ? u : undefined;
   })();
+
+  // Match-state UX (incl. approved non-safety qualification for batch_not_listed).
+  // confirmed_affected body uses structured notice hazard/action from the governed pack.
+  const matchCopy = provisionalCopyForMatchState(match.match_state);
+  if (match.match_state === 'confirmed_affected') {
+    matchCopy.body_display = `${match.hazard} ${match.consumer_action}`.trim();
+  }
 
   return {
     signal_id: sigId,
@@ -76,12 +80,8 @@ function mapAssetGovernedMatchToPublicationRecord(input: {
       last_reviewed_at: signal.reviewed_at?.trim() || null,
     },
     mislink: { open_report_count: 0, last_event_at: null },
-    // Asset Signal remains the content authority — no parallel MILO/commentary records.
-    skeleton_card_copy: {
-      title_display: signal.signal_headline ?? sigId,
-      body_display: signal.signal_summary ?? '',
-      why_display: signal.scope_qualification ?? '',
-    },
+    // Asset Signal owns identity/source/lifecycle; match-state owns consumer recall UX copy.
+    skeleton_card_copy: matchCopy,
     food_recall: {
       match_state: match.match_state,
       severity_override: match.severity,
