@@ -16,6 +16,11 @@ export interface SharedIdentityContext {
     product_id: string;
     brand_id: string;
     current_owner_entity_id?: string;
+    /**
+     * Reviewed product_family IDs from Chaining membership (additive DSA v0.2).
+     * Empty when no reviewed membership exists for the GTIN.
+     */
+    product_family_ids?: string[];
   };
   operational_entities: {
     manufacturer_id?: string;

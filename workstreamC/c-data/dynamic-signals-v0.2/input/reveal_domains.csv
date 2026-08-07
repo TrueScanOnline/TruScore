@@ -1,0 +1,15 @@
+﻿reveal_domain,internal_term,description,status
+unsafe_products,Unsafe Products,"Contamination, undeclared allergens, foreign matter, dangerous mislabelling, recalls or other product safety hazards.",active
+food_fraud,Food Fraud,"Adulteration, substitution, counterfeit composition or concealed ingredients.",active
+false_origin_claims,False Origin Claims,"False, misleading or materially incomplete geographic-origin representations.",active
+misleading_health_claims,Misleading Health Claims,"Misleading nutrition, health, wellness or product-benefit claims.",active
+predatory_marketing,Predatory Marketing,"Child targeting, health halos or other marketing that exploits consumer misunderstanding or vulnerability.",active
+misleading_portions,Misleading Portions,"Serving sizes, preparation directions or consumption assumptions that obscure product impact or usable value.",active
+shrinkflation,Shrinkflation,"Reduced quantity, quality or usable value without adequate visibility to consumers.",active
+labour_rights,Labour Rights,"Child labour, forced labour, unsafe work, wage abuse or worker exploitation.",active
+animal_welfare,Animal Welfare,"Farming, handling or treatment of animals, including misleading welfare claims.",active
+environmental_harm,Environmental Harm,"Deforestation, pollution, biodiversity loss or other material ecological damage.",active
+greenwashing,Greenwashing,"Misleading environmental, sustainability or ethical representations.",active
+unfair_trading,Unfair Trading,"Misleading pricing, promotions, unfair terms or other consumer/supplier trading practices that do not principally concern competitive market structure.",active
+anti_competitive_behaviour,Anti-Competitive Behaviour,"Conduct or concentrated market power that suppresses competition, excludes smaller rivals, blocks entry or unfairly squeezes suppliers and producers.",active
+corporate_misconduct,Corporate Misconduct,"Bribery, corruption, concealment or serious governance failures.",active

@@ -1,0 +1,7 @@
+product_family_id,display_name,market_key,anchor_brand_id,anchor_parent_id,review_state,confidence_state,lineage_reference,notes
+PF_LEGGOS_TOMATO_PASTE_AU,Leggo's Tomato Paste — AU,AU,B0179,P0041,seeded,strong,DSA-v0.2|TGT-009,Membership must be reviewed GTINs only; do not infer from product names
+PF_REMANO_TOMATO_PASTE_AU,Remano Tomato Paste — AU,AU,B0032,P0004,seeded,strong,DSA-v0.2|TGT-010,Membership empty until reviewed GTINs supplied
+PF_COLES_ITALIAN_TOMATO_PASTE_AU,Coles Italian Tomato Paste — AU,AU,B0013,P0002,seeded,strong,DSA-v0.2|TGT-011,Membership empty until reviewed GTINs supplied
+PF_WOOLWORTHS_CAGEFREE_EGGS_SA,Woolworths Cage-Free Eggs — SA tested range,AU,B0001,P0001,seeded,strong,DSA-v0.2|TGT-013,SA-only; no national propagation without matching identity evidence
+PF_KERI_FRUIT_JUICE_NZ,Keri Fruit Juice — pack transition,NZ,B0268,P0011,seeded,strong,DSA-v0.2|TGT-017,Only flavours/GTINs in documented 3L→2.4L transition
+PF_ANCHOR_BUTTER_NZ,Anchor Butter — historical grass-fed label,NZ,B0139,P0022,seeded,strong,DSA-v0.2|TGT-026,Historical label-period membership only

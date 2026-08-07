@@ -61,6 +61,8 @@ export function resolveSharedIdentityContext(input: {
   gtin: string;
   product: Product;
   marketHint?: string | null;
+  /** Reviewed Chaining product_family IDs for this GTIN (optional additive DSA v0.2). */
+  productFamilyIds?: string[];
 }): SharedIdentityResolutionResult {
   const { gtin, product, marketHint } = input;
   const brandCandidates = splitBrandCandidates(product);
@@ -80,6 +82,7 @@ export function resolveSharedIdentityContext(input: {
       product_id: `gtin:${gtin}`,
       brand_id: brandId,
       current_owner_entity_id: currentOwnerId,
+      product_family_ids: input.productFamilyIds?.length ? [...input.productFamilyIds] : [],
     },
     operational_entities: {
       // Kept intentionally narrow in Slice 1/2; broader operational expansion is deferred.

@@ -47,6 +47,7 @@ import { BannerAlertsData } from '../../src/types/bannerAlerts';
 import { buildProductScanResult } from '../../src/services/buildProductScanResult';
 import { buildBannerAlertsDataFromScanResult } from '../../src/utils/scanResultPresentation';
 import { buildWorkstreamCRuntimePublicationRecords } from '../../src/workstreamC/runtime/workstreamCRuntimePublicationRecords';
+import { buildDynamicSignalsAssetRuntimePublicationRecords } from '../../src/dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords';
 import type { FoodRecallSubmittedMarkings } from '../../src/workstreamC/recall';
 import { resolveSharedIdentityContext } from '../../src/identity/resolveSharedIdentityContext';
 import { logScanObs, generateScanId } from '../../src/services/scanObservability';
@@ -427,7 +428,7 @@ function ResultScreenContent() {
       : country === 'AU' || country === 'NZ'
         ? country
         : 'UNKNOWN';
-    const dynamicSignalRecords = productForScan
+    const skeletonRecords = productForScan
       ? buildWorkstreamCRuntimePublicationRecords({
           barcode: primaryBc,
           productName: productForScan.product_name ?? productForScan.product_name_en ?? productForScan.brands ?? '',
@@ -437,8 +438,28 @@ function ResultScreenContent() {
           foodRecallMarkings,
         })
       : [];
+    const assetLogs: string[] = [];
+    const assetRecords = productForScan
+      ? buildDynamicSignalsAssetRuntimePublicationRecords({
+          barcode: primaryBc,
+          productName: productForScan.product_name ?? productForScan.product_name_en ?? productForScan.brands ?? '',
+          product: productForScan,
+          scanMarketPublic,
+          logLines: assetLogs,
+        })
+      : [];
+    // Merge: Asset + Skeleton; prefer first occurrence of each signal_id (no cross-engine dupes).
+    const seenSig = new Set<string>();
+    const dynamicSignalRecords = [...assetRecords, ...skeletonRecords].filter((r) => {
+      if (seenSig.has(r.signal_id)) return false;
+      seenSig.add(r.signal_id);
+      return true;
+    });
     if (workstreamCLogs.length > 0) {
       console.log('[WorkstreamC runtime signals]', { barcode: primaryBc, logs: workstreamCLogs });
+    }
+    if (assetLogs.length > 0) {
+      console.log('[Dynamic Signals Asset v0.2]', { barcode: primaryBc, logs: assetLogs });
     }
     return buildProductScanResult({
       barcode: primaryBc,

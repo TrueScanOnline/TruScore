@@ -272,8 +272,14 @@ export function resolveReviewedRetailChainUnified(input: {
   brandAliasRows: CsvRecord[];
   injected?: InjectedUatChain | null;
   logLines?: string[];
+  /**
+   * Skeleton UAT Cadbury→B0241 bridge. Default true for historical Skeleton path.
+   * Production Dynamic Signals Asset matching must pass false.
+   */
+  applyCadburyUatBridge?: boolean;
 }): ResolvedRetailChain | null {
   const push = (s: string) => input.logLines?.push(s);
+  const useCadburyBridge = input.applyCadburyUatBridge !== false;
 
   if (input.injected) {
     const b = input.aData.brandsById.get(input.injected.brand_id);
@@ -310,6 +316,7 @@ export function resolveReviewedRetailChainUnified(input: {
       const validated = validateReviewedChain(best, input.aData);
       if (validated) {
         if (
+          useCadburyBridge &&
           validated.brand_id === 'B0067' &&
           validated.parent_id === 'P0009' &&
           !isChocolateOrCocoaContext(input.product)
@@ -318,7 +325,12 @@ export function resolveReviewedRetailChainUnified(input: {
             'cadbury_ngo_subject_bridge: not applied — B0067 Cadbury + P0009 Mondelez but no chocolate/cocoa/confectionery signals (fail closed for B0241 NGO links)'
           );
         }
-        const bridged = applyCadburyNgoSubjectBridge(validated, input.product, push);
+        const bridged = useCadburyBridge
+          ? applyCadburyNgoSubjectBridge(validated, input.product, push)
+          : validated;
+        if (!useCadburyBridge) {
+          push?.('cadbury_ngo_subject_bridge: skipped (production Dynamic Signals Asset path)');
+        }
         push?.(
           `chain_resolve: brand_id=${bridged.brand_id} parent_id=${bridged.parent_id} source=identity_resolution (specific_brand+parent_entity; product_name_refine=${fromProductName.has(bridged.brand_id) ? '1' : '0'})`
         );
@@ -326,18 +338,31 @@ export function resolveReviewedRetailChainUnified(input: {
       }
     }
     push?.('chain_resolve: identity_resolution found no reviewed brand/parent chain from product fields');
+    // Finding B (integrated Dynamic Signals): if primary identity fails, use an already-existing
+    // reviewed GTIN relationship as supplementary evidence before returning unresolved.
+    const gtinFallback = tryReviewedGtinChain(input.barcode, input.aData, push);
+    if (gtinFallback) return gtinFallback;
     return null;
   }
 
-  const g = input.aData.gtinRows.get(input.barcode);
+  return tryReviewedGtinChain(input.barcode, input.aData, push);
+}
+
+function tryReviewedGtinChain(
+  barcode: string,
+  aData: ADataMaps,
+  push?: (s: string) => void
+): ResolvedRetailChain | null {
+  const g = aData.gtinRows.get(barcode);
   if (g && g.link_review_state === 'reviewed') {
-    const b = input.aData.brandsById.get(g.brand_id);
-    const p = input.aData.parentsById.get(g.parent_id);
-    if (b?.review_state === 'reviewed' && p?.review_state === 'reviewed') {
-      push?.(`chain_resolve: brand_id=${g.brand_id} parent_id=${g.parent_id} source=gtin_link`);
+    const b = aData.brandsById.get(g.brand_id);
+    const p = aData.parentsById.get(g.parent_id);
+    if (b?.review_state === 'reviewed' && p?.review_state === 'reviewed' && b.parent_id === g.parent_id) {
+      push?.(
+        `chain_resolve: brand_id=${g.brand_id} parent_id=${g.parent_id} source=gtin_link_supplementary`
+      );
       return { brand_id: g.brand_id, parent_id: g.parent_id, source: 'gtin_link' };
     }
   }
-
   return null;
 }
