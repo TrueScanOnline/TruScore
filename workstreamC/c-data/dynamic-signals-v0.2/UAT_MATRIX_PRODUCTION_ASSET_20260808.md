@@ -2,10 +2,17 @@
 
 **Baseline tag:** `dynamic-signals-asset-v0.2-uat-20260808`  
 **Production baseline commit:** `a574254071e68959177b21025d542ec6afc1ffac`  
-**Governed UAT commit:** 4e867c6250d6c2660b676db6acbac3abf7d5f114  
+**Governed UAT commit (tagged):** `a730bcb56df11a7736d5496776bce45b25760072`  
 **Asset flag:** `EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET=1`  
 **Skeleton:** retired — must not activate  
 **Naming:** existing Signal UI only — no “Beyond the Label”
+
+### EAS builds (submitted from tagged tip)
+
+| Platform | Profile | Identifier | Logs |
+|----------|---------|------------|------|
+| iOS | `uat-dynamic-signals-ios` · BN **31** | `a89c79c8-a8cb-45bc-b3a7-3badd362ad6c` | https://expo.dev/accounts/crwmlw/projects/truescan-food-scanner/builds/a89c79c8-a8cb-45bc-b3a7-3badd362ad6c |
+| Android | `uat-dynamic-signals-android` · versionCode **14** | `1578e986-2c00-4846-b9d9-62860ddb1a8e` | https://expo.dev/accounts/crwmlw/projects/truescan-food-scanner/builds/1578e986-2c00-4846-b9d9-62860ddb1a8e |
 
 ## Publishable Signals under test (4)
 
