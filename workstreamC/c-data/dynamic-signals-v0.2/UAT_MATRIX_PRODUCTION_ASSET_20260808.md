@@ -19,9 +19,11 @@
 
 | Platform | Profile | Identifier | Logs |
 |----------|---------|------------|------|
-| iOS | `uat-dynamic-signals-ios` · BN **33** | _pending_ | _pending_ |
-| Android | `uat-dynamic-signals-android` · versionCode **15** | _pending_ | _pending_ |
+| iOS | `uat-dynamic-signals-ios` · BN **33** | `c4ddec30-3be6-4c8a-b097-ca8486884cd7` | https://expo.dev/accounts/crwmlw/projects/truescan-food-scanner/builds/c4ddec30-3be6-4c8a-b097-ca8486884cd7 |
+| Android | `uat-dynamic-signals-android` · versionCode **15** | `1af94081-25f8-47f7-bc11-1c12d6ace096` | https://expo.dev/accounts/crwmlw/projects/truescan-food-scanner/builds/1af94081-25f8-47f7-bc11-1c12d6ace096 |
 
+**Binary tip:** `934cf1c101dec08c20c12128c38f5b742f726f96` (`dynamic-signals-asset-v0.2-uat-20260808-result-isolation`)  
+**Do not release** until both builds finish green and founder approval.
 ### Result-isolation contract (required)
 
 1. Product data / TruScore ready → render primary result immediately (`product_result_ready`)
