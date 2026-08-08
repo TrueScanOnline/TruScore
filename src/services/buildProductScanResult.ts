@@ -169,6 +169,23 @@ function publicationCardsFromRecords(
     .map(mapPublicationRecordToSignalCard);
 }
 
+/**
+ * Attach governed Dynamic Signals onto an already-built primary ProductScanResult.
+ * Preserves product / TruScore / confidence / coverage by reference — Signals must
+ * never recompute or invalidate the initial result.
+ */
+export function attachDynamicSignalRecordsToScanResult(
+  primary: ProductScanResult,
+  records: DynamicSignalPublicationRecord[] | undefined
+): ProductScanResult {
+  const publicationCards = publicationCardsFromRecords(records);
+  const allCards = dedupeSignalCards([...publicationCards]);
+  return {
+    ...primary,
+    signals: partitionSignals(allCards),
+  };
+}
+
 
 
 function resolveTerminalState(opts: BuildProductScanResultOptions): ProductScanResult['terminal_state'] {

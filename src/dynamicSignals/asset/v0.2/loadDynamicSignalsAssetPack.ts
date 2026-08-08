@@ -139,10 +139,28 @@ export function buildAssetPackFromCsvRows(rows: AssetPackCsvRows): AssetPackPars
   };
 }
 
-/** App/runtime pack — embedded governed CSVs (no filesystem). */
-export function loadDynamicSignalsAssetPackFromEmbed(): AssetPackParsed {
+type ADataChainEmbed = ReturnType<typeof buildADataChainFromEmbedRows>;
+
+let cachedAssetPack: AssetPackParsed | null = null;
+let cachedADataChain: ADataChainEmbed | null = null;
+/** Test/observability: how many times pack CSV rows were parsed into Maps. */
+let assetPackParseCount = 0;
+let aDataParseCount = 0;
+
+function buildADataChainFromEmbedRows() {
   const e = DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED;
-  return buildAssetPackFromCsvRows({
+  return {
+    aData: buildADataMapsFromCsvRecords(e.brandRows, e.parentRows, e.gtinRows),
+    brandRows: e.brandRows,
+    aliasRows: e.aliasRows,
+  };
+}
+
+/** App/runtime pack — embedded governed CSVs (no filesystem). Cached after first parse. */
+export function loadDynamicSignalsAssetPackFromEmbed(): AssetPackParsed {
+  if (cachedAssetPack) return cachedAssetPack;
+  const e = DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED;
+  cachedAssetPack = buildAssetPackFromCsvRows({
     sources: e.sources,
     signals: e.signals,
     targets: e.targets,
@@ -155,14 +173,26 @@ export function loadDynamicSignalsAssetPackFromEmbed(): AssetPackParsed {
     foodRecallAffectedVariants: e.foodRecallAffectedVariants,
     foodRecallRelatedGtins: e.foodRecallRelatedGtins,
   });
+  assetPackParseCount += 1;
+  return cachedAssetPack;
 }
 
-/** Shared Identity rows for retail-chain resolution on device. */
+/** Shared Identity rows for retail-chain resolution on device. Cached after first parse. */
 export function loadADataForChainFromEmbed() {
-  const e = DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED;
-  return {
-    aData: buildADataMapsFromCsvRecords(e.brandRows, e.parentRows, e.gtinRows),
-    brandRows: e.brandRows,
-    aliasRows: e.aliasRows,
-  };
+  if (cachedADataChain) return cachedADataChain;
+  cachedADataChain = buildADataChainFromEmbedRows();
+  aDataParseCount += 1;
+  return cachedADataChain;
+}
+
+export function getDynamicSignalsAssetEmbedCacheStats() {
+  return { assetPackParseCount, aDataParseCount, packCached: cachedAssetPack != null };
+}
+
+/** Jest only — clears singleton cache between isolation proofs. */
+export function __resetDynamicSignalsAssetEmbedCacheForTests() {
+  cachedAssetPack = null;
+  cachedADataChain = null;
+  assetPackParseCount = 0;
+  aDataParseCount = 0;
 }

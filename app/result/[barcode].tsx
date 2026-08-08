@@ -44,10 +44,18 @@ import FoodRecallMarkingsEntry, {
   foodRecallShowEditDetails,
 } from '../../src/components/FoodRecallMarkingsEntry';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
-import { buildProductScanResult } from '../../src/services/buildProductScanResult';
+import {
+  attachDynamicSignalRecordsToScanResult,
+  buildProductScanResult,
+} from '../../src/services/buildProductScanResult';
 import { buildBannerAlertsDataFromScanResult } from '../../src/utils/scanResultPresentation';
-import { buildDynamicSignalsAssetRuntimePublicationRecords } from '../../src/dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords';
+import {
+  dynamicSignalsEvaluationKey,
+  evaluateDynamicSignalsAssetProgressive,
+  type SignalsReadyOutcome,
+} from '../../src/dynamicSignals/asset/v0.2/evaluateDynamicSignalsAssetProgressive';
 import { resolveActiveSignalsProducer } from '../../src/dynamicSignals/asset/v0.2/signalsProducerGuard';
+import type { DynamicSignalPublicationRecord } from '../../src/dynamicSignals/publish/types';
 import type { FoodRecallSubmittedMarkings } from '../../src/workstreamC/recall';
 import { resolveSharedIdentityContext } from '../../src/identity/resolveSharedIdentityContext';
 import { logScanObs, generateScanId } from '../../src/services/scanObservability';
@@ -196,6 +204,12 @@ function ResultScreenContent() {
   const [shareInitialMessage, setShareInitialMessage] = useState('');
   const [foodRecallMarkings, setFoodRecallMarkings] = useState<FoodRecallSubmittedMarkings | null>(null);
   const [foodRecallEditing, setFoodRecallEditing] = useState(false);
+  /** Progressive Signals — attached after primary product/TruScore is ready. */
+  const [dynamicSignalRecords, setDynamicSignalRecords] = useState<DynamicSignalPublicationRecord[]>([]);
+  const [signalsReadyOutcome, setSignalsReadyOutcome] = useState<SignalsReadyOutcome | null>(null);
+  const signalsEvalKeyRef = useRef<string | null>(null);
+  const signalsInFlightKeyRef = useRef<string | null>(null);
+  const productResultReadyLoggedRef = useRef<string | null>(null);
   const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number; hasImportedIngredients?: boolean } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isUserContributed, setIsUserContributed] = useState(false);
@@ -211,6 +225,11 @@ function ResultScreenContent() {
   useEffect(() => {
     setFoodRecallMarkings(null);
     setFoodRecallEditing(false);
+    setDynamicSignalRecords([]);
+    setSignalsReadyOutcome(null);
+    signalsEvalKeyRef.current = null;
+    signalsInFlightKeyRef.current = null;
+    productResultReadyLoggedRef.current = null;
   }, [barcode]);
 
   useEffect(() => {
@@ -410,7 +429,8 @@ function ResultScreenContent() {
     }
   }, [product, alertsPreferences]);
 
-  const scanResult = useMemo(() => {
+  // Primary product/TruScore result — never gated on Dynamic Signals evaluation.
+  const primaryScanResult = useMemo(() => {
     const primaryBc = getPrimaryBarcode(barcode);
     const productForScan =
       product && getPrimaryBarcode(product.barcode) === primaryBc ? product : null;
@@ -418,45 +438,13 @@ function ResultScreenContent() {
       return null;
     }
     const country = getUserCountryCode();
-    const scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN' = productForScan
-      ? resolveSharedIdentityContext({
-          gtin: primaryBc,
-          product: productForScan,
-          marketHint: country,
-        }).public_market
-      : country === 'AU' || country === 'NZ'
-        ? country
-        : 'UNKNOWN';
-    const producerLogs: string[] = [];
-    const producer = resolveActiveSignalsProducer(producerLogs);
-    const assetLogs: string[] = [...producerLogs];
-    const productName =
-      productForScan?.product_name ??
-      productForScan?.product_name_en ??
-      productForScan?.brands ??
-      '';
-    // Dynamic Signals Asset is the sole production Signal-content authority.
-    const dynamicSignalRecords =
-      producer === 'asset' && productForScan
-        ? buildDynamicSignalsAssetRuntimePublicationRecords({
-            barcode: primaryBc,
-            productName,
-            product: productForScan,
-            scanMarketPublic,
-            logLines: assetLogs,
-            foodRecallMarkings,
-          })
-        : [];
-    if (assetLogs.length > 0) {
-      console.log('[Dynamic Signals Asset v0.2]', { barcode: primaryBc, logs: assetLogs });
-    }
     return buildProductScanResult({
       barcode: primaryBc,
       product: productForScan,
       userPreferences: alertsPreferences,
       isSubscriber: isPremium,
       market: country,
-      dynamicSignalRecords,
+      dynamicSignalRecords: [],
       deriveTerminal: true,
       fetchPhase: loadingPhase,
       isFetchLoading: loading,
@@ -474,8 +462,120 @@ function ResultScreenContent() {
     alertsPreferences,
     loading,
     loadingPhase,
-    foodRecallMarkings,
   ]);
+
+  // Attach Signals when progressive evaluation completes — TruScore preserved by reference.
+  const scanResult = useMemo(() => {
+    if (!primaryScanResult) return null;
+    if (!dynamicSignalRecords.length) return primaryScanResult;
+    return attachDynamicSignalRecordsToScanResult(primaryScanResult, dynamicSignalRecords);
+  }, [primaryScanResult, dynamicSignalRecords]);
+
+  useEffect(() => {
+    const sid = scanIdRef.current;
+    if (!sid || !primaryScanResult || !product) return;
+    if (getPrimaryBarcode(product.barcode) !== getPrimaryBarcode(barcode)) return;
+    const readyKey = `${sid}|${getPrimaryBarcode(barcode)}`;
+    if (productResultReadyLoggedRef.current === readyKey) return;
+    productResultReadyLoggedRef.current = readyKey;
+    logScanObs({
+      event: 'product_result_ready',
+      scan_id: sid,
+      barcode,
+      trust_score: product.trust_score ?? null,
+      terminal_state: primaryScanResult.terminal_state,
+    });
+  }, [primaryScanResult, product, barcode]);
+
+  // Progressive Signals — after primary is available; not re-run on ordinary loading transitions.
+  useEffect(() => {
+    const primaryBc = getPrimaryBarcode(barcode);
+    const productForScan =
+      product && getPrimaryBarcode(product.barcode) === primaryBc ? product : null;
+    if (!productForScan) return;
+
+    const country = getUserCountryCode();
+    const scanMarketPublic = resolveSharedIdentityContext({
+      gtin: primaryBc,
+      product: productForScan,
+      marketHint: country,
+    }).public_market;
+    const producerLogs: string[] = [];
+    const producer = resolveActiveSignalsProducer(producerLogs);
+    const evalKey = dynamicSignalsEvaluationKey({
+      barcode: primaryBc,
+      scanMarketPublic,
+      foodRecallMarkings,
+      producerActive: producer === 'asset',
+    });
+    if (signalsEvalKeyRef.current === evalKey) return;
+    if (signalsInFlightKeyRef.current === evalKey) return;
+    signalsInFlightKeyRef.current = evalKey;
+
+    let cancelled = false;
+    const productName =
+      productForScan.product_name ??
+      productForScan.product_name_en ??
+      productForScan.brands ??
+      '';
+    const assetLogs: string[] = [...producerLogs];
+
+    void (async () => {
+      const evaluated = await evaluateDynamicSignalsAssetProgressive({
+        barcode: primaryBc,
+        productName,
+        product: productForScan,
+        scanMarketPublic,
+        foodRecallMarkings,
+        logLines: assetLogs,
+      });
+      if (cancelled) {
+        if (signalsInFlightKeyRef.current === evalKey) {
+          signalsInFlightKeyRef.current = null;
+        }
+        return;
+      }
+      signalsEvalKeyRef.current = evalKey;
+      signalsInFlightKeyRef.current = null;
+      if (assetLogs.length > 0) {
+        console.log('[Dynamic Signals Asset v0.2]', { barcode: primaryBc, logs: assetLogs });
+      }
+      setDynamicSignalRecords(evaluated.records);
+      setSignalsReadyOutcome(evaluated.outcome);
+      const sid = scanIdRef.current;
+      if (sid) {
+        logScanObs({
+          event: 'signals_ready',
+          scan_id: sid,
+          barcode: primaryBc,
+          trust_score: productForScan.trust_score ?? null,
+          signals_outcome: evaluated.outcome,
+          signal_counts: {
+            publication_records: evaluated.records.length,
+            safety_regulatory: evaluated.records.filter((r) => r.signal_class === 'safety_regulatory')
+              .length,
+            in_the_news: evaluated.records.filter((r) => r.signal_class === 'in_the_news').length,
+          },
+        });
+      }
+      if (evaluated.outcome === 'failed') {
+        console.warn('[Dynamic Signals Asset v0.2] evaluation failed (contained)', {
+          barcode: primaryBc,
+          error: evaluated.error_message,
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (signalsInFlightKeyRef.current === evalKey) {
+        signalsInFlightKeyRef.current = null;
+      }
+    };
+  }, [product, barcode, foodRecallMarkings]);
+
+  // Silence unused-state lint until UI surfaces progressive outcome.
+  void signalsReadyOutcome;
 
   const foodRecallNeedsBatchEntry = useMemo(() => {
     return !!scanResult?.signals?.safety_regulatory?.some((c) => c.food_recall_needs_batch_entry);

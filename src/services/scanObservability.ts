@@ -10,11 +10,15 @@ export type ScanObsEventName =
   | 'fetch_phase'
   | 'fetch_complete'
   | 'score_ready'
+  | 'product_result_ready'
   | 'signals_built'
+  | 'signals_ready'
   | 'scan_terminal';
 
 /** Bump when adding/removing payload fields (Phase 5B stability for tooling). */
-export const SCAN_OBS_SCHEMA_VERSION = 1 as const;
+export const SCAN_OBS_SCHEMA_VERSION = 2 as const;
+
+export type SignalsReadyObsOutcome = 'attached' | 'empty' | 'failed';
 
 export interface ScanObsPayload {
   event: ScanObsEventName;
@@ -31,6 +35,8 @@ export interface ScanObsPayload {
   source_trace_len?: number;
   coverage_completeness?: number;
   confidence_label?: string;
+  /** Progressive Signals path: attached | empty | failed */
+  signals_outcome?: SignalsReadyObsOutcome;
 }
 
 export function generateScanId(): string {

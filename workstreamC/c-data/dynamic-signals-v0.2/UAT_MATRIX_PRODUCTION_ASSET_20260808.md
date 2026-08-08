@@ -1,18 +1,34 @@
 # Dynamic Signals Asset v0.2 — Founder UAT matrix (production Asset)
 
-**Baseline tag:** `dynamic-signals-asset-v0.2-uat-20260808`  
-**Production baseline commit:** `a574254071e68959177b21025d542ec6afc1ffac`  
-**Governed UAT commit (tagged):** `a730bcb56df11a7736d5496776bce45b25760072`  
+**Content baseline tag:** `dynamic-signals-asset-v0.2-uat-20260808`  
+**Content commit:** `a730bcb56df11a7736d5496776bce45b25760072`  
+**Result-isolation correction tag:** `dynamic-signals-asset-v0.2-uat-20260808-result-isolation`  
 **Asset flag:** `EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET=1`  
 **Skeleton:** retired — must not activate  
 **Naming:** existing Signal UI only — no “Beyond the Label”
 
-### EAS builds (submitted from tagged tip)
+### Hold — do not publish to testers
+
+| Platform | Profile | Identifier | Status |
+|----------|---------|------------|--------|
+| iOS | `uat-dynamic-signals-ios` · BN **31** | `a89c79c8-a8cb-45bc-b3a7-3badd362ad6c` | **HOLD** (errored — Node `fs` in Bundle JS) |
+| Android | `uat-dynamic-signals-android` · VC **13** | `1578e986-2c00-4846-b9d9-62860ddb1a8e` | **HOLD** (errored — Node `fs` in Bundle JS) |
+| Any build from `f00d3e1` (embed-only, pre-isolation) | — | — | **HOLD** — superseded by result-isolation correction |
+
+### Replacement EAS builds (result-isolation corrected tip)
 
 | Platform | Profile | Identifier | Logs |
 |----------|---------|------------|------|
-| iOS | `uat-dynamic-signals-ios` · BN **31** | `a89c79c8-a8cb-45bc-b3a7-3badd362ad6c` | https://expo.dev/accounts/crwmlw/projects/truescan-food-scanner/builds/a89c79c8-a8cb-45bc-b3a7-3badd362ad6c |
-| Android | `uat-dynamic-signals-android` · versionCode **14** | `1578e986-2c00-4846-b9d9-62860ddb1a8e` | https://expo.dev/accounts/crwmlw/projects/truescan-food-scanner/builds/1578e986-2c00-4846-b9d9-62860ddb1a8e |
+| iOS | `uat-dynamic-signals-ios` · BN **33** | _pending_ | _pending_ |
+| Android | `uat-dynamic-signals-android` · versionCode **15** | _pending_ | _pending_ |
+
+### Result-isolation contract (required)
+
+1. Product data / TruScore ready → render primary result immediately (`product_result_ready`)
+2. Evaluate Dynamic Signals independently afterward (`signals_ready` · `attached` | `empty` | `failed`)
+3. Signals failure must not prevent or disturb the primary result
+4. Ordinary loading/render transitions must not re-parse the Asset embed or re-evaluate Signals for the same key
+5. On-device Asset data is embedded (no Node `fs`)
 
 ## Publishable Signals under test (4)
 
@@ -44,6 +60,7 @@ Held Signals (12) must **not** appear publicly.
 - Subject response shown where status is `captured_from_source`
 - No “Beyond the Label” or other unapproved umbrella label
 - TruScore / Body / Planet / Ethics / Open unchanged by Signal presence
+- Primary product/TruScore appears **before** Signals cards when Signals are slow or fail
 
 ## Product-data vs Signals
 
