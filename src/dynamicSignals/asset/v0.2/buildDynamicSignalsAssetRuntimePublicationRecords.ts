@@ -4,19 +4,21 @@
  *
  * Dynamic Signals Asset is the sole production Signal-content authority.
  * Food Recall Matcher is eligibility-only and cannot originate public Signals alone.
+ *
+ * Must not import Node `fs` — Metro/EAS Bundle JavaScript cannot resolve it.
  */
 
-import fs from 'fs';
-import path from 'path';
 import type { Product } from '../../../types/product';
-import { parseCsv } from '../../../identity/workstreamA/csv';
-import { buildADataMapsFromCsvRecords } from '../../../workstreamC/skeleton/workstreamCPublicationCore';
 import { resolveReviewedRetailChainUnified } from '../../../workstreamC/skeleton/resolveWorkstreamCRetailChain';
 import {
   buildDynamicSignalsAssetPublicationRecords,
   type AssetPackParsed,
 } from './matchDynamicSignalsAsset';
-import { isDynamicSignalsAssetRuntimeEnabled, loadDynamicSignalsAssetPackFromDisk } from './loadDynamicSignalsAssetPack';
+import {
+  isDynamicSignalsAssetRuntimeEnabled,
+  loadADataForChainFromEmbed,
+  loadDynamicSignalsAssetPackFromEmbed,
+} from './loadDynamicSignalsAssetPack';
 import { reviewedFamilyIdsForGtin } from '../../../identity/chaining/productFamilyMaps';
 import { buildAssetGovernedFoodRecallPublicationRecords } from './buildAssetGovernedFoodRecallPublicationRecords';
 import { resolveActiveSignalsProducer } from './signalsProducerGuard';
@@ -24,38 +26,6 @@ import type { DynamicSignalPublicationRecord } from '../../publish/types';
 import type { FoodRecallSubmittedMarkings } from '../../../workstreamC/recall';
 
 export { isDynamicSignalsAssetRuntimeEnabled };
-
-function loadADataForChain() {
-  const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
-  const aRoot = path.join(repoRoot, 'workstreamA', 'a-data', 'wave1-v0.14', 'input');
-  const extRoot = path.join(repoRoot, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.1');
-  const read = (dir: string, name: string) => {
-    const p = path.join(dir, name);
-    return fs.existsSync(p) ? parseCsv(fs.readFileSync(p, 'utf8')) : [];
-  };
-  // Additive Shared Identity enrichment — wave1-v0.14 remains immutable baseline.
-  const brandRows = [
-    ...read(aRoot, 'canonical_brands.csv'),
-    ...read(extRoot, 'canonical_brands_extension.csv'),
-  ];
-  const parentRows = [
-    ...read(aRoot, 'canonical_parents.csv'),
-    ...read(extRoot, 'canonical_parents_extension.csv'),
-  ];
-  const gtinRows = [
-    ...read(aRoot, 'gtin_brand_links.csv'),
-    ...read(extRoot, 'gtin_brand_links_extension.csv'),
-  ];
-  const aliasRows = [
-    ...read(aRoot, 'brand_aliases.csv'),
-    ...read(extRoot, 'brand_aliases_extension.csv'),
-  ];
-  return {
-    aData: buildADataMapsFromCsvRecords(brandRows, parentRows, gtinRows),
-    brandRows,
-    aliasRows,
-  };
-}
 
 /**
  * Returns [] unless Asset is the active producer (or `pack` injected for tests).
@@ -83,14 +53,14 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     if (producer !== 'asset') return [];
   }
 
-  const pack = input.pack ?? loadDynamicSignalsAssetPackFromDisk();
+  const pack = input.pack ?? loadDynamicSignalsAssetPackFromEmbed();
   const logs = input.logLines;
 
   let brand_id: string | null = input.injectedBrandId ?? null;
   let parent_id: string | null = input.injectedParentId ?? null;
 
   if (input.injectedBrandId === undefined && input.injectedParentId === undefined) {
-    const { aData, brandRows, aliasRows } = loadADataForChain();
+    const { aData, brandRows, aliasRows } = loadADataForChainFromEmbed();
     const chain = resolveReviewedRetailChainUnified({
       barcode: input.barcode,
       productName: input.productName,

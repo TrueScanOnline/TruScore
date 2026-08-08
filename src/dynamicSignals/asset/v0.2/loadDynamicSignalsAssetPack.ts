@@ -1,10 +1,8 @@
 /**
- * Runtime loader for Dynamic Signals Asset v0.2 (Node/tests + optional app wiring).
+ * Pure Asset pack parsers + Metro-safe embed loader (no Node `fs`).
  */
 
-import fs from 'fs';
-import path from 'path';
-import { parseCsv, type CsvRecord } from '../../../identity/workstreamA/csv';
+import type { CsvRecord } from '../../../identity/workstreamA/csv';
 import {
   buildProductFamilyMapsFromCsvRecords,
   type ProductFamilyMaps,
@@ -13,6 +11,7 @@ import {
   buildBrandHierarchyMapsFromCsvRecords,
   buildEntityHierarchyMapsFromCsvRecords,
 } from '../../../identity/chaining/brandEntityHierarchyMaps';
+import { buildADataMapsFromCsvRecords } from '../../../workstreamC/skeleton/workstreamCPublicationCore';
 import type {
   AssetPackParsed,
   AssetRecallEligibilityBinding,
@@ -21,6 +20,7 @@ import type {
   GtinVerificationStatus,
   StructuredFoodRecallNotice,
 } from '../../../workstreamC/recall';
+import { DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED } from './dynamicSignalsAssetRuntimeEmbed.generated';
 
 export function isDynamicSignalsAssetRuntimeEnabled(): boolean {
   return process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET === '1';
@@ -103,42 +103,66 @@ export function parseAssetRecallNotices(
     .filter((n): n is StructuredFoodRecallNotice => n != null);
 }
 
-export function loadDynamicSignalsAssetPackFromDisk(roots?: {
-  packInputRoot?: string;
-  familyExtRoot?: string;
-}): AssetPackParsed {
-  const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
-  const packRoot =
-    roots?.packInputRoot ?? path.join(repoRoot, 'workstreamC', 'c-data', 'dynamic-signals-v0.2', 'input');
-  const famRoot =
-    roots?.familyExtRoot ??
-    path.join(repoRoot, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.1');
+export type AssetPackCsvRows = {
+  sources: CsvRecord[];
+  signals: CsvRecord[];
+  targets: CsvRecord[];
+  productFamilies: CsvRecord[];
+  productFamilyMembership: CsvRecord[];
+  brandChildOfBrand: CsvRecord[];
+  entityChildOfEntity: CsvRecord[];
+  foodRecallEligibility: CsvRecord[];
+  foodRecallNotices: CsvRecord[];
+  foodRecallAffectedVariants: CsvRecord[];
+  foodRecallRelatedGtins: CsvRecord[];
+};
 
-  const read = (p: string) => (fs.existsSync(p) ? parseCsv(fs.readFileSync(p, 'utf8')) : []);
-
+export function buildAssetPackFromCsvRows(rows: AssetPackCsvRows): AssetPackParsed {
   const familyMaps: ProductFamilyMaps = buildProductFamilyMapsFromCsvRecords(
-    read(path.join(famRoot, 'product_families.csv')),
-    read(path.join(famRoot, 'product_family_membership.csv'))
+    rows.productFamilies,
+    rows.productFamilyMembership
   );
 
   return {
-    sources: read(path.join(packRoot, 'source_universe.csv')),
-    signals: read(path.join(packRoot, 'signals.csv')),
-    targets: read(path.join(packRoot, 'signal_targets.csv')),
+    sources: rows.sources,
+    signals: rows.signals,
+    targets: rows.targets,
     familyMaps,
-    brandHierarchy: buildBrandHierarchyMapsFromCsvRecords(
-      read(path.join(famRoot, 'brand_child_of_brand.csv'))
-    ),
-    entityHierarchy: buildEntityHierarchyMapsFromCsvRecords(
-      read(path.join(famRoot, 'entity_child_of_entity.csv'))
-    ),
-    recallEligibility: parseAssetRecallEligibility(
-      read(path.join(packRoot, 'food_recall_eligibility.csv'))
-    ),
+    brandHierarchy: buildBrandHierarchyMapsFromCsvRecords(rows.brandChildOfBrand),
+    entityHierarchy: buildEntityHierarchyMapsFromCsvRecords(rows.entityChildOfEntity),
+    recallEligibility: parseAssetRecallEligibility(rows.foodRecallEligibility),
     recallNotices: parseAssetRecallNotices(
-      read(path.join(packRoot, 'food_recall_notices.csv')),
-      read(path.join(packRoot, 'food_recall_affected_variants.csv')),
-      read(path.join(packRoot, 'food_recall_related_gtins.csv'))
+      rows.foodRecallNotices,
+      rows.foodRecallAffectedVariants,
+      rows.foodRecallRelatedGtins
     ),
+  };
+}
+
+/** App/runtime pack — embedded governed CSVs (no filesystem). */
+export function loadDynamicSignalsAssetPackFromEmbed(): AssetPackParsed {
+  const e = DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED;
+  return buildAssetPackFromCsvRows({
+    sources: e.sources,
+    signals: e.signals,
+    targets: e.targets,
+    productFamilies: e.productFamilies,
+    productFamilyMembership: e.productFamilyMembership,
+    brandChildOfBrand: e.brandChildOfBrand,
+    entityChildOfEntity: e.entityChildOfEntity,
+    foodRecallEligibility: e.foodRecallEligibility,
+    foodRecallNotices: e.foodRecallNotices,
+    foodRecallAffectedVariants: e.foodRecallAffectedVariants,
+    foodRecallRelatedGtins: e.foodRecallRelatedGtins,
+  });
+}
+
+/** Shared Identity rows for retail-chain resolution on device. */
+export function loadADataForChainFromEmbed() {
+  const e = DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED;
+  return {
+    aData: buildADataMapsFromCsvRecords(e.brandRows, e.parentRows, e.gtinRows),
+    brandRows: e.brandRows,
+    aliasRows: e.aliasRows,
   };
 }
