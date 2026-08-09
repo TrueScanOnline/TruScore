@@ -3,6 +3,11 @@
     "preview": {
       "distribution": "store",
       "node": "20.19.4",
+      "env": {
+        "EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET": "1",
+        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
+        "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0"
+      },
       "android": {
         "buildType": "apk"
       },
@@ -15,6 +20,11 @@
     "preview-apk": {
       "distribution": "internal",
       "node": "20.19.4",
+      "env": {
+        "EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET": "1",
+        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
+        "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0"
+      },
       "android": {
         "buildType": "apk"
       },
@@ -27,6 +37,11 @@
       "developmentClient": true,
       "distribution": "internal",
       "node": "20.19.4",
+      "env": {
+        "EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET": "1",
+        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
+        "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0"
+      },
       "android": {
         "buildType": "apk"
       },
@@ -37,6 +52,11 @@
     "production": {
       "distribution": "store",
       "node": "20.19.4",
+      "env": {
+        "EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET": "1",
+        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
+        "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0"
+      },
       "android": {
         "buildType": "app-bundle"
       },
@@ -49,6 +69,11 @@
     "production-apk": {
       "distribution": "internal",
       "node": "20.19.4",
+      "env": {
+        "EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET": "1",
+        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
+        "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0"
+      },
       "android": {
         "buildType": "apk"
       }

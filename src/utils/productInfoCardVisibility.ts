@@ -11,12 +11,14 @@ import type { Insight, TruScoreResult } from '../lib/truscoreEngine';
 import { calculateEcoScore } from '../services/openFoodFacts';
 import { hasOffPackagingDisplay } from './packagingOffDisplay';
 import { hasOffCarbonFootprintDisplay } from './carbonOffDisplay';
+import { isMvpLegacyAlertsInsightsEnabled } from '../config/mvpRuntimeGates';
 
 /** Non-empty insights list when the user-alerts preference card should appear; otherwise null. */
 export function getProductPageAlertsInsights(
   alertsCategoriesEnabled: boolean,
   truScore: TruScoreResult | null | undefined
 ): Insight[] | null {
+  if (!isMvpLegacyAlertsInsightsEnabled()) return null;
   const insights = truScore?.insights;
   if (!alertsCategoriesEnabled || !insights?.length) return null;
   return insights;

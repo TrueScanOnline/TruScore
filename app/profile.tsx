@@ -21,6 +21,7 @@ import { useFavoritesStore } from '../src/store/useFavoritesStore';
 import { useScanStore } from '../src/store/useScanStore';
 import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
 import { getSubscriptionStatusMessage, isPremium as checkPremium } from '../src/utils/premiumFeatures';
+import { isMvpSubscriptionAndPaywallEnabled } from '../src/config/mvpRuntimeGates';
 import { getCacheSize, clearCache } from '../src/services/cacheService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -217,29 +218,43 @@ export default function ProfileScreen() {
               Alert.alert(t('profile.comingSoon'), t('profile.comingSoonMessage'));
             }}
           />
-          <SettingRow
-            icon={isPremium ? "star" : "star-outline"}
-            label={isPremium ? getSubscriptionStatusMessage(subscriptionInfo) : t('profile.upgradeToPremium')}
-            value={isPremium ? undefined : t('subscription.title')}
-            onPress={() => {
-              navigation.navigate('Subscription');
-            }}
-          />
-          {isPremium && (
-            <SettingRow
-              icon="refresh-outline"
-              label={t('profile.restorePurchases')}
-              onPress={async () => {
-                const result = await useSubscriptionStore.getState().restorePurchases();
-                if (result.success) {
-                  await checkSubscriptionStatus();
-                  Alert.alert(t('subscription.restoreSuccess'), t('subscription.restoreSuccessMessage'));
-                } else {
-                  Alert.alert(t('subscription.restoreError'), result.error || t('subscription.restoreErrorMessage'));
+          {isMvpSubscriptionAndPaywallEnabled() ? (
+            <>
+              <SettingRow
+                icon={isPremium ? 'star' : 'star-outline'}
+                label={
+                  isPremium
+                    ? getSubscriptionStatusMessage(subscriptionInfo)
+                    : t('profile.upgradeToPremium')
                 }
-              }}
-            />
-          )}
+                value={isPremium ? undefined : t('subscription.title')}
+                onPress={() => {
+                  navigation.navigate('Subscription');
+                }}
+              />
+              {isPremium ? (
+                <SettingRow
+                  icon="refresh-outline"
+                  label={t('profile.restorePurchases')}
+                  onPress={async () => {
+                    const result = await useSubscriptionStore.getState().restorePurchases();
+                    if (result.success) {
+                      await checkSubscriptionStatus();
+                      Alert.alert(
+                        t('subscription.restoreSuccess'),
+                        t('subscription.restoreSuccessMessage')
+                      );
+                    } else {
+                      Alert.alert(
+                        t('subscription.restoreError'),
+                        result.error || t('subscription.restoreErrorMessage')
+                      );
+                    }
+                  }}
+                />
+              ) : null}
+            </>
+          ) : null}
         </SettingSection>
 
         {/* Appearance */}

@@ -7,6 +7,7 @@ import {
   SHARE_QUERY_REF,
   SHARE_QUERY_SRC,
 } from './shareUrl';
+import { isMvpAlertsTabEnabled } from '../config/mvpRuntimeGates';
 
 export { buildShareUrl, parseShareQueryParams, SHARE_QUERY_CTX, SHARE_QUERY_REF, SHARE_QUERY_SRC };
 export type { ShareLinkSource } from './shareUrl';
@@ -44,11 +45,15 @@ export const linking = {
               FavouritesHome: 'favourites',
             },
           },
-          Alerts: {
-            screens: {
-              AlertsHome: 'alerts',
-            },
-          },
+          ...(isMvpAlertsTabEnabled()
+            ? {
+                Alerts: {
+                  screens: {
+                    AlertsHome: 'alerts',
+                  },
+                },
+              }
+            : {}),
           Settings: 'profile',
         },
       },

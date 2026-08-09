@@ -2,6 +2,7 @@
 // Ensures required environment variables are set in production
 
 import { logger } from './logger';
+import { assertDynamicSignalsAssetForReleaseRuntime } from '../config/mvpReleaseDynamicSignalsAsset';
 
 interface EnvVarConfig {
   key: string;
@@ -60,6 +61,12 @@ export function validateEnvironment(): {
   const missing: string[] = [];
   const warnings: string[] = [];
   const isProduction = process.env.NODE_ENV === 'production' || !__DEV__;
+
+  // R-01: release/store builds must not start with Asset absent (silent producer=none).
+  // Expo Go / Metro (__DEV__) uses .env.development + app.config.js defaults instead.
+  assertDynamicSignalsAssetForReleaseRuntime(process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET, {
+    isDev: typeof __DEV__ !== 'undefined' ? __DEV__ : !isProduction,
+  });
 
   for (const envVar of ENV_VARS) {
     const value = readExpoPublicEnv(envVar.key);

@@ -10,6 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../app/_layout';
 import { useSubscriptionStore } from '../../store/useSubscriptionStore';
 import { PremiumFeature, PremiumFeatureDescriptions, isPremiumFeatureEnabled } from '../../utils/premiumFeatures';
+import { isMvpSubscriptionAndPaywallEnabled } from '../../config/mvpRuntimeGates';
 import { useTheme } from '../../theme';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -31,6 +32,11 @@ export function CardPremiumGate({
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const { subscriptionInfo } = useSubscriptionStore();
+
+  // MVP: subscription/paywall deferred — no upgrade CTAs
+  if (!isMvpSubscriptionAndPaywallEnabled()) {
+    return <>{children}</>;
+  }
 
   // Check if all features are enabled
   const allEnabled = features.every((feature) =>

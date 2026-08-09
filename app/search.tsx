@@ -23,6 +23,7 @@ import { useScanStore } from '../src/store/useScanStore';
 import { useFavoritesStore } from '../src/store/useFavoritesStore';
 import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
 import { canUseAdvancedSearch } from '../src/utils/premiumFeatures';
+import { isMvpSubscriptionAndPaywallEnabled } from '../src/config/mvpRuntimeGates';
 import { fetchProduct } from '../src/services/productService';
 import { searchProducts } from '../src/services/productSearchService';
 import AdvancedSearchFilters from '../src/components/AdvancedSearchFilters';
@@ -58,7 +59,9 @@ export default function SearchScreen() {
   const { recentScans } = useScanStore();
   const { favorites } = useFavoritesStore();
   const { subscriptionInfo } = useSubscriptionStore();
-  const premiumSearch = canUseAdvancedSearch(subscriptionInfo);
+  // MVP: subscription/paywall deferred — advanced filters available without upgrade CTAs
+  const premiumSearch =
+    !isMvpSubscriptionAndPaywallEnabled() || canUseAdvancedSearch(subscriptionInfo);
 
   const filterContext = useMemo(() => {
     const scannedBarcodes = new Set(recentScans.map((s) => s.barcode));
@@ -76,10 +79,15 @@ export default function SearchScreen() {
   const listData = showFilterTeaser ? [] : premiumSearch ? filteredResults : fetchedResults;
 
   const openPaywall = useCallback(() => {
+    if (!isMvpSubscriptionAndPaywallEnabled()) return;
     setPaywallVisible(true);
   }, []);
 
   const goToSubscription = useCallback(() => {
+    if (!isMvpSubscriptionAndPaywallEnabled()) {
+      setPaywallVisible(false);
+      return;
+    }
     setPaywallVisible(false);
     navigation.navigate('Subscription');
   }, [navigation]);
@@ -378,7 +386,13 @@ export default function SearchScreen() {
         />
       </Modal>
 
-      <SearchPaywallModal visible={paywallVisible} onClose={() => setPaywallVisible(false)} onUpgradePress={goToSubscription} />
+      {isMvpSubscriptionAndPaywallEnabled() ? (
+        <SearchPaywallModal
+          visible={paywallVisible}
+          onClose={() => setPaywallVisible(false)}
+          onUpgradePress={goToSubscription}
+        />
+      ) : null}
     </View>
   );
 }

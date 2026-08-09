@@ -19,6 +19,10 @@ import OnboardingScreen from './onboarding';
 import SubscriptionScreen from './subscription';
 import MethodologyScreen from './methodology';
 import AppTabs from '../src/navigation/AppTabs';
+import {
+  isMvpLegacyPlanetCsvDatabasesEnabled,
+  isMvpSubscriptionAndPaywallEnabled,
+} from '../src/config/mvpRuntimeGates';
 
 // Import stores
 import { useScanStore } from '../src/store/useScanStore';
@@ -77,7 +81,8 @@ function RootLayout() {
                 console.warn('[RootLayout] Environment validation warnings:', validation.warnings);
               }
             },
-            critical: false,
+            // Critical: R-01 release Asset assert throws here — must not continue into producer=none
+            critical: true,
           },
           {
             name: 'rateLimiter',
@@ -87,14 +92,20 @@ function RootLayout() {
             },
             critical: false,
           },
-          {
-            name: 'csvDatabases',
-            task: async () => {
-              const { initializeCSVDatabases } = await import('../src/services/csvDatabases/csvDatabaseService');
-              await initializeCSVDatabases();
-            },
-            critical: false, // Non-critical - PLANET Pillar can work without it
-          },
+          ...(isMvpLegacyPlanetCsvDatabasesEnabled()
+            ? [
+                {
+                  name: 'csvDatabases',
+                  task: async () => {
+                    const { initializeCSVDatabases } = await import(
+                      '../src/services/csvDatabases/csvDatabaseService'
+                    );
+                    await initializeCSVDatabases();
+                  },
+                  critical: false, // Non-critical - PLANET Pillar can work without it
+                },
+              ]
+            : []),
           {
             name: 'settingsStore',
             task: async () => {
@@ -118,21 +129,25 @@ function RootLayout() {
             dependencies: ['settingsStore'],
             critical: false,
           },
-          {
-            name: 'subscriptionStore',
-            task: async () => {
-              await initSubscription();
-              // Verify initialization succeeded
-              const { isInitialized, error } = useSubscriptionStore.getState();
-              if (!isInitialized && error) {
-                console.warn('[RootLayout] Subscription initialization failed:', error);
-                // App continues in free mode - this is acceptable, don't throw
-              }
-            },
-            dependencies: ['settingsStore'],
-            critical: false, // Non-critical - app works in free mode
-            retries: 1,
-          },
+          ...(isMvpSubscriptionAndPaywallEnabled()
+            ? [
+                {
+                  name: 'subscriptionStore',
+                  task: async () => {
+                    await initSubscription();
+                    // Verify initialization succeeded
+                    const { isInitialized, error } = useSubscriptionStore.getState();
+                    if (!isInitialized && error) {
+                      console.warn('[RootLayout] Subscription initialization failed:', error);
+                      // App continues in free mode - this is acceptable, don't throw
+                    }
+                  },
+                  dependencies: ['settingsStore'],
+                  critical: false, // Non-critical - app works in free mode
+                  retries: 1,
+                },
+              ]
+            : []),
           {
             name: 'fsanDatabaseInitializer',
             task: async () => {
@@ -208,20 +223,21 @@ function RootLayout() {
       }
     });
 
-    // Refresh subscription status when app comes to foreground
-    const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
-        // App came to foreground - refresh subscription status
-        const { checkSubscriptionStatus } = useSubscriptionStore.getState();
-        checkSubscriptionStatus().catch(err => {
-          console.warn('[RootLayout] Failed to refresh subscription status:', err);
-        });
-      }
-    });
+    // Refresh subscription status when app comes to foreground (parked for MVP — no Qonversion)
+    const appStateSubscription = isMvpSubscriptionAndPaywallEnabled()
+      ? AppState.addEventListener('change', (nextAppState) => {
+          if (nextAppState === 'active') {
+            const { checkSubscriptionStatus } = useSubscriptionStore.getState();
+            checkSubscriptionStatus().catch((err) => {
+              console.warn('[RootLayout] Failed to refresh subscription status:', err);
+            });
+          }
+        })
+      : null;
 
     return () => {
       linkingSubscription.remove();
-      appStateSubscription.remove();
+      appStateSubscription?.remove();
     };
   }, []);
 
@@ -291,13 +307,15 @@ function RootLayout() {
                     presentation: 'modal',
                   }}
                 />
-                <Stack.Screen 
-                  name="Subscription" 
-                  component={SubscriptionScreen}
-                  options={{
-                    presentation: 'modal',
-                  }}
-                />
+                {isMvpSubscriptionAndPaywallEnabled() ? (
+                  <Stack.Screen
+                    name="Subscription"
+                    component={SubscriptionScreen}
+                    options={{
+                      presentation: 'modal',
+                    }}
+                  />
+                ) : null}
                 <Stack.Screen
                   name="Methodology"
                   component={MethodologyScreen}

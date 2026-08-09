@@ -10,6 +10,7 @@ import { useSettingsStore } from '../../../store/useSettingsStore';
 import { getPlanetScoringContext } from '../../../utils/planetScoringContext';
 import { logger } from '../../../utils/logger';
 import { getManualProduct, isManualProduct } from '../../../services/manualProductService';
+import { isMvpLegacyAlertsInsightsEnabled } from '../../../config/mvpRuntimeGates';
 
 interface UseProductDataOptions {
   barcode: string;
@@ -30,6 +31,7 @@ export function useProductData({
   const [error, setError] = useState<Error | null>(null);
   const alertsPreferences = useAlertsStore();
   const planetPackagingMarket = useSettingsStore((s) => s.planetPackagingMarket);
+  const prefsForInsights = isMvpLegacyAlertsInsightsEnabled() ? alertsPreferences : undefined;
 
   const loadProduct = async () => {
     setLoading(true);
@@ -39,7 +41,7 @@ export function useProductData({
       const manualProduct = await getManualProduct(barcode);
       if (manualProduct) {
         setProduct(manualProduct);
-        const calculated = calculateTruScore(manualProduct, alertsPreferences, getPlanetScoringContext());
+        const calculated = calculateTruScore(manualProduct, prefsForInsights, getPlanetScoringContext());
         setTruScore(calculated);
         setLoading(false);
         return;
@@ -49,7 +51,7 @@ export function useProductData({
       const productData = await fetchProduct(barcode, useCache, isPremium, isOffline);
       if (productData) {
         setProduct(productData);
-        const calculated = calculateTruScore(productData, alertsPreferences, getPlanetScoringContext());
+        const calculated = calculateTruScore(productData, prefsForInsights, getPlanetScoringContext());
         setTruScore(calculated);
       } else {
         setError(new Error('Product not found'));
@@ -68,7 +70,7 @@ export function useProductData({
       const productData = await refreshProduct(barcode);
       if (productData) {
         setProduct(productData);
-        const calculated = calculateTruScore(productData, alertsPreferences, getPlanetScoringContext());
+        const calculated = calculateTruScore(productData, prefsForInsights, getPlanetScoringContext());
         setTruScore(calculated);
       }
     } catch (err) {
@@ -83,13 +85,13 @@ export function useProductData({
     loadProduct();
   }, [barcode, useCache, isPremium, isOffline]);
 
-  // Recalculate TruScore when user alert preferences change
+  // Recalculate TruScore when user alert preferences change (legacy insights parked for MVP)
   useEffect(() => {
     if (product) {
-      const calculated = calculateTruScore(product, alertsPreferences, getPlanetScoringContext());
+      const calculated = calculateTruScore(product, prefsForInsights, getPlanetScoringContext());
       setTruScore(calculated);
     }
-  }, [alertsPreferences, product, planetPackagingMarket]);
+  }, [alertsPreferences, product, planetPackagingMarket, prefsForInsights]);
 
   return {
     product,

@@ -107,6 +107,11 @@ import ProductDisclaimerCard from '../../src/components/productLegal/ProductDisc
 import ProductDataLimitationsCard from '../../src/components/productLegal/ProductDataLimitationsCard';
 import PremiumGate from '../../src/components/PremiumGate';
 import { PremiumFeature, isPremiumFeatureEnabled } from '../../src/utils/premiumFeatures';
+import {
+  isMvpAllergensUiEnabled,
+  isMvpLegacyAlertsInsightsEnabled,
+  isMvpPricingUiEnabled,
+} from '../../src/config/mvpRuntimeGates';
 import type { RootStackParamList } from '../_layout';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -378,9 +383,11 @@ function ResultScreenContent() {
     checkUserContributed();
   }, [barcode, product]);
 
-  // Initialize values store
+  // Initialize values store (parked for MVP — preferences must not revive legacy insights cards)
   useEffect(() => {
-    alertsPreferences.initializeStore();
+    if (isMvpLegacyAlertsInsightsEnabled()) {
+      alertsPreferences.initializeStore();
+    }
   }, []);
 
   // Use TruScore from product object (already calculated in productService.ts using truscoreEngine.ts)
@@ -389,13 +396,15 @@ function ResultScreenContent() {
     if (product) {
       // Use score from product if available (from productService.ts - consistent with logs)
       if (product.trust_score !== null && product.trust_score_breakdown) {
-        // Generate insights if values preferences are enabled
+        // S-02: legacy Alerts/MyChoices insights parked for MVP
         let insights: TruScoreResult['insights'] = undefined;
-        if (alertsPreferences && (
-          alertsPreferences.geopoliticalEnabled ||
-          alertsPreferences.ethicalEnabled ||
-          alertsPreferences.environmentalEnabled
-        )) {
+        if (
+          isMvpLegacyAlertsInsightsEnabled() &&
+          alertsPreferences &&
+          (alertsPreferences.geopoliticalEnabled ||
+            alertsPreferences.ethicalEnabled ||
+            alertsPreferences.environmentalEnabled)
+        ) {
           try {
             const generatedInsights = generateInsights(product, alertsPreferences);
             if (generatedInsights && generatedInsights.length > 0) {
@@ -2101,12 +2110,14 @@ function ResultScreenContent() {
           </TouchableOpacity>
         </Pressable>
 
-        {/* Price Information */}
-        <UniversalPricingCard 
-          barcode={barcode} 
-          productName={product?.product_name || product.product_name_en || undefined}
-          product={product}
-        />
+        {/* Price Information — deferred for MVP */}
+        {isMvpPricingUiEnabled() ? (
+          <UniversalPricingCard
+            barcode={barcode}
+            productName={product?.product_name || product.product_name_en || undefined}
+            product={product}
+          />
+        ) : null}
 
         {/* Ingredients */}
         {product.ingredients_text && (() => {
@@ -2310,8 +2321,8 @@ function ResultScreenContent() {
           </Pressable>
         )}
 
-        {/* Allergens & Additives - Premium Feature */}
-        {(product.allergens_tags || product.additives_tags) && (
+        {/* Allergens & Additives — deferred for MVP */}
+        {isMvpAllergensUiEnabled() && (product.allergens_tags || product.additives_tags) && (
           <PremiumGate feature={PremiumFeature.ALLERGENS_ADDITIVES}>
             {(() => {
               const hasAllergens = product.allergens_tags && product.allergens_tags.length > 0;
@@ -2460,8 +2471,9 @@ function ResultScreenContent() {
         onClose={() => setEcoScoreModalVisible(false)}
       />
 
-      {/* Allergens & Additives Modal - Premium Feature */}
-      {isPremiumFeatureEnabled(PremiumFeature.ALLERGENS_ADDITIVES, subscriptionInfo) && (
+      {/* Allergens & Additives Modal — deferred for MVP */}
+      {isMvpAllergensUiEnabled() &&
+        isPremiumFeatureEnabled(PremiumFeature.ALLERGENS_ADDITIVES, subscriptionInfo) && (
         <AllergensAdditivesModal
           visible={allergensAdditivesModalVisible}
           onClose={() => setAllergensAdditivesModalVisible(false)}

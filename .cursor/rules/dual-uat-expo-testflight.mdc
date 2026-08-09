@@ -1,0 +1,42 @@
+---
+description: Dual UAT paths — AU TestFlight + NZ Expo Go/Metro must stay viable
+alwaysApply: true
+---
+
+# Dual-device UAT convention (AU TestFlight + NZ Expo Go)
+
+## Standing test setup
+
+| Tester | Platform | How they run the app |
+|--------|----------|----------------------|
+| **Australia** | iPhone | **TestFlight** (EAS store/UAT iOS build) |
+| **New Zealand** | Android | **Expo Go** + Metro (`npx expo start -c`, scan QR) |
+
+Both paths are intentional and must remain usable for ongoing development UAT.
+
+## Do not break NZ Expo Go testing
+
+When changing Signals, identity, Result, env, or EAS config:
+
+1. **Keep** committed `.env.development` with:
+   - `EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET=1`
+   - `EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH=1`
+   - `EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT=0`
+2. **Keep** `app.config.js` defaults that set those flags when unset (Metro/Expo Go safety net).
+3. **Keep** store/release EAS profiles (`production`, `preview`, and UAT Dynamic Signals profiles) baking `EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET=1` so AU TestFlight does not silently ship `producer=none`.
+4. Prefer JS/TS changes that work in **Expo Go**. Do not require a custom dev client or native-only module for MVP Dynamic Signals / Result behaviour unless founders explicitly authorise it.
+5. After Signal pack / A-data / chaining CSV changes that affect on-device matching, regenerate the Asset embed (`npm run generate:dsa-asset-runtime-embed`) so Metro and EAS both see the same pack.
+6. Do not remove or default-off Asset for local development without founder approval — that recreates the NZ zero-Signal Expo Go failure mode.
+
+## Acceptable Expo Go differences
+
+These are expected on NZ Expo Go and are **not** blockers for Signals/product UAT:
+
+- Qonversion / subscription native module unavailable
+- Some native-only premium/paywall behaviour
+
+AU TestFlight remains the path for native iOS / TestFlight-specific checks.
+
+## Simple NZ instructions (do not complicate)
+
+See `docs/uat/NZ_EXPO_GO_SIMPLE_TEST_STEPS.md`. NZ tester should not need manual env editing for normal ongoing UAT.

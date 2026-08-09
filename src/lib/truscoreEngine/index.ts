@@ -13,6 +13,7 @@
 import { Product } from '../../types/product';
 import { AlertsPreferences } from '../../store/useAlertsStore';
 import { generateInsights } from '../alertsInsights';
+import { isMvpLegacyAlertsInsightsEnabled } from '../../config/mvpRuntimeGates';
 import { logger } from '../../utils/logger';
 import { powershellLogger } from '../../utils/powershellLogger';
 import type { TruScoreAnalysis, FetchTraceEntry, PillarAnalysis, PillarAdjustmentWithSource } from '../../types/truscoreAnalysis';
@@ -139,8 +140,11 @@ export function calculateTruScore(
     // Total with bounds checking (0-100)
     const truscore = Math.max(0, Math.min(100, Math.round(body + planet + ethics + open)));
     
-    // Generate insights if preferences provided
-    const insights = preferences ? generateInsights(scoringProduct, preferences) : [];
+    // Legacy Alerts/MyChoices insights — parked for MVP (S-02); Asset Signals are sole Signal-content authority
+    const insights =
+      preferences && isMvpLegacyAlertsInsightsEnabled()
+        ? generateInsights(scoringProduct, preferences)
+        : [];
     
     // Determine metadata
     const hasNutriScore = !!scoringProduct.nutriscore_grade;

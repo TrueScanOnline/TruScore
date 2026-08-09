@@ -9,6 +9,7 @@ import { Platform } from 'react-native';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useTheme } from '../theme';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { isMvpAlertsTabEnabled } from '../config/mvpRuntimeGates';
 import type {
   ScanStackParamList,
   SearchStackParamList,
@@ -259,13 +260,15 @@ export default function AppTabs() {
           tabBarLabel: t('tabs.favourites'),
         }}
       />
-      <Tab.Screen
-        name="Alerts"
-        component={AlertsStackNavigator}
-        options={{
-          tabBarLabel: t('tabs.alerts'),
-        }}
-      />
+      {isMvpAlertsTabEnabled() ? (
+        <Tab.Screen
+          name="Alerts"
+          component={AlertsStackNavigator}
+          options={{
+            tabBarLabel: t('tabs.alerts'),
+          }}
+        />
+      ) : null}
       <Tab.Screen
         name="Settings"
         component={ProfileScreenWithBoundary}

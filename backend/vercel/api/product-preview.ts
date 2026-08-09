@@ -8,8 +8,6 @@ import { calculateBodyPillar } from '../truescan-src/lib/truscoreEngine/pillars/
 import { calculatePlanetPillar } from '../truescan-src/lib/truscoreEngine/pillars/planetPillar';
 import { calculateEthicsPillar } from '../truescan-src/lib/truscoreEngine/pillars/ethicsPillar';
 import { calculateOpenPillar } from '../truescan-src/lib/truscoreEngine/pillars/openPillar';
-import { initializeCSVDatabases } from '../truescan-src/services/csvDatabases/csvDatabaseService';
-
 /** Rewritten from /api/share-event (same serverless function on Hobby). */
 function handleShareEventRoute(req: VercelRequest, res: VercelResponse): void | VercelResponse {
   if (req.method === 'OPTIONS') {
@@ -102,10 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         let trustScoreBreakdown: ProductPreview['trust_score_breakdown'];
 
         try {
-          await initializeCSVDatabases().catch((e) => {
-            console.warn('[product-preview] CSV DB init skipped:', e);
-          });
-
+          // S-04: Planet v19 does not require legacy CSV databases; skip vestigial init.
           const truescanProduct = offJsonProductToTruescan(barcode, offProduct);
           const body = calculateBodyPillar(truescanProduct).score;
           const planet = calculatePlanetPillar(truescanProduct).score;

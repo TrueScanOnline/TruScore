@@ -1,5 +1,17 @@
 const nativeIdentity = require('./src/config/productIdentity.expo.json');
 
+// Local Metro / Expo Go: default Dynamic Signals Asset on when unset.
+// EAS profiles may still override explicitly. Release profiles should set Asset=1.
+if (process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET === undefined) {
+  process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '1';
+}
+if (process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH === undefined) {
+  process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+}
+if (process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT === undefined) {
+  process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = '0';
+}
+
 module.exports = {
   expo: {
     name: nativeIdentity.appName,

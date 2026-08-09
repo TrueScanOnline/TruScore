@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../app/_layout';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import { PremiumFeature, PremiumFeatureDescriptions, isPremiumFeatureEnabled, getPremiumFeatureMessage } from '../utils/premiumFeatures';
+import { isMvpSubscriptionAndPaywallEnabled } from '../config/mvpRuntimeGates';
 import { useTheme } from '../theme';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -23,6 +24,11 @@ export default function PremiumGate({ feature, children, fallback, showUpgradeBu
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const { subscriptionInfo } = useSubscriptionStore();
+
+  // MVP: subscription/paywall deferred — no upgrade CTAs; show content in free mode
+  if (!isMvpSubscriptionAndPaywallEnabled()) {
+    return <>{children}</>;
+  }
 
   const isEnabled = isPremiumFeatureEnabled(feature, subscriptionInfo);
   const featureDesc = PremiumFeatureDescriptions[feature];
