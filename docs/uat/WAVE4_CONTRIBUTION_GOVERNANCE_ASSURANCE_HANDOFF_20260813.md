@@ -13,7 +13,8 @@
 |---|---|---|
 | Package commit | `a98c0b3c2d7eaff2d963224b45ae21b05f7de384` | First bounded governance package (pending cannot score) |
 | Handoff note | `ab46cc8bea06a95ca3860b7024c110e897a3147c` | Docs-only: records package SHA in handoff |
-| Final review tip | *(filled at tag time)* | Assurance-ready completion (promotion path + proofs) |
+| Final implementation package | `6742f123c0999cb34a041de4b69e8c2bf4212bef` | Assurance-ready promotion path + proofs |
+| Tip tagged for assurance | resolve via tag `wave4-contribution-governance-assurance-20260812` | Docs-only commit after implementation package |
 
 `git diff --stat a98c0b3..ab46cc8`:
 
