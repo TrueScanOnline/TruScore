@@ -2,6 +2,7 @@ import {
   getCommunityVerificationPolicy,
   type ContributionDisputeReason,
 } from '../config/contributionPolicy';
+import { isLaneACertificationEvidence } from './certificationLane';
 import type { ContributionEvidence, DisputeResponse, FounderAdminAction } from './types';
 
 function otherActiveConfirmations(evidence: ContributionEvidence): number {
@@ -19,29 +20,57 @@ function hasActiveResponse(evidence: ContributionEvidence, contributorId: string
   );
 }
 
+function computeScoringEligible(evidence: ContributionEvidence): boolean {
+  const policy = getCommunityVerificationPolicy(evidence.domain);
+  if (!policy.canonicalPromotionPermission) return false;
+  if (evidence.domain === 'origins') return true;
+  if (evidence.domain === 'certifications') {
+    if (policy.laneBScoring === false) {
+      return isLaneACertificationEvidence({
+        labelsTags: evidence.labelsTags,
+        claimValue: evidence.claimValue,
+        certificationLane: evidence.certificationLane,
+      });
+    }
+    return true;
+  }
+  return false;
+}
+
 function recomputeState(evidence: ContributionEvidence): ContributionEvidence {
   if (evidence.state === 'superseded' || evidence.state === 'withdrawn') {
-    return { ...evidence, scoringEligible: false };
+    return { ...evidence, scoringEligible: false, canonicalPromoted: false };
   }
 
   const policy = getCommunityVerificationPolicy(evidence.domain);
   const disputes = uniqueActiveDisputes(evidence);
   if (disputes >= policy.independentDisputesTriggeringReviewRequired) {
+    // MVP: review_required does not auto-withdraw or alter prior scoring eligibility.
     return {
       ...evidence,
       state: 'review_required',
-      scoringEligible: false,
+      scoringEligible: evidence.scoringEligible,
+      canonicalPromoted: evidence.canonicalPromoted,
     };
   }
 
   const confirmations = otherActiveConfirmations(evidence);
   if (confirmations >= policy.independentConfirmationsRequired) {
-    const scoringEligible =
-      evidence.domain === 'certifications' && policy.canonicalPromotionPermission;
+    const scoringEligible = computeScoringEligible(evidence);
     return {
       ...evidence,
       state: 'cross_user_eligible',
       scoringEligible,
+      certificationLane:
+        evidence.domain === 'certifications'
+          ? isLaneACertificationEvidence({
+              labelsTags: evidence.labelsTags,
+              claimValue: evidence.claimValue,
+              certificationLane: evidence.certificationLane,
+            })
+            ? 'A'
+            : 'B'
+          : evidence.certificationLane,
     };
   }
 
@@ -59,8 +88,19 @@ export function createPendingEvidence(
     'state' | 'confirmations' | 'disputes' | 'scoringEligible' | 'canonicalPromoted' | 'updatedAt'
   > & { createdAt: number }
 ): ContributionEvidence {
+  const certificationLane =
+    base.domain === 'certifications'
+      ? base.certificationLane ||
+        (isLaneACertificationEvidence({
+          labelsTags: base.labelsTags,
+          claimValue: base.claimValue,
+        })
+          ? 'A'
+          : 'B')
+      : undefined;
   return {
     ...base,
+    certificationLane,
     updatedAt: base.createdAt,
     state: 'pending',
     confirmations: [],
@@ -173,7 +213,9 @@ export function automaticWithdrawalEnabled(domain: 'origins' | 'certifications')
 export function canPromoteToCanonicalProduct(evidence: ContributionEvidence): boolean {
   const policy = getCommunityVerificationPolicy(evidence.domain);
   if (!policy.canonicalPromotionPermission) return false;
-  return evidence.state === 'cross_user_eligible' && evidence.domain === 'certifications';
+  if (evidence.state !== 'cross_user_eligible') return false;
+  if (!evidence.scoringEligible) return false;
+  return evidence.domain === 'certifications' || evidence.domain === 'origins';
 }
 
 export function markCanonicalPromoted(
@@ -187,6 +229,20 @@ export function markCanonicalPromoted(
     scoringEligible: true,
     updatedAt: timestamp,
   };
+}
+
+/** Confirm then promote when policy + lane allow — single governed path into scorers. */
+export function confirmAndPromoteIfEligible(
+  evidence: ContributionEvidence,
+  contributorId: string,
+  timestamp = Date.now()
+): { ok: boolean; evidence: ContributionEvidence; reason?: string } {
+  const confirmed = confirmEvidence(evidence, contributorId, timestamp);
+  if (!confirmed.ok) return confirmed;
+  if (!canPromoteToCanonicalProduct(confirmed.evidence)) {
+    return confirmed;
+  }
+  return { ok: true, evidence: markCanonicalPromoted(confirmed.evidence, timestamp) };
 }
 
 export { recomputeState };

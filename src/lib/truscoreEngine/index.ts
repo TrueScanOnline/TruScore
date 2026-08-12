@@ -44,6 +44,11 @@ export interface Insight {
 export type TruScoreScoringContext = {
   /** When set, merged onto the product as `true_scan_market` for Planet packaging fallback. */
   planetMarket?: 'AU' | 'NZ';
+  /**
+   * Verified + canonically promoted contribution evidence authorised to reach existing scorers.
+   * Pending evidence must not be passed here.
+   */
+  promotedContributionEvidence?: import('../../contributions/types').ContributionEvidence[];
 };
 
 export interface TruScoreResult {
@@ -103,7 +108,8 @@ export function calculateTruScore(
 
   let eligible: Product = product;
   try {
-    eligible = toScoringProduct(product) || product;
+    eligible =
+      toScoringProduct(product, scoringContext?.promotedContributionEvidence || []) || product;
   } catch (boundaryError) {
     logger.warn('[truscoreEngine] contribution eligibility boundary failed; scoring without unauthored contribution fields', boundaryError);
     eligible = stripUnauthoredScoringFieldsFromContribution(product);

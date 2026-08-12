@@ -120,6 +120,10 @@ export async function submitManufacturingCountry(
       claimValue: validatedCountry,
       imageUrl: validatedPhotoUrl,
       exactWording: validatedCountry,
+      originStructured: {
+        claimType: 'made_in',
+        primaryCountry: validatedCountry,
+      },
     }).catch((err) => {
       logger.warn('[ManufacturingCountryService] Governed evidence persist failed (non-blocking):', err);
     });

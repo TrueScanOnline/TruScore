@@ -356,6 +356,10 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
             domain: 'origins',
             claimValue: originClaim,
             exactWording: originClaim,
+            originStructured: {
+              claimType: 'made_in',
+              primaryCountry: originClaim,
+            },
           });
         }
         if (data.labels_tags && data.labels_tags.length > 0) {

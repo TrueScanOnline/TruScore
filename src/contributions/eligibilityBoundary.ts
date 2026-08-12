@@ -1,6 +1,7 @@
 /**
  * Single promotion/eligibility boundary upstream of Ethics/Open/TruScore.
  * Pending Rveel contribution fields never enter the scoring-ready Product.
+ * Verified + promoted evidence may enter the existing pillar input fields only.
  */
 
 import type { Product } from '../types/product';
@@ -8,10 +9,12 @@ import { CONTRIBUTION_POLICY } from '../config/contributionPolicy';
 import type { ContributionEvidence, RveelPendingContributionFields } from './types';
 import { RVEEL_PENDING_FIELD_MARK } from './types';
 import { canPromoteToCanonicalProduct } from './lifecycle';
+import { countryToManufacturingTag } from './originStructured';
 
 export type ProductWithContributionMark = Product & {
   [RVEEL_PENDING_FIELD_MARK]?: RveelPendingContributionFields;
   _source?: string;
+  _database?: string;
 };
 
 const USER_ORIGIN_KEYS = [
@@ -26,15 +29,62 @@ const USER_ORIGIN_KEYS = [
 function isStandaloneLocalContribution(product: ProductWithContributionMark): boolean {
   const src = String(product.source || '');
   const overlay = String(product._source || '');
-  if (src.includes('openfoodfacts') || src.includes('sqlite') || src.includes('+')) return false;
-  return src === 'user_contributed' || overlay === 'LOCAL';
+  const database = String(product._database || '').toLowerCase();
+  if (src.includes('openfoodfacts') || src.includes('sqlite') || src.includes('+')) {
+    // Storage medium alone is not trust — LOCAL/BACKEND overlays still strip.
+    if (overlay === 'LOCAL' || overlay === 'BACKEND') return true;
+    if (database.includes('asyncstorage') || database.includes('user contrib')) return true;
+    return false;
+  }
+  return (
+    src === 'user_contributed' ||
+    overlay === 'LOCAL' ||
+    overlay === 'BACKEND' ||
+    database.includes('asyncstorage')
+  );
+}
+
+function applyPromotedCertifications(
+  next: ProductWithContributionMark,
+  promotedEvidence: ContributionEvidence[]
+): void {
+  const promotedTags = promotedEvidence
+    .filter((e) => e.domain === 'certifications' && canPromoteToCanonicalProduct(e) && e.canonicalPromoted)
+    .flatMap((e) => e.labelsTags || [e.claimValue || e.claimKey]);
+
+  if (promotedTags.length > 0) {
+    next.labels_tags = [...new Set([...(next.labels_tags || []), ...promotedTags])];
+  }
+}
+
+function applyPromotedOrigins(
+  next: ProductWithContributionMark,
+  promotedEvidence: ContributionEvidence[]
+): void {
+  const promotedOrigins = promotedEvidence.filter(
+    (e) => e.domain === 'origins' && canPromoteToCanonicalProduct(e) && e.canonicalPromoted
+  );
+  if (promotedOrigins.length === 0) return;
+
+  // Use the latest promoted evidence version for the barcode claim set.
+  const chosen = promotedOrigins.reduce((a, b) => (a.updatedAt >= b.updatedAt ? a : b));
+  const country =
+    chosen.originStructured?.primaryCountry?.trim() ||
+    chosen.claimValue.trim() ||
+    chosen.claimKey;
+  if (!country) return;
+
+  const tag = countryToManufacturingTag(country);
+  // Feed existing Open complete-origin inputs (string + tags) without inventing new methodology.
+  next.manufacturing_places = country;
+  next.manufacturing_places_tags = [...new Set([...(next.manufacturing_places_tags || []), tag])];
 }
 
 /**
  * Product representation that pillar scoring may consume.
  * Trusted external fields stay. Standalone local contribution records cannot
  * supply nutrition, ingredients, origin, or certification tags to scoring.
- * Promoted (cross_user_eligible + policy) certification tags may be unioned.
+ * Promoted (cross_user_eligible + policy + lane) evidence may be applied.
  */
 export function toScoringProduct(
   product: Product | null | undefined,
@@ -71,13 +121,8 @@ export function toScoringProduct(
     next.certifications = undefined;
   }
 
-  const promotedTags = promotedEvidence
-    .filter((e) => canPromoteToCanonicalProduct(e) && e.canonicalPromoted)
-    .flatMap((e) => e.labelsTags || (e.domain === 'certifications' ? [e.claimKey] : []));
-
-  if (promotedTags.length > 0) {
-    next.labels_tags = [...new Set([...(next.labels_tags || []), ...promotedTags])];
-  }
+  applyPromotedCertifications(next, promotedEvidence);
+  applyPromotedOrigins(next, promotedEvidence);
 
   delete next[RVEEL_PENDING_FIELD_MARK];
   return next;

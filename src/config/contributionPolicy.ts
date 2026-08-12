@@ -26,6 +26,35 @@ export const CONTRIBUTION_DISPUTE_REASONS = [
 ] as const;
 export type ContributionDisputeReason = (typeof CONTRIBUTION_DISPUTE_REASONS)[number];
 
+export const ORIGIN_CLAIM_TYPES = [
+  'made_in',
+  'produced_in',
+  'grown_in',
+  'packed_in',
+  'processed_in',
+  'other',
+] as const;
+export type OriginClaimType = (typeof ORIGIN_CLAIM_TYPES)[number];
+
+export const ORIGIN_PERCENTAGE_QUALIFIERS = [
+  'at_least',
+  'exactly',
+  'more_than',
+  'less_than',
+  'other_unclear',
+] as const;
+export type OriginPercentageQualifier = (typeof ORIGIN_PERCENTAGE_QUALIFIERS)[number];
+
+/**
+ * Founder-approved Ingredients & Nutrition success response direction.
+ * Successful submission does not trigger immediate Rveel scoring.
+ */
+export const INGREDIENTS_NUTRITION_SUCCESS_COPY = {
+  title: 'Thanks for helping improve this product.',
+  body:
+    "We've sent your contribution to Open Food Facts. Once the updated information is available through their public product record, Rveel can use it in a future scan.",
+} as const;
+
 export const CONTRIBUTION_POLICY = {
   ingredientsNutrition: {
     personalProvisionalScoring: false,
@@ -33,6 +62,7 @@ export const CONTRIBUTION_POLICY = {
     localSubmittedEvidenceCrossUserScoring: false,
     canonicalScoringFromLocalContribution: false,
     authorityRoute: 'off_public_product_retrieval' as const,
+    successCopy: INGREDIENTS_NUTRITION_SUCCESS_COPY,
   },
   origins: {
     continuedConfirmationAfterPromotion: true,
@@ -42,7 +72,8 @@ export const CONTRIBUTION_POLICY = {
     automaticWithdrawal: false,
     founderAdminOverrideSupported: true,
     personalProvisionalScoring: false,
-    canonicalPromotionPermission: false,
+    /** Verified Origins may promote into the existing Open origin path. */
+    canonicalPromotionPermission: true,
   },
   certifications: {
     continuedConfirmationAfterPromotion: true,
@@ -53,6 +84,7 @@ export const CONTRIBUTION_POLICY = {
     founderAdminOverrideSupported: true,
     laneAPersonalProvisionalScoring: false,
     laneBScoring: false,
+    /** Lane A recognised schemes may promote; Lane B stays non-scoring. */
     canonicalPromotionPermission: true,
   },
 } as const;

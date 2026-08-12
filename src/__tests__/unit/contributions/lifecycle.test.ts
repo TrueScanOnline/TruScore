@@ -1,6 +1,7 @@
 import {
   applyFounderAdminAction,
   canPromoteToCanonicalProduct,
+  confirmAndPromoteIfEligible,
   confirmEvidence,
   createPendingEvidence,
   disputeEvidence,
@@ -30,6 +31,7 @@ function pendingOrigin(): ContributionEvidence {
     evidenceVersion: 1,
     claimKey: 'new zealand',
     claimValue: 'New Zealand',
+    originStructured: { claimType: 'made_in', primaryCountry: 'New Zealand' },
     submitterId: 'user_submitter',
     createdAt: 1,
   });
@@ -41,6 +43,7 @@ describe('contribution evidence lifecycle', () => {
     expect(evidence.state).toBe('pending');
     expect(evidence.scoringEligible).toBe(false);
     expect(evidence.canonicalPromoted).toBe(false);
+    expect(evidence.certificationLane).toBe('A');
   });
 
   it('submitter cannot confirm or dispute their own evidence', () => {
@@ -49,26 +52,22 @@ describe('contribution evidence lifecycle', () => {
     expect(disputeEvidence(evidence, 'user_submitter', 'claim_not_present').ok).toBe(false);
   });
 
-  it('one independent confirmation reaches cross_user_eligible', () => {
-    const confirmed = confirmEvidence(pendingCert(), 'user_other');
-    expect(confirmed.ok).toBe(true);
-    expect(confirmed.evidence.state).toBe('cross_user_eligible');
-    expect(confirmed.evidence.scoringEligible).toBe(true);
+  it('one independent confirmation reaches cross_user_eligible for Lane A and Origins', () => {
+    const cert = confirmEvidence(pendingCert(), 'user_other');
+    expect(cert.evidence.state).toBe('cross_user_eligible');
+    expect(cert.evidence.scoringEligible).toBe(true);
+
+    const origin = confirmEvidence(pendingOrigin(), 'user_other');
+    expect(origin.evidence.state).toBe('cross_user_eligible');
+    expect(origin.evidence.scoringEligible).toBe(true);
+    expect(canPromoteToCanonicalProduct(origin.evidence)).toBe(true);
   });
 
-  it('Origins confirmation never becomes scoring-eligible (canonicalPromotionPermission false)', () => {
-    const confirmed = confirmEvidence(pendingOrigin(), 'user_other');
-    expect(confirmed.ok).toBe(true);
-    expect(confirmed.evidence.state).toBe('cross_user_eligible');
-    expect(confirmed.evidence.scoringEligible).toBe(false);
-    expect(canPromoteToCanonicalProduct(confirmed.evidence)).toBe(false);
-  });
-
-  it('two independent disputes move evidence to review_required', () => {
+  it('two independent disputes move evidence to review_required without withdrawal', () => {
     const first = disputeEvidence(pendingCert(), 'user_a', 'claim_not_present');
     const second = disputeEvidence(first.evidence, 'user_b', 'wrong_product');
     expect(second.evidence.state).toBe('review_required');
-    expect(second.evidence.scoringEligible).toBe(false);
+    expect(second.evidence.state).not.toBe('withdrawn');
   });
 
   it('one active response per contributor per evidence version', () => {
@@ -79,20 +78,20 @@ describe('contribution evidence lifecycle', () => {
     expect(disputed.evidence.disputes).toHaveLength(1);
   });
 
-  it('founder withdraw/suppress closes evidence without automatic withdrawal', () => {
+  it('founder withdraw/suppress closes evidence without automatic withdrawal policy', () => {
     const withdrawn = applyFounderAdminAction(pendingCert(), 'withdraw');
     expect(withdrawn.state).toBe('withdrawn');
     expect(withdrawn.scoringEligible).toBe(false);
     expect(confirmEvidence(withdrawn, 'user_other').ok).toBe(false);
   });
 
-  it('CERT promotion is reserved: eligible certs may be marked promoted; origins cannot', () => {
-    const certEligible = confirmEvidence(pendingCert(), 'user_other').evidence;
-    expect(canPromoteToCanonicalProduct(certEligible)).toBe(true);
-    const promoted = markCanonicalPromoted(certEligible);
-    expect(promoted.canonicalPromoted).toBe(true);
-
-    const originEligible = confirmEvidence(pendingOrigin(), 'user_other').evidence;
-    expect(markCanonicalPromoted(originEligible).canonicalPromoted).toBe(false);
+  it('confirmAndPromoteIfEligible promotes Lane A and Origins', () => {
+    const cert = confirmAndPromoteIfEligible(pendingCert(), 'user_other').evidence;
+    expect(cert.canonicalPromoted).toBe(true);
+    const origin = confirmAndPromoteIfEligible(pendingOrigin(), 'user_other').evidence;
+    expect(origin.canonicalPromoted).toBe(true);
+    expect(markCanonicalPromoted(confirmEvidence(pendingOrigin(), 'user_x').evidence).canonicalPromoted).toBe(
+      true
+    );
   });
 });

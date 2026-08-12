@@ -32,6 +32,20 @@ Conservative treatment for any historically exposed origin/cert/nutrition field:
 
 No `DATABASE_URL`/`POSTGRES_URL` in this run. Inventory is the key map + conservative pending treatment above. A live read-only pass can be attached later without changing policy.
 
+### Hard precondition before any later Vercel/backend production deployment
+
+A **read-only** live exposure inventory must establish, where available:
+
+- total relevant records;
+- affected GTINs;
+- leak fields present;
+- contributor/source/date provenance;
+- any record whose conservative treatment might suppress genuinely governed data unexpectedly.
+
+No deletion or mutation is authorised by that later read-only inventory either unless separately approved.
+
+This limitation does **not** block creation of the assurance baseline.
+
 ## Residual risk
 
 - On-device caches written before this package may still hold leaked origin/cert fields. `calculateTruScore` → `toScoringProduct` strips standalone `user_contributed` records and pending-marked fields. Trusted OFF/SQLite fields are unchanged (W1).
