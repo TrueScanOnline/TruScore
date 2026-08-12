@@ -210,11 +210,13 @@ describe('User Contribution System - Complete E2E Tests', () => {
       // User B retrieves product
       const product = await getUserContributedProduct(TEST_BARCODE);
 
-      // Backend manual-products only exposes proprietary fields (country / certifications / photo merge).
-      // Name, ingredients, allergens, and scoring fields come from Open Food Facts after merge in the app.
+      // Backend manual-products exposes non-scoring proprietary fields only.
+      // Origin/certs are governed evidence; scoring fields come from Open Food Facts.
       expect(product).not.toBeNull();
-      expect(product?.manufacturing_places).toBe('New Zealand');
-      expect(product?.countries).toBe('New Zealand');
+      expect(product?.allergens_tags).toEqual(expect.arrayContaining(['en:milk', 'en:soy']));
+      expect(product?.additives_tags).toEqual(expect.arrayContaining(['en:e412', 'en:e202']));
+      expect(product?.manufacturing_places).toBeUndefined();
+      expect(product?.countries).toBeUndefined();
       expect(product?.source).toBe('user_contributed');
       expect((product as any)._source).toBe('BACKEND');
     });
@@ -460,6 +462,7 @@ describe('User Contribution System - Complete E2E Tests', () => {
         product_name: 'App User Priority Product',
         ingredients_text: 'App User Ingredients',
         countries: 'App User Origin',
+        allergens_tags: ['en:milk'],
         timestamp: Date.now(),
       };
 
@@ -481,6 +484,10 @@ describe('User Contribution System - Complete E2E Tests', () => {
           backendCallOrder.push('backend');
           return Promise.resolve(mockFetchResponse({ success: true, barcode: TEST_BARCODE }));
         }
+        if (urlString.includes('/api/contribution-evidence') && method === 'POST') {
+          backendCallOrder.push('evidence');
+          return Promise.resolve(mockFetchResponse({ success: true, scoringFieldsWritten: false }));
+        }
         if (urlString.includes('openfoodfacts.org')) {
           backendCallOrder.push('openfoodfacts');
           return Promise.resolve(mockFetchResponse({ status: 1 }));
@@ -490,8 +497,9 @@ describe('User Contribution System - Complete E2E Tests', () => {
 
       await saveManualProduct(productData);
 
-      // Verify backend is called (app users get data first)
+      // Non-scoring proprietary slice still posts to manual-products; origin/certs go to evidence.
       expect(backendCallOrder).toContain('backend');
+      expect(backendCallOrder).toContain('evidence');
       
       // When User B retrieves, they should get data from backend (not Open Food Facts)
       AsyncStorage.getItem.mockResolvedValue(null);
@@ -506,6 +514,7 @@ describe('User Contribution System - Complete E2E Tests', () => {
                 product_name: 'App User Priority Product',
                 ingredients_text: 'App User Ingredients',
                 countries: 'App User Origin',
+                allergens_tags: ['en:milk'],
                 submittedAt: Date.now(),
               },
             })
@@ -515,7 +524,8 @@ describe('User Contribution System - Complete E2E Tests', () => {
       });
 
       const product = await getUserContributedProduct(TEST_BARCODE);
-      expect(product?.countries).toBe('App User Origin');
+      expect(product?.allergens_tags).toEqual(expect.arrayContaining(['en:milk']));
+      expect(product?.countries).toBeUndefined();
       expect(product?.source).toBe('user_contributed');
     });
   });
@@ -579,12 +589,12 @@ describe('User Contribution System - Complete E2E Tests', () => {
 
       const product = await getUserContributedProduct(TEST_BARCODE);
 
-      // Vercel GET returns the proprietary slice only; core product fields are loaded from OFF when present.
+      // Vercel GET returns the non-scoring proprietary slice only; core/scoring fields load from OFF.
       expect(product).not.toBeNull();
       expect(product?.barcode).toBe(TEST_BARCODE);
       expect(product?.product_name).toBeUndefined();
       expect(product?.ingredients_text).toBeUndefined();
-      expect(product?.allergens_tags).toBeUndefined();
+      expect(product?.allergens_tags).toEqual(expect.arrayContaining(['en:milk']));
     });
   });
 
@@ -704,9 +714,9 @@ describe('User Contribution System - Complete E2E Tests', () => {
       const product = await getUserContributedProduct(TEST_BARCODE);
       const countryData = await getManufacturingCountry(TEST_BARCODE);
 
-      // Proprietary country on Vercel + manufacturing-country API; scoring fields come from OFF elsewhere.
+      // Origin is not copied from manual-products; manufacturing-country API remains the CoM overlay source.
       expect(product).not.toBeNull();
-      expect(product?.manufacturing_places).toBe('New Zealand');
+      expect(product?.manufacturing_places).toBeUndefined();
       expect(countryData.country).toBe('New Zealand');
     });
   });

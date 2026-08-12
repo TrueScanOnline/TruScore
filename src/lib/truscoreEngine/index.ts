@@ -14,6 +14,10 @@ import { Product } from '../../types/product';
 import { AlertsPreferences } from '../../store/useAlertsStore';
 import { generateInsights } from '../alertsInsights';
 import { isMvpLegacyAlertsInsightsEnabled } from '../../config/mvpRuntimeGates';
+import {
+  stripUnauthoredScoringFieldsFromContribution,
+  toScoringProduct,
+} from '../../contributions/eligibilityBoundary';
 import { logger } from '../../utils/logger';
 import { powershellLogger } from '../../utils/powershellLogger';
 import type { TruScoreAnalysis, FetchTraceEntry, PillarAnalysis, PillarAdjustmentWithSource } from '../../types/truscoreAnalysis';
@@ -97,10 +101,17 @@ export function calculateTruScore(
     logger.warn('[truscoreEngine] Product missing required fields: barcode or product_name');
   }
 
+  let eligible: Product = product;
+  try {
+    eligible = toScoringProduct(product) || product;
+  } catch (boundaryError) {
+    logger.warn('[truscoreEngine] contribution eligibility boundary failed; scoring without unauthored contribution fields', boundaryError);
+    eligible = stripUnauthoredScoringFieldsFromContribution(product);
+  }
   const scoringProduct: Product =
     scoringContext?.planetMarket === 'AU' || scoringContext?.planetMarket === 'NZ'
-      ? { ...product, true_scan_market: scoringContext.planetMarket }
-      : product;
+      ? { ...eligible, true_scan_market: scoringContext.planetMarket }
+      : eligible;
 
   // Validate array types to prevent runtime errors (mutate scoring copy only when it differs)
   if (scoringProduct.labels_tags && !Array.isArray(scoringProduct.labels_tags)) {

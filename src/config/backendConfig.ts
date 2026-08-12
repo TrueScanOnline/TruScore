@@ -61,6 +61,7 @@ export const BackendEndpoints = {
   userPrices: (url: string) => `${url}/api/user-prices`,
   uploadPhoto: (url: string) => `${url}/api/upload-photo`,
   manufacturingCountry: (url: string) => `${url}/api/manufacturing-country`,
+  contributionEvidence: (url: string) => `${url}/api/contribution-evidence`,
   /** Optional telemetry from app after a successful share (no PII). */
   shareEvent: (url: string) => `${url}/api/share-event`,
   

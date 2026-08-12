@@ -132,6 +132,8 @@ describe('User Contribution System - Integration Tests', () => {
               success: true,
               product: {
                 barcode: TEST_BARCODE,
+                allergens_tags: ['en:milk'],
+                additives_tags: ['en:e330'],
                 countries: 'Testland',
                 manufacturing_places: 'Testland',
                 labels_tags: ['en:organic'],
@@ -153,8 +155,10 @@ describe('User Contribution System - Integration Tests', () => {
       const product = await getUserContributedProduct(TEST_BARCODE);
 
       expect(product).not.toBeNull();
-      expect(product?.countries).toBe('Testland');
-      expect(product?.labels_tags).toEqual(expect.arrayContaining(['en:organic']));
+      expect(product?.allergens_tags).toEqual(expect.arrayContaining(['en:milk']));
+      expect(product?.additives_tags).toEqual(expect.arrayContaining(['en:e330']));
+      expect(product?.countries).toBeUndefined();
+      expect(product?.labels_tags).toBeUndefined();
       expect(product?.source).toBe('user_contributed');
     });
 
@@ -166,6 +170,7 @@ describe('User Contribution System - Integration Tests', () => {
               success: true,
               product: {
                 barcode: TEST_BARCODE,
+                allergens_tags: ['en:soy'],
                 countries: 'User Submitted Country',
                 labels_tags: ['en:organic'],
                 submittedAt: Date.now(),
@@ -178,8 +183,9 @@ describe('User Contribution System - Integration Tests', () => {
 
       const userProduct = await getUserContributedProduct(TEST_BARCODE);
 
-      expect(userProduct?.countries).toBe('User Submitted Country');
-      expect(userProduct?.labels_tags).toEqual(expect.arrayContaining(['en:organic']));
+      expect(userProduct?.allergens_tags).toEqual(expect.arrayContaining(['en:soy']));
+      expect(userProduct?.countries).toBeUndefined();
+      expect(userProduct?.labels_tags).toBeUndefined();
     });
   });
 
@@ -346,6 +352,8 @@ describe('User Contribution System - Integration Tests', () => {
               success: true,
               product: {
                 barcode: TEST_BARCODE,
+                allergens_tags: ['en:eggs'],
+                additives_tags: ['en:e202'],
                 countries: 'User Submitted Country',
                 labels_tags: ['en:organic'],
                 labels_hierarchy: ['en:organic'],
@@ -367,8 +375,9 @@ describe('User Contribution System - Integration Tests', () => {
       // User-contributed data should have source = 'user_contributed'
       expect(userProduct?.source).toBe('user_contributed');
 
-      expect(userProduct?.countries).toBe('User Submitted Country');
-      expect(userProduct?.labels_tags).toEqual(expect.arrayContaining(['en:organic']));
+      expect(userProduct?.allergens_tags).toEqual(expect.arrayContaining(['en:eggs']));
+      expect(userProduct?.countries).toBeUndefined();
+      expect(userProduct?.labels_tags).toBeUndefined();
     });
   });
 
@@ -480,6 +489,7 @@ describe('User Contribution System - Integration Tests', () => {
               success: true,
               product: {
                 barcode: TEST_BARCODE,
+                allergens_tags: ['en:gluten'],
                 countries: 'Global Country',
                 manufacturing_places: 'Global Country',
                 labels_tags: ['en:fair-trade'],
@@ -495,7 +505,9 @@ describe('User Contribution System - Integration Tests', () => {
       const retrievedProduct = await getUserContributedProduct(TEST_BARCODE);
 
       expect(retrievedProduct).not.toBeNull();
-      expect(retrievedProduct?.countries).toBe('Global Country');
+      expect(retrievedProduct?.allergens_tags).toEqual(expect.arrayContaining(['en:gluten']));
+      expect(retrievedProduct?.countries).toBeUndefined();
+      expect(retrievedProduct?.manufacturing_places).toBeUndefined();
     });
   });
 });

@@ -25,7 +25,9 @@ interface ManufacturingCountrySubmission {
   hasImportedIngredients?: boolean;
 }
 
-const VERIFICATION_THRESHOLD = 3;
+/** Keep in sync with src/config/contributionPolicy.ts origins.independentConfirmationsRequired. */
+const INDEPENDENT_CONFIRMATIONS_REQUIRED = 1;
+const VERIFICATION_THRESHOLD = 1 + INDEPENDENT_CONFIRMATIONS_REQUIRED;
 
 function handleCORS(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');

@@ -16,6 +16,8 @@ import { powershellLogger } from '../utils/powershellLogger';
 import { buildVercelManualProductPayload } from '../utils/vercelProprietaryManualProduct';
 import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
 import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
+import { submitGovernedEvidence } from '../contributions/submitGovernedEvidence';
+import { markPendingContributionFields } from '../contributions/eligibilityBoundary';
 
 const STORAGE_KEY_PREFIX = '@truescan_manual_product_';
 const MAX_MANUAL_PRODUCTS = 100; // Limit to prevent storage bloat
@@ -100,11 +102,17 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
     };
 
     applyResolvedNutrientLevels(product);
+    const productForScore = markPendingContributionFields(product, {
+      nutrition: !!data.nutriments,
+      ingredients: !!data.ingredients_text,
+      origin: !!(data.manufacturing_places || data.countries || data.origins),
+      labels: !!(data.labels_tags && data.labels_tags.length > 0),
+    });
 
     // Calculate Trust Score if we have enough data
     let productWithScore: ProductWithTrustScore;
     try {
-      const trustScoreResult = calculateTruScore(product, undefined, getPlanetScoringContext());
+      const trustScoreResult = calculateTruScore(productForScore, undefined, getPlanetScoringContext());
       // Map TruScoreResult to TrustScoreBreakdown format
       const breakdown: TrustScoreBreakdown = {
         body: trustScoreResult.breakdown.Body || 0,
@@ -339,8 +347,34 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
         // Continue - local save was successful
       }
       
-      // ===== USER CONTRIBUTION FLOW: STEP 3 - VERCEL (PROPRIETARY FIELDS ONLY) =====
-      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Vercel manual-products (country + certifications only)`, {
+      // Governed Origins / Certifications evidence (not scoring-ready Product fields)
+      try {
+        const originClaim = data.manufacturing_places?.trim() || data.countries?.trim();
+        if (originClaim) {
+          await submitGovernedEvidence({
+            barcode: data.barcode,
+            domain: 'origins',
+            claimValue: originClaim,
+            exactWording: originClaim,
+          });
+        }
+        if (data.labels_tags && data.labels_tags.length > 0) {
+          for (const tag of data.labels_tags) {
+            await submitGovernedEvidence({
+              barcode: data.barcode,
+              domain: 'certifications',
+              claimValue: tag,
+              labelsTags: [tag],
+              exactWording: tag,
+            });
+          }
+        }
+      } catch (evidenceError) {
+        logger.warn('[ManualProductService] Governed evidence persist failed (non-blocking):', evidenceError);
+      }
+
+      // ===== USER CONTRIBUTION FLOW: STEP 3 - VERCEL (non-scoring proprietary slice) =====
+      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Vercel manual-products (non-scoring slice only)`, {
         barcode: data.barcode,
         hasManufacturingOrCountry: !!(
           data.manufacturing_places?.trim() ||
@@ -358,7 +392,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
 
       if (!hasProprietaryForVercel) {
         logger.info(
-          `[ManualProductService] Skipping Vercel manual-products POST (no country or certifications to store)`
+          `[ManualProductService] Skipping Vercel manual-products POST (no non-scoring proprietary fields)`
         );
       }
 

@@ -15,8 +15,13 @@ import {
 } from '../lib/database';
 import { barcodeLookupKeys, canonicalBarcodeForStorage } from '../lib/barcodeLookupKeys';
 
-/** Only these fields are stored for manual edit; core product data lives on Open Food Facts. */
+/** Non-scoring keys still accepted on manual-products. Origin/certs are governed evidence, not Product fields. */
 const PROPRIETARY_KEYS = [
+  'allergens_tags',
+  'additives_tags',
+] as const;
+
+const SCORING_LEAK_KEYS = [
   'manufacturing_places',
   'manufacturing_places_tags',
   'countries',
@@ -44,6 +49,9 @@ function pickStoredProprietary(row: Record<string, unknown>): Record<string, unk
     if (row[key] !== undefined && row[key] !== null) {
       out[key] = row[key];
     }
+  }
+  for (const leak of SCORING_LEAK_KEYS) {
+    delete out[leak];
   }
   return out;
 }
@@ -115,7 +123,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const existingProprietary = pickStoredProprietary(existingData);
       const incomingProprietary = pickIncomingProprietary(productData as Record<string, unknown>);
       const mergedProprietary = { ...existingProprietary, ...incomingProprietary };
+      const preservedHistorical: Record<string, unknown> = {};
+      for (const key of SCORING_LEAK_KEYS) {
+        if (existingData[key] !== undefined && existingData[key] !== null) {
+          preservedHistorical[key] = existingData[key];
+        }
+      }
       const mergedPayload = {
+        ...preservedHistorical,
         ...mergedProprietary,
         barcode: canonicalBarcode,
         submittedAt: Date.now(),

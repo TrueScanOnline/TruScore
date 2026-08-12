@@ -24,14 +24,8 @@ export const USER_CONTRIBUTED_MERGE_RACE_MS = USER_CONTRIBUTED_BACKEND_TIMEOUT_M
 export const USER_CONTRIBUTED_FIRST_PAINT_RACE_MS = 450;
 
 const VERCEL_USER_CONTRIB_KEYS = [
-  'manufacturing_places',
-  'manufacturing_places_tags',
-  'countries',
-  'countries_tags',
-  'origins',
-  'origins_tags',
-  'labels_tags',
-  'labels_hierarchy',
+  'allergens_tags',
+  'additives_tags',
 ] as const;
 
 function getManualProductsApi(): string {
@@ -67,17 +61,11 @@ function parseBackendProductPayload(barcode: string, data: Record<string, unknow
     image_front_url:
       (productData.image_front_url as string | undefined) ||
       (productData.image_url as string | undefined),
-    manufacturing_places: productData.manufacturing_places as string | undefined,
-    manufacturing_places_tags: productData.manufacturing_places_tags as string[] | undefined,
-    countries: productData.countries as string | undefined,
-    countries_tags: productData.countries_tags as string[] | undefined,
-    origins: productData.origins as string | undefined,
-    origins_tags: productData.origins_tags as string[] | undefined,
-    labels_tags: Array.isArray(productData.labels_tags)
-      ? (productData.labels_tags as string[])
+    allergens_tags: Array.isArray(productData.allergens_tags)
+      ? (productData.allergens_tags as string[])
       : undefined,
-    labels_hierarchy: Array.isArray(productData.labels_hierarchy)
-      ? (productData.labels_hierarchy as string[])
+    additives_tags: Array.isArray(productData.additives_tags)
+      ? (productData.additives_tags as string[])
       : undefined,
     source: 'user_contributed' as Product['source'],
     created_t: productData.submittedAt

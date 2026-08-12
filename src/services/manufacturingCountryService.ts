@@ -6,6 +6,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { validateCountrySubmission, RateLimiter } from '../utils/validation';
 import { logger } from '../utils/logger';
 import { uploadProductPhoto } from './photoUploadService';
+import { CONTRIBUTION_POLICY } from '../config/contributionPolicy';
+import { submitGovernedEvidence } from '../contributions/submitGovernedEvidence';
+import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
 
 // Rate limiter: max 1 submission per barcode per user (enforced by userId check)
 // Additional rate limit: max 10 submissions per hour per user
@@ -25,10 +28,10 @@ export interface ManufacturingCountrySubmission {
 
 const STORAGE_KEY = 'manufacturing_country_submissions';
 const USER_ID_KEY = 'manufacturing_country_user_id';
-const VERIFICATION_THRESHOLD = 3; // Number of matching submissions needed for verification
 
-// Backend API URL for global sharing (set via environment variable or use default)
-import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
+/** Submitter + independentConfirmationsRequired subsequent contributors. */
+const VERIFICATION_THRESHOLD = 1 + CONTRIBUTION_POLICY.origins.independentConfirmationsRequired;
+
 // Don't call getBackendUrl() at module load time - call it when needed
 function getManufacturingCountryApi(): string {
   return BackendEndpoints.manufacturingCountry(getBackendUrl());
@@ -110,6 +113,16 @@ export async function submitManufacturingCountry(
         message: 'Too many submissions. Please try again later.',
       };
     }
+
+    await submitGovernedEvidence({
+      barcode,
+      domain: 'origins',
+      claimValue: validatedCountry,
+      imageUrl: validatedPhotoUrl,
+      exactWording: validatedCountry,
+    }).catch((err) => {
+      logger.warn('[ManufacturingCountryService] Governed evidence persist failed (non-blocking):', err);
+    });
 
     // Try to submit to backend API first (for global sharing)
     try {

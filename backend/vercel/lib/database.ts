@@ -549,3 +549,97 @@ export async function getPhotos(barcode: string, imageType?: string): Promise<an
       .sort((a: any, b: any) => b.createdAt - a.createdAt);
   }
 }
+
+async function ensureContributionEvidenceTable(database: any): Promise<void> {
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS contribution_evidence (
+      evidence_id TEXT PRIMARY KEY,
+      barcode TEXT NOT NULL,
+      evidence_json JSONB NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await database.query(`
+    CREATE INDEX IF NOT EXISTS contribution_evidence_barcode_idx
+    ON contribution_evidence (barcode)
+  `);
+}
+
+export async function saveContributionEvidence(
+  evidenceId: string,
+  barcode: string,
+  evidence: Record<string, unknown>
+): Promise<void> {
+  const database = await getDatabase();
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
+    await ensureContributionEvidenceTable(database);
+    await database.query(
+      `INSERT INTO contribution_evidence (evidence_id, barcode, evidence_json, updated_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (evidence_id)
+       DO UPDATE SET evidence_json = EXCLUDED.evidence_json, barcode = EXCLUDED.barcode, updated_at = NOW()`,
+      [evidenceId, barcode, JSON.stringify(evidence)]
+    );
+    return;
+  }
+  if (process.env.MONGODB_URI) {
+    await database.collection('contribution_evidence').updateOne(
+      { evidenceId },
+      { $set: { evidenceId, barcode, evidence, updatedAt: Date.now() } },
+      { upsert: true }
+    );
+    return;
+  }
+  if (!database.has('contribution_evidence')) {
+    database.set('contribution_evidence', new Map());
+  }
+  database.get('contribution_evidence').set(evidenceId, { evidenceId, barcode, evidence });
+}
+
+export async function getContributionEvidenceById(
+  evidenceId: string
+): Promise<Record<string, unknown> | null> {
+  const database = await getDatabase();
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
+    await ensureContributionEvidenceTable(database);
+    const result = await database.query(
+      `SELECT evidence_json FROM contribution_evidence WHERE evidence_id = $1`,
+      [evidenceId]
+    );
+    return result.rows[0]?.evidence_json ?? null;
+  }
+  if (process.env.MONGODB_URI) {
+    const row = await database.collection('contribution_evidence').findOne({ evidenceId });
+    return row?.evidence ?? null;
+  }
+  if (!database.has('contribution_evidence')) return null;
+  return database.get('contribution_evidence').get(evidenceId)?.evidence ?? null;
+}
+
+export async function listContributionEvidenceForBarcode(
+  barcode: string
+): Promise<Record<string, unknown>[]> {
+  const database = await getDatabase();
+  const postgresUrl = getPostgresUrl();
+  if (postgresUrl) {
+    await ensureContributionEvidenceTable(database);
+    const result = await database.query(
+      `SELECT evidence_json FROM contribution_evidence WHERE barcode = $1 ORDER BY updated_at DESC`,
+      [barcode]
+    );
+    return result.rows.map((r: { evidence_json: Record<string, unknown> }) => r.evidence_json);
+  }
+  if (process.env.MONGODB_URI) {
+    const rows = await database
+      .collection('contribution_evidence')
+      .find({ barcode })
+      .toArray();
+    return rows.map((r: { evidence: Record<string, unknown> }) => r.evidence);
+  }
+  if (!database.has('contribution_evidence')) return [];
+  return Array.from(database.get('contribution_evidence').values())
+    .filter((r: { barcode: string }) => r.barcode === barcode)
+    .map((r: { evidence: Record<string, unknown> }) => r.evidence);
+}

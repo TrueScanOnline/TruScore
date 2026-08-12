@@ -144,66 +144,9 @@ export async function mergeUserContributedData(product: Product, barcode: string
     }
 
     if (vercelProprietaryOnly) {
-      if (userContributedProduct.manufacturing_places) {
-        product.manufacturing_places = userContributedProduct.manufacturing_places;
-        if (userContributedProduct.manufacturing_places_tags) {
-          product.manufacturing_places_tags = userContributedProduct.manufacturing_places_tags;
-        }
-      }
-      if (userContributedProduct.countries) {
-        product.countries = userContributedProduct.countries;
-        if (userContributedProduct.countries_tags) {
-          product.countries_tags = userContributedProduct.countries_tags;
-        }
-      }
-      if (userContributedProduct.origins) {
-        product.origins = userContributedProduct.origins;
-        if (userContributedProduct.origins_tags) {
-          product.origins_tags = userContributedProduct.origins_tags;
-        }
-      }
-      if (userContributedProduct.labels_tags && userContributedProduct.labels_tags.length > 0) {
-        product.labels_tags = [
-          ...new Set([...(product.labels_tags || []), ...userContributedProduct.labels_tags]),
-        ];
-      }
-      if (userContributedProduct.labels_hierarchy && userContributedProduct.labels_hierarchy.length > 0) {
-        product.labels_hierarchy = [
-          ...new Set([...(product.labels_hierarchy || []), ...userContributedProduct.labels_hierarchy]),
-        ];
-      }
+      // Origin/certification Product fields are not merged from contributions.
       product.certifications = formatCertifications(product);
     } else {
-      const ucNut = userContributedProduct.nutriments;
-      if (ucNut && typeof ucNut === 'object' && Object.keys(ucNut).length > 0) {
-        product.nutriments = { ...(product.nutriments || {}), ...ucNut } as Product['nutriments'];
-      }
-
-      if (userContributedProduct.ingredients_text && userContributedProduct.ingredients_text.trim().length > 0) {
-        product.ingredients_text = userContributedProduct.ingredients_text;
-      }
-
-      if (userContributedProduct.manufacturing_places) {
-        product.manufacturing_places = userContributedProduct.manufacturing_places;
-        if (userContributedProduct.manufacturing_places_tags) {
-          product.manufacturing_places_tags = userContributedProduct.manufacturing_places_tags;
-        }
-      }
-
-      if (userContributedProduct.countries) {
-        product.countries = userContributedProduct.countries;
-        if (userContributedProduct.countries_tags) {
-          product.countries_tags = userContributedProduct.countries_tags;
-        }
-      }
-
-      if (userContributedProduct.origins) {
-        product.origins = userContributedProduct.origins;
-        if (userContributedProduct.origins_tags) {
-          product.origins_tags = userContributedProduct.origins_tags;
-        }
-      }
-
       if (userContributedProduct.packaging_data) {
         product.packaging_data = userContributedProduct.packaging_data;
       }
@@ -224,16 +167,6 @@ export async function mergeUserContributedData(product: Product, barcode: string
         product.additives_tags = userContributedProduct.additives_tags;
       }
 
-      if (userContributedProduct.labels_tags && userContributedProduct.labels_tags.length > 0) {
-        product.labels_tags = [
-          ...new Set([...(product.labels_tags || []), ...userContributedProduct.labels_tags]),
-        ];
-      }
-      if (userContributedProduct.labels_hierarchy && userContributedProduct.labels_hierarchy.length > 0) {
-        product.labels_hierarchy = [
-          ...new Set([...(product.labels_hierarchy || []), ...userContributedProduct.labels_hierarchy]),
-        ];
-      }
       product.certifications = formatCertifications(product);
     }
 
@@ -241,14 +174,11 @@ export async function mergeUserContributedData(product: Product, barcode: string
       !!userContributedProduct.image_url ||
       (!vercelProprietaryOnly &&
         !!(
-          userContributedProduct.ingredients_text ||
-          (userContributedProduct.nutriments && Object.keys(userContributedProduct.nutriments).length > 0) ||
           userContributedProduct.allergens_tags?.length ||
-          userContributedProduct.additives_tags?.length
-        )) ||
-      !!userContributedProduct.manufacturing_places ||
-      !!userContributedProduct.countries ||
-      !!(userContributedProduct.labels_tags && userContributedProduct.labels_tags.length > 0);
+          userContributedProduct.additives_tags?.length ||
+          userContributedProduct.serving_size ||
+          userContributedProduct.packaging_data
+        ));
 
     if (mergedAnything) {
       await removeCachedTruScore(barcode).catch(() => {});
@@ -262,13 +192,9 @@ export async function mergeUserContributedData(product: Product, barcode: string
       mergeMode: vercelProprietaryOnly ? 'VERCEL_PROPRIETARY_ONLY' : 'LOCAL_FULL',
       mergedFields: {
         photo: !!userContributedProduct.image_url,
-        ingredients: !vercelProprietaryOnly && !!userContributedProduct.ingredients_text,
-        nutrition: !vercelProprietaryOnly && !!userContributedProduct.nutriments,
-        proprietaryCountryOrCerts: !!(
-          userContributedProduct.manufacturing_places ||
-          userContributedProduct.countries ||
-          (userContributedProduct.labels_tags && userContributedProduct.labels_tags.length > 0)
-        ),
+        ingredients: false,
+        nutrition: false,
+        proprietaryCountryOrCerts: false,
       },
     });
     
