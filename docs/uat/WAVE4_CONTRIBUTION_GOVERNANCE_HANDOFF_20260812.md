@@ -12,6 +12,7 @@ First bounded Wave 4 implementation: contribution policy, evidence lifecycle, co
 |---|---|
 | Assurance baseline | `f283494` / tag `wave4-assurance-baseline-20260809` |
 | Implementation branch | `wave4/contribution-governance-20260812` |
+| Package commit | `a98c0b3` |
 | Preserved dirty WIP (not accepted) | `preserve/post-f283494-contribution-wip-20260809` (`b7bf15d`) |
 | Deploy / EAS / OTA | **Not authorised — not done** |
 
