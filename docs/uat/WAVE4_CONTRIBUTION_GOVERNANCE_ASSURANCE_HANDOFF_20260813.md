@@ -85,7 +85,7 @@ Confirm/dispute attach to **evidenceId / evidenceVersion**, not undifferentiated
 - Strips pending-marked and standalone local/contribution-overlay fields.
 - Applies only evidence with `canPromoteToCanonicalProduct` **and** `canonicalPromoted`.
 - Cert Lane A → unions `labels_tags` for existing Ethics evaluator.
-- Origins → sets `manufacturing_places` + `manufacturing_places_tags` for existing Open complete-origin path.
+- Origins → sets faithful `manufacturing_places` / optional `origins` wording for Open; does **not** invent tags to force “complete” +4.
 - Lane B → `cross_user_eligible` allowed, `scoringEligible=false`, cannot promote.
 
 ---
@@ -96,7 +96,7 @@ Confirm/dispute attach to **evidenceId / evidenceVersion**, not undifferentiated
 |---|---|
 | POL-01/02/03 | PASS — thresholds from policy; auto-withdraw off |
 | CERT-01…09 | PASS — pending isolated; Lane A promotes+scores Ethics +6→21; Lane B non-scoring; continue confirm/dispute; review_required no auto-withdraw |
-| ORG-01…06 | PASS — pending isolated; Manual path cannot bypass; qualified AU 75% structured evidence preserves image/wording/fields; promotes; Open +8 vs bare via existing complete-origin inputs |
+| ORG-01…06 | PASS — pending isolated; Manual path cannot bypass; qualified AU 75% structured evidence preserves image/wording/fields; promotes faithfully; Open applies current partial treatment (0), not coerced complete +4; source-consistent with OFF string-only |
 | NUT-01…04 | PASS — no local/cross-user score; OFF authority; success copy; Vercel payload excludes nutrition |
 | PROV-01 | PASS — AsyncStorage / LOCAL overlay shapes cannot score solely from storage |
 | SCAN-01/02/03 | PASS |
@@ -126,7 +126,7 @@ Leak keys preserved in storage; GET sanitizes; conservative **pending**. Live DB
 
 ---
 
-## 22. Genuine contradiction / residual note (reported, not “fixed” by methodology change)
+## 22. Genuine contradiction / residual note
 
 **Open pillar today is not purely binary “disclosure present → +4”.**
 
@@ -137,10 +137,13 @@ Current shipped rule:
 - **complete** (tags+string / multi-tag / manufacturing tags+string) → **+4**  
 - other disclosure-present (string-only) → **0 (partial)**
 
-This package does **not** invent partial/qualified Origins scoring. Verified promotion writes **both** `manufacturing_places` and `manufacturing_places_tags` so the **existing complete-origin path** applies (+4). Finer partial/qualified scoring remains reserved for Wave 2 Open review. Structured evidence preserves qualifications faithfully on the evidence record.
+This package does **not** invent partial/qualified Origins scoring and does **not** coerce qualified Rveel evidence into a manufactured “complete” Product shape solely to obtain +4.
+
+Verified promotion of a qualified claim (e.g. “Made in Australia from at least 75% Australian ingredients”) writes faithful canonical fields (`manufacturing_places` country + `origins` exact wording) **without** synthesizing `manufacturing_places_tags`. Existing Open therefore currently assigns **partial / 0**. Relative to bare absent (−4), that is a **+4 Open-point delta (−4 → 0)** — not an Origins contribution of +8, and not the previous coerced −4 → +4 (+8 delta) path.
+
+Finer treatment of partial/qualified disclosure remains reserved for Wave 2 Open review. Structured qualifications remain on the evidence record.
 
 Residual: pre-remediation merged SQLite rows that already embedded contribution fields onto an `openfoodfacts` source without LOCAL overlay may still need live review — PROV-01 covers contribution-shaped overlays; exposure inventory residual risk stands.
-
 ---
 
 ## Not in this package

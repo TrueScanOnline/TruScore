@@ -228,7 +228,7 @@ describe('ORG — origins promotion and isolation', () => {
     expect(v2.evidenceId).not.toBe(c1.evidenceId);
   });
 
-  it('ORG-06 verified qualified Origins promotes and scores via existing Open path', () => {
+  it('ORG-06 verified qualified Origins promotes faithfully; existing Open assigns partial (not coerced complete +4)', () => {
     const pending = pendingOriginQualified();
     expect(pending.imageUrl).toBe('https://cdn.example.com/packet-front.jpg');
     expect(pending.exactWording).toBe('Made in Australia from at least 75% Australian ingredients');
@@ -246,19 +246,32 @@ describe('ORG — origins promotion and isolation', () => {
     const promoted = confirmAndPromoteIfEligible(pending, 'user_b').evidence;
     expect(promoted.canonicalPromoted).toBe(true);
     expect(promoted.scoringEligible).toBe(true);
+    // Evidence semantics preserved on the governed record (not flattened to “complete”).
+    expect(promoted.originStructured?.ingredientOriginPercentage).toBe(75);
+    expect(promoted.originStructured?.percentageQualifier).toBe('at_least');
+    expect(promoted.exactWording).toBe('Made in Australia from at least 75% Australian ingredients');
 
     const scoringProduct = toScoringProduct(offBare(), [promoted]);
     expect(scoringProduct?.manufacturing_places).toBe('Australia');
-    expect(scoringProduct?.manufacturing_places_tags).toEqual(
-      expect.arrayContaining(['en:australia'])
-    );
+    expect(scoringProduct?.origins).toBe('Made in Australia from at least 75% Australian ingredients');
+    // Must not invent tags to manufacture Open “complete” (+4).
+    expect(scoringProduct?.manufacturing_places_tags).toBeUndefined();
 
     const withOrigin = calculateTruScore(offBare(), undefined, {
       promotedContributionEvidence: [promoted],
     });
     const without = calculateTruScore(offBare());
-    expect(withOrigin.breakdown.Open).toBeGreaterThan(without.breakdown.Open);
-    // Existing Open complete-origin path (+4 vs -4 → +8 Open delta), not a new partial/qualified methodology.
-    expect(withOrigin.breakdown.Open - without.breakdown.Open).toBe(8);
+    // Bare Open includes origin absent (−4). Faithful string-only/partial → current Open 0.
+    // Delta is therefore +4 Open points (−4 → 0), not an Origins “+8 contribution” and not coerced −4 → +4.
+    expect(withOrigin.breakdown.Open - without.breakdown.Open).toBe(4);
+
+    // Source consistency: identical string-only OFF shape scores the same as promoted Rveel evidence.
+    const offStringOnly = calculateTruScore(
+      offBare({
+        manufacturing_places: 'Australia',
+        origins: 'Made in Australia from at least 75% Australian ingredients',
+      })
+    );
+    expect(withOrigin.breakdown.Open).toBe(offStringOnly.breakdown.Open);
   });
 });

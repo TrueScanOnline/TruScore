@@ -9,7 +9,6 @@ import { CONTRIBUTION_POLICY } from '../config/contributionPolicy';
 import type { ContributionEvidence, RveelPendingContributionFields } from './types';
 import { RVEEL_PENDING_FIELD_MARK } from './types';
 import { canPromoteToCanonicalProduct } from './lifecycle';
-import { countryToManufacturingTag } from './originStructured';
 
 export type ProductWithContributionMark = Product & {
   [RVEEL_PENDING_FIELD_MARK]?: RveelPendingContributionFields;
@@ -57,6 +56,15 @@ function applyPromotedCertifications(
   }
 }
 
+function isQualifiedOrPartialOrigin(evidence: ContributionEvidence): boolean {
+  const s = evidence.originStructured;
+  if (!s) return false;
+  if (s.ingredientOriginPercentage != null && Number.isFinite(s.ingredientOriginPercentage)) return true;
+  if (s.percentageQualifier) return true;
+  if (s.additionalOriginStatement?.trim()) return true;
+  return false;
+}
+
 function applyPromotedOrigins(
   next: ProductWithContributionMark,
   promotedEvidence: ContributionEvidence[]
@@ -74,10 +82,19 @@ function applyPromotedOrigins(
     chosen.claimKey;
   if (!country) return;
 
-  const tag = countryToManufacturingTag(country);
-  // Feed existing Open complete-origin inputs (string + tags) without inventing new methodology.
+  // Faithful canonical Product inputs only — do not invent manufacturing_places_tags
+  // (or otherwise manufacture “complete” origin) solely to obtain Open +4.
+  // Qualifications remain on the evidence record (originStructured / exactWording).
+  // Existing Open methodology then assigns whatever it currently assigns to that shape
+  // (string-only / partial disclosure → 0 today). Source-consistent with OFF string-only origin.
   next.manufacturing_places = country;
-  next.manufacturing_places_tags = [...new Set([...(next.manufacturing_places_tags || []), tag])];
+  if (chosen.exactWording?.trim()) {
+    next.origins = chosen.exactWording.trim();
+  }
+  if (isQualifiedOrPartialOrigin(chosen)) {
+    // Explicitly avoid tag synthesis for qualified/partial claims.
+    delete next.manufacturing_places_tags;
+  }
 }
 
 /**
