@@ -1,5 +1,7 @@
 import {
   getCommunityVerificationPolicy,
+  getCommunityVerificationThresholds,
+  resolveVerificationLifecycleState,
   type ContributionDisputeReason,
 } from '../config/contributionPolicy';
 import { isLaneACertificationEvidence } from './certificationLane';
@@ -44,7 +46,15 @@ function recomputeState(evidence: ContributionEvidence): ContributionEvidence {
 
   const policy = getCommunityVerificationPolicy(evidence.domain);
   const disputes = uniqueActiveDisputes(evidence);
-  if (disputes >= policy.independentDisputesTriggeringReviewRequired) {
+  const confirmations = otherActiveConfirmations(evidence);
+  const nextState = resolveVerificationLifecycleState({
+    currentState: evidence.state,
+    independentConfirmationCount: confirmations,
+    independentDisputeCount: disputes,
+    thresholds: getCommunityVerificationThresholds(evidence.domain),
+  });
+
+  if (nextState === 'review_required') {
     // MVP: review_required does not auto-withdraw or alter prior scoring eligibility.
     return {
       ...evidence,
@@ -54,8 +64,7 @@ function recomputeState(evidence: ContributionEvidence): ContributionEvidence {
     };
   }
 
-  const confirmations = otherActiveConfirmations(evidence);
-  if (confirmations >= policy.independentConfirmationsRequired) {
+  if (nextState === 'cross_user_eligible') {
     const scoringEligible = computeScoringEligible(evidence);
     return {
       ...evidence,

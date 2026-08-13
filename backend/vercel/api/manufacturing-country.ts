@@ -12,6 +12,7 @@ import {
   saveManufacturingCountrySubmission,
   getManufacturingCountrySubmissions,
 } from '../lib/database';
+import { getCommunityVerificationThresholds } from '../../../src/config/contributionPolicy';
 
 interface ManufacturingCountrySubmission {
   barcode: string;
@@ -25,9 +26,9 @@ interface ManufacturingCountrySubmission {
   hasImportedIngredients?: boolean;
 }
 
-/** Keep in sync with src/config/contributionPolicy.ts origins.independentConfirmationsRequired. */
-const INDEPENDENT_CONFIRMATIONS_REQUIRED = 1;
-const VERIFICATION_THRESHOLD = 1 + INDEPENDENT_CONFIRMATIONS_REQUIRED;
+/** Submitter + independentConfirmationsRequired from governed policy SoT. */
+const VERIFICATION_THRESHOLD =
+  1 + getCommunityVerificationThresholds('origins').independentConfirmationsRequired;
 
 function handleCORS(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');

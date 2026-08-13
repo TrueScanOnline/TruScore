@@ -14,7 +14,7 @@
     "isolatedModules": true,
     "types": ["node", "@vercel/node"]
   },
-  "include": ["api/**/*", "lib/**/*", "data/**/*", "types/**/*.d.ts"],
+  "include": ["api/**/*", "lib/**/*", "data/**/*", "types/**/*.d.ts", "../../src/config/contributionPolicy.ts"],
   "exclude": [
     "node_modules",
     "dist",

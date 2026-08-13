@@ -1,10 +1,11 @@
-export { CONTRIBUTION_POLICY, getDomainPolicy, getCommunityVerificationPolicy, INGREDIENTS_NUTRITION_SUCCESS_COPY } from '../config/contributionPolicy';
+export { CONTRIBUTION_POLICY, getDomainPolicy, getCommunityVerificationPolicy, getCommunityVerificationThresholds, resolveVerificationLifecycleState, INGREDIENTS_NUTRITION_SUCCESS_COPY } from '../config/contributionPolicy';
 export type {
   ContributionDomain,
   ContributionLifecycleState,
   ContributionDisputeReason,
   OriginClaimType,
   OriginPercentageQualifier,
+  CommunityVerificationThresholds,
 } from '../config/contributionPolicy';
 export * from './types';
 export * from './evidenceVersion';

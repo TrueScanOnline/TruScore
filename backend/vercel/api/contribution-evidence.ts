@@ -4,6 +4,9 @@
  *
  * Stores community contribution evidence versions. Does not write
  * manufacturing_places / labels_tags onto Product or scoring fields.
+ *
+ * Confirmation/dispute thresholds come from src/config/contributionPolicy.ts
+ * (same SoT as client lifecycle) — not hardcoded in this handler.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -12,6 +15,10 @@ import {
   getContributionEvidenceById,
   listContributionEvidenceForBarcode,
 } from '../lib/database';
+import {
+  getCommunityVerificationThresholds,
+  resolveVerificationLifecycleState,
+} from '../../../src/config/contributionPolicy';
 
 const ALLOWED_DOMAINS = new Set(['origins', 'certifications', 'ingredients_nutrition']);
 const ALLOWED_ACTIONS = new Set(['submit', 'confirm', 'dispute']);
@@ -30,6 +37,17 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 function barcodeLooksValid(barcode: string): boolean {
   return /^\d{8,14}$/.test(String(barcode || '').trim());
+}
+
+function contributorIdOf(entry: unknown): string {
+  const rec = asRecord(entry);
+  if (typeof rec?.contributorId === 'string') return rec.contributorId;
+  if (typeof entry === 'string') return entry;
+  return '';
+}
+
+function asVerificationDomain(value: unknown): 'origins' | 'certifications' {
+  return value === 'origins' ? 'origins' : 'certifications';
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -142,18 +160,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ? body.contributorId
           : 'anon';
     const now = Date.now();
+    const submitterId =
+      typeof existing.submitterId === 'string' ? existing.submitterId : '';
 
     if (action === 'confirm') {
-      const already = confirmations.some((c) => {
-        const rec = asRecord(c);
-        return rec?.contributorId === contributorId || c === contributorId;
-      });
+      const already = confirmations.some((c) => contributorIdOf(c) === contributorId);
       if (!already) confirmations.push({ contributorId, timestamp: now });
     } else if (action === 'dispute') {
-      const already = disputes.some((d) => {
-        const rec = asRecord(d);
-        return rec?.contributorId === contributorId || d === contributorId;
-      });
+      const already = disputes.some((d) => contributorIdOf(d) === contributorId);
       if (!already) {
         disputes.push({
           contributorId,
@@ -163,17 +177,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    let state = typeof existing.state === 'string' ? existing.state : 'pending';
-    if (disputes.length >= 2) state = 'review_required';
-    else if (confirmations.length >= 1 && state === 'pending') state = 'cross_user_eligible';
+    const domain = asVerificationDomain(existing.domain);
+    const thresholds = getCommunityVerificationThresholds(domain);
+    const independentConfirmationCount = confirmations.filter(
+      (c) => contributorIdOf(c) && contributorIdOf(c) !== submitterId
+    ).length;
+    const independentDisputeCount = new Set(
+      disputes.map((d) => contributorIdOf(d)).filter(Boolean)
+    ).size;
+
+    const currentState = typeof existing.state === 'string' ? existing.state : 'pending';
+    const state = resolveVerificationLifecycleState({
+      currentState,
+      independentConfirmationCount,
+      independentDisputeCount,
+      thresholds,
+    });
 
     const updated = {
       ...existing,
       confirmations,
       disputes,
       state,
-      scoringEligible: false,
-      canonicalPromoted: false,
+      // Preserve prior eligibility flags; MVP review_required does not auto-withdraw.
+      scoringEligible: existing.scoringEligible === true,
+      canonicalPromoted: existing.canonicalPromoted === true,
       updatedAt: now,
     };
     await saveContributionEvidence(evidenceId, barcode, updated);

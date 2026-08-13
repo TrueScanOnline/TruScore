@@ -3,6 +3,8 @@
  *
  * Single typed config contract. UI, API handlers, merge, and scoring consumers
  * must read thresholds from here. Not a generic rules engine.
+ *
+ * Runtime-neutral: safe for React Native and Vercel Node (no platform imports).
  */
 
 export const CONTRIBUTION_DOMAINS = ['ingredients_nutrition', 'origins', 'certifications'] as const;
@@ -91,6 +93,13 @@ export const CONTRIBUTION_POLICY = {
 
 export type ContributionPolicy = typeof CONTRIBUTION_POLICY;
 
+export type CommunityVerificationThresholds = {
+  independentConfirmationsRequired: number;
+  independentDisputesTriggeringReviewRequired: number;
+  automaticWithdrawal: boolean;
+  continuedConfirmationAfterPromotion: boolean;
+};
+
 export function getDomainPolicy(domain: ContributionDomain) {
   if (domain === 'ingredients_nutrition') return CONTRIBUTION_POLICY.ingredientsNutrition;
   if (domain === 'origins') return CONTRIBUTION_POLICY.origins;
@@ -99,4 +108,42 @@ export function getDomainPolicy(domain: ContributionDomain) {
 
 export function getCommunityVerificationPolicy(domain: 'origins' | 'certifications') {
   return domain === 'origins' ? CONTRIBUTION_POLICY.origins : CONTRIBUTION_POLICY.certifications;
+}
+
+/** Threshold slice shared by client lifecycle and Vercel contribution-evidence. */
+export function getCommunityVerificationThresholds(
+  domain: 'origins' | 'certifications'
+): CommunityVerificationThresholds {
+  const policy = getCommunityVerificationPolicy(domain);
+  return {
+    independentConfirmationsRequired: policy.independentConfirmationsRequired,
+    independentDisputesTriggeringReviewRequired: policy.independentDisputesTriggeringReviewRequired,
+    automaticWithdrawal: policy.automaticWithdrawal,
+    continuedConfirmationAfterPromotion: policy.continuedConfirmationAfterPromotion,
+  };
+}
+
+/**
+ * Pure lifecycle-state transition from confirmation/dispute counts.
+ * Used by client lifecycle and backend contribution-evidence — one policy SoT.
+ * Optional alternate `thresholds` exists so POL tests can prove configurability
+ * without rewriting handlers.
+ */
+export function resolveVerificationLifecycleState(params: {
+  currentState: string;
+  independentConfirmationCount: number;
+  independentDisputeCount: number;
+  thresholds: CommunityVerificationThresholds;
+}): ContributionLifecycleState | string {
+  const { currentState, independentConfirmationCount, independentDisputeCount, thresholds } = params;
+  if (currentState === 'superseded' || currentState === 'withdrawn') {
+    return currentState;
+  }
+  if (independentDisputeCount >= thresholds.independentDisputesTriggeringReviewRequired) {
+    return 'review_required';
+  }
+  if (independentConfirmationCount >= thresholds.independentConfirmationsRequired) {
+    return 'cross_user_eligible';
+  }
+  return 'pending';
 }

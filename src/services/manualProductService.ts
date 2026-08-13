@@ -377,18 +377,14 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
         logger.warn('[ManualProductService] Governed evidence persist failed (non-blocking):', evidenceError);
       }
 
-      // ===== USER CONTRIBUTION FLOW: STEP 3 - VERCEL (non-scoring proprietary slice) =====
-      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Vercel manual-products (non-scoring slice only)`, {
-        barcode: data.barcode,
-        hasManufacturingOrCountry: !!(
-          data.manufacturing_places?.trim() ||
-          data.countries?.trim()
-        ),
-        hasCertTags: !!(data.labels_tags && data.labels_tags.length > 0),
-      });
-
+      // ===== USER CONTRIBUTION FLOW: STEP 3 - VERCEL (allergens/additives residual only) =====
       const proprietaryPayload = buildVercelManualProductPayload(data);
       const hasProprietaryForVercel = Object.keys(proprietaryPayload).length > 0;
+
+      powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Vercel manual-products (non-scoring proprietary slice only)`, {
+        barcode: data.barcode,
+        proprietaryKeysPlanned: Object.keys(proprietaryPayload),
+      });
 
       let backendSubmissionSuccess = !hasProprietaryForVercel;
       const maxRetries = 3;

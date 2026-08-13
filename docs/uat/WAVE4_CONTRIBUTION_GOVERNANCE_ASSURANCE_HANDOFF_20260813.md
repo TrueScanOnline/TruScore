@@ -102,8 +102,19 @@ Confirm/dispute attach to **evidenceId / evidenceVersion**, not undifferentiated
 | SCAN-01/02/03 | PASS |
 | W1-01 | PASS — trusted OFF unchanged; no Signals/Chaining/EAS/OTA edits in this package |
 
-Command: `npm run test:wave4-contributions` → **35 passed**.
+Command: `npm run test:wave4-contributions` → **38 passed** (includes POL-04 backend SoT + P3 origin/cert payload proofs).
 
+---
+
+## P2 closure (2026-08-13 v2) — policy SoT for contribution-evidence
+
+`backend/vercel/api/contribution-evidence.ts` no longer hardcodes confirmation/dispute thresholds. It imports `getCommunityVerificationThresholds` + `resolveVerificationLifecycleState` from `src/config/contributionPolicy.ts` (runtime-neutral; also used by client lifecycle). MVP values remain 1 confirm / 2 disputes / no auto-withdraw. `manufacturing-country.ts` verification threshold also reads the same Origins policy.
+
+---
+
+## P3 disposition (2026-08-13 v2) — manual-products residual
+
+Runtime purpose of remaining POST `/api/manual-products`: **allergens_tags / additives_tags only** (non-scoring proprietary slice for subsequent users). Origins/Certifications already submit solely via `submitGovernedEvidence`; `buildVercelManualProductPayload` returns `{}` for origin/cert-only saves so the endpoint is skipped. Endpoint retained for that residual capability; not removed wholesale. Regression proofs in POL/P3 tests.
 ---
 
 ## 16. Country producer convergence
