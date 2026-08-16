@@ -1,0 +1,53 @@
+{
+  "validation": {
+    "ok": false,
+    "issues": [
+      {
+        "level": "error",
+        "file": "operational_entities.csv",
+        "rule": "enum_validity",
+        "message": "OE0006 has invalid operational_use_case_reason value 'distribution_not_ownership'."
+      },
+      {
+        "level": "error",
+        "file": "operational_entities.csv",
+        "rule": "enum_validity",
+        "message": "OE0007 has invalid operational_use_case_reason value 'licence_not_ownership'."
+      },
+      {
+        "level": "error",
+        "file": "operational_entities.csv",
+        "rule": "enum_validity",
+        "message": "OE0008 has invalid operational_use_case_reason value 'local_ops_not_ownership'."
+      },
+      {
+        "level": "error",
+        "file": "operational_entities.csv",
+        "rule": "enum_validity",
+        "message": "OE0009 has invalid operational_use_case_reason value 'licence_context'."
+      },
+      {
+        "level": "error",
+        "file": "operational_entities.csv",
+        "rule": "enum_validity",
+        "message": "OE0010 has invalid operational_use_case_reason value 'licence_context'."
+      }
+    ],
+    "missing_required_files": [],
+    "missing_optional_files": []
+  },
+  "validationSummary": {
+    "report_generated_at": "2026-08-16T04:41:12.546Z",
+    "rows": [
+      {
+        "report_generated_at": "2026-08-16T04:41:12.546Z",
+        "file_name": "operational_entities.csv",
+        "validation_rule": "enum_validity",
+        "status": "fail",
+        "issue_count": 5,
+        "issue_examples": "OE0006 has invalid operational_use_case_reason value 'distribution_not_ownership'. | OE0007 has invalid operational_use_case_reason value 'licence_not_ownership'. | OE0008 has invalid operational_use_case_reason value 'local_ops_not_ownership'.",
+        "blocking_y_n": "Y"
+      }
+    ]
+  }
+}

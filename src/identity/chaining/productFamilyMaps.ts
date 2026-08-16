@@ -1,6 +1,6 @@
 /**
  * Governed product_family chaining extension (v0.1).
- * Additive — does not mutate Workstream A wave1-v0.14 brand/parent/gtin CSVs.
+ * Additive — does not mutate Workstream A brand/parent/gtin CSVs (current SoT: wave1-v0.15).
  */
 
 import type { CsvRecord } from '../../identity/workstreamA/csv';
