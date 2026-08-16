@@ -398,11 +398,11 @@ for (const id of [
 }
 
 reparent('B0270', monster.parent_id);
-addOE('Coca-Cola Amatil / Coca-Cola Europacific Partners (Monster distribution)', 'distributor', 'P0011', 'B0270', 'distribution_not_ownership');
-addOE('Asahi Beverages (Sunkist licensee / bottler)', 'licensee', 'P0038', '', 'licence_not_ownership');
-addOE('Snackbrands Australia (Intersnack local ops)', 'manufacturer', 'P0156', 'B0163', 'local_ops_not_ownership');
-addOE('Bega Yoplait AU licence context', 'licensee', 'P0023', 'B0339', 'licence_context');
-addOE('Goodman Fielder / Wilmar Yoplait NZ licence context', 'licensee', 'P0040', '', 'licence_context');
+addOE('Coca-Cola Amatil / Coca-Cola Europacific Partners (Monster distribution)', 'distributor', 'P0011', 'B0270', 'safety_regulatory_matching');
+addOE('Asahi Beverages (Sunkist licensee / bottler)', 'licensee', 'P0038', '', 'safety_regulatory_matching');
+addOE('Snackbrands Australia (Intersnack local ops)', 'manufacturer', 'P0156', 'B0163', 'recall_matching');
+addOE('Bega Yoplait AU licence context', 'licensee', 'P0023', 'B0339', 'safety_regulatory_matching');
+addOE('Goodman Fielder / Wilmar Yoplait NZ licence context', 'licensee', 'P0040', '', 'safety_regulatory_matching');
 
 renameBrand('B0301', 'Tip Top Bakery', 'Tip Top Bakery');
 reparent('B0301', gwf.parent_id);
@@ -550,7 +550,7 @@ addChild('B0344', 'B0145');
 const primoDairy = addBrand({
   name: 'Primo (dairy)',
   display: 'Primo Dairy',
-  parentId: 'P0022',
+  parentId: 'P0020',
   skipIfExists: false,
   aliasTexts: ['Primo Dairy', 'Primo yoghurt'],
   harvest: ['Primo'],

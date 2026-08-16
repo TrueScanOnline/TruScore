@@ -24,7 +24,7 @@ export type DynamicSignalsAssetRuntimeEmbed = {
 };
 
 export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbed = {
-  "generatedAt": "2026-08-16T04:39:50.861Z",
+  "generatedAt": "2026-08-16T05:50:30.460Z",
   "sources": [
     {
       "source_channel_id": "SRC-FSANZ-RECALL",
@@ -13501,8 +13501,8 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "brand_id": "B0718",
       "canonical_brand_name": "Primo (dairy)",
       "display_brand_name": "Primo Dairy",
-      "parent_id": "P0022",
-      "parent_display_name": "Fonterra Co-operative Group Limited",
+      "parent_id": "P0020",
+      "parent_display_name": "Lactalis Group",
       "brand_type": "local_brand",
       "review_state": "reviewed",
       "primary_source_type": "official_parent_brand_page",
@@ -13510,7 +13510,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "primary_source_name": "Chaining refresh 20260816",
       "primary_source_url_or_reference": "CHAT_Cursor_Chaining_Asset_Refresh_Instruction_20260816",
       "source_harvest_date": "2026-08-16",
-      "substantiation_note": "AU/NZ current-chain refresh 20260816 from founder governed Chaining instruction; runtime consumes review_state=reviewed only.",
+      "substantiation_note": "AU/NZ current-chain refresh 20260816; dairy Primo under Lactalis (P0020). JBS Primo meat B0351 remains separate. No bare Primo alias.",
       "notes_internal": ""
     },
     {
@@ -21639,8 +21639,8 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "alias_source_type": "manual_stewardship",
       "brand_id": "B0718",
       "canonical_brand_name": "Primo (dairy)",
-      "parent_id": "P0022",
-      "parent_display_name": "Fonterra Co-operative Group Limited",
+      "parent_id": "P0020",
+      "parent_display_name": "Lactalis Group",
       "review_state": "reviewed",
       "source_id": "SRC_CHAINING_REFRESH_20260816",
       "source_reference": "SRC_CHAINING_REFRESH_20260816",
@@ -21654,8 +21654,8 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "alias_source_type": "manual_stewardship",
       "brand_id": "B0718",
       "canonical_brand_name": "Primo (dairy)",
-      "parent_id": "P0022",
-      "parent_display_name": "Fonterra Co-operative Group Limited",
+      "parent_id": "P0020",
+      "parent_display_name": "Lactalis Group",
       "review_state": "reviewed",
       "source_id": "SRC_CHAINING_REFRESH_20260816",
       "source_reference": "SRC_CHAINING_REFRESH_20260816",
