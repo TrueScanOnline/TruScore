@@ -1,14 +1,14 @@
 {
-  "report_generated_at": "2026-08-16T05:50:35.265Z",
-  "canonical_parent_count": 162,
-  "canonical_brand_count": 827,
-  "alias_count": 188,
+  "report_generated_at": "2026-08-16T09:05:24.183Z",
+  "canonical_parent_count": 161,
+  "canonical_brand_count": 777,
+  "alias_count": 184,
   "gtin_link_count": 3,
-  "operational_entity_count": 10,
+  "operational_entity_count": 5,
   "open_change_candidate_count": 0,
   "review_state_summary": {
-    "reviewed": 800,
-    "archived": 25,
+    "reviewed": 742,
+    "archived": 33,
     "provisional": 2
   },
   "wave_status_summary": {
