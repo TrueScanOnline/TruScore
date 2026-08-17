@@ -5,7 +5,7 @@ import { buildADataMapsFromCsvRecords } from '../../../workstreamC/skeleton/work
 import { isChocolateOrCocoaContext, resolveReviewedRetailChainUnified } from '../../../workstreamC/skeleton/resolveWorkstreamCRetailChain';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
-const A_DATA = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.14', 'input');
+const A_DATA = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.15', 'input');
 
 function loadFrozenADataMaps() {
   const brandRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'canonical_brands.csv'), 'utf8'));

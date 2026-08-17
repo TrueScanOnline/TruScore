@@ -26,8 +26,8 @@ function readCsv(filePath: string) {
 
 function main() {
   const packRoot = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.2', 'input');
-  const famRoot = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.1');
-  const aRoot = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.14', 'input');
+  const famRoot = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.2');
+  const aRoot = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.15', 'input');
   const extRoot = famRoot;
 
   const embed = {

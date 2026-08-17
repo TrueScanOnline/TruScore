@@ -20,7 +20,7 @@ export function loadDynamicSignalsAssetPackFromDisk(roots?: {
     roots?.packInputRoot ?? path.join(repoRoot, 'workstreamC', 'c-data', 'dynamic-signals-v0.2', 'input');
   const famRoot =
     roots?.familyExtRoot ??
-    path.join(repoRoot, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.1');
+    path.join(repoRoot, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.2');
 
   const read = (p: string) => (fs.existsSync(p) ? parseCsv(fs.readFileSync(p, 'utf8')) : []);
 

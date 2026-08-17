@@ -1,5 +1,5 @@
 /**
- * Maps a real scanned product + frozen Workstream A v0.14 CSV snapshots (read-only) to a reviewed
+ * Maps a real scanned product + frozen Workstream A v0.15 CSV snapshots (read-only) to a reviewed
  * retail chain for Workstream C subject-link matching. Does not mutate A-data on disk.
  *
  * MVP identity contract (Wave 1 clarification 2026-08-07):

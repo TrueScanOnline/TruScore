@@ -14,7 +14,7 @@ import { loadADataMaps } from '../src/workstreamC/skeleton/buildSkeletonPublicat
 
 const root = path.resolve(__dirname, '..');
 const defaultPack = path.join(root, 'workstreamC', 'c-data', 'v0.4', 'input');
-const defaultA = path.join(root, 'workstreamA', 'a-data', 'wave1-v0.14', 'input');
+const defaultA = path.join(root, 'workstreamA', 'a-data', 'wave1-v0.15', 'input');
 
 function main(): void {
   const packRoot = path.resolve(process.argv[2] ?? defaultPack);

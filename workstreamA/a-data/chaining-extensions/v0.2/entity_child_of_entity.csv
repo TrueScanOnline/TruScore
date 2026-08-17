@@ -1,0 +1,4 @@
+entity_id,parent_entity_id,review_state,confidence_state,lineage_reference,notes
+P0040,P0047,reviewed,strong,chaining-refresh-20260816,Authorised Component 2 entity_child_of_entity edge.
+P0161,P0036,reviewed,strong,chaining-refresh-20260816,Authorised Component 2 entity_child_of_entity edge.
+P0163,P0158,reviewed,strong,chaining-refresh-20260816,Authorised Component 2 entity_child_of_entity edge.
