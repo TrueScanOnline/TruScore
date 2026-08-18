@@ -6,7 +6,9 @@
 import type { Product } from '../../../types/product';
 import type { DynamicSignalPublicationRecord } from '../../publish/types';
 import type { FoodRecallSubmittedMarkings } from '../../../workstreamC/recall';
+import { resolveReviewedRetailChainUnified } from '../../../workstreamC/skeleton/resolveWorkstreamCRetailChain';
 import { buildDynamicSignalsAssetRuntimePublicationRecords } from './buildDynamicSignalsAssetRuntimePublicationRecords';
+import { loadADataForChainFromEmbed } from './loadDynamicSignalsAssetPack';
 import { resolveActiveSignalsProducer } from './signalsProducerGuard';
 
 export type SignalsReadyOutcome = 'attached' | 'empty' | 'failed';
@@ -96,12 +98,59 @@ export async function evaluateDynamicSignalsAssetProgressive(
   return evaluateDynamicSignalsAssetSafe(input);
 }
 
+/** Compact reviewed-identity scheduling token — not raw product_name / brands. */
+export type MaterialRetailIdentityState = 'unresolved' | 'fail_closed' | `reviewed:${string}:${string}`;
+
+export function productNameForSignalsIdentity(product: Product): string {
+  return product.product_name ?? product.product_name_en ?? product.brands ?? '';
+}
+
+/**
+ * Production Chaining only (Asset embed, Cadbury UAT bridge off).
+ * Used to decide whether full Signal matching must re-run after product_enhanced.
+ */
+export function resolveMaterialRetailIdentityStateForAsset(input: {
+  barcode: string;
+  product?: Product | null;
+}): MaterialRetailIdentityState {
+  if (!input.product) return 'unresolved';
+  const { aData, brandRows, aliasRows } = loadADataForChainFromEmbed();
+  const logs: string[] = [];
+  const chain = resolveReviewedRetailChainUnified({
+    barcode: input.barcode,
+    productName: productNameForSignalsIdentity(input.product),
+    product: input.product,
+    aData,
+    canonicalBrandRows: brandRows,
+    brandAliasRows: aliasRows,
+    logLines: logs,
+    applyCadburyUatBridge: false,
+  });
+  if (chain?.brand_id && chain.parent_id) {
+    return `reviewed:${chain.brand_id}:${chain.parent_id}`;
+  }
+  if (logs.some((line) => line.includes('fail_closed'))) return 'fail_closed';
+  return 'unresolved';
+}
+
+/** Drop a progressive eval whose identity-aware key is no longer the Result current key. */
+export function shouldCommitDynamicSignalsEvaluation(input: {
+  evaluationKey: string;
+  currentEvaluationKey: string | null | undefined;
+  cancelled?: boolean;
+}): boolean {
+  if (input.cancelled) return false;
+  return input.currentEvaluationKey === input.evaluationKey;
+}
+
 /** Stable key so ordinary loading/render transitions do not re-evaluate Signals. */
 export function dynamicSignalsEvaluationKey(input: {
   barcode: string;
   scanMarketPublic: string;
   foodRecallMarkings: FoodRecallSubmittedMarkings | null | undefined;
   producerActive: boolean;
+  /** Material Chaining state. Omit only in tests that are not identity-scheduling. */
+  identityState?: MaterialRetailIdentityState;
 }): string {
   const markings = input.foodRecallMarkings
     ? JSON.stringify({
@@ -110,5 +159,6 @@ export function dynamicSignalsEvaluationKey(input: {
         bb_year: input.foodRecallMarkings.bestBeforeYear ?? null,
       })
     : '';
-  return `${input.barcode}|${input.scanMarketPublic}|${input.producerActive ? '1' : '0'}|${markings}`;
+  const identityState = input.identityState ?? 'unresolved';
+  return `${input.barcode}|${input.scanMarketPublic}|${input.producerActive ? '1' : '0'}|${markings}|${identityState}`;
 }
