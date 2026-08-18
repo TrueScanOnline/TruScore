@@ -1,7 +1,8 @@
 /**
  * Rveel Dynamic Signals Asset v0.2 — deterministic target matcher (remediation).
  *
- * Eligibility: market_key + target_type + canonical_target_id + propagation_mode only.
+ * Eligibility: market_key + target_type + canonical_target_id + propagation_mode,
+ * then optional product_scope_guard (currently cocoa_chocolate).
  * Safety & Regulatory product recalls with exact/batch/date scope are NOT published here —
  * they must go through the Food Recall Matcher.
  */
@@ -20,6 +21,10 @@ import {
 } from '../../../identity/chaining/brandEntityHierarchyMaps';
 import type { ResolutionStatus } from '../../../contracts/phase6/enums';
 import type { StructuredFoodRecallNotice } from '../../../workstreamC/recall';
+import {
+  productScopeGuardAllowsDisplay,
+  type CocoaChocolateProductScopeEvidence,
+} from './cocoaChocolateProductScopeGuard';
 
 const VALID_FAR = '2099-12-31T23:59:59.000Z';
 
@@ -29,6 +34,7 @@ export type AssetScanIdentity = {
   parent_id: string | null;
   product_family_ids: string[];
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
+  productScopeEvidence?: CocoaChocolateProductScopeEvidence | null;
 };
 
 /** Signal ↔ structured recall eligibility (smallest durable contract). */
@@ -223,6 +229,14 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
         input.pack.entityHierarchy
       )
     ) {
+      continue;
+    }
+
+    const scopeGuard = (tgt.product_scope_guard ?? '').trim();
+    if (!productScopeGuardAllowsDisplay(scopeGuard, identity.productScopeEvidence)) {
+      push(
+        `product_scope_guard: skip ${sigId} via ${tgt.signal_target_id} guard=${scopeGuard || '(empty)'}`
+      );
       continue;
     }
 

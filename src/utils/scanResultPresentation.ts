@@ -91,7 +91,9 @@ export function buildBannerAlertsDataFromScanResult(
   options?: { maxNonASignals?: number }
 ): BannerAlertsData {
   const maxNonA = options?.maxNonASignals ?? 4;
-  const flat = dedupeSignalCards(flattenSignalsOrdered(scan.signals));
+  const flat = dedupeSignalCards(flattenSignalsOrdered(scan.signals)).filter(
+    (card) => card.class !== 'C'
+  );
   const capped = applyNonASignalCap(flat, maxNonA);
   const alerts: BannerAlert[] = capped.map((card) => {
     let { title, message } = resolveSignalCopy(card, t);

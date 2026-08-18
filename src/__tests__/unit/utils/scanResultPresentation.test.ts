@@ -89,5 +89,7 @@ describe('scanResultPresentation', () => {
     };
     flattenSignalsOrdered(scan.signals);
     expect(orderSpy).toHaveBeenCalled();
+    const banners = buildBannerAlertsDataFromScanResult(scan, t as any);
+    expect(banners.alerts.some((a) => a.signalClass === 'C')).toBe(false);
   });
 });

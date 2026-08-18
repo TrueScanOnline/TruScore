@@ -29,6 +29,12 @@ export const lightColors = {
     e: '#ff6b6b',
     unknown: '#95a5a6',
   },
+  didYouKnow: {
+    card: '#FFFFFF',
+    badgeBackground: '#F5F6F7',
+    border: '#D8DCE1',
+    charcoal: '#44484E',
+  },
 };
 
 export const darkColors = {
@@ -60,6 +66,12 @@ export const darkColors = {
     d: '#ff9800',
     e: '#ff6b6b',
     unknown: '#95a5a6',
+  },
+  didYouKnow: {
+    card: '#FFFFFF',
+    badgeBackground: '#F5F6F7',
+    border: '#D8DCE1',
+    charcoal: '#44484E',
   },
 };
 

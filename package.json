@@ -53,7 +53,7 @@
     "generate:dsa-asset-runtime-embed": "ts-node --project scripts/tsconfig.json scripts/generate-dynamic-signals-asset-runtime-embed.ts",
     "preflight:mvp-release-asset": "ts-node --project scripts/tsconfig.json scripts/assert-mvp-release-dynamic-signals-asset.ts",
     "test:mvp-runtime-gates": "jest src/__tests__/unit/config/mvpReleaseDynamicSignalsAsset.test.ts src/__tests__/unit/config/mvpRuntimeGates.legacyAlerts.test.ts",
-    "test:workstreamC": "jest src/__tests__/unit/workstreamC/resolveWorkstreamCRetailChain.test.ts src/__tests__/unit/workstreamC/foodRecallMatcher.stage2.test.ts src/__tests__/unit/services/bannerAlertsService.workstreamCRecall.test.ts src/__tests__/unit/dynamicSignals/assetV02Matcher.test.ts src/__tests__/unit/dynamicSignals/resultIsolation.progressive.test.ts src/__tests__/unit/dynamicSignals/signalsEvalScheduling.identityStale.test.ts",
+    "test:workstreamC": "jest src/__tests__/unit/workstreamC/resolveWorkstreamCRetailChain.test.ts src/__tests__/unit/workstreamC/foodRecallMatcher.stage2.test.ts src/__tests__/unit/services/bannerAlertsService.workstreamCRecall.test.ts src/__tests__/unit/dynamicSignals/assetV02Matcher.test.ts src/__tests__/unit/dynamicSignals/assetV03Pack.test.ts src/__tests__/unit/dynamicSignals/resultIsolation.progressive.test.ts src/__tests__/unit/dynamicSignals/signalsEvalScheduling.identityStale.test.ts",
     "test:workstreamC:skeleton": "npm run test:workstreamC",
     "test:dsa-result-isolation": "jest src/__tests__/unit/dynamicSignals/resultIsolation.progressive.test.ts src/__tests__/unit/dynamicSignals/signalsEvalScheduling.identityStale.test.ts",
     "workstreamC:verify-subjects": "ts-node --project scripts/tsconfig.json scripts/workstreamC-verify-subject-links-against-a-data.ts",

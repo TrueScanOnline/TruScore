@@ -43,6 +43,15 @@ export function signalClassOrder(c: SignalClass): number {
   return 3;
 }
 
+/** Consumer-facing Dynamic Signals category labels. Internal enums unchanged. */
+export function consumerSignalCategoryLabel(
+  signalClass: SignalClass | undefined
+): 'Food Safety' | 'In the News' | null {
+  if (signalClass === 'A') return 'Food Safety';
+  if (signalClass === 'B') return 'In the News';
+  return null;
+}
+
 export function mapSignalCardToBucket(card: SignalCard): SignalBucketKey {
   return SIGNAL_CLASS_TO_BUCKET[card.class] ?? 'premium_insight';
 }
