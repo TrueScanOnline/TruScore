@@ -129,7 +129,7 @@ export function toScoringProduct(
   }
   if (pending?.origin || standaloneLocal) {
     for (const key of USER_ORIGIN_KEYS) {
-      delete (next as Record<string, unknown>)[key];
+      delete (next as unknown as Record<string, unknown>)[key];
     }
   }
   if (pending?.labels || standaloneLocal) {

@@ -80,27 +80,27 @@ export function parseAssetRecallNotices(
     relatedByNotice.set(noticeId, list);
   }
 
-  return noticeRows
-    .map((r) => {
-      const recall_notice_id = (r.recall_notice_id ?? '').trim();
-      if (!recall_notice_id) return null;
-      const bb_month = Number.parseInt((r.bb_month ?? '').trim(), 10);
-      const bb_year = Number.parseInt((r.bb_year ?? '').trim(), 10);
-      if (!Number.isInteger(bb_month) || !Number.isInteger(bb_year)) return null;
-      return {
-        recall_notice_id,
-        signal_id: (r.signal_id ?? '').trim(),
-        official_source_url: (r.official_source_url ?? '').trim(),
-        hazard: (r.hazard ?? '').trim(),
-        consumer_action: (r.consumer_action ?? '').trim(),
-        bb_month,
-        bb_year,
-        recall_product_family_id: (r.recall_product_family_id ?? '').trim() || undefined,
-        affected_variants: variantsByNotice.get(recall_notice_id) ?? [],
-        related_family_gtins: relatedByNotice.get(recall_notice_id),
-      } satisfies StructuredFoodRecallNotice;
-    })
-    .filter((n): n is StructuredFoodRecallNotice => n != null);
+  const notices: StructuredFoodRecallNotice[] = [];
+  for (const r of noticeRows) {
+    const recall_notice_id = (r.recall_notice_id ?? '').trim();
+    if (!recall_notice_id) continue;
+    const bb_month = Number.parseInt((r.bb_month ?? '').trim(), 10);
+    const bb_year = Number.parseInt((r.bb_year ?? '').trim(), 10);
+    if (!Number.isInteger(bb_month) || !Number.isInteger(bb_year)) continue;
+    notices.push({
+      recall_notice_id,
+      signal_id: (r.signal_id ?? '').trim(),
+      official_source_url: (r.official_source_url ?? '').trim(),
+      hazard: (r.hazard ?? '').trim(),
+      consumer_action: (r.consumer_action ?? '').trim(),
+      bb_month,
+      bb_year,
+      recall_product_family_id: (r.recall_product_family_id ?? '').trim() || undefined,
+      affected_variants: variantsByNotice.get(recall_notice_id) ?? [],
+      related_family_gtins: relatedByNotice.get(recall_notice_id),
+    });
+  }
+  return notices;
 }
 
 export type AssetPackCsvRows = {

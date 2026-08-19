@@ -106,12 +106,12 @@ for (const band of SPEC_KTC) {
   );
 }
 ok(
-  'Cert weights: Fairtrade 6, RA 5, ASC/MSC 4, RSPO 3, Organic 2',
+  'Cert weights: Fairtrade 6, RA/UTZ 6, ASC/MSC 4, RSPO 0 (non-scoring), Organic 2',
   ETHICS_CERTIFICATION_WEIGHTS.fairtrade === 6 &&
-    ETHICS_CERTIFICATION_WEIGHTS.rainforest_alliance === 5 &&
+    ETHICS_CERTIFICATION_WEIGHTS.rainforest_alliance === 6 &&
     ETHICS_CERTIFICATION_WEIGHTS.asc === 4 &&
     ETHICS_CERTIFICATION_WEIGHTS.msc === 4 &&
-    ETHICS_CERTIFICATION_WEIGHTS.rspo === 3 &&
+    ETHICS_CERTIFICATION_WEIGHTS.rspo === 0 &&
     ETHICS_CERTIFICATION_WEIGHTS.organic === 2
 );
 

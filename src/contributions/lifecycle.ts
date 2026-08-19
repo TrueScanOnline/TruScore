@@ -27,7 +27,7 @@ function computeScoringEligible(evidence: ContributionEvidence): boolean {
   if (!policy.canonicalPromotionPermission) return false;
   if (evidence.domain === 'origins') return true;
   if (evidence.domain === 'certifications') {
-    if (policy.laneBScoring === false) {
+    if ('laneBScoring' in policy && policy.laneBScoring === false) {
       return isLaneACertificationEvidence({
         labelsTags: evidence.labelsTags,
         claimValue: evidence.claimValue,

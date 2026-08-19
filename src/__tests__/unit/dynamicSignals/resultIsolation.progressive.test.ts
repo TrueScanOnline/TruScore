@@ -20,7 +20,7 @@ import {
   evaluateDynamicSignalsAssetProgressive,
   evaluateDynamicSignalsAssetSafe,
 } from '../../../dynamicSignals/asset/v0.2/evaluateDynamicSignalsAssetProgressive';
-import { buildDynamicSignalsAssetRuntimePublicationRecords } from '../../../dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords';
+import * as buildDynamicSignalsAssetRuntimeModule from '../../../dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords';
 import type { ProductWithTrustScore } from '../../../types/product';
 import type { AlertsPreferences } from '../../../store/useAlertsStore';
 
@@ -106,7 +106,7 @@ describe('Dynamic Signals result isolation (pre-UAT)', () => {
   it('evaluateDynamicSignalsAssetSafe contains thrown matcher failures', () => {
     const spy = jest
       .spyOn(
-        require('../../../dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords'),
+        buildDynamicSignalsAssetRuntimeModule,
         'buildDynamicSignalsAssetRuntimePublicationRecords'
       )
       .mockImplementation(() => {
@@ -195,13 +195,13 @@ describe('Dynamic Signals result isolation (pre-UAT)', () => {
       packCached: true,
     });
     // Ordinary "render" re-eval uses the same cached pack
-    buildDynamicSignalsAssetRuntimePublicationRecords({
+    buildDynamicSignalsAssetRuntimeModule.buildDynamicSignalsAssetRuntimePublicationRecords({
       barcode: '0000000000000',
       productName: 'none',
       scanMarketPublic: 'AU',
       forceRun: true,
     });
-    buildDynamicSignalsAssetRuntimePublicationRecords({
+    buildDynamicSignalsAssetRuntimeModule.buildDynamicSignalsAssetRuntimePublicationRecords({
       barcode: '0000000000000',
       productName: 'none',
       scanMarketPublic: 'AU',
@@ -267,7 +267,7 @@ describe('Dynamic Signals result isolation (pre-UAT)', () => {
       dynamicSignalRecords: [],
       terminal_state: 'success',
     }).result;
-    const positiveRecs = buildDynamicSignalsAssetRuntimePublicationRecords({
+    const positiveRecs = buildDynamicSignalsAssetRuntimeModule.buildDynamicSignalsAssetRuntimePublicationRecords({
       barcode: product.barcode,
       productName: 'Cadbury Dairy Milk Chocolate',
       product: { ...product, product_name: 'Cadbury Dairy Milk Chocolate' },

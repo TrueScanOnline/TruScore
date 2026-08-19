@@ -118,7 +118,7 @@ export async function submitManufacturingCountry(
       barcode,
       domain: 'origins',
       claimValue: validatedCountry,
-      imageUrl: validatedPhotoUrl,
+      imageUrl: validatedPhotoUrl ?? undefined,
       exactWording: validatedCountry,
       originStructured: {
         claimType: 'made_in',
