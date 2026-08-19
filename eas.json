@@ -86,7 +86,7 @@
         "EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET": "1",
         "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
         "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
-        "RVEEL_IOS_BUILD_NUMBER": "34"
+        "RVEEL_IOS_BUILD_NUMBER": "35"
       },
       "ios": {
         "simulator": false,
