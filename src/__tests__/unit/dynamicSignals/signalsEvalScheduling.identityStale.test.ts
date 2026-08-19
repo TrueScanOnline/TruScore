@@ -142,7 +142,7 @@ describe('Result Signals scheduling — material identity eval key', () => {
     __resetDynamicSignalsAssetEmbedCacheForTests();
   });
 
-  it('weak/unresolved first paint → Dairy Milk reviewed identity re-evaluates; v0.3 pack remains candidate/needs_review', () => {
+  it('weak/unresolved first paint → Dairy Milk reviewed identity re-evaluates; v0.3 pack publishes approved Signals', () => {
     expect(resolveMaterialRetailIdentityStateForAsset({ barcode: BARCODE, product: insufficientIdentityProduct() })).toBe(
       'unresolved'
     );
@@ -155,8 +155,8 @@ describe('Result Signals scheduling — material identity eval key', () => {
     expect(resolveMaterialRetailIdentityStateForAsset({ barcode: BARCODE, product: sufficientCadburyDairyMilkProduct() })).toBe(
       'reviewed:B0241:P0009'
     );
-    expect(hold.last.outcome).toBe('empty');
-    expect(signalIds(hold.last)).toEqual([]);
+    expect(hold.last.outcome).toBe('attached');
+    expect(signalIds(hold.last)).toEqual(expect.arrayContaining(['SIG-IN-GL-001', 'SIG-IN-GL-002']));
   });
 
   it('same reviewed chain + harmless nutrition/image/label enrichment → no additional Signal evaluation', () => {
@@ -168,7 +168,7 @@ describe('Result Signals scheduling — material identity eval key', () => {
     expect(identityEvalKey(harmlessEnrichmentProduct())).toBe(identityEvalKey(sufficientCadburyDairyMilkProduct()));
     hold = applyIdentityAwareScheduler(harmlessEnrichmentProduct(), hold);
     expect(hold.evaluations).toBe(1);
-    expect(hold.last.outcome).toBe('empty');
+    expect(hold.last.outcome).toBe('attached');
     expect(signalIds(hold.last)).toEqual(ids);
   });
 
@@ -188,7 +188,7 @@ describe('Result Signals scheduling — material identity eval key', () => {
     hold = applyIdentityAwareScheduler(dairy, hold);
     const attached = attachDynamicSignalRecordsToScanResult(primary, hold.last.records);
     expect(attached.scores).toBe(primary.scores);
-    expect(hold.last.outcome).toBe('empty');
+    expect(hold.last.outcome).toBe('attached');
 
     hold = applyIdentityAwareScheduler(failClosedConflictProduct(), hold);
     expect(hold.evaluations).toBe(2);
@@ -206,15 +206,15 @@ describe('Result Signals scheduling — material identity eval key', () => {
   it('reviewed identity A → materially different reviewed identity B → Signals reflect B', () => {
     let hold = emptyHold();
     hold = applyIdentityAwareScheduler(sufficientCadburyDairyMilkProduct(), hold);
-    expect(signalIds(hold.last)).toEqual([]);
+    expect(signalIds(hold.last)).toEqual(expect.arrayContaining(['SIG-IN-GL-001', 'SIG-IN-GL-002']));
 
     expect(resolveMaterialRetailIdentityStateForAsset({ barcode: BARCODE, product: kitKatReviewedProduct() })).toBe(
       'reviewed:B0060:P0008'
     );
     hold = applyIdentityAwareScheduler(kitKatReviewedProduct(), hold);
     expect(hold.evaluations).toBe(2);
-    expect(hold.last.outcome).toBe('empty');
-    expect(signalIds(hold.last)).toEqual([]);
+    expect(hold.last.outcome).toBe('attached');
+    expect(signalIds(hold.last)).toEqual(expect.arrayContaining(['SIG-IN-GL-002']));
   });
 
   it('older asynchronous evaluation cannot overwrite the result for a newer identity state', async () => {
@@ -247,8 +247,8 @@ describe('Result Signals scheduling — material identity eval key', () => {
 
     await older;
     expect(published).not.toBeNull();
-    expect(published!.outcome).toBe('empty');
-    expect(signalIds(published!)).toEqual([]);
+    expect(published!.outcome).toBe('attached');
+    expect(signalIds(published!)).toEqual(expect.arrayContaining(['SIG-IN-GL-001', 'SIG-IN-GL-002']));
 
     const staleCommit = shouldCommitDynamicSignalsEvaluation({
       evaluationKey: identityEvalKey(insufficientIdentityProduct()),

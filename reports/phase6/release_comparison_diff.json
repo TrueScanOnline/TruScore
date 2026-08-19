@@ -3,6 +3,6 @@
   "fixture_schema_id": "phase6.fixture.schema.v1",
   "matches_baseline": true,
   "baseline_path": "C:\\TrueScan-FoodScanner\\src\\__tests__\\fixtures\\phase6\\baseline\\phase6-baseline.v1.json",
-  "generated_at": "2026-08-07T02:53:29.430Z",
+  "generated_at": "2026-08-19T08:05:09.360Z",
   "diffs": []
 }

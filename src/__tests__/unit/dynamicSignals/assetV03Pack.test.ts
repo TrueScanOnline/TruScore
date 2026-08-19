@@ -148,7 +148,7 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
     expect(pack.signals).toHaveLength(18);
     expect(pack.targets).toHaveLength(27);
     expect(pack.sources.some((s) => s.source_channel_id === 'SRC-FOOD-SAFETY-NEWS')).toBe(true);
-    expect(pack.signals.every((s) => s.signal_publication_state === 'candidate')).toBe(true);
+    expect(pack.signals.every((s) => s.signal_publication_state === 'publishable')).toBe(true);
   });
 
   it('adding Food Safety News does not itself create a Signal', () => {
@@ -282,10 +282,29 @@ describe('SIG-IN-GL-002 v0.3 corporate targets + cocoa_chocolate guard', () => {
     expect(streets.some((r) => r.signal_id === 'SIG-IN-GL-002')).toBe(false);
   });
 
-  it('workbook needs_review on SIG-IN-GL-002 targets fail closed without overlay', () => {
+  it('resolved targets on SIG-IN-GL-002 match for cocoa/chocolate product under named parent', () => {
     const pack = loadV03Pack();
     const recs = buildDynamicSignalsAssetPublicationRecords({
-      pack: { ...pack, signals: withPublishable(pack.signals, ['SIG-IN-GL-002']) },
+      pack,
+      identity: {
+        barcode: '9300617064879',
+        brand_id: 'B0241',
+        parent_id: 'P0009',
+        product_family_ids: [],
+        scanMarketPublic: 'AU',
+        productScopeEvidence: { product_name: 'Dairy Milk Chocolate' },
+      },
+    });
+    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-002')).toBe(true);
+  });
+
+  it('needs_review targets still fail closed when overlaid', () => {
+    const pack = loadV03Pack();
+    const overridden = pack.targets.map((t) =>
+      t.signal_id === 'SIG-IN-GL-002' ? { ...t, resolution_status: 'needs_review' } : t
+    );
+    const recs = buildDynamicSignalsAssetPublicationRecords({
+      pack: { ...pack, targets: overridden },
       identity: {
         barcode: '9300617064879',
         brand_id: 'B0241',
