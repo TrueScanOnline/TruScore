@@ -221,7 +221,7 @@ function ResultScreenContent() {
   const signalsEvalContextRef = useRef<null | {
     evalKey: string;
     barcode: string;
-    product: Product;
+    product: ProductWithTrustScore;
     productName: string;
     scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
     producerLogs: string[];
