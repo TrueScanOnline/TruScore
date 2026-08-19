@@ -1,4 +1,5 @@
 import {
+  consumerSignalCategoryLabel,
   emptySignalsBuckets,
   isPublicationRecordPubliclyRenderable,
   mapPublicationRecordToSignalCard,
@@ -46,6 +47,9 @@ describe('signalRenderMapping (Slice 0 foundation)', () => {
       bucket: 'user_preference',
       signalClass: 'C',
     });
+    expect(consumerSignalCategoryLabel('A')).toBe('Food Safety');
+    expect(consumerSignalCategoryLabel('B')).toBe('In the News');
+    expect(consumerSignalCategoryLabel('C')).toBeNull();
   });
 
   it('creates empty signal buckets with all public keys', () => {

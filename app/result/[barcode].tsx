@@ -52,6 +52,9 @@ import { buildBannerAlertsDataFromScanResult } from '../../src/utils/scanResultP
 import {
   dynamicSignalsEvaluationKey,
   evaluateDynamicSignalsAssetProgressive,
+  productNameForSignalsIdentity,
+  resolveMaterialRetailIdentityStateForAsset,
+  shouldCommitDynamicSignalsEvaluation,
   type SignalsReadyOutcome,
 } from '../../src/dynamicSignals/asset/v0.2/evaluateDynamicSignalsAssetProgressive';
 import { resolveActiveSignalsProducer } from '../../src/dynamicSignals/asset/v0.2/signalsProducerGuard';
@@ -214,6 +217,16 @@ function ResultScreenContent() {
   const [signalsReadyOutcome, setSignalsReadyOutcome] = useState<SignalsReadyOutcome | null>(null);
   const signalsEvalKeyRef = useRef<string | null>(null);
   const signalsInFlightKeyRef = useRef<string | null>(null);
+  const latestSignalsEvalKeyRef = useRef<string | null>(null);
+  const signalsEvalContextRef = useRef<null | {
+    evalKey: string;
+    barcode: string;
+    product: Product;
+    productName: string;
+    scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
+    producerLogs: string[];
+    foodRecallMarkings: FoodRecallSubmittedMarkings | null;
+  }>(null);
   const productResultReadyLoggedRef = useRef<string | null>(null);
   const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number; hasImportedIngredients?: boolean } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -234,6 +247,8 @@ function ResultScreenContent() {
     setSignalsReadyOutcome(null);
     signalsEvalKeyRef.current = null;
     signalsInFlightKeyRef.current = null;
+    latestSignalsEvalKeyRef.current = null;
+    signalsEvalContextRef.current = null;
     productResultReadyLoggedRef.current = null;
   }, [barcode]);
 
@@ -496,13 +511,14 @@ function ResultScreenContent() {
     });
   }, [primaryScanResult, product, barcode]);
 
-  // Progressive Signals — after primary is available; not re-run on ordinary loading transitions.
-  useEffect(() => {
+  // Progressive Signals — after primary is available. Re-run only when material
+  // reviewed identity (or market / producer / recall markings) changes — not on
+  // harmless product_enhanced completeness merges.
+  const signalsEvalContext = useMemo(() => {
     const primaryBc = getPrimaryBarcode(barcode);
     const productForScan =
       product && getPrimaryBarcode(product.barcode) === primaryBc ? product : null;
-    if (!productForScan) return;
-
+    if (!productForScan) return null;
     const country = getUserCountryCode();
     const scanMarketPublic = resolveSharedIdentityContext({
       gtin: primaryBc,
@@ -511,22 +527,49 @@ function ResultScreenContent() {
     }).public_market;
     const producerLogs: string[] = [];
     const producer = resolveActiveSignalsProducer(producerLogs);
+    const identityState = resolveMaterialRetailIdentityStateForAsset({
+      barcode: primaryBc,
+      product: productForScan,
+    });
     const evalKey = dynamicSignalsEvaluationKey({
       barcode: primaryBc,
       scanMarketPublic,
       foodRecallMarkings,
       producerActive: producer === 'asset',
+      identityState,
     });
+    return {
+      evalKey,
+      barcode: primaryBc,
+      product: productForScan,
+      productName: productNameForSignalsIdentity(productForScan),
+      scanMarketPublic,
+      producerLogs,
+      foodRecallMarkings,
+    };
+  }, [product, barcode, foodRecallMarkings]);
+
+  latestSignalsEvalKeyRef.current = signalsEvalContext?.evalKey ?? null;
+  signalsEvalContextRef.current = signalsEvalContext;
+
+  useEffect(() => {
+    const ctx = signalsEvalContextRef.current;
+    if (!ctx) return;
+
+    const evalKey = ctx.evalKey;
     if (signalsEvalKeyRef.current === evalKey) return;
     if (signalsInFlightKeyRef.current === evalKey) return;
     signalsInFlightKeyRef.current = evalKey;
 
     let cancelled = false;
-    const productName =
-      productForScan.product_name ??
-      productForScan.product_name_en ??
-      productForScan.brands ??
-      '';
+    const {
+      barcode: primaryBc,
+      product: productForScan,
+      productName,
+      scanMarketPublic,
+      producerLogs,
+      foodRecallMarkings: markings,
+    } = ctx;
     const assetLogs: string[] = [...producerLogs];
 
     void (async () => {
@@ -535,10 +578,15 @@ function ResultScreenContent() {
         productName,
         product: productForScan,
         scanMarketPublic,
-        foodRecallMarkings,
+        foodRecallMarkings: markings,
         logLines: assetLogs,
       });
-      if (cancelled) {
+      const stale = !shouldCommitDynamicSignalsEvaluation({
+        evaluationKey: evalKey,
+        currentEvaluationKey: latestSignalsEvalKeyRef.current,
+        cancelled,
+      });
+      if (stale) {
         if (signalsInFlightKeyRef.current === evalKey) {
           signalsInFlightKeyRef.current = null;
         }
@@ -581,7 +629,7 @@ function ResultScreenContent() {
         signalsInFlightKeyRef.current = null;
       }
     };
-  }, [product, barcode, foodRecallMarkings]);
+  }, [signalsEvalContext?.evalKey]);
 
   // Silence unused-state lint until UI surfaces progressive outcome.
   void signalsReadyOutcome;

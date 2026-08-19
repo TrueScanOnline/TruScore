@@ -10,6 +10,7 @@
 
 import type { Product } from '../../../types/product';
 import { resolveReviewedRetailChainUnified } from '../../../workstreamC/skeleton/resolveWorkstreamCRetailChain';
+import type { CocoaChocolateProductScopeEvidence } from './cocoaChocolateProductScopeGuard';
 import {
   buildDynamicSignalsAssetPublicationRecords,
   type AssetPackParsed,
@@ -79,6 +80,18 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     input.productFamilyIds ??
     reviewedFamilyIdsForGtin(pack.familyMaps, input.barcode, input.scanMarketPublic);
 
+  const productScopeEvidence: CocoaChocolateProductScopeEvidence | null = input.product
+    ? {
+        product_name: input.product.product_name ?? input.productName,
+        generic_name: input.product.generic_name,
+        categories: input.product.categories,
+        categories_tags: input.product.categories_tags,
+        ingredients_text: input.product.ingredients_text,
+      }
+    : input.productName
+      ? { product_name: input.productName }
+      : null;
+
   const assetRecords = buildDynamicSignalsAssetPublicationRecords({
     pack,
     identity: {
@@ -87,6 +100,7 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
       parent_id,
       product_family_ids,
       scanMarketPublic: input.scanMarketPublic,
+      productScopeEvidence,
     },
     logLines: logs,
     includeNonPublishable: input.includeNonPublishable ?? false,

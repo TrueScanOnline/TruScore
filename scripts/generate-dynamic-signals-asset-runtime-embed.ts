@@ -1,5 +1,6 @@
 /**
- * Generate Metro-safe embedded Dynamic Signals Asset v0.2 pack + A-data rows.
+ * Generate Metro-safe embedded Dynamic Signals Asset pack + A-data rows.
+ * Source pack: workstreamC/c-data/dynamic-signals-v0.3/input
  * App runtime must not import Node `fs` — EAS Bundle JavaScript fails otherwise.
  *
  * Usage: npx ts-node --project scripts/tsconfig.json scripts/generate-dynamic-signals-asset-runtime-embed.ts
@@ -25,7 +26,7 @@ function readCsv(filePath: string) {
 }
 
 function main() {
-  const packRoot = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.2', 'input');
+  const packRoot = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.3', 'input');
   const famRoot = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.2');
   const aRoot = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.15', 'input');
   const extRoot = famRoot;
@@ -63,7 +64,7 @@ function main() {
 
   const body = `/* AUTO-GENERATED — do not edit by hand.
  * Run: npm run generate:dsa-asset-runtime-embed
- * Source: governed Dynamic Signals Asset v0.2 CSVs + Shared Identity (wave1 + chaining-extensions).
+ * Source: governed Dynamic Signals Asset v0.3 CSVs + Shared Identity (wave1 + chaining-extensions).
  */
 import type { CsvRecord } from '../../../identity/workstreamA/csv';
 

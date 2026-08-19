@@ -1,0 +1,56 @@
+dimension,value,label,definition
+publisher_type,Official Authority,Official Authority,"Government regulator, statutory authority or official food-safety body."
+publisher_type,Public Broadcaster,Public Broadcaster,Publicly funded national broadcaster or newsroom.
+publisher_type,Commercial News Publisher,Commercial News Publisher,Commercial national newsroom or publisher.
+publisher_type,Consumer Organisation,Consumer Organisation,"Consumer testing, advocacy or product-investigation body."
+publisher_type,Specialist Evidence Organisation,Specialist Evidence Organisation,"Specialist evidence-led organisation producing reporting, investigation or analysis using identifiable sources or disclosed methods."
+editorial_function,Food Recall Registry,Food Recall Registry,Official consumer-facing product recall and withdrawal notices.
+editorial_function,Regulatory & Enforcement Reporting,Regulatory & Enforcement Reporting,"Official proceedings, findings, warnings, undertakings and enforcement outcomes."
+editorial_function,National Mainstream Reporting,National Mainstream Reporting,"National reporting capable of recurring named product, brand or company coverage."
+editorial_function,Dedicated Investigative & Verification Journalism,Dedicated Investigative & Verification Journalism,"Original investigation, testing, documents, fieldwork or verification."
+editorial_function,Consumer Testing & Advocacy,Consumer Testing & Advocacy,"Product testing, comparison and consumer-focused investigation."
+editorial_function,Specialist Evidence & Watchdog Investigation,Specialist Evidence & Watchdog Investigation,Evidence-led specialist reporting or investigation using identifiable sources or disclosed methods.
+signal_class,safety_regulatory,Food Safety,"Official food recalls, allergen or food-safety notices, withdrawal notices, and equivalent approved food-safety reporting concerning a product or identifiable product range."
+signal_class,in_the_news,In the News,"Approved current reporting, investigation, or non-food-safety regulator/enforcement developments about a product, brand or company."
+market_key,AU,Australia,Australian product and publication context.
+market_key,NZ,New Zealand,New Zealand product and publication context.
+market_key,AU+NZ,Australia and New Zealand,"Use only where identity, scope and publication are explicitly valid in both markets."
+source_status,active,Active,Authorised source channel.
+source_status,inactive,Inactive,Retained identifier but not authorised for new Signal records.
+confidence_state,confirmed,Confirmed,Highest evidence and identity confidence.
+confidence_state,strong,Strong,Strong evidence and defensible identity/scope.
+confidence_state,probable,Probable,Insufficient for public publication.
+confidence_state,low,Low,Insufficient for public publication.
+confidence_state,rejected,Rejected,Rejected evidence or resolution.
+review_state,seeded,Seeded,Initial governed data row awaiting review.
+review_state,provisional,Provisional,Reviewed in part but not final.
+review_state,reviewed,Reviewed,Governed review complete.
+review_state,disputed,Disputed,Material challenge or conflict under review.
+review_state,archived,Archived,No longer active; retained for history.
+signal_publication_state,candidate,Candidate,Ingested or drafted; not public.
+signal_publication_state,held_for_review,Held for Review,Awaiting required review or resolution.
+signal_publication_state,publishable,Publishable,"All class, scope, review and resolution gates pass."
+signal_publication_state,suppressed,Suppressed,Not eligible for public display.
+signal_publication_state,expired,Expired,Past the approved public display horizon.
+resolution_status,resolved,Resolved,Canonical target resolved without material warning.
+resolution_status,resolved_with_warning,Resolved with Warning,Target resolved with an approved qualification.
+resolution_status,ambiguous,Ambiguous,Multiple plausible targets or unresolved scope conflict.
+resolution_status,blocked,Blocked,Must not become publishable.
+resolution_status,needs_review,Needs Review,Must remain candidate or held for review.
+target_type,product,Product,One canonical sellable product.
+target_type,product_family,Product Family,A governed family of reviewed canonical products maintained in the Chaining asset.
+target_type,brand,Brand,A canonical brand or sub-brand and its reviewed product descendants.
+target_type,entity,Entity,A canonical current entity and its reviewed current descendants.
+target_type,operational_entity,Operational Entity,"A manufacturer, importer, distributor, licensee or other selected operator used for accurate scope."
+subject_response_status,not_applicable,Not Applicable,"Used where a subject response is not relevant, typically official recall records."
+subject_response_status,pending_review,Pending Review,"The source may contain a response, but it has not yet been captured and reviewed."
+subject_response_status,captured_from_source,Captured from Source,The approved source itself contains the subject/company response.
+subject_response_status,captured_from_separate_public_statement,Captured from Separate Public Statement,A separate public statement from the subject/company is linked and summarised.
+subject_response_status,not_reported,Not Reported,No subject response is reported in the approved source; this is not treated as a refusal to comment.
+subject_response_status,declined_to_comment,Declined to Comment,The source explicitly reports that the subject declined to comment or respond.
+propagation_mode,exact_only,Exact Only,Match only the canonical product target itself.
+propagation_mode,family_members,Family Members,Match reviewed products that are members of the canonical product family in the Chaining asset.
+propagation_mode,brand_descendants,Brand Descendants,Match reviewed products resolving to the canonical brand or its governed child-brand descendants.
+propagation_mode,entity_descendants,Entity Descendants,Match reviewed current product/brand descendants whose current ownership chain resolves to the canonical entity.
+propagation_mode,operational_descendants,Operational Descendants,Match reviewed products linked to the selected operational entity where that relationship is the approved scope basis.
+product_scope_guard,cocoa_chocolate,Cocoa / Chocolate,Pass only where available product evidence positively indicates cocoa or chocolate relevance; otherwise fail closed.
