@@ -21,7 +21,11 @@ import {
 } from './productCacheService';
 import { USER_CONTRIBUTED_MERGE_RACE_MS, USER_CONTRIBUTED_FIRST_PAINT_RACE_MS } from './userContributedProductsService';
 import { calculateTrustScore } from '../utils/trustScore';
-import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalization';
+import {
+  normalizeBarcode,
+  getPrimaryBarcode,
+  toWorldOffLookupBarcode,
+} from '../utils/barcodeNormalization';
 import { getUserCountryCode } from '../utils/countryDetection';
 import { logger } from '../utils/logger';
 import { enhanceProduct } from './productEnhancementService';
@@ -68,6 +72,10 @@ async function executeFetchProductOptimized(
 ): Promise<ProductWithTrustScore | null> {
   const primaryBarcode = getPrimaryBarcode(barcode);
   const barcodeVariants = normalizeBarcode(barcode);
+  // OFF fetch must receive the cleaned request barcode (not primaryBarcode).
+  // Passing getPrimaryBarcode() into fetchProductFromOFF causes double-normalisation
+  // and breaks valid GTIN-8 World OFF exact-GTIN retrieval.
+  const offLookupBarcode = toWorldOffLookupBarcode(barcode);
   const userCountry = getUserCountryCode();
 
   const scanStartTime = Date.now();
@@ -123,7 +131,7 @@ async function executeFetchProductOptimized(
         // Background cache refresh from OFF only (no multi-provider)
         Promise.resolve().then(async () => {
           try {
-            const offProduct = await fetchProductFromOFF(primaryBarcode).catch(() => null);
+            const offProduct = await fetchProductFromOFF(offLookupBarcode).catch(() => null);
             if (offProduct) {
               const offProductWithScore = await processProductFast(offProduct, primaryBarcode);
               saveProductToCache(offProductWithScore, primaryBarcode, isPremium).catch(() => {});
@@ -174,18 +182,18 @@ async function executeFetchProductOptimized(
 
   // ===== WORLD OFF EXACT-GTIN =====
   onProgress?.({ phase: 'fast_sources' });
-  powershellLogger.queryPhase(primaryBarcode, 1, 'World Open Food Facts (exact GTIN)', '< 2 seconds');
-  logger.info(`📊 World OFF exact-GTIN: ${primaryBarcode}`);
+  powershellLogger.queryPhase(offLookupBarcode, 1, 'World Open Food Facts (exact GTIN)', '< 2 seconds');
+  logger.info(`📊 World OFF exact-GTIN: ${offLookupBarcode} (request; not pre-normalised primary)`);
 
   const offStart = Date.now();
   let firstPaintProductPromise: Promise<ProductWithTrustScore> | null = null;
 
-  const offProduct = await fetchProductFromOFF(primaryBarcode)
+  const offProduct = await fetchProductFromOFF(offLookupBarcode)
     .then((result) => {
       apiCallCount++;
       if (result) {
         sources.push('openfoodfacts');
-        logger.info(`✅ Open Food Facts found: ${primaryBarcode}`);
+        logger.info(`✅ Open Food Facts found: ${offLookupBarcode}`);
       }
       return result;
     })
@@ -198,7 +206,7 @@ async function executeFetchProductOptimized(
 
   // No OFF product → return null promptly (no Phase 2/3 / legacy providers)
   if (!offProduct) {
-    logger.warn(`No product found for ${primaryBarcode} (World OFF miss)`);
+    logger.warn(`No product found for ${offLookupBarcode} (World OFF miss)`);
     onProgress?.({ phase: 'not_found' });
     return null;
   }

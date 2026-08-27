@@ -88,3 +88,16 @@ export function getPrimaryBarcode(barcode: string): string {
   return variants.reduce((a, b) => a.length > b.length ? a : b, variants[0]);
 }
 
+/**
+ * Barcode to pass into World OFF exact-GTIN retrieval.
+ *
+ * Use the cleaned request barcode — do NOT pass getPrimaryBarcode() into
+ * fetchProductFromOFF(), which normalises again. Double-normalisation turns
+ * valid GTIN-8 codes into padded EAN-13/14 variants and never queries the
+ * original GTIN-8 that World OFF stores.
+ */
+export function toWorldOffLookupBarcode(barcode: string): string {
+  const cleaned = barcode.replace(/\D/g, '');
+  return cleaned || barcode;
+}
+
