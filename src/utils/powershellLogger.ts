@@ -541,12 +541,12 @@ class PowerShellLogger {
    */
   truScoreCalculationDetailed(
     barcode: string,
-    totalScore: number,
+    totalScore: number | null,
     breakdown: {
-      Body: number;
-      Planet: number;
-      Ethics: number;
-      Open: number;
+      Body: number | null;
+      Planet: number | null;
+      Ethics: number | null;
+      Open: number | null;
     },
     metadata: {
       hasNutriScore?: boolean;
@@ -564,7 +564,7 @@ class PowerShellLogger {
   ): void {
     this.section(`TRUSCORE CALCULATION: ${barcode}`);
     
-    this.log('SUCCESS', 'TRUSCORE_COMPLETE', `TruScore: ${totalScore}/100`, {
+    this.log('SUCCESS', 'TRUSCORE_COMPLETE', `TruScore: ${totalScore == null ? 'unavailable' : `${totalScore}/100`}`, {
       barcode,
       totalScore,
       breakdown,

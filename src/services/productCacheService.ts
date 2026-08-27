@@ -147,24 +147,12 @@ export async function mergeUserContributedData(product: Product, barcode: string
       // Origin/certification Product fields are not merged from contributions.
       product.certifications = formatCertifications(product);
     } else {
-      if (userContributedProduct.packaging_data) {
-        product.packaging_data = userContributedProduct.packaging_data;
-      }
-
-      if (userContributedProduct.packagings) {
-        product.packagings = userContributedProduct.packagings;
-      }
-
-      if (userContributedProduct.serving_size) {
-        product.serving_size = userContributedProduct.serving_size;
-      }
+      // Wave 2 P1: do not overlay unverified community additives/packaging/serving onto
+      // the shared product — those fields alter Body/Planet/Open for other users' scans.
+      // Photo + allergen display overlays remain; scoring eligibility is enforced in toScoringProduct.
 
       if (userContributedProduct.allergens_tags && userContributedProduct.allergens_tags.length > 0) {
         product.allergens_tags = userContributedProduct.allergens_tags;
-      }
-
-      if (userContributedProduct.additives_tags && userContributedProduct.additives_tags.length > 0) {
-        product.additives_tags = userContributedProduct.additives_tags;
       }
 
       product.certifications = formatCertifications(product);
@@ -172,13 +160,7 @@ export async function mergeUserContributedData(product: Product, barcode: string
 
     const mergedAnything =
       !!userContributedProduct.image_url ||
-      (!vercelProprietaryOnly &&
-        !!(
-          userContributedProduct.allergens_tags?.length ||
-          userContributedProduct.additives_tags?.length ||
-          userContributedProduct.serving_size ||
-          userContributedProduct.packaging_data
-        ));
+      (!vercelProprietaryOnly && !!(userContributedProduct.allergens_tags?.length));
 
     if (mergedAnything) {
       await removeCachedTruScore(barcode).catch(() => {});

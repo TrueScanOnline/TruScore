@@ -103,6 +103,21 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
     // Cache the result
     await cacheTruScore(product.barcode, truScoreResult);
   }
+
+  // Technical scoring failure → unavailable/non-assessment (never Overall 0 / all-zero pillars)
+  if (truScoreResult.scoringUnavailable || truScoreResult.truscore == null) {
+    return {
+      ...product,
+      trust_score: null,
+      trust_score_breakdown: null,
+      _truscore_metadata: {
+        hasNutriScore: !!truScoreResult.hasNutriScore,
+        hasEcoScore: !!truScoreResult.hasEcoScore,
+        hasOrigin: !!truScoreResult.hasOrigin,
+        scoringUnavailable: true,
+      },
+    };
+  }
   
   // Ensure all pillar scores are valid numbers (safety check)
   const body = typeof truScoreResult.breakdown.Body === 'number' && !isNaN(truScoreResult.breakdown.Body) 

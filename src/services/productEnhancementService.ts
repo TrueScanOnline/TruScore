@@ -21,7 +21,6 @@ import { logger } from '../utils/logger';
 import { calculateDataCompleteness, formatCompletenessMetrics } from '../utils/dataCompleteness';
 import { handleError, ErrorCategory, ErrorSeverity } from './errorHandlingService';
 import { trackUnmappedBrand } from '../utils/unmappedBrandTracker';
-import { calculateNutriScoreFromNutrition, hasRequiredNutrientsForNutriScore } from './nutriscoreCalculator';
 import { assignNOVA1IfHighConfidence } from '../utils/novaAssessment';
 import { extractBrandFromProductName, getBrandData } from '../data/brandDatabase';
 import { extractAllBrands } from '../utils/brandExtraction';
@@ -112,22 +111,6 @@ export function calculateAndSetEcoScore(product: Product): Product {
     }
     if (calculatedEcoScore.score !== undefined) {
       product.ecoscore_score = calculatedEcoScore.score;
-    }
-  }
-  return product;
-}
-
-/**
- * Calculate and set Nutri-Score on product (ID 8: when OFF is missing)
- */
-export function calculateAndSetNutriScore(product: Product): Product {
-  // Only calculate if Nutri-Score is missing and we have required nutrition data
-  if (!product.nutriscore_grade && hasRequiredNutrientsForNutriScore(product.nutriments)) {
-    const calculatedNutriScore = calculateNutriScoreFromNutrition(product.nutriments!);
-    if (calculatedNutriScore) {
-      product.nutriscore_grade = calculatedNutriScore.grade;
-      product.nutriscore_score = calculatedNutriScore.score;
-      logger.debug(`[NutriScore] Calculated and set: grade=${calculatedNutriScore.grade}, score=${calculatedNutriScore.score}`);
     }
   }
   return product;
@@ -275,13 +258,12 @@ export async function enhanceProduct(product: Product): Promise<Product> {
   // Apply brand enrichment (EAN-Search, OpenCorporates, B-Corp)
   product = await applyBrandEnrichment(product);
   
-  // Calculate and set Eco-Score
+  // Calculate and set Eco-Score (OFF score → grade normalization only; not a Rveel-created Eco-Score)
   calculateAndSetEcoScore(product);
   
-  // ID 8: Calculate and set Nutri-Score (when OFF is missing)
-  calculateAndSetNutriScore(product);
+  // Wave 2: local Nutri-Score calculator demised — Body uses OFF nutriscore_grade only.
   
-  // ID 9: Assign NOVA 1 if high confidence (limited approach)
+  // Approved NOVA-1 rescue (pillar Decision Tree) when OFF NOVA is missing
   assignNOVA1IfHighConfidence(product);
   
   return product;

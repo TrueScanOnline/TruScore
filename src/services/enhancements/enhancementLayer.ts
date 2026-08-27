@@ -10,7 +10,7 @@ import { enhanceWithLeapingBunny } from './leapingBunnyEnhancement';
 
 /**
  * Apply all MVP enhancements to a product
- * This is called after primary data sources (Gold Standard → Country-Specific → Global OFF)
+ * This is called after primary governed product retrieval (canonical World OFF).
  * 
  * Enhancement order:
  * 1. EWG Skin Deep (Body pillar - cosmetics)

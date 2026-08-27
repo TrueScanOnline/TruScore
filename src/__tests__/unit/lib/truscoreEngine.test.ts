@@ -9,13 +9,14 @@ import { Product } from '../../../types/product';
 
 describe('TruScore Engine', () => {
   describe('calculateTruScore', () => {
-    it('should return 0 score for null product', () => {
+    it('should return unavailable (null) for null product — not Overall 0', () => {
       const result = calculateTruScore(null);
-      expect(result.truscore).toBe(0);
-      expect(result.breakdown.Body).toBe(0);
-      expect(result.breakdown.Planet).toBe(0);
-      expect(result.breakdown.Ethics).toBe(0);
-      expect(result.breakdown.Open).toBe(0);
+      expect(result.truscore).toBeNull();
+      expect(result.scoringUnavailable).toBe(true);
+      expect(result.breakdown.Body).toBeNull();
+      expect(result.breakdown.Planet).toBeNull();
+      expect(result.breakdown.Ethics).toBeNull();
+      expect(result.breakdown.Open).toBeNull();
     });
 
     it('should calculate score for product with Nutri-Score A', () => {

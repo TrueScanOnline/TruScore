@@ -109,30 +109,18 @@ export class TruScoreOptimizedDatabase {
    */
   async queryAllDatabases(
     barcode: string,
-    userCountry: string | null,
-    earlyProductName?: string | null,
-    onProductUpdate?: (product: Product, source: string) => void,
-    options?: QueryAllDatabasesOptions
+    _userCountry: string | null,
+    _earlyProductName?: string | null,
+    _onProductUpdate?: (product: Product, source: string) => void,
+    _options?: QueryAllDatabasesOptions
   ): Promise<Product[]> {
-    // Check if query is already in progress (deduplication)
-    const queryKey = `${barcode}_${userCountry || 'global'}_${options?.seedProducts?.length ? 'seed' : 'full'}`;
-    if (activeQueries.has(queryKey)) {
-      logger.debug(`Query already in progress for ${barcode}, waiting for existing query...`);
-      return activeQueries.get(queryKey)!;
-    }
-    
-    // Create query promise with progressive callback support
-    const queryPromise = this.executeQuery(barcode, userCountry, earlyProductName, onProductUpdate, options);
-    
-    // Store in active queries
-    activeQueries.set(queryKey, queryPromise);
-    
-    // Clean up after query completes
-    queryPromise.finally(() => {
-      activeQueries.delete(queryKey);
-    });
-    
-    return queryPromise;
+    // Wave 2 Core Truth: multi-provider fan-out demised. Production path is
+    // cache → World OFF exact-GTIN only (see productServiceOptimized).
+    // Safe no-op so leftover callers cannot reintroduce weighted merge.
+    logger.debug(
+      `[TruScoreOptimizedDatabase] multi-provider queryAllDatabases demised — returning [] for ${barcode}`
+    );
+    return [];
   }
   
   /**

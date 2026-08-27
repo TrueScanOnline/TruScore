@@ -300,6 +300,8 @@ export interface ProductWithTrustScore extends Product {
     hasNutriScore?: boolean;
     hasEcoScore?: boolean;
     hasOrigin?: boolean;
+    /** Technical scoring failure — UI should treat as non-assessment, not Overall 0. */
+    scoringUnavailable?: boolean;
   };
   /** Full TruScore analysis (pillar breakdown + data source trace). Set when score is calculated. */
   _truscore_analysis?: import('./truscoreAnalysis').TruScoreAnalysis;

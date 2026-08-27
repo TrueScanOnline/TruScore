@@ -43,7 +43,7 @@ export interface PillarAnalysis {
 /** Full TruScore analysis: fetch trace + per-pillar breakdown */
 export interface TruScoreAnalysis {
   barcode: string;
-  totalScore: number;
+  totalScore: number | null;
   /** Order and result of each database query during product fetch */
   fetchTrace: FetchTraceEntry[];
   /** Per-pillar breakdown with source attribution */

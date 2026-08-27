@@ -52,13 +52,19 @@ export type TruScoreScoringContext = {
 };
 
 export interface TruScoreResult {
-  truscore: number;
+  /**
+   * Overall TruScore 0–100, or null when scoring is unavailable / non-assessment
+   * (technical calculation failure — never a substantive numeric score).
+   */
+  truscore: number | null;
   breakdown: {
-    Body: number;
-    Planet: number;
-    Ethics: number;
-    Open: number;
+    Body: number | null;
+    Planet: number | null;
+    Ethics: number | null;
+    Open: number | null;
   };
+  /** True when a technical scoring failure prevented assessment (distinct from genuine numeric 0). */
+  scoringUnavailable?: boolean;
   hasNutriScore?: boolean;
   hasEcoScore?: boolean;
   hasOrigin?: boolean;
@@ -72,6 +78,27 @@ export interface TruScoreResult {
   };
   /** Full analysis (fetch trace + per-pillar source attribution). Built when pillarDetails exist. */
   analysis?: TruScoreAnalysis;
+}
+
+/** Identifiable non-assessment result for technical calculation failures. */
+function unavailableTruScoreResult(): TruScoreResult {
+  return {
+    truscore: null,
+    breakdown: { Body: null, Planet: null, Ethics: null, Open: null },
+    scoringUnavailable: true,
+    hasNutriScore: false,
+    hasEcoScore: false,
+    hasOrigin: false,
+  };
+}
+
+function runPillarOrThrow<T>(pillar: string, fn: () => T): T {
+  try {
+    return fn();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`SCORING_UNAVAILABLE:${pillar}:${message}`);
+  }
 }
 
 /**
@@ -89,16 +116,10 @@ export function calculateTruScore(
   preferences?: AlertsPreferences,
   scoringContext?: TruScoreScoringContext
 ): TruScoreResult {
-  // Input validation
+  // Input validation — non-assessment (not a substantive Overall 0)
   if (!product || typeof product !== 'object') {
     logger.warn('[truscoreEngine] Invalid product input: product is null or not an object');
-    return {
-      truscore: 0,
-      breakdown: { Body: 0, Planet: 0, Ethics: 0, Open: 0 },
-      hasNutriScore: false,
-      hasEcoScore: false,
-      hasOrigin: false,
-    };
+    return unavailableTruScoreResult();
   }
   
   // Validate that required fields are present
@@ -142,17 +163,22 @@ export function calculateTruScore(
   const calculationStartTime = Date.now();
   
   try {
-    // Calculate each pillar independently
-    const bodyResult = calculateBodyPillar(scoringProduct);
-    const planetResult = calculatePlanetPillar(scoringProduct);
-    const ethicsResult = calculateEthicsPillar(scoringProduct);
-    const openResult = calculateOpenPillar(scoringProduct);
-    
-    // Extract scores - ensure all are valid numbers (safety validation)
-    const body = typeof bodyResult.score === 'number' && !isNaN(bodyResult.score) ? bodyResult.score : 0;
-    const planet = typeof planetResult.score === 'number' && !isNaN(planetResult.score) ? planetResult.score : 0;
-    const ethics = typeof ethicsResult.score === 'number' && !isNaN(ethicsResult.score) ? ethicsResult.score : 0;
-    const open = typeof openResult.score === 'number' && !isNaN(openResult.score) ? openResult.score : 0;
+    // Calculate each pillar independently — any technical failure → unavailable (not a numeric score)
+    const bodyResult = runPillarOrThrow('Body', () => calculateBodyPillar(scoringProduct));
+    const planetResult = runPillarOrThrow('Planet', () => calculatePlanetPillar(scoringProduct));
+    const ethicsResult = runPillarOrThrow('Ethics', () => calculateEthicsPillar(scoringProduct));
+    const openResult = runPillarOrThrow('Open', () => calculateOpenPillar(scoringProduct));
+
+    const requireFinite = (pillar: string, score: unknown): number => {
+      if (typeof score !== 'number' || !Number.isFinite(score)) {
+        throw new Error(`SCORING_UNAVAILABLE:${pillar}:non-finite score`);
+      }
+      return score;
+    };
+    const body = requireFinite('Body', bodyResult.score);
+    const planet = requireFinite('Planet', planetResult.score);
+    const ethics = requireFinite('Ethics', ethicsResult.score);
+    const open = requireFinite('Open', openResult.score);
     
     // Total with bounds checking (0-100)
     const truscore = Math.max(0, Math.min(100, Math.round(body + planet + ethics + open)));
@@ -237,24 +263,15 @@ export function calculateTruScore(
     
     return result;
   } catch (error) {
-    // Error handling - log detailed error and return safe default
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
-    logger.error('[truscoreEngine] Error calculating TruScore:', {
+    logger.error('[truscoreEngine] Technical scoring failure — returning unavailable/non-assessment:', {
       message: errorMessage,
       stack: errorStack,
       productBarcode: product?.barcode || 'unknown',
       productName: product?.product_name || 'unknown',
     });
-    
-    // Return safe default with null truscore to indicate calculation failure
-    return {
-      truscore: 0,
-      breakdown: { Body: 0, Planet: 0, Ethics: 0, Open: 0 },
-      hasNutriScore: false,
-      hasEcoScore: false,
-      hasOrigin: false,
-    };
+    return unavailableTruScoreResult();
   }
 }
 

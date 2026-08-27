@@ -138,6 +138,14 @@ export function toScoringProduct(
     next.certifications = undefined;
   }
 
+  // Wave 2 P1: unverified community evidence must not alter Body/Planet/Open via these fields
+  if (standaloneLocal) {
+    next.additives_tags = undefined;
+    next.packagings = undefined;
+    next.packaging_data = undefined;
+    next.serving_size = undefined;
+  }
+
   applyPromotedCertifications(next, promotedEvidence);
   applyPromotedOrigins(next, promotedEvidence);
 
@@ -175,5 +183,9 @@ export function stripUnauthoredScoringFieldsFromContribution(product: Product): 
     delete next.ingredients_text;
     delete next.ingredients;
   }
+  delete next.additives_tags;
+  delete next.packagings;
+  delete next.packaging_data;
+  delete next.serving_size;
   return next;
 }

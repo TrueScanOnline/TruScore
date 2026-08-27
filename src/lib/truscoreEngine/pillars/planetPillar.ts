@@ -149,28 +149,13 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
     return result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('[PlanetPillar] Error calculating Planet pillar score:', {
+    logger.error('[PlanetPillar] Technical calculation failure — must not return baseline Planet 15:', {
       message: errorMessage,
       stack: error instanceof Error ? error.stack : undefined,
       barcode: product?.barcode || 'unknown',
     });
-
-    return {
-      score: base,
-      base,
-      adjustments: [
-        {
-          description: 'Planet pillar calculation error — baseline only',
-          value: 0,
-          type: 'neutral',
-        },
-      ],
-      details: {
-        specVersion: SPEC_LABEL,
-        annexVersion: ANNEX_LABEL,
-        hasEcoScoreGrade: false,
-        palmOilPlanetAdjustment: 0,
-      },
-    };
+    // Propagate so TruScore outer wrapper resolves to unavailable/non-assessment
+    // (never an indistinguishable genuine Planet 15).
+    throw error instanceof Error ? error : new Error(errorMessage);
   }
 }

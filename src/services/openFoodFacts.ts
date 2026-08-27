@@ -1,7 +1,6 @@
 // Open Food Facts API client
 import { Product, PalmOilAnalysis, PackagingData, PackagingItem, AgribalyseData } from '../types/product';
 import { logger } from '../utils/logger';
-import { getUserCountryCode, getCountryCodesToTry, getOFFCountryInstance } from '../utils/countryDetection';
 import { fetchWithRateLimit } from '../utils/timeoutHelper';
 import { normalizeBarcode } from '../utils/barcodeNormalization';
 import {
@@ -78,65 +77,26 @@ async function fetchProductFromOFFInstance(barcode: string, instance: string): P
 }
 
 /**
- * Fetch product data from Open Food Facts API
- * Tries country-specific instances first, then falls back to global
- * This significantly improves success rate for country-specific products
+ * Fetch product data from Open Food Facts canonical World API by exact GTIN.
+ * Wave 2: Country/regional hosts are not alternative factual product sources —
+ * world.openfoodfacts.org is the sole governed OFF retrieval endpoint.
  */
 export async function fetchProductFromOFF(barcode: string): Promise<Product | null> {
   // Generate barcode variants to try (handles leading zeros, normalization)
   const barcodeVariants = normalizeBarcode(barcode);
   const uniqueVariants = Array.from(new Set(barcodeVariants));
   
-  logger.debug(`Trying ${uniqueVariants.length} barcode variants for OFF query: ${uniqueVariants.join(', ')}`);
+  logger.debug(`Trying ${uniqueVariants.length} barcode variants for OFF World query: ${uniqueVariants.join(', ')}`);
   
-  // Try each barcode variant
   for (const variant of uniqueVariants) {
-    // Get country codes to try (user's country first, then common countries)
-    const countriesToTry = getCountryCodesToTry();
-    
-    // Build list of instances to try
-    // CRITICAL FIX: Try global instance FIRST (like Yuka does)
-    // Global instance has the most products and is most reliable
-    // Country-specific instances are tried after for local enhancements
-    const instancesToTry: string[] = [];
-    
-    // Try global instance FIRST (matches Yuka's strategy)
-    instancesToTry.push('world.openfoodfacts.org');
-    
-    // Add country-specific instances after global (for local enhancements)
-    for (const countryCode of countriesToTry) {
-      const instance = getOFFCountryInstance(countryCode);
-      if (instance && !instancesToTry.includes(instance)) {
-        instancesToTry.push(instance);
-      }
-    }
-
-    // Fast path: world first (avoids noisy parallel failures across many regional subdomains)
     const worldProduct = await fetchProductFromOFFInstance(variant, 'world.openfoodfacts.org');
     if (worldProduct) {
       logger.debug(`Found product in OFF (world.openfoodfacts.org) with variant ${variant}: ${barcode}`);
       return worldProduct;
     }
-
-    const regionalInstances = instancesToTry.filter((h) => h !== 'world.openfoodfacts.org');
-    const cappedRegional = regionalInstances.slice(0, 4);
-
-    const regionalResults = await Promise.allSettled(
-      cappedRegional.map((instance) => fetchProductFromOFFInstance(variant, instance))
-    );
-
-    for (let i = 0; i < regionalResults.length; i++) {
-      const result = regionalResults[i];
-      if (result.status === 'fulfilled' && result.value) {
-        const instance = cappedRegional[i];
-        logger.debug(`Found product in OFF (${instance}) with variant ${variant}: ${barcode}`);
-        return result.value;
-      }
-    }
   }
   
-  // No product found in any instance with any variant
-  logger.debug(`Product not found in any OFF instance with any variant: ${barcode}`);
+  logger.debug(`Product not found in OFF World for any barcode variant: ${barcode}`);
   return null;
 }
 
