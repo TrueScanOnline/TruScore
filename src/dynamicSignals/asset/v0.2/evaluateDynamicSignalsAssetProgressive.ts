@@ -114,7 +114,7 @@ export function resolveMaterialRetailIdentityStateForAsset(input: {
   product?: Product | null;
 }): MaterialRetailIdentityState {
   if (!input.product) return 'unresolved';
-  const { aData, brandRows, aliasRows } = loadADataForChainFromEmbed();
+  const { aData, brandRows, aliasRows, brandChildRows } = loadADataForChainFromEmbed();
   const logs: string[] = [];
   const chain = resolveReviewedRetailChainUnified({
     barcode: input.barcode,
@@ -123,6 +123,7 @@ export function resolveMaterialRetailIdentityStateForAsset(input: {
     aData,
     canonicalBrandRows: brandRows,
     brandAliasRows: aliasRows,
+    brandChildRows,
     logLines: logs,
     applyCadburyUatBridge: false,
   });

@@ -153,6 +153,7 @@ function buildADataChainFromEmbedRows() {
     aData: buildADataMapsFromCsvRecords(e.brandRows, e.parentRows, e.gtinRows),
     brandRows: e.brandRows,
     aliasRows: e.aliasRows,
+    brandChildRows: e.brandChildOfBrand,
   };
 }
 

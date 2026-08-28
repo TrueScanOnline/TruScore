@@ -43,8 +43,6 @@ export interface ResolvedRetailChain {
   brand_id: string;
   parent_id: string;
   source: 'gtin_link' | 'injected_uat_fixture' | 'identity_resolution';
-  brand_match_channel?: 'brands_field' | 'product_name' | 'gtin_link' | 'injected';
-  brand_type?: string;
 }
 
 /** Tests / harnesses only — never pass from app screens. */

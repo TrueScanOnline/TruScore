@@ -80,73 +80,136 @@ function applyCadburyNgoSubjectBridge(
   return chain;
 }
 
-/** Compact tokens from product_name only (not generic_name). */
-function splitProductNameTokens(raw?: string | null): string[] {
-  if (!raw || !raw.trim()) return [];
-  return raw
-    .split(/[^a-zA-Z0-9]+/)
-    .map((t) => normalizeCompact(t))
-    .filter((t) => t.length > 0);
-}
-
 function reviewedAliasForms(row: CsvRecord): string[] {
   return [normalizeCompact(row.alias_normalized ?? ''), normalizeCompact(row.alias_text ?? '')].filter(Boolean);
 }
 
-/**
- * Brands/owner exact tokens → brand candidates.
- * product_name may refine via reviewed aliases (exact token OR contiguous compact match for
- * multiword forms e.g. "Kit Kat" → kitkat). generic_name is never used for brand establishment.
- */
-function collectCandidateBrandIds(
+type GovernedLeadingPhrase = {
+  brand_id: string;
+  parent_id: string;
+  phrase: string;
+};
+
+function buildGovernedLeadingPhrases(
+  canonicalRows: CsvRecord[],
+  aliasRows: CsvRecord[],
+  aData: ADataMaps
+): GovernedLeadingPhrase[] {
+  const out: GovernedLeadingPhrase[] = [];
+  const seen = new Set<string>();
+
+  const pushPhrase = (brand_id: string, phrase: string) => {
+    const trimmed = phrase.trim();
+    if (!trimmed) return;
+    const parent_id = aData.brandsById.get(brand_id)?.parent_id ?? '';
+    if (!parent_id) return;
+    const key = `${brand_id}|${trimmed.toLowerCase()}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ brand_id, parent_id, phrase: trimmed });
+  };
+
+  for (const row of canonicalRows) {
+    if ((row.review_state ?? '').trim() !== 'reviewed') continue;
+    const bid = row.brand_id ?? '';
+    if (!bid) continue;
+    pushPhrase(bid, row.canonical_brand_name ?? '');
+    const display = (row.display_brand_name ?? '').trim();
+    if (display && display !== (row.canonical_brand_name ?? '').trim()) {
+      pushPhrase(bid, display);
+    }
+  }
+
+  for (const row of aliasRows) {
+    if ((row.review_state ?? '').trim() !== 'reviewed') continue;
+    const bid = row.brand_id ?? '';
+    if (!bid) continue;
+    const aliasText = (row.alias_text ?? '').trim();
+    if (aliasText) pushPhrase(bid, aliasText);
+  }
+
+  return out;
+}
+
+/** Leading governed phrase at product_name start with a proper token boundary (not compact prefix). */
+function productNameLeadingPhraseMatches(productName: string, phrase: string): boolean {
+  const name = productName.trim();
+  const p = phrase.trim();
+  if (!name || !p) return false;
+  if (name.length < p.length) return false;
+  if (name.slice(0, p.length).toLowerCase() !== p.toLowerCase()) return false;
+  const next = name.charAt(p.length);
+  return next === '' || /[^a-zA-Z0-9]/.test(next);
+}
+
+function leadingWhitelistHits(productName: string, phrases: GovernedLeadingPhrase[]): GovernedLeadingPhrase[] {
+  return phrases.filter((p) => productNameLeadingPhraseMatches(productName, p.phrase));
+}
+
+function pickLongestLeadingHits(
+  hits: GovernedLeadingPhrase[],
+  push?: (s: string) => void
+): GovernedLeadingPhrase[] | null {
+  if (hits.length === 0) return [];
+  const maxLen = Math.max(...hits.map((h) => h.phrase.length));
+  const longest = hits.filter((h) => h.phrase.length === maxLen);
+  const parentIds = new Set(longest.map((h) => h.parent_id));
+  const brandIds = new Set(longest.map((h) => h.brand_id));
+  if (parentIds.size > 1 || brandIds.size > 1) {
+    push?.(
+      'chain_resolve: fail_closed — ambiguous leading product_name whitelist match across canonical families'
+    );
+    return null;
+  }
+  return longest;
+}
+
+function buildChildOfMap(brandChildRows: CsvRecord[]): Map<string, string> {
+  const childOf = new Map<string, string>();
+  for (const row of brandChildRows) {
+    if ((row.review_state ?? '').trim() !== 'reviewed') continue;
+    const bid = row.brand_id ?? '';
+    const parent = row.parent_brand_id ?? '';
+    if (bid && parent) childOf.set(bid, parent);
+  }
+  return childOf;
+}
+
+function isCompatibleProductNameRefinement(
+  fromBrands: Set<string>,
+  candidateId: string,
+  aData: ADataMaps,
+  childOf: Map<string, string>
+): boolean {
+  const candidateParent = aData.brandsById.get(candidateId)?.parent_id;
+  for (const baseId of fromBrands) {
+    if (candidateId === baseId) return true;
+    if (childOf.get(candidateId) === baseId) return true;
+    const baseParent = aData.brandsById.get(baseId)?.parent_id;
+    if (baseParent && candidateParent === baseParent) return true;
+  }
+  return false;
+}
+
+function collectFromBrandsField(
   product: Product,
   aliasRows: CsvRecord[],
   canonicalRows: CsvRecord[]
-): { fromBrands: Set<string>; fromProductName: Set<string> } {
+): Set<string> {
   const fromBrands = new Set<string>();
-  const fromProductName = new Set<string>();
   const brandTokens = splitBrandCandidates(product).map((s) => normalizeCompact(s));
-  const nameTokens = splitProductNameTokens(product.product_name);
-  const nameCompact = normalizeCompact(product.product_name ?? '');
 
   for (const row of aliasRows) {
     if ((row.review_state ?? '').trim() !== 'reviewed') continue;
     const bid = row.brand_id ?? '';
     if (!bid) continue;
     const forms = reviewedAliasForms(row);
-    if (forms.length === 0) continue;
-
     for (const tok of brandTokens) {
       if (tok && forms.includes(tok)) {
         fromBrands.add(bid);
         break;
       }
     }
-    // product_name refinement: exact token OR contiguous compact alias (Kit Kat / KitKat)
-    let nameHit = false;
-    for (const tok of nameTokens) {
-      if (tok && forms.includes(tok)) {
-        nameHit = true;
-        break;
-      }
-    }
-    if (!nameHit && nameCompact) {
-      for (const f of forms) {
-        if (f.length >= 5 && nameCompact.includes(f)) {
-          nameHit = true;
-          break;
-        }
-      }
-    }
-    // Long Dairy Milk-style substring remains for aliases ≥8 (brand+name compact joined for that path only)
-    if (!nameHit) {
-      const an = normalizeCompact(row.alias_normalized ?? '');
-      const blob = normalizeCompact(
-        [...splitBrandCandidates(product), product.product_name ?? ''].join(' ')
-      );
-      if (an.length >= 8 && blob.includes(an)) nameHit = true;
-    }
-    if (nameHit) fromProductName.add(bid);
   }
 
   for (const row of canonicalRows) {
@@ -163,24 +226,64 @@ function collectCandidateBrandIds(
         break;
       }
     }
-    let nameHit = false;
-    for (const tok of nameTokens) {
-      if (tok && forms.includes(tok)) {
-        nameHit = true;
-        break;
-      }
-    }
-    if (!nameHit && nameCompact) {
-      for (const f of forms) {
-        if (f.length >= 5 && nameCompact.includes(f)) {
-          nameHit = true;
-          break;
-        }
-      }
-    }
-    if (nameHit) fromProductName.add(bid);
   }
 
+  return fromBrands;
+}
+
+function collectFromProductNameLeadingWhitelist(
+  product: Product,
+  fromBrands: Set<string>,
+  phrases: GovernedLeadingPhrase[],
+  aData: ADataMaps,
+  childOf: Map<string, string>,
+  push?: (s: string) => void
+): Set<string> | null {
+  const productName = product.product_name ?? '';
+  if (!productName.trim()) return new Set();
+
+  if (hasExplicitBrandEvidence(product) && fromBrands.size === 0) {
+    return new Set();
+  }
+
+  const hits = leadingWhitelistHits(productName, phrases);
+  const longest = pickLongestLeadingHits(hits, push);
+  if (longest === null) return null;
+
+  const fromProductName = new Set<string>();
+  for (const hit of longest) {
+    if (fromBrands.size === 0) {
+      fromProductName.add(hit.brand_id);
+      continue;
+    }
+    if (isCompatibleProductNameRefinement(fromBrands, hit.brand_id, aData, childOf)) {
+      fromProductName.add(hit.brand_id);
+    }
+  }
+
+  return fromProductName;
+}
+
+function collectCandidateBrandIds(
+  product: Product,
+  aliasRows: CsvRecord[],
+  canonicalRows: CsvRecord[],
+  aData: ADataMaps,
+  brandChildRows: CsvRecord[],
+  push?: (s: string) => void
+): { fromBrands: Set<string>; fromProductName: Set<string> } | null {
+  const fromBrands = collectFromBrandsField(product, aliasRows, canonicalRows);
+  const phrases = buildGovernedLeadingPhrases(canonicalRows, aliasRows, aData);
+  const childOf = buildChildOfMap(brandChildRows);
+  const fromProductName = collectFromProductNameLeadingWhitelist(
+    product,
+    fromBrands,
+    phrases,
+    aData,
+    childOf,
+    push
+  );
+  if (fromProductName === null) return null;
   return { fromBrands, fromProductName };
 }
 
@@ -200,15 +303,13 @@ function pickPrimaryBrandId(
 ): string | null {
   const parentOf = (id: string) => aData.brandsById.get(id)?.parent_id;
 
-  // MVP invariant: explicit brand present but unresolved → fail closed (no product_name-only inference)
-  if (hasExplicitBrandEvidence(product) && fromBrands.size === 0 && fromProductName.size > 0) {
+  if (hasExplicitBrandEvidence(product) && fromBrands.size === 0) {
     push?.(
       'chain_resolve: fail_closed — explicit brand evidence present but unresolved; product_name-only inference blocked'
     );
     return null;
   }
 
-  // Fail closed: product_name refinement must not invent a different-entity chain vs brands field
   if (fromBrands.size > 0 && fromProductName.size > 0) {
     const brandParents = new Set([...fromBrands].map(parentOf).filter(Boolean) as string[]);
     const nameParents = new Set([...fromProductName].map(parentOf).filter(Boolean) as string[]);
@@ -225,8 +326,6 @@ function pickPrimaryBrandId(
   if (candidates.size === 0) return null;
 
   const brandTokens = new Set(splitBrandCandidates(product).map((s) => normalizeCompact(s)));
-  const nameTokens = new Set(splitProductNameTokens(product.product_name));
-  const nameCompact = normalizeCompact(product.product_name ?? '');
 
   const aliasByBrand = new Map<string, string[]>();
   for (const row of aliasRows) {
@@ -246,17 +345,12 @@ function pickPrimaryBrandId(
       normalizeCompact(row.display_brand_name ?? ''),
       ...(aliasByBrand.get(id) ?? []),
     ].filter(Boolean);
-    let nameHitLen = 0;
     let brandHitLen = 0;
     for (const f of forms) {
-      if (nameTokens.has(f) || (f.length >= 5 && nameCompact.includes(f))) {
-        nameHitLen = Math.max(nameHitLen, f.length);
-      }
       if (brandTokens.has(f)) brandHitLen = Math.max(brandHitLen, f.length);
     }
-    // Prefer same-entity product_name refinement over umbrella brands-only node
     const fromName = fromProductName.has(id);
-    const score = fromName && nameHitLen > 0 ? 1000 + nameHitLen : brandHitLen > 0 ? 100 + brandHitLen : 0;
+    const score = fromName && !fromBrands.has(id) ? 1000 : brandHitLen > 0 ? 100 + brandHitLen : fromName ? 50 : 0;
     const nameLen = Math.max((row.canonical_brand_name ?? '').length, (row.display_brand_name ?? '').length);
     const tieBreak = score * 1000 + nameLen;
     if (tieBreak > bestScore) {
@@ -267,37 +361,7 @@ function pickPrimaryBrandId(
   return bestId;
 }
 
-function chainBrandMatchChannel(
-  brandId: string,
-  fromBrands: Set<string>,
-  source: ResolvedRetailChain['source']
-): ResolvedRetailChain['brand_match_channel'] {
-  if (source === 'gtin_link') return 'gtin_link';
-  if (source === 'injected_uat_fixture') return 'injected';
-  return fromBrands.has(brandId) ? 'brands_field' : 'product_name';
-}
-
-function brandTypeForId(brandId: string, canonicalRows: CsvRecord[]): string | undefined {
-  const row = canonicalRows.find((r) => r.brand_id === brandId);
-  return (row?.brand_type ?? '').trim() || undefined;
-}
-
-function enrichResolvedChain(
-  chain: Omit<ResolvedRetailChain, 'brand_match_channel' | 'brand_type'>,
-  fromBrands: Set<string>,
-  canonicalRows: CsvRecord[]
-): ResolvedRetailChain {
-  return {
-    ...chain,
-    brand_match_channel: chainBrandMatchChannel(chain.brand_id, fromBrands, chain.source),
-    brand_type: brandTypeForId(chain.brand_id, canonicalRows),
-  };
-}
-
-function validateReviewedChain(
-  brand_id: string,
-  aData: ADataMaps
-): Omit<ResolvedRetailChain, 'brand_match_channel' | 'brand_type'> | null {
+function validateReviewedChain(brand_id: string, aData: ADataMaps): ResolvedRetailChain | null {
   const b = aData.brandsById.get(brand_id);
   if (!b || b.review_state !== 'reviewed') return null;
   const p = aData.parentsById.get(b.parent_id);
@@ -312,6 +376,7 @@ export function resolveReviewedRetailChainUnified(input: {
   aData: ADataMaps;
   canonicalBrandRows: CsvRecord[];
   brandAliasRows: CsvRecord[];
+  brandChildRows?: CsvRecord[];
   injected?: InjectedUatChain | null;
   logLines?: string[];
   /**
@@ -322,6 +387,7 @@ export function resolveReviewedRetailChainUnified(input: {
 }): ResolvedRetailChain | null {
   const push = (s: string) => input.logLines?.push(s);
   const useCadburyBridge = input.applyCadburyUatBridge === true;
+  const brandChildRows = input.brandChildRows ?? [];
 
   if (input.injected) {
     const b = input.aData.brandsById.get(input.injected.brand_id);
@@ -332,23 +398,25 @@ export function resolveReviewedRetailChainUnified(input: {
     push?.(
       `chain_resolve: brand_id=${input.injected.brand_id} parent_id=${input.injected.parent_id} source=injected_uat_fixture`
     );
-    return enrichResolvedChain(
-      {
-        brand_id: input.injected.brand_id,
-        parent_id: input.injected.parent_id,
-        source: 'injected_uat_fixture',
-      },
-      new Set([input.injected.brand_id]),
-      input.canonicalBrandRows
-    );
+    return {
+      brand_id: input.injected.brand_id,
+      parent_id: input.injected.parent_id,
+      source: 'injected_uat_fixture',
+    };
   }
 
   if (input.product) {
-    const { fromBrands, fromProductName } = collectCandidateBrandIds(
+    const collected = collectCandidateBrandIds(
       input.product,
       input.brandAliasRows,
-      input.canonicalBrandRows
+      input.canonicalBrandRows,
+      input.aData,
+      brandChildRows,
+      push
     );
+    if (!collected) return null;
+
+    const { fromBrands, fromProductName } = collected;
     const best = pickPrimaryBrandId(
       fromBrands,
       fromProductName,
@@ -380,24 +448,21 @@ export function resolveReviewedRetailChainUnified(input: {
         push?.(
           `chain_resolve: brand_id=${bridged.brand_id} parent_id=${bridged.parent_id} source=identity_resolution (specific_brand+parent_entity; product_name_refine=${fromProductName.has(bridged.brand_id) ? '1' : '0'})`
         );
-        return enrichResolvedChain(bridged, fromBrands, input.canonicalBrandRows);
+        return bridged;
       }
     }
     push?.('chain_resolve: identity_resolution found no reviewed brand/parent chain from product fields');
-    // Finding B (integrated Dynamic Signals): if primary identity fails, use an already-existing
-    // reviewed GTIN relationship as supplementary evidence before returning unresolved.
-    const gtinFallback = tryReviewedGtinChain(input.barcode, input.aData, input.canonicalBrandRows, push);
+    const gtinFallback = tryReviewedGtinChain(input.barcode, input.aData, push);
     if (gtinFallback) return gtinFallback;
     return null;
   }
 
-  return tryReviewedGtinChain(input.barcode, input.aData, input.canonicalBrandRows, push);
+  return tryReviewedGtinChain(input.barcode, input.aData, push);
 }
 
 function tryReviewedGtinChain(
   barcode: string,
   aData: ADataMaps,
-  canonicalRows: CsvRecord[],
   push?: (s: string) => void
 ): ResolvedRetailChain | null {
   const g = aData.gtinRows.get(barcode);
@@ -408,12 +473,14 @@ function tryReviewedGtinChain(
       push?.(
         `chain_resolve: brand_id=${g.brand_id} parent_id=${g.parent_id} source=gtin_link_supplementary`
       );
-      return enrichResolvedChain(
-        { brand_id: g.brand_id, parent_id: g.parent_id, source: 'gtin_link' },
-        new Set(),
-        canonicalRows
-      );
+      return { brand_id: g.brand_id, parent_id: g.parent_id, source: 'gtin_link' };
     }
   }
   return null;
 }
+
+export {
+  productNameLeadingPhraseMatches,
+  buildGovernedLeadingPhrases,
+  leadingWhitelistHits,
+};

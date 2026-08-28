@@ -35,8 +35,6 @@ export type AssetScanIdentity = {
   product_family_ids: string[];
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
   productScopeEvidence?: CocoaChocolateProductScopeEvidence | null;
-  brand_match_channel?: 'brands_field' | 'product_name' | 'gtin_link' | 'injected' | null;
-  brand_type?: string | null;
 };
 
 /** Signal ↔ structured recall eligibility (smallest durable contract). */
@@ -235,14 +233,7 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
     }
 
     const scopeGuard = (tgt.product_scope_guard ?? '').trim();
-    if (
-      !productScopeGuardAllowsDisplay(scopeGuard, identity.productScopeEvidence, {
-        brand_id: identity.brand_id,
-        parent_id: identity.parent_id,
-        brand_match_channel: identity.brand_match_channel,
-        brand_type: identity.brand_type,
-      })
-    ) {
+    if (!productScopeGuardAllowsDisplay(scopeGuard, identity.productScopeEvidence)) {
       push(
         `product_scope_guard: skip ${sigId} via ${tgt.signal_target_id} guard=${scopeGuard || '(empty)'}`
       );

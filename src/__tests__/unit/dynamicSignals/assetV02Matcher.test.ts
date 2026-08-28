@@ -239,9 +239,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
       ...pack,
       signals: withPublishable(pack.signals, ['SIG-SR-AU-003']),
       targets: pack.targets.map((t) =>
-        t.signal_target_id === 'TGT-008'
-          ? { ...t, resolution_status: 'resolved', product_scope_guard: 'coles_family' }
-          : t
+        t.signal_target_id === 'TGT-008' ? { ...t, resolution_status: 'resolved' } : t
       ),
     };
     const hit = buildDynamicSignalsAssetPublicationRecords({
@@ -252,8 +250,6 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         parent_id: 'P0002',
         product_family_ids: [],
         scanMarketPublic: 'AU',
-        brand_match_channel: 'brands_field',
-        brand_type: 'retailer_own_label',
       },
     });
     expect(hit.map((r) => r.signal_id)).toContain('SIG-SR-AU-003');
@@ -396,9 +392,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
       ...pack,
       signals: withPublishable(pack.signals, ['SIG-SR-AU-003']),
       targets: pack.targets.map((t) =>
-        t.signal_target_id === 'TGT-008'
-          ? { ...t, resolution_status: 'resolved', product_scope_guard: 'coles_family' }
-          : t
+        t.signal_target_id === 'TGT-008' ? { ...t, resolution_status: 'resolved' } : t
       ),
     };
     const colesOwn = buildDynamicSignalsAssetPublicationRecords({
@@ -409,8 +403,6 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         parent_id: 'P0002',
         product_family_ids: [],
         scanMarketPublic: 'AU',
-        brand_match_channel: 'brands_field',
-        brand_type: 'retailer_own_label',
       },
     });
     expect(colesOwn.map((r) => r.signal_id)).toContain('SIG-SR-AU-003');
@@ -426,21 +418,6 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
       },
     });
     expect(nestleSoldAtColes.some((r) => r.signal_id === 'SIG-SR-AU-003')).toBe(false);
-
-    const productNameOnlyColes = buildDynamicSignalsAssetPublicationRecords({
-      pack,
-      identity: {
-        barcode: '4901002156565',
-        brand_id: 'B0769',
-        parent_id: 'P0002',
-        product_family_ids: [],
-        scanMarketPublic: 'AU',
-        brand_match_channel: 'product_name',
-        brand_type: 'retailer_own_label',
-      },
-      logLines: [],
-    });
-    expect(productNameOnlyColes.some((r) => r.signal_id === 'SIG-SR-AU-003')).toBe(false);
   });
 
   it('Skeleton flag retired: Asset-only producer guard (legacy Skeleton flag ignored)', () => {

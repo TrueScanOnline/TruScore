@@ -1,14 +1,8 @@
 /**
- * Deterministic product_scope_guard = cocoa_chocolate | coles_family.
- * After identity/target resolution, display only where guard evidence passes.
+ * Deterministic product_scope_guard = cocoa_chocolate.
+ * After identity/target resolution, display only where existing product fields
+ * contain positive cocoa/chocolate evidence. No taxonomy, AI, or brand allowlist.
  */
-
-import {
-  colesFamilyScopeGuardAllows,
-  type ColesFamilyScopeChainContext,
-} from './colesFamilyProductScopeGuard';
-
-export type ProductScopeGuardChainContext = ColesFamilyScopeChainContext;
 
 const POSITIVE_TERMS = ['chocolate', 'choc', 'cocoa', 'cacao'] as const;
 
@@ -53,16 +47,12 @@ export function productHasPositiveCocoaChocolateEvidence(
  */
 export function productScopeGuardAllowsDisplay(
   guardValue: string | undefined,
-  evidence: CocoaChocolateProductScopeEvidence | null | undefined,
-  chainContext?: ProductScopeGuardChainContext | null
+  evidence: CocoaChocolateProductScopeEvidence | null | undefined
 ): boolean {
   const guard = (guardValue ?? '').trim();
   if (!guard) return true;
   if (guard === 'cocoa_chocolate') {
     return productHasPositiveCocoaChocolateEvidence(evidence);
-  }
-  if (guard === 'coles_family') {
-    return colesFamilyScopeGuardAllows(chainContext);
   }
   return false;
 }

@@ -75,9 +75,9 @@ function failClosedConflictProduct(): Product {
   return {
     barcode: BARCODE,
     source: 'openfoodfacts',
-    product_name: 'KitKat Chunky',
-    brands: 'Cadbury',
-    categories_tags: ['en:chocolates'],
+    product_name: 'Japanese Curry Mix',
+    brands: 'S&B',
+    categories_tags: ['en:curry'],
     trust_score: 61,
     trust_score_breakdown: { body: 60, planet: 61, ethics: 62, open: 63 },
   } as Product;
@@ -172,7 +172,7 @@ describe('Result Signals scheduling — material identity eval key', () => {
     expect(signalIds(hold.last)).toEqual(ids);
   });
 
-  it('attached reviewed identity → genuine fail-closed conflict → Signals become empty; scores untouched', () => {
+  it('attached reviewed identity → explicit unresolved brand fail-closed → Signals become empty; scores untouched', () => {
     const dairy = sufficientCadburyDairyMilkProduct();
     const primary = buildProductScanResult({
       barcode: BARCODE,

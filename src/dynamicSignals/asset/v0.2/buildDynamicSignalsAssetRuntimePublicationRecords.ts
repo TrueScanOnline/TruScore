@@ -14,7 +14,6 @@ import type { CocoaChocolateProductScopeEvidence } from './cocoaChocolateProduct
 import {
   buildDynamicSignalsAssetPublicationRecords,
   type AssetPackParsed,
-  type AssetScanIdentity,
 } from './matchDynamicSignalsAsset';
 import {
   isDynamicSignalsAssetRuntimeEnabled,
@@ -60,11 +59,9 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
 
   let brand_id: string | null = input.injectedBrandId ?? null;
   let parent_id: string | null = input.injectedParentId ?? null;
-  let brand_match_channel: AssetScanIdentity['brand_match_channel'] = null;
-  let brand_type: string | null = null;
 
   if (input.injectedBrandId === undefined && input.injectedParentId === undefined) {
-    const { aData, brandRows, aliasRows } = loadADataForChainFromEmbed();
+    const { aData, brandRows, aliasRows, brandChildRows } = loadADataForChainFromEmbed();
     const chain = resolveReviewedRetailChainUnified({
       barcode: input.barcode,
       productName: input.productName,
@@ -72,15 +69,12 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
       aData,
       canonicalBrandRows: brandRows,
       brandAliasRows: aliasRows,
+      brandChildRows,
       logLines: logs,
       applyCadburyUatBridge: false,
     });
     brand_id = chain?.brand_id ?? null;
     parent_id = chain?.parent_id ?? null;
-    brand_match_channel = chain?.brand_match_channel ?? null;
-    brand_type = chain?.brand_type ?? null;
-  } else if (input.injectedBrandId && input.injectedParentId) {
-    brand_match_channel = 'injected';
   }
 
   const product_family_ids =
@@ -108,8 +102,6 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
       product_family_ids,
       scanMarketPublic: input.scanMarketPublic,
       productScopeEvidence,
-      brand_match_channel,
-      brand_type,
     },
     logLines: logs,
     includeNonPublishable: input.includeNonPublishable ?? false,
