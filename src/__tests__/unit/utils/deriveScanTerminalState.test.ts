@@ -85,7 +85,31 @@ describe('deriveScanTerminalState', () => {
     ).toBe('success');
   });
 
-  it('returns partial when identity present but trust_score null', () => {
+  it('returns success when scored product_refined arrives after completion', () => {
+    expect(
+      deriveScanTerminalState({
+        loadError: null,
+        product: minimalProduct({ trust_score: 72 }),
+        isOffline: false,
+        fetchPhase: 'product_refined',
+        isFetchLoading: false,
+      })
+    ).toBe('success');
+  });
+
+  it('returns partial when product_refined is genuinely unscored', () => {
+    expect(
+      deriveScanTerminalState({
+        loadError: null,
+        product: minimalProduct({ trust_score: null, trust_score_breakdown: null }),
+        isOffline: false,
+        fetchPhase: 'product_refined',
+        isFetchLoading: false,
+      })
+    ).toBe('partial');
+  });
+
+  it('returns partial when identity present but trust_score null on complete', () => {
     expect(
       deriveScanTerminalState({
         loadError: null,

@@ -147,8 +147,8 @@ export async function autoVerifyProduct(
 }> {
   // Check if product already exists in Open Food Facts
   try {
-    const { fetchProductFromOFF } = await import('./openFoodFacts');
-    const existingProduct = await fetchProductFromOFF(productData.barcode);
+    const { fetchProductFromOFFOrNull } = await import('./openFoodFacts');
+    const existingProduct = await fetchProductFromOFFOrNull(productData.barcode);
     
     if (existingProduct) {
       // Product exists in OFF - compare data

@@ -206,4 +206,61 @@ describe('resolveWorkstreamCRetailChain', () => {
     expect(chain?.brand_id).toBe('B0237');
     expect(chain?.parent_id).toBe('P0008');
   });
+
+  it('S&B Japanese Curry Mix: explicit unresolved brand fails closed (no Coles MIX inference)', () => {
+    const { aData, brandRows, aliasRows } = loadFrozenADataMaps();
+    const logs: string[] = [];
+    const chain = resolveReviewedRetailChainUnified({
+      barcode: '4901002156565',
+      productName: 'Japanese Curry Mix',
+      product: {
+        barcode: '4901002156565',
+        brands: 'S&B',
+        product_name: 'Japanese Curry Mix',
+      } as any,
+      aData,
+      canonicalBrandRows: brandRows,
+      brandAliasRows: aliasRows,
+      logLines: logs,
+    });
+    expect(chain).toBeNull();
+    expect(logs.some((l) => l.includes('explicit brand evidence present but unresolved'))).toBe(true);
+  });
+
+  it('absent brand field preserves product_name-only inference', () => {
+    const { aData, brandRows, aliasRows } = loadFrozenADataMaps();
+    const chain = resolveReviewedRetailChainUnified({
+      barcode: '9300601234567',
+      productName: 'Cadbury Dairy Milk',
+      product: {
+        barcode: '9300601234567',
+        product_name: 'Cadbury Dairy Milk',
+        categories_tags: ['en:chocolates'],
+      } as any,
+      aData,
+      canonicalBrandRows: brandRows,
+      brandAliasRows: aliasRows,
+    });
+    expect(chain?.brand_id).toBe('B0241');
+    expect(chain?.brand_match_channel).toBe('product_name');
+  });
+
+  it('Coles MIX own-label resolves when brands field corroborates MIX', () => {
+    const { aData, brandRows, aliasRows } = loadFrozenADataMaps();
+    const chain = resolveReviewedRetailChainUnified({
+      barcode: '9300000000999',
+      productName: 'Curry Sauce Mix',
+      product: {
+        barcode: '9300000000999',
+        brands: 'MIX',
+        product_name: 'Curry Sauce Mix',
+      } as any,
+      aData,
+      canonicalBrandRows: brandRows,
+      brandAliasRows: aliasRows,
+    });
+    expect(chain?.brand_id).toBe('B0769');
+    expect(chain?.parent_id).toBe('P0002');
+    expect(chain?.brand_match_channel).toBe('brands_field');
+  });
 });

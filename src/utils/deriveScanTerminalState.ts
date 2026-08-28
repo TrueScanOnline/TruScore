@@ -6,7 +6,7 @@
 import type { ScanTerminalState } from '../types/scanOutputContract';
 import type { Product, ProductWithTrustScore } from '../types/product';
 
-const SUCCESS_PHASES = new Set(['complete', 'not_found', 'product_enhanced']);
+const SUCCESS_PHASES = new Set(['complete', 'not_found', 'product_enhanced', 'product_refined']);
 
 function hasScorableIdentity(product: Product): boolean {
   const n = product.product_name?.trim() ?? '';

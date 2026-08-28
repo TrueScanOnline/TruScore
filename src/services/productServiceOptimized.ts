@@ -10,7 +10,8 @@
  */
 
 import { Product, ProductWithTrustScore } from '../types/product';
-import { fetchProductFromOFF } from './openFoodFacts';
+import { fetchProductFromOFF, type OffFetchResult } from './openFoodFacts';
+import { logScanObs } from './scanObservability';
 import {
   lookupFromSQLite,
   lookupProductFast,
@@ -131,9 +132,11 @@ async function executeFetchProductOptimized(
         // Background cache refresh from OFF only (no multi-provider)
         Promise.resolve().then(async () => {
           try {
-            const offProduct = await fetchProductFromOFF(offLookupBarcode).catch(() => null);
-            if (offProduct) {
-              const offProductWithScore = await processProductFast(offProduct, primaryBarcode);
+            const offResult = await fetchProductFromOFF(offLookupBarcode).catch(
+              (): OffFetchResult => ({ kind: 'retrieval_error', reason: 'retrieval_other' })
+            );
+            if (offResult.kind === 'hit') {
+              const offProductWithScore = await processProductFast(offResult.product, primaryBarcode);
               saveProductToCache(offProductWithScore, primaryBarcode, isPremium).catch(() => {});
             }
           } catch (err) {
@@ -188,25 +191,37 @@ async function executeFetchProductOptimized(
   const offStart = Date.now();
   let firstPaintProductPromise: Promise<ProductWithTrustScore> | null = null;
 
-  const offProduct = await fetchProductFromOFF(offLookupBarcode)
-    .then((result) => {
-      apiCallCount++;
-      if (result) {
-        sources.push('openfoodfacts');
-        logger.info(`✅ Open Food Facts found: ${offLookupBarcode}`);
-      }
-      return result;
-    })
-    .catch((err) => {
-      logger.debug('OFF query error (non-critical):', err);
-      return null;
-    });
+  const offResult = await fetchProductFromOFF(offLookupBarcode).catch(
+    (): OffFetchResult => ({ kind: 'retrieval_error', reason: 'retrieval_other' })
+  );
 
   timingBreakdown.databaseQueries = Date.now() - offStart;
 
+  if (offResult.kind === 'retrieval_error') {
+    logger.warn(
+      `OFF retrieval_error for ${offLookupBarcode}: ${offResult.reason} (not conflated with not_found)`
+    );
+    logScanObs({
+      event: 'retrieval_error',
+      scan_id: primaryBarcode,
+      barcode: primaryBarcode,
+      retrieval_reason: offResult.reason,
+      phase: 'retrieval_error',
+    });
+    onProgress?.({ phase: 'retrieval_error' });
+    return null;
+  }
+
+  const offProduct = offResult.kind === 'hit' ? offResult.product : null;
+  if (offProduct) {
+    apiCallCount++;
+    sources.push('openfoodfacts');
+    logger.info(`✅ Open Food Facts found: ${offLookupBarcode}`);
+  }
+
   // No OFF product → return null promptly (no Phase 2/3 / legacy providers)
   if (!offProduct) {
-    logger.warn(`No product found for ${offLookupBarcode} (World OFF miss)`);
+    logger.warn(`No product found for ${offLookupBarcode} (World OFF authoritative miss)`);
     onProgress?.({ phase: 'not_found' });
     return null;
   }

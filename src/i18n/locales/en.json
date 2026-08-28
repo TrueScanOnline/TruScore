@@ -312,8 +312,10 @@
     "webSearchNoticeText": "This product was found via web search. For more detailed information, search the web or contribute to Open Food Facts.",
     "minimalDataNotice": "Product Information Not Available",
     "minimalDataNoticeText": "We couldn't find detailed information about this product in our databases (Open Food Facts, Open Beauty Facts, UPCitemdb, etc.). Basic information may be available from web search. You can help improve our databases by contributing product information to Open Food Facts.",
-    "analysisPartialTitle": "Analysis still updating",
-    "analysisPartialSubtitle": "Scores or details may change when more sources finish loading.",
+    "analysisPartialTitle": "Seeing what we can find…",
+    "analysisPartialSubtitle": "Checking the product and anything else you might want to know.",
+    "retrievalErrorTitle": "Oops. Awkward.",
+    "retrievalErrorMessage": "We couldn't finish this analysis just now. Sorry about that.",
     "signals": {
       "limited_data": {
         "title": "Limited product data",

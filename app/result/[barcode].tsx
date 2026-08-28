@@ -724,10 +724,12 @@ function ResultScreenContent() {
       // OPTIMIZED: Use optimized product service with progressive loading
       console.log('[ResultScreen] Fetching product from APIs (optimized)...');
       let productData: ProductWithTrustScore | null = null;
+      let lastFetchPhase = 'initializing';
       
       // ULTRA-FAST: Progress callback for instant product display
       // Product displays immediately (< 100ms) even before TruScore is calculated
       const onProgress = (progress: { phase: string; product?: Product }) => {
+        lastFetchPhase = progress.phase;
         setLoadingPhase(progress.phase);
         if (scanIdRef.current) {
           logScanObs({
@@ -819,10 +821,23 @@ function ResultScreenContent() {
           // Continue - not critical
         }
       } else {
-        console.warn('[ResultScreen] Product not found');
-        // CRITICAL FIX: Better error message for product not found
-        setError('Product not found in our databases. You can help by adding this product manually.');
-        setLoadingPhase('not_found');
+        if (lastFetchPhase === 'retrieval_error') {
+          console.warn('[ResultScreen] OFF retrieval_error — not conflated with not_found');
+          if (scanIdRef.current) {
+            logScanObs({
+              event: 'retrieval_error',
+              scan_id: scanIdRef.current,
+              barcode,
+              phase: 'retrieval_error',
+            });
+          }
+          setError(null);
+          setLoadingPhase('retrieval_error');
+        } else {
+          console.warn('[ResultScreen] Product not found');
+          setError('Product not found in our databases. You can help by adding this product manually.');
+          setLoadingPhase('not_found');
+        }
       }
     } catch (err) {
       console.error('[ResultScreen] Fatal error loading product:', err);
@@ -1050,6 +1065,7 @@ function ResultScreenContent() {
 
   // Show "Unknown Product" page if product not found OR has minimal/no useful data
   if (error || !product || shouldShowUnknownProductPage) {
+    const isRetrievalError = loadingPhase === 'retrieval_error';
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <ScrollView
@@ -1059,15 +1075,21 @@ function ResultScreenContent() {
           <View style={styles.unknownProductContent}>
             <Ionicons name="barcode-outline" size={80} color={colors.textTertiary} />
             <Text style={[styles.errorTitle, { color: colors.text, marginTop: 24 }]}>
-              {t('result.productUnknown') || 'Unknown Product'}
+              {isRetrievalError
+                ? t('result.retrievalErrorTitle')
+                : t('result.productUnknown') || 'Unknown Product'}
             </Text>
             <Text style={[styles.errorText, { color: colors.textSecondary, marginTop: 12, marginBottom: 8 }]}>
-              {t('result.unknownProductMessage') || 'We couldn\'t find detailed information about this product in our databases.'}
+              {isRetrievalError
+                ? t('result.retrievalErrorMessage')
+                : t('result.unknownProductMessage') || 'We couldn\'t find detailed information about this product in our databases.'}
             </Text>
             <Text style={[styles.barcodeText, { color: colors.textTertiary, marginBottom: 32 }]}>
               Barcode: {barcode}
             </Text>
             
+            {!isRetrievalError && (
+            <>
             {/* Primary Action: Add Product Information */}
             <TouchableOpacity
               style={[styles.primaryActionButton, { backgroundColor: colors.primary }]}
@@ -1109,16 +1131,31 @@ function ResultScreenContent() {
                 {t('result.scanAnother') || 'Scan Another Product'}
               </Text>
             </TouchableOpacity>
+            </>
+            )}
+
+            {isRetrievalError && (
+            <TouchableOpacity 
+              style={styles.backButton} 
+              onPress={() => navigateToScanHome(navigation)}
+            >
+              <Text style={[styles.backButtonText, { color: colors.primary }]}>
+                {t('result.scanAnother') || 'Scan Another Product'}
+              </Text>
+            </TouchableOpacity>
+            )}
           </View>
         </ScrollView>
         
         {/* Manual Product Entry Modal */}
+        {!isRetrievalError && (
         <ManualProductEntryModal
           visible={manualProductModalVisible}
           onClose={() => setManualProductModalVisible(false)}
           onSave={handleManualProductSave}
           barcode={barcode}
         />
+        )}
       </SafeAreaView>
     );
   }

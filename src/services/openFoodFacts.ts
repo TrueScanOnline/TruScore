@@ -10,6 +10,17 @@ import {
 } from './ethicsCertificationsService';
 import { ORGANIC_LABEL_TEXT_CLAIM_TAG, ORGANIC_PRODUCT_NAME_CLAIM_TAG } from '../constants/certDisplay';
 import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
+import {
+  backoffDelayMs,
+  classifyFetchException,
+  classifyHttpStatus,
+  OFF_MAX_TRANSIENT_ATTEMPTS,
+  type OffFetchResult,
+  type OffRetrievalFailureReason,
+  type OffVariantAttemptOutcome,
+} from './offRetrievalOutcome';
+
+export type { OffFetchResult, OffRetrievalFailureReason } from './offRetrievalOutcome';
 
 export { ORGANIC_LABEL_TEXT_CLAIM_TAG, ORGANIC_PRODUCT_NAME_CLAIM_TAG };
 
@@ -23,56 +34,72 @@ export interface OFFResponse {
   code?: string;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
- * Fetch product data from a specific Open Food Facts instance
+ * Single OFF World request — no nested retries (recovery is orchestrated in fetchProductFromOFF).
  */
-async function fetchProductFromOFFInstance(barcode: string, instance: string): Promise<Product | null> {
+async function fetchProductFromOFFInstanceOnce(
+  barcode: string,
+  instance: string
+): Promise<OffVariantAttemptOutcome> {
   try {
     const url = `https://${instance}/api/v2/product/${barcode}.json`;
-    
-    const response = await fetchWithRateLimit(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
+
+    const response = await fetchWithRateLimit(
+      url,
+      {
+        headers: {
+          'User-Agent': USER_AGENT,
+        },
       },
-    }, 'openfoodfacts');
+      'openfoodfacts',
+      'best_effort'
+    );
 
     if (!response.ok) {
+      const classified = classifyHttpStatus(response.status);
+      if (classified === 'not_found') {
+        return { kind: 'not_found' };
+      }
       if (response.status !== 404) {
         logger.debug(`OFF API error (${instance}): ${response.status} ${response.statusText}`);
       }
-      return null;
+      return { kind: 'transient', reason: classified };
     }
 
-    const data: OFFResponse = await response.json();
+    let data: OFFResponse;
+    try {
+      data = await response.json();
+    } catch {
+      return { kind: 'transient', reason: 'malformed_response_exhausted' };
+    }
 
-    // CRITICAL FIX: Accept products even with status: 0 if product data exists
-    // Open Food Facts may return status: 0 with partial product data
-    // Yuka accepts these products, so we should too
     if (!data.product) {
-      return null;
+      return { kind: 'not_found' };
     }
 
-    // Log if status was 0 but we're accepting the product anyway (for debugging)
     if (data.status === 0) {
-      logger.debug(`OFF API returned status: 0 but product data exists for ${barcode} (accepting product - Yuka-compatible behavior)`);
+      logger.debug(
+        `OFF API returned status: 0 but product data exists for ${barcode} (accepting product - Yuka-compatible behavior)`
+      );
     }
 
-    // Add source and barcode
     const product: Product = {
       ...data.product,
       barcode,
       source: 'openfoodfacts',
     };
 
-    // Enhance product with extracted sustainability data
     enhanceProductWithSustainabilityData(product);
-
     applyResolvedNutrientLevels(product);
 
-    return product;
+    return { kind: 'hit', product };
   } catch (error) {
     logger.debug(`Error fetching from ${instance}:`, error);
-    return null;
+    return { kind: 'transient', reason: classifyFetchException(error) };
   }
 }
 
@@ -80,24 +107,62 @@ async function fetchProductFromOFFInstance(barcode: string, instance: string): P
  * Fetch product data from Open Food Facts canonical World API by exact GTIN.
  * Wave 2: Country/regional hosts are not alternative factual product sources —
  * world.openfoodfacts.org is the sole governed OFF retrieval endpoint.
+ *
+ * Transient failures retry up to OFF_MAX_TRANSIENT_ATTEMPTS total (including initial).
+ * Authoritative 404 on a variant proceeds to the next variant without consuming retry budget.
  */
-export async function fetchProductFromOFF(barcode: string): Promise<Product | null> {
-  // Generate barcode variants to try (handles leading zeros, normalization)
+export async function fetchProductFromOFF(barcode: string): Promise<OffFetchResult> {
   const barcodeVariants = normalizeBarcode(barcode);
   const uniqueVariants = Array.from(new Set(barcodeVariants));
-  
-  logger.debug(`Trying ${uniqueVariants.length} barcode variants for OFF World query: ${uniqueVariants.join(', ')}`);
-  
-  for (const variant of uniqueVariants) {
-    const worldProduct = await fetchProductFromOFFInstance(variant, 'world.openfoodfacts.org');
-    if (worldProduct) {
-      logger.debug(`Found product in OFF (world.openfoodfacts.org) with variant ${variant}: ${barcode}`);
-      return worldProduct;
+
+  logger.debug(
+    `Trying ${uniqueVariants.length} barcode variants for OFF World query: ${uniqueVariants.join(', ')}`
+  );
+
+  let transientAttempts = 0;
+  let lastTransientReason: OffRetrievalFailureReason = 'retrieval_other';
+  let variantIndex = 0;
+
+  while (variantIndex < uniqueVariants.length) {
+    const variant = uniqueVariants[variantIndex];
+    const outcome = await fetchProductFromOFFInstanceOnce(variant, 'world.openfoodfacts.org');
+
+    if (outcome.kind === 'hit') {
+      logger.debug(
+        `Found product in OFF (world.openfoodfacts.org) with variant ${variant}: ${barcode}`
+      );
+      return { kind: 'hit', product: outcome.product };
     }
+
+    if (outcome.kind === 'not_found') {
+      variantIndex += 1;
+      continue;
+    }
+
+    lastTransientReason = outcome.reason;
+    transientAttempts += 1;
+    logger.debug(
+      `OFF transient failure for ${variant} (${lastTransientReason}) attempt ${transientAttempts}/${OFF_MAX_TRANSIENT_ATTEMPTS}`
+    );
+
+    if (transientAttempts >= OFF_MAX_TRANSIENT_ATTEMPTS) {
+      logger.warn(
+        `OFF retrieval exhausted for ${barcode} after ${transientAttempts} transient attempt(s): ${lastTransientReason}`
+      );
+      return { kind: 'retrieval_error', reason: lastTransientReason };
+    }
+
+    await sleep(backoffDelayMs(transientAttempts - 1));
   }
-  
+
   logger.debug(`Product not found in OFF World for any barcode variant: ${barcode}`);
-  return null;
+  return { kind: 'not_found' };
+}
+
+/** Convenience for callers that only need a product or null (non-production diagnostic paths). */
+export async function fetchProductFromOFFOrNull(barcode: string): Promise<Product | null> {
+  const result = await fetchProductFromOFF(barcode);
+  return result.kind === 'hit' ? result.product : null;
 }
 
 /**

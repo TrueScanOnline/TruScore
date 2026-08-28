@@ -24,7 +24,7 @@ export type DynamicSignalsAssetRuntimeEmbed = {
 };
 
 export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbed = {
-  "generatedAt": "2026-08-19T08:01:56.544Z",
+  "generatedAt": "2026-08-28T23:09:11.914Z",
   "sources": [
     {
       "source_channel_id": "SRC-FSANZ-RECALL",
@@ -898,7 +898,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "review_state": "reviewed",
       "resolution_status": "resolved",
       "lineage_reference": "ACCC-39-26",
-      "product_scope_guard": ""
+      "product_scope_guard": "coles_family"
     },
     {
       "signal_target_id": "TGT-009",

@@ -24,6 +24,10 @@ function normalizeCompact(raw: string): string {
     .replace(/[^a-z0-9]+/g, '');
 }
 
+function hasExplicitBrandEvidence(product: Product): boolean {
+  return splitBrandCandidates(product).length > 0;
+}
+
 function splitBrandCandidates(product: Product): string[] {
   const out: string[] = [];
   if (typeof product.brand_owner === 'string' && product.brand_owner.trim()) {
@@ -196,6 +200,14 @@ function pickPrimaryBrandId(
 ): string | null {
   const parentOf = (id: string) => aData.brandsById.get(id)?.parent_id;
 
+  // MVP invariant: explicit brand present but unresolved → fail closed (no product_name-only inference)
+  if (hasExplicitBrandEvidence(product) && fromBrands.size === 0 && fromProductName.size > 0) {
+    push?.(
+      'chain_resolve: fail_closed — explicit brand evidence present but unresolved; product_name-only inference blocked'
+    );
+    return null;
+  }
+
   // Fail closed: product_name refinement must not invent a different-entity chain vs brands field
   if (fromBrands.size > 0 && fromProductName.size > 0) {
     const brandParents = new Set([...fromBrands].map(parentOf).filter(Boolean) as string[]);
@@ -255,7 +267,37 @@ function pickPrimaryBrandId(
   return bestId;
 }
 
-function validateReviewedChain(brand_id: string, aData: ADataMaps): ResolvedRetailChain | null {
+function chainBrandMatchChannel(
+  brandId: string,
+  fromBrands: Set<string>,
+  source: ResolvedRetailChain['source']
+): ResolvedRetailChain['brand_match_channel'] {
+  if (source === 'gtin_link') return 'gtin_link';
+  if (source === 'injected_uat_fixture') return 'injected';
+  return fromBrands.has(brandId) ? 'brands_field' : 'product_name';
+}
+
+function brandTypeForId(brandId: string, canonicalRows: CsvRecord[]): string | undefined {
+  const row = canonicalRows.find((r) => r.brand_id === brandId);
+  return (row?.brand_type ?? '').trim() || undefined;
+}
+
+function enrichResolvedChain(
+  chain: Omit<ResolvedRetailChain, 'brand_match_channel' | 'brand_type'>,
+  fromBrands: Set<string>,
+  canonicalRows: CsvRecord[]
+): ResolvedRetailChain {
+  return {
+    ...chain,
+    brand_match_channel: chainBrandMatchChannel(chain.brand_id, fromBrands, chain.source),
+    brand_type: brandTypeForId(chain.brand_id, canonicalRows),
+  };
+}
+
+function validateReviewedChain(
+  brand_id: string,
+  aData: ADataMaps
+): Omit<ResolvedRetailChain, 'brand_match_channel' | 'brand_type'> | null {
   const b = aData.brandsById.get(brand_id);
   if (!b || b.review_state !== 'reviewed') return null;
   const p = aData.parentsById.get(b.parent_id);
@@ -290,11 +332,15 @@ export function resolveReviewedRetailChainUnified(input: {
     push?.(
       `chain_resolve: brand_id=${input.injected.brand_id} parent_id=${input.injected.parent_id} source=injected_uat_fixture`
     );
-    return {
-      brand_id: input.injected.brand_id,
-      parent_id: input.injected.parent_id,
-      source: 'injected_uat_fixture',
-    };
+    return enrichResolvedChain(
+      {
+        brand_id: input.injected.brand_id,
+        parent_id: input.injected.parent_id,
+        source: 'injected_uat_fixture',
+      },
+      new Set([input.injected.brand_id]),
+      input.canonicalBrandRows
+    );
   }
 
   if (input.product) {
@@ -334,23 +380,24 @@ export function resolveReviewedRetailChainUnified(input: {
         push?.(
           `chain_resolve: brand_id=${bridged.brand_id} parent_id=${bridged.parent_id} source=identity_resolution (specific_brand+parent_entity; product_name_refine=${fromProductName.has(bridged.brand_id) ? '1' : '0'})`
         );
-        return bridged;
+        return enrichResolvedChain(bridged, fromBrands, input.canonicalBrandRows);
       }
     }
     push?.('chain_resolve: identity_resolution found no reviewed brand/parent chain from product fields');
     // Finding B (integrated Dynamic Signals): if primary identity fails, use an already-existing
     // reviewed GTIN relationship as supplementary evidence before returning unresolved.
-    const gtinFallback = tryReviewedGtinChain(input.barcode, input.aData, push);
+    const gtinFallback = tryReviewedGtinChain(input.barcode, input.aData, input.canonicalBrandRows, push);
     if (gtinFallback) return gtinFallback;
     return null;
   }
 
-  return tryReviewedGtinChain(input.barcode, input.aData, push);
+  return tryReviewedGtinChain(input.barcode, input.aData, input.canonicalBrandRows, push);
 }
 
 function tryReviewedGtinChain(
   barcode: string,
   aData: ADataMaps,
+  canonicalRows: CsvRecord[],
   push?: (s: string) => void
 ): ResolvedRetailChain | null {
   const g = aData.gtinRows.get(barcode);
@@ -361,7 +408,11 @@ function tryReviewedGtinChain(
       push?.(
         `chain_resolve: brand_id=${g.brand_id} parent_id=${g.parent_id} source=gtin_link_supplementary`
       );
-      return { brand_id: g.brand_id, parent_id: g.parent_id, source: 'gtin_link' };
+      return enrichResolvedChain(
+        { brand_id: g.brand_id, parent_id: g.parent_id, source: 'gtin_link' },
+        new Set(),
+        canonicalRows
+      );
     }
   }
   return null;

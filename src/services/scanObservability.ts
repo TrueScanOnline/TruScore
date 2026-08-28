@@ -9,6 +9,7 @@ export type ScanObsEventName =
   | 'scan_started'
   | 'fetch_phase'
   | 'fetch_complete'
+  | 'retrieval_error'
   | 'score_ready'
   | 'product_result_ready'
   | 'signals_built'
@@ -37,6 +38,8 @@ export interface ScanObsPayload {
   confidence_label?: string;
   /** Progressive Signals path: attached | empty | failed */
   signals_outcome?: SignalsReadyObsOutcome;
+  /** OFF retrieval_error internal reason (rate_limit_exhausted, etc.) */
+  retrieval_reason?: string;
 }
 
 export function generateScanId(): string {

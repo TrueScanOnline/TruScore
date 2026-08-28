@@ -1,7 +1,7 @@
 // Open Food Facts pricing data extraction
 // Open Food Facts sometimes includes pricing from various stores
 import { PriceEntry } from '../../types/pricing';
-import { fetchProductFromOFF } from '../openFoodFacts';
+import { fetchProductFromOFFOrNull } from '../openFoodFacts';
 
 /**
  * Extract pricing data from Open Food Facts product data
@@ -12,7 +12,7 @@ export async function fetchOpenFoodFactsPrices(barcode: string): Promise<PriceEn
 
   try {
     // Fetch product data from Open Food Facts
-    const product = await fetchProductFromOFF(barcode);
+    const product = await fetchProductFromOFFOrNull(barcode);
 
     if (!product) {
       return prices;
