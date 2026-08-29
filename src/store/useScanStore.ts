@@ -11,6 +11,7 @@ interface ScanStore {
   recentScans: ScanHistoryItem[];
   currentBarcode: string | null;
   addScan: (scan: ScanHistoryItem) => void;
+  removeScanByBarcode: (barcode: string) => void;
   clearHistory: () => void;
   initializeStore: () => Promise<void>;
 }
@@ -35,6 +36,20 @@ export const useScanStore = create<ScanStore>((set, get) => ({
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } catch (error) {
       console.error('Failed to save scan history:', error);
+    }
+  },
+
+  removeScanByBarcode: async (barcode) => {
+    const current = get().recentScans;
+    const updated = current.filter((s) => s.barcode !== barcode);
+    if (updated.length === current.length) {
+      return;
+    }
+    set({ recentScans: updated });
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to remove scan from history:', error);
     }
   },
 

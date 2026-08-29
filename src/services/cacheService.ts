@@ -3,6 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { Product } from '../types/product';
 import { logger } from '../utils/logger';
+import {
+  getOffRevalidationTimestamp,
+  withOffRevalidationTimestamp,
+} from './offRevalidationPolicy';
 
 const CACHE_DIR = `${FileSystem.cacheDirectory}truescan/`;
 const CACHE_STORAGE_KEY = '@truescan_product_cache';
@@ -83,7 +87,8 @@ export async function getCachedProduct(barcode: string, isPremium: boolean = fal
       return null;
     }
 
-    return cached.product;
+    const revalidationAt = getOffRevalidationTimestamp(cached.product) ?? cached.timestamp;
+    return { ...cached.product, _cachedAt: revalidationAt };
   } catch (error) {
     logger.error('Error getting cached product', error);
     return null;
@@ -110,11 +115,14 @@ export async function cacheProduct(product: Product, isPremium: boolean = false)
     const cacheData = await AsyncStorage.getItem(CACHE_STORAGE_KEY);
     const cache: Record<string, CachedProduct> = cacheData ? JSON.parse(cacheData) : {};
 
+    const stampedProduct = withOffRevalidationTimestamp(product);
+    const writeTimestamp = getOffRevalidationTimestamp(stampedProduct) ?? Date.now();
+
     // Add new product
-    cache[product.barcode] = {
-      product,
-      timestamp: Date.now(),
-      barcode: product.barcode,
+    cache[stampedProduct.barcode] = {
+      product: stampedProduct,
+      timestamp: writeTimestamp,
+      barcode: stampedProduct.barcode,
     };
 
     // Remove oldest entries if cache is too large (premium users get larger cache)

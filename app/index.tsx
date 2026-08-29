@@ -17,7 +17,6 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useScanStore } from '../src/store/useScanStore';
 import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
 import { isPremiumFeatureEnabled, PremiumFeature } from '../src/utils/premiumFeatures';
 import { useNetworkStatus } from '../src/hooks/useNetworkStatus';
@@ -37,7 +36,6 @@ export default function ScanScreen() {
   const [scanned, setScanned] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
-  const { addScan } = useScanStore();
   const { subscriptionInfo } = useSubscriptionStore();
   const { isOffline, isOnline, canUseOfflineMode, isOfflineModeEnabled } = useNetworkStatus();
   const isPremium = isPremiumFeatureEnabled(PremiumFeature.OFFLINE_MODE, subscriptionInfo);
@@ -196,22 +194,9 @@ export default function ScanScreen() {
       const scanTimestamp = Date.now();
       powershellLogger.scanInitiated(barcode, type, scanTimestamp);
       
-      console.log('[ScanScreen] Valid barcode, adding to history:', barcode);
+      console.log('[ScanScreen] Valid barcode, navigating to Result:', barcode);
 
-      // Add to history
-      try {
-        addScan({
-          barcode,
-          timestamp: Date.now(),
-          productName: null,
-        });
-        console.log('[ScanScreen] Added to scan history');
-      } catch (scanError) {
-        console.error('[ScanScreen] Error adding to scan history:', scanError);
-      }
-
-      // Navigate to result screen
-      console.log('[ScanScreen] Navigating to Result screen with barcode:', barcode);
+      // Navigate to result screen (history updated on successful fetch from Result screen)
       
       try {
         navigation.navigate('Result', { barcode });
@@ -258,12 +243,6 @@ export default function ScanScreen() {
     setShowManualEntry(false);
     setManualBarcode('');
     
-    addScan({
-      barcode: trimmedBarcode,
-      timestamp: Date.now(),
-      productName: null,
-    });
-
     navigation.navigate('Result', { barcode: trimmedBarcode });
   };
 

@@ -512,6 +512,9 @@ function convertRowToProduct(row: SQLiteProductRow): Product {
     quality: row.quality || undefined,
     completion: row.completion || undefined,
   };
+  if (row.last_updated) {
+    (product as Product & { _cachedAt?: number })._cachedAt = row.last_updated;
+  }
   applyResolvedNutrientLevels(product);
   return product;
 }

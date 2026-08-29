@@ -15,12 +15,12 @@ import { logScanObs } from './scanObservability';
 import {
   lookupFromSQLite,
   lookupProductFast,
-  processSQLiteProduct,
-  processCachedProduct,
   saveProductToCache,
   mergeUserContributedData,
+  enhanceProductWithComputedFields,
 } from './productCacheService';
-import { USER_CONTRIBUTED_MERGE_RACE_MS, USER_CONTRIBUTED_FIRST_PAINT_RACE_MS } from './userContributedProductsService';
+import { USER_CONTRIBUTED_FIRST_PAINT_RACE_MS, USER_CONTRIBUTED_MERGE_RACE_MS } from './userContributedProductsService';
+import { needsOffBackgroundRevalidation, withOffRevalidationTimestamp } from './offRevalidationPolicy';
 import { calculateTrustScore } from '../utils/trustScore';
 import {
   normalizeBarcode,
@@ -121,28 +121,14 @@ async function executeFetchProductOptimized(
         }];
         (cachedProduct as any)._fetchTrace = fetchTrace;
 
-        const processedProduct = (cachedProduct.source === 'sqlite')
-          ? await processSQLiteProduct(cachedProduct, primaryBarcode)
-          : (cachedProduct.source === 'cache')
-          ? await processCachedProduct(cachedProduct, primaryBarcode)
-          : await processProductFast(cachedProduct, primaryBarcode);
-
-        onProgress?.({ phase: 'product_ready', product: processedProduct });
-
-        // Background cache refresh from OFF only (no multi-provider)
-        Promise.resolve().then(async () => {
-          try {
-            const offResult = await fetchProductFromOFF(offLookupBarcode).catch(
-              (): OffFetchResult => ({ kind: 'retrieval_error', reason: 'retrieval_other' })
-            );
-            if (offResult.kind === 'hit') {
-              const offProductWithScore = await processProductFast(offResult.product, primaryBarcode);
-              saveProductToCache(offProductWithScore, primaryBarcode, isPremium).catch(() => {});
-            }
-          } catch (err) {
-            logger.debug('Background cache refresh failed (non-critical):', err);
-          }
-        });
+        const processedProduct = await deliverLocalProductHit(
+          cachedProduct,
+          primaryBarcode,
+          offLookupBarcode,
+          isPremium,
+          scanStartTime,
+          onProgress
+        );
 
         const totalTime = Date.now() - scanStartTime;
         logger.info(`✅ CACHED PRODUCT RETURNED: ${primaryBarcode} in ${totalTime}ms (INSTANT!)`);
@@ -166,8 +152,14 @@ async function executeFetchProductOptimized(
           responseTimeMs: cacheTime,
         }];
         (sqliteProduct as any)._fetchTrace = fetchTrace;
-        const processedProduct = await processSQLiteProduct(sqliteProduct, primaryBarcode);
-        onProgress?.({ phase: 'product_ready', product: processedProduct });
+        const processedProduct = await deliverLocalProductHit(
+          sqliteProduct,
+          primaryBarcode,
+          offLookupBarcode,
+          isPremium,
+          scanStartTime,
+          onProgress
+        );
         const totalTime = Date.now() - scanStartTime;
         logger.info(`✅ SQLITE PRODUCT RETURNED: ${primaryBarcode} in ${totalTime}ms (INSTANT!)`);
         return processedProduct;
@@ -318,6 +310,65 @@ async function executeFetchProductOptimized(
   });
 
   return processedProduct;
+}
+
+/**
+ * Local cache/SQLite hit: bounded first-paint merge, optional 24h OFF background revalidation.
+ */
+async function deliverLocalProductHit(
+  localProduct: Product,
+  primaryBarcode: string,
+  offLookupBarcode: string,
+  isPremium: boolean,
+  scanStartTime: number,
+  onProgress?: (progress: { phase: string; product?: ProductWithTrustScore }) => void
+): Promise<ProductWithTrustScore> {
+  enhanceProductWithComputedFields(localProduct);
+
+  const processedProduct = await processProductForDisplay(localProduct, primaryBarcode, (refined) => {
+    const timeFromStart = Date.now() - scanStartTime;
+    onProgress?.({ phase: 'product_refined', product: refined });
+    logger.info(
+      `[ProductServiceOptimized] Local hit user-contributed merge refined UI (${timeFromStart}ms from scan start)`
+    );
+  });
+
+  onProgress?.({ phase: 'product_ready', product: processedProduct });
+
+  if (needsOffBackgroundRevalidation(localProduct)) {
+    Promise.resolve().then(() => {
+      revalidateLocalProductFromOffInBackground(
+        offLookupBarcode,
+        primaryBarcode,
+        isPremium
+      ).catch((err) => {
+        logger.debug('Background OFF revalidation failed (non-critical):', err);
+      });
+    });
+  }
+
+  return processedProduct;
+}
+
+/**
+ * Background World OFF revalidation for aged local products (≥24h since last refresh).
+ */
+async function revalidateLocalProductFromOffInBackground(
+  offLookupBarcode: string,
+  primaryBarcode: string,
+  isPremium: boolean
+): Promise<void> {
+  const offResult = await fetchProductFromOFF(offLookupBarcode).catch(
+    (): OffFetchResult => ({ kind: 'retrieval_error', reason: 'retrieval_other' })
+  );
+  if (offResult.kind !== 'hit') {
+    return;
+  }
+
+  const refreshed = await processProductFast(offResult.product, primaryBarcode);
+  const stamped = withOffRevalidationTimestamp(refreshed) as ProductWithTrustScore;
+  await saveProductToCache(stamped, primaryBarcode, isPremium);
+  logger.debug(`✅ Background OFF revalidation complete for ${primaryBarcode}`);
 }
 
 /**
