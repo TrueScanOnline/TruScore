@@ -3,11 +3,8 @@
 // Implements selection logic: >=7 abs(value) first, then top 2 pos/neg per pillar
 
 import { ProductWithTrustScore } from '../types/product';
-import {
-  ALL_HIGHLIGHT_DEFINITIONS,
-  HighlightDefinition,
-  isAlcoholicProduct,
-} from '../config/scoreHighlightDefinitions';
+import { ALL_HIGHLIGHT_DEFINITIONS, HighlightDefinition } from '../config/scoreHighlightDefinitions';
+import { isAlcoholicProduct } from './alcoholHighlightClassification';
 import { ProductFlag } from './productFlags';
 
 export interface ScoreHighlight extends ProductFlag {

@@ -4,6 +4,7 @@
 
 import { ProductWithTrustScore } from '../types/product';
 import { ProductFlag } from '../utils/productFlags';
+import { isAlcoholicProduct } from '../utils/alcoholHighlightClassification';
 
 /**
  * Rule condition - matches products based on various criteria
@@ -148,30 +149,9 @@ function matchesCondition(product: ProductWithTrustScore, condition: OverrideRul
     }
   }
   
-  // Check alcohol content (OR logic - if specified and detected, it's a match)
   if (condition.hasAlcohol !== undefined) {
     hasAnyCondition = true;
-    // Check nutriments for alcohol (alcohol_100g or alcohol)
-    const alcoholValue = product.nutriments?.['alcohol_100g'] || product.nutriments?.['alcohol'];
-    const hasAlcohol = alcoholValue !== undefined && alcoholValue > 0;
-    // Also check categories and keywords as fallback
-    const hasAlcoholInCategories = product.categories_tags?.some(cat => 
-      cat.toLowerCase().includes('alcohol') || 
-      cat.toLowerCase().includes('wine') || 
-      cat.toLowerCase().includes('beer') ||
-      cat.toLowerCase().includes('spirits')
-    );
-    const hasAlcoholInName = (product.product_name || product.product_name_en || '')
-      .toLowerCase()
-      .includes('alcohol') || 
-      (product.product_name || product.product_name_en || '')
-      .toLowerCase()
-      .match(/\b(wine|beer|whiskey|whisky|vodka|rum|gin|tequila)\b/);
-    
-    const detectedAlcohol = hasAlcohol || hasAlcoholInCategories || !!hasAlcoholInName;
-    
-    // If condition requires alcohol and we detected it, it's a match
-    // If condition requires no alcohol and we didn't detect it, it's also a match
+    const detectedAlcohol = isAlcoholicProduct(product);
     if (condition.hasAlcohol === true && detectedAlcohol) {
       hasAnyMatch = true;
     } else if (condition.hasAlcohol === false && !detectedAlcohol) {
@@ -302,10 +282,6 @@ export const DEFAULT_OVERRIDE_RULES: ScoreHighlightOverrideRule[] = [
     priority: 10,
     condition: {
       hasAlcohol: true,
-      // Also match by categories and keywords as fallback
-      categories: ['alcohol', 'wine', 'beer', 'spirits', 'liquor'],
-      productNameKeywords: ['wine', 'beer', 'whiskey', 'whisky', 'vodka', 'rum', 'gin', 'tequila', 'alcohol'],
-      ingredientsKeywords: ['alcohol', 'ethanol', 'ethyl alcohol'],
     },
     action: {
       excludeFlagTitles: ['High Body Safety Score', 'No Additives', 'No artificial additives'],

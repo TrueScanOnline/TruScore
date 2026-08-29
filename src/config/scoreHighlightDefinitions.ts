@@ -809,26 +809,5 @@ export const ALL_HIGHLIGHT_DEFINITIONS: HighlightDefinition[] = [
   ...OPEN_HIGHLIGHTS,
 ];
 
-// Helper to check if product is alcoholic
-export function isAlcoholicProduct(product: any): boolean {
-  // Check nutriments for alcohol
-  const alcoholValue = product.nutriments?.['alcohol_100g'] || product.nutriments?.['alcohol'];
-  if (alcoholValue !== undefined && alcoholValue > 0) return true;
-  
-  // Check categories
-  const categories = product.categories_tags || [];
-  if (categories.some((cat: string) => 
-    cat.toLowerCase().includes('alcohol') || 
-    cat.toLowerCase().includes('wine') || 
-    cat.toLowerCase().includes('beer') ||
-    cat.toLowerCase().includes('spirits')
-  )) return true;
-  
-  // Check product name
-  const name = (product.product_name || product.product_name_en || '').toLowerCase();
-  if (name.includes('alcohol') || 
-      /\b(wine|beer|whiskey|whisky|vodka|rum|gin|tequila)\b/.test(name)) return true;
-  
-  return false;
-}
+export { isAlcoholicProduct } from '../utils/alcoholHighlightClassification';
 
