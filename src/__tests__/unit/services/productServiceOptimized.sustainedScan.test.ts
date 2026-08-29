@@ -173,12 +173,14 @@ describe('productServiceOptimized sustained-scan remediation', () => {
     expect(mockedOff).toHaveBeenCalledTimes(1);
     expect(mockedSave).toHaveBeenCalled();
     const saved = mockedSave.mock.calls[0]?.[0] as ProductWithTrustScore & { _cachedAt?: number };
+    const saveOptions = mockedSave.mock.calls[0]?.[3] as { offRevalidatedAt?: number } | undefined;
     expect(saved?.product_name).toBe('Revalidated Oats');
     expect(typeof saved?._cachedAt).toBe('number');
     expect(saved!._cachedAt!).toBeGreaterThan(staleAt);
+    expect(saveOptions?.offRevalidatedAt).toBe(saved?._cachedAt);
   });
 
-  it('cold cache miss performs foreground World OFF retrieval', async () => {
+  it('cold cache miss performs foreground World OFF retrieval and stamps OFF freshness', async () => {
     mockedLookup.mockResolvedValueOnce(null);
     mockedOff.mockResolvedValueOnce({ kind: 'hit', product: offHit() });
 
@@ -188,6 +190,54 @@ describe('productServiceOptimized sustained-scan remediation', () => {
 
     expect(mockedOff).toHaveBeenCalledTimes(1);
     expect(result?.product_name).toBe('Fresh OFF Oats');
+    expect(mockedSave).toHaveBeenCalled();
+    const initialSave = mockedSave.mock.calls.find(
+      (call) => (call[3] as { offRevalidatedAt?: number } | undefined)?.offRevalidatedAt !== undefined
+    );
+    expect(initialSave).toBeDefined();
+    const saved = initialSave?.[0] as ProductWithTrustScore & { _cachedAt?: number };
+    expect(typeof saved?._cachedAt).toBe('number');
+  });
+
+  it('failed background OFF revalidation does not advance _cachedAt', async () => {
+    const staleAt = Date.now() - OFF_REVALIDATION_MS - 1000;
+    mockedLookup.mockResolvedValueOnce(localProduct(staleAt));
+    mockedOff.mockResolvedValueOnce({ kind: 'retrieval_error', reason: 'retrieval_other' });
+
+    const promise = fetchProductOptimized(BARCODE, true, false, false);
+    await jest.advanceTimersByTimeAsync(USER_CONTRIBUTED_FIRST_PAINT_RACE_MS + 20);
+    await promise;
+    await jest.runAllTimersAsync();
+    await Promise.resolve();
+
+    expect(mockedOff).toHaveBeenCalledTimes(1);
+    expect(mockedSave).not.toHaveBeenCalled();
+  });
+
+  it('background enhancement after cold OFF preserves OFF freshness timestamp', async () => {
+    mockedLookup.mockResolvedValueOnce(null);
+    mockedOff.mockResolvedValueOnce({ kind: 'hit', product: offHit() });
+
+    const promise = fetchProductOptimized(BARCODE, true, false, false);
+    await jest.advanceTimersByTimeAsync(USER_CONTRIBUTED_FIRST_PAINT_RACE_MS + 20);
+    await promise;
+    await jest.runAllTimersAsync();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const offStampedSave = mockedSave.mock.calls.find(
+      (call) => (call[3] as { offRevalidatedAt?: number } | undefined)?.offRevalidatedAt !== undefined
+    );
+    const enhancementSave = mockedSave.mock.calls.find(
+      (call) => (call[3] as { offRevalidatedAt?: number } | undefined)?.offRevalidatedAt === undefined
+    );
+
+    expect(offStampedSave).toBeDefined();
+    const offAt = (offStampedSave![0] as ProductWithTrustScore & { _cachedAt?: number })._cachedAt;
+    if (enhancementSave) {
+      const enhancedAt = (enhancementSave[0] as ProductWithTrustScore & { _cachedAt?: number })._cachedAt;
+      expect(enhancedAt).toBe(offAt);
+    }
   });
 
   it('product_refined after product_ready keeps terminal success state', async () => {

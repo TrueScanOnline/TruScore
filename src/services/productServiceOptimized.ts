@@ -266,6 +266,14 @@ async function executeFetchProductOptimized(
   onProgress?.({ phase: 'product_ready', product: processedProduct });
   timingBreakdown.uiRendering = Date.now() - uiRenderStart;
 
+  const offFreshnessAt = Date.now();
+  processedProduct = withOffRevalidationTimestamp(processedProduct, offFreshnessAt) as ProductWithTrustScore;
+  saveProductToCache(processedProduct, primaryBarcode, isPremium, {
+    offRevalidatedAt: offFreshnessAt,
+  }).catch((err) => {
+    logger.debug('Initial OFF cache write failed (non-critical):', err);
+  });
+
   // Eco helper + NOVA-1 rescue (local Nutri already removed from enhanceProduct)
   enhanceProductInBackground(primaryBarcode, processedProduct, userCountry, isPremium).catch((err) => {
     logger.debug('Background enhancement failed (non-critical):', err);
@@ -366,8 +374,9 @@ async function revalidateLocalProductFromOffInBackground(
   }
 
   const refreshed = await processProductFast(offResult.product, primaryBarcode);
-  const stamped = withOffRevalidationTimestamp(refreshed) as ProductWithTrustScore;
-  await saveProductToCache(stamped, primaryBarcode, isPremium);
+  const offFreshnessAt = Date.now();
+  const stamped = withOffRevalidationTimestamp(refreshed, offFreshnessAt) as ProductWithTrustScore;
+  await saveProductToCache(stamped, primaryBarcode, isPremium, { offRevalidatedAt: offFreshnessAt });
   logger.debug(`✅ Background OFF revalidation complete for ${primaryBarcode}`);
 }
 

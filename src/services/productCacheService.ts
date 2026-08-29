@@ -11,7 +11,7 @@
  */
 
 import { Product, ProductWithTrustScore } from '../types/product';
-import { getCachedProduct, cacheProduct } from './cacheService';
+import { getCachedProduct, cacheProduct, type CacheProductOptions } from './cacheService';
 import { lookupProductInSQLite, saveProductToSQLite } from './sqliteProductDatabase';
 import { getUserCountryCode } from '../utils/countryDetection';
 import { getUserContributedProduct, USER_CONTRIBUTED_MERGE_RACE_MS } from './userContributedProductsService';
@@ -213,15 +213,20 @@ export async function processAndScoreProduct(product: Product): Promise<ProductW
 /**
  * Save product to SQLite database
  */
-export async function saveProductToCache(product: ProductWithTrustScore, barcode: string, isPremium: boolean): Promise<void> {
+export async function saveProductToCache(
+  product: ProductWithTrustScore,
+  barcode: string,
+  isPremium: boolean,
+  options?: CacheProductOptions
+): Promise<void> {
   try {
     const userCountry = getUserCountryCode();
     
     // Save to AsyncStorage cache
-    await cacheProduct(product, isPremium);
+    await cacheProduct(product, isPremium, options);
     
     // Also save to SQLite for offline-first lookups
-    await saveProductToSQLite(product, userCountry ?? undefined);
+    await saveProductToSQLite(product, userCountry ?? undefined, options);
     
     logger.debug(`[ProductCacheService] ✅ Product cached: ${barcode}`);
   } catch (error) {

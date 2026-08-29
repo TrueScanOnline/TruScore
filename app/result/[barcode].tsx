@@ -139,7 +139,7 @@ function ResultScreenContent() {
   const { t } = useTranslation();
   const { colors, darkMode } = useTheme();
   const { barcode } = route.params;
-  const { addScan, removeScanByBarcode } = useScanStore();
+  const { addScan, removeLegacyProvisionalScan } = useScanStore();
   const { addFavorite, removeFavorite, isFavorite } = useFavoritesStore();
   const { subscriptionInfo } = useSubscriptionStore();
   const { isOffline } = useNetworkStatus();
@@ -832,18 +832,18 @@ function ResultScreenContent() {
             });
           }
           try {
-            removeScanByBarcode(barcode);
+            removeLegacyProvisionalScan(barcode);
           } catch (scanError) {
-            console.warn('[ResultScreen] Error removing failed scan from history:', scanError);
+            console.warn('[ResultScreen] Error removing legacy provisional scan from history:', scanError);
           }
           setError(null);
           setLoadingPhase('retrieval_error');
         } else {
           console.warn('[ResultScreen] Product not found');
           try {
-            removeScanByBarcode(barcode);
+            removeLegacyProvisionalScan(barcode);
           } catch (scanError) {
-            console.warn('[ResultScreen] Error removing failed scan from history:', scanError);
+            console.warn('[ResultScreen] Error removing legacy provisional scan from history:', scanError);
           }
           setError('Product not found in our databases. You can help by adding this product manually.');
           setLoadingPhase('not_found');

@@ -3,10 +3,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { Product } from '../types/product';
 import { logger } from '../utils/logger';
-import {
-  getOffRevalidationTimestamp,
-  withOffRevalidationTimestamp,
-} from './offRevalidationPolicy';
+import { getOffRevalidationTimestamp } from './offRevalidationPolicy';
+
+export interface CacheProductOptions {
+  /** Set only after a successful World OFF retrieval or ≥24h revalidation. */
+  offRevalidatedAt?: number;
+}
 
 const CACHE_DIR = `${FileSystem.cacheDirectory}truescan/`;
 const CACHE_STORAGE_KEY = '@truescan_product_cache';
@@ -87,8 +89,10 @@ export async function getCachedProduct(barcode: string, isPremium: boolean = fal
       return null;
     }
 
-    const revalidationAt = getOffRevalidationTimestamp(cached.product) ?? cached.timestamp;
-    return { ...cached.product, _cachedAt: revalidationAt };
+    const revalidationAt = getOffRevalidationTimestamp(cached.product);
+    return revalidationAt !== undefined
+      ? { ...cached.product, _cachedAt: revalidationAt }
+      : cached.product;
   } catch (error) {
     logger.error('Error getting cached product', error);
     return null;
@@ -100,7 +104,25 @@ export async function getCachedProduct(barcode: string, isPremium: boolean = fal
  * Premium users get larger cache size
  * Uses locking mechanism to prevent race conditions
  */
-export async function cacheProduct(product: Product, isPremium: boolean = false): Promise<void> {
+function resolveStoredOffCachedAt(
+  product: Product,
+  existingProduct: Product | undefined,
+  options?: CacheProductOptions
+): number | undefined {
+  if (options?.offRevalidatedAt !== undefined) {
+    return options.offRevalidatedAt;
+  }
+  return (
+    getOffRevalidationTimestamp(product) ??
+    (existingProduct ? getOffRevalidationTimestamp(existingProduct) : undefined)
+  );
+}
+
+export async function cacheProduct(
+  product: Product,
+  isPremium: boolean = false,
+  options?: CacheProductOptions
+): Promise<void> {
   const lockKey = product.barcode;
   
   // Wait for any existing operation on this barcode
@@ -115,14 +137,21 @@ export async function cacheProduct(product: Product, isPremium: boolean = false)
     const cacheData = await AsyncStorage.getItem(CACHE_STORAGE_KEY);
     const cache: Record<string, CachedProduct> = cacheData ? JSON.parse(cacheData) : {};
 
-    const stampedProduct = withOffRevalidationTimestamp(product);
-    const writeTimestamp = getOffRevalidationTimestamp(stampedProduct) ?? Date.now();
+    const existingEntry = cache[product.barcode];
+    const offCachedAt = resolveStoredOffCachedAt(product, existingEntry?.product, options);
+    const { _cachedAt: _ignored, ...productWithoutCachedAt } = product as Product & {
+      _cachedAt?: number;
+    };
+    const productToStore =
+      offCachedAt !== undefined
+        ? ({ ...productWithoutCachedAt, _cachedAt: offCachedAt } as Product)
+        : (productWithoutCachedAt as Product);
 
-    // Add new product
-    cache[stampedProduct.barcode] = {
-      product: stampedProduct,
-      timestamp: writeTimestamp,
-      barcode: stampedProduct.barcode,
+    // Wrapper timestamp is generic cache metadata (expiry/LRU), not OFF freshness.
+    cache[product.barcode] = {
+      product: productToStore,
+      timestamp: Date.now(),
+      barcode: product.barcode,
     };
 
     // Remove oldest entries if cache is too large (premium users get larger cache)

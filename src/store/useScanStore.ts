@@ -11,7 +11,7 @@ interface ScanStore {
   recentScans: ScanHistoryItem[];
   currentBarcode: string | null;
   addScan: (scan: ScanHistoryItem) => void;
-  removeScanByBarcode: (barcode: string) => void;
+  removeLegacyProvisionalScan: (barcode: string) => void;
   clearHistory: () => void;
   initializeStore: () => Promise<void>;
 }
@@ -39,9 +39,11 @@ export const useScanStore = create<ScanStore>((set, get) => ({
     }
   },
 
-  removeScanByBarcode: async (barcode) => {
+  removeLegacyProvisionalScan: async (barcode) => {
     const current = get().recentScans;
-    const updated = current.filter((s) => s.barcode !== barcode);
+    const updated = current.filter(
+      (s) => !(s.barcode === barcode && s.productName === null)
+    );
     if (updated.length === current.length) {
       return;
     }
@@ -49,7 +51,7 @@ export const useScanStore = create<ScanStore>((set, get) => ({
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } catch (error) {
-      console.error('Failed to remove scan from history:', error);
+      console.error('Failed to remove legacy provisional scan from history:', error);
     }
   },
 

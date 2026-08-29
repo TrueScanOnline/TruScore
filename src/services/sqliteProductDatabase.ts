@@ -9,6 +9,8 @@ import { logger } from '../utils/logger';
 import { normalizeBarcode } from '../utils/barcodeNormalization';
 import { createDatabaseIndexes } from '../utils/databaseIndexes';
 import { initializeDatabaseConnection, executeWithRetry } from './databaseConnectionManager';
+import type { CacheProductOptions } from './cacheService';
+import { getOffRevalidationTimestamp } from './offRevalidationPolicy';
 
 const DB_NAME = 'truescan_products.db';
 let db: SQLite.SQLiteDatabase | null = null;
@@ -262,13 +264,32 @@ export async function lookupProductInSQLite(barcode: string, countryCode?: strin
 /**
  * Insert or update product in SQLite database
  */
-export async function saveProductToSQLite(product: Product, countryCode?: string): Promise<boolean> {
+export async function saveProductToSQLite(
+  product: Product,
+  countryCode?: string,
+  options?: CacheProductOptions
+): Promise<boolean> {
   try {
     const database = await getDatabase();
     
     if (!database) {
       // Database not available - this is fine, app can continue without SQLite
       return false;
+    }
+
+    let lastUpdated: number;
+    if (options?.offRevalidatedAt !== undefined) {
+      lastUpdated = options.offRevalidatedAt;
+    } else {
+      const existingRow = await database.getFirstAsync<{ last_updated: number }>(
+        'SELECT last_updated FROM products WHERE barcode = ?',
+        [product.barcode]
+      );
+      if (existingRow?.last_updated) {
+        lastUpdated = existingRow.last_updated;
+      } else {
+        lastUpdated = getOffRevalidationTimestamp(product) ?? Date.now();
+      }
     }
     
     const row: SQLiteProductRow = {
@@ -302,7 +323,7 @@ export async function saveProductToSQLite(product: Product, countryCode?: string
       source: product.source || 'sqlite',
       quality: product.quality || null,
       completion: product.completion || null,
-      last_updated: Date.now(),
+      last_updated: lastUpdated,
       country_filter: countryCode || null,
     };
     
