@@ -163,6 +163,23 @@ describe('Body Pillar Calculation', () => {
       expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
     });
 
+    test('valid OFF Nutri-Score B + NOVA 1 → Whole Produce +4 does not stack (non-cap-masked)', () => {
+      const product: Product = {
+        ...baseProduct,
+        barcode: '93541121',
+        product_name: 'Raspberries',
+        ingredients_text: 'raspberries',
+        categories_tags: ['en:fresh-raspberries', 'en:berries', 'en:fruits'],
+        nova_group: 1,
+        nutriscore_grade: 'b',
+      };
+      const result = calculateBodyPillar(product);
+      // 15 base + 3 Nutri B + 3 NOVA1 = 21; accidental +4 stack would reach 25 (cap-masked under grade A)
+      expect(result.score).toBe(21);
+      expect(result.details.nutriscoreValue).toBe(18);
+      expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
+    });
+
     test('eligible apple → +4 with NOVA 1', () => {
       const product: Product = {
         ...baseProduct,
