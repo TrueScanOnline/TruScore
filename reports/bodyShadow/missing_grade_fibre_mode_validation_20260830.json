@@ -1,0 +1,1319 @@
+{
+  "generated_at": "2026-08-30T01:42:50.549Z",
+  "git_sha": "9d1163a2e0fb734ae9d34e9803895d71f466615c",
+  "mode": "missing_grade_fibre_unavailable_zero_points_shadow",
+  "methodology_note": "Fibre unavailable → 0 favourable fibre points (OFF-aligned shadow mode). Does not coerce fibreG to 0 g/100g. Adverse nutrients remain fail-closed.",
+  "cohort": {
+    "denominator": 36,
+    "evaluated": 36,
+    "source": "missing_off_grade rows from nutriScore2023_shadow_validation_complete_20260830.json"
+  },
+  "summary": {
+    "prior_strict_complete_input_recoveries": 1,
+    "fibre_mode_complete_input_recoveries": 2,
+    "additional_recoveries_solely_from_fibre_mode": 1,
+    "exact_matches_vs_off_reference_where_available": 0,
+    "still_unresolved_fibre_mode": 34
+  },
+  "incremental_recoveries": [
+    {
+      "gtin": "5052675000989",
+      "productName": "Thai Green Curry Kit",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": true,
+      "fibreModeGrade": "d",
+      "fibreModePath": "complete_input_fibre_unavailable_zero_points",
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": true,
+      "fibreOnlyGapStrict": true,
+      "stillUnresolvedReason": null,
+      "branch": "general_foods",
+      "fibreG": null
+    }
+  ],
+  "fibre_mode_grades_recovered": [
+    {
+      "gtin": "9300601249114",
+      "productName": "White vinegar",
+      "grade": "c",
+      "path": "complete_input",
+      "incremental": false,
+      "offReference": null,
+      "exactMatch": null
+    },
+    {
+      "gtin": "5052675000989",
+      "productName": "Thai Green Curry Kit",
+      "grade": "d",
+      "path": "complete_input_fibre_unavailable_zero_points",
+      "incremental": true,
+      "offReference": null,
+      "exactMatch": null
+    }
+  ],
+  "still_unresolved": [
+    {
+      "gtin": "9310232961279",
+      "productName": "Double Espresso Lactose Free",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "5060229012371",
+      "productName": "Herbal Collection Assorted Herbal Tea Sachets",
+      "reason": "unresolved_preparation_basis",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "070177025700",
+      "productName": "Twinings English Breakfast Tea Bags",
+      "reason": "unresolved_preparation_basis",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9313010000108",
+      "productName": "White Sugar",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9310061462206",
+      "productName": "Bi-Carb Soda",
+      "reason": "missing_required_nutrient",
+      "fibreOnlyWasGap": false,
+      "branch": "general_foods"
+    },
+    {
+      "gtin": "9313958005890",
+      "productName": "Unbleached Self Raising Flour",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9310047207180",
+      "productName": "Flour whole meal",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9300601002849",
+      "productName": "Sour cream",
+      "reason": "missing_required_nutrient",
+      "fibreOnlyWasGap": false,
+      "branch": "fats_oils_nuts_seeds"
+    },
+    {
+      "gtin": "9310653105733",
+      "productName": "PASSIONFRUIT TWIST YOGURT",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9310052120856",
+      "productName": "UNSALTED BUTTER",
+      "reason": "missing_required_nutrient",
+      "fibreOnlyWasGap": false,
+      "branch": "fats_oils_nuts_seeds"
+    },
+    {
+      "gtin": "9310015247828",
+      "productName": "Doritos",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "63523614",
+      "productName": "Seashells",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9310988022378",
+      "productName": "Salt And Vin",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9310645350899",
+      "productName": "Boysenberry Cheesecake",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "4008355030495",
+      "productName": "Pfeffernüsse",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "793579769781",
+      "productName": "Oats",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9315090200102",
+      "productName": "Ancient grains muesli",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9311208001241",
+      "productName": "Fettucine",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9343005001018",
+      "productName": "Hot Salmon",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "818411000478",
+      "productName": "Açai Bowl",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9300657235031",
+      "productName": "Spaghetti",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9300462137582",
+      "productName": "Yellonfin Tuna Italian Oil Style",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9310006212972",
+      "productName": "Peaches Sliced in tasty juice",
+      "reason": "missing_required_nutrient",
+      "fibreOnlyWasGap": false,
+      "branch": "general_foods"
+    },
+    {
+      "gtin": "9310645244846",
+      "productName": "Tuna",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9342373000296",
+      "productName": "Blackberries",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9415767038615",
+      "productName": "",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9416897711003",
+      "productName": "Cheddar",
+      "reason": "missing_required_nutrient",
+      "fibreOnlyWasGap": false,
+      "branch": "cheese"
+    },
+    {
+      "gtin": "9556001137722",
+      "productName": "2 Minute Noodles Chicken Flavour",
+      "reason": "unresolved_preparation_basis",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "089686171914",
+      "productName": "Instant Noodles Mi Goreng bbq Chicken",
+      "reason": "unresolved_preparation_basis",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9310036044239",
+      "productName": "PAULS MLKY MAX CHOC",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9416107522245",
+      "productName": "Lentils",
+      "reason": "unresolved_branch",
+      "fibreOnlyWasGap": false,
+      "branch": null
+    },
+    {
+      "gtin": "9420020300194",
+      "productName": "Sushi seaweed",
+      "reason": "missing_required_nutrient",
+      "fibreOnlyWasGap": false,
+      "branch": "general_foods"
+    },
+    {
+      "gtin": "9300617300793",
+      "productName": "Sour patch kids",
+      "reason": "missing_required_nutrient",
+      "fibreOnlyWasGap": false,
+      "branch": "general_foods"
+    },
+    {
+      "gtin": "93541121",
+      "productName": "Raspberries",
+      "reason": "missing_required_nutrient",
+      "fibreOnlyWasGap": false,
+      "branch": "general_foods"
+    }
+  ],
+  "off_nutri_inspections": {
+    "9300617300793": {
+      "source": "live_off",
+      "off_nutri_status": {
+        "nutriscore_grade": "e",
+        "nutrition_grades_tags": [
+          "e"
+        ],
+        "misc_tags": [
+          "en:environmental-score-changed",
+          "en:environmental-score-computed",
+          "en:environmental-score-grade-changed",
+          "en:environmental-score-missing-data-labels",
+          "en:environmental-score-missing-data-no-packagings",
+          "en:environmental-score-missing-data-origins",
+          "en:environmental-score-missing-data-packagings",
+          "en:environmental-score-missing-data-warning",
+          "en:estimated-ingredients-with-recipe-estimator-cvxpy",
+          "en:nutrients-not-estimated-from-ingredients-too-few-ingredients-with-nutrition-data",
+          "en:nutriscore-2021-better-than-2023",
+          "en:nutriscore-2021-d-2023-e",
+          "en:nutriscore-2021-different-from-2023",
+          "en:nutriscore-computed",
+          "en:nutriscore-missing-fiber",
+          "en:nutrition-data-per-100g",
+          "en:nutrition-fruits-vegetables-legumes-estimate-from-ingredients",
+          "en:nutrition-fruits-vegetables-nuts-estimate-from-ingredients",
+          "en:nutrition-no-fiber-or-fruits-vegetables-nuts",
+          "en:packagings-empty",
+          "en:packagings-not-complete",
+          "en:packagings-number-of-components-0",
+          "en:storage-conditions-not-set",
+          "en:number-of-uploaded-images-4-to-6",
+          "en:main-countries-old-product-without-scans-in-2020"
+        ],
+        "nutriscore_2023": {
+          "grade": "e",
+          "score": 19,
+          "nutriscore_computed": 1,
+          "nutriscore_applicable": 1,
+          "nutrients_available": 1,
+          "category_available": 1,
+          "data": {
+            "components": {
+              "negative": [
+                {
+                  "id": "energy",
+                  "points": 4,
+                  "points_max": 10,
+                  "unit": "kJ",
+                  "value": 1520
+                },
+                {
+                  "id": "sugars",
+                  "points": 15,
+                  "points_max": 15,
+                  "unit": "g",
+                  "value": 62
+                },
+                {
+                  "id": "saturated_fat",
+                  "points": 0,
+                  "points_max": 10,
+                  "unit": "g",
+                  "value": 1
+                },
+                {
+                  "id": "salt",
+                  "points": 0,
+                  "points_max": 20,
+                  "unit": "g",
+                  "value": 0.03
+                }
+              ],
+              "positive": [
+                {
+                  "id": "fiber",
+                  "points": 0,
+                  "points_max": 5,
+                  "unit": "g",
+                  "value": null
+                },
+                {
+                  "id": "fruits_vegetables_legumes",
+                  "points": 0,
+                  "points_max": 5,
+                  "unit": "%",
+                  "value": 0
+                }
+              ]
+            },
+            "count_proteins": 0,
+            "count_proteins_reason": "negative_points_greater_than_or_equal_to_11",
+            "is_beverage": 0,
+            "is_cheese": 0,
+            "is_fat_oil_nuts_seeds": 0,
+            "is_red_meat_product": 0,
+            "is_water": 0,
+            "negative_points": 19,
+            "negative_points_max": 55,
+            "positive_nutrients": [
+              "fiber",
+              "fruits_vegetables_legumes"
+            ],
+            "positive_points": 0,
+            "positive_points_max": 10
+          }
+        }
+      },
+      "strict": {
+        "applicability": {
+          "applicable": true
+        },
+        "mapped": {
+          "inputs": {
+            "branch": "general_foods",
+            "basis": "per_100g",
+            "energyKj": 1520,
+            "saturatedFatG": 1,
+            "sugarsG": 62,
+            "saltG": 0.027,
+            "proteinG": 4,
+            "fibreG": null,
+            "fvlPercent": 0,
+            "fvlPoints": null,
+            "totalFatG": 4.32,
+            "nonNutritiveSweetenersPresent": null,
+            "isWater": false,
+            "nutritionPreparation": "as_sold"
+          }
+        },
+        "completeOutcome": {
+          "kind": "unresolved",
+          "reason": "missing_required_nutrient",
+          "branch": "general_foods"
+        },
+        "boundsOutcome": null,
+        "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+        "unresolvedReason": "missing_required_nutrient"
+      },
+      "fibre_mode": {
+        "applicability": {
+          "applicable": true
+        },
+        "mapped": {
+          "inputs": {
+            "branch": "general_foods",
+            "basis": "per_100g",
+            "energyKj": 1520,
+            "saturatedFatG": 1,
+            "sugarsG": 62,
+            "saltG": 0.027,
+            "proteinG": 4,
+            "fibreG": null,
+            "fvlPercent": 0,
+            "fvlPoints": null,
+            "totalFatG": 4.32,
+            "nonNutritiveSweetenersPresent": null,
+            "isWater": false,
+            "nutritionPreparation": "as_sold"
+          }
+        },
+        "completeOutcome": {
+          "kind": "calculated",
+          "numericScore": 19,
+          "grade": "e",
+          "branch": "general_foods",
+          "negativePoints": 19,
+          "positivePoints": 0,
+          "path": "complete_input_fibre_unavailable_zero_points"
+        },
+        "boundsOutcome": null,
+        "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED"
+      },
+      "input_trace": {
+        "rawOffNutriments": {
+          "energyKj": 1520,
+          "sugarsG": 62,
+          "saturatedFatG": 1,
+          "sodiumG": 0.0108,
+          "sodiumMg": null,
+          "saltG": 0.027,
+          "fibreG": null,
+          "proteinG": 4,
+          "fvlPercent": 0
+        },
+        "preparationBasis": {
+          "basis": "as_sold",
+          "requiredPrepared": false,
+          "source": "default_as_sold"
+        },
+        "offNutriscore2023Data": {
+          "components": {
+            "negative": [
+              {
+                "id": "energy",
+                "points": 4,
+                "points_max": 10,
+                "unit": "kJ",
+                "value": 1520
+              },
+              {
+                "id": "sugars",
+                "points": 15,
+                "points_max": 15,
+                "unit": "g",
+                "value": 62
+              },
+              {
+                "id": "saturated_fat",
+                "points": 0,
+                "points_max": 10,
+                "unit": "g",
+                "value": 1
+              },
+              {
+                "id": "salt",
+                "points": 0,
+                "points_max": 20,
+                "unit": "g",
+                "value": 0.03
+              }
+            ],
+            "positive": [
+              {
+                "id": "fiber",
+                "points": 0,
+                "points_max": 5,
+                "unit": "g",
+                "value": null
+              },
+              {
+                "id": "fruits_vegetables_legumes",
+                "points": 0,
+                "points_max": 5,
+                "unit": "%",
+                "value": 0
+              }
+            ]
+          },
+          "count_proteins": 0,
+          "count_proteins_reason": "negative_points_greater_than_or_equal_to_11",
+          "is_beverage": 0,
+          "is_cheese": 0,
+          "is_fat_oil_nuts_seeds": 0,
+          "is_red_meat_product": 0,
+          "is_water": 0,
+          "negative_points": 19,
+          "negative_points_max": 55,
+          "positive_nutrients": [
+            "fiber",
+            "fruits_vegetables_legumes"
+          ],
+          "positive_points": 0,
+          "positive_points_max": 10
+        },
+        "categoryAvailable": true,
+        "saltResolution": {
+          "directSaltG": 0.027,
+          "sodiumG": 0.0108,
+          "sodiumMg": null,
+          "resolvedSaltG": 0.027,
+          "sodiumToSaltApplied": false
+        },
+        "normalizedInputs": {
+          "branch": "general_foods",
+          "basis": "per_100g",
+          "energyKj": 1520,
+          "saturatedFatG": 1,
+          "sugarsG": 62,
+          "saltG": 0.027,
+          "proteinG": 4,
+          "fibreG": null,
+          "fvlPercent": 0,
+          "fvlPoints": null,
+          "totalFatG": 4.32,
+          "nonNutritiveSweetenersPresent": null,
+          "isWater": false,
+          "nutritionPreparation": "as_sold"
+        },
+        "unresolvedReason": "missing_required_nutrient",
+        "completeOutcome": {
+          "kind": "unresolved",
+          "reason": "missing_required_nutrient",
+          "branch": "general_foods"
+        },
+        "boundsOutcome": null
+      }
+    },
+    "9336318000113": {
+      "source": "live_off",
+      "off_nutri_status": {
+        "nutriscore_grade": "unknown",
+        "nutrition_grades_tags": [
+          "unknown"
+        ],
+        "misc_tags": [
+          "en:environmental-score-not-computed",
+          "en:estimated-ingredients-with-recipe-estimator-cvxpy",
+          "en:nutrients-estimated-from-ingredients",
+          "en:nutriscore-missing-category",
+          "en:nutriscore-not-computed",
+          "en:nutrition-all-nutriscore-values-known",
+          "en:nutrition-data-per-100g",
+          "en:nutrition-data-per-serving",
+          "en:nutrition-fruits-vegetables-legumes-estimate-from-ingredients",
+          "en:nutrition-fruits-vegetables-nuts-estimate-from-ingredients",
+          "en:packagings-complete",
+          "en:packagings-not-empty",
+          "en:packagings-number-of-components-2",
+          "en:storage-conditions-not-set",
+          "en:number-of-uploaded-images-4-to-6",
+          "en:main-countries-new-product"
+        ],
+        "nutriscore_2023": {
+          "grade": "unknown",
+          "nutriscore_computed": 0,
+          "nutriscore_applicable": 0,
+          "nutrients_available": 1,
+          "category_available": 0,
+          "data": {
+            "energy": 3700,
+            "fiber": 0,
+            "fruits_vegetables_legumes": 0,
+            "is_beverage": 0,
+            "is_cheese": 0,
+            "is_fat_oil_nuts_seeds": 0,
+            "is_red_meat_product": 0,
+            "is_water": 0,
+            "proteins": 0,
+            "salt": 0,
+            "saturated_fat": 94,
+            "sugars": 0
+          }
+        }
+      },
+      "strict": {
+        "applicability": {
+          "applicable": true
+        },
+        "mapped": {
+          "inputs": null,
+          "unresolvedReason": "unresolved_branch"
+        },
+        "completeOutcome": null,
+        "boundsOutcome": null,
+        "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+        "unresolvedReason": "unresolved_branch"
+      },
+      "fibre_mode": {
+        "applicability": {
+          "applicable": true
+        },
+        "mapped": {
+          "inputs": null,
+          "unresolvedReason": "unresolved_branch"
+        },
+        "completeOutcome": null,
+        "boundsOutcome": null,
+        "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+        "unresolvedReason": "unresolved_branch"
+      },
+      "input_trace": {
+        "rawOffNutriments": {
+          "energyKj": 3700,
+          "sugarsG": 0,
+          "saturatedFatG": 94,
+          "sodiumG": 0,
+          "sodiumMg": null,
+          "saltG": 0,
+          "fibreG": 0,
+          "proteinG": 0,
+          "fvlPercent": 0
+        },
+        "preparationBasis": {
+          "basis": "as_sold",
+          "requiredPrepared": false,
+          "source": "default_as_sold"
+        },
+        "offNutriscore2023Data": {
+          "energy": 3700,
+          "fiber": 0,
+          "fruits_vegetables_legumes": 0,
+          "is_beverage": 0,
+          "is_cheese": 0,
+          "is_fat_oil_nuts_seeds": 0,
+          "is_red_meat_product": 0,
+          "is_water": 0,
+          "proteins": 0,
+          "salt": 0,
+          "saturated_fat": 94,
+          "sugars": 0
+        },
+        "categoryAvailable": false,
+        "saltResolution": {
+          "directSaltG": 0,
+          "sodiumG": 0,
+          "sodiumMg": null,
+          "resolvedSaltG": 0,
+          "sodiumToSaltApplied": false
+        },
+        "normalizedInputs": null,
+        "unresolvedReason": "unresolved_branch",
+        "completeOutcome": null,
+        "boundsOutcome": null
+      }
+    }
+  },
+  "rows": [
+    {
+      "gtin": "9310232961279",
+      "productName": "Double Espresso Lactose Free",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "5060229012371",
+      "productName": "Herbal Collection Assorted Herbal Tea Sachets",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_preparation_basis",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "070177025700",
+      "productName": "Twinings English Breakfast Tea Bags",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_preparation_basis",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9300601249114",
+      "productName": "White vinegar",
+      "strictComplete": true,
+      "strictGrade": "c",
+      "fibreModeComplete": true,
+      "fibreModeGrade": "c",
+      "fibreModePath": "complete_input",
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": null,
+      "branch": "general_foods",
+      "fibreG": 11.111111111111
+    },
+    {
+      "gtin": "9313010000108",
+      "productName": "White Sugar",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9310061462206",
+      "productName": "Bi-Carb Soda",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "missing_required_nutrient",
+      "branch": "general_foods",
+      "fibreG": null
+    },
+    {
+      "gtin": "9313958005890",
+      "productName": "Unbleached Self Raising Flour",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9310047207180",
+      "productName": "Flour whole meal",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9300601002849",
+      "productName": "Sour cream",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "missing_required_nutrient",
+      "branch": "fats_oils_nuts_seeds",
+      "fibreG": null
+    },
+    {
+      "gtin": "9310653105733",
+      "productName": "PASSIONFRUIT TWIST YOGURT",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9310052120856",
+      "productName": "UNSALTED BUTTER",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "missing_required_nutrient",
+      "branch": "fats_oils_nuts_seeds",
+      "fibreG": null
+    },
+    {
+      "gtin": "9310015247828",
+      "productName": "Doritos",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "63523614",
+      "productName": "Seashells",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9310988022378",
+      "productName": "Salt And Vin",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9310645350899",
+      "productName": "Boysenberry Cheesecake",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "4008355030495",
+      "productName": "Pfeffernüsse",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "793579769781",
+      "productName": "Oats",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9315090200102",
+      "productName": "Ancient grains muesli",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9311208001241",
+      "productName": "Fettucine",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "5052675000989",
+      "productName": "Thai Green Curry Kit",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": true,
+      "fibreModeGrade": "d",
+      "fibreModePath": "complete_input_fibre_unavailable_zero_points",
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": true,
+      "fibreOnlyGapStrict": true,
+      "stillUnresolvedReason": null,
+      "branch": "general_foods",
+      "fibreG": null
+    },
+    {
+      "gtin": "9343005001018",
+      "productName": "Hot Salmon",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "818411000478",
+      "productName": "Açai Bowl",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9300657235031",
+      "productName": "Spaghetti",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9300462137582",
+      "productName": "Yellonfin Tuna Italian Oil Style",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9310006212972",
+      "productName": "Peaches Sliced in tasty juice",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "missing_required_nutrient",
+      "branch": "general_foods",
+      "fibreG": null
+    },
+    {
+      "gtin": "9310645244846",
+      "productName": "Tuna",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9342373000296",
+      "productName": "Blackberries",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9415767038615",
+      "productName": "",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9416897711003",
+      "productName": "Cheddar",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "missing_required_nutrient",
+      "branch": "cheese",
+      "fibreG": null
+    },
+    {
+      "gtin": "9556001137722",
+      "productName": "2 Minute Noodles Chicken Flavour",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_preparation_basis",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "089686171914",
+      "productName": "Instant Noodles Mi Goreng bbq Chicken",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_preparation_basis",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9310036044239",
+      "productName": "PAULS MLKY MAX CHOC",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9416107522245",
+      "productName": "Lentils",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "unresolved_branch",
+      "branch": null,
+      "fibreG": null
+    },
+    {
+      "gtin": "9420020300194",
+      "productName": "Sushi seaweed",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "missing_required_nutrient",
+      "branch": "general_foods",
+      "fibreG": null
+    },
+    {
+      "gtin": "9300617300793",
+      "productName": "Sour patch kids",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "missing_required_nutrient",
+      "branch": "general_foods",
+      "fibreG": null
+    },
+    {
+      "gtin": "93541121",
+      "productName": "Raspberries",
+      "strictComplete": false,
+      "strictGrade": null,
+      "fibreModeComplete": false,
+      "fibreModeGrade": null,
+      "fibreModePath": null,
+      "offGrade": null,
+      "offGradeReferenceSource": null,
+      "exactMatchVsOffReference": null,
+      "incrementalFromFibreMode": false,
+      "fibreOnlyGapStrict": false,
+      "stillUnresolvedReason": "missing_required_nutrient",
+      "branch": "general_foods",
+      "fibreG": 6.5
+    }
+  ]
+}

@@ -1,0 +1,4993 @@
+{
+  "generated_at": "2026-08-30T01:45:17.029Z",
+  "module_version": "20260830-offline-v1",
+  "methodology_sources": [
+    "Santé publique France — Nutri-Score (current page, consulted 2026-08-30)",
+    "Conditions of Use — Exhibit 1B Specifications of the Updated Algorithm",
+    "Scientific and Technical Q&A — Updated Algorithm",
+    "Nutri-Score Scientific Committee 2022 (solid foods) / 2023 (beverages) final reports",
+    "Open Food Facts nutriscore.2023 branch metadata (mapping reference only, not methodology authority)"
+  ],
+  "production_scoring_unchanged": true,
+  "retired_calculator_not_used": true,
+  "provenance": {
+    "current_sha": "9d1163a2e0fb734ae9d34e9803895d71f466615c",
+    "authorized_baseline_sha": "e919d550c40ca73c35179149525bacb1970d7826",
+    "shadow_build_commit": "dbb55ac270c34a07f0358f24d8641c1d97f2a05",
+    "baseline_is_ancestor": true,
+    "shadow_files_changed_since_baseline": [
+      "reports/bodyShadow/missing_grade_fibre_mode_validation_20260830.json",
+      "reports/bodyShadow/nutriScore2023_shadow_validation_20260830.json",
+      "reports/bodyShadow/nutriScore2023_shadow_validation_complete_20260830.json",
+      "reports/bodyShadow/nutriScore2023_shadow_validation_report_20260830.md",
+      "reports/bodyShadow/off_evidence_cache.json",
+      "scripts/bodyShadow/runMissingGradeFibreModeValidation.ts",
+      "scripts/bodyShadow/runNutriScore2023Validation.ts",
+      "src/lib/truscoreEngine/bodyShadow/index.ts",
+      "src/lib/truscoreEngine/bodyShadow/nutriScore2023/applicability.ts",
+      "src/lib/truscoreEngine/bodyShadow/nutriScore2023/boundsInvariance.ts",
+      "src/lib/truscoreEngine/bodyShadow/nutriScore2023/calculator.ts",
+      "src/lib/truscoreEngine/bodyShadow/nutriScore2023/offEvidenceMapper.ts",
+      "src/lib/truscoreEngine/bodyShadow/nutriScore2023/pointTables.ts",
+      "src/lib/truscoreEngine/bodyShadow/nutriScore2023/preparationBasis.ts",
+      "src/lib/truscoreEngine/bodyShadow/nutriScore2023/types.ts",
+      "src/lib/truscoreEngine/bodyShadow/wholeProduce.ts"
+    ],
+    "production_body_pillar_changed": false
+  },
+  "cohort_reconciliation": [
+    {
+      "name": "au_core_run_79",
+      "asset": "C:\\TrueScan-FoodScanner\\scripts\\_local_wave2_au_cohort_executable_DO_NOT_COMMIT.json",
+      "expected_count": 79,
+      "actual_count": 79,
+      "reconciled": true
+    },
+    {
+      "name": "au_edge_cases_6",
+      "asset": "C:\\TrueScan-FoodScanner\\scripts\\_local_wave2_au_cohort_executable_DO_NOT_COMMIT.json",
+      "expected_count": 6,
+      "actual_count": 6,
+      "reconciled": true
+    },
+    {
+      "name": "nz_core_run_34",
+      "asset": "C:\\TrueScan-FoodScanner\\scripts\\_local_wave2_nz_cohort_executable_DO_NOT_COMMIT.json",
+      "expected_count": 34,
+      "actual_count": 34,
+      "reconciled": true
+    },
+    {
+      "name": "gtin35_historical_regression",
+      "asset": "docs/phase4/golden-barcode-pack-au.csv + nz + Cadbury targeted",
+      "expected_count": 35,
+      "actual_count": 35,
+      "reconciled": true
+    },
+    {
+      "name": "mandatory_regressions",
+      "asset": "founder mandatory GTINs (not in governed cohort)",
+      "expected_count": 2,
+      "actual_count": 2,
+      "reconciled": true
+    }
+  ],
+  "fetch_evidence": {
+    "unique_gtins": 144,
+    "cache_hits": 124,
+    "live_fetched": 0,
+    "fetch_failed": 20,
+    "cache_path": "C:\\TrueScan-FoodScanner\\reports\\bodyShadow\\off_evidence_cache.json"
+  },
+  "known_grade_validation": {
+    "cohort_count": 88,
+    "locally_calculable_count": 40,
+    "exact_matches": 40,
+    "disagreements": [],
+    "off_grade_no_local_recovery": 25,
+    "exact_match_pct_among_calculable": 100,
+    "branch_breakdown": {
+      "beverages": {
+        "total": 9,
+        "calculable": 3,
+        "exact": 3,
+        "disagreements": 0
+      },
+      "general_foods": {
+        "total": 69,
+        "calculable": 31,
+        "exact": 31,
+        "disagreements": 0
+      },
+      "water": {
+        "total": 1,
+        "calculable": 1,
+        "exact": 1,
+        "disagreements": 0
+      },
+      "fats_oils_nuts_seeds": {
+        "total": 8,
+        "calculable": 4,
+        "exact": 4,
+        "disagreements": 0
+      },
+      "cheese": {
+        "total": 1,
+        "calculable": 1,
+        "exact": 1,
+        "disagreements": 0
+      }
+    }
+  },
+  "missing_grade_validation": {
+    "denominator": 36,
+    "complete_input_recoveries": 1,
+    "bounds_invariant_recoveries": 1,
+    "incremental_bounds_from_complete_unresolved": 0,
+    "unresolved": 33,
+    "not_applicable": 0,
+    "whole_produce_candidates": 1,
+    "by_classification": {
+      "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED": 1,
+      "BOUNDS_INVARIANT_GRADE": 1,
+      "INSUFFICIENT_DETERMINISTIC_EVIDENCE": 33,
+      "NUTRISCORE_NOT_APPLICABLE": 0,
+      "WHOLE_PRODUCE_CANDIDATE": 1,
+      "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY": 0
+    },
+    "bounds_incremental_examples": []
+  },
+  "runtime_eligibility_validation": {
+    "population": 124,
+    "branch_resolved": 98,
+    "complete_input_establishable": 41,
+    "bounds_establishable": 24,
+    "applicable_population": 124,
+    "branch_resolved_pct": 79,
+    "complete_input_pct": 33.1
+  },
+  "algorithm_correctness_validation": {
+    "among_known_grade_complete_input_calculable": {
+      "total": 40,
+      "exact_matches": 40,
+      "disagreements": 0,
+      "exact_match_pct": 100
+    }
+  },
+  "per_cohort": [
+    {
+      "name": "au_core_run_79",
+      "expected": 79,
+      "evaluated": 77,
+      "known_grade": {
+        "cohort_count": 51,
+        "locally_calculable_count": 24,
+        "exact_matches": 24,
+        "disagreements": [],
+        "off_grade_no_local_recovery": 14,
+        "exact_match_pct_among_calculable": 100,
+        "branch_breakdown": {
+          "beverages": {
+            "total": 5,
+            "calculable": 1,
+            "exact": 1,
+            "disagreements": 0
+          },
+          "general_foods": {
+            "total": 40,
+            "calculable": 20,
+            "exact": 20,
+            "disagreements": 0
+          },
+          "water": {
+            "total": 1,
+            "calculable": 1,
+            "exact": 1,
+            "disagreements": 0
+          },
+          "fats_oils_nuts_seeds": {
+            "total": 5,
+            "calculable": 2,
+            "exact": 2,
+            "disagreements": 0
+          }
+        }
+      },
+      "missing_grade": {
+        "denominator": 26,
+        "complete_input_recoveries": 1,
+        "bounds_invariant_recoveries": 1,
+        "incremental_bounds_from_complete_unresolved": 0,
+        "unresolved": 24,
+        "not_applicable": 0,
+        "whole_produce_candidates": 0,
+        "by_classification": {
+          "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED": 1,
+          "BOUNDS_INVARIANT_GRADE": 1,
+          "INSUFFICIENT_DETERMINISTIC_EVIDENCE": 24,
+          "NUTRISCORE_NOT_APPLICABLE": 0,
+          "WHOLE_PRODUCE_CANDIDATE": 0,
+          "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY": 0
+        },
+        "bounds_incremental_examples": []
+      }
+    },
+    {
+      "name": "au_edge_cases_6",
+      "expected": 6,
+      "evaluated": 3,
+      "known_grade": {
+        "cohort_count": 2,
+        "locally_calculable_count": 0,
+        "exact_matches": 0,
+        "disagreements": [],
+        "off_grade_no_local_recovery": 1,
+        "exact_match_pct_among_calculable": null,
+        "branch_breakdown": {
+          "general_foods": {
+            "total": 2,
+            "calculable": 0,
+            "exact": 0,
+            "disagreements": 0
+          }
+        }
+      },
+      "missing_grade": {
+        "denominator": 1,
+        "complete_input_recoveries": 0,
+        "bounds_invariant_recoveries": 0,
+        "incremental_bounds_from_complete_unresolved": 0,
+        "unresolved": 1,
+        "not_applicable": 0,
+        "whole_produce_candidates": 0,
+        "by_classification": {
+          "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED": 0,
+          "BOUNDS_INVARIANT_GRADE": 0,
+          "INSUFFICIENT_DETERMINISTIC_EVIDENCE": 1,
+          "NUTRISCORE_NOT_APPLICABLE": 0,
+          "WHOLE_PRODUCE_CANDIDATE": 0,
+          "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY": 0
+        },
+        "bounds_incremental_examples": []
+      }
+    },
+    {
+      "name": "nz_core_run_34",
+      "expected": 34,
+      "evaluated": 29,
+      "known_grade": {
+        "cohort_count": 25,
+        "locally_calculable_count": 12,
+        "exact_matches": 12,
+        "disagreements": [],
+        "off_grade_no_local_recovery": 8,
+        "exact_match_pct_among_calculable": 100,
+        "branch_breakdown": {
+          "beverages": {
+            "total": 4,
+            "calculable": 2,
+            "exact": 2,
+            "disagreements": 0
+          },
+          "cheese": {
+            "total": 1,
+            "calculable": 1,
+            "exact": 1,
+            "disagreements": 0
+          },
+          "general_foods": {
+            "total": 19,
+            "calculable": 8,
+            "exact": 8,
+            "disagreements": 0
+          },
+          "fats_oils_nuts_seeds": {
+            "total": 1,
+            "calculable": 1,
+            "exact": 1,
+            "disagreements": 0
+          }
+        }
+      },
+      "missing_grade": {
+        "denominator": 4,
+        "complete_input_recoveries": 0,
+        "bounds_invariant_recoveries": 0,
+        "incremental_bounds_from_complete_unresolved": 0,
+        "unresolved": 4,
+        "not_applicable": 0,
+        "whole_produce_candidates": 0,
+        "by_classification": {
+          "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED": 0,
+          "BOUNDS_INVARIANT_GRADE": 0,
+          "INSUFFICIENT_DETERMINISTIC_EVIDENCE": 4,
+          "NUTRISCORE_NOT_APPLICABLE": 0,
+          "WHOLE_PRODUCE_CANDIDATE": 0,
+          "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY": 0
+        },
+        "bounds_incremental_examples": []
+      }
+    },
+    {
+      "name": "gtin35_historical_regression",
+      "expected": 35,
+      "evaluated": 24,
+      "known_grade": {
+        "cohort_count": 19,
+        "locally_calculable_count": 9,
+        "exact_matches": 9,
+        "disagreements": [],
+        "off_grade_no_local_recovery": 5,
+        "exact_match_pct_among_calculable": 100,
+        "branch_breakdown": {
+          "beverages": {
+            "total": 1,
+            "calculable": 0,
+            "exact": 0,
+            "disagreements": 0
+          },
+          "water": {
+            "total": 1,
+            "calculable": 1,
+            "exact": 1,
+            "disagreements": 0
+          },
+          "general_foods": {
+            "total": 15,
+            "calculable": 7,
+            "exact": 7,
+            "disagreements": 0
+          },
+          "fats_oils_nuts_seeds": {
+            "total": 2,
+            "calculable": 1,
+            "exact": 1,
+            "disagreements": 0
+          }
+        }
+      },
+      "missing_grade": {
+        "denominator": 5,
+        "complete_input_recoveries": 1,
+        "bounds_invariant_recoveries": 0,
+        "incremental_bounds_from_complete_unresolved": 0,
+        "unresolved": 4,
+        "not_applicable": 0,
+        "whole_produce_candidates": 0,
+        "by_classification": {
+          "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED": 1,
+          "BOUNDS_INVARIANT_GRADE": 0,
+          "INSUFFICIENT_DETERMINISTIC_EVIDENCE": 4,
+          "NUTRISCORE_NOT_APPLICABLE": 0,
+          "WHOLE_PRODUCE_CANDIDATE": 0,
+          "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY": 0
+        },
+        "bounds_incremental_examples": []
+      }
+    },
+    {
+      "name": "mandatory_regressions",
+      "expected": 2,
+      "evaluated": 2,
+      "known_grade": {
+        "cohort_count": 0,
+        "locally_calculable_count": 0,
+        "exact_matches": 0,
+        "disagreements": [],
+        "off_grade_no_local_recovery": 0,
+        "exact_match_pct_among_calculable": null,
+        "branch_breakdown": {}
+      },
+      "missing_grade": {
+        "denominator": 2,
+        "complete_input_recoveries": 0,
+        "bounds_invariant_recoveries": 0,
+        "incremental_bounds_from_complete_unresolved": 0,
+        "unresolved": 1,
+        "not_applicable": 0,
+        "whole_produce_candidates": 1,
+        "by_classification": {
+          "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED": 0,
+          "BOUNDS_INVARIANT_GRADE": 0,
+          "INSUFFICIENT_DETERMINISTIC_EVIDENCE": 1,
+          "NUTRISCORE_NOT_APPLICABLE": 0,
+          "WHOLE_PRODUCE_CANDIDATE": 1,
+          "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY": 0
+        },
+        "bounds_incremental_examples": []
+      }
+    }
+  ],
+  "mandatory_regressions": {
+    "sour_patch_kids_9300617300793": {
+      "row": {
+        "gtin": "9300617300793",
+        "productName": "Sour patch kids",
+        "offGrade": null,
+        "localGrade": null,
+        "localNumericScore": null,
+        "branch": "general_foods",
+        "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+        "unresolvedReason": "missing_required_nutrient",
+        "exactMatch": null,
+        "productionBodyScore": 9,
+        "shadowBodyScoreEstimate": 9,
+        "wholeProduceCandidate": false,
+        "completeOutcomeKind": null,
+        "cohorts": [
+          "mandatory_regressions"
+        ],
+        "fetchSource": "cache",
+        "runtimeEligibility": {
+          "branchResolved": true,
+          "branch": "general_foods",
+          "completeInputCalculable": false,
+          "boundsCalculable": false
+        },
+        "algorithmValidation": {
+          "applicable": true,
+          "completeGradeComparable": false,
+          "exactMatch": null
+        },
+        "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+      },
+      "input_trace": {
+        "rawOffNutriments": {
+          "energyKj": 1749.68,
+          "sugarsG": 62,
+          "saturatedFatG": 4,
+          "sodiumG": null,
+          "sodiumMg": null,
+          "saltG": null,
+          "fibreG": null,
+          "proteinG": 4,
+          "fvlPercent": 0
+        },
+        "preparationBasis": {
+          "basis": "as_sold",
+          "requiredPrepared": false,
+          "source": "default_as_sold"
+        },
+        "offNutriscore2023Data": {
+          "energy": 1749.68,
+          "fiber": null,
+          "fruits_vegetables_legumes": 0,
+          "is_beverage": 0,
+          "is_cheese": 0,
+          "is_fat_oil_nuts_seeds": 0,
+          "is_red_meat_product": 0,
+          "is_water": 0,
+          "proteins": 4,
+          "salt": null,
+          "saturated_fat": 4,
+          "sugars": 62
+        },
+        "categoryAvailable": true,
+        "saltResolution": {
+          "directSaltG": null,
+          "sodiumG": null,
+          "sodiumMg": null,
+          "resolvedSaltG": null,
+          "sodiumToSaltApplied": false
+        },
+        "normalizedInputs": {
+          "branch": "general_foods",
+          "basis": "per_100g",
+          "energyKj": 1749.68,
+          "saturatedFatG": 4,
+          "sugarsG": 62,
+          "saltG": null,
+          "proteinG": 4,
+          "fibreG": null,
+          "fvlPercent": 0,
+          "fvlPoints": null,
+          "totalFatG": 4.32,
+          "nonNutritiveSweetenersPresent": null,
+          "isWater": false,
+          "nutritionPreparation": "as_sold"
+        },
+        "unresolvedReason": "missing_required_nutrient",
+        "completeOutcome": {
+          "kind": "unresolved",
+          "reason": "missing_required_nutrient",
+          "branch": "general_foods"
+        },
+        "boundsOutcome": null
+      },
+      "complete_input_result": null,
+      "bounds_result": null,
+      "unresolved_reason": "missing_required_nutrient",
+      "sodium_present": false,
+      "salt_conversion_applied": false,
+      "fibre_treated_as_zero": false
+    },
+    "driscolls_raspberries_93541121": {
+      "row": {
+        "gtin": "93541121",
+        "productName": "Raspberries",
+        "offGrade": null,
+        "localGrade": null,
+        "localNumericScore": null,
+        "branch": "general_foods",
+        "classification": "WHOLE_PRODUCE_CANDIDATE",
+        "unresolvedReason": "missing_required_nutrient",
+        "exactMatch": null,
+        "productionBodyScore": 18,
+        "shadowBodyScoreEstimate": 22,
+        "wholeProduceCandidate": true,
+        "completeOutcomeKind": null,
+        "cohorts": [
+          "mandatory_regressions"
+        ],
+        "fetchSource": "cache",
+        "runtimeEligibility": {
+          "branchResolved": true,
+          "branch": "general_foods",
+          "completeInputCalculable": false,
+          "boundsCalculable": false
+        },
+        "algorithmValidation": {
+          "applicable": true,
+          "completeGradeComparable": false,
+          "exactMatch": null
+        },
+        "missingGradeClassification": "WHOLE_PRODUCE_CANDIDATE"
+      },
+      "shadow_body_breakdown": {
+        "base": 15,
+        "nova1": 3,
+        "whole_produce": 4,
+        "nutri_adjustment": 0,
+        "total": 22
+      }
+    }
+  },
+  "whole_produce_boundary_tests": [
+    {
+      "name": "Driscolls raspberries 93541121 inclusion 15+3+4=22",
+      "pass": true,
+      "detail": "shadowBody=22"
+    },
+    {
+      "name": "Juice category excluded from Whole Produce",
+      "pass": true,
+      "detail": "excluded_category"
+    },
+    {
+      "name": "Multi-ingredient excluded from Whole Produce",
+      "pass": true,
+      "detail": "ingredients_not_whole_produce_only"
+    },
+    {
+      "name": "NOVA 4 excluded from Whole Produce",
+      "pass": true,
+      "detail": "nova_not_1"
+    },
+    {
+      "name": "Whole Produce +4 does not stack when OFF Nutri grade present",
+      "pass": true,
+      "detail": "shadowBody=25 (15+7 NOVA1+3)"
+    }
+  ],
+  "disagreements_investigated": [],
+  "fetch_failed_gtins": [
+    "9310036039655",
+    "9310412003577",
+    "9310645176833",
+    "9357107000251",
+    "9342373000395",
+    "9419741001589",
+    "9415077068029",
+    "7042960102908",
+    "9415077022700",
+    "9415077073061",
+    "9300632000000",
+    "9300633000000",
+    "9300675003001",
+    "9300694335947",
+    "93100062212972",
+    "9400547019939",
+    "9400580012345",
+    "9414967764447",
+    "9415007000000",
+    "9421903360120"
+  ],
+  "recommendation": {
+    "complete_input_mvp_supported": false,
+    "bounds_later_consideration": "Bounds provided no incremental missing-grade recovery beyond complete-input path in this cohort — marginal for MVP.",
+    "whole_produce_boundary_pass": true
+  },
+  "rows": [
+    {
+      "gtin": "9310036039655",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300675001113",
+      "productName": "Coca-Cola Classic",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "beverages",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "beverages",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "5449000000996",
+      "productName": "Coca-Cola",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "beverages",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "beverages",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310232961279",
+      "productName": "Double Espresso Lactose Free",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 9,
+      "shadowBodyScoreEstimate": 9,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9310272002253",
+      "productName": "Our Finest Non-Homogenised Milk",
+      "offGrade": "c",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 17,
+      "shadowBodyScoreEstimate": 17,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "5060229012371",
+      "productName": "Herbal Collection Assorted Herbal Tea Sachets",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_preparation_basis",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9300675016902",
+      "productName": "Pump Water",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": 0,
+      "branch": "water",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 25,
+      "shadowBodyScoreEstimate": 25,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "water",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "611269991000",
+      "productName": "Energy Drink",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": 12,
+      "branch": "beverages",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "beverages",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "070177025700",
+      "productName": "Twinings English Breakfast Tea Bags",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_preparation_basis",
+      "exactMatch": null,
+      "productionBodyScore": 18,
+      "shadowBodyScoreEstimate": 18,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9317557896019",
+      "productName": "Probiotic Drink",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": null,
+      "branch": "beverages",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "beverages",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9341650001766",
+      "productName": "Soy Milky Regular",
+      "offGrade": "b",
+      "localGrade": "b",
+      "localNumericScore": null,
+      "branch": "beverages",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 12,
+      "shadowBodyScoreEstimate": 12,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "beverages",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300650022898",
+      "productName": "Strawberry Yoghurt Sandwich",
+      "offGrade": "d",
+      "localGrade": "d",
+      "localNumericScore": 14,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 6,
+      "shadowBodyScoreEstimate": 6,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "7622300992675",
+      "productName": "Belvita Milk & Cereals",
+      "offGrade": "c",
+      "localGrade": "c",
+      "localNumericScore": 9,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9326666610553",
+      "productName": "cranberry & buckwheat flakes",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 22,
+      "shadowBodyScoreEstimate": 22,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310055105850",
+      "productName": "NUTRI GRAIN",
+      "offGrade": "d",
+      "localGrade": "d",
+      "localNumericScore": 11,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 6,
+      "shadowBodyScoreEstimate": 6,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310055105904",
+      "productName": "Sultana Bran",
+      "offGrade": "c",
+      "localGrade": "c",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 14,
+      "shadowBodyScoreEstimate": 14,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300652014396",
+      "productName": "Multi-Grain+",
+      "offGrade": "b",
+      "localGrade": "b",
+      "localNumericScore": 1,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 17,
+      "shadowBodyScoreEstimate": 17,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300652010794",
+      "productName": "Weet-Bix",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": -3,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 21,
+      "shadowBodyScoreEstimate": 21,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300677006437",
+      "productName": "Pure honey",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 9,
+      "shadowBodyScoreEstimate": 9,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300601249114",
+      "productName": "White vinegar",
+      "offGrade": null,
+      "localGrade": "c",
+      "localNumericScore": 10,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": null,
+      "productionBodyScore": 16,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED"
+    },
+    {
+      "gtin": "9313010000801",
+      "productName": "CSR Brown Sugar 1kg",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 9,
+      "shadowBodyScoreEstimate": 9,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9313010000108",
+      "productName": "White Sugar",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "013000006408",
+      "productName": "Tomato Ketchup",
+      "offGrade": "d",
+      "localGrade": "d",
+      "localNumericScore": 13,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 11,
+      "shadowBodyScoreEstimate": 11,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "8715035110304",
+      "productName": "Sauce Soja",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": 20,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 7,
+      "shadowBodyScoreEstimate": 7,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310061462206",
+      "productName": "Bi-Carb Soda",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 18,
+      "shadowBodyScoreEstimate": 18,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9310061550101",
+      "productName": "Fine Desiccated Coconut",
+      "offGrade": "d",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "fats_oils_nuts_seeds",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 12,
+      "shadowBodyScoreEstimate": 12,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "fats_oils_nuts_seeds",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "3017620422003",
+      "productName": "Nutella",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9313958005890",
+      "productName": "Unbleached Self Raising Flour",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9310412003577",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9352042000281",
+      "productName": "Vegemite",
+      "offGrade": "d",
+      "localGrade": "d",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 6,
+      "shadowBodyScoreEstimate": 6,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310047207180",
+      "productName": "Flour whole meal",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "894700010137",
+      "productName": "Greek Yogurt Nonfat Plain",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": -3,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 25,
+      "shadowBodyScoreEstimate": 25,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300601002849",
+      "productName": "Sour cream",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "fats_oils_nuts_seeds",
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 14,
+      "shadowBodyScoreEstimate": 14,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "fats_oils_nuts_seeds",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9300639100012",
+      "productName": "Spreadable Dairy Soft Original",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "fats_oils_nuts_seeds",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 9,
+      "shadowBodyScoreEstimate": 9,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "fats_oils_nuts_seeds",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9343787099111",
+      "productName": "GREEK STYLE ORGANIC YOGHURT",
+      "offGrade": "c",
+      "localGrade": "c",
+      "localNumericScore": 6,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 17,
+      "shadowBodyScoreEstimate": 17,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9343787099104",
+      "productName": "Vanilla Bean Organic Yoghurt",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 16,
+      "shadowBodyScoreEstimate": 16,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310653105733",
+      "productName": "PASSIONFRUIT TWIST YOGURT",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9310354890006",
+      "productName": "Creamy Vanilla Flavoured Yoghurt",
+      "offGrade": "c",
+      "localGrade": "c",
+      "localNumericScore": 3,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310354982466",
+      "productName": "Greek Style Yoghurt",
+      "offGrade": "c",
+      "localGrade": "c",
+      "localNumericScore": 5,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 17,
+      "shadowBodyScoreEstimate": 17,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310052120856",
+      "productName": "UNSALTED BUTTER",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "fats_oils_nuts_seeds",
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 16,
+      "shadowBodyScoreEstimate": 16,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "fats_oils_nuts_seeds",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9310072028866",
+      "productName": "Shapes Originals Barbecue",
+      "offGrade": "d",
+      "localGrade": "d",
+      "localNumericScore": 18,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 6,
+      "shadowBodyScoreEstimate": 6,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310034017068",
+      "productName": "Water Crackers Classic",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300830060733",
+      "productName": "Paddle Pop Chocolate",
+      "offGrade": "c",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300601767762",
+      "productName": "Pain au chocolat",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": 21,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310015247828",
+      "productName": "Doritos",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "63523614",
+      "productName": "Seashells",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9310988022378",
+      "productName": "Salt And Vin",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "040000511281",
+      "productName": "m&m's Dark Chocolate",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300682059015",
+      "productName": "Mars",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "040000422068",
+      "productName": "milkyway",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": 31,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300682059091",
+      "productName": "Milky way",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "044000032210",
+      "productName": "Nabisco chips ahoy! cookies chunky",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": 28,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300650452701",
+      "productName": "OREO Original Choc Cookie Sandwich with Sweet Vanilla Creme",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310080257418",
+      "productName": "Ice Cream Vanilla - 4L",
+      "offGrade": "d",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 12,
+      "shadowBodyScoreEstimate": 12,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "038000845017",
+      "productName": "Pringles, jalapeno potato crisp",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310161017603",
+      "productName": "Nutrageous ice cream",
+      "offGrade": "d",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 6,
+      "shadowBodyScoreEstimate": 6,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310645350899",
+      "productName": "Boysenberry Cheesecake",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "4008355030495",
+      "productName": "Pfeffernüsse",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 9,
+      "shadowBodyScoreEstimate": 9,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "793579769781",
+      "productName": "Oats",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9315090200102",
+      "productName": "Ancient grains muesli",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9311208001241",
+      "productName": "Fettucine",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "058449450023",
+      "productName": "Flax Plus Instant Oatmeal imp",
+      "offGrade": "c",
+      "localGrade": "c",
+      "localNumericScore": 8,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 13,
+      "shadowBodyScoreEstimate": 13,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310155305037",
+      "productName": "CousCous",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": -1,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 21,
+      "shadowBodyScoreEstimate": 21,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310060011030",
+      "productName": "Rolled Oats Traditional",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": -8,
+      "branch": "fats_oils_nuts_seeds",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 22,
+      "shadowBodyScoreEstimate": 22,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "fats_oils_nuts_seeds",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9339687209279",
+      "productName": "Popping corn",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": -6,
+      "branch": "fats_oils_nuts_seeds",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 22,
+      "shadowBodyScoreEstimate": 22,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "fats_oils_nuts_seeds",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9315822010863",
+      "productName": "Prawn Gyoza",
+      "offGrade": "c",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310174006403",
+      "productName": "Super Juicy Corn Kernels",
+      "offGrade": "b",
+      "localGrade": "b",
+      "localNumericScore": null,
+      "branch": "fats_oils_nuts_seeds",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 18,
+      "shadowBodyScoreEstimate": 18,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "fats_oils_nuts_seeds",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310174006021",
+      "productName": "Peas",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 22,
+      "shadowBodyScoreEstimate": 22,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "5052675000989",
+      "productName": "Thai Green Curry Kit",
+      "offGrade": null,
+      "localGrade": "d",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": null,
+      "productionBodyScore": 14,
+      "shadowBodyScoreEstimate": 11,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "BOUNDS_INVARIANT_GRADE"
+    },
+    {
+      "gtin": "9343005001018",
+      "productName": "Hot Salmon",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "818411000478",
+      "productName": "Açai Bowl",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "8801073142312",
+      "productName": "15001217 Carbonara Buldak Spicy Ramen",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": 25,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "042272005024",
+      "productName": "Lentil Soup",
+      "offGrade": "b",
+      "localGrade": "b",
+      "localNumericScore": 1,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 17,
+      "shadowBodyScoreEstimate": 17,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300657003425",
+      "productName": "Killer Beans Smokey Campfire BBQ",
+      "offGrade": "a",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 16,
+      "shadowBodyScoreEstimate": 16,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79",
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300657234713",
+      "productName": "Baked beans in a deliciously rich tomato sauce",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": 0,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 16,
+      "shadowBodyScoreEstimate": 16,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300657235031",
+      "productName": "Spaghetti",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9300462137582",
+      "productName": "Yellonfin Tuna Italian Oil Style",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9310006212972",
+      "productName": "Peaches Sliced in tasty juice",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 18,
+      "shadowBodyScoreEstimate": 18,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9310645244846",
+      "productName": "Tuna",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_core_run_79"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9320802000444",
+      "productName": "Strawberry",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 22,
+      "shadowBodyScoreEstimate": 22,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "au_edge_cases_6"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310645176833",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_edge_cases_6"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9342373000296",
+      "productName": "Blackberries",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_edge_cases_6"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9357107000251",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_edge_cases_6"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9320802000482",
+      "productName": "Strawberry",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_edge_cases_6"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9342373000395",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "au_edge_cases_6"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "94152210",
+      "productName": "blue full cream milk",
+      "offGrade": "c",
+      "localGrade": "c",
+      "localNumericScore": 3,
+      "branch": "beverages",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 14,
+      "shadowBodyScoreEstimate": 14,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "beverages",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "94008241",
+      "productName": "Fresh Chocolate Milk",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "beverages",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "beverages",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9415087020031",
+      "productName": "L&P Lemon & Paeroa",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "beverages",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "beverages",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9415767038615",
+      "productName": "",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9419741001589",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9341650001599",
+      "productName": "Oat Milky",
+      "offGrade": "c",
+      "localGrade": "c",
+      "localNumericScore": 4,
+      "branch": "beverages",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "beverages",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9414832132029",
+      "productName": "Tasty Aged Cheddar",
+      "offGrade": "d",
+      "localGrade": "d",
+      "localNumericScore": 13,
+      "branch": "cheese",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 11,
+      "shadowBodyScoreEstimate": 11,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "cheese",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9415077068029",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9421027711822",
+      "productName": "Yoplait Real fruit mixed berries",
+      "offGrade": "b",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 18,
+      "shadowBodyScoreEstimate": 18,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9416897711003",
+      "productName": "Cheddar",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "cheese",
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "cheese",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9414942805653",
+      "productName": "Weet-Bix",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": -2,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 21,
+      "shadowBodyScoreEstimate": 21,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9414763002071",
+      "productName": "Berry Muesli Clusters",
+      "offGrade": "d",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 6,
+      "shadowBodyScoreEstimate": 6,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300605153578",
+      "productName": "MILO Cereal",
+      "offGrade": "c",
+      "localGrade": "c",
+      "localNumericScore": 7,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9414987008194",
+      "productName": "original mixed grain",
+      "offGrade": "b",
+      "localGrade": "b",
+      "localNumericScore": 1,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 12,
+      "shadowBodyScoreEstimate": 12,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9414987000426",
+      "productName": "Original Toast",
+      "offGrade": "b",
+      "localGrade": "b",
+      "localNumericScore": 1,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 12,
+      "shadowBodyScoreEstimate": 12,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9415077048939",
+      "productName": "Rolled Oats",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 22,
+      "shadowBodyScoreEstimate": 22,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9556001137722",
+      "productName": "2 Minute Noodles Chicken Flavour",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_preparation_basis",
+      "exactMatch": null,
+      "productionBodyScore": 9,
+      "shadowBodyScoreEstimate": 9,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "089686171914",
+      "productName": "Instant Noodles Mi Goreng bbq Chicken",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_preparation_basis",
+      "exactMatch": null,
+      "productionBodyScore": 9,
+      "shadowBodyScoreEstimate": 9,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9400547002634",
+      "productName": "Baked Beans in Rich Tomato Sauce",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": -4,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 16,
+      "shadowBodyScoreEstimate": 16,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9400547025435",
+      "productName": "Watties Spaghetti in Tomato Sauce Handy Pack",
+      "offGrade": "c",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "7042960102908",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9414942110252",
+      "productName": "Marmite",
+      "offGrade": "d",
+      "localGrade": "d",
+      "localNumericScore": 16,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 6,
+      "shadowBodyScoreEstimate": 6,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9421901881160",
+      "productName": "Peanut Butter - Smooth",
+      "offGrade": "b",
+      "localGrade": "b",
+      "localNumericScore": -5,
+      "branch": "fats_oils_nuts_seeds",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 19,
+      "shadowBodyScoreEstimate": 19,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "fats_oils_nuts_seeds",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300657240424",
+      "productName": "Watties Tomato Sauce",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9415077022700",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9415077073061",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9415077409976",
+      "productName": "CRINKLE CUT FRIES",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": -2,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 16,
+      "shadowBodyScoreEstimate": 16,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9403142000852",
+      "productName": "CREAMY MILK",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9400553438786",
+      "productName": "Gingernuts",
+      "offGrade": "e",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9415912010008",
+      "productName": "THE ORIGINAL CHOCOLATE CHUNK COOKIE",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9421901659004",
+      "productName": "Marlborough Sea Salt",
+      "offGrade": "d",
+      "localGrade": "d",
+      "localNumericScore": 11,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 11,
+      "shadowBodyScoreEstimate": 11,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9400566004961",
+      "productName": "Originals Ready Salted Potato Chips",
+      "offGrade": "d",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 11,
+      "shadowBodyScoreEstimate": 11,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300617300953",
+      "productName": "Pineapple lumps",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9418315003004",
+      "productName": "ORIGINAL SOFT EATING LICORICE",
+      "offGrade": "d",
+      "localGrade": "d",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 6,
+      "shadowBodyScoreEstimate": 6,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "nz_core_run_34"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300605157200",
+      "productName": "Trix",
+      "offGrade": "c",
+      "localGrade": "c",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 8,
+      "shadowBodyScoreEstimate": 8,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300632000000",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300633000000",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300633910198",
+      "productName": "Tomato Sauce",
+      "offGrade": "d",
+      "localGrade": "d",
+      "localNumericScore": 13,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 6,
+      "shadowBodyScoreEstimate": 6,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300645019629",
+      "productName": "Passata Classic",
+      "offGrade": "a",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 21,
+      "shadowBodyScoreEstimate": 21,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300675003001",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300694335947",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "93100062212972",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9310036044239",
+      "productName": "PAULS MLKY MAX CHOC",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 9,
+      "shadowBodyScoreEstimate": 9,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9400544002392",
+      "productName": "Baked Beans in Tomato Sauce",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": -2,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 16,
+      "shadowBodyScoreEstimate": 16,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9400547009374",
+      "productName": "CHILLI BEANS MILD",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 16,
+      "shadowBodyScoreEstimate": 16,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9400547019939",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9400566004541",
+      "productName": "Copper Kettle Wood Fired BBQ Potato Chips",
+      "offGrade": "d",
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 12,
+      "shadowBodyScoreEstimate": 12,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9400580012345",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9414967764447",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9415007000000",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9415077044894",
+      "productName": "Golden Syrup",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": 20,
+      "branch": "general_foods",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 7,
+      "shadowBodyScoreEstimate": 7,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9416107522245",
+      "productName": "Lentils",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "unresolved_branch",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9420020300194",
+      "productName": "Sushi seaweed",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 15,
+      "shadowBodyScoreEstimate": 15,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "9421901881054",
+      "productName": "PEANUT BUTTER - CRUNCHY",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": null,
+      "branch": "fats_oils_nuts_seeds",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 21,
+      "shadowBodyScoreEstimate": 21,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "fats_oils_nuts_seeds",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9421903360120",
+      "productName": null,
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": null,
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "exactMatch": null,
+      "productionBodyScore": 0,
+      "shadowBodyScoreEstimate": 0,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "failed",
+      "runtimeEligibility": {
+        "branchResolved": false,
+        "branch": null,
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": false,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9421903938589",
+      "productName": "Smooth Peanut Butter",
+      "offGrade": "a",
+      "localGrade": "a",
+      "localNumericScore": -10,
+      "branch": "fats_oils_nuts_seeds",
+      "classification": "LOCAL_COMPLETE_INPUT_GRADE_RECOVERED",
+      "exactMatch": true,
+      "productionBodyScore": 21,
+      "shadowBodyScoreEstimate": 21,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "calculated",
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "fats_oils_nuts_seeds",
+        "completeInputCalculable": true,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": true,
+        "exactMatch": true
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300617064879",
+      "productName": "Dairy Milk Milk Chocolate",
+      "offGrade": "e",
+      "localGrade": "e",
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "BOUNDS_INVARIANT_GRADE",
+      "exactMatch": true,
+      "productionBodyScore": 2,
+      "shadowBodyScoreEstimate": 2,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": "bounds_invariant_grade",
+      "cohorts": [
+        "gtin35_historical_regression"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": true
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": null
+    },
+    {
+      "gtin": "9300617300793",
+      "productName": "Sour patch kids",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 9,
+      "shadowBodyScoreEstimate": 9,
+      "wholeProduceCandidate": false,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "mandatory_regressions"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "INSUFFICIENT_DETERMINISTIC_EVIDENCE"
+    },
+    {
+      "gtin": "93541121",
+      "productName": "Raspberries",
+      "offGrade": null,
+      "localGrade": null,
+      "localNumericScore": null,
+      "branch": "general_foods",
+      "classification": "WHOLE_PRODUCE_CANDIDATE",
+      "unresolvedReason": "missing_required_nutrient",
+      "exactMatch": null,
+      "productionBodyScore": 18,
+      "shadowBodyScoreEstimate": 22,
+      "wholeProduceCandidate": true,
+      "completeOutcomeKind": null,
+      "cohorts": [
+        "mandatory_regressions"
+      ],
+      "fetchSource": "cache",
+      "runtimeEligibility": {
+        "branchResolved": true,
+        "branch": "general_foods",
+        "completeInputCalculable": false,
+        "boundsCalculable": false
+      },
+      "algorithmValidation": {
+        "applicable": true,
+        "completeGradeComparable": false,
+        "exactMatch": null
+      },
+      "missingGradeClassification": "WHOLE_PRODUCE_CANDIDATE"
+    }
+  ]
+}

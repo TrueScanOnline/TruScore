@@ -24,11 +24,12 @@ export function generalSugarsPoints(g: number): number {
   return pointsFromAscendingThresholds(g, [3.4, 6.8, 10, 14, 17, 20, 24, 27, 31, 34, 37, 41, 44, 48, 51]);
 }
 
+/** 2023 general-foods salt: 0–20 points, 0.2 g steps (>0.2 → 1 pt … >4.0 → 20 pts). */
 export function generalSaltPoints(g: number): number {
   if (g <= 0.2) return 0;
-  if (g <= 2.0) return Math.min(10, Math.ceil((g - 0.2) / 0.2));
-  if (g <= 3.0) return 15;
-  return 20;
+  return pointsFromAscendingThresholds(g, [
+    0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0,
+  ]);
 }
 
 export function generalProteinPoints(g: number): number {

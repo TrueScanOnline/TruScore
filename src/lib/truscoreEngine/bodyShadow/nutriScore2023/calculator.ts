@@ -26,6 +26,7 @@ import type {
   NutriScore2023Branch,
   NutriScore2023Inputs,
   NutriScore2023Outcome,
+  NutriScore2023CalculationOptions,
 } from './types';
 
 function requireNumber(value: number | null, label: string): number | 'missing' {
@@ -49,22 +50,46 @@ function capRedMeatProtein(proteinPoints: number): number {
   return Math.min(proteinPoints, 2);
 }
 
+function resolveFibrePositivePoints(
+  fibreG: number | null,
+  options?: NutriScore2023CalculationOptions
+): number | 'missing' {
+  if (fibreG !== null && Number.isFinite(fibreG)) {
+    return generalFibrePoints(fibreG);
+  }
+  if (options?.fibreUnavailableAsZeroPoints) {
+    return 0;
+  }
+  return 'missing';
+}
+
+function fibreInputMissing(
+  fibreG: number | null,
+  options?: NutriScore2023CalculationOptions
+): boolean {
+  if (fibreG !== null && Number.isFinite(fibreG)) return false;
+  return !options?.fibreUnavailableAsZeroPoints;
+}
+
 function scoreGeneralLike(
   inputs: NutriScore2023Inputs,
   branch: NutriScore2023Branch,
   nThreshold: number,
   cheese: boolean,
-  redMeatCap: boolean
-): NutriScore2023Outcome | { negative: number; positive: number; score: number } {
+  redMeatCap: boolean,
+  options?: NutriScore2023CalculationOptions
+): NutriScore2023Outcome | { negative: number; positive: number; score: number; fibreUnavailableZeroPoints?: boolean } {
   const energy = requireNumber(inputs.energyKj, 'energy');
   const sat = requireNumber(inputs.saturatedFatG, 'saturatedFat');
   const sugars = requireNumber(inputs.sugarsG, 'sugars');
   const salt = requireNumber(inputs.saltG, 'salt');
   const protein = requireNumber(inputs.proteinG, 'protein');
-  const fibre = requireNumber(inputs.fibreG, 'fibre');
+  const fibreMissing = fibreInputMissing(inputs.fibreG, options);
+  const fibre = fibreMissing ? requireNumber(inputs.fibreG, 'fibre') : null;
+  const pFibre = resolveFibrePositivePoints(inputs.fibreG, options);
   const fvl = resolveFvlPoints(inputs, false);
 
-  if ([energy, sat, sugars, salt, protein, fibre, fvl].some((v) => v === 'missing')) {
+  if ([energy, sat, sugars, salt, protein, fibre, pFibre, fvl].some((v) => v === 'missing')) {
     return { kind: 'unresolved', reason: 'missing_required_nutrient', branch };
   }
 
@@ -76,9 +101,9 @@ function scoreGeneralLike(
 
   let pProtein = generalProteinPoints(protein as number);
   if (redMeatCap) pProtein = capRedMeatProtein(pProtein);
-  const pFibre = generalFibrePoints(fibre as number);
+  const fibrePoints = pFibre as number;
   const pFvl = fvl as number;
-  const positive = pProtein + pFibre + pFvl;
+  const positive = pProtein + fibrePoints + pFvl;
 
   let score: number;
   let effectivePositive: number;
@@ -86,23 +111,32 @@ function scoreGeneralLike(
     effectivePositive = positive;
     score = negative - positive;
   } else {
-    effectivePositive = pFibre + pFvl;
-    score = negative - pFibre - pFvl;
+    effectivePositive = fibrePoints + pFvl;
+    score = negative - fibrePoints - pFvl;
   }
 
-  return { negative, positive: effectivePositive, score };
+  const fibreUnavailableZeroPoints =
+    options?.fibreUnavailableAsZeroPoints &&
+    (inputs.fibreG === null || !Number.isFinite(inputs.fibreG));
+
+  return { negative, positive: effectivePositive, score, fibreUnavailableZeroPoints };
 }
 
-function scoreFatsBranch(inputs: NutriScore2023Inputs): NutriScore2023Outcome | { negative: number; positive: number; score: number } {
+function scoreFatsBranch(
+  inputs: NutriScore2023Inputs,
+  options?: NutriScore2023CalculationOptions
+): NutriScore2023Outcome | { negative: number; positive: number; score: number; fibreUnavailableZeroPoints?: boolean } {
   const sat = requireNumber(inputs.saturatedFatG, 'saturatedFat');
   const sugars = requireNumber(inputs.sugarsG, 'sugars');
   const salt = requireNumber(inputs.saltG, 'salt');
   const protein = requireNumber(inputs.proteinG, 'protein');
-  const fibre = requireNumber(inputs.fibreG, 'fibre');
+  const fibreMissing = fibreInputMissing(inputs.fibreG, options);
+  const fibre = fibreMissing ? requireNumber(inputs.fibreG, 'fibre') : null;
+  const pFibre = resolveFibrePositivePoints(inputs.fibreG, options);
   const totalFat = requireNumber(inputs.totalFatG, 'totalFat');
   const fvl = resolveFvlPoints(inputs, false);
 
-  if ([sat, sugars, salt, protein, fibre, totalFat, fvl].some((v) => v === 'missing')) {
+  if ([sat, sugars, salt, protein, fibre, pFibre, totalFat, fvl].some((v) => v === 'missing')) {
     return { kind: 'unresolved', reason: 'missing_required_nutrient', branch: 'fats_oils_nuts_seeds' };
   }
 
@@ -112,16 +146,22 @@ function scoreFatsBranch(inputs: NutriScore2023Inputs): NutriScore2023Outcome | 
   const negative = energyFromSat + generalSugarsPoints(sugars as number) + nRatio + generalSaltPoints(salt as number);
 
   const pProtein = generalProteinPoints(protein as number);
-  const pFibre = generalFibrePoints(fibre as number);
+  const fibrePoints = pFibre as number;
   const pFvl = fvl as number;
-  const positive = pProtein + pFibre + pFvl;
+  const positive = pProtein + fibrePoints + pFvl;
 
-  const score = negative < 7 ? negative - positive : negative - pFibre - pFvl;
-  const effectivePositive = negative < 7 ? positive : pFibre + pFvl;
-  return { negative, positive: effectivePositive, score };
+  const score = negative < 7 ? negative - positive : negative - fibrePoints - pFvl;
+  const effectivePositive = negative < 7 ? positive : fibrePoints + pFvl;
+  const fibreUnavailableZeroPoints =
+    options?.fibreUnavailableAsZeroPoints &&
+    (inputs.fibreG === null || !Number.isFinite(inputs.fibreG));
+  return { negative, positive: effectivePositive, score, fibreUnavailableZeroPoints };
 }
 
-function scoreBeverageBranch(inputs: NutriScore2023Inputs): NutriScore2023Outcome | { negative: number; positive: number; score: number } {
+function scoreBeverageBranch(
+  inputs: NutriScore2023Inputs,
+  options?: NutriScore2023CalculationOptions
+): NutriScore2023Outcome | { negative: number; positive: number; score: number; fibreUnavailableZeroPoints?: boolean } {
   if (inputs.isWater) {
     return { negative: 0, positive: 0, score: 0 };
   }
@@ -131,11 +171,13 @@ function scoreBeverageBranch(inputs: NutriScore2023Inputs): NutriScore2023Outcom
   const sugars = requireNumber(inputs.sugarsG, 'sugars');
   const salt = requireNumber(inputs.saltG, 'salt');
   const protein = requireNumber(inputs.proteinG, 'protein');
-  const fibre = requireNumber(inputs.fibreG, 'fibre');
+  const fibreMissing = fibreInputMissing(inputs.fibreG, options);
+  const fibre = fibreMissing ? requireNumber(inputs.fibreG, 'fibre') : null;
+  const fibrePoints = resolveFibrePositivePoints(inputs.fibreG, options);
   const fvl = resolveFvlPoints(inputs, true);
   const nns = inputs.nonNutritiveSweetenersPresent;
 
-  if ([energy, sat, sugars, salt, protein, fibre, fvl, nns].some((v) => v === 'missing')) {
+  if ([energy, sat, sugars, salt, protein, fibre, fibrePoints, fvl, nns].some((v) => v === 'missing')) {
     return { kind: 'unresolved', reason: 'missing_required_nutrient', branch: 'beverages' };
   }
 
@@ -148,14 +190,20 @@ function scoreBeverageBranch(inputs: NutriScore2023Inputs): NutriScore2023Outcom
 
   const positive =
     beverageProteinPoints(protein as number) +
-    generalFibrePoints(fibre as number) +
+    (fibrePoints as number) +
     (fvl as number);
 
   const score = negative - positive;
-  return { negative, positive, score };
+  const fibreUnavailableZeroPoints =
+    options?.fibreUnavailableAsZeroPoints &&
+    (inputs.fibreG === null || !Number.isFinite(inputs.fibreG));
+  return { negative, positive, score, fibreUnavailableZeroPoints };
 }
 
-export function calculateNutriScore2023(inputs: NutriScore2023Inputs): NutriScore2023Outcome {
+export function calculateNutriScore2023(
+  inputs: NutriScore2023Inputs,
+  options?: NutriScore2023CalculationOptions
+): NutriScore2023Outcome {
   if (inputs.branch === 'water') {
     return {
       kind: 'calculated',
@@ -170,24 +218,24 @@ export function calculateNutriScore2023(inputs: NutriScore2023Inputs): NutriScor
 
   let raw:
     | NutriScore2023Outcome
-    | { negative: number; positive: number; score: number };
+    | { negative: number; positive: number; score: number; fibreUnavailableZeroPoints?: boolean };
 
   switch (inputs.branch) {
     case 'cheese':
-      raw = scoreGeneralLike(inputs, 'cheese', 11, true, false);
+      raw = scoreGeneralLike(inputs, 'cheese', 11, true, false, options);
       break;
     case 'red_meat':
-      raw = scoreGeneralLike(inputs, 'red_meat', 11, false, true);
+      raw = scoreGeneralLike(inputs, 'red_meat', 11, false, true, options);
       break;
     case 'fats_oils_nuts_seeds':
-      raw = scoreFatsBranch(inputs);
+      raw = scoreFatsBranch(inputs, options);
       break;
     case 'beverages':
-      raw = scoreBeverageBranch(inputs);
+      raw = scoreBeverageBranch(inputs, options);
       break;
     case 'general_foods':
     default:
-      raw = scoreGeneralLike(inputs, 'general_foods', 11, false, false);
+      raw = scoreGeneralLike(inputs, 'general_foods', 11, false, false, options);
       break;
   }
 
@@ -209,6 +257,8 @@ export function calculateNutriScore2023(inputs: NutriScore2023Inputs): NutriScor
     branch: inputs.branch,
     negativePoints: raw.negative,
     positivePoints: raw.positive,
-    path: 'complete_input',
+    path: raw.fibreUnavailableZeroPoints
+      ? 'complete_input_fibre_unavailable_zero_points'
+      : 'complete_input',
   };
 }

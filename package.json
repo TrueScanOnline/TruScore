@@ -33,6 +33,7 @@
     "test:pillar:body": "jest src/__tests__/unit/lib/pillars/bodyPillar.test.ts",
     "test:body-shadow:nutri2023": "jest src/__tests__/unit/lib/bodyShadow/nutriScore2023.shadow.test.ts",
     "bodyShadow:validate-nutri2023": "ts-node --project scripts/tsconfig.json scripts/bodyShadow/runNutriScore2023Validation.ts",
+    "bodyShadow:validate-missing-grade-fibre-mode": "ts-node --project scripts/tsconfig.json scripts/bodyShadow/runMissingGradeFibreModeValidation.ts",
     "test:pillar:planet": "jest src/__tests__/unit/lib/pillars/planetPillar.test.ts",
     "test:pillar:ethics": "jest src/__tests__/unit/lib/pillars/ethicsPillar.test.ts",
     "test:pillar:open": "jest src/__tests__/unit/lib/pillars/openPillar.test.ts",

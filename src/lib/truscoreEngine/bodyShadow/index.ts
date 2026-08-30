@@ -13,6 +13,7 @@ import {
   evaluateWholeProduceCandidate,
   shadowBodyScoreEstimate,
 } from './wholeProduce';
+import { classifyMissingOffGradeProduct } from './nutriScore2023/offEvidenceMapper';
 
 export type BodyShadowRow = {
   gtin: string;
@@ -55,10 +56,8 @@ export function evaluateBodyShadowRow(product: Product): BodyShadowRow {
     classification = local.classification;
   } else if (offGrade && !localGrade) {
     classification = 'OFF_GRADE_PRESENT_NO_LOCAL_RECOVERY';
-  } else if (!offGrade && wholeProduce.candidate) {
-    classification = 'WHOLE_PRODUCE_CANDIDATE';
-  } else if (!offGrade && localGrade) {
-    classification = local.classification;
+  } else if (!offGrade) {
+    classification = classifyMissingOffGradeProduct(product);
   }
 
   const productionBody = calculateBodyPillar(product).score;

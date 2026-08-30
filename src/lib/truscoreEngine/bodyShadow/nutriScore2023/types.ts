@@ -44,7 +44,20 @@ export interface NutriScore2023Inputs {
   totalFatG: number | null;
   nonNutritiveSweetenersPresent: boolean | null;
   isWater: boolean;
+  /** Established nutrition declaration basis when mapped from OFF evidence. */
+  nutritionPreparation?: 'as_sold' | 'prepared';
 }
+
+/**
+ * Shadow-only calculation options. Default (omitted) preserves fail-closed fibre handling.
+ */
+export type NutriScore2023CalculationOptions = {
+  /**
+   * OFF-aligned: when fibreG is unavailable, award 0 favourable fibre points and continue.
+   * Does not treat unavailable fibre as declared 0 g/100g.
+   */
+  fibreUnavailableAsZeroPoints?: boolean;
+};
 
 export type NutriScore2023Outcome =
   | {
@@ -54,7 +67,7 @@ export type NutriScore2023Outcome =
       branch: NutriScore2023Branch;
       negativePoints: number;
       positivePoints: number;
-      path: 'complete_input';
+      path: 'complete_input' | 'complete_input_fibre_unavailable_zero_points';
     }
   | {
       kind: 'bounds_invariant_grade';
