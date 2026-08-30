@@ -16,6 +16,7 @@ import {
 } from '../../../../lib/truscoreEngine/bodyShadow/nutriScore2023/offEvidenceMapper';
 import { evaluateWholeProduceCandidate, shadowBodyScoreEstimate } from '../../../../lib/truscoreEngine/bodyShadow/wholeProduce';
 import type { Product } from '../../../../types/product';
+import { miGorengBbqChicken089686171914Fixture } from '../../../fixtures/bodyShadow/miGoreng089686171914.fixture';
 
 function generalInputs(over: Partial<NutriScore2023Inputs> = {}): NutriScore2023Inputs {
   return {
@@ -333,6 +334,16 @@ describe('Nutri-Score 2023 shadow calculator', () => {
     const evalResult = evaluateLocalNutriScoreFromOffProduct(product);
     expect(evalResult.mapped.inputs?.nutritionPreparation).toBe('prepared');
     expect(evalResult.completeOutcome?.kind).toBe('calculated');
+  });
+
+  it('089686171914 Mi Goreng — rehydratable category fails closed on prepared basis (fixture)', () => {
+    const product = miGorengBbqChicken089686171914Fixture as unknown as Product;
+    const strict = evaluateLocalNutriScoreFromOffProduct(product);
+    const fibreMode = evaluateLocalNutriScoreFromOffProduct(product, OFF_FIBRE_UNAVAILABLE_ZERO_POINTS);
+    expect(strict.unresolvedReason).toBe('unresolved_preparation_basis');
+    expect(strict.completeOutcome).toBeNull();
+    expect(fibreMode.unresolvedReason).toBe('unresolved_preparation_basis');
+    expect(fibreMode.completeOutcome).toBeNull();
   });
 
   it('Driscoll raspberries 93541121 — whole produce candidate Body shadow 22', () => {

@@ -16,6 +16,9 @@ import {
   scoreBodyMvpAdditives,
   BODY_RED_ADDITIVE_SCORE_CEILING,
 } from './bodyAdditiveScoring';
+import {
+  evaluateWholeProduceEligibility,
+} from '../wholeProduceEligibility';
 
 export interface BodyPillarResult {
   score: number;
@@ -37,6 +40,8 @@ export interface BodyPillarResult {
     /** False when category is not human food/beverage — additive rules skipped. */
     foodAdditivesApplied: boolean;
     redAdditiveCeilingApplied: boolean;
+    /** True when Whole Produce +4 applied (no valid OFF Nutri-Score; NOVA 1; eligible category). */
+    wholeProduceAdjustmentApplied: boolean;
   };
 }
 
@@ -68,10 +73,12 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
 
   const hasNutriScore = !!product.nutriscore_grade;
   let nutriscoreValue: number | undefined;
+  let validNutriScoreApplied = false;
 
   if (hasNutriScore && product.nutriscore_grade) {
     const nc = nutriscoreContribution(product.nutriscore_grade);
     if (nc) {
+      validNutriScoreApplied = true;
       nutriscoreValue = nc.value;
       const adj = nc.adjustmentFromBase;
       if (adj > 0) {
@@ -108,6 +115,21 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
       value: 0,
       type: 'neutral',
     });
+  }
+
+  let wholeProduceAdjustmentApplied = false;
+  if (!validNutriScoreApplied) {
+    const wholeProduce = evaluateWholeProduceEligibility(product);
+    if (wholeProduce.eligible) {
+      wholeProduceAdjustmentApplied = true;
+      adjustments.push({
+        description: 'Whole produce (unprocessed / minimally processed, single ingredient)',
+        value: 4,
+        type: 'positive',
+      });
+      score += 4;
+      logger.debug('[BodyPillar] Whole Produce +4 applied (no valid OFF Nutri-Score)');
+    }
   }
 
   // NOVA: 1 = +3, 2 = +1, 3 = −1, 4 = −6 (OFF authoritative; internal NOVA 1 only via enhancement)
@@ -184,6 +206,7 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
       novaAdjustment,
       foodAdditivesApplied,
       redAdditiveCeilingApplied,
+      wholeProduceAdjustmentApplied,
     },
   };
 
