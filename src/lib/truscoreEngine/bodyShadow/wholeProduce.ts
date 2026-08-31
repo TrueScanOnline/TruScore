@@ -7,6 +7,7 @@ import {
   evaluateWholeProduceEligibility,
   hasValidOffNutriScoreGrade,
 } from '../wholeProduceEligibility';
+import { WHOLE_PRODUCE_NUTRITION_BONUS } from '../pillars/bodyPillar';
 
 export interface WholeProduceShadowResult {
   candidate: boolean;
@@ -19,7 +20,7 @@ export function evaluateWholeProduceCandidate(product: Product): WholeProduceSha
   return {
     candidate: result.eligible,
     reason: result.reason,
-    expectedBodyBump: result.eligible ? 4 : 0,
+    expectedBodyBump: result.eligible ? WHOLE_PRODUCE_NUTRITION_BONUS : 0,
   };
 }
 
@@ -60,7 +61,7 @@ export function shadowBodyScoreEstimate(input: {
   const offNutriBlocksWholeProduce =
     !!input.offGrade && hasValidOffNutriScoreGrade(input.offGrade);
   if (input.wholeProduceCandidate && !offNutriBlocksWholeProduce && !input.localGrade) {
-    score += 4;
+    score += WHOLE_PRODUCE_NUTRITION_BONUS;
   }
-  return Math.max(2, score);
+  return Math.max(2, Math.min(25, Math.round(score)));
 }

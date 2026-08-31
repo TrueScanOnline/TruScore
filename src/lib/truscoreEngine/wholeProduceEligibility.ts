@@ -4,6 +4,10 @@
  */
 
 import type { Product } from '../../types/product';
+import {
+  hasMultipleIngredientParts,
+  rawIngredientTextHasProcessedForm,
+} from '../../utils/ingredientTextPrimitives';
 
 const EXCLUDE_CATEGORY_PATTERNS = [
   /juice/i,
@@ -52,11 +56,18 @@ function hasEligibleCategory(tags: string[]): boolean {
 
 function ingredientsAreWholeProduceOnly(ingredientsText?: string): boolean {
   if (!ingredientsText?.trim()) return false;
-  const normalized = ingredientsText.trim().toLowerCase();
-  if (/[,;]| and | with | containing /.test(normalized)) {
+
+  // H1: test raw text before any normalization that would erase qualifiers such as "dried".
+  if (rawIngredientTextHasProcessedForm(ingredientsText)) {
     return false;
   }
-  return normalized.length > 0;
+
+  // H3: broad multi-ingredient separator detection.
+  if (hasMultipleIngredientParts(ingredientsText)) {
+    return false;
+  }
+
+  return ingredientsText.trim().length > 0;
 }
 
 /** Valid OFF Nutri-Score grades that trigger the Body v12 Nutri adjustment (A–E only). */
@@ -71,6 +82,11 @@ export function evaluateWholeProduceEligibility(product: Product): WholeProduceE
 
   if (nova !== 1) {
     return { eligible: false, reason: 'nova_not_1' };
+  }
+
+  // H2: contradictory additive evidence — fail closed.
+  if (product.additives_tags && product.additives_tags.length > 0) {
+    return { eligible: false, reason: 'additive_tags_present' };
   }
 
   if (hasExcludedCategory(tags)) {

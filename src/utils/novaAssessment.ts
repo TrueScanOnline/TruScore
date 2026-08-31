@@ -7,6 +7,12 @@
 
 import { Product } from '../types/product';
 import { logger } from './logger';
+import {
+  INGREDIENT_COMPOSITE_BLOCK,
+  INGREDIENT_GROUP2_CULINARY,
+  INGREDIENT_PROCESSED_MARKERS,
+  splitIngredientPartsNova,
+} from './ingredientTextPrimitives';
 
 export interface NOVA1Assessment {
   likelyNOVA1: boolean;
@@ -14,14 +20,9 @@ export interface NOVA1Assessment {
   reason: string;
 }
 
-const GROUP2_RE =
-  /\b(salt|sugar|sucrose|glucose|fructose|olive oil|vegetable oil|sunflower oil|canola oil|coconut oil|sesame oil|butter|margarine|lard|cream|honey|maple syrup|molasses|vinegar)\b/i;
-
-const PROCESSED_MARKERS =
-  /\b(modified\s+starch|corn\s+syrup|high\s+fructose|hfcs|hydrogenated|nitrite|nitrate|preservative|colour|color|flavour|flavor|sweetener|emulsifier|stabiliser|stabilizer|isolate|carrageenan|xanthan|msg|maltodextrin)\b/i;
-
-const COMPOSITE_BLOCK =
-  /\b(bread|cracker|biscuit|pasta\s+sauce|soup|seasoned|salted\s+nuts|roasted\s+salted)\b/i;
+const GROUP2_RE = INGREDIENT_GROUP2_CULINARY;
+const PROCESSED_MARKERS = INGREDIENT_PROCESSED_MARKERS;
+const COMPOSITE_BLOCK = INGREDIENT_COMPOSITE_BLOCK;
 
 /** Normalised single-ingredient lines allowed for NOVA 1 rescue (source-anchored examples, v1.3). */
 const NOVA1_SINGLE_WHITELIST = new Set([
@@ -79,10 +80,7 @@ function stripLeadingQualifiers(s: string): string {
 }
 
 function splitIngredients(text: string): string[] {
-  return text
-    .split(/[,;]/)
-    .map((p) => p.replace(/\s+/g, ' ').trim())
-    .filter((p) => p.length > 0);
+  return splitIngredientPartsNova(text);
 }
 
 function isPlainYoghurtMilkCultures(parts: string[]): boolean {

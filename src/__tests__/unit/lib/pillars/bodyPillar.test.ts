@@ -204,14 +204,142 @@ describe('Body Pillar Calculation', () => {
       expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
     });
 
-    test('valid OFF Nutri-Score A without NOVA → 22/25', () => {
+    test('valid OFF Nutri-Score A without NOVA on Whole-Produce-eligible product → Nutri precedence, no +7', () => {
       const product: Product = {
         ...baseProduct,
+        barcode: '93541121',
+        product_name: 'Raspberries',
+        ingredients_text: 'raspberries',
+        categories_tags: ['en:fresh-raspberries', 'en:berries', 'en:fruits'],
         nutriscore_grade: 'a',
       };
       const result = calculateBodyPillar(product);
       expect(result.score).toBe(22);
       expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
+    });
+
+    describe('H1–H3 hardening regressions', () => {
+      test('strawberry jam + generic fruit category + NOVA1 → no Whole Produce +7', () => {
+        const product: Product = {
+          ...baseProduct,
+          ingredients_text: 'strawberry jam',
+          categories_tags: ['en:fruits'],
+          nova_group: 1,
+        };
+        const result = calculateBodyPillar(product);
+        expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
+        expect(result.score).toBe(18);
+      });
+
+      test('apple juice → no +7', () => {
+        const product: Product = {
+          ...baseProduct,
+          ingredients_text: 'apple juice',
+          categories_tags: ['en:apple-juices', 'en:juices'],
+          nova_group: 1,
+        };
+        const result = calculateBodyPillar(product);
+        expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
+      });
+
+      test('dried blueberries with rescued NOVA1 → no +7', () => {
+        const product: Product = {
+          ...baseProduct,
+          ingredients_text: 'dried blueberries',
+          categories_tags: ['en:berries', 'en:fruits'],
+          additives_tags: [],
+        };
+        const rescued = assignNOVA1IfHighConfidence(product);
+        expect(rescued.nova_group).toBe(1);
+        const result = calculateBodyPillar(rescued);
+        expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
+        expect(result.score).toBe(18);
+      });
+
+      test('roasted carrots → no +7', () => {
+        const product: Product = {
+          ...baseProduct,
+          ingredients_text: 'roasted carrots',
+          categories_tags: ['en:vegetables'],
+          nova_group: 1,
+        };
+        const result = calculateBodyPillar(product);
+        expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
+        expect(result.score).toBe(18);
+      });
+
+      test('seasoned potato → no +7', () => {
+        const product: Product = {
+          ...baseProduct,
+          ingredients_text: 'seasoned potato',
+          categories_tags: ['en:fresh-potatoes', 'en:vegetables'],
+          nova_group: 1,
+        };
+        const result = calculateBodyPillar(product);
+        expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
+        expect(result.score).toBe(18);
+      });
+
+      test('additive-bearing generic produce + NOVA1 → no +7', () => {
+        const product: Product = {
+          ...baseProduct,
+          ingredients_text: 'spinach',
+          categories_tags: ['en:vegetables'],
+          nova_group: 1,
+          additives_tags: ['en:e300'],
+        };
+        const result = calculateBodyPillar(product);
+        expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
+        expect(result.score).toBe(18);
+      });
+
+      test('apples & pears → no +7', () => {
+        const product: Product = {
+          ...baseProduct,
+          ingredients_text: 'apples & pears',
+          categories_tags: ['en:fresh-fruits'],
+          nova_group: 1,
+        };
+        const result = calculateBodyPillar(product);
+        expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
+        expect(result.score).toBe(18);
+      });
+
+      test('blanched single-ingredient produce remains eligible for +7', () => {
+        const product: Product = {
+          ...baseProduct,
+          ingredients_text: 'blanched spinach',
+          categories_tags: ['en:vegetables'],
+          nova_group: 1,
+        };
+        const result = calculateBodyPillar(product);
+        expect(result.details.wholeProduceAdjustmentApplied).toBe(true);
+        expect(result.score).toBe(25);
+      });
+
+      test('frozen produce remains eligible for +7', () => {
+        const product: Product = {
+          ...baseProduct,
+          ingredients_text: 'frozen peas',
+          categories_tags: ['en:legumes', 'en:pulses'],
+          nova_group: 1,
+        };
+        const result = calculateBodyPillar(product);
+        expect(result.details.wholeProduceAdjustmentApplied).toBe(true);
+        expect(result.score).toBe(25);
+      });
+
+      test('peeled produce remains eligible for +7', () => {
+        const product: Product = {
+          ...baseProduct,
+          ingredients_text: 'peeled potato',
+          categories_tags: ['en:fresh-potatoes', 'en:vegetables'],
+          nova_group: 1,
+        };
+        const result = calculateBodyPillar(product);
+        expect(result.details.wholeProduceAdjustmentApplied).toBe(true);
+        expect(result.score).toBe(25);
+      });
     });
 
     test('eligible apple → +7 with NOVA 1', () => {

@@ -346,7 +346,7 @@ describe('Nutri-Score 2023 shadow calculator', () => {
     expect(fibreMode.completeOutcome).toBeNull();
   });
 
-  it('Driscoll raspberries 93541121 — whole produce candidate Body shadow 22', () => {
+  it('Driscoll raspberries 93541121 — whole produce candidate Body shadow 25', () => {
     const product: Product = {
       barcode: '93541121',
       product_name: 'Raspberries',
@@ -386,7 +386,7 @@ describe('Nutri-Score 2023 shadow calculator', () => {
       offGrade: null,
       wholeProduceCandidate: wp.candidate,
     });
-    expect(shadow).toBe(22);
+    expect(shadow).toBe(25);
   });
 
   it('whole produce does not stack when OFF Nutri-Score present', () => {
