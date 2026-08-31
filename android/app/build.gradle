@@ -94,7 +94,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Note: versionCode and versionName are managed by Expo via app.config.js
         // These values are overridden during EAS build, but kept here for local builds
-        versionCode 15
+        versionCode 18
         versionName "10.0.0"
     }
     signingConfigs {
