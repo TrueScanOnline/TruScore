@@ -20,6 +20,9 @@ import {
   evaluateWholeProduceEligibility,
 } from '../wholeProduceEligibility';
 
+/** Rveel Whole Produce nutrition bonus when eligibility gate passes and no valid OFF Nutri A–E. */
+export const WHOLE_PRODUCE_NUTRITION_BONUS = 7;
+
 export interface BodyPillarResult {
   score: number;
   base: number;
@@ -40,7 +43,7 @@ export interface BodyPillarResult {
     /** False when category is not human food/beverage — additive rules skipped. */
     foodAdditivesApplied: boolean;
     redAdditiveCeilingApplied: boolean;
-    /** True when Whole Produce +4 applied (no valid OFF Nutri-Score; NOVA 1; eligible category). */
+    /** True when Whole Produce nutrition bonus applied (no valid OFF Nutri-Score; NOVA 1; eligible category). */
     wholeProduceAdjustmentApplied: boolean;
   };
 }
@@ -124,11 +127,13 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
       wholeProduceAdjustmentApplied = true;
       adjustments.push({
         description: 'Whole produce (unprocessed / minimally processed, single ingredient)',
-        value: 4,
+        value: WHOLE_PRODUCE_NUTRITION_BONUS,
         type: 'positive',
       });
-      score += 4;
-      logger.debug('[BodyPillar] Whole Produce +4 applied (no valid OFF Nutri-Score)');
+      score += WHOLE_PRODUCE_NUTRITION_BONUS;
+      logger.debug(
+        `[BodyPillar] Whole Produce +${WHOLE_PRODUCE_NUTRITION_BONUS} applied (no valid OFF Nutri-Score)`
+      );
     }
   }
 

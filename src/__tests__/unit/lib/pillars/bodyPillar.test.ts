@@ -5,7 +5,11 @@
  * NOVA 1=+3, 2=+1, 3=−1, 4=−6; MVP additives (−1/−3/−6 per tier, element cap −8); red additive ceiling 12; floor 2.
  */
 
-import { calculateBodyPillar } from '../../../../lib/truscoreEngine/pillars/bodyPillar';
+import {
+  calculateBodyPillar,
+  WHOLE_PRODUCE_NUTRITION_BONUS,
+} from '../../../../lib/truscoreEngine/pillars/bodyPillar';
+import { assignNOVA1IfHighConfidence } from '../../../../utils/novaAssessment';
 import { Product } from '../../../../types/product';
 
 describe('Body Pillar Calculation', () => {
@@ -133,8 +137,12 @@ describe('Body Pillar Calculation', () => {
     expect(result.score).toBe(25);
   });
 
-  describe('Whole Produce +4 (production)', () => {
-    test("93541121 Driscoll's Raspberries → 22/25", () => {
+  describe('Whole Produce +7 (production)', () => {
+    test(`Whole Produce nutrition bonus constant is +${WHOLE_PRODUCE_NUTRITION_BONUS}`, () => {
+      expect(WHOLE_PRODUCE_NUTRITION_BONUS).toBe(7);
+    });
+
+    test("93541121 Driscoll's Raspberries → 25/25 (no valid OFF Nutri + NOVA 1)", () => {
       const product: Product = {
         ...baseProduct,
         barcode: '93541121',
@@ -145,11 +153,27 @@ describe('Body Pillar Calculation', () => {
         nutriscore_grade: 'unknown',
       };
       const result = calculateBodyPillar(product);
-      expect(result.score).toBe(22);
+      expect(result.score).toBe(25);
       expect(result.details.wholeProduceAdjustmentApplied).toBe(true);
     });
 
-    test('valid OFF Nutri-Score + NOVA 1 → Whole Produce +4 does not stack', () => {
+    test('qualifying Whole Produce + rescued NOVA 1 → 25/25', () => {
+      const product: Product = {
+        ...baseProduct,
+        barcode: '93536240',
+        product_name: 'Blueberries',
+        ingredients_text: 'blueberries',
+        categories_tags: ['en:berries', 'en:fruits', 'en:blueberries'],
+        additives_tags: [],
+      };
+      const rescued = assignNOVA1IfHighConfidence(product);
+      expect(rescued.nova_group).toBe(1);
+      const result = calculateBodyPillar(rescued);
+      expect(result.score).toBe(25);
+      expect(result.details.wholeProduceAdjustmentApplied).toBe(true);
+    });
+
+    test('valid OFF Nutri-Score A + NOVA 1 → 25/25 (Whole Produce does not stack)', () => {
       const product: Product = {
         ...baseProduct,
         barcode: '93541121',
@@ -163,7 +187,7 @@ describe('Body Pillar Calculation', () => {
       expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
     });
 
-    test('valid OFF Nutri-Score B + NOVA 1 → Whole Produce +4 does not stack (non-cap-masked)', () => {
+    test('valid OFF Nutri-Score B + NOVA 1 → 21/25 (Whole Produce +7 does not stack, non-cap-masked)', () => {
       const product: Product = {
         ...baseProduct,
         barcode: '93541121',
@@ -174,13 +198,23 @@ describe('Body Pillar Calculation', () => {
         nutriscore_grade: 'b',
       };
       const result = calculateBodyPillar(product);
-      // 15 base + 3 Nutri B + 3 NOVA1 = 21; accidental +4 stack would reach 25 (cap-masked under grade A)
+      // 15 base + 3 Nutri B + 3 NOVA1 = 21; accidental +7 stack would reach 28 (capped at 25)
       expect(result.score).toBe(21);
       expect(result.details.nutriscoreValue).toBe(18);
       expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
     });
 
-    test('eligible apple → +4 with NOVA 1', () => {
+    test('valid OFF Nutri-Score A without NOVA → 22/25', () => {
+      const product: Product = {
+        ...baseProduct,
+        nutriscore_grade: 'a',
+      };
+      const result = calculateBodyPillar(product);
+      expect(result.score).toBe(22);
+      expect(result.details.wholeProduceAdjustmentApplied).toBe(false);
+    });
+
+    test('eligible apple → +7 with NOVA 1', () => {
       const product: Product = {
         ...baseProduct,
         ingredients_text: 'apple',
@@ -188,11 +222,11 @@ describe('Body Pillar Calculation', () => {
         nova_group: 1,
       };
       const result = calculateBodyPillar(product);
-      expect(result.score).toBe(22);
+      expect(result.score).toBe(25);
       expect(result.details.wholeProduceAdjustmentApplied).toBe(true);
     });
 
-    test('eligible onion → +4 with NOVA 1', () => {
+    test('eligible onion → +7 with NOVA 1', () => {
       const product: Product = {
         ...baseProduct,
         ingredients_text: 'onion',
@@ -200,11 +234,11 @@ describe('Body Pillar Calculation', () => {
         nova_group: 1,
       };
       const result = calculateBodyPillar(product);
-      expect(result.score).toBe(22);
+      expect(result.score).toBe(25);
       expect(result.details.wholeProduceAdjustmentApplied).toBe(true);
     });
 
-    test('eligible potato → +4 with NOVA 1', () => {
+    test('eligible potato → +7 with NOVA 1', () => {
       const product: Product = {
         ...baseProduct,
         ingredients_text: 'potato',
@@ -212,11 +246,11 @@ describe('Body Pillar Calculation', () => {
         nova_group: 1,
       };
       const result = calculateBodyPillar(product);
-      expect(result.score).toBe(22);
+      expect(result.score).toBe(25);
       expect(result.details.wholeProduceAdjustmentApplied).toBe(true);
     });
 
-    test('eligible avocado → +4 with NOVA 1', () => {
+    test('eligible avocado → +7 with NOVA 1', () => {
       const product: Product = {
         ...baseProduct,
         ingredients_text: 'avocado',
@@ -224,11 +258,11 @@ describe('Body Pillar Calculation', () => {
         nova_group: 1,
       };
       const result = calculateBodyPillar(product);
-      expect(result.score).toBe(22);
+      expect(result.score).toBe(25);
       expect(result.details.wholeProduceAdjustmentApplied).toBe(true);
     });
 
-    test('eligible fresh/frozen legume/pulse → +4 with NOVA 1', () => {
+    test('eligible fresh/frozen legume/pulse → +7 with NOVA 1', () => {
       const product: Product = {
         ...baseProduct,
         ingredients_text: 'lentils',
@@ -236,7 +270,7 @@ describe('Body Pillar Calculation', () => {
         nova_group: 1,
       };
       const result = calculateBodyPillar(product);
-      expect(result.score).toBe(22);
+      expect(result.score).toBe(25);
       expect(result.details.wholeProduceAdjustmentApplied).toBe(true);
     });
 

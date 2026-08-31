@@ -1,5 +1,5 @@
 /**
- * Whole Produce +4 eligibility — shared between production Body and shadow validation.
+ * Whole Produce eligibility gate — shared between production Body and shadow validation.
  * Fail-closed: category tags + single-ingredient evidence only; no product-name inference.
  */
 
