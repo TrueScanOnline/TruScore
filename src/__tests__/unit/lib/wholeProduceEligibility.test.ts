@@ -151,4 +151,53 @@ describe('evaluateWholeProduceEligibility — hardening H1/H2/H3', () => {
     );
     expect(result.eligible).toBe(true);
   });
+
+  describe('N1 — exactly one surviving ingredient part', () => {
+    test.each([',', ';', ',,', ' , ', '  ', ''])(
+      'malformed separator-only "%s" fails closed',
+      (ingredients_text) => {
+        const result = evaluateWholeProduceEligibility(
+          baseProduct({
+            ingredients_text,
+            categories_tags: ['en:legumes', 'en:pulses'],
+          })
+        );
+        expect(result.eligible).toBe(false);
+        expect(result.reason).toBe('ingredients_not_whole_produce_only');
+      }
+    );
+
+    test('trailing-separator single ingredient "peas," remains eligible', () => {
+      const result = evaluateWholeProduceEligibility(
+        baseProduct({
+          ingredients_text: 'peas,',
+          categories_tags: ['en:legumes', 'en:pulses'],
+        })
+      );
+      expect(result.eligible).toBe(true);
+    });
+
+    test('ordinary qualifying produce remains eligible', () => {
+      const result = evaluateWholeProduceEligibility(
+        baseProduct({
+          ingredients_text: 'raspberries',
+          categories_tags: ['en:fresh-raspberries', 'en:berries'],
+        })
+      );
+      expect(result.eligible).toBe(true);
+    });
+
+    test('multi-ingredient blockers remain intact', () => {
+      expect(
+        evaluateWholeProduceEligibility(
+          baseProduct({ ingredients_text: 'apple, banana', categories_tags: ['en:fresh-fruits'] })
+        ).eligible
+      ).toBe(false);
+      expect(
+        evaluateWholeProduceEligibility(
+          baseProduct({ ingredients_text: 'apples & pears', categories_tags: ['en:fresh-fruits'] })
+        ).eligible
+      ).toBe(false);
+    });
+  });
 });

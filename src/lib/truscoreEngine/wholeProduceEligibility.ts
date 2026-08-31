@@ -5,6 +5,7 @@
 
 import type { Product } from '../../types/product';
 import {
+  hasExactlyOneSurvivingIngredientPart,
   hasMultipleIngredientParts,
   rawIngredientTextHasProcessedForm,
 } from '../../utils/ingredientTextPrimitives';
@@ -67,7 +68,12 @@ function ingredientsAreWholeProduceOnly(ingredientsText?: string): boolean {
     return false;
   }
 
-  return ingredientsText.trim().length > 0;
+  // N1: require exactly one surviving normalized part (malformed separator-only fails closed).
+  if (!hasExactlyOneSurvivingIngredientPart(ingredientsText)) {
+    return false;
+  }
+
+  return true;
 }
 
 /** Valid OFF Nutri-Score grades that trigger the Body v12 Nutri adjustment (A–E only). */

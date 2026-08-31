@@ -11,6 +11,16 @@ export function splitIngredientPartsNova(text: string): string[] {
     .filter((p) => p.length > 0);
 }
 
+/** Whole Produce — broad ingredient-part split (H3 / N1). */
+export function splitIngredientPartsBroad(text: string): string[] {
+  const normalized = text.trim().toLowerCase();
+  if (!normalized) return [];
+  return normalized
+    .split(/[,;/&+|·]|\n/)
+    .map((p) => p.replace(/\s+/g, ' ').trim())
+    .filter((p) => p.length > 0);
+}
+
 /** Whole Produce — conservative multi-ingredient separator detection (H3). */
 export function hasMultipleIngredientParts(text: string): boolean {
   const normalized = text.trim().toLowerCase();
@@ -18,11 +28,12 @@ export function hasMultipleIngredientParts(text: string): boolean {
   if (/\band\b|\bwith\b|\bcontaining\b/.test(normalized)) {
     return true;
   }
-  const parts = normalized
-    .split(/[,;/&+|·]|\n/)
-    .map((p) => p.replace(/\s+/g, ' ').trim())
-    .filter((p) => p.length > 0);
-  return parts.length > 1;
+  return splitIngredientPartsBroad(text).length > 1;
+}
+
+/** Whole Produce N1 — exactly one surviving normalized part required (not merely ≤1). */
+export function hasExactlyOneSurvivingIngredientPart(text: string): boolean {
+  return splitIngredientPartsBroad(text).length === 1;
 }
 
 /** NOVA composite / processed patterns — reused by Whole Produce processed-form gate (H1). */
