@@ -5,9 +5,13 @@
 import {
   calculateOpenPillar,
   getOpenPillarIngredientsText,
-  type OpenPillarAdjustment,
 } from '../../../../lib/truscoreEngine/pillars/openPillar';
-import { assessOpenOriginsV15 } from '../../../../lib/truscoreEngine/pillars/openPillarOriginsV15';
+import {
+  assessOpenOriginsV15,
+  getRawOffIngredientOriginTags,
+  hasNestedCompositionList,
+  resolveDistinctOffOriginCountries,
+} from '../../../../lib/truscoreEngine/pillars/openPillarOriginsV15';
 import {
   OPEN_V15_ADJUSTMENT_REGISTRY,
   OPEN_V15_MVP_UNREACHABLE_ORIGINS_IDS,
@@ -17,11 +21,6 @@ import {
   countHiddenTermHitsInToken,
   tokenizeIngredientsText,
 } from '../../../../lib/truscoreEngine/pillars/openPillarHiddenTerms';
-import {
-  allOpenV15DrillDownHighlights,
-  calculateOpenV15Highlights,
-  selectOpenV15Highlights,
-} from '../../../../utils/openScoreHighlights';
 import { buildTruScoreAnalysis, calculateTruScore } from '../../../../lib/truscoreEngine';
 import { Product } from '../../../../types/product';
 
@@ -141,7 +140,7 @@ describe('Open Pillar v15', () => {
     expect(result.adjustments.some((a) => a.description.includes('No origin information'))).toBe(false);
   });
 
-  test('single-ingredient + raw OFF origin: +8 evidently complete', () => {
+  test('genuine single-ingredient + raw OFF origin: +8 evidently complete', () => {
     const product = {
       ...baseProduct,
       ingredients_text: 'Honey',
@@ -155,12 +154,91 @@ describe('Open Pillar v15', () => {
     expect(result.score).toBe(24);
   });
 
+  test('origins and origins_tags lexical variants resolve to one country (not conflict)', () => {
+    const product = {
+      ...baseProduct,
+      ingredients_text: 'Honey',
+      origins: 'New Zealand',
+      origins_tags: ['en:new-zealand'],
+    };
+    expect(resolveDistinctOffOriginCountries(product)).toEqual(['new zealand']);
+    const result = calculateOpenPillar(product);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete' && a.value === 8)).toBe(
+      true
+    );
+  });
+
+  test('vague sole ingredient with origin present fails +8', () => {
+    const product = {
+      ...baseProduct,
+      ingredients_text: 'natural flavor',
+      origins_tags: ['en:france'],
+    };
+    const result = calculateOpenPillar(product);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+    expect(result.score).toBe(13);
+  });
+
+  test('nested compound ingredient with origin present fails +8', () => {
+    expect(hasNestedCompositionList('Honey (raw, unfiltered)')).toBe(true);
+    const product = {
+      ...baseProduct,
+      ingredients_text: 'Honey (raw, unfiltered)',
+      origins_tags: ['en:new-zealand'],
+    };
+    const result = calculateOpenPillar(product);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+  });
+
   test('multi-ingredient with origin tags: no +8 inference', () => {
     const product = {
       ...baseProduct,
       ingredients_text: 'Honey, water',
       origins_tags: ['en:new-zealand'],
     };
+    const result = calculateOpenPillar(product);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+  });
+
+  test('two or more distinct OFF countries: insufficient 0 (not +8)', () => {
+    const product = {
+      ...baseProduct,
+      ingredients_text: 'Honey',
+      origins_tags: ['en:new-zealand', 'en:australia'],
+    };
+    const result = calculateOpenPillar(product);
+    expect(resolveDistinctOffOriginCountries(product).length).toBe(2);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient' && a.value === 0)).toBe(
+      true
+    );
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-conflict')).toBe(false);
+  });
+
+  test('malformed non-string origins_tags ignored — no throw, +8 when one valid string remains', () => {
+    const product = {
+      ...baseProduct,
+      ingredients_text: 'Honey',
+      origins_tags: [123 as unknown as string, null as unknown as string, { origin: 'en:france' } as unknown as string, 'en:new-zealand'],
+    };
+    expect(() => getRawOffIngredientOriginTags(product)).not.toThrow();
+    expect(getRawOffIngredientOriginTags(product)).toEqual(['new zealand']);
+    const result = calculateOpenPillar(product);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete' && a.value === 8)).toBe(
+      true
+    );
+  });
+
+  test('malformed origins_tags with no valid strings: insufficient 0, no throw', () => {
+    const product = {
+      ...baseProduct,
+      ingredients_text: 'Honey',
+      origins_tags: [42 as unknown as string, null as unknown as string],
+    };
+    expect(() => calculateOpenPillar(product)).not.toThrow();
     const result = calculateOpenPillar(product);
     expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
     expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
@@ -173,12 +251,12 @@ describe('Open Pillar v15', () => {
       manufacturing_places_tags: ['en:australia'],
       manufacturing_places: 'Australia',
     };
-    const assessment = assessOpenOriginsV15(product, product.ingredients_text!, true);
+    const assessment = assessOpenOriginsV15(product, product.ingredients_text!, true, 0);
     expect(assessment.id).toBe('open-v15-origins-insufficient');
     expect(assessment.value).toBe(0);
   });
 
-  test('Eco-Score aggregated origins alone do not establish +8', () => {
+  test('Environmental/Eco-Score aggregated origins alone are score-inert (no +8)', () => {
     const product = {
       ...baseProduct,
       ingredients_text: 'Honey',
@@ -190,18 +268,14 @@ describe('Open Pillar v15', () => {
         },
       },
     };
+    expect(getRawOffIngredientOriginTags(product)).toEqual([]);
+    expect(resolveDistinctOffOriginCountries(product)).toEqual([]);
     const result = calculateOpenPillar(product);
     expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
-  });
-
-  test('conflicting raw OFF origin tags: fail closed neutral', () => {
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'Honey',
-      origins_tags: ['en:new-zealand', 'en:australia'],
-    };
-    const result = calculateOpenPillar(product);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-conflict')).toBe(true);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient' && a.value === 0)).toBe(
+      true
+    );
+    expect(result.score).toBe(16);
   });
 
   test('score clamps at 0–25', () => {
@@ -246,7 +320,7 @@ describe('Open Pillar v15', () => {
   });
 });
 
-describe('Open v15 Score Highlights (S12)', () => {
+describe('Open v15 S28 diagnostic trace', () => {
   const product: Product = {
     barcode: '999',
     product_name: 'Honey NZ',
@@ -255,49 +329,6 @@ describe('Open v15 Score Highlights (S12)', () => {
     origins: 'New Zealand',
     source: 'test',
   };
-
-  test('S12 selects at most one positive and one negative; no points displayed', () => {
-    const multiFlag: Product = {
-      ...product,
-      ingredients_text: 'Honey, natural flavor',
-      origins_tags: ['en:new-zealand'],
-    };
-    const highlights = calculateOpenV15Highlights(multiFlag);
-    expect(highlights.filter((h) => h.type === 'green').length).toBeLessThanOrEqual(1);
-    expect(highlights.filter((h) => h.type === 'red').length).toBeLessThanOrEqual(1);
-    highlights.forEach((h) => expect(h.scoreValue).toBe(0));
-  });
-
-  test('Origins wins positive tie over ingredient clarity at equal preference when both positive', () => {
-    const adjustments = calculateOpenPillar(product).adjustments;
-    const selected = selectOpenV15Highlights(adjustments);
-    const positive = selected.find((h) => h.type === 'green');
-    expect(positive?.highlightId).toBe('open-v15-origins-evidently-complete');
-  });
-
-  test('Origins wins negative tie at equal absolute effect (−4 qualified partial vs −4 two flags)', () => {
-    const adjustments: OpenPillarAdjustment[] = [
-      {
-        id: 'open-v15-ing-clarity-two',
-        description: OPEN_V15_ADJUSTMENT_REGISTRY['open-v15-ing-clarity-two'].description,
-        value: -4,
-        type: 'negative',
-        highlightEligible: true,
-        family: 'ingredients',
-      },
-      {
-        id: 'open-v15-origins-qualified-partial',
-        description: OPEN_V15_ADJUSTMENT_REGISTRY['open-v15-origins-qualified-partial'].description,
-        value: -4,
-        type: 'negative',
-        highlightEligible: true,
-        family: 'origins',
-      },
-    ];
-    const selected = selectOpenV15Highlights(adjustments);
-    const negative = selected.find((h) => h.type === 'red');
-    expect(negative?.highlightId).toBe('open-v15-origins-qualified-partial');
-  });
 
   test('S28 analysis: baseScore 15; fired rows carry adjustmentId (no base ledger row)', () => {
     const tru = calculateTruScore(product);
@@ -311,25 +342,6 @@ describe('Open v15 Score Highlights (S12)', () => {
       expect(a.adjustmentId).toMatch(/^open-v15-/);
       expect(a.value).toBeDefined();
     });
-  });
-
-  test('drill-down exposes all highlight-eligible fired adjustments', () => {
-    const multiFlag: Product = {
-      ...product,
-      ingredients_text: 'Honey, natural flavor',
-      origins_tags: ['en:new-zealand'],
-    };
-    const adjustments = calculateOpenPillar(multiFlag).adjustments.filter(
-      (a) => a.highlightEligible && a.value !== 0
-    );
-    const drill = allOpenV15DrillDownHighlights(multiFlag as any);
-    expect(drill.length).toBe(adjustments.length);
-    expect(drill.length).toBeGreaterThanOrEqual(1);
-  });
-
-  test('base and clamp never appear as highlights', () => {
-    const highlights = allOpenV15DrillDownHighlights(product as any);
-    expect(highlights.some((h) => h.highlightId === 'open-v15-base')).toBe(false);
   });
 });
 

@@ -104,7 +104,12 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   const clarityAdj = pushAdjustment(adjustments, clarityId);
   score += clarityAdj.value;
 
-  const originsAssessment = assessOpenOriginsV15(product, ingredientsText, usable);
+  const originsAssessment = assessOpenOriginsV15(
+    product,
+    ingredientsText,
+    usable,
+    governedFlagCount
+  );
   const originsAdj = pushAdjustment(adjustments, originsAssessment.id);
   score += originsAdj.value;
 

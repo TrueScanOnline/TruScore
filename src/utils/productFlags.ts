@@ -5,7 +5,6 @@ import { getPalmOilStatus } from './palmOilUtils';
 import { applyOverrideRules } from '../config/scoreHighlightOverrides';
 import { ETHICS_BBFAW_KTC_SCORE_HIGHLIGHT_IDS } from '../config/scoreHighlightDefinitions';
 import { calculateHighlights, selectHighlights } from './scoreHighlights';
-import { calculateOpenV15Highlights } from './openScoreHighlights';
 
 export interface ProductFlag {
   type: 'green' | 'red';
@@ -33,10 +32,6 @@ export function generateProductFlags(
   // Use new spec-based highlight generation system
   // Calculate and select highlights based on spec
   let calculatedHighlights = calculateHighlights(product);
-  calculatedHighlights = [
-    ...calculatedHighlights.filter((h) => h.pillar !== 'open'),
-    ...calculateOpenV15Highlights(product),
-  ];
   if (options?.suppressBbfawKtcScoreHighlights) {
     calculatedHighlights = calculatedHighlights.filter(
       (h) => !ETHICS_BBFAW_KTC_SCORE_HIGHLIGHT_IDS.has(h.highlightId)

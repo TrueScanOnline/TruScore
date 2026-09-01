@@ -44,12 +44,18 @@ function isPlaceholderOriginValue(value: string): boolean {
   return PLACEHOLDER_ORIGIN_VALUES.has(v.replace(/\s+/g, ' '));
 }
 
+/** Nested subingredient/composition list inside parentheses (comma-separated). */
+export function hasNestedCompositionList(ingredientsText: string): boolean {
+  return /\([^)]*,[^)]*\)/.test(ingredientsText);
+}
+
 /** Raw OFF ingredient-origin tags/strings — excludes manufacturing-only and Eco-Score derived data. */
 export function getRawOffIngredientOriginTags(product: Product): string[] {
   const tags: string[] = [];
   if (Array.isArray(product.origins_tags)) {
     for (const t of product.origins_tags) {
-      const n = normalizeOriginTag(String(t));
+      if (typeof t !== 'string') continue;
+      const n = normalizeOriginTag(t);
       if (n && !isPlaceholderOriginValue(n)) tags.push(n);
     }
   }
@@ -63,19 +69,17 @@ export function getRawOffIngredientOriginTags(product: Product): string[] {
   return [...new Set(tags)];
 }
 
+/** Distinct resolved countries from flat OFF origin fields (lexical variants deduped). */
+export function resolveDistinctOffOriginCountries(product: Product): string[] {
+  return getRawOffIngredientOriginTags(product);
+}
+
 function hasManufacturingOnlySignal(product: Product): boolean {
   const hasMfgTags =
     Array.isArray(product.manufacturing_places_tags) && product.manufacturing_places_tags.length > 0;
   const hasMfgString =
     typeof product.manufacturing_places === 'string' && product.manufacturing_places.trim().length > 0;
   return hasMfgTags || hasMfgString;
-}
-
-function hasEcoScoreAggregatedOrigins(product: Product): boolean {
-  const ooi = product.ecoscore_data?.origins_of_ingredients;
-  if (!ooi || typeof ooi !== 'object') return false;
-  const agg = (ooi as { aggregated_origins?: unknown }).aggregated_origins;
-  return Array.isArray(agg) && agg.length > 0;
 }
 
 function ingredientTokensForOriginsGate(ingredientsText: string): string[] {
@@ -85,11 +89,21 @@ function ingredientTokensForOriginsGate(ingredientsText: string): string[] {
   return trimmed ? [trimmed] : [];
 }
 
-function hasOriginConflict(rawTags: string[]): boolean {
-  if (rawTags.length <= 1) return false;
-  const normalized = rawTags.map((t) => t.toLowerCase());
-  const unique = new Set(normalized);
-  return unique.size > 1;
+function singleIngredientEvidentlyCompleteEligible(
+  ingredientsText: string,
+  governedFlagCount: number
+): { eligible: boolean; reason?: string } {
+  const tokens = ingredientTokensForOriginsGate(ingredientsText);
+  if (tokens.length !== 1) {
+    return { eligible: false, reason: 'Requires exactly one substantive ingredient' };
+  }
+  if (governedFlagCount > 0) {
+    return { eligible: false, reason: 'Governed vague or code-dependent ingredient wording present' };
+  }
+  if (hasNestedCompositionList(ingredientsText)) {
+    return { eligible: false, reason: 'Nested subingredient/composition list not permitted for +8' };
+  }
+  return { eligible: true };
 }
 
 /**
@@ -99,7 +113,8 @@ function hasOriginConflict(rawTags: string[]): boolean {
 export function assessOpenOriginsV15(
   product: Product,
   ingredientsText: string,
-  ingredientsUsable: boolean
+  ingredientsUsable: boolean,
+  governedFlagCount: number
 ): OpenOriginsV15Assessment {
   if (!ingredientsUsable) {
     return {
@@ -110,40 +125,42 @@ export function assessOpenOriginsV15(
     };
   }
 
-  const rawTags = getRawOffIngredientOriginTags(product);
+  const distinctCountries = resolveDistinctOffOriginCountries(product);
   const tokens = ingredientTokensForOriginsGate(ingredientsText);
   const multiIngredient = tokens.length !== 1;
 
-  if (hasOriginConflict(rawTags)) {
+  if (distinctCountries.length > 1) {
     return {
-      id: 'open-v15-origins-conflict',
+      id: 'open-v15-origins-insufficient',
       value: 0,
-      provenance: 'off_conflict',
-      detail: 'Conflicting raw OFF ingredient-origin tags',
+      provenance: 'off_insufficient',
+      detail: 'Multiple distinct OFF ingredient-origin countries — flat record non-scoring',
     };
   }
 
-  // Tightly bound single-ingredient exception: +8 when raw OFF origin identifies specific origin.
-  if (!multiIngredient && rawTags.length === 1) {
-    if (hasEcoScoreAggregatedOrigins(product) && rawTags.length === 0) {
-      return {
-        id: 'open-v15-origins-insufficient',
-        value: 0,
-        provenance: 'off_insufficient',
-        detail: 'Eco-Score aggregated origins cannot establish disclosure completeness',
-      };
-    }
+  const singleEligible = singleIngredientEvidentlyCompleteEligible(ingredientsText, governedFlagCount);
+
+  if (!multiIngredient && distinctCountries.length === 1 && singleEligible.eligible) {
     return {
       id: 'open-v15-origins-evidently-complete',
       value: 8,
       provenance: 'off_raw_origins',
-      detail: `Single-ingredient product with raw OFF origin: ${rawTags[0]}`,
+      detail: `Single-ingredient product with raw OFF origin: ${distinctCountries[0]}`,
+    };
+  }
+
+  if (!multiIngredient && distinctCountries.length === 1 && !singleEligible.eligible) {
+    return {
+      id: 'open-v15-origins-insufficient',
+      value: 0,
+      provenance: 'off_insufficient',
+      detail: singleEligible.reason || 'Single-ingredient +8 exception not met',
     };
   }
 
   // Multi-ingredient: do not infer completeness or percentages from partial OFF data.
   if (multiIngredient) {
-    if (rawTags.length > 0) {
+    if (distinctCountries.length > 0) {
       return {
         id: 'open-v15-origins-insufficient',
         value: 0,
@@ -167,8 +184,8 @@ export function assessOpenOriginsV15(
     };
   }
 
-  // Single ingredient but no raw origin tag.
-  if (hasManufacturingOnlySignal(product) && rawTags.length === 0) {
+  // Single ingredient but no raw origin country.
+  if (hasManufacturingOnlySignal(product) && distinctCountries.length === 0) {
     return {
       id: 'open-v15-origins-insufficient',
       value: 0,

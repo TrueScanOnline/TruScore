@@ -32,5 +32,5 @@
     "nova_listing_clarity_bonus",
     "origins_field_presence_plus_minus"
   ],
-  "notes": "Supersedes Open_Scoring_Specification_v14. S12 highlights bound via openScoreHighlights.ts."
+  "notes": "Supersedes Open_Scoring_Specification_v14. S12 consumer highlights deferred to consolidated four-pillar Score Highlights workstream."
 }
