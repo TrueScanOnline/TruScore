@@ -297,7 +297,7 @@ function generateTrustReasons(
     reasons.push('High salt content');
   }
 
-  // Open (Ingredient transparency — v14 hidden-term count)
+  // Open (Ingredient transparency — v15 governed-flag count)
   const ingredientsText = (product.ingredients_text || '').trim();
   const hiddenCount = countOpenPillarHiddenTermHits(ingredientsText);
 

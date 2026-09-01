@@ -153,15 +153,13 @@ describe('TruScore End-to-End Tests', () => {
       recalls: [],
     };
 
-    test('should apply hidden terms penalty in OPEN pillar', () => {
+    test('should apply governed vague-term flags penalty in OPEN pillar (v15)', () => {
       const result = calculateTruScore(product);
       
-      // OPEN pillar should be reduced due to hidden terms
       expect(result.breakdown.Open).toBeLessThan(15);
       
-      // Verify hidden terms are detected
       const openResult = result.pillarDetails?.open;
-      expect(openResult?.details.hiddenTermsCount).toBeGreaterThan(0);
+      expect(openResult?.details.governedFlagCount).toBeGreaterThan(0);
     });
   });
 
@@ -260,15 +258,14 @@ describe('TruScore End-to-End Tests', () => {
       recalls: [],
     };
 
-    test('should apply origin penalty in OPEN pillar', () => {
+    test('should score missing origin as neutral insufficient in OPEN pillar (v15)', () => {
       const result = calculateTruScore(product);
       
-      // OPEN pillar should be reduced
-      expect(result.breakdown.Open).toBeLessThan(15);
+      expect(result.breakdown.Open).toBe(16);
       
-      // Verify origin penalty is applied
       const openResult = result.pillarDetails?.open;
-      expect(openResult?.details.originPenalty).toBeGreaterThan(0);
+      expect(openResult?.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+      expect(openResult?.details.originsAdjustment).toBe(0);
     });
   });
 
@@ -383,12 +380,14 @@ describe('TruScore End-to-End Tests', () => {
       recalls: [],
     };
 
-    test('should apply zero hidden terms reward', () => {
+    test('should apply zero governed flags ingredient clarity bonus (v15)', () => {
       const result = calculateTruScore(product);
 
       const openResult = result.pillarDetails?.open;
-      expect(openResult?.details.hiddenTermsCount).toBe(0);
-      expect(openResult?.details.listingClarityBonus).toBe(4);
+      expect(openResult?.details.governedFlagCount).toBe(0);
+      expect(
+        openResult?.adjustments.some((a) => a.id === 'open-v15-ing-clarity-zero' && a.value === 1)
+      ).toBe(true);
 
       expect(result.breakdown.Open).toBeGreaterThan(15);
     });

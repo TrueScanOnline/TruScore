@@ -1,6 +1,6 @@
 /**
- * Open Pillar v14 — hidden / vague ingredient disclosure terms.
- * Food & beverage MVP: phrase list and match rules from Open_Scoring_Specification_v14.
+ * Open Pillar v15 — governed vague / code-dependent ingredient disclosure flags.
+ * Food & beverage MVP: phrase list and match rules from Open_Scoring_Specification_v15.
  *
  * Tokenization: split on commas at parenthesis depth 0 (NFKC-normalized).
  * Matching: whole-word / exact phrase; additive classes only when standalone or with code-only parentheses;
@@ -140,6 +140,11 @@ const NAMED_SUBSTANCE_EXCLUSIONS: RegExp[] = [
   /\bpaprika\s+extracts?\b/gi,
   /\blemon\s+essence\b/gi,
   /\bmonosodium\s+glutamate\b/gi,
+  /\bmsg\b/gi,
+  /\bflavour\s+enhancer\s*\(\s*msg\s*\)/gi,
+  /\bflavor\s+enhancer\s*\(\s*msg\s*\)/gi,
+  /\bmonosodium\s+glutamate\s*\(\s*\d{3,4}[a-z]?\s*\)/gi,
+  /\bpreservative\s*\(\s*potassium\s+sorbate\s*\)/gi,
 ];
 
 /** Block generic colour/colouring matches inside caramel colour (spec example). */
@@ -321,6 +326,18 @@ function innerParenIsCodeOnly(inner: string): boolean {
   return false;
 }
 
+const GENERIC_SEASONING_DISCLOSURE_TERMS = ['seasoning', 'seasonings', 'spice', 'spices', 'herb', 'herbs'];
+
+function isDisclosedSeasoningCompositionToken(tokenLower: string): boolean {
+  for (const term of GENERIC_SEASONING_DISCLOSURE_TERMS) {
+    const escaped = escapeRegExp(term);
+    const re = new RegExp(`^${escaped}\\s*\\(([^)]+)\\)\\s*$`, 'i');
+    const m = tokenLower.match(re);
+    if (m && !innerParenIsCodeOnly(m[1])) return true;
+  }
+  return false;
+}
+
 /**
  * e.g. emulsifier (471) → hit; emulsifier (soy lecithin) → no hit from this rule.
  */
@@ -371,6 +388,11 @@ export function countHiddenTermHitsInToken(token: string): number {
   }
 
   if (isOpaqueAdditiveParenToken(tokenLower)) {
+    markRange(covered, 0, tokenLower.length);
+    return hits.count;
+  }
+
+  if (isDisclosedSeasoningCompositionToken(tokenLower)) {
     markRange(covered, 0, tokenLower.length);
     return hits.count;
   }

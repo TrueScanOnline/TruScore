@@ -1,21 +1,24 @@
 /**
- * Open Pillar Calculation — Open_Scoring_Specification_v14 (food & beverage MVP)
+ * Open Pillar Calculation — Open_Scoring_Specification_v15 (food & beverage MVP)
  *
- * Base: 15/25 (uniform across pillars)
- * - Ingredients: `ingredients_text` if non-empty after trim, else `ingredients_text_en` (OFF English fallback);
- *   same normalized string for presence, placeholder check, and hidden-term hits
- * - Presence: present +2 / none or placeholder −3
- * - Hidden / vague terms (tokenized + guardrails): 1 = −4, 2 = −8, ≥3 = −11
- * - Zero vague-term hits + NOVA 1–2: +4; zero hits + NOVA 3–4: +2; unknown NOVA: no listing-clarity bonus
- * - Nutrition: complete +3 / partial +1 / none −3
- * - Origin: none or placeholder −4; complete +4; partial neutral
- * Final: clamped 0–25
+ * Base: 15/25 (Highlight-ineligible)
+ * Ingredient wording clarity (governed flags): +1 / −2 / −4 / −6 / 0 unavailable
+ * Origins (OFF ingredient-origin gate): +8 single-ingredient evidently complete; other bands registered;
+ *   percentage/qualified/packet-gap unreachable under OFF-only MVP; insufficient/conflict → 0
+ * Final: clamped 0–25 (Highlight-ineligible)
+ *
+ * Supersedes v14: ingredient presence ±, NIP, NOVA listing bonus, field-presence origins ±.
  */
 
 import { Product } from '../../../types/product';
 import { logger } from '../../../utils/logger';
 import { powershellLogger } from '../../../utils/powershellLogger';
 import { countOpenPillarHiddenTermHits } from './openPillarHiddenTerms';
+import { assessOpenOriginsV15 } from './openPillarOriginsV15';
+import {
+  OPEN_V15_ADJUSTMENT_REGISTRY,
+  type OpenV15AdjustmentId,
+} from './openPillarV15Registry';
 
 /** Primary OFF ingredients field, then English fallback (same normalization across Open pillar). */
 export function getOpenPillarIngredientsText(product: Product): string {
@@ -27,232 +30,92 @@ export function getOpenPillarIngredientsText(product: Product): string {
   return en;
 }
 
+export interface OpenPillarAdjustment {
+  id: OpenV15AdjustmentId;
+  description: string;
+  value: number;
+  type: 'positive' | 'negative' | 'neutral';
+  highlightEligible: boolean;
+  family: 'system' | 'ingredients' | 'origins';
+}
+
 export interface OpenPillarResult {
   score: number;
   base: number;
-  adjustments: Array<{
-    description: string;
-    value: number;
-    type: 'positive' | 'negative' | 'neutral';
-  }>;
+  adjustments: OpenPillarAdjustment[];
   details: {
-    ingredientsScore: number;
     ingredientsLength: number;
-    hiddenTermsPenalty: number;
-    hiddenTermsCount: number;
-    listingClarityBonus: number;
-    nutritionalInfoAdjustment: number;
-    originPenalty: number;
+    governedFlagCount: number;
+    ingredientClarityAdjustment: number;
+    originsAdjustmentId: OpenV15AdjustmentId;
+    originsAdjustment: number;
+    originsProvenance: string;
   };
 }
 
+function isPlaceholderIngredients(text: string): boolean {
+  return /^(product|item|n\/a|not available|unknown|missing|no ingredients|ingredients not listed)/i.test(
+    text.trim()
+  );
+}
+
+function ingredientsUsableForV15(ingredientsText: string): boolean {
+  if (!ingredientsText || ingredientsText.trim().length === 0) return false;
+  if (isPlaceholderIngredients(ingredientsText)) return false;
+  return true;
+}
+
+function pushAdjustment(
+  adjustments: OpenPillarAdjustment[],
+  id: OpenV15AdjustmentId
+): OpenPillarAdjustment {
+  const meta = OPEN_V15_ADJUSTMENT_REGISTRY[id];
+  const adj: OpenPillarAdjustment = {
+    id,
+    description: meta.description,
+    value: meta.points,
+    type: meta.points > 0 ? 'positive' : meta.points < 0 ? 'negative' : 'neutral',
+    highlightEligible: meta.highlightEligible,
+    family: meta.family,
+  };
+  adjustments.push(adj);
+  return adj;
+}
+
+function ingredientClarityId(flagCount: number, usable: boolean): OpenV15AdjustmentId {
+  if (!usable) return 'open-v15-ing-clarity-unavailable';
+  if (flagCount === 0) return 'open-v15-ing-clarity-zero';
+  if (flagCount === 1) return 'open-v15-ing-clarity-one';
+  if (flagCount === 2) return 'open-v15-ing-clarity-two';
+  return 'open-v15-ing-clarity-three-plus';
+}
+
 export function calculateOpenPillar(product: Product): OpenPillarResult {
-  const adjustments: OpenPillarResult['adjustments'] = [];
+  const adjustments: OpenPillarAdjustment[] = [];
   let score = 15;
   const base = 15;
 
   const ingredientsText = getOpenPillarIngredientsText(product);
   const ingredientsLength = ingredientsText.length;
+  const usable = ingredientsUsableForV15(ingredientsText);
 
-  adjustments.push({
-    description: 'Base score (neutral starting point; uniform across pillars)',
-    value: 0,
-    type: 'neutral',
-  });
+  const governedFlagCount = usable ? countOpenPillarHiddenTermHits(ingredientsText) : 0;
+  const clarityId = ingredientClarityId(governedFlagCount, usable);
+  const clarityAdj = pushAdjustment(adjustments, clarityId);
+  score += clarityAdj.value;
 
-  let ingredientsScore = 0;
-  if (!ingredientsText || ingredientsLength === 0) {
-    ingredientsScore = -3;
-    adjustments.push({
-      description: 'No ingredients listed',
-      value: ingredientsScore,
-      type: 'negative',
-    });
-    score += ingredientsScore;
-  } else {
-    const isPlaceholder = /^(product|item|n\/a|not available|unknown|missing|no ingredients|ingredients not listed)/i.test(
-      ingredientsText
-    );
-    if (isPlaceholder) {
-      ingredientsScore = -3;
-      adjustments.push({
-        description: 'Ingredients placeholder text (not real ingredients)',
-        value: ingredientsScore,
-        type: 'negative',
-      });
-      score += ingredientsScore;
-    } else {
-      ingredientsScore = 2;
-      adjustments.push({
-        description: 'Ingredients disclosure present',
-        value: ingredientsScore,
-        type: 'positive',
-      });
-      score += ingredientsScore;
-    }
-  }
-
-  const hiddenTermsCount = countOpenPillarHiddenTermHits(ingredientsText);
-
-  let hiddenTermsPenalty = 0;
-  if (hiddenTermsCount >= 3) {
-    hiddenTermsPenalty = 11;
-  } else if (hiddenTermsCount === 2) {
-    hiddenTermsPenalty = 8;
-  } else if (hiddenTermsCount === 1) {
-    hiddenTermsPenalty = 4;
-  }
-
-  if (hiddenTermsPenalty > 0) {
-    adjustments.push({
-      description: `${hiddenTermsCount} vague-ingredient / disclosure-risk pattern(s) (Open v14 list)`,
-      value: -hiddenTermsPenalty,
-      type: 'negative',
-    });
-    score -= hiddenTermsPenalty;
-  }
-
-  let listingClarityBonus = 0;
-  if (hiddenTermsCount === 0) {
-    const nova = product.nova_group;
-    if (nova === 1 || nova === 2) {
-      listingClarityBonus = 4;
-      adjustments.push({
-        description: 'Listing clarity bonus (no vague-term matches + NOVA 1–2)',
-        value: listingClarityBonus,
-        type: 'positive',
-      });
-      score += listingClarityBonus;
-    } else if (nova === 3 || nova === 4) {
-      listingClarityBonus = 2;
-      adjustments.push({
-        description: 'Listing clarity bonus (no vague-term matches + NOVA 3–4)',
-        value: listingClarityBonus,
-        type: 'positive',
-      });
-      score += listingClarityBonus;
-    }
-  }
-
-  let nutritionalInfoAdjustment = 0;
-  const nutrients = product.nutriments || {};
-  const hasNutrients = Object.keys(nutrients).length > 0;
-
-  if (!hasNutrients) {
-    nutritionalInfoAdjustment = -3;
-    adjustments.push({
-      description: 'No nutritional information disclosed',
-      value: nutritionalInfoAdjustment,
-      type: 'negative',
-    });
-    score += nutritionalInfoAdjustment;
-  } else {
-    const hasPer100g = Object.keys(nutrients).some((key) => key.includes('_100g'));
-    const hasServingSize = !!product.serving_size || !!nutrients.serving_size;
-    const hasCompleteFormat = hasPer100g && hasServingSize;
-
-    const keyNutrients = ['energy', 'fat', 'carbohydrates', 'proteins', 'salt', 'sugars'];
-    const hasKeyNutrients = keyNutrients.some((nutrient) =>
-      Object.keys(nutrients).some((key) => key.toLowerCase().includes(nutrient))
-    );
-
-    if (hasCompleteFormat && hasKeyNutrients) {
-      nutritionalInfoAdjustment = 3;
-      adjustments.push({
-        description: 'Complete nutritional information (per 100g/serve benchmarks)',
-        value: nutritionalInfoAdjustment,
-        type: 'positive',
-      });
-      score += nutritionalInfoAdjustment;
-    } else if (hasKeyNutrients) {
-      nutritionalInfoAdjustment = 1;
-      adjustments.push({
-        description: 'Partial nutritional information disclosed',
-        value: nutritionalInfoAdjustment,
-        type: 'positive',
-      });
-      score += nutritionalInfoAdjustment;
-    } else {
-      adjustments.push({
-        description: 'Nutritional information present but incomplete',
-        value: 0,
-        type: 'neutral',
-      });
-    }
-  }
-
-  const hasOriginTags = Array.isArray(product.origins_tags) && product.origins_tags.length > 0;
-  const hasManufacturingTags = Array.isArray(product.manufacturing_places_tags) && product.manufacturing_places_tags.length > 0;
-  const hasOriginString = !!(product.origins && typeof product.origins === 'string' && product.origins.trim().length > 0);
-  const hasManufacturingString = !!(product.manufacturing_places && typeof product.manufacturing_places === 'string' && product.manufacturing_places.trim().length > 0);
-
-  const textFields = [product.product_name, product.product_name_en, product.generic_name, product.labels, product.labels_en]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-
-  const originPattern = /(?:product\s+(?:of|made\s+in)|made\s+in|origin:|origin\s+of|manufactured\s+in)\s+([a-z\s]+?)(?:[,;]|\s*$)/i;
-  const hasOriginInText = originPattern.test(textFields);
-
-  const placeholderValues = ['unknown', 'n/a', 'not available', 'missing', 'not disclosed', 'not specified'];
-  const originArrayValues = [
-    ...(Array.isArray(product.origins_tags) ? product.origins_tags.map((v) => String(v).toLowerCase()) : []),
-    ...(Array.isArray(product.manufacturing_places_tags) ? product.manufacturing_places_tags.map((v) => String(v).toLowerCase()) : []),
-  ];
-  const originString = (product.origins || product.manufacturing_places || '').toString().toLowerCase();
-  const allOriginValues = [...originArrayValues, originString, textFields].join(' ');
-
-  const hasOrigin: boolean =
-    hasOriginTags || hasManufacturingTags || hasOriginString || hasManufacturingString || hasOriginInText;
-
-  const isOriginComplete =
-    (hasOriginTags && hasOriginString) ||
-    (hasOriginTags && product.origins_tags && product.origins_tags.length > 1) ||
-    (hasManufacturingTags && hasManufacturingString);
-
-  let originAdjustment = 0;
-  if (!hasOrigin) {
-    originAdjustment = -4;
-    adjustments.push({
-      description: 'No origin information',
-      value: originAdjustment,
-      type: 'negative',
-    });
-    score += originAdjustment;
-  } else if (placeholderValues.some((placeholder) => allOriginValues.includes(placeholder))) {
-    originAdjustment = -4;
-    adjustments.push({
-      description: 'Origin information is placeholder text (not real origin)',
-      value: originAdjustment,
-      type: 'negative',
-    });
-    score += originAdjustment;
-  } else if (isOriginComplete) {
-    originAdjustment = 4;
-    adjustments.push({
-      description: 'Complete origin information disclosed',
-      value: originAdjustment,
-      type: 'positive',
-    });
-    score += originAdjustment;
-  } else {
-    adjustments.push({
-      description: 'Origin information available (partial)',
-      value: 0,
-      type: 'neutral',
-    });
-  }
+  const originsAssessment = assessOpenOriginsV15(product, ingredientsText, usable);
+  const originsAdj = pushAdjustment(adjustments, originsAssessment.id);
+  score += originsAdj.value;
 
   score = Math.max(0, Math.min(25, Math.round(score)));
 
-  logger.debug('[OpenPillar] Calculation:', {
+  logger.debug('[OpenPillar] v15 calculation:', {
     base,
-    ingredientsScore,
-    hiddenTermsPenalty,
-    hiddenTermsCount,
-    listingClarityBonus,
-    nutritionalInfoAdjustment,
-    originAdjustment,
+    governedFlagCount,
+    clarityId,
+    originsId: originsAssessment.id,
+    originsProvenance: originsAssessment.provenance,
     final: score,
   });
 
@@ -261,13 +124,12 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     base,
     adjustments,
     details: {
-      ingredientsScore,
       ingredientsLength,
-      hiddenTermsPenalty,
-      hiddenTermsCount,
-      listingClarityBonus,
-      nutritionalInfoAdjustment,
-      originPenalty: Math.abs(originAdjustment < 0 ? originAdjustment : 0),
+      governedFlagCount,
+      ingredientClarityAdjustment: clarityAdj.value,
+      originsAdjustmentId: originsAssessment.id,
+      originsAdjustment: originsAdj.value,
+      originsProvenance: originsAssessment.provenance,
     },
   };
 
@@ -276,7 +138,7 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     'Open',
     base,
     score,
-    adjustments,
+    adjustments.map((a) => ({ description: a.description, value: a.value, type: a.type })),
     result.details
   );
 

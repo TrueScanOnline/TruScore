@@ -366,12 +366,14 @@ export function buildTruScoreAnalysis(
     const adjustments: PillarAdjustmentWithSource[] = pr.adjustments.map((adj) => {
       const inferred = inferAdjustmentSource(pillarName, adj, productSourceDisplay);
       const referenceUrl = (adj as { referenceUrl?: string }).referenceUrl ?? inferred.referenceUrl;
+      const adjustmentId = (adj as { id?: string }).id;
       return {
         description: adj.description,
         value: adj.value,
         type: adj.type,
         sourceDatabase: inferred.sourceDatabase,
         queryKeyType: inferred.queryKeyType,
+        ...(adjustmentId != null && { adjustmentId }),
         ...(referenceUrl != null && { referenceUrl }),
       };
     });

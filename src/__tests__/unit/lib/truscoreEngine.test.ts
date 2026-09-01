@@ -98,7 +98,7 @@ describe('TruScore Engine', () => {
       expect(result.breakdown.Ethics).toBeGreaterThan(15); // Should have bonuses
     });
 
-    it('should handle missing ingredients (Open pillar penalty)', () => {
+    it('should handle missing ingredients (Open v15 neutral — no penalty)', () => {
       const product: Product = {
         barcode: '1234567890123',
         product_name: 'Test Product',
@@ -106,18 +106,18 @@ describe('TruScore Engine', () => {
       };
 
       const result = calculateTruScore(product);
-      expect(result.breakdown.Open).toBeLessThan(15); // Should have penalty
+      expect(result.breakdown.Open).toBe(15);
     });
 
-    it('should handle hidden terms penalty', () => {
+    it('should handle governed vague-term flags penalty', () => {
       const product: Product = {
         barcode: '1234567890123',
         product_name: 'Test Product',
-        ingredients_text: 'Water, sugar, parfum, fragrance, natural flavor',
+        ingredients_text: 'Water, sugar, natural flavor, aroma',
       };
 
       const result = calculateTruScore(product);
-      expect(result.breakdown.Open).toBeLessThan(15); // Should have penalty for hidden terms
+      expect(result.breakdown.Open).toBeLessThan(15);
     });
 
     it('should calculate complete score for full product', () => {

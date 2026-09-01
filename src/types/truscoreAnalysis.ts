@@ -21,6 +21,8 @@ export interface PillarAdjustmentWithSource {
   description: string;
   value: number;
   type: 'positive' | 'negative' | 'neutral';
+  /** Stable production adjustment ID (Open v15+). */
+  adjustmentId?: string;
   /** Which database/source provided the data that led to this adjustment */
   sourceDatabase?: string;
   /** How that source was queried (barcode, brand, parent, product field) */
