@@ -2,7 +2,9 @@
  * Open Pillar v15 — OFF ingredient-origin evidence gate.
  * OFF is the only approved Open product source for Wave 3 MVP.
  *
- * Raw disclosure inputs: `origins`, `origins_tags` (ingredient origin).
+ * +8 Evidently Complete requires exactly one valid structured `origins_tags` value.
+ * Free-text `origins` alone cannot establish +8; when both fields exist, free-text is
+ * contextual only and must mechanically normalize to the same single tag or fail closed.
  * Separate manufacturing fields (`manufacturing_places*`) are NOT ingredient-origin completeness.
  * Eco-Score `origins_of_ingredients` aggregated percentages are derived — never used for scoring.
  */
@@ -44,13 +46,16 @@ function isPlaceholderOriginValue(value: string): boolean {
   return PLACEHOLDER_ORIGIN_VALUES.has(v.replace(/\s+/g, ' '));
 }
 
-/** Nested subingredient/composition list inside parentheses (comma-separated). */
+/**
+ * MVP conservative parenthetical guard: comma-separated content inside parentheses
+ * disqualifies +8 eligibility (accepts false negatives rather than semantic parsing).
+ */
 export function hasNestedCompositionList(ingredientsText: string): boolean {
   return /\([^)]*,[^)]*\)/.test(ingredientsText);
 }
 
-/** Raw OFF ingredient-origin tags/strings — excludes manufacturing-only and Eco-Score derived data. */
-export function getRawOffIngredientOriginTags(product: Product): string[] {
+/** Valid structured OFF ingredient-origin tags from `origins_tags` only (strings). */
+export function getStructuredOffOriginTags(product: Product): string[] {
   const tags: string[] = [];
   if (Array.isArray(product.origins_tags)) {
     for (const t of product.origins_tags) {
@@ -59,19 +64,17 @@ export function getRawOffIngredientOriginTags(product: Product): string[] {
       if (n && !isPlaceholderOriginValue(n)) tags.push(n);
     }
   }
-  if (typeof product.origins === 'string' && product.origins.trim()) {
-    const parts = product.origins.split(/[,;]/).map((p) => p.trim()).filter(Boolean);
-    for (const p of parts) {
-      const n = normalizeOriginTag(p);
-      if (n && !isPlaceholderOriginValue(n)) tags.push(n);
-    }
-  }
   return [...new Set(tags)];
 }
 
-/** Distinct resolved countries from flat OFF origin fields (lexical variants deduped). */
+/** @deprecated Scoring uses structured tags only; retained for test/diagnostic imports. */
+export function getRawOffIngredientOriginTags(product: Product): string[] {
+  return getStructuredOffOriginTags(product);
+}
+
+/** Distinct resolved countries from structured `origins_tags` only. */
 export function resolveDistinctOffOriginCountries(product: Product): string[] {
-  return getRawOffIngredientOriginTags(product);
+  return getStructuredOffOriginTags(product);
 }
 
 function hasManufacturingOnlySignal(product: Product): boolean {
@@ -89,19 +92,35 @@ function ingredientTokensForOriginsGate(ingredientsText: string): string[] {
   return trimmed ? [trimmed] : [];
 }
 
+/**
+ * When free-text `origins` is present alongside a single structured tag, require narrow
+ * whole-string mechanical normalization match — no conjunction parsing or splitting.
+ */
+function freeTextOriginsConsistentWithStructuredTag(
+  product: Product,
+  normalizedStructuredTag: string
+): boolean {
+  if (typeof product.origins !== 'string' || !product.origins.trim()) return true;
+  const normalizedOrigins = normalizeOriginTag(product.origins);
+  return normalizedOrigins === normalizedStructuredTag;
+}
+
 function singleIngredientEvidentlyCompleteEligible(
   ingredientsText: string,
   governedFlagCount: number
 ): { eligible: boolean; reason?: string } {
   const tokens = ingredientTokensForOriginsGate(ingredientsText);
   if (tokens.length !== 1) {
-    return { eligible: false, reason: 'Requires exactly one substantive ingredient' };
+    return { eligible: false, reason: 'Requires exactly one actual declared ingredient' };
   }
   if (governedFlagCount > 0) {
     return { eligible: false, reason: 'Governed vague or code-dependent ingredient wording present' };
   }
   if (hasNestedCompositionList(ingredientsText)) {
-    return { eligible: false, reason: 'Nested subingredient/composition list not permitted for +8' };
+    return {
+      eligible: false,
+      reason: 'Comma-separated parenthetical content disqualifies +8 at MVP',
+    };
   }
   return { eligible: true };
 }
@@ -125,31 +144,36 @@ export function assessOpenOriginsV15(
     };
   }
 
-  const distinctCountries = resolveDistinctOffOriginCountries(product);
+  const structuredTags = getStructuredOffOriginTags(product);
   const tokens = ingredientTokensForOriginsGate(ingredientsText);
   const multiIngredient = tokens.length !== 1;
 
-  if (distinctCountries.length > 1) {
+  if (structuredTags.length > 1) {
     return {
       id: 'open-v15-origins-insufficient',
       value: 0,
       provenance: 'off_insufficient',
-      detail: 'Multiple distinct OFF ingredient-origin countries — flat record non-scoring',
+      detail: 'Multiple distinct structured OFF origin tags — flat record non-scoring',
     };
   }
 
   const singleEligible = singleIngredientEvidentlyCompleteEligible(ingredientsText, governedFlagCount);
 
-  if (!multiIngredient && distinctCountries.length === 1 && singleEligible.eligible) {
+  if (
+    !multiIngredient &&
+    structuredTags.length === 1 &&
+    singleEligible.eligible &&
+    freeTextOriginsConsistentWithStructuredTag(product, structuredTags[0])
+  ) {
     return {
       id: 'open-v15-origins-evidently-complete',
       value: 8,
       provenance: 'off_raw_origins',
-      detail: `Single-ingredient product with raw OFF origin: ${distinctCountries[0]}`,
+      detail: `Single-ingredient product with structured OFF origin tag: ${structuredTags[0]}`,
     };
   }
 
-  if (!multiIngredient && distinctCountries.length === 1 && !singleEligible.eligible) {
+  if (!multiIngredient && structuredTags.length === 1 && !singleEligible.eligible) {
     return {
       id: 'open-v15-origins-insufficient',
       value: 0,
@@ -158,9 +182,23 @@ export function assessOpenOriginsV15(
     };
   }
 
+  if (
+    !multiIngredient &&
+    structuredTags.length === 1 &&
+    singleEligible.eligible &&
+    !freeTextOriginsConsistentWithStructuredTag(product, structuredTags[0])
+  ) {
+    return {
+      id: 'open-v15-origins-insufficient',
+      value: 0,
+      provenance: 'off_insufficient',
+      detail: 'Free-text origins not mechanically consistent with structured origin tag',
+    };
+  }
+
   // Multi-ingredient: do not infer completeness or percentages from partial OFF data.
   if (multiIngredient) {
-    if (distinctCountries.length > 0) {
+    if (structuredTags.length > 0) {
       return {
         id: 'open-v15-origins-insufficient',
         value: 0,
@@ -184,8 +222,8 @@ export function assessOpenOriginsV15(
     };
   }
 
-  // Single ingredient but no raw origin country.
-  if (hasManufacturingOnlySignal(product) && distinctCountries.length === 0) {
+  // Single ingredient but no qualifying structured origin tag (+8 requires origins_tags).
+  if (hasManufacturingOnlySignal(product) && structuredTags.length === 0) {
     return {
       id: 'open-v15-origins-insufficient',
       value: 0,
@@ -198,6 +236,6 @@ export function assessOpenOriginsV15(
     id: 'open-v15-origins-insufficient',
     value: 0,
     provenance: 'off_insufficient',
-    detail: 'Insufficient OFF ingredient-origin evidence',
+    detail: 'Insufficient structured OFF ingredient-origin evidence',
   };
 }

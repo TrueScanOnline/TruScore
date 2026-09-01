@@ -8,7 +8,7 @@ import {
 } from '../../../../lib/truscoreEngine/pillars/openPillar';
 import {
   assessOpenOriginsV15,
-  getRawOffIngredientOriginTags,
+  getStructuredOffOriginTags,
   hasNestedCompositionList,
   resolveDistinctOffOriginCountries,
 } from '../../../../lib/truscoreEngine/pillars/openPillarOriginsV15';
@@ -140,142 +140,191 @@ describe('Open Pillar v15', () => {
     expect(result.adjustments.some((a) => a.description.includes('No origin information'))).toBe(false);
   });
 
-  test('genuine single-ingredient + raw OFF origin: +8 evidently complete', () => {
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'Honey',
-      origins_tags: ['en:new-zealand'],
-      origins: 'New Zealand',
-    };
-    const result = calculateOpenPillar(product);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete' && a.value === 8)).toBe(
-      true
-    );
-    expect(result.score).toBe(24);
-  });
+  describe('OFF Evidently Complete +8 gate', () => {
+    test('Honey + one valid origins_tags country → +8 subject to all other gates', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins_tags: ['en:new-zealand'],
+      };
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete' && a.value === 8)).toBe(
+        true
+      );
+      expect(result.score).toBe(24);
+    });
 
-  test('origins and origins_tags lexical variants resolve to one country (not conflict)', () => {
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'Honey',
-      origins: 'New Zealand',
-      origins_tags: ['en:new-zealand'],
-    };
-    expect(resolveDistinctOffOriginCountries(product)).toEqual(['new zealand']);
-    const result = calculateOpenPillar(product);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete' && a.value === 8)).toBe(
-      true
-    );
-  });
+    test('Honey + origins: "New Zealand" but no origins_tags → 0', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins: 'New Zealand',
+      };
+      expect(getStructuredOffOriginTags(product)).toEqual([]);
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient' && a.value === 0)).toBe(
+        true
+      );
+      expect(result.score).toBe(16);
+    });
 
-  test('vague sole ingredient with origin present fails +8', () => {
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'natural flavor',
-      origins_tags: ['en:france'],
-    };
-    const result = calculateOpenPillar(product);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
-    expect(result.score).toBe(13);
-  });
+    test('Honey + origins: "New Zealand and Australia" but no tags → 0', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins: 'New Zealand and Australia',
+      };
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+    });
 
-  test('nested compound ingredient with origin present fails +8', () => {
-    expect(hasNestedCompositionList('Honey (raw, unfiltered)')).toBe(true);
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'Honey (raw, unfiltered)',
-      origins_tags: ['en:new-zealand'],
-    };
-    const result = calculateOpenPillar(product);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
-  });
+    test('Honey, water + one tag → 0', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey, water',
+        origins_tags: ['en:new-zealand'],
+      };
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+    });
 
-  test('multi-ingredient with origin tags: no +8 inference', () => {
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'Honey, water',
-      origins_tags: ['en:new-zealand'],
-    };
-    const result = calculateOpenPillar(product);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
-  });
+    test('Corn, salt + one tag → 0', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Corn, salt',
+        origins_tags: ['en:france'],
+      };
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+    });
 
-  test('two or more distinct OFF countries: insufficient 0 (not +8)', () => {
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'Honey',
-      origins_tags: ['en:new-zealand', 'en:australia'],
-    };
-    const result = calculateOpenPillar(product);
-    expect(resolveDistinctOffOriginCountries(product).length).toBe(2);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient' && a.value === 0)).toBe(
-      true
-    );
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-conflict')).toBe(false);
-  });
+    test('Honey (raw, unfiltered) + one tag → 0 under conservative parenthetical guard', () => {
+      expect(hasNestedCompositionList('Honey (raw, unfiltered)')).toBe(true);
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey (raw, unfiltered)',
+        origins_tags: ['en:new-zealand'],
+      };
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+    });
 
-  test('malformed non-string origins_tags ignored — no throw, +8 when one valid string remains', () => {
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'Honey',
-      origins_tags: [123 as unknown as string, null as unknown as string, { origin: 'en:france' } as unknown as string, 'en:new-zealand'],
-    };
-    expect(() => getRawOffIngredientOriginTags(product)).not.toThrow();
-    expect(getRawOffIngredientOriginTags(product)).toEqual(['new zealand']);
-    const result = calculateOpenPillar(product);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete' && a.value === 8)).toBe(
-      true
-    );
-  });
+    test('consistent free-text origins with single structured tag does not expand eligibility beyond tag', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins: 'New Zealand',
+        origins_tags: ['en:new-zealand'],
+      };
+      expect(resolveDistinctOffOriginCountries(product)).toEqual(['new zealand']);
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete' && a.value === 8)).toBe(
+        true
+      );
+    });
 
-  test('malformed origins_tags with no valid strings: insufficient 0, no throw', () => {
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'Honey',
-      origins_tags: [42 as unknown as string, null as unknown as string],
-    };
-    expect(() => calculateOpenPillar(product)).not.toThrow();
-    const result = calculateOpenPillar(product);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
-  });
+    test('inconsistent free-text origins with single structured tag fails closed → 0', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins: 'New Zealand and Australia',
+        origins_tags: ['en:new-zealand'],
+      };
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+    });
 
-  test('manufacturing-only signal does not score ingredient origins', () => {
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'Honey, water',
-      manufacturing_places_tags: ['en:australia'],
-      manufacturing_places: 'Australia',
-    };
-    const assessment = assessOpenOriginsV15(product, product.ingredients_text!, true, 0);
-    expect(assessment.id).toBe('open-v15-origins-insufficient');
-    expect(assessment.value).toBe(0);
-  });
+    test('vague sole ingredient with structured tag present fails +8', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'natural flavor',
+        origins_tags: ['en:france'],
+      };
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+      expect(result.score).toBe(13);
+    });
 
-  test('Environmental/Eco-Score aggregated origins alone are score-inert (no +8)', () => {
-    const product = {
-      ...baseProduct,
-      ingredients_text: 'Honey',
-      ecoscore_data: {
-        score: 80,
-        grade: 'a' as const,
-        origins_of_ingredients: {
-          aggregated_origins: [{ origin: 'en:france', percent: 100 }],
+    test('two or more distinct structured origin tags → insufficient 0', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins_tags: ['en:new-zealand', 'en:australia'],
+      };
+      expect(resolveDistinctOffOriginCountries(product).length).toBe(2);
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient' && a.value === 0)).toBe(
+        true
+      );
+    });
+
+    test('malformed non-string origins_tags ignored — no throw, +8 when one valid string remains', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins_tags: [123 as unknown as string, null as unknown as string, { origin: 'en:france' } as unknown as string, 'en:new-zealand'],
+      };
+      expect(() => getStructuredOffOriginTags(product)).not.toThrow();
+      expect(getStructuredOffOriginTags(product)).toEqual(['new zealand']);
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete' && a.value === 8)).toBe(
+        true
+      );
+    });
+
+    test('malformed origins_tags with no valid strings: insufficient 0, no throw', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins_tags: [42 as unknown as string, null as unknown as string],
+      };
+      expect(() => calculateOpenPillar(product)).not.toThrow();
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+    });
+
+    test('Environmental/Eco-Score aggregated origins alone are score-inert (no +8)', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        ecoscore_data: {
+          score: 80,
+          grade: 'a' as const,
+          origins_of_ingredients: {
+            aggregated_origins: [{ origin: 'en:france', percent: 100 }],
+          },
         },
-      },
-    };
-    expect(getRawOffIngredientOriginTags(product)).toEqual([]);
-    expect(resolveDistinctOffOriginCountries(product)).toEqual([]);
-    const result = calculateOpenPillar(product);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
-    expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient' && a.value === 0)).toBe(
-      true
-    );
-    expect(result.score).toBe(16);
+      };
+      expect(getStructuredOffOriginTags(product)).toEqual([]);
+      expect(resolveDistinctOffOriginCountries(product)).toEqual([]);
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient' && a.value === 0)).toBe(
+        true
+      );
+      expect(result.score).toBe(16);
+    });
+
+    test('manufacturing-only signal does not score ingredient origins', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey, water',
+        manufacturing_places_tags: ['en:australia'],
+        manufacturing_places: 'Australia',
+      };
+      const assessment = assessOpenOriginsV15(product, product.ingredients_text!, true, 0);
+      expect(assessment.id).toBe('open-v15-origins-insufficient');
+      expect(assessment.value).toBe(0);
+    });
   });
 
   test('score clamps at 0–25', () => {
