@@ -8,6 +8,7 @@ import {
 } from '../../../../lib/truscoreEngine/pillars/openPillar';
 import {
   assessOpenOriginsV15,
+  auditOriginsTagsEvidence,
   getStructuredOffOriginTags,
   hasNestedCompositionList,
   resolveDistinctOffOriginCountries,
@@ -266,14 +267,48 @@ describe('Open Pillar v15', () => {
       );
     });
 
-    test('malformed non-string origins_tags ignored — no throw, +8 when one valid string remains', () => {
+    test('malformed origins_tags alongside valid tag fail closed → 0, no throw', () => {
       const product = {
         ...baseProduct,
         ingredients_text: 'Honey',
         origins_tags: [123 as unknown as string, null as unknown as string, { origin: 'en:france' } as unknown as string, 'en:new-zealand'],
       };
-      expect(() => getStructuredOffOriginTags(product)).not.toThrow();
-      expect(getStructuredOffOriginTags(product)).toEqual(['new zealand']);
+      expect(() => auditOriginsTagsEvidence(product)).not.toThrow();
+      expect(auditOriginsTagsEvidence(product).dirty).toBe(true);
+      expect(getStructuredOffOriginTags(product)).toEqual([]);
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+    });
+
+    test.each([
+      ['numeric', 123],
+      ['null', null],
+      ['object', { origin: 'en:france' }],
+      ['unknown placeholder', 'en:unknown'],
+      ['n/a placeholder', 'n/a'],
+      ['empty tag', 'en:'],
+    ] as const)('dirty evidence: %s alongside en:new-zealand → 0', (_label, badEntry) => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins_tags: [badEntry as unknown as string, 'en:new-zealand'],
+      };
+      expect(() => calculateOpenPillar(product)).not.toThrow();
+      expect(auditOriginsTagsEvidence(product).dirty).toBe(true);
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+    });
+
+    test('exact duplicate valid origins_tags deduplicate and remain +8 eligible', () => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins_tags: ['en:new-zealand', 'en:new-zealand'],
+      };
+      expect(auditOriginsTagsEvidence(product).dirty).toBe(false);
+      expect(resolveDistinctOffOriginCountries(product)).toEqual(['new zealand']);
       const result = calculateOpenPillar(product);
       expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete' && a.value === 8)).toBe(
         true
@@ -291,6 +326,39 @@ describe('Open Pillar v15', () => {
       expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
       expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
     });
+
+    test.each([
+      ['en:oceania'],
+      ['en:europe'],
+      ['en:european-union'],
+      ['en:asia'],
+      ['en:canterbury'],
+    ])('unrecognised structured tag %s alone → insufficient 0', (tag) => {
+      const product = {
+        ...baseProduct,
+        ingredients_text: 'Honey',
+        origins_tags: [tag],
+      };
+      expect(resolveDistinctOffOriginCountries(product)).toEqual([]);
+      const result = calculateOpenPillar(product);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient' && a.value === 0)).toBe(
+        true
+      );
+    });
+
+    test.each(['en:new-zealand', 'en:australia', 'en:china'])(
+      'recognised country tag %s resolves for clean evidence',
+      (tag) => {
+        const product = {
+          ...baseProduct,
+          ingredients_text: 'Honey',
+          origins_tags: [tag],
+        };
+        expect(auditOriginsTagsEvidence(product).dirty).toBe(false);
+        expect(resolveDistinctOffOriginCountries(product).length).toBe(1);
+      }
+    );
 
     test('Environmental/Eco-Score aggregated origins alone are score-inert (no +8)', () => {
       const product = {

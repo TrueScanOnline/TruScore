@@ -2,14 +2,15 @@
  * Open Pillar v15 — OFF ingredient-origin evidence gate.
  * OFF is the only approved Open product source for Wave 3 MVP.
  *
- * +8 Evidently Complete requires exactly one valid structured `origins_tags` value.
- * Free-text `origins` alone cannot establish +8; when both fields exist, free-text is
- * contextual only and must mechanically normalize to the same single tag or fail closed.
+ * +8 Evidently Complete requires exactly one valid structured `origins_tags` value
+ * representing a recognised country, with a clean complete evidence set (no malformed,
+ * placeholder or unrecognised entries). Free-text `origins` alone cannot establish +8.
  * Separate manufacturing fields (`manufacturing_places*`) are NOT ingredient-origin completeness.
  * Eco-Score `origins_of_ingredients` aggregated percentages are derived — never used for scoring.
  */
 
 import { Product } from '../../../types/product';
+import { COUNTRIES } from '../../../utils/countries';
 import { tokenizeIngredientsText } from './openPillarHiddenTerms';
 import type { OpenV15AdjustmentId } from './openPillarV15Registry';
 
@@ -31,6 +32,13 @@ export interface OpenOriginsV15Assessment {
   detail: string;
 }
 
+export interface OriginsTagsEvidenceAudit {
+  /** Complete set contained malformed, placeholder or unrecognised entries. */
+  dirty: boolean;
+  /** Distinct recognised countries from clean string entries only (pre-dedup source list). */
+  distinctRecognizedCountries: string[];
+}
+
 function normalizeOriginTag(tag: string): string {
   return tag
     .toLowerCase()
@@ -39,11 +47,71 @@ function normalizeOriginTag(tag: string): string {
     .trim();
 }
 
+function mechanicalCountryKey(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/^en:/, '')
+    .replace(/-/g, ' ')
+    .replace(/['().]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const RECOGNIZED_OFF_COUNTRY_KEYS = new Set(
+  COUNTRIES.map((c) => mechanicalCountryKey(c.name)).filter(Boolean)
+);
+
 function isPlaceholderOriginValue(value: string): boolean {
   const v = value.toLowerCase().trim();
   if (!v) return true;
   if (PLACEHOLDER_ORIGIN_VALUES.has(v)) return true;
   return PLACEHOLDER_ORIGIN_VALUES.has(v.replace(/\s+/g, ' '));
+}
+
+function isRecognizedOffCountry(normalizedTag: string): boolean {
+  return RECOGNIZED_OFF_COUNTRY_KEYS.has(mechanicalCountryKey(normalizedTag));
+}
+
+/**
+ * Inspect the complete supplied `origins_tags` evidence set before deduplication.
+ * Malformed, empty, placeholder and unrecognised entries mark the set dirty (+8 ineligible).
+ */
+export function auditOriginsTagsEvidence(product: Product): OriginsTagsEvidenceAudit {
+  if (!Array.isArray(product.origins_tags) || product.origins_tags.length === 0) {
+    return { dirty: false, distinctRecognizedCountries: [] };
+  }
+
+  let dirty = false;
+  const recognized: string[] = [];
+
+  for (const entry of product.origins_tags) {
+    if (typeof entry !== 'string') {
+      dirty = true;
+      continue;
+    }
+    const trimmed = entry.trim();
+    if (!trimmed || trimmed === 'en:') {
+      dirty = true;
+      continue;
+    }
+    const normalized = normalizeOriginTag(trimmed);
+    if (!normalized || isPlaceholderOriginValue(normalized)) {
+      dirty = true;
+      continue;
+    }
+    if (!isRecognizedOffCountry(normalized)) {
+      dirty = true;
+      continue;
+    }
+    recognized.push(normalized);
+  }
+
+  return {
+    dirty,
+    distinctRecognizedCountries: [...new Set(recognized)],
+  };
 }
 
 /**
@@ -54,17 +122,11 @@ export function hasNestedCompositionList(ingredientsText: string): boolean {
   return /\([^)]*,[^)]*\)/.test(ingredientsText);
 }
 
-/** Valid structured OFF ingredient-origin tags from `origins_tags` only (strings). */
+/** Recognised countries from structured `origins_tags` when the evidence set is clean. */
 export function getStructuredOffOriginTags(product: Product): string[] {
-  const tags: string[] = [];
-  if (Array.isArray(product.origins_tags)) {
-    for (const t of product.origins_tags) {
-      if (typeof t !== 'string') continue;
-      const n = normalizeOriginTag(t);
-      if (n && !isPlaceholderOriginValue(n)) tags.push(n);
-    }
-  }
-  return [...new Set(tags)];
+  const audit = auditOriginsTagsEvidence(product);
+  if (audit.dirty) return [];
+  return audit.distinctRecognizedCountries;
 }
 
 /** @deprecated Scoring uses structured tags only; retained for test/diagnostic imports. */
@@ -72,7 +134,7 @@ export function getRawOffIngredientOriginTags(product: Product): string[] {
   return getStructuredOffOriginTags(product);
 }
 
-/** Distinct resolved countries from structured `origins_tags` only. */
+/** Distinct recognised countries from clean structured `origins_tags` only. */
 export function resolveDistinctOffOriginCountries(product: Product): string[] {
   return getStructuredOffOriginTags(product);
 }
@@ -144,11 +206,21 @@ export function assessOpenOriginsV15(
     };
   }
 
-  const structuredTags = getStructuredOffOriginTags(product);
+  const originsAudit = auditOriginsTagsEvidence(product);
+  const structuredCountries = originsAudit.dirty ? [] : originsAudit.distinctRecognizedCountries;
   const tokens = ingredientTokensForOriginsGate(ingredientsText);
   const multiIngredient = tokens.length !== 1;
 
-  if (structuredTags.length > 1) {
+  if (originsAudit.dirty) {
+    return {
+      id: 'open-v15-origins-insufficient',
+      value: 0,
+      provenance: 'off_insufficient',
+      detail: 'Dirty structured origins_tags evidence — fail closed',
+    };
+  }
+
+  if (structuredCountries.length > 1) {
     return {
       id: 'open-v15-origins-insufficient',
       value: 0,
@@ -161,19 +233,19 @@ export function assessOpenOriginsV15(
 
   if (
     !multiIngredient &&
-    structuredTags.length === 1 &&
+    structuredCountries.length === 1 &&
     singleEligible.eligible &&
-    freeTextOriginsConsistentWithStructuredTag(product, structuredTags[0])
+    freeTextOriginsConsistentWithStructuredTag(product, structuredCountries[0])
   ) {
     return {
       id: 'open-v15-origins-evidently-complete',
       value: 8,
       provenance: 'off_raw_origins',
-      detail: `Single-ingredient product with structured OFF origin tag: ${structuredTags[0]}`,
+      detail: `Single-ingredient product with structured OFF origin tag: ${structuredCountries[0]}`,
     };
   }
 
-  if (!multiIngredient && structuredTags.length === 1 && !singleEligible.eligible) {
+  if (!multiIngredient && structuredCountries.length === 1 && !singleEligible.eligible) {
     return {
       id: 'open-v15-origins-insufficient',
       value: 0,
@@ -184,9 +256,9 @@ export function assessOpenOriginsV15(
 
   if (
     !multiIngredient &&
-    structuredTags.length === 1 &&
+    structuredCountries.length === 1 &&
     singleEligible.eligible &&
-    !freeTextOriginsConsistentWithStructuredTag(product, structuredTags[0])
+    !freeTextOriginsConsistentWithStructuredTag(product, structuredCountries[0])
   ) {
     return {
       id: 'open-v15-origins-insufficient',
@@ -198,7 +270,7 @@ export function assessOpenOriginsV15(
 
   // Multi-ingredient: do not infer completeness or percentages from partial OFF data.
   if (multiIngredient) {
-    if (structuredTags.length > 0) {
+    if (structuredCountries.length > 0) {
       return {
         id: 'open-v15-origins-insufficient',
         value: 0,
@@ -223,7 +295,7 @@ export function assessOpenOriginsV15(
   }
 
   // Single ingredient but no qualifying structured origin tag (+8 requires origins_tags).
-  if (hasManufacturingOnlySignal(product) && structuredTags.length === 0) {
+  if (hasManufacturingOnlySignal(product) && structuredCountries.length === 0) {
     return {
       id: 'open-v15-origins-insufficient',
       value: 0,
