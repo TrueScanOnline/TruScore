@@ -10,6 +10,7 @@ import {
 } from './ethicsCertificationsService';
 import { ORGANIC_LABEL_TEXT_CLAIM_TAG, ORGANIC_PRODUCT_NAME_CLAIM_TAG } from '../constants/certDisplay';
 import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
+import { markNova1ProvenanceOff } from '../utils/nova1Provenance';
 import {
   backoffDelayMs,
   classifyFetchException,
@@ -92,6 +93,11 @@ async function fetchProductFromOFFInstanceOnce(
       barcode,
       source: 'openfoodfacts',
     };
+
+    // Affirmative external NOVA 1 from OFF — durable Highlight-eligible provenance.
+    if (product.nova_group === 1) {
+      markNova1ProvenanceOff(product);
+    }
 
     enhanceProductWithSustainabilityData(product);
     applyResolvedNutrientLevels(product);

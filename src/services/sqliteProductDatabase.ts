@@ -15,7 +15,7 @@ import { getOffRevalidationTimestamp } from './offRevalidationPolicy';
 const DB_NAME = 'truescan_products.db';
 let db: SQLite.SQLiteDatabase | null = null;
 
-/** Add columns introduced after v1 schema (OFF packaging + Eco-Score / carbon footprint). */
+/** Add columns introduced after v1 schema (OFF packaging + Eco-Score / carbon footprint + scoring inputs). */
 async function ensureProductTableColumns(database: SQLite.SQLiteDatabase): Promise<void> {
   try {
     const rows = await database.getAllAsync<{ name: string }>('PRAGMA table_info(products)');
@@ -26,6 +26,23 @@ async function ensureProductTableColumns(database: SQLite.SQLiteDatabase): Promi
       ['packaging', 'TEXT'],
       ['packaging_tags', 'TEXT'],
       ['url', 'TEXT'],
+      // Wave 3 P1-A: scoring-input parity vs AsyncStorage full cache
+      ['nova_group', 'INTEGER'],
+      ['nova1_provenance', 'TEXT'],
+      ['origins', 'TEXT'],
+      ['origins_tags', 'TEXT'],
+      ['manufacturing_places_tags', 'TEXT'],
+      ['ingredients_text_en', 'TEXT'],
+      ['brand_owner', 'TEXT'],
+      ['labels_hierarchy', 'TEXT'],
+      ['labels', 'TEXT'],
+      ['labels_en', 'TEXT'],
+      ['certifications', 'TEXT'],
+      ['ethics_msc_api_validated', 'INTEGER'],
+      ['packagings_complete', 'INTEGER'],
+      ['packaging_text_in_languages', 'TEXT'],
+      ['true_scan_market', 'TEXT'],
+      ['scoring_runtime_json', 'TEXT'],
     ];
     for (const [col, sqlType] of additions) {
       if (!existing.has(col)) {
@@ -292,6 +309,19 @@ export async function saveProductToSQLite(
       }
     }
     
+    const runtimePayload = {
+      _shared_identity_context: (product as Product & { _shared_identity_context?: unknown })._shared_identity_context,
+      _frozen_benchmark_attribution: (product as Product & { _frozen_benchmark_attribution?: unknown })
+        ._frozen_benchmark_attribution,
+      phase6_benchmark_owner_entity_id: (product as Product & { phase6_benchmark_owner_entity_id?: unknown })
+        .phase6_benchmark_owner_entity_id,
+      phase6_previous_owner_entity_id: (product as Product & { phase6_previous_owner_entity_id?: unknown })
+        .phase6_previous_owner_entity_id,
+      phase6_current_owner_effective_date: (product as Product & { phase6_current_owner_effective_date?: unknown })
+        .phase6_current_owner_effective_date,
+    };
+    const hasRuntime = Object.values(runtimePayload).some((v) => v !== undefined && v !== null);
+
     const row: SQLiteProductRow = {
       barcode: product.barcode,
       product_name: product.product_name || null,
@@ -325,6 +355,28 @@ export async function saveProductToSQLite(
       completion: product.completion || null,
       last_updated: lastUpdated,
       country_filter: countryCode || null,
+      nova_group: product.nova_group ?? null,
+      nova1_provenance: product.nova1Provenance ?? null,
+      origins: product.origins || null,
+      origins_tags: product.origins_tags ? JSON.stringify(product.origins_tags) : null,
+      manufacturing_places_tags: product.manufacturing_places_tags
+        ? JSON.stringify(product.manufacturing_places_tags)
+        : null,
+      ingredients_text_en: product.ingredients_text_en || null,
+      brand_owner: product.brand_owner || null,
+      labels_hierarchy: product.labels_hierarchy ? JSON.stringify(product.labels_hierarchy) : null,
+      labels: product.labels || null,
+      labels_en: product.labels_en || null,
+      certifications: product.certifications ? JSON.stringify(product.certifications) : null,
+      ethics_msc_api_validated:
+        product.ethics_msc_api_validated === true ? 1 : product.ethics_msc_api_validated === false ? 0 : null,
+      packagings_complete:
+        product.packagings_complete === true ? 1 : product.packagings_complete === false ? 0 : null,
+      packaging_text_in_languages: product.packaging_text_in_languages
+        ? JSON.stringify(product.packaging_text_in_languages)
+        : null,
+      true_scan_market: product.true_scan_market || null,
+      scoring_runtime_json: hasRuntime ? JSON.stringify(runtimePayload) : null,
     };
     
     await database.runAsync(
@@ -334,8 +386,12 @@ export async function saveProductToSQLite(
         packaging_data, ecoscore_data, packagings, packaging, packaging_tags, url,
         manufacturing_places, countries, ecoscore_grade, ecoscore_score,
         nutriscore_grade, nutriscore_score, labels_tags, allergens_tags, additives_tags,
-        source, quality, completion, last_updated, country_filter
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        source, quality, completion, last_updated, country_filter,
+        nova_group, nova1_provenance, origins, origins_tags, manufacturing_places_tags,
+        ingredients_text_en, brand_owner, labels_hierarchy, labels, labels_en, certifications,
+        ethics_msc_api_validated, packagings_complete, packaging_text_in_languages,
+        true_scan_market, scoring_runtime_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         row.barcode, row.product_name, row.product_name_en, row.brands, row.generic_name,
         row.categories, row.categories_tags, row.ingredients_text, row.image_url,
@@ -347,7 +403,23 @@ export async function saveProductToSQLite(
         row.url ?? null,
         row.manufacturing_places, row.countries, row.ecoscore_grade, row.ecoscore_score,
         row.nutriscore_grade, row.nutriscore_score, row.labels_tags, row.allergens_tags,
-        row.additives_tags, row.source, row.quality, row.completion, row.last_updated, row.country_filter
+        row.additives_tags, row.source, row.quality, row.completion, row.last_updated, row.country_filter,
+        row.nova_group ?? null,
+        row.nova1_provenance ?? null,
+        row.origins ?? null,
+        row.origins_tags ?? null,
+        row.manufacturing_places_tags ?? null,
+        row.ingredients_text_en ?? null,
+        row.brand_owner ?? null,
+        row.labels_hierarchy ?? null,
+        row.labels ?? null,
+        row.labels_en ?? null,
+        row.certifications ?? null,
+        row.ethics_msc_api_validated ?? null,
+        row.packagings_complete ?? null,
+        row.packaging_text_in_languages ?? null,
+        row.true_scan_market ?? null,
+        row.scoring_runtime_json ?? null,
       ]
     );
     
@@ -484,6 +556,23 @@ interface SQLiteProductRow {
   completion: number | null;
   last_updated: number;
   country_filter: string | null;
+  // Wave 3 P1-A scoring inputs
+  nova_group?: number | null;
+  nova1_provenance?: string | null;
+  origins?: string | null;
+  origins_tags?: string | null;
+  manufacturing_places_tags?: string | null;
+  ingredients_text_en?: string | null;
+  brand_owner?: string | null;
+  labels_hierarchy?: string | null;
+  labels?: string | null;
+  labels_en?: string | null;
+  certifications?: string | null;
+  ethics_msc_api_validated?: number | null;
+  packagings_complete?: number | null;
+  packaging_text_in_languages?: string | null;
+  true_scan_market?: string | null;
+  scoring_runtime_json?: string | null;
 }
 
 function parseJsonField<T>(raw: string | null | undefined, field: string): T | undefined {
@@ -506,6 +595,7 @@ function convertRowToProduct(row: SQLiteProductRow): Product {
     categories: row.categories || undefined,
     categories_tags: row.categories_tags ? JSON.parse(row.categories_tags) : undefined,
     ingredients_text: row.ingredients_text || undefined,
+    ingredients_text_en: row.ingredients_text_en || undefined,
     image_url: row.image_url || undefined,
     image_front_url: row.image_front_url || undefined,
     image_front_small_url: row.image_front_small_url || undefined,
@@ -517,6 +607,7 @@ function convertRowToProduct(row: SQLiteProductRow): Product {
     packaging_tags: parseJsonField(row.packaging_tags, 'packaging_tags'),
     url: row.url || undefined,
     manufacturing_places: row.manufacturing_places || undefined,
+    manufacturing_places_tags: parseJsonField(row.manufacturing_places_tags, 'manufacturing_places_tags'),
     countries: row.countries || undefined,
     ecoscore_grade: (row.ecoscore_grade && ['a', 'b', 'c', 'd', 'e', 'unknown'].includes(row.ecoscore_grade.toLowerCase())) 
       ? row.ecoscore_grade.toLowerCase() as 'a' | 'b' | 'c' | 'd' | 'e' | 'unknown'
@@ -527,12 +618,47 @@ function convertRowToProduct(row: SQLiteProductRow): Product {
       : undefined,
     nutriscore_score: row.nutriscore_score || undefined,
     labels_tags: row.labels_tags ? JSON.parse(row.labels_tags) : undefined,
+    labels_hierarchy: parseJsonField(row.labels_hierarchy, 'labels_hierarchy'),
+    labels: row.labels || undefined,
+    labels_en: row.labels_en || undefined,
+    certifications: parseJsonField(row.certifications, 'certifications'),
     allergens_tags: row.allergens_tags ? JSON.parse(row.allergens_tags) : undefined,
     additives_tags: row.additives_tags ? JSON.parse(row.additives_tags) : undefined,
-    source: row.source ? (row.source as Product['source']) : 'sqlite', // Preserve source, default to 'sqlite' if missing
+    origins: row.origins || undefined,
+    origins_tags: parseJsonField(row.origins_tags, 'origins_tags'),
+    brand_owner: row.brand_owner || undefined,
+    source: row.source ? (row.source as Product['source']) : 'sqlite',
     quality: row.quality || undefined,
     completion: row.completion || undefined,
   };
+
+  if (row.nova_group === 1 || row.nova_group === 2 || row.nova_group === 3 || row.nova_group === 4) {
+    product.nova_group = row.nova_group;
+  }
+  if (row.nova1_provenance === 'off' || row.nova1_provenance === 'inferred' || row.nova1_provenance === 'unknown') {
+    product.nova1Provenance = row.nova1_provenance;
+  } else if (product.nova_group === 1) {
+    // Legacy SQLite row without provenance → unknown (fail-closed for Highlight eligibility)
+    product.nova1Provenance = 'unknown';
+  }
+
+  if (row.ethics_msc_api_validated === 1) product.ethics_msc_api_validated = true;
+  else if (row.ethics_msc_api_validated === 0) product.ethics_msc_api_validated = false;
+
+  if (row.packagings_complete === 1) product.packagings_complete = true;
+  else if (row.packagings_complete === 0) product.packagings_complete = false;
+
+  product.packaging_text_in_languages = parseJsonField(row.packaging_text_in_languages, 'packaging_text_in_languages');
+
+  if (row.true_scan_market === 'AU' || row.true_scan_market === 'NZ') {
+    product.true_scan_market = row.true_scan_market;
+  }
+
+  const runtime = parseJsonField<Record<string, unknown>>(row.scoring_runtime_json, 'scoring_runtime_json');
+  if (runtime) {
+    Object.assign(product, runtime);
+  }
+
   if (row.last_updated) {
     (product as Product & { _cachedAt?: number })._cachedAt = row.last_updated;
   }

@@ -48,8 +48,22 @@ describe('novaAssessment v1.3 guidance examples', () => {
       const p = baseProduct({ ingredients_text: 'frozen peas', additives_tags: [] });
       const out = assignNOVA1IfHighConfidence({ ...p });
       expect(out.nova_group).toBe(1);
-      expect((out as any)._nova_estimated).toBe(true);
-      expect((out as any)._nova_confidence).toBe('high');
+      expect(out.nova1Provenance).toBe('inferred');
+      expect(out._nova_estimated).toBe(true);
+      expect(out._nova_confidence).toBe('high');
+    });
+
+    test('pre-existing external NOVA 1 is not stamped as inferred', () => {
+      const p = baseProduct({
+        ingredients_text: 'frozen peas',
+        additives_tags: [],
+        nova_group: 1,
+        nova1Provenance: 'off',
+      });
+      const out = assignNOVA1IfHighConfidence({ ...p });
+      expect(out.nova_group).toBe(1);
+      expect(out.nova1Provenance).toBe('off');
+      expect(out._nova_estimated).toBeUndefined();
     });
 
     test('milk + live cultures (plain yoghurt pattern)', () => {

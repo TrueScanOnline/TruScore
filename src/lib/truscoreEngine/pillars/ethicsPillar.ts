@@ -39,16 +39,34 @@ import { resolveBrandToKTCParent } from '../../../services/ktcBrandResolutionSer
 import { evaluateEthicsCertifications } from '../../../services/ethicsCertificationsService';
 import { powershellLogger } from '../../../utils/powershellLogger';
 import { resolveEthicsBenchmarkContext } from './ethicsBenchmarkAdapter';
+import {
+  ETHICS_V37_ADJUSTMENT_REGISTRY,
+  ethicsV37BbfawImpactAdjustmentId,
+  ethicsV37BbfawTierAdjustmentId,
+  ethicsV37CertificationAdjustmentId,
+  ethicsV37KtcAdjustmentId,
+  type EthicsV37AdjustmentFamily,
+  type EthicsV37AdjustmentId,
+} from './ethicsPillarV37Registry';
+
+/** Structured, non-arithmetic context carried alongside a fired adjustment (S12/S28 commentary binding). */
+export type EthicsPillarAdjustmentMetadata = Record<string, string | number | boolean>;
+
+export interface EthicsPillarAdjustment {
+  id: EthicsV37AdjustmentId;
+  description: string;
+  value: number;
+  type: 'positive' | 'negative' | 'neutral';
+  highlightEligible: boolean;
+  family: EthicsV37AdjustmentFamily;
+  referenceUrl?: string;
+  metadata?: EthicsPillarAdjustmentMetadata;
+}
 
 export interface EthicsPillarResult {
   score: number;
   base: number;
-  adjustments: Array<{
-    description: string;
-    value: number;
-    type: 'positive' | 'negative' | 'neutral';
-    referenceUrl?: string;
-  }>;
+  adjustments: EthicsPillarAdjustment[];
   details: {
     bbfawTierScore: number;
     bbfawImpactScore: number;
@@ -90,11 +108,39 @@ function getEthicsCompanyCandidates(product: Product): string[] {
   return [...new Set(candidates)];
 }
 
+function adjustmentType(value: number): 'positive' | 'negative' | 'neutral' {
+  return value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+}
+
+/**
+ * Push a fired row carrying its locked Ethics v37 ID and registry-governed Highlight eligibility.
+ * Metadata is descriptive only — it never participates in the arithmetic.
+ */
+function pushAdjustment(
+  adjustments: EthicsPillarAdjustment[],
+  id: EthicsV37AdjustmentId,
+  value: number,
+  description: string,
+  options?: { referenceUrl?: string; metadata?: EthicsPillarAdjustmentMetadata }
+): void {
+  const meta = ETHICS_V37_ADJUSTMENT_REGISTRY[id];
+  adjustments.push({
+    id,
+    description,
+    value,
+    type: adjustmentType(value),
+    highlightEligible: meta.highlightEligible,
+    family: meta.family,
+    ...(options?.referenceUrl && { referenceUrl: options.referenceUrl }),
+    ...(options?.metadata && { metadata: options.metadata }),
+  });
+}
+
 /**
  * ETHICS pillar score: Base 15 + BBFAW + KTC + max one certification, clamped 0–25.
  */
 export function calculateEthicsPillar(product: Product): EthicsPillarResult {
-  const adjustments: EthicsPillarResult['adjustments'] = [];
+  const adjustments: EthicsPillarAdjustment[] = [];
   let score = 15;
   const base = 15;
 
@@ -103,11 +149,7 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     ? [benchmarkCtx.benchmarkOwnerHint, ...getEthicsCompanyCandidates(product)]
     : getEthicsCompanyCandidates(product);
 
-  adjustments.push({
-    description: 'Base score (assumes ethical until poor ratings)',
-    value: 0,
-    type: 'neutral',
-  });
+  pushAdjustment(adjustments, 'ethics-v37-base', 0, 'Base score (assumes ethical until poor ratings)');
 
   // Try each candidate: resolve via mapping, then BBFAW lookup; use first match.
   // If frozen benchmark eligibility is false, benchmark adjustments are deterministically disabled.
@@ -148,32 +190,48 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
       bbfawTierScore = getBBFAWTierScore(tier);
       bbfawImpactScore = getBBFAWImpactScore(impactRating);
 
-      if (bbfawTierScore !== 0 && tier) {
-        adjustments.push({
-          description: `BBFAW Tier ${tier} (animal welfare governance)`,
-          value: bbfawTierScore,
-          type: bbfawTierScore > 0 ? 'positive' : 'negative',
+      // Same-cycle provenance for the commentary tokens; falls back to the canonical asset year.
+      const bbfawYear = benchmarkCtx.bbfawFrozen?.snapshot_ref.benchmark_cycle ?? bbfawData?.year;
+
+      const tierId = ethicsV37BbfawTierAdjustmentId(tier);
+      if (bbfawTierScore !== 0 && tier && tierId) {
+        pushAdjustment(adjustments, tierId, bbfawTierScore, `BBFAW Tier ${tier} (animal welfare governance)`, {
           referenceUrl: 'https://www.bbfaw.com/food-companies/',
+          metadata: {
+            ...(bbfawYear != null && { benchmarkYear: bbfawYear }),
+            ...(companyName && { benchmarkCompany: companyName }),
+            tier,
+          },
         });
         score += bbfawTierScore;
       }
 
-      if (bbfawImpactScore !== 0 && impactRating) {
-        adjustments.push({
-          description: `BBFAW Impact Rating ${impactRating} (welfare outcomes)`,
-          value: bbfawImpactScore,
-          type: bbfawImpactScore > 0 ? 'positive' : 'negative',
-          referenceUrl: 'https://www.bbfaw.com/food-companies/',
-        });
+      const impactId = ethicsV37BbfawImpactAdjustmentId(impactRating);
+      if (bbfawImpactScore !== 0 && impactRating && impactId) {
+        pushAdjustment(
+          adjustments,
+          impactId,
+          bbfawImpactScore,
+          `BBFAW Impact Rating ${impactRating} (welfare outcomes)`,
+          {
+            referenceUrl: 'https://www.bbfaw.com/food-companies/',
+            metadata: {
+              ...(bbfawYear != null && { benchmarkYear: bbfawYear }),
+              ...(companyName && { benchmarkCompany: companyName }),
+              impactRating,
+            },
+          }
+        );
         score += bbfawImpactScore;
       }
     }
   } else {
-    adjustments.push({
-      description: 'Frozen benchmark not eligible for ethics scoring (deterministic zero benchmark movement)',
-      value: 0,
-      type: 'neutral',
-    });
+    pushAdjustment(
+      adjustments,
+      'ethics-v37-frozen-benchmark-ineligible',
+      0,
+      'Frozen benchmark not eligible for ethics scoring (deterministic zero benchmark movement)'
+    );
   }
 
   // KTC (KnowTheChain) 2026 – apply in addition to BBFAW, using same brand candidates
@@ -192,13 +250,22 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     }
   }
 
-  if (ktcMatched && ktcScoreAdjustment !== 0) {
-    adjustments.push({
-      description: `KTC 2026 benchmark score ${ktcMatched.totalBenchmarkScore} (labour rights in supply chains)`,
-      value: ktcScoreAdjustment,
-      type: ktcScoreAdjustment > 0 ? 'positive' : 'negative',
-      referenceUrl: 'https://www.business-humanrights.org/en/companies/',
-    });
+  const ktcBandId = ktcMatched ? ethicsV37KtcAdjustmentId(ktcMatched.totalBenchmarkScore) : null;
+  if (ktcMatched && ktcScoreAdjustment !== 0 && ktcBandId) {
+    pushAdjustment(
+      adjustments,
+      ktcBandId,
+      ktcScoreAdjustment,
+      `KTC 2026 benchmark score ${ktcMatched.totalBenchmarkScore} (labour rights in supply chains)`,
+      {
+        referenceUrl: 'https://www.business-humanrights.org/en/companies/',
+        metadata: {
+          benchmarkYear: benchmarkCtx.ktcFrozen?.snapshot_ref.benchmark_cycle ?? '2026',
+          benchmarkCompany: ktcMatched.parentName,
+          benchmarkScore: ktcMatched.totalBenchmarkScore,
+        },
+      }
+    );
     score += ktcScoreAdjustment;
 
     logger.debug('[EthicsPillar] KTC match:', {
@@ -213,7 +280,8 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
   // Certifications (ETHICS SPEC — max single scheme for MVP)
   const certEval = evaluateEthicsCertifications(product);
   let certificationsAdjustment = 0;
-  if (certEval.adjustment !== 0 && certEval.winningScheme) {
+  const certId = ethicsV37CertificationAdjustmentId(certEval.winningScheme);
+  if (certEval.adjustment !== 0 && certEval.winningScheme && certId) {
     certificationsAdjustment = certEval.adjustment;
     const labelPretty = certEval.winningScheme
       .replace(/_/g, ' ')
@@ -222,12 +290,24 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
       certEval.winningScheme === 'organic' && certEval.organicMatchSource
         ? ` [${certEval.organicMatchSource.replace(/_/g, ' ')}]`
         : '';
-    adjustments.push({
-      description: `Ethics certifications – ${labelPretty} (+${certificationsAdjustment}, highest eligible scheme; MVP no stacking)${organicHint}`,
-      value: certificationsAdjustment,
-      type: 'positive',
-      referenceUrl: certEval.referenceUrl,
-    });
+    pushAdjustment(
+      adjustments,
+      certId,
+      certificationsAdjustment,
+      `Ethics certifications – ${labelPretty} (+${certificationsAdjustment}, highest eligible scheme; MVP no stacking)${organicHint}`,
+      {
+        referenceUrl: certEval.referenceUrl,
+        metadata: {
+          certificationScheme: certEval.winningScheme,
+          packetEvidence: true,
+          // Same +2 effect either way; selects the correct locked organic L1/L2.
+          ...(certEval.winningScheme === 'organic' && {
+            organicEvidenceClass:
+              certEval.organicMatchSource === 'off_tags_or_hierarchy' ? 'certified' : 'claim_only',
+          }),
+        },
+      }
+    );
     score += certificationsAdjustment;
     logger.debug('[EthicsPillar] Certifications:', {
       winningScheme: certEval.winningScheme,
@@ -237,7 +317,13 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
   }
 
   // Global cap after Base + BBFAW + KTC + certifications
-  score = Math.max(0, Math.min(25, Math.round(score)));
+  const beforeClamp = Math.round(score);
+  score = Math.max(0, Math.min(25, beforeClamp));
+  if (beforeClamp > 25) {
+    pushAdjustment(adjustments, 'ethics-v37-final-cap', score - beforeClamp, 'Ethics Pillar cap 25/25 applied');
+  } else if (beforeClamp < 0) {
+    pushAdjustment(adjustments, 'ethics-v37-final-floor', score - beforeClamp, 'Ethics Pillar floor 0/25 applied');
+  }
 
   const result: EthicsPillarResult = {
     score,

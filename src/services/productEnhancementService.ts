@@ -22,6 +22,7 @@ import { calculateDataCompleteness, formatCompletenessMetrics } from '../utils/d
 import { handleError, ErrorCategory, ErrorSeverity } from './errorHandlingService';
 import { trackUnmappedBrand } from '../utils/unmappedBrandTracker';
 import { assignNOVA1IfHighConfidence } from '../utils/novaAssessment';
+import { ensureNova1ProvenanceOnProduct } from '../utils/nova1Provenance';
 import { extractBrandFromProductName, getBrandData } from '../data/brandDatabase';
 import { extractAllBrands } from '../utils/brandExtraction';
 
@@ -265,6 +266,9 @@ export async function enhanceProduct(product: Product): Promise<Product> {
   
   // Approved NOVA-1 rescue (pillar Decision Tree) when OFF NOVA is missing
   assignNOVA1IfHighConfidence(product);
+
+  // Legacy/cached NOVA 1 without typed provenance → unknown (never promote to off).
+  ensureNova1ProvenanceOnProduct(product);
   
   return product;
 }

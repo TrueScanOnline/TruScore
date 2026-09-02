@@ -13,6 +13,7 @@ import {
   INGREDIENT_PROCESSED_MARKERS,
   splitIngredientPartsNova,
 } from './ingredientTextPrimitives';
+import { markNova1ProvenanceInferred } from './nova1Provenance';
 
 export interface NOVA1Assessment {
   likelyNOVA1: boolean;
@@ -192,11 +193,15 @@ export function assessNOVAGroup1(product: Product): NOVA1Assessment {
 }
 
 export function assignNOVA1IfHighConfidence(product: Product): Product {
+  // Only assign when nova_group is missing — never stamp an already-external NOVA 1 as inferred.
+  if (product.nova_group !== undefined && product.nova_group !== null) {
+    return product;
+  }
+
   const assessment = assessNOVAGroup1(product);
   if (assessment.likelyNOVA1 && assessment.confidence === 'high') {
-    product.nova_group = 1;
-    (product as any)._nova_estimated = true;
-    (product as any)._nova_confidence = 'high';
+    markNova1ProvenanceInferred(product);
+    product._nova_confidence = 'high';
     logger.debug(`[NOVA Assessment] Assigned NOVA 1 (whitelist rescue): ${assessment.reason}`);
   }
   return product;

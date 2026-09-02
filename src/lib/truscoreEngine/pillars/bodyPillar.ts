@@ -19,18 +19,41 @@ import {
 import {
   evaluateWholeProduceEligibility,
 } from '../wholeProduceEligibility';
+import {
+  BODY_V12_ADJUSTMENT_REGISTRY,
+  bodyV12AdditiveAdjustmentId,
+  bodyV12NovaAdjustmentId,
+  bodyV12NutriScoreAdjustmentId,
+  type BodyV12AdjustmentFamily,
+  type BodyV12AdjustmentId,
+} from './bodyPillarV12Registry';
+import {
+  bodyNova1AdjustmentId,
+  ensureNova1ProvenanceOnProduct,
+  resolveNova1Provenance,
+} from '../../../utils/nova1Provenance';
 
 /** Rveel Whole Produce nutrition bonus when eligibility gate passes and no valid OFF Nutri A–E. */
 export const WHOLE_PRODUCE_NUTRITION_BONUS = 7;
 
+/** Structured, non-arithmetic context carried alongside a fired adjustment (S12/S28 commentary binding). */
+export type BodyPillarAdjustmentMetadata = Record<string, string | number | boolean>;
+
+export interface BodyPillarAdjustment {
+  /** Locked Body v12 ID. Absent only if a governed additive somehow has no registered ID. */
+  id?: BodyV12AdjustmentId;
+  description: string;
+  value: number;
+  type: 'positive' | 'negative' | 'neutral';
+  highlightEligible: boolean;
+  family: BodyV12AdjustmentFamily;
+  metadata?: BodyPillarAdjustmentMetadata;
+}
+
 export interface BodyPillarResult {
   score: number;
   base: number;
-  adjustments: Array<{
-    description: string;
-    value: number;
-    type: 'positive' | 'negative' | 'neutral';
-  }>;
+  adjustments: BodyPillarAdjustment[];
   details: {
     hasNutriScore: boolean;
     nutriscoreGrade?: string;
@@ -69,10 +92,40 @@ function nutriscoreContribution(grade: string | undefined): {
   return { value, adjustmentFromBase: value - 15 };
 }
 
+function adjustmentType(value: number): 'positive' | 'negative' | 'neutral' {
+  return value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+}
+
+/**
+ * Push a fired row carrying its locked Body v12 ID and registry-governed Highlight eligibility.
+ * `description` overrides the registry description where the production row is value-specific.
+ */
+function pushAdjustment(
+  adjustments: BodyPillarAdjustment[],
+  id: BodyV12AdjustmentId,
+  value: number,
+  description?: string,
+  metadata?: BodyPillarAdjustmentMetadata
+): void {
+  const meta = BODY_V12_ADJUSTMENT_REGISTRY[id];
+  adjustments.push({
+    id,
+    description: description ?? meta.description,
+    value,
+    type: adjustmentType(value),
+    highlightEligible: meta.highlightEligible,
+    family: meta.family,
+    ...(metadata && { metadata }),
+  });
+}
+
 export function calculateBodyPillar(product: Product): BodyPillarResult {
-  const adjustments: BodyPillarResult['adjustments'] = [];
+  const adjustments: BodyPillarAdjustment[] = [];
   const base = 15;
   let score = 15;
+
+  // Durable NOVA 1 provenance so the fired ID survives cache/SQLite read-back and later scans.
+  ensureNova1ProvenanceOnProduct(product);
 
   const hasNutriScore = !!product.nutriscore_grade;
   let nutriscoreValue: number | undefined;
@@ -80,44 +133,28 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
 
   if (hasNutriScore && product.nutriscore_grade) {
     const nc = nutriscoreContribution(product.nutriscore_grade);
-    if (nc) {
+    const nutriId = bodyV12NutriScoreAdjustmentId(product.nutriscore_grade);
+    if (nc && nutriId) {
       validNutriScoreApplied = true;
       nutriscoreValue = nc.value;
       const adj = nc.adjustmentFromBase;
-      if (adj > 0) {
-        adjustments.push({
-          description: `Nutri-Score Grade ${product.nutriscore_grade.toUpperCase()} (excellent nutrition)`,
-          value: adj,
-          type: 'positive',
-        });
-      } else if (adj < 0) {
-        adjustments.push({
-          description: `Nutri-Score Grade ${product.nutriscore_grade.toUpperCase()} (poor nutrition)`,
-          value: adj,
-          type: 'negative',
-        });
-      } else {
-        adjustments.push({
-          description: `Nutri-Score Grade ${product.nutriscore_grade.toUpperCase()} (average nutrition)`,
-          value: 0,
-          type: 'neutral',
-        });
-      }
+      const quality = adj > 0 ? 'excellent nutrition' : adj < 0 ? 'poor nutrition' : 'average nutrition';
+      pushAdjustment(
+        adjustments,
+        nutriId,
+        adj,
+        `Nutri-Score Grade ${product.nutriscore_grade.toUpperCase()} (${quality})`,
+        { nutriscoreGrade: product.nutriscore_grade.toUpperCase() }
+      );
       score += adj;
       logger.debug(`[BodyPillar] Nutri-Score "${product.nutriscore_grade}" → total ${nc.value} (adj ${adj})`);
     } else {
-      adjustments.push({
-        description: 'Nutri-Score grade not recognised (baseline)',
-        value: 0,
-        type: 'neutral',
+      pushAdjustment(adjustments, 'body-v12-nutri-unrecognised', 0, 'Nutri-Score grade not recognised (baseline)', {
+        rawNutriscoreGrade: String(product.nutriscore_grade),
       });
     }
   } else {
-    adjustments.push({
-      description: 'No Nutri-Score available (baseline)',
-      value: 0,
-      type: 'neutral',
-    });
+    pushAdjustment(adjustments, 'body-v12-nutri-unavailable', 0, 'No Nutri-Score available (baseline)');
   }
 
   let wholeProduceAdjustmentApplied = false;
@@ -125,11 +162,12 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
     const wholeProduce = evaluateWholeProduceEligibility(product);
     if (wholeProduce.eligible) {
       wholeProduceAdjustmentApplied = true;
-      adjustments.push({
-        description: 'Whole produce (unprocessed / minimally processed, single ingredient)',
-        value: WHOLE_PRODUCE_NUTRITION_BONUS,
-        type: 'positive',
-      });
+      pushAdjustment(
+        adjustments,
+        'body-v12-whole-produce-rescue',
+        WHOLE_PRODUCE_NUTRITION_BONUS,
+        'Whole produce (unprocessed / minimally processed, single ingredient)'
+      );
       score += WHOLE_PRODUCE_NUTRITION_BONUS;
       logger.debug(
         `[BodyPillar] Whole Produce +${WHOLE_PRODUCE_NUTRITION_BONUS} applied (no valid OFF Nutri-Score)`
@@ -142,20 +180,24 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
   let novaAdjustment = 0;
   if (nova === 1) {
     novaAdjustment = 3;
-    adjustments.push({ description: 'NOVA Group 1 (unprocessed / minimally processed)', value: 3, type: 'positive' });
+    const provenance = resolveNova1Provenance(product) ?? 'unknown';
+    pushAdjustment(
+      adjustments,
+      bodyNova1AdjustmentId(provenance),
+      3,
+      'NOVA Group 1 (unprocessed / minimally processed)',
+      { nova1Provenance: provenance }
+    );
     score += 3;
-  } else if (nova === 2) {
-    novaAdjustment = 1;
-    adjustments.push({ description: 'NOVA Group 2 (processed culinary ingredients)', value: 1, type: 'positive' });
-    score += 1;
-  } else if (nova === 3) {
-    novaAdjustment = -1;
-    adjustments.push({ description: 'NOVA Group 3 (processed)', value: -1, type: 'negative' });
-    score -= 1;
-  } else if (nova === 4) {
-    novaAdjustment = -6;
-    adjustments.push({ description: 'NOVA Group 4 (ultra-processed)', value: -6, type: 'negative' });
-    score -= 6;
+  } else if (nova === 2 || nova === 3 || nova === 4) {
+    const novaId = bodyV12NovaAdjustmentId(nova);
+    if (novaId) {
+      novaAdjustment = BODY_V12_ADJUSTMENT_REGISTRY[novaId].points;
+      const label =
+        nova === 2 ? 'processed culinary ingredients' : nova === 3 ? 'processed' : 'ultra-processed';
+      pushAdjustment(adjustments, novaId, novaAdjustment, `NOVA Group ${nova} (${label})`, { novaGroup: nova });
+      score += novaAdjustment;
+    }
   }
 
   const foodAdditivesApplied = isHumanFoodOrBeverageCategory(product);
@@ -170,15 +212,37 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
     bodyMvpAdditiveMatchCount = mvp.matches.length;
     hasRedBodyAdditive = mvp.hasRedTier;
 
-    if (mvp.elementDeduction > 0) {
-      const names = mvp.matches.map((m) => `${m.name} (${m.tier})`).slice(0, 4);
-      const extra = mvp.matches.length > 4 ? ` (+${mvp.matches.length - 4} more)` : '';
+    // One row per fired additive at its raw deduction, then a cap normaliser so the
+    // ledger still reconciles to the capped element deduction the score actually uses.
+    for (const match of mvp.matches) {
+      const additiveId = bodyV12AdditiveAdjustmentId(match.canonicalId);
+      if (!additiveId) {
+        logger.warn('[BodyPillar] Governed MVP additive has no locked Wave 3 adjustment ID', {
+          canonicalId: match.canonicalId,
+        });
+      }
       adjustments.push({
-        description: `Food additives of concern (MVP registry, max −8): ${names.join(', ')}${extra}`,
-        value: -mvp.elementDeduction,
+        ...(additiveId && { id: additiveId }),
+        description: `Food additive of concern: ${match.name} (${match.tier} tier, MVP registry)`,
+        value: -match.deduction,
         type: 'negative',
+        highlightEligible: additiveId ? BODY_V12_ADJUSTMENT_REGISTRY[additiveId].highlightEligible : false,
+        family: 'additives',
+        metadata: { canonicalId: match.canonicalId, additiveName: match.name, concernTier: match.tier },
       });
-      score -= mvp.elementDeduction;
+      score -= match.deduction;
+    }
+
+    const capNormaliser = mvp.rawSumDeduction - mvp.elementDeduction;
+    if (capNormaliser > 0) {
+      pushAdjustment(
+        adjustments,
+        'body-v12-additive-cap',
+        capNormaliser,
+        `Food additive element cap applied (raw −${mvp.rawSumDeduction} limited to −${mvp.elementDeduction})`,
+        { rawSumDeduction: mvp.rawSumDeduction, cappedElementDeduction: mvp.elementDeduction }
+      );
+      score += capNormaliser;
     }
   }
 
@@ -187,15 +251,20 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
     score = Math.min(score, BODY_RED_ADDITIVE_SCORE_CEILING);
     if (score < before) {
       redAdditiveCeilingApplied = true;
-      adjustments.push({
-        description: 'Red-tier additive present: Body Pillar ceiling 12/25',
-        value: score - before,
-        type: 'negative',
-      });
+      pushAdjustment(
+        adjustments,
+        'body-v12-red-additive-ceiling',
+        score - before,
+        'Red-tier additive present: Body Pillar ceiling 12/25'
+      );
     }
   }
 
-  score = Math.max(2, Math.min(25, Math.round(score)));
+  const beforeFloor = Math.min(25, Math.round(score));
+  score = Math.max(2, beforeFloor);
+  if (score !== beforeFloor) {
+    pushAdjustment(adjustments, 'body-v12-final-floor', score - beforeFloor, 'Body Pillar floor 2/25 applied');
+  }
 
   const result: BodyPillarResult = {
     score,
@@ -221,7 +290,9 @@ export function calculateBodyPillar(product: Product): BodyPillarResult {
     base,
     score,
     adjustments.map((adj) => ({
-      ...adj,
+      description: adj.description,
+      value: adj.value,
+      type: adj.type,
       dataSource: adj.description.includes('Nutri-Score') ? 'OFF' : undefined,
     })),
     result.details

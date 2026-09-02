@@ -149,6 +149,17 @@ export interface Product {
   nutrient_levels?: ProductNutrientLevels;
   nova_group?: 1 | 2 | 3 | 4; // NOVA processing score
   nova_groups?: string;
+  /**
+   * Durable NOVA 1 provenance for Score Highlights eligibility (Body v12 / Wave 3).
+   * - off: affirmative external/OFF evidence
+   * - inferred: Rveel whitelist rescue
+   * - unknown: legacy/ambiguous; never promote to off without fresh external evidence
+   * Scoring arithmetic is +3 for all three; only Highlight eligibility differs.
+   */
+  nova1Provenance?: 'off' | 'inferred' | 'unknown';
+  /** @deprecated Prefer nova1Provenance='inferred'. Retained for read migration. */
+  _nova_estimated?: boolean;
+  _nova_confidence?: 'high' | 'medium' | 'low';
   
   // Ingredients
   ingredients_text?: string;

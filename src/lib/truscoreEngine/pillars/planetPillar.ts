@@ -12,18 +12,34 @@ import { Product } from '../../../types/product';
 import { logger } from '../../../utils/logger';
 import { powershellLogger } from '../../../utils/powershellLogger';
 import { computePackagingFallback } from './planetPackagingFallback';
+import {
+  PLANET_V19_ADJUSTMENT_REGISTRY,
+  planetV19EnvironmentalGradeAdjustmentId,
+  planetV19PackagingFallbackAdjustmentId,
+  type PlanetV19AdjustmentFamily,
+  type PlanetV19AdjustmentId,
+} from './planetPillarV19Registry';
 
 const SPEC_LABEL = 'Planet_Scoring_Specification_v19';
 const ANNEX_LABEL = 'Planet_v19_Packaging_Jurisdiction_Rules_Annex_v2';
 
+/** Structured, non-arithmetic context carried alongside a fired adjustment (S12/S28 commentary binding). */
+export type PlanetPillarAdjustmentMetadata = Record<string, string | number | boolean>;
+
+export interface PlanetPillarAdjustment {
+  id: PlanetV19AdjustmentId;
+  description: string;
+  value: number;
+  type: 'positive' | 'negative' | 'neutral';
+  highlightEligible: boolean;
+  family: PlanetV19AdjustmentFamily;
+  metadata?: PlanetPillarAdjustmentMetadata;
+}
+
 export interface PlanetPillarResult {
   score: number;
   base: number;
-  adjustments: Array<{
-    description: string;
-    value: number;
-    type: 'positive' | 'negative' | 'neutral';
-  }>;
+  adjustments: PlanetPillarAdjustment[];
   details: {
     specVersion: typeof SPEC_LABEL;
     annexVersion: typeof ANNEX_LABEL;
@@ -47,20 +63,43 @@ function ecoScoreAdjustmentFromGrade(grade: 'a' | 'b' | 'c' | 'd' | 'e'): number
   return m[grade] ?? 0;
 }
 
+function adjustmentType(value: number): 'positive' | 'negative' | 'neutral' {
+  return value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+}
+
+/**
+ * Push a fired row carrying its locked Planet v19 ID and registry-governed Highlight eligibility.
+ * Jurisdiction stays in metadata/description; it is never part of the stable ID.
+ */
+function pushAdjustment(
+  adjustments: PlanetPillarAdjustment[],
+  id: PlanetV19AdjustmentId,
+  value: number,
+  description: string,
+  metadata?: PlanetPillarAdjustmentMetadata
+): void {
+  const meta = PLANET_V19_ADJUSTMENT_REGISTRY[id];
+  adjustments.push({
+    id,
+    description,
+    value,
+    type: adjustmentType(value),
+    highlightEligible: meta.highlightEligible,
+    family: meta.family,
+    ...(metadata && { metadata }),
+  });
+}
+
 export function calculatePlanetPillar(product: Product): PlanetPillarResult {
   const base = 15;
 
   try {
     let score = base;
-    const adjustments: PlanetPillarResult['adjustments'] = [];
+    const adjustments: PlanetPillarAdjustment[] = [];
     const grade = product.ecoscore_grade;
     const hasEcoScoreGrade = isValidEcoScoreGrade(grade);
 
-    adjustments.push({
-      description: `Base score (${base}) — ${SPEC_LABEL}`,
-      value: 0,
-      type: 'neutral',
-    });
+    pushAdjustment(adjustments, 'planet-v19-base', 0, `Base score (${base}) — ${SPEC_LABEL}`);
 
     let ecoscoreAdjustment: number | undefined;
     let packagingFallbackPoints: number | undefined;
@@ -70,19 +109,21 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
       const g = grade.toLowerCase() as 'a' | 'b' | 'c' | 'd' | 'e';
       ecoscoreAdjustment = ecoScoreAdjustmentFromGrade(g);
       score += ecoscoreAdjustment;
-      const type: 'positive' | 'negative' | 'neutral' =
-        ecoscoreAdjustment > 0 ? 'positive' : ecoscoreAdjustment < 0 ? 'negative' : 'neutral';
-      adjustments.push({
-        description: `Eco-Score grade ${g.toUpperCase()} (${ecoscoreAdjustment >= 0 ? '+' : ''}${ecoscoreAdjustment}) — Open Food Facts / Eco-Score`,
-        value: ecoscoreAdjustment,
-        type,
-      });
+      const gradeId = planetV19EnvironmentalGradeAdjustmentId(g);
+      pushAdjustment(
+        adjustments,
+        gradeId ?? 'planet-v19-environmental-no-usable-grade',
+        ecoscoreAdjustment,
+        `Eco-Score grade ${g.toUpperCase()} (${ecoscoreAdjustment >= 0 ? '+' : ''}${ecoscoreAdjustment}) — Open Food Facts / Eco-Score`,
+        { environmentalGrade: g.toUpperCase() }
+      );
     } else {
-      adjustments.push({
-        description: 'No Eco-Score grade on record — no Eco-Score adjustment (per spec)',
-        value: 0,
-        type: 'neutral',
-      });
+      pushAdjustment(
+        adjustments,
+        'planet-v19-environmental-no-usable-grade',
+        0,
+        'No Eco-Score grade on record — no Eco-Score adjustment (per spec)'
+      );
 
       const fb = computePackagingFallback(product);
       packagingFallbackPoints = fb.points;
@@ -90,29 +131,34 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
 
       if (fb.points > 0) {
         score += fb.points;
-        adjustments.push({
-          description:
-            fb.points === 2
-              ? `Packaging fallback +2 (${fb.jurisdiction}): packagings_complete and all primary components kerbside-recyclable — ${ANNEX_LABEL}`
-              : `Packaging fallback +1 (${fb.jurisdiction}): at least one kerbside-recyclable component, none not-recyclable — ${ANNEX_LABEL}`,
-          value: fb.points,
-          type: 'positive',
-        });
+        pushAdjustment(
+          adjustments,
+          planetV19PackagingFallbackAdjustmentId(fb.points as 1 | 2),
+          fb.points,
+          fb.points === 2
+            ? `Packaging fallback +2 (${fb.jurisdiction}): packagings_complete and all primary components kerbside-recyclable — ${ANNEX_LABEL}`
+            : `Packaging fallback +1 (${fb.jurisdiction}): at least one kerbside-recyclable component, none not-recyclable — ${ANNEX_LABEL}`,
+          { jurisdiction: fb.jurisdiction }
+        );
       } else if (
         fb.structuredPackagingPresent ||
         (product.packaging_text_in_languages && typeof product.packaging_text_in_languages === 'object')
       ) {
-        adjustments.push({
-          description: `Packaging fallback 0 (${fb.jurisdiction}): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — ${ANNEX_LABEL}`,
-          value: 0,
-          type: 'neutral',
-        });
+        pushAdjustment(
+          adjustments,
+          'planet-v19-packaging-neutral-evidence',
+          0,
+          `Packaging fallback 0 (${fb.jurisdiction}): insufficient kerbside evidence, conditional-only, incomplete, or non-approved market — ${ANNEX_LABEL}`,
+          { jurisdiction: fb.jurisdiction }
+        );
       } else {
-        adjustments.push({
-          description: `Packaging fallback 0 (${fb.jurisdiction}): no structured packaging evidence — ${ANNEX_LABEL}`,
-          value: 0,
-          type: 'neutral',
-        });
+        pushAdjustment(
+          adjustments,
+          'planet-v19-packaging-no-evidence',
+          0,
+          `Packaging fallback 0 (${fb.jurisdiction}): no structured packaging evidence — ${ANNEX_LABEL}`,
+          { jurisdiction: fb.jurisdiction }
+        );
       }
     }
 
@@ -140,7 +186,9 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
       base,
       result.score,
       adjustments.map((adj) => ({
-        ...adj,
+        description: adj.description,
+        value: adj.value,
+        type: adj.type,
         dataSource: adj.description.includes('Eco-Score') ? 'OFF' : undefined,
       })),
       result.details

@@ -21,8 +21,12 @@ export interface PillarAdjustmentWithSource {
   description: string;
   value: number;
   type: 'positive' | 'negative' | 'neutral';
-  /** Stable production adjustment ID (Open v15+). */
+  /** Stable production adjustment ID (Body v12 / Planet v19 / Ethics v37 / Open v15). */
   adjustmentId?: string;
+  /** Registry-governed S12 Highlight eligibility for the fired row. */
+  highlightEligible?: boolean;
+  /** Structured, non-arithmetic context bound to the fired row (benchmark year/company, jurisdiction, provenance). */
+  adjustmentMetadata?: Record<string, string | number | boolean>;
   /** Which database/source provided the data that led to this adjustment */
   sourceDatabase?: string;
   /** How that source was queried (barcode, brand, parent, product field) */

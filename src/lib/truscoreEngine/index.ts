@@ -367,6 +367,8 @@ export function buildTruScoreAnalysis(
       const inferred = inferAdjustmentSource(pillarName, adj, productSourceDisplay);
       const referenceUrl = (adj as { referenceUrl?: string }).referenceUrl ?? inferred.referenceUrl;
       const adjustmentId = (adj as { id?: string }).id;
+      const highlightEligible = (adj as { highlightEligible?: boolean }).highlightEligible;
+      const adjustmentMetadata = (adj as { metadata?: Record<string, string | number | boolean> }).metadata;
       return {
         description: adj.description,
         value: adj.value,
@@ -374,6 +376,8 @@ export function buildTruScoreAnalysis(
         sourceDatabase: inferred.sourceDatabase,
         queryKeyType: inferred.queryKeyType,
         ...(adjustmentId != null && { adjustmentId }),
+        ...(highlightEligible != null && { highlightEligible }),
+        ...(adjustmentMetadata != null && { adjustmentMetadata }),
         ...(referenceUrl != null && { referenceUrl }),
       };
     });

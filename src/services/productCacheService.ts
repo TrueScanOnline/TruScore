@@ -24,6 +24,8 @@ import { normalizeBarcode, getPrimaryBarcode } from '../utils/barcodeNormalizati
 import { isWebSearchFallback } from './webSearchFallback';
 import { logger } from '../utils/logger';
 import { powershellLogger } from '../utils/powershellLogger';
+import { selectPreferredLocalProduct } from '../utils/localProductPreference';
+import { ensureNova1ProvenanceOnProduct } from '../utils/nova1Provenance';
 // CRITICAL FIX: Use dynamic import to break require cycle
 // import { handleError, ErrorCategory, ErrorSeverity } from './errorHandlingService';
 
@@ -310,9 +312,10 @@ export async function lookupProductFast(barcode: string, isPremium: boolean, bar
       lookupFromSQLite(barcode),
       lookupFromCache(barcode, isPremium, barcodeVariants),
     ]);
-    
-    // Return fastest result (SQLite is usually faster, but cache might have more recent data)
-    return sqliteProduct || cachedProduct;
+
+    // Prefer fuller/fresher record — do not knowingly prefer thinner SQLite over fuller cache
+    const preferred = selectPreferredLocalProduct(sqliteProduct, cachedProduct);
+    return preferred ? ensureNova1ProvenanceOnProduct(preferred) : null;
   } catch (error) {
     // Use dynamic import to break require cycle
     const { handleError, ErrorCategory, ErrorSeverity } = await import('./errorHandlingService');

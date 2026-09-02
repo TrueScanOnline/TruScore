@@ -3,6 +3,11 @@
  */
 
 import { calculatePlanetPillar } from '../../../../lib/truscoreEngine/pillars/planetPillar';
+import { PLANET_V19_ADJUSTMENT_REGISTRY } from '../../../../lib/truscoreEngine/pillars/planetPillarV19Registry';
+import {
+  expectPillarLedgerReconciles,
+  firedAdjustmentIds,
+} from '../../../helpers/pillarLedgerNeutrality';
 import { Product } from '../../../../types/product';
 
 describe('Planet Pillar (v19)', () => {
@@ -94,5 +99,79 @@ describe('Planet Pillar (v19)', () => {
     const result = calculatePlanetPillar(product);
     expect(result.details.packagingFallbackPoints ?? 0).toBe(0);
     expect(result.score).toBe(15);
+  });
+
+  describe('Wave 3 stable adjustment IDs (v19)', () => {
+    function idOf(result: ReturnType<typeof calculatePlanetPillar>, id: string) {
+      return result.adjustments.find((adj) => adj.id === id);
+    }
+
+    test('base row fires as planet-v19-base and is never highlight-eligible', () => {
+      const result = calculatePlanetPillar(baseProduct);
+      const row = idOf(result, 'planet-v19-base');
+      expect(row?.value).toBe(0);
+      expect(row?.highlightEligible).toBe(false);
+    });
+
+    test('environmental grades map to locked highlight-eligible IDs', () => {
+      const cases: Array<[string, string, number]> = [
+        ['a', 'planet-v19-environmental-a', 7],
+        ['b', 'planet-v19-environmental-b', 3],
+        ['c', 'planet-v19-environmental-c', -1],
+        ['d', 'planet-v19-environmental-d', -3],
+        ['e', 'planet-v19-environmental-e', -7],
+      ];
+      for (const [grade, id, value] of cases) {
+        const result = calculatePlanetPillar({ ...baseProduct, ecoscore_grade: grade });
+        const row = idOf(result, id);
+        expect(row?.value).toBe(value);
+        expect(row?.highlightEligible).toBe(true);
+        expect(row?.metadata?.environmentalGrade).toBe(grade.toUpperCase());
+        expect(firedAdjustmentIds(result)).not.toContain('planet-v19-packaging-no-evidence');
+        expectPillarLedgerReconciles(result);
+      }
+    });
+
+    test('no usable grade opens the packaging fallback gate with its own diagnostic ID', () => {
+      const result = calculatePlanetPillar(baseProduct);
+      expect(idOf(result, 'planet-v19-environmental-no-usable-grade')?.highlightEligible).toBe(false);
+      expect(idOf(result, 'planet-v19-packaging-no-evidence')?.highlightEligible).toBe(false);
+    });
+
+    test('packaging fallback +2 fires all-kerbside with jurisdiction as metadata, not in the ID', () => {
+      const result = calculatePlanetPillar({
+        ...baseProduct,
+        ecoscore_grade: 'unknown',
+        true_scan_market: 'AU',
+        packagings_complete: true,
+        packagings: [{ recycling: 'Recycle' }, { recycling: 'en:recycle' }],
+      });
+      const row = idOf(result, 'planet-v19-packaging-all-kerbside');
+      expect(row?.value).toBe(2);
+      expect(row?.highlightEligible).toBe(true);
+      expect(row?.metadata?.jurisdiction).toBe('AU');
+      expect(row?.id).not.toContain('au');
+      expectPillarLedgerReconciles(result);
+    });
+
+    test('packaging evidence present but non-scoring fires the neutral-evidence ID', () => {
+      const result = calculatePlanetPillar({
+        ...baseProduct,
+        true_scan_market: 'AU',
+        packagings: [{ material: 'en:plastic', recycling: 'Check locally' }],
+      });
+      expect(idOf(result, 'planet-v19-packaging-neutral-evidence')?.highlightEligible).toBe(false);
+      expect(result.score).toBe(15);
+      expectPillarLedgerReconciles(result);
+    });
+
+    test('highlight-eligible registry entries carry locked L1/L2 commentary', () => {
+      for (const meta of Object.values(PLANET_V19_ADJUSTMENT_REGISTRY)) {
+        if (meta.highlightEligible) {
+          expect(meta.highlightTitle).toBeTruthy();
+          expect(meta.highlightExplainer).toBeTruthy();
+        }
+      }
+    });
   });
 });
