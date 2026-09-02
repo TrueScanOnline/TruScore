@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -72,9 +72,20 @@ import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModa
 import AdditivesRiskCard from '../../src/components/AdditivesRiskCard';
 import ProcessingLevelModal from '../../src/components/ProcessingLevelModal';
 import CameraCaptureModal from '../../src/components/CameraCaptureModal';
-import { extractManufacturingCountry, calculateEcoScore, extractPalmOilAnalysis } from '../../src/services/openFoodFacts';
+import { useSettingsStore } from '../../src/store/useSettingsStore';
+import { shouldShowScoreDiagnosticsEntry } from '../../src/config/scoreDiagnostics';
+import ScoreHighlightsList from '../../src/components/ScoreHighlightsList';
+import ScoreHighlightsLookThroughModal, {
+  type ScoreHighlightsLookThroughRequest,
+} from '../../src/components/ScoreHighlightsLookThroughModal';
+import {
+  firedLedgerFromTruScoreResult,
+  selectScoreHighlights,
+  type ScoreHighlightPillar,
+  type ScoreHighlightStory,
+} from '../../src/lib/scoreHighlights';
+import { extractManufacturingCountry, calculateEcoScore } from '../../src/services/openFoodFacts';
 import { generateInsights } from '../../src/lib/alertsInsights';
-import { generateProductFlags } from '../../src/utils/productFlags';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
 import { useTheme } from '../../src/theme';
@@ -142,6 +153,8 @@ function ResultScreenContent() {
   const { addScan, removeLegacyProvisionalScan } = useScanStore();
   const { addFavorite, removeFavorite, isFavorite } = useFavoritesStore();
   const { subscriptionInfo } = useSubscriptionStore();
+  const scoreDiagnosticsEnabled = useSettingsStore((s) => s.scoreDiagnosticsEnabled);
+  const showScoreDiagnostics = shouldShowScoreDiagnosticsEntry(scoreDiagnosticsEnabled);
   const { isOffline } = useNetworkStatus();
   const insets = useSafeAreaInsets();
   const alertsPreferences = useAlertsStore();
@@ -187,6 +200,8 @@ function ResultScreenContent() {
   const [truScoreModalVisible, setTruScoreModalVisible] = useState(false);
   const [truScoreAnalysisModalVisible, setTruScoreAnalysisModalVisible] = useState(false);
   const [ecoScoreModalVisible, setEcoScoreModalVisible] = useState(false);
+  const [scoreHighlightsRequest, setScoreHighlightsRequest] =
+    useState<ScoreHighlightsLookThroughRequest | null>(null);
   const [allergensAdditivesModalVisible, setAllergensAdditivesModalVisible] = useState(false);
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
@@ -442,6 +457,9 @@ function ResultScreenContent() {
           hasEcoScore: product._truscore_metadata?.hasEcoScore,
           hasOrigin: product._truscore_metadata?.hasOrigin,
           insights,
+          // Governed fired-adjustment ledger from the same scoring run — the only input the
+          // Score Highlights selection engine reads (W3-S12/S12a).
+          analysis: product._truscore_analysis,
         };
         setTruScore(score);
       } else {
@@ -452,6 +470,26 @@ function ResultScreenContent() {
       setTruScore(null);
     }
   }, [product, alertsPreferences]);
+
+  /**
+   * W3-S12 / W3-S12a governed Score Highlights.
+   *
+   * Derived only from the fired adjustment ledger produced by the scoring run that set this
+   * product's score. No raw-field re-evaluation and no adjustment-description matching.
+   */
+  const scoreHighlights = useMemo(() => {
+    const ledger = firedLedgerFromTruScoreResult(truScore);
+    if (!ledger) return null;
+    return selectScoreHighlights(ledger);
+  }, [truScore]);
+
+  const openScoreHighlightsPillar = useCallback((pillar: ScoreHighlightPillar) => {
+    setScoreHighlightsRequest({ mode: 'pillar', pillar });
+  }, []);
+
+  const openScoreHighlightStory = useCallback((story: ScoreHighlightStory) => {
+    setScoreHighlightsRequest({ mode: 'detail', story });
+  }, []);
 
   // Primary product/TruScore result — never gated on Dynamic Signals evaluation.
   const primaryScanResult = useMemo(() => {
@@ -1430,20 +1468,26 @@ function ResultScreenContent() {
             <Text style={[styles.cardTitle, { color: colors.text }]}>{productIdentity.publicScoreName}</Text>
           </View>
           
-          {/* TruScore Display - v1.4 */}
-          <TruScore truScore={truScore} size="medium" />
+          {/* TruScore Display - v1.4. Pillar rows open the W3-S12a look-through. */}
+          <TruScore
+            truScore={truScore}
+            size="medium"
+            onPillarPress={scoreHighlights ? openScoreHighlightsPillar : undefined}
+          />
 
-          {/* Score breakdown - opens analysis modal (DBs, pillars, adjustments) */}
-          <TouchableOpacity
-            onPress={() => setTruScoreAnalysisModalVisible(true)}
-            style={[styles.analysisButton, { borderColor: colors.border }]}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="analytics-outline" size={18} color={colors.primary} />
-            <Text style={[styles.analysisButtonText, { color: colors.primary }]}>
-              How was this scored?
-            </Text>
-          </TouchableOpacity>
+          {/* S28 — founder/UAT only when build-entitled AND Settings Score diagnostics On */}
+          {showScoreDiagnostics && (
+            <TouchableOpacity
+              onPress={() => setTruScoreAnalysisModalVisible(true)}
+              style={[styles.analysisButton, { borderColor: colors.border }]}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="analytics-outline" size={18} color={colors.primary} />
+              <Text style={[styles.analysisButtonText, { color: colors.primary }]}>
+                How was this scored?
+              </Text>
+            </TouchableOpacity>
+          )}
           
           {/* Confidence Badge - Data Quality Indicator */}
           {product && product.confidence !== undefined && (
@@ -1452,94 +1496,15 @@ function ResultScreenContent() {
             </View>
           )}
 
-          {/* Why this score - Green/Red Flags */}
-          {(() => {
-            // Ensure palm_oil_analysis exists before generating flags (user alert insights / scoring)
-            if (product.ingredients_text && !product.palm_oil_analysis) {
-              // Re-extract palm oil analysis if missing (shouldn't happen, but safety check)
-              try {
-                product.palm_oil_analysis = extractPalmOilAnalysis(product);
-              } catch (error) {
-                console.warn('[ResultScreen] Failed to extract palm oil analysis:', error);
-              }
-            }
-            
-            const flags = generateProductFlags(product, { suppressBbfawKtcScoreHighlights: true });
-            const greenFlags = flags.filter(f => f.type === 'green');
-            const redFlags = flags.filter(f => f.type === 'red');
-            
-            if (greenFlags.length === 0 && redFlags.length === 0) return null;
-            
-            return (
-              <View style={[styles.reasonsContainer, { borderTopColor: colors.border }]}>
-                <View style={styles.reasonsHeader}>
-                  <Text style={[styles.reasonsTitle, { color: colors.text }]}>Score highlights:</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      const cardShareType = product.trust_score !== null && product.trust_score < 40 
-                        ? 'negativeTruScore' 
-                        : 'truScore';
-                      handleShare(cardShareType);
-                    }}
-                    style={styles.shareButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="share-outline" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
-                
-                {/* Green Flags (Positive) */}
-                {greenFlags.length > 0 && (
-                  <View style={styles.flagsSection}>
-                    <View style={styles.flagsHeader}>
-                      <Ionicons name="checkmark-circle" size={18} color="#4caf50" />
-                      <Text style={[styles.flagsSectionTitle, { color: colors.text }]}>
-                        {t('result.positivePoints')} ({greenFlags.length})
-                      </Text>
-                    </View>
-                    {greenFlags.map((flag, index) => (
-                      <View key={`green-${index}`} style={styles.flagItem}>
-                        <View style={[styles.flagIndicator, { backgroundColor: '#4caf50' + '20' }]}>
-                          <Ionicons name="checkmark-circle" size={14} color="#4caf50" />
-                        </View>
-                        <View style={styles.flagContent}>
-                          <Text style={[styles.flagTitle, { color: colors.text }]}>{flag.title}</Text>
-                          <Text style={[styles.flagDescription, { color: colors.textSecondary }]}>
-                            {flag.description}
-                          </Text>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                )}
-                
-                {/* Red Flags (Negative) */}
-                {redFlags.length > 0 && (
-                  <View style={[styles.flagsSection, greenFlags.length > 0 && styles.flagsSectionWithMargin]}>
-                    <View style={styles.flagsHeader}>
-                      <Ionicons name="alert-circle" size={18} color="#f44336" />
-                      <Text style={[styles.flagsSectionTitle, { color: colors.text }]}>
-                        {t('result.negativePoints')} ({redFlags.length})
-                      </Text>
-                    </View>
-                    {redFlags.map((flag, index) => (
-                      <View key={`red-${index}`} style={styles.flagItem}>
-                        <View style={[styles.flagIndicator, { backgroundColor: '#f44336' + '20' }]}>
-                          <Ionicons name="alert-circle" size={14} color="#f44336" />
-                        </View>
-                        <View style={styles.flagContent}>
-                          <Text style={[styles.flagTitle, { color: colors.text }]}>{flag.title}</Text>
-                          <Text style={[styles.flagDescription, { color: colors.textSecondary }]}>
-                            {flag.description}
-                          </Text>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-            );
-          })()}
+          {/* W3-S12 "What we found" — governed promoted stories from the fired ledger */}
+          {scoreHighlights && scoreHighlights.promoted.length > 0 && (
+            <View style={[styles.reasonsContainer, { borderTopColor: colors.border }]}>
+              <ScoreHighlightsList
+                stories={scoreHighlights.promoted}
+                onSelectStory={openScoreHighlightStory}
+              />
+            </View>
+          )}
         </TouchableOpacity>
         ) : (
           /* Insufficient Data Card */
@@ -2553,11 +2518,20 @@ function ResultScreenContent() {
         />
       )}
 
-      {/* TruScore Analysis Modal - Pillar breakdown & data source trace */}
+      {/* S28 — route/modal guard: only when entitled + toggle On */}
       <TruScoreAnalysisModal
-        visible={truScoreAnalysisModalVisible}
+        visible={showScoreDiagnostics && truScoreAnalysisModalVisible}
         onClose={() => setTruScoreAnalysisModalVisible(false)}
         analysis={product?._truscore_analysis}
+      />
+
+      {/* W3-S12a / L2 shared Score Highlights look-through */}
+      <ScoreHighlightsLookThroughModal
+        visible={scoreHighlightsRequest != null}
+        request={scoreHighlightsRequest}
+        selection={scoreHighlights}
+        pillarScores={truScore?.breakdown}
+        onClose={() => setScoreHighlightsRequest(null)}
       />
 
       {/* Eco-Score Info Modal */}

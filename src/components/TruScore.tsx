@@ -1,17 +1,21 @@
 // src/components/TruScore.tsx – Rveel Score v1.4 display component
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { TruScoreResult } from '../lib/truscoreEngine';
 import { productIdentity } from '../config/productIdentity';
 import { useTheme } from '../theme';
 
+type TruScorePillar = 'Body' | 'Planet' | 'Ethics' | 'Open';
+
 interface TruScoreProps {
   truScore: TruScoreResult;
   size?: 'small' | 'medium' | 'large';
+  /** When provided, pillar rows become the W3-S12a pillar look-through entry point. */
+  onPillarPress?: (pillar: TruScorePillar) => void;
 }
 
-const TruScore = React.memo(function TruScore({ truScore, size = 'medium' }: TruScoreProps) {
+const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPillarPress }: TruScoreProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { truscore, breakdown } = truScore;
@@ -64,8 +68,8 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium' }: Tru
         {(['Body', 'Planet', 'Ethics', 'Open'] as const).map((pillar) => {
           const value = breakdown[pillar] ?? 0;
           const safeValue = typeof value === 'number' && !isNaN(value) ? value : 0;
-          return (
-            <View key={pillar} style={styles.pillarRow}>
+          const rowContent = (
+            <>
               <Text style={[styles.pillarLabel, { color: colors.text }]}>{pillar}</Text>
               <View style={[styles.pillarBarContainer, { backgroundColor: colors.surface }]}>
                 <View
@@ -79,6 +83,22 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium' }: Tru
                 />
               </View>
               <Text style={[styles.pillarValue, { color: colors.text }]}>{safeValue}/25</Text>
+            </>
+          );
+          return onPillarPress ? (
+            <TouchableOpacity
+              key={pillar}
+              style={styles.pillarRow}
+              onPress={() => onPillarPress(pillar)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={pillar}
+            >
+              {rowContent}
+            </TouchableOpacity>
+          ) : (
+            <View key={pillar} style={styles.pillarRow}>
+              {rowContent}
             </View>
           );
         })}

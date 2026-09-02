@@ -21,6 +21,7 @@ import { useScanStore } from '../src/store/useScanStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { clearCache, getCacheSize } from '../src/services/cacheService';
 import FSANZDatabaseImportModal from '../src/components/FSANZDatabaseImportModal';
+import ScoreDiagnosticsSettingRow from '../src/components/ScoreDiagnosticsSettingRow';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -287,6 +288,7 @@ export default function SettingsScreen() {
           <Text style={[styles.privacyNote, { color: colors.textTertiary }]}>
             {t('settings.privacyNote')}
           </Text>
+          <ScoreDiagnosticsSettingRow />
         </SettingSection>
 
         {/* Data */}

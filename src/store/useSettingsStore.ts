@@ -13,6 +13,11 @@ interface SettingsStore {
   units: 'metric' | 'imperial';
   analyticsEnabled: boolean;
   /**
+   * UAT-only local Score diagnostics toggle. Meaningful only when
+   * EXPO_PUBLIC_SCORE_DIAGNOSTICS === '1'. Default Off for near-consumer parity.
+   */
+  scoreDiagnosticsEnabled: boolean;
+  /**
    * When AU/NZ, Planet packaging fallback (Eco-Score absent) uses that kerbside ruleset.
    * `auto` uses product.true_scan_market if present, else device locale / defaults (see planetPackagingFallback).
    */
@@ -23,6 +28,7 @@ interface SettingsStore {
   setLanguage: (value: 'en' | 'es' | 'fr') => Promise<void>;
   setUnits: (value: 'metric' | 'imperial') => Promise<void>;
   setAnalyticsEnabled: (value: boolean) => Promise<void>;
+  setScoreDiagnosticsEnabled: (value: boolean) => Promise<void>;
   setPlanetPackagingMarket: (value: PlanetPackagingMarketSetting) => Promise<void>;
   initializeStore: () => Promise<void>;
 }
@@ -37,6 +43,7 @@ const defaultSettings = {
   language: 'en' as const,
   units: 'metric' as const,
   analyticsEnabled: false,
+  scoreDiagnosticsEnabled: false,
   planetPackagingMarket: 'auto' as PlanetPackagingMarketSetting,
 };
 
@@ -48,6 +55,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   language: 'en' as const,
   units: 'metric' as const,
   analyticsEnabled: false,
+  scoreDiagnosticsEnabled: false,
   planetPackagingMarket: 'auto' as PlanetPackagingMarketSetting,
 
   setHasCompletedOnboarding: async (value) => {
@@ -80,6 +88,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   setAnalyticsEnabled: async (value) => {
     set({ analyticsEnabled: value });
+    await saveSettings();
+  },
+
+  setScoreDiagnosticsEnabled: async (value) => {
+    set({ scoreDiagnosticsEnabled: value });
     await saveSettings();
   },
 

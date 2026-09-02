@@ -11,6 +11,13 @@ if (process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH === undefined) {
 if (process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT === undefined) {
   process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = '0';
 }
+// P1-C: Score Diagnostics fail closed for Metro/Expo Go unless explicitly entitled.
+if (process.env.EXPO_PUBLIC_SCORE_DIAGNOSTICS === undefined) {
+  process.env.EXPO_PUBLIC_SCORE_DIAGNOSTICS = '0';
+}
+if (process.env.EXPO_PUBLIC_STORE_RELEASE === undefined) {
+  process.env.EXPO_PUBLIC_STORE_RELEASE = '0';
+}
 
 module.exports = {
   expo: {

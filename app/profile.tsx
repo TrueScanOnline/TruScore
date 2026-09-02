@@ -24,6 +24,7 @@ import { getSubscriptionStatusMessage, isPremium as checkPremium } from '../src/
 import { isMvpSubscriptionAndPaywallEnabled } from '../src/config/mvpRuntimeGates';
 import { getCacheSize, clearCache } from '../src/services/cacheService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ScoreDiagnosticsSettingRow from '../src/components/ScoreDiagnosticsSettingRow';
 
 type NavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Settings'>,
@@ -303,6 +304,7 @@ export default function ProfileScreen() {
               />
             }
           />
+          <ScoreDiagnosticsSettingRow />
         </SettingSection>
 
         {/* Data */}

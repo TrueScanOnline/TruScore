@@ -27,6 +27,7 @@ import {
 // Import stores
 import { useScanStore } from '../src/store/useScanStore';
 import { useSettingsStore } from '../src/store/useSettingsStore';
+import { assertScoreDiagnosticsReleaseSafe } from '../src/config/scoreDiagnostics';
 import { useFavoritesStore } from '../src/store/useFavoritesStore';
 import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
 
@@ -75,6 +76,7 @@ function RootLayout() {
           {
             name: 'environmentValidation',
             task: async () => {
+              assertScoreDiagnosticsReleaseSafe();
               const { validateEnvironment } = await import('../src/utils/environmentValidation');
               const validation = validateEnvironment();
               if (!validation.isValid) {

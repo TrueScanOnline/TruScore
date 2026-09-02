@@ -98,7 +98,13 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
               {pillar.adjustments.map((adj, idx) => (
                 <View key={idx} style={[styles.adjRow, { borderColor: colors.border }]}>
                   <View style={styles.adjLeft}>
+                    {adj.adjustmentId ? (
+                      <Text style={[styles.adjId, { color: colors.textTertiary }]}>{adj.adjustmentId}</Text>
+                    ) : null}
                     <Text style={[styles.adjDesc, { color: colors.text }]} numberOfLines={2}>{adj.description}</Text>
+                    <Text style={[styles.adjSource, { color: colors.textTertiary }]}>
+                      Highlight: {adj.highlightEligible === true ? 'eligible' : adj.highlightEligible === false ? 'ineligible' : '—'}
+                    </Text>
                     {(adj.sourceDatabase || adj.queryKeyType) && (
                       <View style={styles.adjSourceRow}>
                         <Text style={[styles.adjSource, { color: colors.textTertiary }]}>
@@ -164,6 +170,7 @@ const styles = StyleSheet.create({
   pillarBase: { fontWeight: '400', fontSize: 13 },
   adjRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 6, paddingHorizontal: 12, borderTopWidth: 1 },
   adjLeft: { flex: 1, marginRight: 8 },
+  adjId: { fontSize: 11, marginBottom: 2, opacity: 0.85 },
   adjDesc: { fontSize: 13 },
   adjSourceRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginTop: 2 },
   adjSource: { fontSize: 11 },
