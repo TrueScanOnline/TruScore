@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import InfoModal from './InfoModal';
 import { useTheme } from '../theme';
 import { ProductWithTrustScore } from '../types/product';
-import { generateProductFlags } from '../utils/productFlags';
 
 interface TruScoreInfoModalProps {
   visible: boolean;
@@ -13,28 +12,9 @@ interface TruScoreInfoModalProps {
   product?: ProductWithTrustScore | null;
 }
 
-// Helper function to get icon name for flag category
-function getFlagIcon(category: string): any {
-  const iconMap: Record<string, any> = {
-    'geopolitics': 'globe-outline',
-    'news': 'newspaper-outline',
-    'boycott': 'people-outline',
-    'sustainability': 'leaf-outline',
-    'ethics': 'heart-outline',
-    'nutrition': 'shield-outline',
-    'processing': 'build-outline',
-  };
-  return iconMap[category] || 'information-circle-outline';
-}
-
 export default function TruScoreInfoModal({ visible, onClose, product }: TruScoreInfoModalProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  
-  // Generate flags if product is provided
-  const productFlags = product ? generateProductFlags(product) : [];
-  const greenFlags = productFlags.filter(f => f.type === 'green');
-  const redFlags = productFlags.filter(f => f.type === 'red');
 
   return (
     <InfoModal
@@ -587,67 +567,11 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           {t('infoModal.trustScore.flags')}
         </Text>
         <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
-          {product 
-            ? t('infoModal.trustScore.flagsDescriptionForProduct')
-            : t('infoModal.trustScore.flagsDescription')}
+          {t('infoModal.trustScore.flagsDescription')}
         </Text>
 
-        {/* Show actual product flags if product is provided */}
-        {product && (greenFlags.length > 0 || redFlags.length > 0) ? (
-          <>
-            {/* Red Flags */}
-            {redFlags.length > 0 && (
-              <View style={[styles.flagsContainer, { backgroundColor: '#ff6b6b' + '15', borderColor: '#ff6b6b', marginTop: 12 }]}>
-                <View style={styles.flagsHeader}>
-                  <Ionicons name="alert-circle" size={20} color="#ff6b6b" />
-                  <Text style={[styles.flagsTitle, { color: colors.text }]}>
-                    {t('infoModal.trustScore.redFlags')} ({redFlags.length})
-                  </Text>
-                </View>
-                {redFlags.map((flag, index) => (
-                  <View key={`red-${index}`} style={styles.flagItem}>
-                    <Ionicons name={getFlagIcon(flag.category)} size={16} color="#ff6b6b" />
-                    <View style={styles.flagContent}>
-                      <Text style={[styles.flagTitle, { color: colors.text }]}>
-                        {flag.title}
-                      </Text>
-                      <Text style={[styles.flagDescription, { color: colors.textSecondary }]}>
-                        {flag.description}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {/* Green Flags */}
-            {greenFlags.length > 0 && (
-              <View style={[styles.flagsContainer, { backgroundColor: '#16a085' + '15', borderColor: '#16a085', marginTop: 16 }]}>
-                <View style={styles.flagsHeader}>
-                  <Ionicons name="checkmark-circle" size={20} color="#16a085" />
-                  <Text style={[styles.flagsTitle, { color: colors.text }]}>
-                    {t('infoModal.trustScore.greenFlags')} ({greenFlags.length})
-                  </Text>
-                </View>
-                {greenFlags.map((flag, index) => (
-                  <View key={`green-${index}`} style={styles.flagItem}>
-                    <Ionicons name={getFlagIcon(flag.category)} size={16} color="#16a085" />
-                    <View style={styles.flagContent}>
-                      <Text style={[styles.flagTitle, { color: colors.text }]}>
-                        {flag.title}
-                      </Text>
-                      <Text style={[styles.flagDescription, { color: colors.textSecondary }]}>
-                        {flag.description}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
-          </>
-        ) : (
-          /* Generic flag descriptions (educational) */
-          <>
+        {/* Generic flag descriptions (educational) */}
+        <>
             {/* Red Flags */}
             <View style={[styles.flagsContainer, { backgroundColor: '#ff6b6b' + '15', borderColor: '#ff6b6b', marginTop: 12 }]}>
               <View style={styles.flagsHeader}>
@@ -817,8 +741,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                 </View>
               </View>
             </View>
-          </>
-        )}
+        </>
       </View>
 
       {/* Full Transparency Note */}

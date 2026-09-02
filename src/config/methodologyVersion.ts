@@ -8,7 +8,6 @@ export const RVEEL_SCORE_METHODOLOGY_VERSION = '1.4' as const;
 /** Primary paths reviewers must re-read after engine or methodology changes */
 export const METHODOLOGY_REVIEW_TRIGGER_PATHS: readonly string[] = [
   'src/lib/truscoreEngine/',
-  'src/config/scoreHighlightDefinitions.ts',
   'src/i18n/locales/en.json (infoModal.trustScore)',
   'src/i18n/locales/fr.json (infoModal.trustScore)',
   'src/i18n/locales/es.json (infoModal.trustScore)',

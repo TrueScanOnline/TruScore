@@ -1,7 +1,7 @@
 /**
  * Product Header Component
  * 
- * Displays product image, name, brand, and key flags.
+ * Displays product image, name, brand, confidence and country of origin.
  * Optimized with React.memo for performance.
  * 
  * @module ProductHeader
@@ -9,13 +9,11 @@
 
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ProductWithTrustScore } from '../../../types/product';
 import { useTheme } from '../../../theme';
 import ConfidenceBadge from '../../../components/ConfidenceBadge';
 import CountryFlag from '../../../components/CountryFlag';
-import { generateProductFlags } from '../../../utils/productFlags';
 
 interface ProductHeaderProps {
   product: ProductWithTrustScore;
@@ -26,7 +24,6 @@ const ProductHeader = React.memo(function ProductHeader({ product, onImagePress 
   const { t } = useTranslation();
   const { colors } = useTheme();
   
-  const flags = generateProductFlags(product);
   const imageUrl = product.image_url || product.image_front_url;
   
   return (
@@ -64,20 +61,6 @@ const ProductHeader = React.memo(function ProductHeader({ product, onImagePress 
         {product.origins_tags && product.origins_tags.length > 0 && (
           <CountryFlag country={product.origins_tags[0] as string} />
         )}
-        {flags.slice(0, 3).map((flag, index) => {
-          const flagColor = flag.type === 'green' ? '#16a085' : '#ff6b6b';
-          const flagIcon = flag.category === 'sustainability' ? 'leaf-outline' :
-                          flag.category === 'ethics' ? 'heart-outline' :
-                          flag.category === 'nutrition' ? 'shield-outline' :
-                          flag.category === 'processing' ? 'build-outline' :
-                          'information-circle-outline';
-          return (
-            <View key={index} style={[styles.flagBadge, { backgroundColor: flagColor + '20' }]}>
-              <Ionicons name={flagIcon as any} size={16} color={flagColor} />
-              <Text style={[styles.flagText, { color: colors.text }]}>{flag.title}</Text>
-            </View>
-          );
-        })}
       </View>
     </View>
   );
@@ -118,18 +101,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-  },
-  flagBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  flagText: {
-    fontSize: 12,
-    fontWeight: '600',
   },
 });
 
