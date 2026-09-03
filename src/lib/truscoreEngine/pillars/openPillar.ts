@@ -13,8 +13,14 @@
 import { Product } from '../../../types/product';
 import { logger } from '../../../utils/logger';
 import { powershellLogger } from '../../../utils/powershellLogger';
-import { countOpenPillarHiddenTermHits } from './openPillarHiddenTerms';
+import { assessOpenPillarHiddenTerms } from './openPillarHiddenTerms';
 import { assessOpenOriginsV15 } from './openPillarOriginsV15';
+import {
+  buildOpenClarityCommentaryMetadata,
+  buildOpenOriginsCommentaryMetadata,
+  type OpenCommentaryMetadata,
+} from './openPillarCommentaryMetadata';
+import { resolvePlanetJurisdiction } from './planetPackagingFallback';
 import {
   OPEN_V15_ADJUSTMENT_REGISTRY,
   type OpenV15AdjustmentId,
@@ -37,6 +43,7 @@ export interface OpenPillarAdjustment {
   type: 'positive' | 'negative' | 'neutral';
   highlightEligible: boolean;
   family: 'system' | 'ingredients' | 'origins';
+  metadata?: OpenCommentaryMetadata;
 }
 
 export interface OpenPillarResult {
@@ -67,7 +74,8 @@ function ingredientsUsableForV15(ingredientsText: string): boolean {
 
 function pushAdjustment(
   adjustments: OpenPillarAdjustment[],
-  id: OpenV15AdjustmentId
+  id: OpenV15AdjustmentId,
+  metadata?: OpenCommentaryMetadata
 ): OpenPillarAdjustment {
   const meta = OPEN_V15_ADJUSTMENT_REGISTRY[id];
   const adj: OpenPillarAdjustment = {
@@ -77,6 +85,7 @@ function pushAdjustment(
     type: meta.points > 0 ? 'positive' : meta.points < 0 ? 'negative' : 'neutral',
     highlightEligible: meta.highlightEligible,
     family: meta.family,
+    ...(metadata && Object.keys(metadata).length > 0 && { metadata }),
   };
   adjustments.push(adj);
   return adj;
@@ -99,9 +108,18 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   const ingredientsLength = ingredientsText.length;
   const usable = ingredientsUsableForV15(ingredientsText);
 
-  const governedFlagCount = usable ? countOpenPillarHiddenTermHits(ingredientsText) : 0;
+  const hiddenTermAssessment = usable ? assessOpenPillarHiddenTerms(ingredientsText) : null;
+  const governedFlagCount = hiddenTermAssessment?.flagCount ?? 0;
   const clarityId = ingredientClarityId(governedFlagCount, usable);
-  const clarityAdj = pushAdjustment(adjustments, clarityId);
+  const openMarket = resolvePlanetJurisdiction(product);
+  const clarityMetadata =
+    usable && hiddenTermAssessment && governedFlagCount > 0
+      ? buildOpenClarityCommentaryMetadata(
+          hiddenTermAssessment,
+          openMarket === 'AU' || openMarket === 'NZ' ? openMarket : undefined
+        )
+      : undefined;
+  const clarityAdj = pushAdjustment(adjustments, clarityId, clarityMetadata);
   score += clarityAdj.value;
 
   const originsAssessment = assessOpenOriginsV15(
@@ -110,7 +128,12 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     usable,
     governedFlagCount
   );
-  const originsAdj = pushAdjustment(adjustments, originsAssessment.id);
+  const originsMetadata = buildOpenOriginsCommentaryMetadata(
+    product,
+    ingredientsText,
+    originsAssessment
+  );
+  const originsAdj = pushAdjustment(adjustments, originsAssessment.id, originsMetadata);
   score += originsAdj.value;
 
   score = Math.max(0, Math.min(25, Math.round(score)));

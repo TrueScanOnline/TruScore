@@ -13,6 +13,7 @@ import {
 import { PLANET_V19_ADJUSTMENT_REGISTRY } from '../truscoreEngine/pillars/planetPillarV19Registry';
 import { ETHICS_V37_ADJUSTMENT_REGISTRY } from '../truscoreEngine/pillars/ethicsPillarV37Registry';
 import { OPEN_V15_ADJUSTMENT_REGISTRY } from '../truscoreEngine/pillars/openPillarV15Registry';
+import { resolveOpenGovernedCopy } from './openGovernedCopy';
 import type { ScoreHighlightL3Route, ScoreHighlightPillar } from './types';
 
 export interface GovernedCommentaryRow {
@@ -169,6 +170,21 @@ export function resolveGovernedCopy(
   if (adjustmentId === 'ethics-v37-cert-organic' && metadata?.organicEvidenceClass === 'claim_only') {
     l1 = ORGANIC_CLAIM_ONLY_L1;
     l2 = ORGANIC_CLAIM_ONLY_L2;
+  }
+
+  if (pillar === 'Open') {
+    const openCopy = resolveOpenGovernedCopy(adjustmentId, metadata);
+    if (openCopy) {
+      l1 = openCopy.l1;
+      l2 = openCopy.l2;
+    } else if (
+      adjustmentId.startsWith('open-v15-ing-clarity-') &&
+      adjustmentId !== 'open-v15-ing-clarity-zero' &&
+      adjustmentId !== 'open-v15-ing-clarity-unavailable' &&
+      metadata?.termPresentationClass
+    ) {
+      return null;
+    }
   }
 
   l1 = resolveTokens(l1, metadata);

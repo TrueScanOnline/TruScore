@@ -78,9 +78,11 @@ import ScoreHighlightsList from '../../src/components/ScoreHighlightsList';
 import ScoreHighlightsLookThroughModal, {
   type ScoreHighlightsLookThroughRequest,
 } from '../../src/components/ScoreHighlightsLookThroughModal';
+import AboutTheseAdditivesModal from '../../src/components/AboutTheseAdditivesModal';
 import {
   firedLedgerFromTruScoreResult,
   selectScoreHighlights,
+  type ScoreHighlightL3Route,
   type ScoreHighlightPillar,
   type ScoreHighlightStory,
 } from '../../src/lib/scoreHighlights';
@@ -202,6 +204,7 @@ function ResultScreenContent() {
   const [ecoScoreModalVisible, setEcoScoreModalVisible] = useState(false);
   const [scoreHighlightsRequest, setScoreHighlightsRequest] =
     useState<ScoreHighlightsLookThroughRequest | null>(null);
+  const [aboutAdditivesModalVisible, setAboutAdditivesModalVisible] = useState(false);
   const [allergensAdditivesModalVisible, setAllergensAdditivesModalVisible] = useState(false);
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
@@ -477,11 +480,27 @@ function ResultScreenContent() {
    * Derived only from the fired adjustment ledger produced by the scoring run that set this
    * product's score. No raw-field re-evaluation and no adjustment-description matching.
    */
+  const scoreHighlightsLedger = useMemo(
+    () => firedLedgerFromTruScoreResult(truScore),
+    [truScore]
+  );
+
   const scoreHighlights = useMemo(() => {
-    const ledger = firedLedgerFromTruScoreResult(truScore);
-    if (!ledger) return null;
-    return selectScoreHighlights(ledger);
-  }, [truScore]);
+    if (!scoreHighlightsLedger) return null;
+    return selectScoreHighlights(scoreHighlightsLedger, { additivesL3Available: true });
+  }, [scoreHighlightsLedger]);
+
+  const detectedBodyAdditiveIds = useMemo(() => {
+    if (!scoreHighlightsLedger) return [];
+    return scoreHighlightsLedger
+      .filter(
+        (row) =>
+          row.pillar === 'Body' &&
+          typeof row.id === 'string' &&
+          row.id.startsWith('body-v12-additive-')
+      )
+      .map((row) => row.id as string);
+  }, [scoreHighlightsLedger]);
 
   const openScoreHighlightsPillar = useCallback((pillar: ScoreHighlightPillar) => {
     setScoreHighlightsRequest({ mode: 'pillar', pillar });
@@ -490,6 +509,13 @@ function ResultScreenContent() {
   const openScoreHighlightStory = useCallback((story: ScoreHighlightStory) => {
     setScoreHighlightsRequest({ mode: 'detail', story });
   }, []);
+
+  const openAboutTheseAdditivesL3 = useCallback(
+    (_route: Extract<ScoreHighlightL3Route, { kind: 'in_app' }>, _story: ScoreHighlightStory) => {
+      setAboutAdditivesModalVisible(true);
+    },
+    []
+  );
 
   // Primary product/TruScore result — never gated on Dynamic Signals evaluation.
   const primaryScanResult = useMemo(() => {
@@ -2532,6 +2558,13 @@ function ResultScreenContent() {
         selection={scoreHighlights}
         pillarScores={truScore?.breakdown}
         onClose={() => setScoreHighlightsRequest(null)}
+        onOpenInAppL3={openAboutTheseAdditivesL3}
+      />
+
+      <AboutTheseAdditivesModal
+        visible={aboutAdditivesModalVisible}
+        onClose={() => setAboutAdditivesModalVisible(false)}
+        detectedAdditiveIds={detectedBodyAdditiveIds}
       />
 
       {/* Eco-Score Info Modal */}

@@ -7,6 +7,67 @@
  * generic extract/essence terms exclude named examples from the spec (e.g. vanilla extract).
  */
 
+import { getAdditiveInfo } from '../../../services/additiveDatabase';
+
+export type OpenHiddenTermPresentationClass = 'broad_generic' | 'coded';
+
+export interface OpenHiddenTermMatch {
+  term: string;
+  presentationClass: OpenHiddenTermPresentationClass;
+  decodedName?: string;
+}
+
+export interface OpenHiddenTermAssessment {
+  flagCount: number;
+  matches: OpenHiddenTermMatch[];
+  termPresentationClass: 'broad_generic' | 'coded' | 'mixed';
+  matchedTerms: string;
+  decodedAdditiveNames: string;
+}
+
+function decodeCodedTerm(rawTerm: string): string | undefined {
+  const paren = rawTerm.match(/\(([^)]+)\)/);
+  if (paren) {
+    const fromParen = decodeCodedTerm(paren[1]);
+    if (fromParen) return fromParen;
+  }
+  const compact = rawTerm.replace(/\s+/g, '').toLowerCase();
+  let key: string | undefined;
+  const enTag = compact.match(/^en:e(\d{3,4}[a-z]?)$/);
+  const eDirect = compact.match(/^e(\d{3,4}[a-z]?)$/);
+  const insDirect = compact.match(/^ins(\d{3,4}[a-z]?)$/);
+  const numOnly = compact.match(/^(\d{3,4}[a-z]?)$/);
+  if (enTag) key = `e${enTag[1]}`;
+  else if (eDirect) key = `e${eDirect[1]}`;
+  else if (insDirect) key = `e${insDirect[1]}`;
+  else if (numOnly) key = `e${numOnly[1]}`;
+  return key ? getAdditiveInfo(key)?.name : undefined;
+}
+
+function deriveTermPresentationClass(
+  matches: readonly OpenHiddenTermMatch[]
+): 'broad_generic' | 'coded' | 'mixed' {
+  const hasBroad = matches.some((m) => m.presentationClass === 'broad_generic');
+  const hasCoded = matches.some((m) => m.presentationClass === 'coded');
+  if (hasBroad && hasCoded) return 'mixed';
+  if (hasCoded) return 'coded';
+  return 'broad_generic';
+}
+
+function finalizeHiddenTermAssessment(matches: OpenHiddenTermMatch[]): OpenHiddenTermAssessment {
+  const decodedNames = matches
+    .filter((m) => m.presentationClass === 'coded')
+    .map((m) => m.decodedName)
+    .filter((name): name is string => Boolean(name));
+  return {
+    flagCount: matches.length,
+    matches,
+    termPresentationClass: deriveTermPresentationClass(matches),
+    matchedTerms: matches.map((m) => m.term).join('|'),
+    decodedAdditiveNames: decodedNames.join('|'),
+  };
+}
+
 const E_NUMBER_RE = /\bE\s?\d{3,4}[a-z]?\b/gi;
 const INS_NUMBER_RE = /\bINS\s?\d{3,4}[a-z]?\b/gi;
 
@@ -304,7 +365,14 @@ function findPhraseMatch(tokenLower: string, phrase: string): { start: number; l
   return null;
 }
 
-function applyRegexHits(tokenLower: string, covered: boolean[], re: RegExp, hits: { count: number }): void {
+function applyRegexHits(
+  token: string,
+  tokenLower: string,
+  covered: boolean[],
+  re: RegExp,
+  hits: { count: number; matches?: OpenHiddenTermMatch[] },
+  presentationClass: OpenHiddenTermPresentationClass
+): void {
   const r = new RegExp(re.source, re.flags.includes('g') ? re.flags : `${re.flags}g`);
   let m: RegExpExecArray | null;
   while ((m = r.exec(tokenLower)) !== null) {
@@ -313,6 +381,11 @@ function applyRegexHits(tokenLower: string, covered: boolean[], re: RegExp, hits
     if (isRangeFree(covered, start, end)) {
       markRange(covered, start, end);
       hits.count += 1;
+      if (hits.matches) {
+        const term = token.slice(start, end);
+        const decodedName = decodeCodedTerm(term);
+        hits.matches.push({ term, presentationClass, ...(decodedName && { decodedName }) });
+      }
     }
   }
 }
@@ -366,35 +439,49 @@ function isOpaqueAdditiveParenToken(tokenLower: string): boolean {
  * Count vague-disclosure hits for one ingredient token (comma-separated segment).
  */
 export function countHiddenTermHitsInToken(token: string): number {
+  return scanHiddenTermHitsInToken(token).count;
+}
+
+function scanHiddenTermHitsInToken(
+  token: string,
+  collectMatches = false
+): { count: number; matches: OpenHiddenTermMatch[] } {
   const raw = normalizeOpenPillarIngredientsText(token);
-  if (!raw) return 0;
+  if (!raw) return { count: 0, matches: [] };
 
   const tokenLower = raw.toLowerCase();
   const covered = new Array(tokenLower.length).fill(false);
   maskExclusions(raw, covered);
 
-  const hits = { count: 0 };
+  const hits: { count: number; matches?: OpenHiddenTermMatch[] } = {
+    count: 0,
+    ...(collectMatches && { matches: [] }),
+  };
 
-  applyRegexHits(tokenLower, covered, E_NUMBER_RE, hits);
-  applyRegexHits(tokenLower, covered, INS_NUMBER_RE, hits);
-  applyRegexHits(tokenLower, covered, EN_E_NUMBER_RE, hits);
+  applyRegexHits(raw, tokenLower, covered, E_NUMBER_RE, hits, 'coded');
+  applyRegexHits(raw, tokenLower, covered, INS_NUMBER_RE, hits, 'coded');
+  applyRegexHits(raw, tokenLower, covered, EN_E_NUMBER_RE, hits, 'coded');
 
   if (additiveClassWithCodeParenHit(tokenLower)) {
     if (isRangeFree(covered, 0, tokenLower.length)) {
       markRange(covered, 0, tokenLower.length);
       hits.count += 1;
+      if (hits.matches) {
+        const decodedName = decodeCodedTerm(raw);
+        hits.matches.push({ term: raw, presentationClass: 'coded', ...(decodedName && { decodedName }) });
+      }
     }
-    return hits.count;
+    return { count: hits.count, matches: hits.matches ?? [] };
   }
 
   if (isOpaqueAdditiveParenToken(tokenLower)) {
     markRange(covered, 0, tokenLower.length);
-    return hits.count;
+    return { count: hits.count, matches: hits.matches ?? [] };
   }
 
   if (isDisclosedSeasoningCompositionToken(tokenLower)) {
     markRange(covered, 0, tokenLower.length);
-    return hits.count;
+    return { count: hits.count, matches: hits.matches ?? [] };
   }
 
   for (const phrase of SORTED_ALL_PHRASES) {
@@ -405,17 +492,39 @@ export function countHiddenTermHitsInToken(token: string): number {
     if (isRangeFree(covered, start, end)) {
       markRange(covered, start, end);
       hits.count += 1;
+      if (hits.matches) {
+        hits.matches.push({
+          term: raw.slice(start, end),
+          presentationClass: 'broad_generic',
+        });
+      }
     }
   }
 
-  return hits.count;
+  return { count: hits.count, matches: hits.matches ?? [] };
 }
 
-/** Total hidden-term hits across all ingredient tokens (Open Pillar v14). */
+/** Total hidden-term hits across all ingredient tokens (Open Pillar v15). */
 export function countOpenPillarHiddenTermHits(ingredientsText: string): number {
-  const tokens = tokenizeIngredientsText(ingredientsText || '');
-  if (tokens.length === 0 && normalizeOpenPillarIngredientsText(ingredientsText || '')) {
-    return countHiddenTermHitsInToken(ingredientsText);
+  return assessOpenPillarHiddenTerms(ingredientsText).flagCount;
+}
+
+/**
+ * Score-neutral governed-term assessment for Open ingredient-clarity commentary metadata.
+ * Uses the same match rules as scoring; does not change flag counts.
+ */
+export function assessOpenPillarHiddenTerms(ingredientsText: string): OpenHiddenTermAssessment {
+  const text = ingredientsText || '';
+  const tokens = tokenizeIngredientsText(text);
+  const allMatches: OpenHiddenTermMatch[] = [];
+
+  if (tokens.length === 0 && normalizeOpenPillarIngredientsText(text)) {
+    allMatches.push(...scanHiddenTermHitsInToken(text, true).matches);
+  } else {
+    for (const t of tokens) {
+      allMatches.push(...scanHiddenTermHitsInToken(t, true).matches);
+    }
   }
-  return tokens.reduce((sum, t) => sum + countHiddenTermHitsInToken(t), 0);
+
+  return finalizeHiddenTermAssessment(allMatches);
 }

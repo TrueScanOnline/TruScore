@@ -50,8 +50,7 @@ Ordinary EAS build minutes only. No new paid diagnostics service, admin accounts
 
 ## Known residuals (out of package / for Claude + founders)
 
-- In-app Body “About these additives” L3 surface not yet present — L3 currently opens governed authoritative source URLs.
-- Open locked L2 variants (broad/coded/mixed, percentage origins) need score-neutral Open metadata emission in a follow-up; registry flat explainers used meantime without changing Open arithmetic.
 - S27 static red/green educational copy may diverge from Result “What we found” — deferred S27 redesign.
 - Alcohol consumer treatment not migrated (legacy alcohol highlight policy deleted).
 - KTC/BBFAW benchmark refresh deferred after Wave 5.
+- Open percentage / qualified-partial / verified-packet-gap origin L2 variants remain governed in the contract but are **not yet reachable** under the OFF-only MVP scoring path (`mvpUnreachable` registry rows); metadata plumbing is in place for states that fire today (clarity broad/coded/mixed; single-ingredient evidently complete).

@@ -362,6 +362,50 @@ describe('governed copy resolution', () => {
   });
 });
 
+describe('Body additive in-app L3 routing', () => {
+  it('routes Body additive stories to in-app About these additives when available', () => {
+    const { byPillar } = selectScoreHighlights(
+      [body('body-v12-additive-e171', -3)],
+      { additivesL3Available: true }
+    );
+    expect(byPillar.Body[0].l3Route).toEqual({
+      kind: 'in_app',
+      target: 'additives',
+      label: 'About these additives',
+    });
+  });
+
+  it('falls back to external source when in-app L3 is unavailable', () => {
+    const { byPillar } = selectScoreHighlights([body('body-v12-additive-e171', -3)]);
+    expect(byPillar.Body[0].l3Route?.kind).toBe('external_source');
+  });
+});
+
+describe('Open structured-metadata L2 variants', () => {
+  it('uses locked broad one-term copy from metadata', () => {
+    const { byPillar } = selectScoreHighlights([
+      fired('Open', 'open-v15-ing-clarity-one', -2, {
+        termPresentationClass: 'broad_generic',
+        matchedTerms: 'natural flavours',
+        market: 'NZ',
+      }),
+    ]);
+    expect(byPillar.Open[0].l1).toBe('One ingredient term is vague');
+    expect(byPillar.Open[0].l2).toContain('New Zealand food-labelling rules');
+  });
+
+  it('withholds clarity stories when metadata variant cannot be resolved', () => {
+    const { byPillar, exclusions } = selectScoreHighlights([
+      fired('Open', 'open-v15-ing-clarity-one', -2, {
+        termPresentationClass: 'broad_generic',
+        matchedTerms: 'natural flavours',
+      }),
+    ]);
+    expect(byPillar.Open).toEqual([]);
+    expect(exclusions.some((e) => e.reason === 'unresolved_locked_copy_token')).toBe(true);
+  });
+});
+
 describe('no description-string matching', () => {
   function analysisPillar(
     pillarName: PillarAnalysis['pillarName'],
