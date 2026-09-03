@@ -381,6 +381,31 @@ describe('Body additive in-app L3 routing', () => {
   });
 });
 
+describe('Open Origins Product Origins L3 routing', () => {
+  it('deep-links Open origins stories into the Product Origins experience when available', () => {
+    const { byPillar } = selectScoreHighlights(
+      [fired('Open', 'open-v15-origins-evidently-complete', 8, { singleIngredient: true, ingredient: 'Honey', country: 'New Zealand' })],
+      { productOriginsL3Available: true }
+    );
+    expect(byPillar.Open[0].l3Route).toEqual({
+      kind: 'in_app',
+      target: 'product_origins',
+      label: 'Product Origins',
+    });
+  });
+
+  it('falls back to external origins source when Product Origins deep-link is unavailable', () => {
+    const { byPillar } = selectScoreHighlights([
+      fired('Open', 'open-v15-origins-evidently-complete', 8, {
+        singleIngredient: true,
+        ingredient: 'Honey',
+        country: 'New Zealand',
+      }),
+    ]);
+    expect(byPillar.Open[0].l3Route?.kind).toBe('external_source');
+  });
+});
+
 describe('Open structured-metadata L2 variants', () => {
   it('uses locked broad one-term copy from metadata', () => {
     const { byPillar } = selectScoreHighlights([

@@ -162,6 +162,8 @@ function ResultScreenContent() {
   const alertsPreferences = useAlertsStore();
   const scanIdRef = useRef<string>(generateScanId());
   const lastBarcodeForScan = useRef<string | null>(null);
+  const resultScrollRef = useRef<ScrollView>(null);
+  const productOriginsOffsetYRef = useRef(0);
 
   const isPremium = subscriptionInfo.isPremium && 
     (subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial' || subscriptionInfo.status === 'grace_period');
@@ -487,7 +489,10 @@ function ResultScreenContent() {
 
   const scoreHighlights = useMemo(() => {
     if (!scoreHighlightsLedger) return null;
-    return selectScoreHighlights(scoreHighlightsLedger, { additivesL3Available: true });
+    return selectScoreHighlights(scoreHighlightsLedger, {
+      additivesL3Available: true,
+      productOriginsL3Available: true,
+    });
   }, [scoreHighlightsLedger]);
 
   const detectedBodyAdditiveIds = useMemo(() => {
@@ -510,9 +515,22 @@ function ResultScreenContent() {
     setScoreHighlightsRequest({ mode: 'detail', story });
   }, []);
 
-  const openAboutTheseAdditivesL3 = useCallback(
-    (_route: Extract<ScoreHighlightL3Route, { kind: 'in_app' }>, _story: ScoreHighlightStory) => {
-      setAboutAdditivesModalVisible(true);
+  const openInAppScoreHighlightL3 = useCallback(
+    (route: Extract<ScoreHighlightL3Route, { kind: 'in_app' }>, _story: ScoreHighlightStory) => {
+      if (route.target === 'additives') {
+        setAboutAdditivesModalVisible(true);
+        return;
+      }
+      if (route.target === 'product_origins') {
+        // Open Origins L3 reuses the governed Product Origins (CoM) experience on Result.
+        setScoreHighlightsRequest(null);
+        requestAnimationFrame(() => {
+          resultScrollRef.current?.scrollTo({
+            y: Math.max(0, productOriginsOffsetYRef.current - 12),
+            animated: true,
+          });
+        });
+      }
     },
     []
   );
@@ -1350,6 +1368,7 @@ function ResultScreenContent() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView
+        ref={resultScrollRef}
         style={styles.scrollView}
         contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
         nestedScrollEnabled
@@ -1675,7 +1694,12 @@ function ResultScreenContent() {
           />
         </Pressable>
 
-        {/* Country of Manufacture */}
+        {/* Country of Manufacture — governed Product Origins surface (Open Origins L3 deep-link) */}
+        <View
+          onLayout={(e) => {
+            productOriginsOffsetYRef.current = e.nativeEvent.layout.y;
+          }}
+        >
         {(() => {
           // Helper function to determine if verify button should be shown
           const shouldShowVerifyButton = () => {
@@ -2020,6 +2044,7 @@ function ResultScreenContent() {
             </>
           );
         })()}
+        </View>
 
         {/* Eco-Score — only when OFF provides a numeric score to display */}
         {product && shouldShowEcoScoreCard(product) && calculatedEcoScore && (() => {
@@ -2558,7 +2583,7 @@ function ResultScreenContent() {
         selection={scoreHighlights}
         pillarScores={truScore?.breakdown}
         onClose={() => setScoreHighlightsRequest(null)}
-        onOpenInAppL3={openAboutTheseAdditivesL3}
+        onOpenInAppL3={openInAppScoreHighlightL3}
       />
 
       <AboutTheseAdditivesModal

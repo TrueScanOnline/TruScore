@@ -47,8 +47,9 @@ function hasValue(v: unknown): boolean {
 /** Count of scoring-relevant fields present on a product. */
 export function scoringInputCompleteness(product: Product): number {
   let n = 0;
+  const fields = product as Product & Record<string, unknown>;
   for (const key of SCORING_INPUT_KEYS) {
-    if (hasValue((product as Record<string, unknown>)[key])) n += 1;
+    if (hasValue(fields[key])) n += 1;
   }
   return n;
 }

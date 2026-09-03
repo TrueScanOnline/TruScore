@@ -123,12 +123,26 @@ const BODY_ADDITIVE_IDS: readonly BodyV12AdjustmentId[] = [
 export interface GovernedCopyOptions {
   /** Set when a faithful in-app "About these additives" destination is available. */
   additivesL3Available?: boolean;
+  /** Set when the Result Product Origins (CoM) experience can be deep-linked. */
+  productOriginsL3Available?: boolean;
 }
+
+const OPEN_ORIGINS_HIGHLIGHT_IDS = [
+  'open-v15-origins-evidently-complete',
+  'open-v15-origins-pct-95-99',
+  'open-v15-origins-pct-76-94',
+  'open-v15-origins-pct-50-75',
+  'open-v15-origins-pct-25-49',
+  'open-v15-origins-pct-1-24',
+  'open-v15-origins-qualified-partial',
+  'open-v15-origins-packet-gap',
+] as const;
 
 /**
  * Locked L3 destination for a story. Body additives route to the in-app additives experience
- * when the host provides one; every other governed story offers the authoritative source
- * carried by its registry row.
+ * when the host provides one; Open origins deep-link into the governed Product Origins
+ * experience; every other governed story offers the authoritative source carried by its
+ * registry row.
  */
 export function governedL3Route(
   pillar: ScoreHighlightPillar,
@@ -142,6 +156,16 @@ export function governedL3Route(
   if (isBodyAdditive && options?.additivesL3Available) {
     return { kind: 'in_app', target: 'additives', label: 'About these additives' };
   }
+
+  const isOpenOrigins =
+    pillar === 'Open' &&
+    boundAdjustmentIds.some((id) =>
+      (OPEN_ORIGINS_HIGHLIGHT_IDS as readonly string[]).includes(id)
+    );
+  if (isOpenOrigins && options?.productOriginsL3Available) {
+    return { kind: 'in_app', target: 'product_origins', label: 'Product Origins' };
+  }
+
   if (externalResource) {
     return { kind: 'external_source', url: externalResource, label: 'Where this comes from' };
   }

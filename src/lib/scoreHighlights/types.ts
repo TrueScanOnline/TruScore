@@ -39,7 +39,7 @@ export interface FiredAdjustment {
  * available, and otherwise to the governed authoritative source carried by the registry row.
  */
 export type ScoreHighlightL3Route =
-  | { kind: 'in_app'; target: 'additives'; label: string }
+  | { kind: 'in_app'; target: 'additives' | 'product_origins'; label: string }
   | { kind: 'external_source'; url: string; label: string };
 
 /** Five-band muted materiality treatment locked in v0.4 §4.0.1. */
