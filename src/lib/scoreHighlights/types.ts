@@ -39,7 +39,7 @@ export interface FiredAdjustment {
  * available, and otherwise to the governed authoritative source carried by the registry row.
  */
 export type ScoreHighlightL3Route =
-  | { kind: 'in_app'; target: 'additives' | 'product_origins'; label: string }
+  | { kind: 'in_app'; target: import('./l3/targets').ScoreHighlightL3InAppTarget; label: string }
   | { kind: 'external_source'; url: string; label: string };
 
 /** Five-band muted materiality treatment locked in v0.4 §4.0.1. */
@@ -66,6 +66,8 @@ export interface ScoreHighlightStory {
   l1: string;
   l2: string;
   l3Route?: ScoreHighlightL3Route;
+  /** Fired-row commentary metadata carried for L3 token binding (never from raw product fields). */
+  metadata?: Record<string, string | number | boolean>;
   /** True when overall S12 promoted this story for its pillar. */
   promotedOverall?: boolean;
   /** Set for the approved Body colour-warning cluster only. */

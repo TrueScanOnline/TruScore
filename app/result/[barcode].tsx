@@ -79,6 +79,9 @@ import ScoreHighlightsLookThroughModal, {
   type ScoreHighlightsLookThroughRequest,
 } from '../../src/components/ScoreHighlightsLookThroughModal';
 import AboutTheseAdditivesModal from '../../src/components/AboutTheseAdditivesModal';
+import ScoreHighlightsGovernedL3Modal, {
+  type ScoreHighlightsGovernedL3Request,
+} from '../../src/components/ScoreHighlightsGovernedL3Modal';
 import {
   firedLedgerFromTruScoreResult,
   selectScoreHighlights,
@@ -86,6 +89,7 @@ import {
   type ScoreHighlightPillar,
   type ScoreHighlightStory,
 } from '../../src/lib/scoreHighlights';
+import type { ScoreHighlightL3InAppTarget } from '../../src/lib/scoreHighlights/l3/targets';
 import { extractManufacturingCountry, calculateEcoScore } from '../../src/services/openFoodFacts';
 import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
@@ -207,6 +211,9 @@ function ResultScreenContent() {
   const [scoreHighlightsRequest, setScoreHighlightsRequest] =
     useState<ScoreHighlightsLookThroughRequest | null>(null);
   const [aboutAdditivesModalVisible, setAboutAdditivesModalVisible] = useState(false);
+  const [governedL3Request, setGovernedL3Request] = useState<ScoreHighlightsGovernedL3Request | null>(
+    null
+  );
   const [allergensAdditivesModalVisible, setAllergensAdditivesModalVisible] = useState(false);
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
@@ -516,13 +523,12 @@ function ResultScreenContent() {
   }, []);
 
   const openInAppScoreHighlightL3 = useCallback(
-    (route: Extract<ScoreHighlightL3Route, { kind: 'in_app' }>, _story: ScoreHighlightStory) => {
+    (route: Extract<ScoreHighlightL3Route, { kind: 'in_app' }>, story: ScoreHighlightStory) => {
       if (route.target === 'additives') {
         setAboutAdditivesModalVisible(true);
         return;
       }
       if (route.target === 'product_origins') {
-        // Open Origins L3 reuses the governed Product Origins (CoM) experience on Result.
         setScoreHighlightsRequest(null);
         requestAnimationFrame(() => {
           resultScrollRef.current?.scrollTo({
@@ -530,7 +536,12 @@ function ResultScreenContent() {
             animated: true,
           });
         });
+        return;
       }
+      setGovernedL3Request({
+        target: route.target as ScoreHighlightL3InAppTarget,
+        story,
+      });
     },
     []
   );
@@ -2590,6 +2601,12 @@ function ResultScreenContent() {
         visible={aboutAdditivesModalVisible}
         onClose={() => setAboutAdditivesModalVisible(false)}
         detectedAdditiveIds={detectedBodyAdditiveIds}
+      />
+
+      <ScoreHighlightsGovernedL3Modal
+        visible={governedL3Request != null}
+        request={governedL3Request}
+        onClose={() => setGovernedL3Request(null)}
       />
 
       {/* Eco-Score Info Modal */}

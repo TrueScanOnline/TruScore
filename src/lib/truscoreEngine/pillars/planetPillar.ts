@@ -11,7 +11,7 @@
 import { Product } from '../../../types/product';
 import { logger } from '../../../utils/logger';
 import { powershellLogger } from '../../../utils/powershellLogger';
-import { computePackagingFallback } from './planetPackagingFallback';
+import { computePackagingFallback, packagingConsumerDispositionKey } from './planetPackagingFallback';
 import {
   PLANET_V19_ADJUSTMENT_REGISTRY,
   planetV19EnvironmentalGradeAdjustmentId,
@@ -131,6 +131,13 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
 
       if (fb.points > 0) {
         score += fb.points;
+        const packagingMeta: PlanetPillarAdjustmentMetadata = {
+          jurisdiction: fb.jurisdiction,
+          packagingComponentLabels: fb.componentLabels.join('|'),
+          packagingComponentDispositions: fb.dispositions
+            .map((d) => packagingConsumerDispositionKey(d))
+            .join('|'),
+        };
         pushAdjustment(
           adjustments,
           planetV19PackagingFallbackAdjustmentId(fb.points as 1 | 2),
@@ -138,7 +145,7 @@ export function calculatePlanetPillar(product: Product): PlanetPillarResult {
           fb.points === 2
             ? `Packaging fallback +2 (${fb.jurisdiction}): packagings_complete and all primary components kerbside-recyclable — ${ANNEX_LABEL}`
             : `Packaging fallback +1 (${fb.jurisdiction}): at least one kerbside-recyclable component, none not-recyclable — ${ANNEX_LABEL}`,
-          { jurisdiction: fb.jurisdiction }
+          packagingMeta
         );
       } else if (
         fb.structuredPackagingPresent ||

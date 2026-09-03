@@ -8,12 +8,12 @@
 
 import {
   BODY_V12_ADJUSTMENT_REGISTRY,
-  type BodyV12AdjustmentId,
 } from '../truscoreEngine/pillars/bodyPillarV12Registry';
 import { PLANET_V19_ADJUSTMENT_REGISTRY } from '../truscoreEngine/pillars/planetPillarV19Registry';
 import { ETHICS_V37_ADJUSTMENT_REGISTRY } from '../truscoreEngine/pillars/ethicsPillarV37Registry';
 import { OPEN_V15_ADJUSTMENT_REGISTRY } from '../truscoreEngine/pillars/openPillarV15Registry';
 import { resolveOpenGovernedCopy } from './openGovernedCopy';
+import { resolveInAppL3Route } from './l3/resolveL3Route';
 import type { ScoreHighlightL3Route, ScoreHighlightPillar } from './types';
 
 export interface GovernedCommentaryRow {
@@ -111,15 +111,6 @@ export function hasUnresolvedToken(text: string): boolean {
   return /\[[^\]]+\]/.test(text);
 }
 
-const BODY_ADDITIVE_IDS: readonly BodyV12AdjustmentId[] = [
-  'body-v12-additive-e102',
-  'body-v12-additive-e110',
-  'body-v12-additive-e129',
-  'body-v12-additive-e171',
-  'body-v12-additive-e250',
-  'body-v12-additive-e951',
-];
-
 export interface GovernedCopyOptions {
   /** Set when a faithful in-app "About these additives" destination is available. */
   additivesL3Available?: boolean;
@@ -127,49 +118,27 @@ export interface GovernedCopyOptions {
   productOriginsL3Available?: boolean;
 }
 
-const OPEN_ORIGINS_HIGHLIGHT_IDS = [
-  'open-v15-origins-evidently-complete',
-  'open-v15-origins-pct-95-99',
-  'open-v15-origins-pct-76-94',
-  'open-v15-origins-pct-50-75',
-  'open-v15-origins-pct-25-49',
-  'open-v15-origins-pct-1-24',
-  'open-v15-origins-qualified-partial',
-  'open-v15-origins-packet-gap',
-] as const;
-
 /**
- * Locked L3 destination for a story. Body additives route to the in-app additives experience
- * when the host provides one; Open origins deep-link into the governed Product Origins
- * experience; every other governed story offers the authoritative source carried by its
- * registry row.
+ * Locked L3 destination for a story (Addendum v1.0).
+ * Every governed Highlight family resolves to its in-app L3. Authoritative external material
+ * sits beneath that explanation inside the L3 surface — it does not replace the L3 route.
  */
 export function governedL3Route(
   pillar: ScoreHighlightPillar,
   boundAdjustmentIds: readonly string[],
-  externalResource: string,
+  _externalResource: string,
   options?: GovernedCopyOptions
 ): ScoreHighlightL3Route | undefined {
-  const isBodyAdditive =
-    pillar === 'Body' &&
-    boundAdjustmentIds.some((id) => (BODY_ADDITIVE_IDS as readonly string[]).includes(id));
-  if (isBodyAdditive && options?.additivesL3Available) {
-    return { kind: 'in_app', target: 'additives', label: 'About these additives' };
-  }
+  const inApp = resolveInAppL3Route(pillar, boundAdjustmentIds);
+  if (!inApp || inApp.kind !== 'in_app') return undefined;
 
-  const isOpenOrigins =
-    pillar === 'Open' &&
-    boundAdjustmentIds.some((id) =>
-      (OPEN_ORIGINS_HIGHLIGHT_IDS as readonly string[]).includes(id)
-    );
-  if (isOpenOrigins && options?.productOriginsL3Available) {
-    return { kind: 'in_app', target: 'product_origins', label: 'Product Origins' };
+  if (inApp.target === 'additives' && !options?.additivesL3Available) {
+    return undefined;
   }
-
-  if (externalResource) {
-    return { kind: 'external_source', url: externalResource, label: 'Where this comes from' };
+  if (inApp.target === 'product_origins' && !options?.productOriginsL3Available) {
+    return undefined;
   }
-  return undefined;
+  return inApp;
 }
 
 export interface ResolvedGovernedCopy {

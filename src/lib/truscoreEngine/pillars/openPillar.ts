@@ -115,7 +115,12 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   const clarityMetadata =
     usable && hiddenTermAssessment && governedFlagCount > 0
       ? buildOpenClarityCommentaryMetadata(
-          hiddenTermAssessment,
+          {
+            termPresentationClass: hiddenTermAssessment.termPresentationClass,
+            matchedTerms: hiddenTermAssessment.matchedTerms,
+            decodedAdditiveNames: hiddenTermAssessment.decodedAdditiveNames,
+            matches: hiddenTermAssessment.matches,
+          },
           openMarket === 'AU' || openMarket === 'NZ' ? openMarket : undefined
         )
       : undefined;

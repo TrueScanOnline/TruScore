@@ -192,16 +192,19 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
 
       // Same-cycle provenance for the commentary tokens; falls back to the canonical asset year.
       const bbfawYear = benchmarkCtx.bbfawFrozen?.snapshot_ref.benchmark_cycle ?? bbfawData?.year;
+      // Paired Tier + Impact on every BBFAW row so L3 can show both without re-scoring.
+      const bbfawPairMeta = {
+        ...(bbfawYear != null && { benchmarkYear: bbfawYear }),
+        ...(companyName && { benchmarkCompany: companyName }),
+        ...(tier != null && { tier }),
+        ...(impactRating != null && { impactRating }),
+      };
 
       const tierId = ethicsV37BbfawTierAdjustmentId(tier);
       if (bbfawTierScore !== 0 && tier && tierId) {
         pushAdjustment(adjustments, tierId, bbfawTierScore, `BBFAW Tier ${tier} (animal welfare governance)`, {
           referenceUrl: 'https://www.bbfaw.com/food-companies/',
-          metadata: {
-            ...(bbfawYear != null && { benchmarkYear: bbfawYear }),
-            ...(companyName && { benchmarkCompany: companyName }),
-            tier,
-          },
+          metadata: bbfawPairMeta,
         });
         score += bbfawTierScore;
       }
@@ -215,11 +218,7 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
           `BBFAW Impact Rating ${impactRating} (welfare outcomes)`,
           {
             referenceUrl: 'https://www.bbfaw.com/food-companies/',
-            metadata: {
-              ...(bbfawYear != null && { benchmarkYear: bbfawYear }),
-              ...(companyName && { benchmarkCompany: companyName }),
-              impactRating,
-            },
+            metadata: bbfawPairMeta,
           }
         );
         score += bbfawImpactScore;

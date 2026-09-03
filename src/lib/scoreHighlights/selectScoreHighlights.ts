@@ -126,6 +126,7 @@ export function selectScoreHighlights(
       l1: copy.l1,
       l2: copy.l2,
       l3Route: governedL3Route(row.pillar, [row.id], registry.externalResource, options),
+      ...(row.metadata && { metadata: row.metadata }),
     });
   });
 

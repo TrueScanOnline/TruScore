@@ -62,12 +62,17 @@ export function buildOpenClarityCommentaryMetadata(
     termPresentationClass: 'broad_generic' | 'coded' | 'mixed';
     matchedTerms: string;
     decodedAdditiveNames: string;
+    matches?: readonly { term: string; presentationClass: 'broad_generic' | 'coded'; decodedName?: string }[];
   },
   market?: 'AU' | 'NZ'
 ): OpenCommentaryMetadata {
+  const termClasses =
+    hiddenTermAssessment.matches?.map((m) => m.presentationClass).join('|') ||
+    '';
   return {
     termPresentationClass: hiddenTermAssessment.termPresentationClass,
     matchedTerms: hiddenTermAssessment.matchedTerms,
+    ...(termClasses && { termPresentationClasses: termClasses }),
     ...(hiddenTermAssessment.decodedAdditiveNames && {
       decodedAdditiveNames: hiddenTermAssessment.decodedAdditiveNames,
     }),

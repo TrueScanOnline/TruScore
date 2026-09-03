@@ -168,8 +168,45 @@ export interface PackagingFallbackResult {
   points: 0 | 1 | 2;
   jurisdiction: PlanetJurisdictionCode;
   dispositions: PackagingDisposition[];
+  /** Score-neutral component labels aligned 1:1 with dispositions (for L3). */
+  componentLabels: string[];
   packagingsComplete: boolean | undefined;
   structuredPackagingPresent: boolean;
+}
+
+function cleanPackagingTag(raw: string | undefined): string {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw
+    .replace(/^en:/i, '')
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function packagingComponentLabel(item: PackagingItem): string {
+  const shape = cleanPackagingTag(item.shape);
+  const material = cleanPackagingTag(item.material);
+  if (shape && material) return `${shape} (${material})`;
+  if (shape) return shape;
+  if (material) return material;
+  return 'Packaging component';
+}
+
+/** Map internal disposition to L3 consumer disposition key (addendum §4.2). */
+export function packagingConsumerDispositionKey(
+  disposition: PackagingDisposition
+): 'kerbside' | 'special_pathway' | 'not_accepted' | 'not_confirmed' {
+  switch (disposition) {
+    case 'kerbside_recyclable':
+      return 'kerbside';
+    case 'conditionally_recyclable':
+      return 'special_pathway';
+    case 'not_recyclable':
+      return 'not_accepted';
+    default:
+      return 'not_confirmed';
+  }
 }
 
 /**
@@ -188,6 +225,7 @@ export function computePackagingFallback(product: Product): PackagingFallbackRes
       points: 0,
       jurisdiction,
       dispositions: [],
+      componentLabels: [],
       packagingsComplete: product.packagings_complete,
       structuredPackagingPresent: rawItems.length > 0,
     };
@@ -198,6 +236,7 @@ export function computePackagingFallback(product: Product): PackagingFallbackRes
       points: 0,
       jurisdiction,
       dispositions: [],
+      componentLabels: [],
       packagingsComplete: product.packagings_complete,
       structuredPackagingPresent: false,
     };
@@ -207,6 +246,7 @@ export function computePackagingFallback(product: Product): PackagingFallbackRes
   const dispositions = items.map((it) =>
     dispositionForPackagingItem(it, supplementalTextForPackagingItem(it, globalPackagingText, primaryCount))
   );
+  const componentLabels = items.map((it) => packagingComponentLabel(it));
   const complete = product.packagings_complete === true;
   const anyNot = dispositions.some((d) => d === 'not_recyclable');
   const anyKerbside = dispositions.some((d) => d === 'kerbside_recyclable');
@@ -224,6 +264,7 @@ export function computePackagingFallback(product: Product): PackagingFallbackRes
     points,
     jurisdiction,
     dispositions,
+    componentLabels,
     packagingsComplete: product.packagings_complete,
     structuredPackagingPresent: true,
   };

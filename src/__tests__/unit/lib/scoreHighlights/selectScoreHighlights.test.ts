@@ -375,9 +375,9 @@ describe('Body additive in-app L3 routing', () => {
     });
   });
 
-  it('falls back to external source when in-app L3 is unavailable', () => {
+  it('falls back to no L3 route when in-app L3 is unavailable', () => {
     const { byPillar } = selectScoreHighlights([body('body-v12-additive-e171', -3)]);
-    expect(byPillar.Body[0].l3Route?.kind).toBe('external_source');
+    expect(byPillar.Body[0].l3Route).toBeUndefined();
   });
 });
 
@@ -394,7 +394,7 @@ describe('Open Origins Product Origins L3 routing', () => {
     });
   });
 
-  it('falls back to external origins source when Product Origins deep-link is unavailable', () => {
+  it('falls back to no L3 route when Product Origins deep-link is unavailable', () => {
     const { byPillar } = selectScoreHighlights([
       fired('Open', 'open-v15-origins-evidently-complete', 8, {
         singleIngredient: true,
@@ -402,7 +402,79 @@ describe('Open Origins Product Origins L3 routing', () => {
         country: 'New Zealand',
       }),
     ]);
-    expect(byPillar.Open[0].l3Route?.kind).toBe('external_source');
+    expect(byPillar.Open[0].l3Route).toBeUndefined();
+  });
+});
+
+describe('Addendum v1.0 governed in-app L3 routing (no external substitute)', () => {
+  const host = { additivesL3Available: true, productOriginsL3Available: true };
+
+  const cases: Array<{
+    pillar: 'Body' | 'Planet' | 'Ethics' | 'Open';
+    id: string;
+    value: number;
+    target: string;
+    meta?: Record<string, string | number | boolean>;
+  }> = [
+    { pillar: 'Body', id: 'body-v12-nutri-a', value: 7, target: 'nutri_score' },
+    { pillar: 'Body', id: 'body-v12-nova-3', value: -3, target: 'nova' },
+    { pillar: 'Body', id: 'body-v12-nova-4', value: -8, target: 'nova' },
+    { pillar: 'Planet', id: 'planet-v19-environmental-b', value: 3, target: 'green_score' },
+    {
+      pillar: 'Planet',
+      id: 'planet-v19-packaging-all-kerbside',
+      value: 2,
+      target: 'packaging',
+      meta: { jurisdiction: 'AU', packagingComponentLabels: 'Bottle', packagingComponentDispositions: 'kerbside' },
+    },
+    { pillar: 'Ethics', id: 'ethics-v37-cert-fairtrade', value: 6, target: 'ethics_fairtrade' },
+    { pillar: 'Ethics', id: 'ethics-v37-cert-rainforest-alliance', value: 6, target: 'ethics_rainforest' },
+    { pillar: 'Ethics', id: 'ethics-v37-cert-msc', value: 4, target: 'ethics_msc' },
+    { pillar: 'Ethics', id: 'ethics-v37-cert-asc', value: 4, target: 'ethics_asc' },
+    {
+      pillar: 'Ethics',
+      id: 'ethics-v37-cert-organic',
+      value: 2,
+      target: 'ethics_organic',
+      meta: { organicEvidenceClass: 'certified' },
+    },
+    {
+      pillar: 'Ethics',
+      id: 'ethics-v37-ktc-71-80',
+      value: 6,
+      target: 'ethics_ktc',
+      meta: { benchmarkCompany: 'Example', benchmarkYear: 2026, benchmarkScore: 75 },
+    },
+    {
+      pillar: 'Ethics',
+      id: 'ethics-v37-bbfaw-tier-3',
+      value: 6,
+      target: 'ethics_bbfaw',
+      meta: { benchmarkCompany: 'Example', benchmarkYear: 2024, tier: 3, impactRating: 'C' },
+    },
+    {
+      pillar: 'Open',
+      id: 'open-v15-ing-clarity-one',
+      value: -2,
+      target: 'ingredient_wording',
+      meta: {
+        termPresentationClass: 'broad_generic',
+        termPresentationClasses: 'broad_generic',
+        matchedTerms: 'natural flavours',
+        market: 'AU',
+      },
+    },
+    { pillar: 'Open', id: 'open-v15-ing-clarity-zero', value: 1, target: 'ingredient_wording' },
+  ];
+
+  it.each(cases)('routes $id to in-app $target', ({ pillar, id, value, target, meta }) => {
+    const { byPillar } = selectScoreHighlights([fired(pillar, id, value, meta)], host);
+    const story = byPillar[pillar][0];
+    expect(story.l3Route?.kind).toBe('in_app');
+    expect(story.l3Route && story.l3Route.kind === 'in_app' ? story.l3Route.target : null).toBe(
+      target
+    );
+    expect(story.l3Route?.kind).not.toBe('external_source');
   });
 });
 
