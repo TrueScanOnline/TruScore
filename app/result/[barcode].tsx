@@ -90,6 +90,7 @@ import {
   type ScoreHighlightStory,
 } from '../../src/lib/scoreHighlights';
 import type { ScoreHighlightL3InAppTarget } from '../../src/lib/scoreHighlights/l3/targets';
+import { planInAppL3HostPresentation } from '../../src/lib/scoreHighlights/l3/hostPresentation';
 import { extractManufacturingCountry, calculateEcoScore } from '../../src/services/openFoodFacts';
 import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
@@ -524,23 +525,27 @@ function ResultScreenContent() {
 
   const openInAppScoreHighlightL3 = useCallback(
     (route: Extract<ScoreHighlightL3Route, { kind: 'in_app' }>, story: ScoreHighlightStory) => {
-      if (route.target === 'additives') {
-        setAboutAdditivesModalVisible(true);
-        return;
-      }
-      if (route.target === 'product_origins') {
+      const plan = planInAppL3HostPresentation(route.target as ScoreHighlightL3InAppTarget);
+      // Dismiss look-through first so L3 never stacks a second native Modal underneath it.
+      if (plan.dismissLookThrough) {
         setScoreHighlightsRequest(null);
-        requestAnimationFrame(() => {
+      }
+      requestAnimationFrame(() => {
+        if (plan.present === 'additives') {
+          setAboutAdditivesModalVisible(true);
+          return;
+        }
+        if (plan.present === 'product_origins') {
           resultScrollRef.current?.scrollTo({
             y: Math.max(0, productOriginsOffsetYRef.current - 12),
             animated: true,
           });
+          return;
+        }
+        setGovernedL3Request({
+          target: route.target as ScoreHighlightL3InAppTarget,
+          story,
         });
-        return;
-      }
-      setGovernedL3Request({
-        target: route.target as ScoreHighlightL3InAppTarget,
-        story,
       });
     },
     []
