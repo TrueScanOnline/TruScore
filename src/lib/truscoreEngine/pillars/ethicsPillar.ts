@@ -38,7 +38,10 @@ import {
 import { resolveBrandToKTCParent } from '../../../services/ktcBrandResolutionService';
 import { evaluateEthicsCertifications } from '../../../services/ethicsCertificationsService';
 import { powershellLogger } from '../../../utils/powershellLogger';
-import { resolveEthicsBenchmarkContext } from './ethicsBenchmarkAdapter';
+import {
+  resolveEthicsBenchmarkContext,
+  resolveKtcGovernedBenchmarkYear,
+} from './ethicsBenchmarkAdapter';
 import {
   ETHICS_V37_ADJUSTMENT_REGISTRY,
   ethicsV37BbfawImpactAdjustmentId,
@@ -251,15 +254,17 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
 
   const ktcBandId = ktcMatched ? ethicsV37KtcAdjustmentId(ktcMatched.totalBenchmarkScore) : null;
   if (ktcMatched && ktcScoreAdjustment !== 0 && ktcBandId) {
+    const ktcYear = resolveKtcGovernedBenchmarkYear(benchmarkCtx.ktcFrozen);
+    const ktcYearLabel = ktcYear ? `KTC ${ktcYear}` : 'KTC';
     pushAdjustment(
       adjustments,
       ktcBandId,
       ktcScoreAdjustment,
-      `KTC 2026 benchmark score ${ktcMatched.totalBenchmarkScore} (labour rights in supply chains)`,
+      `${ktcYearLabel} benchmark score ${ktcMatched.totalBenchmarkScore} (labour rights in supply chains)`,
       {
         referenceUrl: 'https://www.business-humanrights.org/en/companies/',
         metadata: {
-          benchmarkYear: benchmarkCtx.ktcFrozen?.snapshot_ref.benchmark_cycle ?? '2026',
+          ...(ktcYear != null && { benchmarkYear: ktcYear }),
           benchmarkCompany: ktcMatched.parentName,
           benchmarkScore: ktcMatched.totalBenchmarkScore,
         },

@@ -99,6 +99,14 @@ function resolveTokens(text: string, metadata: Metadata): string {
   if (score != null) out = out.split('[SCORE]').join(String(score));
   const company = metadata.benchmarkCompany;
   if (company != null) out = out.split('[COMPANY]').join(String(company));
+  const accounted = metadata.accountedPercent;
+  if (typeof accounted === 'number') out = out.split('[X]').join(String(accounted));
+  const remainder = metadata.remainderPercent;
+  if (typeof remainder === 'number') out = out.split('[Y]').join(String(remainder));
+  const statement = metadata.sourceStatement;
+  if (typeof statement === 'string' && statement.trim()) {
+    out = out.split('[STATEMENT]').join(statement.trim());
+  }
   const jurisdiction = metadata.jurisdiction;
   if (typeof jurisdiction === 'string' && PLANET_JURISDICTION_NAMES[jurisdiction]) {
     out = out.split('[Australia/New Zealand]').join(PLANET_JURISDICTION_NAMES[jurisdiction]);

@@ -1,6 +1,9 @@
 import { calculateEthicsPillar } from '../../../../lib/truscoreEngine/pillars/ethicsPillar';
+import { resolveKtcGovernedBenchmarkYear } from '../../../../lib/truscoreEngine/pillars/ethicsBenchmarkAdapter';
+import { selectBenchmarkSnapshot } from '../../../../benchmark/snapshotSelect';
 import type { Product } from '../../../../types/product';
 import type { ProductWithTrustScore } from '../../../../types/product';
+import type { FrozenBenchmarkAttributionObject } from '../../../../benchmark/types';
 
 describe('ethics benchmark adapter integration (Slice 3)', () => {
   const baseProduct: Product = {
@@ -66,6 +69,14 @@ describe('ethics benchmark adapter integration (Slice 3)', () => {
         a.description.includes('Frozen benchmark not eligible for ethics scoring')
       )
     ).toBe(true);
+  });
+
+  it('binds KTC display year from the frozen record when present, else the governed asset cycle', () => {
+    const frozen = {
+      snapshot_ref: { benchmark_cycle: '2019' },
+    } as FrozenBenchmarkAttributionObject;
+    expect(resolveKtcGovernedBenchmarkYear(frozen)).toBe('2019');
+    expect(resolveKtcGovernedBenchmarkYear(null)).toBe(selectBenchmarkSnapshot('KTC').benchmark_cycle);
   });
 });
 

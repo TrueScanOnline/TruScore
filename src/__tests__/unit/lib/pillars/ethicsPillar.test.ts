@@ -15,6 +15,7 @@ import {
   firedAdjustmentIds,
 } from '../../../helpers/pillarLedgerNeutrality';
 import { Product } from '../../../../types/product';
+import { selectBenchmarkSnapshot } from '../../../../benchmark/snapshotSelect';
 
 describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
   const baseProduct: Product = {
@@ -190,7 +191,7 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
       expect(row?.highlightEligible).toBe(true);
       expect(row?.metadata?.benchmarkCompany).toBe('JBS S.A.');
       expect(row?.metadata?.benchmarkScore).toBe(3);
-      expect(row?.metadata?.benchmarkYear).toBeTruthy();
+      expect(row?.metadata?.benchmarkYear).toBe(selectBenchmarkSnapshot('KTC').benchmark_cycle);
       expectPillarLedgerReconciles(result);
     });
 

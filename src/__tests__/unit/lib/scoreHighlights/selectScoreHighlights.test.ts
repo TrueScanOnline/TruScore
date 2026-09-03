@@ -274,8 +274,13 @@ describe('locked tie-break determinism', () => {
 
   it('ranks Origins qualified/unquantified partial above two-term ingredient wording at −4', () => {
     const { byPillar, promoted } = selectScoreHighlights([
-      fired('Open', 'open-v15-ing-clarity-two', -4),
-      fired('Open', 'open-v15-origins-qualified-partial', -4),
+      fired('Open', 'open-v15-ing-clarity-two', -4, {
+        termPresentationClass: 'coded',
+        matchedTerms: 'E102|E110',
+      }),
+      fired('Open', 'open-v15-origins-qualified-partial', -4, {
+        sourceStatement: 'local and imported',
+      }),
     ]);
 
     expect(byPillar.Open.map((s) => s.storyKey)).toEqual([

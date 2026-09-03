@@ -39,6 +39,13 @@ function resolveOpenIngredientClarityCopy(
   adjustmentId: OpenV15AdjustmentId,
   metadata: Metadata
 ): ResolvedOpenCopy | null {
+  if (adjustmentId === 'open-v15-ing-clarity-zero') {
+    return {
+      l1: 'Ingredient wording is clear where assessed',
+      l2: 'In the ingredient list we could assess, we didn’t find any of the broad, generic or code-dependent terms Rveel checks for. That doesn’t mean every detail about the product is disclosed.',
+    };
+  }
+
   const presentationClass = metadata?.termPresentationClass;
   if (typeof presentationClass !== 'string') return null;
 
@@ -121,61 +128,23 @@ function resolveOpenIngredientClarityCopy(
 
 function resolveOpenOriginsCopy(
   adjustmentId: OpenV15AdjustmentId,
-  metadata: Metadata
+  _metadata: Metadata
 ): ResolvedOpenCopy | null {
   if (adjustmentId === 'open-v15-origins-evidently-complete') {
-    if (metadata?.singleIngredient === true) {
-      const ingredient = metadata.ingredient;
-      const country = metadata.country;
-      if (typeof ingredient === 'string' && typeof country === 'string') {
-        return {
-          l1: 'Evident ingredient origin',
-          l2: `The ingredient list contains only ${ingredient}, and the available origin information records it as from ${country}.`,
-        };
-      }
-    }
     return {
       l1: 'Ingredient origins appear fully accounted for',
       l2: 'The available origin information appears to account for the relevant ingredient sourcing, with no material remainder left unexplained.',
     };
   }
 
-  const accounted = metadata?.accountedPercent;
-  const remainder = metadata?.remainderPercent;
-  if (typeof accounted === 'number' && typeof remainder === 'number') {
-    const pctL1 = `${remainder}% of ingredient sourcing is unspecified`;
-    const pctL2 = `The origin statement identifies ${accounted}% of ingredient sourcing. It doesn’t say where the remaining ${remainder}% comes from.`;
-    const pctIds: OpenV15AdjustmentId[] = [
-      'open-v15-origins-pct-76-94',
-      'open-v15-origins-pct-50-75',
-      'open-v15-origins-pct-25-49',
-      'open-v15-origins-pct-1-24',
-    ];
-    if (adjustmentId === 'open-v15-origins-pct-95-99') {
-      return {
-        l1: `${accounted}% of ingredient sourcing disclosed`,
-        l2: `The origin information accounts for ${accounted}% of ingredient sourcing, leaving only a small remainder unspecified.`,
-      };
-    }
-    if (pctIds.includes(adjustmentId)) {
-      return { l1: pctL1, l2: pctL2 };
-    }
-  }
-
-  if (adjustmentId === 'open-v15-origins-qualified-partial') {
-    const statement = metadata?.sourceStatement;
-    if (typeof statement === 'string' && statement.trim()) {
-      return {
-        l1: 'Origin information is only partly specific',
-        l2: `The origin statement says “${statement.trim()}”, but doesn’t identify where all ingredients come from or how much comes from each source.`,
-      };
-    }
+  if (adjustmentId === 'open-v15-origins-packet-gap') {
     return {
-      l1: 'Origin information is only partly specific',
-      l2: 'The origin statement provides only partial specificity about ingredient sources.',
+      l1: 'No clear origin statement found',
+      l2: 'This packet was checked and no clear ingredient-origin information was found, leaving the product’s origins unclear.',
     };
   }
 
+  // Percentage bands and qualified-partial resolve from registry templates + fired metadata tokens.
   return null;
 }
 

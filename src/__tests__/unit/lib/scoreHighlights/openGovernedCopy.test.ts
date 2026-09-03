@@ -41,13 +41,25 @@ describe('resolveOpenGovernedCopy', () => {
     expect(copy?.l2).toContain('combines broad descriptions with coded additive names');
   });
 
-  it('resolves single-ingredient evidently complete origins variant', () => {
-    const copy = resolveOpenGovernedCopy('open-v15-origins-evidently-complete', {
+  it('resolves single-ingredient and generic evidently complete origins to the same locked v0.4 copy', () => {
+    const locked = {
+      l1: 'Ingredient origins appear fully accounted for',
+      l2: 'The available origin information appears to account for the relevant ingredient sourcing, with no material remainder left unexplained.',
+    };
+    const single = resolveOpenGovernedCopy('open-v15-origins-evidently-complete', {
       singleIngredient: true,
       ingredient: 'Whole milk',
       country: 'New Zealand',
     });
-    expect(copy?.l2).toContain('Whole milk');
-    expect(copy?.l2).toContain('New Zealand');
+    const generic = resolveOpenGovernedCopy('open-v15-origins-evidently-complete', {});
+    expect(single).toEqual(locked);
+    expect(generic).toEqual(locked);
+    expect(single?.l2).not.toContain('Whole milk');
+  });
+
+  it('resolves zero-flag ingredient-clarity copy from the locked v0.4 strings', () => {
+    const copy = resolveOpenGovernedCopy('open-v15-ing-clarity-zero', {});
+    expect(copy?.l1).toBe('Ingredient wording is clear where assessed');
+    expect(copy?.l2).toContain('we didn’t find any of the broad, generic or code-dependent terms');
   });
 });

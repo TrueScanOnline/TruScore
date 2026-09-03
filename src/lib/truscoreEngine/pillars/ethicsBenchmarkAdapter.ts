@@ -30,6 +30,25 @@ function materializeIfPossible(
   });
 }
 
+function usableBenchmarkCycle(value: unknown): string | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  return undefined;
+}
+
+/**
+ * Display/provenance year for a fired KTC adjustment. Never manufactures a cycle:
+ * frozen snapshot first, else the governed KTC asset snapshot, else undefined (fail closed).
+ */
+export function resolveKtcGovernedBenchmarkYear(
+  ktcFrozen: FrozenBenchmarkAttributionObject | null | undefined
+): string | undefined {
+  return (
+    usableBenchmarkCycle(ktcFrozen?.snapshot_ref?.benchmark_cycle) ??
+    usableBenchmarkCycle(selectBenchmarkSnapshot('KTC').benchmark_cycle)
+  );
+}
+
 export function resolveEthicsBenchmarkContext(product: Product): EthicsBenchmarkAdapterResult {
   const identity = getSharedIdentityContext(product);
   const bbfawFrozen =
