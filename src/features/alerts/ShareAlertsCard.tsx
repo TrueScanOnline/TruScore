@@ -19,7 +19,7 @@ import type { AlertsStackParamList } from '../../navigation/tabStackParamLists';
 type NavigationProp = NativeStackNavigationProp<AlertsStackParamList>;
 
 interface ShareAlertsCardProps {
-  truScore?: number;
+  truScore?: number | null;
 }
 
 export default function ShareAlertsCard({ truScore }: ShareAlertsCardProps = {}) {
@@ -103,17 +103,27 @@ export default function ShareAlertsCard({ truScore }: ShareAlertsCardProps = {})
       }
 
       // Build share message - v1.3 spec: objective "Rveel Score 78 + insights" format
-      const score = truScore || 0;
+      // Preserve null/unavailable — never coerce missing overall to 0
       const hasInsights = activeToggles.length > 0;
-      
+      const insightTypes =
+        activeToggles.filter((t) => t.includes('cruelty') || t.includes('Cruelty')).length > 0
+          ? 'cruelty'
+          : '';
+      const bdsTypes =
+        activeToggles.filter((t) => t.includes('Israel') || t.includes('Palestine')).length > 0
+          ? 'BDS'
+          : '';
+      const flags = [insightTypes, bdsTypes].filter(Boolean).join(' & ');
+
       let message = '';
-      if (hasInsights) {
-        const insightTypes = activeToggles.filter(t => t.includes('cruelty') || t.includes('Cruelty')).length > 0 ? 'cruelty' : '';
-        const bdsTypes = activeToggles.filter(t => t.includes('Israel') || t.includes('Palestine')).length > 0 ? 'BDS' : '';
-        const flags = [insightTypes, bdsTypes].filter(Boolean).join(' & ');
-        message = `Rveel Score ${score} + insights flagged ${flags}\n\n`;
+      if (truScore == null) {
+        message = hasInsights
+          ? `Rveel Score unavailable + insights flagged ${flags}\n\n`
+          : `Rveel Score unavailable\n\n`;
+      } else if (hasInsights) {
+        message = `Rveel Score ${truScore} + insights flagged ${flags}\n\n`;
       } else {
-        message = `Rveel Score ${score} – independent breakdown\n\n`;
+        message = `Rveel Score ${truScore} – independent breakdown\n\n`;
       }
       
       message += 'Active alert preferences:\n';

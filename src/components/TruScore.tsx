@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { TruScoreResult } from '../lib/truscoreEngine';
 import { productIdentity } from '../config/productIdentity';
 import { useTheme } from '../theme';
+import {
+  getTruScoreConsumerPresentation,
+} from '../utils/truScorePresentation';
 
 type TruScorePillar = 'Body' | 'Planet' | 'Ethics' | 'Open';
 
@@ -19,8 +22,9 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { truscore, breakdown } = truScore;
+  const presentation = getTruScoreConsumerPresentation(truScore);
 
-  // Color based on score
+  // Color based on score (scored path only; never call with null)
   const getScoreColor = (s: number) => {
     if (s >= 80) return '#16a085'; // Green (excellent)
     if (s >= 60) return '#4dd09f'; // Light green (good)
@@ -50,24 +54,56 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
 
   const currentStyles = sizeStyles[size];
 
+  if (presentation.kind === 'unavailable') {
+    return (
+      <View style={[styles.container, currentStyles.container]}>
+        <Text
+          style={[styles.label, currentStyles.label, { color: colors.text, textAlign: 'center' }]}
+        >
+          {presentation.title}
+        </Text>
+        <Text
+          style={[
+            styles.subLabel,
+            styles.unavailableExplanation,
+            { color: colors.textSecondary, textAlign: 'center' },
+          ]}
+        >
+          {presentation.explanation}
+        </Text>
+      </View>
+    );
+  }
+
+  const scored = presentation.score;
+
   return (
     <View style={[styles.container, currentStyles.container]}>
       {/* Main Score */}
-      <View style={[styles.scoreCircle, { borderColor: getScoreColor(truscore), backgroundColor: colors.card }]}>
-        <Text style={[styles.scoreText, currentStyles.score, { color: getScoreColor(truscore) }]}>
-          {truscore}
+      <View style={[styles.scoreCircle, { borderColor: getScoreColor(scored), backgroundColor: colors.card }]}>
+        <Text style={[styles.scoreText, currentStyles.score, { color: getScoreColor(scored) }]}>
+          {scored}
         </Text>
       </View>
       <Text style={[styles.label, currentStyles.label, { color: colors.text }]}>
-        {getScoreLabel(truscore)}
+        {getScoreLabel(scored)}
       </Text>
       <Text style={[styles.subLabel, { color: colors.textSecondary }]}>{productIdentity.publicScoreName}</Text>
 
       {/* Pillar Bars - Display in consistent order: Body, Planet, Ethics, Open */}
       <View style={styles.pillarsContainer}>
         {(['Body', 'Planet', 'Ethics', 'Open'] as const).map((pillar) => {
-          const value = breakdown[pillar] ?? 0;
-          const safeValue = typeof value === 'number' && !isNaN(value) ? value : 0;
+          const value = breakdown[pillar];
+          // Never coerce null/missing pillar to 0 for display
+          if (typeof value !== 'number' || Number.isNaN(value)) {
+            return (
+              <View key={pillar} style={styles.pillarRow}>
+                <Text style={[styles.pillarLabel, { color: colors.text }]}>{pillar}</Text>
+                <View style={[styles.pillarBarContainer, { backgroundColor: colors.surface }]} />
+                <Text style={[styles.pillarValue, { color: colors.textSecondary }]}>—</Text>
+              </View>
+            );
+          }
           const rowContent = (
             <>
               <Text style={[styles.pillarLabel, { color: colors.text }]}>{pillar}</Text>
@@ -76,13 +112,13 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
                   style={[
                     styles.pillarBar,
                     {
-                      width: `${(safeValue / 25) * 100}%`,
-                      backgroundColor: getPillarColor(pillar, safeValue),
+                      width: `${(value / 25) * 100}%`,
+                      backgroundColor: getPillarColor(pillar, value),
                     },
                   ]}
                 />
               </View>
-              <Text style={[styles.pillarValue, { color: colors.text }]}>{safeValue}/25</Text>
+              <Text style={[styles.pillarValue, { color: colors.text }]}>{value}/25</Text>
             </>
           );
           return onPillarPress ? (
@@ -129,6 +165,11 @@ const styles = StyleSheet.create({
   subLabel: {
     fontSize: 12,
     marginTop: 4,
+  },
+  unavailableExplanation: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    lineHeight: 18,
   },
   pillarsContainer: {
     width: '100%',
@@ -186,10 +227,10 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   largeScore: {
-    fontSize: 72,
+    fontSize: 64,
   },
   largeLabel: {
-    fontSize: 24,
+    fontSize: 22,
   },
 });
 

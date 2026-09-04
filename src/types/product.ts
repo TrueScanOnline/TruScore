@@ -214,6 +214,12 @@ export interface Product {
   // Nutrition (Nutri-Score)
   nutriscore_grade?: 'a' | 'b' | 'c' | 'd' | 'e' | 'unknown';
   nutriscore_score?: number;
+  /**
+   * OFF nutrition_grades_tags (e.g. ["a"]). Documented for typecheck / mapper access only.
+   * Nutri-Score evidence precedence is unchanged: nutriscore_grade remains primary when present;
+   * tags are a secondary read used by offGradeForComparison — do not reorder that precedence here.
+   */
+  nutrition_grades_tags?: string[];
   
   // Animal welfare (if applicable)
   animal_welfare?: {
@@ -266,6 +272,13 @@ export interface Product {
   // Confidence scoring (0-1, where 1 = highest confidence)
   confidence?: number; // 0-1 score based on source reliability
   sourceReliability?: 'high' | 'medium' | 'low'; // Human-readable reliability level
+
+  /**
+   * Runtime cache stamp (ms epoch) for OFF revalidation freshness.
+   * Set by cache/OFF revalidation paths; not an OFF API field. Optional documentation only —
+   * behaviour of cacheService / offRevalidationPolicy is unchanged by declaring this field.
+   */
+  _cachedAt?: number;
   
   // API source
   source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'go_upc' | 'buycott' | 'open_gtin' | 'barcode_monster' | 'web_search' | 'woolworths_nz' | 'paknsave' | 'newworld' | 'woolworths_au' | 'coles_au' | 'iga_au' | 'fsanz_au' | 'fsanz_nz' | 'nz_store_api' | 'afcd' | 'nzfcd' | 'barcode_lookup' | 'bestbuy' | 'eandata' | 'ean_search' | 'edamam' | 'nutritionix' | 'upc_database' | 'sqlite' | 'health_canada_cnf' | 'uk_fsa' | 'efsa' | 'tesco_labs' | 'walmart_open' | 'foodrepo' | 'opennutrition' | string; // Allow string for composite sources like 'openfoodfacts+afcd'

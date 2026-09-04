@@ -16,6 +16,10 @@ import { ProductWithTrustScore } from '../../../types/product';
 import { useTheme } from '../../../theme';
 import TruScore from '../../../components/TruScore';
 import TruScoreInfoModal from '../../../components/TrustScoreInfoModal';
+import {
+  isOverallTruScoreUnavailable,
+  RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR,
+} from '../../../utils/truScorePresentation';
 
 interface TruScoreCardProps {
   truScore: TruScoreResult | null;
@@ -44,13 +48,19 @@ const TruScoreCard = React.memo(function TruScoreCard({ truScore, product, onSha
     if (score >= 40) return '#ffd93d';
     return '#ff6b6b';
   };
+
+  const unavailable = isOverallTruScoreUnavailable(truScore.truscore);
+  // Null overall → neutral chrome; never coerce null → 0 for colour banding
+  const chromeColor = unavailable
+    ? RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR
+    : getScoreColor(truScore.truscore as number);
   
   return (
     <>
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: getScoreColor(truScore.truscore) }]}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: chromeColor }]}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Ionicons name="shield-checkmark" size={24} color={getScoreColor(truScore.truscore)} />
+            <Ionicons name="shield-checkmark" size={24} color={chromeColor} />
             <Text style={[styles.title, { color: colors.text }]}>{t('trust.title')}</Text>
           </View>
           <View style={styles.headerRight}>
@@ -126,4 +136,3 @@ const styles = StyleSheet.create({
 });
 
 export default TruScoreCard;
-

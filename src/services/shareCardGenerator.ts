@@ -6,12 +6,19 @@
  * Install: npm install react-native-view-shot
  */
 
-import { Product, ProductWithTrustScore } from '../types/product';
+import { ProductWithTrustScore } from '../types/product';
 import { TruScoreResult } from '../lib/truscoreEngine';
 import { logger } from '../utils/logger';
-import { Platform } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import { productIdentity } from '../config/productIdentity';
+import {
+  resolveShareOverallScore,
+  resolveShareBreakdownForOverall,
+} from '../utils/shareScoreSemantics';
+import {
+  RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
+  RVEEL_SCORE_UNAVAILABLE_TITLE,
+} from '../utils/truScorePresentation';
 
 export interface ShareCardOptions {
   product: ProductWithTrustScore;
@@ -35,15 +42,6 @@ export async function generateShareCard(
   product: ProductWithTrustScore,
   options: Partial<ShareCardOptions> = {}
 ): Promise<string | null> {
-  const {
-    truScore,
-    includeInsights = true,
-    width = 1200,
-    height = 1200,
-    format = 'png',
-    quality = 0.9,
-  } = options;
-
   try {
     // For now, return product image as share card
     // Full implementation would require:
@@ -90,18 +88,16 @@ export function getShareCardData(
       insights.push(insight.reason);
     });
   }
+
+  const overall = resolveShareOverallScore(truScore, product);
+  const breakdown = resolveShareBreakdownForOverall(overall, truScore, product) ?? undefined;
   
   return {
     productName: product.product_name || `Product ${product.barcode}`,
-    truScore: truScore?.truscore ?? product.trust_score,
+    truScore: overall,
     imageUrl: product.image_url || product.image_front_url || null,
     insights,
-    breakdown: truScore?.breakdown || (product.trust_score_breakdown ? {
-      Body: product.trust_score_breakdown.body,
-      Planet: product.trust_score_breakdown.planet,
-      Ethics: product.trust_score_breakdown.ethics ?? 0,
-      Open: product.trust_score_breakdown.open,
-    } : undefined),
+    breakdown,
   };
 }
 
@@ -113,18 +109,24 @@ export function generateShareMessage(
   product: ProductWithTrustScore,
   truScore?: TruScoreResult
 ): string {
-  const score = truScore?.truscore ?? product.trust_score ?? 0;
+  const score = resolveShareOverallScore(truScore, product);
   const productName = product.product_name || `Product ${product.barcode}`;
+  const breakdown = resolveShareBreakdownForOverall(score, truScore, product);
   
   let message = `🔍 ${productName}\n\n`;
-  message += `${productIdentity.publicScoreName}: ${score}/100\n\n`;
+  if (score === null) {
+    message += `${RVEEL_SCORE_UNAVAILABLE_TITLE}\n`;
+    message += `${RVEEL_SCORE_UNAVAILABLE_EXPLANATION}\n\n`;
+  } else {
+    message += `${productIdentity.publicScoreName}: ${score}/100\n\n`;
+  }
   
-  if (truScore?.breakdown) {
+  if (breakdown) {
     message += `Breakdown:\n`;
-    message += `• Body: ${truScore.breakdown.Body}/25\n`;
-    message += `• Planet: ${truScore.breakdown.Planet}/25\n`;
-    message += `• Ethics: ${truScore.breakdown.Ethics}/25\n`;
-    message += `• Open: ${truScore.breakdown.Open}/25\n\n`;
+    message += `• Body: ${breakdown.Body}/25\n`;
+    message += `• Planet: ${breakdown.Planet}/25\n`;
+    message += `• Ethics: ${breakdown.Ethics}/25\n`;
+    message += `• Open: ${breakdown.Open}/25\n\n`;
   }
   
   if (truScore?.insights && truScore.insights.length > 0) {

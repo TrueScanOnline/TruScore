@@ -574,13 +574,13 @@ class PowerShellLogger {
       totalTime: metadata.totalTime ? `${metadata.totalTime}ms` : undefined,
     });
     
-    // Log each pillar score separately
+    // Log each pillar score separately (null-guard percentage only — no coercion to 0)
     Object.entries(breakdown).forEach(([pillar, score]) => {
       this.log('INFO', 'TRUSCORE_PILLAR', `${pillar}: ${score}/25`, {
         barcode,
         pillar,
         score,
-        percentage: (score / 25) * 100,
+        percentage: score == null ? null : (score / 25) * 100,
       });
     });
   }
@@ -627,7 +627,8 @@ class PowerShellLogger {
    */
   truScoreAnalysis(analysis: {
     barcode: string;
-    totalScore: number;
+    /** Nullable overall: legitimate unavailable / non-assessment state (matches TruScoreAnalysis). */
+    totalScore: number | null;
     fetchTrace: Array<{ database: string; queryKeyType: string; order: number; hit: boolean; responseTimeMs?: number }>;
     pillars: Record<string, { pillarName: string; baseScore: number; finalScore: number; adjustments: Array<{ description: string; value: number; type: string; sourceDatabase?: string; queryKeyType?: string }> }>;
     generatedAt?: number;

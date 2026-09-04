@@ -64,7 +64,7 @@ export function checkGradeInvarianceBounds(
     for (const field of missing) {
       const val = combo[field];
       if (val === undefined) continue;
-      (filled as Record<string, unknown>)[field] = val;
+      (filled as unknown as Record<string, unknown>)[field] = val;
     }
     if (filled.fvlPercent !== null && filled.fvlPoints === null) {
       filled.fvlPoints = null;

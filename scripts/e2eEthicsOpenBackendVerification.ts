@@ -155,57 +155,72 @@ console.log('\n=== ETHICS PILLAR — integration (calculateEthicsPillar) ===\n')
   ok('MSC + API validated: +4', mscOk.details.certificationsWinningScheme === 'msc' && mscOk.details.certificationsAdjustment === 4);
 }
 
-console.log('\n=== OPEN PILLAR — Open_Scoring_Specification_v14 (shipped) ===\n');
+console.log('\n=== OPEN PILLAR — Open_Scoring_Specification_v15 (accepted) ===\n');
 {
   const r0 = calculateOpenPillar(baseProduct());
   ok('Base 15', r0.base === 15);
-  ok('No ingredients: ingredientsScore −3', r0.details.ingredientsScore === -3);
+  ok(
+    'Unavailable ingredients: clarity neutral (0)',
+    r0.details.ingredientClarityAdjustment === 0 &&
+      r0.adjustments.some((a) => a.id === 'open-v15-ing-clarity-unavailable')
+  );
+  ok(
+    'Unavailable ingredients: originsAdjustmentId + originsAdjustment present',
+    typeof r0.details.originsAdjustmentId === 'string' &&
+      typeof r0.details.originsAdjustment === 'number'
+  );
 
   const r1 = calculateOpenPillar(baseProduct({ ingredients_text: 'Water, sugar.' }));
-  ok('Ingredients present: +2', r1.details.ingredientsScore === 2);
+  ok(
+    'Clarity zero governed flags: +1',
+    r1.details.governedFlagCount === 0 && r1.details.ingredientClarityAdjustment === 1
+  );
 
   const r2 = calculateOpenPillar(
     baseProduct({
       ingredients_text: 'Water, natural flavor.',
-      origins: 'France',
     })
   );
-  ok('One vague term: hidden penalty 4', r2.details.hiddenTermsPenalty === 4);
+  ok(
+    'One governed flag: −2',
+    r2.details.governedFlagCount === 1 && r2.details.ingredientClarityAdjustment === -2
+  );
 
   const r3 = calculateOpenPillar(
     baseProduct({
       ingredients_text: 'Water, natural flavor, spice extractives.',
-      origins: 'France',
     })
   );
-  ok('Two vague terms: hidden penalty 8', r3.details.hiddenTermsPenalty === 8);
+  ok(
+    'Two governed flags: −4',
+    r3.details.governedFlagCount === 2 && r3.details.ingredientClarityAdjustment === -4
+  );
 
   const r4 = calculateOpenPillar(
     baseProduct({
-      ingredients_text: 'Water, sugar, salt.',
-      nova_group: 1,
-      origins: 'NZ',
+      ingredients_text: 'Water, natural flavor, aroma, smoke flavouring, artificial flavouring.',
     })
   );
-  ok('Zero hidden + NOVA 1: listing clarity +4', r4.details.listingClarityBonus === 4);
+  ok(
+    'Three+ governed flags: −6',
+    r4.details.governedFlagCount >= 3 && r4.details.ingredientClarityAdjustment === -6
+  );
 
   const r5 = calculateOpenPillar(
     baseProduct({
-      ingredients_text: 'Water, sugar, salt.',
-      nova_group: 4,
-      origins: 'NZ',
-    })
-  );
-  ok('Zero hidden + NOVA 4: listing clarity +2', r5.details.listingClarityBonus === 2);
-
-  const r6 = calculateOpenPillar(
-    baseProduct({
       ingredients_text: '',
       ingredients_text_en: 'Milk, cultures.',
-      origins: 'NZ',
     })
   );
-  ok('ingredients_text_en fallback: disclosure +2', r6.details.ingredientsScore === 2);
+  ok(
+    'ingredients_text_en fallback: clarity zero +1',
+    r5.details.ingredientClarityAdjustment === 1
+  );
+  ok(
+    'ingredients_text_en fallback exposes originsAdjustment fields',
+    typeof r5.details.originsAdjustmentId === 'string' &&
+      typeof r5.details.originsAdjustment === 'number'
+  );
 }
 
 const skipLiveBackend =

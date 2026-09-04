@@ -28,6 +28,7 @@ import { ShareContentBuilder } from '../features/sharing/services/ShareContentBu
 import { ShareOptions, SharePlatform } from '../features/sharing/types';
 import { ProductWithTrustScore } from '../types/product';
 import { TruScoreResult } from '../lib/truscoreEngine';
+import { resolveShareOverallScore } from '../utils/shareScoreSemantics';
 import { logger } from '../utils/logger';
 import { ShareProductStoryCard } from './ShareProductStoryCard';
 
@@ -408,7 +409,7 @@ export default function ShareModal({
             productName={productDisplayName}
             imageUrl={product.image_url}
             barcode={product.barcode}
-            truScore={truScore?.truscore ?? product.trust_score}
+            truScore={resolveShareOverallScore(truScore, product)}
             shareType={shareType}
             brandColor={colors.primary}
             surfaceColor={colors.card}

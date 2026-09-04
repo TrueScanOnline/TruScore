@@ -80,7 +80,10 @@ export class ShareService {
           platform: trackedPlatform,
           itemType: options.item || 'productInfo',
           productBarcode: options.product.barcode,
-          truScore: options.truScore?.truscore || options.product.trust_score || undefined,
+          truScore:
+            options.truScore != null
+              ? options.truScore.truscore ?? undefined
+              : options.product.trust_score ?? undefined,
           success: result.success,
         });
         void reportShareEventToBackend({

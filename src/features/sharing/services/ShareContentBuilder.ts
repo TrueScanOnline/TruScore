@@ -8,6 +8,14 @@ import { logger } from '../../../utils/logger';
 import { extractManufacturingCountry, calculateEcoScore } from '../../../services/openFoodFacts';
 import { getNutritionShareBurnData, buildNutritionShareBodyLines } from '../../../utils/nutritionShareCopy';
 import { productIdentity } from '../../../config/productIdentity';
+import {
+  resolveShareOverallScore,
+  resolveShareBreakdownForOverall,
+} from '../../../utils/shareScoreSemantics';
+import {
+  RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
+  RVEEL_SCORE_UNAVAILABLE_TITLE,
+} from '../../../utils/truScorePresentation';
 
 const scoreName = productIdentity.publicScoreName;
 const appName = productIdentity.displayName;
@@ -77,11 +85,26 @@ export class ShareContentBuilder {
     productName: string,
     platform: ShareOptions['platform']
   ): ShareContent {
-    const score = truScore?.truscore ?? product.trust_score ?? 0;
-    const body = truScore?.breakdown.Body ?? product.trust_score_breakdown?.body ?? 0;
-    const planet = truScore?.breakdown.Planet ?? product.trust_score_breakdown?.planet ?? 0;
-    const ethics = truScore?.breakdown.Ethics ?? product.trust_score_breakdown?.ethics ?? 0;
-    const open = truScore?.breakdown.Open ?? product.trust_score_breakdown?.open ?? 0;
+    const score = resolveShareOverallScore(truScore, product);
+    const breakdown = resolveShareBreakdownForOverall(score, truScore, product);
+
+    if (score === null) {
+      const title = `${productName} - ${RVEEL_SCORE_UNAVAILABLE_TITLE}`;
+      const message =
+        `${productName}\n\n` +
+        `${RVEEL_SCORE_UNAVAILABLE_TITLE}\n` +
+        `${RVEEL_SCORE_UNAVAILABLE_EXPLANATION}\n\n` +
+        `🔍 Tap to open in ${appName}\n` +
+        `📱 Free app - no sign-up needed\n\n` +
+        `#RveelScore #ProductScan #${appName} #FoodTransparency #KnowWhatYouBuy`;
+      return {
+        title,
+        message,
+        url: universalLink,
+        imageUrl: product.image_url,
+        hashtags: ['RveelScore', 'ProductScan', appName, 'FoodTransparency', 'KnowWhatYouBuy'],
+      };
+    }
 
     // VIRAL HOOKS - Platform-optimized for maximum engagement
     const emoji = score >= 80 ? '🌟' : score >= 60 ? '✅' : score >= 40 ? '⚠️' : '❌';
@@ -105,13 +128,17 @@ export class ShareContentBuilder {
     }
 
     const title = `${emoji} ${productName} - ${scoreName} ${score}/100`;
-    const message = `${hook}\n\n${curiosityGap}\n\n` +
-      `📊 ${scoreName}: ${score}/100\n` +
-      `• Body: ${body}/25\n` +
-      `• Planet: ${planet}/25\n` +
-      `• Ethics: ${ethics}/25\n` +
-      `• Open: ${open}/25\n\n` +
-      `🔍 Tap to see the full breakdown\n` +
+    let message = `${hook}\n\n${curiosityGap}\n\n` +
+      `📊 ${scoreName}: ${score}/100\n`;
+    if (breakdown) {
+      message +=
+        `• Body: ${breakdown.Body}/25\n` +
+        `• Planet: ${breakdown.Planet}/25\n` +
+        `• Ethics: ${breakdown.Ethics}/25\n` +
+        `• Open: ${breakdown.Open}/25\n`;
+    }
+    message +=
+      `\n🔍 Tap to see the full breakdown\n` +
       `📱 Free app - no sign-up needed\n\n` +
       `#RveelScore #ProductScan #${appName} #FoodTransparency #KnowWhatYouBuy`;
 
@@ -197,7 +224,21 @@ export class ShareContentBuilder {
     productName: string,
     platform: ShareOptions['platform']
   ): ShareContent {
-    const score = truScore?.truscore ?? product.trust_score ?? 0;
+    const score = resolveShareOverallScore(truScore, product);
+
+    if (score === null) {
+      const title = `${productName}: ${RVEEL_SCORE_UNAVAILABLE_TITLE}`;
+      const message =
+        `${title}\n\n` +
+        `${RVEEL_SCORE_UNAVAILABLE_EXPLANATION}\n\n` +
+        `🔍 Tap to view details in ${appName}`;
+      return {
+        title,
+        message,
+        url: universalLink,
+        hashtags: ['RveelScore', 'ProductAlert'],
+      };
+    }
 
     const title = `⚠️ Low ${scoreName} alert: ${productName}`;
     const message = `${title}\n\n` +
@@ -220,7 +261,26 @@ export class ShareContentBuilder {
     productName: string,
     platform: ShareOptions['platform']
   ): ShareContent {
-    const score = truScore?.truscore ?? product.trust_score ?? 0;
+    const score = resolveShareOverallScore(truScore, product);
+
+    // Preserve existing product-info share shape; omit numeric score when unavailable
+    // (do not invent a separate product-only unavailable share experience).
+    if (score === null) {
+      const title = `Discovered ${productName} on ${appName}`;
+      const message =
+        `🔍 Just scanned ${productName}!\n\n` +
+        `See nutrition, ingredients, sustainability & more\n` +
+        `📱 Free app - scan any product instantly\n\n` +
+        `#RveelScore #ProductScan #${appName} #KnowWhatYouBuy #ProductDiscovery`;
+      return {
+        title,
+        message,
+        url: universalLink,
+        imageUrl: product.image_url,
+        hashtags: ['RveelScore', 'ProductScan', appName, 'KnowWhatYouBuy', 'ProductDiscovery'],
+      };
+    }
+
     const emoji = score >= 80 ? '🌟' : score >= 60 ? '✅' : score >= 40 ? '⚠️' : '❌';
 
     // VIRAL HOOK - curiosity and discovery
