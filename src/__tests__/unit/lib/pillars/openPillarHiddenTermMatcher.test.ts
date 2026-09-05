@@ -6,11 +6,11 @@
  * phrase. Open v15 adjustment IDs and points (+1 / -2 / -4 / -6) are unchanged; only
  * whether a governed clarity flag legitimately fires moves.
  *
- * v0.4 adds the founder-locked category/function-shell boundary: a class shell is resolved
- * by an identity supplied in the same item with or without brackets, a code-only identity
- * yields one coded flag instead of the shell, a non-exhaustive "contains / may contain /
- * including" qualifier never resolves the shell, and the two founder UAT packet strings are
- * locked as mandatory full-string fixtures.
+ * v0.5 supersedes v0.4 class-shell resolution with the residual-ambiguity test: none /
+ * code-only / non-exhaustive / residual governed ambiguity / direct identity. Arbitrary
+ * trailing words are not sufficient to resolve a class shell. One unresolved top-level
+ * class item contributes one broad/generic clarity count. The two founder UAT packet
+ * strings remain mandatory full-string fixtures.
  */
 
 import {
@@ -477,5 +477,73 @@ describe('Open v15 v0.4 — founder UAT full-string fixtures', () => {
     expect(terms).not.toContain('colours');
     expect(terms).not.toContain('extract');
     expect(terms).not.toContain('acid');
+  });
+});
+
+/**
+ * v0.5 residual-ambiguity — founder-locked. Bracketed and unbracketed specifications share
+ * the same decision path. Extra ungoverned words cannot mask a governed ambiguity, and an
+ * otherwise unaccounted substantive trailing word is not sufficient class resolution.
+ */
+describe('Open v15 v0.5 — residual-ambiguity class-shell classification', () => {
+  it.each([
+    ['Emulsifier Soy Lecithin', 0, ''],
+    ['Emulsifier Contains Soy Lecithin', 1, 'Emulsifier'],
+    ['Emulsifier blend', 1, 'Emulsifier'],
+    ['Emulsifier blend premium', 1, 'Emulsifier'],
+    ['Thickener vegetable gum', 1, 'vegetable gum'],
+    ['Thickener vegetable gum natural', 1, 'vegetable gum'],
+    ['Colour 150a', 1, 'Colour 150a'],
+    ['Colour E150a', 1, 'E150a'],
+    ['Flavours (Contains Glutamic Acid)', 1, 'Flavours'],
+    ['Emulsifier (blend)', 1, 'Emulsifier'],
+    ['Thickener (vegetable gum)', 1, 'vegetable gum'],
+  ] as const)(
+    '%s → %i flags (evidence %s)',
+    (token, flags, evidence) => {
+      const assessment = assessOpenPillarHiddenTerms(token);
+      expect(assessment.flagCount).toBe(flags);
+      if (flags === 0) {
+        expect(assessment.matchedTerms).toBe('');
+      } else {
+        expect(assessment.matchedTerms).toBe(evidence);
+      }
+      expect(countOpenPillarHiddenTermHits(`Water, ${token}, Salt`)).toBe(flags);
+    }
+  );
+
+  it('does not treat residual governed wording as resolved by extra ungoverned words', () => {
+    // Old defect: hasSpecifyingWord("blend"/"premium") resolved the shell to 0.
+    expect(countHiddenTermHitsInToken('Emulsifier blend')).toBe(1);
+    expect(countHiddenTermHitsInToken('Emulsifier blend premium')).toBe(1);
+    expect(countHiddenTermHitsInToken('Thickener vegetable gum')).toBe(1);
+    expect(countHiddenTermHitsInToken('Thickener vegetable gum natural')).toBe(1);
+    expect(countHiddenTermHitsInToken('Emulsifier (blend)')).toBe(1);
+    expect(countHiddenTermHitsInToken('Thickener (vegetable gum)')).toBe(1);
+  });
+
+  it('qualifier-only remainder does not resolve a class shell', () => {
+    expect(countHiddenTermHitsInToken('Thickener natural')).toBe(1);
+    expect(countHiddenTermHitsInToken('Colour permitted')).toBe(1);
+  });
+  it('keeps one-item / one-ambiguity for residual class items (no shell+generic double count)', () => {
+    expect(countHiddenTermHitsInToken('Emulsifier blend')).toBe(1);
+    expect(countHiddenTermHitsInToken('Thickener vegetable gum')).toBe(1);
+    expect(countHiddenTermHitsInToken('Emulsifier Contains Soy Lecithin')).toBe(1);
+  });
+
+  it('retains distinct code-dependent tokens inside an otherwise unresolved class item', () => {
+    const mixed = assessOpenPillarHiddenTerms('Emulsifiers (471, spices)');
+    expect(mixed.flagCount).toBe(2);
+    expect(mixed.matches.some((m) => m.presentationClass === 'coded')).toBe(true);
+    expect(mixed.matches.some((m) => m.presentationClass === 'broad_generic')).toBe(true);
+  });
+
+  it('Colour 150a / Colour E150a remain single coded flags', () => {
+    for (const token of ['Colour 150a', 'Colour E150a']) {
+      const assessment = assessOpenPillarHiddenTerms(token);
+      expect(assessment.flagCount).toBe(1);
+      expect(assessment.termPresentationClass).toBe('coded');
+    }
   });
 });
