@@ -71,13 +71,21 @@ export function governedCommentaryRow(
 }
 
 /**
- * Locked organic variants (Ethics v0.1 / v0.4 §4.3). Both states score +2 and share one
- * stable ID; `organicEvidenceClass` on the fired row selects the correct locked copy, which is
- * exactly what the Ethics scorer emits that metadata for.
+ * Locked organic variants (Ethics v0.2 §3). Both states score +2 and share one stable ID;
+ * `organicEvidenceClass` on the fired row selects the correct locked copy, which is exactly what
+ * the Ethics scorer emits that metadata for.
  */
-const ORGANIC_CLAIM_ONLY_L1 = 'Organic claim recognised';
+const ORGANIC_CLAIM_ONLY_L1 = 'Organic claim identified';
 const ORGANIC_CLAIM_ONLY_L2 =
   'An organic claim appears on this packet, but the packet does not show a specific organic certification.';
+
+/**
+ * KTC L1 attribution prefix (Ethics v0.2 §4). "Product owner" survives only when governed entity
+ * resolution proves the benchmarked company is this product's owner; otherwise the benchmarked
+ * company name from the same fired record is substituted. Never attribute a subsidiary result to a
+ * different ultimate parent.
+ */
+const KTC_PRODUCT_OWNER_PREFIX = 'Product owner:';
 
 type Metadata = Record<string, string | number | boolean> | undefined;
 
@@ -171,6 +179,14 @@ export function resolveGovernedCopy(
   if (adjustmentId === 'ethics-v37-cert-organic' && metadata?.organicEvidenceClass === 'claim_only') {
     l1 = ORGANIC_CLAIM_ONLY_L1;
     l2 = ORGANIC_CLAIM_ONLY_L2;
+  }
+
+  if (adjustmentId.startsWith('ethics-v37-ktc-') && l1.startsWith(KTC_PRODUCT_OWNER_PREFIX)) {
+    if (metadata?.benchmarkEntityRole !== 'product_owner') {
+      const company = metadata?.benchmarkCompany;
+      if (typeof company !== 'string' || !company.trim()) return null;
+      l1 = `${company.trim()}:${l1.slice(KTC_PRODUCT_OWNER_PREFIX.length)}`;
+    }
   }
 
   if (pillar === 'Open') {

@@ -2,8 +2,10 @@
  * Wave 3 null-score integrity — unavailable presentation + share semantics.
  * Score-neutral: does not change pillar arithmetic; asserts consumer/share contracts.
  *
- * Share path assertions use the pure shareScoreSemantics helpers (the same resolution
- * wired into shareCardGenerator / ShareContentBuilder) to avoid RN/Expo Jest loaders.
+ * Share assertions run against the live share services (shareCardGenerator and
+ * ShareContentBuilder), not a local mirror of their logic. They assert only the invariant that an
+ * unavailable score is never fabricated as 0 and that a genuine score still reaches the consumer.
+ * The transitional Wave-4 share wording itself is deliberately not locked here as product policy.
  */
 
 import {
@@ -16,6 +18,8 @@ import {
   resolveShareBreakdownForOverall,
   resolveGenuinePillarBreakdown,
 } from '../../../utils/shareScoreSemantics';
+import { getShareCardData, generateShareMessage } from '../../../services/shareCardGenerator';
+import { ShareContentBuilder } from '../../../features/sharing/services/ShareContentBuilder';
 import { calculateOpenPillar, calculateTruScore } from '../../../lib/truscoreEngine';
 import type { TruScoreResult } from '../../../lib/truscoreEngine';
 import type { Product, ProductWithTrustScore } from '../../../types/product';
@@ -59,26 +63,18 @@ const baseProduct: ProductWithTrustScore = {
   trust_score_breakdown: null,
 };
 
-/** Mirrors shareCardGenerator / ShareContentBuilder score lines after this corrective. */
-function shareScoreBearingLines(
+/** Score tokens that would mean an unavailable score had been fabricated as a number. */
+const FABRICATED_SCORE_PATTERNS = [/\b0\/100\b/, /\b0\/25\b/, /\bnull\/100\b/, /NaN/];
+
+function truScoreShareContent(
   truScore: TruScoreResult | undefined,
   product: ProductWithTrustScore
-): { overall: number | null; messageScoreLine: string; breakdownLines: string[] } {
-  const overall = resolveShareOverallScore(truScore, product);
-  const breakdown = resolveShareBreakdownForOverall(overall, truScore, product);
-  const messageScoreLine =
-    overall === null
-      ? RVEEL_SCORE_UNAVAILABLE_TITLE
-      : `Rveel Score: ${overall}/100`;
-  const breakdownLines = breakdown
-    ? [
-        `Body: ${breakdown.Body}/25`,
-        `Planet: ${breakdown.Planet}/25`,
-        `Ethics: ${breakdown.Ethics}/25`,
-        `Open: ${breakdown.Open}/25`,
-      ]
-    : [];
-  return { overall, messageScoreLine, breakdownLines };
+) {
+  return ShareContentBuilder.buildContent({
+    product: product as never,
+    truScore: truScore as never,
+    item: 'truScore',
+  });
 }
 
 describe('null-score integrity — unavailable presentation', () => {
@@ -110,13 +106,40 @@ describe('null-score integrity — unavailable presentation', () => {
 });
 
 describe('null-score integrity — sharing semantics', () => {
-  test('null overall is not coerced to 0 in share resolution', () => {
+  test('live shareCardGenerator never fabricates an unavailable score as 0', () => {
     const tru = unavailableResult();
-    const lines = shareScoreBearingLines(tru, baseProduct);
-    expect(lines.overall).toBeNull();
-    expect(lines.messageScoreLine).toBe(RVEEL_SCORE_UNAVAILABLE_TITLE);
-    expect(lines.messageScoreLine).not.toMatch(/0\/100/);
-    expect(lines.breakdownLines).toEqual([]);
+
+    const cardData = getShareCardData(baseProduct, tru);
+    expect(cardData.truScore).toBeNull();
+    expect(cardData.breakdown).toBeUndefined();
+
+    const message = generateShareMessage(baseProduct, tru);
+    for (const pattern of FABRICATED_SCORE_PATTERNS) {
+      expect(message).not.toMatch(pattern);
+    }
+    expect(message).not.toMatch(/Breakdown:/);
+  });
+
+  test('live ShareContentBuilder never fabricates an unavailable score as 0', () => {
+    const content = truScoreShareContent(unavailableResult(), baseProduct);
+    for (const pattern of FABRICATED_SCORE_PATTERNS) {
+      expect(content.title).not.toMatch(pattern);
+      expect(content.message).not.toMatch(pattern);
+    }
+    // The unavailable state is communicated, without locking the transitional wording itself.
+    expect(content.message).toContain(RVEEL_SCORE_UNAVAILABLE_TITLE);
+    expect(content.message).not.toMatch(/• Body: /);
+  });
+
+  test('a stale persisted score cannot resurrect a share score once scoring is unavailable', () => {
+    const withStale: ProductWithTrustScore = {
+      ...baseProduct,
+      trust_score: 55,
+      trust_score_breakdown: { body: 10, planet: 10, ethics: 10, open: 10, reasons: [] },
+    };
+    expect(getShareCardData(withStale, unavailableResult()).truScore).toBeNull();
+    const content = truScoreShareContent(unavailableResult(), withStale);
+    expect(content.message).not.toMatch(/55\/100/);
   });
 
   test('resolveShareOverallScore preserves explicit null from TruScoreResult', () => {
@@ -141,17 +164,20 @@ describe('null-score integrity — sharing semantics', () => {
     expect(resolveShareOverallScore(unavailableResult(), baseProduct)).toBeNull();
   });
 
-  test('scored share content still includes numeric score and genuine breakdown', () => {
+  test('scored share content still carries the genuine score and breakdown', () => {
     const tru = scoredResult();
-    const lines = shareScoreBearingLines(tru, baseProduct);
-    expect(lines.overall).toBe(72);
-    expect(lines.messageScoreLine).toContain('72/100');
-    expect(lines.breakdownLines).toEqual([
-      'Body: 18/25',
-      'Planet: 16/25',
-      'Ethics: 20/25',
-      'Open: 18/25',
-    ]);
+
+    const cardData = getShareCardData(baseProduct, tru);
+    expect(cardData.truScore).toBe(72);
+    expect(cardData.breakdown).toEqual({ Body: 18, Planet: 16, Ethics: 20, Open: 18 });
+
+    const message = generateShareMessage(baseProduct, tru);
+    expect(message).toContain('72/100');
+    expect(message).toContain('Body: 18/25');
+
+    const content = truScoreShareContent(tru, baseProduct);
+    expect(content.message).toContain('72/100');
+    expect(content.message).toContain('• Planet: 16/25');
   });
 
   test('incomplete pillar set omits breakdown (no zero fill)', () => {

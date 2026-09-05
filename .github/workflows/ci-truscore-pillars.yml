@@ -3,9 +3,9 @@ name: CI — Pillars & spec E2E
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master, develop, 'wave3/**']
   pull_request:
-    branches: [main, master, develop]
+    branches: [main, master, develop, 'wave3/**']
   workflow_dispatch:
 
 jobs:

@@ -1,6 +1,10 @@
 /**
  * Open Pillar v15 — stable production adjustment IDs and commentary registry.
  * Bound to fired adjustments for S28 (exhaustive) and S12 (governed selection).
+ *
+ * Authority: Rveel_Wave3_Open_Score_Highlights_Founder_Locked_Commentary_L3_ID_Contract_20260905_v0_2.
+ * Ingredient-clarity rows carry the broad/generic template; `resolveOpenGovernedCopy` selects the
+ * authorised variant from `termPresentationClass`, and any unresolved token fails the story closed.
  */
 
 export type OpenV15AdjustmentFamily = 'system' | 'ingredients' | 'origins';
@@ -39,6 +43,11 @@ export interface OpenV15AdjustmentMeta {
   mvpUnreachable?: boolean;
 }
 
+const OPEN_INGREDIENT_RESOURCE =
+  'https://www.foodstandards.gov.au/consumer/labelling/Labelling-of-food-additives';
+const OPEN_ORIGINS_RESOURCE =
+  'https://www.accc.gov.au/business/advertising-and-promotions/country-of-origin-food-labelling';
+
 export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15AdjustmentMeta> = {
   'open-v15-base': {
     id: 'open-v15-base',
@@ -57,8 +66,8 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     description: 'Ingredient wording clarity: no governed vague or code-dependent flags',
     highlightTitle: 'Ingredient wording is clear where assessed',
     highlightExplainer:
-      'In the ingredient list we could assess, we didn’t find any of the broad, generic or code-dependent terms Rveel checks for. That doesn’t mean every detail about the product is disclosed.',
-    externalResource: 'https://world.openfoodfacts.org/ingredients',
+      'In the ingredient list we could assess, we did not find any of the broad, generic or code-dependent terms we check for. That does not mean every detail about the product is disclosed.',
+    externalResource: OPEN_INGREDIENT_RESOURCE,
   },
   'open-v15-ing-clarity-one': {
     id: 'open-v15-ing-clarity-one',
@@ -66,10 +75,10 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     points: -2,
     highlightEligible: true,
     description: 'Ingredient wording clarity: one governed vague or code-dependent flag',
-    highlightTitle: 'Possible vague ingredient wording',
+    highlightTitle: 'One ingredient term is vague',
     highlightExplainer:
-      'One governed broad, generic or code-dependent ingredient form was detected; clearer identity would improve transparency.',
-    externalResource: 'https://world.openfoodfacts.org/ingredients',
+      'The ingredient list says “[TERM]”. This is a broad description, and in the wording we could assess it does not identify the specific ingredient or substance represented by [TERM].',
+    externalResource: OPEN_INGREDIENT_RESOURCE,
   },
   'open-v15-ing-clarity-two': {
     id: 'open-v15-ing-clarity-two',
@@ -77,10 +86,10 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     points: -4,
     highlightEligible: true,
     description: 'Ingredient wording clarity: two governed vague or code-dependent flags',
-    highlightTitle: 'Vague ingredient wording',
+    highlightTitle: 'Two ingredient terms are vague',
     highlightExplainer:
-      'Two governed broad, generic or code-dependent ingredient forms were detected.',
-    externalResource: 'https://world.openfoodfacts.org/ingredients',
+      'The ingredient list uses two broad descriptions: “[TERM 1]” and “[TERM 2]”. In the wording we could assess, they do not identify the specific ingredients or substances represented by those categories.',
+    externalResource: OPEN_INGREDIENT_RESOURCE,
   },
   'open-v15-ing-clarity-three-plus': {
     id: 'open-v15-ing-clarity-three-plus',
@@ -88,10 +97,10 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     points: -6,
     highlightEligible: true,
     description: 'Ingredient wording clarity: three or more governed vague or code-dependent flags',
-    highlightTitle: 'Heavy vague ingredient wording',
+    highlightTitle: 'Several ingredient terms are vague',
     highlightExplainer:
-      'Three or more governed broad, generic or code-dependent ingredient forms were detected.',
-    externalResource: 'https://world.openfoodfacts.org/ingredients',
+      'Several broad ingredient descriptions appear in this list, including [TERMS]. In the wording we could assess, they leave parts of the ingredient make-up unspecified.',
+    externalResource: OPEN_INGREDIENT_RESOURCE,
   },
   'open-v15-ing-clarity-unavailable': {
     id: 'open-v15-ing-clarity-unavailable',
@@ -99,7 +108,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     points: 0,
     highlightEligible: false,
     description: 'Ingredient wording clarity: usable ingredient declaration unavailable',
-    externalResource: 'https://world.openfoodfacts.org/ingredients',
+    externalResource: OPEN_INGREDIENT_RESOURCE,
   },
   'open-v15-origins-evidently-complete': {
     id: 'open-v15-origins-evidently-complete',
@@ -110,7 +119,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     highlightTitle: 'Ingredient origins appear fully accounted for',
     highlightExplainer:
       'The available origin information appears to account for the relevant ingredient sourcing, with no material remainder left unexplained.',
-    externalResource: 'https://world.openfoodfacts.org/origins',
+    externalResource: OPEN_ORIGINS_RESOURCE,
   },
   'open-v15-origins-pct-95-99': {
     id: 'open-v15-origins-pct-95-99',
@@ -121,7 +130,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     highlightTitle: '[X]% of ingredient sourcing disclosed',
     highlightExplainer:
       'The origin information accounts for [X]% of ingredient sourcing, leaving only a small remainder unspecified.',
-    externalResource: 'https://world.openfoodfacts.org/origins',
+    externalResource: OPEN_ORIGINS_RESOURCE,
     mvpUnreachable: true,
   },
   'open-v15-origins-pct-76-94': {
@@ -133,7 +142,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     highlightTitle: '[Y]% of ingredient sourcing is unspecified',
     highlightExplainer:
       'The origin statement identifies [X]% of ingredient sourcing. It doesn’t say where the remaining [Y]% comes from.',
-    externalResource: 'https://world.openfoodfacts.org/origins',
+    externalResource: OPEN_ORIGINS_RESOURCE,
     mvpUnreachable: true,
   },
   'open-v15-origins-pct-50-75': {
@@ -145,7 +154,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     highlightTitle: '[Y]% of ingredient sourcing is unspecified',
     highlightExplainer:
       'The origin statement identifies [X]% of ingredient sourcing. It doesn’t say where the remaining [Y]% comes from.',
-    externalResource: 'https://world.openfoodfacts.org/origins',
+    externalResource: OPEN_ORIGINS_RESOURCE,
     mvpUnreachable: true,
   },
   'open-v15-origins-pct-25-49': {
@@ -157,7 +166,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     highlightTitle: '[Y]% of ingredient sourcing is unspecified',
     highlightExplainer:
       'The origin statement identifies [X]% of ingredient sourcing. It doesn’t say where the remaining [Y]% comes from.',
-    externalResource: 'https://world.openfoodfacts.org/origins',
+    externalResource: OPEN_ORIGINS_RESOURCE,
     mvpUnreachable: true,
   },
   'open-v15-origins-pct-1-24': {
@@ -169,7 +178,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     highlightTitle: '[Y]% of ingredient sourcing is unspecified',
     highlightExplainer:
       'The origin statement identifies [X]% of ingredient sourcing. It doesn’t say where the remaining [Y]% comes from.',
-    externalResource: 'https://world.openfoodfacts.org/origins',
+    externalResource: OPEN_ORIGINS_RESOURCE,
     mvpUnreachable: true,
   },
   'open-v15-origins-qualified-partial': {
@@ -181,7 +190,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     highlightTitle: 'Origin information is only partly specific',
     highlightExplainer:
       'The origin statement says “[STATEMENT]”, but doesn’t identify where all ingredients come from or how much comes from each source.',
-    externalResource: 'https://world.openfoodfacts.org/origins',
+    externalResource: OPEN_ORIGINS_RESOURCE,
     mvpUnreachable: true,
   },
   'open-v15-origins-packet-gap': {
@@ -193,7 +202,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     highlightTitle: 'No clear origin statement found',
     highlightExplainer:
       'This packet was checked and no clear ingredient-origin information was found, leaving the product’s origins unclear.',
-    externalResource: 'https://world.openfoodfacts.org/origins',
+    externalResource: OPEN_ORIGINS_RESOURCE,
     mvpUnreachable: true,
   },
   'open-v15-origins-insufficient': {
@@ -202,7 +211,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     points: 0,
     highlightEligible: false,
     description: 'Origins: insufficient OFF ingredient-origin evidence (neutral)',
-    externalResource: 'https://world.openfoodfacts.org/origins',
+    externalResource: OPEN_ORIGINS_RESOURCE,
   },
   'open-v15-origins-conflict': {
     id: 'open-v15-origins-conflict',
@@ -210,7 +219,7 @@ export const OPEN_V15_ADJUSTMENT_REGISTRY: Record<OpenV15AdjustmentId, OpenV15Ad
     points: 0,
     highlightEligible: false,
     description: 'Origins: conflicting OFF ingredient-origin evidence (fail closed, neutral)',
-    externalResource: 'https://world.openfoodfacts.org/origins',
+    externalResource: OPEN_ORIGINS_RESOURCE,
   },
 };
 

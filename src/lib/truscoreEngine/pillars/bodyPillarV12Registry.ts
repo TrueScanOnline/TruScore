@@ -2,8 +2,8 @@
  * Body Pillar v12 — stable production adjustment IDs and commentary registry.
  * Bound to fired adjustments for S28 (exhaustive) and S12 (governed selection).
  *
- * Authority: Rveel_Wave3_Body_Score_Highlights_Founder_Locked_..._ID_Contract_..._v0_5 §14
- * plus the consolidated v0.4 controlling specification (body-v12-nova-1-unknown).
+ * Authority: Rveel_Wave3_Body_Score_Highlights_Founder_Locked_..._ID_Contract_..._20260905_v0_6
+ * plus the consolidated 20260905 v0.5 controlling specification (body-v12-nova-1-unknown).
  * Scoring arithmetic is unchanged by this registry.
  */
 
@@ -57,9 +57,7 @@ export interface BodyV12AdjustmentMeta {
 }
 
 const NUTRISCORE_RESOURCE = 'https://www.santepubliquefrance.fr/en/nutrition-and-physical-activity/nutri-score';
-const NOVA_RESOURCE = 'https://www.fao.org/3/ca5644en/ca5644en.pdf';
-const NOVA_4_HEALTH_RESOURCE =
-  'https://www.who.int/news-room/articles-detail/call-for-experts-to-develop-a-who-guideline-on-consumption-of-ultra-processed-foods';
+const NOVA_RESOURCE = 'https://world.openfoodfacts.org/nova';
 const COLOUR_RESOURCE = 'https://www.foodstandards.gov.au/consumer/additives/foodcolour';
 const E171_RESOURCE = 'https://www.foodstandards.gov.au/consumer/foodtech/Review-of-titanium-dioxide-as-a-food-additive';
 const E250_RESOURCE = 'https://www.foodstandards.gov.au/consumer/additives/nitrate';
@@ -239,9 +237,9 @@ export const BODY_V12_ADJUSTMENT_REGISTRY: Record<BodyV12AdjustmentId, BodyV12Ad
     highlightTitle: 'Ultra-processed food',
     highlightExplainer:
       'NOVA Group 4 covers industrial formulations that typically involve refined ingredients, additives or processing methods ' +
-      'uncommon in home cooking. WHO says a growing body of evidence links diets high in ultra-processed foods with higher risks ' +
-      'of diet-related disease and other negative health outcomes.',
-    externalResource: NOVA_4_HEALTH_RESOURCE,
+      'uncommon in home cooking. WHO says diets high in ultra-processed foods are associated with higher risks of diet-related ' +
+      'disease and other negative health outcomes.',
+    externalResource: NOVA_RESOURCE,
   },
   'body-v12-additive-e102': {
     id: 'body-v12-additive-e102',
@@ -261,7 +259,7 @@ export const BODY_V12_ADJUSTMENT_REGISTRY: Record<BodyV12AdjustmentId, BodyV12Ad
     highlightEligible: true,
     description: 'Food additive of concern: E110 Sunset Yellow FCF',
     highlightTitle: COLOUR_L1,
-    highlightExplainer: colourExplainer('Sunset Yellow FCF (E110)'),
+    highlightExplainer: colourExplainer('Sunset Yellow (E110)'),
     synthesisFamily: 'body.additives.colour_warning_cluster',
     externalResource: COLOUR_RESOURCE,
   },
@@ -272,7 +270,7 @@ export const BODY_V12_ADJUSTMENT_REGISTRY: Record<BodyV12AdjustmentId, BodyV12Ad
     highlightEligible: true,
     description: 'Food additive of concern: E129 Allura Red AC',
     highlightTitle: COLOUR_L1,
-    highlightExplainer: colourExplainer('Allura Red AC (E129)'),
+    highlightExplainer: colourExplainer('Allura Red (E129)'),
     synthesisFamily: 'body.additives.colour_warning_cluster',
     externalResource: COLOUR_RESOURCE,
   },
@@ -297,7 +295,7 @@ export const BODY_V12_ADJUSTMENT_REGISTRY: Record<BodyV12AdjustmentId, BodyV12Ad
     points: -6,
     highlightEligible: true,
     description: 'Food additive of concern: E250 Sodium nitrite',
-    highlightTitle: 'Nitrite helps keep cured meat safe — but can form carcinogenic compounds',
+    highlightTitle: 'Nitrite helps keep cured meat safe — but can contribute to nitrosamine formation',
     highlightExplainer:
       'Sodium nitrite (E250) is added to bacon, ham and sausages to control dangerous bacteria, extend safe shelf life and create the ' +
       'familiar cured flavour and pink colour. The trade-off is that it can help form chemicals called nitrosamines, some of which are ' +
@@ -312,7 +310,7 @@ export const BODY_V12_ADJUSTMENT_REGISTRY: Record<BodyV12AdjustmentId, BodyV12Ad
     points: -3,
     highlightEligible: true,
     description: 'Food additive of concern: E951 Aspartame',
-    highlightTitle: 'Aspartame classified as “possibly carcinogenic”',
+    highlightTitle: 'IARC classified aspartame as “possibly carcinogenic”',
     highlightExplainer:
       'Aspartame (E951) is an artificial sweetener made from two amino acids and is about 200 times sweeter than sugar. WHO’s cancer ' +
       'research agency classified it as “possibly carcinogenic” in 2023, based on limited evidence, while WHO’s food-additive experts ' +

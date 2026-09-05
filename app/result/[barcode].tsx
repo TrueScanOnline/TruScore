@@ -2598,6 +2598,7 @@ function ResultScreenContent() {
         request={scoreHighlightsRequest}
         selection={scoreHighlights}
         pillarScores={truScore?.breakdown}
+        firedAdjustments={scoreHighlightsLedger ?? undefined}
         onClose={() => setScoreHighlightsRequest(null)}
         onOpenInAppL3={openInAppScoreHighlightL3}
       />

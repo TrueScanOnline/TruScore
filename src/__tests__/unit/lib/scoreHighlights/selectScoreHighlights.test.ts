@@ -128,7 +128,10 @@ describe('overall S12 promotion cap', () => {
       fired('Ethics', 'ethics-v37-bbfaw-tier-3', 2, BBFAW_META),
       fired('Ethics', 'ethics-v37-ktc-21-30', -6, KTC_META),
       fired('Ethics', 'ethics-v37-bbfaw-impact-ef', -3, BBFAW_META),
-      fired('Open', 'open-v15-ing-clarity-two', -4),
+      fired('Open', 'open-v15-ing-clarity-two', -4, {
+        termPresentationClass: 'broad_generic',
+        matchedTerms: 'natural flavours|spices',
+      }),
       fired('Open', 'open-v15-ing-clarity-zero', 1),
     ]);
 
@@ -324,7 +327,7 @@ describe('governed copy resolution', () => {
     ]);
 
     expect(byPillar.Ethics[0].l2).toBe(
-      'KnowTheChain’s 2026 Food & Beverage Benchmark scored this company 24/100 for its efforts ' +
+      'KnowTheChain’s 2026 Food & Beverage Benchmark scored Example Foods 24/100 for its efforts ' +
         'to prevent and address forced-labour risks in its supply chains.'
     );
   });
@@ -360,7 +363,7 @@ describe('governed copy resolution', () => {
     ]).byPillar.Ethics[0];
 
     expect(certified.l1).toBe('Organic certified');
-    expect(claimOnly.l1).toBe('Organic claim recognised');
+    expect(claimOnly.l1).toBe('Organic claim identified');
     expect(claimOnly.l2).toBe(
       'An organic claim appears on this packet, but the packet does not show a specific organic certification.'
     );
@@ -484,23 +487,35 @@ describe('Addendum v1.0 governed in-app L3 routing (no external substitute)', ()
 });
 
 describe('Open structured-metadata L2 variants', () => {
-  it('uses locked broad one-term copy from metadata', () => {
+  it('uses locked broad one-term copy from metadata without a market token', () => {
     const { byPillar } = selectScoreHighlights([
       fired('Open', 'open-v15-ing-clarity-one', -2, {
         termPresentationClass: 'broad_generic',
         matchedTerms: 'natural flavours',
-        market: 'NZ',
       }),
     ]);
     expect(byPillar.Open[0].l1).toBe('One ingredient term is vague');
-    expect(byPillar.Open[0].l2).toContain('New Zealand food-labelling rules');
+    expect(byPillar.Open[0].l2).toBe(
+      'The ingredient list says “natural flavours”. This is a broad description, and in the wording we could assess ' +
+        'it does not identify the specific ingredient or substance represented by natural flavours.'
+    );
   });
 
-  it('withholds clarity stories when metadata variant cannot be resolved', () => {
+  it('withholds clarity stories when the metadata variant cannot be resolved', () => {
     const { byPillar, exclusions } = selectScoreHighlights([
       fired('Open', 'open-v15-ing-clarity-one', -2, {
-        termPresentationClass: 'broad_generic',
         matchedTerms: 'natural flavours',
+      }),
+    ]);
+    expect(byPillar.Open).toEqual([]);
+    expect(exclusions.some((e) => e.reason === 'unresolved_locked_copy_token')).toBe(true);
+  });
+
+  it('withholds the coded clarity story when no decoded additive name is governed', () => {
+    const { byPillar, exclusions } = selectScoreHighlights([
+      fired('Open', 'open-v15-ing-clarity-one', -2, {
+        termPresentationClass: 'coded',
+        matchedTerms: 'E102',
       }),
     ]);
     expect(byPillar.Open).toEqual([]);

@@ -28,7 +28,7 @@ const ORIGINS_COMPLETE_L2 =
   'The available origin information appears to account for the relevant ingredient sourcing, with no material remainder left unexplained.';
 const CLARITY_ZERO_L1 = 'Ingredient wording is clear where assessed';
 const CLARITY_ZERO_L2 =
-  'In the ingredient list we could assess, we didn’t find any of the broad, generic or code-dependent terms Rveel checks for. That doesn’t mean every detail about the product is disclosed.';
+  'In the ingredient list we could assess, we did not find any of the broad, generic or code-dependent terms we check for. That does not mean every detail about the product is disclosed.';
 const PACKET_GAP_L1 = 'No clear origin statement found';
 const PACKET_GAP_L2 =
   'This packet was checked and no clear ingredient-origin information was found, leaving the product’s origins unclear.';
@@ -167,14 +167,49 @@ describe('closed-set pipeline-resolved L1/L2', () => {
   });
 
   describe('D-4 / D-5 KTC year binding', () => {
-    it('binds the displayed year from the fired governed record metadata', () => {
+    it('binds the displayed year and company from the fired governed record metadata', () => {
       const { byPillar } = selectScoreHighlights([
         fired('Ethics', 'ethics-v37-ktc-21-30', -6, KTC_META),
       ]);
       expect(byPillar.Ethics[0].l2).toBe(
-        'KnowTheChain’s 2026 Food & Beverage Benchmark scored this company 24/100 for its efforts ' +
+        'KnowTheChain’s 2026 Food & Beverage Benchmark scored Example Foods 24/100 for its efforts ' +
           'to prevent and address forced-labour risks in its supply chains.'
       );
+    });
+
+    it('keeps the Product owner L1 attribution only when entity resolution proves ownership', () => {
+      const owned = selectScoreHighlights([
+        fired('Ethics', 'ethics-v37-ktc-21-30', -6, {
+          ...KTC_META,
+          benchmarkEntityRole: 'product_owner',
+        }),
+      ]).byPillar.Ethics[0];
+      expect(owned.l1).toBe(
+        'Product owner: 24/100 in independent forced-labour safeguards benchmark'
+      );
+
+      const unproven = selectScoreHighlights([
+        fired('Ethics', 'ethics-v37-ktc-21-30', -6, KTC_META),
+      ]).byPillar.Ethics[0];
+      expect(unproven.l1).toBe(
+        'Example Foods: 24/100 in independent forced-labour safeguards benchmark'
+      );
+      expect(unproven.l1).not.toContain('Product owner');
+    });
+
+    it('fail-closes the KTC L1 attribution when no benchmarked company can be named', () => {
+      const { byPillar, exclusions } = selectScoreHighlights([
+        fired('Ethics', 'ethics-v37-ktc-21-30', -6, {
+          benchmarkYear: 2026,
+          benchmarkScore: 24,
+        }),
+      ]);
+      expect(byPillar.Ethics).toEqual([]);
+      expect(exclusions).toContainEqual({
+        pillar: 'Ethics',
+        adjustmentId: 'ethics-v37-ktc-21-30',
+        reason: 'unresolved_locked_copy_token',
+      });
     });
 
     it('fail-closes when the KTC year cannot be established', () => {
@@ -309,7 +344,7 @@ describe('closed-set pipeline-resolved L1/L2', () => {
     const organicClaim = selectScoreHighlights([
       fired('Ethics', 'ethics-v37-cert-organic', 2, { organicEvidenceClass: 'claim_only' }),
     ]).byPillar.Ethics[0];
-    expect(organicClaim.l1).toBe('Organic claim recognised');
+    expect(organicClaim.l1).toBe('Organic claim identified');
 
     for (const [id, row] of Object.entries(OPEN_V15_ADJUSTMENT_REGISTRY)) {
       if (!row.highlightEligible) continue;

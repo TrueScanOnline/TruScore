@@ -2,9 +2,10 @@
  * Ethics Pillar v37 — stable production adjustment IDs and commentary registry.
  * Bound to fired adjustments for S28 (exhaustive) and S12 (governed selection).
  *
- * Authority: Rveel_Wave3_Ethics_Score_Highlights_Founder_Locked_Commentary_L3_ID_Contract_20260901_v0_1 §11.
+ * Authority: Rveel_Wave3_Ethics_Score_Highlights_Founder_Locked_Commentary_L3_ID_Contract_20260905_v0_2 §3–§5.
  * Consumer copy is year-dynamic: `[Year]`, `[COMPANY]` and `[SCORE]` resolve from the metadata carried on
  * the fired row, which must come from the same governed benchmark record that produced the score.
+ * KTC/BBFAW L1 carries its own benchmark attribution so it survives being read in isolation.
  * Scoring arithmetic is unchanged by this registry.
  */
 
@@ -58,18 +59,26 @@ export interface EthicsV37AdjustmentMeta {
 }
 
 const KTC_RESOURCE = 'https://www.business-humanrights.org/en/from-us/knowthechain/food-and-beverage-benchmark/';
-const BBFAW_RESOURCE = 'https://www.bbfaw.com/food-companies/';
+const BBFAW_RESOURCE = 'https://www.bbfaw.com/about-us/benchmark-methodology/';
 const FAIRTRADE_RESOURCE = 'https://www.fairtrade.net/en/why-fairtrade/how-we-do-it/how-does-the-label-work.html';
-const RAINFOREST_RESOURCE =
-  'https://www.rainforest-alliance.org/business/marketing-sustainability/using-our-logo-and-seal/';
+const RAINFOREST_RESOURCE = 'https://www.rainforest-alliance.org/what-does-rainforest-alliance-certified-mean/';
 const MSC_RESOURCE = 'https://www.msc.org/what-we-are-doing/our-approach/the-blue-msc-label-what-it-means-for-you';
-const ASC_RESOURCE = 'https://au.asc-aqua.org/our-assurance/';
-const ORGANIC_RESOURCE = 'https://www.accc.gov.au/';
+const ASC_RESOURCE = 'https://asc-aqua.org/about-the-asc-sustainability-label/';
+const ORGANIC_RESOURCE = 'https://www.accc.gov.au/consumers/advertising-and-promotions/organic-claims';
 const OFF_RESOURCE = 'https://world.openfoodfacts.org/';
 
+/**
+ * Locked KTC L1. `Product owner` only survives when governed entity resolution proves the
+ * benchmarked company is this product's owner; otherwise `resolveGovernedCopy` substitutes
+ * `[COMPANY]` from the same fired benchmark record (Ethics v0.2 §4).
+ */
+const KTC_L1 = 'Product owner: [SCORE]/100 in independent forced-labour safeguards benchmark';
+
 const KTC_L2 =
-  'KnowTheChain’s [Year] Food & Beverage Benchmark scored this company [SCORE]/100 for its efforts to prevent and address ' +
+  'KnowTheChain’s [Year] Food & Beverage Benchmark scored [COMPANY] [SCORE]/100 for its efforts to prevent and address ' +
   'forced-labour risks in its supply chains.';
+
+const BBFAW_L1_PREFIX = 'Independent animal-welfare benchmark:';
 
 function bbfawTierExplainer(tier: BBFAWTier): string {
   const trailing: Record<BBFAWTier, string> = {
@@ -80,7 +89,7 @@ function bbfawTierExplainer(tier: BBFAWTier): string {
     5: 'where it found limited evidence that animal welfare was being managed effectively.',
     6: 'where it found limited, if any, evidence that farm animal welfare was recognised as a business issue.',
   };
-  return `BBFAW’s [Year] benchmark placed this company in Tier ${tier}, ${trailing[tier]}`;
+  return `BBFAW’s [Year] benchmark placed [COMPANY] in Tier ${tier}, ${trailing[tier]}`;
 }
 
 export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, EthicsV37AdjustmentMeta> = {
@@ -98,7 +107,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: -10,
     highlightEligible: true,
     description: 'KnowTheChain benchmark score 0–10',
-    highlightTitle: 'Very weak supply-chain labour safeguards',
+    highlightTitle: KTC_L1,
     highlightExplainer: KTC_L2,
     externalResource: KTC_RESOURCE,
   },
@@ -108,7 +117,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: -8,
     highlightEligible: true,
     description: 'KnowTheChain benchmark score 11–20',
-    highlightTitle: 'Weak supply-chain labour safeguards',
+    highlightTitle: KTC_L1,
     highlightExplainer: KTC_L2,
     externalResource: KTC_RESOURCE,
   },
@@ -118,7 +127,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: -6,
     highlightEligible: true,
     description: 'KnowTheChain benchmark score 21–30',
-    highlightTitle: 'Limited supply-chain labour safeguards',
+    highlightTitle: KTC_L1,
     highlightExplainer: KTC_L2,
     externalResource: KTC_RESOURCE,
   },
@@ -128,7 +137,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: -3,
     highlightEligible: true,
     description: 'KnowTheChain benchmark score 31–50',
-    highlightTitle: 'Supply-chain labour safeguards lag leaders',
+    highlightTitle: KTC_L1,
     highlightExplainer: KTC_L2,
     externalResource: KTC_RESOURCE,
   },
@@ -138,7 +147,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: 3,
     highlightEligible: true,
     description: 'KnowTheChain benchmark score 51–70',
-    highlightTitle: 'Stronger supply-chain labour safeguards',
+    highlightTitle: KTC_L1,
     highlightExplainer: KTC_L2,
     externalResource: KTC_RESOURCE,
   },
@@ -148,7 +157,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: 6,
     highlightEligible: true,
     description: 'KnowTheChain benchmark score 71–80',
-    highlightTitle: 'Strong supply-chain labour safeguards',
+    highlightTitle: KTC_L1,
     highlightExplainer: KTC_L2,
     externalResource: KTC_RESOURCE,
   },
@@ -158,7 +167,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: 8,
     highlightEligible: true,
     description: 'KnowTheChain benchmark score 81–90',
-    highlightTitle: 'Very strong supply-chain labour safeguards',
+    highlightTitle: KTC_L1,
     highlightExplainer: KTC_L2,
     externalResource: KTC_RESOURCE,
   },
@@ -168,7 +177,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: 10,
     highlightEligible: true,
     description: 'KnowTheChain benchmark score 91–100',
-    highlightTitle: 'Leading supply-chain labour safeguards',
+    highlightTitle: KTC_L1,
     highlightExplainer: KTC_L2,
     externalResource: KTC_RESOURCE,
   },
@@ -178,7 +187,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: 6,
     highlightEligible: true,
     description: 'BBFAW Tier 1 (animal welfare governance)',
-    highlightTitle: 'Leading animal welfare governance',
+    highlightTitle: `${BBFAW_L1_PREFIX} Tier 1 — leading governance`,
     highlightExplainer: bbfawTierExplainer(1),
     externalResource: BBFAW_RESOURCE,
   },
@@ -188,7 +197,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: 4,
     highlightEligible: true,
     description: 'BBFAW Tier 2 (animal welfare governance)',
-    highlightTitle: 'Strong animal welfare governance',
+    highlightTitle: `${BBFAW_L1_PREFIX} Tier 2 — strong governance`,
     highlightExplainer: bbfawTierExplainer(2),
     externalResource: BBFAW_RESOURCE,
   },
@@ -198,7 +207,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: 2,
     highlightEligible: true,
     description: 'BBFAW Tier 3 (animal welfare governance)',
-    highlightTitle: 'Established animal welfare approach',
+    highlightTitle: `${BBFAW_L1_PREFIX} Tier 3 — established approach`,
     highlightExplainer: bbfawTierExplainer(3),
     externalResource: BBFAW_RESOURCE,
   },
@@ -208,7 +217,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: 1,
     highlightEligible: true,
     description: 'BBFAW Tier 4 (animal welfare governance)',
-    highlightTitle: 'Making progress on animal welfare',
+    highlightTitle: `${BBFAW_L1_PREFIX} Tier 4 — making progress`,
     highlightExplainer: bbfawTierExplainer(4),
     externalResource: BBFAW_RESOURCE,
   },
@@ -218,7 +227,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: -4,
     highlightEligible: true,
     description: 'BBFAW Tier 5 (animal welfare governance)',
-    highlightTitle: 'Limited animal welfare progress',
+    highlightTitle: `${BBFAW_L1_PREFIX} Tier 5 — limited progress`,
     highlightExplainer: bbfawTierExplainer(5),
     externalResource: BBFAW_RESOURCE,
   },
@@ -228,7 +237,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: -6,
     highlightEligible: true,
     description: 'BBFAW Tier 6 (animal welfare governance)',
-    highlightTitle: 'Little evidence of animal welfare governance',
+    highlightTitle: `${BBFAW_L1_PREFIX} Tier 6 — little evidence of governance`,
     highlightExplainer: bbfawTierExplainer(6),
     externalResource: BBFAW_RESOURCE,
   },
@@ -238,9 +247,9 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: 3,
     highlightEligible: true,
     description: 'BBFAW Impact Rating A/B (welfare outcomes)',
-    highlightTitle: 'Strong reported improvement in animal welfare',
+    highlightTitle: `${BBFAW_L1_PREFIX} Impact A/B — strong reported improvement`,
     highlightExplainer:
-      'BBFAW’s [Year] Impact Rating placed this company in A/B, reflecting reported improved welfare impacts for a reasonable ' +
+      'BBFAW’s [Year] Impact Rating placed [COMPANY] in A/B, reflecting reported improved welfare impacts for a reasonable ' +
       'proportion of farm animals in its operations or supply chains.',
     externalResource: BBFAW_RESOURCE,
   },
@@ -250,9 +259,9 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: 1,
     highlightEligible: true,
     description: 'BBFAW Impact Rating C/D (welfare outcomes)',
-    highlightTitle: 'Some reported improvement in animal welfare',
+    highlightTitle: `${BBFAW_L1_PREFIX} Impact C/D — some reported improvement`,
     highlightExplainer:
-      'BBFAW’s [Year] Impact Rating placed this company in C/D, reflecting reported improved welfare impacts for at least some ' +
+      'BBFAW’s [Year] Impact Rating placed [COMPANY] in C/D, reflecting reported improved welfare impacts for at least some ' +
       'farm animals in its operations or supply chains.',
     externalResource: BBFAW_RESOURCE,
   },
@@ -262,9 +271,9 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     points: -3,
     highlightEligible: true,
     description: 'BBFAW Impact Rating E/F (welfare outcomes)',
-    highlightTitle: 'Improved animal welfare outcomes not yet demonstrated',
+    highlightTitle: `${BBFAW_L1_PREFIX} Impact E/F — improvement not yet demonstrated`,
     highlightExplainer:
-      'BBFAW’s [Year] Impact Rating placed this company in E/F, meaning it had yet to demonstrate improved welfare impacts for ' +
+      'BBFAW’s [Year] Impact Rating placed [COMPANY] in E/F, meaning it had yet to demonstrate improved welfare impacts for ' +
       'farm animals in its operations or supply chains.',
     externalResource: BBFAW_RESOURCE,
   },

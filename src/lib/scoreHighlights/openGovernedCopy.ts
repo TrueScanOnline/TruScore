@@ -1,6 +1,10 @@
 /**
- * Founder-locked Open ingredient-clarity L1/L2 variants (Open Score Highlights v0.1 §3).
- * Selected from score-neutral metadata on the fired adjustment — never from raw product fields.
+ * Founder-locked Open ingredient-clarity / origins L1/L2 variants.
+ * Authority: Rveel_Wave3_Open_Score_Highlights_Founder_Locked_Commentary_L3_ID_Contract_20260905_v0_2
+ * and the Consolidated Controlling Specification 20260905 v0.5 §5 (Open).
+ *
+ * Variants are selected from score-neutral metadata on the fired adjustment — never from raw
+ * product fields — and fail closed when the governed metadata cannot supply the locked tokens.
  */
 
 import type { OpenV15AdjustmentId } from '../truscoreEngine/pillars/openPillarV15Registry';
@@ -11,11 +15,6 @@ export interface ResolvedOpenCopy {
   l1: string;
   l2: string;
 }
-
-const MARKET_LABELLING: Record<string, string> = {
-  AU: 'Australian',
-  NZ: 'New Zealand',
-};
 
 function splitPipeList(value: string | undefined): string[] {
   if (!value) return [];
@@ -29,12 +28,6 @@ function formatTermsList(terms: string[]): string {
   return `${terms.slice(0, -1).join(', ')} and ${terms[terms.length - 1]}`;
 }
 
-function marketLabelling(metadata: Metadata): string | null {
-  const market = metadata?.market;
-  if (typeof market !== 'string') return null;
-  return MARKET_LABELLING[market] ?? null;
-}
-
 function resolveOpenIngredientClarityCopy(
   adjustmentId: OpenV15AdjustmentId,
   metadata: Metadata
@@ -42,7 +35,9 @@ function resolveOpenIngredientClarityCopy(
   if (adjustmentId === 'open-v15-ing-clarity-zero') {
     return {
       l1: 'Ingredient wording is clear where assessed',
-      l2: 'In the ingredient list we could assess, we didn’t find any of the broad, generic or code-dependent terms Rveel checks for. That doesn’t mean every detail about the product is disclosed.',
+      l2:
+        'In the ingredient list we could assess, we did not find any of the broad, generic or code-dependent terms we check ' +
+        'for. That does not mean every detail about the product is disclosed.',
     };
   }
 
@@ -55,14 +50,15 @@ function resolveOpenIngredientClarityCopy(
   const decodedNames = splitPipeList(
     typeof metadata?.decodedAdditiveNames === 'string' ? metadata.decodedAdditiveNames : undefined
   );
-  const labelling = marketLabelling(metadata);
 
   if (adjustmentId === 'open-v15-ing-clarity-one') {
     if (presentationClass === 'broad_generic') {
-      if (!terms[0] || !labelling) return null;
+      if (!terms[0]) return null;
       return {
         l1: 'One ingredient term is vague',
-        l2: `The list says “${terms[0]}”. ${labelling} food-labelling rules allow this kind of broad description without naming the specific substance or substances, so it doesn’t show exactly what makes up ${terms[0]}.`,
+        l2:
+          `The ingredient list says “${terms[0]}”. This is a broad description, and in the wording we could assess it does ` +
+          `not identify the specific ingredient or substance represented by ${terms[0]}.`,
       };
     }
     if (presentationClass === 'coded') {
@@ -70,7 +66,9 @@ function resolveOpenIngredientClarityCopy(
       if (!terms[0] || !plainName) return null;
       return {
         l1: 'One ingredient needs decoding',
-        l2: `“${terms[0]}” is a permitted, standardised way to identify ${plainName}. The code identifies the additive precisely, but you need to know or look it up to see the additive’s actual name.`,
+        l2:
+          `“${terms[0]}” is a standard food-additive number for ${plainName}. The code identifies the additive precisely, ` +
+          'but a shopper needs to know or look up the number to see the additive’s name.',
       };
     }
     return null;
@@ -81,19 +79,25 @@ function resolveOpenIngredientClarityCopy(
       if (!terms[0] || !terms[1]) return null;
       return {
         l1: 'Two ingredient terms are vague',
-        l2: `The list uses two broad terms: “${terms[0]}” and “${terms[1]}”. They describe ingredient categories without fully showing what is in them.`,
+        l2:
+          `The ingredient list uses two broad descriptions: “${terms[0]}” and “${terms[1]}”. In the wording we could ` +
+          'assess, they do not identify the specific ingredients or substances represented by those categories.',
       };
     }
     if (presentationClass === 'coded') {
       return {
         l1: 'Two ingredients need decoding',
-        l2: 'Two additives are listed mainly by number. The codes identify them precisely, but you need to look them up to see their actual names.',
+        l2:
+          'Two additives are listed mainly by number. The codes identify them precisely, but a shopper needs to know or ' +
+          'look them up to see their names.',
       };
     }
     if (presentationClass === 'mixed') {
       return {
         l1: 'Some ingredient wording needs explanation',
-        l2: 'This ingredient list combines broad descriptions with coded additive names. Tap through to see what each term means.',
+        l2:
+          'This ingredient list combines a broad description with a coded additive number. Tap through to see what each ' +
+          'term means.',
       };
     }
     return null;
@@ -105,19 +109,25 @@ function resolveOpenIngredientClarityCopy(
       if (!termsPhrase) return null;
       return {
         l1: 'Several ingredient terms are vague',
-        l2: `Several broad ingredient terms appear in this list, including ${termsPhrase}. They leave parts of the ingredient make-up unspecified.`,
+        l2:
+          `Several broad ingredient descriptions appear in this list, including ${termsPhrase}. In the wording we could ` +
+          'assess, they leave parts of the ingredient make-up unspecified.',
       };
     }
     if (presentationClass === 'coded') {
       return {
         l1: 'Several ingredients need decoding',
-        l2: 'Several additives are listed mainly by number. The codes identify them precisely, but you need to look them up to see their actual names.',
+        l2:
+          'Several additives are listed mainly by number. The codes identify them precisely, but a shopper needs to know ' +
+          'or look them up to see their names.',
       };
     }
     if (presentationClass === 'mixed') {
       return {
         l1: 'Several ingredient terms need explanation',
-        l2: 'This ingredient list uses several broad descriptions and coded additive names. Tap through to see what each term means.',
+        l2:
+          'This ingredient list uses several broad descriptions and coded additive numbers. Tap through to see what each ' +
+          'term means.',
       };
     }
     return null;

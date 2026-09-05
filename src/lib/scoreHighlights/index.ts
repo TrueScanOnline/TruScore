@@ -35,5 +35,19 @@ export {
   BODY_COLOUR_SYNTHESIS_MEMBER_IDS,
 } from './bodyColourSynthesis';
 
+export {
+  ACTIVE_CONSUMER_PILLAR_LABELS,
+  consumerPillarLabel,
+} from './consumerPillarLabels';
+
+export {
+  contextualContributionPromptsByPillar,
+  selectContextualContributionPrompts,
+  type ContextualContributionPrompt,
+  type ContextualContributionPromptOptions,
+  type ContextualPromptAction,
+  type ContextualPromptKind,
+} from './contextualContributionPrompts';
+
 /** Locked consumer heading for both overall S12 and the S12a pillar look-through. */
 export const SCORE_HIGHLIGHTS_HEADING = 'What we found';

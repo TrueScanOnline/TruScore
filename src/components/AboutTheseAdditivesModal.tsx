@@ -1,5 +1,6 @@
 /**
- * Founder-locked Body additive L3 — in-app "About these additives" (Body v0.5 §8).
+ * Founder-locked Body additive L3 — in-app "About these additives".
+ * Authority: L3 Content Closure Addendum 20260905 v1.1 (Body — Additives).
  * Shows every governed Body additive that fired for this product, not only the promoted story.
  */
 
@@ -12,10 +13,12 @@ import {
   ABOUT_THESE_ADDITIVES_TITLE,
   COLOUR_ADDITIVE_IDS,
   COLOUR_CLUSTER_EVIDENCE_STORY,
+  COLOUR_CLUSTER_SOURCES,
   COLOUR_TILES,
   E171_SECTION,
   E250_SECTION,
   E951_SECTION,
+  type AdditiveSourceLink,
 } from '../config/bodyAdditivesL3Content';
 import type { BodyV12AdjustmentId } from '../lib/truscoreEngine/pillars/bodyPillarV12Registry';
 import { useTheme } from '../theme';
@@ -35,6 +38,25 @@ function SectionHeading({ children }: { children: string }) {
 function BodyText({ children }: { children: string }) {
   const { colors } = useTheme();
   return <Text style={[styles.bodyText, { color: colors.textSecondary }]}>{children}</Text>;
+}
+
+function SourceLinks({ sources }: { sources: readonly AdditiveSourceLink[] }) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.sourceList}>
+      {sources.map((source) => (
+        <TouchableOpacity
+          key={source.url}
+          style={styles.sourceRow}
+          onPress={() => Linking.openURL(source.url)}
+          accessibilityRole="link"
+        >
+          <Ionicons name="open-outline" size={14} color={colors.primary} />
+          <Text style={[styles.sourceLinkText, { color: colors.primary }]}>{source.label}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
 }
 
 function MicroFactRow({ label, value }: { label: string; value: string }) {
@@ -102,6 +124,7 @@ export default function AboutTheseAdditivesModal({
               <MicroFactRow label="US alias" value={tile.usAlias} />
             </View>
           ))}
+          <SourceLinks sources={COLOUR_CLUSTER_SOURCES} />
         </View>
       )}
 
@@ -111,12 +134,13 @@ export default function AboutTheseAdditivesModal({
           {E171_SECTION.microFacts.map((fact) => (
             <MicroFactRow key={fact.label} label={fact.label} value={fact.value} />
           ))}
-          <Text style={[styles.subheading, { color: colors.text }]}>Why Rveel surfaced it</Text>
+          <Text style={[styles.subheading, { color: colors.text }]}>Why we surfaced it</Text>
           <BodyText>{E171_SECTION.whySurfaced}</BodyText>
           <Text style={[styles.subheading, { color: colors.text }]}>Why did regulators reach different conclusions?</Text>
           <BodyText>{E171_SECTION.deeperExplanation}</BodyText>
           <Text style={[styles.subheading, { color: colors.text }]}>How the rules differ</Text>
           <BodyText>{E171_SECTION.rulesDiffer}</BodyText>
+          <SourceLinks sources={E171_SECTION.sources} />
         </View>
       )}
 
@@ -132,6 +156,7 @@ export default function AboutTheseAdditivesModal({
           <BodyText>{E250_SECTION.context}</BodyText>
           <Text style={[styles.subheading, { color: colors.text }]}>How the rules differ</Text>
           <BodyText>{E250_SECTION.rulesDiffer}</BodyText>
+          <SourceLinks sources={E250_SECTION.sources} />
         </View>
       )}
 
@@ -145,17 +170,9 @@ export default function AboutTheseAdditivesModal({
           <BodyText>{E951_SECTION.contradiction}</BodyText>
           <Text style={[styles.subheading, { color: colors.text }]}>Deeper explanation</Text>
           <BodyText>{E951_SECTION.deeperExplanation}</BodyText>
+          <SourceLinks sources={E951_SECTION.sources} />
         </View>
       )}
-
-      <TouchableOpacity
-        style={[styles.sourceLink, { borderColor: colors.border }]}
-        onPress={() => Linking.openURL('https://www.foodstandards.gov.au/')}
-        accessibilityRole="link"
-      >
-        <Ionicons name="open-outline" size={16} color={colors.primary} />
-        <Text style={[styles.sourceLinkText, { color: colors.primary }]}>FSANZ food standards</Text>
-      </TouchableOpacity>
     </InfoModal>
   );
 }
@@ -216,16 +233,18 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 2,
   },
-  sourceLink: {
+  sourceList: {
+    marginTop: 10,
+    gap: 6,
+  },
+  sourceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 24,
-    paddingVertical: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
   sourceLinkText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
+    flex: 1,
   },
 });

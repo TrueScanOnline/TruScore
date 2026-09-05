@@ -24,6 +24,9 @@ module.exports = {
     '^expo-sqlite$': '<rootDir>/src/__tests__/__mocks__/expo-sqlite.ts',
     '^expo-sqlite/build/index$': '<rootDir>/src/__tests__/__mocks__/expo-sqlite.ts',
     '^expo-linking$': '<rootDir>/src/__tests__/__mocks__/expo-linking.ts',
+    '^expo-constants$': '<rootDir>/src/__tests__/__mocks__/expo-constants.ts',
+    // Native-only capture module: mocked so share services can be tested on their live path
+    '^react-native-view-shot$': '<rootDir>/src/__tests__/__mocks__/react-native-view-shot.ts',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],

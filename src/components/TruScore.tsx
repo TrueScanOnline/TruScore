@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { TruScoreResult } from '../lib/truscoreEngine';
 import { productIdentity } from '../config/productIdentity';
+import { consumerPillarLabel } from '../lib/scoreHighlights';
 import { useTheme } from '../theme';
 import {
   getTruScoreConsumerPresentation,
@@ -90,15 +91,16 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
       </Text>
       <Text style={[styles.subLabel, { color: colors.textSecondary }]}>{productIdentity.publicScoreName}</Text>
 
-      {/* Pillar Bars - Display in consistent order: Body, Planet, Ethics, Open */}
+      {/* Pillar Bars - internal order Body, Planet, Ethics, Open; consumer labels applied on render */}
       <View style={styles.pillarsContainer}>
         {(['Body', 'Planet', 'Ethics', 'Open'] as const).map((pillar) => {
+          const label = consumerPillarLabel(pillar);
           const value = breakdown[pillar];
           // Never coerce null/missing pillar to 0 for display
           if (typeof value !== 'number' || Number.isNaN(value)) {
             return (
               <View key={pillar} style={styles.pillarRow}>
-                <Text style={[styles.pillarLabel, { color: colors.text }]}>{pillar}</Text>
+                <Text style={[styles.pillarLabel, { color: colors.text }]}>{label}</Text>
                 <View style={[styles.pillarBarContainer, { backgroundColor: colors.surface }]} />
                 <Text style={[styles.pillarValue, { color: colors.textSecondary }]}>—</Text>
               </View>
@@ -106,7 +108,7 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
           }
           const rowContent = (
             <>
-              <Text style={[styles.pillarLabel, { color: colors.text }]}>{pillar}</Text>
+              <Text style={[styles.pillarLabel, { color: colors.text }]}>{label}</Text>
               <View style={[styles.pillarBarContainer, { backgroundColor: colors.surface }]}>
                 <View
                   style={[
@@ -128,7 +130,7 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
               onPress={() => onPillarPress(pillar)}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={pillar}
+              accessibilityLabel={label}
             >
               {rowContent}
             </TouchableOpacity>
@@ -227,10 +229,10 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   largeScore: {
-    fontSize: 64,
+    fontSize: 72,
   },
   largeLabel: {
-    fontSize: 22,
+    fontSize: 24,
   },
 });
 

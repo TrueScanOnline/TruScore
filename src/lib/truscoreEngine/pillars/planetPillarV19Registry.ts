@@ -2,7 +2,7 @@
  * Planet Pillar v19 — stable production adjustment IDs and commentary registry.
  * Bound to fired adjustments for S28 (exhaustive) and S12 (governed selection).
  *
- * Authority: Rveel_Wave3_Planet_Score_Highlights_Founder_Locked_Commentary_L3_ID_Contract_20260901_v0_1 §9.
+ * Authority: Rveel_Wave3_Planet_Score_Highlights_Founder_Locked_Commentary_L3_ID_Contract_20260905_v0_2 §3.
  * IDs deliberately say "environmental" rather than Eco-Score/Green-Score so upstream naming
  * changes never force an internal scoring-ID migration. Scoring arithmetic is unchanged.
  */
@@ -36,8 +36,8 @@ export interface PlanetV19AdjustmentMeta {
   externalResource: string;
 }
 
-const GREEN_SCORE_RESOURCE = 'https://blog.openfoodfacts.org/en/EN-Pro-Platform-User-Guide.pdf';
-const PACKAGING_AU_RESOURCE = 'https://apco.org.au/faqs?category=Australasian+Recycling+Label+Program';
+const GREEN_SCORE_RESOURCE = 'https://world.openfoodfacts.org/green-score#how_is_the_green_score_calculated';
+const PACKAGING_AU_RESOURCE = 'https://arl.org.au';
 const OFF_RESOURCE = 'https://world.openfoodfacts.org/';
 
 const GREEN_SCORE_L2_PREFIX =
@@ -60,7 +60,7 @@ export const PLANET_V19_ADJUSTMENT_REGISTRY: Record<PlanetV19AdjustmentId, Plane
     highlightEligible: true,
     description: 'Reported environmental grade A',
     highlightTitle: 'A — lower environmental impact',
-    highlightExplainer: `${GREEN_SCORE_L2_PREFIX} This product received an A, the lowest-impact grade on its A–E scale.`,
+    highlightExplainer: `${GREEN_SCORE_L2_PREFIX} This product received an A, the lowest-eco-impact grade on its A–E scale.`,
     externalResource: GREEN_SCORE_RESOURCE,
   },
   'planet-v19-environmental-b': {
@@ -70,7 +70,7 @@ export const PLANET_V19_ADJUSTMENT_REGISTRY: Record<PlanetV19AdjustmentId, Plane
     highlightEligible: true,
     description: 'Reported environmental grade B',
     highlightTitle: 'B — relatively low environmental impact',
-    highlightExplainer: `${GREEN_SCORE_L2_PREFIX} This product received a B, indicating relatively low estimated impact on its A–E scale.`,
+    highlightExplainer: `${GREEN_SCORE_L2_PREFIX} This product received a B, indicating relatively low estimated eco-impact on its A–E scale.`,
     externalResource: GREEN_SCORE_RESOURCE,
   },
   'planet-v19-environmental-c': {
@@ -90,7 +90,7 @@ export const PLANET_V19_ADJUSTMENT_REGISTRY: Record<PlanetV19AdjustmentId, Plane
     highlightEligible: true,
     description: 'Reported environmental grade D',
     highlightTitle: 'D — higher environmental impact',
-    highlightExplainer: `${GREEN_SCORE_L2_PREFIX} This product received a D, indicating higher estimated impact on its A–E scale.`,
+    highlightExplainer: `${GREEN_SCORE_L2_PREFIX} This product received a D, indicating higher estimated eco-impact on its A–E scale.`,
     externalResource: GREEN_SCORE_RESOURCE,
   },
   'planet-v19-environmental-e': {
@@ -120,7 +120,7 @@ export const PLANET_V19_ADJUSTMENT_REGISTRY: Record<PlanetV19AdjustmentId, Plane
     highlightTitle: 'Primary packaging is kerbside recyclable',
     highlightExplainer:
       'No usable Open Food Facts Green-Score is available for this product. In [Australia/New Zealand], the packaging evidence ' +
-      'available to Rveel indicates that all primary packaging components can go in ordinary kerbside recycling.',
+      'available to us indicates that all primary packaging components can go in ordinary kerbside recycling.',
     externalResource: PACKAGING_AU_RESOURCE,
   },
   'planet-v19-packaging-some-kerbside': {
@@ -132,7 +132,7 @@ export const PLANET_V19_ADJUSTMENT_REGISTRY: Record<PlanetV19AdjustmentId, Plane
     highlightTitle: 'Some primary packaging is kerbside recyclable',
     highlightExplainer:
       'No usable Open Food Facts Green-Score is available for this product. In [Australia/New Zealand], the packaging evidence ' +
-      'available to Rveel confirms kerbside recycling for at least one primary packaging component, but not the full primary ' +
+      'available to us confirms kerbside recycling for at least one primary packaging component, but not the full primary ' +
       'packaging set.',
     externalResource: PACKAGING_AU_RESOURCE,
   },

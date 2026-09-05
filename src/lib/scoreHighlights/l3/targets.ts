@@ -1,5 +1,5 @@
 /**
- * Wave 3 Score Highlights — governed in-app L3 destination targets (L3 Content Closure Addendum v1.0).
+ * Wave 3 Score Highlights — governed in-app L3 destination targets (L3 Content Closure Addendum v1.1).
  */
 
 export type ScoreHighlightL3InAppTarget =

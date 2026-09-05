@@ -28,6 +28,9 @@ import { useTheme } from '../theme';
 import ScoreHighlightsList from './ScoreHighlightsList';
 import {
   SCORE_HIGHLIGHTS_HEADING,
+  consumerPillarLabel,
+  selectContextualContributionPrompts,
+  type FiredAdjustment,
   type ScoreHighlightL3Route,
   type ScoreHighlightPillar,
   type ScoreHighlightSelection,
@@ -51,6 +54,16 @@ interface ScoreHighlightsLookThroughModalProps {
   selection: ScoreHighlightSelection | null;
   /** Pillar score shown in the S12a header, when known. */
   pillarScores?: Partial<Record<ScoreHighlightPillar, number | null>>;
+  /**
+   * The fired scoring ledger for this scan. Used only to derive presentation-only contextual
+   * contribution prompts; it never enters the S12/S12a Highlight candidate set.
+   */
+  firedAdjustments?: readonly FiredAdjustment[];
+  /**
+   * True only once the governed User Contribution destination exists (Wave 4). While false, the
+   * route-bound action fragment of every contextual prompt is wholly suppressed.
+   */
+  userContributionRouteLive?: boolean;
   onClose: () => void;
   /**
    * Host handler for governed in-app L3 destinations. External sources are opened here.
@@ -77,6 +90,8 @@ export default function ScoreHighlightsLookThroughModal({
   request,
   selection,
   pillarScores,
+  firedAdjustments,
+  userContributionRouteLive = false,
   onClose,
   onOpenInAppL3,
 }: ScoreHighlightsLookThroughModalProps) {
@@ -131,12 +146,21 @@ export default function ScoreHighlightsLookThroughModal({
     return selection.byPillar[current.pillar];
   }, [current, selection]);
 
+  // Presentation-only pillar-state context. Separate from the Highlight list by contract.
+  const contextualPrompts = useMemo(() => {
+    if (!current || current.kind !== 'pillar' || !firedAdjustments) return [];
+    return selectContextualContributionPrompts(current.pillar, firedAdjustments, {
+      userContributionRouteLive,
+    });
+  }, [current, firedAdjustments, userContributionRouteLive]);
+
   if (!visible || !current) return null;
 
   const pillarScore =
     current.kind === 'pillar' ? pillarScores?.[current.pillar] ?? null : null;
-  const headerTitle =
-    current.kind === 'pillar' ? current.pillar : current.story.pillar;
+  const headerTitle = consumerPillarLabel(
+    current.kind === 'pillar' ? current.pillar : current.story.pillar
+  );
   const headerSubtitle =
     current.kind === 'pillar'
       ? pillarScore != null
@@ -188,12 +212,28 @@ export default function ScoreHighlightsLookThroughModal({
 
           <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
             {current.kind === 'pillar' ? (
-              <ScoreHighlightsList
-                stories={pillarStories}
-                onSelectStory={handleSelectStory}
-                showHeading={false}
-                emptyText={`Nothing stood out for ${current.pillar} on this product.`}
-              />
+              <>
+                <ScoreHighlightsList
+                  stories={pillarStories}
+                  onSelectStory={handleSelectStory}
+                  showHeading={false}
+                  emptyText={`Nothing stood out for ${consumerPillarLabel(current.pillar)} on this product.`}
+                />
+                {contextualPrompts.length > 0 && (
+                  <View style={[styles.contextArea, { borderTopColor: colors.border }]}>
+                    {contextualPrompts.map((prompt) => (
+                      <View key={prompt.promptKey} style={styles.contextPrompt}>
+                        <Text style={[styles.contextPromptTitle, { color: colors.text }]}>
+                          {prompt.l1}
+                        </Text>
+                        <Text style={[styles.contextPromptBody, { color: colors.textSecondary }]}>
+                          {prompt.l2}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </>
             ) : (
               <View style={styles.detail}>
                 <Text style={[styles.detailTitle, { color: colors.text }]}>{current.story.l1}</Text>
@@ -275,6 +315,23 @@ const styles = StyleSheet.create({
   },
   bodyContent: {
     padding: 16,
+  },
+  contextArea: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 14,
+  },
+  contextPrompt: {
+    gap: 4,
+  },
+  contextPromptTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  contextPromptBody: {
+    fontSize: 14,
+    lineHeight: 21,
   },
   detail: {
     gap: 12,
