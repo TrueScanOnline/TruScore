@@ -7,8 +7,13 @@
  * bracketed specification groups (recursively parsed the same way).
  * Matching: whole-word / exact phrase against an unresolved head expression, never an
  * arbitrary substring inside a more specific phrase ("yeast extract", "citric acid").
- * Additive classes count only when standalone or with code-only specification; generic
- * extract/essence terms exclude named examples from the spec (e.g. vanilla extract).
+ * Additive classes count only while the additive identity stays unresolved: an identity
+ * supplied in the same item resolves the class shell whether it is bracketed
+ * ("Emulsifier (Soy Lecithin)") or immediately follows the class name
+ * ("Emulsifier Soy Lecithin"). A code-only identity suppresses the shell and keeps one
+ * code-dependent flag; a non-exhaustive qualifier ("contains", "may contain",
+ * "including") never resolves the shell. Generic extract/essence terms exclude named
+ * examples from the spec (e.g. vanilla extract).
  */
 
 import { getAdditiveInfo } from '../../../services/additiveDatabase';
@@ -552,6 +557,18 @@ function specificationIsCodeOnly(inner: string): boolean {
 }
 
 /**
+ * "contains", "may contain", "including" and equivalents are non-exhaustive: they name an
+ * example rather than establishing that the category is fully specified, so they never
+ * resolve a class shell ("Flavours (Contains Glutamic Acid)" stays a broad Flavours flag).
+ */
+const NON_EXHAUSTIVE_QUALIFIER_RE =
+  /^(?:may\s+contains?|contains?|includ(?:e|es|ing)|such\s+as|e\.?g\.?|etc\.?)\b/i;
+
+function specificationIsNonExhaustive(inner: string): boolean {
+  return NON_EXHAUSTIVE_QUALIFIER_RE.test(inner.trim());
+}
+
+/**
  * Bare code items listed inside an additive category specification, e.g. the `471` and
  * `472e` of "Emulsifiers (471, 472e)". The category context disambiguates these from
  * quantities, so they count as code-dependent disclosure rather than being dropped with
@@ -571,17 +588,19 @@ function countBareCodesInSpecification(ctx: ScanContext, from: number, to: numbe
 const WORD_RE = /[\p{L}\p{N}]+/gu;
 
 /**
- * True when every substantive word of the expression belongs to a governed phrase match
- * (or is already resolved / non-specifying), i.e. the governed terms ARE the expression
- * rather than fragments of a more specific phrase ("citric acid", "yeast extract").
+ * True when the expression carries a substantive word from `from` onwards that no governed
+ * phrase, exclusion mask or coded hit already accounts for — i.e. wording that specifies an
+ * actual ingredient identity rather than restating the generic expression.
  */
-function expressionIsFullyGoverned(
+function hasSpecifyingWord(
   ctx: ScanContext,
   absStart: number,
   expression: string,
-  candidates: readonly TextRange[]
+  candidates: readonly TextRange[],
+  from = 0
 ): boolean {
   const re = new RegExp(WORD_RE.source, WORD_RE.flags);
+  re.lastIndex = from;
   let m: RegExpExecArray | null;
   while ((m = re.exec(expression)) !== null) {
     const wordStart = m.index;
@@ -592,9 +611,23 @@ function expressionIsFullyGoverned(
     const word = m[0];
     if (/\d/.test(word)) continue;
     if (STRUCTURAL_STOPWORDS.has(word) || NON_SPECIFYING_QUALIFIERS.has(word)) continue;
-    return false;
+    return true;
   }
-  return true;
+  return false;
+}
+
+/**
+ * True when every substantive word of the expression belongs to a governed phrase match
+ * (or is already resolved / non-specifying), i.e. the governed terms ARE the expression
+ * rather than fragments of a more specific phrase ("citric acid", "yeast extract").
+ */
+function expressionIsFullyGoverned(
+  ctx: ScanContext,
+  absStart: number,
+  expression: string,
+  candidates: readonly TextRange[]
+): boolean {
+  return !hasSpecifyingWord(ctx, absStart, expression, candidates);
 }
 
 function commitBroadGenericMatches(
@@ -612,9 +645,49 @@ function commitBroadGenericMatches(
 }
 
 /**
+ * Class+identity supplied without brackets, e.g. "Emulsifier Soy Lecithin" or
+ * "Colour 150a". Returns `true` when the shell has been disposed of here: either the
+ * identity resolves it (suppress the shell, keep assessing the identity wording) or the
+ * identity is code-only (one code-dependent flag, never the shell as well).
+ */
+function resolveInlineClassShell(
+  ctx: ScanContext,
+  start: number,
+  end: number,
+  expression: string,
+  shell: TextRange,
+  candidates: readonly TextRange[]
+): boolean {
+  // "Colour 150a", "Colour: 150a" and "Colour — 150a" all supply the same identity.
+  const remainder = expression.slice(shell.end).replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+  if (!remainder) return false;
+  if (specificationIsNonExhaustive(remainder)) return false;
+
+  if (specificationIsCodeOnly(remainder)) {
+    if (isRangeFree(ctx.covered, start, end)) {
+      markRange(ctx.covered, start, end);
+      const term = ctx.text.slice(start, end);
+      const decodedName = decodeCodedTerm(remainder);
+      ctx.matches.push({ term, presentationClass: 'coded', ...(decodedName && { decodedName }) });
+    } else {
+      // The code was already counted (e.g. "Colour E150a"); only suppress the shell.
+      markRange(ctx.covered, start + shell.start, start + shell.end);
+    }
+    return true;
+  }
+
+  if (!hasSpecifyingWord(ctx, start, expression, candidates, shell.end)) return false;
+
+  markRange(ctx.covered, start + shell.start, start + shell.end);
+  const identity = trimRange(ctx.text, start + shell.end, end);
+  if (identity.end > identity.start) analyzeBareExpression(ctx, identity.start, identity.end);
+  return true;
+}
+
+/**
  * Governed phrase matching for one unresolved bare expression (an item head or a tail
  * fragment). Longest phrase first; a match only counts when it is the whole unresolved
- * expression, or an additive-category shell heading an otherwise unresolved expression.
+ * expression, or an additive-category shell whose additive identity is still unresolved.
  */
 function analyzeBareExpression(ctx: ScanContext, start: number, end: number): void {
   const expression = ctx.lower.slice(start, end);
@@ -636,13 +709,14 @@ function analyzeBareExpression(ctx: ScanContext, start: number, end: number): vo
 
   if (candidates.length === 0) return;
 
-  if (expressionIsFullyGoverned(ctx, start, expression, candidates)) {
-    commitBroadGenericMatches(ctx, start, candidates);
+  const categoryShell = candidates.find((c) => c.start === 0 && ADDITIVE_CLASS_SET.has(c.phrase));
+  if (categoryShell && resolveInlineClassShell(ctx, start, end, expression, categoryShell, candidates)) {
     return;
   }
 
-  const categoryShell = candidates.find((c) => c.start === 0 && ADDITIVE_CLASS_SET.has(c.phrase));
-  if (categoryShell) commitBroadGenericMatches(ctx, start, [categoryShell]);
+  if (expressionIsFullyGoverned(ctx, start, expression, candidates)) {
+    commitBroadGenericMatches(ctx, start, candidates);
+  }
 }
 
 function analyzeRange(ctx: ScanContext, from: number, to: number): void {
@@ -659,6 +733,10 @@ function analyzeItem(ctx: ScanContext, item: ParsedIngredientItem): void {
   const allSpecificationsCoded =
     hasSpecification &&
     item.groups.every((g) => specificationIsCodeOnly(ctx.text.slice(g.start, g.end)));
+  // "contains / may contain / including" names an example, so it cannot resolve the shell.
+  const hasDirectSpecification =
+    hasSpecification &&
+    item.groups.some((g) => !specificationIsNonExhaustive(ctx.text.slice(g.start, g.end)));
 
   // Additive category disclosed only by code, e.g. "Thickeners (471)": one coded flag for
   // the shell + its specification, never both.
@@ -676,7 +754,7 @@ function analyzeItem(ctx: ScanContext, item: ParsedIngredientItem): void {
   // category shell, then assess the specification for any governed terms left inside it.
   if (
     headOnlyBare &&
-    hasSpecification &&
+    hasDirectSpecification &&
     !allSpecificationsCoded &&
     RESOLVABLE_CATEGORY_HEADS.has(headLower)
   ) {

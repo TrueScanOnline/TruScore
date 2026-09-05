@@ -103,6 +103,8 @@ describe('Open Pillar v15', () => {
   test('generic vs code-dependent vs named-additive examples', () => {
     expect(countHiddenTermHitsInToken('emulsifier (471)')).toBe(1);
     expect(countHiddenTermHitsInToken('emulsifier (soy lecithin)')).toBe(0);
+    expect(countHiddenTermHitsInToken('emulsifier soy lecithin')).toBe(0);
+    expect(countHiddenTermHitsInToken('colour 150a')).toBe(1);
     expect(countHiddenTermHitsInToken('E621')).toBe(1);
     expect(countHiddenTermHitsInToken('monosodium glutamate')).toBe(0);
     expect(countHiddenTermHitsInToken('flavour enhancer (MSG)')).toBe(0);
@@ -526,5 +528,52 @@ describe('Open v15 ingredient clarity after governed-term matcher correction', (
     expect(result.adjustments.some((a) => a.id === 'open-v15-ing-clarity-one' && a.value === -2)).toBe(
       true
     );
+  });
+
+  test('class+identity wording without brackets earns the zero-flag clarity credit', () => {
+    const result = calculateOpenPillar(
+      product(
+        'Water, Emulsifier Soy Lecithin, Thickener Xanthan Gum, Preservative Potassium Sorbate, Antioxidant Ascorbic Acid, Acidity Regulator Citric Acid, Salt'
+      )
+    );
+    expect(result.details.governedFlagCount).toBe(0);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-ing-clarity-zero' && a.value === 1)).toBe(
+      true
+    );
+    expect(result.score).toBe(16);
+  });
+
+  test('code-only class specification costs exactly one coded clarity flag', () => {
+    const result = calculateOpenPillar(product('Water, Colour 150a, Salt'));
+    expect(result.details.governedFlagCount).toBe(1);
+    const clarity = result.adjustments.find((a) => a.id === 'open-v15-ing-clarity-one');
+    expect(clarity?.value).toBe(-2);
+    expect(clarity?.metadata?.termPresentationClass).toBe('coded');
+  });
+
+  test('founder UAT fixture 1 scores one governed flag (Spices only)', () => {
+    const result = calculateOpenPillar(
+      product(
+        'Water, Soy Protein, Coconut Oil, Potato Starch, Canola Oil, Methylcellulose, Sausage Casing (Sodium Alginate, Calcium Chloride), Yeast Extract, Maltodextrin, Spices, Salt, Sugar, Citric Acid, Potassium Sorbate.'
+      )
+    );
+    expect(result.details.governedFlagCount).toBe(1);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-ing-clarity-one' && a.value === -2)).toBe(
+      true
+    );
+    expect(result.score).toBe(13);
+  });
+
+  test('founder UAT fixture 2 scores one governed flag (Flavours only)', () => {
+    const result = calculateOpenPillar(
+      product(
+        'Water, Plant Protein 25% (Soy), Vegetable Oils, Thickeners (Methyl Cellulose, Modified Corn Starch, Gellan Gum (Contains Soy), Carrageenan), Vinegar, Colours (Burnt Sugar, Beetroot Powder), Flavours (Contains Glutamic Acid), Cultured Sugar (From Cane), Yeast Extract, Dextrose, Salt, Onion Powder, Iron, Vitamin B12.'
+      )
+    );
+    expect(result.details.governedFlagCount).toBe(1);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-ing-clarity-one' && a.value === -2)).toBe(
+      true
+    );
+    expect(result.score).toBe(13);
   });
 });

@@ -5,6 +5,12 @@
  * unresolved ingredient/category expression, never against a fragment of a more specific
  * phrase. Open v15 adjustment IDs and points (+1 / -2 / -4 / -6) are unchanged; only
  * whether a governed clarity flag legitimately fires moves.
+ *
+ * v0.4 adds the founder-locked category/function-shell boundary: a class shell is resolved
+ * by an identity supplied in the same item with or without brackets, a code-only identity
+ * yields one coded flag instead of the shell, a non-exhaustive "contains / may contain /
+ * including" qualifier never resolves the shell, and the two founder UAT packet strings are
+ * locked as mandatory full-string fixtures.
  */
 
 import {
@@ -172,11 +178,6 @@ describe('Open v15 governed-term matcher — unresolved terms still fire', () =>
     expect(nonFiring).toEqual([]);
   });
 
-  it('an additive category heading an otherwise unresolved expression still fires', () => {
-    expect(countHiddenTermHitsInToken('Emulsifier Soy Lecithin')).toBe(1);
-    expect(countHiddenTermHitsInToken('Colour 150a')).toBe(1);
-  });
-
   it('multiple unresolved governed terms in one item each fire', () => {
     expect(countHiddenTermHitsInToken('herbs and spices')).toBe(2);
     expect(countOpenPillarHiddenTermHits('natural flavor, aroma, smoke flavouring')).toBe(3);
@@ -253,5 +254,228 @@ describe('Open v15 governed-term matcher — retained specificity behaviours', (
     expect(countHiddenTermHitsInToken('E621')).toBe(1);
     expect(countHiddenTermHitsInToken('INS 322')).toBe(1);
     expect(countHiddenTermHitsInToken('en:e330')).toBe(1);
+  });
+});
+
+/**
+ * v0.4 class-shell resolution: "The shell is resolved when the same ingredient item
+ * directly identifies the specific substance/additive, whether the identity is supplied in
+ * parentheses/brackets or immediately after the class name."
+ */
+const CLASS_IDENTITY_BEFORE_AFTER: readonly {
+  ingredientsText: string;
+  beforeFlagCount: number;
+  afterFlagCount: number;
+  afterTermPresentationClass: 'broad_generic' | 'coded';
+  reason: string;
+}[] = [
+  {
+    ingredientsText: 'Emulsifier Soy Lecithin',
+    beforeFlagCount: 1,
+    afterFlagCount: 0,
+    afterTermPresentationClass: 'broad_generic',
+    reason: 'class and specific substance both supplied; parentheses are not required',
+  },
+  {
+    ingredientsText: 'Thickener Xanthan Gum',
+    beforeFlagCount: 1,
+    afterFlagCount: 0,
+    afterTermPresentationClass: 'broad_generic',
+    reason: 'class and specific substance both supplied; parentheses are not required',
+  },
+  {
+    ingredientsText: 'Preservative Potassium Sorbate',
+    beforeFlagCount: 1,
+    afterFlagCount: 0,
+    afterTermPresentationClass: 'broad_generic',
+    reason: 'class and specific substance both supplied; parentheses are not required',
+  },
+  {
+    ingredientsText: 'Antioxidant Ascorbic Acid',
+    beforeFlagCount: 1,
+    afterFlagCount: 0,
+    afterTermPresentationClass: 'broad_generic',
+    reason: 'class and specific substance both supplied; Acid does not fire from Ascorbic Acid',
+  },
+  {
+    ingredientsText: 'Acidity Regulator Citric Acid',
+    beforeFlagCount: 1,
+    afterFlagCount: 0,
+    afterTermPresentationClass: 'broad_generic',
+    reason: 'class and specific substance both supplied; Acid does not fire from Citric Acid',
+  },
+  {
+    ingredientsText: 'Colour 150a',
+    beforeFlagCount: 1,
+    afterFlagCount: 1,
+    afterTermPresentationClass: 'coded',
+    reason: 'code-only identity: suppress the broad shell, retain one code-dependent flag',
+  },
+  {
+    ingredientsText: 'Flavour enhancer (621)',
+    beforeFlagCount: 1,
+    afterFlagCount: 1,
+    afterTermPresentationClass: 'coded',
+    reason: 'code-only identity: suppress the broad shell, retain one code-dependent flag',
+  },
+  {
+    ingredientsText: 'Emulsifier (471)',
+    beforeFlagCount: 1,
+    afterFlagCount: 1,
+    afterTermPresentationClass: 'coded',
+    reason: 'code-only identity: suppress the broad shell, retain one code-dependent flag',
+  },
+  {
+    ingredientsText: 'Flavours (Contains Glutamic Acid)',
+    beforeFlagCount: 1,
+    afterFlagCount: 1,
+    afterTermPresentationClass: 'broad_generic',
+    reason: '"Contains" is non-exhaustive and does not fully identify the flavouring substances',
+  },
+];
+
+describe('Open v15 v0.4 — category/function-shell resolution', () => {
+  it('documents before → after flag counts for the class+identity cases', () => {
+    expect(
+      CLASS_IDENTITY_BEFORE_AFTER.map((f) => [
+        f.ingredientsText,
+        f.beforeFlagCount,
+        countOpenPillarHiddenTermHits(f.ingredientsText),
+      ])
+    ).toEqual([
+      ['Emulsifier Soy Lecithin', 1, 0],
+      ['Thickener Xanthan Gum', 1, 0],
+      ['Preservative Potassium Sorbate', 1, 0],
+      ['Antioxidant Ascorbic Acid', 1, 0],
+      ['Acidity Regulator Citric Acid', 1, 0],
+      ['Colour 150a', 1, 1],
+      ['Flavour enhancer (621)', 1, 1],
+      ['Emulsifier (471)', 1, 1],
+      ['Flavours (Contains Glutamic Acid)', 1, 1],
+    ]);
+  });
+
+  it.each(CLASS_IDENTITY_BEFORE_AFTER)(
+    '"$ingredientsText" produces $afterFlagCount governed flags standalone and in a list',
+    ({ ingredientsText, afterFlagCount }) => {
+      expect(countHiddenTermHitsInToken(ingredientsText)).toBe(afterFlagCount);
+      expect(countOpenPillarHiddenTermHits(`Water, ${ingredientsText}, Salt`)).toBe(afterFlagCount);
+      expect(countOpenPillarHiddenTermHits(`Water; ${ingredientsText}; Salt`)).toBe(afterFlagCount);
+    }
+  );
+
+  it.each(CLASS_IDENTITY_BEFORE_AFTER.filter((f) => f.afterFlagCount > 0))(
+    '"$ingredientsText" is classified $afterTermPresentationClass',
+    ({ ingredientsText, afterTermPresentationClass }) => {
+      expect(assessOpenPillarHiddenTerms(ingredientsText).termPresentationClass).toBe(
+        afterTermPresentationClass
+      );
+    }
+  );
+
+  it.each([
+    'Emulsifier Soy Lecithin',
+    'Emulsifier (Soy Lecithin)',
+    'Thickener Xanthan Gum',
+    'Thickener (Xanthan Gum)',
+    'Preservative Potassium Sorbate',
+    'Antioxidant Ascorbic Acid',
+    'Acidity Regulator Citric Acid',
+    'Colour Caramel',
+    'Flavour enhancer Yeast Extract',
+  ])('direct class+identity "%s" resolves the shell with or without brackets', (token) => {
+    expect(countHiddenTermHitsInToken(token)).toBe(0);
+  });
+
+  it('code-only specification produces one coded flag without double-counting the class', () => {
+    for (const token of ['Emulsifier (471)', 'Colour 150a', 'Flavour enhancer (621)']) {
+      const assessment = assessOpenPillarHiddenTerms(token);
+      expect(assessment.flagCount).toBe(1);
+      expect(assessment.termPresentationClass).toBe('coded');
+    }
+    const inlineCode = assessOpenPillarHiddenTerms('Colour E150a');
+    expect(inlineCode.flagCount).toBe(1);
+    expect(inlineCode.termPresentationClass).toBe('coded');
+  });
+
+  it('a non-exhaustive qualifier does not resolve a broad category', () => {
+    expect(assessOpenPillarHiddenTerms('Flavours (Contains Glutamic Acid)').matchedTerms).toBe(
+      'Flavours'
+    );
+    expect(countHiddenTermHitsInToken('Thickeners (Contains Xanthan Gum)')).toBe(1);
+    expect(countHiddenTermHitsInToken('Thickeners (May Contain Xanthan Gum)')).toBe(1);
+    expect(countHiddenTermHitsInToken('Colours (Including Beetroot Powder)')).toBe(1);
+  });
+
+  it('standalone class shells stay unresolved and keep firing', () => {
+    for (const shell of [
+      'Emulsifier',
+      'Preservative',
+      'Thickener',
+      'Colour',
+      'Antioxidant',
+      'Acidity Regulator',
+      'Flavour enhancer',
+    ]) {
+      expect(countHiddenTermHitsInToken(shell)).toBe(1);
+      expect(assessOpenPillarHiddenTerms(shell).termPresentationClass).toBe('broad_generic');
+    }
+  });
+});
+
+/**
+ * Founder UAT regression fixtures — mandatory full-string tests (v0.4). Abbreviated
+ * substitutes are expressly not sufficient to prove the defects remain closed.
+ */
+const UAT_FIXTURE_1 =
+  'Water, Soy Protein, Coconut Oil, Potato Starch, Canola Oil, Methylcellulose, Sausage Casing (Sodium Alginate, Calcium Chloride), Yeast Extract, Maltodextrin, Spices, Salt, Sugar, Citric Acid, Potassium Sorbate.';
+
+const UAT_FIXTURE_2 =
+  'Water, Plant Protein 25% (Soy), Vegetable Oils, Thickeners (Methyl Cellulose, Modified Corn Starch, Gellan Gum (Contains Soy), Carrageenan), Vinegar, Colours (Burnt Sugar, Beetroot Powder), Flavours (Contains Glutamic Acid), Cultured Sugar (From Cane), Yeast Extract, Dextrose, Salt, Onion Powder, Iron, Vitamin B12.';
+
+describe('Open v15 v0.4 — founder UAT full-string fixtures', () => {
+  it('Fixture 1 matches Spices only', () => {
+    const assessment = assessOpenPillarHiddenTerms(UAT_FIXTURE_1);
+    expect(assessment.flagCount).toBe(1);
+    expect(assessment.matchedTerms).toBe('Spices');
+    expect(assessment.termPresentationClass).toBe('broad_generic');
+  });
+
+  it('Fixture 2 matches Flavours only', () => {
+    const assessment = assessOpenPillarHiddenTerms(UAT_FIXTURE_2);
+    expect(assessment.flagCount).toBe(1);
+    expect(assessment.matchedTerms).toBe('Flavours');
+    expect(assessment.termPresentationClass).toBe('broad_generic');
+  });
+
+  it.each([
+    ['Fixture 1', UAT_FIXTURE_1],
+    ['Fixture 2', UAT_FIXTURE_2],
+  ])('%s takes exactly the one-flag ingredient-clarity adjustment', (_label, text) => {
+    const result = calculateOpenPillar(productWith(text));
+    expect(result.details.governedFlagCount).toBe(1);
+    expect(
+      result.adjustments.some((a) => a.id === 'open-v15-ing-clarity-one' && a.value === -2)
+    ).toBe(true);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-ing-clarity-two')).toBe(false);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-ing-clarity-three-plus')).toBe(false);
+  });
+
+  it('Fixture 1 does not fire Extract from Yeast Extract or Acid from Citric Acid', () => {
+    const terms = assessOpenPillarHiddenTerms(UAT_FIXTURE_1).matches.map((m) =>
+      m.term.toLowerCase()
+    );
+    expect(terms).not.toContain('extract');
+    expect(terms).not.toContain('acid');
+  });
+
+  it('Fixture 2 resolves the directly specified Thickeners and Colours shells', () => {
+    const terms = assessOpenPillarHiddenTerms(UAT_FIXTURE_2).matches.map((m) =>
+      m.term.toLowerCase()
+    );
+    expect(terms).not.toContain('thickeners');
+    expect(terms).not.toContain('colours');
+    expect(terms).not.toContain('extract');
+    expect(terms).not.toContain('acid');
   });
 });
