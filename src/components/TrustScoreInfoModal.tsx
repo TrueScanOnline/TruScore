@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import InfoModal from './InfoModal';
 import { useTheme } from '../theme';
 import { ProductWithTrustScore } from '../types/product';
+import { consumerPillarLabel } from '../lib/scoreHighlights';
 
 interface TruScoreInfoModalProps {
   visible: boolean;
@@ -25,7 +26,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
       iconColor={colors.primary}
     >
       <Text style={[styles.description, { color: colors.textSecondary }]}>
-        {t('infoModal.trustScore.description') || 'Rveel Score is a comprehensive rating (0-100) based entirely on recognized public systems. Four equal pillars (25 points each): Body, Planet, Ethics, and Open.'}
+        {t('infoModal.trustScore.description') || 'Rveel Score is a comprehensive rating (0-100) based entirely on recognized public systems. Four equal pillars (25 points each): Body, Planet, Claims, and Transparency.'}
       </Text>
 
       <View style={styles.section}>
@@ -46,7 +47,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           </View>
           <View style={styles.formulaContent}>
             <Text style={[styles.formulaText, { color: colors.text }]}>
-              {t('infoModal.trustScore.formula') || 'Rveel Score = Body (25) + Planet (25) + Ethics (25) + Open (25) = 0-100'}
+              {t('infoModal.trustScore.formula') || 'Rveel Score = Body (25) + Planet (25) + Claims (25) + Transparency (25) = 0-100'}
             </Text>
             <Text style={[styles.formulaSubtext, { color: colors.textSecondary }]}>
               100% based on recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels)
@@ -58,7 +59,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                   <Text style={styles.formulaFlagText}>25</Text>
                 </View>
                 <Text style={[styles.formulaLabel, { color: colors.textSecondary }]}>
-                  {t('result.body')} - Nutri-Score + NOVA + additives
+                  {consumerPillarLabel('Body')} - Nutri-Score + NOVA + additives
                 </Text>
               </View>
               <View style={styles.formulaRow}>
@@ -67,7 +68,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                   <Text style={styles.formulaFlagText}>25</Text>
                 </View>
                 <Text style={[styles.formulaLabel, { color: colors.textSecondary }]}>
-                  {t('result.planet')} - Eco-Score (v19); packaging fallback only if Eco-Score missing
+                  {consumerPillarLabel('Planet')} - Eco-Score (v19); packaging fallback only if Eco-Score missing
                 </Text>
               </View>
               <View style={styles.formulaRow}>
@@ -76,7 +77,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                   <Text style={styles.formulaFlagText}>25</Text>
                 </View>
                 <Text style={[styles.formulaLabel, { color: colors.textSecondary }]}>
-                  {t('result.ethics')} - Certifications + ethical labels
+                  {consumerPillarLabel('Ethics')} - Certifications + ethical labels
                 </Text>
               </View>
               <View style={styles.formulaRow}>
@@ -85,7 +86,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                   <Text style={styles.formulaFlagText}>25</Text>
                 </View>
                 <Text style={[styles.formulaLabel, { color: colors.textSecondary }]}>
-                  {t('result.open')} - Ingredient disclosure transparency
+                  {consumerPillarLabel('Open')} - Ingredient disclosure transparency
                 </Text>
               </View>
             </View>
@@ -118,7 +119,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>3</Text>
             </View>
             <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.step3') || 'Calculate Ethics score (0-25) using certifications, animal cruelty detection, labor violations, and recalls. Base 15, certifications up to +15, penalties for violations.'}
+              {t('infoModal.trustScore.step3') || 'Calculate Claims score (0-25) using certifications, animal cruelty detection, labor violations, and recalls. Base 15, certifications up to +15, penalties for violations.'}
             </Text>
           </View>
           <View style={styles.stepItem}>
@@ -126,7 +127,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>4</Text>
             </View>
             <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.step4') || 'Calculate Open score (0-25) by detecting hidden ingredient terms (parfum, fragrance, proprietary blend)'}
+              {t('infoModal.trustScore.step4') || 'Calculate Transparency score (0-25) by detecting hidden ingredient terms (parfum, fragrance, proprietary blend)'}
             </Text>
           </View>
           <View style={styles.stepItem}>
@@ -134,7 +135,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>5</Text>
             </View>
             <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.step5') || 'Sum all four pillars: Rveel Score = Body + Planet + Ethics + Open (0-100 total)'}
+              {t('infoModal.trustScore.step5') || 'Sum all four pillars: Rveel Score = Body + Planet + Claims + Transparency (0-100 total)'}
             </Text>
           </View>
         </View>
@@ -254,7 +255,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           <View style={styles.categoryContent}>
             <View style={styles.categoryHeader}>
               <Text style={[styles.categoryTitle, { color: colors.text }]}>
-                {t('result.planet')}
+                {consumerPillarLabel('Planet')}
               </Text>
               <View style={[styles.categoryWeight, { backgroundColor: '#16a085' }]}>
                 <Text style={styles.categoryWeightText}>25</Text>
@@ -294,7 +295,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           <View style={styles.categoryContent}>
             <View style={styles.categoryHeader}>
               <Text style={[styles.categoryTitle, { color: colors.text }]}>
-                {t('result.ethics')}
+                {consumerPillarLabel('Ethics')}
               </Text>
               <View style={[styles.categoryWeight, { backgroundColor: '#ff6b6b' }]}>
                 <Text style={styles.categoryWeightText}>25</Text>
@@ -340,7 +341,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           <View style={styles.categoryContent}>
             <View style={styles.categoryHeader}>
               <Text style={[styles.categoryTitle, { color: colors.text }]}>
-                {t('result.body')}
+                {consumerPillarLabel('Body')}
               </Text>
               <View style={[styles.categoryWeight, { backgroundColor: '#4dd09f' }]}>
                 <Text style={styles.categoryWeightText}>25</Text>
@@ -386,7 +387,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           <View style={styles.categoryContent}>
             <View style={styles.categoryHeader}>
               <Text style={[styles.categoryTitle, { color: colors.text }]}>
-                {t('result.open')}
+                {consumerPillarLabel('Open')}
               </Text>
               <View style={[styles.categoryWeight, { backgroundColor: '#9b59b6' }]}>
                 <Text style={styles.categoryWeightText}>25</Text>
@@ -467,16 +468,16 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             • Base score: 15 (neutral until data adjusts it){'\n'}
             • BBFAW 2024: tier and impact rating adjustments (animal welfare governance & outcomes){'\n'}
             • KnowTheChain Food & Beverage benchmark: total benchmark score bands (labour / supply chain){'\n'}
-            • Certifications (OFF labels + optional MSC API): Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Organic +2 — highest eligible scheme only in MVP (no stacking); RSPO does not contribute Ethics points{'\n'}
+            • Certifications (OFF labels + optional MSC API): Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Organic +2 — highest eligible scheme only in MVP (no stacking); RSPO does not contribute Claims points{'\n'}
             • Organic requires a recognised certifier signal; MSC positive credit follows the MSC Data Validation API when enabled{'\n'}
-            • Final Ethics pillar is floored at 0 and capped at 25{'\n'}
-            • Source: ETHICS Pillar spec sheet + BBFAW report + KnowTheChain + Open Food Facts (+ MSC API when licensed)
+            • Final Claims pillar is floored at 0 and capped at 25{'\n'}
+            • Source: Claims Pillar spec sheet + BBFAW report + KnowTheChain + Open Food Facts (+ MSC API when licensed)
           </Text>
         </View>
 
         <View style={[styles.sourceBox, { backgroundColor: '#9b59b6' + '15', borderColor: '#9b59b6', marginTop: 12 }]}>
           <Text style={[styles.sourceTitle, { color: colors.text }]}>
-            {t('infoModal.trustScore.openSource') || 'Open Pillar (0-25 points)'}
+            {t('infoModal.trustScore.openSource') || 'Transparency Pillar (0-25 points)'}
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
             • Ingredient Text Analysis (Open Food Facts) - Hidden term detection{'\n'}
@@ -513,7 +514,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('trust.excellent') || 'Excellent'} - 80-100 points
             </Text>
             <Text style={[styles.scoreDescription, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.excellentDesc') || 'Outstanding quality across all 4 pillars (Body, Planet, Ethics, Open). These products excel in nutrition, sustainability, ethics, and transparency.'}
+              {t('infoModal.trustScore.excellentDesc') || 'Outstanding quality across all 4 pillars (Body, Planet, Claims, Transparency). These products excel in nutrition, sustainability, ethical signals, and disclosure.'}
             </Text>
           </View>
         </View>
@@ -555,7 +556,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('trust.poor') || 'Poor'} - 0-39 points
             </Text>
             <Text style={[styles.scoreDescription, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.poorDesc') || 'Below-average quality. These products may have significant issues in Body safety, Planet sustainability, Ethics, or Open transparency.'}
+              {t('infoModal.trustScore.poorDesc') || 'Below-average quality. These products may have significant issues in Body safety, Planet sustainability, Claims, or Transparency.'}
             </Text>
           </View>
         </View>

@@ -19,6 +19,7 @@ import {
   RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
   RVEEL_SCORE_UNAVAILABLE_TITLE,
 } from '../utils/truScorePresentation';
+import { consumerPillarLabel } from '../lib/scoreHighlights';
 
 export interface ShareCardOptions {
   product: ProductWithTrustScore;
@@ -122,11 +123,12 @@ export function generateShareMessage(
   }
   
   if (breakdown) {
+    // Consumer pillar labels (Ethics → Claims, Open → Transparency); internal keys unchanged.
     message += `Breakdown:\n`;
-    message += `• Body: ${breakdown.Body}/25\n`;
-    message += `• Planet: ${breakdown.Planet}/25\n`;
-    message += `• Ethics: ${breakdown.Ethics}/25\n`;
-    message += `• Open: ${breakdown.Open}/25\n\n`;
+    message += `• ${consumerPillarLabel('Body')}: ${breakdown.Body}/25\n`;
+    message += `• ${consumerPillarLabel('Planet')}: ${breakdown.Planet}/25\n`;
+    message += `• ${consumerPillarLabel('Ethics')}: ${breakdown.Ethics}/25\n`;
+    message += `• ${consumerPillarLabel('Open')}: ${breakdown.Open}/25\n\n`;
   }
   
   if (truScore?.insights && truScore.insights.length > 0) {

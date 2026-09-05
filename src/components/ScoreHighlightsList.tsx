@@ -27,17 +27,18 @@ interface ScoreHighlightsListProps {
   onSelectStory: (story: ScoreHighlightStory) => void;
   /** Omit the locked heading when the host already renders it (e.g. a sheet header). */
   showHeading?: boolean;
-  /** Neutral empty state. Never manufacture a story when nothing eligible fired. */
-  emptyText?: string;
 }
 
 export default function ScoreHighlightsList({
   stories,
   onSelectStory,
   showHeading = true,
-  emptyText,
 }: ScoreHighlightsListProps) {
   const { colors, darkMode } = useTheme();
+
+  // Fail closed: with no eligible Highlight there is nothing governed to say, so the list renders
+  // nothing at all rather than manufacturing generic commentary or an empty heading.
+  if (stories.length === 0) return null;
 
   return (
     <View style={styles.container}>
@@ -45,38 +46,32 @@ export default function ScoreHighlightsList({
         <Text style={[styles.heading, { color: colors.text }]}>{SCORE_HIGHLIGHTS_HEADING}</Text>
       )}
 
-      {stories.length === 0 ? (
-        <Text style={[styles.empty, { color: colors.textSecondary }]}>
-          {emptyText ?? 'Nothing stood out for this product yet.'}
-        </Text>
-      ) : (
-        stories.map((story) => {
-          const bandStyle = scoreHighlightBandStyle(story.band, darkMode);
-          return (
-            <TouchableOpacity
-              key={`${story.pillar}-${story.storyKey}`}
-              onPress={() => onSelectStory(story)}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={story.l1}
-              style={[
-                styles.row,
-                { backgroundColor: bandStyle.background, borderLeftColor: bandStyle.accent },
-              ]}
-            >
-              <Text style={[styles.rowTitle, { color: colors.text }]}>{story.l1}</Text>
-              <Ionicons
-                name={scoreHighlightDirectionGlyph(story.sign)}
-                size={16}
-                color={bandStyle.accent}
-                accessible={false}
-                importantForAccessibility="no"
-                style={styles.glyph}
-              />
-            </TouchableOpacity>
-          );
-        })
-      )}
+      {stories.map((story) => {
+        const bandStyle = scoreHighlightBandStyle(story.band, darkMode);
+        return (
+          <TouchableOpacity
+            key={`${story.pillar}-${story.storyKey}`}
+            onPress={() => onSelectStory(story)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={story.l1}
+            style={[
+              styles.row,
+              { backgroundColor: bandStyle.background, borderLeftColor: bandStyle.accent },
+            ]}
+          >
+            <Text style={[styles.rowTitle, { color: colors.text }]}>{story.l1}</Text>
+            <Ionicons
+              name={scoreHighlightDirectionGlyph(story.sign)}
+              size={16}
+              color={bandStyle.accent}
+              accessible={false}
+              importantForAccessibility="no"
+              style={styles.glyph}
+            />
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -89,10 +84,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
-  },
-  empty: {
-    fontSize: 14,
-    lineHeight: 20,
   },
   row: {
     flexDirection: 'row',

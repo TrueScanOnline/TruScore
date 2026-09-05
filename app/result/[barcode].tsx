@@ -75,6 +75,7 @@ import CameraCaptureModal from '../../src/components/CameraCaptureModal';
 import { useSettingsStore } from '../../src/store/useSettingsStore';
 import { shouldShowScoreDiagnosticsEntry } from '../../src/config/scoreDiagnostics';
 import ScoreHighlightsList from '../../src/components/ScoreHighlightsList';
+import { resultPillarBreakdown } from '../../src/utils/resultPillarBreakdown';
 import ScoreHighlightsLookThroughModal, {
   type ScoreHighlightsLookThroughRequest,
 } from '../../src/components/ScoreHighlightsLookThroughModal';
@@ -460,12 +461,9 @@ function ResultScreenContent() {
         
         const score: TruScoreResult = {
           truscore: product.trust_score,
-          breakdown: {
-            Body: product.trust_score_breakdown.body ?? 0,
-            Planet: product.trust_score_breakdown.planet ?? 0,
-            Ethics: product.trust_score_breakdown.ethics ?? 0,
-            Open: product.trust_score_breakdown.open ?? 0,
-          },
+          // Null-score integrity: an unavailable pillar stays null end-to-end into TruScore.
+          // A genuine 0 stays 0; nothing is coerced, so no pillar can surface as a fabricated 0/25.
+          breakdown: resultPillarBreakdown(product.trust_score_breakdown),
           hasNutriScore: product._truscore_metadata?.hasNutriScore,
           hasEcoScore: product._truscore_metadata?.hasEcoScore,
           hasOrigin: product._truscore_metadata?.hasOrigin,

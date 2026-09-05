@@ -213,11 +213,15 @@ export default function ScoreHighlightsLookThroughModal({
           <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
             {current.kind === 'pillar' ? (
               <>
+                {/*
+                  Where contextual prompts exist they alone carry the pillar state; where neither an
+                  eligible Highlight nor a contextual prompt qualifies, the body stays empty. No
+                  parallel empty-state sentence is rendered in either case.
+                */}
                 <ScoreHighlightsList
                   stories={pillarStories}
                   onSelectStory={handleSelectStory}
                   showHeading={false}
-                  emptyText={`Nothing stood out for ${consumerPillarLabel(current.pillar)} on this product.`}
                 />
                 {contextualPrompts.length > 0 && (
                   <View style={[styles.contextArea, { borderTopColor: colors.border }]}>

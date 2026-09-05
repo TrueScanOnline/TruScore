@@ -10,6 +10,10 @@ import type { Product, ProductWithTrustScore } from '../types/product';
 import type { BannerAlert } from '../types/bannerAlerts';
 import type { EthicsPillarResult } from '../lib/truscoreEngine/pillars/ethicsPillar';
 import { calculateEthicsPillar } from '../lib/truscoreEngine/pillars/ethicsPillar';
+import { consumerPillarLabel } from '../lib/scoreHighlights';
+
+/** Consumer pillar name. Internal pillar key, adjustment IDs and dedupe keys stay Ethics. */
+const CONSUMER_PILLAR = consumerPillarLabel('Ethics');
 
 const BBFAW_REF = 'https://www.bbfaw.com/food-companies/';
 const KTC_REF = 'https://www.business-humanrights.org/en/companies/';
@@ -54,12 +58,12 @@ export function buildEthicsPillarBannerAlerts(
       category: 'animal_cruelty',
       signalClass: 'B',
       dedupeKey: `transparency:ethics:bbfaw:${barcode}`,
-      title: 'Animal welfare (BBFAW) — Ethics pillar',
-      message: `This matches your Rveel Score Ethics pillar (same BBFAW tier/impact as the spec sheet): ${detail}. Tap for official BBFAW reference.`,
+      title: `Animal welfare (BBFAW) — ${CONSUMER_PILLAR} pillar`,
+      message: `This matches your Rveel Score ${CONSUMER_PILLAR} pillar (same BBFAW tier/impact as the spec sheet): ${detail}. Tap for official BBFAW reference.`,
       severity: severityFromNegativeTotal(total),
       timestamp: Date.now(),
       actionUrl,
-      sourceDetails: { organization: 'BBFAW (Ethics pillar v37)' },
+      sourceDetails: { organization: `BBFAW (${CONSUMER_PILLAR} pillar v37)` },
     });
   }
 
@@ -68,7 +72,7 @@ export function buildEthicsPillarBannerAlerts(
     const total = ktcNeg.reduce((s, a) => s + a.value, 0);
     const detail = ktcNeg.map((a) => `${a.description} (${a.value})`).join(' ');
     const actionUrl = ktcNeg.find((a) => a.referenceUrl)?.referenceUrl ?? KTC_REF;
-    let message = `This matches your Rveel Score Ethics pillar (KnowTheChain 2026 benchmark used in scoring): ${detail}. Tap for reference.`;
+    let message = `This matches your Rveel Score ${CONSUMER_PILLAR} pillar (KnowTheChain 2026 benchmark used in scoring): ${detail}. Tap for reference.`;
     if (opts?.mentionForcedLabourPreference) {
       message +=
         ' This also relates to your alert preference to avoid forced or child labour concerns.';
@@ -79,12 +83,12 @@ export function buildEthicsPillarBannerAlerts(
       category: 'labor_violations',
       signalClass: 'B',
       dedupeKey: `transparency:ethics:ktc:${barcode}`,
-      title: 'Supply chain labour (KTC) — Ethics pillar',
+      title: `Supply chain labour (KTC) — ${CONSUMER_PILLAR} pillar`,
       message,
       severity: severityFromNegativeTotal(total),
       timestamp: Date.now(),
       actionUrl,
-      sourceDetails: { organization: 'KnowTheChain / BHRRC (Ethics pillar v37)' },
+      sourceDetails: { organization: `KnowTheChain / BHRRC (${CONSUMER_PILLAR} pillar v37)` },
     });
   }
 

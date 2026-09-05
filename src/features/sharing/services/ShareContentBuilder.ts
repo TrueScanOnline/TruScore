@@ -16,6 +16,7 @@ import {
   RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
   RVEEL_SCORE_UNAVAILABLE_TITLE,
 } from '../../../utils/truScorePresentation';
+import { consumerPillarLabel } from '../../../lib/scoreHighlights';
 
 const scoreName = productIdentity.publicScoreName;
 const appName = productIdentity.displayName;
@@ -115,10 +116,13 @@ export class ShareContentBuilder {
     
     if (score >= 80) {
       hook = `🌟 ${productName}`;
-      curiosityGap = `Strong ${scoreName} (${score}/100) — open the app for the four-pillar breakdown (Body, Planet, Ethics, Open).`;
+      curiosityGap =
+        `Strong ${scoreName} (${score}/100) — open the app for the four-pillar breakdown ` +
+        `(${consumerPillarLabel('Body')}, ${consumerPillarLabel('Planet')}, ` +
+        `${consumerPillarLabel('Ethics')}, ${consumerPillarLabel('Open')}).`;
     } else if (score >= 60) {
       hook = `✅ Scanned ${productName}`;
-      curiosityGap = `${scoreName} ${score}/100 — see nutrition, planet, ethics & transparency details in ${appName}.`;
+      curiosityGap = `${scoreName} ${score}/100 — see nutrition, planet, claims & disclosure details in ${appName}.`;
     } else if (score >= 40) {
       hook = `⚠️ ${productName}`;
       curiosityGap = `${scoreName} ${score}/100 — review what drove the score in the app before you buy.`;
@@ -131,11 +135,12 @@ export class ShareContentBuilder {
     let message = `${hook}\n\n${curiosityGap}\n\n` +
       `📊 ${scoreName}: ${score}/100\n`;
     if (breakdown) {
+      // Consumer pillar labels (Ethics → Claims, Open → Transparency); internal keys unchanged.
       message +=
-        `• Body: ${breakdown.Body}/25\n` +
-        `• Planet: ${breakdown.Planet}/25\n` +
-        `• Ethics: ${breakdown.Ethics}/25\n` +
-        `• Open: ${breakdown.Open}/25\n`;
+        `• ${consumerPillarLabel('Body')}: ${breakdown.Body}/25\n` +
+        `• ${consumerPillarLabel('Planet')}: ${breakdown.Planet}/25\n` +
+        `• ${consumerPillarLabel('Ethics')}: ${breakdown.Ethics}/25\n` +
+        `• ${consumerPillarLabel('Open')}: ${breakdown.Open}/25\n`;
     }
     message +=
       `\n🔍 Tap to see the full breakdown\n` +

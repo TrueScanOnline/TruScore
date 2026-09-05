@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../src/theme';
+import { consumerPillarLabel } from '../src/lib/scoreHighlights';
 import { RootStackParamList } from './_layout';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -41,11 +42,11 @@ export default function MethodologyScreen() {
         {/* Body pillar */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t('methodology.bodyTitle') || 'Body pillar (0–25)'}
+            {t('methodology.bodyTitle') || `${consumerPillarLabel('Body')} pillar (0–25)`}
           </Text>
           <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
             {t('methodology.bodyText') ||
-              'The Body pillar estimates how well the product aligns with widely-accepted nutrition guidance. ' +
+              `The ${consumerPillarLabel('Body')} pillar estimates how well the product aligns with widely-accepted nutrition guidance. ` +
                 'Inputs may include energy density, saturated fat, sugar, salt, fibre and other nutrients, as well ' +
                 'as the presence of certain additives or allergens. Rveel uses public frameworks and regulatory ' +
                 'thresholds as references, but does not claim to be an official Nutri-Score or any government rating.'}
@@ -55,11 +56,11 @@ export default function MethodologyScreen() {
         {/* Planet pillar */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t('methodology.planetTitle') || 'Planet pillar (0–25)'}
+            {t('methodology.planetTitle') || `${consumerPillarLabel('Planet')} pillar (0–25)`}
           </Text>
           <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
             {t('methodology.planetText') ||
-              'Planet pillar (Rveel v19): starts at 15. When Open Food Facts provides an Eco-Score letter (A–E), ' +
+              `${consumerPillarLabel('Planet')} pillar (Rveel v19): starts at 15. When Open Food Facts provides an Eco-Score letter (A–E), ` +
                 'the pillar applies the official v19 mapping (+7, +3, −1, −3, −7). Packaging is not scored separately ' +
                 'when Eco-Score is present. If Eco-Score is missing, a conservative packaging fallback (+2, +1, or 0) ' +
                 'may apply using structured packaging data and AU/NZ kerbside recycling rules (Annex v2). Palm oil ' +
@@ -67,14 +68,14 @@ export default function MethodologyScreen() {
           </Text>
         </View>
 
-        {/* Ethics pillar */}
+        {/* Ethics pillar — presented to consumers as Claims */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t('methodology.ethicsTitle') || 'Ethics pillar (0–25)'}
+            {t('methodology.ethicsTitle') || `${consumerPillarLabel('Ethics')} pillar (0–25)`}
           </Text>
           <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
             {t('methodology.ethicsText') ||
-              'The Ethics pillar reflects signals about company and brand behaviour. This may include public ' +
+              `The ${consumerPillarLabel('Ethics')} pillar reflects signals about company and brand behaviour. This may include public ` +
                 'information about recalls, labour controversies, animal welfare certifications, and other ' +
                 'documented issues or recognitions. Rveel does not conduct its own investigations; it organises ' +
                 'and weights information from public, cited sources and applies precautionary penalties where there ' +
@@ -82,14 +83,14 @@ export default function MethodologyScreen() {
           </Text>
         </View>
 
-        {/* Open pillar */}
+        {/* Open pillar — presented to consumers as Transparency */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t('methodology.openTitle') || 'Open pillar (0–25)'}
+            {t('methodology.openTitle') || `${consumerPillarLabel('Open')} pillar (0–25)`}
           </Text>
           <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
             {t('methodology.openText') ||
-              'The Open pillar estimates how transparent the product and label appear to be. It looks for signals ' +
+              `The ${consumerPillarLabel('Open')} pillar estimates how transparent the product and label appear to be. It looks for signals ` +
                 'such as clearly disclosed ingredient lists, absence of vague umbrella terms, availability of ' +
                 'origin information, and other indicators of openness. Hidden or vague labelling terms may reduce ' +
                 'this score.'}
