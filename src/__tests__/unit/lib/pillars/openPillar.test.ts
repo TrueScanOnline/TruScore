@@ -18,8 +18,8 @@ import {
   OPEN_V15_MVP_UNREACHABLE_ORIGINS_IDS,
 } from '../../../../lib/truscoreEngine/pillars/openPillarV15Registry';
 import {
-  countOpenPillarHiddenTermHits,
   countHiddenTermHitsInToken,
+  countOpenPillarHiddenTermHits,
   tokenizeIngredientsText,
 } from '../../../../lib/truscoreEngine/pillars/openPillarHiddenTerms';
 import { buildTruScoreAnalysis, calculateTruScore } from '../../../../lib/truscoreEngine';
@@ -468,7 +468,63 @@ describe('openPillarHiddenTerms guardrails (v15)', () => {
     expect(t).toEqual(['emulsifier (soy, modified)', 'salt']);
   });
 
+  test('tokenize respects brackets and top-level semicolons', () => {
+    expect(tokenizeIngredientsText('Water; Thickeners [Methyl Cellulose]; Salt')).toEqual([
+      'Water',
+      'Thickeners [Methyl Cellulose]',
+      'Salt',
+    ]);
+  });
+
   test('allspice does not match spice term', () => {
     expect(countHiddenTermHitsInToken('allspice')).toBe(0);
+  });
+
+  test('governed terms do not fire on fragments of a more specific ingredient head', () => {
+    expect(countHiddenTermHitsInToken('Yeast extract')).toBe(0);
+    expect(countHiddenTermHitsInToken('Citric Acid')).toBe(0);
+    expect(countOpenPillarHiddenTermHits('Water, Yeast extract, Citric Acid, Salt')).toBe(0);
+  });
+
+  test('specifically resolved category shells do not fire a broad category flag', () => {
+    expect(countHiddenTermHitsInToken('Thickeners (Methyl Cellulose)')).toBe(0);
+    expect(countHiddenTermHitsInToken('Colours (Burnt Sugar, Beetroot Powder)')).toBe(0);
+  });
+
+  test('unresolved category and generic terms continue to fire', () => {
+    expect(countHiddenTermHitsInToken('Thickeners')).toBe(1);
+    expect(countHiddenTermHitsInToken('Colours')).toBe(1);
+    expect(countHiddenTermHitsInToken('extract')).toBe(1);
+    expect(countHiddenTermHitsInToken('Vegetable extract')).toBe(1);
+    expect(countHiddenTermHitsInToken('natural flavor')).toBe(1);
+  });
+
+  test('partially resolved category fires only the governed term left inside', () => {
+    expect(countHiddenTermHitsInToken('Thickeners (natural flavor)')).toBe(1);
+  });
+});
+
+describe('Open v15 ingredient clarity after governed-term matcher correction', () => {
+  const product = (ingredients_text: string): Product => ({
+    barcode: '1234567890123',
+    product_name: 'Clarity Fixture',
+    ingredients_text,
+    source: 'test',
+  });
+
+  test('specific named acids and extracts earn the zero-flag clarity credit', () => {
+    const result = calculateOpenPillar(product('Water, Yeast extract, Citric Acid, Salt'));
+    expect(result.details.governedFlagCount).toBe(0);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-ing-clarity-zero' && a.value === 1)).toBe(
+      true
+    );
+  });
+
+  test('unresolved category shell still takes the one-flag clarity penalty', () => {
+    const result = calculateOpenPillar(product('Water, Thickeners, Salt'));
+    expect(result.details.governedFlagCount).toBe(1);
+    expect(result.adjustments.some((a) => a.id === 'open-v15-ing-clarity-one' && a.value === -2)).toBe(
+      true
+    );
   });
 });

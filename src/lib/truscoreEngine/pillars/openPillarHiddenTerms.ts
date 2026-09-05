@@ -2,9 +2,13 @@
  * Open Pillar v15 — governed vague / code-dependent ingredient disclosure flags.
  * Food & beverage MVP: phrase list and match rules from Open_Scoring_Specification_v15.
  *
- * Tokenization: split on commas at parenthesis depth 0 (NFKC-normalized).
- * Matching: whole-word / exact phrase; additive classes only when standalone or with code-only parentheses;
- * generic extract/essence terms exclude named examples from the spec (e.g. vanilla extract).
+ * Parsing: ingredient items are split on top-level `,` / `;` with depth awareness for
+ * `()`, `[]` and `{}`; each item is decomposed into an unresolved head plus any
+ * bracketed specification groups (recursively parsed the same way).
+ * Matching: whole-word / exact phrase against an unresolved head expression, never an
+ * arbitrary substring inside a more specific phrase ("yeast extract", "citric acid").
+ * Additive classes count only when standalone or with code-only specification; generic
+ * extract/essence terms exclude named examples from the spec (e.g. vanilla extract).
  */
 
 import { getAdditiveInfo } from '../../../services/additiveDatabase';
@@ -26,10 +30,10 @@ export interface OpenHiddenTermAssessment {
 }
 
 function decodeCodedTerm(rawTerm: string): string | undefined {
-  const paren = rawTerm.match(/\(([^)]+)\)/);
-  if (paren) {
-    const fromParen = decodeCodedTerm(paren[1]);
-    if (fromParen) return fromParen;
+  const bracketed = rawTerm.match(/[([{]([^)\]}]+)[)\]}]/);
+  if (bracketed) {
+    const fromBracket = decodeCodedTerm(bracketed[1]);
+    if (fromBracket) return fromBracket;
   }
   const compact = rawTerm.replace(/\s+/g, '').toLowerCase();
   let key: string | undefined;
@@ -278,7 +282,16 @@ const ADDITIVE_CLASS_TERMS: string[] = [
   'acid',
 ];
 
-const SORTED_ADDITIVE_CLASSES = [...ADDITIVE_CLASS_TERMS].sort((a, b) => b.length - a.length);
+/** Generic seasoning/spice/herb heads that a composition list can legitimately resolve. */
+const SEASONING_CATEGORY_TERMS: string[] = [
+  'seasoning',
+  'seasonings',
+  'spice',
+  'spices',
+  'herb',
+  'herbs',
+];
+
 /** All disclosure phrases (flavour, spice/herb, extract, additive class) — longest first. */
 const SORTED_ALL_PHRASES = [
   ...GENERIC_FLAVOUR_PHRASES,
@@ -287,9 +300,58 @@ const SORTED_ALL_PHRASES = [
   ...ADDITIVE_CLASS_TERMS,
 ].sort((a, b) => b.length - a.length);
 
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+/** Exported for governed-term coverage tests; not a scoring input on its own. */
+export const OPEN_GOVERNED_TERM_PHRASES: readonly string[] = Object.freeze([...SORTED_ALL_PHRASES]);
+
+const ADDITIVE_CLASS_SET = new Set(ADDITIVE_CLASS_TERMS);
+const RESOLVABLE_CATEGORY_HEADS = new Set([...ADDITIVE_CLASS_TERMS, ...SEASONING_CATEGORY_TERMS]);
+
+/**
+ * Words that carry no ingredient specificity, so a governed term remains the unresolved
+ * expression when only these surround it ("permitted colours", "natural colour").
+ */
+const NON_SPECIFYING_QUALIFIERS = new Set([
+  'added',
+  'approved',
+  'artificial',
+  'assorted',
+  'blended',
+  'certain',
+  'edible',
+  'food',
+  'mixed',
+  'natural',
+  'other',
+  'permitted',
+  'synthetic',
+  'various',
+]);
+
+/** Grammatical glue that never specifies an ingredient. */
+const STRUCTURAL_STOPWORDS = new Set([
+  'a',
+  'an',
+  'and',
+  'as',
+  'both',
+  'contain',
+  'containing',
+  'contains',
+  'each',
+  'for',
+  'from',
+  'in',
+  'include',
+  'includes',
+  'including',
+  'of',
+  'on',
+  'or',
+  'plus',
+  'the',
+  'to',
+  'with',
+]);
 
 /** NFKC + trim (ingredients_text is usually single-line; newlines treated as space). */
 export function normalizeOpenPillarIngredientsText(text: string): string {
@@ -299,31 +361,115 @@ export function normalizeOpenPillarIngredientsText(text: string): string {
     .trim();
 }
 
-/**
- * Split on commas at parenthesis depth 0 (handles "emulsifier (soy, modified), salt").
- */
-export function tokenizeIngredientsText(text: string): string[] {
-  const normalized = normalizeOpenPillarIngredientsText(text);
-  if (!normalized) return [];
+const OPEN_BRACKETS: Record<string, string> = { '(': ')', '[': ']', '{': '}' };
+const CLOSE_BRACKETS = new Set([')', ']', '}']);
+const TOP_LEVEL_SEPARATORS = new Set([',', ';']);
 
-  const tokens: string[] = [];
-  let depth = 0;
-  let start = 0;
+/** Edge punctuation removed per item/head without disturbing internal phrase structure. */
+const EDGE_TRIM_RE = /[\s.,;:!?*†‡•·+/\\_"'\u2018\u2019\u201C\u201D\-\u2013\u2014]/;
 
-  for (let i = 0; i < normalized.length; i++) {
-    const c = normalized[i];
-    if (c === '(') depth++;
-    else if (c === ')') depth = Math.max(0, depth - 1);
-    else if (c === ',' && depth === 0) {
-      const piece = normalized.slice(start, i).trim();
-      if (piece) tokens.push(piece);
-      start = i + 1;
+interface TextRange {
+  start: number;
+  end: number;
+}
+
+interface SpecificationGroup extends TextRange {
+  outerStart: number;
+  outerEnd: number;
+}
+
+interface ParsedIngredientItem extends TextRange {
+  /** Top-level text ranges outside any bracket group; the first one is the head. */
+  bareRanges: TextRange[];
+  groups: SpecificationGroup[];
+}
+
+function trimRange(text: string, start: number, end: number): TextRange {
+  let s = start;
+  let e = end;
+  while (s < e && EDGE_TRIM_RE.test(text[s])) s++;
+  while (e > s && EDGE_TRIM_RE.test(text[e - 1])) e--;
+  return { start: s, end: e };
+}
+
+/** Depth-aware split on top-level `,` and `;` (parentheses, brackets and braces nest). */
+function splitTopLevelRanges(text: string, from: number, to: number): TextRange[] {
+  const parts: TextRange[] = [];
+  const stack: string[] = [];
+  let segmentStart = from;
+
+  for (let i = from; i < to; i++) {
+    const c = text[i];
+    if (OPEN_BRACKETS[c]) {
+      stack.push(OPEN_BRACKETS[c]);
+    } else if (CLOSE_BRACKETS.has(c)) {
+      if (stack.length > 0) stack.pop();
+    } else if (stack.length === 0 && TOP_LEVEL_SEPARATORS.has(c)) {
+      const piece = trimRange(text, segmentStart, i);
+      if (piece.end > piece.start) parts.push(piece);
+      segmentStart = i + 1;
     }
   }
-  const last = normalized.slice(start).trim();
-  if (last) tokens.push(last);
 
-  return tokens;
+  const last = trimRange(text, segmentStart, to);
+  if (last.end > last.start) parts.push(last);
+  return parts;
+}
+
+/** Decompose one item into its unresolved bare text ranges and specification groups. */
+function parseIngredientItem(text: string, start: number, end: number): ParsedIngredientItem {
+  const groups: SpecificationGroup[] = [];
+  const stack: string[] = [];
+  let groupOuterStart = -1;
+
+  for (let i = start; i < end; i++) {
+    const c = text[i];
+    if (OPEN_BRACKETS[c]) {
+      if (stack.length === 0) groupOuterStart = i;
+      stack.push(OPEN_BRACKETS[c]);
+    } else if (CLOSE_BRACKETS.has(c)) {
+      if (stack.length === 0) continue;
+      stack.pop();
+      if (stack.length === 0 && groupOuterStart >= 0) {
+        groups.push({
+          outerStart: groupOuterStart,
+          outerEnd: i + 1,
+          start: groupOuterStart + 1,
+          end: i,
+        });
+        groupOuterStart = -1;
+      }
+    }
+  }
+
+  // Unterminated group: treat the remainder as its specification content.
+  if (stack.length > 0 && groupOuterStart >= 0) {
+    groups.push({
+      outerStart: groupOuterStart,
+      outerEnd: end,
+      start: groupOuterStart + 1,
+      end,
+    });
+  }
+
+  const bareRanges: TextRange[] = [];
+  let cursor = start;
+  for (const group of groups) {
+    const bare = trimRange(text, cursor, group.outerStart);
+    if (bare.end > bare.start) bareRanges.push(bare);
+    cursor = group.outerEnd;
+  }
+  const tail = trimRange(text, cursor, end);
+  if (tail.end > tail.start) bareRanges.push(tail);
+
+  return { start, end, bareRanges, groups };
+}
+
+interface ScanContext {
+  text: string;
+  lower: string;
+  covered: boolean[];
+  matches: OpenHiddenTermMatch[];
 }
 
 function isRangeFree(covered: boolean[], from: number, to: number): boolean {
@@ -337,28 +483,36 @@ function markRange(covered: boolean[], from: number, to: number): void {
   for (let i = from; i < to; i++) covered[i] = true;
 }
 
-function maskExclusions(token: string, covered: boolean[]): void {
+function maskExclusions(ctx: ScanContext): void {
   const apply = (re: RegExp) => {
-    let m: RegExpExecArray | null;
     const r = new RegExp(re.source, re.flags.includes('g') ? re.flags : `${re.flags}g`);
-    while ((m = r.exec(token)) !== null) {
-      markRange(covered, m.index, m.index + m[0].length);
+    let m: RegExpExecArray | null;
+    while ((m = r.exec(ctx.text)) !== null) {
+      markRange(ctx.covered, m.index, m.index + m[0].length);
     }
   };
   for (const ex of NAMED_SUBSTANCE_EXCLUSIONS) apply(ex);
   apply(CARAMEL_COLOUR_BLOCK);
 }
 
-function findPhraseMatch(tokenLower: string, phrase: string): { start: number; len: number } | null {
+/**
+ * First whole-word occurrence of `phrase` in `haystack` whose span is still available.
+ */
+function findPhraseMatch(
+  haystack: string,
+  phrase: string,
+  isAvailable: (start: number, end: number) => boolean
+): TextRange | null {
   const p = phrase.toLowerCase();
+  if (!p || p.length > haystack.length) return null;
   let from = 0;
-  while (from <= tokenLower.length - p.length) {
-    const idx = tokenLower.indexOf(p, from);
+  while (from <= haystack.length - p.length) {
+    const idx = haystack.indexOf(p, from);
     if (idx === -1) return null;
-    const before = idx === 0 ? ' ' : tokenLower[idx - 1];
-    const after = idx + p.length >= tokenLower.length ? ' ' : tokenLower[idx + p.length];
-    if (!/\w/.test(before) && !/\w/.test(after)) {
-      return { start: idx, len: p.length };
+    const before = idx === 0 ? ' ' : haystack[idx - 1];
+    const after = idx + p.length >= haystack.length ? ' ' : haystack[idx + p.length];
+    if (!/\w/.test(before) && !/\w/.test(after) && isAvailable(idx, idx + p.length)) {
+      return { start: idx, end: idx + p.length };
     }
     from = idx + 1;
   }
@@ -366,31 +520,29 @@ function findPhraseMatch(tokenLower: string, phrase: string): { start: number; l
 }
 
 function applyRegexHits(
-  token: string,
-  tokenLower: string,
-  covered: boolean[],
+  ctx: ScanContext,
+  from: number,
+  to: number,
   re: RegExp,
-  hits: { count: number; matches?: OpenHiddenTermMatch[] },
   presentationClass: OpenHiddenTermPresentationClass
 ): void {
+  const slice = ctx.lower.slice(from, to);
   const r = new RegExp(re.source, re.flags.includes('g') ? re.flags : `${re.flags}g`);
   let m: RegExpExecArray | null;
-  while ((m = r.exec(tokenLower)) !== null) {
-    const start = m.index;
+  while ((m = r.exec(slice)) !== null) {
+    const start = from + m.index;
     const end = start + m[0].length;
-    if (isRangeFree(covered, start, end)) {
-      markRange(covered, start, end);
-      hits.count += 1;
-      if (hits.matches) {
-        const term = token.slice(start, end);
-        const decodedName = decodeCodedTerm(term);
-        hits.matches.push({ term, presentationClass, ...(decodedName && { decodedName }) });
-      }
+    if (isRangeFree(ctx.covered, start, end)) {
+      markRange(ctx.covered, start, end);
+      const term = ctx.text.slice(start, end);
+      const decodedName = decodeCodedTerm(term);
+      ctx.matches.push({ term, presentationClass, ...(decodedName && { decodedName }) });
     }
   }
 }
 
-function innerParenIsCodeOnly(inner: string): boolean {
+/** e.g. `471`, `E150a`, `INS 322` — a specification that is nothing but an additive code. */
+function specificationIsCodeOnly(inner: string): boolean {
   const s = inner.trim();
   if (!s) return false;
   if (/^e\s?\d{3,4}[a-z]?$/i.test(s)) return true;
@@ -399,112 +551,199 @@ function innerParenIsCodeOnly(inner: string): boolean {
   return false;
 }
 
-const GENERIC_SEASONING_DISCLOSURE_TERMS = ['seasoning', 'seasonings', 'spice', 'spices', 'herb', 'herbs'];
-
-function isDisclosedSeasoningCompositionToken(tokenLower: string): boolean {
-  for (const term of GENERIC_SEASONING_DISCLOSURE_TERMS) {
-    const escaped = escapeRegExp(term);
-    const re = new RegExp(`^${escaped}\\s*\\(([^)]+)\\)\\s*$`, 'i');
-    const m = tokenLower.match(re);
-    if (m && !innerParenIsCodeOnly(m[1])) return true;
+/**
+ * Bare code items listed inside an additive category specification, e.g. the `471` and
+ * `472e` of "Emulsifiers (471, 472e)". The category context disambiguates these from
+ * quantities, so they count as code-dependent disclosure rather than being dropped with
+ * the suppressed category shell.
+ */
+function countBareCodesInSpecification(ctx: ScanContext, from: number, to: number): void {
+  for (const range of splitTopLevelRanges(ctx.text, from, to)) {
+    const item = ctx.text.slice(range.start, range.end);
+    if (!specificationIsCodeOnly(item)) continue;
+    if (!isRangeFree(ctx.covered, range.start, range.end)) continue;
+    markRange(ctx.covered, range.start, range.end);
+    const decodedName = decodeCodedTerm(item);
+    ctx.matches.push({ term: item, presentationClass: 'coded', ...(decodedName && { decodedName }) });
   }
-  return false;
+}
+
+const WORD_RE = /[\p{L}\p{N}]+/gu;
+
+/**
+ * True when every substantive word of the expression belongs to a governed phrase match
+ * (or is already resolved / non-specifying), i.e. the governed terms ARE the expression
+ * rather than fragments of a more specific phrase ("citric acid", "yeast extract").
+ */
+function expressionIsFullyGoverned(
+  ctx: ScanContext,
+  absStart: number,
+  expression: string,
+  candidates: readonly TextRange[]
+): boolean {
+  const re = new RegExp(WORD_RE.source, WORD_RE.flags);
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(expression)) !== null) {
+    const wordStart = m.index;
+    const wordEnd = wordStart + m[0].length;
+    if (candidates.some((c) => wordStart >= c.start && wordEnd <= c.end)) continue;
+    // Already resolved by an exclusion mask or a coded-term hit.
+    if (!isRangeFree(ctx.covered, absStart + wordStart, absStart + wordEnd)) continue;
+    const word = m[0];
+    if (/\d/.test(word)) continue;
+    if (STRUCTURAL_STOPWORDS.has(word) || NON_SPECIFYING_QUALIFIERS.has(word)) continue;
+    return false;
+  }
+  return true;
+}
+
+function commitBroadGenericMatches(
+  ctx: ScanContext,
+  absStart: number,
+  candidates: readonly TextRange[]
+): void {
+  for (const c of candidates) {
+    const start = absStart + c.start;
+    const end = absStart + c.end;
+    if (!isRangeFree(ctx.covered, start, end)) continue;
+    markRange(ctx.covered, start, end);
+    ctx.matches.push({ term: ctx.text.slice(start, end), presentationClass: 'broad_generic' });
+  }
 }
 
 /**
- * e.g. emulsifier (471) → hit; emulsifier (soy lecithin) → no hit from this rule.
+ * Governed phrase matching for one unresolved bare expression (an item head or a tail
+ * fragment). Longest phrase first; a match only counts when it is the whole unresolved
+ * expression, or an additive-category shell heading an otherwise unresolved expression.
  */
-function additiveClassWithCodeParenHit(tokenLower: string): boolean {
-  for (const cls of SORTED_ADDITIVE_CLASSES) {
-    const escaped = escapeRegExp(cls.toLowerCase());
-    const re = new RegExp(`^${escaped}\\s*\\(([^)]+)\\)\\s*$`, 'i');
-    const m = tokenLower.match(re);
-    if (m) return innerParenIsCodeOnly(m[1]);
-  }
-  return false;
-}
+function analyzeBareExpression(ctx: ScanContext, start: number, end: number): void {
+  const expression = ctx.lower.slice(start, end);
+  if (!expression) return;
 
-/** e.g. emulsifier (soy lecithin) — do not treat class name as a vague term (spec). */
-function isOpaqueAdditiveParenToken(tokenLower: string): boolean {
-  for (const cls of SORTED_ADDITIVE_CLASSES) {
-    const escaped = escapeRegExp(cls.toLowerCase());
-    const re = new RegExp(`^${escaped}\\s*\\(([^)]+)\\)\\s*$`, 'i');
-    const m = tokenLower.match(re);
-    if (m && !innerParenIsCodeOnly(m[1])) return true;
-  }
-  return false;
-}
-
-/**
- * Count vague-disclosure hits for one ingredient token (comma-separated segment).
- */
-export function countHiddenTermHitsInToken(token: string): number {
-  return scanHiddenTermHitsInToken(token).count;
-}
-
-function scanHiddenTermHitsInToken(
-  token: string,
-  collectMatches = false
-): { count: number; matches: OpenHiddenTermMatch[] } {
-  const raw = normalizeOpenPillarIngredientsText(token);
-  if (!raw) return { count: 0, matches: [] };
-
-  const tokenLower = raw.toLowerCase();
-  const covered = new Array(tokenLower.length).fill(false);
-  maskExclusions(raw, covered);
-
-  const hits: { count: number; matches?: OpenHiddenTermMatch[] } = {
-    count: 0,
-    ...(collectMatches && { matches: [] }),
-  };
-
-  applyRegexHits(raw, tokenLower, covered, E_NUMBER_RE, hits, 'coded');
-  applyRegexHits(raw, tokenLower, covered, INS_NUMBER_RE, hits, 'coded');
-  applyRegexHits(raw, tokenLower, covered, EN_E_NUMBER_RE, hits, 'coded');
-
-  if (additiveClassWithCodeParenHit(tokenLower)) {
-    if (isRangeFree(covered, 0, tokenLower.length)) {
-      markRange(covered, 0, tokenLower.length);
-      hits.count += 1;
-      if (hits.matches) {
-        const decodedName = decodeCodedTerm(raw);
-        hits.matches.push({ term: raw, presentationClass: 'coded', ...(decodedName && { decodedName }) });
-      }
-    }
-    return { count: hits.count, matches: hits.matches ?? [] };
-  }
-
-  if (isOpaqueAdditiveParenToken(tokenLower)) {
-    markRange(covered, 0, tokenLower.length);
-    return { count: hits.count, matches: hits.matches ?? [] };
-  }
-
-  if (isDisclosedSeasoningCompositionToken(tokenLower)) {
-    markRange(covered, 0, tokenLower.length);
-    return { count: hits.count, matches: hits.matches ?? [] };
-  }
+  const localCovered = new Array(expression.length).fill(false);
+  const candidates: (TextRange & { phrase: string })[] = [];
 
   for (const phrase of SORTED_ALL_PHRASES) {
-    const match = findPhraseMatch(tokenLower, phrase);
+    const match = findPhraseMatch(
+      expression,
+      phrase,
+      (s, e) => isRangeFree(localCovered, s, e) && isRangeFree(ctx.covered, start + s, start + e)
+    );
     if (!match) continue;
-    const { start, len } = match;
-    const end = start + len;
-    if (isRangeFree(covered, start, end)) {
-      markRange(covered, start, end);
-      hits.count += 1;
-      if (hits.matches) {
-        hits.matches.push({
-          term: raw.slice(start, end),
-          presentationClass: 'broad_generic',
-        });
-      }
-    }
+    markRange(localCovered, match.start, match.end);
+    candidates.push({ ...match, phrase });
   }
 
-  return { count: hits.count, matches: hits.matches ?? [] };
+  if (candidates.length === 0) return;
+
+  if (expressionIsFullyGoverned(ctx, start, expression, candidates)) {
+    commitBroadGenericMatches(ctx, start, candidates);
+    return;
+  }
+
+  const categoryShell = candidates.find((c) => c.start === 0 && ADDITIVE_CLASS_SET.has(c.phrase));
+  if (categoryShell) commitBroadGenericMatches(ctx, start, [categoryShell]);
 }
 
-/** Total hidden-term hits across all ingredient tokens (Open Pillar v15). */
+function analyzeRange(ctx: ScanContext, from: number, to: number): void {
+  for (const range of splitTopLevelRanges(ctx.text, from, to)) {
+    analyzeItem(ctx, parseIngredientItem(ctx.text, range.start, range.end));
+  }
+}
+
+function analyzeItem(ctx: ScanContext, item: ParsedIngredientItem): void {
+  const head = item.bareRanges[0];
+  const headLower = head ? ctx.lower.slice(head.start, head.end) : '';
+  const headOnlyBare = item.bareRanges.length === 1;
+  const hasSpecification = item.groups.length > 0;
+  const allSpecificationsCoded =
+    hasSpecification &&
+    item.groups.every((g) => specificationIsCodeOnly(ctx.text.slice(g.start, g.end)));
+
+  // Additive category disclosed only by code, e.g. "Thickeners (471)": one coded flag for
+  // the shell + its specification, never both.
+  if (headOnlyBare && allSpecificationsCoded && ADDITIVE_CLASS_SET.has(headLower)) {
+    if (isRangeFree(ctx.covered, item.start, item.end)) {
+      markRange(ctx.covered, item.start, item.end);
+      const term = ctx.text.slice(item.start, item.end);
+      const decodedName = decodeCodedTerm(term);
+      ctx.matches.push({ term, presentationClass: 'coded', ...(decodedName && { decodedName }) });
+    }
+    return;
+  }
+
+  // Category specifically resolved, e.g. "Thickeners (Methyl Cellulose)": suppress the
+  // category shell, then assess the specification for any governed terms left inside it.
+  if (
+    headOnlyBare &&
+    hasSpecification &&
+    !allSpecificationsCoded &&
+    RESOLVABLE_CATEGORY_HEADS.has(headLower)
+  ) {
+    markRange(ctx.covered, head.start, head.end);
+    for (const group of item.groups) {
+      if (ADDITIVE_CLASS_SET.has(headLower)) countBareCodesInSpecification(ctx, group.start, group.end);
+      analyzeRange(ctx, group.start, group.end);
+    }
+    return;
+  }
+
+  for (const bare of item.bareRanges) analyzeBareExpression(ctx, bare.start, bare.end);
+  for (const group of item.groups) analyzeRange(ctx, group.start, group.end);
+}
+
+/**
+ * Split ingredients text into top-level ingredient items.
+ * Depth-aware for `()`, `[]`, `{}` and splitting on both `,` and `;`
+ * (e.g. "emulsifier (soy, modified), salt" → 2 items).
+ */
+export function tokenizeIngredientsText(text: string): string[] {
+  const normalized = normalizeOpenPillarIngredientsText(text);
+  if (!normalized) return [];
+  return splitTopLevelRanges(normalized, 0, normalized.length).map((r) =>
+    normalized.slice(r.start, r.end)
+  );
+}
+
+function createScanContext(normalized: string): ScanContext {
+  const ctx: ScanContext = {
+    text: normalized,
+    lower: normalized.toLowerCase(),
+    covered: new Array(normalized.length).fill(false),
+    matches: [],
+  };
+  maskExclusions(ctx);
+  return ctx;
+}
+
+function scanItemRange(ctx: ScanContext, range: TextRange): void {
+  applyRegexHits(ctx, range.start, range.end, E_NUMBER_RE, 'coded');
+  applyRegexHits(ctx, range.start, range.end, INS_NUMBER_RE, 'coded');
+  applyRegexHits(ctx, range.start, range.end, EN_E_NUMBER_RE, 'coded');
+  analyzeItem(ctx, parseIngredientItem(ctx.text, range.start, range.end));
+}
+
+function scanHiddenTerms(text: string): OpenHiddenTermMatch[] {
+  const normalized = normalizeOpenPillarIngredientsText(text || '');
+  if (!normalized) return [];
+  const ctx = createScanContext(normalized);
+  const ranges = splitTopLevelRanges(normalized, 0, normalized.length);
+  if (ranges.length === 0) {
+    scanItemRange(ctx, { start: 0, end: normalized.length });
+  } else {
+    for (const range of ranges) scanItemRange(ctx, range);
+  }
+  return ctx.matches;
+}
+
+/**
+ * Count vague-disclosure hits for one ingredient item (or a short item list).
+ */
+export function countHiddenTermHitsInToken(token: string): number {
+  return scanHiddenTerms(token).length;
+}
+
+/** Total hidden-term hits across all ingredient items (Open Pillar v15). */
 export function countOpenPillarHiddenTermHits(ingredientsText: string): number {
   return assessOpenPillarHiddenTerms(ingredientsText).flagCount;
 }
@@ -514,17 +753,5 @@ export function countOpenPillarHiddenTermHits(ingredientsText: string): number {
  * Uses the same match rules as scoring; does not change flag counts.
  */
 export function assessOpenPillarHiddenTerms(ingredientsText: string): OpenHiddenTermAssessment {
-  const text = ingredientsText || '';
-  const tokens = tokenizeIngredientsText(text);
-  const allMatches: OpenHiddenTermMatch[] = [];
-
-  if (tokens.length === 0 && normalizeOpenPillarIngredientsText(text)) {
-    allMatches.push(...scanHiddenTermHitsInToken(text, true).matches);
-  } else {
-    for (const t of tokens) {
-      allMatches.push(...scanHiddenTermHitsInToken(t, true).matches);
-    }
-  }
-
-  return finalizeHiddenTermAssessment(allMatches);
+  return finalizeHiddenTermAssessment(scanHiddenTerms(ingredientsText || ''));
 }
