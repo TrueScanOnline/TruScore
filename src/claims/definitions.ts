@@ -299,10 +299,10 @@ export const CLAIM_DEFINITIONS: readonly ClaimDefinition[] = [
     enI18nPath: 'settings.methodology',
     mustNotSay: ['TrueScan', 'TruScore'],
     approvedAnchors: ['rveel score'],
-    surfaceLocation: 'Settings methodology row',
+    surfaceLocation: 'Settings methodology row (retired — Wave 3 Commit E containment)',
     dependentCodePath: 'app/settings.tsx',
     owner: 'Product',
-    status: 'approved',
-    lastReviewedDate: '2026-04-14',
+    status: 'retired',
+    lastReviewedDate: '2026-09-06',
   },
 ];

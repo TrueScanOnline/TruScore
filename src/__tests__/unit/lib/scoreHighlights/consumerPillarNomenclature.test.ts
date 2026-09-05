@@ -252,7 +252,6 @@ describe('English locale bundle carries no consumer pillar-name leak', () => {
 
 describe('active consumer source files carry no pillar-name copy', () => {
   const CONSUMER_SOURCES = [
-    'app/methodology.tsx',
     'src/components/TrustScoreInfoModal.tsx',
     'src/components/EcoScoreInfoModal.tsx',
     'src/components/TruScore.tsx',
@@ -285,7 +284,6 @@ describe('active consumer source files carry no pillar-name copy', () => {
 
   it('routes the pillar names through the canonical helper', () => {
     for (const relative of [
-      'app/methodology.tsx',
       'src/components/TrustScoreInfoModal.tsx',
       'src/features/sharing/services/ShareContentBuilder.ts',
       'src/services/shareCardGenerator.ts',
