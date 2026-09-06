@@ -6,11 +6,10 @@
  * phrase. Open v15 adjustment IDs and points (+1 / -2 / -4 / -6) are unchanged; only
  * whether a governed clarity flag legitimately fires moves.
  *
- * v0.5 supersedes v0.4 class-shell resolution with the residual-ambiguity test: none /
- * code-only / non-exhaustive / residual governed ambiguity / direct identity. Arbitrary
- * trailing words are not sufficient to resolve a class shell. One unresolved top-level
- * class item contributes one broad/generic clarity count. The two founder UAT packet
- * strings remain mandatory full-string fixtures.
+ * v0.6 supersedes the v0.5 unbracketed direct-identity rule: an unbracketed class tail
+ * resolves only when a governed Open specific-identity vocabulary phrase is present.
+ * Arbitrary descriptive words never resolve. Residual ambiguity, non-exhaustive qualifiers,
+ * class+code, one-item/one-ambiguity, and the two founder UAT packet fixtures remain.
  */
 
 import {
@@ -382,8 +381,8 @@ describe('Open v15 v0.4 — category/function-shell resolution', () => {
     'Antioxidant Ascorbic Acid',
     'Acidity Regulator Citric Acid',
     'Colour Caramel',
-    'Flavour enhancer Yeast Extract',
-  ])('direct class+identity "%s" resolves the shell with or without brackets', (token) => {
+    'Flavour enhancer MSG',
+  ])('direct class+recognised-identity "%s" resolves the shell with or without brackets', (token) => {
     expect(countHiddenTermHitsInToken(token)).toBe(0);
   });
 
@@ -545,5 +544,41 @@ describe('Open v15 v0.5 — residual-ambiguity class-shell classification', () =
       expect(assessment.flagCount).toBe(1);
       expect(assessment.termPresentationClass).toBe('coded');
     }
+  });
+});
+
+/**
+ * v0.6 — unbracketed class resolution requires positive governed specific-identity evidence.
+ * Arbitrary unrecognised/descriptive tails must not become direct_identity.
+ */
+describe('Open v15 v0.6 — positive specific-identity recognition', () => {
+  it.each([
+    ['Emulsifier premium', 1, 'Emulsifier'],
+    ['Emulsifier proprietary', 1, 'Emulsifier'],
+    ['Emulsifier premium blend', 1, 'Emulsifier'],
+    ['Emulsifier premium Lecithin', 0, ''],
+    ['Emulsifier Soy Lecithin', 0, ''],
+    ['Thickener natural', 1, 'Thickener'],
+    ['Thickener Xanthan Gum', 0, ''],
+    ['Colour permitted', 1, 'Colour'],
+  ] as const)('%s → %i (evidence %s)', (token, flags, evidence) => {
+    const assessment = assessOpenPillarHiddenTerms(token);
+    expect(assessment.flagCount).toBe(flags);
+    expect(assessment.matchedTerms).toBe(evidence);
+  });
+
+  it('does not treat Yeast Extract as an additive identity for Flavour enhancer', () => {
+    // Yeast Extract is not in the governed Open specific-identity vocabulary (additive names).
+    expect(countHiddenTermHitsInToken('Flavour enhancer Yeast Extract')).toBe(1);
+    expect(assessOpenPillarHiddenTerms('Flavour enhancer Yeast Extract').matchedTerms).toBe(
+      'Flavour enhancer'
+    );
+  });
+
+  it('keeps bracketed enumeration independent of the unbracketed identity vocabulary gate', () => {
+    expect(countHiddenTermHitsInToken('Thickeners (Methyl Cellulose)')).toBe(0);
+    expect(countHiddenTermHitsInToken('Colours (Burnt Sugar, Beetroot Powder)')).toBe(0);
+    expect(countHiddenTermHitsInToken('seasoning (salt, pepper, paprika)')).toBe(0);
+    expect(countHiddenTermHitsInToken('Emulsifier (Soy Lecithin)')).toBe(0);
   });
 });

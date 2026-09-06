@@ -1,22 +1,23 @@
 /**
  * Open Pillar v15 — governed vague / code-dependent ingredient disclosure flags.
  * Food & beverage MVP: phrase list and match rules from Open_Scoring_Specification_v15 /
- * Founder-Locked Scoring Methodology v0.5.
+ * Founder-Locked Scoring Methodology v0.6.
  *
  * Parsing: ingredient items are split on top-level `,` / `;` with depth awareness for
  * `()`, `[]` and `{}`; each item is decomposed into an unresolved head plus any
  * bracketed specification groups (recursively parsed the same way).
  * Matching: whole-word / exact phrase against an unresolved head expression, never an
  * arbitrary substring inside a more specific phrase ("yeast extract", "citric acid").
- * Additive classes count only while the additive identity stays unresolved. v0.5 class-shell
- * resolution uses the residual-ambiguity test on bracketed and unbracketed specifications
- * alike: none / code-only / non-exhaustive / residual governed ambiguity / direct identity.
- * Arbitrary trailing words are not sufficient to resolve a class shell. One unresolved
- * top-level class item contributes one broad/generic clarity count. Generic extract/essence
- * terms exclude named examples from the spec (e.g. vanilla extract).
+ * Additive classes count only while the additive identity stays unresolved. v0.6 class-shell
+ * resolution uses residual-ambiguity plus positive identity recognition: unbracketed tails
+ * resolve only when a governed Open specific-identity vocabulary phrase is present;
+ * arbitrary descriptive words never resolve. Bracketed direct enumeration still resolves by
+ * completeness. One unresolved top-level class item contributes one broad/generic clarity
+ * count. Generic extract/essence terms exclude named examples from the spec (e.g. vanilla extract).
  */
 
 import { getAdditiveInfo } from '../../../services/additiveDatabase';
+import { OPEN_SPECIFIC_IDENTITY_PHRASES } from './openSpecificIdentityVocabulary.generated';
 
 export type OpenHiddenTermPresentationClass = 'broad_generic' | 'coded';
 
@@ -754,15 +755,17 @@ function commitCodedClassItem(ctx: ScanContext, start: number, end: number, code
 }
 
 /**
- * v0.5 residual-ambiguity classification for one class-shell specification string.
- * Identical semantics for bracketed and unbracketed attachment.
+ * v0.6 residual-ambiguity + identity-recognition classification for one class-shell
+ * specification string. Unbracketed tails require a recognised specific-identity phrase;
+ * bracketed enumerations resolve by completeness (no residual governed ambiguity).
  */
 function classifyClassSpecification(
   ctx: ScanContext,
   specAbsStart: number,
   specAbsEnd: number,
   shellAbsStart: number,
-  shellAbsEnd: number
+  shellAbsEnd: number,
+  mode: 'bracketed' | 'unbracketed'
 ): ClassSpecClassification {
   const expression = ctx.lower.slice(specAbsStart, specAbsEnd);
   const trimmed = expression.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
@@ -776,8 +779,6 @@ function classifyClassSpecification(
 
   const residual = residualGovernedHits(ctx, specAbsStart, expression);
   if (residual.length > 0) {
-    // Prefer the most informative longest residual phrase; fall back to the shell when the
-    // residual is only a trailing-component singleton that is shorter than the shell.
     const longest = residual.reduce((a, b) =>
       b.end - b.start > a.end - a.start ||
       (b.end - b.start === a.end - a.start && b.phrase.length > a.phrase.length)
@@ -796,9 +797,14 @@ function classifyClassSpecification(
     return { kind: 'residual_governed', evidenceStart: shellAbsStart, evidenceEnd: shellAbsEnd };
   }
 
-  // Qualifier/stopword-only remainder is not substantive identity (e.g. "Thickener natural").
-  // Digit/percentage quantity specs (e.g. "2%", "250 mg") are treated as direct identity so
-  // they suppress the shell without inventing a broad flag — same disposition as v0.4.
+  if (mode === 'unbracketed') {
+    // Positive identity evidence only — never "any substantive word".
+    if (specificationContainsRecognisedIdentity(trimmed)) return { kind: 'direct_identity' };
+    return { kind: 'none', evidenceStart: shellAbsStart, evidenceEnd: shellAbsEnd };
+  }
+
+  // Bracketed direct enumeration: completeness gate (no residual already). Quantity-only
+  // specs (e.g. "2%", "250 mg") also suppress the shell without inventing a broad flag.
   const re = new RegExp(WORD_RE.source, WORD_RE.flags);
   let hasSubstance = false;
   let m: RegExpExecArray | null;
@@ -813,10 +819,20 @@ function classifyClassSpecification(
     if (/[\p{N}%]/u.test(trimmed)) return { kind: 'direct_identity' };
     return { kind: 'none', evidenceStart: shellAbsStart, evidenceEnd: shellAbsEnd };
   }
-
-  // Non-empty substantive wording, not code-only, not non-exhaustive, no residual governed
-  // phrase → direct identity (Methodology v0.5 § residual-ambiguity (4)).
   return { kind: 'direct_identity' };
+}
+
+/**
+ * Exact/normalised whole-phrase match against the frozen Open specific-identity vocabulary.
+ * Source/material modifiers may accompany a recognised identity ("Soy Lecithin").
+ */
+function specificationContainsRecognisedIdentity(specification: string): boolean {
+  const haystack = specification.toLowerCase().replace(/\s+/g, ' ').trim();
+  if (!haystack) return false;
+  for (const phrase of OPEN_SPECIFIC_IDENTITY_PHRASES) {
+    if (findPhraseMatch(haystack, phrase, () => true)) return true;
+  }
+  return false;
 }
 
 /**
@@ -840,6 +856,7 @@ function handleClassShellItem(
   // Build the attached specification ranges: bracketed groups, else unbracketed remainder.
   type SpecSlice = { start: number; end: number };
   const slices: SpecSlice[] = [];
+  const mode: 'bracketed' | 'unbracketed' = item.groups.length > 0 ? 'bracketed' : 'unbracketed';
   if (item.groups.length > 0) {
     for (const g of item.groups) slices.push({ start: g.start, end: g.end });
   } else {
@@ -869,7 +886,14 @@ function handleClassShellItem(
   let anyDirect = false;
   let anyCode = false;
   for (const slice of slices) {
-    const c = classifyClassSpecification(ctx, slice.start, slice.end, head.start, head.end);
+    const c = classifyClassSpecification(
+      ctx,
+      slice.start,
+      slice.end,
+      head.start,
+      head.end,
+      mode
+    );
     if (c.kind === 'direct_identity') {
       anyDirect = true;
       continue;
