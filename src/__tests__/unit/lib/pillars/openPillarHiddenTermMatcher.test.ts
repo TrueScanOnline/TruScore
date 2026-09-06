@@ -582,3 +582,33 @@ describe('Open v15 v0.6 — positive specific-identity recognition', () => {
     expect(countHiddenTermHitsInToken('Emulsifier (Soy Lecithin)')).toBe(0);
   });
 });
+
+/**
+ * v0.7 — identity-vocabulary source hygiene. Annotation / class-labelled source phrases
+ * must not resolve an unbracketed class shell; genuine additive identities still do.
+ */
+describe('Open v15 v0.7 — identity vocabulary source hygiene', () => {
+  it.each([
+    ['Emulsifier alternative', 1, 'Emulsifier'],
+    ['Emulsifier additional variant', 1, 'Emulsifier'],
+    ['Emulsifier another variant', 1, 'Emulsifier'],
+    ['Emulsifier reserved for antibiotics', 1, 'Emulsifier'],
+    ['Preservative Sodium Nitrite', 0, ''],
+    ['Colour Tartrazine', 0, ''],
+    ['Sweetener Aspartame', 0, ''],
+  ] as const)('%s → %i (evidence %s)', (token, flags, evidence) => {
+    const assessment = assessOpenPillarHiddenTerms(token);
+    expect(assessment.flagCount).toBe(flags);
+    expect(assessment.matchedTerms).toBe(evidence);
+  });
+
+  it('preserves G-correct arbitrary-tail and residual behaviour', () => {
+    expect(countHiddenTermHitsInToken('Emulsifier premium')).toBe(1);
+    expect(countHiddenTermHitsInToken('Emulsifier proprietary')).toBe(1);
+    expect(countHiddenTermHitsInToken('Emulsifier Soy Lecithin')).toBe(0);
+    expect(countHiddenTermHitsInToken('Emulsifier blend')).toBe(1);
+    expect(countHiddenTermHitsInToken('Thickener vegetable gum')).toBe(1);
+    expect(countHiddenTermHitsInToken('Colour 150a')).toBe(1);
+    expect(assessOpenPillarHiddenTerms('Colour 150a').termPresentationClass).toBe('coded');
+  });
+});

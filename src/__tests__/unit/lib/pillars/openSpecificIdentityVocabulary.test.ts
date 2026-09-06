@@ -1,8 +1,8 @@
 /**
- * Closed-set integrity for the governed Open v15 specific-identity vocabulary.
+ * Closed-set integrity for the governed Open v15 specific-identity vocabulary (v0.7).
  *
- * The frozen snapshot is scoring evidence. Changes must be visible/reviewable — not silently
- * inherited from live ADDITIVE_DATABASE mutations at runtime.
+ * The frozen snapshot is scoring evidence. Count/hash lock integrity only — semantic
+ * authority is the v0.7 source-hygiene rules plus founder-reviewed alias allowlist.
  */
 import { createHash } from 'crypto';
 import fs from 'fs';
@@ -11,6 +11,10 @@ import {
   OPEN_SPECIFIC_IDENTITY_PHRASES,
   OPEN_SPECIFIC_IDENTITY_VOCAB_META,
 } from '../../../../lib/truscoreEngine/pillars/openSpecificIdentityVocabulary.generated';
+import {
+  OPEN_SPECIFIC_IDENTITY_REJECTION_META,
+  OPEN_SPECIFIC_IDENTITY_REJECTIONS,
+} from '../../../../lib/truscoreEngine/pillars/openSpecificIdentityVocabulary.rejections.generated';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../../');
 const GENERATED = path.join(
@@ -19,11 +23,14 @@ const GENERATED = path.join(
 );
 const MATCHER = path.join(REPO_ROOT, 'src/lib/truscoreEngine/pillars/openPillarHiddenTerms.ts');
 
-describe('Open specific-identity vocabulary — closed-set integrity', () => {
+describe('Open specific-identity vocabulary — closed-set integrity (v0.7)', () => {
   it('exposes a frozen phrase count and content hash', () => {
     expect(OPEN_SPECIFIC_IDENTITY_VOCAB_META.phraseCount).toBe(OPEN_SPECIFIC_IDENTITY_PHRASES.length);
-    expect(OPEN_SPECIFIC_IDENTITY_VOCAB_META.phraseCount).toBeGreaterThan(100);
-    expect(OPEN_SPECIFIC_IDENTITY_VOCAB_META.contentSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(OPEN_SPECIFIC_IDENTITY_VOCAB_META.phraseCount).toBe(518);
+    expect(OPEN_SPECIFIC_IDENTITY_VOCAB_META.contentSha256).toBe(
+      'dd2d624371dd5ab4f87cbb365a463a2278c1df96ed5d2acc6f01d703b285a0dd'
+    );
+    expect(OPEN_SPECIFIC_IDENTITY_VOCAB_META.methodologyVersion).toBe('v0.7');
     expect(OPEN_SPECIFIC_IDENTITY_VOCAB_META.source).toBe('ADDITIVE_DATABASE');
   });
 
@@ -40,7 +47,7 @@ describe('Open specific-identity vocabulary — closed-set integrity', () => {
     }
   });
 
-  it('includes the founder-required plain-language identities', () => {
+  it('includes required plain-language identities and founder-reviewed aliases', () => {
     const set = new Set(OPEN_SPECIFIC_IDENTITY_PHRASES);
     for (const required of [
       'lecithin',
@@ -48,29 +55,40 @@ describe('Open specific-identity vocabulary — closed-set integrity', () => {
       'potassium sorbate',
       'ascorbic acid',
       'citric acid',
-      'caramel',
+      'sodium nitrite',
+      'tartrazine',
+      'aspartame',
       'msg',
+      'tbhq',
+      'bha',
+      'bht',
+      'turmeric',
+      'vitamin b2',
+      'vitamin b3',
     ]) {
       expect(set.has(required)).toBe(true);
     }
   });
 
-  it('does not include broad/generic Open disclosure shells as identity evidence', () => {
+  it('excludes annotation, class-labelled, and broad-shell phrases from positive identity', () => {
     const set = new Set(OPEN_SPECIFIC_IDENTITY_PHRASES);
-    for (const blocked of [
+    for (const forbidden of [
+      'alternative',
+      'additional variant',
+      'another variant',
+      'reserved for antibiotics',
+      'preservative sodium nitrite',
+      'colour tartrazine',
+      'color tartrazine',
+      'sweetener aspartame',
       'emulsifier',
       'thickener',
       'preservative',
       'colour',
-      'color',
       'blend',
       'vegetable gum',
-      'acid',
-      'extract',
-      'flavour',
-      'flavor',
     ]) {
-      expect(set.has(blocked)).toBe(false);
+      expect(set.has(forbidden)).toBe(false);
     }
   });
 
@@ -85,8 +103,6 @@ describe('Open specific-identity vocabulary — closed-set integrity', () => {
     const matcher = fs.readFileSync(MATCHER, 'utf8');
     expect(matcher).toContain("from './openSpecificIdentityVocabulary.generated'");
     expect(matcher).toContain('OPEN_SPECIFIC_IDENTITY_PHRASES');
-    // decodeCodedTerm may still use getAdditiveInfo for coded display names — that is not
-    // the unbracketed identity gate. The identity gate must not call ADDITIVE_DATABASE.
     const identityFn = matcher.slice(
       matcher.indexOf('function specificationContainsRecognisedIdentity'),
       matcher.indexOf('function specificationContainsRecognisedIdentity') + 800
@@ -100,5 +116,46 @@ describe('Open specific-identity vocabulary — closed-set integrity', () => {
     const source = fs.readFileSync(GENERATED, 'utf8');
     expect(source).toContain(OPEN_SPECIFIC_IDENTITY_VOCAB_META.contentSha256);
     expect(source).toContain(`phraseCount: ${OPEN_SPECIFIC_IDENTITY_VOCAB_META.phraseCount}`);
+  });
+});
+
+describe('Open specific-identity vocabulary — generation rejection audit (v0.7)', () => {
+  it('records rejection counts by reason', () => {
+    expect(OPEN_SPECIFIC_IDENTITY_REJECTION_META.totalRejected).toBe(
+      OPEN_SPECIFIC_IDENTITY_REJECTIONS.length
+    );
+    expect(OPEN_SPECIFIC_IDENTITY_REJECTION_META.countsByReason.annotation_admin).toBeGreaterThan(0);
+    expect(OPEN_SPECIFIC_IDENTITY_REJECTION_META.countsByReason.class_labelled).toBeGreaterThan(0);
+    expect(
+      OPEN_SPECIFIC_IDENTITY_REJECTION_META.countsByReason.parenthetical_not_allowlisted
+    ).toBeGreaterThan(0);
+    expect(OPEN_SPECIFIC_IDENTITY_REJECTION_META.countsByReason.placeholder_name).toBeGreaterThan(0);
+  });
+
+  it('rejects the founder-cited annotation and class-labelled exemplars', () => {
+    const byPhrase = new Map(
+      OPEN_SPECIFIC_IDENTITY_REJECTIONS.map((r) => [r.phrase, r.reason] as const)
+    );
+    expect(byPhrase.get('alternative')).toBe('annotation_admin');
+    expect(byPhrase.get('additional variant')).toBe('annotation_admin');
+    expect(byPhrase.get('another variant')).toBe('annotation_admin');
+    expect(byPhrase.get('reserved for antibiotics')).toBe('annotation_admin');
+    expect(byPhrase.get('preservative sodium nitrite')).toBe('class_labelled');
+    expect(byPhrase.get('colour tartrazine')).toBe('class_labelled');
+    expect(byPhrase.get('color tartrazine')).toBe('class_labelled');
+    expect(byPhrase.get('sweetener aspartame')).toBe('class_labelled');
+  });
+
+  it('rejection ledger hash matches committed rows', () => {
+    const hash = createHash('sha256')
+      .update(
+        OPEN_SPECIFIC_IDENTITY_REJECTIONS.map((r) => `${r.reason}\t${r.phrase}\t${r.source}`)
+          .slice()
+          .sort()
+          .join('\n'),
+        'utf8'
+      )
+      .digest('hex');
+    expect(hash).toBe(OPEN_SPECIFIC_IDENTITY_REJECTION_META.contentSha256);
   });
 });
