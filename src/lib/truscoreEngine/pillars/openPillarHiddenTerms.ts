@@ -1,23 +1,20 @@
 /**
  * Open Pillar v15 — governed vague / code-dependent ingredient disclosure flags.
  * Food & beverage MVP: phrase list and match rules from Open_Scoring_Specification_v15 /
- * Founder-Locked Scoring Methodology v0.6.
+ * Founder-Locked Scoring Methodology v0.9.
  *
  * Parsing: ingredient items are split on top-level `,` / `;` with depth awareness for
  * `()`, `[]` and `{}`; each item is decomposed into an unresolved head plus any
  * bracketed specification groups (recursively parsed the same way).
  * Matching: whole-word / exact phrase against an unresolved head expression, never an
  * arbitrary substring inside a more specific phrase ("yeast extract", "citric acid").
- * Additive classes count only while the additive identity stays unresolved. v0.6 class-shell
- * resolution uses residual-ambiguity plus positive identity recognition: unbracketed tails
- * resolve only when a governed Open specific-identity vocabulary phrase is present;
- * arbitrary descriptive words never resolve. Bracketed direct enumeration still resolves by
- * completeness. One unresolved top-level class item contributes one broad/generic clarity
- * count. Generic extract/essence terms exclude named examples from the spec (e.g. vanilla extract).
+ * Affirmative-negative evidence (v0.9): fire only on governed broad/generic, code-dependent,
+ * non-exhaustive, or residual-governed conditions. Unfamiliar/unclassified class tails do
+ * not create a negative flag. Positive-identity whitelists are not consulted. One unresolved
+ * top-level class item contributes one broad/generic clarity count.
  */
 
 import { getAdditiveInfo } from '../../../services/additiveDatabase';
-import { OPEN_SPECIFIC_IDENTITY_PHRASES } from './openSpecificIdentityVocabulary.generated';
 
 export type OpenHiddenTermPresentationClass = 'broad_generic' | 'coded';
 
@@ -623,11 +620,16 @@ const TRAILING_COMPONENT_GENERICS = new Set([
   'oleoresins',
 ]);
 
-type ClassSpecKind = 'none' | 'code' | 'non_exhaustive' | 'residual_governed' | 'direct_identity';
+type ClassSpecKind =
+  | 'none'
+  | 'code'
+  | 'non_exhaustive'
+  | 'residual_governed'
+  | 'inert';
 
 interface ClassSpecClassification {
   kind: ClassSpecKind;
-  /** Absolute range of the preferred broad evidence phrase when kind is residual/non_exhaustive/none. */
+  /** Absolute range of the preferred broad evidence phrase when kind fires broad. */
   evidenceStart?: number;
   evidenceEnd?: number;
 }
@@ -755,17 +757,16 @@ function commitCodedClassItem(ctx: ScanContext, start: number, end: number, code
 }
 
 /**
- * v0.6 residual-ambiguity + identity-recognition classification for one class-shell
- * specification string. Unbracketed tails require a recognised specific-identity phrase;
- * bracketed enumerations resolve by completeness (no residual governed ambiguity).
+ * v0.9 affirmative-negative classification for one class-shell specification string.
+ * Bracketed and unbracketed forms share the same negative-evidence rules. Unfamiliar or
+ * unclassified attached wording is inert — it does not create a broad flag.
  */
 function classifyClassSpecification(
   ctx: ScanContext,
   specAbsStart: number,
   specAbsEnd: number,
   shellAbsStart: number,
-  shellAbsEnd: number,
-  mode: 'bracketed' | 'unbracketed'
+  shellAbsEnd: number
 ): ClassSpecClassification {
   const expression = ctx.lower.slice(specAbsStart, specAbsEnd);
   const trimmed = expression.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
@@ -797,14 +798,7 @@ function classifyClassSpecification(
     return { kind: 'residual_governed', evidenceStart: shellAbsStart, evidenceEnd: shellAbsEnd };
   }
 
-  if (mode === 'unbracketed') {
-    // Positive identity evidence only — never "any substantive word".
-    if (specificationContainsRecognisedIdentity(trimmed)) return { kind: 'direct_identity' };
-    return { kind: 'none', evidenceStart: shellAbsStart, evidenceEnd: shellAbsEnd };
-  }
-
-  // Bracketed direct enumeration: completeness gate (no residual already). Quantity-only
-  // specs (e.g. "2%", "250 mg") also suppress the shell without inventing a broad flag.
+  // Qualifier/stopword-only remainder is treated as an unresolved standalone shell.
   const re = new RegExp(WORD_RE.source, WORD_RE.flags);
   let hasSubstance = false;
   let m: RegExpExecArray | null;
@@ -816,27 +810,17 @@ function classifyClassSpecification(
     break;
   }
   if (!hasSubstance) {
-    if (/[\p{N}%]/u.test(trimmed)) return { kind: 'direct_identity' };
+    // Quantity-only specs (e.g. "2%", "250 mg") are not affirmative vagueness evidence.
+    if (/[\p{N}%]/u.test(trimmed)) return { kind: 'inert' };
     return { kind: 'none', evidenceStart: shellAbsStart, evidenceEnd: shellAbsEnd };
   }
-  return { kind: 'direct_identity' };
+
+  // Attached unfamiliar/unclassified wording — fail closed with no negative flag (v0.9).
+  return { kind: 'inert' };
 }
 
 /**
- * Exact/normalised whole-phrase match against the frozen Open specific-identity vocabulary.
- * Source/material modifiers may accompany a recognised identity ("Soy Lecithin").
- */
-function specificationContainsRecognisedIdentity(specification: string): boolean {
-  const haystack = specification.toLowerCase().replace(/\s+/g, ' ').trim();
-  if (!haystack) return false;
-  for (const phrase of OPEN_SPECIFIC_IDENTITY_PHRASES) {
-    if (findPhraseMatch(haystack, phrase, () => true)) return true;
-  }
-  return false;
-}
-
-/**
- * Apply v0.5 class-shell handling for a governed additive/seasoning head with an attached
+ * Apply v0.9 class-shell handling for a governed additive/seasoning head with an attached
  * specification (bracketed groups and/or an unbracketed remainder after the shell).
  * Returns true when the class item has been fully disposed of.
  */
@@ -853,10 +837,8 @@ function handleClassShellItem(
   const headOnlyBare = item.bareRanges.length === 1;
   if (!headOnlyBare && item.groups.length === 0) return false;
 
-  // Build the attached specification ranges: bracketed groups, else unbracketed remainder.
   type SpecSlice = { start: number; end: number };
   const slices: SpecSlice[] = [];
-  const mode: 'bracketed' | 'unbracketed' = item.groups.length > 0 ? 'bracketed' : 'unbracketed';
   if (item.groups.length > 0) {
     for (const g of item.groups) slices.push({ start: g.start, end: g.end });
   } else {
@@ -865,7 +847,6 @@ function handleClassShellItem(
   }
 
   if (slices.length === 0) {
-    // Bare class shell with no specification.
     if (ADDITIVE_CLASS_SET.has(shellPhrase) || RESOLVABLE_CATEGORY_HEADS.has(shellPhrase)) {
       commitOneBroad(ctx, head.start, head.end);
       return true;
@@ -873,36 +854,25 @@ function handleClassShellItem(
     return false;
   }
 
-  // Multi-slice: code-only only when every slice is code-only.
   const allCoded = slices.every((s) => specificationIsCodeOnly(ctx.text.slice(s.start, s.end)));
   if (allCoded && ADDITIVE_CLASS_SET.has(shellPhrase)) {
     commitCodedClassItem(ctx, item.start, item.end, ctx.text.slice(slices[0].start, slices[0].end));
     return true;
   }
 
-  // Classify each slice; the most severe unresolved kind wins.
-  // Severity: non_exhaustive / residual_governed / none > code (partial) > direct_identity
   let unresolved: ClassSpecClassification | null = null;
-  let anyDirect = false;
+  let anyInert = false;
   let anyCode = false;
   for (const slice of slices) {
-    const c = classifyClassSpecification(
-      ctx,
-      slice.start,
-      slice.end,
-      head.start,
-      head.end,
-      mode
-    );
-    if (c.kind === 'direct_identity') {
-      anyDirect = true;
+    const c = classifyClassSpecification(ctx, slice.start, slice.end, head.start, head.end);
+    if (c.kind === 'inert') {
+      anyInert = true;
       continue;
     }
     if (c.kind === 'code') {
       anyCode = true;
       continue;
     }
-    // none / non_exhaustive / residual_governed — item stays vague
     if (
       !unresolved ||
       (c.kind === 'residual_governed' && unresolved.kind !== 'residual_governed') ||
@@ -924,8 +894,6 @@ function handleClassShellItem(
   }
 
   if (unresolved) {
-    // One-item / one-ambiguity: a single broad flag. Mark the shell and residual evidence
-    // spans, but leave code token ranges free so distinct coded flags are retained.
     const evidenceStart = unresolved.evidenceStart ?? head.start;
     const evidenceEnd = unresolved.evidenceEnd ?? head.end;
     commitOneBroad(ctx, evidenceStart, evidenceEnd);
@@ -940,7 +908,6 @@ function handleClassShellItem(
       )) {
         markRange(ctx.covered, slice.start + hit.start, slice.start + hit.end);
       }
-      // Non-exhaustive / qualifier prose should not be re-scanned for fragment generics.
       if (unresolved.kind === 'non_exhaustive' || unresolved.kind === 'none') {
         markRange(ctx.covered, slice.start, slice.end);
       }
@@ -951,13 +918,13 @@ function handleClassShellItem(
     return true;
   }
 
-  if (anyCode && !anyDirect && ADDITIVE_CLASS_SET.has(shellPhrase)) {
-    // Only codes, but not all slices were pure codes (shouldn't normally happen).
+  if (anyCode && !anyInert && ADDITIVE_CLASS_SET.has(shellPhrase)) {
     commitCodedClassItem(ctx, item.start, item.end, ctx.text.slice(slices[0].start, slices[0].end));
     return true;
   }
 
-  // Direct identity (and optional codes alongside identity): suppress the shell, assess specs.
+  // Inert / unclassified attached wording: suppress the shell without a broad flag, then
+  // assess any nested specification for independently governed terms or codes.
   markRange(ctx.covered, head.start, head.end);
   for (const group of item.groups) {
     if (ADDITIVE_CLASS_SET.has(shellPhrase)) countBareCodesInSpecification(ctx, group.start, group.end);
@@ -966,7 +933,10 @@ function handleClassShellItem(
   if (item.groups.length === 0) {
     const remainder = trimRange(ctx.text, head.end, item.end);
     if (remainder.end > remainder.start) {
-      if (ADDITIVE_CLASS_SET.has(shellPhrase) && specificationIsCodeOnly(ctx.text.slice(remainder.start, remainder.end))) {
+      if (
+        ADDITIVE_CLASS_SET.has(shellPhrase) &&
+        specificationIsCodeOnly(ctx.text.slice(remainder.start, remainder.end))
+      ) {
         commitCodedClassItem(ctx, item.start, item.end, ctx.text.slice(remainder.start, remainder.end));
       } else {
         analyzeBareExpression(ctx, remainder.start, remainder.end);
@@ -979,7 +949,7 @@ function handleClassShellItem(
 /**
  * Governed phrase matching for one unresolved bare expression (an item head or a tail
  * fragment). Longest phrase first; class shells with an attached specification are handled
- * by the v0.5 residual-ambiguity path rather than "any extra substantive word resolves".
+ * by the v0.9 affirmative-negative class-shell path rather than identity-whitelist resolution.
  */
 function analyzeBareExpression(ctx: ScanContext, start: number, end: number): void {
   const expression = ctx.lower.slice(start, end);

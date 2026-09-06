@@ -6,10 +6,11 @@
  * phrase. Open v15 adjustment IDs and points (+1 / -2 / -4 / -6) are unchanged; only
  * whether a governed clarity flag legitimately fires moves.
  *
- * v0.6 supersedes the v0.5 unbracketed direct-identity rule: an unbracketed class tail
- * resolves only when a governed Open specific-identity vocabulary phrase is present.
- * Arbitrary descriptive words never resolve. Residual ambiguity, non-exhaustive qualifiers,
- * class+code, one-item/one-ambiguity, and the two founder UAT packet fixtures remain.
+ * v0.9 affirmative-negative evidence: fire only on governed broad/generic, code-dependent,
+ * non-exhaustive, or residual-governed conditions. Unfamiliar/unclassified class tails do
+ * not create a negative flag. Positive-identity vocabulary is not consulted. Residual
+ * ambiguity, non-exhaustive qualifiers, class+code, one-item/one-ambiguity, and the two
+ * founder UAT packet fixtures remain.
  */
 
 import {
@@ -548,18 +549,37 @@ describe('Open v15 v0.5 — residual-ambiguity class-shell classification', () =
 });
 
 /**
- * v0.6 — unbracketed class resolution requires positive governed specific-identity evidence.
- * Arbitrary unrecognised/descriptive tails must not become direct_identity.
+ * v0.9 — affirmative-negative evidence. Unfamiliar / unclassified class tails fail closed
+ * with no negative flag. Positive-identity vocabulary is not consulted.
  */
-describe('Open v15 v0.6 — positive specific-identity recognition', () => {
+describe('Open v15 v0.9 — affirmative-negative evidence', () => {
   it.each([
-    ['Emulsifier premium', 1, 'Emulsifier'],
-    ['Emulsifier proprietary', 1, 'Emulsifier'],
+    // Must fire (governed affirmative negative / residual / non-exhaustive / standalone / coded)
+    ['Spices', 1, 'Spices'],
+    ['Flavours', 1, 'Flavours'],
+    ['Emulsifier', 1, 'Emulsifier'],
+    ['Emulsifier Contains Soy Lecithin', 1, 'Emulsifier'],
+    ['Emulsifier blend', 1, 'Emulsifier'],
+    ['Thickener vegetable gum', 1, 'vegetable gum'],
+    ['Vegetable extract', 1, 'Vegetable extract'],
     ['Emulsifier premium blend', 1, 'Emulsifier'],
-    ['Emulsifier premium Lecithin', 0, ''],
+    // Must not fire merely because unfamiliar / unclassified / specific-looking
+    ['Emulsifier premium', 0, ''],
+    ['Emulsifier proprietary', 0, ''],
+    ['Emulsifier alternative', 0, ''],
+    ['Emulsifier reserved for antibiotics', 0, ''],
+    ['Colour Orange', 0, ''],
+    ['Emulsifier Foozyme', 0, ''],
     ['Emulsifier Soy Lecithin', 0, ''],
-    ['Thickener natural', 1, 'Thickener'],
     ['Thickener Xanthan Gum', 0, ''],
+    ['Preservative Potassium Sorbate', 0, ''],
+    ['Emulsifier premium Lecithin', 0, ''],
+    ['Flavour enhancer Yeast Extract', 0, ''],
+    ['Preservative Sodium Nitrite', 0, ''],
+    ['Colour Tartrazine', 0, ''],
+    ['Sweetener Aspartame', 0, ''],
+    // Qualifier-only remainder remains unresolved (standalone-equivalent)
+    ['Thickener natural', 1, 'Thickener'],
     ['Colour permitted', 1, 'Colour'],
   ] as const)('%s → %i (evidence %s)', (token, flags, evidence) => {
     const assessment = assessOpenPillarHiddenTerms(token);
@@ -567,48 +587,31 @@ describe('Open v15 v0.6 — positive specific-identity recognition', () => {
     expect(assessment.matchedTerms).toBe(evidence);
   });
 
-  it('does not treat Yeast Extract as an additive identity for Flavour enhancer', () => {
-    // Yeast Extract is not in the governed Open specific-identity vocabulary (additive names).
-    expect(countHiddenTermHitsInToken('Flavour enhancer Yeast Extract')).toBe(1);
-    expect(assessOpenPillarHiddenTerms('Flavour enhancer Yeast Extract').matchedTerms).toBe(
-      'Flavour enhancer'
-    );
+  it('Colour 150a is coded-only (no shell double-count)', () => {
+    const assessment = assessOpenPillarHiddenTerms('Colour 150a');
+    expect(assessment.flagCount).toBe(1);
+    expect(assessment.termPresentationClass).toBe('coded');
   });
 
-  it('keeps bracketed enumeration independent of the unbracketed identity vocabulary gate', () => {
+  it('keeps bracketed enumeration structure without identity whitelist', () => {
     expect(countHiddenTermHitsInToken('Thickeners (Methyl Cellulose)')).toBe(0);
     expect(countHiddenTermHitsInToken('Colours (Burnt Sugar, Beetroot Powder)')).toBe(0);
     expect(countHiddenTermHitsInToken('seasoning (salt, pepper, paprika)')).toBe(0);
     expect(countHiddenTermHitsInToken('Emulsifier (Soy Lecithin)')).toBe(0);
   });
-});
 
-/**
- * v0.7 — identity-vocabulary source hygiene. Annotation / class-labelled source phrases
- * must not resolve an unbracketed class shell; genuine additive identities still do.
- */
-describe('Open v15 v0.7 — identity vocabulary source hygiene', () => {
-  it.each([
-    ['Emulsifier alternative', 1, 'Emulsifier'],
-    ['Emulsifier additional variant', 1, 'Emulsifier'],
-    ['Emulsifier another variant', 1, 'Emulsifier'],
-    ['Emulsifier reserved for antibiotics', 1, 'Emulsifier'],
-    ['Preservative Sodium Nitrite', 0, ''],
-    ['Colour Tartrazine', 0, ''],
-    ['Sweetener Aspartame', 0, ''],
-  ] as const)('%s → %i (evidence %s)', (token, flags, evidence) => {
-    const assessment = assessOpenPillarHiddenTerms(token);
-    expect(assessment.flagCount).toBe(flags);
-    expect(assessment.matchedTerms).toBe(evidence);
-  });
-
-  it('preserves G-correct arbitrary-tail and residual behaviour', () => {
-    expect(countHiddenTermHitsInToken('Emulsifier premium')).toBe(1);
-    expect(countHiddenTermHitsInToken('Emulsifier proprietary')).toBe(1);
-    expect(countHiddenTermHitsInToken('Emulsifier Soy Lecithin')).toBe(0);
-    expect(countHiddenTermHitsInToken('Emulsifier blend')).toBe(1);
-    expect(countHiddenTermHitsInToken('Thickener vegetable gum')).toBe(1);
-    expect(countHiddenTermHitsInToken('Colour 150a')).toBe(1);
-    expect(assessOpenPillarHiddenTerms('Colour 150a').termPresentationClass).toBe('coded');
+  it('runtime matcher does not import or reference positive identity vocabulary', () => {
+    const fs = require('fs') as typeof import('fs');
+    const path = require('path') as typeof import('path');
+    const matcher = fs.readFileSync(
+      path.join(
+        process.cwd(),
+        'src/lib/truscoreEngine/pillars/openPillarHiddenTerms.ts'
+      ),
+      'utf8'
+    );
+    expect(matcher).not.toMatch(/openSpecificIdentityVocabulary/);
+    expect(matcher).not.toMatch(/OPEN_SPECIFIC_IDENTITY/);
+    expect(matcher).not.toMatch(/specificationContainsRecognisedIdentity/);
   });
 });
