@@ -21,6 +21,24 @@ export const MVP_RUNTIME = {
   legacyPlanetCsvDatabases: false,
 } as const;
 
+/**
+ * AU/NZ MVP consumer UI locales that may be activated.
+ * `es` / `fr` locale JSON may remain as dormant scaffolding — not selectable here.
+ */
+export const MVP_ENABLED_UI_LOCALES = ['en'] as const;
+export type MvpEnabledUiLocale = (typeof MVP_ENABLED_UI_LOCALES)[number];
+
+export function isMvpEnabledUiLocale(code: string | null | undefined): code is MvpEnabledUiLocale {
+  if (!code) return false;
+  const primary = code.trim().toLowerCase().split(/[-_]/)[0];
+  return (MVP_ENABLED_UI_LOCALES as readonly string[]).includes(primary);
+}
+
+/** Resolve any requested/device/persisted locale to the MVP-active UI locale (English only). */
+export function resolveMvpUiLocale(_requested?: string | null): MvpEnabledUiLocale {
+  return 'en';
+}
+
 export function isMvpLegacyAlertsInsightsEnabled(): boolean {
   return MVP_RUNTIME.legacyAlertsInsights;
 }

@@ -33,6 +33,8 @@ async function ensureProductTableColumns(database: SQLite.SQLiteDatabase): Promi
       ['origins_tags', 'TEXT'],
       ['manufacturing_places_tags', 'TEXT'],
       ['ingredients_text_en', 'TEXT'],
+      ['lang', 'TEXT'],
+      ['ingredients_lc', 'TEXT'],
       ['brand_owner', 'TEXT'],
       ['labels_hierarchy', 'TEXT'],
       ['labels', 'TEXT'],
@@ -363,6 +365,8 @@ export async function saveProductToSQLite(
         ? JSON.stringify(product.manufacturing_places_tags)
         : null,
       ingredients_text_en: product.ingredients_text_en || null,
+      lang: product.lang || product.lc || null,
+      ingredients_lc: product.ingredients_lc || null,
       brand_owner: product.brand_owner || null,
       labels_hierarchy: product.labels_hierarchy ? JSON.stringify(product.labels_hierarchy) : null,
       labels: product.labels || null,
@@ -388,10 +392,10 @@ export async function saveProductToSQLite(
         nutriscore_grade, nutriscore_score, labels_tags, allergens_tags, additives_tags,
         source, quality, completion, last_updated, country_filter,
         nova_group, nova1_provenance, origins, origins_tags, manufacturing_places_tags,
-        ingredients_text_en, brand_owner, labels_hierarchy, labels, labels_en, certifications,
+        ingredients_text_en, lang, ingredients_lc, brand_owner, labels_hierarchy, labels, labels_en, certifications,
         ethics_msc_api_validated, packagings_complete, packaging_text_in_languages,
         true_scan_market, scoring_runtime_json
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         row.barcode, row.product_name, row.product_name_en, row.brands, row.generic_name,
         row.categories, row.categories_tags, row.ingredients_text, row.image_url,
@@ -401,15 +405,28 @@ export async function saveProductToSQLite(
         row.packaging ?? null,
         row.packaging_tags ?? null,
         row.url ?? null,
-        row.manufacturing_places, row.countries, row.ecoscore_grade, row.ecoscore_score,
-        row.nutriscore_grade, row.nutriscore_score, row.labels_tags, row.allergens_tags,
-        row.additives_tags, row.source, row.quality, row.completion, row.last_updated, row.country_filter,
+        row.manufacturing_places,
+        row.countries,
+        row.ecoscore_grade,
+        row.ecoscore_score,
+        row.nutriscore_grade,
+        row.nutriscore_score,
+        row.labels_tags,
+        row.allergens_tags,
+        row.additives_tags,
+        row.source,
+        row.quality,
+        row.completion,
+        row.last_updated,
+        row.country_filter,
         row.nova_group ?? null,
         row.nova1_provenance ?? null,
         row.origins ?? null,
         row.origins_tags ?? null,
         row.manufacturing_places_tags ?? null,
         row.ingredients_text_en ?? null,
+        row.lang ?? null,
+        row.ingredients_lc ?? null,
         row.brand_owner ?? null,
         row.labels_hierarchy ?? null,
         row.labels ?? null,
@@ -563,6 +580,8 @@ interface SQLiteProductRow {
   origins_tags?: string | null;
   manufacturing_places_tags?: string | null;
   ingredients_text_en?: string | null;
+  lang?: string | null;
+  ingredients_lc?: string | null;
   brand_owner?: string | null;
   labels_hierarchy?: string | null;
   labels?: string | null;
@@ -596,6 +615,8 @@ function convertRowToProduct(row: SQLiteProductRow): Product {
     categories_tags: row.categories_tags ? JSON.parse(row.categories_tags) : undefined,
     ingredients_text: row.ingredients_text || undefined,
     ingredients_text_en: row.ingredients_text_en || undefined,
+    lang: row.lang || undefined,
+    ingredients_lc: row.ingredients_lc || undefined,
     image_url: row.image_url || undefined,
     image_front_url: row.image_front_url || undefined,
     image_front_small_url: row.image_front_small_url || undefined,

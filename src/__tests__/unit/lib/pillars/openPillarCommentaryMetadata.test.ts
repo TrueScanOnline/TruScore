@@ -6,6 +6,7 @@ function productWithIngredients(text: string, extras: Partial<Product> = {}): Pr
     barcode: '9310652815573',
     product_name: 'Test',
     ingredients_text: text,
+    lang: 'en',
     ...extras,
   } as Product;
 }

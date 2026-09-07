@@ -33,6 +33,7 @@ function baseProduct(over: Partial<ProductWithTrustScore>): ProductWithTrustScor
     product_name: 'Golden Test Product',
     brands: 'TestBrand',
     source: 'openfoodfacts',
+    lang: 'en',
     trust_score: 72,
     trust_score_breakdown: {
       body: 18,

@@ -202,6 +202,7 @@ describe('null-score integrity — Open v15 + score neutrality smoke', () => {
       additives_tags: [],
       nutriments: {},
       source: 'test',
+      lang: 'en',
     };
 
     expect(calculateOpenPillar(base).details.ingredientClarityAdjustment).toBe(0);

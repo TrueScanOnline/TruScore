@@ -104,14 +104,6 @@ export default function SettingsScreen() {
           text: 'English',
           onPress: () => setLanguage('en'),
         },
-        {
-          text: 'Español',
-          onPress: () => setLanguage('es'),
-        },
-        {
-          text: 'Français',
-          onPress: () => setLanguage('fr'),
-        },
       ]
     );
   };
@@ -160,10 +152,6 @@ export default function SettingsScreen() {
     switch (lang) {
       case 'en':
         return 'English';
-      case 'es':
-        return 'Español';
-      case 'fr':
-        return 'Français';
       default:
         return 'English';
     }

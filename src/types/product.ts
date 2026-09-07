@@ -161,6 +161,19 @@ export interface Product {
   _nova_estimated?: boolean;
   _nova_confidence?: 'high' | 'medium' | 'low';
   
+  /**
+   * OFF main product language (`lang`). Duplicate historical field: `lc`.
+   * Used for Open-v15 English assessability of generic `ingredients_text`.
+   */
+  lang?: string;
+  /** OFF historical duplicate of `lang`. */
+  lc?: string;
+  /**
+   * OFF language used for the ingredients list / parse (`ingredients_lc`).
+   * When present, preferred over `lang`/`lc` for Open-v15 assessability of generic text.
+   */
+  ingredients_lc?: string;
+
   // Ingredients
   ingredients_text?: string;
   ingredients_text_en?: string;

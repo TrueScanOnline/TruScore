@@ -13,6 +13,8 @@
  * founder UAT packet fixtures remain.
  */
 
+import fs from 'fs';
+import path from 'path';
 import {
   OPEN_GOVERNED_TERM_PHRASES,
   assessOpenPillarHiddenTerms,
@@ -22,12 +24,18 @@ import {
 } from '../../../../lib/truscoreEngine/pillars/openPillarHiddenTerms';
 import { calculateOpenPillar } from '../../../../lib/truscoreEngine/pillars/openPillar';
 import type { Product } from '../../../../types/product';
+import {
+  FOUNDER_LOCKED_OPEN_GOVERNED_TERM_PHRASES_V15,
+  FOUNDER_LOCKED_OPEN_GOVERNED_TERM_PHRASES_V15_SHA256,
+} from '../../../fixtures/open/openGovernedTermPhrases.founderContract.v15';
+import * as crypto from 'crypto';
 
 function productWith(ingredientsText: string): Product {
   return {
     barcode: '1234567890123',
     product_name: 'Matcher Fixture',
     ingredients_text: ingredientsText,
+    lang: 'en',
     source: 'test',
   } as Product;
 }
@@ -171,8 +179,22 @@ describe('Open v15 governed-term matcher — unresolved terms still fire', () =>
     expect(countOpenPillarHiddenTermHits(`Water, ${term}, Salt`)).toBeGreaterThanOrEqual(1);
   });
 
-  it('every governed phrase in the v15 list can still fire standalone', () => {
-    const nonFiring = OPEN_GOVERNED_TERM_PHRASES.filter(
+  it('founder-locked 180-phrase membership matches production exactly (F5)', () => {
+    const expected = [...FOUNDER_LOCKED_OPEN_GOVERNED_TERM_PHRASES_V15].sort((a, b) =>
+      a.localeCompare(b)
+    );
+    const actual = [...OPEN_GOVERNED_TERM_PHRASES].sort((a, b) => a.localeCompare(b));
+    expect(actual).toEqual(expected);
+    expect(actual).toHaveLength(180);
+    const hash = crypto
+      .createHash('sha256')
+      .update(expected.join('\n') + '\n', 'utf8')
+      .digest('hex');
+    expect(hash).toBe(FOUNDER_LOCKED_OPEN_GOVERNED_TERM_PHRASES_V15_SHA256);
+  });
+
+  it('every founder-locked governed literal remains reachable standalone (F5)', () => {
+    const nonFiring = FOUNDER_LOCKED_OPEN_GOVERNED_TERM_PHRASES_V15.filter(
       (phrase) => countHiddenTermHitsInToken(phrase) < 1
     );
     expect(nonFiring).toEqual([]);
@@ -601,17 +623,67 @@ describe('Open v15 v0.9 — affirmative-negative evidence', () => {
   });
 
   it('runtime matcher does not import or reference positive identity vocabulary', () => {
-    const fs = require('fs') as typeof import('fs');
-    const path = require('path') as typeof import('path');
     const matcher = fs.readFileSync(
-      path.join(
-        process.cwd(),
-        'src/lib/truscoreEngine/pillars/openPillarHiddenTerms.ts'
-      ),
+      path.join(process.cwd(), 'src/lib/truscoreEngine/pillars/openPillarHiddenTerms.ts'),
       'utf8'
     );
     expect(matcher).not.toMatch(/openSpecificIdentityVocabulary/);
     expect(matcher).not.toMatch(/OPEN_SPECIFIC_IDENTITY/);
     expect(matcher).not.toMatch(/specificationContainsRecognisedIdentity/);
+  });
+
+  it('production runtime does not import the F5 founder test fixture', () => {
+    const matcher = fs.readFileSync(
+      path.join(process.cwd(), 'src/lib/truscoreEngine/pillars/openPillarHiddenTerms.ts'),
+      'utf8'
+    );
+    expect(matcher).not.toMatch(/founderContract/);
+    expect(matcher).not.toMatch(/FOUNDER_LOCKED_OPEN_GOVERNED_TERM_PHRASES/);
+  });
+});
+
+/**
+ * F2 — flavour-family equivalence within one top-level item.
+ */
+describe('Open v15 Commit J — F2 flavour-family equivalence', () => {
+  it.each([
+    ['Flavor and Flavouring', 1],
+    ['Natural Flavor and Natural Flavouring', 1],
+    ['Natural Flavours and Flavourings', 1],
+    ['Flavour Flavouring', 1],
+    ['Flavours (Flavour)', 1],
+    ['Artificial Flavours and Artificial Flavourings', 1],
+    ['Aroma and Aromas', 1],
+    ['Smoke Flavour and Smoke Flavouring', 1],
+    ['Permitted Flavouring and Flavouring', 1],
+    ['Permitted Flavouring and Natural Flavour', 1],
+    ['Natural and Artificial Flavours', 1],
+    ['Natural Flavours and Artificial Flavours', 2],
+    ['Natural Flavours and Smoke Flavour', 2],
+    ['Aroma and Flavouring', 2],
+    ['Smoke Flavour and Thermal Process Flavouring', 2],
+    ['Nature-identical Flavour and Natural Flavour', 2],
+    ['Herbs and Spices', 2],
+  ] as const)('%s → %i', (token, flags) => {
+    expect(assessOpenPillarHiddenTerms(token).flagCount).toBe(flags);
+  });
+});
+
+/**
+ * F3 — flavour/extract category shells: exhaustive vs non-exhaustive.
+ */
+describe('Open v15 Commit J — F3 flavour/extract category shells', () => {
+  it.each([
+    ['Flavours (Vanilla, Strawberry)', 0, ''],
+    ['Flavouring (Vanillin)', 0, ''],
+    ['Extracts (Vanilla, Paprika)', 0, ''],
+    ['Flavours (Contains Glutamic Acid)', 1, 'Flavours'],
+    ['Flavours including Vanilla', 1, 'Flavours'],
+    ['Flavours such as Vanilla', 1, 'Flavours'],
+    ['Flavours e.g. Vanilla', 1, 'Flavours'],
+  ] as const)('%s → %i (%s)', (token, flags, evidence) => {
+    const a = assessOpenPillarHiddenTerms(token);
+    expect(a.flagCount).toBe(flags);
+    expect(a.matchedTerms).toBe(evidence);
   });
 });

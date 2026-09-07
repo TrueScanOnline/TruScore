@@ -20,20 +20,33 @@ import {
   buildOpenOriginsCommentaryMetadata,
   type OpenCommentaryMetadata,
 } from './openPillarCommentaryMetadata';
+import {
+  resolveOpenV15ScoringIngredients,
+  type OpenV15IngredientsResolution,
+} from './openPillarIngredientsLanguage';
 import { resolvePlanetJurisdiction } from './planetPackagingFallback';
 import {
   OPEN_V15_ADJUSTMENT_REGISTRY,
   type OpenV15AdjustmentId,
 } from './openPillarV15Registry';
 
-/** Primary OFF ingredients field, then English fallback (same normalization across Open pillar). */
+export {
+  isAffirmativelyEnglishIngredientSource,
+  normalizeOffLanguageCode,
+  resolveOpenV15ScoringIngredients,
+} from './openPillarIngredientsLanguage';
+export type { OpenV15IngredientsResolution, OpenV15IngredientsScoringSource } from './openPillarIngredientsLanguage';
+
+/**
+ * Governed Open-v15 scoring ingredient text (English-assessable only).
+ * May differ from consumer-displayed `product.ingredients_text`.
+ */
 export function getOpenPillarIngredientsText(product: Product): string {
-  const primary =
-    typeof product.ingredients_text === 'string' ? product.ingredients_text.trim() : '';
-  if (primary.length > 0) return primary;
-  const en =
-    typeof product.ingredients_text_en === 'string' ? product.ingredients_text_en.trim() : '';
-  return en;
+  return resolveOpenV15ScoringIngredients(product).scoringText;
+}
+
+export function resolveOpenPillarIngredientsForV15(product: Product): OpenV15IngredientsResolution {
+  return resolveOpenV15ScoringIngredients(product);
 }
 
 export interface OpenPillarAdjustment {
@@ -58,18 +71,6 @@ export interface OpenPillarResult {
     originsAdjustment: number;
     originsProvenance: string;
   };
-}
-
-function isPlaceholderIngredients(text: string): boolean {
-  return /^(product|item|n\/a|not available|unknown|missing|no ingredients|ingredients not listed)/i.test(
-    text.trim()
-  );
-}
-
-function ingredientsUsableForV15(ingredientsText: string): boolean {
-  if (!ingredientsText || ingredientsText.trim().length === 0) return false;
-  if (isPlaceholderIngredients(ingredientsText)) return false;
-  return true;
 }
 
 function pushAdjustment(
@@ -104,9 +105,10 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   let score = 15;
   const base = 15;
 
-  const ingredientsText = getOpenPillarIngredientsText(product);
+  const ingredientsResolution = resolveOpenV15ScoringIngredients(product);
+  const ingredientsText = ingredientsResolution.scoringText;
   const ingredientsLength = ingredientsText.length;
-  const usable = ingredientsUsableForV15(ingredientsText);
+  const usable = ingredientsResolution.usable;
 
   const hiddenTermAssessment = usable ? assessOpenPillarHiddenTerms(ingredientsText) : null;
   const governedFlagCount = hiddenTermAssessment?.flagCount ?? 0;

@@ -38,6 +38,8 @@ describe('Open Pillar v15', () => {
     additives_tags: [],
     nutriments: {},
     source: 'test',
+    // Affirmative English OFF metadata so English fixtures remain assessable under v15 language gate.
+    lang: 'en',
   };
 
   test('base score is 15; base is not a fired-adjustment ledger row', () => {
@@ -444,6 +446,7 @@ describe('Open v15 S28 diagnostic trace', () => {
     barcode: '999',
     product_name: 'Honey NZ',
     ingredients_text: 'Honey',
+    lang: 'en',
     origins_tags: ['en:new-zealand'],
     origins: 'New Zealand',
     source: 'test',
@@ -511,6 +514,7 @@ describe('Open v15 ingredient clarity after governed-term matcher correction', (
     barcode: '1234567890123',
     product_name: 'Clarity Fixture',
     ingredients_text,
+    lang: 'en',
     source: 'test',
   });
 

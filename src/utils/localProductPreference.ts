@@ -14,6 +14,8 @@ const SCORING_INPUT_KEYS: (keyof Product | string)[] = [
   'additives_tags',
   'ingredients_text',
   'ingredients_text_en',
+  'lang',
+  'ingredients_lc',
   'categories_tags',
   'categories',
   'origins',

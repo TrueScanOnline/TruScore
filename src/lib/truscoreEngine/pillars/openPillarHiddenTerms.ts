@@ -316,11 +316,177 @@ const SORTED_ALL_PHRASES = [
   ...ADDITIVE_CLASS_TERMS,
 ].sort((a, b) => b.length - a.length);
 
-/** Exported for governed-term coverage tests; not a scoring input on its own. */
+/** Exported for membership checks; production scoring uses SORTED_ALL_PHRASES directly. */
 export const OPEN_GOVERNED_TERM_PHRASES: readonly string[] = Object.freeze([...SORTED_ALL_PHRASES]);
 
 const ADDITIVE_CLASS_SET = new Set(ADDITIVE_CLASS_TERMS);
-const RESOLVABLE_CATEGORY_HEADS = new Set([...ADDITIVE_CLASS_TERMS, ...SEASONING_CATEGORY_TERMS]);
+/** Flavour/aroma phrases that may act as category shells (F3). */
+const FLAVOUR_CATEGORY_HEADS = new Set(GENERIC_FLAVOUR_PHRASES);
+/** Extract-family phrases that may act as category shells (F3). */
+const EXTRACT_CATEGORY_HEADS = new Set(GENERIC_EXTRACT_PHRASES);
+const RESOLVABLE_CATEGORY_HEADS = new Set([
+  ...ADDITIVE_CLASS_TERMS,
+  ...SEASONING_CATEGORY_TERMS,
+  ...GENERIC_FLAVOUR_PHRASES,
+  ...GENERIC_EXTRACT_PHRASES,
+]);
+
+/**
+ * F2 semantic classes over GENERIC_FLAVOUR_PHRASES. Collapse aliases / morphology /
+ * general↔specific overlap within one top-level item; keep distinct subtypes separate.
+ */
+type FlavourSemClass =
+  | 'generic_flavour'
+  | 'natural_flavour'
+  | 'artificial_flavour'
+  | 'natural_and_artificial_flavour'
+  | 'nature_identical_flavour'
+  | 'permitted_flavour'
+  | 'smoke_flavour'
+  | 'thermal_process_flavour'
+  | 'aroma_generic'
+  | 'aroma_natural'
+  | 'aroma_artificial';
+
+const FLAVOUR_SEM_CLASS_BY_PHRASE: ReadonlyMap<string, FlavourSemClass> = (() => {
+  const m = new Map<string, FlavourSemClass>();
+  const add = (cls: FlavourSemClass, phrases: string[]) => {
+    for (const p of phrases) m.set(p, cls);
+  };
+  add('generic_flavour', [
+    'flavor',
+    'flavour',
+    'flavors',
+    'flavours',
+    'flavoring',
+    'flavouring',
+    'flavorings',
+    'flavourings',
+    'flavoring preparation',
+    'flavouring preparation',
+    'flavoring preparations',
+    'flavouring preparations',
+    'flavoring substance',
+    'flavouring substance',
+    'flavoring substances',
+    'flavouring substances',
+  ]);
+  add('natural_flavour', [
+    'natural flavor',
+    'natural flavour',
+    'natural flavors',
+    'natural flavours',
+    'natural flavoring',
+    'natural flavouring',
+    'natural flavorings',
+    'natural flavourings',
+  ]);
+  add('artificial_flavour', [
+    'artificial flavor',
+    'artificial flavour',
+    'artificial flavors',
+    'artificial flavours',
+    'artificial flavoring',
+    'artificial flavouring',
+    'artificial flavorings',
+    'artificial flavourings',
+  ]);
+  add('natural_and_artificial_flavour', [
+    'natural and artificial flavours',
+    'natural and artificial flavors',
+    'natural & artificial flavours',
+    'natural & artificial flavors',
+  ]);
+  add('nature_identical_flavour', [
+    'nature identical flavor',
+    'nature identical flavour',
+    'nature identical flavors',
+    'nature identical flavours',
+    'nature identical flavoring',
+    'nature identical flavouring',
+    'nature-identical flavor',
+    'nature-identical flavour',
+    'nature-identical flavors',
+    'nature-identical flavours',
+    'nature-identical flavoring',
+    'nature-identical flavouring',
+  ]);
+  add('permitted_flavour', [
+    'permitted flavoring',
+    'permitted flavouring',
+    'permitted flavorings',
+    'permitted flavourings',
+    'permitted flavoring substance',
+    'permitted flavouring substance',
+    'permitted flavoring substances',
+    'permitted flavouring substances',
+  ]);
+  add('smoke_flavour', [
+    'smoke flavor',
+    'smoke flavour',
+    'smoke flavors',
+    'smoke flavours',
+    'smoke flavoring',
+    'smoke flavouring',
+  ]);
+  add('thermal_process_flavour', [
+    'thermal process flavoring',
+    'thermal process flavouring',
+    'thermal process flavorings',
+    'thermal process flavourings',
+  ]);
+  add('aroma_generic', ['aroma', 'aromas']);
+  add('aroma_natural', ['natural aroma', 'natural aromas']);
+  add('aroma_artificial', ['artificial aroma', 'artificial aromas']);
+  return m;
+})();
+
+const FLAVOUR_SPECIFICITY: Record<FlavourSemClass, number> = {
+  natural_and_artificial_flavour: 100,
+  nature_identical_flavour: 80,
+  smoke_flavour: 80,
+  thermal_process_flavour: 80,
+  natural_flavour: 60,
+  artificial_flavour: 60,
+  aroma_natural: 60,
+  aroma_artificial: 60,
+  permitted_flavour: 40,
+  generic_flavour: 20,
+  aroma_generic: 20,
+};
+
+function isAromaClass(cls: FlavourSemClass): boolean {
+  return cls === 'aroma_generic' || cls === 'aroma_natural' || cls === 'aroma_artificial';
+}
+
+/** True when two flavour semantic classes collapse under F2 (same top-level item). */
+function flavourClassesCollapse(a: FlavourSemClass, b: FlavourSemClass): boolean {
+  if (a === b) return true;
+  if (isAromaClass(a) !== isAromaClass(b)) return false;
+  if (isAromaClass(a) && isAromaClass(b)) {
+    return a === 'aroma_generic' || b === 'aroma_generic';
+  }
+  // Flavour stem: generic and permitted wrappers collapse with any stem class.
+  if (a === 'generic_flavour' || b === 'generic_flavour') return true;
+  if (a === 'permitted_flavour' || b === 'permitted_flavour') return true;
+  if (
+    (a === 'natural_and_artificial_flavour' &&
+      (b === 'natural_flavour' || b === 'artificial_flavour')) ||
+    (b === 'natural_and_artificial_flavour' &&
+      (a === 'natural_flavour' || a === 'artificial_flavour'))
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function takesUnbracketedClassShellPath(phrase: string): boolean {
+  return (
+    ADDITIVE_CLASS_SET.has(phrase) ||
+    FLAVOUR_CATEGORY_HEADS.has(phrase) ||
+    EXTRACT_CATEGORY_HEADS.has(phrase)
+  );
+}
 
 /**
  * Words that carry no ingredient specificity, so a governed term remains the unresolved
@@ -717,12 +883,89 @@ function residualGovernedHits(
   });
 }
 
+/**
+ * F2: within one bare expression, collapse overlapping flavour-family matches to the most
+ * informative evidence label; leave non-flavour governed hits untouched.
+ */
+function collapseFlavourFamilyMatches<T extends { phrase: string; start: number; end: number }>(
+  candidates: readonly T[]
+): { winners: T[]; covered: T[] } {
+  const flavourHits: T[] = [];
+  const others: T[] = [];
+  for (const c of candidates) {
+    if (FLAVOUR_SEM_CLASS_BY_PHRASE.has(c.phrase)) flavourHits.push(c);
+    else others.push(c);
+  }
+  if (flavourHits.length <= 1) {
+    return { winners: [...candidates], covered: [] };
+  }
+
+  const parent = flavourHits.map((_, i) => i);
+  const find = (i: number): number => {
+    let p = i;
+    while (parent[p] !== p) p = parent[p];
+    let x = i;
+    while (parent[x] !== x) {
+      const n = parent[x];
+      parent[x] = p;
+      x = n;
+    }
+    return p;
+  };
+  const union = (i: number, j: number) => {
+    const a = find(i);
+    const b = find(j);
+    if (a !== b) parent[b] = a;
+  };
+
+  for (let i = 0; i < flavourHits.length; i++) {
+    const ci = FLAVOUR_SEM_CLASS_BY_PHRASE.get(flavourHits[i].phrase)!;
+    for (let j = i + 1; j < flavourHits.length; j++) {
+      const cj = FLAVOUR_SEM_CLASS_BY_PHRASE.get(flavourHits[j].phrase)!;
+      if (flavourClassesCollapse(ci, cj)) union(i, j);
+    }
+  }
+
+  const groups = new Map<number, T[]>();
+  for (let i = 0; i < flavourHits.length; i++) {
+    const root = find(i);
+    const g = groups.get(root) ?? [];
+    g.push(flavourHits[i]);
+    groups.set(root, g);
+  }
+
+  const winners: T[] = [...others];
+  const covered: T[] = [];
+  for (const group of groups.values()) {
+    const winner = group.reduce((best, cur) => {
+      const bestCls = FLAVOUR_SEM_CLASS_BY_PHRASE.get(best.phrase)!;
+      const curCls = FLAVOUR_SEM_CLASS_BY_PHRASE.get(cur.phrase)!;
+      const bestRank = FLAVOUR_SPECIFICITY[bestCls];
+      const curRank = FLAVOUR_SPECIFICITY[curCls];
+      if (curRank !== bestRank) return curRank > bestRank ? cur : best;
+      const bestLen = best.end - best.start;
+      const curLen = cur.end - cur.start;
+      if (curLen !== bestLen) return curLen > bestLen ? cur : best;
+      return cur.start < best.start ? cur : best;
+    });
+    winners.push(winner);
+    for (const c of group) {
+      if (c !== winner) covered.push(c);
+    }
+  }
+  return { winners, covered };
+}
+
 function commitBroadGenericMatches(
   ctx: ScanContext,
   absStart: number,
-  candidates: readonly TextRange[]
+  candidates: readonly (TextRange & { phrase: string })[]
 ): void {
-  for (const c of candidates) {
+  const { winners, covered } = collapseFlavourFamilyMatches(candidates);
+  for (const c of covered) {
+    markRange(ctx.covered, absStart + c.start, absStart + c.end);
+  }
+  for (const c of winners) {
     const start = absStart + c.start;
     const end = absStart + c.end;
     if (!isRangeFree(ctx.covered, start, end)) continue;
@@ -983,31 +1226,40 @@ function analyzeItem(ctx: ScanContext, item: ParsedIngredientItem): void {
     isRangeFree(ctx.covered, head.start + s, head.start + e)
   );
   const categoryShell = headCandidates.find(
-    (c) => c.start === 0 && (ADDITIVE_CLASS_SET.has(c.phrase) || RESOLVABLE_CATEGORY_HEADS.has(c.phrase))
+    (c) => c.start === 0 && RESOLVABLE_CATEGORY_HEADS.has(c.phrase)
   );
 
-  // Class shell at the head — bracketed or unbracketed specification uses the same path.
-  // Seasoning heads only take the class-shell path when bracketed (or bare); an unbracketed
-  // "herbs and spices" coordination must still fire both governed terms.
+  // Class shell at the head — bracketed specs use the class-shell path. Unbracketed
+  // additive/flavour/extract shells use it when the remainder is a class specification
+  // (code / non-exhaustive / residual). Seasoning coordination ("herbs and spices") and
+  // multi-flavour subtype coordination fall through so F2 can preserve distinct categories.
   if (categoryShell) {
     const shellEnd = head.start + categoryShell.end;
     const shellHead: TextRange = { start: head.start, end: shellEnd };
-    const isAdditiveShell = ADDITIVE_CLASS_SET.has(categoryShell.phrase);
     const hasUnbracketedRemainder =
       categoryShell.end < headLower.length && item.groups.length === 0;
 
-    if (hasUnbracketedRemainder && !isAdditiveShell) {
-      // Fall through to ordinary bare-expression matching.
-    } else if (hasUnbracketedRemainder && isAdditiveShell) {
-      const prefixItem: ParsedIngredientItem = {
-        start: item.start,
-        end: item.end,
-        bareRanges: [shellHead],
-        groups: [],
-      };
-      if (handleClassShellItem(ctx, prefixItem, shellHead, categoryShell.phrase)) {
-        return;
+    if (hasUnbracketedRemainder) {
+      const remainder = trimRange(ctx.text, shellEnd, item.end);
+      const remainderText = ctx.text.slice(remainder.start, remainder.end);
+      const useShellPath =
+        takesUnbracketedClassShellPath(categoryShell.phrase) &&
+        (ADDITIVE_CLASS_SET.has(categoryShell.phrase) ||
+          specificationIsNonExhaustive(remainderText) ||
+          specificationIsCodeOnly(remainderText));
+
+      if (useShellPath) {
+        const prefixItem: ParsedIngredientItem = {
+          start: item.start,
+          end: item.end,
+          bareRanges: [shellHead],
+          groups: [],
+        };
+        if (handleClassShellItem(ctx, prefixItem, shellHead, categoryShell.phrase)) {
+          return;
+        }
       }
+      // else fall through — F2 / seasoning coordination
     } else {
       const syntheticItem: ParsedIngredientItem = {
         ...item,

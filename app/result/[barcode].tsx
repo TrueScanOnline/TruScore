@@ -2275,17 +2275,8 @@ function ResultScreenContent() {
             return null;
           }
           
-          // Determine border color based on negative indicators
-          // Red if: many additives, hidden ingredients, ultra-processed (NOVA 4)
-          const hasManyAdditives = product.additives_tags && product.additives_tags.length > 5;
-          const hiddenTerms = ['parfum', 'fragrance', 'aroma', 'natural flavor', 'proprietary blend'];
-          const hasHiddenIngredients = hiddenTerms.some(term => 
-            ingredientsText.toLowerCase().includes(term)
-          );
-          const isUltraProcessed = product.nova_group === 4;
-          
-          const hasNegativeIndicators = hasManyAdditives || hasHiddenIngredients || isUltraProcessed;
-          const borderColor = hasNegativeIndicators ? '#ff6b6b' : '#16a085';
+          // Ordinary Ingredients card: no independent raw-field risk border.
+          // Governed interpretation remains Score Highlights / L3 (and Body NOVA via scoring path).
           
           return (
             <Pressable
@@ -2295,7 +2286,7 @@ function ResultScreenContent() {
                 {
                   backgroundColor: colors.card,
                   borderWidth: 2,
-                  borderColor,
+                  borderColor: colors.border,
                   opacity: pressed ? 0.96 : 1,
                 },
               ]}

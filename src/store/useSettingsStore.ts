@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../i18n';
+import {
+  isMvpEnabledUiLocale,
+  resolveMvpUiLocale,
+  type MvpEnabledUiLocale,
+} from '../config/mvpRuntimeGates';
 
 export type PlanetPackagingMarketSetting = 'auto' | 'AU' | 'NZ';
 
@@ -9,7 +14,8 @@ interface SettingsStore {
   /** ISO timestamp when user acknowledged legal disclaimers during onboarding; null if not yet accepted */
   legalDisclaimersAcceptedAt: string | null;
   darkMode: boolean;
-  language: 'en' | 'es' | 'fr';
+  /** MVP-active UI locale (English only). Persisted es/fr values are coerced to en. */
+  language: MvpEnabledUiLocale;
   units: 'metric' | 'imperial';
   analyticsEnabled: boolean;
   /**
@@ -25,7 +31,7 @@ interface SettingsStore {
   setHasCompletedOnboarding: (value: boolean) => Promise<void>;
   setLegalDisclaimersAcceptedAt: (value: string | null) => Promise<void>;
   setDarkMode: (value: boolean) => Promise<void>;
-  setLanguage: (value: 'en' | 'es' | 'fr') => Promise<void>;
+  setLanguage: (value: string) => Promise<void>;
   setUnits: (value: 'metric' | 'imperial') => Promise<void>;
   setAnalyticsEnabled: (value: boolean) => Promise<void>;
   setScoreDiagnosticsEnabled: (value: boolean) => Promise<void>;
@@ -76,8 +82,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   },
 
   setLanguage: async (value) => {
-    set({ language: value });
-    i18n.changeLanguage(value); // Update i18n language
+    const next = isMvpEnabledUiLocale(value) ? value : resolveMvpUiLocale(value);
+    set({ language: next });
+    i18n.changeLanguage(next);
     await saveSettings();
   },
 
@@ -176,6 +183,10 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
           hasCompletedOnboarding, // Explicitly use our checked value
           legalDisclaimersAcceptedAt,
           planetPackagingMarket,
+          // MVP English-only: coerce any persisted es/fr (or other) to en.
+          language: resolveMvpUiLocale(
+            typeof parsed.language === 'string' ? parsed.language : defaultSettings.language
+          ),
         };
         
         console.log('[SettingsStore] Final merged settings:', {
@@ -188,10 +199,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         
         set(settings);
         
-        // Initialize i18n with saved language
-        if (settings.language) {
-          i18n.changeLanguage(settings.language);
-        }
+        // Initialize i18n with MVP-active locale only
+        i18n.changeLanguage(settings.language);
       } else {
         // No stored settings - use defaults (hasCompletedOnboarding = false, so onboarding will show)
         console.log('[SettingsStore] No stored settings found. Using defaults:', defaultSettings);

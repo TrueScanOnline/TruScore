@@ -127,7 +127,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>4</Text>
             </View>
             <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-              {t('infoModal.trustScore.step4') || 'Calculate Transparency score (0-25) by detecting hidden ingredient terms (parfum, fragrance, proprietary blend)'}
+              {t('infoModal.trustScore.step4') || 'Calculate Transparency score (0-25) from ingredient-list disclosure evidence and origin completeness where available'}
             </Text>
           </View>
           <View style={styles.stepItem}>
@@ -195,7 +195,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                 </Text>
               </View>
               <Text style={[styles.confidenceDesc, { color: colors.textSecondary, marginTop: 8 }]}>
-                {t('infoModal.trustScore.mediumConfidenceDesc') || 'This product information comes from store websites or community databases. These include major retailers like Woolworths, Coles, and IGA in Australia and New Zealand, as well as community databases like Open Beauty Facts and Open Pet Food Facts. While these sources are generally reliable, they may sometimes have missing information or be less complete than official sources.'}
+                {t('infoModal.trustScore.mediumConfidenceDesc') || 'This product information comes from store websites or community databases. These include major retailers like Woolworths, Coles, and IGA in Australia and New Zealand, as well as other food product databases. While these sources are generally reliable, they may sometimes have missing information or be less complete than official sources.'}
               </Text>
               <View style={[styles.sourceList, { marginTop: 12 }]}>
                 <Text style={[styles.sourceListTitle, { color: colors.text, fontSize: 13, fontWeight: '600', marginBottom: 6 }]}>
@@ -203,7 +203,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                 </Text>
                 <Text style={[styles.sourceListItem, { color: colors.textSecondary, fontSize: 13, lineHeight: 20 }]}>
                   • Major retailer websites (Woolworths, Coles, IGA){'\n'}
-                  • Community databases (Open Beauty Facts, Open Pet Food Facts){'\n'}
+                  • Other food product community databases{'\n'}
                   • Third-party product APIs
                 </Text>
               </View>
@@ -354,25 +354,19 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#4dd09f" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  {t('infoModal.trustScore.nutriScore')} (A=25, B=20, C=15, D=10, E=5)
+                  {t('infoModal.trustScore.nutriScore')} (when available)
                 </Text>
               </View>
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#4dd09f" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  NOVA Classification (1=+3, 2=0, 3=-3, 4=-8)
+                  NOVA classification (when available)
                 </Text>
               </View>
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#4dd09f" />
                 <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  Additives (weighted: safe -0.5, caution -1.5, avoid -3, cap 15)
-                </Text>
-              </View>
-              <View style={styles.factorTag}>
-                <Ionicons name="checkmark-circle" size={12} color="#4dd09f" />
-                <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  {t('infoModal.trustScore.allergens')} (up to -5)
+                  Food additives of concern (governed MVP registry when evidence is present)
                 </Text>
               </View>
             </View>
@@ -403,18 +397,6 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                   {t('infoModal.trustScore.ingredientDisclosure')}
                 </Text>
               </View>
-              <View style={styles.factorTag}>
-                <Ionicons name="checkmark-circle" size={12} color="#9b59b6" />
-                <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  {t('infoModal.trustScore.hiddenTerms')}
-                </Text>
-              </View>
-              <View style={styles.factorTag}>
-                <Ionicons name="checkmark-circle" size={12} color="#9b59b6" />
-                <Text style={[styles.factorTagText, { color: colors.textSecondary }]}>
-                  {t('infoModal.trustScore.percentageDisclosure')}
-                </Text>
-              </View>
             </View>
           </View>
         </View>
@@ -436,14 +418,9 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             {t('infoModal.trustScore.bodySource')}
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
-            • Nutri-Score (official EU/UK/FR/BE/ES system) - Direct conversion: A=25, B=20, C=15, D=10, E=5{'\n'}
-            • NOVA Classification (São Paulo University system) - Merged into Body: NOVA 1=+3, NOVA 2=0, NOVA 3=-3, NOVA 4=-8{'\n'}
-            • Additives (weighted by safety rating) - Safe: -0.5 each, Caution: -1.5 each, Avoid: -3 each (cap 15 total){'\n'}
-            • Comprehensive E-number database (400+ additives) with detailed safety ratings{'\n'}
-            • Risky tags (carcinogenic, endocrine, palm, allergen, irritant): -4 each{'\n'}
-            • Irritants (parabens, phthalates, sulfates, etc.): -10 block penalty{'\n'}
-            • Fragrance/Parfum: -10 penalty{'\n'}
-            • Source: Open Food Facts API + Comprehensive additive database
+            • Body uses Nutri-Score and NOVA classification when those signals are available from Open Food Facts{'\n'}
+            • A governed food-additives-of-concern registry may adjust Body when evidence is present{'\n'}
+            • Source: Open Food Facts API ingredients and nutrition fields
           </Text>
         </View>
 
@@ -480,12 +457,9 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             {t('infoModal.trustScore.openSource') || 'Transparency Pillar (0-25 points)'}
           </Text>
           <Text style={[styles.sourceText, { color: colors.textSecondary }]}>
-            • Ingredient Text Analysis (Open Food Facts) - Hidden term detection{'\n'}
-            • Hidden Terms: {'\u201c'}parfum{'\u201d'}, {'\u201c'}fragrance{'\u201d'}, {'\u201c'}natural flavor{'\u201d'}, {'\u201c'}proprietary blend{'\u201d'} — 1–2 terms: -10, ≥3 terms: -20{'\n'}
-            • Ingredients Disclosure: Full=15, {'>'}80%=10, 50-80%=5, None=-5{'\n'}
-            • Origin: No origin = -8 penalty (was -15){'\n'}
-            • Percentage Disclosure - Bonus for full ingredient percentages{'\n'}
-            • Source: Open Food Facts API ingredients_text field
+            • Ingredient-list disclosure evidence from the product label text{'\n'}
+            • Origin completeness where structured origin evidence is available{'\n'}
+            • Source: Open Food Facts API ingredients_text and origins fields where present
           </Text>
         </View>
 
@@ -753,10 +727,10 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             {t('infoModal.trustScore.transparencyTitle') || '100% Transparent Methodology'}
           </Text>
           <Text style={[styles.noteText, { color: colors.textSecondary }]}>
-            {t('infoModal.trustScore.note') || 'Rveel Score v1.4 is calculated based on available product data from Open Food Facts, Open Beauty Facts, and UPCitemdb. The score uses recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) combined with comprehensive databases (400+ E-number additives, 500+ brand/company database). Additive penalties are weighted by safety rating (safe: -0.5, caution: -1.5, avoid: -3). Brand detection uses parent-subsidiary relationships for accurate cruel parent identification. When Nutri-Score or Eco-Score are missing, scores are calculated from available data with appropriate baselines (25 points base).'}
+            {t('infoModal.trustScore.note') || 'Rveel Score v1.4 is calculated from available product data using recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) across Body, Planet, Claims, and Transparency. Scores are shown when sufficient verified data is available.'}
           </Text>
           <Text style={[styles.noteText, { color: colors.textSecondary, marginTop: 8 }]}>
-            {t('infoModal.trustScore.dataSourceNote') || 'Data Sources: Open Food Facts (world.openfoodfacts.org), Open Beauty Facts (world.openbeautyfacts.org), UPCitemdb (api.upcitemdb.com), Barcode Spider, FDA Food Recall API (fda.gov/food/recalls). All calculations are transparent and verifiable.'}
+            {t('infoModal.trustScore.dataSourceNote') || 'Data Sources: Open Food Facts (world.openfoodfacts.org), UPCitemdb (api.upcitemdb.com), Barcode Spider, FDA Food Recall API (fda.gov/food/recalls). All calculations are transparent and verifiable.'}
           </Text>
         </View>
       </View>

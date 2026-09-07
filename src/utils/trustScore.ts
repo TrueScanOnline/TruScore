@@ -3,7 +3,6 @@ import { Product, ProductWithTrustScore, TrustScoreBreakdown } from '../types/pr
 import { extractManufacturingCountry, calculateEcoScore, formatCertifications } from '../services/openFoodFacts';
 import { calculateTruScore, buildTruScoreAnalysis } from '../lib/truscoreEngine';
 import { getPlanetScoringContext } from './planetScoringContext';
-import { countOpenPillarHiddenTermHits } from '../lib/truscoreEngine/pillars/openPillarHiddenTerms';
 import { scoreBodyMvpAdditives } from '../lib/truscoreEngine/pillars/bodyAdditiveScoring';
 import { getCachedTruScore, cacheTruScore } from './truScoreCache';
 import { applyResolvedNutrientLevels } from './resolveNutrientLevels';
@@ -297,19 +296,9 @@ function generateTrustReasons(
     reasons.push('High salt content');
   }
 
-  // Open (Ingredient transparency — v15 governed-flag count)
-  const ingredientsText = (product.ingredients_text || '').trim();
-  const hiddenCount = countOpenPillarHiddenTermHits(ingredientsText);
-
-  if (hiddenCount >= 3) {
-    reasons.push('Multiple hidden ingredients - low transparency');
-  } else if (hiddenCount >= 1) {
-    reasons.push('Contains hidden ingredients - reduced transparency');
-  } else if (!ingredientsText || ingredientsText.length < 10) {
-    reasons.push('No ingredient list available - very low transparency');
-  } else if (hiddenCount === 0 && ingredientsText.length > 10) {
-    reasons.push('Full ingredient disclosure - high transparency');
-  }
+  // Open / Transparency: consumer interpretation is Score Highlights + pillar score only.
+  // Legacy generateTrustReasons Open prose removed (Commit J / F8); cached historical
+  // reason strings may remain in storage but have no live reader.
 
   return reasons;
 }
