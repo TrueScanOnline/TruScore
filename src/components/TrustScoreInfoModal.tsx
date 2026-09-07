@@ -727,7 +727,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             {t('infoModal.trustScore.transparencyTitle') || '100% Transparent Methodology'}
           </Text>
           <Text style={[styles.noteText, { color: colors.textSecondary }]}>
-            {t('infoModal.trustScore.note') || 'Rveel Score v1.4 is calculated from available product data using recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels) across Body, Planet, Claims, and Transparency. Scores are shown when sufficient verified data is available.'}
+            {t('infoModal.trustScore.note') || 'Rveel Score v1.4 is calculated from available Open Food Facts and other product data using recognized public systems (Nutri-Score, Eco-Score, NOVA, Open Food Facts labels) across Body, Planet, Claims, and Transparency. Scores are shown when sufficient verified data is available.'}
           </Text>
           <Text style={[styles.noteText, { color: colors.textSecondary, marginTop: 8 }]}>
             {t('infoModal.trustScore.dataSourceNote') || 'Data Sources: Open Food Facts (world.openfoodfacts.org), UPCitemdb (api.upcitemdb.com), Barcode Spider, FDA Food Recall API (fda.gov/food/recalls). All calculations are transparent and verifiable.'}

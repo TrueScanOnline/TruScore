@@ -114,6 +114,7 @@ describe('TruScore Engine', () => {
         barcode: '1234567890123',
         product_name: 'Test Product',
         ingredients_text: 'Water, sugar, natural flavor, aroma',
+        lang: 'en',
       };
 
       const result = calculateTruScore(product);
@@ -127,6 +128,7 @@ describe('TruScore Engine', () => {
         nutriscore_grade: 'a',
         ecoscore_grade: 'a',
         ingredients_text: 'Organic ingredients, water, salt',
+        lang: 'en',
         labels_tags: ['en:organic'],
         origins_tags: ['en:france'],
         nova_group: 1,

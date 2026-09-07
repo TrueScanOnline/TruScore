@@ -687,3 +687,58 @@ describe('Open v15 Commit J — F3 flavour/extract category shells', () => {
     expect(a.matchedTerms).toBe(evidence);
   });
 });
+
+/**
+ * K-1 — bare numeric codes under resolvable (non-additive-only) category heads.
+ */
+describe('Open v15 Commit K — bare numeric codes under resolvable category heads', () => {
+  it('Flavours (621) → 1 coded', () => {
+    const a = assessOpenPillarHiddenTerms('Flavours (621)');
+    expect(a.flagCount).toBe(1);
+    expect(a.termPresentationClass).toBe('coded');
+  });
+
+  it('Flavours (627, 631) → 2 coded', () => {
+    const a = assessOpenPillarHiddenTerms('Flavours (627, 631)');
+    expect(a.flagCount).toBe(2);
+    expect(a.termPresentationClass).toBe('coded');
+  });
+
+  it('Flavours (Vanilla, 621) keeps the governed code reachable', () => {
+    const a = assessOpenPillarHiddenTerms('Flavours (Vanilla, 621)');
+    expect(a.flagCount).toBe(1);
+    expect(a.matchedTerms.toLowerCase()).toContain('621');
+  });
+
+  it('Aroma (621) → 1 coded', () => {
+    const a = assessOpenPillarHiddenTerms('Aroma (621)');
+    expect(a.flagCount).toBe(1);
+    expect(a.termPresentationClass).toBe('coded');
+  });
+
+  it('Extracts (150a) → 1 coded', () => {
+    const a = assessOpenPillarHiddenTerms('Extracts (150a)');
+    expect(a.flagCount).toBe(1);
+    expect(a.termPresentationClass).toBe('coded');
+  });
+
+  it.each([
+    'Spice (621)',
+    'Spices (621)',
+    'Herb (621)',
+    'Herbs (621)',
+    'Seasoning (621)',
+    'Seasonings (621)',
+  ])('%s → 1 coded', (token) => {
+    const a = assessOpenPillarHiddenTerms(token);
+    expect(a.flagCount).toBe(1);
+    expect(a.termPresentationClass).toBe('coded');
+  });
+
+  it('preserves Flavours (E621) / (INS 621) and additive-class coded cases', () => {
+    expect(assessOpenPillarHiddenTerms('Flavours (E621)').flagCount).toBe(1);
+    expect(assessOpenPillarHiddenTerms('Flavours (INS 621)').flagCount).toBe(1);
+    expect(assessOpenPillarHiddenTerms('Colour (621)').flagCount).toBe(1);
+    expect(assessOpenPillarHiddenTerms('Emulsifier (471)').flagCount).toBe(1);
+  });
+});

@@ -81,6 +81,8 @@ function baseProduct(over: Partial<Product> = {}): Product {
     additives_tags: [],
     nutriments: {},
     source: 'test',
+    // Established English verification fixtures for Open-v15 language assessability.
+    lang: 'en',
     ...over,
   };
 }

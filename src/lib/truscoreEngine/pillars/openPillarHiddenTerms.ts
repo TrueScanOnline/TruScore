@@ -1098,7 +1098,9 @@ function handleClassShellItem(
   }
 
   const allCoded = slices.every((s) => specificationIsCodeOnly(ctx.text.slice(s.start, s.end)));
-  if (allCoded && ADDITIVE_CLASS_SET.has(shellPhrase)) {
+  // Bare numeric / lettered codes must remain reachable for every resolvable category head
+  // (additive classes plus F3 flavour/extract/seasoning heads), not only ADDITIVE_CLASS_SET.
+  if (allCoded && RESOLVABLE_CATEGORY_HEADS.has(shellPhrase)) {
     commitCodedClassItem(ctx, item.start, item.end, ctx.text.slice(slices[0].start, slices[0].end));
     return true;
   }
@@ -1155,13 +1157,13 @@ function handleClassShellItem(
         markRange(ctx.covered, slice.start, slice.end);
       }
     }
-    if (ADDITIVE_CLASS_SET.has(shellPhrase)) {
+    if (RESOLVABLE_CATEGORY_HEADS.has(shellPhrase)) {
       for (const slice of slices) countBareCodesInSpecification(ctx, slice.start, slice.end);
     }
     return true;
   }
 
-  if (anyCode && !anyInert && ADDITIVE_CLASS_SET.has(shellPhrase)) {
+  if (anyCode && !anyInert && RESOLVABLE_CATEGORY_HEADS.has(shellPhrase)) {
     commitCodedClassItem(ctx, item.start, item.end, ctx.text.slice(slices[0].start, slices[0].end));
     return true;
   }
@@ -1170,14 +1172,14 @@ function handleClassShellItem(
   // assess any nested specification for independently governed terms or codes.
   markRange(ctx.covered, head.start, head.end);
   for (const group of item.groups) {
-    if (ADDITIVE_CLASS_SET.has(shellPhrase)) countBareCodesInSpecification(ctx, group.start, group.end);
+    if (RESOLVABLE_CATEGORY_HEADS.has(shellPhrase)) countBareCodesInSpecification(ctx, group.start, group.end);
     analyzeRange(ctx, group.start, group.end);
   }
   if (item.groups.length === 0) {
     const remainder = trimRange(ctx.text, head.end, item.end);
     if (remainder.end > remainder.start) {
       if (
-        ADDITIVE_CLASS_SET.has(shellPhrase) &&
+        RESOLVABLE_CATEGORY_HEADS.has(shellPhrase) &&
         specificationIsCodeOnly(ctx.text.slice(remainder.start, remainder.end))
       ) {
         commitCodedClassItem(ctx, item.start, item.end, ctx.text.slice(remainder.start, remainder.end));

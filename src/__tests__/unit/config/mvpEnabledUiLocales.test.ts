@@ -2,6 +2,8 @@
  * MVP English-only UI locale authority.
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   isMvpEnabledUiLocale,
   MVP_ENABLED_UI_LOCALES,
@@ -28,8 +30,6 @@ describe('MVP enabled UI locales', () => {
 
   test('settings/profile language pickers do not offer es/fr buttons', () => {
     // Lightweight source contract: MVP pickers must not call setLanguage('es'|'fr').
-    const fs = require('fs') as typeof import('fs');
-    const path = require('path') as typeof import('path');
     const root = path.join(__dirname, '../../../../');
     for (const rel of ['app/settings.tsx', 'app/profile.tsx']) {
       const src = fs.readFileSync(path.join(root, rel), 'utf8');
@@ -41,12 +41,7 @@ describe('MVP enabled UI locales', () => {
   });
 
   test('i18n bootstrap does not activate device es/fr', () => {
-    const fs = require('fs') as typeof import('fs');
-    const path = require('path') as typeof import('path');
-    const src = fs.readFileSync(
-      path.join(__dirname, '../../../i18n/index.ts'),
-      'utf8'
-    );
+    const src = fs.readFileSync(path.join(__dirname, '../../../i18n/index.ts'), 'utf8');
     expect(src).toMatch(/resolveMvpUiLocale/);
     expect(src).not.toMatch(/getDeviceLanguage/);
     expect(src).toMatch(/Dormant scaffolding/);
