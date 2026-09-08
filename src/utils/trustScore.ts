@@ -4,54 +4,28 @@ import { extractManufacturingCountry, calculateEcoScore, formatCertifications } 
 import { calculateTruScore, buildTruScoreAnalysis } from '../lib/truscoreEngine';
 import { getPlanetScoringContext } from './planetScoringContext';
 import { scoreBodyMvpAdditives } from '../lib/truscoreEngine/pillars/bodyAdditiveScoring';
-import { getCachedTruScore, cacheTruScore } from './truScoreCache';
 import { applyResolvedNutrientLevels } from './resolveNutrientLevels';
 import { logger } from './logger';
 import { powershellLogger } from './powershellLogger';
+import { hasCoreTruthAuthority } from '../config/coreTruthProductCacheAuthority';
 
 /**
- * Check if we have sufficient real data to calculate a meaningful TruScore
- * Only products from Open Food Facts or with comprehensive data should get scores
+ * Scoring eligibility after Review 1 Pass 2 (NA-003):
+ * only Core Truth–authorised products (World OFF + governed transforms) may score.
+ * Storage location (sqlite / AsyncStorage) and legacy source labels are not authority.
  */
 function hasSufficientDataForTrustScore(product: Product): boolean {
-  // If source is Open Food Facts, we have real data
-  if (product.source === 'openfoodfacts') {
-    return true;
-  }
-  
-  // SQLite products are cached products - they have real data (even if minimal)
-  if (product.source === 'sqlite') {
-    return true;
-  }
-  
-  // If it's a web search result with low quality/completion, don't show score
-  if (product.source === 'web_search') {
-    const hasRealData = Boolean(
-      product.quality && product.quality >= 50 && 
-      product.completion && product.completion >= 50 &&
-      (product.image_url || product.nutriments || product.ingredients_text)
-    );
-    return hasRealData;
-  }
-  
-  // For other sources (upcitemdb, barcodespider), check if we have meaningful data
-  const hasRealData = Boolean(
-    product.product_name && !product.product_name.startsWith('Product ') &&
-    (product.image_url || product.nutriments || product.ingredients_text || 
-     product.brands || product.origins || product.manufacturing_places)
-  );
-  
-  return hasRealData;
+  return hasCoreTruthAuthority(product);
 }
 
 /**
  * Calculate overall TruScore (0-100) based on multiple factors
  * Only calculates score if we have sufficient real data
- * 
+ *
  * Note: This is a wrapper function that calls calculateTruScore from truscoreEngine.ts
  * The function name uses "TrustScore" for backward compatibility with ProductWithTrustScore type
- * 
- * Now includes caching to avoid recalculation
+ *
+ * Review 1 Pass 2 (NA-001): always recalculates — calculated TruScore cache has no runtime authority.
  */
 export async function calculateTrustScore(product: Product): Promise<ProductWithTrustScore> {
   // Fill missing traffic-light levels from per-100g nutriments (OFF often omits nutrient_levels when
@@ -60,7 +34,7 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
 
   // Check if we have sufficient data for a meaningful TruScore
   const hasRealData = hasSufficientDataForTrustScore(product);
-  
+
   if (!hasRealData) {
     // Return product without TruScore (marked as insufficient data)
     return {
@@ -70,38 +44,15 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
     };
   }
 
-  // Check cache first
-  const cachedTruScore = await getCachedTruScore(product.barcode);
-  let truScoreResult;
-
-  if (cachedTruScore) {
-    truScoreResult = cachedTruScore;
-    logger.debug('[TruScore] Cache hit (skipping full pillar logs)', {
-      barcode: product.barcode,
-      truscore: truScoreResult.truscore,
-      breakdown: truScoreResult.breakdown,
-    });
-    powershellLogger.log('INFO', 'TRUSCORE_CACHE', `TruScore from cache: ${truScoreResult.truscore}`, {
-      barcode: product.barcode,
-      breakdown: truScoreResult.breakdown,
-      isCached: true,
-    });
-  } else {
-    // TruScore v1.4: 4 equal pillars (25 points each = 100 total)
-    // 100% based on recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels)
-    // Use v1.4 scoring engine (truscoreEngine.ts) - matches UI component
-    logger.debug('[TruScore] Calculating fresh TruScore (not cached):', {
-      barcode: product.barcode,
-      hasNutriScore: !!product.nutriscore_grade,
-      nutriscore_grade: product.nutriscore_grade,
-      hasEcoScore: !!product.ecoscore_grade,
-      ecoscore_grade: product.ecoscore_grade,
-    });
-    truScoreResult = calculateTruScore(product, undefined, getPlanetScoringContext());
-    
-    // Cache the result
-    await cacheTruScore(product.barcode, truScoreResult);
-  }
+  // Always calculate current TruScore from current product (NA-001 / NA-015 / NA-016).
+  logger.debug('[TruScore] Calculating TruScore:', {
+    barcode: product.barcode,
+    hasNutriScore: !!product.nutriscore_grade,
+    nutriscore_grade: product.nutriscore_grade,
+    hasEcoScore: !!product.ecoscore_grade,
+    ecoscore_grade: product.ecoscore_grade,
+  });
+  const truScoreResult = calculateTruScore(product, undefined, getPlanetScoringContext());
 
   // Technical scoring failure → unavailable/non-assessment (never Overall 0 / all-zero pillars)
   if (truScoreResult.scoringUnavailable || truScoreResult.truscore == null) {

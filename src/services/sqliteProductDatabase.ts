@@ -321,6 +321,7 @@ export async function saveProductToSQLite(
         .phase6_previous_owner_entity_id,
       phase6_current_owner_effective_date: (product as Product & { phase6_current_owner_effective_date?: unknown })
         .phase6_current_owner_effective_date,
+      _rveelCoreTruthAuthority: product._rveelCoreTruthAuthority,
     };
     const hasRuntime = Object.values(runtimePayload).some((v) => v !== undefined && v !== null);
 

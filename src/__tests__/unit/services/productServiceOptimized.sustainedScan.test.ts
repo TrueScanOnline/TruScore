@@ -16,6 +16,7 @@ import {
 } from '../../../services/userContributedProductsService';
 import { deriveScanTerminalState } from '../../../utils/deriveScanTerminalState';
 import type { Product, ProductWithTrustScore } from '../../../types/product';
+import { CORE_TRUTH_PRODUCT_CACHE_AUTHORITY } from '../../../config/coreTruthProductCacheAuthority';
 
 jest.mock('../../../services/openFoodFacts', () => ({
   fetchProductFromOFF: jest.fn(),
@@ -43,6 +44,7 @@ jest.mock('../../../utils/confidenceScoring', () => ({
 
 jest.mock('../../../services/productEnhancementService', () => ({
   enhanceProduct: jest.fn(async (p: Product) => p),
+  applyGovernedProductTransforms: jest.fn((p: Product) => p),
 }));
 
 const mockedOff = fetchProductFromOFF as jest.MockedFunction<typeof fetchProductFromOFF>;
@@ -58,6 +60,7 @@ function localProduct(cachedAt?: number): Product {
     product_name: 'Cached Oats',
     source: 'openfoodfacts',
     nutriscore_grade: 'b',
+    _rveelCoreTruthAuthority: CORE_TRUTH_PRODUCT_CACHE_AUTHORITY,
   };
   return cachedAt !== undefined ? withOffRevalidationTimestamp(p, cachedAt) : p;
 }
@@ -129,7 +132,11 @@ describe('productServiceOptimized sustained-scan remediation', () => {
   it('SQLite-sourced local hit behaves like cache hit (450ms path, no OFF when fresh)', async () => {
     mockedLookup.mockResolvedValueOnce(
       withOffRevalidationTimestamp(
-        { ...localProduct(Date.now() - 1000), source: 'sqlite' },
+        {
+          ...localProduct(Date.now() - 1000),
+          source: 'sqlite',
+          _rveelCoreTruthAuthority: CORE_TRUTH_PRODUCT_CACHE_AUTHORITY,
+        },
         Date.now() - 1000
       )
     );
@@ -140,6 +147,37 @@ describe('productServiceOptimized sustained-scan remediation', () => {
 
     expect(mockedOff).not.toHaveBeenCalled();
     expect(enhanceProductWithComputedFields).toHaveBeenCalled();
+  });
+
+  it('legacy local hit without Core Truth authority requires World OFF before scoring', async () => {
+    mockedLookup.mockResolvedValueOnce({
+      barcode: BARCODE,
+      product_name: 'Legacy Cache',
+      source: 'openfoodfacts',
+      // no _rveelCoreTruthAuthority
+    });
+    mockedOff.mockResolvedValueOnce({ kind: 'hit', product: offHit('Revalidated') });
+
+    const promise = fetchProductOptimized(BARCODE, true, false, false);
+    await jest.advanceTimersByTimeAsync(USER_CONTRIBUTED_MERGE_RACE_MS + 50);
+    const result = await promise;
+
+    expect(mockedOff).toHaveBeenCalled();
+    expect(result?.product_name).toBe('Revalidated');
+    expect(mockedSave).toHaveBeenCalled();
+  });
+
+  it('legacy local hit without authority and OFF miss returns unscored non-assessment', async () => {
+    mockedLookup.mockResolvedValueOnce({
+      barcode: BARCODE,
+      product_name: 'Legacy Only',
+      source: 'web_search',
+    });
+    mockedOff.mockResolvedValueOnce({ kind: 'not_found' });
+
+    const result = await fetchProductOptimized(BARCODE, true, false, false);
+    expect(result?.trust_score).toBeNull();
+    expect(result?.product_name).toBe('Legacy Only');
   });
 
   it('aged local product (≥24h) returns immediately and triggers one background OFF refresh', async () => {
@@ -214,7 +252,7 @@ describe('productServiceOptimized sustained-scan remediation', () => {
     expect(mockedSave).not.toHaveBeenCalled();
   });
 
-  it('background enhancement after cold OFF preserves OFF freshness timestamp', async () => {
+  it('cold OFF path writes stamped cache once without post-score enhancement save (NA-004/017)', async () => {
     mockedLookup.mockResolvedValueOnce(null);
     mockedOff.mockResolvedValueOnce({ kind: 'hit', product: offHit() });
 
@@ -225,19 +263,15 @@ describe('productServiceOptimized sustained-scan remediation', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const offStampedSave = mockedSave.mock.calls.find(
+    const offStampedSaves = mockedSave.mock.calls.filter(
       (call) => (call[3] as { offRevalidatedAt?: number } | undefined)?.offRevalidatedAt !== undefined
     );
-    const enhancementSave = mockedSave.mock.calls.find(
+    const enhancementSaves = mockedSave.mock.calls.filter(
       (call) => (call[3] as { offRevalidatedAt?: number } | undefined)?.offRevalidatedAt === undefined
     );
 
-    expect(offStampedSave).toBeDefined();
-    const offAt = (offStampedSave![0] as ProductWithTrustScore & { _cachedAt?: number })._cachedAt;
-    if (enhancementSave) {
-      const enhancedAt = (enhancementSave[0] as ProductWithTrustScore & { _cachedAt?: number })._cachedAt;
-      expect(enhancedAt).toBe(offAt);
-    }
+    expect(offStampedSaves.length).toBeGreaterThanOrEqual(1);
+    expect(enhancementSaves).toHaveLength(0);
   });
 
   it('product_refined after product_ready keeps terminal success state', async () => {
@@ -294,9 +328,10 @@ describe('productServiceOptimized sustained-scan remediation', () => {
       ...localProduct(Date.now() - 1000),
       product_name: 'Merged Community Name',
     });
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
+    // Full-merge refine awaits scoreWithGovernedTransforms → calculateTrustScore
+    for (let i = 0; i < 10; i++) {
+      await Promise.resolve();
+    }
 
     expect(phases).toContain('product_refined');
   });

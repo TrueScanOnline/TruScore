@@ -1,79 +1,31 @@
-// TruScore caching utility
-// Caches calculated TruScores to avoid recalculation
+// TruScore calculated-score cache — RETIRED from ordinary runtime (Review 1 Pass 2 / NA-001).
+//
+// Production assessment must always recalculate. Historical @truescan_truscore_cache_* keys
+// may remain physically present but have zero runtime authority (reads always miss; writes no-op).
+// No migration wipe is performed.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from './logger';
 import { TruScoreResult } from '../lib/truscoreEngine';
 
 const CACHE_KEY_PREFIX = '@truescan_truscore_cache_';
-const CACHE_VERSION = '1.4'; // Increment when TruScore algorithm changes
-const CACHE_EXPIRY_DAYS = 30; // Cache expires after 30 days
-
-interface CachedTruScore {
-  result: TruScoreResult;
-  version: string;
-  timestamp: number;
-  barcode: string;
-}
 
 /**
- * Get cached TruScore for a barcode
+ * @deprecated Calculated TruScore cache retired — always returns null.
  */
-export async function getCachedTruScore(barcode: string): Promise<TruScoreResult | null> {
-  try {
-    const cacheKey = `${CACHE_KEY_PREFIX}${barcode}`;
-    const cachedData = await AsyncStorage.getItem(cacheKey);
-    
-    if (!cachedData) {
-      return null;
-    }
-
-    const cached: CachedTruScore = JSON.parse(cachedData);
-    
-    // Check version - if algorithm changed, invalidate cache
-    if (cached.version !== CACHE_VERSION) {
-      logger.debug(`TruScore cache invalidated for ${barcode} (version mismatch: ${cached.version} vs ${CACHE_VERSION})`);
-      await removeCachedTruScore(barcode);
-      return null;
-    }
-
-    // Check expiry
-    const ageInDays = (Date.now() - cached.timestamp) / (1000 * 60 * 60 * 24);
-    if (ageInDays > CACHE_EXPIRY_DAYS) {
-      logger.debug(`TruScore cache expired for ${barcode} (${ageInDays.toFixed(1)} days old)`);
-      await removeCachedTruScore(barcode);
-      return null;
-    }
-
-    return cached.result;
-  } catch (error) {
-    logger.error('Error getting cached TruScore', error);
-    return null;
-  }
+export async function getCachedTruScore(_barcode: string): Promise<TruScoreResult | null> {
+  return null;
 }
 
 /**
- * Cache TruScore result
+ * @deprecated Calculated TruScore cache retired — no-op (does not persist).
  */
-export async function cacheTruScore(barcode: string, result: TruScoreResult): Promise<void> {
-  try {
-    const cacheKey = `${CACHE_KEY_PREFIX}${barcode}`;
-    const cached: CachedTruScore = {
-      result,
-      version: CACHE_VERSION,
-      timestamp: Date.now(),
-      barcode,
-    };
-
-    await AsyncStorage.setItem(cacheKey, JSON.stringify(cached));
-  } catch (error) {
-    logger.error('Error caching TruScore', error);
-    // Don't throw - caching failure shouldn't break the app
-  }
+export async function cacheTruScore(_barcode: string, _result: TruScoreResult): Promise<void> {
+  // Intentionally empty — NA-001 / NA-015: never persist calculated conclusions.
 }
 
 /**
- * Remove cached TruScore
+ * Optional cleanup of a single orphaned key (e.g. contribution merge). Not required for correctness.
  */
 export async function removeCachedTruScore(barcode: string): Promise<void> {
   try {
@@ -85,21 +37,23 @@ export async function removeCachedTruScore(barcode: string): Promise<void> {
 }
 
 /**
- * Clear all TruScore cache
+ * Optional bulk cleanup of orphaned keys. Not called by ordinary runtime.
  */
 export async function clearTruScoreCache(): Promise<void> {
   try {
     const keys = await AsyncStorage.getAllKeys();
-    const cacheKeys = keys.filter(key => key.startsWith(CACHE_KEY_PREFIX));
-    await AsyncStorage.multiRemove(cacheKeys);
-    logger.info(`Cleared ${cacheKeys.length} TruScore cache entries`);
+    const cacheKeys = keys.filter((key) => key.startsWith(CACHE_KEY_PREFIX));
+    if (cacheKeys.length > 0) {
+      await AsyncStorage.multiRemove(cacheKeys);
+    }
+    logger.info(`Cleared ${cacheKeys.length} orphaned TruScore cache entries (optional)`);
   } catch (error) {
     logger.error('Error clearing TruScore cache', error);
   }
 }
 
 /**
- * Get cache statistics
+ * Diagnostics only — counts orphaned keys that no longer have runtime authority.
  */
 export async function getTruScoreCacheStats(): Promise<{
   count: number;
@@ -108,33 +62,11 @@ export async function getTruScoreCacheStats(): Promise<{
 }> {
   try {
     const keys = await AsyncStorage.getAllKeys();
-    const cacheKeys = keys.filter(key => key.startsWith(CACHE_KEY_PREFIX));
-    
-    if (cacheKeys.length === 0) {
-      return {
-        count: 0,
-        oldestTimestamp: null,
-        newestTimestamp: null,
-      };
-    }
-
-    const cachedItems = await AsyncStorage.multiGet(cacheKeys);
-    const timestamps = cachedItems
-      .map(([_, value]) => {
-        if (!value) return null;
-        try {
-          const cached: CachedTruScore = JSON.parse(value);
-          return cached.timestamp;
-        } catch {
-          return null;
-        }
-      })
-      .filter((t): t is number => t !== null);
-
+    const cacheKeys = keys.filter((key) => key.startsWith(CACHE_KEY_PREFIX));
     return {
       count: cacheKeys.length,
-      oldestTimestamp: timestamps.length > 0 ? Math.min(...timestamps) : null,
-      newestTimestamp: timestamps.length > 0 ? Math.max(...timestamps) : null,
+      oldestTimestamp: null,
+      newestTimestamp: null,
     };
   } catch (error) {
     logger.error('Error getting TruScore cache stats', error);

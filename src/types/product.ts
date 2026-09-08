@@ -292,6 +292,14 @@ export interface Product {
    * behaviour of cacheService / offRevalidationPolicy is unchanged by declaring this field.
    */
   _cachedAt?: number;
+
+  /**
+   * Review 1 Pass 2 — Core Truth product-cache authority marker (NA-003).
+   * Present only on records produced by the current governed World-OFF pipeline.
+   * Absence ⇒ local record must not receive ordinary scoring authority.
+   * @see src/config/coreTruthProductCacheAuthority.ts
+   */
+  _rveelCoreTruthAuthority?: string;
   
   // API source
   source?: 'openfoodfacts' | 'openbeautyfacts' | 'openproductsfacts' | 'openpetfoodfacts' | 'usda_fooddata' | 'gs1_datasource' | 'off_api' | 'barcode_spider' | 'spoonacular' | 'upcitemdb' | 'go_upc' | 'buycott' | 'open_gtin' | 'barcode_monster' | 'web_search' | 'woolworths_nz' | 'paknsave' | 'newworld' | 'woolworths_au' | 'coles_au' | 'iga_au' | 'fsanz_au' | 'fsanz_nz' | 'nz_store_api' | 'afcd' | 'nzfcd' | 'barcode_lookup' | 'bestbuy' | 'eandata' | 'ean_search' | 'edamam' | 'nutritionix' | 'upc_database' | 'sqlite' | 'health_canada_cnf' | 'uk_fsa' | 'efsa' | 'tesco_labs' | 'walmart_open' | 'foodrepo' | 'opennutrition' | string; // Allow string for composite sources like 'openfoodfacts+afcd'

@@ -29,12 +29,13 @@ import {
 } from '../utils/barcodeNormalization';
 import { getUserCountryCode } from '../utils/countryDetection';
 import { logger } from '../utils/logger';
-import { enhanceProduct } from './productEnhancementService';
+import { applyGovernedProductTransforms } from './productEnhancementService';
 import { applyConfidenceScore } from '../utils/confidenceScoring';
 import { logPerformanceMetrics } from '../utils/performanceMonitor';
 import { Platform } from 'react-native';
 import { powershellLogger } from '../utils/powershellLogger';
 import type { FetchTraceEntry } from '../types/truscoreAnalysis';
+import { hasCoreTruthAuthority } from '../config/coreTruthProductCacheAuthority';
 
 // Query deduplication
 const activeProductQueries = new Map<string, Promise<ProductWithTrustScore | null>>();
@@ -268,16 +269,16 @@ async function executeFetchProductOptimized(
 
   const offFreshnessAt = Date.now();
   processedProduct = withOffRevalidationTimestamp(processedProduct, offFreshnessAt) as ProductWithTrustScore;
-  saveProductToCache(processedProduct, primaryBarcode, isPremium, {
-    offRevalidatedAt: offFreshnessAt,
-  }).catch((err) => {
+  // Await initial cache write so we do not race later mutations of the same object (NA-017).
+  try {
+    await saveProductToCache(processedProduct, primaryBarcode, isPremium, {
+      offRevalidatedAt: offFreshnessAt,
+    });
+  } catch (err) {
     logger.debug('Initial OFF cache write failed (non-critical):', err);
-  });
+  }
 
-  // Eco helper + NOVA-1 rescue (local Nutri already removed from enhanceProduct)
-  enhanceProductInBackground(primaryBarcode, processedProduct, userCountry, isPremium).catch((err) => {
-    logger.debug('Background enhancement failed (non-critical):', err);
-  });
+  // NA-004 / NA-017: no post-score authoritative enhanceProductInBackground.
 
   const totalLoadTime = Date.now() - scanStartTime;
 
@@ -321,7 +322,9 @@ async function executeFetchProductOptimized(
 }
 
 /**
- * Local cache/SQLite hit: bounded first-paint merge, optional 24h OFF background revalidation.
+ * Local cache/SQLite hit: Core Truth authority required for ordinary scoring (NA-003).
+ * Unauthoritative legacy rows must revalidate via World OFF before substantive scoring.
+ * Trusted post-correction records retain the existing ≥24h OFF background revalidation policy.
  */
 async function deliverLocalProductHit(
   localProduct: Product,
@@ -331,6 +334,48 @@ async function deliverLocalProductHit(
   scanStartTime: number,
   onProgress?: (progress: { phase: string; product?: ProductWithTrustScore }) => void
 ): Promise<ProductWithTrustScore> {
+  if (!hasCoreTruthAuthority(localProduct)) {
+    logger.info(
+      `Local product lacks Core Truth authority — requiring World OFF before scoring: ${primaryBarcode}`
+    );
+    const offResult = await fetchProductFromOFF(offLookupBarcode).catch(
+      (): OffFetchResult => ({ kind: 'retrieval_error', reason: 'retrieval_other' })
+    );
+    if (offResult.kind === 'hit') {
+      const fetchTrace: FetchTraceEntry[] = [
+        {
+          database: 'Open Food Facts',
+          queryKeyType: 'barcode',
+          order: 1,
+          hit: true,
+          responseTimeMs: Date.now() - scanStartTime,
+        },
+      ];
+      (offResult.product as Product & { _fetchTrace?: FetchTraceEntry[] })._fetchTrace = fetchTrace;
+
+      const processed = await processProductFast(offResult.product, primaryBarcode);
+      const offFreshnessAt = Date.now();
+      const stamped = withOffRevalidationTimestamp(processed, offFreshnessAt) as ProductWithTrustScore;
+      try {
+        await saveProductToCache(stamped, primaryBarcode, isPremium, {
+          offRevalidatedAt: offFreshnessAt,
+        });
+      } catch (err) {
+        logger.debug('Authority revalidation cache write failed (non-critical):', err);
+      }
+      onProgress?.({ phase: 'product_ready', product: stamped });
+      return stamped;
+    }
+
+    // Canonical evidence unavailable — honest non-assessment; do not score ungoverned local record.
+    onProgress?.({ phase: 'product_ready' });
+    return {
+      ...localProduct,
+      trust_score: null,
+      trust_score_breakdown: null,
+    };
+  }
+
   enhanceProductWithComputedFields(localProduct);
 
   const processedProduct = await processProductForDisplay(localProduct, primaryBarcode, (refined) => {
@@ -381,8 +426,8 @@ async function revalidateLocalProductFromOffInBackground(
 }
 
 /**
- * First paint: short user-contributed merge wait, then score. Full merge continues in background
- * and invokes onFullyMerged when complete (photos / Vercel row).
+ * First paint: short user-contributed merge wait, then governed transforms + score.
+ * Full merge continues in background and invokes onFullyMerged when complete (photos / Vercel row).
  */
 async function processProductForDisplay(
   product: Product,
@@ -399,14 +444,18 @@ async function processProductForDisplay(
   mergePromise
     .then(async (fullyMerged) => {
       try {
-        const refined = await calculateTrustScore(applyConfidenceScore(fullyMerged));
+        const refined = await scoreWithGovernedTransforms(fullyMerged, {
+          stampAuthority: hasCoreTruthAuthority(fullyMerged) || fullyMerged.source === 'openfoodfacts',
+        });
         onFullyMerged?.(refined);
       } catch (e) {
         logger.debug('Full user-merge refine failed (non-critical):', e);
       }
     })
     .catch(() => {});
-  return calculateTrustScore(applyConfidenceScore(quickMerged));
+  return scoreWithGovernedTransforms(quickMerged, {
+    stampAuthority: hasCoreTruthAuthority(quickMerged) || quickMerged.source === 'openfoodfacts',
+  });
 }
 
 /**
@@ -429,26 +478,21 @@ async function processProductFast(product: Product, barcode: string): Promise<Pr
     mergedProduct = product;
   }
 
-  const productWithConfidence = applyConfidenceScore(mergedProduct);
-  return calculateTrustScore(productWithConfidence);
+  return scoreWithGovernedTransforms(mergedProduct, {
+    stampAuthority: true,
+  });
 }
 
 /**
- * Enhance product in background (non-blocking).
- * Eco helper + NOVA-1 rescue remain inside enhanceProduct; local Nutri already removed.
+ * authorised evidence → governed deterministic transforms → current calculateTruScore.
  */
-async function enhanceProductInBackground(
-  barcode: string,
-  product: ProductWithTrustScore,
-  _userCountry: string | null,
-  isPremium: boolean
-): Promise<void> {
-  try {
-    const enhanced = await enhanceProduct(product);
-    const enhancedWithScore = await calculateTrustScore(enhanced);
-    await saveProductToCache(enhancedWithScore, barcode, isPremium);
-    logger.debug(`✅ Background enhancement complete for ${barcode}`);
-  } catch (error) {
-    logger.debug('Background enhancement error (non-critical):', error);
-  }
+async function scoreWithGovernedTransforms(
+  product: Product,
+  options: { stampAuthority: boolean }
+): Promise<ProductWithTrustScore> {
+  const prepared = applyGovernedProductTransforms(product, {
+    stampAuthority: options.stampAuthority,
+  });
+  const productWithConfidence = applyConfidenceScore(prepared);
+  return calculateTrustScore(productWithConfidence);
 }
