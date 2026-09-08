@@ -26,6 +26,7 @@ import { logger } from '../utils/logger';
 import { powershellLogger } from '../utils/powershellLogger';
 import { selectPreferredLocalProduct } from '../utils/localProductPreference';
 import { ensureNova1ProvenanceOnProduct } from '../utils/nova1Provenance';
+import { hasCoreTruthAuthority } from '../config/coreTruthProductCacheAuthority';
 // CRITICAL FIX: Use dynamic import to break require cycle
 // import { handleError, ErrorCategory, ErrorSeverity } from './errorHandlingService';
 
@@ -392,12 +393,20 @@ export async function lookupFromCache(barcode: string, isPremium: boolean, barco
 }
 
 /**
- * Process SQLite product: enhance, merge user data, score, and return
+ * Process SQLite product: enhance, merge user data, score, and return.
+ * NA-003 Candidate 2: unstamped legacy/local rows are not released as product results.
  */
 export async function processSQLiteProduct(
   sqliteProduct: Product,
   barcode: string
-): Promise<ProductWithTrustScore> {
+): Promise<ProductWithTrustScore | null> {
+  if (!hasCoreTruthAuthority(sqliteProduct)) {
+    logger.warn(
+      `[ProductCacheService] SQLite product lacks Core Truth authority — not releasing: ${barcode}`
+    );
+    return null;
+  }
+
   // Enhance with computed fields
   enhanceProductWithComputedFields(sqliteProduct);
   
@@ -440,12 +449,20 @@ export async function processSQLiteProduct(
 }
 
 /**
- * Process cached product: enhance, merge user data, score, and return
+ * Process cached product: enhance, merge user data, score, and return.
+ * NA-003 Candidate 2: unstamped legacy/local rows are not released as product results.
  */
 export async function processCachedProduct(
   cachedProduct: Product,
   barcode: string
-): Promise<ProductWithTrustScore> {
+): Promise<ProductWithTrustScore | null> {
+  if (!hasCoreTruthAuthority(cachedProduct)) {
+    logger.warn(
+      `[ProductCacheService] Cached product lacks Core Truth authority — not releasing: ${barcode}`
+    );
+    return null;
+  }
+
   // Enhance with computed fields
   enhanceProductWithComputedFields(cachedProduct);
   

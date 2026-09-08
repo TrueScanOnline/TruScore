@@ -228,14 +228,20 @@ async function executeFetchProductOptimized(
   }];
   (offProduct as any)._fetchTrace = fetchTrace;
 
-  // Progressive first paint when OFF returns (even partial)
-  firstPaintProductPromise = processProductForDisplay(offProduct, primaryBarcode, (refined) => {
-    const timeFromStart = Date.now() - scanStartTime;
-    onProgress?.({ phase: 'product_refined', product: refined });
-    logger.info(
-      `[ProductServiceOptimized] User-contributed merge refined UI (${timeFromStart}ms from scan start)`
-    );
-  });
+  // Progressive first paint when OFF returns (even partial).
+  // stampAuthority granted explicitly by this successful canonical World OFF retrieval.
+  firstPaintProductPromise = processProductForDisplay(
+    offProduct,
+    primaryBarcode,
+    (refined) => {
+      const timeFromStart = Date.now() - scanStartTime;
+      onProgress?.({ phase: 'product_refined', product: refined });
+      logger.info(
+        `[ProductServiceOptimized] User-contributed merge refined UI (${timeFromStart}ms from scan start)`
+      );
+    },
+    { stampAuthority: true }
+  );
 
   firstPaintProductPromise
     .then((processed) => {
@@ -333,7 +339,7 @@ async function deliverLocalProductHit(
   isPremium: boolean,
   scanStartTime: number,
   onProgress?: (progress: { phase: string; product?: ProductWithTrustScore }) => void
-): Promise<ProductWithTrustScore> {
+): Promise<ProductWithTrustScore | null> {
   if (!hasCoreTruthAuthority(localProduct)) {
     logger.info(
       `Local product lacks Core Truth authority — requiring World OFF before scoring: ${primaryBarcode}`
@@ -353,6 +359,7 @@ async function deliverLocalProductHit(
       ];
       (offResult.product as Product & { _fetchTrace?: FetchTraceEntry[] })._fetchTrace = fetchTrace;
 
+      // Fresh canonical OFF hit — stampAuthority granted only by this retrieval event.
       const processed = await processProductFast(offResult.product, primaryBarcode);
       const offFreshnessAt = Date.now();
       const stamped = withOffRevalidationTimestamp(processed, offFreshnessAt) as ProductWithTrustScore;
@@ -367,24 +374,30 @@ async function deliverLocalProductHit(
       return stamped;
     }
 
-    // Canonical evidence unavailable — honest non-assessment; do not score ungoverned local record.
-    onProgress?.({ phase: 'product_ready' });
-    return {
-      ...localProduct,
-      trust_score: null,
-      trust_score_breakdown: null,
-    };
+    // NA-003 Candidate 2: canonical OFF unavailable — do not release legacy fields.
+    // Same honest unavailable path as cold OFF miss (null product / not_found).
+    logger.warn(
+      `Local product lacks Core Truth authority and World OFF unavailable — releasing no product: ${primaryBarcode}`
+    );
+    onProgress?.({ phase: 'not_found' });
+    return null;
   }
 
   enhanceProductWithComputedFields(localProduct);
 
-  const processedProduct = await processProductForDisplay(localProduct, primaryBarcode, (refined) => {
-    const timeFromStart = Date.now() - scanStartTime;
-    onProgress?.({ phase: 'product_refined', product: refined });
-    logger.info(
-      `[ProductServiceOptimized] Local hit user-contributed merge refined UI (${timeFromStart}ms from scan start)`
-    );
-  });
+  // Already Core Truth–authorised local record: re-affirm stamp only (never via source label).
+  const processedProduct = await processProductForDisplay(
+    localProduct,
+    primaryBarcode,
+    (refined) => {
+      const timeFromStart = Date.now() - scanStartTime;
+      onProgress?.({ phase: 'product_refined', product: refined });
+      logger.info(
+        `[ProductServiceOptimized] Local hit user-contributed merge refined UI (${timeFromStart}ms from scan start)`
+      );
+    },
+    { stampAuthority: true }
+  );
 
   onProgress?.({ phase: 'product_ready', product: processedProduct });
 
@@ -428,11 +441,16 @@ async function revalidateLocalProductFromOffInBackground(
 /**
  * First paint: short user-contributed merge wait, then governed transforms + score.
  * Full merge continues in background and invokes onFullyMerged when complete (photos / Vercel row).
+ *
+ * `stampAuthority` must be passed explicitly from the call site that established Core Truth
+ * eligibility (successful canonical World OFF retrieval, or an already-stamped local record).
+ * `source === 'openfoodfacts'` alone must never grant the stamp.
  */
 async function processProductForDisplay(
   product: Product,
   barcode: string,
-  onFullyMerged?: (p: ProductWithTrustScore) => void
+  onFullyMerged: ((p: ProductWithTrustScore) => void) | undefined,
+  options: { stampAuthority: boolean }
 ): Promise<ProductWithTrustScore> {
   const mergePromise = mergeUserContributedData(product, barcode).catch(() => product);
   const quickMerged = await Promise.race([
@@ -445,7 +463,7 @@ async function processProductForDisplay(
     .then(async (fullyMerged) => {
       try {
         const refined = await scoreWithGovernedTransforms(fullyMerged, {
-          stampAuthority: hasCoreTruthAuthority(fullyMerged) || fullyMerged.source === 'openfoodfacts',
+          stampAuthority: options.stampAuthority,
         });
         onFullyMerged?.(refined);
       } catch (e) {
@@ -454,12 +472,13 @@ async function processProductForDisplay(
     })
     .catch(() => {});
   return scoreWithGovernedTransforms(quickMerged, {
-    stampAuthority: hasCoreTruthAuthority(quickMerged) || quickMerged.source === 'openfoodfacts',
+    stampAuthority: options.stampAuthority,
   });
 }
 
 /**
  * Process product with TruScore after user-contributed merge (long race for correctness).
+ * Caller must only invoke after successful canonical World OFF retrieval (stampAuthority true).
  */
 async function processProductFast(product: Product, barcode: string): Promise<ProductWithTrustScore> {
   // Await merge before scoring: calculateTrustScore returns `{ ...product }` (shallow copy).

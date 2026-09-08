@@ -134,6 +134,7 @@ import {
   isMvpLegacyAlertsInsightsEnabled,
   isMvpPricingUiEnabled,
 } from '../../src/config/mvpRuntimeGates';
+import { hasCoreTruthAuthority } from '../../src/config/coreTruthProductCacheAuthority';
 import type { RootStackParamList } from '../_layout';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -150,6 +151,20 @@ function navigateToScanHome(navigation: ResultScreenNavigationProp) {
   } catch {
     navigation.goBack();
   }
+}
+
+/**
+ * NA-003 Candidate 2 defence-in-depth: authoritative interpretation (identity / Chaining /
+ * ownership / Dynamic Signals) requires barcode match AND Core Truth authority stamp.
+ */
+function authoritativeProductForScan(
+  product: ProductWithTrustScore | null | undefined,
+  routeBarcode: string
+): ProductWithTrustScore | null {
+  if (!product) return null;
+  if (getPrimaryBarcode(product.barcode) !== getPrimaryBarcode(routeBarcode)) return null;
+  if (!hasCoreTruthAuthority(product)) return null;
+  return product;
 }
 
 function ResultScreenContent() {
@@ -550,10 +565,10 @@ function ResultScreenContent() {
   );
 
   // Primary product/TruScore result — never gated on Dynamic Signals evaluation.
+  // NA-003 Candidate 2: productForScan requires Core Truth authority (defence-in-depth).
   const primaryScanResult = useMemo(() => {
     const primaryBc = getPrimaryBarcode(barcode);
-    const productForScan =
-      product && getPrimaryBarcode(product.barcode) === primaryBc ? product : null;
+    const productForScan = authoritativeProductForScan(product, barcode);
     if (!productForScan && !error) {
       return null;
     }
@@ -610,10 +625,10 @@ function ResultScreenContent() {
   // Progressive Signals — after primary is available. Re-run only when material
   // reviewed identity (or market / producer / recall markings) changes — not on
   // harmless product_enhanced completeness merges.
+  // NA-003 Candidate 2: Signals / identity / Chaining inputs require Core Truth authority.
   const signalsEvalContext = useMemo(() => {
     const primaryBc = getPrimaryBarcode(barcode);
-    const productForScan =
-      product && getPrimaryBarcode(product.barcode) === primaryBc ? product : null;
+    const productForScan = authoritativeProductForScan(product, barcode);
     if (!productForScan) return null;
     const country = getUserCountryCode();
     const scanMarketPublic = resolveSharedIdentityContext({
@@ -838,6 +853,14 @@ function ResultScreenContent() {
         if (progress.product) {
           // Convert Product to ProductWithTrustScore if needed
           const productWithScore = progress.product as ProductWithTrustScore;
+
+          // NA-003 Candidate 2: never promote unstamped progressive payloads into Result state.
+          if (!hasCoreTruthAuthority(productWithScore)) {
+            console.warn(
+              '[ResultScreen] Ignoring unstamped progressive product (Core Truth authority required)'
+            );
+            return;
+          }
           
           // CRITICAL: Update product IMMEDIATELY - don't wait for anything
           // This enables instant display (< 100ms) instead of waiting for TruScore
@@ -883,8 +906,15 @@ function ResultScreenContent() {
           );
           
           if (!productData) {
-            // Last resort: minimal product
+            // NA-003 Candidate 2: createMinimalProduct no longer releases a Product object.
             productData = createMinimalProduct(barcode);
+          }
+          // Defence: never accept unstamped fallback as Result product state.
+          if (productData && !hasCoreTruthAuthority(productData)) {
+            console.warn(
+              '[ResultScreen] Fallback product lacks Core Truth authority — treating as unavailable'
+            );
+            productData = null;
           }
         } catch (fallbackError) {
           console.error('[ResultScreen] Fallback also failed:', fallbackError);
@@ -892,6 +922,15 @@ function ResultScreenContent() {
         }
       }
       
+      if (productData) {
+        if (!hasCoreTruthAuthority(productData)) {
+          console.warn(
+            '[ResultScreen] Fetched product lacks Core Truth authority — treating as unavailable'
+          );
+          productData = null;
+        }
+      }
+
       if (productData) {
         console.log('[ResultScreen] Product fetched successfully');
         if (scanIdRef.current) {

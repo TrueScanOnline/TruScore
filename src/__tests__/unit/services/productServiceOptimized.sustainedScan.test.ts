@@ -44,7 +44,12 @@ jest.mock('../../../utils/confidenceScoring', () => ({
 
 jest.mock('../../../services/productEnhancementService', () => ({
   enhanceProduct: jest.fn(async (p: Product) => p),
-  applyGovernedProductTransforms: jest.fn((p: Product) => p),
+  applyGovernedProductTransforms: jest.fn((p: Product, options?: { stampAuthority?: boolean }) => {
+    if (options?.stampAuthority) {
+      p._rveelCoreTruthAuthority = 'rveel-core-truth-v1';
+    }
+    return p;
+  }),
 }));
 
 const mockedOff = fetchProductFromOFF as jest.MockedFunction<typeof fetchProductFromOFF>;
@@ -164,10 +169,11 @@ describe('productServiceOptimized sustained-scan remediation', () => {
 
     expect(mockedOff).toHaveBeenCalled();
     expect(result?.product_name).toBe('Revalidated');
+    expect(result?._rveelCoreTruthAuthority).toBe(CORE_TRUTH_PRODUCT_CACHE_AUTHORITY);
     expect(mockedSave).toHaveBeenCalled();
   });
 
-  it('legacy local hit without authority and OFF miss returns unscored non-assessment', async () => {
+  it('legacy local hit without authority and OFF miss releases no product object (NA-003 Candidate 2)', async () => {
     mockedLookup.mockResolvedValueOnce({
       barcode: BARCODE,
       product_name: 'Legacy Only',
@@ -175,9 +181,45 @@ describe('productServiceOptimized sustained-scan remediation', () => {
     });
     mockedOff.mockResolvedValueOnce({ kind: 'not_found' });
 
-    const result = await fetchProductOptimized(BARCODE, true, false, false);
-    expect(result?.trust_score).toBeNull();
-    expect(result?.product_name).toBe('Legacy Only');
+    const phases: string[] = [];
+    const result = await fetchProductOptimized(BARCODE, true, false, false, ({ phase }) => {
+      phases.push(phase);
+    });
+
+    expect(result).toBeNull();
+    expect(phases).toContain('not_found');
+    expect(mockedSave).not.toHaveBeenCalled();
+  });
+
+  it('false provenance source=openfoodfacts without marker does not stamp via local display path', async () => {
+    // Authoritative local path is skipped when marker absent — OFF required.
+    // When OFF hits, stamp comes from processProductFast (stampAuthority: true), not source label.
+    mockedLookup.mockResolvedValueOnce({
+      barcode: BARCODE,
+      product_name: 'Legacy OFF-labelled',
+      source: 'openfoodfacts',
+    });
+    mockedOff.mockResolvedValueOnce({ kind: 'hit', product: offHit('Canonical') });
+
+    const promise = fetchProductOptimized(BARCODE, true, false, false);
+    await jest.advanceTimersByTimeAsync(USER_CONTRIBUTED_MERGE_RACE_MS + 50);
+    const result = await promise;
+
+    expect(result?._rveelCoreTruthAuthority).toBe(CORE_TRUTH_PRODUCT_CACHE_AUTHORITY);
+    expect(result?.product_name).toBe('Canonical');
+  });
+
+  it('cold OFF hit receives Core Truth stamp and scores (stampAuthority from OFF retrieval)', async () => {
+    mockedLookup.mockResolvedValueOnce(null);
+    mockedOff.mockResolvedValueOnce({ kind: 'hit', product: offHit() });
+
+    const promise = fetchProductOptimized(BARCODE, true, false, false);
+    await jest.advanceTimersByTimeAsync(USER_CONTRIBUTED_FIRST_PAINT_RACE_MS + 20);
+    const result = await promise;
+
+    expect(result?._rveelCoreTruthAuthority).toBe(CORE_TRUTH_PRODUCT_CACHE_AUTHORITY);
+    expect(result?.trust_score).toBe(72);
+    expect(mockedSave).toHaveBeenCalled();
   });
 
   it('aged local product (≥24h) returns immediately and triggers one background OFF refresh', async () => {

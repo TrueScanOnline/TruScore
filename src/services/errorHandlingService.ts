@@ -105,16 +105,10 @@ export async function fetchProductWithFallback(
 }
 
 /**
- * Create minimal product as last resort
+ * Create minimal product as last resort.
+ * NA-003 Candidate 2: must not release an interpretive/fallback Product object.
+ * Callers must treat null as unavailable (same as not_found).
  */
-export function createMinimalProduct(barcode: string): ProductWithTrustScore {
-  return {
-    barcode,
-    product_name: `Product ${barcode}`,
-    source: 'fallback',
-    quality: 10,
-    completion: 10,
-    trust_score: null,
-    trust_score_breakdown: null,
-  };
+export function createMinimalProduct(_barcode: string): ProductWithTrustScore | null {
+  return null;
 }
