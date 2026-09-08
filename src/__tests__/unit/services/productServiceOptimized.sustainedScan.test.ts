@@ -17,9 +17,14 @@ import {
 import { deriveScanTerminalState } from '../../../utils/deriveScanTerminalState';
 import type { Product, ProductWithTrustScore } from '../../../types/product';
 import { CORE_TRUTH_PRODUCT_CACHE_AUTHORITY } from '../../../config/coreTruthProductCacheAuthority';
+import { logScanObs } from '../../../services/scanObservability';
 
 jest.mock('../../../services/openFoodFacts', () => ({
   fetchProductFromOFF: jest.fn(),
+}));
+
+jest.mock('../../../services/scanObservability', () => ({
+  logScanObs: jest.fn(),
 }));
 
 jest.mock('../../../services/productCacheService', () => ({
@@ -56,6 +61,7 @@ const mockedOff = fetchProductFromOFF as jest.MockedFunction<typeof fetchProduct
 const mockedLookup = lookupProductFast as jest.MockedFunction<typeof lookupProductFast>;
 const mockedMerge = mergeUserContributedData as jest.MockedFunction<typeof mergeUserContributedData>;
 const mockedSave = saveProductToCache as jest.MockedFunction<typeof saveProductToCache>;
+const mockedLogScanObs = logScanObs as jest.MockedFunction<typeof logScanObs>;
 
 const BARCODE = '9300652815573';
 
@@ -188,7 +194,38 @@ describe('productServiceOptimized sustained-scan remediation', () => {
 
     expect(result).toBeNull();
     expect(phases).toContain('not_found');
+    expect(phases).not.toContain('retrieval_error');
     expect(mockedSave).not.toHaveBeenCalled();
+    expect(mockedLogScanObs).not.toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'retrieval_error' })
+    );
+  });
+
+  it('legacy unstamped local + OFF retrieval_error preserves retrieval_error (Candidate 3)', async () => {
+    mockedLookup.mockResolvedValueOnce({
+      barcode: BARCODE,
+      product_name: 'Legacy Only',
+      source: 'openfoodfacts',
+    });
+    mockedOff.mockResolvedValueOnce({ kind: 'retrieval_error', reason: 'retrieval_other' });
+
+    const phases: string[] = [];
+    const result = await fetchProductOptimized(BARCODE, true, false, false, ({ phase }) => {
+      phases.push(phase);
+    });
+
+    expect(result).toBeNull();
+    expect(phases).toContain('retrieval_error');
+    expect(phases).not.toContain('not_found');
+    expect(mockedSave).not.toHaveBeenCalled();
+    expect(mockedLogScanObs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'retrieval_error',
+        barcode: BARCODE,
+        retrieval_reason: 'retrieval_other',
+        phase: 'retrieval_error',
+      })
+    );
   });
 
   it('false provenance source=openfoodfacts without marker does not stamp via local display path', async () => {

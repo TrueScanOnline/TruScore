@@ -451,10 +451,16 @@ function ResultScreenContent() {
 
   // Use TruScore from product object (already calculated in productService.ts using truscoreEngine.ts)
   // Always use product object score for consistency with logs - no fallback recalculation
+  // Candidate 3: persisted trust_score fields render only with current Core Truth authority
+  // (prevents unstamped manual/legacy objects from presenting as authoritative assessment).
   useEffect(() => {
     if (product) {
       // Use score from product if available (from productService.ts - consistent with logs)
-      if (product.trust_score !== null && product.trust_score_breakdown) {
+      if (
+        hasCoreTruthAuthority(product) &&
+        product.trust_score !== null &&
+        product.trust_score_breakdown
+      ) {
         // S-02: legacy Alerts/MyChoices insights parked for MVP
         let insights: TruScoreResult['insights'] = undefined;
         if (
@@ -489,7 +495,7 @@ function ResultScreenContent() {
         };
         setTruScore(score);
       } else {
-        // If score is missing, set to null (don't recalculate - ensures consistency)
+        // If score is missing or product lacks Core Truth authority, do not render assessment UI
         setTruScore(null);
       }
     } else {
@@ -2605,7 +2611,10 @@ function ResultScreenContent() {
 
 
       {/* TruScore Info Modal - Only show if we have data */}
-      {product && product.trust_score !== null && product.trust_score_breakdown && (
+      {product &&
+        hasCoreTruthAuthority(product) &&
+        product.trust_score !== null &&
+        product.trust_score_breakdown && (
         <TruScoreInfoModal
           visible={truScoreModalVisible}
           onClose={() => setTruScoreModalVisible(false)}

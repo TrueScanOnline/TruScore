@@ -374,10 +374,25 @@ async function deliverLocalProductHit(
       return stamped;
     }
 
-    // NA-003 Candidate 2: canonical OFF unavailable — do not release legacy fields.
-    // Same honest unavailable path as cold OFF miss (null product / not_found).
+    // NA-003 Candidate 3: preserve cold-path retrieval_error vs not_found distinction.
+    // Both remain non-assessment (null product; no legacy object release).
+    if (offResult.kind === 'retrieval_error') {
+      logger.warn(
+        `Local product lacks Core Truth authority and OFF retrieval_error for ${offLookupBarcode}: ${offResult.reason} (not conflated with not_found)`
+      );
+      logScanObs({
+        event: 'retrieval_error',
+        scan_id: primaryBarcode,
+        barcode: primaryBarcode,
+        retrieval_reason: offResult.reason,
+        phase: 'retrieval_error',
+      });
+      onProgress?.({ phase: 'retrieval_error' });
+      return null;
+    }
+
     logger.warn(
-      `Local product lacks Core Truth authority and World OFF unavailable — releasing no product: ${primaryBarcode}`
+      `Local product lacks Core Truth authority and World OFF not_found — releasing no product: ${primaryBarcode}`
     );
     onProgress?.({ phase: 'not_found' });
     return null;
