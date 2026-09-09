@@ -154,14 +154,14 @@ describe('null-score integrity — sharing semantics', () => {
         reasons: [],
       },
     };
-    expect(resolveShareOverallScore(unavailableResult(), withStaleProduct)).toBeNull();
-    expect(resolveShareBreakdownForOverall(null, unavailableResult(), withStaleProduct)).toBeNull();
+    expect(resolveShareOverallScore(unavailableResult())).toBeNull();
+    expect(resolveShareBreakdownForOverall(null, unavailableResult())).toBeNull();
   });
 
   test('legacy ?? 0 pattern would invent a score — helpers must not', () => {
     const coerced = (unavailableResult().truscore ?? 0) as number;
     expect(coerced).toBe(0);
-    expect(resolveShareOverallScore(unavailableResult(), baseProduct)).toBeNull();
+    expect(resolveShareOverallScore(unavailableResult())).toBeNull();
   });
 
   test('scored share content still carries the genuine score and breakdown', () => {
@@ -184,7 +184,25 @@ describe('null-score integrity — sharing semantics', () => {
     const partial = scoredResult({
       breakdown: { Body: 18, Planet: null, Ethics: 20, Open: 18 },
     });
-    expect(resolveGenuinePillarBreakdown(partial, baseProduct)).toBeNull();
+    expect(resolveGenuinePillarBreakdown(partial)).toBeNull();
+  });
+
+  test('NA-018: missing truScore never falls back to product.trust_score', () => {
+    const withStale: ProductWithTrustScore = {
+      ...baseProduct,
+      trust_score: 55,
+      trust_score_breakdown: { body: 10, planet: 10, ethics: 10, open: 10, reasons: [] },
+    };
+    expect(resolveShareOverallScore(undefined)).toBeNull();
+    expect(resolveShareOverallScore(null)).toBeNull();
+    expect(resolveGenuinePillarBreakdown(undefined)).toBeNull();
+    expect(getShareCardData(withStale, undefined).truScore).toBeNull();
+    const productInfo = ShareContentBuilder.buildContent({
+      product: withStale as never,
+      truScore: undefined,
+      item: 'productInfo',
+    });
+    expect(productInfo.message).not.toMatch(/55\/100/);
   });
 });
 

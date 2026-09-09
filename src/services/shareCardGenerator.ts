@@ -90,8 +90,8 @@ export function getShareCardData(
     });
   }
 
-  const overall = resolveShareOverallScore(truScore, product);
-  const breakdown = resolveShareBreakdownForOverall(overall, truScore, product) ?? undefined;
+  const overall = resolveShareOverallScore(truScore);
+  const breakdown = resolveShareBreakdownForOverall(overall, truScore) ?? undefined;
   
   return {
     productName: product.product_name || `Product ${product.barcode}`,
@@ -110,9 +110,9 @@ export function generateShareMessage(
   product: ProductWithTrustScore,
   truScore?: TruScoreResult
 ): string {
-  const score = resolveShareOverallScore(truScore, product);
+  const score = resolveShareOverallScore(truScore);
   const productName = product.product_name || `Product ${product.barcode}`;
-  const breakdown = resolveShareBreakdownForOverall(score, truScore, product);
+  const breakdown = resolveShareBreakdownForOverall(score, truScore);
   
   let message = `🔍 ${productName}\n\n`;
   if (score === null) {

@@ -1,0 +1,55 @@
+﻿node.exe : PASS src/__tests__/unit/utils/nullScoreResultPath.test.ts
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (PASS src/__test...ultPath.test.ts:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Result path preserves null pillars end-to-end
+    ΓêÜ the Result screen no longer coerces persisted pillars and delegates to the shared mapping (13 ms)
+    ΓêÜ carries an unavailable pillar into TruScore as null, and a genuine 0 as 0 (3 ms)
+    ΓêÜ treats a wholly missing persisted breakdown as four null pillars, not four zeros (2 ms)
+    ΓêÜ does not resurrect a null pillar from NaN
+  Result surfaces never show a null pillar as 0 or 0/25
+    ΓêÜ the pillar bars render an em dash rather than a coerced zero (2 ms)
+    ΓêÜ the pillar look-through header omits the score line when the pillar score is null
+    ΓêÜ an unavailable overall still presents as unavailable, not as zero (1 ms)
+    ΓêÜ a scored overall with a null pillar stays scored without fabricating the null pillar (1 ms)
+  Share of a Result with a null pillar omits the breakdown
+    ΓêÜ the live share semantics refuse an incomplete pillar set (1 ms)
+    ΓêÜ the live share card and content builder emit no 0/25 pillar line (4 ms)
+    ΓêÜ a fully genuine breakdown, including a real 0, still shares (1 ms)
+
+PASS src/__tests__/unit/review1/pass3Corrective.na018.shareAuthority.test.ts
+  Pass 3 NA-018 ΓÇö Share assessment authority (P1)
+    ΓêÜ unstamped/manual + persisted raw score + truScore=null ΓåÆ no score/pillars in live ShareContentBuilder 
+(truScore + productInfo + negative) (21 ms)
+    ΓêÜ unstamped/manual + truScore=null ΓåÆ no score/pillars in shareCardGenerator representations (3 ms)
+    ΓêÜ story/image resolver follows the same rule (no product.trust_score fallback) (1 ms)
+    ΓêÜ raw product breakdown alone cannot reintroduce pillar assessment (2 ms)
+    ΓêÜ authorised current truScore ΓåÆ Overall and pillars continue to share (4 ms)
+    ΓêÜ productInfo with authorised truScore still includes Overall; without truScore omits assessment (2 ms)
+
+PASS src/__tests__/unit/utils/nullScoreIntegrity.test.ts
+  null-score integrity ΓÇö unavailable presentation
+    ΓêÜ unavailable overall cannot present Poor, red band, 0/25, or zero pillar bars (12 ms)
+    ΓêÜ ordinary scored products remain scored presentation
+  null-score integrity ΓÇö sharing semantics
+    ΓêÜ live shareCardGenerator never fabricates an unavailable score as 0 (1 ms)
+    ΓêÜ live ShareContentBuilder never fabricates an unavailable score as 0 (2 ms)
+    ΓêÜ a stale persisted score cannot resurrect a share score once scoring is unavailable (1 ms)
+    ΓêÜ resolveShareOverallScore preserves explicit null from TruScoreResult (1 ms)
+    ΓêÜ legacy ?? 0 pattern would invent a score ΓÇö helpers must not (1 ms)
+    ΓêÜ scored share content still carries the genuine score and breakdown (1 ms)
+    ΓêÜ incomplete pillar set omits breakdown (no zero fill) (1 ms)
+    ΓêÜ NA-018: missing truScore never falls back to product.trust_score (1 ms)
+  null-score integrity ΓÇö Open v15 + score neutrality smoke
+    ΓêÜ Open verifier fields match v15 clarity bands (16 ms)
+    ΓêÜ scored product pillar scores and adjustment arrays remain identical shape (18 ms)
+
+Test Suites: 3 passed, 3 total
+Tests:       29 passed, 29 total
+Snapshots:   0 total
+Time:        2.222 s, estimated 4 s
+Ran all test suites matching /src\\__tests__\\unit\\review1\\pass3Corrective.na018.shareAuthority.test.ts|src\\__tests_
+_\\unit\\utils\\nullScoreIntegrity.test.ts|src\\__tests__\\unit\\utils\\nullScoreResultPath.test.ts/i.

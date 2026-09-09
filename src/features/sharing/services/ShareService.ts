@@ -80,10 +80,9 @@ export class ShareService {
           platform: trackedPlatform,
           itemType: options.item || 'productInfo',
           productBarcode: options.product.barcode,
+          // NA-018: track only authorised session assessment — never raw product.trust_score.
           truScore:
-            options.truScore != null
-              ? options.truScore.truscore ?? undefined
-              : options.product.trust_score ?? undefined,
+            options.truScore != null ? options.truScore.truscore ?? undefined : undefined,
           success: result.success,
         });
         void reportShareEventToBackend({

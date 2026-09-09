@@ -86,8 +86,8 @@ export class ShareContentBuilder {
     productName: string,
     platform: ShareOptions['platform']
   ): ShareContent {
-    const score = resolveShareOverallScore(truScore, product);
-    const breakdown = resolveShareBreakdownForOverall(score, truScore, product);
+    const score = resolveShareOverallScore(truScore);
+    const breakdown = resolveShareBreakdownForOverall(score, truScore);
 
     if (score === null) {
       const title = `${productName} - ${RVEEL_SCORE_UNAVAILABLE_TITLE}`;
@@ -229,7 +229,7 @@ export class ShareContentBuilder {
     productName: string,
     platform: ShareOptions['platform']
   ): ShareContent {
-    const score = resolveShareOverallScore(truScore, product);
+    const score = resolveShareOverallScore(truScore);
 
     if (score === null) {
       const title = `${productName}: ${RVEEL_SCORE_UNAVAILABLE_TITLE}`;
@@ -266,7 +266,8 @@ export class ShareContentBuilder {
     productName: string,
     platform: ShareOptions['platform']
   ): ShareContent {
-    const score = resolveShareOverallScore(truScore, product);
+    // NA-018: product-info may share without an authorised assessment; omit score/pillars then.
+    const score = resolveShareOverallScore(truScore);
 
     // Preserve existing product-info share shape; omit numeric score when unavailable
     // (do not invent a separate product-only unavailable share experience).

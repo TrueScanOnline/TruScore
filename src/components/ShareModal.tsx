@@ -409,7 +409,7 @@ export default function ShareModal({
             productName={productDisplayName}
             imageUrl={product.image_url}
             barcode={product.barcode}
-            truScore={resolveShareOverallScore(truScore, product)}
+            truScore={resolveShareOverallScore(truScore)}
             shareType={shareType}
             brandColor={colors.primary}
             surfaceColor={colors.card}

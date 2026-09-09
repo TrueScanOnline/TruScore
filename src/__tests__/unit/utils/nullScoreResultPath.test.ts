@@ -155,8 +155,8 @@ describe('Share of a Result with a null pillar omits the breakdown', () => {
   const tru = resultTruScore();
 
   it('the live share semantics refuse an incomplete pillar set', () => {
-    expect(resolveGenuinePillarBreakdown(tru, product)).toBeNull();
-    expect(resolveShareBreakdownForOverall(48, tru, product)).toBeNull();
+    expect(resolveGenuinePillarBreakdown(tru)).toBeNull();
+    expect(resolveShareBreakdownForOverall(48, tru)).toBeNull();
   });
 
   it('the live share card and content builder emit no 0/25 pillar line', () => {
