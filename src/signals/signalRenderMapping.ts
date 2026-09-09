@@ -14,6 +14,8 @@
 import type { ProductScanResult, SignalCard, SignalClass } from '../types/scanOutputContract';
 import type { NormativeSignalClass } from '../contracts/phase6/enums';
 import type { DynamicSignalPublicationRecord } from '../dynamicSignals/publish/types';
+import { createSystemIngestionClock } from '../dynamicSignals/ingest/ingestionClock';
+import { isPastValidUntil } from '../dynamicSignals/publish/validityPolicy';
 
 export type SignalBucketKey = keyof ProductScanResult['signals'];
 
@@ -71,9 +73,13 @@ const PUBLICATION_SIGNAL_SEVERITY_BY_CLASS: Record<NormativeSignalClass, SignalC
   my_choices_chain: 'low',
 };
 
-/** Slice 6 contract: only 5B publishable records can enter ProductScanResult.signals. */
 export function isPublicationRecordPubliclyRenderable(r: DynamicSignalPublicationRecord): boolean {
-  return r.signal_publication_state === 'publishable';
+  if (r.signal_publication_state !== 'publishable') return false;
+  const until = r.staleness?.valid_until?.trim();
+  if (until && isPastValidUntil(until, createSystemIngestionClock())) {
+    return false;
+  }
+  return true;
 }
 
 /**

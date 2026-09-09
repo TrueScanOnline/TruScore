@@ -326,6 +326,8 @@ describe('resolveWorkstreamCRetailChain', () => {
       } as any,
       scanMarketPublic: 'AU',
       forceRun: true,
+      // NA-019: embed pack expires_at 2026-08-19 — keep chaining assertion in-window.
+      evaluationClockIso: '2026-08-10T12:00:00.000Z',
     });
     expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-003')).toBe(true);
   });

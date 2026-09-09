@@ -102,6 +102,8 @@ function matchGl002(input: {
         ingredients_text: input.ingredients_text,
       },
     },
+    // NA-019: pack expires_at is 2026-08-19 — use in-window clock for scope/guard proofs.
+    evaluationClock: { nowIso: () => '2026-08-10T12:00:00.000Z' },
   });
 }
 
@@ -212,6 +214,7 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
         product_family_ids: [],
         scanMarketPublic: 'NZ',
       },
+      evaluationClock: { nowIso: () => '2026-08-10T12:00:00.000Z' },
     });
     expect(recs.some((r) => r.signal_id === 'SIG-SR-NZ-003' || r.signal_id === 'SIG-SR-AU-004')).toBe(
       false
@@ -294,6 +297,7 @@ describe('SIG-IN-GL-002 v0.3 corporate targets + cocoa_chocolate guard', () => {
         scanMarketPublic: 'AU',
         productScopeEvidence: { product_name: 'Dairy Milk Chocolate' },
       },
+      evaluationClock: { nowIso: () => '2026-08-10T12:00:00.000Z' },
     });
     expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-002')).toBe(true);
   });
@@ -313,6 +317,7 @@ describe('SIG-IN-GL-002 v0.3 corporate targets + cocoa_chocolate guard', () => {
         scanMarketPublic: 'AU',
         productScopeEvidence: { product_name: 'Dairy Milk Chocolate' },
       },
+      evaluationClock: { nowIso: () => '2026-08-10T12:00:00.000Z' },
     });
     expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-002')).toBe(false);
   });

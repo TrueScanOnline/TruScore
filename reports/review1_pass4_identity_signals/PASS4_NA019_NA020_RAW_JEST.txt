@@ -1,0 +1,108 @@
+﻿node.exe : PASS src/__tests__/unit/dynamicSignals/assetV03Pack.test.ts
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (PASS src/__test...V03Pack.test.ts:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  cocoa_chocolate product_scope_guard
+    ΓêÜ returns false when positive product evidence is absent (26 ms)
+    ΓêÜ matches chocolate / choc / cocoa / cacao after case and spacing normalisation (3 ms)
+    ΓêÜ empty guard allows display; unknown guard fails closed (3 ms)
+  Dynamic Signals Asset v0.3 pack
+    ΓêÜ validates and loads workbook counts (14 sources / 18 signals / 27 targets) (24 ms)
+    ΓêÜ adding Food Safety News does not itself create a Signal (12 ms)
+    ΓêÜ SIG-SR-AU-003 is classified in_the_news; ACCC/NZ ComCom sources are in_the_news (11 ms)
+    ΓêÜ new Food Safety Signals remain restricted to product/date scope and have no invented GTINs (12 ms)
+  SIG-IN-GL-002 v0.3 corporate targets + cocoa_chocolate guard
+    ΓêÜ propagates through approved corporate targets only when the guard passes (17 ms)
+    ΓêÜ non-cocoa sibling products under the same parent do not receive SIG-IN-GL-002 (13 ms)
+    ΓêÜ Magnum receives the historical Signal only through its explicit brand target (10 ms)
+    ΓêÜ unrelated current TMICC brands do not inherit SIG-IN-GL-002 (12 ms)
+    ΓêÜ resolved targets on SIG-IN-GL-002 match for cocoa/chocolate product under named parent (7 ms)
+    ΓêÜ needs_review targets still fail closed when overlaid (4 ms)
+  Did You Know? consumer presentation
+    ΓêÜ maps Food Safety and In the News consumer labels; My Choices stays hidden (12 ms)
+
+PASS src/__tests__/unit/dynamicSignals/assetV02Matcher.test.ts
+  Dynamic Signals Asset v0.2 ΓÇö remediation matcher
+    ΓêÜ pack row counts match founder asset (13/14/16/25) (39 ms)
+    ΓêÜ candidate Signals do not render publicly even when target would match (10 ms)
+    ΓêÜ founder-authorised UAT Signals are publishable in pack (13 ms)
+    ΓêÜ positive publish lifecycle: resolved reviewed Signal reaches publishable with target resolution_status (17 ms)
+    ΓêÜ batch/date-limited Safety recall cannot become a generic barcode-wide Asset publish (14 ms)
+    ΓêÜ exact-product positive for non-Safety News still works; sibling negative (10 ms)
+    ΓêÜ family_members: multiple pack sizes inherit when family+membership reviewed; outsider does not (13 ms)
+    ΓêÜ unreviewed family or membership cannot match (8 ms)
+    ΓêÜ Cadbury-wide Signal inherits to Dairy Milk via brand_child_of_brand; Ritz does not (6 ms)
+    ΓêÜ Dairy Milk-only Signal (B0241) does not fire for umbrella Cadbury brand alone (8 ms)
+    ΓêÜ entity_descendants: Coles own-label inherits; third-party stocked brand does not (11 ms)
+    ΓêÜ Skeleton flag retired: Asset-only producer guard (legacy Skeleton flag ignored) (1 ms)
+    ΓêÜ AU/NZ market isolation (6 ms)
+    ΓêÜ needs_review targets fail closed (9 ms)
+    ΓêÜ no TruScore mutation when Asset records attach (8 ms)
+    ΓêÜ Finding B: reviewed GTIN supplementary when product identity fails (53 ms)
+  Dynamic Signals Asset v0.2 ΓÇö sole production Signal-content authority
+    ΓêÜ Asset disabled / no governed recall ΓåÆ no production Safety Signal (2 ms)
+    ΓêÜ Asset active + historical MILO pack present ΓåÆ MILO does not surface unless MILO is a governed Asset Signal 
+(9 ms)
+    ΓêÜ affected GTIN + matching batch/date ΓåÆ confirmed_affected (10 ms)
+    ΓêÜ affected GTIN + missing/partial batch/date ΓåÆ batch_check_required (6 ms)
+    ΓêÜ affected GTIN + complete unlisted batch/date ΓåÆ batch_not_listed; card present; never says safe (7 ms)
+    ΓêÜ reviewed recall-family member without exact affected variant ΓåÆ related_recall_variant_unconfirmed (5 ms)
+    ΓêÜ unrelated/non-member GTIN ΓåÆ not_applicable, no card (4 ms)
+    ΓêÜ stable card identity across batch_check_required ΓåÆ confirmed_affected / batch_not_listed (8 ms)
+    ΓêÜ historical MILO pack remains incapable of originating a production Signal absent governed Asset record (7 ms)
+
+PASS src/__tests__/unit/review1/pass4Corrective.na019_na020.signalsTemporalScope.test.ts
+  Pass 4 NA-019 ΓÇö Asset temporal public window
+    ΓêÜ normalizes date-only bounds to UTC day start/end (23 ms)
+    ΓêÜ before publishable_from ΓåÆ hidden (1 ms)
+    ΓêÜ valid publication window ΓåÆ visible (1 ms)
+    ΓêÜ after expires_at ΓåÆ hidden (2 ms)
+    ΓêÜ suppressed publication state ΓåÆ hidden regardless of dates (24 ms)
+    ΓêÜ expired publication state ΓåÆ hidden (9 ms)
+    ΓêÜ inactive/non-authorised source ΓåÆ hidden (9 ms)
+    ΓêÜ current expired v0.3 pack records do not render at 2026-09-09 (8 ms)
+    ΓêÜ within-window Cadbury chocolate still matches when clock is inside pack dates (9 ms)
+  Pass 4 NA-020 ΓÇö TGT-014/015 cocoa_chocolate guard
+    ΓêÜ pack rows and embed carry cocoa_chocolate on TGT-014/015 only as guard change (8 ms)
+    ΓêÜ qualifying Cadbury/Dairy Milk chocolate context continues to receive SIG-IN-GL-001 (9 ms)
+    ΓêÜ B0067 descendant lacking positive cocoa/chocolate evidence does not receive SIG-IN-GL-001 (5 ms)
+    ΓêÜ Ritz and other non-Cadbury Mondel─ôz siblings remain negative for SIG-IN-GL-001 (4 ms)
+    ΓêÜ existing GL-002 cocoa_chocolate scope behaviour remains unchanged (9 ms)
+  Pass 4 NA-019 ΓÇö TruScore / identity unchanged by Signal temporal gate
+    ΓêÜ calculateTruScore output is independent of Signal temporal enforcement (57 ms)
+
+PASS src/__tests__/unit/workstreamC/resolveWorkstreamCRetailChain.test.ts (5.622 s)
+  resolveWorkstreamCRetailChain
+    ΓêÜ isChocolateOrCocoaContext true for chocolates category (24 ms)
+    ΓêÜ isChocolateOrCocoaContext false for plain cracker / biscuit products without chocolate cues (3 ms)
+    ΓêÜ leading phrase boundary: MIX matches leading token only (3 ms)
+    ΓêÜ Cadbury Dairy Milk product_name refines to reviewed child brand B0241 (not UAT bridge) (88 ms)
+    ΓêÜ umbrella Cadbury chocolate stays B0067 when UAT bridge off; opt-in bridge ΓåÆ B0241 (53 ms)
+    ΓêÜ Ritz cracker resolves to B0069 ΓÇö not bridged to B0241 (44 ms)
+    ΓêÜ KitKat: Nestl├⌐-only brands + KitKat in product_name resolves to B0060 (not umbrella B0066) (45 ms)
+    ΓêÜ Kit Kat (spaced) product_name resolves to B0060 via reviewed alias leading phrase (45 ms)
+    ΓêÜ generic_name KitKat alone does not override Nestl├⌐ product brand (39 ms)
+    ΓêÜ cross-parent product_name refinement cannot override resolved brands-field identity (48 ms)
+    ΓêÜ Nestl├⌐ condensed-milk title refines to specific brand B0237 (parent Nestl├⌐ retained; not KitKat) (53 ms)
+    ΓêÜ explicit S&B + Japanese Curry Mix fails closed (no Coles MIX inference) (43 ms)
+    ΓêÜ explicit S&B + Coles Japanese Curry Mix fails closed (no cross-family override) (43 ms)
+    ΓêÜ no brand field + Japanese Curry Mix does not resolve to MIX (51 ms)
+    ΓêÜ no brand field + Mixed Berry does not resolve to MIX (40 ms)
+    ΓêÜ no brand field + leading MIX resolves B0769 when brands field corroborates at start (44 ms)
+    ΓêÜ no brand field + Coles Kitchen leading phrase resolves correctly (44 ms)
+    ΓêÜ absent brand field preserves product_name-only inference via leading whitelist (40 ms)
+    ΓêÜ explicit Cadbury + Crunchie product name refines to child brand B0244 (42 ms)
+    ΓêÜ trailing canonical phrase collision is rejected (leading brand wins; trailing MIX ignored) (43 ms)
+    ΓêÜ Coles-family product with brands-field MIX still receives SIG-SR-AU-003 without signal guard (16 ms)
+    ΓêÜ S&B Japanese Curry Mix does not receive SIG-SR-AU-003 (6 ms)
+
+Test Suites: 4 passed, 4 total
+Tests:       76 passed, 76 total
+Snapshots:   0 total
+Time:        6.44 s, estimated 9 s
+Ran all test suites matching /src\\__tests__\\unit\\review1\\pass4Corrective.na019_na020.signalsTemporalScope.test.ts|s
+rc\\__tests__\\unit\\dynamicSignals\\assetV03Pack.test.ts|src\\__tests__\\unit\\workstreamC\\resolveWorkstreamCRetailCh
+ain.test.ts|src\\__tests__\\unit\\dynamicSignals\\assetV02Matcher.test.ts/i.

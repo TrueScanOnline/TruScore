@@ -21,8 +21,11 @@ import {
 } from '../../../workstreamC/recall';
 import { publicationStateForGtinVerification } from '../../../workstreamC/recall/mapFoodRecallMatchToPublicationRecord';
 import type { AssetPackParsed } from './matchDynamicSignalsAsset';
-
-const VALID_FAR = '2099-12-31T23:59:59.000Z';
+import {
+  assetExpiresAtAsValidUntil,
+  isAssetSignalWithinPublicTemporalWindow,
+} from './assetSignalTemporalPolicy';
+import { createFixedIngestionClock } from '../../ingest/ingestionClock';
 
 function authorisedSourceIds(sources: CsvRecord[]): Set<string> {
   const s = new Set<string>();
@@ -73,7 +76,7 @@ function mapAssetGovernedMatchToPublicationRecord(input: {
     source_system: signal.source_channel_id ?? undefined,
     source_record_url: sourceUrl,
     source_idempotency_key: match.dedupe_key,
-    staleness: { valid_until: signal.expires_at?.trim() || VALID_FAR },
+    staleness: { valid_until: assetExpiresAtAsValidUntil(signal.expires_at) },
     editorial: {
       priority: 0,
       due_at: null,
@@ -130,9 +133,10 @@ export function buildAssetGovernedFoodRecallPublicationRecords(input: {
   const signalById = new Map(input.pack.signals.map((r) => [r.signal_id ?? '', r]));
   const noticeById = new Map(notices.map((n) => [n.recall_notice_id, n]));
   const authSources = authorisedSourceIds(input.pack.sources);
-  const clock = createFixedFoodRecallClock(
-    input.evaluationClockIso ?? '2026-08-05T00:00:00.000Z'
-  );
+  // Same injected clock for recall eligibility date logic and NA-019 temporal public window.
+  const clockIso = input.evaluationClockIso ?? '2026-08-05T00:00:00.000Z';
+  const clock = createFixedFoodRecallClock(clockIso);
+  const temporalClock = createFixedIngestionClock(clockIso);
   const out: DynamicSignalPublicationRecord[] = [];
   const seen = new Set<string>();
 
@@ -166,8 +170,27 @@ export function buildAssetGovernedFoodRecallPublicationRecords(input: {
     }
 
     const pubState = (signal.signal_publication_state ?? '').trim();
+    if (pubState === 'suppressed' || pubState === 'expired') {
+      push(`food_recall: skip ${signalId} signal_publication_state=${pubState} — not public`);
+      continue;
+    }
     if (pubState !== 'publishable' && !input.includeNonPublishable) {
       push(`food_recall: skip ${signalId} signal_publication_state=${pubState} — not public`);
+      continue;
+    }
+
+    if (
+      !isAssetSignalWithinPublicTemporalWindow(
+        {
+          publishable_from: signal.publishable_from,
+          expires_at: signal.expires_at,
+        },
+        temporalClock
+      )
+    ) {
+      push(
+        `food_recall: temporal_hold ${signalId} outside public window expires_at=${(signal.expires_at ?? '').trim() || '(none)'}`
+      );
       continue;
     }
 

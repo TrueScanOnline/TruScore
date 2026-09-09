@@ -93,6 +93,10 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
       ? { product_name: input.productName }
       : null;
 
+  const evaluationClock = input.evaluationClockIso
+    ? { nowIso: () => input.evaluationClockIso as string }
+    : undefined;
+
   const assetRecords = buildDynamicSignalsAssetPublicationRecords({
     pack,
     identity: {
@@ -105,6 +109,7 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     },
     logLines: logs,
     includeNonPublishable: input.includeNonPublishable ?? false,
+    evaluationClock,
   });
 
   const recallRecords = buildAssetGovernedFoodRecallPublicationRecords({

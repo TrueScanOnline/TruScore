@@ -21,12 +21,16 @@ import {
 } from '../../../identity/chaining/brandEntityHierarchyMaps';
 import type { ResolutionStatus } from '../../../contracts/phase6/enums';
 import type { StructuredFoodRecallNotice } from '../../../workstreamC/recall';
+import type { IngestionClock } from '../../ingest/ingestionClock';
+import { createSystemIngestionClock } from '../../ingest/ingestionClock';
 import {
   productScopeGuardAllowsDisplay,
   type CocoaChocolateProductScopeEvidence,
 } from './cocoaChocolateProductScopeGuard';
-
-const VALID_FAR = '2099-12-31T23:59:59.000Z';
+import {
+  assetExpiresAtAsValidUntil,
+  isAssetSignalWithinPublicTemporalWindow,
+} from './assetSignalTemporalPolicy';
 
 export type AssetScanIdentity = {
   barcode: string;
@@ -156,7 +160,8 @@ function signalToPublicationRecord(
       return u && /^https?:\/\//i.test(u) ? u : undefined;
     })(),
     source_idempotency_key: `dsa_v0_2|${sigId}|${barcode}`,
-    staleness: { valid_until: signal.expires_at?.trim() || VALID_FAR },
+    // NA-019: persist end-normalized expires_at so render-layer staleness matches matcher gate.
+    staleness: { valid_until: assetExpiresAtAsValidUntil(signal.expires_at) },
     editorial: {
       priority: 0,
       due_at: null,
@@ -176,8 +181,11 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
   identity: AssetScanIdentity;
   logLines?: string[];
   includeNonPublishable?: boolean;
+  /** Injected evaluation clock (tests / deterministic UAT). Defaults to system clock. */
+  evaluationClock?: IngestionClock;
 }): DynamicSignalPublicationRecord[] {
   const push = (s: string) => input.logLines?.push(s);
+  const clock = input.evaluationClock ?? createSystemIngestionClock();
   const authSources = authorisedSourceIds(input.pack.sources);
   const signalById = new Map(input.pack.signals.map((r) => [r.signal_id ?? '', r]));
   const out: DynamicSignalPublicationRecord[] = [];
@@ -247,8 +255,29 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
     }
 
     const pubState = (signal.signal_publication_state ?? '').trim();
+    // NA-019: suppressed / expired / non-publishable never reach consumer cards.
+    if (pubState === 'suppressed' || pubState === 'expired') {
+      push(`lifecycle_hold: ${sigId} signal_publication_state=${pubState} — not public`);
+      continue;
+    }
     if (pubState !== 'publishable' && !input.includeNonPublishable) {
       push(`candidate_hold: ${sigId} signal_publication_state=${pubState} — not public`);
+      continue;
+    }
+
+    // NA-019: publication state alone is insufficient — temporal window must also be valid.
+    if (
+      !isAssetSignalWithinPublicTemporalWindow(
+        {
+          publishable_from: signal.publishable_from,
+          expires_at: signal.expires_at,
+        },
+        clock
+      )
+    ) {
+      push(
+        `temporal_hold: ${sigId} outside public window publishable_from=${(signal.publishable_from ?? '').trim() || '(none)'} expires_at=${(signal.expires_at ?? '').trim() || '(none)'}`
+      );
       continue;
     }
 
