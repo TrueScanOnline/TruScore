@@ -1709,20 +1709,9 @@ function ResultScreenContent() {
             </View>
           )}
 
-        {/* Nutrition Facts — tap card or footer to edit; share/edit icons unchanged */}
-        <Pressable
-          onPress={handleEditProduct}
-          style={({ pressed }) => [pressed && { opacity: 0.97 }]}
-          accessibilityRole="button"
-          accessibilityLabel={t('result.nutritionFacts')}
-          accessibilityHint={t(
-            'result.nutritionCardOpenEditA11y',
-            'Opens edit product to update nutrition information.'
-          )}
-        >
+        {/* Nutrition Facts — card body opens Nutrition Details; pencil glyph alone opens contribution */}
           <NutritionTable
             nutriments={product.nutriments}
-            nutrientLevels={product.nutrient_levels}
             categoriesTags={product.categories_tags}
             servingSize={product.serving_size}
             onShare={() => handleShare('nutrition')}
@@ -1736,22 +1725,7 @@ function ResultScreenContent() {
               setShareInitialMessage(prefill);
               setShareModalVisible(true);
             }}
-            cardFooter={
-              <TouchableOpacity
-                onPress={handleEditProduct}
-                activeOpacity={0.7}
-                style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
-                accessibilityRole="button"
-                accessibilityLabel={t('result.addNutritionFactsHere', 'Add nutrition facts here')}
-              >
-                <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-                <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
-                  {t('result.addNutritionFactsHere', 'Add nutrition facts here')}
-                </Text>
-              </TouchableOpacity>
-            }
           />
-        </Pressable>
 
         {/* Country of Manufacture — governed Product Origins surface (Open Origins L3 deep-link) */}
         <View

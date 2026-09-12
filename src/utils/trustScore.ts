@@ -5,6 +5,7 @@ import { calculateTruScore, buildTruScoreAnalysis } from '../lib/truscoreEngine'
 import { getPlanetScoringContext } from './planetScoringContext';
 import { scoreBodyMvpAdditives } from '../lib/truscoreEngine/pillars/bodyAdditiveScoring';
 import { applyResolvedNutrientLevels } from './resolveNutrientLevels';
+import { assessGovernedNutrientsFromProduct } from '../nutrition/governedNutrientAssessment';
 import { logger } from './logger';
 import { powershellLogger } from './powershellLogger';
 import { hasCoreTruthAuthority } from '../config/coreTruthProductCacheAuthority';
@@ -28,8 +29,7 @@ function hasSufficientDataForTrustScore(product: Product): boolean {
  * Review 1 Pass 2 (NA-001): always recalculates — calculated TruScore cache has no runtime authority.
  */
 export async function calculateTrustScore(product: Product): Promise<ProductWithTrustScore> {
-  // Fill missing traffic-light levels from per-100g nutriments (OFF often omits nutrient_levels when
-  // server-side compute is skipped; see Open Food Facts Food.pm compute_nutrient_levels).
+  // Wave 3: OFF-legacy nutrient_levels fill is a no-op. Consumer ratings use assessGovernedNutrients.
   applyResolvedNutrientLevels(product);
 
   // Check if we have sufficient data for a meaningful TruScore
@@ -239,12 +239,13 @@ function generateTrustReasons(
     );
   }
 
-  const nutrientLevels = product.nutrient_levels || {};
-  if (nutrientLevels.sugars === 'high') {
+  // Wave 3: use governed UK FoP MTL assessment — not raw OFF nutrient_levels.
+  const governed = assessGovernedNutrientsFromProduct(product);
+  if (governed.nutrients.totalSugars.level === 'high') {
     reasons.push('High sugar content');
   }
-  if (nutrientLevels.salt === 'high') {
-    reasons.push('High salt content');
+  if (governed.nutrients.sodium.level === 'high') {
+    reasons.push('High sodium content');
   }
 
   // Open / Transparency: consumer interpretation is Score Highlights + pillar score only.

@@ -1,15 +1,22 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Share, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Share, Platform, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { ProductNutriments, ProductNutrientLevels } from '../types/product';
+import { ProductNutriments } from '../types/product';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { formatWeight, formatVolume, formatServingSize } from '../utils/units';
 import { useTheme } from '../theme';
 import { getNutrientValue100g, toFiniteNumber, resolveKcalPer100g } from '../utils/nutritionPer100g';
-import { resolveNutrientLevels } from '../utils/resolveNutrientLevels';
+import {
+  assessGovernedNutrients,
+  hasGovernedHighNutrient,
+  type GovernedNutrientAssessment,
+  type GovernedNutrientKey,
+  type GovernedNutrientLevel,
+} from '../nutrition';
 import { computeBurnMinutesFromKcal } from '../utils/nutritionBurnTime';
 import NutritionBurnInfoModal from './NutritionBurnInfoModal';
+import NutritionDetailsModal, { type NutritionDetailsFocusTarget } from './NutritionDetailsModal';
 
 export interface NutritionTableShareContext {
   productName: string;
@@ -18,21 +25,23 @@ export interface NutritionTableShareContext {
 
 interface NutritionTableProps {
   nutriments?: ProductNutriments;
-  nutrientLevels?: ProductNutrientLevels;
-  /** For beverage traffic-light halving (OFF `en:beverages`); optional second-line resolver with nutriments. */
+  /** Ignored for ratings — retained for call-site compatibility. Raw OFF levels are not authority. */
+  nutrientLevels?: unknown;
   categoriesTags?: string[];
   servingSize?: string;
   onShare?: () => void;
   onEdit?: () => void;
   shareContext?: NutritionTableShareContext;
   onRequestNutritionSharePrefill?: (prefill: string) => void;
-  /** Optional footer inside the card (e.g. product screen “add nutrition” CTA). */
   cardFooter?: React.ReactNode;
+  /** Optional external control of Nutrition Details visibility. */
+  detailsVisible?: boolean;
+  onDetailsVisibleChange?: (visible: boolean) => void;
+  initialDetailsFocus?: NutritionDetailsFocusTarget | null;
 }
 
 const NutritionTable = React.memo(function NutritionTable({
   nutriments,
-  nutrientLevels,
   categoriesTags,
   servingSize,
   onShare,
@@ -40,24 +49,45 @@ const NutritionTable = React.memo(function NutritionTable({
   shareContext,
   onRequestNutritionSharePrefill,
   cardFooter,
+  detailsVisible: detailsVisibleProp,
+  onDetailsVisibleChange,
+  initialDetailsFocus = null,
 }: NutritionTableProps) {
   const { t } = useTranslation();
   const { units } = useSettingsStore();
   const { colors } = useTheme();
   const [burnModalVisible, setBurnModalVisible] = useState(false);
+  const [internalDetailsVisible, setInternalDetailsVisible] = useState(false);
+  const [detailsFocus, setDetailsFocus] = useState<NutritionDetailsFocusTarget | null>(
+    initialDetailsFocus
+  );
 
+  const detailsVisible = detailsVisibleProp ?? internalDetailsVisible;
+  const setDetailsVisible = useCallback(
+    (visible: boolean) => {
+      if (onDetailsVisibleChange) onDetailsVisibleChange(visible);
+      else setInternalDetailsVisible(visible);
+    },
+    [onDetailsVisibleChange]
+  );
+
+  const assessment: GovernedNutrientAssessment = useMemo(
+    () =>
+      assessGovernedNutrients({
+        nutriments,
+        categoriesTags,
+        servingSize,
+      }),
+    [nutriments, categoriesTags, servingSize]
+  );
+
+  const showPerServe = assessment.serving.usable === true;
   const kcalPer100g = useMemo(() => resolveKcalPer100g(nutriments), [nutriments]);
   const burnMinutes = useMemo(
     () => (kcalPer100g !== undefined ? computeBurnMinutesFromKcal(kcalPer100g) : null),
     [kcalPer100g]
   );
   const showBurnStrip = burnMinutes !== null && kcalPer100g !== undefined;
-
-  /** UI second hook: same OFF-aligned merge as TruScore, so levels show even if upstream omitted them. */
-  const effectiveNutrientLevels = useMemo(
-    () => resolveNutrientLevels(nutriments, nutrientLevels, categoriesTags),
-    [nutriments, nutrientLevels, categoriesTags]
-  );
 
   const handleBurnSharePrefill = useCallback(
     (prefill: string) => {
@@ -69,6 +99,14 @@ const NutritionTable = React.memo(function NutritionTable({
       Share.share({ message: prefill }).catch(() => {});
     },
     [onRequestNutritionSharePrefill]
+  );
+
+  const openDetails = useCallback(
+    (focus: NutritionDetailsFocusTarget | null = null) => {
+      setDetailsFocus(focus);
+      setDetailsVisible(true);
+    },
+    [setDetailsVisible]
   );
 
   if (!nutriments) {
@@ -85,6 +123,11 @@ const NutritionTable = React.memo(function NutritionTable({
                 onPress={onEdit}
                 style={styles.editButton}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel={t(
+                  'nutrition.contributeA11y',
+                  'Contribute or correct nutrition information'
+                )}
               >
                 <Ionicons name="create-outline" size={20} color={colors.primary} />
               </TouchableOpacity>
@@ -106,15 +149,14 @@ const NutritionTable = React.memo(function NutritionTable({
     );
   }
 
-  const getLevelColor = (level?: string) => {
+  const getLevelColor = (level?: GovernedNutrientLevel | string) => {
     if (level === 'low') return '#16a085';
     if (level === 'moderate') return '#ffd93d';
     if (level === 'high') return '#ff6b6b';
     return '#666';
   };
 
-  /** Dot/border use traffic-light hues; moderate label uses a darker tone for contrast on light cards. */
-  const getLevelLabelColor = (level?: string) => {
+  const getLevelLabelColor = (level?: GovernedNutrientLevel | string) => {
     if (level === 'moderate') return '#b8860b';
     return getLevelColor(level);
   };
@@ -126,12 +168,15 @@ const NutritionTable = React.memo(function NutritionTable({
     if (unit === 'g') {
       return formatWeight(numericValue, units);
     }
+    if (unit === 'mg') {
+      const n = Number.isInteger(numericValue) ? String(Math.round(numericValue)) : numericValue.toFixed(1);
+      return `${n}\u00A0mg`;
+    }
     if (unit === 'ml' || unit === 'L') {
       const mlValue = unit === 'L' ? numericValue * 1000 : numericValue;
       return formatVolume(mlValue, units);
     }
     if (unit === 'kcal') {
-      // Non-breaking space keeps "value + unit" on one line in narrow columns
       const n = Number.isInteger(numericValue) ? String(Math.round(numericValue)) : numericValue.toFixed(1);
       return `${n}\u00A0kcal`;
     }
@@ -139,44 +184,101 @@ const NutritionTable = React.memo(function NutritionTable({
   };
 
   const levelBadgeLabel = (level: 'low' | 'moderate' | 'high') => {
-    if (level === 'low') return t('nutrition.levelBadgeLow');
-    if (level === 'moderate') return t('nutrition.levelBadgeMed');
-    return t('nutrition.levelBadgeHigh');
+    if (level === 'low') return t('nutrition.levelBadgeLow', 'Low');
+    if (level === 'moderate') return t('nutrition.levelBadgeModerate', 'Moderate');
+    return t('nutrition.levelBadgeHigh', 'High');
   };
 
-  const getNutritionRows = () => [
-    { label: t('nutrition.energy'), key: 'energy-kcal', unit: 'kcal', levelKey: undefined },
-    { label: t('nutrition.fat'), key: 'fat', unit: 'g', levelKey: 'fat' },
-    { label: t('nutrition.saturatedFat'), key: 'saturated-fat', unit: 'g', levelKey: 'saturated_fat' },
-    { label: t('nutrition.carbohydrates'), key: 'carbohydrates', unit: 'g', levelKey: undefined },
-    { label: t('nutrition.sugars'), key: 'sugars', unit: 'g', levelKey: 'sugars' },
-    { label: t('nutrition.fiber'), key: 'fiber', unit: 'g', levelKey: undefined },
-    { label: t('nutrition.protein'), key: 'proteins', unit: 'g', levelKey: undefined },
-    { label: t('nutrition.salt'), key: 'salt', unit: 'g', levelKey: 'salt' },
+  const per100Header =
+    assessment.per100Basis === '100ml'
+      ? t('nutrition.per100ml', 'Per 100 mL')
+      : assessment.per100Basis === '100g'
+        ? t('nutrition.per100g', 'Per 100g')
+        : t('nutrition.per100gOrMl', 'Per 100 g/mL');
+
+  type RowDef = {
+    label: string;
+    key: string;
+    unit: string;
+    governedKey?: GovernedNutrientKey;
+  };
+
+  const nutritionRows: RowDef[] = [
+    { label: t('nutrition.energy'), key: 'energy-kcal', unit: 'kcal' },
+    { label: t('nutrition.fat'), key: 'fat', unit: 'g' },
+    {
+      label: t('nutrition.saturatedFat'),
+      key: 'saturated-fat',
+      unit: 'g',
+      governedKey: 'saturatedFat',
+    },
+    { label: t('nutrition.carbohydrates'), key: 'carbohydrates', unit: 'g' },
+    {
+      label: t('nutrition.sugars'),
+      key: 'sugars',
+      unit: 'g',
+      governedKey: 'totalSugars',
+    },
+    { label: t('nutrition.fiber'), key: 'fiber', unit: 'g' },
+    { label: t('nutrition.protein'), key: 'proteins', unit: 'g' },
+    {
+      label: t('nutrition.sodium'),
+      key: 'sodium',
+      unit: 'mg',
+      governedKey: 'sodium',
+    },
   ];
 
-  const nutritionRows = getNutritionRows();
+  const borderColor = hasGovernedHighNutrient(assessment) ? '#ff6b6b' : '#16a085';
 
-  const hasHighNegativeNutrients =
-    effectiveNutrientLevels.sugars === 'high' ||
-    effectiveNutrientLevels.salt === 'high' ||
-    effectiveNutrientLevels.saturated_fat === 'high';
+  const perServeForRow = (row: RowDef): number | undefined => {
+    if (!showPerServe || !assessment.serving.usable) return undefined;
+    if (row.governedKey) {
+      return assessment.nutrients[row.governedKey].perServe;
+    }
+    const per100 =
+      row.key === 'energy-kcal'
+        ? (getNutrientValue100g(nutriments, 'energy-kcal') ?? resolveKcalPer100g(nutriments))
+        : row.key === 'sodium'
+          ? assessment.nutrients.sodium.rawPer100
+          : getNutrientValue100g(nutriments, row.key);
+    if (per100 === undefined) return undefined;
+    return (per100 * assessment.serving.quantity) / 100;
+  };
 
-  const borderColor = hasHighNegativeNutrients ? '#ff6b6b' : '#16a085';
+  const per100ForRow = (row: RowDef): number | undefined => {
+    if (row.governedKey === 'sodium') return assessment.nutrients.sodium.rawPer100;
+    if (row.governedKey === 'saturatedFat') return assessment.nutrients.saturatedFat.rawPer100;
+    if (row.governedKey === 'totalSugars') return assessment.nutrients.totalSugars.rawPer100;
+    if (row.key === 'energy-kcal') {
+      return getNutrientValue100g(nutriments, 'energy-kcal') ?? resolveKcalPer100g(nutriments);
+    }
+    return getNutrientValue100g(nutriments, row.key);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.card, borderWidth: 2, borderColor }]}>
       <View style={styles.titleContainer}>
-        <View style={styles.titleLeft}>
+        <Pressable
+          onPress={() => openDetails(null)}
+          style={styles.titleLeft}
+          accessibilityRole="button"
+          accessibilityLabel={t('nutrition.openDetailsA11y', 'Open nutrition details')}
+        >
           <Ionicons name="nutrition" size={24} color={colors.primary} />
           <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{t('result.nutritionFacts')}</Text>
-        </View>
+        </Pressable>
         <View style={styles.headerButtons}>
           {onEdit && (
             <TouchableOpacity
               onPress={onEdit}
               style={styles.editButton}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel={t(
+                'nutrition.contributeA11y',
+                'Contribute or correct nutrition information'
+              )}
             >
               <Ionicons name="create-outline" size={20} color={colors.primary} />
             </TouchableOpacity>
@@ -192,81 +294,113 @@ const NutritionTable = React.memo(function NutritionTable({
           )}
         </View>
       </View>
-      {servingSize && (
-        <Text style={[styles.servingSize, { color: colors.textSecondary }]}>
-          {t('result.servingSize')}: {formatServingSize(servingSize, units)}
-        </Text>
-      )}
 
-      <View style={[styles.table, { borderTopColor: colors.border }]}>
-        <View style={[styles.tableHeader, { borderBottomColor: colors.border }]}>
-          <View style={styles.headerLabelCol} />
-          <Text style={[styles.headerText, styles.headerValueCol, { color: colors.textSecondary }]}>
-            {t('nutrition.per100g')}
+      <Pressable
+        onPress={() => openDetails(null)}
+        accessibilityRole="button"
+        accessibilityLabel={t('nutrition.openDetailsA11y', 'Open nutrition details')}
+      >
+        {servingSize ? (
+          <Text style={[styles.servingSize, { color: colors.textSecondary }]}>
+            {t('result.servingSize')}: {formatServingSize(servingSize, units)}
           </Text>
-          <Text style={[styles.headerText, styles.headerLevelCol, { color: colors.textSecondary }]}>
-            {t('nutrition.level')}
-          </Text>
-        </View>
+        ) : null}
 
-        {nutritionRows.map((row) => {
-          const value =
-            row.key === 'energy-kcal'
-              ? (getNutrientValue100g(nutriments, 'energy-kcal') ?? resolveKcalPer100g(nutriments))
-              : getNutrientValue100g(nutriments, row.key);
-          const level = row.levelKey
-            ? effectiveNutrientLevels[row.levelKey as keyof ProductNutrientLevels]
-            : undefined;
-          const levelColor = getLevelColor(level);
-          const levelLabelColor = getLevelLabelColor(level);
+        <View style={[styles.table, { borderTopColor: colors.border }]}>
+          <View style={[styles.tableHeader, { borderBottomColor: colors.border }]}>
+            <View style={styles.headerLabelCol} />
+            <Text
+              style={[
+                styles.headerText,
+                showPerServe ? styles.headerValueColCompact : styles.headerValueCol,
+                { color: colors.textSecondary },
+              ]}
+              numberOfLines={2}
+            >
+              {per100Header}
+            </Text>
+            {showPerServe ? (
+              <Text
+                style={[styles.headerText, styles.headerServeCol, { color: colors.textSecondary }]}
+                numberOfLines={2}
+              >
+                {t('nutrition.perServe', 'Per serve')}
+              </Text>
+            ) : null}
+            <Text style={[styles.headerText, styles.headerLevelCol, { color: colors.textSecondary }]}>
+              {t('nutrition.level')}
+            </Text>
+          </View>
 
-          return (
-            <View key={row.key} style={[styles.tableRow, { borderBottomColor: colors.border }]}>
-              <View style={styles.labelCell}>
-                <Text
-                  style={[styles.labelText, { color: colors.text }]}
-                  {...(Platform.OS === 'android' ? { textBreakStrategy: 'highQuality' as const } : {})}
-                  {...(Platform.OS === 'ios' ? { lineBreakStrategyIOS: 'standard' as const } : {})}
-                >
-                  {row.label}
-                </Text>
-              </View>
-              <View style={styles.valueCell}>
-                <Text
-                  style={[styles.valueText, { color: colors.text }]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit={row.unit === 'kcal'}
-                  minimumFontScale={row.unit === 'kcal' ? 0.82 : 1}
-                >
-                  {formatValue(value, row.unit)}
-                </Text>
-              </View>
-              <View style={styles.levelCell}>
-                {level ? (
-                  <View
-                    style={[
-                      styles.levelBadge,
-                      {
-                        backgroundColor: colors.surface,
-                        borderColor: levelColor,
-                      },
-                    ]}
-                    accessibilityRole="text"
-                    accessibilityLabel={`${row.label}: ${levelBadgeLabel(level)}`}
+          {nutritionRows.map((row) => {
+            const value = per100ForRow(row);
+            const serveValue = perServeForRow(row);
+            const governed = row.governedKey ? assessment.nutrients[row.governedKey] : undefined;
+            const level =
+              governed && governed.level !== 'unavailable' ? governed.level : undefined;
+            const levelColor = getLevelColor(level);
+            const levelLabelColor = getLevelLabelColor(level);
+
+            return (
+              <View key={row.key} style={[styles.tableRow, { borderBottomColor: colors.border }]}>
+                <View style={styles.labelCell}>
+                  <Text
+                    style={[styles.labelText, { color: colors.text }]}
+                    {...(Platform.OS === 'android' ? { textBreakStrategy: 'highQuality' as const } : {})}
+                    {...(Platform.OS === 'ios' ? { lineBreakStrategyIOS: 'standard' as const } : {})}
                   >
-                    <View style={[styles.levelDot, { backgroundColor: levelColor }]} />
-                    <Text style={[styles.levelBadgeText, { color: levelLabelColor }]} numberOfLines={1}>
-                      {levelBadgeLabel(level)}
+                    {row.label}
+                  </Text>
+                </View>
+                <View style={showPerServe ? styles.valueCellCompact : styles.valueCell}>
+                  <Text
+                    style={[styles.valueText, { color: colors.text }]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={row.unit === 'kcal' || row.unit === 'mg'}
+                    minimumFontScale={0.75}
+                  >
+                    {formatValue(value, row.unit)}
+                  </Text>
+                </View>
+                {showPerServe ? (
+                  <View style={styles.serveCell}>
+                    <Text
+                      style={[styles.valueText, { color: colors.text }]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.75}
+                    >
+                      {formatValue(serveValue, row.unit)}
                     </Text>
                   </View>
-                ) : (
-                  <View style={styles.levelPlaceholder} />
-                )}
+                ) : null}
+                <View style={styles.levelCell}>
+                  {level ? (
+                    <View
+                      style={[
+                        styles.levelBadge,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: levelColor,
+                        },
+                      ]}
+                      accessibilityRole="text"
+                      accessibilityLabel={`${row.label}: ${levelBadgeLabel(level)}`}
+                    >
+                      <View style={[styles.levelDot, { backgroundColor: levelColor }]} />
+                      <Text style={[styles.levelBadgeText, { color: levelLabelColor }]} numberOfLines={1}>
+                        {levelBadgeLabel(level)}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.levelPlaceholder} />
+                  )}
+                </View>
               </View>
-            </View>
-          );
-        })}
-      </View>
+            );
+          })}
+        </View>
+      </Pressable>
 
       {cardFooter}
 
@@ -330,6 +464,15 @@ const NutritionTable = React.memo(function NutritionTable({
           onSharePrefill={handleBurnSharePrefill}
         />
       )}
+
+      <NutritionDetailsModal
+        visible={detailsVisible}
+        onClose={() => setDetailsVisible(false)}
+        assessment={assessment}
+        nutriments={nutriments}
+        servingSize={servingSize}
+        focusTarget={detailsFocus}
+      />
     </View>
   );
 });
@@ -384,16 +527,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     alignItems: 'center',
   },
-  /**
-   * Header mirrors row layout: label takes remaining width; value + level use fixed
-   * widths so nutrient names are never squeezed by proportional flex when badges appear.
-   */
   headerLabelCol: {
     flex: 1,
     minWidth: 0,
   },
   headerText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
   },
   headerValueCol: {
@@ -404,9 +543,25 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     paddingLeft: 4,
   },
+  headerValueColCompact: {
+    width: 72,
+    flexBasis: 72,
+    flexGrow: 0,
+    flexShrink: 0,
+    textAlign: 'right',
+    paddingLeft: 2,
+  },
+  headerServeCol: {
+    width: 72,
+    flexBasis: 72,
+    flexGrow: 0,
+    flexShrink: 0,
+    textAlign: 'right',
+    paddingLeft: 2,
+  },
   headerLevelCol: {
-    width: 60,
-    flexBasis: 60,
+    width: 78,
+    flexBasis: 78,
     flexGrow: 0,
     flexShrink: 0,
     textAlign: 'right',
@@ -422,11 +577,11 @@ const styles = StyleSheet.create({
   labelCell: {
     flex: 1,
     minWidth: 0,
-    paddingRight: 8,
+    paddingRight: 6,
     justifyContent: 'center',
   },
   labelText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   valueCell: {
@@ -438,14 +593,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingLeft: 4,
   },
+  valueCellCompact: {
+    width: 72,
+    flexBasis: 72,
+    flexGrow: 0,
+    flexShrink: 0,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    paddingLeft: 2,
+  },
+  serveCell: {
+    width: 72,
+    flexBasis: 72,
+    flexGrow: 0,
+    flexShrink: 0,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    paddingLeft: 2,
+  },
   valueText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     maxWidth: '100%',
   },
   levelCell: {
-    width: 60,
-    flexBasis: 60,
+    width: 78,
+    flexBasis: 78,
     flexGrow: 0,
     flexShrink: 0,
     alignItems: 'flex-end',
@@ -455,9 +628,9 @@ const styles = StyleSheet.create({
   levelBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
     paddingVertical: 4,
-    paddingHorizontal: 7,
+    paddingHorizontal: 5,
     borderRadius: 10,
     borderWidth: 1.5,
     maxWidth: '100%',
@@ -469,9 +642,9 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   levelBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
     flexShrink: 1,
   },
   levelPlaceholder: {
