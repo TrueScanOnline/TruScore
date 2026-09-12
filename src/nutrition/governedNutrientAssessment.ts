@@ -5,7 +5,7 @@
  */
 
 import type { Product, ProductNutriments } from '../types/product';
-import { getNutrientValue100g, toFiniteNumber } from '../utils/nutritionPer100g';
+import { getNutrientValue100g } from '../utils/nutritionPer100g';
 import { UK_GOV_FOP_MTL_REFERENCE } from './ukGovFopMtlReference';
 import { parseReliableServingSize } from './parseReliableServingSize';
 import type {
@@ -82,21 +82,18 @@ function levelFromPer100(value: number, lowMax: number, highMinExclusive: number
   return 'moderate';
 }
 
-function getServingNutrient(
-  nutriments: ProductNutriments | undefined,
-  key: string
+/**
+ * Singular governed Per serve arithmetic: per100 × servingQuantity ÷ 100.
+ * Raw OFF/source `*_serving` fields must not override this value.
+ */
+export function governedPerServeFromPer100(
+  per100: number | undefined,
+  servingQuantity: number | undefined
 ): number | undefined {
-  if (!nutriments) return undefined;
-  const candidates = [`${key}_serving`, key.replace(/-/g, '_') + '_serving'];
-  for (const c of candidates) {
-    const v = toFiniteNumber(nutriments[c as keyof ProductNutriments] as unknown);
-    if (isValidAmount(v)) return v;
+  if (!isValidAmount(per100) || servingQuantity === undefined || !(servingQuantity > 0)) {
+    return undefined;
   }
-  return undefined;
-}
-
-function emptyItem(): GovernedNutrientAssessmentItem {
-  return { rawPer100: undefined, level: 'unavailable', triggers: [] };
+  return (per100 * servingQuantity) / 100;
 }
 
 function assessOne(args: {
@@ -198,32 +195,21 @@ export function assessGovernedNutrients(input: AssessGovernedNutrientsInput): Go
   if (!isValidAmount(sugarsPer100)) limitations.push('nutrient_missing');
   if (!isValidAmount(sodiumPer100)) limitations.push('nutrient_missing');
 
-  const derivePerServeG = (per100: number | undefined, servingKey: string): number | undefined => {
-    if (!servingUsableForClass || !serving.usable) return undefined;
-    const direct = getServingNutrient(n, servingKey);
-    if (isValidAmount(direct)) return direct;
-    if (!isValidAmount(per100)) return undefined;
-    return (per100 * serving.quantity) / 100;
-  };
+  const serveQty =
+    servingUsableForClass && serving.usable ? serving.quantity : undefined;
 
-  const satPerServe = derivePerServeG(isValidAmount(satPer100) ? satPer100 : undefined, 'saturated-fat');
-  const sugarsPerServe = derivePerServeG(isValidAmount(sugarsPer100) ? sugarsPer100 : undefined, 'sugars');
-
-  // OFF sodium*_serving is gram-based; canonical assessment uses mg.
-  let sodiumPerServeMg: number | undefined;
-  if (servingUsableForClass && serving.usable) {
-    const directNaG = getServingNutrient(n, 'sodium');
-    if (isValidAmount(directNaG)) {
-      sodiumPerServeMg = directNaG * 1000;
-    } else if (isValidAmount(sodiumPer100)) {
-      sodiumPerServeMg = (sodiumPer100 * serving.quantity) / 100;
-    } else {
-      const directSaltG = getServingNutrient(n, 'salt');
-      if (isValidAmount(directSaltG)) {
-        sodiumPerServeMg = (directSaltG / 2.5) * 1000;
-      }
-    }
-  }
+  const satPerServe = governedPerServeFromPer100(
+    isValidAmount(satPer100) ? satPer100 : undefined,
+    serveQty
+  );
+  const sugarsPerServe = governedPerServeFromPer100(
+    isValidAmount(sugarsPer100) ? sugarsPer100 : undefined,
+    serveQty
+  );
+  const sodiumPerServeMg = governedPerServeFromPer100(
+    isValidAmount(sodiumPer100) ? sodiumPer100 : undefined,
+    serveQty
+  );
 
   const band = productClass === 'drink' ? ref.thresholds.drink : ref.thresholds.food;
   const portion = productClass === 'drink' ? ref.largePortion.drink : ref.largePortion.food;

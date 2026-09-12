@@ -300,6 +300,60 @@ describe('governed UK FoP MTL nutrient assessment', () => {
         expect(p.unit).toBe('ml');
       }
     });
+
+    it('resolves explicit multi-serving totals by division', () => {
+      for (const [text, qty] of [
+        ['250 g (2 servings)', 125],
+        ['500 g (4 servings)', 125],
+        ['250 g / 2 serves', 125],
+      ] as const) {
+        const p = parseReliableServingSize(text);
+        expect(p.usable).toBe(true);
+        if (p.usable) {
+          expect(p.quantity).toBe(qty);
+          expect(p.unit).toBe('g');
+        }
+      }
+    });
+
+    it('rejects multipack notation without explicit serving count', () => {
+      expect(parseReliableServingSize('2 x 30 g').usable).toBe(false);
+      expect(parseReliableServingSize('1 pack (2 x 25 g)').usable).toBe(false);
+      const a = assessGovernedNutrients({
+        nutriments: { sugars_100g: 20 },
+        categoriesTags: ['en:meals'],
+        servingSize: '2 x 30 g',
+      });
+      expect(a.serving.usable).toBe(false);
+      expect(a.nutrients.totalSugars.perServe).toBeUndefined();
+      expect(a.nutrients.totalSugars.triggers).not.toContain('large_portion');
+    });
+
+    it('keeps explicit single-serving forms working', () => {
+      expect(parseReliableServingSize('1 slice (35 g)')).toMatchObject({
+        usable: true,
+        quantity: 35,
+        unit: 'g',
+      });
+      expect(parseReliableServingSize('30 g')).toMatchObject({ usable: true, quantity: 30, unit: 'g' });
+      expect(parseReliableServingSize('0.5 L')).toMatchObject({ usable: true, quantity: 500, unit: 'ml' });
+    });
+
+    it('ignores raw *_serving fields — governed Per serve is per100 × qty ÷ 100 only', () => {
+      const a = assessGovernedNutrients({
+        nutriments: {
+          sugars_100g: 10,
+          sugars_serving: 40,
+        },
+        categoriesTags: ['en:meals'],
+        servingSize: '120 g',
+      });
+      expect(a.serving.usable).toBe(true);
+      expect(a.nutrients.totalSugars.perServe).toBe(12);
+      expect(a.nutrients.totalSugars.level).toBe('moderate'); // 10 g/100 food
+      expect(a.nutrients.totalSugars.triggers).toEqual([]);
+      expect(a.nutrients.totalSugars.triggers).not.toContain('large_portion');
+    });
   });
 
   describe('reference metadata', () => {

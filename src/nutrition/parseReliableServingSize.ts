@@ -1,19 +1,34 @@
 /**
  * Reliable declared serving-size parsing for governed Nutrition assessment.
- * Ambiguous / count-only servings are unavailable — never guess.
+ * Ambiguous / count-only / multipack servings are unavailable — never guess.
+ *
+ * Explicit multi-serving totals (e.g. "250 g (2 servings)") resolve to a single
+ * serve by division. Multipack notation without an explicit serving count
+ * (e.g. "2 x 30 g") remains unusable.
  */
 
 export type ParsedServingUnit = 'g' | 'ml';
 
 export type ParseServingResult =
   | { usable: true; quantity: number; unit: ParsedServingUnit; sourceText: string }
-  | { usable: false; reason: 'serving_unavailable' | 'serving_ambiguous' | 'serving_count_only'; sourceText?: string };
+  | {
+      usable: false;
+      reason: 'serving_unavailable' | 'serving_ambiguous' | 'serving_count_only';
+      sourceText?: string;
+    };
 
 const METRIC_TOKEN =
   /(\d+(?:[.,]\d+)?)\s*(kg|g|grams?|grammes?|l|lt|ltr|litre|litres|liter|liters|ml|millilitres?|milliliters?)\b/gi;
 
+/** Multipack / unit packs without an explicit "N servings" declaration. */
+const MULTIPACK_METRIC =
+  /(\d+)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*(kg|g|grams?|grammes?|l|lt|ltr|litre|litres|liter|liters|ml|millilitres?|milliliters?)\b/i;
+
 const COUNT_ONLY =
   /^\s*\d*\s*(can|cans|piece|pieces|bar|bars|packet|packets|pack|packs|sachet|sachets|bottle|bottles|serving|servings|slice|slices)\b/i;
+
+/** Explicit declared serving count: "(2 servings)", "/ 2 serves", "4 servings". */
+const SERVING_COUNT = /(\d+)\s*(servings?|serves?)\b/i;
 
 function toCanonicalUnit(raw: string): ParsedServingUnit | 'kg' | 'l' | null {
   const u = raw.toLowerCase();
@@ -24,7 +39,10 @@ function toCanonicalUnit(raw: string): ParsedServingUnit | 'kg' | 'l' | null {
   return null;
 }
 
-function toQuantityAndUnit(amount: number, unitRaw: string): { quantity: number; unit: ParsedServingUnit } | null {
+function toQuantityAndUnit(
+  amount: number,
+  unitRaw: string
+): { quantity: number; unit: ParsedServingUnit } | null {
   const unit = toCanonicalUnit(unitRaw);
   if (!unit || !Number.isFinite(amount) || amount <= 0) return null;
   if (unit === 'kg') return { quantity: amount * 1000, unit: 'g' };
@@ -32,15 +50,9 @@ function toQuantityAndUnit(amount: number, unitRaw: string): { quantity: number;
   return { quantity: amount, unit };
 }
 
-/**
- * Parse a single unambiguous metric serving from free text (e.g. "30 g", "1 can (330 mL)").
- */
-export function parseReliableServingSize(servingSize?: string | null): ParseServingResult {
-  const sourceText = (servingSize ?? '').trim();
-  if (!sourceText) {
-    return { usable: false, reason: 'serving_unavailable' };
-  }
-
+function collectMetricMatches(
+  sourceText: string
+): Array<{ quantity: number; unit: ParsedServingUnit; index: number }> {
   const matches: Array<{ quantity: number; unit: ParsedServingUnit; index: number }> = [];
   METRIC_TOKEN.lastIndex = 0;
   let m: RegExpExecArray | null;
@@ -51,6 +63,35 @@ export function parseReliableServingSize(servingSize?: string | null): ParseServ
       matches.push({ ...converted, index: m.index });
     }
   }
+  return matches;
+}
+
+function uniqueMetricValues(
+  matches: Array<{ quantity: number; unit: ParsedServingUnit }>
+): Array<{ quantity: number; unit: ParsedServingUnit }> {
+  const unique = new Map<string, { quantity: number; unit: ParsedServingUnit }>();
+  for (const hit of matches) {
+    unique.set(`${hit.unit}:${hit.quantity}`, { quantity: hit.quantity, unit: hit.unit });
+  }
+  return [...unique.values()];
+}
+
+/**
+ * Parse a single unambiguous metric serving from free text
+ * (e.g. "30 g", "1 can (330 mL)", "250 g (2 servings)").
+ */
+export function parseReliableServingSize(servingSize?: string | null): ParseServingResult {
+  const sourceText = (servingSize ?? '').trim();
+  if (!sourceText) {
+    return { usable: false, reason: 'serving_unavailable' };
+  }
+
+  // Multipack without explicit serving-count language is never usable evidence.
+  if (MULTIPACK_METRIC.test(sourceText)) {
+    return { usable: false, reason: 'serving_ambiguous', sourceText };
+  }
+
+  const matches = collectMetricMatches(sourceText);
 
   if (matches.length === 0) {
     if (COUNT_ONLY.test(sourceText) || /^\s*\d+\s*$/.test(sourceText)) {
@@ -59,25 +100,46 @@ export function parseReliableServingSize(servingSize?: string | null): ParseServ
     return { usable: false, reason: 'serving_unavailable', sourceText };
   }
 
-  // Prefer parenthetical / trailing metric when multiple (e.g. "1 can (330 mL)")
-  const unique = new Map<string, { quantity: number; unit: ParsedServingUnit }>();
-  for (const hit of matches) {
-    unique.set(`${hit.unit}:${hit.quantity}`, { quantity: hit.quantity, unit: hit.unit });
+  const servingCountMatch = SERVING_COUNT.exec(sourceText);
+  if (servingCountMatch) {
+    const serveCount = Number(servingCountMatch[1]);
+    if (!Number.isFinite(serveCount) || serveCount < 1) {
+      return { usable: false, reason: 'serving_ambiguous', sourceText };
+    }
+
+    const unique = uniqueMetricValues(matches);
+    if (unique.length !== 1) {
+      // More than one incompatible metric with an explicit serve count — do not guess.
+      return { usable: false, reason: 'serving_ambiguous', sourceText };
+    }
+
+    const total = unique[0];
+    const perServe = total.quantity / serveCount;
+    if (!(perServe > 0) || !Number.isFinite(perServe)) {
+      return { usable: false, reason: 'serving_ambiguous', sourceText };
+    }
+
+    return {
+      usable: true,
+      quantity: perServe,
+      unit: total.unit,
+      sourceText,
+    };
   }
-  if (unique.size > 1) {
-    // Same physical quantity expressed twice is OK; incompatible metrics are not.
-    const units = new Set([...unique.values()].map((v) => v.unit));
-    const quantities = [...unique.values()];
+
+  // Single-serving forms: prefer parenthetical / trailing metric when repeated identically.
+  const unique = uniqueMetricValues(matches);
+  if (unique.length > 1) {
+    const units = new Set(unique.map((v) => v.unit));
     if (units.size > 1) {
       return { usable: false, reason: 'serving_ambiguous', sourceText };
     }
-    const q0 = quantities[0].quantity;
-    if (quantities.some((q) => Math.abs(q.quantity - q0) > 1e-6)) {
+    const q0 = unique[0].quantity;
+    if (unique.some((q) => Math.abs(q.quantity - q0) > 1e-6)) {
       return { usable: false, reason: 'serving_ambiguous', sourceText };
     }
   }
 
-  // If multiple identical, or one unique — take the last metric token (often the parenthetical).
   const chosen = matches[matches.length - 1];
   return {
     usable: true,

@@ -7,6 +7,7 @@ export {
   resolveGovernedProductClass,
   sodiumMgFromNutriments,
   formatHighReason,
+  governedPerServeFromPer100,
 } from './governedNutrientAssessment';
 export type {
   GovernedNutrientAssessment,
