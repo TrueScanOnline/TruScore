@@ -1,0 +1,232 @@
+[
+  {
+    "class_id": "acid",
+    "parser_terms": [
+      "acid"
+    ],
+    "consumer_label": "Acid",
+    "consumer_purpose_copy": "Helps control acidity.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "acidity_regulator",
+    "parser_terms": [
+      "acidity regulator"
+    ],
+    "consumer_label": "Acidity regulator",
+    "consumer_purpose_copy": "Helps control the acidity or alkalinity of the food.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "alkali",
+    "parser_terms": [
+      "alkali"
+    ],
+    "consumer_label": "Alkali",
+    "consumer_purpose_copy": "Helps control alkalinity.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "anticaking_agent",
+    "parser_terms": [
+      "anticaking agent",
+      "anti-caking agent"
+    ],
+    "consumer_label": "Anticaking agent",
+    "consumer_purpose_copy": "Helps stop food particles sticking together and improves flow.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "antioxidant",
+    "parser_terms": [
+      "antioxidant"
+    ],
+    "consumer_label": "Antioxidant",
+    "consumer_purpose_copy": "Helps slow or prevent oxidative deterioration.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "bulking_agent",
+    "parser_terms": [
+      "bulking agent"
+    ],
+    "consumer_label": "Bulking agent",
+    "consumer_purpose_copy": "Adds volume without contributing significantly to available energy.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "colour",
+    "parser_terms": [
+      "colour",
+      "color"
+    ],
+    "consumer_label": "Colour",
+    "consumer_purpose_copy": "Adds or restores colour.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "emulsifier",
+    "parser_terms": [
+      "emulsifier"
+    ],
+    "consumer_label": "Emulsifier",
+    "consumer_purpose_copy": "Helps ingredients that do not normally mix form or stay mixed.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "firming_agent",
+    "parser_terms": [
+      "firming agent"
+    ],
+    "consumer_label": "Firming agent",
+    "consumer_purpose_copy": "Helps maintain or strengthen firmness or gel structure.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "flavour_enhancer",
+    "parser_terms": [
+      "flavour enhancer",
+      "flavor enhancer"
+    ],
+    "consumer_label": "Flavour enhancer",
+    "consumer_purpose_copy": "Enhances the food's existing taste or aroma.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "foaming_agent",
+    "parser_terms": [
+      "foaming agent"
+    ],
+    "consumer_label": "Foaming agent",
+    "consumer_purpose_copy": "Helps create or maintain foam.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "gelling_agent",
+    "parser_terms": [
+      "gelling agent"
+    ],
+    "consumer_label": "Gelling agent",
+    "consumer_purpose_copy": "Changes texture by forming a gel.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "glazing_agent",
+    "parser_terms": [
+      "glazing agent"
+    ],
+    "consumer_label": "Glazing agent",
+    "consumer_purpose_copy": "Adds a coating to the outside of the food.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "humectant",
+    "parser_terms": [
+      "humectant"
+    ],
+    "consumer_label": "Humectant",
+    "consumer_purpose_copy": "Helps retain moisture or helps a solid dissolve in a liquid.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "preservative",
+    "parser_terms": [
+      "preservative"
+    ],
+    "consumer_label": "Preservative",
+    "consumer_purpose_copy": "Helps slow or prevent deterioration caused by microorganisms.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "raising_agent",
+    "parser_terms": [
+      "raising agent"
+    ],
+    "consumer_label": "Raising agent",
+    "consumer_purpose_copy": "Releases gas to increase the food's volume.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "stabiliser",
+    "parser_terms": [
+      "stabiliser",
+      "stabilizer"
+    ],
+    "consumer_label": "Stabiliser",
+    "consumer_purpose_copy": "Helps keep ingredients evenly dispersed.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "sweetener",
+    "parser_terms": [
+      "sweetener"
+    ],
+    "consumer_label": "Sweetener",
+    "consumer_purpose_copy": "Provides sweetness.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "thickener",
+    "parser_terms": [
+      "thickener"
+    ],
+    "consumer_label": "Thickener",
+    "consumer_purpose_copy": "Makes the food thicker by increasing its viscosity.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "antifoaming_agent",
+    "parser_terms": [
+      "antifoaming agent",
+      "anti-foaming agent"
+    ],
+    "consumer_label": "Antifoaming agent",
+    "consumer_purpose_copy": "Helps reduce or prevent foaming.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "emulsifying_salt",
+    "parser_terms": [
+      "emulsifying salt"
+    ],
+    "consumer_label": "Emulsifying salt",
+    "consumer_purpose_copy": "Helps ingredients that do not normally mix form or stay mixed.",
+    "render_mode": "EXPLAIN"
+  },
+  {
+    "class_id": "enzyme",
+    "parser_terms": [
+      "enzyme"
+    ],
+    "consumer_label": "Enzyme",
+    "consumer_purpose_copy": "",
+    "render_mode": "LABEL_ONLY"
+  },
+  {
+    "class_id": "mineral_salt",
+    "parser_terms": [
+      "mineral salt"
+    ],
+    "consumer_label": "Mineral salt",
+    "consumer_purpose_copy": "",
+    "render_mode": "LABEL_ONLY"
+  },
+  {
+    "class_id": "modified_starch",
+    "parser_terms": [
+      "modified starch"
+    ],
+    "consumer_label": "Modified starch",
+    "consumer_purpose_copy": "",
+    "render_mode": "LABEL_ONLY"
+  },
+  {
+    "class_id": "vegetable_gum",
+    "parser_terms": [
+      "vegetable gum"
+    ],
+    "consumer_label": "Vegetable gum",
+    "consumer_purpose_copy": "",
+    "render_mode": "LABEL_ONLY"
+  }
+]

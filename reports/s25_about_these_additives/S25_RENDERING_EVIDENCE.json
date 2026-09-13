@@ -1,0 +1,240 @@
+{
+  "kind": "automated_render_evidence",
+  "note": "Not device screenshots — deterministic merge/list fixtures for S25 scenarios required by brief §7.",
+  "surface_title": "About these Additives",
+  "surface_intro": "These are the food additives we could identify from the information available for this product. Here’s what they are and, where the label tells us, why they’re used. This may not be a complete list of every additive in the product.",
+  "scenarios": [
+    {
+      "id": "no_additive_hidden",
+      "label": "no-additive hidden state",
+      "cardVisible": false,
+      "countText": null,
+      "renderedAdditiveIds": [],
+      "entries": [],
+      "navigation": {
+        "from": "result",
+        "focusAdditiveIds": [],
+        "backRestores": "n/a",
+        "closeExitsTo": "result"
+      }
+    },
+    {
+      "id": "standard_only_no_evidence",
+      "label": "standard-only scan without evidence",
+      "cardVisible": true,
+      "countText": "1 additive identified",
+      "renderedAdditiveIds": [
+        "e100"
+      ],
+      "entries": [
+        {
+          "additiveId": "e100",
+          "entry_title": "Curcumin or turmeric (100)",
+          "isBody6": false,
+          "evidence_enabled": false,
+          "evidence_source_count": 0
+        }
+      ],
+      "navigation": {
+        "from": "result",
+        "focusAdditiveIds": [],
+        "backRestores": "result",
+        "closeExitsTo": "result"
+      }
+    },
+    {
+      "id": "standard_enriched_one_source",
+      "label": "standard enriched one-source entry",
+      "cardVisible": true,
+      "countText": "1 additive identified",
+      "renderedAdditiveIds": [
+        "e120"
+      ],
+      "entries": [
+        {
+          "additiveId": "e120",
+          "entry_title": "Cochineal or carmines or carminic acid (120)",
+          "isBody6": false,
+          "evidence_enabled": true,
+          "evidence_source_count": 1
+        }
+      ],
+      "navigation": {
+        "from": "result",
+        "focusAdditiveIds": [
+          "e120"
+        ],
+        "backRestores": "result",
+        "closeExitsTo": "result"
+      }
+    },
+    {
+      "id": "standard_enriched_two_source",
+      "label": "standard enriched two-source entry",
+      "cardVisible": true,
+      "countText": "1 additive identified",
+      "renderedAdditiveIds": [
+        "e211"
+      ],
+      "entries": [
+        {
+          "additiveId": "e211",
+          "entry_title": "Sodium benzoate (211)",
+          "isBody6": false,
+          "evidence_enabled": true,
+          "evidence_source_count": 2
+        }
+      ],
+      "navigation": {
+        "from": "result",
+        "focusAdditiveIds": [
+          "e211"
+        ],
+        "backRestores": "result",
+        "closeExitsTo": "result"
+      }
+    },
+    {
+      "id": "body6_only",
+      "label": "Body-6-only scan",
+      "cardVisible": true,
+      "countText": "1 additive identified",
+      "renderedAdditiveIds": [
+        "e250"
+      ],
+      "entries": [
+        {
+          "additiveId": "e250",
+          "entry_title": "Sodium nitrite (250)",
+          "isBody6": true,
+          "evidence_enabled": false,
+          "evidence_source_count": 0
+        }
+      ],
+      "navigation": {
+        "from": "body",
+        "focusAdditiveIds": [
+          "e250"
+        ],
+        "backRestores": "Body L2 story",
+        "closeExitsTo": "result"
+      }
+    },
+    {
+      "id": "mixed_standard_body6",
+      "label": "mixed standard + Body-6 scan",
+      "cardVisible": true,
+      "countText": "2 additives identified",
+      "renderedAdditiveIds": [
+        "e171",
+        "e471"
+      ],
+      "entries": [
+        {
+          "additiveId": "e171",
+          "entry_title": "Titanium dioxide (171)",
+          "isBody6": true,
+          "evidence_enabled": false,
+          "evidence_source_count": 0
+        },
+        {
+          "additiveId": "e471",
+          "entry_title": "Mono- and di-glycerides of fatty acids (471)",
+          "isBody6": false,
+          "evidence_enabled": true,
+          "evidence_source_count": 1
+        }
+      ],
+      "navigation": {
+        "from": "result",
+        "focusAdditiveIds": [],
+        "backRestores": "result",
+        "closeExitsTo": "result"
+      }
+    },
+    {
+      "id": "mixed_enriched_body6",
+      "label": "mixed enriched standard + Body-6 scan",
+      "cardVisible": true,
+      "countText": "2 additives identified",
+      "renderedAdditiveIds": [
+        "e102",
+        "e120"
+      ],
+      "entries": [
+        {
+          "additiveId": "e102",
+          "entry_title": "Tartrazine (102)",
+          "isBody6": true,
+          "evidence_enabled": false,
+          "evidence_source_count": 0
+        },
+        {
+          "additiveId": "e120",
+          "entry_title": "Cochineal or carmines or carminic acid (120)",
+          "isBody6": false,
+          "evidence_enabled": true,
+          "evidence_source_count": 1
+        }
+      ],
+      "navigation": {
+        "from": "body",
+        "focusAdditiveIds": [
+          "e102"
+        ],
+        "backRestores": "Body L2 story",
+        "closeExitsTo": "result"
+      }
+    },
+    {
+      "id": "direct_result_entry",
+      "label": "direct Result entry",
+      "cardVisible": true,
+      "countText": "1 additive identified",
+      "renderedAdditiveIds": [
+        "e415"
+      ],
+      "entries": [
+        {
+          "additiveId": "e415",
+          "entry_title": "Xanthan gum (415)",
+          "isBody6": false,
+          "evidence_enabled": false,
+          "evidence_source_count": 0
+        }
+      ],
+      "navigation": {
+        "from": "result",
+        "focusAdditiveIds": [],
+        "backRestores": "result",
+        "closeExitsTo": "result"
+      }
+    },
+    {
+      "id": "open_deep_link",
+      "label": "Open coded-term deep-link and Back/X behaviour",
+      "cardVisible": true,
+      "countText": "1 additive identified",
+      "renderedAdditiveIds": [
+        "e120"
+      ],
+      "entries": [
+        {
+          "additiveId": "e120",
+          "entry_title": "Cochineal or carmines or carminic acid (120)",
+          "isBody6": false,
+          "evidence_enabled": true,
+          "evidence_source_count": 1
+        }
+      ],
+      "navigation": {
+        "from": "open",
+        "focusAdditiveIds": [
+          "e120"
+        ],
+        "backRestores": "Open Ingredient wording L3",
+        "closeExitsTo": "result"
+      }
+    }
+  ]
+}

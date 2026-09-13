@@ -13,6 +13,7 @@
  */
 
 import type { ScoreHighlightL3InAppTarget } from './targets';
+import { normalizeCodedTermToAdditiveId } from '../../../s25/normalize';
 
 export type L3Metadata = Record<string, string | number | boolean> | undefined;
 
@@ -38,6 +39,13 @@ export interface L3ActionFragment {
   textAfter: string;
 }
 
+/** S25 — per coded Open term deep-link into the canonical About these Additives destination. */
+export interface L3TermRouteAction {
+  term: string;
+  label: string;
+  additiveId: string;
+}
+
 export interface L3ResolvedContent {
   title: string;
   highlightLine?: string;
@@ -47,6 +55,8 @@ export interface L3ResolvedContent {
   sources: L3SourceLink[];
   /** Present only when the governed destination for the fragment exists. */
   action?: L3ActionFragment;
+  /** Present for Open coded terms whose resolved ID is in the current scan's renderedAdditiveIds. */
+  termRouteActions?: L3TermRouteAction[];
 }
 
 export interface L3ResolveOptions {
@@ -54,6 +64,11 @@ export interface L3ResolveOptions {
   userContributionRouteLive?: boolean;
   /** Governed S27 Body explainer destination. Defaults to false. */
   s27BodyExplainerRouteLive?: boolean;
+  /**
+   * S25 — canonical additive IDs rendered for this scan.
+   * Used only to gate Open coded-term “About this additive” deep-links (presentation).
+   */
+  renderedAdditiveIds?: readonly string[];
 }
 
 const ANCHOR_LABEL = 'here';
@@ -588,6 +603,32 @@ function resolveBbfaw(metadata: L3Metadata): L3ResolvedContent | null {
   };
 }
 
+function buildCodedTermRouteActions(
+  terms: string[],
+  /** When null, every term is treated as coded (presentationClass === 'coded'). */
+  termClasses: string[] | null,
+  renderedAdditiveIds: readonly string[] | undefined
+): L3TermRouteAction[] {
+  if (!renderedAdditiveIds || renderedAdditiveIds.length === 0) return [];
+  const rendered = new Set(renderedAdditiveIds);
+  const actions: L3TermRouteAction[] = [];
+  const seenTargets = new Set<string>();
+
+  for (let i = 0; i < terms.length; i++) {
+    if (termClasses && termClasses[i] !== 'coded') continue;
+    const additiveId = normalizeCodedTermToAdditiveId(terms[i]);
+    if (!additiveId || !rendered.has(additiveId)) continue;
+    if (seenTargets.has(additiveId)) continue;
+    seenTargets.add(additiveId);
+    actions.push({
+      term: terms[i],
+      label: 'About this additive',
+      additiveId,
+    });
+  }
+  return actions;
+}
+
 function resolveIngredientWording(
   metadata: L3Metadata,
   options: L3ResolveOptions
@@ -611,11 +652,15 @@ function resolveIngredientWording(
     },
   ];
 
-  const withAction = (built: L3Section[]): L3ResolvedContent => ({
+  const withAction = (
+    built: L3Section[],
+    termRouteActions?: L3TermRouteAction[]
+  ): L3ResolvedContent => ({
     title: 'Ingredient wording explained',
     sections: built,
     sources: [OPEN_INGREDIENT_SOURCE],
     ...(options.userContributionRouteLive === true && { action: OPEN_CONTRIBUTION_ACTION }),
+    ...(termRouteActions && termRouteActions.length > 0 && { termRouteActions }),
   });
 
   // Zero-flag clarity (+1) carries no presentation class or matched terms.
@@ -655,7 +700,10 @@ function resolveIngredientWording(
           ? 'The code identifies the additive precisely, but a shopper needs to know or look up the number to see the additive’s name.'
           : 'The codes identify the additives precisely, but a shopper needs to know or look them up to see their names.',
     });
-    return withAction(sections);
+    return withAction(
+      sections,
+      buildCodedTermRouteActions(terms, null, options.renderedAdditiveIds)
+    );
   }
 
   if (presentationClass === 'mixed') {
@@ -685,7 +733,10 @@ function resolveIngredientWording(
         body: coded.join('; '),
       });
     }
-    return withAction(sections);
+    return withAction(
+      sections,
+      buildCodedTermRouteActions(terms, termClasses, options.renderedAdditiveIds)
+    );
   }
 
   return null;

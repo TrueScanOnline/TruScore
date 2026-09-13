@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,38 +18,69 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 interface InfoModalProps {
   visible: boolean;
   onClose: () => void;
+  /** When set, shows a Back control that restores the prior surface (does not exit to Result). */
+  onBack?: () => void;
   title: string;
   icon?: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
   children: React.ReactNode;
+  /** Optional scroll offset after open (focused entry). */
+  scrollToY?: number;
 }
 
 export default function InfoModal({
   visible,
   onClose,
+  onBack,
   title,
   icon,
   iconColor,
   children,
+  scrollToY,
 }: InfoModalProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    if (!visible || scrollToY == null) return;
+    const tmr = setTimeout(() => {
+      scrollRef.current?.scrollTo({ y: Math.max(0, scrollToY - 8), animated: true });
+    }, 50);
+    return () => clearTimeout(tmr);
+  }, [visible, scrollToY]);
+
+  // Android hardware back: prefer caller Back when available, else close to Result.
+  const handleRequestClose = () => {
+    if (onBack) onBack();
+    else onClose();
+  };
 
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={handleRequestClose}
     >
       <View style={styles.overlay}>
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={styles.overlayTouchable} />
         </TouchableWithoutFeedback>
         <View style={[styles.modalContainer, { backgroundColor: colors.card }]}>
-          {/* Header */}
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
             <View style={styles.headerLeft}>
+              {onBack ? (
+                <TouchableOpacity
+                  onPress={onBack}
+                  style={[styles.closeButton, { backgroundColor: colors.surface }]}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.back', 'Back')}
+                >
+                  <Ionicons name="chevron-back" size={24} color={colors.text} />
+                </TouchableOpacity>
+              ) : null}
               {icon && (
                 <Ionicons
                   name={icon}
@@ -64,13 +95,15 @@ export default function InfoModal({
               onPress={onClose}
               style={[styles.closeButton, { backgroundColor: colors.surface }]}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close', 'Close')}
             >
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
-          {/* Content */}
           <ScrollView
+            ref={scrollRef}
             style={styles.content}
             contentContainerStyle={styles.contentContainer}
             showsVerticalScrollIndicator={true}
@@ -79,7 +112,6 @@ export default function InfoModal({
             {children}
           </ScrollView>
 
-          {/* Footer */}
           <View style={[styles.footer, { borderTopColor: colors.border }]}>
             <TouchableOpacity
               style={[styles.closeButtonBottom, { backgroundColor: colors.primary }]}
@@ -179,4 +211,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

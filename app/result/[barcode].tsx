@@ -69,7 +69,7 @@ import TruScoreAnalysisModal from '../../src/components/TruScoreAnalysisModal';
 import { productIdentity } from '../../src/config/productIdentity';
 import EcoScoreInfoModal from '../../src/components/EcoScoreInfoModal';
 import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModal';
-import AdditivesRiskCard from '../../src/components/AdditivesRiskCard';
+import AboutTheseAdditivesCard from '../../src/components/AboutTheseAdditivesCard';
 import ProcessingLevelModal from '../../src/components/ProcessingLevelModal';
 import CameraCaptureModal from '../../src/components/CameraCaptureModal';
 import { useSettingsStore } from '../../src/store/useSettingsStore';
@@ -79,7 +79,9 @@ import { resultPillarBreakdown } from '../../src/utils/resultPillarBreakdown';
 import ScoreHighlightsLookThroughModal, {
   type ScoreHighlightsLookThroughRequest,
 } from '../../src/components/ScoreHighlightsLookThroughModal';
-import AboutTheseAdditivesModal from '../../src/components/AboutTheseAdditivesModal';
+import AboutTheseAdditivesModal, {
+  type AboutTheseAdditivesCaller,
+} from '../../src/components/AboutTheseAdditivesModal';
 import ScoreHighlightsGovernedL3Modal, {
   type ScoreHighlightsGovernedL3Request,
 } from '../../src/components/ScoreHighlightsGovernedL3Modal';
@@ -92,6 +94,7 @@ import {
 } from '../../src/lib/scoreHighlights';
 import type { ScoreHighlightL3InAppTarget } from '../../src/lib/scoreHighlights/l3/targets';
 import { planInAppL3HostPresentation } from '../../src/lib/scoreHighlights/l3/hostPresentation';
+import { mapBodyLedgerIdToCanonical, mergeRenderedAdditives } from '../../src/s25';
 import { extractManufacturingCountry, calculateEcoScore } from '../../src/services/openFoodFacts';
 import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
@@ -227,7 +230,17 @@ function ResultScreenContent() {
   const [ecoScoreModalVisible, setEcoScoreModalVisible] = useState(false);
   const [scoreHighlightsRequest, setScoreHighlightsRequest] =
     useState<ScoreHighlightsLookThroughRequest | null>(null);
-  const [aboutAdditivesModalVisible, setAboutAdditivesModalVisible] = useState(false);
+  /** Saved Body L2 look-through so About-these-additives Back can restore it. */
+  const [aboutAdditivesBodyRestore, setAboutAdditivesBodyRestore] =
+    useState<ScoreHighlightsLookThroughRequest | null>(null);
+  /** Saved Open L3 so About-these-additives Back can restore it. */
+  const [aboutAdditivesOpenRestore, setAboutAdditivesOpenRestore] =
+    useState<ScoreHighlightsGovernedL3Request | null>(null);
+  const [aboutAdditivesSession, setAboutAdditivesSession] = useState<{
+    visible: boolean;
+    caller: AboutTheseAdditivesCaller;
+    focusAdditiveIds: string[];
+  }>({ visible: false, caller: 'result', focusAdditiveIds: [] });
   const [governedL3Request, setGovernedL3Request] = useState<ScoreHighlightsGovernedL3Request | null>(
     null
   );
@@ -534,6 +547,14 @@ function ResultScreenContent() {
       .map((row) => row.id as string);
   }, [scoreHighlightsLedger]);
 
+  const s25Merged = useMemo(() => {
+    return mergeRenderedAdditives({
+      firedBodyLedgerIds: detectedBodyAdditiveIds,
+      ingredientsText: product?.ingredients_text ?? null,
+      additivesTags: product?.additives_tags ?? null,
+    });
+  }, [detectedBodyAdditiveIds, product?.ingredients_text, product?.additives_tags]);
+
   const openScoreHighlightsPillar = useCallback((pillar: ScoreHighlightPillar) => {
     setScoreHighlightsRequest({ mode: 'pillar', pillar });
   }, []);
@@ -542,16 +563,76 @@ function ResultScreenContent() {
     setScoreHighlightsRequest({ mode: 'detail', story });
   }, []);
 
+  const closeAboutAdditivesToResult = useCallback(() => {
+    setAboutAdditivesSession({ visible: false, caller: 'result', focusAdditiveIds: [] });
+    setAboutAdditivesBodyRestore(null);
+    setAboutAdditivesOpenRestore(null);
+  }, []);
+
+  const backFromAboutAdditives = useCallback(() => {
+    const caller = aboutAdditivesSession.caller;
+    setAboutAdditivesSession({ visible: false, caller: 'result', focusAdditiveIds: [] });
+    if (caller === 'body' && aboutAdditivesBodyRestore) {
+      const restore = aboutAdditivesBodyRestore;
+      setAboutAdditivesBodyRestore(null);
+      requestAnimationFrame(() => setScoreHighlightsRequest(restore));
+      return;
+    }
+    if (caller === 'open' && aboutAdditivesOpenRestore) {
+      const restore = aboutAdditivesOpenRestore;
+      setAboutAdditivesOpenRestore(null);
+      requestAnimationFrame(() => setGovernedL3Request(restore));
+    }
+  }, [aboutAdditivesSession.caller, aboutAdditivesBodyRestore, aboutAdditivesOpenRestore]);
+
+  const openAboutAdditivesFromResult = useCallback(() => {
+    setAboutAdditivesBodyRestore(null);
+    setAboutAdditivesOpenRestore(null);
+    setAboutAdditivesSession({
+      visible: true,
+      caller: 'result',
+      focusAdditiveIds: [],
+    });
+  }, []);
+
+  const openAboutAdditivesFromOpen = useCallback(
+    (additiveId: string) => {
+      if (governedL3Request) {
+        setAboutAdditivesOpenRestore(governedL3Request);
+        setGovernedL3Request(null);
+      }
+      requestAnimationFrame(() => {
+        setAboutAdditivesSession({
+          visible: true,
+          caller: 'open',
+          focusAdditiveIds: [additiveId],
+        });
+      });
+    },
+    [governedL3Request]
+  );
+
   const openInAppScoreHighlightL3 = useCallback(
     (route: Extract<ScoreHighlightL3Route, { kind: 'in_app' }>, story: ScoreHighlightStory) => {
       const plan = planInAppL3HostPresentation(route.target as ScoreHighlightL3InAppTarget);
       // Dismiss look-through first so L3 never stacks a second native Modal underneath it.
       if (plan.dismissLookThrough) {
+        if (plan.present === 'additives') {
+          // Preserve Body L2 so Back can restore the exact launching story.
+          setAboutAdditivesBodyRestore({ mode: 'detail', story });
+        }
         setScoreHighlightsRequest(null);
       }
       requestAnimationFrame(() => {
         if (plan.present === 'additives') {
-          setAboutAdditivesModalVisible(true);
+          const focusAdditiveIds = (story.boundAdjustmentIds || [])
+            .map((id) => mapBodyLedgerIdToCanonical(id))
+            .filter((id): id is string => Boolean(id));
+          setAboutAdditivesSession({
+            visible: true,
+            caller: 'body',
+            focusAdditiveIds,
+          });
           return;
         }
         if (plan.present === 'product_origins') {
@@ -2563,13 +2644,10 @@ function ResultScreenContent() {
           </PremiumGate>
         )}
 
-        {/* Additives Risk Card - IARC & EWG Risks */}
-        <AdditivesRiskCard
-          product={product}
-          onPress={() => {
-            // Could open a detailed modal in the future
-            console.log('Additives Risk card pressed');
-          }}
+        {/* S25 — About these Additives (conditional; after Ingredients & Nutrition) */}
+        <AboutTheseAdditivesCard
+          count={s25Merged.renderedAdditiveIds.length}
+          onPress={openAboutAdditivesFromResult}
         />
 
         <ProductDataLimitationsCard product={product} onOpenManualEdit={handleEditProduct} />
@@ -2624,15 +2702,21 @@ function ResultScreenContent() {
       />
 
       <AboutTheseAdditivesModal
-        visible={aboutAdditivesModalVisible}
-        onClose={() => setAboutAdditivesModalVisible(false)}
-        detectedAdditiveIds={detectedBodyAdditiveIds}
+        visible={aboutAdditivesSession.visible}
+        onClose={closeAboutAdditivesToResult}
+        onBack={backFromAboutAdditives}
+        caller={aboutAdditivesSession.caller}
+        merged={s25Merged}
+        ingredientsText={product?.ingredients_text ?? null}
+        focusAdditiveIds={aboutAdditivesSession.focusAdditiveIds}
       />
 
       <ScoreHighlightsGovernedL3Modal
         visible={governedL3Request != null}
         request={governedL3Request}
         onClose={() => setGovernedL3Request(null)}
+        renderedAdditiveIds={s25Merged.renderedAdditiveIds}
+        onOpenAboutAdditive={openAboutAdditivesFromOpen}
       />
 
       {/* Eco-Score Info Modal */}

@@ -1,0 +1,16 @@
+{
+  "asset_version": "v0.7",
+  "generated_at": "2026-09-13T22:49:12.305Z",
+  "tsv_dir": "C:\\Users\\leigh\\AppData\\Local\\Temp\\rveel_s25_docs",
+  "counts": {
+    "catalogue_rows": 315,
+    "standard_rows": 309,
+    "body6_rows": 6,
+    "evidence_enabled": 33,
+    "evidence_dual_source": 7,
+    "unique_additive_ids": 315,
+    "classes": 25,
+    "source_profiles": 11,
+    "surface_copy_keys": 7
+  }
+}
