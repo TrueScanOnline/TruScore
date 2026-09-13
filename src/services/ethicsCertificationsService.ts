@@ -6,12 +6,14 @@
  * update bbfawService / ktcService / ETHICS_CERTIFICATION_WEIGHTS and re-run `yarn sync-ethics-data` when JSON inputs change.
  *
  * - MVP: single highest eligible certification only (no stacking).
- * - Weights (Currency Note / founder disposition 2026-08-04): Fairtrade +6, Rainforest Alliance/UTZ +6,
- *   ASC +4, MSC +4, Organic +2. RSPO does not contribute Ethics points (not an eligible scoring scheme).
+ * - Weights (Currency Note / founder disposition 2026-08-04; Wave 3 Claims Rescue v0.2):
+ *   Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Certified Organic +3.
+ *   Whole-product Organic claim-only +1 is scored via Claims Set O (not this certifications element).
+ * - RSPO does not contribute Ethics points (not an eligible scoring scheme).
  * - MSC: API validation rules unchanged (see ethics_msc_api_validated).
  *
- * Organic (+2): OFF recognised certifier/mark OR generic en:organic tag OR product-name standalone “organic”.
- * Generic organic wording in ingredients_text / ingredients_text_en alone does not score.
+ * Certified Organic (+3): OFF recognised certifier/mark or generic en:organic tag (off_tags_or_hierarchy only).
+ * Label/product-name organic wording is claim-only and must not receive the certification +3.
  */
 
 import type { Product } from '../types/product';
@@ -40,7 +42,7 @@ export const ETHICS_CERTIFICATION_WEIGHTS: Record<EthicsCertificationScheme, num
   asc: 4,
   msc: 4,
   rspo: 0,
-  organic: 2,
+  organic: 3,
 };
 
 const REF_OFF_PRODUCT = 'https://world.openfoodfacts.org/';
@@ -397,7 +399,10 @@ export function evaluateEthicsCertifications(product: Product): EthicsCertificat
   if (detectAsc(tagUnion, haystack)) eligible.push('asc');
   if (mscEligible(product, tagUnion)) eligible.push('msc');
   // RSPO: detect for display/picker elsewhere; do not add to Ethics scoring eligibility (Currency Note).
-  if (organicEval.matched) eligible.push('organic');
+  // Certified Organic only (OFF tags/hierarchy). Claim-only organic is Claims Set O (+1).
+  if (organicEval.matched && organicEval.source === 'off_tags_or_hierarchy') {
+    eligible.push('organic');
+  }
 
   if (eligible.length === 0) {
     return {
@@ -405,7 +410,7 @@ export function evaluateEthicsCertifications(product: Product): EthicsCertificat
       winningScheme: null,
       eligibleSchemes: [],
       referenceUrl: REF_OFF_PRODUCT,
-      organicMatchSource: undefined,
+      organicMatchSource: organicEval.matched ? organicEval.source : undefined,
     };
   }
 
@@ -429,6 +434,27 @@ export function evaluateEthicsCertifications(product: Product): EthicsCertificat
     referenceUrl,
     organicMatchSource: organicEval.matched ? organicEval.source : undefined,
   };
+}
+
+/**
+ * Whole-product Organic claim-only evidence (Wave 3 Claims Rescue).
+ * True when organic wording is present via label/product-name paths and Certified Organic tags are absent.
+ */
+export function evaluateOrganicClaimOnlyCandidate(product: Product): {
+  matched: boolean;
+  source?: Exclude<EthicsOrganicMatchSource, 'off_tags_or_hierarchy'>;
+  observedText?: string;
+} {
+  const tagUnion = collectEthicsOffLabelTags(product);
+  const organicEval = evaluateOrganicMatch(product, tagUnion);
+  if (!organicEval.matched) return { matched: false };
+  if (organicEval.source === 'off_tags_or_hierarchy') return { matched: false };
+  if (organicEval.source === 'product_name') {
+    const name = [product.product_name, product.product_name_en].filter(Boolean).join(' ').trim();
+    return { matched: true, source: 'product_name', observedText: name || 'organic' };
+  }
+  const labelText = [product.labels, product.labels_en].filter(Boolean).join(' ').trim();
+  return { matched: true, source: 'label_or_cert_text', observedText: labelText || 'organic' };
 }
 
 export function getEthicsCertificationAdjustment(product: Product): number {

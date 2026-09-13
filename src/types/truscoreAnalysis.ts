@@ -4,6 +4,8 @@
  * which databases affected each pillar and by how much.
  */
 
+import type { ClaimsAssessmentResult } from '../lib/truscoreEngine/claims/types';
+
 /** How the database/lookup was queried (barcode, brand, parent, or product field) */
 export type QueryKeyType = 'barcode' | 'product_name' | 'brand' | 'parent' | 'product_field';
 
@@ -43,7 +45,7 @@ export interface PillarAnalysis {
   /** Running total after each step (for display) */
   adjustments: PillarAdjustmentWithSource[];
   /** Which data sources this pillar used (deduplicated) */
-  dataSourcesUsed: Array<{ database: string; queryKeyType: QueryKeyType; returnedResult: boolean; order: number }>;
+  dataSourcesUsed: { database: string; queryKeyType: QueryKeyType; returnedResult: boolean; order: number }[];
 }
 
 /** Full TruScore analysis: fetch trace + per-pillar breakdown */
@@ -59,6 +61,11 @@ export interface TruScoreAnalysis {
     Ethics: PillarAnalysis;
     Open: PillarAnalysis;
   };
+  /**
+   * Wave 3 Claims Rescue — S28-01..07 diagnostic truth when Ethics produced a Claims assessment.
+   * Internal/UAT Score Diagnostics surface only; never an ordinary-user feature.
+   */
+  claimsAssessment?: ClaimsAssessmentResult;
   /** Timestamp when this analysis was generated (matches the score on screen) */
   generatedAt: number;
 }

@@ -716,6 +716,17 @@ export function resolveGovernedL3Content(
     case 'ethics_asc':
     case 'ethics_organic':
       return resolveEthicsCert(target, metadata);
+    case 'claims_packet_context_nutrition':
+      return {
+        title: 'Nutrition details',
+        sections: [
+          {
+            body:
+              'This Claims finding uses the same nutrition check shown on the Nutrition details card for total sugars, saturated fat and sodium. Open Nutrition details to review those ratings and sources.',
+          },
+        ],
+        sources: [],
+      };
     case 'ethics_ktc':
       return resolveKtc(metadata);
     case 'ethics_bbfaw':

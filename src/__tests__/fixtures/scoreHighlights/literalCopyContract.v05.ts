@@ -684,7 +684,7 @@ const ETHICS_CERTIFICATIONS: LiteralCopyContractEntry[] = [
     variant: 'Certified variant',
     authority: `${ETHICS_DOC}, §6`,
     fired: [
-      { id: 'ethics-v37-cert-organic', value: 2, metadata: { organicEvidenceClass: 'certified' } },
+      { id: 'ethics-v37-cert-organic', value: 3, metadata: { organicEvidenceClass: 'certified' } },
     ],
     l1Template: `Organic certified`,
     l2Template: `An organic certification mark appears on this packet, indicating certification against that scheme’s organic standard.`,
@@ -693,21 +693,70 @@ const ETHICS_CERTIFICATIONS: LiteralCopyContractEntry[] = [
     provenance: 'doc_literal',
   },
   {
-    contractKey: 'Ethics:ethics-v37-cert-organic:claim-only',
+    contractKey: 'Ethics:claims.organic.claim_only.v1',
     pillar: 'Ethics',
-    storyKey: 'ethics-v37-cert-organic',
-    eligibleIds: ['ethics-v37-cert-organic'],
-    variant: 'Claim-only variant',
-    authority: `${ETHICS_DOC}, §6`,
+    storyKey: 'claims.organic.claim_only.v1',
+    eligibleIds: ['claims.organic.claim_only.v1'],
+    variant: 'Claim-only Organic +1',
+    authority: `Claims Controlling Specification v0.2, §6 / §11`,
     fired: [
-      { id: 'ethics-v37-cert-organic', value: 2, metadata: { organicEvidenceClass: 'claim_only' } },
+      { id: 'claims.organic.claim_only.v1', value: 1, metadata: { organicEvidenceClass: 'claim_only' } },
     ],
     l1Template: `Organic claim identified`,
     l2Template: `An organic claim appears on this packet, but the packet does not show a specific organic certification.`,
     l1: `Organic claim identified`,
     l2: `An organic claim appears on this packet, but the packet does not show a specific organic certification.`,
     provenance: 'doc_literal',
-    note: 'Same +2 scoring ID; organicEvidenceClass selects the variant and never upgrades claim-only to certified.',
+    note: 'Claim-only Organic is claims.organic.claim_only.v1 (+1); Certified Organic remains ethics-v37-cert-organic (+3).',
+  },
+  {
+    contractKey: 'Ethics:claims.packet_context.positive.v1',
+    pillar: 'Ethics',
+    storyKey: 'claims.packet_context.positive.v1',
+    eligibleIds: ['claims.packet_context.positive.v1'],
+    variant: 'Packet Claim Context +1',
+    authority: `Claims Controlling Specification v0.2, §11.2`,
+    fired: [
+      {
+        id: 'claims.packet_context.positive.v1',
+        value: 1,
+        metadata: {
+          claimsL1:
+            'The pack highlights high protein and our nutrition context check did not find high total sugars, saturated fat or sodium.',
+          claimsL2:
+            'The pack highlights high protein. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the product’s broader nutritional picture.',
+        },
+      },
+    ],
+    l1Template: `The pack highlights [CLAIM] and our nutrition context check did not find high total sugars, saturated fat or sodium.`,
+    l2Template: `The pack highlights [CLAIM]. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the product’s broader nutritional picture.`,
+    l1: `The pack highlights high protein and our nutrition context check did not find high total sugars, saturated fat or sodium.`,
+    l2: `The pack highlights high protein. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the product’s broader nutritional picture.`,
+    provenance: 'doc_literal',
+  },
+  {
+    contractKey: 'Ethics:claims.packet_context.adverse.v1',
+    pillar: 'Ethics',
+    storyKey: 'claims.packet_context.adverse.v1',
+    eligibleIds: ['claims.packet_context.adverse.v1'],
+    variant: 'Packet Claim Context −3',
+    authority: `Claims Controlling Specification v0.2, §11.3`,
+    fired: [
+      {
+        id: 'claims.packet_context.adverse.v1',
+        value: -3,
+        metadata: {
+          claimsL1: 'The pack highlights high protein, while our nutrition check found high sodium.',
+          claimsL2:
+            'The pack highlights high protein. We also checked the nutrition information panel and found high sodium. That wider nutritional context can help you consider the broader nutritional profile of this product. This finding does not by itself mean the packet claim is false, unlawful, misleading or non-compliant.',
+        },
+      },
+    ],
+    l1Template: `The pack highlights [CLAIM], while our nutrition check found high [NUTRIENT(S)].`,
+    l2Template: `The pack highlights [CLAIM]. We also checked the nutrition information panel and found high [NUTRIENT(S)]. That wider nutritional context can help you consider the broader nutritional profile of this product. This finding does not by itself mean the packet claim is false, unlawful, misleading or non-compliant.`,
+    l1: `The pack highlights high protein, while our nutrition check found high sodium.`,
+    l2: `The pack highlights high protein. We also checked the nutrition information panel and found high sodium. That wider nutritional context can help you consider the broader nutritional profile of this product. This finding does not by itself mean the packet claim is false, unlawful, misleading or non-compliant.`,
+    provenance: 'doc_literal',
   },
 ];
 

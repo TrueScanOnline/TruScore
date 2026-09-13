@@ -399,6 +399,8 @@ export function buildTruScoreAnalysis(
   }
 
   const pd = result.pillarDetails;
+  const claimsAssessment = (pd.ethics as { details?: { claimsAssessment?: TruScoreAnalysis['claimsAssessment'] } })
+    ?.details?.claimsAssessment;
   const analysis: TruScoreAnalysis = {
     barcode: product.barcode || 'unknown',
     totalScore: result.truscore,
@@ -409,6 +411,7 @@ export function buildTruScoreAnalysis(
       Ethics: toPillarAnalysis('Ethics', pd.ethics),
       Open: toPillarAnalysis('Open', pd.open),
     },
+    ...(claimsAssessment ? { claimsAssessment } : {}),
     generatedAt: Date.now(),
   };
   return analysis;

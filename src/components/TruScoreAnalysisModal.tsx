@@ -31,7 +31,7 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
     );
   }
 
-  const { fetchTrace, pillars, totalScore, barcode } = analysis;
+  const { fetchTrace, pillars, totalScore, barcode, claimsAssessment } = analysis;
 
   return (
     <InfoModal
@@ -47,6 +47,134 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
           <Text style={[styles.totalValue, { color: colors.primary }]}>{totalScore}/100</Text>
         </View>
         <Text style={[styles.meta, { color: colors.textTertiary }]}>Barcode: {barcode}</Text>
+
+        {/* S28-01..07 Claims Rescue diagnostic truth (founder/UAT Score Diagnostics only) */}
+        {claimsAssessment ? (
+          <View style={[styles.claimsBlock, { borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Claims assessment (S28)</Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+              Founder/UAT diagnostic — assessment state is independent of the numeric score.
+            </Text>
+            <Text style={[styles.claimsLine, { color: colors.text }]} testID="s28-assessment-state">
+              assessment_state: {claimsAssessment.assessment_state}
+            </Text>
+            <Text style={[styles.claimsLine, { color: colors.text }]} testID="s28-packet-coverage-state">
+              packet_coverage_state: {claimsAssessment.packet_coverage_state}
+            </Text>
+            <Text style={[styles.claimsLine, { color: colors.textTertiary }]}>
+              register_version: {claimsAssessment.register_version} · nutrient_standard_version:{' '}
+              {claimsAssessment.nutrient_standard_version} · schema: {claimsAssessment.schema_version}
+            </Text>
+
+            <Text style={[styles.claimsSubhead, { color: colors.text }]}>Admitted claims</Text>
+            {claimsAssessment.admitted_claims.length === 0 ? (
+              <Text style={[styles.empty, { color: colors.textTertiary }]}>None</Text>
+            ) : (
+              claimsAssessment.admitted_claims.map((c) => (
+                <View key={`${c.evidence_id}:${c.register_row_id}`} style={styles.claimsItem}>
+                  <Text style={[styles.claimsLine, { color: colors.text }]}>
+                    {c.register_row_id} · set {c.set} · {c.canonical_family}
+                  </Text>
+                  <Text style={[styles.claimsLine, { color: colors.textSecondary }]}>
+                    evidence_id: {c.evidence_id} · admission: {c.admission_method}
+                    {c.source_locator ? ` · locator: ${c.source_locator}` : ''}
+                  </Text>
+                  <Text style={[styles.claimsLine, { color: colors.textSecondary }]}>
+                    observed: {c.observed_text}
+                  </Text>
+                  <Text style={[styles.claimsLine, { color: colors.textSecondary }]}>
+                    display: {c.display_text}
+                  </Text>
+                  {c.member_targets && c.member_targets.length > 0 ? (
+                    <Text style={[styles.claimsLine, { color: colors.textTertiary }]}>
+                      member_targets: {c.member_targets.join(', ')}
+                    </Text>
+                  ) : null}
+                </View>
+              ))
+            )}
+
+            <Text style={[styles.claimsSubhead, { color: colors.text }]}>Nutrient context</Text>
+            {claimsAssessment.nutrient_context ? (
+              <View>
+                <Text style={[styles.claimsLine, { color: colors.textSecondary }]}>
+                  standard: {claimsAssessment.nutrient_context.standard_version} · basis:{' '}
+                  {claimsAssessment.nutrient_context.basis} · large_portion_override:{' '}
+                  {String(claimsAssessment.nutrient_context.large_portion_override)}
+                </Text>
+                {(
+                  [
+                    ['total_sugars', claimsAssessment.nutrient_context.nutrients.total_sugars],
+                    ['saturated_fat', claimsAssessment.nutrient_context.nutrients.saturated_fat],
+                    ['sodium', claimsAssessment.nutrient_context.nutrients.sodium],
+                  ] as const
+                ).map(([key, entry]) => (
+                  <Text key={key} style={[styles.claimsLine, { color: colors.text }]}>
+                    {key}: {entry.level}
+                    {entry.per_100_value != null ? ` · per100=${entry.per_100_value}` : ''}
+                    {entry.per_portion_value != null ? ` · portion=${entry.per_portion_value}` : ''}
+                    {entry.high_reason ? ` · high_reason=${entry.high_reason}` : ''}
+                  </Text>
+                ))}
+              </View>
+            ) : (
+              <Text style={[styles.empty, { color: colors.textTertiary }]}>No nutrient context</Text>
+            )}
+
+            <Text style={[styles.claimsSubhead, { color: colors.text }]}>Fired Claims adjustments</Text>
+            {claimsAssessment.fired_adjustments.length === 0 ? (
+              <Text style={[styles.empty, { color: colors.textTertiary }]}>
+                None (assessed-neutral must never appear as a +0 fired row)
+              </Text>
+            ) : (
+              claimsAssessment.fired_adjustments.map((f, i) => (
+                <Text key={`${f.id}:${i}`} style={[styles.claimsLine, { color: colors.text }]}>
+                  {f.id} · {f.points > 0 ? '+' : ''}
+                  {f.points} · {f.description}
+                  {f.canonical_id ? ` · commentary/canonical: ${f.canonical_id}` : ''}
+                </Text>
+              ))
+            )}
+
+            <Text style={[styles.claimsSubhead, { color: colors.text }]}>Suppressed candidates</Text>
+            {claimsAssessment.suppressed_candidates.length === 0 ? (
+              <Text style={[styles.empty, { color: colors.textTertiary }]}>None</Text>
+            ) : (
+              claimsAssessment.suppressed_candidates.map((s, i) => (
+                <Text key={`${s.candidate_id}:${i}`} style={[styles.claimsLine, { color: colors.text }]}>
+                  {s.candidate_id} · would={s.points_would_have_been} · {s.reason_code}: {s.reason_detail}
+                </Text>
+              ))
+            )}
+
+            <Text style={[styles.claimsSubhead, { color: colors.text }]}>Benchmark checks</Text>
+            {claimsAssessment.benchmark_checks.map((b) => (
+              <Text key={b.source} style={[styles.claimsLine, { color: colors.text }]}>
+                {b.source}: {b.status}
+              </Text>
+            ))}
+
+            <Text style={[styles.claimsSubhead, { color: colors.text }]}>Diagnostics / fail-closed reasons</Text>
+            {claimsAssessment.diagnostics.length === 0 ? (
+              <Text style={[styles.empty, { color: colors.textTertiary }]}>None</Text>
+            ) : (
+              claimsAssessment.diagnostics.map((d, i) => (
+                <Text key={`${d.code}:${i}`} style={[styles.claimsLine, { color: colors.text }]}>
+                  {d.code}: {d.detail}
+                </Text>
+              ))
+            )}
+
+            {claimsAssessment.commentary_payload.route !== 'none' ? (
+              <Text style={[styles.claimsLine, { color: colors.textTertiary }]}>
+                commentary_route: {claimsAssessment.commentary_payload.route}
+                {claimsAssessment.commentary_payload.l1
+                  ? ` · L1 bound: ${claimsAssessment.commentary_payload.l1.slice(0, 80)}…`
+                  : ''}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
 
         {/* Data sources: which DBs were queried, order, hit/miss */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Data sources (query order)</Text>
@@ -177,5 +305,9 @@ const styles = StyleSheet.create({
   adjLink: { fontSize: 11, textDecorationLine: 'underline', marginLeft: 8 },
   adjValue: { fontSize: 14, fontWeight: '600' },
   placeholder: { fontStyle: 'italic' },
+  claimsBlock: { borderWidth: 1, borderRadius: 8, padding: 12, marginBottom: 16 },
+  claimsSubhead: { fontSize: 13, fontWeight: '600', marginTop: 10, marginBottom: 4 },
+  claimsLine: { fontSize: 12, marginBottom: 2 },
+  claimsItem: { marginBottom: 8 },
   bottomSpacer: { height: 24 },
 });

@@ -14,8 +14,10 @@
  *
  * BBFAW: Tier 1=+6, 2=+4, 3=+2, 4=+1, 5=-4, 6=-6; Impact A/B=+3, C/D=+1, E/F=-3.
  * KTC Total Benchmark Score: 0–10=-10, 11–20=-8, 21–30=-6, 31–50=-3, 51–70=+3, 71–80=+6, 81–90=+8, 91–100=+10.
- * Certifications: Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Organic +2.
- * RSPO does not contribute Ethics points (Currency Note / founder disposition 2026-08-04).
+ * Certifications: Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Certified Organic +3.
+ * Packet Claim Context: at most one of +1 / −3 (Wave 3 Claims Rescue v0.2).
+ * Whole-product Organic claim-only: +1 via claims.organic.claim_only.v1 (suppressed when Certified Organic fires).
+ * RSPO does not contribute Ethics/Claims points (Currency Note / founder disposition 2026-08-04).
  */
 
 import { Product } from '../../../types/product';
@@ -51,6 +53,22 @@ import {
   type EthicsV37AdjustmentFamily,
   type EthicsV37AdjustmentId,
 } from './ethicsPillarV37Registry';
+import { assessGovernedNutrientsFromProduct } from '../../../nutrition/governedNutrientAssessment';
+import {
+  assessClaimsPacketAndOrganic,
+  buildClaimsNutrientContext,
+  buildClaimsObservationsFromProduct,
+  type AdmittedPacketObservation,
+  type ClaimsAssessmentResult,
+  type PacketCoverageState,
+} from '../claims';
+
+/** Optional Claims Rescue inputs (packet admissions + coverage). Defaults fail closed. */
+export interface CalculateEthicsPillarOptions {
+  admittedPacketObservations?: AdmittedPacketObservation[];
+  packetCoverageState?: PacketCoverageState;
+  novaGroup?: number | null;
+}
 
 /** Structured, non-arithmetic context carried alongside a fired adjustment (S12/S28 commentary binding). */
 export type EthicsPillarAdjustmentMetadata = Record<string, string | number | boolean>;
@@ -83,6 +101,8 @@ export interface EthicsPillarResult {
     certificationsEligibleSchemes: string[];
     /** How organic was detected when organic rules matched (diagnostics / UI). */
     certificationsOrganicMatchSource?: 'off_tags_or_hierarchy' | 'label_or_cert_text' | 'product_name' | null;
+    /** Wave 3 Claims Rescue assessment truth (S28 / Confidence handoff). */
+    claimsAssessment?: ClaimsAssessmentResult;
   };
 }
 
@@ -140,9 +160,13 @@ function pushAdjustment(
 }
 
 /**
- * ETHICS pillar score: Base 15 + BBFAW + KTC + max one certification, clamped 0–25.
+ * Claims pillar score (internal Ethics key): Base 15 + BBFAW + KTC + max one certification
+ * + Packet Claim Context + Organic claim-only, clamped 0–25.
  */
-export function calculateEthicsPillar(product: Product): EthicsPillarResult {
+export function calculateEthicsPillar(
+  product: Product,
+  options?: CalculateEthicsPillarOptions
+): EthicsPillarResult {
   const adjustments: EthicsPillarAdjustment[] = [];
   let score = 15;
   const base = 15;
@@ -281,10 +305,15 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     logger.debug('[EthicsPillar] KTC not found - nil return (no adjustment)');
   }
 
-  // Certifications (ETHICS SPEC — max single scheme for MVP)
+  // Certifications (max single scheme for MVP) — Certified Organic is +3 when OFF tags admit it
   const certEval = evaluateEthicsCertifications(product);
   let certificationsAdjustment = 0;
   const certId = ethicsV37CertificationAdjustmentId(certEval.winningScheme);
+  const certifiedOrganicFired =
+    certEval.winningScheme === 'organic' && certEval.organicMatchSource === 'off_tags_or_hierarchy';
+  const otherCertificationFired =
+    !!certEval.winningScheme && certEval.winningScheme !== 'organic';
+
   if (certEval.adjustment !== 0 && certEval.winningScheme && certId) {
     certificationsAdjustment = certEval.adjustment;
     const labelPretty = certEval.winningScheme
@@ -298,16 +327,14 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
       adjustments,
       certId,
       certificationsAdjustment,
-      `Ethics certifications – ${labelPretty} (+${certificationsAdjustment}, highest eligible scheme; MVP no stacking)${organicHint}`,
+      `Claims certifications – ${labelPretty} (+${certificationsAdjustment}, highest eligible scheme; MVP no stacking)${organicHint}`,
       {
         referenceUrl: certEval.referenceUrl,
         metadata: {
           certificationScheme: certEval.winningScheme,
           packetEvidence: true,
-          // Same +2 effect either way; selects the correct locked organic L1/L2.
           ...(certEval.winningScheme === 'organic' && {
-            organicEvidenceClass:
-              certEval.organicMatchSource === 'off_tags_or_hierarchy' ? 'certified' : 'claim_only',
+            organicEvidenceClass: 'certified',
           }),
         },
       }
@@ -320,7 +347,69 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
     });
   }
 
-  // Global cap after Base + BBFAW + KTC + certifications
+  // Packet Claim Context + Organic claim-only (Wave 3 Claims Rescue v0.2)
+  const nutrientAssessment = assessGovernedNutrientsFromProduct(product);
+  const nutrientContext = buildClaimsNutrientContext(nutrientAssessment);
+  const obsBundle = buildClaimsObservationsFromProduct(product, {
+    explicitAdmissions: options?.admittedPacketObservations,
+    packetCoverageState: options?.packetCoverageState,
+  });
+
+  const benchmarkChecks: ClaimsAssessmentResult['benchmark_checks'] = [
+    {
+      source: 'ktc',
+      status: !benchmarkCtx.benchmarkEligible
+        ? 'not_applicable'
+        : ktcMatched
+          ? ktcScoreAdjustment > 0
+            ? 'positive'
+            : ktcScoreAdjustment < 0
+              ? 'adverse'
+              : 'no_finding'
+          : 'no_finding',
+    },
+    {
+      source: 'bbfaw',
+      status: !benchmarkCtx.benchmarkEligible
+        ? 'not_applicable'
+        : companyName && (tier || impactRating)
+          ? bbfawTierScore + bbfawImpactScore > 0
+            ? 'positive'
+            : bbfawTierScore + bbfawImpactScore < 0
+              ? 'adverse'
+              : 'no_finding'
+          : 'no_finding',
+    },
+  ];
+
+  const claimsAssessment = assessClaimsPacketAndOrganic({
+    admittedObservations: obsBundle.observations,
+    packetCoverageState: obsBundle.packetCoverageState,
+    nutrientContext,
+    novaGroup: options?.novaGroup ?? null,
+    certifiedOrganicFired,
+    otherCertificationFired,
+    benchmarkChecks,
+  });
+
+  for (const event of claimsAssessment.fired_adjustments) {
+    const id = event.id as EthicsV37AdjustmentId;
+    if (!ETHICS_V37_ADJUSTMENT_REGISTRY[id]) continue;
+    pushAdjustment(adjustments, id, event.points, event.description, {
+      metadata: {
+        ...(event.metadata ?? {}),
+        ...(claimsAssessment.commentary_payload.l1 && {
+          claimsL1: claimsAssessment.commentary_payload.l1,
+        }),
+        ...(claimsAssessment.commentary_payload.l2 && {
+          claimsL2: claimsAssessment.commentary_payload.l2,
+        }),
+      },
+    });
+    score += event.points;
+  }
+
+  // Global cap after Base + BBFAW + KTC + certifications + packet context + organic claim-only
   const beforeClamp = Math.round(score);
   score = Math.max(0, Math.min(25, beforeClamp));
   if (beforeClamp > 25) {
@@ -345,6 +434,7 @@ export function calculateEthicsPillar(product: Product): EthicsPillarResult {
       certificationsWinningScheme: certEval.winningScheme,
       certificationsEligibleSchemes: certEval.eligibleSchemes,
       certificationsOrganicMatchSource: certEval.organicMatchSource ?? null,
+      claimsAssessment,
     },
   };
 

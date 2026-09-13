@@ -12,8 +12,6 @@
 import type { EthicsCertificationScheme } from '../../../services/ethicsCertificationsService';
 import type { BBFAWImpactRating, BBFAWTier } from '../../../services/bbfawService';
 
-export type EthicsV37AdjustmentFamily = 'system' | 'ktc' | 'bbfaw' | 'certifications';
-
 export type EthicsV37AdjustmentId =
   | 'ethics-v37-base'
   | 'ethics-v37-ktc-0-10'
@@ -38,9 +36,20 @@ export type EthicsV37AdjustmentId =
   | 'ethics-v37-cert-asc'
   | 'ethics-v37-cert-msc'
   | 'ethics-v37-cert-organic'
+  | 'claims.packet_context.positive.v1'
+  | 'claims.packet_context.adverse.v1'
+  | 'claims.organic.claim_only.v1'
   | 'ethics-v37-frozen-benchmark-ineligible'
   | 'ethics-v37-final-cap'
   | 'ethics-v37-final-floor';
+
+export type EthicsV37AdjustmentFamily =
+  | 'system'
+  | 'ktc'
+  | 'bbfaw'
+  | 'certifications'
+  | 'packet_context'
+  | 'organic_claim_only';
 
 export interface EthicsV37AdjustmentMeta {
   id: EthicsV37AdjustmentId;
@@ -328,12 +337,46 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
   'ethics-v37-cert-organic': {
     id: 'ethics-v37-cert-organic',
     family: 'certifications',
-    points: 2,
+    points: 3,
     highlightEligible: true,
-    description: 'Ethics certifications — Organic (highest eligible scheme; MVP no stacking)',
+    description: 'Claims certifications — Certified Organic +3 (highest eligible scheme; MVP no stacking)',
     highlightTitle: 'Organic certified',
     highlightExplainer:
       'An organic certification mark appears on this packet, indicating certification against that scheme’s organic standard.',
+    externalResource: ORGANIC_RESOURCE,
+  },
+  'claims.packet_context.positive.v1': {
+    id: 'claims.packet_context.positive.v1',
+    family: 'packet_context',
+    points: 1,
+    highlightEligible: true,
+    description: 'Packet Claim Context positive (+1)',
+    highlightTitle:
+      'The pack highlights [CLAIM] and our nutrition context check did not find high total sugars, saturated fat or sodium.',
+    highlightExplainer:
+      'The pack highlights [CLAIM]. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the product’s broader nutritional picture.',
+    externalResource: OFF_RESOURCE,
+  },
+  'claims.packet_context.adverse.v1': {
+    id: 'claims.packet_context.adverse.v1',
+    family: 'packet_context',
+    points: -3,
+    highlightEligible: true,
+    description: 'Packet Claim Context adverse (−3)',
+    highlightTitle: 'The pack highlights [CLAIM], while our nutrition check found high [NUTRIENT(S)].',
+    highlightExplainer:
+      'The pack highlights [CLAIM]. We also checked the nutrition information panel and found high [NUTRIENT(S)]. That wider nutritional context can help you consider the broader nutritional profile of this product. This finding does not by itself mean the packet claim is false, unlawful, misleading or non-compliant.',
+    externalResource: OFF_RESOURCE,
+  },
+  'claims.organic.claim_only.v1': {
+    id: 'claims.organic.claim_only.v1',
+    family: 'organic_claim_only',
+    points: 1,
+    highlightEligible: true,
+    description: 'Whole-product Organic claim-only (+1)',
+    highlightTitle: 'Organic claim identified',
+    highlightExplainer:
+      'An organic claim appears on this packet, but the packet does not show a specific organic certification.',
     externalResource: ORGANIC_RESOURCE,
   },
   'ethics-v37-frozen-benchmark-ineligible': {

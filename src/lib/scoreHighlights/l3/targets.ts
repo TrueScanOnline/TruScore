@@ -16,6 +16,7 @@ export type ScoreHighlightL3InAppTarget =
   | 'ethics_organic'
   | 'ethics_ktc'
   | 'ethics_bbfaw'
+  | 'claims_packet_context_nutrition'
   | 'ingredient_wording';
 
 export const L3_TITLES: Record<ScoreHighlightL3InAppTarget, string> = {
@@ -32,5 +33,6 @@ export const L3_TITLES: Record<ScoreHighlightL3InAppTarget, string> = {
   ethics_organic: 'What this organic claim means',
   ethics_ktc: 'How KnowTheChain assessed this company',
   ethics_bbfaw: 'How BBFAW assessed this company',
+  claims_packet_context_nutrition: 'Nutrition details',
   ingredient_wording: 'Ingredient wording explained',
 };

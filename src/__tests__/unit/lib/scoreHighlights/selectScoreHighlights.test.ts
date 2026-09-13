@@ -356,10 +356,10 @@ describe('governed copy resolution', () => {
 
   it('selects the locked organic claim-only copy from the evidence-class metadata', () => {
     const certified = selectScoreHighlights([
-      fired('Ethics', 'ethics-v37-cert-organic', 2, { organicEvidenceClass: 'certified' }),
+      fired('Ethics', 'ethics-v37-cert-organic', 3, { organicEvidenceClass: 'certified' }),
     ]).byPillar.Ethics[0];
     const claimOnly = selectScoreHighlights([
-      fired('Ethics', 'ethics-v37-cert-organic', 2, { organicEvidenceClass: 'claim_only' }),
+      fired('Ethics', 'claims.organic.claim_only.v1', 1, { organicEvidenceClass: 'claim_only' }),
     ]).byPillar.Ethics[0];
 
     expect(certified.l1).toBe('Organic certified');

@@ -71,9 +71,8 @@ export function governedCommentaryRow(
 }
 
 /**
- * Locked organic variants (Ethics v0.2 §3). Both states score +2 and share one stable ID;
- * `organicEvidenceClass` on the fired row selects the correct locked copy, which is exactly what
- * the Ethics scorer emits that metadata for.
+ * Locked organic claim-only copy (Claims Rescue v0.2). Certified Organic uses the registry row.
+ * Prefer `claims.organic.claim_only.v1` for claim-only; legacy metadata branch retained for safety.
  */
 const ORGANIC_CLAIM_ONLY_L1 = 'Organic claim identified';
 const ORGANIC_CLAIM_ONLY_L2 =
@@ -176,7 +175,24 @@ export function resolveGovernedCopy(
 
   let l1 = row.l1;
   let l2 = row.l2;
-  if (adjustmentId === 'ethics-v37-cert-organic' && metadata?.organicEvidenceClass === 'claim_only') {
+
+  // Wave 3 Claims Rescue: prefer synthesized commentary payload bound on the fired row.
+  if (
+    (adjustmentId === 'claims.packet_context.positive.v1' ||
+      adjustmentId === 'claims.packet_context.adverse.v1') &&
+    typeof metadata?.claimsL1 === 'string' &&
+    typeof metadata?.claimsL2 === 'string'
+  ) {
+    l1 = String(metadata.claimsL1);
+    l2 = String(metadata.claimsL2);
+    if (hasUnresolvedToken(l1) || hasUnresolvedToken(l2)) return null;
+    return { l1, l2 };
+  }
+
+  if (
+    adjustmentId === 'claims.organic.claim_only.v1' ||
+    (adjustmentId === 'ethics-v37-cert-organic' && metadata?.organicEvidenceClass === 'claim_only')
+  ) {
     l1 = ORGANIC_CLAIM_ONLY_L1;
     l2 = ORGANIC_CLAIM_ONLY_L2;
   }

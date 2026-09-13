@@ -296,9 +296,11 @@ describe('active consumer source files carry no pillar-name copy', () => {
 
 describe('internal naming is deliberately unchanged', () => {
   it('keeps the Ethics/Open stable adjustment ID prefixes', () => {
-    expect(Object.keys(ETHICS_V37_ADJUSTMENT_REGISTRY).every((id) => id.startsWith('ethics-v37-'))).toBe(
-      true
-    );
+    expect(
+      Object.keys(ETHICS_V37_ADJUSTMENT_REGISTRY).every(
+        (id) => id.startsWith('ethics-v37-') || id.startsWith('claims.')
+      )
+    ).toBe(true);
     expect(Object.keys(OPEN_V15_ADJUSTMENT_REGISTRY).every((id) => id.startsWith('open-v15-'))).toBe(
       true
     );

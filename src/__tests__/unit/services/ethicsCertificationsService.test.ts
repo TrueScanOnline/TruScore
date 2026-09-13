@@ -71,19 +71,19 @@ describe('ethicsCertificationsService', () => {
     expect(e.adjustment).toBe(6);
   });
 
-  test('en:organic → +2', () => {
+  test('en:organic → +3', () => {
     const p = { ...minimalProduct(), labels_tags: ['en:organic'] };
     const e = evaluateEthicsCertifications(p);
     expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(2);
+    expect(e.adjustment).toBe(3);
     expect(e.organicMatchSource).toBe('off_tags_or_hierarchy');
   });
 
-  test('en:aco-certified-organic → Organic +2', () => {
+  test('en:aco-certified-organic → Organic +3', () => {
     const p = { ...minimalProduct(), labels_tags: ['en:aco-certified-organic'] };
     const e = evaluateEthicsCertifications(p);
     expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(2);
+    expect(e.adjustment).toBe(3);
     expect(e.organicMatchSource).toBe('off_tags_or_hierarchy');
   });
 
@@ -94,12 +94,12 @@ describe('ethicsCertificationsService', () => {
       labels_tags: [],
     };
     const e = evaluateEthicsCertifications(p);
-    expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(2);
+    expect(e.winningScheme).toBeNull();
+    expect(e.adjustment).toBe(0);
     expect(e.organicMatchSource).toBe('label_or_cert_text');
   });
 
-  test('labels_hierarchy en:organic only (no labels_tags) → Organic +2', () => {
+  test('labels_hierarchy en:organic only (no labels_tags) → Organic +3', () => {
     const p = {
       ...minimalProduct(),
       labels_tags: [],
@@ -107,7 +107,7 @@ describe('ethicsCertificationsService', () => {
     };
     const e = evaluateEthicsCertifications(p);
     expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(2);
+    expect(e.adjustment).toBe(3);
     expect(e.organicMatchSource).toBe('off_tags_or_hierarchy');
   });
 
@@ -117,7 +117,7 @@ describe('ethicsCertificationsService', () => {
       labels: 'Canada Organic',
     };
     const e = evaluateEthicsCertifications(p);
-    expect(e.winningScheme).toBe('organic');
+    expect(e.winningScheme).toBeNull();
     expect(e.organicMatchSource).toBe('label_or_cert_text');
   });
 
@@ -127,8 +127,8 @@ describe('ethicsCertificationsService', () => {
       labels: 'Tún certified organic',
     };
     const e = evaluateEthicsCertifications(p);
-    expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(2);
+    expect(e.winningScheme).toBeNull();
+    expect(e.adjustment).toBe(0);
   });
 
   test('label text Catalan Council of Organic Production → Organic +2', () => {
@@ -137,8 +137,8 @@ describe('ethicsCertificationsService', () => {
       labels: 'Catalan Council of Organic Production',
     };
     const e = evaluateEthicsCertifications(p);
-    expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(2);
+    expect(e.winningScheme).toBeNull();
+    expect(e.adjustment).toBe(0);
   });
 
   test('product name Organic Greek Yoghurt, no OFF organic label → Organic +2', () => {
@@ -149,8 +149,8 @@ describe('ethicsCertificationsService', () => {
       labels: '',
     };
     const e = evaluateEthicsCertifications(p);
-    expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(2);
+    expect(e.winningScheme).toBeNull();
+    expect(e.adjustment).toBe(0);
     expect(e.organicMatchSource).toBe('product_name');
   });
 
@@ -186,11 +186,11 @@ describe('ethicsCertificationsService', () => {
     expect(e.eligibleSchemes).toContain('organic');
   });
 
-  test('EU organic tag → +2', () => {
+  test('EU organic tag → +3', () => {
     const p = { ...minimalProduct(), labels_tags: ['en:eu-organic'] };
     const e = evaluateEthicsCertifications(p);
     expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(2);
+    expect(e.adjustment).toBe(3);
   });
 
   test('MSC OFF tag without API validation → no MSC credit', () => {

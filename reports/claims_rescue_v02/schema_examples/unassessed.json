@@ -1,0 +1,38 @@
+{
+  "schema_version": "claims-assessment-v1",
+  "register_version": "20260912_v1_0",
+  "nutrient_standard_version": "uk-gov-fop-mtl-v1",
+  "assessment_state": "unassessed",
+  "packet_coverage_state": "incomplete",
+  "admitted_claims": [],
+  "unclassified_statements": [],
+  "nutrient_context": {
+    "standard_version": "uk-gov-fop-mtl-v1",
+    "basis": "food",
+    "large_portion_override": false,
+    "nutrients": {
+      "total_sugars": { "level": "low", "high_reason": null },
+      "saturated_fat": { "level": "low", "high_reason": null },
+      "sodium": { "level": "low", "high_reason": null }
+    },
+    "required_context_complete": true,
+    "any_governed_high": false,
+    "high_nutrient_labels": []
+  },
+  "benchmark_checks": [
+    { "source": "ktc", "status": "no_finding" },
+    { "source": "bbfaw", "status": "no_finding" }
+  ],
+  "packet_context_points": 0,
+  "organic_claim_only_points": 0,
+  "fired_adjustments": [],
+  "suppressed_candidates": [],
+  "commentary_payload": { "route": "none" },
+  "diagnostics": [
+    {
+      "code": "packet_coverage_incomplete",
+      "detail": "No approved Set A/B packet admissions; coverage incomplete (REG-03 fail-closed)"
+    }
+  ],
+  "_example_note": "Live TruScore path without explicit admissions. Contribution treatment preserved; never assessed_neutral L2."
+}

@@ -98,6 +98,15 @@ export function resolveInAppL3Route(
   }
 
   if (pillar === 'Ethics') {
+    if (
+      boundAdjustmentIds.includes('claims.packet_context.positive.v1') ||
+      boundAdjustmentIds.includes('claims.packet_context.adverse.v1')
+    ) {
+      return routeFor('claims_packet_context_nutrition');
+    }
+    if (boundAdjustmentIds.includes('claims.organic.claim_only.v1')) {
+      return routeFor('ethics_organic');
+    }
     if (boundAdjustmentIds.includes('ethics-v37-cert-fairtrade')) return routeFor('ethics_fairtrade');
     if (boundAdjustmentIds.includes('ethics-v37-cert-rainforest-alliance')) {
       return routeFor('ethics_rainforest');
