@@ -51,6 +51,15 @@ function NutritionCardContent({ product, onShare, premiumFeatures }: NutritionCa
           nutriments={product.nutriments}
           categoriesTags={product.categories_tags}
           servingSize={product.serving_size}
+          productName={product.product_name || product.product_name_en}
+          genericName={product.generic_name}
+          quantity={product.quantity}
+          productQuantity={product.product_quantity}
+          productQuantityUnit={product.product_quantity_unit}
+          servingQuantity={product.serving_quantity}
+          servingQuantityUnit={product.serving_quantity_unit}
+          nutritionDataPer={product.nutrition_data_per}
+          nutritionDataPreparedPer={product.nutrition_data_prepared_per}
           shareContext={{
             productName: product.product_name || product.product_name_en || '',
             barcode: product.barcode,

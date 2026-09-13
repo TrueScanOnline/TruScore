@@ -8,6 +8,7 @@ import type { Product, ProductNutriments } from '../types/product';
 import { getNutrientValue100g } from '../utils/nutritionPer100g';
 import { UK_GOV_FOP_MTL_REFERENCE } from './ukGovFopMtlReference';
 import { parseReliableServingSize } from './parseReliableServingSize';
+import { simulateV02FoodDrinkClass } from './v02FoodDrinkDeterminant';
 import type {
   GovernedLimitationCode,
   GovernedLevelTrigger,
@@ -25,9 +26,19 @@ export interface AssessGovernedNutrientsInput {
   nutriments?: ProductNutriments;
   categoriesTags?: string[];
   servingSize?: string | null;
-  /** Optional structured serving quantity (g or ml) when already normalised. */
+  /** Optional structured serving quantity (g or ml) when already normalised for Per serve. */
   servingQuantity?: number | null;
   servingUnit?: 'g' | 'ml' | null;
+  /** Identity / quantity fields for the accepted v0.2 Food/Drink determinant. */
+  productName?: string | null;
+  genericName?: string | null;
+  quantity?: string | null;
+  productQuantity?: number | null;
+  productQuantityUnit?: string | null;
+  /** OFF raw serving quantity unit (string); distinct from normalised servingUnit for Per serve. */
+  servingQuantityUnit?: string | null;
+  nutritionDataPer?: string | null;
+  nutritionDataPreparedPer?: string | null;
 }
 
 function isValidAmount(value: number | undefined): value is number {
@@ -35,18 +46,12 @@ function isValidAmount(value: number | undefined): value is number {
 }
 
 /**
- * Beverage detection: exact taxonomy local id `beverages` (any language prefix).
- * Does NOT match parent tags such as `en:plant-based-foods-and-beverages`.
+ * Categories-only view of the accepted v0.2 binary Food/Drink determinant.
+ * Prefer assessGovernedNutrients / simulateV02FoodDrinkClass with full identity+quantity evidence.
+ * Never returns `unknown` — Drink must be affirmatively established; otherwise Food.
  */
 export function resolveGovernedProductClass(categoriesTags?: string[]): GovernedProductClass {
-  if (!categoriesTags || categoriesTags.length === 0) {
-    return 'unknown';
-  }
-  const isBeverage = categoriesTags.some((tag) => {
-    const local = tag.includes(':') ? tag.slice(tag.indexOf(':') + 1) : tag;
-    return local === 'beverages';
-  });
-  return isBeverage ? 'drink' : 'food';
+  return simulateV02FoodDrinkClass({ categoriesTags: categoriesTags ?? null }).productClass;
 }
 
 export function resolvePer100Basis(productClass: GovernedProductClass): GovernedPer100Basis {
@@ -139,10 +144,24 @@ function assessOne(args: {
 export function assessGovernedNutrients(input: AssessGovernedNutrientsInput): GovernedNutrientAssessment {
   const ref = UK_GOV_FOP_MTL_REFERENCE;
   const limitations: GovernedLimitationCode[] = [];
-  const productClass = resolveGovernedProductClass(input.categoriesTags);
+  const classResult = simulateV02FoodDrinkClass({
+    productName: input.productName,
+    genericName: input.genericName,
+    quantity: input.quantity,
+    servingSize: input.servingSize,
+    productQuantity: input.productQuantity,
+    productQuantityUnit: input.productQuantityUnit,
+    servingQuantity: input.servingQuantity,
+    servingQuantityUnit: input.servingQuantityUnit ?? input.servingUnit ?? null,
+    categoriesTags: input.categoriesTags,
+    nutriments: input.nutriments,
+    nutritionDataPer: input.nutritionDataPer,
+    nutritionDataPreparedPer: input.nutritionDataPreparedPer,
+  });
+  const productClass: GovernedProductClass = classResult.productClass;
   const per100Basis = resolvePer100Basis(productClass);
-  const ratingsEnabled = productClass !== 'unknown';
-  if (!ratingsEnabled) limitations.push('product_class_unknown');
+  // v0.2 determinant is binary Food/Drink — ratings always enabled once nutrients exist.
+  const ratingsEnabled = true;
 
   // Serving evidence
   let serving: GovernedNutrientAssessment['serving'];
@@ -271,12 +290,36 @@ export function assessGovernedNutrients(input: AssessGovernedNutrientsInput): Go
 
 /** Convenience: assess from a Product-like object. */
 export function assessGovernedNutrientsFromProduct(
-  product: Pick<Product, 'nutriments' | 'categories_tags' | 'serving_size'>
+  product: Pick<
+    Product,
+    | 'nutriments'
+    | 'categories_tags'
+    | 'serving_size'
+    | 'product_name'
+    | 'product_name_en'
+    | 'generic_name'
+    | 'quantity'
+    | 'product_quantity'
+    | 'product_quantity_unit'
+    | 'serving_quantity'
+    | 'serving_quantity_unit'
+    | 'nutrition_data_per'
+    | 'nutrition_data_prepared_per'
+  >
 ): GovernedNutrientAssessment {
   return assessGovernedNutrients({
     nutriments: product.nutriments,
     categoriesTags: product.categories_tags,
     servingSize: product.serving_size,
+    productName: product.product_name || product.product_name_en,
+    genericName: product.generic_name,
+    quantity: product.quantity,
+    productQuantity: product.product_quantity,
+    productQuantityUnit: product.product_quantity_unit,
+    servingQuantity: product.serving_quantity,
+    servingQuantityUnit: product.serving_quantity_unit,
+    nutritionDataPer: product.nutrition_data_per,
+    nutritionDataPreparedPer: product.nutrition_data_prepared_per,
   });
 }
 

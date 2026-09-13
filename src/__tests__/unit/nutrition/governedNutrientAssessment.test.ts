@@ -1,5 +1,6 @@
 import {
   assessGovernedNutrients,
+  assessGovernedNutrientsFromProduct,
   resolveGovernedProductClass,
   sodiumMgFromNutriments,
 } from '../../../nutrition/governedNutrientAssessment';
@@ -189,18 +190,72 @@ describe('governed UK FoP MTL nutrient assessment', () => {
     });
   });
 
-  describe('product class', () => {
+  describe('product class — v0.2 binary Food/Drink determinant', () => {
     it('does not treat plant-based-foods-and-beverages as drink', () => {
       expect(resolveGovernedProductClass(['en:plant-based-foods-and-beverages'])).toBe('food');
+      const a = assessGovernedNutrients({
+        nutriments: { sugars_100g: 8 },
+        categoriesTags: ['en:plant-based-foods-and-beverages'],
+      });
+      expect(a.productClass).toBe('food');
+      expect(a.per100Basis).toBe('100g');
     });
+
     it('treats exact en:beverages as drink', () => {
       expect(resolveGovernedProductClass(['en:beverages'])).toBe('drink');
+      const a = assessGovernedNutrients({
+        nutriments: { sugars_100g: 8 },
+        categoriesTags: ['en:beverages'],
+      });
+      expect(a.productClass).toBe('drink');
+      expect(a.per100Basis).toBe('100ml');
     });
-    it('unknown when categories absent', () => {
-      expect(resolveGovernedProductClass(undefined)).toBe('unknown');
+
+    it('defaults to food when categories absent (no unknown gate)', () => {
+      expect(resolveGovernedProductClass(undefined)).toBe('food');
       const a = assessGovernedNutrients({ nutriments: { sugars_100g: 50 } });
-      expect(a.nutrients.totalSugars.level).toBe('unavailable');
-      expect(a.limitations).toContain('product_class_unknown');
+      expect(a.productClass).toBe('food');
+      expect(a.nutrients.totalSugars.level).toBe('high');
+      expect(a.limitations).not.toContain('product_class_unknown');
+    });
+
+    it('classifies unambiguous volume serving as drink without beverages tag', () => {
+      const a = assessGovernedNutrients({
+        nutriments: { sugars_100g: 8 },
+        servingSize: '150 mL',
+      });
+      expect(a.productClass).toBe('drink');
+      expect(a.per100Basis).toBe('100ml');
+      expect(a.nutrients.totalSugars.level).toBe('moderate');
+    });
+
+    it('food-vetoes soup after provisional volume drink', () => {
+      const a = assessGovernedNutrients({
+        nutriments: { sugars_100g: 2 },
+        productName: 'Chicken Soup',
+        servingSize: '250 ml',
+      });
+      expect(a.productClass).toBe('food');
+      expect(a.per100Basis).toBe('100g');
+    });
+
+    it('keeps yoghurt drink as drink via explicit identity exception', () => {
+      const a = assessGovernedNutrients({
+        nutriments: { sugars_100g: 8 },
+        productName: 'Yakult Yoghurt Drink',
+        servingSize: '65 ml',
+      });
+      expect(a.productClass).toBe('drink');
+    });
+
+    it('assessGovernedNutrientsFromProduct passes identity and quantity evidence', () => {
+      const a = assessGovernedNutrientsFromProduct({
+        nutriments: { sugars_100g: 8 },
+        product_name: 'Yakult',
+        serving_size: '65 ml',
+        categories_tags: ['en:yogurt-drinks'],
+      });
+      expect(a.productClass).toBe('drink');
     });
   });
 

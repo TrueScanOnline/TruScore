@@ -29,6 +29,16 @@ interface NutritionTableProps {
   nutrientLevels?: unknown;
   categoriesTags?: string[];
   servingSize?: string;
+  /** Identity / quantity evidence for the accepted v0.2 Food/Drink determinant. */
+  productName?: string;
+  genericName?: string;
+  quantity?: string;
+  productQuantity?: number;
+  productQuantityUnit?: string;
+  servingQuantity?: number;
+  servingQuantityUnit?: string;
+  nutritionDataPer?: string;
+  nutritionDataPreparedPer?: string;
   onShare?: () => void;
   onEdit?: () => void;
   shareContext?: NutritionTableShareContext;
@@ -44,6 +54,15 @@ const NutritionTable = React.memo(function NutritionTable({
   nutriments,
   categoriesTags,
   servingSize,
+  productName,
+  genericName,
+  quantity,
+  productQuantity,
+  productQuantityUnit,
+  servingQuantity,
+  servingQuantityUnit,
+  nutritionDataPer,
+  nutritionDataPreparedPer,
   onShare,
   onEdit,
   shareContext,
@@ -77,8 +96,30 @@ const NutritionTable = React.memo(function NutritionTable({
         nutriments,
         categoriesTags,
         servingSize,
+        productName,
+        genericName,
+        quantity,
+        productQuantity,
+        productQuantityUnit,
+        servingQuantity,
+        servingQuantityUnit,
+        nutritionDataPer,
+        nutritionDataPreparedPer,
       }),
-    [nutriments, categoriesTags, servingSize]
+    [
+      nutriments,
+      categoriesTags,
+      servingSize,
+      productName,
+      genericName,
+      quantity,
+      productQuantity,
+      productQuantityUnit,
+      servingQuantity,
+      servingQuantityUnit,
+      nutritionDataPer,
+      nutritionDataPreparedPer,
+    ]
   );
 
   const showPerServe = assessment.serving.usable === true;

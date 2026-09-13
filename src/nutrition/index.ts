@@ -9,6 +9,12 @@ export {
   formatHighReason,
   governedPerServeFromPer100,
 } from './governedNutrientAssessment';
+export { simulateV02FoodDrinkClass } from './v02FoodDrinkDeterminant';
+export type {
+  V02FoodDrinkDeterminantInput,
+  V02FoodDrinkDeterminantResult,
+  V02ProductClass,
+} from './v02FoodDrinkDeterminant';
 export type {
   GovernedNutrientAssessment,
   GovernedNutrientAssessmentItem,

@@ -266,7 +266,19 @@ export interface Product {
    */
   true_scan_market?: 'AU' | 'NZ';
   serving_size?: string;
-  
+  /** OFF structured pack quantity (numeric); used by v0.2 Food/Drink determinant. */
+  product_quantity?: number;
+  /** OFF structured pack quantity unit (e.g. ml, g); used by v0.2 Food/Drink determinant. */
+  product_quantity_unit?: string;
+  /** OFF structured serving quantity (numeric); used by v0.2 Food/Drink determinant. */
+  serving_quantity?: number;
+  /** OFF structured serving quantity unit (e.g. ml, g); used by v0.2 Food/Drink determinant. */
+  serving_quantity_unit?: string;
+  /** OFF nutrition_data_per (e.g. 100g / 100ml); used by v0.2 determinant basis limitation. */
+  nutrition_data_per?: string;
+  /** OFF nutrition_data_prepared_per; used by v0.2 prepared-drink Step 2. */
+  nutrition_data_prepared_per?: string;
+
   // Enhanced sustainability data (extracted from OFF)
   palm_oil_analysis?: PalmOilAnalysis;
   packaging_data?: PackagingData;
