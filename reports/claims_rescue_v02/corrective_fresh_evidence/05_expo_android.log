@@ -9,17 +9,13 @@ At line:1 char:1
 [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
 [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
 Starting Metro Bundler
-Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæ 82.4% (1283/1413)
-| (node:4372) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-| (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:14472) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-| (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:21212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-| (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:17900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+Android .\index.js ΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ  0.0% (0/1)
+Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæ 72.0% (1075/1280)
+Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1706/1707)
+| (node:20708) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | (Use `node --trace-warnings ...` to show where the warning was created)
 Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1708/1708)
-Android Bundled 11695ms index.js (1708 modules)
+Android Bundled 22736ms index.js (1708 modules)
 Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1708/1708)
 
 ΓÇ║ Assets (36):
@@ -49,9 +45,9 @@ Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûô�
 ..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\search-icon.png (4 variations | 599 B)
 
 ΓÇ║ android bundles (1):
-_expo/static/js/android/index-aacf288e91dd1cc551fc41cf5c312960.hbc (6.82 MB)
+_expo/static/js/android/index-f5868eb9d588347160155cce43dd8b0c.hbc (6.83 MB)
 
 ΓÇ║ Files (1):
 metadata.json (2.58 kB)
 
-Exported: dist-claims-reconcile-DO-NOT-COMMIT/android
+Exported: dist-claims-final-DO-NOT-COMMIT/android

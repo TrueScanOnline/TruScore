@@ -23,7 +23,9 @@ function obs(text: string, id = 'e1'): AdmittedPacketObservation {
 
 function nutrientComplete(): ClaimsNutrientContext {
   return {
-    standard_version: 'uk-gov-fop-mtl-v1',
+    standard_version: 'uk-gov-fop-mtl-rveel-reviewed-2026-09-12',
+    nutrient_methodology_version: '20260912_v0_1',
+    nutrient_reference_asset_id: 'uk-gov-fop-mtl-rveel-reviewed-2026-09-12',
     basis: 'food',
     large_portion_override: false,
     nutrients: {
@@ -97,5 +99,20 @@ describe('Machine Register match_types + A-VMC-003 / R-013', () => {
     expect(r.admitted_claims[0].register_row_id).toBe('A-VMC-003');
     expect(r.packet_context_points).toBe(1);
     expect(r.fired_adjustments.filter((f) => f.family === 'packet_context')).toHaveLength(1);
+  });
+
+  test('CR-12 residual: contains vitamins and minerals → A-VMC-002 not fail-closed', () => {
+    const match = matchAdmittedObservations([obs('contains vitamins and minerals')]);
+    expect(match.matched).toHaveLength(1);
+    expect(match.matched[0].register_row_id).toBe('A-VMC-002');
+    expect(match.diagnostics.some((d) => d.code === 'collision_priority_tie_fail_closed')).toBe(
+      false
+    );
+  });
+
+  test('CR-12 residual: vitamins and minerals alone → A-VMC-001', () => {
+    const match = matchAdmittedObservations([obs('vitamins and minerals')]);
+    expect(match.matched).toHaveLength(1);
+    expect(match.matched[0].register_row_id).toBe('A-VMC-001');
   });
 });

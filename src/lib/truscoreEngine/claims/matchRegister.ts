@@ -398,6 +398,71 @@ function applyProseExclusionPredicates(
   return remaining;
 }
 
+function isOverlappingVitaminMineralCandidate(c: Candidate, retainedId: string): boolean {
+  const id = c.pattern.pattern_id;
+  if (id === retainedId) return false;
+  if (id === 'A-VMC-001' || id === 'A-VMC-002' || id === 'A-VMC-003') return true;
+  const fam = c.pattern.canonical_family;
+  return (
+    fam === 'vitamin' ||
+    fam === 'mineral' ||
+    fam === 'vitamin_mineral' ||
+    /^A-VIT-/i.test(id) ||
+    /^A-MIN-/i.test(id)
+  );
+}
+
+/**
+ * Same-observation governed combination precedence (CR-12 residual).
+ * Returns a single-candidate selection when a VMC row applies; otherwise null.
+ */
+function applyVitaminMineralCombinationPrecedence(
+  candidates: Candidate[],
+  evidenceId: string,
+  diagnostics: { code: string; detail: string }[]
+): Candidate[] | null {
+  const vmc003 = candidates.find(
+    (h) =>
+      h.pattern.pattern_id === 'A-VMC-003' && h.pattern.match_type === 'deterministic_member_count'
+  );
+  if (vmc003) {
+    const suppressed = candidates
+      .filter((c) => isOverlappingVitaminMineralCandidate(c, 'A-VMC-003'))
+      .map((c) => c.pattern.pattern_id);
+    diagnostics.push({
+      code: 'r013_combination_observation',
+      detail: `evidence ${evidenceId}: A-VMC-003 retained as one combination observation with members [${(vmc003.memberTargets ?? []).join(', ')}]${suppressed.length ? `; suppressed [${suppressed.join(', ')}]` : ''}`,
+    });
+    return [vmc003];
+  }
+
+  const vmc002 = candidates.find((h) => h.pattern.pattern_id === 'A-VMC-002');
+  if (vmc002) {
+    const suppressed = candidates
+      .filter((c) => isOverlappingVitaminMineralCandidate(c, 'A-VMC-002'))
+      .map((c) => c.pattern.pattern_id);
+    diagnostics.push({
+      code: 'vmc_combination_precedence',
+      detail: `evidence ${evidenceId}: A-VMC-002 retained; overlapping A-VMC-001 and component vitamin/mineral candidates suppressed${suppressed.length ? ` [${suppressed.join(', ')}]` : ''}`,
+    });
+    return [vmc002];
+  }
+
+  const vmc001 = candidates.find((h) => h.pattern.pattern_id === 'A-VMC-001');
+  if (vmc001) {
+    const suppressed = candidates
+      .filter((c) => isOverlappingVitaminMineralCandidate(c, 'A-VMC-001'))
+      .map((c) => c.pattern.pattern_id);
+    diagnostics.push({
+      code: 'vmc_combination_precedence',
+      detail: `evidence ${evidenceId}: A-VMC-001 retained; overlapping component vitamin/mineral candidates suppressed${suppressed.length ? ` [${suppressed.join(', ')}]` : ''}`,
+    });
+    return [vmc001];
+  }
+
+  return null;
+}
+
 export interface MatchRegisterResult {
   matched: MatchedClaimObservation[];
   unclassified: {
@@ -504,18 +569,15 @@ export function matchAdmittedObservations(
 
     let selected = candidates;
 
-    // R-013
-    const combinationHit = candidates.find(
-      (h) =>
-        h.pattern.match_type === 'deterministic_member_count' &&
-        h.pattern.pattern_id === 'A-VMC-003'
+    // Governed vitamin/mineral combination precedence (same observation) before generic priority ties.
+    // A-VMC-003 (R-013) > A-VMC-002 > A-VMC-001 > component A-VIT/A-MIN hits.
+    const combinationSelected = applyVitaminMineralCombinationPrecedence(
+      candidates,
+      obs.evidence_id,
+      diagnostics
     );
-    if (combinationHit) {
-      selected = [combinationHit];
-      diagnostics.push({
-        code: 'r013_combination_observation',
-        detail: `evidence ${obs.evidence_id}: A-VMC-003 retained as one combination observation with members [${(combinationHit.memberTargets ?? []).join(', ')}]`,
-      });
+    if (combinationSelected) {
+      selected = combinationSelected;
     } else {
       // R-012
       const hasA = candidates.some((h) => h.pattern.catalogue_set === 'A');
@@ -533,7 +595,7 @@ export function matchAdmittedObservations(
     const maxPriority = Math.max(...selected.map((s) => s.pattern.collision_priority));
     const top = selected.filter((s) => s.pattern.collision_priority === maxPriority);
     if (top.length > 1) {
-      // Distinct equal-priority ambiguity → fail closed
+      // Distinct equal-priority ambiguity → fail closed (only after governed combination rules)
       diagnostics.push({
         code: 'collision_priority_tie_fail_closed',
         detail: `evidence ${obs.evidence_id}: equal priority among [${top.map((t) => t.pattern.pattern_id).join(', ')}]`,

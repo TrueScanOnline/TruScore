@@ -287,7 +287,7 @@ describe('Claims corrective pass regressions', () => {
     expect(toDisplaySafeClaimText(raw)).toContain('&lt;');
   });
 
-  test('CR-12: R-013 combination supersedes component hits; equal priority fails closed', () => {
+  test('CR-12: R-013 combination supersedes component hits', () => {
     const match = matchAdmittedObservations([
       {
         evidence_id: 'vmc',
@@ -299,6 +299,67 @@ describe('Claims corrective pass regressions', () => {
     expect(match.matched).toHaveLength(1);
     expect(match.matched[0].register_row_id).toBe('A-VMC-003');
     expect(match.matched[0].member_targets?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test('CR-12: contains vitamins and minerals → one A-VMC-002', () => {
+    const match = matchAdmittedObservations([
+      {
+        evidence_id: 'vmc2a',
+        observed_text: 'contains vitamins and minerals',
+        display_text: 'contains vitamins and minerals',
+        admission_method: 'off_labels',
+        source_locator: 'off:labels',
+      },
+    ]);
+    expect(match.matched).toHaveLength(1);
+    expect(match.matched[0].register_row_id).toBe('A-VMC-002');
+    expect(match.diagnostics.some((d) => d.code === 'collision_priority_tie_fail_closed')).toBe(
+      false
+    );
+  });
+
+  test('CR-12: high in vitamins and minerals → one A-VMC-002', () => {
+    const match = matchAdmittedObservations([
+      {
+        evidence_id: 'vmc2b',
+        observed_text: 'high in vitamins and minerals',
+        display_text: 'high in vitamins and minerals',
+        admission_method: 'off_labels',
+        source_locator: 'off:labels',
+      },
+    ]);
+    expect(match.matched).toHaveLength(1);
+    expect(match.matched[0].register_row_id).toBe('A-VMC-002');
+  });
+
+  test('CR-12: vitamins and minerals → one A-VMC-001', () => {
+    const match = matchAdmittedObservations([
+      {
+        evidence_id: 'vmc1',
+        observed_text: 'vitamins and minerals',
+        display_text: 'vitamins and minerals',
+        admission_method: 'off_labels',
+        source_locator: 'off:labels',
+      },
+    ]);
+    expect(match.matched).toHaveLength(1);
+    expect(match.matched[0].register_row_id).toBe('A-VMC-001');
+  });
+
+  test('CR-12: unrelated equal-priority ambiguity with no governed precedence fails closed', () => {
+    const match = matchAdmittedObservations([
+      {
+        evidence_id: 'tie',
+        observed_text: 'high protein, high fibre',
+        display_text: 'high protein, high fibre',
+        admission_method: 'off_labels',
+        source_locator: 'off:labels',
+      },
+    ]);
+    expect(match.matched).toHaveLength(0);
+    expect(match.diagnostics.some((d) => d.code === 'collision_priority_tie_fail_closed')).toBe(
+      true
+    );
   });
 
   test('CR-13: singular/plural bounded lists', () => {

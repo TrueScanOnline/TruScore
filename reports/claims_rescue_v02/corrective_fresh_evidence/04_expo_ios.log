@@ -9,21 +9,13 @@ At line:1 char:1
 [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
 [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
 Starting Metro Bundler
-iOS .\index.js ΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ  1.5% ( 18/207)
-iOS .\index.js ΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 21.8% (228/504)
-iOS .\index.js ΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 25.1% (420/838)
-| (node:6020) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæ 69.0% ( 968/1165)
-| (Use `node --trace-warnings ...` to show where the warning was created)
-iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæ 93.6% (1549/1611)
-| (node:21240) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-| (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:2332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-| (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:3284) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+iOS .\index.js ΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ  0.0% (0/1)
+iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæ 66.1% ( 993/1249)
+iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1702/1703)
+| (node:17420) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | (Use `node --trace-warnings ...` to show where the warning was created)
 iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1704/1704)
-iOS Bundled 25119ms index.js (1704 modules)
+iOS Bundled 22289ms index.js (1704 modules)
 iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1704/1704)
 
 ΓÇ║ Assets (35):
@@ -53,9 +45,9 @@ iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓû�
 ..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\search-icon.png (3 variations | 582 B)
 
 ΓÇ║ ios bundles (1):
-_expo/static/js/ios/index-7657668c63fc5e83fc392f5279226de0.hbc (6.81 MB)
+_expo/static/js/ios/index-bc72a17578159dfc874e086603098f81.hbc (6.81 MB)
 
 ΓÇ║ Files (1):
 metadata.json (2.57 kB)
 
-Exported: dist-claims-reconcile-DO-NOT-COMMIT/ios
+Exported: dist-claims-final-DO-NOT-COMMIT/ios
