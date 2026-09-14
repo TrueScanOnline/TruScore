@@ -1,0 +1,90 @@
+[
+  {
+    "profile_id": "PLANT_EXTRACT",
+    "consumer_label": "Plant / seaweed sourced",
+    "glyph_key": "leaf_extract",
+    "glyph_brief": "Leaf or seaweed frond with a small extraction droplet; neutral, not a health halo.",
+    "consumer_definition": "Starts with plant or seaweed material. The useful colour, gum, wax or other component is separated from the raw material, then concentrated, refined or purified for food use.",
+    "consumer_examples": "Examples: curcumin (100), chlorophylls (140), alginates (400–405) and agar (406)."
+  },
+  {
+    "profile_id": "ANIMAL_DERIVED",
+    "consumer_label": "Animal / insect sourced",
+    "glyph_key": "animal_origin",
+    "glyph_brief": "Simple animal/insect origin mark; factual rather than emotive.",
+    "consumer_definition": "Starts with animal or insect material. The target substance is separated from that material and then cleaned, refined or converted into a stable food-grade form.",
+    "consumer_examples": "Examples: cochineal/carmine (120), bone phosphate (542), beeswax (901) and shellac (904)."
+  },
+  {
+    "profile_id": "FERMENTATION",
+    "consumer_label": "Made by fermentation",
+    "glyph_key": "fermentation_tank",
+    "glyph_brief": "Fermentation vessel with small microbe/bubble cue.",
+    "consumer_definition": "Microorganisms such as bacteria, yeasts or fungi are grown in controlled tanks and fed sugars or other nutrients. They make the target substance as they grow. The liquid or culture is then filtered or separated, and the additive is concentrated and purified. The finished additive normally does not contain live production microbes.",
+    "consumer_examples": "Examples: riboflavin (101), natamycin (235), xanthan gum (415) and MSG (621)."
+  },
+  {
+    "profile_id": "MINERAL_INORGANIC",
+    "consumer_label": "Mineral / simple salts & compounds",
+    "glyph_key": "crystal_salt",
+    "glyph_brief": "Crystal or salt-grain cue rather than laboratory-warning imagery.",
+    "consumer_definition": "Includes minerals and simple salts, acids, bases, oxides and related compounds. Some are refined directly from mineral deposits; others are made by reacting basic mineral-derived or industrial starting materials and then purified.",
+    "consumer_examples": "Examples: calcium carbonate (170), iron oxides (172), sodium bicarbonate (500) and phosphoric acid (338)."
+  },
+  {
+    "profile_id": "MODIFIED_NATURAL",
+    "consumer_label": "Modified natural material",
+    "glyph_key": "natural_transform",
+    "glyph_brief": "Natural-material cue with clear transformation arrows.",
+    "consumer_definition": "Starts with a natural material such as starch, cellulose, fat, sugar, gum or resin. It is deliberately changed using methods such as acid or alkali treatment, enzymes, heat, oxidation, or by attaching small chemical groups so it behaves differently in food — for instance to thicken better, stay stable after freezing or help oil and water stay mixed.",
+    "consumer_examples": "Examples: modified starches (1400-series), methyl cellulose (461), propylene glycol alginate (405) and glycerol esters of wood rosin (445)."
+  },
+  {
+    "profile_id": "CHEMICAL_SYNTHESIS",
+    "consumer_label": "Made by chemical synthesis",
+    "glyph_key": "reaction_flask",
+    "glyph_brief": "Neutral laboratory reaction flask or reaction vessel; no hazard symbol.",
+    "consumer_definition": "Built from simpler starting chemicals through one or more controlled chemical reactions, then separated and purified to a defined food-grade composition. The starting chemicals may themselves come from petroleum, minerals, plants or other industrial sources; the substance-specific description should say when a notable origin is known.",
+    "consumer_examples": "Examples: quinoline yellow (104), benzoic acid (210), acesulphame potassium (950) and sucralose (955)."
+  },
+  {
+    "profile_id": "CONTROLLED_PROCESS",
+    "consumer_label": "Transformed by processing",
+    "glyph_key": "process_transform",
+    "glyph_brief": "Transformation vessel with heat/reaction arrows, showing deliberate change rather than a generic gear.",
+    "consumer_definition": "Starts with an existing material — natural or manufactured — and deliberately transforms it using processes such as heating, roasting, oxidation, hydrolysis, neutralisation or other controlled treatment. The starting material can be materially changed in colour, structure or food-technology behaviour.",
+    "consumer_examples": "Examples: caramel colours (150a–150d), vegetable carbon (153) and tartrate salts (335–337)."
+  },
+  {
+    "profile_id": "BIOLOGICAL_ENZYME",
+    "consumer_label": "Enzyme / biological protein",
+    "glyph_key": "enzyme_scissors",
+    "glyph_brief": "Protein/enzyme cue showing a molecule being cut or transformed.",
+    "consumer_definition": "A protein that performs a specific biological job. Food enzymes may be extracted from plants or animals, or produced by microorganisms grown by fermentation. They speed up reactions such as breaking starch, protein or fat into smaller components.",
+    "consumer_examples": "Examples: alpha-amylase (1100), proteases such as papain and bromelain (1101), lipases (1104) and lysozyme (1105)."
+  },
+  {
+    "profile_id": "FOOD_GAS",
+    "consumer_label": "Food-grade gas",
+    "glyph_key": "gas_bubbles",
+    "glyph_brief": "Gas cylinder or clean bubble cue.",
+    "consumer_definition": "A purified gas used in or around food. It may dissolve into the product, displace oxygen in a package, create bubbles or foam, or act as a propellant.",
+    "consumer_examples": "Examples: carbon dioxide (290), nitrogen (941) and nitrous oxide (942)."
+  },
+  {
+    "profile_id": "PETROLEUM_REFINED",
+    "consumer_label": "Made from petroleum",
+    "glyph_key": "petroleum_drop",
+    "glyph_brief": "Oil-drop or refinery-source cue; factual, not a pollution or hazard icon.",
+    "consumer_definition": "Starts with material from crude-oil refining, then undergoes extensive refining and purification to meet food-grade specifications. The petroleum origin remains factual even though the finished material is highly purified.",
+    "consumer_examples": "Example: petrolatum or petroleum jelly (905b)."
+  },
+  {
+    "profile_id": "VARIABLE",
+    "consumer_label": "Source / production route varies",
+    "glyph_key": "branching_routes",
+    "glyph_brief": "Two or more branching source-route arrows.",
+    "consumer_definition": "The same additive identity can legitimately be made from different starting materials or by different manufacturing routes. The additive code alone therefore cannot tell you one reliable origin.",
+    "consumer_examples": "Examples include carotene (160a), lecithin (322), glycerol (422) and fatty-acid salts (470)."
+  }
+]

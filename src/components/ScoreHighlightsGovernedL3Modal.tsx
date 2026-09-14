@@ -21,19 +21,30 @@ interface ScoreHighlightsGovernedL3ModalProps {
   visible: boolean;
   request: ScoreHighlightsGovernedL3Request | null;
   onClose: () => void;
+  /** Optional Back when this L3 was reached from another look-through (reserved). */
+  onBack?: () => void;
+  /** S25 — canonical rendered additive IDs for Open coded-term deep-links. */
+  renderedAdditiveIds?: readonly string[];
+  /** S25 — Open coded-term deep-link into About these Additives. */
+  onOpenAboutAdditive?: (additiveId: string) => void;
 }
 
 export default function ScoreHighlightsGovernedL3Modal({
   visible,
   request,
   onClose,
+  onBack,
+  renderedAdditiveIds,
+  onOpenAboutAdditive,
 }: ScoreHighlightsGovernedL3ModalProps) {
   const { colors } = useTheme();
 
   const content = useMemo(() => {
     if (!request) return null;
-    return resolveGovernedL3Content(request.target, request.story.storyKey, request.story.metadata);
-  }, [request]);
+    return resolveGovernedL3Content(request.target, request.story.storyKey, request.story.metadata, {
+      renderedAdditiveIds,
+    });
+  }, [request, renderedAdditiveIds]);
 
   if (!request || !content) return null;
 
@@ -41,6 +52,7 @@ export default function ScoreHighlightsGovernedL3Modal({
     <InfoModal
       visible={visible}
       onClose={onClose}
+      onBack={onBack}
       title={content.title}
       icon="information-circle-outline"
       iconColor={colors.primary}
@@ -61,6 +73,36 @@ export default function ScoreHighlightsGovernedL3Modal({
           <Text style={[styles.body, { color: colors.textSecondary }]}>{section.body}</Text>
         </View>
       ))}
+
+      {content.termRouteActions && content.termRouteActions.length > 0 ? (
+        <View style={styles.section}>
+          {content.termRouteActions.map((action) => (
+            <TouchableOpacity
+              key={action.additiveId}
+              style={[styles.termAction, { borderColor: colors.border }]}
+              onPress={() => onOpenAboutAdditive?.(action.additiveId)}
+              accessibilityRole="button"
+              accessibilityLabel={action.label}
+            >
+              <Text style={[styles.termActionTerm, { color: colors.textSecondary }]}>
+                {action.term}
+              </Text>
+              <Text style={[styles.termActionLabel, { color: colors.primary }]}>{action.label}</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
+
+      {content.action ? (
+        <Text style={[styles.body, { color: colors.textSecondary, marginTop: 12 }]}>
+          {content.action.textBefore}
+          <Text style={{ color: colors.primary, fontWeight: '600' }}>
+            {content.action.anchorLabel}
+          </Text>
+          {content.action.textAfter}
+        </Text>
+      ) : null}
 
       {content.componentRows && content.componentRows.length > 0 ? (
         <View style={styles.section}>
@@ -115,6 +157,25 @@ const styles = StyleSheet.create({
   body: {
     fontSize: 15,
     lineHeight: 22,
+  },
+  termAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: 6,
+  },
+  termActionTerm: {
+    fontSize: 13,
+    flexShrink: 1,
+  },
+  termActionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
   },
   componentRow: {
     borderWidth: 1,

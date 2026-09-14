@@ -1,0 +1,9 @@
+{
+  "surface_title": "About these Additives",
+  "surface_intro": "These are the food additives we could identify from the information available for this product. Here’s what they are and, where the label tells us, why they’re used. This may not be a complete list of every additive in the product.",
+  "result_count_singular": "1 additive identified",
+  "result_count_plural": "{count} additives identified",
+  "function_unknown": "The available product information identifies the additive but not its function in this product.",
+  "source_preparation_section_title": "Source & preparation",
+  "evidence_section_title": "What the evidence says"
+}
