@@ -1,0 +1,11 @@
+﻿commit 9ef5cb7b4b853b3b814f919679ada89ef5bbadca
+Author:     Leighton <flagshipdevelopments@gmail.com>
+AuthorDate: Mon Sep 14 15:45:12 2026 +1200
+Commit:     Leighton <flagshipdevelopments@gmail.com>
+CommitDate: Mon Sep 14 15:45:37 2026 +1200
+
+    fix(claims): Claims Rescue v0.2 independent QA corrective pass
+    
+    Apply founder clarifications: scoped OFF evidence provenance, candidate exclusions, orthogonal assessment/coverage states, dual nutrient identities, multi-event commentary, display escaping, and Organic consumer copy ΓÇö without merging into Nutrition.
+    
+    Co-authored-by: Cursor <cursoragent@cursor.com>

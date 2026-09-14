@@ -1,0 +1,13 @@
+
+C:\TrueScan-FoodScanner-wt-claims-corrective\src\__tests__\unit\lib\claims\claimsCorrective.regression.test.ts
+  114:11  warning  'match' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+Γ£û 1 problem (0 errors, 1 warning)
+
+node.exe : ESLint found too many warnings (maximum: 0).
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ESLint found to...s (maximum: 0).:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

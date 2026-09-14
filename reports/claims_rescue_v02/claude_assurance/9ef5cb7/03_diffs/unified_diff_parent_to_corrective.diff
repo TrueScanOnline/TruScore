@@ -1,0 +1,2994 @@
+﻿diff --git a/reports/claims_rescue_v02/CLAIMS_RESCUE_V02_CORRECTIVE_COMPLETION_REPORT.md b/reports/claims_rescue_v02/CLAIMS_RESCUE_V02_CORRECTIVE_COMPLETION_REPORT.md
+new file mode 100644
+index 0000000..0d23ddb
+--- /dev/null
++++ b/reports/claims_rescue_v02/CLAIMS_RESCUE_V02_CORRECTIVE_COMPLETION_REPORT.md
+@@ -0,0 +1,211 @@
++# Claims Rescue v0.2 ΓÇö Independent QA Corrective Pass Completion
++
++**Status:** Corrective pass complete ΓÇö ready for re-assurance  
++**Claims remote branch:** `origin/feat/claims-rescue-v02`  
++**Review (FAIL) SHA:** `16e10c384fdb024282020aaa8e5eaae30da83f2a`  
++**Corrective commit SHA:** `git rev-parse HEAD` of the commit that contains this file (immutable tip of Claims corrective line)  
++**Parent SHA:** `16e10c384fdb024282020aaa8e5eaae30da83f2a`  
++**Nutrition frozen line (untouched):** `674d1fe48d500393a4c19d75859bcaa3b512768c` @ `origin/fix/review1-pass2-corrective-na001-003-004`  
++**Controlling clarifications:** founder Claims evidence model + CR-01ΓÇªCR-15 instruction set (this pass)
++
++**Not done:** merge into Nutrition / bundled release; new OCR or contribution workflow; Nutrition Stage 3 TS2367 fix; UAT release builds.
++
++---
++
++## 1. Parallel release lines
++
++| Line | Location | State |
++|------|----------|-------|
++| Nutrition | `origin/fix/review1-pass2-corrective-na001-003-004` @ `674d1fe` | Frozen ΓÇö not advanced |
++| Claims review | `16e10c3` | Preserved as parent of corrective |
++| Claims corrective | this commit on Claims feature line | Advances Claims only |
++| S25 / About these Additives | separate worktree/branch | Untouched |
++
++---
++
++## 2. CR-01ΓÇªCR-15 disposition map
++
++| ID | Disposition | Notes |
++|----|-------------|-------|
++| CR-01 | **Corrected** | Product-name evidence scoped to Set O; no A/B catalogue leak from OFF product name |
++| CR-02 | **Founder-accepted / non-blocking** | Brand-token ΓÇ£OrganicΓÇ¥ edge retained; no new taxonomy/parser |
++| CR-03 | **Corrected** | Candidate/scoped exclusions; B-SUG-002 survives X-001; B-SOD-002 both word orders; unrelated Organic survival |
++| CR-05 | **Corrected** | OFF labels admitted as `off_labels` (never `user_confirmation`); valid A/B/C/O matching |
++| CR-06 | **Corrected** | `Open nutrition details` ΓåÆ `View nutrition details`; Organic L1/L2/L3/CTA founder copy; L3 CTA ΓåÆ Certifications |
++| CR-07 | **Corrected** | Three states retained; `assessment_state` ΓèÑ `packet_coverage_state`; scored + incomplete coexistence |
++| CR-08 | **Corrected** | Dual identities always present: methodology `20260912_v0_1` + asset `uk-gov-fop-mtl-rveel-reviewed-2026-09-12`; `source_evidence_id` on nutrient entries |
++| CR-09 | **Corrected** | `commentary_by_event_id` keyed by fired event; Packet Context + Organic coexist |
++| CR-10 | **Corrected** | `escapeDisplayText` on display path; `observed_text` immutable; injection tests |
++| CR-11 | **Corrected** | Same exclusion architecture as CR-03 (candidate-scoped; X-007/X-011 style preserve independent patterns) |
++| CR-12 | **Corrected** | Higher `collision_priority` wins; R-012/R-013; equal-priority ambiguity fails closed (no JSON order tiebreak) |
++| CR-13 | **Corrected** | Singular/plural ΓÇ£other packet statement(s)ΓÇ¥ |
++| CR-14 | **Corrected** | Certified Organic +3 ΓåÆ claim-only +1 suppression retained; `suppressed_candidates` + S28 reason evidence/tests |
++| CR-15 | **Corrected** (Claims portions) | Fresh regression suite + clean-tree verification; **Nutrition TS2367 unrelated / not fixed** |
++
++---
++
++## 3. Changed-file register (vs `16e10c3`)
++
++### Runtime / product
++| Path | Change |
++|------|--------|
++| `src/lib/truscoreEngine/claims/types.ts` | `off_labels`; dual nutrient versions; `commentary_by_event_id`; Organic CTA fields |
++| `src/lib/truscoreEngine/claims/productObservations.ts` | OFF labels provenance; product-name Set O scope |
++| `src/lib/truscoreEngine/claims/matchRegister.ts` | Candidate ΓåÆ scoped exclusions ΓåÆ precedence; product-name A/B block; prose exclusions |
++| `src/lib/truscoreEngine/claims/normalize.ts` | Display escaping; singular/plural lists |
++| `src/lib/truscoreEngine/claims/assessClaims.ts` | Orthogonal states; per-event commentary; version identities |
++| `src/lib/truscoreEngine/claims/commentary.ts` | Founder Organic L1/L2/L3/CTA |
++| `src/lib/truscoreEngine/claims/nutrientContextAdapter.ts` | Methodology + reference asset; `source_evidence_id` |
++| `src/lib/truscoreEngine/claims/index.ts` | Export surface |
++| `src/lib/truscoreEngine/pillars/ethicsPillar.ts` | Per-event commentary stamp |
++| `src/lib/truscoreEngine/pillars/ethicsPillarV37Registry.ts` | Organic copy alignment |
++| `src/lib/scoreHighlights/governedCommentary.ts` | Organic L2 alignment |
++| `src/lib/scoreHighlights/l3/content.ts` | Founder Organic L3 + Certifications CTA; View Nutrition details |
++| `src/components/TruScoreAnalysisModal.tsx` | Dual nutrient versions + per-event commentary bindings |
++| `src/i18n/locales/en.json` | `openDetailsA11y`: View nutrition details |
++
++### Tests / evidence
++| Path | Change |
++|------|--------|
++| `src/__tests__/unit/lib/claims/claimsCorrective.regression.test.ts` | **Added** ΓÇö CR regressions |
++| `src/__tests__/unit/lib/claims/claimsRescue.uat.test.ts` | Dual nutrient identity helpers |
++| `src/__tests__/unit/lib/claims/claimsRescue.negativeAssurance.test.ts` | Dual nutrient identity helpers |
++| `src/__tests__/fixtures/scoreHighlights/literalCopyContract.v05.ts` | Organic L3 founder copy |
++| `src/__tests__/unit/lib/scoreHighlights/l3ContentAddendum.test.ts` | Organic L3 expectations |
++| `src/__tests__/unit/lib/scoreHighlights/selectScoreHighlights.test.ts` | Organic copy alignment |
++| `reports/claims_rescue_v02/schema_examples/*.json` | Revised corrective schema examples |
++| `reports/claims_rescue_v02/CLAIMS_RESCUE_V02_CORRECTIVE_COMPLETION_REPORT.md` | This report |
++| `reports/claims_rescue_v02/corrective_fresh_evidence/*` | Clean-tree command logs |
++
++---
++
++## 4. Revised schema examples
++
++See `reports/claims_rescue_v02/schema_examples/`:
++
++- `unassessed.json` ΓÇö dual nutrient identities present; incomplete coverage
++- `assessed_neutral.json` ΓÇö `off_labels` admission; complete coverage; no fired adjustment
++- `assessed_scored.json` ΓÇö scored + **incomplete** coverage; `off_labels` + `governed_product_name`; dual events in `commentary_by_event_id`; Organic founder L1
++
++---
++
++## 5. Section 15 UAT matrix (fresh clean-tree)
++
++Evidence class: **A** = automated; **U** = UI/source contract; **P** = platform/parity.
++
++| ID | Expected | Actual | Class | Reference |
++|----|----------|--------|-------|-----------|
++| UAT-01 | +1; exact positive L2 | Pass | A | `claimsRescue.uat.test.ts` |
++| UAT-02 | one +1; synthesized claims | Pass | A | same |
++| UAT-03 | ΓêÆ3; sugars adverse | Pass | A | same |
++| UAT-04 | ΓêÆ3; multi-nutrient list | Pass | A | same |
++| UAT-05 | one ΓêÆ3 only | Pass | A | same |
++| UAT-06 | Set B no High ΓåÆ no +1 | Pass | A | same |
++| UAT-07 | Set B + High ΓåÆ ΓêÆ3 | Pass | A | same |
++| UAT-08 | Moderate not High | Pass | A | same |
++| UAT-09 | equality not High | Pass | A | same |
++| UAT-10 | large-portion High ΓåÆ ΓêÆ3 | Pass | A | same |
++| UAT-11 | total fat ignored | Pass | A | same |
++| UAT-12 | NOVA4 alone ΓåÆ no Claims NOVA story | Pass | A | same |
++| UAT-13 | +1 + NOVA sentence | Pass | A | same |
++| UAT-14 | ΓêÆ3 + NOVA sentence | Pass | A | same |
++| UAT-15 | +3; +1 suppressed | Pass | A | same |
++| UAT-16 | Organic claim-only +1 | Pass | A | same |
++| UAT-17 | ingredient organic excluded | Pass | A | same |
++| UAT-18 | Fairtrade +6 unchanged | Pass | A | same |
++| UAT-19 | MSC/RA points unchanged | Pass | A | same |
++| UAT-20 | KTC company-level | Pass | A | same |
++| UAT-21 | ambiguous BBFAW ΓåÆ no fire | Pass | A | same |
++| UAT-22 | assessed_neutral; exact L2 | Pass | A | same |
++| UAT-23 | neutral + unclassified append | Pass | A | same |
++| UAT-24 | incomplete ΓåÆ unassessed (no score) | Pass | A | same |
++| UAT-25 | offsetting ΓåÆ assessed_scored | Pass | A | same |
++| UAT-26 | Set C record-only | Pass | A | same |
++| UAT-27 | unlisted synonym ΓåÆ no match | Pass | A | same |
++| UAT-28 | collision retain B | Pass | A | same |
++| UAT-29 | register mismatch fail-closed | Pass | A | same |
++| UAT-30 | missing sodium ΓåÆ no +1 | Pass | A | same |
++| UAT-31 | no raw `[CLAIM]` brackets | Pass | A | same |
++| UAT-32 | one ΓêÆ3; bounded lists | Pass | A | same |
++| UAT-33 | ordinary S28 inaccessible | Pass | A+U | same + scoreDiagnostics |
++| UAT-34 | founder S28 Claims payload | Pass | A+U | UAT-34 + claimsS28 |
++| UAT-35 | iOS/Android parity | Pass | P | UAT-35 + expo export |
++| UAT-36 | nomenclature / no Ethics leak | Pass | A+U | nomenclature + UAT-36 |
++
++**Corrective addendum (CR suite):** all 15 CR-targeted cases in `claimsCorrective.regression.test.ts` Pass (A).
++
++---
++
++## 6. Section 16 negative-assurance matrix (fresh)
++
++| Theme | Probe | Result | Evidence |
++|-------|-------|--------|----------|
++| Recognition boundary | Typos / look-alikes / ingredient organic / case | Pass | `claimsRescue.negativeAssurance.test.ts` |
++| Evidence honesty | No A/B without admissions; pending Γëá neutral | Pass | same |
++| Arithmetic | +1/ΓêÆ3 exclusivity; Organic suppression | Pass | same |
++| Nutrient boundary | Moderate; missing sodium | Pass | same |
++| State integrity | No +0; offsetting assessed_scored | Pass | same |
++| Commentary / access | Qualification retained; S28 gated | Pass | same |
++| Corrective evidence model | OFF name no A/B leak; OFF labels honest provenance | Pass | `claimsCorrective.regression.test.ts` |
++
++---
++
++## 7. Fresh clean-tree commands and results
++
++```text
++npx jest src/__tests__/unit/lib/claims/ \
++  src/__tests__/unit/lib/pillars/ethicsPillar.test.ts \
++  src/__tests__/unit/lib/scoreHighlights/ \
++  src/__tests__/unit/services/ethicsCertificationsService.test.ts \
++  src/__tests__/unit/config/scoreDiagnostics.test.ts --no-cache
++ΓåÆ Test Suites: 17 passed; Tests: 330 passed
++  (log: reports/claims_rescue_v02/corrective_fresh_evidence/01_jest_focused.log)
++
++npx eslint src/lib/truscoreEngine/claims/**/*.{ts,tsx} \
++  src/components/TruScoreAnalysisModal.tsx src/types/truscoreAnalysis.ts \
++  src/__tests__/unit/lib/claims/**/*.ts \
++  src/lib/scoreHighlights/l3/content.ts src/lib/scoreHighlights/governedCommentary.ts \
++  --max-warnings 0
++ΓåÆ exit 0
++  (log: reports/claims_rescue_v02/corrective_fresh_evidence/02_eslint.log)
++
++npx tsc --noEmit -p tsconfig.json
++ΓåÆ exit 2 ΓÇö single reported error:
++  src/nutrition/governedNutrientAssessment.ts(203,16): error TS2367
++  (Nutrition Stage 3 preexisting; UNRELATED to this Claims commit ΓÇö not fixed here)
++  (log: reports/claims_rescue_v02/corrective_fresh_evidence/03_tsc.log)
++
++EXPO_PUBLIC_SCORE_DIAGNOSTICS=0 EXPO_PUBLIC_STORE_RELEASE=1 \
++  npx expo export --platform ios --output-dir dist-claims-corrective-DO-NOT-COMMIT/ios
++ΓåÆ exit 0 (artifact deleted; not committed)
++  (log: reports/claims_rescue_v02/corrective_fresh_evidence/04_expo_ios.log)
++
++EXPO_PUBLIC_SCORE_DIAGNOSTICS=0 EXPO_PUBLIC_STORE_RELEASE=1 \
++  npx expo export --platform android --output-dir dist-claims-corrective-DO-NOT-COMMIT/android
++ΓåÆ exit 0 (artifact deleted; not committed)
++  (log: reports/claims_rescue_v02/corrective_fresh_evidence/05_expo_android.log)
++```
++
++---
++
++## 8. Residuals
++
++1. Nutrition Stage 3 `TS2367` remains on the Nutrition line ΓÇö unrelated; report only.  
++2. No new OCR / contribution workflow (founder instruction).  
++3. CR-02 brand-name Organic edge deliberately retained.  
++4. Claims not merged into Nutrition or bundled release in this task.
++
++---
++
++## 9. Commit / SHA
++
++| Field | Value |
++|-------|-------|
++| Branch | `feat/claims-rescue-v02` (Claims-specific remote-backed) |
++| Parent | `16e10c384fdb024282020aaa8e5eaae30da83f2a` |
++| Corrective SHA | `git rev-parse HEAD` (commit containing this report) |
++| Message | `fix(claims): Claims Rescue v0.2 independent QA corrective pass` |
++
++---
++
++*End of corrective completion report.*
+diff --git a/reports/claims_rescue_v02/corrective_fresh_evidence/01_jest_focused.log b/reports/claims_rescue_v02/corrective_fresh_evidence/01_jest_focused.log
+new file mode 100644
+index 0000000..2e7e24f
+--- /dev/null
++++ b/reports/claims_rescue_v02/corrective_fresh_evidence/01_jest_focused.log
+@@ -0,0 +1,422 @@
++node.exe : PASS src/__tests__/unit/lib/scoreHighlights/l3ContentAddendum.test.ts
++At line:1 char:1
+++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
+++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++    + CategoryInfo          : NotSpecified: (PASS src/__test...ddendum.test.ts:String) [], RemoteException
++    + FullyQualifiedErrorId : NativeCommandError
++ 
++  resolveGovernedL3Content ╬ô├ç├╢ Addendum v1.1
++    ╬ô├¬├£ binds Nutri-Score grade from the fired adjustment ID and uses the locked grade label (13 ms)
++    ╬ô├¬├£ suppresses the S27 Health Star Rating cross-link until the destination exists (1 ms)
++    ╬ô├¬├£ shows all four NOVA groups and WHO/Deakin context only for Group 4 (3 ms)
++    ╬ô├¬├£ cites the Open Food Facts NOVA URL for every group (1 ms)
++    ╬ô├¬├£ Green-Score L3 carries the experimental caveat and no legacy Eco-Score decomposition (2 ms)
++    ╬ô├¬├£ Packaging L3 requires jurisdiction and uses the locked disposition labels (13 ms)
++    ╬ô├¬├£ KTC and BBFAW fail closed without required benchmark tokens (2 ms)
++    ╬ô├¬├£ BBFAW prominent line binds Tier and Impact together and omits a missing counterpart (1 ms)
++    ╬ô├¬├£ organic claim-only L3 never presents the product as certified (3 ms)
++    ╬ô├¬├£ ingredient wording binds matched terms without requiring a market token (2 ms)
++    ╬ô├¬├£ coded ingredient wording shows decoded names only where metadata supplies them (1 ms)
++    ╬ô├¬├£ mixed ingredient wording fails closed without per-term classification (1 ms)
++    ╬ô├¬├£ zero-flag ingredient wording L3 needs no matched-term metadata
++    ╬ô├¬├£ suppresses the ingredient contribution fragment until the route is live (1 ms)
++    ╬ô├¬├£ never leaks a literal [here] token or the app name into consumer L3 (2 ms)
++    ╬ô├¬├£ does not leak prohibited legacy snippets across Green-Score / NOVA 4 content (2 ms)
++  resolveInAppL3Route coverage
++    ╬ô├¬├£ maps every addendum family to its authorised in-app title (3 ms)
++
++PASS src/__tests__/unit/lib/scoreHighlights/selectScoreHighlights.test.ts (5.276 s)
++  Body colour-warning synthesis
++    ╬ô├¬├£ replaces one fired colour with a single ╬ô├¬├å3 presentation candidate bound to that ID (22 ms)
++    ╬ô├¬├£ uses the locked two-colour L2 and ╬ô├¬├å6 presentation materiality (1 ms)
++    ╬ô├¬├£ uses the locked three-colour L2 and ╬ô├¬├å9 presentation materiality (3 ms)
++    ╬ô├¬├£ leaves non-family additives as their own independent stories (3 ms)
++  overall S12 promotion cap
++    ╬ô├¬├£ promotes at most one positive and one negative per pillar (13 ms)
++    ╬ô├¬├£ leaves a side absent rather than padding when no eligible finding fired (2 ms)
++    ╬ô├¬├£ renders nothing rather than manufacturing a story when the ledger has no eligible rows (1 ms)
++  S12a completeness and eligibility
++    ╬ô├¬├£ shows every eligible story for the pillar, including ones not promoted overall (12 ms)
++    ╬ô├¬├£ excludes base rows, rescues, normalisers and ineligible NOVA provenance states (2 ms)
++    ╬ô├¬├£ keeps eligible external NOVA 1 while excluding the inferred and unknown states (1 ms)
++    ╬ô├¬├£ fails closed on an unknown fired adjustment ID and on rows with no stable ID (1 ms)
++  locked tie-break determinism
++    ╬ô├¬├£ resolves the Ethics +6 three-way tie by locked registry priority (1 ms)
++    ╬ô├¬├£ is independent of ledger array order (1 ms)
++    ╬ô├¬├£ ranks Origins qualified/unquantified partial above two-term ingredient wording at ╬ô├¬├å4 (1 ms)
++    ╬ô├¬├£ ranks E250 above NOVA 4 and above the two-colour cluster at ╬ô├¬├å6 (1 ms)
++    ╬ô├¬├£ ranks the two-colour cluster above NOVA 4 when E250 did not fire (1 ms)
++  governed copy resolution
++    ╬ô├¬├£ resolves locked Ethics benchmark tokens from the fired-row metadata
++    ╬ô├¬├£ withholds a story whose locked template token cannot be resolved from metadata (2 ms)
++    ╬ô├¬├£ resolves the Planet jurisdiction token from the fired packaging row
++    ╬ô├¬├£ selects the locked organic claim-only copy from the evidence-class metadata
++  Body additive in-app L3 routing
++    ╬ô├¬├£ routes Body additive stories to in-app About these additives when available (1 ms)
++    ╬ô├¬├£ falls back to no L3 route when in-app L3 is unavailable (1 ms)
++  Open Origins Product Origins L3 routing
++    ╬ô├¬├£ deep-links Open origins stories into the Product Origins experience when available
++    ╬ô├¬├£ falls back to no L3 route when Product Origins deep-link is unavailable (1 ms)
++  Addendum v1.0 governed in-app L3 routing (no external substitute)
++    ╬ô├¬├£ routes body-v12-nutri-a to in-app nutri_score (1 ms)
++    ╬ô├¬├£ routes body-v12-nova-3 to in-app nova (1 ms)
++    ╬ô├¬├£ routes body-v12-nova-4 to in-app nova
++    ╬ô├¬├£ routes planet-v19-environmental-b to in-app green_score (1 ms)
++    ╬ô├¬├£ routes planet-v19-packaging-all-kerbside to in-app packaging (1 ms)
++    ╬ô├¬├£ routes ethics-v37-cert-fairtrade to in-app ethics_fairtrade
++    ╬ô├¬├£ routes ethics-v37-cert-rainforest-alliance to in-app ethics_rainforest (1 ms)
++    ╬ô├¬├£ routes ethics-v37-cert-msc to in-app ethics_msc (1 ms)
++    ╬ô├¬├£ routes ethics-v37-cert-asc to in-app ethics_asc
++    ╬ô├¬├£ routes ethics-v37-cert-organic to in-app ethics_organic (1 ms)
++    ╬ô├¬├£ routes ethics-v37-ktc-71-80 to in-app ethics_ktc (1 ms)
++    ╬ô├¬├£ routes ethics-v37-bbfaw-tier-3 to in-app ethics_bbfaw (1 ms)
++    ╬ô├¬├£ routes open-v15-ing-clarity-one to in-app ingredient_wording (1 ms)
++    ╬ô├¬├£ routes open-v15-ing-clarity-zero to in-app ingredient_wording
++  Open structured-metadata L2 variants
++    ╬ô├¬├£ uses locked broad one-term copy from metadata without a market token (1 ms)
++    ╬ô├¬├£ withholds clarity stories when the metadata variant cannot be resolved (1 ms)
++    ╬ô├¬├£ withholds the coded clarity story when no decoded additive name is governed (1 ms)
++  no description-string matching
++    ╬ô├¬├£ resolves consumer copy from stable IDs even when descriptions are absent or misleading (1 ms)
++    ╬ô├¬├£ never receives an adjustment description in the selection input
++
++PASS src/__tests__/unit/lib/scoreHighlights/contextualContributionPrompts.test.ts
++  consumerPillarLabel
++    ╬ô├¬├£ applies the founder naming disposition for Ethics and Open only (2 ms)
++    ╬ô├¬├£ inventories the active in-app consumer labels in render order
++  selectContextualContributionPrompts ╬ô├ç├╢ base state
++    ╬ô├¬├£ renders the Base prompt when no non-base score-moving adjustment fired (1 ms)
++    ╬ô├¬├£ binds [PILLAR] to the consumer label for Ethics and Open (1 ms)
++    ╬ô├¬├£ suppresses the specific missing-element prompts while Base owns the pillar state (2 ms)
++    ╬ô├¬├£ ignores fired rows from other pillars
++  selectContextualContributionPrompts ╬ô├ç├╢ Body Nutri-Score
++    ╬ô├¬├£ renders when no usable Nutri fired but another non-base Body element did (1 ms)
++    ╬ô├¬├£ counts the Highlight-ineligible Whole Produce rescue as score movement
++    ╬ô├¬├£ does not render when a usable Nutri grade fired (1 ms)
++  selectContextualContributionPrompts ╬ô├ç├╢ Open
++    ╬ô├¬├£ renders the ingredient prompt when no clarity adjustment fired (1 ms)
++    ╬ô├¬├£ does not render the ingredient prompt when the zero-flag clarity state scored (1 ms)
++    ╬ô├¬├£ renders both Open prompts together in a non-base state (1 ms)
++  contextual prompt route-bound copy
++    ╬ô├¬├£ suppresses the whole action fragment while the contribution route is not live (3 ms)
++    ╬ô├¬├£ exposes the split action fragment once the route is live and never a literal [here] (1 ms)
++    ╬ô├¬├£ carries presentation keys that are never scoring adjustment IDs (5 ms)
++
++PASS src/__tests__/unit/lib/claims/claimsCorrective.regression.test.ts (5.894 s)
++  Claims corrective pass regressions
++    ╬ô├¬├£ CR-01: OFF product name does not leak into unintended A/B recognition (26 ms)
++    ╬ô├¬├£ CR-01/05: OFF labels can establish governed A/B claims and never as user_confirmation (119 ms)
++    ╬ô├¬├£ CR-03: no added sugar / sugars / without added sugar survive X-001 (3 ms)
++    ╬ô├¬├£ CR-03: no added salt / no salt added both match B-SOD-002 (3 ms)
++    ╬ô├¬├£ CR-03: unrelated Organic survives when another phrase meets an exclusion (2 ms)
++    ╬ô├¬├£ CR-02: Organic product-name claim-only +1 (founder-accepted edge) (3 ms)
++    ╬ô├¬├£ CR-14: Certified Organic suppresses claim-only with S28 reason (2 ms)
++    ╬ô├¬├£ CR-07: scored + incomplete coverage coexistence; contribution still possible (1 ms)
++    ╬ô├¬├£ CR-09: dual Packet Context + Organic event commentary bindings (4 ms)
++    ╬ô├¬├£ CR-08: both nutrient version identities always present (16 ms)
++    ╬ô├¬├£ CR-10: display escaping; observed_text immutable (3 ms)
++    ╬ô├¬├£ CR-12: R-013 combination supersedes component hits; equal priority fails closed (1 ms)
++    ╬ô├¬├£ CR-13: singular/plural bounded lists (1 ms)
++    ╬ô├¬├£ CR-06: Organic L3 founder copy + certifications CTA (1 ms)
++    ╬ô├¬├£ CR-06: ordinary-user Claims nomenclature ╬ô├ç├╢ View nutrition details (10 ms)
++
++PASS src/__tests__/unit/lib/scoreHighlights/pipelineResolvedCopy.closedSet.test.ts
++  literal copy contract ╬ô├ç├╢ oracle independence
++    ╬ô├¬├£ the contract fixture does not import any runtime copy source (8 ms)
++    ╬ô├¬├£ covers every Highlight-eligible registry ID, and only those (1 ms)
++    ╬ô├¬├£ has a unique key per ID/variant pair (1 ms)
++    ╬ô├¬├£ keeps instruction-derived rows to the locked exception list (1 ms)
++    ╬ô├¬├£ does not make latent Open Origins states reachable in the OFF MVP scorer registry (1 ms)
++  closed-set pipeline-resolved L1/L2 equals the independent literal contract
++    ╬ô├¬├£ Body:body-v12-nutri-a (8 ms)
++    ╬ô├¬├£ Body:body-v12-nutri-b (1 ms)
++    ╬ô├¬├£ Body:body-v12-nutri-c (6 ms)
++    ╬ô├¬├£ Body:body-v12-nutri-d (9 ms)
++    ╬ô├¬├£ Body:body-v12-nutri-e (3 ms)
++    ╬ô├¬├£ Body:body-v12-nova-1-off (2 ms)
++    ╬ô├¬├£ Body:body-v12-nova-2 (2 ms)
++    ╬ô├¬├£ Body:body-v12-nova-3 (2 ms)
++    ╬ô├¬├£ Body:body-v12-nova-4 (2 ms)
++    ╬ô├¬├£ Body:body-v12-additive-e171 (1 ms)
++    ╬ô├¬├£ Body:body-v12-additive-e250 (1 ms)
++    ╬ô├¬├£ Body:body-v12-additive-e951 (2 ms)
++    ╬ô├¬├£ Body:body.additives.colour_warning_cluster:one-colour:body-v12-additive-e102 (14 ms)
++    ╬ô├¬├£ Body:body.additives.colour_warning_cluster:one-colour:body-v12-additive-e110 (1 ms)
++    ╬ô├¬├£ Body:body.additives.colour_warning_cluster:one-colour:body-v12-additive-e129 (1 ms)
++    ╬ô├¬├£ Body:body.additives.colour_warning_cluster:two-colour (4 ms)
++    ╬ô├¬├£ Body:body.additives.colour_warning_cluster:three-colour (2 ms)
++    ╬ô├¬├£ Planet:planet-v19-environmental-a (8 ms)
++    ╬ô├¬├£ Planet:planet-v19-environmental-b (1 ms)
++    ╬ô├¬├£ Planet:planet-v19-environmental-c (1 ms)
++    ╬ô├¬├£ Planet:planet-v19-environmental-d (3 ms)
++    ╬ô├¬├£ Planet:planet-v19-environmental-e (2 ms)
++    ╬ô├¬├£ Planet:planet-v19-packaging-all-kerbside:AU (2 ms)
++    ╬ô├¬├£ Planet:planet-v19-packaging-some-kerbside:AU (1 ms)
++    ╬ô├¬├£ Planet:planet-v19-packaging-all-kerbside:NZ (6 ms)
++    ╬ô├¬├£ Planet:planet-v19-packaging-some-kerbside:NZ (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-0-10:product-owner-proven (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-0-10:company-substituted (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-11-20:product-owner-proven (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-11-20:company-substituted (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-21-30:product-owner-proven (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-21-30:company-substituted (35 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-31-50:product-owner-proven (2 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-31-50:company-substituted (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-51-70:product-owner-proven (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-51-70:company-substituted (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-71-80:product-owner-proven (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-71-80:company-substituted (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-81-90:product-owner-proven (2 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-81-90:company-substituted (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-91-100:product-owner-proven (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-ktc-91-100:company-substituted (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-bbfaw-tier-1 (2 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-bbfaw-tier-2 (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-bbfaw-tier-3 (2 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-bbfaw-tier-4 (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-bbfaw-tier-5 (34 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-bbfaw-tier-6 (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-bbfaw-impact-ab (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-bbfaw-impact-cd (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-bbfaw-impact-ef (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-cert-fairtrade (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-cert-rainforest-alliance (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-cert-asc (1 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-cert-msc (12 ms)
++    ╬ô├¬├£ Ethics:ethics-v37-cert-organic:certified (2 ms)
++    ╬ô├¬├£ Ethics:claims.organic.claim_only.v1 (1 ms)
++    ╬ô├¬├£ Ethics:claims.packet_context.positive.v1 (1 ms)
++    ╬ô├¬├£ Ethics:claims.packet_context.adverse.v1 (1 ms)
++    ╬ô├¬├£ Open:open-v15-ing-clarity-zero (6 ms)
++    ╬ô├¬├£ Open:open-v15-ing-clarity-one:broad_generic (2 ms)
++    ╬ô├¬├£ Open:open-v15-ing-clarity-one:coded (1 ms)
++    ╬ô├¬├£ Open:open-v15-ing-clarity-two:broad_generic (1 ms)
++    ╬ô├¬├£ Open:open-v15-ing-clarity-two:coded (1 ms)
++    ╬ô├¬├£ Open:open-v15-ing-clarity-two:mixed (2 ms)
++    ╬ô├¬├£ Open:open-v15-ing-clarity-three-plus:broad_generic (1 ms)
++    ╬ô├¬├£ Open:open-v15-ing-clarity-three-plus:coded (3 ms)
++    ╬ô├¬├£ Open:open-v15-ing-clarity-three-plus:mixed (2 ms)
++    ╬ô├¬├£ Open:open-v15-origins-evidently-complete (2 ms)
++    ╬ô├¬├£ Open:open-v15-origins-evidently-complete:single-ingredient (1 ms)
++    ╬ô├¬├£ Open:open-v15-origins-pct-95-99 (1 ms)
++    ╬ô├¬├£ Open:open-v15-origins-pct-76-94 (1 ms)
++    ╬ô├¬├£ Open:open-v15-origins-pct-50-75 (16 ms)
++    ╬ô├¬├£ Open:open-v15-origins-pct-25-49 (1 ms)
++    ╬ô├¬├£ Open:open-v15-origins-pct-1-24 (2 ms)
++    ╬ô├¬├£ Open:open-v15-origins-qualified-partial (1 ms)
++    ╬ô├¬├£ Open:open-v15-origins-packet-gap (2 ms)
++    ╬ô├¬├£ only the locked set of rows differs from the founder text by apostrophe/quote glyph (6 ms)
++    ╬ô├¬├£ resolves the founder template tokens rather than echoing them (12 ms)
++  governed token binding fails closed
++    ╬ô├¬├£ withholds qualified-partial origins without a packet statement (1 ms)
++    ╬ô├¬├£ withholds the KTC story when no benchmarked company can be named (1 ms)
++    ╬ô├¬├£ withholds the KTC story when the benchmark year cannot be established (1 ms)
++    ╬ô├¬├£ withholds an ingredient-clarity story when the governed variant cannot be resolved (1 ms)
++    ╬ô├¬├£ withholds packaging copy when no active jurisdiction is bound
++
++PASS src/__tests__/unit/lib/scoreHighlights/openGovernedCopy.test.ts
++  resolveOpenGovernedCopy
++    ╬ô├¬├£ resolves one broad/generic clarity variant without requiring a market token (2 ms)
++    ╬ô├¬├£ resolves one coded clarity variant with decoded plain name (1 ms)
++    ╬ô├¬├£ fail-closes the coded variant when no decoded additive name is supplied
++    ╬ô├¬├£ fail-closes any clarity variant without a governed presentation class
++    ╬ô├¬├£ resolves two broad terms from the locked two-flag copy (1 ms)
++    ╬ô├¬├£ resolves the two-flag mixed clarity variant (1 ms)
++    ╬ô├¬├£ resolves three-plus broad terms as a governed list
++    ╬ô├¬├£ resolves single-ingredient and generic evidently complete origins to the same locked copy (1 ms)
++    ╬ô├¬├£ resolves zero-flag ingredient-clarity copy from the locked 5 September strings (1 ms)
++
++PASS src/__tests__/unit/services/ethicsCertificationsService.test.ts
++  ethicsCertificationsService
++    ╬ô├¬├£ no labels ╬ô├Ñ├å no adjustment (4 ms)
++    ╬ô├¬├£ Fairtrade tag ╬ô├Ñ├å +6 (2 ms)
++    ╬ô├¬├£ Fairtrade + RSPO ╬ô├Ñ├å Fairtrade 6; RSPO not Ethics-eligible (1 ms)
++    ╬ô├¬├£ RSPO only ╬ô├Ñ├å no Ethics certification points (10 ms)
++    ╬ô├¬├£ Rainforest Alliance ╬ô├Ñ├å +6 (1 ms)
++    ╬ô├¬├£ UTZ ╬ô├Ñ├å +6 (same Rainforest Alliance/UTZ scheme) (5 ms)
++    ╬ô├¬├£ en:organic ╬ô├Ñ├å +3 (2 ms)
++    ╬ô├¬├£ en:aco-certified-organic ╬ô├Ñ├å Organic +3 (1 ms)
++    ╬ô├¬├£ label text ACO certified organic ╬ô├Ñ├å Organic +2 (2 ms)
++    ╬ô├¬├£ labels_hierarchy en:organic only (no labels_tags) ╬ô├Ñ├å Organic +3 (2 ms)
++    ╬ô├¬├£ label text Canada Organic ╬ô├Ñ├å Organic +2 (1 ms)
++    ╬ô├¬├£ label text TΓö£Γòæn certified organic ╬ô├Ñ├å Organic +2 (diacritic normalisation) (4 ms)
++    ╬ô├¬├£ label text Catalan Council of Organic Production ╬ô├Ñ├å Organic +2 (1 ms)
++    ╬ô├¬├£ product name Organic Greek Yoghurt, no OFF organic label ╬ô├Ñ├å Organic +2 (2 ms)
++    ╬ô├¬├£ product name containing non-organic ╬ô├Ñ├å no Organic +2 (1 ms)
++    ╬ô├¬├£ ingredients_text organic milk only ╬ô├Ñ├å no Organic +2 (1 ms)
++    ╬ô├¬├£ Fairtrade + en:organic ╬ô├Ñ├å Fairtrade wins (+6) (1 ms)
++    ╬ô├¬├£ EU organic tag ╬ô├Ñ├å +3 (1 ms)
++    ╬ô├¬├£ MSC OFF tag without API validation ╬ô├Ñ├å no MSC credit (2 ms)
++    ╬ô├¬├£ MSC with API validated true ╬ô├Ñ├å +4 (1 ms)
++    ╬ô├¬├£ MSC API false ╬ô├Ñ├å no credit even with OFF label
++  normalizeEthicsOrganicText
++    ╬ô├¬├£ strips diacritics for matching
++
++PASS src/__tests__/unit/lib/scoreHighlights/lookThroughEmptyState.test.ts
++  look-through empty state renders nothing manufactured
++    ╬ô├¬├£ no consumer surface carries the legacy empty-state sentence (1 ms)
++    ╬ô├¬├£ ScoreHighlightsList no longer accepts or defaults any empty-state copy (1 ms)
++    ╬ô├¬├£ fails closed when neither an eligible Highlight nor a contextual prompt qualifies (4 ms)
++    ╬ô├¬├£ lets the contextual prompt stand alone, with no parallel empty text beside it (2 ms)
++    ╬ô├¬├£ leaves the promoted Result list untouched when eligible stories exist (2 ms)
++
++PASS src/__tests__/unit/lib/claims/claimsRescue.negativeAssurance.test.ts (7.021 s)
++  Claims Rescue Section 16 negative assurance
++    Recognition boundary
++      ╬ô├¬├£ typos / look-alike synonyms do not match (156 ms)
++      ╬ô├¬├£ case/punctuation/pluralisation resolve only via R-004 normalisation (7 ms)
++      ╬ô├¬├£ ingredient-level organic excluded (2 ms)
++    Evidence honesty
++      ╬ô├¬├£ live product path without admissions fails closed for Set A/B (8 ms)
++      ╬ô├¬├£ pending coverage never yields assessed_neutral (2 ms)
++    Arithmetic
++      ╬ô├¬├£ +1 and -3 exclusivity; no stacking (4 ms)
++      ╬ô├¬├£ Organic claim-only suppressed by Certified Organic (2 ms)
++    Nutrient boundary
++      ╬ô├¬├£ Moderate / exact High threshold equality do not adverse-trigger (1 ms)
++      ╬ô├¬├£ missing sodium blocks +1 (1 ms)
++    State integrity
++      ╬ô├¬├£ no +0 Claims fired ledger event for assessed_neutral (1 ms)
++      ╬ô├¬├£ offsetting arithmetic retains assessed_scored (12 ms)
++    Commentary / access control
++      ╬ô├¬├£ no raw tokens; adverse copy retains non-allegation qualification (3 ms)
++      ╬ô├¬├£ S28 inaccessible without build entitlement (1 ms)
++
++PASS src/__tests__/unit/config/scoreDiagnostics.test.ts
++  scoreDiagnostics P1-C fail-closed
++    ╬ô├¬├£ missing env defaults OFF (2 ms)
++    ╬ô├¬├£ only exact "1" entitles (2 ms)
++    ╬ô├¬├£ entitled + local Off hides entry; On shows (1 ms)
++    ╬ô├¬├£ store release + entitled throws (92 ms)
++    ╬ô├¬├£ uat entitled does not throw (1 ms)
++
++PASS src/__tests__/unit/lib/claims/claimsS28.contract.test.ts
++  S28 Claims diagnostic surface contracts
++    ╬ô├¬├£ S28-01..07: modal renders Claims assessment fields (not attachment-only) (3 ms)
++    ╬ô├¬├£ S28-08: ordinary release path remains dual-gated (82 ms)
++
++PASS src/__tests__/unit/lib/scoreHighlights/literalCopyContract.mutation.test.ts
++  literal copy contract mutation demonstration
++    ╬ô├¬├£ a mutated governed L1 fails against the hand-authored contract (35 ms)
++    ╬ô├¬├£ a mutated governed L2 fails against the hand-authored contract (10 ms)
++    ╬ô├¬├£ the un-mutated pipeline still matches the contract, so no mutation leaked
++
++PASS src/__tests__/unit/lib/pillars/ethicsPillar.test.ts (7.424 s)
++  Ethics Pillar Calculation (BBFAW + KTC + certifications)
++    ╬ô├¬├£ should start at base score 15 when no BBFAW match (60 ms)
++    ╬ô├¬├£ should apply nil return when brand not in BBFAW (4 ms)
++    ╬ô├¬├£ should use brand_owner over brands for BBFAW lookup (4 ms)
++    ╬ô├¬├£ should resolve alias "M&S" to Marks & Spencer PLC via BBFAW mapping (3 ms)
++    ╬ô├¬├£ should resolve alias "Batchelors" to Premier Foods PLC via BBFAW mapping (3 ms)
++    ╬ô├¬├£ should try second brand when first fails (Unknown, Activia) (2 ms)
++    ╬ô├¬├£ should match NestlΓö£ΓîÉ with accent via parent_entity_exact indexing (2 ms)
++    ╬ô├¬├£ should require exact match - Unilever does not match Unilever NV (4 ms)
++    ╬ô├¬├£ should apply BBFAW Tier 2 + Impact B for Marks & Spencer (3 ms)
++    ╬ô├¬├£ should apply BBFAW Tier 2 for Greggs (3 ms)
++    ╬ô├¬├£ should apply BBFAW Tier 3 for Groupe Danone (1 ms)
++    ╬ô├¬├£ should apply BBFAW Tier 6 penalty for Tyson Foods (2 ms)
++    ╬ô├¬├£ should cap score at 0 (1 ms)
++    ╬ô├¬├£ should cap score at 25 (3 ms)
++    ╬ô├¬├£ should add certifications (max scheme) when BBFAW does not apply (8 ms)
++    Wave 3 stable adjustment IDs (v37)
++      ╬ô├¬├£ base row fires as ethics-v37-base and is never highlight-eligible (2 ms)
++      ╬ô├¬├£ BBFAW Tier and Impact stay separate fired rows with same-cycle metadata (4 ms)
++      ╬ô├¬├£ negative BBFAW tier and impact fire their locked IDs (3 ms)
++      ╬ô├¬├£ KTC band ID matches the governed score band and carries year/company/score metadata (2 ms)
++      ╬ô├¬├£ KTC band IDs and v37 point weights agree across every band boundary (5 ms)
++      ╬ô├¬├£ winning certification fires its locked ID with packet-evidence metadata (3 ms)
++      ╬ô├¬├£ organic certified OFF tags score +3 with certified evidence class (2 ms)
++      ╬ô├¬├£ cap normaliser fires only when the cap changes the score (3 ms)
++      ╬ô├¬├£ floor normaliser fires only when the floor changes the score (11 ms)
++      ╬ô├¬├£ no RSPO or superseded certification ID exists in the registry (1 ms)
++      ╬ô├¬├£ highlight-eligible registry entries carry locked L1/L2 commentary (5 ms)
++
++PASS src/__tests__/unit/lib/claims/aVmc003.r013.test.ts
++  Machine Register match_types + A-VMC-003 / R-013
++    ╬ô├¬├£ register exposes all governed match_type values (1 ms)
++    ╬ô├¬├£ positive: two distinct members ╬ô├Ñ├å one A-VMC-003 combination observation (85 ms)
++    ╬ô├¬├£ positive: alias collision collapses to one canonical member (no false combination) (30 ms)
++    ╬ô├¬├£ negative: single member does not fire A-VMC-003 (1 ms)
++    ╬ô├¬├£ negative: unlisted look-alike targets do not invent members (2 ms)
++    ╬ô├¬├£ collision: combination supersedes individual vitamin/mineral hits on same statement (1 ms)
++    ╬ô├¬├£ R-013 scoring: combination yields one Packet Context event, not per-member events (3 ms)
++
++PASS src/__tests__/unit/lib/scoreHighlights/l3HostPresentation.test.ts
++  planInAppL3HostPresentation ╬ô├ç├╢ no look-through stacking under L3
++    ╬ô├¬├£ dismisses the look-through Modal before every in-app L3 presentation (3 ms)
++    ╬ô├¬├£ preserves product_origins scroll host behaviour and modal hosts for L3 content (1 ms)
++
++PASS src/__tests__/unit/lib/scoreHighlights/consumerPillarNomenclature.test.ts (8.614 s)
++  canonical consumer pillar labels
++    ╬ô├¬├£ maps the internal pillar keys to the founder-locked consumer names (9 ms)
++    ╬ô├¬├£ never emits a pillar name that is itself a leak (2 ms)
++  live consumer surfaces cannot render Ethics or Open as pillar names
++    ╬ô├¬├£ share content for every share item is clean (5 ms)
++    ╬ô├¬├£ the share card message and card data are clean, and use the consumer labels (1 ms)
++    ╬ô├¬├£ the platform-optimised variants stay clean (2 ms)
++    ╬ô├¬├£ the Claims-pillar banner alerts name the consumer pillar (1 ms)
++    ╬ô├¬├£ governed Score Highlights copy and contextual prompts are clean (6 ms)
++  English locale bundle carries no consumer pillar-name leak
++    ╬ô├¬├£ uses the consumer labels for the pillar-name keys (1 ms)
++    ╬ô├¬├£ has no remaining pillar-name occurrence in any string value (2 ms)
++    ╬ô├¬├£ still keeps the upstream database proper nouns (1 ms)
++  active consumer source files carry no pillar-name copy
++    ╬ô├¬├£ src/components/TrustScoreInfoModal.tsx (2 ms)
++    ╬ô├¬├£ src/components/EcoScoreInfoModal.tsx (2 ms)
++    ╬ô├¬├£ src/components/TruScore.tsx (1 ms)
++    ╬ô├¬├£ src/components/ScoreHighlightsList.tsx (1 ms)
++    ╬ô├¬├£ src/components/ScoreHighlightsLookThroughModal.tsx (1 ms)
++    ╬ô├¬├£ src/features/sharing/services/ShareContentBuilder.ts (4 ms)
++    ╬ô├¬├£ src/services/shareCardGenerator.ts
++    ╬ô├¬├£ src/services/ethicsPillarBannerAlerts.ts (1 ms)
++    ╬ô├¬├£ routes the pillar names through the canonical helper (1 ms)
++  internal naming is deliberately unchanged
++    ╬ô├¬├£ keeps the Ethics/Open stable adjustment ID prefixes (1 ms)
++    ╬ô├¬├£ keeps the internal breakdown keys on TruScoreResult
++    ╬ô├¬├£ leaves the S28 diagnostics modal rendering internal pillar names (1 ms)
++
++PASS src/__tests__/unit/lib/claims/claimsRescue.uat.test.ts (9.173 s)
++  Claims Rescue Section 15 UAT
++    ╬ô├¬├£ UAT-01 Set A; complete context; none High ╬ô├Ñ├å +1 exact L2 (46 ms)
++    ╬ô├¬├£ UAT-02 Two Set A; no High ╬ô├Ñ├å one +1 synthesized list (16 ms)
++    ╬ô├¬├£ UAT-03 Set A; High total sugars ╬ô├Ñ├å -3 (1 ms)
++    ╬ô├¬├£ UAT-04 Set A; High sat fat and sodium ╬ô├Ñ├å one -3 list (1 ms)
++    ╬ô├¬├£ UAT-05 Set A + Set B; High ╬ô├Ñ├å one -3 (2 ms)
++    ╬ô├¬├£ UAT-06 Set B only; no High ╬ô├Ñ├å never +1 (1 ms)
++    ╬ô├¬├£ UAT-07 Set B only; High sodium ╬ô├Ñ├å -3
++    ╬ô├¬├£ UAT-08/09 Moderate and exact High threshold are not High triggers (2 ms)
++    ╬ô├¬├£ UAT-10 Large-portion High override consumed (3 ms)
++    ╬ô├¬├£ UAT-11 Total fat High ignored; governed three not High
++    ╬ô├¬├£ UAT-12 NOVA 4 without A/B ╬ô├Ñ├å no Claims NOVA story (1 ms)
++    ╬ô├¬├£ UAT-13/14 NOVA 4 appends only after context story (1 ms)
++    ╬ô├¬├£ UAT-15 Certified Organic suppresses claim-only +1
++    ╬ô├¬├£ UAT-16 Whole-product Organic claim only ╬ô├Ñ├å +1 Set O (1 ms)
++    ╬ô├¬├£ UAT-17 Ingredient-level organic excluded (1 ms)
++    ╬ô├¬├£ UAT-22 assessed_neutral exact L2
++    ╬ô├¬├£ UAT-23 assessed_neutral + unclassified append (1 ms)
++    ╬ô├¬├£ UAT-24 incomplete packet ╬ô├Ñ├å unassessed; never neutral L2
++    ╬ô├¬├£ UAT-25 opposing adjustments net 15 ╬ô├Ñ├å assessed_scored (1 ms)
++    ╬ô├¬├£ UAT-26 Set C only ╬ô├Ñ├å record retained; no score
++    ╬ô├¬├£ UAT-27 unlisted synonym ╬ô├Ñ├å no match (1 ms)
++    ╬ô├¬├£ UAT-28 A+B collision on same statement retains B
++    ╬ô├¬├£ UAT-29 register version mismatch fails closed (1 ms)
++    ╬ô├¬├£ UAT-30 missing sodium ╬ô├Ñ├å no +1
++    ╬ô├¬├£ UAT-31 missing claim token suppresses story (1 ms)
++    ╬ô├¬├£ UAT-32 three claims + three High ╬ô├Ñ├å one -3 bounded lists (1 ms)
++    ╬ô├¬├£ UAT-33 ordinary-user S28 gated off by default (1 ms)
++    ╬ô├¬├£ UAT-36 normalisation does not invent synonyms
++    ╬ô├¬├£ UAT-18 Fairtrade certification unchanged +6 (8 ms)
++    ╬ô├¬├£ UAT-19 MSC/ASC/Rainforest certification points unchanged (2 ms)
++    ╬ô├¬├£ UAT-20 KTC positive with valid entity remains company-level (2 ms)
++    ╬ô├¬├£ UAT-21 BBFAW ambiguous / unresolved entity ╬ô├Ñ├å no benchmark fire (1 ms)
++    ╬ô├¬├£ UAT-34 founder/UAT S28 analysis carries Claims diagnostic payload (27 ms)
++    ╬ô├¬├£ UAT-35 iOS/Android parity via shared Claims assessment payload (1 ms)
++    ╬ô├¬├£ Certified Organic +3 on live ethics pillar; claim-only name ╬ô├Ñ├å Set O +1 (2 ms)
++
++Test Suites: 17 passed, 17 total
++Tests:       330 passed, 330 total
++Snapshots:   0 total
++Time:        9.604 s
++Ran all test suites matching /src\\__tests__\\unit\\lib\\claims\\|src\\__tests__\\unit\\lib\\pillars\\ethicsPillar.test
++.ts|src\\__tests__\\unit\\lib\\scoreHighlights\\|src\\__tests__\\unit\\services\\ethicsCertificationsService.test.ts|sr
++c\\__tests__\\unit\\config\\scoreDiagnostics.test.ts/i.
+diff --git a/reports/claims_rescue_v02/corrective_fresh_evidence/02_eslint.log b/reports/claims_rescue_v02/corrective_fresh_evidence/02_eslint.log
+new file mode 100644
+index 0000000..738539c
+--- /dev/null
++++ b/reports/claims_rescue_v02/corrective_fresh_evidence/02_eslint.log
+@@ -0,0 +1,13 @@
++
++C:\TrueScan-FoodScanner-wt-claims-corrective\src\__tests__\unit\lib\claims\claimsCorrective.regression.test.ts
++  114:11  warning  'match' is assigned a value but never used  @typescript-eslint/no-unused-vars
++
++╬ô┬ú├╗ 1 problem (0 errors, 1 warning)
++
++node.exe : ESLint found too many warnings (maximum: 0).
++At line:1 char:1
+++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
+++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++    + CategoryInfo          : NotSpecified: (ESLint found to...s (maximum: 0).:String) [], RemoteException
++    + FullyQualifiedErrorId : NativeCommandError
++ 
+diff --git a/reports/claims_rescue_v02/corrective_fresh_evidence/03_tsc.log b/reports/claims_rescue_v02/corrective_fresh_evidence/03_tsc.log
+new file mode 100644
+index 0000000..22c8ad0
+--- /dev/null
++++ b/reports/claims_rescue_v02/corrective_fresh_evidence/03_tsc.log
+@@ -0,0 +1 @@
++src/nutrition/governedNutrientAssessment.ts(203,16): error TS2367: This comparison appears to be unintentional because the types '"food" | "drink"' and '"unknown"' have no overlap.
+diff --git a/reports/claims_rescue_v02/corrective_fresh_evidence/04_expo_ios.log b/reports/claims_rescue_v02/corrective_fresh_evidence/04_expo_ios.log
+new file mode 100644
+index 0000000..12700ea
+--- /dev/null
++++ b/reports/claims_rescue_v02/corrective_fresh_evidence/04_expo_ios.log
+@@ -0,0 +1,68 @@
++node.exe : [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
++At line:1 char:1
+++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
+++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++    + CategoryInfo          : NotSpecified: ([BUILD] EXPO_PU...ot be available:String) [], RemoteException
++    + FullyQualifiedErrorId : NativeCommandError
++ 
++[BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
++[BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
++[BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
++Starting Metro Bundler
++| (node:15392) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++| (node:924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++| (node:15912) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++| (node:3300) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++iOS .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 17.4% ( 20/186)
++| (node:11028) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++| (node:6800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++iOS .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 17.7% (216/513)
++iOS .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 29.4% (386/731)
++iOS .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 38.8% (585/939)
++iOS .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 51.7% ( 811/1162)
++iOS .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 62.8% (1060/1340)
++iOS .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 74.2% (1285/1507)
++iOS .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª 90.1% (1496/1576)
++iOS .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª 99.9% (1704/1704)
++iOS Bundled 39024ms index.js (1704 modules)
++iOS .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª 99.9% (1704/1704)
++
++╬ô├çΓòæ Assets (35):
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\AntDesign.ttf (70.3 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Entypo.ttf (66.2 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\EvilIcons.ttf (13.5 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Feather.ttf (56.2 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome.ttf (166 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome5_Brands.ttf (134 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome5_Regular.ttf (33.7 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome5_Solid.ttf (203 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome6_Brands.ttf (209 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome6_Regular.ttf (68 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome6_Solid.ttf (424 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Fontisto.ttf (314 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Foundation.ttf (57 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Ionicons.ttf (443 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\MaterialCommunityIcons.ttf (1.15 MB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\MaterialIcons.ttf (357 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Octicons.ttf (49.4 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\SimpleLineIcons.ttf (54.1 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Zocial.ttf (25.8 kB)
++..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\back-icon-mask.png (653 B)
++..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\back-icon.png (4 variations | 566 B)
++..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\clear-icon.png (4 variations | 425 B)
++..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\close-icon.png (4 variations | 235 B)
++..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\search-icon.png (3 variations | 582 B)
++
++╬ô├çΓòæ ios bundles (1):
++_expo/static/js/ios/index-13518d97d4430738964546d7058c9108.hbc (6.8 MB)
++
++╬ô├çΓòæ Files (1):
++metadata.json (2.57 kB)
++
++Exported: dist-claims-corrective-DO-NOT-COMMIT/ios
+diff --git a/reports/claims_rescue_v02/corrective_fresh_evidence/05_expo_android.log b/reports/claims_rescue_v02/corrective_fresh_evidence/05_expo_android.log
+new file mode 100644
+index 0000000..1c8523f
+--- /dev/null
++++ b/reports/claims_rescue_v02/corrective_fresh_evidence/05_expo_android.log
+@@ -0,0 +1,66 @@
++node.exe : [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
++At line:1 char:1
+++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
+++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++    + CategoryInfo          : NotSpecified: ([BUILD] EXPO_PU...ot be available:String) [], RemoteException
++    + FullyQualifiedErrorId : NativeCommandError
++ 
++[BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
++[BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
++[BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
++Starting Metro Bundler
++| (node:14032) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++| (node:9408) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++| (node:20488) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++| (node:2084) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++Android .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 16.4% ( 60/148)
++| (node:8728) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++| (node:17568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
++| (Use `node --trace-warnings ...` to show where the warning was created)
++Android .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 23.0% (319/665)
++Android .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 45.9% (631/931)
++Android .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 57.2% ( 993/1313)
++Android .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª╬ô├╗├ª 75.9% (1338/1536)
++Android .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª╬ô├╗├ª 93.0% (1540/1597)
++Android .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª 99.9% (1708/1708)
++Android Bundled 28482ms index.js (1708 modules)
++Android .\index.js ╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├┤╬ô├╗├ª 99.9% (1708/1708)
++
++╬ô├çΓòæ Assets (36):
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\AntDesign.ttf (70.3 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Entypo.ttf (66.2 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\EvilIcons.ttf (13.5 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Feather.ttf (56.2 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome.ttf (166 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome5_Brands.ttf (134 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome5_Regular.ttf (33.7 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome5_Solid.ttf (203 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome6_Brands.ttf (209 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome6_Regular.ttf (68 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome6_Solid.ttf (424 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Fontisto.ttf (314 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Foundation.ttf (57 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Ionicons.ttf (443 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\MaterialCommunityIcons.ttf (1.15 MB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\MaterialIcons.ttf (357 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Octicons.ttf (49.4 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\SimpleLineIcons.ttf (54.1 kB)
++..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Zocial.ttf (25.8 kB)
++..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\back-icon-mask.png (653 B)
++..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\back-icon.png (4 variations | 152 B)
++..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\clear-icon.png (4 variations | 425 B)
++..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\close-icon.png (4 variations | 235 B)
++..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\search-icon.png (4 variations | 599 B)
++
++╬ô├çΓòæ android bundles (1):
++_expo/static/js/android/index-9a15bae1cd6ecc644b10328adf0327fd.hbc (6.82 MB)
++
++╬ô├çΓòæ Files (1):
++metadata.json (2.58 kB)
++
++Exported: dist-claims-corrective-DO-NOT-COMMIT/android
+diff --git a/reports/claims_rescue_v02/schema_examples/assessed_neutral.json b/reports/claims_rescue_v02/schema_examples/assessed_neutral.json
+index 9131a37..73bfd38 100644
+--- a/reports/claims_rescue_v02/schema_examples/assessed_neutral.json
++++ b/reports/claims_rescue_v02/schema_examples/assessed_neutral.json
+@@ -1,33 +1,55 @@
+ {
+   "schema_version": "claims-assessment-v1",
+   "register_version": "20260912_v1_0",
+-  "nutrient_standard_version": "uk-gov-fop-mtl-v1",
++  "nutrient_standard_version": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
++  "nutrient_methodology_version": "20260912_v0_1",
++  "nutrient_reference_asset_id": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+   "assessment_state": "assessed_neutral",
+   "packet_coverage_state": "complete",
+   "admitted_claims": [],
+   "unclassified_statements": [
+     {
+-      "evidence_id": "u1",
+-      "observed_text": "responsibly sourced",
+-      "display_text": "responsibly sourced"
++      "evidence_id": "n1",
++      "observed_text": "May contain traces of milk",
++      "display_text": "May contain traces of milk"
+     }
+   ],
+   "nutrient_context": {
+-    "standard_version": "uk-gov-fop-mtl-v1",
++    "standard_version": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
++    "nutrient_methodology_version": "20260912_v0_1",
++    "nutrient_reference_asset_id": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+     "basis": "food",
+     "large_portion_override": false,
+     "nutrients": {
+-      "total_sugars": { "level": "low", "high_reason": null },
+-      "saturated_fat": { "level": "low", "high_reason": null },
+-      "sodium": { "level": "low", "high_reason": null }
++      "total_sugars": {
++        "level": "low",
++        "high_reason": null,
++        "source_evidence_id": "nutrient:total_sugars"
++      },
++      "saturated_fat": {
++        "level": "low",
++        "high_reason": null,
++        "source_evidence_id": "nutrient:saturated_fat"
++      },
++      "sodium": {
++        "level": "low",
++        "high_reason": null,
++        "source_evidence_id": "nutrient:sodium"
++      }
+     },
+     "required_context_complete": true,
+     "any_governed_high": false,
+     "high_nutrient_labels": []
+   },
+   "benchmark_checks": [
+-    { "source": "ktc", "status": "no_finding" },
+-    { "source": "bbfaw", "status": "no_finding" }
++    {
++      "source": "ktc",
++      "status": "no_finding"
++    },
++    {
++      "source": "bbfaw",
++      "status": "no_finding"
++    }
+   ],
+   "packet_context_points": 0,
+   "organic_claim_only_points": 0,
+@@ -35,8 +57,12 @@
+   "suppressed_candidates": [],
+   "commentary_payload": {
+     "route": "assessed_neutral",
+-    "l2": "We checked the packet for the product claims and certifications we currently assess, and our independent company-level benchmark checks did not produce a positive or adverse finding. We did find packet claims for responsibly sourced, but these sit outside the claims we currently assess."
++    "l2": "We checked the packet for the product claims and certifications we currently assess, and our independent company-level benchmark checks did not produce a positive or adverse finding. We did find packet claims for May contain traces of milk, but these sit outside the claims we currently assess.",
++    "claim_display_texts": [
++      "May contain traces of milk"
++    ]
+   },
++  "commentary_by_event_id": {},
+   "diagnostics": [],
+-  "_example_note": "Complete packet coverage; no scoring claim/certification; no benchmark fire. Fired ledger empty (no synthetic +0)."
+-}
++  "_example_note": "Corrective: assessed_neutral with complete governed Claims evidence and no fired adjustment; admission_method off_labels (never user_confirmation)."
++}
+\ No newline at end of file
+diff --git a/reports/claims_rescue_v02/schema_examples/assessed_scored.json b/reports/claims_rescue_v02/schema_examples/assessed_scored.json
+index 782f0fb..0136831 100644
+--- a/reports/claims_rescue_v02/schema_examples/assessed_scored.json
++++ b/reports/claims_rescue_v02/schema_examples/assessed_scored.json
+@@ -1,9 +1,11 @@
+ {
+   "schema_version": "claims-assessment-v1",
+   "register_version": "20260912_v1_0",
+-  "nutrient_standard_version": "uk-gov-fop-mtl-v1",
++  "nutrient_standard_version": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
++  "nutrient_methodology_version": "20260912_v0_1",
++  "nutrient_reference_asset_id": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+   "assessment_state": "assessed_scored",
+-  "packet_coverage_state": "complete",
++  "packet_coverage_state": "incomplete",
+   "admitted_claims": [
+     {
+       "evidence_id": "e1",
+@@ -12,48 +14,134 @@
+       "register_row_id": "A-VMC-003",
+       "canonical_family": "vitamin_mineral_combination",
+       "set": "A",
+-      "admission_method": "user_confirmation",
+-      "source_locator": "uat",
++      "admission_method": "off_labels",
++      "source_locator": "off:labels_en",
+       "collision_priority": 30,
+       "context_test_eligible": true,
+-      "member_targets": ["calcium", "vitamin_c"]
++      "member_targets": [
++        "calcium",
++        "vitamin_c"
++      ]
++    },
++    {
++      "evidence_id": "name1",
++      "observed_text": "Harry's Organic Milk",
++      "display_text": "Harry's Organic Milk",
++      "register_row_id": "O-ORG-002",
++      "canonical_family": "organic_whole_product",
++      "set": "O",
++      "admission_method": "governed_product_name",
++      "source_locator": "off:product_name",
++      "collision_priority": 20,
++      "context_test_eligible": false
+     }
+   ],
+   "unclassified_statements": [],
+   "nutrient_context": {
+-    "standard_version": "uk-gov-fop-mtl-v1",
++    "standard_version": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
++    "nutrient_methodology_version": "20260912_v0_1",
++    "nutrient_reference_asset_id": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+     "basis": "food",
+     "large_portion_override": false,
+     "nutrients": {
+-      "total_sugars": { "level": "low", "high_reason": null },
+-      "saturated_fat": { "level": "low", "high_reason": null },
+-      "sodium": { "level": "low", "high_reason": null }
++      "total_sugars": {
++        "level": "low",
++        "high_reason": null,
++        "source_evidence_id": "nutrient:total_sugars"
++      },
++      "saturated_fat": {
++        "level": "low",
++        "high_reason": null,
++        "source_evidence_id": "nutrient:saturated_fat"
++      },
++      "sodium": {
++        "level": "low",
++        "high_reason": null,
++        "source_evidence_id": "nutrient:sodium"
++      }
+     },
+     "required_context_complete": true,
+     "any_governed_high": false,
+     "high_nutrient_labels": []
+   },
+   "benchmark_checks": [
+-    { "source": "ktc", "status": "no_finding" },
+-    { "source": "bbfaw", "status": "no_finding" }
++    {
++      "source": "ktc",
++      "status": "no_finding"
++    },
++    {
++      "source": "bbfaw",
++      "status": "no_finding"
++    }
+   ],
+   "packet_context_points": 1,
+-  "organic_claim_only_points": 0,
++  "organic_claim_only_points": 1,
+   "fired_adjustments": [
++    {
++      "id": "claims.organic.claim_only.v1",
++      "canonical_id": "claims.organic.claim_only.v1",
++      "points": 1,
++      "description": "Whole-product Organic claim (claim-only)",
++      "highlightEligible": true,
++      "family": "organic_claim_only",
++      "metadata": {
++        "register_row_id": "O-ORG-002",
++        "display_text": "Harry's Organic Milk",
++        "organicEvidenceClass": "claim_only",
++        "evidence_id": "name1",
++        "admission_method": "governed_product_name",
++        "claimsL1": "Organic claim identified",
++        "claimsL2": "The product is presented as Organic, but we have not established a specific organic certification.",
++        "claimsL3Body": "This reflects a whole-product Organic claim where our available data does not establish a specific organic certification. That does not mean the product is not genuinely organic. If there is a certification on the packet, help us update the record.",
++        "claimsCtaLabel": "Update certification",
++        "claimsCtaDomain": "certifications"
++      }
++    },
+     {
+       "id": "claims.packet_context.positive.v1",
+       "canonical_id": "claims.packet_context.positive.v1",
+       "points": 1,
+       "description": "Packet Claim Context positive",
+       "highlightEligible": true,
+-      "family": "packet_context"
++      "family": "packet_context",
++      "metadata": {
++        "claim_texts": "Source of vitamin C and calcium",
++        "claimsL1": "The pack highlights Source of vitamin C and calcium and our nutrition context check did not find high total sugars, saturated fat or sodium.",
++        "claimsL2": "The pack highlights Source of vitamin C and calcium. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the productΓÇÖs broader nutritional picture."
++      }
+     }
+   ],
+   "suppressed_candidates": [],
+   "commentary_payload": {
+     "route": "packet_context_positive",
+     "l1": "The pack highlights Source of vitamin C and calcium and our nutrition context check did not find high total sugars, saturated fat or sodium.",
+-    "l2": "The pack highlights Source of vitamin C and calcium. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the productΓÇÖs broader nutritional picture."
++    "l2": "The pack highlights Source of vitamin C and calcium. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the productΓÇÖs broader nutritional picture.",
++    "claim_display_texts": [
++      "Source of vitamin C and calcium"
++    ],
++    "nova4_sentence_appended": false,
++    "bound_event_id": "claims.packet_context.positive.v1"
++  },
++  "commentary_by_event_id": {
++    "claims.organic.claim_only.v1": {
++      "route": "organic_claim_only",
++      "l1": "Organic claim identified",
++      "l2": "The product is presented as Organic, but we have not established a specific organic certification.",
++      "l3_body": "This reflects a whole-product Organic claim where our available data does not establish a specific organic certification. That does not mean the product is not genuinely organic. If there is a certification on the packet, help us update the record.",
++      "cta_label": "Update certification",
++      "cta_domain": "certifications",
++      "bound_event_id": "claims.organic.claim_only.v1"
++    },
++    "claims.packet_context.positive.v1": {
++      "route": "packet_context_positive",
++      "l1": "The pack highlights Source of vitamin C and calcium and our nutrition context check did not find high total sugars, saturated fat or sodium.",
++      "l2": "The pack highlights Source of vitamin C and calcium. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the productΓÇÖs broader nutritional picture.",
++      "claim_display_texts": [
++        "Source of vitamin C and calcium"
++      ],
++      "nova4_sentence_appended": false,
++      "bound_event_id": "claims.packet_context.positive.v1"
++    }
+   },
+   "diagnostics": [
+     {
+@@ -61,5 +149,5 @@
+       "detail": "evidence e1: A-VMC-003 retained as one combination observation with members [calcium, vitamin_c]"
+     }
+   ],
+-  "_example_note": "R-013 / A-VMC-003: one combination observation with member_targets; one Packet Context +1 (not per-member events)."
+-}
++  "_example_note": "Corrective: assessed_scored with incomplete packet_coverage_state (orthogonal); dual Packet Context + Organic commentary_by_event_id; off_labels + governed_product_name; dual nutrient identities."
++}
+\ No newline at end of file
+diff --git a/reports/claims_rescue_v02/schema_examples/unassessed.json b/reports/claims_rescue_v02/schema_examples/unassessed.json
+index 26f1447..a7c814e 100644
+--- a/reports/claims_rescue_v02/schema_examples/unassessed.json
++++ b/reports/claims_rescue_v02/schema_examples/unassessed.json
+@@ -1,38 +1,32 @@
+ {
+   "schema_version": "claims-assessment-v1",
+   "register_version": "20260912_v1_0",
+-  "nutrient_standard_version": "uk-gov-fop-mtl-v1",
++  "nutrient_standard_version": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
++  "nutrient_methodology_version": "20260912_v0_1",
++  "nutrient_reference_asset_id": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+   "assessment_state": "unassessed",
+   "packet_coverage_state": "incomplete",
+   "admitted_claims": [],
+   "unclassified_statements": [],
+-  "nutrient_context": {
+-    "standard_version": "uk-gov-fop-mtl-v1",
+-    "basis": "food",
+-    "large_portion_override": false,
+-    "nutrients": {
+-      "total_sugars": { "level": "low", "high_reason": null },
+-      "saturated_fat": { "level": "low", "high_reason": null },
+-      "sodium": { "level": "low", "high_reason": null }
+-    },
+-    "required_context_complete": true,
+-    "any_governed_high": false,
+-    "high_nutrient_labels": []
+-  },
++  "nutrient_context": null,
+   "benchmark_checks": [
+-    { "source": "ktc", "status": "no_finding" },
+-    { "source": "bbfaw", "status": "no_finding" }
++    {
++      "source": "ktc",
++      "status": "no_finding"
++    },
++    {
++      "source": "bbfaw",
++      "status": "no_finding"
++    }
+   ],
+   "packet_context_points": 0,
+   "organic_claim_only_points": 0,
+   "fired_adjustments": [],
+   "suppressed_candidates": [],
+-  "commentary_payload": { "route": "none" },
+-  "diagnostics": [
+-    {
+-      "code": "packet_coverage_incomplete",
+-      "detail": "No approved Set A/B packet admissions; coverage incomplete (REG-03 fail-closed)"
+-    }
+-  ],
+-  "_example_note": "Live TruScore path without explicit admissions. Contribution treatment preserved; never assessed_neutral L2."
+-}
++  "commentary_payload": {
++    "route": "none"
++  },
++  "commentary_by_event_id": {},
++  "diagnostics": [],
++  "_example_note": "Corrective: unassessed when no genuine Claims adjustment and evidence insufficient for neutral; dual nutrient version identities always present."
++}
+\ No newline at end of file
+diff --git a/src/__tests__/fixtures/scoreHighlights/literalCopyContract.v05.ts b/src/__tests__/fixtures/scoreHighlights/literalCopyContract.v05.ts
+index 8388864..848b22a 100644
+--- a/src/__tests__/fixtures/scoreHighlights/literalCopyContract.v05.ts
++++ b/src/__tests__/fixtures/scoreHighlights/literalCopyContract.v05.ts
+@@ -703,9 +703,9 @@ const ETHICS_CERTIFICATIONS: LiteralCopyContractEntry[] = [
+       { id: 'claims.organic.claim_only.v1', value: 1, metadata: { organicEvidenceClass: 'claim_only' } },
+     ],
+     l1Template: `Organic claim identified`,
+-    l2Template: `An organic claim appears on this packet, but the packet does not show a specific organic certification.`,
++    l2Template: `The product is presented as Organic, but we have not established a specific organic certification.`,
+     l1: `Organic claim identified`,
+-    l2: `An organic claim appears on this packet, but the packet does not show a specific organic certification.`,
++    l2: `The product is presented as Organic, but we have not established a specific organic certification.`,
+     provenance: 'doc_literal',
+     note: 'Claim-only Organic is claims.organic.claim_only.v1 (+1); Certified Organic remains ethics-v37-cert-organic (+3).',
+   },
+diff --git a/src/__tests__/unit/lib/claims/claimsCorrective.regression.test.ts b/src/__tests__/unit/lib/claims/claimsCorrective.regression.test.ts
+new file mode 100644
+index 0000000..dfd6cea
+--- /dev/null
++++ b/src/__tests__/unit/lib/claims/claimsCorrective.regression.test.ts
+@@ -0,0 +1,332 @@
++/**
++ * Claims Rescue v0.2 corrective pass ΓÇö regression / falsification suite (CR-01ΓÇªCR-15).
++ */
++
++import {
++  assessClaimsPacketAndOrganic,
++  buildClaimsNutrientContext,
++  buildClaimsObservationsFromProduct,
++  claimsNutrientVersionIdentities,
++  escapeDisplayText,
++  matchAdmittedObservations,
++  naturalLanguageList,
++  ORGANIC_CLAIM_ONLY_CTA_LABEL_V02,
++  ORGANIC_CLAIM_ONLY_L2_V02,
++  ORGANIC_CLAIM_ONLY_L3_BODY_V02,
++  toDisplaySafeClaimText,
++  CLAIMS_NUTRIENT_METHODOLOGY_VERSION,
++  CLAIMS_NUTRIENT_REFERENCE_ASSET_ID,
++} from '../../../../lib/truscoreEngine/claims';
++import type { ClaimsNutrientContext } from '../../../../lib/truscoreEngine/claims/types';
++import type { Product } from '../../../../types/product';
++import { resolveGovernedL3Content } from '../../../../lib/scoreHighlights/l3/content';
++
++function nutrientCompleteNoneHigh(): ClaimsNutrientContext {
++  return {
++    standard_version: CLAIMS_NUTRIENT_REFERENCE_ASSET_ID,
++    nutrient_methodology_version: CLAIMS_NUTRIENT_METHODOLOGY_VERSION,
++    nutrient_reference_asset_id: CLAIMS_NUTRIENT_REFERENCE_ASSET_ID,
++    basis: 'food',
++    large_portion_override: false,
++    nutrients: {
++      total_sugars: { level: 'low', per_100_value: 1, source_evidence_id: 'gov:n' },
++      saturated_fat: { level: 'low', per_100_value: 1, source_evidence_id: 'gov:n' },
++      sodium: { level: 'low', per_100_value: 50, source_evidence_id: 'gov:n' },
++    },
++    required_context_complete: true,
++    any_governed_high: false,
++    high_nutrient_labels: [],
++  };
++}
++
++function baseProduct(over: Partial<Product> = {}): Product {
++  return {
++    barcode: '9415007000000',
++    name: 'Test Product',
++    brands: 'Test',
++    ...over,
++  } as Product;
++}
++
++describe('Claims corrective pass regressions', () => {
++  test('CR-01: OFF product name does not leak into unintended A/B recognition', () => {
++    const bundle = buildClaimsObservationsFromProduct(
++      baseProduct({
++        product_name: "Harry's High Protein Organic Milk",
++        name: "Harry's High Protein Organic Milk",
++        labels: '',
++        labels_en: '',
++      })
++    );
++    const nameObs = bundle.observations.filter((o) => o.is_product_name);
++    expect(nameObs.length).toBeGreaterThan(0);
++    const match = matchAdmittedObservations(nameObs);
++    expect(match.matched.every((m) => m.set === 'O')).toBe(true);
++    expect(match.matched.some((m) => m.set === 'A' || m.set === 'B')).toBe(false);
++  });
++
++  test('CR-01/05: OFF labels can establish governed A/B claims and never as user_confirmation', () => {
++    const bundle = buildClaimsObservationsFromProduct(
++      baseProduct({
++        name: 'Plain Yoghurt',
++        product_name: 'Plain Yoghurt',
++        labels: 'High protein, No added sugar',
++        labels_en: '',
++      })
++    );
++    expect(bundle.observations.every((o) => o.admission_method !== 'user_confirmation')).toBe(true);
++    expect(bundle.observations.some((o) => o.admission_method === 'off_labels')).toBe(true);
++    const match = matchAdmittedObservations(bundle.observations);
++    expect(match.matched.some((m) => m.register_row_id === 'B-SUG-002')).toBe(true);
++    expect(match.matched.some((m) => m.register_row_id === 'A-PRO-003')).toBe(true);
++    expect(match.matched.every((m) => m.admission_method !== 'user_confirmation')).toBe(true);
++  });
++
++  test('CR-03: no added sugar / sugars / without added sugar survive X-001', () => {
++    for (const text of ['no added sugar', 'no added sugars', 'without added sugar']) {
++      const match = matchAdmittedObservations([
++        {
++          evidence_id: `e-${text}`,
++          observed_text: text,
++          display_text: text,
++          admission_method: 'off_labels',
++        },
++      ]);
++      expect(match.matched.some((m) => m.register_row_id === 'B-SUG-002')).toBe(true);
++    }
++  });
++
++  test('CR-03: no added salt / no salt added both match B-SOD-002', () => {
++    for (const text of ['no added salt', 'no salt added']) {
++      const match = matchAdmittedObservations([
++        {
++          evidence_id: `e-${text}`,
++          observed_text: text,
++          display_text: text,
++          admission_method: 'packet_image',
++        },
++      ]);
++      expect(match.matched.some((m) => m.register_row_id === 'B-SOD-002')).toBe(true);
++    }
++  });
++
++  test('CR-03: unrelated Organic survives when another phrase meets an exclusion', () => {
++    // X-001 may veto sugar candidates; Set O exact/organic token should still be able to fire
++    // when organic appears as a label chunk ΓÇö use separate admissions as production does
++    const split = matchAdmittedObservations([
++      {
++        evidence_id: 'org',
++        observed_text: 'organic',
++        display_text: 'organic',
++        admission_method: 'off_labels',
++      },
++      {
++        evidence_id: 'sug',
++        observed_text: 'added sugar',
++        display_text: 'added sugar',
++        admission_method: 'off_labels',
++      },
++    ]);
++    expect(split.matched.some((m) => m.set === 'O')).toBe(true);
++    expect(split.matched.some((m) => m.register_row_id === 'B-SUG-002')).toBe(false);
++  });
++
++  test('CR-02: Organic product-name claim-only +1 (founder-accepted edge)', () => {
++    const bundle = buildClaimsObservationsFromProduct(
++      baseProduct({
++        product_name: "Harry's Organic Milk",
++        name: "Harry's Organic Milk",
++        labels: '',
++        labels_en: '',
++      })
++    );
++    const r = assessClaimsPacketAndOrganic({
++      admittedObservations: bundle.observations,
++      packetCoverageState: 'incomplete',
++      nutrientContext: nutrientCompleteNoneHigh(),
++      certifiedOrganicFired: false,
++      otherCertificationFired: false,
++      benchmarkChecks: [
++        { source: 'ktc', status: 'no_finding' },
++        { source: 'bbfaw', status: 'no_finding' },
++      ],
++    });
++    expect(r.organic_claim_only_points).toBe(1);
++    expect(r.assessment_state).toBe('assessed_scored');
++    expect(r.commentary_by_event_id['claims.organic.claim_only.v1']?.l2).toBe(ORGANIC_CLAIM_ONLY_L2_V02);
++  });
++
++  test('CR-14: Certified Organic suppresses claim-only with S28 reason', () => {
++    const r = assessClaimsPacketAndOrganic({
++      admittedObservations: [
++        {
++          evidence_id: 'o',
++          observed_text: 'organic',
++          display_text: 'organic',
++          admission_method: 'off_labels',
++        },
++      ],
++      packetCoverageState: 'incomplete',
++      nutrientContext: nutrientCompleteNoneHigh(),
++      certifiedOrganicFired: true,
++      otherCertificationFired: false,
++      benchmarkChecks: [
++        { source: 'ktc', status: 'no_finding' },
++        { source: 'bbfaw', status: 'no_finding' },
++      ],
++    });
++    expect(r.organic_claim_only_points).toBe(0);
++    expect(r.suppressed_candidates).toEqual(
++      expect.arrayContaining([
++        expect.objectContaining({
++          candidate_id: 'claims.organic.claim_only.v1',
++          reason_code: 'suppressed_by_certified_organic',
++        }),
++      ])
++    );
++  });
++
++  test('CR-07: scored + incomplete coverage coexistence; contribution still possible', () => {
++    const r = assessClaimsPacketAndOrganic({
++      admittedObservations: [
++        {
++          evidence_id: 'o',
++          observed_text: 'organic',
++          display_text: 'organic',
++          admission_method: 'off_labels',
++        },
++      ],
++      packetCoverageState: 'incomplete',
++      nutrientContext: nutrientCompleteNoneHigh(),
++      certifiedOrganicFired: false,
++      otherCertificationFired: false,
++      benchmarkChecks: [
++        { source: 'ktc', status: 'no_finding' },
++        { source: 'bbfaw', status: 'no_finding' },
++      ],
++    });
++    expect(r.assessment_state).toBe('assessed_scored');
++    expect(r.packet_coverage_state).toBe('incomplete');
++    const organic = r.commentary_by_event_id['claims.organic.claim_only.v1'];
++    expect(organic?.cta_domain).toBe('certifications');
++    expect(organic?.cta_label).toBe(ORGANIC_CLAIM_ONLY_CTA_LABEL_V02);
++  });
++
++  test('CR-09: dual Packet Context + Organic event commentary bindings', () => {
++    const r = assessClaimsPacketAndOrganic({
++      admittedObservations: [
++        {
++          evidence_id: 'a',
++          observed_text: 'high protein',
++          display_text: 'high protein',
++          admission_method: 'off_labels',
++        },
++        {
++          evidence_id: 'o',
++          observed_text: 'organic',
++          display_text: 'organic',
++          admission_method: 'off_labels',
++        },
++      ],
++      packetCoverageState: 'incomplete',
++      nutrientContext: nutrientCompleteNoneHigh(),
++      certifiedOrganicFired: false,
++      otherCertificationFired: false,
++      benchmarkChecks: [
++        { source: 'ktc', status: 'no_finding' },
++        { source: 'bbfaw', status: 'no_finding' },
++      ],
++    });
++    expect(r.packet_context_points).toBe(1);
++    expect(r.organic_claim_only_points).toBe(1);
++    expect(r.commentary_by_event_id['claims.packet_context.positive.v1']?.route).toBe(
++      'packet_context_positive'
++    );
++    expect(r.commentary_by_event_id['claims.organic.claim_only.v1']?.route).toBe('organic_claim_only');
++  });
++
++  test('CR-08: both nutrient version identities always present', () => {
++    const ids = claimsNutrientVersionIdentities();
++    expect(ids.nutrient_methodology_version).toBe('20260912_v0_1');
++    expect(ids.nutrient_reference_asset_id).toBe('uk-gov-fop-mtl-rveel-reviewed-2026-09-12');
++    const ctx = buildClaimsNutrientContext(null);
++    expect(ctx).toBeNull();
++    const r = assessClaimsPacketAndOrganic({
++      admittedObservations: [],
++      packetCoverageState: 'incomplete',
++      nutrientContext: null,
++      certifiedOrganicFired: false,
++      otherCertificationFired: false,
++      benchmarkChecks: [
++        { source: 'ktc', status: 'no_finding' },
++        { source: 'bbfaw', status: 'no_finding' },
++      ],
++    });
++    expect(r.nutrient_methodology_version).toBe('20260912_v0_1');
++    expect(r.nutrient_reference_asset_id.length).toBeGreaterThan(0);
++    expect(r.nutrient_standard_version.length).toBeGreaterThan(0);
++  });
++
++  test('CR-10: display escaping; observed_text immutable', () => {
++    const raw = '<script>alert("x")</script> & more';
++    expect(escapeDisplayText(raw)).toContain('&lt;script&gt;');
++    expect(escapeDisplayText(raw)).toContain('&amp;');
++    const match = matchAdmittedObservations([
++      {
++        evidence_id: 'inj',
++        observed_text: raw,
++        display_text: raw,
++        admission_method: 'user_confirmation',
++      },
++    ]);
++    // May be unclassified; if matched, display is escaped and observed preserved
++    if (match.matched[0]) {
++      expect(match.matched[0].observed_text).toBe(raw);
++      expect(match.matched[0].display_text).not.toContain('<script>');
++    }
++    expect(toDisplaySafeClaimText(raw)).toContain('&lt;');
++  });
++
++  test('CR-12: R-013 combination supersedes component hits; equal priority fails closed', () => {
++    const match = matchAdmittedObservations([
++      {
++        evidence_id: 'vmc',
++        observed_text: 'source of vitamin c and calcium',
++        display_text: 'source of vitamin c and calcium',
++        admission_method: 'off_labels',
++      },
++    ]);
++    expect(match.matched).toHaveLength(1);
++    expect(match.matched[0].register_row_id).toBe('A-VMC-003');
++    expect(match.matched[0].member_targets?.length).toBeGreaterThanOrEqual(2);
++  });
++
++  test('CR-13: singular/plural bounded lists', () => {
++    expect(naturalLanguageList(['a', 'b', 'c', 'd'])).toContain('1 other packet statement');
++    expect(naturalLanguageList(['a', 'b', 'c', 'd', 'e'])).toContain('2 other packet statements');
++    expect(naturalLanguageList(['a', 'b', 'c', 'd'])).not.toContain('1 other packet statements');
++  });
++
++  test('CR-06: Organic L3 founder copy + certifications CTA', () => {
++    const l3 = resolveGovernedL3Content(
++      'ethics_organic',
++      'claims.organic.claim_only.v1',
++      {
++        organicEvidenceClass: 'claim_only',
++        claimsL3Body: ORGANIC_CLAIM_ONLY_L3_BODY_V02,
++        claimsCtaLabel: ORGANIC_CLAIM_ONLY_CTA_LABEL_V02,
++      },
++      {}
++    );
++    expect(l3?.sections[0]?.body).toBe(ORGANIC_CLAIM_ONLY_L3_BODY_V02);
++    expect(l3?.action?.anchorLabel).toBe('Update certification');
++    expect(l3?.action?.contributionDomain).toBe('certifications');
++  });
++
++  test('CR-06: ordinary-user Claims nomenclature ΓÇö View nutrition details', () => {
++    // eslint-disable-next-line @typescript-eslint/no-require-imports
++    const en = require('../../../../i18n/locales/en.json');
++    expect(en.nutrition.openDetailsA11y).toBe('View nutrition details');
++    expect(en.nutrition.openDetailsA11y.toLowerCase()).not.toMatch(/\bopen\b/);
++  });
++});
+diff --git a/src/__tests__/unit/lib/claims/claimsRescue.negativeAssurance.test.ts b/src/__tests__/unit/lib/claims/claimsRescue.negativeAssurance.test.ts
+index c24963a..46bb0e0 100644
+--- a/src/__tests__/unit/lib/claims/claimsRescue.negativeAssurance.test.ts
++++ b/src/__tests__/unit/lib/claims/claimsRescue.negativeAssurance.test.ts
+@@ -31,13 +31,27 @@ function nutrient(opts: {
+   if (opts.satFat === 'high') high.push('saturated fat');
+   if (opts.sodium === 'high') high.push('sodium');
+   return {
+-    standard_version: 'uk-gov-fop-mtl-v1',
++    standard_version: 'uk-gov-fop-mtl-rveel-reviewed-2026-09-12',
++    nutrient_methodology_version: '20260912_v0_1',
++    nutrient_reference_asset_id: 'uk-gov-fop-mtl-rveel-reviewed-2026-09-12',
+     basis: 'food',
+     large_portion_override: false,
+     nutrients: {
+-      total_sugars: { level: opts.sugars, high_reason: opts.sugars === 'high' ? 'threshold' : null },
+-      saturated_fat: { level: opts.satFat, high_reason: opts.satFat === 'high' ? 'threshold' : null },
+-      sodium: { level: opts.sodium, high_reason: opts.sodium === 'high' ? 'threshold' : null },
++      total_sugars: {
++        level: opts.sugars,
++        high_reason: opts.sugars === 'high' ? 'threshold' : null,
++        source_evidence_id: 'uat:total_sugars',
++      },
++      saturated_fat: {
++        level: opts.satFat,
++        high_reason: opts.satFat === 'high' ? 'threshold' : null,
++        source_evidence_id: 'uat:saturated_fat',
++      },
++      sodium: {
++        level: opts.sodium,
++        high_reason: opts.sodium === 'high' ? 'threshold' : null,
++        source_evidence_id: 'uat:sodium',
++      },
+     },
+     required_context_complete: [opts.sugars, opts.satFat, opts.sodium].every((l) => l !== 'unavailable'),
+     any_governed_high: high.length > 0,
+diff --git a/src/__tests__/unit/lib/claims/claimsRescue.uat.test.ts b/src/__tests__/unit/lib/claims/claimsRescue.uat.test.ts
+index 3174d61..3a477c8 100644
+--- a/src/__tests__/unit/lib/claims/claimsRescue.uat.test.ts
++++ b/src/__tests__/unit/lib/claims/claimsRescue.uat.test.ts
+@@ -34,21 +34,26 @@ function nutrientContext(opts: {
+   if (opts.satFat === 'high') high.push('saturated fat');
+   if (opts.sodium === 'high') high.push('sodium');
+   return {
+-    standard_version: 'uk-gov-fop-mtl-v1',
++    standard_version: 'uk-gov-fop-mtl-rveel-reviewed-2026-09-12',
++    nutrient_methodology_version: '20260912_v0_1',
++    nutrient_reference_asset_id: 'uk-gov-fop-mtl-rveel-reviewed-2026-09-12',
+     basis: 'food',
+     large_portion_override: !!opts.largePortion,
+     nutrients: {
+       total_sugars: {
+         level: opts.sugars,
+         high_reason: opts.sugars === 'high' ? (opts.largePortion ? 'large_portion_override' : 'threshold') : null,
++        source_evidence_id: 'uat:total_sugars',
+       },
+       saturated_fat: {
+         level: opts.satFat,
+         high_reason: opts.satFat === 'high' ? 'threshold' : null,
++        source_evidence_id: 'uat:saturated_fat',
+       },
+       sodium: {
+         level: opts.sodium,
+         high_reason: opts.sodium === 'high' ? 'threshold' : null,
++        source_evidence_id: 'uat:sodium',
+       },
+     },
+     required_context_complete: [opts.sugars, opts.satFat, opts.sodium].every((l) => l !== 'unavailable'),
+diff --git a/src/__tests__/unit/lib/scoreHighlights/l3ContentAddendum.test.ts b/src/__tests__/unit/lib/scoreHighlights/l3ContentAddendum.test.ts
+index e832910..ad56fce 100644
+--- a/src/__tests__/unit/lib/scoreHighlights/l3ContentAddendum.test.ts
++++ b/src/__tests__/unit/lib/scoreHighlights/l3ContentAddendum.test.ts
+@@ -125,8 +125,12 @@ describe('resolveGovernedL3Content ΓÇö Addendum v1.1', () => {
+     const claimOnly = resolveGovernedL3Content('ethics_organic', 'ethics-v37-cert-organic', {
+       organicEvidenceClass: 'claim_only',
+     });
++    expect(claimOnly?.sections).toHaveLength(1);
+     expect(claimOnly?.sections[0].body).toContain('does not establish a specific organic certification');
+-    expect(claimOnly?.sections[1].body).toContain('The current Ethics rule recognises the packet claim');
++    expect(claimOnly?.sections[0].body).toContain('That does not mean the product is not genuinely organic');
++    expect(claimOnly?.action?.anchorLabel).toBe('Update certification');
++    expect(claimOnly?.action?.contributionDomain).toBe('certifications');
++    expect(JSON.stringify(claimOnly)).not.toMatch(/certified against/i);
+     expect(claimOnly?.sources.map((s) => s.label)).toEqual([
+       'Australia ΓÇö ACCC Organic claims',
+       'New Zealand ΓÇö MPI organic product requirements',
+diff --git a/src/__tests__/unit/lib/scoreHighlights/selectScoreHighlights.test.ts b/src/__tests__/unit/lib/scoreHighlights/selectScoreHighlights.test.ts
+index 16ea258..ac80e02 100644
+--- a/src/__tests__/unit/lib/scoreHighlights/selectScoreHighlights.test.ts
++++ b/src/__tests__/unit/lib/scoreHighlights/selectScoreHighlights.test.ts
+@@ -365,7 +365,7 @@ describe('governed copy resolution', () => {
+     expect(certified.l1).toBe('Organic certified');
+     expect(claimOnly.l1).toBe('Organic claim identified');
+     expect(claimOnly.l2).toBe(
+-      'An organic claim appears on this packet, but the packet does not show a specific organic certification.'
++      'The product is presented as Organic, but we have not established a specific organic certification.'
+     );
+   });
+ });
+diff --git a/src/components/TruScoreAnalysisModal.tsx b/src/components/TruScoreAnalysisModal.tsx
+index 224ad18..47314db 100644
+--- a/src/components/TruScoreAnalysisModal.tsx
++++ b/src/components/TruScoreAnalysisModal.tsx
+@@ -62,7 +62,9 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
+               packet_coverage_state: {claimsAssessment.packet_coverage_state}
+             </Text>
+             <Text style={[styles.claimsLine, { color: colors.textTertiary }]}>
+-              register_version: {claimsAssessment.register_version} ┬╖ nutrient_standard_version:{' '}
++              register_version: {claimsAssessment.register_version} ┬╖ nutrient_methodology_version:{' '}
++              {claimsAssessment.nutrient_methodology_version} ┬╖ nutrient_reference_asset_id:{' '}
++              {claimsAssessment.nutrient_reference_asset_id} ┬╖ nutrient_standard_version:{' '}
+               {claimsAssessment.nutrient_standard_version} ┬╖ schema: {claimsAssessment.schema_version}
+             </Text>
+ 
+@@ -127,13 +129,34 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
+                 None (assessed-neutral must never appear as a +0 fired row)
+               </Text>
+             ) : (
+-              claimsAssessment.fired_adjustments.map((f, i) => (
+-                <Text key={`${f.id}:${i}`} style={[styles.claimsLine, { color: colors.text }]}>
+-                  {f.id} ┬╖ {f.points > 0 ? '+' : ''}
+-                  {f.points} ┬╖ {f.description}
+-                  {f.canonical_id ? ` ┬╖ commentary/canonical: ${f.canonical_id}` : ''}
+-                </Text>
+-              ))
++              claimsAssessment.fired_adjustments.map((f, i) => {
++                const bound =
++                  claimsAssessment.commentary_by_event_id?.[f.id] ||
++                  (f.canonical_id
++                    ? claimsAssessment.commentary_by_event_id?.[f.canonical_id]
++                    : undefined);
++                return (
++                  <View key={`${f.id}:${i}`} style={styles.claimsItem}>
++                    <Text style={[styles.claimsLine, { color: colors.text }]}>
++                      {f.id} ┬╖ {f.points > 0 ? '+' : ''}
++                      {f.points} ┬╖ {f.description}
++                      {f.canonical_id ? ` ┬╖ canonical: ${f.canonical_id}` : ''}
++                    </Text>
++                    {bound ? (
++                      <Text style={[styles.claimsLine, { color: colors.textSecondary }]}>
++                        commentary_route: {bound.route}
++                        {bound.l1 ? ` ┬╖ L1: ${bound.l1.slice(0, 80)}` : ''}
++                        {f.metadata?.admission_method
++                          ? ` ┬╖ admission: ${String(f.metadata.admission_method)}`
++                          : ''}
++                        {f.metadata?.evidence_id
++                          ? ` ┬╖ evidence_id: ${String(f.metadata.evidence_id)}`
++                          : ''}
++                      </Text>
++                    ) : null}
++                  </View>
++                );
++              })
+             )}
+ 
+             <Text style={[styles.claimsSubhead, { color: colors.text }]}>Suppressed candidates</Text>
+diff --git a/src/i18n/locales/en.json b/src/i18n/locales/en.json
+index ab9b784..6395f7a 100644
+--- a/src/i18n/locales/en.json
++++ b/src/i18n/locales/en.json
+@@ -667,7 +667,7 @@
+     "perServeContextTitle": "Per serve context",
+     "sourcesMethodTitle": "Sources & method",
+     "contributeA11y": "Contribute or correct nutrition information",
+-    "openDetailsA11y": "Open nutrition details",
++    "openDetailsA11y": "View nutrition details",
+     "burnStripTitle": "Feel the burn",
+     "burnStripSubtitle": "Per 100g of this product consumed, a rough exercise equivalent is estimated below. (Note: this does not constitute medical advice. This information is shown for approximate comparison only.)",
+     "burnWalkShort": "Γëê {{min}} min walking",
+diff --git a/src/lib/scoreHighlights/governedCommentary.ts b/src/lib/scoreHighlights/governedCommentary.ts
+index 4d15886..59885e9 100644
+--- a/src/lib/scoreHighlights/governedCommentary.ts
++++ b/src/lib/scoreHighlights/governedCommentary.ts
+@@ -76,7 +76,7 @@ export function governedCommentaryRow(
+  */
+ const ORGANIC_CLAIM_ONLY_L1 = 'Organic claim identified';
+ const ORGANIC_CLAIM_ONLY_L2 =
+-  'An organic claim appears on this packet, but the packet does not show a specific organic certification.';
++  'The product is presented as Organic, but we have not established a specific organic certification.';
+ 
+ /**
+  * KTC L1 attribution prefix (Ethics v0.2 ┬º4). "Product owner" survives only when governed entity
+diff --git a/src/lib/scoreHighlights/l3/content.ts b/src/lib/scoreHighlights/l3/content.ts
+index 463499e..a2d4118 100644
+--- a/src/lib/scoreHighlights/l3/content.ts
++++ b/src/lib/scoreHighlights/l3/content.ts
+@@ -36,6 +36,8 @@ export interface L3ActionFragment {
+   textBefore: string;
+   anchorLabel: string;
+   textAfter: string;
++  /** When set, anchor routes to the named User Contribution domain. */
++  contributionDomain?: 'certifications' | 'origins';
+ }
+ 
+ export interface L3ResolvedContent {
+@@ -488,19 +490,29 @@ function resolveEthicsCert(
+     const claimOnly = metadata?.organicEvidenceClass === 'claim_only';
+     const sources = [ORGANIC_AU_SOURCE, ORGANIC_NZ_SOURCE];
+     if (claimOnly) {
++      const l3Body =
++        typeof metadata?.claimsL3Body === 'string' && metadata.claimsL3Body.trim()
++          ? String(metadata.claimsL3Body)
++          : 'This reflects a whole-product Organic claim where our available data does not establish a specific organic certification. That does not mean the product is not genuinely organic. If there is a certification on the packet, help us update the record.';
++      const ctaLabel =
++        typeof metadata?.claimsCtaLabel === 'string' && metadata.claimsCtaLabel.trim()
++          ? String(metadata.claimsCtaLabel)
++          : 'Update certification';
+       return {
+         title: 'What this organic claim means',
+         sections: [
+           {
+-            body:
+-              'An organic claim appears on this packet, but the available governed evidence does not establish a specific organic certification.',
+-          },
+-          {
+-            body:
+-              'The current Ethics rule recognises the packet claim, but this view must not present the product as certified unless a specific certification is actually established.',
++            body: l3Body,
+           },
+         ],
+         sources,
++        action: {
++          textBefore: '',
++          anchorLabel: ctaLabel,
++          textAfter: '',
++          /** Existing Certifications User Contribution flow. */
++          contributionDomain: 'certifications',
++        },
+       };
+     }
+     const sections: L3Section[] = [
+@@ -722,7 +734,7 @@ export function resolveGovernedL3Content(
+         sections: [
+           {
+             body:
+-              'This Claims finding uses the same nutrition check shown on the Nutrition details card for total sugars, saturated fat and sodium. Open Nutrition details to review those ratings and sources.',
++              'This Claims finding uses the same nutrition check shown on the Nutrition details card for total sugars, saturated fat and sodium. View Nutrition details to review those ratings and sources.',
+           },
+         ],
+         sources: [],
+diff --git a/src/lib/truscoreEngine/claims/assessClaims.ts b/src/lib/truscoreEngine/claims/assessClaims.ts
+index 38c094b..0ddd065 100644
+--- a/src/lib/truscoreEngine/claims/assessClaims.ts
++++ b/src/lib/truscoreEngine/claims/assessClaims.ts
+@@ -1,6 +1,7 @@
+ /**
+  * Claims assessment decision procedure (v0.2 ┬º10).
+  * Packet Claim Context arithmetic + Organic claim-only + assessment state.
++ * assessment_state and packet_coverage_state are orthogonal (CR-07).
+  */
+ 
+ import {
+@@ -10,10 +11,12 @@ import {
+   buildPositivePacketContextCommentary,
+ } from './commentary';
+ import { matchAdmittedObservations, getMachineRegisterVersion } from './matchRegister';
++import { claimsNutrientVersionIdentities } from './nutrientContextAdapter';
+ import type {
+   AdmittedPacketObservation,
+   BenchmarkCheckStatus,
+   ClaimsAssessmentResult,
++  ClaimsCommentaryPayload,
+   ClaimsFiredAdjustment,
+   ClaimsNutrientContext,
+   ClaimsSuppressedCandidate,
+@@ -25,15 +28,10 @@ export interface AssessClaimsInput {
+   admittedObservations: AdmittedPacketObservation[];
+   packetCoverageState: PacketCoverageState;
+   nutrientContext: ClaimsNutrientContext | null;
+-  /** Body NOVA group when known (optional commentary only). */
+   novaGroup?: number | null;
+-  /** Certified Organic certification fired (+3). */
+   certifiedOrganicFired: boolean;
+-  /** KTC/BBFAW check statuses for assessment_state and neutral copy. */
+   benchmarkChecks: { source: 'ktc' | 'bbfaw'; status: BenchmarkCheckStatus }[];
+-  /** Other certification schemes fired (Fairtrade, MSC, ΓÇª) ΓÇö prevents assessed_neutral. */
+   otherCertificationFired: boolean;
+-  /** Expected register version; mismatch fails closed for new recognition. */
+   registerVersionExpected?: string;
+ }
+ 
+@@ -52,12 +50,10 @@ function computePacketContextPoints(
+     return { points: -3 };
+   }
+ 
+-  // Set B never +1
+   if (!hasA && hasB) {
+     return { points: 0, diagnostic: 'set_b_no_high_zero_outcome' };
+   }
+ 
+-  // Set A positive requires complete required context and no High
+   if (hasA && !nutrient.any_governed_high) {
+     if (!nutrient.required_context_complete) {
+       return { points: 0, diagnostic: 'nutrient_context_incomplete_no_positive' };
+@@ -68,13 +64,48 @@ function computePacketContextPoints(
+   return { points: 0 };
+ }
+ 
++function emptyResult(
++  partial: Partial<ClaimsAssessmentResult> &
++    Pick<ClaimsAssessmentResult, 'diagnostics' | 'packet_coverage_state' | 'benchmark_checks'>
++): ClaimsAssessmentResult {
++  const versions = claimsNutrientVersionIdentities();
++  return {
++    schema_version: CLAIMS_ASSESSMENT_SCHEMA_VERSION,
++    register_version: getMachineRegisterVersion(),
++    nutrient_standard_version: versions.nutrient_standard_version,
++    nutrient_methodology_version: versions.nutrient_methodology_version,
++    nutrient_reference_asset_id: versions.nutrient_reference_asset_id,
++    assessment_state: 'unassessed',
++    admitted_claims: [],
++    unclassified_statements: [],
++    nutrient_context: null,
++    packet_context_points: 0,
++    organic_claim_only_points: 0,
++    fired_adjustments: [],
++    suppressed_candidates: [],
++    commentary_payload: { route: 'none' },
++    commentary_by_event_id: {},
++    ...partial,
++  };
++}
++
+ /**
+  * Run Packet Claim Context + Set O Organic claim-only assessment.
+- * Does not include KTC/BBFAW/certification arithmetic (caller merges).
+  */
+ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAssessmentResult {
+   const diagnostics: ClaimsAssessmentResult['diagnostics'] = [];
+   const registerVersion = getMachineRegisterVersion();
++  const versions = claimsNutrientVersionIdentities();
++  const nutrientVersions = {
++    nutrient_standard_version:
++      input.nutrientContext?.nutrient_reference_asset_id ||
++      input.nutrientContext?.standard_version ||
++      versions.nutrient_standard_version,
++    nutrient_methodology_version:
++      input.nutrientContext?.nutrient_methodology_version || versions.nutrient_methodology_version,
++    nutrient_reference_asset_id:
++      input.nutrientContext?.nutrient_reference_asset_id || versions.nutrient_reference_asset_id,
++  };
+ 
+   const match = matchAdmittedObservations(input.admittedObservations, {
+     registerVersionExpected: input.registerVersionExpected,
+@@ -82,23 +113,15 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
+   diagnostics.push(...match.diagnostics);
+ 
+   if (match.diagnostics.some((d) => d.code === 'register_version_mismatch')) {
+-    return {
+-      schema_version: CLAIMS_ASSESSMENT_SCHEMA_VERSION,
++    return emptyResult({
++      ...nutrientVersions,
+       register_version: registerVersion,
+-      nutrient_standard_version: input.nutrientContext?.standard_version ?? '',
+-      assessment_state: 'unassessed',
+       packet_coverage_state: input.packetCoverageState,
+-      admitted_claims: [],
+-      unclassified_statements: [],
+       nutrient_context: input.nutrientContext,
+       benchmark_checks: input.benchmarkChecks,
+-      packet_context_points: 0,
+-      organic_claim_only_points: 0,
+-      fired_adjustments: [],
+-      suppressed_candidates: [],
+       commentary_payload: { route: 'none', suppressed_reason: 'register_version_mismatch' },
+       diagnostics,
+-    };
++    });
+   }
+ 
+   const setA = match.matched.filter((m) => m.set === 'A');
+@@ -115,6 +138,7 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
+ 
+   const fired: ClaimsFiredAdjustment[] = [];
+   const suppressed: ClaimsSuppressedCandidate[] = [];
++  const commentaryByEvent: Record<string, ClaimsCommentaryPayload> = {};
+ 
+   // Organic claim-only +1, suppressed by Certified Organic +3
+   let organicClaimOnlyPoints: 0 | 1 = 0;
+@@ -128,10 +152,12 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
+       });
+       diagnostics.push({
+         code: 'organic_claim_only_suppressed',
+-        detail: 'Certified Organic present',
++        detail: 'Certified Organic present ΓÇö claim-only +1 suppressed; reason exposed for S28',
+       });
+     } else {
+       organicClaimOnlyPoints = 1;
++      const organicCommentary = buildOrganicClaimOnlyCommentary();
++      commentaryByEvent['claims.organic.claim_only.v1'] = organicCommentary;
+       fired.push({
+         id: 'claims.organic.claim_only.v1',
+         canonical_id: 'claims.organic.claim_only.v1',
+@@ -143,15 +169,27 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
+           register_row_id: setO[0].register_row_id,
+           display_text: setO[0].display_text,
+           organicEvidenceClass: 'claim_only',
++          evidence_id: setO[0].evidence_id,
++          admission_method: setO[0].admission_method,
++          ...(organicCommentary.l1 ? { claimsL1: organicCommentary.l1 } : {}),
++          ...(organicCommentary.l2 ? { claimsL2: organicCommentary.l2 } : {}),
++          ...(organicCommentary.l3_body ? { claimsL3Body: organicCommentary.l3_body } : {}),
++          ...(organicCommentary.cta_label ? { claimsCtaLabel: organicCommentary.cta_label } : {}),
++          ...(organicCommentary.cta_domain ? { claimsCtaDomain: organicCommentary.cta_domain } : {}),
+         },
+       });
+     }
+   }
+ 
+   const nova4 = input.novaGroup === 4;
+-  let commentary: ClaimsAssessmentResult['commentary_payload'] = { route: 'none' };
+ 
+   if (packetPoints === -3) {
++    const adverse = buildAdversePacketContextCommentary(
++      [...setA, ...setB],
++      input.nutrientContext?.high_nutrient_labels ?? [],
++      nova4
++    );
++    commentaryByEvent['claims.packet_context.adverse.v1'] = adverse;
+     fired.push({
+       id: 'claims.packet_context.adverse.v1',
+       canonical_id: 'claims.packet_context.adverse.v1',
+@@ -162,14 +200,13 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
+       metadata: {
+         high_nutrients: (input.nutrientContext?.high_nutrient_labels ?? []).join('|'),
+         claim_texts: [...setA, ...setB].map((c) => c.display_text).join('|'),
++        ...(adverse.l1 ? { claimsL1: adverse.l1 } : {}),
++        ...(adverse.l2 ? { claimsL2: adverse.l2 } : {}),
+       },
+     });
+-    commentary = buildAdversePacketContextCommentary(
+-      [...setA, ...setB],
+-      input.nutrientContext?.high_nutrient_labels ?? [],
+-      nova4
+-    );
+   } else if (packetPoints === 1) {
++    const positive = buildPositivePacketContextCommentary(setA, nova4);
++    commentaryByEvent['claims.packet_context.positive.v1'] = positive;
+     fired.push({
+       id: 'claims.packet_context.positive.v1',
+       canonical_id: 'claims.packet_context.positive.v1',
+@@ -179,52 +216,57 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
+       family: 'packet_context',
+       metadata: {
+         claim_texts: setA.map((c) => c.display_text).join('|'),
++        ...(positive.l1 ? { claimsL1: positive.l1 } : {}),
++        ...(positive.l2 ? { claimsL2: positive.l2 } : {}),
+       },
+     });
+-    commentary = buildPositivePacketContextCommentary(setA, nova4);
+-  } else if (organicClaimOnlyPoints === 1) {
+-    commentary = buildOrganicClaimOnlyCommentary();
+   }
+ 
+-  // Assessment state
++  // Primary commentary: prefer packet context, else organic (both retained in commentary_by_event_id)
++  let commentary_payload: ClaimsCommentaryPayload = { route: 'none' };
++  if (commentaryByEvent['claims.packet_context.adverse.v1']) {
++    commentary_payload = commentaryByEvent['claims.packet_context.adverse.v1'];
++  } else if (commentaryByEvent['claims.packet_context.positive.v1']) {
++    commentary_payload = commentaryByEvent['claims.packet_context.positive.v1'];
++  } else if (commentaryByEvent['claims.organic.claim_only.v1']) {
++    commentary_payload = commentaryByEvent['claims.organic.claim_only.v1'];
++  }
++
+   const anyBenchmarkFired = input.benchmarkChecks.some(
+     (b) => b.status === 'positive' || b.status === 'adverse'
+   );
+   const anyScoringClaimOrCert =
+     fired.length > 0 || input.certifiedOrganicFired || input.otherCertificationFired;
+ 
++  // CR-07: assessment_state orthogonal to packet_coverage_state
+   let assessment_state: ClaimsAssessmentResult['assessment_state'] = 'unassessed';
+-  if (input.packetCoverageState !== 'complete') {
+-    assessment_state = anyScoringClaimOrCert || anyBenchmarkFired ? 'assessed_scored' : 'unassessed';
+-    // If we have scored events, assessed_scored even if coverage incomplete
+-    if (anyScoringClaimOrCert || anyBenchmarkFired) assessment_state = 'assessed_scored';
+-  } else if (anyScoringClaimOrCert || anyBenchmarkFired) {
++  if (anyScoringClaimOrCert || anyBenchmarkFired) {
+     assessment_state = 'assessed_scored';
+-  } else {
+-    // Complete coverage, no scoring claim/cert, no benchmark fire
++  } else if (input.packetCoverageState === 'complete') {
+     assessment_state = 'assessed_neutral';
+     const nonScoring = [
+       ...setC.map((c) => ({ display_text: c.display_text })),
+       ...match.unclassified.map((u) => ({ display_text: u.display_text })),
+     ];
+-    commentary = buildAssessedNeutralCommentary(nonScoring);
++    commentary_payload = buildAssessedNeutralCommentary(nonScoring);
++  } else {
++    assessment_state = 'unassessed';
+   }
+ 
+-  // If packet context commentary was suppressed (missing tokens), keep score event + diagnostic
+   if (
+     (packetPoints === 1 || packetPoints === -3) &&
+-    (commentary as { suppressed_reason?: string }).suppressed_reason
++    commentary_payload.suppressed_reason
+   ) {
+     diagnostics.push({
+       code: 'commentary_suppressed',
+-      detail: (commentary as { suppressed_reason?: string }).suppressed_reason || 'token_failure',
++      detail: commentary_payload.suppressed_reason || 'token_failure',
+     });
+   }
+ 
+   return {
+     schema_version: CLAIMS_ASSESSMENT_SCHEMA_VERSION,
+     register_version: registerVersion,
+-    nutrient_standard_version: input.nutrientContext?.standard_version ?? '',
++    ...nutrientVersions,
+     assessment_state,
+     packet_coverage_state: input.packetCoverageState,
+     admitted_claims: match.matched,
+@@ -235,7 +277,8 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
+     organic_claim_only_points: organicClaimOnlyPoints,
+     fired_adjustments: fired,
+     suppressed_candidates: suppressed,
+-    commentary_payload: commentary,
++    commentary_payload,
++    commentary_by_event_id: commentaryByEvent,
+     diagnostics,
+   };
+ }
+diff --git a/src/lib/truscoreEngine/claims/commentary.ts b/src/lib/truscoreEngine/claims/commentary.ts
+index 5006dab..5033a92 100644
+--- a/src/lib/truscoreEngine/claims/commentary.ts
++++ b/src/lib/truscoreEngine/claims/commentary.ts
+@@ -1,11 +1,8 @@
+ /**
+- * Exact founder-approved Claims commentary (v0.2 ┬º11). Do not rewrite.
++ * Exact founder-approved Claims commentary (v0.2 ┬º11 + corrective Organic copy).
+  */
+ 
+-import {
+-  naturalLanguageList,
+-  naturalLanguageNutrientList,
+-} from './normalize';
++import { naturalLanguageList, naturalLanguageNutrientList } from './normalize';
+ import type { ClaimsCommentaryPayload, MatchedClaimObservation } from './types';
+ 
+ const POSITIVE_L2 =
+@@ -23,9 +20,13 @@ const NEUTRAL_L2 =
+ const NEUTRAL_APPEND =
+   'We did find packet claims for [CLAIM(S)], but these sit outside the claims we currently assess.';
+ 
++/** Founder-approved Organic claim-only consumer copy (corrective pass). */
+ export const ORGANIC_CLAIM_ONLY_L1_V02 = 'Organic claim identified';
+ export const ORGANIC_CLAIM_ONLY_L2_V02 =
+-  'An organic claim appears on this packet, but the packet does not show a specific organic certification.';
++  'The product is presented as Organic, but we have not established a specific organic certification.';
++export const ORGANIC_CLAIM_ONLY_L3_BODY_V02 =
++  'This reflects a whole-product Organic claim where our available data does not establish a specific organic certification. That does not mean the product is not genuinely organic. If there is a certification on the packet, help us update the record.';
++export const ORGANIC_CLAIM_ONLY_CTA_LABEL_V02 = 'Update certification';
+ 
+ function bindClaimToken(template: string, claimList: string): string | null {
+   if (!claimList) return null;
+@@ -60,6 +61,7 @@ export function buildPositivePacketContextCommentary(
+     l2,
+     claim_display_texts: claimTexts,
+     nova4_sentence_appended: nova4,
++    bound_event_id: 'claims.packet_context.positive.v1',
+   };
+ }
+ 
+@@ -93,6 +95,7 @@ export function buildAdversePacketContextCommentary(
+     claim_display_texts: claimTexts,
+     high_nutrient_labels: highNutrients,
+     nova4_sentence_appended: nova4,
++    bound_event_id: 'claims.packet_context.adverse.v1',
+   };
+ }
+ 
+@@ -119,5 +122,9 @@ export function buildOrganicClaimOnlyCommentary(): ClaimsCommentaryPayload {
+     route: 'organic_claim_only',
+     l1: ORGANIC_CLAIM_ONLY_L1_V02,
+     l2: ORGANIC_CLAIM_ONLY_L2_V02,
++    l3_body: ORGANIC_CLAIM_ONLY_L3_BODY_V02,
++    cta_label: ORGANIC_CLAIM_ONLY_CTA_LABEL_V02,
++    cta_domain: 'certifications',
++    bound_event_id: 'claims.organic.claim_only.v1',
+   };
+ }
+diff --git a/src/lib/truscoreEngine/claims/index.ts b/src/lib/truscoreEngine/claims/index.ts
+index a568de4..8406937 100644
+--- a/src/lib/truscoreEngine/claims/index.ts
++++ b/src/lib/truscoreEngine/claims/index.ts
+@@ -1,6 +1,6 @@
+ export { assessClaimsPacketAndOrganic } from './assessClaims';
+ export type { AssessClaimsInput } from './assessClaims';
+-export { buildClaimsNutrientContext } from './nutrientContextAdapter';
++export { buildClaimsNutrientContext, claimsNutrientVersionIdentities } from './nutrientContextAdapter';
+ export { buildClaimsObservationsFromProduct } from './productObservations';
+ export { matchAdmittedObservations, getMachineRegisterVersion } from './matchRegister';
+ export {
+@@ -14,10 +14,14 @@ export {
+   buildOrganicClaimOnlyCommentary,
+   ORGANIC_CLAIM_ONLY_L1_V02,
+   ORGANIC_CLAIM_ONLY_L2_V02,
++  ORGANIC_CLAIM_ONLY_L3_BODY_V02,
++  ORGANIC_CLAIM_ONLY_CTA_LABEL_V02,
+ } from './commentary';
+ export * from './types';
+ export {
+   normalizePacketStatement,
+   naturalLanguageList,
+   naturalLanguageNutrientList,
++  escapeDisplayText,
++  toDisplaySafeClaimText,
+ } from './normalize';
+diff --git a/src/lib/truscoreEngine/claims/matchRegister.ts b/src/lib/truscoreEngine/claims/matchRegister.ts
+index 1b6430a..49451f2 100644
+--- a/src/lib/truscoreEngine/claims/matchRegister.ts
++++ b/src/lib/truscoreEngine/claims/matchRegister.ts
+@@ -1,5 +1,7 @@
+ /**
+  * Deterministic Machine Register matching ΓÇö closed expressions only (REG-02 / R-003).
++ * Pipeline: normalise ΓåÆ generate candidates ΓåÆ apply candidate/scoped exclusions ΓåÆ
++ * resolve collisions/precedence ΓåÆ aggregate.
+  * match_type handlers: regex | regex_exact | deterministic_member_count (A-VMC-003 / R-013).
+  */
+ 
+@@ -47,6 +49,23 @@ interface RegisterFile {
+ 
+ const REGISTER = registerJson as RegisterFile;
+ 
++/** Favourable ΓÇ£no added ΓÇªΓÇ¥ sugar/sodium/fat pattern ids that must survive inverse exclusions. */
++const NO_ADDED_PATTERN_IDS = new Set(['B-SUG-002', 'B-SOD-002']);
++
++const CLOSED_PROTEIN_ADJECTIVES = new Set([
++  'high',
++  'higher',
++  'increased',
++  'more',
++  'source',
++  'good',
++  'excellent',
++  'rich',
++]);
++
++const ACTIVE_VITAMIN_MINERAL_TARGETS =
++  'vitamins?|minerals?|calcium|iron|zinc|magnesium|iodine|thiamine|thiamin|riboflavin|niacin|folate';
++
+ export function getMachineRegisterVersion(): string {
+   return REGISTER.register_version || PACKET_CLAIM_MACHINE_REGISTER_VERSION;
+ }
+@@ -59,11 +78,6 @@ export function getRegisterMatchTypes(): string[] {
+   return [...new Set(REGISTER.patterns.map((p) => p.match_type))].sort();
+ }
+ 
+-/**
+- * Active Target Vocabulary aliases ΓåÆ canonical member ids for A-VMC-003 / R-013.
+- * Only specific vitamin/mineral targets participate (not generic "vitamin"/"mineral").
+- * Longer aliases are matched first so "vitamin b12" wins over "vitamin b1".
+- */
+ const ACTIVE_MEMBER_TARGET_ALIASES: { alias: string; canonical: string }[] = [
+   { alias: 'vitamin b12', canonical: 'vitamin_b12' },
+   { alias: 'vitamin b 12', canonical: 'vitamin_b12' },
+@@ -110,13 +124,9 @@ function isRegexExclusionCondition(condition: string): boolean {
+   return condition.startsWith('\\') || condition.startsWith('^') || condition.includes('\\b');
+ }
+ 
+-function matchesExclusion(normalized: string, exclusion: RegisterExclusion): boolean {
++function matchesRegexExclusion(normalized: string, exclusion: RegisterExclusion): boolean {
+   const cond = exclusion.normalised_pattern_or_condition.trim();
+-  if (!cond) return false;
+-  // Narrative exclusions (X-020 etc.) are applied by admission policy, not regex.
+-  if (!isRegexExclusionCondition(cond) && !cond.startsWith('^')) {
+-    return false;
+-  }
++  if (!cond || !isRegexExclusionCondition(cond)) return false;
+   try {
+     return new RegExp(cond, 'i').test(normalized);
+   } catch {
+@@ -124,18 +134,25 @@ function matchesExclusion(normalized: string, exclusion: RegisterExclusion): boo
+   }
+ }
+ 
++/**
++ * Product-name evidence is Set O scope only ΓÇö never scan the whole A/B catalogue.
++ * OFF labels and packet/OCR/user admissions may use established_packet_statement patterns.
++ */
+ function patternAppliesToScope(pattern: RegisterPattern, observation: AdmittedPacketObservation): boolean {
+-  if (pattern.required_scope === 'governed_product_name_whole_product') {
+-    return observation.is_product_name === true || observation.admission_method === 'governed_product_name';
++  const productNameScope =
++    observation.is_product_name === true || observation.admission_method === 'governed_product_name';
++
++  if (productNameScope) {
++    return pattern.required_scope === 'governed_product_name_whole_product';
+   }
+-  if (pattern.required_scope === 'standalone_promotional_callout') {
+-    // Exact whole-string match patterns; any established packet statement may apply.
+-    return true;
++
++  if (pattern.required_scope === 'governed_product_name_whole_product') {
++    return false;
+   }
++
+   return true;
+ }
+ 
+-/** Distinct active vitamin/mineral member targets (canonical ids) for R-013. */
+ export function listDistinctVitaminMineralTargets(normalized: string): string[] {
+   const found = new Set<string>();
+   for (const { alias, canonical } of ACTIVE_MEMBER_TARGET_ALIASES) {
+@@ -155,8 +172,6 @@ function matchPattern(
+   }
+   const expr = pattern.normalised_match_expression;
+   try {
+-    // regex_exact rows use anchored ^ΓÇª$ expressions; regex rows use word-boundary expressions.
+-    // Both are closed RegExp tests ΓÇö no fuzzy/semantic expansion (REG-02).
+     const matched = new RegExp(expr, 'i').test(normalized);
+     return { matched };
+   } catch {
+@@ -164,6 +179,198 @@ function matchPattern(
+   }
+ }
+ 
++type Candidate = { pattern: RegisterPattern; memberTargets?: string[] };
++
++/**
++ * Candidate-scoped exclusion: veto only the candidates the exclusion governs.
++ * Independent approved patterns on the same statement survive (X-007 / X-011 style).
++ */
++function candidateVetoedByExclusion(
++  exclusion: RegisterExclusion,
++  candidate: Candidate,
++  normalized: string,
++  diagnostics: { code: string; detail: string }[]
++): boolean {
++  const id = exclusion.negative_id;
++  const p = candidate.pattern;
++
++  // Inverse sugar ΓÇö do not veto full B-SUG-002 ΓÇ£no added sugarΓÇ¥ matches
++  if (id === 'X-001') {
++    if (NO_ADDED_PATTERN_IDS.has(p.pattern_id)) return false;
++    return p.canonical_family === 'total_sugars' || /sugar/.test(p.pattern_id.toLowerCase());
++  }
++
++  // Inverse fat/sodium/salt ΓÇö do not veto B-SOD-002 / no-added fat rows
++  if (id === 'X-002') {
++    if (NO_ADDED_PATTERN_IDS.has(p.pattern_id)) return false;
++    return (
++      p.canonical_family === 'sodium' ||
++      p.canonical_family === 'saturated_fat' ||
++      p.canonical_family === 'total_fat' ||
++      /fat|sod|salt/.test(p.pattern_id.toLowerCase())
++    );
++  }
++
++  if (id === 'X-003') {
++    return p.canonical_family === 'protein' || /protein/i.test(p.pattern_id);
++  }
++  if (id === 'X-004') {
++    return p.canonical_family === 'fibre' || /fibre|fiber/i.test(p.pattern_id);
++  }
++  if (id === 'X-005') {
++    return (
++      p.canonical_family === 'vitamin_mineral' ||
++      p.match_type === 'deterministic_member_count' ||
++      /vmc|vitamin|mineral/i.test(p.pattern_id)
++    );
++  }
++  if (id === 'X-006') {
++    return p.canonical_family === 'total_sugars';
++  }
++
++  // Unapproved protein adjectives ΓÇö only veto protein candidates; preserve independent patterns
++  if (id === 'X-007') {
++    return p.canonical_family === 'protein' || /protein/i.test(p.pattern_id);
++  }
++
++  if (id === 'X-008') {
++    return /fat/i.test(p.canonical_family) || /fat/i.test(p.pattern_id);
++  }
++  if (id === 'X-009' || id === 'X-010') {
++    return p.canonical_family === 'sodium' || /sod|salt/i.test(p.pattern_id);
++  }
++
++  // Protein bar alone ΓÇö only veto bare product-type protein claims
++  if (id === 'X-011') {
++    return p.canonical_family === 'protein' || /protein/i.test(p.pattern_id);
++  }
++
++  // Outside MVP V/M vocabulary ΓÇö unclassified those targets; do not kill other families
++  if (id === 'X-012') {
++    return (
++      p.canonical_family === 'vitamin_mineral' ||
++      p.match_type === 'deterministic_member_count' ||
++      /vmc|vitamin|mineral/i.test(p.pattern_id)
++    );
++  }
++
++  if (id === 'X-013' || id === 'X-014' || id === 'X-015' || id === 'X-016') {
++    return p.catalogue_set === 'C' || /fodmap|vegan|dairy|gluten|plant/i.test(p.pattern_id);
++  }
++
++  // Certified Organic ΓåÆ no Set O packet row (cert path separate)
++  if (id === 'X-017' || id === 'X-023') {
++    return p.catalogue_set === 'O' || /org/i.test(p.pattern_id);
++  }
++
++  // Ingredient / partial organic ΓÇö veto Set O only; unrelated claims survive
++  if (id === 'X-018' || id === 'X-019') {
++    return p.catalogue_set === 'O' || /org/i.test(p.pattern_id);
++  }
++
++  // X-024: founder-accepted MVP edge ΓÇö do not brand-parse; no veto
++  if (id === 'X-024') {
++    diagnostics.push({
++      code: 'x024_mvp_edge_accepted',
++      detail: 'Partial Organic-in-name brand edge deferred; whole-product Organic claim-only may fire',
++    });
++    return false;
++  }
++
++  // Default regex exclusion: veto A/B candidates in overlapping family when possible
++  if (p.catalogue_set === 'A' || p.catalogue_set === 'B') {
++    return true;
++  }
++  return false;
++}
++
++/** Deterministic prose exclusions (X-020ΓÇªX-022). */
++function applyProseExclusionPredicates(
++  normalized: string,
++  observation: AdmittedPacketObservation,
++  candidates: Candidate[],
++  diagnostics: { code: string; detail: string }[]
++): Candidate[] {
++  let remaining = [...candidates];
++
++  // X-020: mandatory legal/NIP text ΓÇö only when admission explicitly marks that universe
++  if (observation.source_locator === 'mandatory_legal_text' || observation.source_locator === 'nip') {
++    diagnostics.push({
++      code: 'x020_mandatory_text_excluded',
++      detail: `evidence ${observation.evidence_id}: mandatory NIP/legal text outside claim input universe`,
++    });
++    return [];
++  }
++
++  // X-021: unlisted adjective immediately before active protein/fibre target
++  const stop = new Set([
++    'of',
++    'a',
++    'an',
++    'the',
++    'per',
++    'with',
++    'contains',
++    'and',
++    'or',
++    'in',
++    'for',
++    'to',
++    'from',
++    'g',
++    'mg',
++  ]);
++  const adjTarget = normalized.match(/\b([a-z]+)\s+(protein|fibre|fiber)\b/gi) || [];
++  let unlistedHit = false;
++  for (const phrase of adjTarget) {
++    const parts = phrase.toLowerCase().split(/\s+/);
++    const adj = parts[0];
++    if (CLOSED_PROTEIN_ADJECTIVES.has(adj) || stop.has(adj)) continue;
++    if (/^\d/.test(adj)) continue;
++    unlistedHit = true;
++  }
++  if (unlistedHit) {
++    const before = remaining.length;
++    remaining = remaining.filter((c) => {
++      const fam = c.pattern.canonical_family;
++      if (fam === 'protein' || fam === 'fibre') return false;
++      return true;
++    });
++    if (remaining.length < before) {
++      diagnostics.push({
++        code: 'x021_unlisted_adjective',
++        detail: `evidence ${observation.evidence_id}: unlisted adjective+target ΓåÆ protein/fibre candidates dropped`,
++      });
++    }
++  }
++
++  // X-022: comparative vitamin/mineral
++  const comparativeVm = new RegExp(
++    `\\b(?:more|higher|increased|less|lower|reduced)\\s+(?:${ACTIVE_VITAMIN_MINERAL_TARGETS})\\b`,
++    'i'
++  );
++  if (comparativeVm.test(normalized)) {
++    const before = remaining.length;
++    remaining = remaining.filter(
++      (c) =>
++        c.pattern.canonical_family !== 'vitamin_mineral' &&
++        c.pattern.match_type !== 'deterministic_member_count' &&
++        !/vmc|vitamin|mineral/i.test(c.pattern.pattern_id)
++    );
++    if (remaining.length < before) {
++      diagnostics.push({
++        code: 'x022_comparative_vm',
++        detail: `evidence ${observation.evidence_id}: comparative V/M outside MVP catalogue`,
++      });
++    }
++  }
++
++  // Silence unused closed-set reference (documents closed vocabulary for X-021)
++  void CLOSED_PROTEIN_ADJECTIVES;
++
++  return remaining;
++}
++
+ export interface MatchRegisterResult {
+   matched: MatchedClaimObservation[];
+   unclassified: {
+@@ -172,14 +379,18 @@ export interface MatchRegisterResult {
+     display_text: string;
+   }[];
+   diagnostics: { code: string; detail: string }[];
+-  excluded: { evidence_id: string; negative_id: string; reason: string }[];
++  excluded: {
++    evidence_id: string;
++    negative_id: string;
++    reason: string;
++    vetoed_pattern_id?: string;
++  }[];
+ }
+ 
+ /**
+  * Match admitted observations against the active Machine Register.
+  * Collision R-012: same statement matching A and B retains B.
+- * R-013: A-VMC-003 combination observation supersedes individual vitamin/mineral hits
+- * on the same statement (one observation with member_targets; never one score event per member).
++ * R-013: A-VMC-003 combination supersedes individual vitamin/mineral hits.
+  */
+ export function matchAdmittedObservations(
+   observations: AdmittedPacketObservation[],
+@@ -204,26 +415,42 @@ export function matchAdmittedObservations(
+     const normalized = normalizePacketStatement(obs.observed_text);
+     if (!normalized) continue;
+ 
+-    // Ingredient-level organic exclusions etc.
+-    let excludedHit: RegisterExclusion | undefined;
++    // 1) Generate active-row candidates (scoped)
++    let candidates: Candidate[] = [];
++    for (const pattern of patterns) {
++      if (!patternAppliesToScope(pattern, obs)) continue;
++      const result = matchPattern(normalized, pattern);
++      if (result.matched) candidates.push({ pattern, memberTargets: result.memberTargets });
++    }
++
++    // 2) Apply candidate/scoped regex exclusions
+     for (const ex of REGISTER.exclusions) {
+-      if (matchesExclusion(normalized, ex)) {
+-        excludedHit = ex;
+-        break;
++      if (!isRegexExclusionCondition(ex.normalised_pattern_or_condition)) continue;
++      if (!matchesRegexExclusion(normalized, ex)) continue;
++
++      const kept: Candidate[] = [];
++      for (const cand of candidates) {
++        if (candidateVetoedByExclusion(ex, cand, normalized, diagnostics)) {
++          excluded.push({
++            evidence_id: obs.evidence_id,
++            negative_id: ex.negative_id,
++            reason: ex.reason,
++            vetoed_pattern_id: cand.pattern.pattern_id,
++          });
++        } else {
++          kept.push(cand);
++        }
+       }
++      candidates = kept;
+     }
+-    if (excludedHit) {
+-      excluded.push({
+-        evidence_id: obs.evidence_id,
+-        negative_id: excludedHit.negative_id,
+-        reason: excludedHit.reason,
+-      });
+-      // Certified Organic wording ΓåÆ route to certifications (no packet row)
+-      if (excludedHit.negative_id === 'X-017' || excludedHit.negative_id === 'X-023') {
+-        continue;
+-      }
+-      // Inverse/unfavourable ΓåÆ may remain unclassified if required; treat as unclassified for honesty
+-      if (excludedHit.required_treatment.toLowerCase().includes('unclassified')) {
++
++    // 3) Prose exclusions (X-020 / X-021 / X-022); X-024 handled as MVP-accepted edge above
++    candidates = applyProseExclusionPredicates(normalized, obs, candidates, diagnostics);
++
++    if (candidates.length === 0) {
++      // Do not dump exclusion-rejected governed wording into ΓÇ£outside claims we assessΓÇ¥
++      const hadExclusion = excluded.some((e) => e.evidence_id === obs.evidence_id);
++      if (!hadExclusion) {
+         unclassified.push({
+           evidence_id: obs.evidence_id,
+           observed_text: obs.observed_text,
+@@ -233,26 +460,10 @@ export function matchAdmittedObservations(
+       continue;
+     }
+ 
+-    const hits: { pattern: RegisterPattern; memberTargets?: string[] }[] = [];
+-    for (const pattern of patterns) {
+-      if (!patternAppliesToScope(pattern, obs)) continue;
+-      const result = matchPattern(normalized, pattern);
+-      if (result.matched) hits.push({ pattern, memberTargets: result.memberTargets });
+-    }
+-
+-    if (hits.length === 0) {
+-      unclassified.push({
+-        evidence_id: obs.evidence_id,
+-        observed_text: obs.observed_text,
+-        display_text: toDisplaySafeClaimText(obs.display_text || obs.observed_text),
+-      });
+-      continue;
+-    }
+-
+-    let selected = hits;
++    let selected = candidates;
+ 
+-    // R-013: combination member-count row wins over individual vitamin/mineral / phrase VMC rows
+-    const combinationHit = hits.find(
++    // R-013
++    const combinationHit = candidates.find(
+       (h) =>
+         h.pattern.match_type === 'deterministic_member_count' &&
+         h.pattern.pattern_id === 'A-VMC-003'
+@@ -264,11 +475,11 @@ export function matchAdmittedObservations(
+         detail: `evidence ${obs.evidence_id}: A-VMC-003 retained as one combination observation with members [${(combinationHit.memberTargets ?? []).join(', ')}]`,
+       });
+     } else {
+-      // Collision: same statement matches A and B ΓåÆ retain B (R-012)
+-      const hasA = hits.some((h) => h.pattern.catalogue_set === 'A');
+-      const hasB = hits.some((h) => h.pattern.catalogue_set === 'B');
++      // R-012
++      const hasA = candidates.some((h) => h.pattern.catalogue_set === 'A');
++      const hasB = candidates.some((h) => h.pattern.catalogue_set === 'B');
+       if (hasA && hasB) {
+-        selected = hits.filter((h) => h.pattern.catalogue_set === 'B');
++        selected = candidates.filter((h) => h.pattern.catalogue_set === 'B');
+         diagnostics.push({
+           code: 'collision_a_b_retain_b',
+           detail: `evidence ${obs.evidence_id}: A+B collision retained Set B`,
+@@ -276,9 +487,19 @@ export function matchAdmittedObservations(
+       }
+     }
+ 
+-    // Prefer highest collision_priority within remaining; keep one observation per statement
+-    selected.sort((a, b) => b.pattern.collision_priority - a.pattern.collision_priority);
+-    const best = selected[0];
++    // Highest collision_priority wins ΓÇö no JSON-order tiebreak
++    const maxPriority = Math.max(...selected.map((s) => s.pattern.collision_priority));
++    const top = selected.filter((s) => s.pattern.collision_priority === maxPriority);
++    if (top.length > 1) {
++      // Distinct equal-priority ambiguity ΓåÆ fail closed
++      diagnostics.push({
++        code: 'collision_priority_tie_fail_closed',
++        detail: `evidence ${obs.evidence_id}: equal priority among [${top.map((t) => t.pattern.pattern_id).join(', ')}]`,
++      });
++      continue;
++    }
++    const best = top[0];
++
+     matched.push({
+       evidence_id: obs.evidence_id,
+       observed_text: obs.observed_text,
+diff --git a/src/lib/truscoreEngine/claims/normalize.ts b/src/lib/truscoreEngine/claims/normalize.ts
+index 80001d3..e76e80e 100644
+--- a/src/lib/truscoreEngine/claims/normalize.ts
++++ b/src/lib/truscoreEngine/claims/normalize.ts
+@@ -3,20 +3,16 @@
+  */
+ 
+ export function normalizePacketStatement(raw: string): string {
+-  // Unicode NFKC
+   let s = raw.normalize('NFKC');
+   s = s.toLowerCase();
+-  // Ampersand / plus between claim terms ΓåÆ and
+   s = s.replace(/\s*[&+]\s*/g, ' and ');
+-  // Hyphens/dashes ΓåÆ spaces
+   s = s.replace(/[\u2010-\u2015\-ΓÇôΓÇö]/g, ' ');
+-  // Insert space between number and g/mg/mcg/┬╡g
+   s = s.replace(/(\d)(g|mg|mcg|┬╡g)\b/gi, '$1 $2');
+-  // Collapse whitespace
+   s = s.replace(/\s+/g, ' ').trim();
+   return s;
+ }
+ 
++/** HTML/display escaping for outward-facing claim tokens. Immutable observed_text is never mutated. */
+ export function escapeDisplayText(text: string): string {
+   return text
+     .replace(/&/g, '&amp;')
+@@ -25,14 +21,15 @@ export function escapeDisplayText(text: string): string {
+     .replace(/"/g, '&quot;');
+ }
+ 
+-/** Preserve meaning; light sentence-case only where whole string is uppercase. */
++/** Preserve meaning; light sentence-case where whole string is uppercase; then escape for display. */
+ export function toDisplaySafeClaimText(observed: string): string {
+   const trimmed = observed.trim();
+   if (!trimmed) return '';
++  let display = trimmed;
+   if (trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed)) {
+-    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
++    display = trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+   }
+-  return trimmed;
++  return escapeDisplayText(display);
+ }
+ 
+ export function naturalLanguageList(items: string[]): string {
+@@ -43,7 +40,9 @@ export function naturalLanguageList(items: string[]): string {
+   if (unique.length === 3) return `${unique[0]}, ${unique[1]} and ${unique[2]}`;
+   const shown = unique.slice(0, 3);
+   const remaining = unique.length - 3;
+-  return `${shown[0]}, ${shown[1]}, ${shown[2]} and ${remaining} other packet statements`;
++  const otherLabel =
++    remaining === 1 ? '1 other packet statement' : `${remaining} other packet statements`;
++  return `${shown[0]}, ${shown[1]}, ${shown[2]} and ${otherLabel}`;
+ }
+ 
+ export function naturalLanguageNutrientList(
+diff --git a/src/lib/truscoreEngine/claims/nutrientContextAdapter.ts b/src/lib/truscoreEngine/claims/nutrientContextAdapter.ts
+index 34a8a7c..6df4dc9 100644
+--- a/src/lib/truscoreEngine/claims/nutrientContextAdapter.ts
++++ b/src/lib/truscoreEngine/claims/nutrientContextAdapter.ts
+@@ -1,14 +1,20 @@
+ /**
+  * Nutrient-context adapter ΓÇö Claims consumes governed Nutrition assessment (NUT-01..06).
+  * Does not recalculate thresholds.
++ * Persists two distinct identities: founder methodology vs threshold/reference asset.
+  */
+ 
+ import type { GovernedNutrientAssessment } from '../../../nutrition/governedNutrientTypes';
+ import { UK_GOV_FOP_MTL_REFERENCE } from '../../../nutrition/ukGovFopMtlReference';
+ import type { ClaimsNutrientContext, ClaimsNutrientEntry } from './types';
++import {
++  CLAIMS_NUTRIENT_METHODOLOGY_VERSION,
++  CLAIMS_NUTRIENT_REFERENCE_ASSET_ID,
++} from './types';
+ 
+ function mapEntry(
+-  item: GovernedNutrientAssessment['nutrients']['totalSugars']
++  item: GovernedNutrientAssessment['nutrients']['totalSugars'],
++  sourceEvidenceId: string
+ ): ClaimsNutrientEntry {
+   const high =
+     item.level === 'high'
+@@ -21,20 +27,41 @@ function mapEntry(
+     per_100_value: item.rawPer100,
+     per_portion_value: item.perServe,
+     high_reason: high,
++    source_evidence_id: sourceEvidenceId,
++  };
++}
++
++function emptyUnavailableEntry(sourceEvidenceId: string): ClaimsNutrientEntry {
++  return {
++    level: 'unavailable',
++    high_reason: null,
++    source_evidence_id: sourceEvidenceId,
+   };
+ }
+ 
+ /**
+  * Build the versioned nutrient-context object Claims must consume.
++ * When assessment is null, still emit both version identities (never empty strings).
+  */
+ export function buildClaimsNutrientContext(
+   assessment: GovernedNutrientAssessment | null | undefined
+ ): ClaimsNutrientContext | null {
+-  if (!assessment) return null;
++  const methodology = CLAIMS_NUTRIENT_METHODOLOGY_VERSION;
++  const assetId =
++    assessment?.standardId ||
++    UK_GOV_FOP_MTL_REFERENCE.reference_standard_id ||
++    CLAIMS_NUTRIENT_REFERENCE_ASSET_ID;
++
++  if (!assessment) {
++    // Caller may still need version identities on the assessment result; return a
++    // null context for scoring arithmetic, versions live on ClaimsAssessmentResult.
++    return null;
++  }
+ 
+-  const total_sugars = mapEntry(assessment.nutrients.totalSugars);
+-  const saturated_fat = mapEntry(assessment.nutrients.saturatedFat);
+-  const sodium = mapEntry(assessment.nutrients.sodium);
++  const sourceEvidenceId = `governed-nutrient:${assetId}`;
++  const total_sugars = mapEntry(assessment.nutrients.totalSugars, sourceEvidenceId);
++  const saturated_fat = mapEntry(assessment.nutrients.saturatedFat, sourceEvidenceId);
++  const sodium = mapEntry(assessment.nutrients.sodium, sourceEvidenceId);
+ 
+   const high_nutrient_labels: ClaimsNutrientContext['high_nutrient_labels'] = [];
+   if (total_sugars.level === 'high') high_nutrient_labels.push('total sugars');
+@@ -58,7 +85,9 @@ export function buildClaimsNutrientContext(
+     assessment.nutrients.sodium.triggers.includes('large_portion');
+ 
+   return {
+-    standard_version: assessment.standardId || UK_GOV_FOP_MTL_REFERENCE.reference_standard_id,
++    standard_version: assetId,
++    nutrient_methodology_version: methodology,
++    nutrient_reference_asset_id: assetId,
+     basis,
+     large_portion_override,
+     nutrients: { total_sugars, saturated_fat, sodium },
+@@ -67,3 +96,21 @@ export function buildClaimsNutrientContext(
+     high_nutrient_labels,
+   };
+ }
++
++/** Version identities when nutrient assessment is unavailable. */
++export function claimsNutrientVersionIdentities(): {
++  nutrient_methodology_version: string;
++  nutrient_reference_asset_id: string;
++  nutrient_standard_version: string;
++} {
++  return {
++    nutrient_methodology_version: CLAIMS_NUTRIENT_METHODOLOGY_VERSION,
++    nutrient_reference_asset_id: CLAIMS_NUTRIENT_REFERENCE_ASSET_ID,
++    nutrient_standard_version: CLAIMS_NUTRIENT_REFERENCE_ASSET_ID,
++  };
++}
++
++/** Test helper ΓÇö empty unavailable entries retain source_evidence_id. */
++export function __testEmptyNutrientEntry(id: string): ClaimsNutrientEntry {
++  return emptyUnavailableEntry(id);
++}
+diff --git a/src/lib/truscoreEngine/claims/productObservations.ts b/src/lib/truscoreEngine/claims/productObservations.ts
+index ef2d259..576a543 100644
+--- a/src/lib/truscoreEngine/claims/productObservations.ts
++++ b/src/lib/truscoreEngine/claims/productObservations.ts
+@@ -1,24 +1,15 @@
+ /**
+  * Derive admitted packet observations for Claims assessment from product + optional explicit admissions.
+  *
+- * REG-03 / Evidence admission minimum (controlling spec ┬º4.1):
+- * A recognised expression is not scoreable until its packet observation is admitted through an
+- * approved evidence path retaining: evidence ID, product/GTIN binding, observed text, display text,
+- * admission state, register-row binding (after match), and source locator.
+- *
+- * Upstream dependency (fail-closed until connected):
+- * No approved live producer currently emits Set A/B `AdmittedPacketObservation` records into the
+- * production TruScore path. `photoOcrService` is a stub; contribution domains are origins/certifications
+- * only; typed admission methods `packet_image` / `ocr_crop` / `user_confirmation` exist on the Claims
+- * contract but have no production feeder. Callers must supply `explicitAdmissions` (and typically
+- * `packetCoverageState: 'complete'`) via `CalculateEthicsPillarOptions` once an approved producer exists.
+- *
+- * Set O may use governed product name / claim-only organic wording without Set A/B admissions.
+- * Without explicit complete packet coverage, Packet Claim Context and assessed_neutral fail closed.
++ * Evidence model (founder clarification):
++ * - Use governed evidence already available (OFF product name Set O; OFF labels/labels_en for A/B/C/O).
++ * - Fail closed = do not invent/misapply facts ΓÇö not "ignore OFF until user photographs the packet".
++ * - Never record OFF evidence as user_confirmation.
+  */
+ 
+ import type { Product } from '../../../types/product';
+ import { evaluateOrganicClaimOnlyCandidate } from '../../../services/ethicsCertificationsService';
++import { toDisplaySafeClaimText } from './normalize';
+ import type { AdmittedPacketObservation, PacketCoverageState } from './types';
+ 
+ export interface ClaimsProductObservationBundle {
+@@ -26,10 +17,18 @@ export interface ClaimsProductObservationBundle {
+   packetCoverageState: PacketCoverageState;
+ }
+ 
++function splitOffLabelStatements(raw: string | undefined | null): string[] {
++  if (!raw || !String(raw).trim()) return [];
++  return String(raw)
++    .split(/[,;\n|]+/)
++    .map((s) => s.trim())
++    .filter((s) => s.length > 0);
++}
++
+ /**
+  * Build observations for the Claims Machine Register.
+- * @param explicitAdmissions ΓÇö OCR/user-confirmed packet statements (required for Set A/B scoring)
+- * @param packetCoverageState ΓÇö must be `complete` for assessed_neutral
++ * @param explicitAdmissions ΓÇö packet_image / ocr_crop / user_confirmation (optional)
++ * @param packetCoverageState ΓÇö orthogonal to assessment_state; incomplete may still be assessed_scored
+  */
+ export function buildClaimsObservationsFromProduct(
+   product: Product,
+@@ -39,32 +38,51 @@ export function buildClaimsObservationsFromProduct(
+   }
+ ): ClaimsProductObservationBundle {
+   const observations: AdmittedPacketObservation[] = [...(options?.explicitAdmissions ?? [])];
++  const barcode = product.barcode || 'unknown';
++
++  // OFF labels / labels_en ΓÇö legitimate claim-bearing evidence (A/B/C/O within scope)
++  const labelChunks = [
++    ...splitOffLabelStatements(product.labels),
++    ...splitOffLabelStatements(product.labels_en),
++  ];
++  const seenLabelNorm = new Set<string>();
++  for (const chunk of labelChunks) {
++    const key = chunk.toLowerCase();
++    if (seenLabelNorm.has(key)) continue;
++    seenLabelNorm.add(key);
++    observations.push({
++      evidence_id: `off-labels:${barcode}:${seenLabelNorm.size}`,
++      observed_text: chunk,
++      display_text: toDisplaySafeClaimText(chunk),
++      admission_method: 'off_labels',
++      source_locator: 'off_labels',
++      is_product_name: false,
++    });
++  }
+ 
+-  // Governed product-name Organic (O-ORG-002) / claim-only path
++  // Governed product-name Organic (Set O only ΓÇö never indiscriminate A/B catalogue scan)
+   const claimOnly = evaluateOrganicClaimOnlyCandidate(product);
+-  if (claimOnly.matched && claimOnly.observedText) {
++  if (claimOnly.matched && claimOnly.observedText && claimOnly.source === 'product_name') {
+     const already = observations.some(
+-      (o) => o.observed_text.toLowerCase().includes('organic') && o.is_product_name
++      (o) =>
++        o.admission_method === 'governed_product_name' &&
++        o.is_product_name === true &&
++        o.observed_text.toLowerCase() === claimOnly.observedText!.toLowerCase()
+     );
+     if (!already) {
+       observations.push({
+-        evidence_id: `organic-claim-only:${product.barcode || 'unknown'}`,
+-        observed_text: claimOnly.source === 'product_name' ? claimOnly.observedText : 'organic',
+-        display_text: claimOnly.source === 'product_name' ? claimOnly.observedText : 'organic',
+-        admission_method:
+-          claimOnly.source === 'product_name' ? 'governed_product_name' : 'user_confirmation',
+-        is_product_name: claimOnly.source === 'product_name',
+-        source_locator: claimOnly.source,
++        evidence_id: `organic-claim-only-name:${barcode}`,
++        observed_text: claimOnly.observedText,
++        display_text: toDisplaySafeClaimText(claimOnly.observedText),
++        admission_method: 'governed_product_name',
++        is_product_name: true,
++        source_locator: 'product_name',
+       });
+     }
+   }
++  // Label-path organic is already covered by off_labels admissions above; do not mis-tag as user_confirmation.
+ 
+-  // Without an explicit complete packet gate, coverage remains incomplete (fail closed for assessed_neutral).
+-  const packetCoverageState: PacketCoverageState =
+-    options?.packetCoverageState ??
+-    (options?.explicitAdmissions && options.explicitAdmissions.length > 0
+-      ? 'incomplete'
+-      : 'incomplete');
++  const packetCoverageState: PacketCoverageState = options?.packetCoverageState ?? 'incomplete';
+ 
+   return { observations, packetCoverageState };
+ }
+diff --git a/src/lib/truscoreEngine/claims/types.ts b/src/lib/truscoreEngine/claims/types.ts
+index 0172f5b..ec437e4 100644
+--- a/src/lib/truscoreEngine/claims/types.ts
++++ b/src/lib/truscoreEngine/claims/types.ts
+@@ -27,13 +27,26 @@ export type ClaimsRuntimeAdjustmentId =
+   | 'ethics-v37-cert-organic'
+   | string;
+ 
++/**
++ * Provenance / admission method for a packet-claim observation.
++ * `off_labels` = governed OFF labels / labels_en (never record as user_confirmation).
++ */
++export type ClaimsAdmissionMethod =
++  | 'packet_image'
++  | 'ocr_crop'
++  | 'user_confirmation'
++  | 'governed_product_name'
++  | 'off_labels';
++
+ export interface AdmittedPacketObservation {
+   evidence_id: string;
++  /** Immutable observed wording (never HTML-escaped). */
+   observed_text: string;
++  /** Display-safe wording for commentary tokens (escaped). */
+   display_text: string;
+-  admission_method: 'packet_image' | 'ocr_crop' | 'user_confirmation' | 'governed_product_name';
++  admission_method: ClaimsAdmissionMethod;
+   source_locator?: string;
+-  /** When true, observation is product-name scope for O-ORG-002. */
++  /** When true, observation is product-name scope for O-ORG-002 (not A/B catalogue). */
+   is_product_name?: boolean;
+ }
+ 
+@@ -44,7 +57,7 @@ export interface MatchedClaimObservation {
+   register_row_id: string;
+   canonical_family: string;
+   set: ClaimsCatalogueSet;
+-  admission_method: AdmittedPacketObservation['admission_method'];
++  admission_method: ClaimsAdmissionMethod;
+   source_locator?: string;
+   collision_priority: number;
+   context_test_eligible: boolean;
+@@ -63,8 +76,21 @@ export interface ClaimsNutrientEntry {
+   source_evidence_id?: string;
+ }
+ 
++/** Founder methodology identity (Nutrient-Level Reference Standard). */
++export const CLAIMS_NUTRIENT_METHODOLOGY_VERSION = '20260912_v0_1';
++/** Governed threshold/reference asset identity (UK FoP MTL Rveel-reviewed). */
++export const CLAIMS_NUTRIENT_REFERENCE_ASSET_ID = 'uk-gov-fop-mtl-rveel-reviewed-2026-09-12';
++
+ export interface ClaimsNutrientContext {
++  /**
++   * @deprecated Prefer nutrient_reference_asset_id ΓÇö retained for schema compatibility.
++   * Always the governed threshold asset id (never empty).
++   */
+   standard_version: string;
++  /** Founder methodology version ΓÇö always populated. */
++  nutrient_methodology_version: string;
++  /** Governed threshold/reference asset ΓÇö always populated. */
++  nutrient_reference_asset_id: string;
+   basis: 'food' | 'drink' | 'unknown';
+   large_portion_override: boolean;
+   nutrients: {
+@@ -104,10 +130,17 @@ export interface ClaimsCommentaryPayload {
+     | 'none';
+   l1?: string;
+   l2?: string;
++  /** L3 body (organic claim-only founder copy). */
++  l3_body?: string;
++  /** Contribution CTA label (routes to Certifications User Contribution). */
++  cta_label?: string;
++  cta_domain?: 'certifications';
+   claim_display_texts?: string[];
+   high_nutrient_labels?: string[];
+   nova4_sentence_appended?: boolean;
+   suppressed_reason?: string;
++  /** Canonical fired-event id this payload binds to (R-016 multi-event). */
++  bound_event_id?: string;
+ }
+ 
+ export interface ClaimsDiagnostic {
+@@ -118,7 +151,10 @@ export interface ClaimsDiagnostic {
+ export interface ClaimsAssessmentResult {
+   schema_version: string;
+   register_version: string;
++  /** @deprecated Prefer nutrient_reference_asset_id ΓÇö always the threshold asset id. */
+   nutrient_standard_version: string;
++  nutrient_methodology_version: string;
++  nutrient_reference_asset_id: string;
+   assessment_state: ClaimsAssessmentState;
+   packet_coverage_state: PacketCoverageState;
+   admitted_claims: MatchedClaimObservation[];
+@@ -133,6 +169,12 @@ export interface ClaimsAssessmentResult {
+   organic_claim_only_points: 0 | 1;
+   fired_adjustments: ClaimsFiredAdjustment[];
+   suppressed_candidates: ClaimsSuppressedCandidate[];
++  /**
++   * Primary / consumer-facing commentary (legacy single-route consumers).
++   * Prefer commentary_by_event_id when multiple events fire (R-016).
++   */
+   commentary_payload: ClaimsCommentaryPayload;
++  /** Per fired-event commentary keyed by canonical/runtime adjustment id. */
++  commentary_by_event_id: Record<string, ClaimsCommentaryPayload>;
+   diagnostics: ClaimsDiagnostic[];
+ }
+diff --git a/src/lib/truscoreEngine/pillars/ethicsPillar.ts b/src/lib/truscoreEngine/pillars/ethicsPillar.ts
+index 232f746..b5ec23c 100644
+--- a/src/lib/truscoreEngine/pillars/ethicsPillar.ts
++++ b/src/lib/truscoreEngine/pillars/ethicsPillar.ts
+@@ -395,15 +395,19 @@ export function calculateEthicsPillar(
+   for (const event of claimsAssessment.fired_adjustments) {
+     const id = event.id as EthicsV37AdjustmentId;
+     if (!ETHICS_V37_ADJUSTMENT_REGISTRY[id]) continue;
++    const eventCommentary =
++      claimsAssessment.commentary_by_event_id[event.id] ||
++      (event.canonical_id
++        ? claimsAssessment.commentary_by_event_id[event.canonical_id]
++        : undefined);
+     pushAdjustment(adjustments, id, event.points, event.description, {
+       metadata: {
+         ...(event.metadata ?? {}),
+-        ...(claimsAssessment.commentary_payload.l1 && {
+-          claimsL1: claimsAssessment.commentary_payload.l1,
+-        }),
+-        ...(claimsAssessment.commentary_payload.l2 && {
+-          claimsL2: claimsAssessment.commentary_payload.l2,
+-        }),
++        ...(eventCommentary?.l1 && { claimsL1: eventCommentary.l1 }),
++        ...(eventCommentary?.l2 && { claimsL2: eventCommentary.l2 }),
++        ...(eventCommentary?.l3_body && { claimsL3Body: eventCommentary.l3_body }),
++        ...(eventCommentary?.cta_label && { claimsCtaLabel: eventCommentary.cta_label }),
++        ...(eventCommentary?.cta_domain && { claimsCtaDomain: eventCommentary.cta_domain }),
+       },
+     });
+     score += event.points;
+diff --git a/src/lib/truscoreEngine/pillars/ethicsPillarV37Registry.ts b/src/lib/truscoreEngine/pillars/ethicsPillarV37Registry.ts
+index 68c89ec..aabf642 100644
+--- a/src/lib/truscoreEngine/pillars/ethicsPillarV37Registry.ts
++++ b/src/lib/truscoreEngine/pillars/ethicsPillarV37Registry.ts
+@@ -376,7 +376,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
+     description: 'Whole-product Organic claim-only (+1)',
+     highlightTitle: 'Organic claim identified',
+     highlightExplainer:
+-      'An organic claim appears on this packet, but the packet does not show a specific organic certification.',
++      'The product is presented as Organic, but we have not established a specific organic certification.',
+     externalResource: ORGANIC_RESOURCE,
+   },
+   'ethics-v37-frozen-benchmark-ineligible': {

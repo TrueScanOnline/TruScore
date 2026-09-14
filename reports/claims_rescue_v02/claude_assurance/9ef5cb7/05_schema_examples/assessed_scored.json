@@ -1,0 +1,153 @@
+{
+  "schema_version": "claims-assessment-v1",
+  "register_version": "20260912_v1_0",
+  "nutrient_standard_version": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+  "nutrient_methodology_version": "20260912_v0_1",
+  "nutrient_reference_asset_id": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+  "assessment_state": "assessed_scored",
+  "packet_coverage_state": "incomplete",
+  "admitted_claims": [
+    {
+      "evidence_id": "e1",
+      "observed_text": "Source of vitamin C and calcium",
+      "display_text": "Source of vitamin C and calcium",
+      "register_row_id": "A-VMC-003",
+      "canonical_family": "vitamin_mineral_combination",
+      "set": "A",
+      "admission_method": "off_labels",
+      "source_locator": "off:labels_en",
+      "collision_priority": 30,
+      "context_test_eligible": true,
+      "member_targets": [
+        "calcium",
+        "vitamin_c"
+      ]
+    },
+    {
+      "evidence_id": "name1",
+      "observed_text": "Harry's Organic Milk",
+      "display_text": "Harry's Organic Milk",
+      "register_row_id": "O-ORG-002",
+      "canonical_family": "organic_whole_product",
+      "set": "O",
+      "admission_method": "governed_product_name",
+      "source_locator": "off:product_name",
+      "collision_priority": 20,
+      "context_test_eligible": false
+    }
+  ],
+  "unclassified_statements": [],
+  "nutrient_context": {
+    "standard_version": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+    "nutrient_methodology_version": "20260912_v0_1",
+    "nutrient_reference_asset_id": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+    "basis": "food",
+    "large_portion_override": false,
+    "nutrients": {
+      "total_sugars": {
+        "level": "low",
+        "high_reason": null,
+        "source_evidence_id": "nutrient:total_sugars"
+      },
+      "saturated_fat": {
+        "level": "low",
+        "high_reason": null,
+        "source_evidence_id": "nutrient:saturated_fat"
+      },
+      "sodium": {
+        "level": "low",
+        "high_reason": null,
+        "source_evidence_id": "nutrient:sodium"
+      }
+    },
+    "required_context_complete": true,
+    "any_governed_high": false,
+    "high_nutrient_labels": []
+  },
+  "benchmark_checks": [
+    {
+      "source": "ktc",
+      "status": "no_finding"
+    },
+    {
+      "source": "bbfaw",
+      "status": "no_finding"
+    }
+  ],
+  "packet_context_points": 1,
+  "organic_claim_only_points": 1,
+  "fired_adjustments": [
+    {
+      "id": "claims.organic.claim_only.v1",
+      "canonical_id": "claims.organic.claim_only.v1",
+      "points": 1,
+      "description": "Whole-product Organic claim (claim-only)",
+      "highlightEligible": true,
+      "family": "organic_claim_only",
+      "metadata": {
+        "register_row_id": "O-ORG-002",
+        "display_text": "Harry's Organic Milk",
+        "organicEvidenceClass": "claim_only",
+        "evidence_id": "name1",
+        "admission_method": "governed_product_name",
+        "claimsL1": "Organic claim identified",
+        "claimsL2": "The product is presented as Organic, but we have not established a specific organic certification.",
+        "claimsL3Body": "This reflects a whole-product Organic claim where our available data does not establish a specific organic certification. That does not mean the product is not genuinely organic. If there is a certification on the packet, help us update the record.",
+        "claimsCtaLabel": "Update certification",
+        "claimsCtaDomain": "certifications"
+      }
+    },
+    {
+      "id": "claims.packet_context.positive.v1",
+      "canonical_id": "claims.packet_context.positive.v1",
+      "points": 1,
+      "description": "Packet Claim Context positive",
+      "highlightEligible": true,
+      "family": "packet_context",
+      "metadata": {
+        "claim_texts": "Source of vitamin C and calcium",
+        "claimsL1": "The pack highlights Source of vitamin C and calcium and our nutrition context check did not find high total sugars, saturated fat or sodium.",
+        "claimsL2": "The pack highlights Source of vitamin C and calcium. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the product’s broader nutritional picture."
+      }
+    }
+  ],
+  "suppressed_candidates": [],
+  "commentary_payload": {
+    "route": "packet_context_positive",
+    "l1": "The pack highlights Source of vitamin C and calcium and our nutrition context check did not find high total sugars, saturated fat or sodium.",
+    "l2": "The pack highlights Source of vitamin C and calcium. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the product’s broader nutritional picture.",
+    "claim_display_texts": [
+      "Source of vitamin C and calcium"
+    ],
+    "nova4_sentence_appended": false,
+    "bound_event_id": "claims.packet_context.positive.v1"
+  },
+  "commentary_by_event_id": {
+    "claims.organic.claim_only.v1": {
+      "route": "organic_claim_only",
+      "l1": "Organic claim identified",
+      "l2": "The product is presented as Organic, but we have not established a specific organic certification.",
+      "l3_body": "This reflects a whole-product Organic claim where our available data does not establish a specific organic certification. That does not mean the product is not genuinely organic. If there is a certification on the packet, help us update the record.",
+      "cta_label": "Update certification",
+      "cta_domain": "certifications",
+      "bound_event_id": "claims.organic.claim_only.v1"
+    },
+    "claims.packet_context.positive.v1": {
+      "route": "packet_context_positive",
+      "l1": "The pack highlights Source of vitamin C and calcium and our nutrition context check did not find high total sugars, saturated fat or sodium.",
+      "l2": "The pack highlights Source of vitamin C and calcium. We also checked the nutrition information panel for total sugars, saturated fat and sodium and did not find high levels in any of those areas. That helps put the claim in the context of the product’s broader nutritional picture.",
+      "claim_display_texts": [
+        "Source of vitamin C and calcium"
+      ],
+      "nova4_sentence_appended": false,
+      "bound_event_id": "claims.packet_context.positive.v1"
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "r013_combination_observation",
+      "detail": "evidence e1: A-VMC-003 retained as one combination observation with members [calcium, vitamin_c]"
+    }
+  ],
+  "_example_note": "Corrective: assessed_scored with incomplete packet_coverage_state (orthogonal); dual Packet Context + Organic commentary_by_event_id; off_labels + governed_product_name; dual nutrient identities."
+}
