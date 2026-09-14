@@ -1,0 +1,32 @@
+{
+  "schema_version": "claims-assessment-v1",
+  "register_version": "20260912_v1_0",
+  "nutrient_standard_version": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+  "nutrient_methodology_version": "20260912_v0_1",
+  "nutrient_reference_asset_id": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+  "assessment_state": "unassessed",
+  "packet_coverage_state": "incomplete",
+  "admitted_claims": [],
+  "unclassified_statements": [],
+  "nutrient_context": null,
+  "benchmark_checks": [
+    {
+      "source": "ktc",
+      "status": "no_finding"
+    },
+    {
+      "source": "bbfaw",
+      "status": "no_finding"
+    }
+  ],
+  "packet_context_points": 0,
+  "organic_claim_only_points": 0,
+  "fired_adjustments": [],
+  "suppressed_candidates": [],
+  "commentary_payload": {
+    "route": "none"
+  },
+  "commentary_by_event_id": {},
+  "diagnostics": [],
+  "_example_note": "Pre-assurance: unassessed; dual nutrient identities always on result; no unknown basis."
+}

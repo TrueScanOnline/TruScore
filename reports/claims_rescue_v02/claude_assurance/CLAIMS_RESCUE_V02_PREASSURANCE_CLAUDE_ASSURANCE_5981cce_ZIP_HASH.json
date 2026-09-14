@@ -1,0 +1,12 @@
+﻿{
+    "branch":  "feat/claims-rescue-v02",
+    "zip_bytes":  132960,
+    "baseline_nutrition_sha":  "674d1fe48d500393a4c19d75859bcaa3b512768c",
+    "prior_corrective_sha":  "9ef5cb7b4b853b3b814f919679ada89ef5bbadca",
+    "workstream":  "claims_rescue_v02_preassurance",
+    "zip_filename":  "CLAIMS_RESCUE_V02_PREASSURANCE_CLAUDE_ASSURANCE_5981cce.zip",
+    "rewritten_9ef5cb7":  false,
+    "assurance_sha":  "5981ccea93adc2ab59a15b15d2950b0dc65a9ba2",
+    "zip_sha256":  "6b233bd267f5225f30673ca807ca4149e35fabef146c77635a1727ac9b48b93b",
+    "push_to_nutrition_remote":  false
+}

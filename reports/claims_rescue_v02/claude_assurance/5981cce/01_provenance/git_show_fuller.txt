@@ -1,0 +1,11 @@
+﻿commit 5981ccea93adc2ab59a15b15d2950b0dc65a9ba2
+Author:     Leighton <flagshipdevelopments@gmail.com>
+AuthorDate: Mon Sep 14 17:05:54 2026 +1200
+Commit:     Leighton <flagshipdevelopments@gmail.com>
+CommitDate: Mon Sep 14 17:05:54 2026 +1200
+
+    fix(claims): pre-assurance reconciliation for Claims Rescue v0.2
+    
+    Gate Organic CTA on contribution route live; phrase-scope X-007/X-011; X-020 source exclusions; fix nutrient reference identity and product-bound evidence ids; single-pass display escape; OFF field provenance ΓÇö without rewriting 9ef5cb7 or touching Nutrition/S25.
+    
+    Co-authored-by: Cursor <cursoragent@cursor.com>

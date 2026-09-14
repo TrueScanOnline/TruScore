@@ -1,0 +1,57 @@
+node.exe : [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([BUILD] EXPO_PU...ot be available:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
+[BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
+[BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
+Starting Metro Bundler
+Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæ 82.4% (1283/1413)
+| (node:4372) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:14472) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:21212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:17900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1708/1708)
+Android Bundled 11695ms index.js (1708 modules)
+Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1708/1708)
+
+ΓÇ║ Assets (36):
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\AntDesign.ttf (70.3 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Entypo.ttf (66.2 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\EvilIcons.ttf (13.5 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Feather.ttf (56.2 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome.ttf (166 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome5_Brands.ttf (134 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome5_Regular.ttf (33.7 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome5_Solid.ttf (203 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome6_Brands.ttf (209 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome6_Regular.ttf (68 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\FontAwesome6_Solid.ttf (424 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Fontisto.ttf (314 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Foundation.ttf (57 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Ionicons.ttf (443 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\MaterialCommunityIcons.ttf (1.15 MB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\MaterialIcons.ttf (357 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Octicons.ttf (49.4 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\SimpleLineIcons.ttf (54.1 kB)
+..\TrueScan-FoodScanner\node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Zocial.ttf (25.8 kB)
+..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\back-icon-mask.png (653 B)
+..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\back-icon.png (4 variations | 152 B)
+..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\clear-icon.png (4 variations | 425 B)
+..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\close-icon.png (4 variations | 235 B)
+..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\search-icon.png (4 variations | 599 B)
+
+ΓÇ║ android bundles (1):
+_expo/static/js/android/index-aacf288e91dd1cc551fc41cf5c312960.hbc (6.82 MB)
+
+ΓÇ║ Files (1):
+metadata.json (2.58 kB)
+
+Exported: dist-claims-reconcile-DO-NOT-COMMIT/android

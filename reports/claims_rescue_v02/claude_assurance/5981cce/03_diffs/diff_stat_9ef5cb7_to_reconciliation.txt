@@ -1,0 +1,47 @@
+﻿ ...ESCUE_V02_PREASSURANCE_RECONCILIATION_REPORT.md |   79 +
+ .../9ef5cb7/01_provenance/assurance_sha.txt        |    1 +
+ .../9ef5cb7/01_provenance/branch_name.txt          |    1 +
+ .../9ef5cb7/01_provenance/commit_header.txt        |   11 +
+ .../01_provenance/nutrition_baseline_sha.txt       |    1 +
+ .../9ef5cb7/01_provenance/parent_review_sha.txt    |    1 +
+ .../01_provenance/remote_claims_branch_tip.txt     |    1 +
+ .../01_provenance/remote_nutrition_branch_tip.txt  |    1 +
+ .../9ef5cb7/01_provenance/rev_list_parents.txt     |    1 +
+ .../9ef5cb7/02_source/SOURCE_README.md             |    4 +
+ .../9ef5cb7/02_source/_path_list.txt               |   20 +
+ .../source_changed_from_9ef5cb7.gitarchive.zip     |  Bin 0 -> 99087 bytes
+ .../claude_assurance/9ef5cb7/03_diffs/DIFF_MAP.md  |    4 +
+ .../changed_files_parent_to_corrective.txt         |   29 +
+ .../03_diffs/diff_stat_parent_to_corrective.txt    |   30 +
+ .../unified_diff_parent_to_corrective.diff         | 2994 ++++++++++++++++++++
+ .../9ef5cb7/04_test_evidence/01_jest_focused.log   |  422 +++
+ .../9ef5cb7/04_test_evidence/02_eslint.log         |   13 +
+ .../9ef5cb7/04_test_evidence/03_tsc.log            |    1 +
+ .../9ef5cb7/04_test_evidence/04_expo_ios.log       |   68 +
+ .../9ef5cb7/04_test_evidence/05_expo_android.log   |   66 +
+ .../9ef5cb7/04_test_evidence/INDEX.txt             |    5 +
+ .../05_schema_examples/assessed_neutral.json       |   68 +
+ .../05_schema_examples/assessed_scored.json        |  153 +
+ .../9ef5cb7/05_schema_examples/unassessed.json     |   32 +
+ ...AIMS_RESCUE_V02_CORRECTIVE_COMPLETION_REPORT.md |  211 ++
+ .../claude_assurance/9ef5cb7/README.md             |   28 +
+ ...CUE_V02_CORRECTIVE_CLAUDE_ASSURANCE_9ef5cb7.zip |  Bin 0 -> 155102 bytes
+ ...RRECTIVE_CLAUDE_ASSURANCE_9ef5cb7_ZIP_HASH.json |   11 +
+ .../corrective_fresh_evidence/01_jest_focused.log  |  521 ++--
+ .../corrective_fresh_evidence/02_eslint.log        |   16 +-
+ .../corrective_fresh_evidence/03_tsc.log           |    2 +-
+ .../corrective_fresh_evidence/04_expo_ios.log      |   31 +-
+ .../corrective_fresh_evidence/05_expo_android.log  |   25 +-
+ .../schema_examples/assessed_neutral.json          |    8 +-
+ .../schema_examples/assessed_scored.json           |   12 +-
+ .../schema_examples/unassessed.json                |    2 +-
+ .../lib/claims/claimsCorrective.regression.test.ts |  236 +-
+ .../lib/scoreHighlights/l3ContentAddendum.test.ts  |   15 +-
+ src/lib/scoreHighlights/l3/content.ts              |   26 +-
+ src/lib/truscoreEngine/claims/index.ts             |    7 +-
+ src/lib/truscoreEngine/claims/matchRegister.ts     |   92 +-
+ .../claims/nutrientContextAdapter.ts               |   74 +-
+ .../truscoreEngine/claims/productObservations.ts   |   53 +-
+ src/lib/truscoreEngine/claims/types.ts             |   10 +-
+ src/lib/truscoreEngine/pillars/ethicsPillar.ts     |    4 +-
+ 46 files changed, 4992 insertions(+), 398 deletions(-)
