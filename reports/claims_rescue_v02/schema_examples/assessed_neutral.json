@@ -1,33 +1,55 @@
 {
   "schema_version": "claims-assessment-v1",
   "register_version": "20260912_v1_0",
-  "nutrient_standard_version": "uk-gov-fop-mtl-v1",
+  "nutrient_standard_version": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+  "nutrient_methodology_version": "20260912_v0_1",
+  "nutrient_reference_asset_id": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
   "assessment_state": "assessed_neutral",
   "packet_coverage_state": "complete",
   "admitted_claims": [],
   "unclassified_statements": [
     {
-      "evidence_id": "u1",
-      "observed_text": "responsibly sourced",
-      "display_text": "responsibly sourced"
+      "evidence_id": "n1",
+      "observed_text": "May contain traces of milk",
+      "display_text": "May contain traces of milk"
     }
   ],
   "nutrient_context": {
-    "standard_version": "uk-gov-fop-mtl-v1",
+    "standard_version": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
+    "nutrient_methodology_version": "20260912_v0_1",
+    "nutrient_reference_asset_id": "uk-gov-fop-mtl-rveel-reviewed-2026-09-12",
     "basis": "food",
     "large_portion_override": false,
     "nutrients": {
-      "total_sugars": { "level": "low", "high_reason": null },
-      "saturated_fat": { "level": "low", "high_reason": null },
-      "sodium": { "level": "low", "high_reason": null }
+      "total_sugars": {
+        "level": "low",
+        "high_reason": null,
+        "source_evidence_id": "nutrient:total_sugars"
+      },
+      "saturated_fat": {
+        "level": "low",
+        "high_reason": null,
+        "source_evidence_id": "nutrient:saturated_fat"
+      },
+      "sodium": {
+        "level": "low",
+        "high_reason": null,
+        "source_evidence_id": "nutrient:sodium"
+      }
     },
     "required_context_complete": true,
     "any_governed_high": false,
     "high_nutrient_labels": []
   },
   "benchmark_checks": [
-    { "source": "ktc", "status": "no_finding" },
-    { "source": "bbfaw", "status": "no_finding" }
+    {
+      "source": "ktc",
+      "status": "no_finding"
+    },
+    {
+      "source": "bbfaw",
+      "status": "no_finding"
+    }
   ],
   "packet_context_points": 0,
   "organic_claim_only_points": 0,
@@ -35,8 +57,12 @@
   "suppressed_candidates": [],
   "commentary_payload": {
     "route": "assessed_neutral",
-    "l2": "We checked the packet for the product claims and certifications we currently assess, and our independent company-level benchmark checks did not produce a positive or adverse finding. We did find packet claims for responsibly sourced, but these sit outside the claims we currently assess."
+    "l2": "We checked the packet for the product claims and certifications we currently assess, and our independent company-level benchmark checks did not produce a positive or adverse finding. We did find packet claims for May contain traces of milk, but these sit outside the claims we currently assess.",
+    "claim_display_texts": [
+      "May contain traces of milk"
+    ]
   },
+  "commentary_by_event_id": {},
   "diagnostics": [],
-  "_example_note": "Complete packet coverage; no scoring claim/certification; no benchmark fire. Fired ledger empty (no synthetic +0)."
+  "_example_note": "Corrective: assessed_neutral with complete governed Claims evidence and no fired adjustment; admission_method off_labels (never user_confirmation)."
 }

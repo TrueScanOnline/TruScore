@@ -1,11 +1,8 @@
 /**
- * Exact founder-approved Claims commentary (v0.2 §11). Do not rewrite.
+ * Exact founder-approved Claims commentary (v0.2 §11 + corrective Organic copy).
  */
 
-import {
-  naturalLanguageList,
-  naturalLanguageNutrientList,
-} from './normalize';
+import { naturalLanguageList, naturalLanguageNutrientList } from './normalize';
 import type { ClaimsCommentaryPayload, MatchedClaimObservation } from './types';
 
 const POSITIVE_L2 =
@@ -23,9 +20,13 @@ const NEUTRAL_L2 =
 const NEUTRAL_APPEND =
   'We did find packet claims for [CLAIM(S)], but these sit outside the claims we currently assess.';
 
+/** Founder-approved Organic claim-only consumer copy (corrective pass). */
 export const ORGANIC_CLAIM_ONLY_L1_V02 = 'Organic claim identified';
 export const ORGANIC_CLAIM_ONLY_L2_V02 =
-  'An organic claim appears on this packet, but the packet does not show a specific organic certification.';
+  'The product is presented as Organic, but we have not established a specific organic certification.';
+export const ORGANIC_CLAIM_ONLY_L3_BODY_V02 =
+  'This reflects a whole-product Organic claim where our available data does not establish a specific organic certification. That does not mean the product is not genuinely organic. If there is a certification on the packet, help us update the record.';
+export const ORGANIC_CLAIM_ONLY_CTA_LABEL_V02 = 'Update certification';
 
 function bindClaimToken(template: string, claimList: string): string | null {
   if (!claimList) return null;
@@ -60,6 +61,7 @@ export function buildPositivePacketContextCommentary(
     l2,
     claim_display_texts: claimTexts,
     nova4_sentence_appended: nova4,
+    bound_event_id: 'claims.packet_context.positive.v1',
   };
 }
 
@@ -93,6 +95,7 @@ export function buildAdversePacketContextCommentary(
     claim_display_texts: claimTexts,
     high_nutrient_labels: highNutrients,
     nova4_sentence_appended: nova4,
+    bound_event_id: 'claims.packet_context.adverse.v1',
   };
 }
 
@@ -119,5 +122,9 @@ export function buildOrganicClaimOnlyCommentary(): ClaimsCommentaryPayload {
     route: 'organic_claim_only',
     l1: ORGANIC_CLAIM_ONLY_L1_V02,
     l2: ORGANIC_CLAIM_ONLY_L2_V02,
+    l3_body: ORGANIC_CLAIM_ONLY_L3_BODY_V02,
+    cta_label: ORGANIC_CLAIM_ONLY_CTA_LABEL_V02,
+    cta_domain: 'certifications',
+    bound_event_id: 'claims.organic.claim_only.v1',
   };
 }

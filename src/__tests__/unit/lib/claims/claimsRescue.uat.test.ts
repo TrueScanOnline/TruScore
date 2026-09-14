@@ -34,21 +34,26 @@ function nutrientContext(opts: {
   if (opts.satFat === 'high') high.push('saturated fat');
   if (opts.sodium === 'high') high.push('sodium');
   return {
-    standard_version: 'uk-gov-fop-mtl-v1',
+    standard_version: 'uk-gov-fop-mtl-rveel-reviewed-2026-09-12',
+    nutrient_methodology_version: '20260912_v0_1',
+    nutrient_reference_asset_id: 'uk-gov-fop-mtl-rveel-reviewed-2026-09-12',
     basis: 'food',
     large_portion_override: !!opts.largePortion,
     nutrients: {
       total_sugars: {
         level: opts.sugars,
         high_reason: opts.sugars === 'high' ? (opts.largePortion ? 'large_portion_override' : 'threshold') : null,
+        source_evidence_id: 'uat:total_sugars',
       },
       saturated_fat: {
         level: opts.satFat,
         high_reason: opts.satFat === 'high' ? 'threshold' : null,
+        source_evidence_id: 'uat:saturated_fat',
       },
       sodium: {
         level: opts.sodium,
         high_reason: opts.sodium === 'high' ? 'threshold' : null,
+        source_evidence_id: 'uat:sodium',
       },
     },
     required_context_complete: [opts.sugars, opts.satFat, opts.sodium].every((l) => l !== 'unavailable'),

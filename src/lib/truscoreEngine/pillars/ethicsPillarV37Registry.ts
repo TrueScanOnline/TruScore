@@ -376,7 +376,7 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
     description: 'Whole-product Organic claim-only (+1)',
     highlightTitle: 'Organic claim identified',
     highlightExplainer:
-      'An organic claim appears on this packet, but the packet does not show a specific organic certification.',
+      'The product is presented as Organic, but we have not established a specific organic certification.',
     externalResource: ORGANIC_RESOURCE,
   },
   'ethics-v37-frozen-benchmark-ineligible': {

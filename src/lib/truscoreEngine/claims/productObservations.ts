@@ -1,24 +1,15 @@
 /**
  * Derive admitted packet observations for Claims assessment from product + optional explicit admissions.
  *
- * REG-03 / Evidence admission minimum (controlling spec §4.1):
- * A recognised expression is not scoreable until its packet observation is admitted through an
- * approved evidence path retaining: evidence ID, product/GTIN binding, observed text, display text,
- * admission state, register-row binding (after match), and source locator.
- *
- * Upstream dependency (fail-closed until connected):
- * No approved live producer currently emits Set A/B `AdmittedPacketObservation` records into the
- * production TruScore path. `photoOcrService` is a stub; contribution domains are origins/certifications
- * only; typed admission methods `packet_image` / `ocr_crop` / `user_confirmation` exist on the Claims
- * contract but have no production feeder. Callers must supply `explicitAdmissions` (and typically
- * `packetCoverageState: 'complete'`) via `CalculateEthicsPillarOptions` once an approved producer exists.
- *
- * Set O may use governed product name / claim-only organic wording without Set A/B admissions.
- * Without explicit complete packet coverage, Packet Claim Context and assessed_neutral fail closed.
+ * Evidence model (founder clarification):
+ * - Use governed evidence already available (OFF product name Set O; OFF labels/labels_en for A/B/C/O).
+ * - Fail closed = do not invent/misapply facts — not "ignore OFF until user photographs the packet".
+ * - Never record OFF evidence as user_confirmation.
  */
 
 import type { Product } from '../../../types/product';
 import { evaluateOrganicClaimOnlyCandidate } from '../../../services/ethicsCertificationsService';
+import { toDisplaySafeClaimText } from './normalize';
 import type { AdmittedPacketObservation, PacketCoverageState } from './types';
 
 export interface ClaimsProductObservationBundle {
@@ -26,10 +17,18 @@ export interface ClaimsProductObservationBundle {
   packetCoverageState: PacketCoverageState;
 }
 
+function splitOffLabelStatements(raw: string | undefined | null): string[] {
+  if (!raw || !String(raw).trim()) return [];
+  return String(raw)
+    .split(/[,;\n|]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
 /**
  * Build observations for the Claims Machine Register.
- * @param explicitAdmissions — OCR/user-confirmed packet statements (required for Set A/B scoring)
- * @param packetCoverageState — must be `complete` for assessed_neutral
+ * @param explicitAdmissions — packet_image / ocr_crop / user_confirmation (optional)
+ * @param packetCoverageState — orthogonal to assessment_state; incomplete may still be assessed_scored
  */
 export function buildClaimsObservationsFromProduct(
   product: Product,
@@ -39,32 +38,51 @@ export function buildClaimsObservationsFromProduct(
   }
 ): ClaimsProductObservationBundle {
   const observations: AdmittedPacketObservation[] = [...(options?.explicitAdmissions ?? [])];
+  const barcode = product.barcode || 'unknown';
 
-  // Governed product-name Organic (O-ORG-002) / claim-only path
+  // OFF labels / labels_en — legitimate claim-bearing evidence (A/B/C/O within scope)
+  const labelChunks = [
+    ...splitOffLabelStatements(product.labels),
+    ...splitOffLabelStatements(product.labels_en),
+  ];
+  const seenLabelNorm = new Set<string>();
+  for (const chunk of labelChunks) {
+    const key = chunk.toLowerCase();
+    if (seenLabelNorm.has(key)) continue;
+    seenLabelNorm.add(key);
+    observations.push({
+      evidence_id: `off-labels:${barcode}:${seenLabelNorm.size}`,
+      observed_text: chunk,
+      display_text: toDisplaySafeClaimText(chunk),
+      admission_method: 'off_labels',
+      source_locator: 'off_labels',
+      is_product_name: false,
+    });
+  }
+
+  // Governed product-name Organic (Set O only — never indiscriminate A/B catalogue scan)
   const claimOnly = evaluateOrganicClaimOnlyCandidate(product);
-  if (claimOnly.matched && claimOnly.observedText) {
+  if (claimOnly.matched && claimOnly.observedText && claimOnly.source === 'product_name') {
     const already = observations.some(
-      (o) => o.observed_text.toLowerCase().includes('organic') && o.is_product_name
+      (o) =>
+        o.admission_method === 'governed_product_name' &&
+        o.is_product_name === true &&
+        o.observed_text.toLowerCase() === claimOnly.observedText!.toLowerCase()
     );
     if (!already) {
       observations.push({
-        evidence_id: `organic-claim-only:${product.barcode || 'unknown'}`,
-        observed_text: claimOnly.source === 'product_name' ? claimOnly.observedText : 'organic',
-        display_text: claimOnly.source === 'product_name' ? claimOnly.observedText : 'organic',
-        admission_method:
-          claimOnly.source === 'product_name' ? 'governed_product_name' : 'user_confirmation',
-        is_product_name: claimOnly.source === 'product_name',
-        source_locator: claimOnly.source,
+        evidence_id: `organic-claim-only-name:${barcode}`,
+        observed_text: claimOnly.observedText,
+        display_text: toDisplaySafeClaimText(claimOnly.observedText),
+        admission_method: 'governed_product_name',
+        is_product_name: true,
+        source_locator: 'product_name',
       });
     }
   }
+  // Label-path organic is already covered by off_labels admissions above; do not mis-tag as user_confirmation.
 
-  // Without an explicit complete packet gate, coverage remains incomplete (fail closed for assessed_neutral).
-  const packetCoverageState: PacketCoverageState =
-    options?.packetCoverageState ??
-    (options?.explicitAdmissions && options.explicitAdmissions.length > 0
-      ? 'incomplete'
-      : 'incomplete');
+  const packetCoverageState: PacketCoverageState = options?.packetCoverageState ?? 'incomplete';
 
   return { observations, packetCoverageState };
 }

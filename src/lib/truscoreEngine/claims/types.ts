@@ -27,13 +27,26 @@ export type ClaimsRuntimeAdjustmentId =
   | 'ethics-v37-cert-organic'
   | string;
 
+/**
+ * Provenance / admission method for a packet-claim observation.
+ * `off_labels` = governed OFF labels / labels_en (never record as user_confirmation).
+ */
+export type ClaimsAdmissionMethod =
+  | 'packet_image'
+  | 'ocr_crop'
+  | 'user_confirmation'
+  | 'governed_product_name'
+  | 'off_labels';
+
 export interface AdmittedPacketObservation {
   evidence_id: string;
+  /** Immutable observed wording (never HTML-escaped). */
   observed_text: string;
+  /** Display-safe wording for commentary tokens (escaped). */
   display_text: string;
-  admission_method: 'packet_image' | 'ocr_crop' | 'user_confirmation' | 'governed_product_name';
+  admission_method: ClaimsAdmissionMethod;
   source_locator?: string;
-  /** When true, observation is product-name scope for O-ORG-002. */
+  /** When true, observation is product-name scope for O-ORG-002 (not A/B catalogue). */
   is_product_name?: boolean;
 }
 
@@ -44,7 +57,7 @@ export interface MatchedClaimObservation {
   register_row_id: string;
   canonical_family: string;
   set: ClaimsCatalogueSet;
-  admission_method: AdmittedPacketObservation['admission_method'];
+  admission_method: ClaimsAdmissionMethod;
   source_locator?: string;
   collision_priority: number;
   context_test_eligible: boolean;
@@ -63,8 +76,21 @@ export interface ClaimsNutrientEntry {
   source_evidence_id?: string;
 }
 
+/** Founder methodology identity (Nutrient-Level Reference Standard). */
+export const CLAIMS_NUTRIENT_METHODOLOGY_VERSION = '20260912_v0_1';
+/** Governed threshold/reference asset identity (UK FoP MTL Rveel-reviewed). */
+export const CLAIMS_NUTRIENT_REFERENCE_ASSET_ID = 'uk-gov-fop-mtl-rveel-reviewed-2026-09-12';
+
 export interface ClaimsNutrientContext {
+  /**
+   * @deprecated Prefer nutrient_reference_asset_id — retained for schema compatibility.
+   * Always the governed threshold asset id (never empty).
+   */
   standard_version: string;
+  /** Founder methodology version — always populated. */
+  nutrient_methodology_version: string;
+  /** Governed threshold/reference asset — always populated. */
+  nutrient_reference_asset_id: string;
   basis: 'food' | 'drink' | 'unknown';
   large_portion_override: boolean;
   nutrients: {
@@ -104,10 +130,17 @@ export interface ClaimsCommentaryPayload {
     | 'none';
   l1?: string;
   l2?: string;
+  /** L3 body (organic claim-only founder copy). */
+  l3_body?: string;
+  /** Contribution CTA label (routes to Certifications User Contribution). */
+  cta_label?: string;
+  cta_domain?: 'certifications';
   claim_display_texts?: string[];
   high_nutrient_labels?: string[];
   nova4_sentence_appended?: boolean;
   suppressed_reason?: string;
+  /** Canonical fired-event id this payload binds to (R-016 multi-event). */
+  bound_event_id?: string;
 }
 
 export interface ClaimsDiagnostic {
@@ -118,7 +151,10 @@ export interface ClaimsDiagnostic {
 export interface ClaimsAssessmentResult {
   schema_version: string;
   register_version: string;
+  /** @deprecated Prefer nutrient_reference_asset_id — always the threshold asset id. */
   nutrient_standard_version: string;
+  nutrient_methodology_version: string;
+  nutrient_reference_asset_id: string;
   assessment_state: ClaimsAssessmentState;
   packet_coverage_state: PacketCoverageState;
   admitted_claims: MatchedClaimObservation[];
@@ -133,6 +169,12 @@ export interface ClaimsAssessmentResult {
   organic_claim_only_points: 0 | 1;
   fired_adjustments: ClaimsFiredAdjustment[];
   suppressed_candidates: ClaimsSuppressedCandidate[];
+  /**
+   * Primary / consumer-facing commentary (legacy single-route consumers).
+   * Prefer commentary_by_event_id when multiple events fire (R-016).
+   */
   commentary_payload: ClaimsCommentaryPayload;
+  /** Per fired-event commentary keyed by canonical/runtime adjustment id. */
+  commentary_by_event_id: Record<string, ClaimsCommentaryPayload>;
   diagnostics: ClaimsDiagnostic[];
 }

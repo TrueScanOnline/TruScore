@@ -365,7 +365,7 @@ describe('governed copy resolution', () => {
     expect(certified.l1).toBe('Organic certified');
     expect(claimOnly.l1).toBe('Organic claim identified');
     expect(claimOnly.l2).toBe(
-      'An organic claim appears on this packet, but the packet does not show a specific organic certification.'
+      'The product is presented as Organic, but we have not established a specific organic certification.'
     );
   });
 });

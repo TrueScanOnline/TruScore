@@ -36,6 +36,8 @@ export interface L3ActionFragment {
   textBefore: string;
   anchorLabel: string;
   textAfter: string;
+  /** When set, anchor routes to the named User Contribution domain. */
+  contributionDomain?: 'certifications' | 'origins';
 }
 
 export interface L3ResolvedContent {
@@ -488,19 +490,29 @@ function resolveEthicsCert(
     const claimOnly = metadata?.organicEvidenceClass === 'claim_only';
     const sources = [ORGANIC_AU_SOURCE, ORGANIC_NZ_SOURCE];
     if (claimOnly) {
+      const l3Body =
+        typeof metadata?.claimsL3Body === 'string' && metadata.claimsL3Body.trim()
+          ? String(metadata.claimsL3Body)
+          : 'This reflects a whole-product Organic claim where our available data does not establish a specific organic certification. That does not mean the product is not genuinely organic. If there is a certification on the packet, help us update the record.';
+      const ctaLabel =
+        typeof metadata?.claimsCtaLabel === 'string' && metadata.claimsCtaLabel.trim()
+          ? String(metadata.claimsCtaLabel)
+          : 'Update certification';
       return {
         title: 'What this organic claim means',
         sections: [
           {
-            body:
-              'An organic claim appears on this packet, but the available governed evidence does not establish a specific organic certification.',
-          },
-          {
-            body:
-              'The current Ethics rule recognises the packet claim, but this view must not present the product as certified unless a specific certification is actually established.',
+            body: l3Body,
           },
         ],
         sources,
+        action: {
+          textBefore: '',
+          anchorLabel: ctaLabel,
+          textAfter: '',
+          /** Existing Certifications User Contribution flow. */
+          contributionDomain: 'certifications',
+        },
       };
     }
     const sections: L3Section[] = [
@@ -722,7 +734,7 @@ export function resolveGovernedL3Content(
         sections: [
           {
             body:
-              'This Claims finding uses the same nutrition check shown on the Nutrition details card for total sugars, saturated fat and sodium. Open Nutrition details to review those ratings and sources.',
+              'This Claims finding uses the same nutrition check shown on the Nutrition details card for total sugars, saturated fat and sodium. View Nutrition details to review those ratings and sources.',
           },
         ],
         sources: [],

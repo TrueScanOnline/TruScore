@@ -395,15 +395,19 @@ export function calculateEthicsPillar(
   for (const event of claimsAssessment.fired_adjustments) {
     const id = event.id as EthicsV37AdjustmentId;
     if (!ETHICS_V37_ADJUSTMENT_REGISTRY[id]) continue;
+    const eventCommentary =
+      claimsAssessment.commentary_by_event_id[event.id] ||
+      (event.canonical_id
+        ? claimsAssessment.commentary_by_event_id[event.canonical_id]
+        : undefined);
     pushAdjustment(adjustments, id, event.points, event.description, {
       metadata: {
         ...(event.metadata ?? {}),
-        ...(claimsAssessment.commentary_payload.l1 && {
-          claimsL1: claimsAssessment.commentary_payload.l1,
-        }),
-        ...(claimsAssessment.commentary_payload.l2 && {
-          claimsL2: claimsAssessment.commentary_payload.l2,
-        }),
+        ...(eventCommentary?.l1 && { claimsL1: eventCommentary.l1 }),
+        ...(eventCommentary?.l2 && { claimsL2: eventCommentary.l2 }),
+        ...(eventCommentary?.l3_body && { claimsL3Body: eventCommentary.l3_body }),
+        ...(eventCommentary?.cta_label && { claimsCtaLabel: eventCommentary.cta_label }),
+        ...(eventCommentary?.cta_domain && { claimsCtaDomain: eventCommentary.cta_domain }),
       },
     });
     score += event.points;

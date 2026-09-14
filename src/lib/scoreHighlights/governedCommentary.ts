@@ -76,7 +76,7 @@ export function governedCommentaryRow(
  */
 const ORGANIC_CLAIM_ONLY_L1 = 'Organic claim identified';
 const ORGANIC_CLAIM_ONLY_L2 =
-  'An organic claim appears on this packet, but the packet does not show a specific organic certification.';
+  'The product is presented as Organic, but we have not established a specific organic certification.';
 
 /**
  * KTC L1 attribution prefix (Ethics v0.2 §4). "Product owner" survives only when governed entity

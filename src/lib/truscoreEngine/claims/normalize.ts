@@ -3,20 +3,16 @@
  */
 
 export function normalizePacketStatement(raw: string): string {
-  // Unicode NFKC
   let s = raw.normalize('NFKC');
   s = s.toLowerCase();
-  // Ampersand / plus between claim terms → and
   s = s.replace(/\s*[&+]\s*/g, ' and ');
-  // Hyphens/dashes → spaces
   s = s.replace(/[\u2010-\u2015\-–—]/g, ' ');
-  // Insert space between number and g/mg/mcg/µg
   s = s.replace(/(\d)(g|mg|mcg|µg)\b/gi, '$1 $2');
-  // Collapse whitespace
   s = s.replace(/\s+/g, ' ').trim();
   return s;
 }
 
+/** HTML/display escaping for outward-facing claim tokens. Immutable observed_text is never mutated. */
 export function escapeDisplayText(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -25,14 +21,15 @@ export function escapeDisplayText(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/** Preserve meaning; light sentence-case only where whole string is uppercase. */
+/** Preserve meaning; light sentence-case where whole string is uppercase; then escape for display. */
 export function toDisplaySafeClaimText(observed: string): string {
   const trimmed = observed.trim();
   if (!trimmed) return '';
+  let display = trimmed;
   if (trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed)) {
-    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+    display = trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
   }
-  return trimmed;
+  return escapeDisplayText(display);
 }
 
 export function naturalLanguageList(items: string[]): string {
@@ -43,7 +40,9 @@ export function naturalLanguageList(items: string[]): string {
   if (unique.length === 3) return `${unique[0]}, ${unique[1]} and ${unique[2]}`;
   const shown = unique.slice(0, 3);
   const remaining = unique.length - 3;
-  return `${shown[0]}, ${shown[1]}, ${shown[2]} and ${remaining} other packet statements`;
+  const otherLabel =
+    remaining === 1 ? '1 other packet statement' : `${remaining} other packet statements`;
+  return `${shown[0]}, ${shown[1]}, ${shown[2]} and ${otherLabel}`;
 }
 
 export function naturalLanguageNutrientList(

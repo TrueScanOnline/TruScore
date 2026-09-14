@@ -1,6 +1,7 @@
 /**
  * Claims assessment decision procedure (v0.2 §10).
  * Packet Claim Context arithmetic + Organic claim-only + assessment state.
+ * assessment_state and packet_coverage_state are orthogonal (CR-07).
  */
 
 import {
@@ -10,10 +11,12 @@ import {
   buildPositivePacketContextCommentary,
 } from './commentary';
 import { matchAdmittedObservations, getMachineRegisterVersion } from './matchRegister';
+import { claimsNutrientVersionIdentities } from './nutrientContextAdapter';
 import type {
   AdmittedPacketObservation,
   BenchmarkCheckStatus,
   ClaimsAssessmentResult,
+  ClaimsCommentaryPayload,
   ClaimsFiredAdjustment,
   ClaimsNutrientContext,
   ClaimsSuppressedCandidate,
@@ -25,15 +28,10 @@ export interface AssessClaimsInput {
   admittedObservations: AdmittedPacketObservation[];
   packetCoverageState: PacketCoverageState;
   nutrientContext: ClaimsNutrientContext | null;
-  /** Body NOVA group when known (optional commentary only). */
   novaGroup?: number | null;
-  /** Certified Organic certification fired (+3). */
   certifiedOrganicFired: boolean;
-  /** KTC/BBFAW check statuses for assessment_state and neutral copy. */
   benchmarkChecks: { source: 'ktc' | 'bbfaw'; status: BenchmarkCheckStatus }[];
-  /** Other certification schemes fired (Fairtrade, MSC, …) — prevents assessed_neutral. */
   otherCertificationFired: boolean;
-  /** Expected register version; mismatch fails closed for new recognition. */
   registerVersionExpected?: string;
 }
 
@@ -52,12 +50,10 @@ function computePacketContextPoints(
     return { points: -3 };
   }
 
-  // Set B never +1
   if (!hasA && hasB) {
     return { points: 0, diagnostic: 'set_b_no_high_zero_outcome' };
   }
 
-  // Set A positive requires complete required context and no High
   if (hasA && !nutrient.any_governed_high) {
     if (!nutrient.required_context_complete) {
       return { points: 0, diagnostic: 'nutrient_context_incomplete_no_positive' };
@@ -68,13 +64,48 @@ function computePacketContextPoints(
   return { points: 0 };
 }
 
+function emptyResult(
+  partial: Partial<ClaimsAssessmentResult> &
+    Pick<ClaimsAssessmentResult, 'diagnostics' | 'packet_coverage_state' | 'benchmark_checks'>
+): ClaimsAssessmentResult {
+  const versions = claimsNutrientVersionIdentities();
+  return {
+    schema_version: CLAIMS_ASSESSMENT_SCHEMA_VERSION,
+    register_version: getMachineRegisterVersion(),
+    nutrient_standard_version: versions.nutrient_standard_version,
+    nutrient_methodology_version: versions.nutrient_methodology_version,
+    nutrient_reference_asset_id: versions.nutrient_reference_asset_id,
+    assessment_state: 'unassessed',
+    admitted_claims: [],
+    unclassified_statements: [],
+    nutrient_context: null,
+    packet_context_points: 0,
+    organic_claim_only_points: 0,
+    fired_adjustments: [],
+    suppressed_candidates: [],
+    commentary_payload: { route: 'none' },
+    commentary_by_event_id: {},
+    ...partial,
+  };
+}
+
 /**
  * Run Packet Claim Context + Set O Organic claim-only assessment.
- * Does not include KTC/BBFAW/certification arithmetic (caller merges).
  */
 export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAssessmentResult {
   const diagnostics: ClaimsAssessmentResult['diagnostics'] = [];
   const registerVersion = getMachineRegisterVersion();
+  const versions = claimsNutrientVersionIdentities();
+  const nutrientVersions = {
+    nutrient_standard_version:
+      input.nutrientContext?.nutrient_reference_asset_id ||
+      input.nutrientContext?.standard_version ||
+      versions.nutrient_standard_version,
+    nutrient_methodology_version:
+      input.nutrientContext?.nutrient_methodology_version || versions.nutrient_methodology_version,
+    nutrient_reference_asset_id:
+      input.nutrientContext?.nutrient_reference_asset_id || versions.nutrient_reference_asset_id,
+  };
 
   const match = matchAdmittedObservations(input.admittedObservations, {
     registerVersionExpected: input.registerVersionExpected,
@@ -82,23 +113,15 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
   diagnostics.push(...match.diagnostics);
 
   if (match.diagnostics.some((d) => d.code === 'register_version_mismatch')) {
-    return {
-      schema_version: CLAIMS_ASSESSMENT_SCHEMA_VERSION,
+    return emptyResult({
+      ...nutrientVersions,
       register_version: registerVersion,
-      nutrient_standard_version: input.nutrientContext?.standard_version ?? '',
-      assessment_state: 'unassessed',
       packet_coverage_state: input.packetCoverageState,
-      admitted_claims: [],
-      unclassified_statements: [],
       nutrient_context: input.nutrientContext,
       benchmark_checks: input.benchmarkChecks,
-      packet_context_points: 0,
-      organic_claim_only_points: 0,
-      fired_adjustments: [],
-      suppressed_candidates: [],
       commentary_payload: { route: 'none', suppressed_reason: 'register_version_mismatch' },
       diagnostics,
-    };
+    });
   }
 
   const setA = match.matched.filter((m) => m.set === 'A');
@@ -115,6 +138,7 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
 
   const fired: ClaimsFiredAdjustment[] = [];
   const suppressed: ClaimsSuppressedCandidate[] = [];
+  const commentaryByEvent: Record<string, ClaimsCommentaryPayload> = {};
 
   // Organic claim-only +1, suppressed by Certified Organic +3
   let organicClaimOnlyPoints: 0 | 1 = 0;
@@ -128,10 +152,12 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
       });
       diagnostics.push({
         code: 'organic_claim_only_suppressed',
-        detail: 'Certified Organic present',
+        detail: 'Certified Organic present — claim-only +1 suppressed; reason exposed for S28',
       });
     } else {
       organicClaimOnlyPoints = 1;
+      const organicCommentary = buildOrganicClaimOnlyCommentary();
+      commentaryByEvent['claims.organic.claim_only.v1'] = organicCommentary;
       fired.push({
         id: 'claims.organic.claim_only.v1',
         canonical_id: 'claims.organic.claim_only.v1',
@@ -143,15 +169,27 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
           register_row_id: setO[0].register_row_id,
           display_text: setO[0].display_text,
           organicEvidenceClass: 'claim_only',
+          evidence_id: setO[0].evidence_id,
+          admission_method: setO[0].admission_method,
+          ...(organicCommentary.l1 ? { claimsL1: organicCommentary.l1 } : {}),
+          ...(organicCommentary.l2 ? { claimsL2: organicCommentary.l2 } : {}),
+          ...(organicCommentary.l3_body ? { claimsL3Body: organicCommentary.l3_body } : {}),
+          ...(organicCommentary.cta_label ? { claimsCtaLabel: organicCommentary.cta_label } : {}),
+          ...(organicCommentary.cta_domain ? { claimsCtaDomain: organicCommentary.cta_domain } : {}),
         },
       });
     }
   }
 
   const nova4 = input.novaGroup === 4;
-  let commentary: ClaimsAssessmentResult['commentary_payload'] = { route: 'none' };
 
   if (packetPoints === -3) {
+    const adverse = buildAdversePacketContextCommentary(
+      [...setA, ...setB],
+      input.nutrientContext?.high_nutrient_labels ?? [],
+      nova4
+    );
+    commentaryByEvent['claims.packet_context.adverse.v1'] = adverse;
     fired.push({
       id: 'claims.packet_context.adverse.v1',
       canonical_id: 'claims.packet_context.adverse.v1',
@@ -162,14 +200,13 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
       metadata: {
         high_nutrients: (input.nutrientContext?.high_nutrient_labels ?? []).join('|'),
         claim_texts: [...setA, ...setB].map((c) => c.display_text).join('|'),
+        ...(adverse.l1 ? { claimsL1: adverse.l1 } : {}),
+        ...(adverse.l2 ? { claimsL2: adverse.l2 } : {}),
       },
     });
-    commentary = buildAdversePacketContextCommentary(
-      [...setA, ...setB],
-      input.nutrientContext?.high_nutrient_labels ?? [],
-      nova4
-    );
   } else if (packetPoints === 1) {
+    const positive = buildPositivePacketContextCommentary(setA, nova4);
+    commentaryByEvent['claims.packet_context.positive.v1'] = positive;
     fired.push({
       id: 'claims.packet_context.positive.v1',
       canonical_id: 'claims.packet_context.positive.v1',
@@ -179,52 +216,57 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
       family: 'packet_context',
       metadata: {
         claim_texts: setA.map((c) => c.display_text).join('|'),
+        ...(positive.l1 ? { claimsL1: positive.l1 } : {}),
+        ...(positive.l2 ? { claimsL2: positive.l2 } : {}),
       },
     });
-    commentary = buildPositivePacketContextCommentary(setA, nova4);
-  } else if (organicClaimOnlyPoints === 1) {
-    commentary = buildOrganicClaimOnlyCommentary();
   }
 
-  // Assessment state
+  // Primary commentary: prefer packet context, else organic (both retained in commentary_by_event_id)
+  let commentary_payload: ClaimsCommentaryPayload = { route: 'none' };
+  if (commentaryByEvent['claims.packet_context.adverse.v1']) {
+    commentary_payload = commentaryByEvent['claims.packet_context.adverse.v1'];
+  } else if (commentaryByEvent['claims.packet_context.positive.v1']) {
+    commentary_payload = commentaryByEvent['claims.packet_context.positive.v1'];
+  } else if (commentaryByEvent['claims.organic.claim_only.v1']) {
+    commentary_payload = commentaryByEvent['claims.organic.claim_only.v1'];
+  }
+
   const anyBenchmarkFired = input.benchmarkChecks.some(
     (b) => b.status === 'positive' || b.status === 'adverse'
   );
   const anyScoringClaimOrCert =
     fired.length > 0 || input.certifiedOrganicFired || input.otherCertificationFired;
 
+  // CR-07: assessment_state orthogonal to packet_coverage_state
   let assessment_state: ClaimsAssessmentResult['assessment_state'] = 'unassessed';
-  if (input.packetCoverageState !== 'complete') {
-    assessment_state = anyScoringClaimOrCert || anyBenchmarkFired ? 'assessed_scored' : 'unassessed';
-    // If we have scored events, assessed_scored even if coverage incomplete
-    if (anyScoringClaimOrCert || anyBenchmarkFired) assessment_state = 'assessed_scored';
-  } else if (anyScoringClaimOrCert || anyBenchmarkFired) {
+  if (anyScoringClaimOrCert || anyBenchmarkFired) {
     assessment_state = 'assessed_scored';
-  } else {
-    // Complete coverage, no scoring claim/cert, no benchmark fire
+  } else if (input.packetCoverageState === 'complete') {
     assessment_state = 'assessed_neutral';
     const nonScoring = [
       ...setC.map((c) => ({ display_text: c.display_text })),
       ...match.unclassified.map((u) => ({ display_text: u.display_text })),
     ];
-    commentary = buildAssessedNeutralCommentary(nonScoring);
+    commentary_payload = buildAssessedNeutralCommentary(nonScoring);
+  } else {
+    assessment_state = 'unassessed';
   }
 
-  // If packet context commentary was suppressed (missing tokens), keep score event + diagnostic
   if (
     (packetPoints === 1 || packetPoints === -3) &&
-    (commentary as { suppressed_reason?: string }).suppressed_reason
+    commentary_payload.suppressed_reason
   ) {
     diagnostics.push({
       code: 'commentary_suppressed',
-      detail: (commentary as { suppressed_reason?: string }).suppressed_reason || 'token_failure',
+      detail: commentary_payload.suppressed_reason || 'token_failure',
     });
   }
 
   return {
     schema_version: CLAIMS_ASSESSMENT_SCHEMA_VERSION,
     register_version: registerVersion,
-    nutrient_standard_version: input.nutrientContext?.standard_version ?? '',
+    ...nutrientVersions,
     assessment_state,
     packet_coverage_state: input.packetCoverageState,
     admitted_claims: match.matched,
@@ -235,7 +277,8 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
     organic_claim_only_points: organicClaimOnlyPoints,
     fired_adjustments: fired,
     suppressed_candidates: suppressed,
-    commentary_payload: commentary,
+    commentary_payload,
+    commentary_by_event_id: commentaryByEvent,
     diagnostics,
   };
 }

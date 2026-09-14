@@ -62,7 +62,9 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
               packet_coverage_state: {claimsAssessment.packet_coverage_state}
             </Text>
             <Text style={[styles.claimsLine, { color: colors.textTertiary }]}>
-              register_version: {claimsAssessment.register_version} · nutrient_standard_version:{' '}
+              register_version: {claimsAssessment.register_version} · nutrient_methodology_version:{' '}
+              {claimsAssessment.nutrient_methodology_version} · nutrient_reference_asset_id:{' '}
+              {claimsAssessment.nutrient_reference_asset_id} · nutrient_standard_version:{' '}
               {claimsAssessment.nutrient_standard_version} · schema: {claimsAssessment.schema_version}
             </Text>
 
@@ -127,13 +129,34 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
                 None (assessed-neutral must never appear as a +0 fired row)
               </Text>
             ) : (
-              claimsAssessment.fired_adjustments.map((f, i) => (
-                <Text key={`${f.id}:${i}`} style={[styles.claimsLine, { color: colors.text }]}>
-                  {f.id} · {f.points > 0 ? '+' : ''}
-                  {f.points} · {f.description}
-                  {f.canonical_id ? ` · commentary/canonical: ${f.canonical_id}` : ''}
-                </Text>
-              ))
+              claimsAssessment.fired_adjustments.map((f, i) => {
+                const bound =
+                  claimsAssessment.commentary_by_event_id?.[f.id] ||
+                  (f.canonical_id
+                    ? claimsAssessment.commentary_by_event_id?.[f.canonical_id]
+                    : undefined);
+                return (
+                  <View key={`${f.id}:${i}`} style={styles.claimsItem}>
+                    <Text style={[styles.claimsLine, { color: colors.text }]}>
+                      {f.id} · {f.points > 0 ? '+' : ''}
+                      {f.points} · {f.description}
+                      {f.canonical_id ? ` · canonical: ${f.canonical_id}` : ''}
+                    </Text>
+                    {bound ? (
+                      <Text style={[styles.claimsLine, { color: colors.textSecondary }]}>
+                        commentary_route: {bound.route}
+                        {bound.l1 ? ` · L1: ${bound.l1.slice(0, 80)}` : ''}
+                        {f.metadata?.admission_method
+                          ? ` · admission: ${String(f.metadata.admission_method)}`
+                          : ''}
+                        {f.metadata?.evidence_id
+                          ? ` · evidence_id: ${String(f.metadata.evidence_id)}`
+                          : ''}
+                      </Text>
+                    ) : null}
+                  </View>
+                );
+              })
             )}
 
             <Text style={[styles.claimsSubhead, { color: colors.text }]}>Suppressed candidates</Text>

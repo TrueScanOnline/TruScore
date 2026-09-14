@@ -125,8 +125,12 @@ describe('resolveGovernedL3Content — Addendum v1.1', () => {
     const claimOnly = resolveGovernedL3Content('ethics_organic', 'ethics-v37-cert-organic', {
       organicEvidenceClass: 'claim_only',
     });
+    expect(claimOnly?.sections).toHaveLength(1);
     expect(claimOnly?.sections[0].body).toContain('does not establish a specific organic certification');
-    expect(claimOnly?.sections[1].body).toContain('The current Ethics rule recognises the packet claim');
+    expect(claimOnly?.sections[0].body).toContain('That does not mean the product is not genuinely organic');
+    expect(claimOnly?.action?.anchorLabel).toBe('Update certification');
+    expect(claimOnly?.action?.contributionDomain).toBe('certifications');
+    expect(JSON.stringify(claimOnly)).not.toMatch(/certified against/i);
     expect(claimOnly?.sources.map((s) => s.label)).toEqual([
       'Australia — ACCC Organic claims',
       'New Zealand — MPI organic product requirements',

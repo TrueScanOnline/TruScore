@@ -667,7 +667,7 @@
     "perServeContextTitle": "Per serve context",
     "sourcesMethodTitle": "Sources & method",
     "contributeA11y": "Contribute or correct nutrition information",
-    "openDetailsA11y": "Open nutrition details",
+    "openDetailsA11y": "View nutrition details",
     "burnStripTitle": "Feel the burn",
     "burnStripSubtitle": "Per 100g of this product consumed, a rough exercise equivalent is estimated below. (Note: this does not constitute medical advice. This information is shown for approximate comparison only.)",
     "burnWalkShort": "≈ {{min}} min walking",
