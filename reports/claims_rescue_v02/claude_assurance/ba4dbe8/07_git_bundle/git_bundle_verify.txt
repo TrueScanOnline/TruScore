@@ -1,0 +1,6 @@
+﻿The bundle contains this ref:
+ba4dbe8f3a28a7b0c8b77592189c2cf3754161dc HEAD
+The bundle requires this ref:
+16e10c384fdb024282020aaa8e5eaae30da83f2a 
+The bundle uses this hash algorithm: sha1
+reports/claims_rescue_v02/claude_assurance/ba4dbe8/07_git_bundle/TruScore_claims_rescue_v02_ba4dbe8_from_16e10c3.bundle is okay

@@ -1,0 +1,11 @@
+﻿commit ba4dbe8f3a28a7b0c8b77592189c2cf3754161dc
+Author:     Leighton <flagshipdevelopments@gmail.com>
+AuthorDate: Mon Sep 14 18:28:11 2026 +1200
+Commit:     Leighton <flagshipdevelopments@gmail.com>
+CommitDate: Mon Sep 14 18:28:11 2026 +1200
+
+    fix(claims): CR-12 VMC combination precedence for final pre-Claude closure
+    
+    Retain A-VMC-003 > A-VMC-002 > A-VMC-001 over overlapping component vitamin/mineral hits on the same observation; keep equal-priority fail-closed only for unresolved ties. Do not rewrite 5981cce.
+    
+    Co-authored-by: Cursor <cursoragent@cursor.com>

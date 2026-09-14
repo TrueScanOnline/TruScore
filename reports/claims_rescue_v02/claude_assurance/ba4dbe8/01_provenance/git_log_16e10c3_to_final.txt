@@ -1,0 +1,5 @@
+﻿ba4dbe8 fix(claims): CR-12 VMC combination precedence for final pre-Claude closure
+8ab3f13 docs(claims): add pre-assurance reconciliation Claude package for 5981cce
+5981cce fix(claims): pre-assurance reconciliation for Claims Rescue v0.2
+3e4827b docs(claims): add Claims Rescue v0.2 corrective Claude assurance package
+9ef5cb7 fix(claims): Claims Rescue v0.2 independent QA corrective pass

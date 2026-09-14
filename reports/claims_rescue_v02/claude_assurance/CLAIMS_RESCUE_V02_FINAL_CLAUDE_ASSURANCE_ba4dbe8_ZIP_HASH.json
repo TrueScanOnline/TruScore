@@ -1,0 +1,16 @@
+﻿{
+    "branch":  "feat/claims-rescue-v02",
+    "workstream":  "claims_rescue_v02_final",
+    "zip_filename":  "CLAIMS_RESCUE_V02_FINAL_CLAUDE_ASSURANCE_ba4dbe8.zip",
+    "reconciliation_sha_5981cce":  "5981ccea93adc2ab59a15b15d2950b0dc65a9ba2",
+    "rewritten_5981cce":  false,
+    "zip_bytes":  1468712,
+    "zip_sha256":  "6c7323e50bd3dd29bf563f216627d633dabfc06c4f6d1e2bcb0675e1f9ff5783",
+    "nutrition_baseline_sha":  "674d1fe48d500393a4c19d75859bcaa3b512768c",
+    "assurance_sha":  "ba4dbe8f3a28a7b0c8b77592189c2cf3754161dc",
+    "corrective_sha_9ef5cb7":  "9ef5cb7b4b853b3b814f919679ada89ef5bbadca",
+    "git_bundle_bytes":  562914,
+    "failed_baseline_sha":  "16e10c384fdb024282020aaa8e5eaae30da83f2a",
+    "push_to_nutrition_remote":  false,
+    "git_bundle":  "07_git_bundle/TruScore_claims_rescue_v02_ba4dbe8_from_16e10c3.bundle"
+}

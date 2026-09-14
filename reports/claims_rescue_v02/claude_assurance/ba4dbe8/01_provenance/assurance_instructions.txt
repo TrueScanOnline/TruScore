@@ -1,0 +1,5 @@
+Claude last reviewed failed baseline 16e10c3.
+9ef5cb7 was intentionally not sent for assurance.
+Assure FINAL product SHA ba4dbe8f3a28a7b0c8b77592189c2cf3754161dc.
+5981cce not rewritten.
+Nutrition/S25 untouched.

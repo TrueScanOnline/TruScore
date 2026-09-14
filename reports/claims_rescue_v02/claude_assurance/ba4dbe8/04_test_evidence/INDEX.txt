@@ -1,0 +1,5 @@
+﻿FRESH at ba4dbe8f3a28a7b0c8b77592189c2cf3754161dc
+Jest: 17 suites / 351 passed
+eslint --max-warnings 0: exit 0
+tsc: exit 2 — Nutrition TS2367 unrelated only
+expo ios/android: exit 0
