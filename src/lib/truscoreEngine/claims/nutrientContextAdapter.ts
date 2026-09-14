@@ -2,15 +2,26 @@
  * Nutrient-context adapter — Claims consumes governed Nutrition assessment (NUT-01..06).
  * Does not recalculate thresholds.
  * Persists two distinct identities: founder methodology vs threshold/reference asset.
+ *
+ * Controlling reference asset is always CLAIMS_NUTRIENT_REFERENCE_ASSET_ID — never overridden
+ * by a legacy/generic assessment.standardId. Upstream standardId may be preserved diagnostically.
  */
 
 import type { GovernedNutrientAssessment } from '../../../nutrition/governedNutrientTypes';
-import { UK_GOV_FOP_MTL_REFERENCE } from '../../../nutrition/ukGovFopMtlReference';
 import type { ClaimsNutrientContext, ClaimsNutrientEntry } from './types';
 import {
   CLAIMS_NUTRIENT_METHODOLOGY_VERSION,
   CLAIMS_NUTRIENT_REFERENCE_ASSET_ID,
 } from './types';
+
+export interface BuildClaimsNutrientContextOptions {
+  /**
+   * Product GTIN/barcode for product-bound nutrient evidence pointers.
+   * Identifies which product the governed nutrient assessment outcome was built for —
+   * not an OFF evidence object and not the asset id alone.
+   */
+  productBarcode?: string | null;
+}
 
 function mapEntry(
   item: GovernedNutrientAssessment['nutrients']['totalSugars'],
@@ -40,28 +51,52 @@ function emptyUnavailableEntry(sourceEvidenceId: string): ClaimsNutrientEntry {
 }
 
 /**
+ * Smallest deterministic product-bound pointer to a governed nutrient assessment outcome.
+ * Format: governed-nutrient-assessment:{barcode}:{nutrientKey}
+ * Identifies the Claims-consumed Nutrition assessment result for that product+nutrient —
+ * not the threshold asset and not a packet evidence object.
+ */
+export function claimsNutrientSourceEvidenceId(
+  productBarcode: string | null | undefined,
+  nutrientKey: 'total_sugars' | 'saturated_fat' | 'sodium'
+): string {
+  const gtin = (productBarcode && String(productBarcode).trim()) || 'unknown';
+  return `governed-nutrient-assessment:${gtin}:${nutrientKey}`;
+}
+
+/**
  * Build the versioned nutrient-context object Claims must consume.
- * When assessment is null, still emit both version identities (never empty strings).
+ * When assessment is null, return null (version identities live on ClaimsAssessmentResult).
  */
 export function buildClaimsNutrientContext(
-  assessment: GovernedNutrientAssessment | null | undefined
+  assessment: GovernedNutrientAssessment | null | undefined,
+  options?: BuildClaimsNutrientContextOptions
 ): ClaimsNutrientContext | null {
   const methodology = CLAIMS_NUTRIENT_METHODOLOGY_VERSION;
-  const assetId =
-    assessment?.standardId ||
-    UK_GOV_FOP_MTL_REFERENCE.reference_standard_id ||
-    CLAIMS_NUTRIENT_REFERENCE_ASSET_ID;
+  // Controlling identity — never let legacy/generic assessment.standardId override.
+  const referenceAssetId = CLAIMS_NUTRIENT_REFERENCE_ASSET_ID;
+  const upstreamStandardId =
+    assessment?.standardId && assessment.standardId !== referenceAssetId
+      ? assessment.standardId
+      : undefined;
 
   if (!assessment) {
-    // Caller may still need version identities on the assessment result; return a
-    // null context for scoring arithmetic, versions live on ClaimsAssessmentResult.
     return null;
   }
 
-  const sourceEvidenceId = `governed-nutrient:${assetId}`;
-  const total_sugars = mapEntry(assessment.nutrients.totalSugars, sourceEvidenceId);
-  const saturated_fat = mapEntry(assessment.nutrients.saturatedFat, sourceEvidenceId);
-  const sodium = mapEntry(assessment.nutrients.sodium, sourceEvidenceId);
+  const barcode = options?.productBarcode;
+  const total_sugars = mapEntry(
+    assessment.nutrients.totalSugars,
+    claimsNutrientSourceEvidenceId(barcode, 'total_sugars')
+  );
+  const saturated_fat = mapEntry(
+    assessment.nutrients.saturatedFat,
+    claimsNutrientSourceEvidenceId(barcode, 'saturated_fat')
+  );
+  const sodium = mapEntry(
+    assessment.nutrients.sodium,
+    claimsNutrientSourceEvidenceId(barcode, 'sodium')
+  );
 
   const high_nutrient_labels: ClaimsNutrientContext['high_nutrient_labels'] = [];
   if (total_sugars.level === 'high') high_nutrient_labels.push('total sugars');
@@ -72,12 +107,8 @@ export function buildClaimsNutrientContext(
   const required_context_complete = levels.every((l) => l !== 'unavailable');
   const any_governed_high = high_nutrient_labels.length > 0;
 
-  const basis =
-    assessment.productClass === 'drink'
-      ? 'drink'
-      : assessment.productClass === 'food'
-        ? 'food'
-        : 'unknown';
+  // Accepted upstream contract is binary food | drink (no Claims 'unknown' basis).
+  const basis: 'food' | 'drink' = assessment.productClass === 'drink' ? 'drink' : 'food';
 
   const large_portion_override =
     assessment.nutrients.totalSugars.triggers.includes('large_portion') ||
@@ -85,9 +116,10 @@ export function buildClaimsNutrientContext(
     assessment.nutrients.sodium.triggers.includes('large_portion');
 
   return {
-    standard_version: assetId,
+    standard_version: referenceAssetId,
     nutrient_methodology_version: methodology,
-    nutrient_reference_asset_id: assetId,
+    nutrient_reference_asset_id: referenceAssetId,
+    ...(upstreamStandardId ? { upstream_standard_id: upstreamStandardId } : {}),
     basis,
     large_portion_override,
     nutrients: { total_sugars, saturated_fat, sodium },

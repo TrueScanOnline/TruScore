@@ -5,11 +5,11 @@
  * - Use governed evidence already available (OFF product name Set O; OFF labels/labels_en for A/B/C/O).
  * - Fail closed = do not invent/misapply facts — not "ignore OFF until user photographs the packet".
  * - Never record OFF evidence as user_confirmation.
+ * - display_text is not escaped here — single-pass escape happens in matchRegister from observed_text.
  */
 
 import type { Product } from '../../../types/product';
 import { evaluateOrganicClaimOnlyCandidate } from '../../../services/ethicsCertificationsService';
-import { toDisplaySafeClaimText } from './normalize';
 import type { AdmittedPacketObservation, PacketCoverageState } from './types';
 
 export interface ClaimsProductObservationBundle {
@@ -25,9 +25,32 @@ function splitOffLabelStatements(raw: string | undefined | null): string[] {
     .filter((s) => s.length > 0);
 }
 
+function admitOffLabelField(
+  observations: AdmittedPacketObservation[],
+  seenLabelNorm: Set<string>,
+  raw: string | undefined | null,
+  field: 'labels' | 'labels_en',
+  barcode: string
+): void {
+  for (const chunk of splitOffLabelStatements(raw)) {
+    const key = `${field}:${chunk.toLowerCase()}`;
+    if (seenLabelNorm.has(key)) continue;
+    seenLabelNorm.add(key);
+    observations.push({
+      evidence_id: `off-${field}:${barcode}:${seenLabelNorm.size}`,
+      observed_text: chunk,
+      // Immutable observed wording mirrored until matchRegister escapes once.
+      display_text: chunk,
+      admission_method: 'off_labels',
+      source_locator: field === 'labels' ? 'off:labels' : 'off:labels_en',
+      is_product_name: false,
+    });
+  }
+}
+
 /**
  * Build observations for the Claims Machine Register.
- * @param explicitAdmissions — packet_image / ocr_crop / user_confirmation (optional)
+ * @param explicitAdmissions — packet_image / ocr_crop / user_confirmation / NIP-marked (optional)
  * @param packetCoverageState — orthogonal to assessment_state; incomplete may still be assessed_scored
  */
 export function buildClaimsObservationsFromProduct(
@@ -40,25 +63,10 @@ export function buildClaimsObservationsFromProduct(
   const observations: AdmittedPacketObservation[] = [...(options?.explicitAdmissions ?? [])];
   const barcode = product.barcode || 'unknown';
 
-  // OFF labels / labels_en — legitimate claim-bearing evidence (A/B/C/O within scope)
-  const labelChunks = [
-    ...splitOffLabelStatements(product.labels),
-    ...splitOffLabelStatements(product.labels_en),
-  ];
+  // OFF labels / labels_en — legitimate claim-bearing evidence; preserve field in source_locator
   const seenLabelNorm = new Set<string>();
-  for (const chunk of labelChunks) {
-    const key = chunk.toLowerCase();
-    if (seenLabelNorm.has(key)) continue;
-    seenLabelNorm.add(key);
-    observations.push({
-      evidence_id: `off-labels:${barcode}:${seenLabelNorm.size}`,
-      observed_text: chunk,
-      display_text: toDisplaySafeClaimText(chunk),
-      admission_method: 'off_labels',
-      source_locator: 'off_labels',
-      is_product_name: false,
-    });
-  }
+  admitOffLabelField(observations, seenLabelNorm, product.labels, 'labels', barcode);
+  admitOffLabelField(observations, seenLabelNorm, product.labels_en, 'labels_en', barcode);
 
   // Governed product-name Organic (Set O only — never indiscriminate A/B catalogue scan)
   const claimOnly = evaluateOrganicClaimOnlyCandidate(product);
@@ -73,14 +81,13 @@ export function buildClaimsObservationsFromProduct(
       observations.push({
         evidence_id: `organic-claim-only-name:${barcode}`,
         observed_text: claimOnly.observedText,
-        display_text: toDisplaySafeClaimText(claimOnly.observedText),
+        display_text: claimOnly.observedText,
         admission_method: 'governed_product_name',
         is_product_name: true,
-        source_locator: 'product_name',
+        source_locator: 'off:product_name',
       });
     }
   }
-  // Label-path organic is already covered by off_labels admissions above; do not mis-tag as user_confirmation.
 
   const packetCoverageState: PacketCoverageState = options?.packetCoverageState ?? 'incomplete';
 

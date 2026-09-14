@@ -9,28 +9,21 @@ At line:1 char:1
 [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
 [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
 Starting Metro Bundler
-| (node:15392) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+iOS .\index.js ΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ  1.5% ( 18/207)
+iOS .\index.js ΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 21.8% (228/504)
+iOS .\index.js ΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 25.1% (420/838)
+| (node:6020) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæ 69.0% ( 968/1165)
 | (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæ 93.6% (1549/1611)
+| (node:21240) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:15912) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (node:2332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:3300) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (node:3284) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | (Use `node --trace-warnings ...` to show where the warning was created)
-iOS .\index.js ΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 17.4% ( 20/186)
-| (node:11028) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-| (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:6800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-| (Use `node --trace-warnings ...` to show where the warning was created)
-iOS .\index.js ΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 17.7% (216/513)
-iOS .\index.js ΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 29.4% (386/731)
-iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 38.8% (585/939)
-iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 51.7% ( 811/1162)
-iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæ 62.8% (1060/1340)
-iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæ 74.2% (1285/1507)
-iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæ 90.1% (1496/1576)
 iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1704/1704)
-iOS Bundled 39024ms index.js (1704 modules)
+iOS Bundled 25119ms index.js (1704 modules)
 iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1704/1704)
 
 ΓÇ║ Assets (35):
@@ -60,9 +53,9 @@ iOS .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓû�
 ..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\search-icon.png (3 variations | 582 B)
 
 ΓÇ║ ios bundles (1):
-_expo/static/js/ios/index-13518d97d4430738964546d7058c9108.hbc (6.8 MB)
+_expo/static/js/ios/index-7657668c63fc5e83fc392f5279226de0.hbc (6.81 MB)
 
 ΓÇ║ Files (1):
 metadata.json (2.57 kB)
 
-Exported: dist-claims-corrective-DO-NOT-COMMIT/ios
+Exported: dist-claims-reconcile-DO-NOT-COMMIT/ios

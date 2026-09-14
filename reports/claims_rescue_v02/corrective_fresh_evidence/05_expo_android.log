@@ -9,26 +9,17 @@ At line:1 char:1
 [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
 [BUILD] EXPO_PUBLIC_USDA_API_KEY not set - USDA data will not be available
 Starting Metro Bundler
-| (node:14032) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæ 82.4% (1283/1413)
+| (node:4372) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:9408) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (node:14472) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:20488) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (node:21212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:2084) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (node:17900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 | (Use `node --trace-warnings ...` to show where the warning was created)
-Android .\index.js ΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 16.4% ( 60/148)
-| (node:8728) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-| (Use `node --trace-warnings ...` to show where the warning was created)
-| (node:17568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-| (Use `node --trace-warnings ...` to show where the warning was created)
-Android .\index.js ΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 23.0% (319/665)
-Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 45.9% (631/931)
-Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæΓûæΓûæΓûæ 57.2% ( 993/1313)
-Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæΓûæΓûæ 75.9% (1338/1536)
-Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæΓûæ 93.0% (1540/1597)
 Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1708/1708)
-Android Bundled 28482ms index.js (1708 modules)
+Android Bundled 11695ms index.js (1708 modules)
 Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûæ 99.9% (1708/1708)
 
 ΓÇ║ Assets (36):
@@ -58,9 +49,9 @@ Android .\index.js ΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûôΓûô�
 ..\TrueScan-FoodScanner\node_modules\@react-navigation\elements\lib\module\assets\search-icon.png (4 variations | 599 B)
 
 ΓÇ║ android bundles (1):
-_expo/static/js/android/index-9a15bae1cd6ecc644b10328adf0327fd.hbc (6.82 MB)
+_expo/static/js/android/index-aacf288e91dd1cc551fc41cf5c312960.hbc (6.82 MB)
 
 ΓÇ║ Files (1):
 metadata.json (2.58 kB)
 
-Exported: dist-claims-corrective-DO-NOT-COMMIT/android
+Exported: dist-claims-reconcile-DO-NOT-COMMIT/android

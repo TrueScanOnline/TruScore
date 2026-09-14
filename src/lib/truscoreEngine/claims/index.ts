@@ -1,6 +1,11 @@
 export { assessClaimsPacketAndOrganic } from './assessClaims';
 export type { AssessClaimsInput } from './assessClaims';
-export { buildClaimsNutrientContext, claimsNutrientVersionIdentities } from './nutrientContextAdapter';
+export {
+  buildClaimsNutrientContext,
+  claimsNutrientVersionIdentities,
+  claimsNutrientSourceEvidenceId,
+} from './nutrientContextAdapter';
+export type { BuildClaimsNutrientContextOptions } from './nutrientContextAdapter';
 export { buildClaimsObservationsFromProduct } from './productObservations';
 export { matchAdmittedObservations, getMachineRegisterVersion } from './matchRegister';
 export {

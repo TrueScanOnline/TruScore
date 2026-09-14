@@ -89,9 +89,15 @@ export interface ClaimsNutrientContext {
   standard_version: string;
   /** Founder methodology version — always populated. */
   nutrient_methodology_version: string;
-  /** Governed threshold/reference asset — always populated. */
+  /** Governed threshold/reference asset — always populated; never overridden by legacy standardId. */
   nutrient_reference_asset_id: string;
-  basis: 'food' | 'drink' | 'unknown';
+  /**
+   * Diagnostic only: upstream Nutrition assessment.standardId when it differs from the
+   * controlling Claims reference asset (e.g. legacy uk-gov-fop-mtl-v1).
+   */
+  upstream_standard_id?: string;
+  /** Accepted upstream contract is binary food | drink. */
+  basis: 'food' | 'drink';
   large_portion_override: boolean;
   nutrients: {
     total_sugars: ClaimsNutrientEntry;

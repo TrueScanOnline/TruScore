@@ -24,17 +24,17 @@
       "total_sugars": {
         "level": "low",
         "high_reason": null,
-        "source_evidence_id": "nutrient:total_sugars"
+        "source_evidence_id": "governed-nutrient-assessment:9415007000000:total_sugars"
       },
       "saturated_fat": {
         "level": "low",
         "high_reason": null,
-        "source_evidence_id": "nutrient:saturated_fat"
+        "source_evidence_id": "governed-nutrient-assessment:9415007000000:saturated_fat"
       },
       "sodium": {
         "level": "low",
         "high_reason": null,
-        "source_evidence_id": "nutrient:sodium"
+        "source_evidence_id": "governed-nutrient-assessment:9415007000000:sodium"
       }
     },
     "required_context_complete": true,
@@ -64,5 +64,5 @@
   },
   "commentary_by_event_id": {},
   "diagnostics": [],
-  "_example_note": "Corrective: assessed_neutral with complete governed Claims evidence and no fired adjustment; admission_method off_labels (never user_confirmation)."
+  "_example_note": "Pre-assurance: assessed_neutral; off:labels provenance; no live CTA required."
 }

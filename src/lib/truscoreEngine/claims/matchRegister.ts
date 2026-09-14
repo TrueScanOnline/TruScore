@@ -66,6 +66,11 @@ const CLOSED_PROTEIN_ADJECTIVES = new Set([
 const ACTIVE_VITAMIN_MINERAL_TARGETS =
   'vitamins?|minerals?|calcium|iron|zinc|magnesium|iodine|thiamine|thiamin|riboflavin|niacin|folate';
 
+/** Single-pass display escaping from immutable observed_text (never re-escape display_text). */
+function displayTextFromObserved(observedText: string): string {
+  return toDisplaySafeClaimText(observedText);
+}
+
 export function getMachineRegisterVersion(): string {
   return REGISTER.register_version || PACKET_CLAIM_MACHINE_REGISTER_VERSION;
 }
@@ -228,8 +233,9 @@ function candidateVetoedByExclusion(
     return p.canonical_family === 'total_sugars';
   }
 
-  // Unapproved protein adjectives — only veto protein candidates; preserve independent patterns
+  // Unapproved protein adjectives — veto protein candidates that are not independently approved
   if (id === 'X-007') {
+    if (/^A-PRO-00[1-4]$/.test(p.pattern_id)) return false;
     return p.canonical_family === 'protein' || /protein/i.test(p.pattern_id);
   }
 
@@ -240,8 +246,9 @@ function candidateVetoedByExclusion(
     return p.canonical_family === 'sodium' || /sod|salt/i.test(p.pattern_id);
   }
 
-  // Protein bar alone — only veto bare product-type protein claims
+  // Protein bar alone — no A/B from that phrase alone; preserve independently approved protein patterns
   if (id === 'X-011') {
+    if (/^A-PRO-00[1-4]$/.test(p.pattern_id)) return false;
     return p.canonical_family === 'protein' || /protein/i.test(p.pattern_id);
   }
 
@@ -268,11 +275,12 @@ function candidateVetoedByExclusion(
     return p.catalogue_set === 'O' || /org/i.test(p.pattern_id);
   }
 
-  // X-024: founder-accepted MVP edge — do not brand-parse; no veto
+  // X-024: founder-dispositioned for MVP — not runtime-enforced (no brand-token parser)
   if (id === 'X-024') {
     diagnostics.push({
-      code: 'x024_mvp_edge_accepted',
-      detail: 'Partial Organic-in-name brand edge deferred; whole-product Organic claim-only may fire',
+      code: 'x024_founder_dispositioned_mvp',
+      detail:
+        'X-024 brand-token Organic edge is founder-dispositioned / not runtime-enforced for MVP; product-name Organic claim-only +1 may fire; Certified Organic +3 requires separate certification evidence',
     });
     return false;
   }
@@ -293,11 +301,19 @@ function applyProseExclusionPredicates(
 ): Candidate[] {
   let remaining = [...candidates];
 
-  // X-020: mandatory legal/NIP text — only when admission explicitly marks that universe
-  if (observation.source_locator === 'mandatory_legal_text' || observation.source_locator === 'nip') {
+  // X-020: mandatory/regulatory packet information — evidence-location/source exclusion.
+  // Does not lexically veto approved OFF labels / labels_en / voluntary packet admissions.
+  const mandatoryLocators = new Set([
+    'nip',
+    'mandatory_legal_text',
+    'ingredient_list',
+    'allergen_statement',
+    'preparation_instructions',
+  ]);
+  if (observation.source_locator && mandatoryLocators.has(observation.source_locator)) {
     diagnostics.push({
-      code: 'x020_mandatory_text_excluded',
-      detail: `evidence ${observation.evidence_id}: mandatory NIP/legal text outside claim input universe`,
+      code: 'x020_mandatory_source_excluded',
+      detail: `evidence ${observation.evidence_id}: source_locator=${observation.source_locator} outside voluntary packet-claim input universe`,
     });
     return [];
   }
@@ -333,15 +349,17 @@ function applyProseExclusionPredicates(
     const before = remaining.length;
     remaining = remaining.filter((c) => {
       const fam = c.pattern.canonical_family;
-      if (fam === 'protein' || fam === 'fibre') return false;
+      // Preserve independently approved absolute protein/fibre patterns
+      if (/^A-PRO-00[1-4]$/.test(c.pattern.pattern_id)) return true;
+      if (/^A-FIB-/.test(c.pattern.pattern_id)) return true;
+      if (fam === 'protein' || fam === 'fibre' || fam === 'dietary_fibre') return false;
       return true;
     });
-    if (remaining.length < before) {
-      diagnostics.push({
-        code: 'x021_unlisted_adjective',
-        detail: `evidence ${observation.evidence_id}: unlisted adjective+target → protein/fibre candidates dropped`,
-      });
-    }
+    diagnostics.push({
+      code: 'x021_unlisted_adjective',
+      detail: `evidence ${observation.evidence_id}: unlisted adjective+target → non-approved protein/fibre candidates dropped (independent approved patterns preserved)`,
+    });
+    void before;
   }
 
   // X-022: comparative vitamin/mineral
@@ -350,19 +368,28 @@ function applyProseExclusionPredicates(
     'i'
   );
   if (comparativeVm.test(normalized)) {
-    const before = remaining.length;
     remaining = remaining.filter(
       (c) =>
         c.pattern.canonical_family !== 'vitamin_mineral' &&
         c.pattern.match_type !== 'deterministic_member_count' &&
         !/vmc|vitamin|mineral/i.test(c.pattern.pattern_id)
     );
-    if (remaining.length < before) {
-      diagnostics.push({
-        code: 'x022_comparative_vm',
-        detail: `evidence ${observation.evidence_id}: comparative V/M outside MVP catalogue`,
-      });
-    }
+    diagnostics.push({
+      code: 'x022_comparative_vm',
+      detail: `evidence ${observation.evidence_id}: comparative V/M outside MVP catalogue (unrelated families preserved)`,
+    });
+  }
+
+  // X-024: founder-dispositioned for MVP — not runtime-enforced; diagnostic only on product-name Organic
+  if (
+    observation.is_product_name === true &&
+    remaining.some((c) => c.pattern.catalogue_set === 'O')
+  ) {
+    diagnostics.push({
+      code: 'x024_founder_dispositioned_mvp',
+      detail:
+        'X-024 brand-token Organic edge is founder-dispositioned / not runtime-enforced for MVP; product-name Organic claim-only +1 may fire; Certified Organic +3 requires separate certification evidence',
+    });
   }
 
   // Silence unused closed-set reference (documents closed vocabulary for X-021)
@@ -429,8 +456,10 @@ export function matchAdmittedObservations(
       if (!matchesRegexExclusion(normalized, ex)) continue;
 
       const kept: Candidate[] = [];
+      let vetoedAny = false;
       for (const cand of candidates) {
         if (candidateVetoedByExclusion(ex, cand, normalized, diagnostics)) {
+          vetoedAny = true;
           excluded.push({
             evidence_id: obs.evidence_id,
             negative_id: ex.negative_id,
@@ -442,6 +471,19 @@ export function matchAdmittedObservations(
         }
       }
       candidates = kept;
+      // Record that the exclusion phrase matched even when independent patterns were preserved
+      if (!vetoedAny && (ex.negative_id === 'X-007' || ex.negative_id === 'X-011')) {
+        diagnostics.push({
+          code: `${ex.negative_id.toLowerCase()}_phrase_scoped`,
+          detail: `evidence ${obs.evidence_id}: ${ex.negative_id} matched; independently governed protein patterns preserved`,
+        });
+        excluded.push({
+          evidence_id: obs.evidence_id,
+          negative_id: ex.negative_id,
+          reason: ex.reason,
+          vetoed_pattern_id: '(phrase-only; independent patterns preserved)',
+        });
+      }
     }
 
     // 3) Prose exclusions (X-020 / X-021 / X-022); X-024 handled as MVP-accepted edge above
@@ -454,7 +496,7 @@ export function matchAdmittedObservations(
         unclassified.push({
           evidence_id: obs.evidence_id,
           observed_text: obs.observed_text,
-          display_text: toDisplaySafeClaimText(obs.display_text || obs.observed_text),
+          display_text: displayTextFromObserved(obs.observed_text),
         });
       }
       continue;
@@ -503,7 +545,7 @@ export function matchAdmittedObservations(
     matched.push({
       evidence_id: obs.evidence_id,
       observed_text: obs.observed_text,
-      display_text: toDisplaySafeClaimText(obs.display_text || obs.observed_text),
+      display_text: displayTextFromObserved(obs.observed_text),
       register_row_id: best.pattern.pattern_id,
       canonical_family: best.pattern.canonical_family,
       set: best.pattern.catalogue_set,

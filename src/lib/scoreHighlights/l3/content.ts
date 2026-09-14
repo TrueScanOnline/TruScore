@@ -402,7 +402,8 @@ function resolvePackaging(storyKey: string, metadata: L3Metadata): L3ResolvedCon
 
 function resolveEthicsCert(
   target: ScoreHighlightL3InAppTarget,
-  metadata: L3Metadata
+  metadata: L3Metadata,
+  options: L3ResolveOptions = {}
 ): L3ResolvedContent | null {
   if (target === 'ethics_fairtrade') {
     const sections: L3Section[] = [
@@ -498,6 +499,9 @@ function resolveEthicsCert(
         typeof metadata?.claimsCtaLabel === 'string' && metadata.claimsCtaLabel.trim()
           ? String(metadata.claimsCtaLabel)
           : 'Update certification';
+      // Preserve founder L3 copy always; expose live CTA only when contribution route is live.
+      // Do not activate Wave 4 contribution merely because destination is known.
+      const routeLive = options.userContributionRouteLive === true;
       return {
         title: 'What this organic claim means',
         sections: [
@@ -506,13 +510,17 @@ function resolveEthicsCert(
           },
         ],
         sources,
-        action: {
-          textBefore: '',
-          anchorLabel: ctaLabel,
-          textAfter: '',
-          /** Existing Certifications User Contribution flow. */
-          contributionDomain: 'certifications',
-        },
+        ...(routeLive
+          ? {
+              action: {
+                textBefore: '',
+                anchorLabel: ctaLabel,
+                textAfter: '',
+                /** Existing Certifications User Contribution flow. */
+                contributionDomain: 'certifications' as const,
+              },
+            }
+          : {}),
       };
     }
     const sections: L3Section[] = [
@@ -727,7 +735,7 @@ export function resolveGovernedL3Content(
     case 'ethics_msc':
     case 'ethics_asc':
     case 'ethics_organic':
-      return resolveEthicsCert(target, metadata);
+      return resolveEthicsCert(target, metadata, options);
     case 'claims_packet_context_nutrition':
       return {
         title: 'Nutrition details',

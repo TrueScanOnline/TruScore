@@ -128,13 +128,24 @@ describe('resolveGovernedL3Content — Addendum v1.1', () => {
     expect(claimOnly?.sections).toHaveLength(1);
     expect(claimOnly?.sections[0].body).toContain('does not establish a specific organic certification');
     expect(claimOnly?.sections[0].body).toContain('That does not mean the product is not genuinely organic');
-    expect(claimOnly?.action?.anchorLabel).toBe('Update certification');
-    expect(claimOnly?.action?.contributionDomain).toBe('certifications');
+    // Contribution route not live by default — content retained, no live CTA
+    expect(claimOnly?.action).toBeUndefined();
     expect(JSON.stringify(claimOnly)).not.toMatch(/certified against/i);
     expect(claimOnly?.sources.map((s) => s.label)).toEqual([
       'Australia — ACCC Organic claims',
       'New Zealand — MPI organic product requirements',
     ]);
+  });
+
+  it('organic claim-only L3 exposes Update certification CTA only when contribution route is live', () => {
+    const live = resolveGovernedL3Content(
+      'ethics_organic',
+      'ethics-v37-cert-organic',
+      { organicEvidenceClass: 'claim_only' },
+      { userContributionRouteLive: true }
+    );
+    expect(live?.action?.anchorLabel).toBe('Update certification');
+    expect(live?.action?.contributionDomain).toBe('certifications');
   });
 
   it('ingredient wording binds matched terms without requiring a market token', () => {

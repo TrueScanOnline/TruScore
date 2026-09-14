@@ -349,7 +349,9 @@ export function calculateEthicsPillar(
 
   // Packet Claim Context + Organic claim-only (Wave 3 Claims Rescue v0.2)
   const nutrientAssessment = assessGovernedNutrientsFromProduct(product);
-  const nutrientContext = buildClaimsNutrientContext(nutrientAssessment);
+  const nutrientContext = buildClaimsNutrientContext(nutrientAssessment, {
+    productBarcode: product.barcode,
+  });
   const obsBundle = buildClaimsObservationsFromProduct(product, {
     explicitAdmissions: options?.admittedPacketObservations,
     packetCoverageState: options?.packetCoverageState,
