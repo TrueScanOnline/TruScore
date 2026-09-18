@@ -2,17 +2,18 @@
  * BBFAW (Business Benchmark on Farm Animal Welfare) Service
  * Integrates with Business Benchmark on Farm Animal Welfare data
  *
- * SOURCE OF TRUTH: Database files/ETHICS Pillar/bbfaw-2024-data.json
- * Synced to: src/data/ethics/bbfaw2024Canonical.json (run yarn sync-ethics-data)
+ * SOURCE OF TRUTH: Database files/ETHICS Pillar/BBFAW folder/bbfaw-2025-data.json
+ * Synced to: src/data/ethics/bbfaw2025Canonical.json (run yarn sync-ethics-data)
  *
  * This service provides animal welfare tier data for ETHICS Pillar scoring.
  * Each match includes referenceUrl so users can see WHY and WHERE the score came from.
+ * Historical 2024 snapshot remains at bbfaw2024Canonical.json (unmutated).
  */
 
 import { logger } from '../utils/logger';
 
-/** Canonical BBFAW 2024 data - synced from Database files/ETHICS Pillar */
-const BBFAW_CANONICAL = require('../data/ethics/bbfaw2024Canonical.json') as {
+/** Canonical BBFAW 2025 data - synced from Database files/ETHICS Pillar */
+const BBFAW_CANONICAL = require('../data/ethics/bbfaw2025Canonical.json') as {
   companies: Array<{
     companyName: string;
     tier: number;
@@ -47,7 +48,7 @@ let bbfawDataCache: BBFAWData | null = null;
 let bbfawDataCacheTimestamp: number = 0;
 const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year (BBFAW updates annually)
 
-/** BBFAW 2024 companies - from canonical JSON (Database files/ETHICS Pillar) */
+/** BBFAW 2025 companies - from canonical JSON (Database files/ETHICS Pillar) */
 const BBFAW_COMPANIES: BBFAWCompanyData[] = BBFAW_CANONICAL.companies.map((c) => ({
   companyName: c.companyName,
   tier: c.tier as BBFAWTier,
@@ -57,13 +58,17 @@ const BBFAW_COMPANIES: BBFAWCompanyData[] = BBFAW_CANONICAL.companies.map((c) =>
   reportSection: c.reportSection,
 }));
 
-/** Normalize for matching: lowercase, trim, accent-fold (Nestlé/Nestle → nestle) */
+/** Normalize for matching: lowercase, trim, accent-fold, strip periods/trailing punct. */
 function normalizeForMatch(s: string): string {
   return s
     .toLowerCase()
     .trim()
     .normalize('NFD')
-    .replace(/\p{M}/gu, '');
+    .replace(/\p{M}/gu, '')
+    .replace(/\./g, '')
+    .replace(/[.\u2026]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /**

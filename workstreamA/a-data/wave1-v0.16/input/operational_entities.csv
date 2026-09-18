@@ -1,0 +1,6 @@
+operational_entity_id,operational_entity_name,entity_type,use_case_reason,review_state,source_id,source_reference,linked_parent_id,linked_brand_id,notes_internal
+OE0001,Woolworths New Zealand Limited,distributor,recall_matching,provisional,SRC_WOOLWORTHS_GROUP_BRANDS,SRC_WOOLWORTHS_GROUP_BRANDS,P0001,,Useful for NZ recall/regulatory matching; not a separate chain anchor.
+OE0002,Foodstuffs North Island Limited,distributor,recall_matching,provisional,SRC_FOODSTUFFS_OUR_BRANDS,SRC_FOODSTUFFS_OUR_BRANDS,P0003,,Useful for NZ recall/regulatory matching; cooperative structure requires careful review.
+OE0003,Foodstuffs South Island Limited,distributor,recall_matching,provisional,SRC_FOODSTUFFS_OUR_BRANDS,SRC_FOODSTUFFS_OUR_BRANDS,P0003,,Useful for NZ recall/regulatory matching; cooperative structure requires careful review.
+OE0004,ALDI Stores Australia,distributor,recall_matching,seeded,,SRC_ALDI_FARMDALE_PRODUCT,P0004,,Useful for AU recall/regulatory matching.
+OE0005,Snackbrands Australia,manufacturer,recall_matching,reviewed,SRC_SNACKBRANDS_AU,SRC_SNACKBRANDS_AU,P0156,B0163,Local entity context for Kettle/Intersnack AU. Added v0.10 from founder exception review. v0.13 linked_brand_id retargeted to B0163 Kettle.

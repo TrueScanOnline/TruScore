@@ -27,8 +27,8 @@ function readCsv(filePath: string) {
 
 function main() {
   const packRoot = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.3', 'input');
-  const famRoot = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.2');
-  const aRoot = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.15', 'input');
+  const famRoot = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.3');
+  const aRoot = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.16', 'input');
   const extRoot = famRoot;
 
   const embed = {
@@ -64,7 +64,7 @@ function main() {
 
   const body = `/* AUTO-GENERATED — do not edit by hand.
  * Run: npm run generate:dsa-asset-runtime-embed
- * Source: governed Dynamic Signals Asset v0.3 CSVs + Shared Identity (wave1 + chaining-extensions).
+ * Source: governed Dynamic Signals Asset v0.3 CSVs + Shared Identity (wave1-v0.16 + chaining-extensions/v0.3).
  */
 import type { CsvRecord } from '../../../identity/workstreamA/csv';
 

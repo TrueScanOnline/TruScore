@@ -1,0 +1,27 @@
+{
+  "title": "SI v0.16 + KTC/BBFAW refresh closure evidence",
+  "snapshots": {
+    "ktc": "ktc-2026-v2",
+    "bbfaw": "bbfaw-2025-v1",
+    "ktc_count": 45,
+    "bbfaw_count": 149,
+    "ktc_ownership_cutoff_date": "2025-09-30",
+    "bbfaw_ownership_cutoff_date": "2025-11-30"
+  },
+  "ktc_unilever_tmicc_divergences": [
+    "Magnum",
+    "Wall's",
+    "Streets",
+    "Paddle Pop"
+  ],
+  "si_packs": {
+    "wave1": "workstreamA/a-data/wave1-v0.16",
+    "chaining": "workstreamA/a-data/chaining-extensions/v0.3"
+  },
+  "held": [],
+  "see_also": [
+    "reports/si_v016_ktc_bbfaw_refresh_created.json",
+    "reports/bbfaw_2025_mapping_delta.json",
+    "reports/si_v016_resolution_validation.json"
+  ]
+}

@@ -1,0 +1,971 @@
+{
+  "generated_at": "2026-09-18T04:05:53.012Z",
+  "benchmark_cycle": 2025,
+  "snapshot_version": "bbfaw-2025-v1",
+  "ownership_cutoff_date": "2025-11-30",
+  "unique_mapped_parents": 106,
+  "mapping_row_classification_counts": {
+    "UNCHANGED": 102,
+    "NEW": 0,
+    "NO_LONGER_APPLICABLE": 4,
+    "BENCHMARK_OWNER_CHANGED": 0,
+    "NEEDS_FOUNDER_DISPOSITION": 0
+  },
+  "informational_2025_companies_without_au_nz_mapping": 47,
+  "rows": [
+    {
+      "parent_entity_exact": "Marks & Spencer PLC",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 2,
+      "impact_2024_historical": "B",
+      "tier_2025": 2,
+      "impact_2025": "B",
+      "matched_2025_name": "Marks & Spencer PLC"
+    },
+    {
+      "parent_entity_exact": "Premier Foods PLC",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 2,
+      "impact_2024_historical": "B",
+      "tier_2025": 2,
+      "impact_2025": "B",
+      "matched_2025_name": "Premier Foods PLC"
+    },
+    {
+      "parent_entity_exact": "Waitrose",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 2,
+      "impact_2024_historical": "C",
+      "tier_2025": 2,
+      "impact_2025": "C",
+      "matched_2025_name": "Waitrose"
+    },
+    {
+      "parent_entity_exact": "Danish Crown AmbA",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 3,
+      "impact_2024_historical": "D",
+      "tier_2025": 4,
+      "impact_2025": "D",
+      "matched_2025_name": "Danish Crown AmbA"
+    },
+    {
+      "parent_entity_exact": "Fonterra",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 3,
+      "impact_2024_historical": "B",
+      "tier_2025": 3,
+      "impact_2025": "B",
+      "matched_2025_name": "Fonterra"
+    },
+    {
+      "parent_entity_exact": "Groupe Danone SA",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 3,
+      "impact_2024_historical": "C",
+      "tier_2025": 3,
+      "impact_2025": "C",
+      "matched_2025_name": "Groupe Danone SA"
+    },
+    {
+      "parent_entity_exact": "Migros-Genossenschafts-Bund",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 3,
+      "impact_2024_historical": "C",
+      "tier_2025": 4,
+      "impact_2025": "C",
+      "matched_2025_name": "Migros-Genossenschafts-Bund"
+    },
+    {
+      "parent_entity_exact": "Minerva Foods",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 3,
+      "impact_2024_historical": "D",
+      "tier_2025": 3,
+      "impact_2025": "D",
+      "matched_2025_name": "Minerva Foods"
+    },
+    {
+      "parent_entity_exact": "Noble Foods",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 3,
+      "impact_2024_historical": "D",
+      "tier_2025": 3,
+      "impact_2025": "D",
+      "matched_2025_name": "Noble Foods"
+    },
+    {
+      "parent_entity_exact": "ALDI Süd/ALDI Einkauf SE & Co. oHG",
+      "classification": "NO_LONGER_APPLICABLE",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "F",
+      "tier_2025": null,
+      "impact_2025": null,
+      "matched_2025_name": null
+    },
+    {
+      "parent_entity_exact": "Arla Foods Ltd.",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "E",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Arla Foods Ltd"
+    },
+    {
+      "parent_entity_exact": "Barilla SpA",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "E",
+      "tier_2025": 4,
+      "impact_2025": "E",
+      "matched_2025_name": "Barilla SpA"
+    },
+    {
+      "parent_entity_exact": "BRF SA",
+      "classification": "NO_LONGER_APPLICABLE",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "E",
+      "tier_2025": null,
+      "impact_2025": null,
+      "matched_2025_name": null
+    },
+    {
+      "parent_entity_exact": "Groupe Lactalis",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "E",
+      "tier_2025": 4,
+      "impact_2025": "E",
+      "matched_2025_name": "Groupe Lactalis"
+    },
+    {
+      "parent_entity_exact": "Hershey Co.",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "E",
+      "tier_2025": 4,
+      "impact_2025": "E",
+      "matched_2025_name": "Hershey Co"
+    },
+    {
+      "parent_entity_exact": "Hilton Food Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "E",
+      "tier_2025": 3,
+      "impact_2025": "D",
+      "matched_2025_name": "Hilton Food Group"
+    },
+    {
+      "parent_entity_exact": "J Sainsbury PLC",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "D",
+      "tier_2025": 4,
+      "impact_2025": "D",
+      "matched_2025_name": "J Sainsbury PLC"
+    },
+    {
+      "parent_entity_exact": "Les Mousquetaires",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "E",
+      "tier_2025": 4,
+      "impact_2025": "E",
+      "matched_2025_name": "Les Mousquetaires"
+    },
+    {
+      "parent_entity_exact": "Marfrig Global Foods SA",
+      "classification": "NO_LONGER_APPLICABLE",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "D",
+      "tier_2025": null,
+      "impact_2025": null,
+      "matched_2025_name": null
+    },
+    {
+      "parent_entity_exact": "Terrena Group.",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "E",
+      "tier_2025": 4,
+      "impact_2025": "E",
+      "matched_2025_name": "Terrena Group"
+    },
+    {
+      "parent_entity_exact": "Tesco PLC",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "E",
+      "tier_2025": 4,
+      "impact_2025": "E",
+      "matched_2025_name": "Tesco PLC"
+    },
+    {
+      "parent_entity_exact": "Unilever NV",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Unilever NV"
+    },
+    {
+      "parent_entity_exact": "Wm Morrison Supermarkets PLC.",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "E",
+      "tier_2025": 4,
+      "impact_2025": "E",
+      "matched_2025_name": "Wm Morrison Supermarkets PLC"
+    },
+    {
+      "parent_entity_exact": "Woolworths Limited",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 4,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Woolworths Limited"
+    },
+    {
+      "parent_entity_exact": "(The) Kroger Company",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "(The) Kroger Company"
+    },
+    {
+      "parent_entity_exact": "2 Sisters Food Group (Boparan Holdings Ltd)",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "2 Sisters Food Group (Boparan Holdings Ltd)"
+    },
+    {
+      "parent_entity_exact": "Agro Super",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Agro Super"
+    },
+    {
+      "parent_entity_exact": "Ahold Delhaize",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Ahold Delhaize"
+    },
+    {
+      "parent_entity_exact": "ALDI Einkauf SE & Co. oHG (ALDI Nord)",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "ALDI Einkauf SE & Co. oHG (ALDI Nord)"
+    },
+    {
+      "parent_entity_exact": "Bellis Topco Ltd./Asda",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 4,
+      "impact_2025": "E",
+      "matched_2025_name": "Bellis Topco Ltd./Asda"
+    },
+    {
+      "parent_entity_exact": "Bimbo",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Bimbo"
+    },
+    {
+      "parent_entity_exact": "Campbell Soup Company",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Campbell Soup Company"
+    },
+    {
+      "parent_entity_exact": "Cargill",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Cargill"
+    },
+    {
+      "parent_entity_exact": "Carrefour SA.",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Carrefour SA"
+    },
+    {
+      "parent_entity_exact": "Casino Guichard-Perrachon SA",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 4,
+      "impact_2025": "F",
+      "matched_2025_name": "Casino Guichard-Perrachon SA"
+    },
+    {
+      "parent_entity_exact": "Charoen Pokphand Foods",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Charoen Pokphand Foods"
+    },
+    {
+      "parent_entity_exact": "Coles Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Coles Group"
+    },
+    {
+      "parent_entity_exact": "Colruyt",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Colruyt"
+    },
+    {
+      "parent_entity_exact": "Coop Group (Switzerland)/Coop Genossenschaft",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Coop Group (Switzerland)/Coop Genossenschaft"
+    },
+    {
+      "parent_entity_exact": "Cooperativa Central Aurora Alimentos",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Cooperativa Central Aurora Alimentos"
+    },
+    {
+      "parent_entity_exact": "Coopérative U Enseigne",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Coopérative U Enseigne"
+    },
+    {
+      "parent_entity_exact": "Cooperl Arc Atlantique",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Cooperl Arc Atlantique"
+    },
+    {
+      "parent_entity_exact": "Cremonini SpA",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Cremonini SpA"
+    },
+    {
+      "parent_entity_exact": "E.Leclerc",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "E.Leclerc"
+    },
+    {
+      "parent_entity_exact": "EDEKA Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "EDEKA Group"
+    },
+    {
+      "parent_entity_exact": "Elo Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Elo Group"
+    },
+    {
+      "parent_entity_exact": "Ferrero Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Ferrero Group"
+    },
+    {
+      "parent_entity_exact": "General Mills Inc",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "General Mills Inc"
+    },
+    {
+      "parent_entity_exact": "Gruppo Veronesi",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Gruppo Veronesi"
+    },
+    {
+      "parent_entity_exact": "Hormel Foods Corporation",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Hormel Foods Corporation"
+    },
+    {
+      "parent_entity_exact": "ICA Gruppen AB",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "ICA Gruppen AB"
+    },
+    {
+      "parent_entity_exact": "JBS SA",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "JBS SA"
+    },
+    {
+      "parent_entity_exact": "Jeronimo Martins",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Jeronimo Martins"
+    },
+    {
+      "parent_entity_exact": "Kraft Heinz Company",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Kraft Heinz Company"
+    },
+    {
+      "parent_entity_exact": "Maple Leaf Foods",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "E",
+      "tier_2025": 4,
+      "impact_2025": "E",
+      "matched_2025_name": "Maple Leaf Foods"
+    },
+    {
+      "parent_entity_exact": "METRO AG",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "METRO AG"
+    },
+    {
+      "parent_entity_exact": "Metro Inc",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Metro Inc"
+    },
+    {
+      "parent_entity_exact": "Mowi ASA",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Mowi ASA"
+    },
+    {
+      "parent_entity_exact": "Nestlé SA",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Nestlé SA"
+    },
+    {
+      "parent_entity_exact": "Perdue Farms",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Perdue Farms"
+    },
+    {
+      "parent_entity_exact": "Plukon Food Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Plukon Food Group"
+    },
+    {
+      "parent_entity_exact": "REWE Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "REWE Group"
+    },
+    {
+      "parent_entity_exact": "Royal FrieslandCampina.",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Royal FrieslandCampina"
+    },
+    {
+      "parent_entity_exact": "Saputo Inc",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Saputo Inc"
+    },
+    {
+      "parent_entity_exact": "Schwarz Gruppe",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Schwarz Gruppe"
+    },
+    {
+      "parent_entity_exact": "Tönnies Group",
+      "classification": "NO_LONGER_APPLICABLE",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": null,
+      "impact_2025": null,
+      "matched_2025_name": null
+    },
+    {
+      "parent_entity_exact": "Tyson Foods Inc",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Tyson Foods Inc"
+    },
+    {
+      "parent_entity_exact": "Vion Food Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Vion Food Group"
+    },
+    {
+      "parent_entity_exact": "Wayne-Sanderson Farms.",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Wayne-Sanderson Farms"
+    },
+    {
+      "parent_entity_exact": "Aeon Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Aeon Group"
+    },
+    {
+      "parent_entity_exact": "Albertsons",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Albertsons"
+    },
+    {
+      "parent_entity_exact": "Alimentation Couche-Tard",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Alimentation Couche-Tard"
+    },
+    {
+      "parent_entity_exact": "Amazon/Whole Foods Market",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "Amazon/Whole Foods Market"
+    },
+    {
+      "parent_entity_exact": "BJ’s Wholesale Club Holdings",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "BJ’s Wholesale Club Holdings"
+    },
+    {
+      "parent_entity_exact": "Cencosud",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Cencosud"
+    },
+    {
+      "parent_entity_exact": "China Resources Vanguard",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "China Resources Vanguard"
+    },
+    {
+      "parent_entity_exact": "China Yurun Group Limited",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "China Yurun Group Limited"
+    },
+    {
+      "parent_entity_exact": "Conad Consorzio Nazionale",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Conad Consorzio Nazionale"
+    },
+    {
+      "parent_entity_exact": "Cooke Seafood Inc",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Cooke Seafood Inc"
+    },
+    {
+      "parent_entity_exact": "Costco Wholesale Corporation",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Costco Wholesale Corporation"
+    },
+    {
+      "parent_entity_exact": "Dairy Farmers of America",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Dairy Farmers of America"
+    },
+    {
+      "parent_entity_exact": "Dino Polska SA",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Dino Polska SA"
+    },
+    {
+      "parent_entity_exact": "Empire Company/Sobey’s",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Empire Company/Sobey’s"
+    },
+    {
+      "parent_entity_exact": "H E Butt Company",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "H E Butt Company"
+    },
+    {
+      "parent_entity_exact": "Industrias Bachoco",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Industrias Bachoco"
+    },
+    {
+      "parent_entity_exact": "JAB Holding Company",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "JAB Holding Company"
+    },
+    {
+      "parent_entity_exact": "Lianhua Supermarket Holdings Co",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Lianhua Supermarket Holdings Co"
+    },
+    {
+      "parent_entity_exact": "Loblaw Companies Limited",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Loblaw Companies Limited"
+    },
+    {
+      "parent_entity_exact": "Mars Inc",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Mars Inc"
+    },
+    {
+      "parent_entity_exact": "Maruha Nichiro",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Maruha Nichiro"
+    },
+    {
+      "parent_entity_exact": "Meiji Holdings",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Meiji Holdings"
+    },
+    {
+      "parent_entity_exact": "Mercadona SA",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Mercadona SA"
+    },
+    {
+      "parent_entity_exact": "Mondelēz International",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Mondelēz International"
+    },
+    {
+      "parent_entity_exact": "Müller UTM",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Müller UTM"
+    },
+    {
+      "parent_entity_exact": "New Hope Liuhe Co Ltd",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "New Hope Liuhe Co Ltd"
+    },
+    {
+      "parent_entity_exact": "Nippon Ham",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Nippon Ham"
+    },
+    {
+      "parent_entity_exact": "Publix Super Markets Inc",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Publix Super Markets Inc"
+    },
+    {
+      "parent_entity_exact": "Seven & i Holdings",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Seven & i Holdings"
+    },
+    {
+      "parent_entity_exact": "Spar Holding AG",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Spar Holding AG"
+    },
+    {
+      "parent_entity_exact": "Target Corporation",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Target Corporation"
+    },
+    {
+      "parent_entity_exact": "Walmart Inc",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 5,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Walmart Inc"
+    },
+    {
+      "parent_entity_exact": "Wens Foodstuff Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Wens Foodstuff Group"
+    },
+    {
+      "parent_entity_exact": "WH Group Ltd",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 5,
+      "impact_2025": "F",
+      "matched_2025_name": "WH Group Ltd"
+    },
+    {
+      "parent_entity_exact": "Yili Group",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": 6,
+      "impact_2024_historical": "F",
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Yili Group"
+    },
+    {
+      "parent_entity_exact": "Yonghui Superstores Co Ltd",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Yonghui Superstores Co Ltd"
+    },
+    {
+      "parent_entity_exact": "Zhongpin Inc (Huayu Holdings)",
+      "classification": "UNCHANGED",
+      "tier_2024_historical": null,
+      "impact_2024_historical": null,
+      "tier_2025": 6,
+      "impact_2025": "F",
+      "matched_2025_name": "Zhongpin Inc (Huayu Holdings)"
+    }
+  ]
+}

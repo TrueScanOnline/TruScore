@@ -18,6 +18,10 @@ const KTC_PARENTS = require('../data/ethics/ktcParents.json') as Array<{
   subindustry?: string;
   total_benchmark_score: number;
   rank_2025?: number;
+  /** Governed cycle on the firing score row (ktc-2026-v2). */
+  year?: number;
+  benchmark_cycle?: string | number;
+  snapshot_version?: string;
 }>;
 
 export interface KTCParentData {
@@ -29,6 +33,8 @@ export interface KTCParentData {
   /** KTC 2026 total benchmark score (0–100 in source; used for scaling ETHICS adjustment) */
   totalBenchmarkScore: number;
   rank2025?: number;
+  /** Governed benchmark cycle on the firing score record (fail-closed commentary source). */
+  year?: number;
 }
 
 // Pre-normalised list for matching
@@ -40,6 +46,14 @@ const KTC_PARENTS_NORMALISED: KTCParentData[] = KTC_PARENTS.map((row) => ({
   subindustry: row.subindustry,
   totalBenchmarkScore: row.total_benchmark_score,
   rank2025: row.rank_2025,
+  year:
+    typeof row.year === 'number'
+      ? row.year
+      : typeof row.benchmark_cycle === 'number'
+        ? row.benchmark_cycle
+        : typeof row.benchmark_cycle === 'string' && /^\d{4}$/.test(row.benchmark_cycle.trim())
+          ? Number(row.benchmark_cycle.trim())
+          : undefined,
 }));
 
 function normalizeForMatch(s: string): string {

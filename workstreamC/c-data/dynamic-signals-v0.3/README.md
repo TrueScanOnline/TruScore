@@ -3,7 +3,7 @@
 **Workbook source:** `Rveel_Dynamic_Signals_Asset_20260819_v0_3_FINAL.xlsx` (founder-approved v0.3 data state; not runtime).  
 **Repo-native source:** `workstreamC/c-data/dynamic-signals-v0.3/`  
 **Historical v0.2:** `workstreamC/c-data/dynamic-signals-v0.2/` — unchanged.  
-**Accepted Chaining:** `workstreamA/a-data/wave1-v0.15/` + `workstreamA/a-data/chaining-extensions/v0.2/` — unchanged.
+**Accepted Chaining (identity dependency for Asset matching):** `workstreamA/a-data/wave1-v0.16/` + `workstreamA/a-data/chaining-extensions/v0.3/`. Signal records/targets unchanged.
 
 ## Row counts (canonical repo CSVs)
 

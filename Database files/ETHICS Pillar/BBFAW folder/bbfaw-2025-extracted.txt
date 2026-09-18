@@ -1,0 +1,218 @@
+BBFAW 2025 Figure 1.1 Extraction Verification
+==========================================
+Source PDF: C:\TrueScan-FoodScanner-wt-si-benchmark-refresh\Database files\ETHICS Pillar\BBFAW folder\bbfaw-benchmark-2025.pdf
+Reference URL: https://www.bbfaw.com/media/2209/bbfaw-benchmark-2025.pdf
+Report section: Figure 1.1 - Company Tier Rankings and Impact Ratings
+Extracted: 2026-09-18T03:49:46.398Z
+
+Total companies: 149 (expected 149)
+
+Tier counts (PDF Figure 1.1 header row under Tier 1..6: 0 4 8 18 59 60):
+  Tier 1: 0 (expected 0)
+  Tier 2: 4 (expected 4)
+  Tier 3: 8 (expected 8)
+  Tier 4: 18 (expected 18)
+  Tier 5: 59 (expected 59)
+  Tier 6: 60 (expected 60)
+  Sum: 149
+
+NOTE: Plain-text extract showed "59" then "0 4 8 18 60" (mis-ordered columns).
+Positioned PDF parse places 59 under Tier 5 and 60 under Tier 6.
+
+Impact Rating counts (from Figure 1.1 company cells):
+  A: 0
+  B: 3
+  C: 5
+  D: 7
+  E: 12
+  F: 122
+  Sum: 149
+
+Table 1.3 states B=3, C=5, D=7, E=14, F=120.
+Figure 1.1 cells: B=3, C=5, D=7, E=12, F=122.
+Discrepancy: Figure has E=12 / F=122 (Δ2 vs Table 1.3). Company rows follow Figure 1.1.
+
+Known Tier 2 check:
+  Greggs PLC: tier 2 IR C
+  Marks & Spencer PLC: tier 2 IR B
+  Premier Foods PLC: tier 2 IR B
+  Waitrose: tier 2 IR C
+Known Tier 3 check:
+  Co-op UK: tier 3 IR D
+  Cranswick PLC: tier 3 IR C
+  Fonterra: tier 3 IR B
+  Groupe Danone SA: tier 3 IR C
+  Hilton Food Group: tier 3 IR D
+  MBRF: tier 3 IR D
+  Minerva Foods: tier 3 IR D
+  Noble Foods: tier 3 IR D
+
+Ambiguous / name notes:
+  (no parse failures)
+  Figure 1.1 name forms (vs appendix aliases):
+    - Müller UTM (appendix: Unternehmensgruppe Theo Müller)
+    - Maruha Nichiro (appendix: Umios (previously Maruha Nichiro))
+    - Vion Food Group (appendix: Vion Food)
+    - Bellis Topco Ltd./Asda (appendix also: Asda (Bellis Topco Ltd.))
+    - ALDI SOUTH Group (appendix: ALDI Süd/ALDI Einkauf SE & Co. OHG)
+
+Companies by tier:
+
+--- Tier 2 (4) ---
+  Greggs PLC | C
+  Marks & Spencer PLC | B
+  Premier Foods PLC | B
+  Waitrose | C
+
+--- Tier 3 (8) ---
+  Co-op UK | D
+  Cranswick PLC | C
+  Fonterra | B
+  Groupe Danone SA | C
+  Hilton Food Group | D
+  MBRF | D
+  Minerva Foods | D
+  Noble Foods | D
+
+--- Tier 4 (18) ---
+  ALDI SOUTH Group | E
+  Barilla SpA | E
+  Bellis Topco Ltd./Asda | E
+  Casino Guichard-Perrachon SA | F
+  Compass Group PLC | F
+  Danish Crown AmbA | D
+  Groupe Lactalis | E
+  Hershey Co | E
+  J Sainsbury PLC | D
+  LDC Groupe | E
+  Les Mousquetaires | E
+  Maple Leaf Foods | E
+  Migros-Genossenschafts-Bund | C
+  Mitchells & Butlers PLC | F
+  Terrena Group | E
+  Tesco PLC | E
+  Whitbread PLC | E
+  Wm Morrison Supermarkets PLC | E
+
+--- Tier 5 (59) ---
+  (The) Kroger Company | F
+  2 Sisters Food Group (Boparan Holdings Ltd) | F
+  Agro Super | F
+  Ahold Delhaize | F
+  ALDI Einkauf SE & Co. oHG (ALDI Nord) | F
+  Amazon/Whole Foods Market | F
+  Aramark Corporation | F
+  Arla Foods Ltd | F
+  Bimbo | F
+  Cargill | F
+  Carrefour SA | F
+  Charoen Pokphand Foods | F
+  Chipotle Mexican Grill | F
+  Coles Group | F
+  Colruyt | F
+  ConAgra | F
+  Coop Group (Switzerland)/Coop Genossenschaft | F
+  Cooperativa Central Aurora Alimentos | F
+  Coopérative U Enseigne | F
+  Cooperl Arc Atlantique | F
+  Cremonini SpA | F
+  E.Leclerc | F
+  EDEKA Group | F
+  Elior Group | F
+  Elo Group | F
+  Ferrero Group | F
+  Gruppo Veronesi | F
+  Hormel Foods Corporation | F
+  ICA Gruppen AB | F
+  IKEA (Inter IKEA Group) | F
+  JBS SA | F
+  JD Wetherspoon PLC | F
+  Jeronimo Martins | F
+  Kraft Heinz Company | F
+  McDonald’s Corporation | F
+  METRO AG | F
+  Metro Inc | F
+  Mowi ASA | F
+  Nestlé SA | F
+  New Hope Liuhe Co Ltd | F
+  OSI Group | F
+  Papa John’s Pizza | F
+  Perdue Farms | F
+  Plukon Food Group | F
+  Restaurant Brands International | F
+  REWE Group | F
+  Royal FrieslandCampina | F
+  Saputo Inc | F
+  Schwarz Gruppe | F
+  Sodexo | F
+  SSP Group | F
+  The Cheesecake Factory | F
+  Tyson Foods Inc | F
+  Unilever NV | F
+  Vion Food Group | F
+  Wayne-Sanderson Farms | F
+  WH Group Ltd | F
+  Woolworths Limited | F
+  Yum! Brands Inc | F
+
+--- Tier 6 (60) ---
+  Aeon Group | F
+  Albertsons | F
+  Alimentation Couche-Tard | F
+  Avolta AG (previously Autogrill) | F
+  Beijing Dabeinong Technology Group Co., Ltd. | F
+  BJ’s Wholesale Club Holdings | F
+  Bloomin’ Brands Inc | F
+  C&S Wholesale | F
+  Campbell Soup Company | F
+  Camst – La Ristorazione Italiana Soc. Coop. ARL | F
+  Cencosud | F
+  Chick-fil-A | F
+  China Resources Vanguard | F
+  China Yurun Group Limited | F
+  CKE Restaurants | F
+  Conad Consorzio Nazionale | F
+  Cooke Seafood Inc | F
+  Coop Italia | F
+  Costco Wholesale Corporation | F
+  Cracker Barrel | F
+  Dairy Farmers of America | F
+  Darden Restaurants PLC | F
+  Dico’s/Ting Hsin Intl Group | F
+  Dino Polska SA | F
+  Domino’s Pizza Inc | F
+  Empire Company/Sobey’s | F
+  Gategroup Holding AG | F
+  General Mills Inc | F
+  H E Butt Company | F
+  Habib’s | F
+  Industrias Bachoco | F
+  JAB Holding Company | F
+  Kerry Group | F
+  Lianhua Supermarket Holdings Co | F
+  Loblaw Companies Limited | F
+  Mars Inc | F
+  Maruha Nichiro | F
+  Meiji Holdings | F
+  Mercadona SA | F
+  Mondelēz International | F
+  Müller UTM | F
+  Nippon Ham | F
+  Premium Food Group | F
+  Publix Super Markets Inc | F
+  Roark Capital (Inspire Brands, Subway et al.) | F
+  Seaboard Corp | F
+  Seven & i Holdings | F
+  Spar Holding AG | F
+  Starbucks Corporation | F
+  Sysco Corporation | F
+  Target Corporation | F
+  UNFI | F
+  US Foods | F
+  Walmart Inc | F
+  Wendy’s Company (The) | F
+  Wens Foodstuff Group | F
+  Yili Group | F
+  Yonghui Superstores Co Ltd | F
+  Yum China Holdings | F
+  Zhongpin Inc (Huayu Holdings) | F

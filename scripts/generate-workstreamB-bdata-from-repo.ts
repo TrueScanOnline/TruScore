@@ -3,7 +3,7 @@
  * Does not modify scoring methodology — field mapping only.
  *
  * Sources:
- * - src/data/ethics/bbfaw2024Canonical.json + brandAliasMap.json (BBFAW)
+ * - src/data/ethics/bbfaw2025Canonical.json + brandAliasMap.json (BBFAW identity maps)
  * - src/data/ethics/ktcParents.json + ktcBrandAliasMap.json (KTC)
  *
  * Run: npx ts-node --project scripts/tsconfig.json scripts/generate-workstreamB-bdata-from-repo.ts
@@ -66,7 +66,7 @@ type KTCAliasRow = {
 function main(): void {
   const bbfawCanonical = require(path.join(
     ROOT,
-    'src/data/ethics/bbfaw2024Canonical.json'
+    'src/data/ethics/bbfaw2025Canonical.json'
   )) as BBFAWCanonical;
   const brandAliasMap = require(path.join(
     ROOT,
@@ -78,24 +78,24 @@ function main(): void {
     'src/data/ethics/ktcBrandAliasMap.json'
   )) as KTCAliasRow[];
 
-  const SNAPSHOT_BBFAW = 'bbfaw-2024-v1';
-  const SNAPSHOT_KTC = 'ktc-2026-v1';
+  const SNAPSHOT_BBFAW = 'bbfaw-2025-v1';
+  const SNAPSHOT_KTC = 'ktc-2026-v2';
 
   const releases: CsvRecord[] = [
     {
       benchmark_name: 'BBFAW',
-      benchmark_cycle: '2024',
+      benchmark_cycle: '2025',
       snapshot_version: SNAPSHOT_BBFAW,
-      ownership_cutoff_date: '2024-06-30',
+      ownership_cutoff_date: '2025-11-30',
       freeze_status: 'frozen',
-      methodology_ref: 'bbfaw-2024-method',
-      seed_ref: 'bbfaw2024Canonical',
+      methodology_ref: 'bbfaw-2025-method',
+      seed_ref: 'bbfaw2025Canonical',
     },
     {
       benchmark_name: 'KTC',
       benchmark_cycle: '2026',
       snapshot_version: SNAPSHOT_KTC,
-      ownership_cutoff_date: '2026-06-30',
+      ownership_cutoff_date: '2025-09-30',
       freeze_status: 'frozen',
       methodology_ref: 'ktc-2026-method',
       seed_ref: 'ktcParents',
@@ -116,7 +116,7 @@ function main(): void {
       display_name: c.companyName,
       benchmark_owner_entity_id: `frozen:bbfaw:${id}`,
       benchmark_owner_legal_name: c.companyName,
-      notes: 'from_bbfaw2024Canonical.json',
+      notes: 'from_bbfaw2025Canonical.json',
     });
   });
 
@@ -183,8 +183,8 @@ function main(): void {
       ktc_total_benchmark_score: '',
       ktc_rank: '',
       reference_url: c.referenceUrl ?? '',
-      year: String(c.year ?? 2024),
-      source_lineage: `bbfaw2024Canonical.companies[${idx}]`,
+      year: String(c.year ?? 2025),
+      source_lineage: `bbfaw2025Canonical.companies[${idx}]`,
     });
   });
 
@@ -199,11 +199,12 @@ function main(): void {
       ktc_total_benchmark_score: String(r.total_benchmark_score),
       ktc_rank: String(r.rank_2025),
       reference_url: '',
-      year: '2025',
+      year: '2026',
       source_lineage: `ktcParents.json[${idx}]`,
     });
   });
 
+  // Mapping rows are identity/attribution only — Tier/Impact live solely in benchmark_scores.
   const brandMaps: CsvRecord[] = brandAliasMap.map((row, i) => ({
     row_index: String(i),
     benchmark_name: 'BBFAW',
@@ -215,8 +216,8 @@ function main(): void {
     au_nz_relevance: row.au_nz_relevance ?? '',
     mapping_confidence: row.mapping_confidence ?? '',
     seed_status: row.seed_status ?? '',
-    tier_2024: row.tier_2024 != null ? String(row.tier_2024) : '',
-    impact_2024: row.impact_2024 ?? '',
+    tier_2024: '',
+    impact_2024: '',
     notes: row.notes ?? '',
   }));
 
@@ -248,7 +249,7 @@ function main(): void {
   const conversion_report = {
     generated_at: new Date().toISOString(),
     row_counts: {
-      bbfaw2024Canonical_companies: bbfawCanonical.companies.length,
+      bbfaw2025Canonical_companies: bbfawCanonical.companies.length,
       brandAliasMap_rows: brandAliasMap.length,
       ktcParents_rows: ktcParents.length,
       ktcBrandAliasMap_rows: ktcBrandAliasMap.length,
@@ -258,8 +259,9 @@ function main(): void {
     assumptions: [
       'entity_id is synthetic stable slug (BBFAW-C-#### / KTC-C-####) plus MAP-* rows for parents only present in mapping JSON.',
       'Frozen benchmark owner fields mirror display_name from source JSON (no Workstream A inference).',
-      'BBFAW score rows map 1:1 with bbfaw2024Canonical.companies order.',
-      'KTC score rows map 1:1 with ktcParents order.',
+      'BBFAW score rows map 1:1 with bbfaw2025Canonical.companies order (official 2025 table).',
+      'BBFAW brand-map CSV leaves tier/impact blank — scores are authoritative only in benchmark_scores.',
+      'KTC score rows map 1:1 with ktcParents (ktc-2026-v2) order.',
     ],
   };
   fs.writeFileSync(

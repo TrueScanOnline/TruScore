@@ -1,0 +1,131 @@
+brand_id,canonical_brand_name,parent_id,parent_display_name,review_state
+B0656,Fresh 'n Fruity,P0020,Lactalis Group,reviewed
+B0657,Primo (dairy),P0020,Lactalis Group,reviewed
+B0658,Cadbury &MORE,P0009,"Mondelez International, Inc.",reviewed
+B0659,Cherry Ripe,P0009,"Mondelez International, Inc.",reviewed
+B0660,Cadbury Favourites,P0009,"Mondelez International, Inc.",reviewed
+B0661,Old Gold,P0009,"Mondelez International, Inc.",reviewed
+B0662,Picnic,P0009,"Mondelez International, Inc.",reviewed
+B0663,Roses,P0009,"Mondelez International, Inc.",reviewed
+B0664,Cadbury Slices,P0009,"Mondelez International, Inc.",reviewed
+B0665,Twirl,P0009,"Mondelez International, Inc.",reviewed
+B0666,Cadbury Velvet,P0009,"Mondelez International, Inc.",reviewed
+B0667,Dream,P0009,"Mondelez International, Inc.",reviewed
+B0668,Pinky,P0009,"Mondelez International, Inc.",reviewed
+B0669,Perky Nana,P0009,"Mondelez International, Inc.",reviewed
+B0670,Moro,P0009,"Mondelez International, Inc.",reviewed
+B0671,Marvellous Creations,P0009,"Mondelez International, Inc.",reviewed
+B0672,Caramello Koala,P0009,"Mondelez International, Inc.",reviewed
+B0673,Fry's Turkish Delight,P0009,"Mondelez International, Inc.",reviewed
+B0674,Olina's Bakehouse,P0009,"Mondelez International, Inc.",reviewed
+B0675,Kellogg's,P0007,"Mars, Incorporated",reviewed
+B0676,Plaistowe,P0008,Nestlé S.A.,reviewed
+B0677,Bubly,P0010,"PepsiCo, Inc.",reviewed
+B0678,Copper Kettle,P0010,"PepsiCo, Inc.",reviewed
+B0679,Delisio,P0010,"PepsiCo, Inc.",reviewed
+B0680,Obela,P0010,"PepsiCo, Inc.",reviewed
+B0681,Rockstar,P0010,"PepsiCo, Inc.",reviewed
+B0682,Tasty Toobs,P0010,"PepsiCo, Inc.",reviewed
+B0683,Tostitos,P0010,"PepsiCo, Inc.",reviewed
+B0684,The Juice Brothers,P0023,Bega Group Limited,reviewed
+B0685,Simply Nuts,P0023,Bega Group Limited,reviewed
+B0686,Farmers Union Iced Coffee,P0023,Bega Group Limited,reviewed
+B0687,Complete Dairy,P0023,Bega Group Limited,reviewed
+B0688,Betta Milk,P0023,Bega Group Limited,reviewed
+B0689,Bega Peanut Butter,P0023,Bega Group Limited,reviewed
+B0690,The Alternative Dairy Co,P0025,Sanitarium Health Food Company,reviewed
+B0691,Vegie Delights,P0025,Sanitarium Health Food Company,reviewed
+B0692,Ricies,P0025,Sanitarium Health Food Company,reviewed
+B0693,Skippy Cornflakes,P0025,Sanitarium Health Food Company,reviewed
+B0694,Greater Hummus,P0025,Sanitarium Health Food Company,reviewed
+B0695,Bush Oven,P0040,Goodman Fielder Pty Limited,reviewed
+B0696,Buttercup,P0040,Goodman Fielder Pty Limited,reviewed
+B0697,Country Life,P0040,Goodman Fielder Pty Limited,reviewed
+B0698,Defiance,P0040,Goodman Fielder Pty Limited,reviewed
+B0699,ETA,P0040,Goodman Fielder Pty Limited,reviewed
+B0700,Gold'n Canola,P0040,Goodman Fielder Pty Limited,reviewed
+B0701,Holbrooks,P0040,Goodman Fielder Pty Limited,reviewed
+B0702,La Famiglia,P0040,Goodman Fielder Pty Limited,reviewed
+B0703,Mighty Soft,P0040,Goodman Fielder Pty Limited,reviewed
+B0704,Olive Grove,P0040,Goodman Fielder Pty Limited,reviewed
+B0705,Bouton d'or,P0040,Goodman Fielder Pty Limited,reviewed
+B0706,Chesdale,P0040,Goodman Fielder Pty Limited,reviewed
+B0707,Freya's,P0040,Goodman Fielder Pty Limited,reviewed
+B0708,Molenberg,P0040,Goodman Fielder Pty Limited,reviewed
+B0709,Naturalea,P0040,Goodman Fielder Pty Limited,reviewed
+B0710,Nature's Fresh,P0040,Goodman Fielder Pty Limited,reviewed
+B0711,Olivani,P0040,Goodman Fielder Pty Limited,reviewed
+B0712,Ornelle,P0040,Goodman Fielder Pty Limited,reviewed
+B0713,Quality Bakers,P0040,Goodman Fielder Pty Limited,reviewed
+B0714,Simply Oil,P0040,Goodman Fielder Pty Limited,reviewed
+B0715,Tararua Dairy Co,P0040,Goodman Fielder Pty Limited,reviewed
+B0716,Yoplait (NZ / Goodman Fielder-Wilmar licence),P0040,Goodman Fielder Pty Limited,reviewed
+B0717,Quatro Bars,P0043,The Arnott's Group,reviewed
+B0718,Premium,P0043,The Arnott's Group,reviewed
+B0719,Snack Right,P0043,The Arnott's Group,reviewed
+B0720,Bluey,P0043,The Arnott's Group,reviewed
+B0721,Cruskits,P0043,The Arnott's Group,reviewed
+B0722,Clix,P0043,The Arnott's Group,reviewed
+B0723,DON,P0018,Associated British Foods plc,reviewed
+B0724,Jarrah,P0018,Associated British Foods plc,reviewed
+B0725,KR Castlemaine,P0018,Associated British Foods plc,reviewed
+B0726,Tip Top Ice Cream,P0160,Froneri,reviewed
+B0727,Trumpet,P0160,Froneri,reviewed
+B0728,Memphis Meltdown,P0160,Froneri,reviewed
+B0729,Fruju,P0160,Froneri,reviewed
+B0730,Popsicle,P0160,Froneri,reviewed
+B0731,Moccona,P0161,JDE Peet's,reviewed
+B0732,L'OR,P0161,JDE Peet's,reviewed
+B0733,Harris,P0161,JDE Peet's,reviewed
+B0734,Campos Coffee,P0161,JDE Peet's,reviewed
+B0735,Pickwick,P0161,JDE Peet's,reviewed
+B0736,Hummingbird,P0161,JDE Peet's,reviewed
+B0737,Bell Tea,P0161,JDE Peet's,reviewed
+B0738,Jed's,P0161,JDE Peet's,reviewed
+B0739,Ti Ora,P0161,JDE Peet's,reviewed
+B0740,Sunkist,P0162,Sunkist Growers,reviewed
+B0741,Celsius,P0037,Suntory Holdings Limited,reviewed
+B0742,The Real McCoy,P0037,Suntory Holdings Limited,reviewed
+B0743,Sheese,P0046,Saputo Inc.,reviewed
+B0744,Ardmona,P0060,SPC Global Limited,reviewed
+B0745,Goulburn Valley,P0060,SPC Global Limited,reviewed
+B0746,Pomlife,P0060,SPC Global Limited,reviewed
+B0747,SPC ProVital,P0060,SPC Global Limited,reviewed
+B0748,Street Eats,P0060,SPC Global Limited,reviewed
+B0749,Nature One Dairy,P0060,SPC Global Limited,reviewed
+B0750,San Remo,P0062,San Remo Macaroni Company Pty Ltd,reviewed
+B0751,Barnes Naturals,P0154,Hive + Wellness Australia Pty Ltd,reviewed
+B0752,Wescobee,P0154,Hive + Wellness Australia Pty Ltd,reviewed
+B0753,Byron Bay Honey,P0154,Hive + Wellness Australia Pty Ltd,reviewed
+B0754,CC's,P0156,Intersnack Group GmbH & Co. KG,reviewed
+B0755,Cheezels,P0156,Intersnack Group GmbH & Co. KG,reviewed
+B0756,French Fries,P0156,Intersnack Group GmbH & Co. KG,reviewed
+B0757,Jumpy's,P0156,Intersnack Group GmbH & Co. KG,reviewed
+B0758,Natural Chip Company,P0156,Intersnack Group GmbH & Co. KG,reviewed
+B0759,Samboy,P0156,Intersnack Group GmbH & Co. KG,reviewed
+B0760,Thins,P0156,Intersnack Group GmbH & Co. KG,reviewed
+B0761,Deep South,P0163,Open Country Dairy Limited,reviewed
+B0762,Motueka Creamery,P0163,Open Country Dairy Limited,reviewed
+B0763,Thomas Dux,P0001,Woolworths Group Limited,reviewed
+B0764,Woolworths BBQ,P0001,Woolworths Group Limited,reviewed
+B0765,Woolworths Cook,P0001,Woolworths Group Limited,reviewed
+B0766,Pams Organic,P0003,Foodstuffs New Zealand,reviewed
+B0767,Pams Gluten Free,P0003,Foodstuffs New Zealand,reviewed
+B0768,Pams Free Range,P0003,Foodstuffs New Zealand,reviewed
+B0769,MIX,P0002,Coles Group Limited,reviewed
+B0770,Urban Coffee Culture,P0002,Coles Group Limited,reviewed
+B0771,DALEY ST Coffee,P0002,Coles Group Limited,reviewed
+B0772,Cucina Matese,P0002,Coles Group Limited,reviewed
+B0773,Coles Asia,P0002,Coles Group Limited,reviewed
+B0774,Coles BOM,P0002,Coles Group Limited,reviewed
+B0775,Coles Mum's,P0002,Coles Group Limited,reviewed
+B0776,UltraLife,P0002,Coles Group Limited,reviewed
+B0777,I'm Perfect,P0002,Coles Group Limited,reviewed
+B0778,Grower's Selection,P0002,Coles Group Limited,reviewed
+B0779,Made Easy,P0002,Coles Group Limited,reviewed
+B0780,Coles Free Range,P0002,Coles Group Limited,reviewed
+B0781,GRAZE,P0002,Coles Group Limited,reviewed
+B0782,Drovers Choice,P0002,Coles Group Limited,reviewed
+B0783,El-Amin's,P0002,Coles Group Limited,reviewed
+B0784,Sweetporium Co.,P0002,Coles Group Limited,reviewed
+B0785,Wild Tides,P0002,Coles Group Limited,reviewed

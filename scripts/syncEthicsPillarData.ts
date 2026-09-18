@@ -24,6 +24,12 @@ interface SyncEntry {
 
 const SYNC_ENTRIES: SyncEntry[] = [
   {
+    source: path.join(SOURCE_DIR, 'BBFAW folder', 'bbfaw-2025-data.json'),
+    dest: path.join(DEST_DIR, 'bbfaw2025Canonical.json'),
+    required: true,
+  },
+  {
+    // Historical 2024 snapshot — preserved, not the active scoring asset.
     source: path.join(SOURCE_DIR, 'BBFAW folder', 'bbfaw-2024-data.json'),
     dest: path.join(DEST_DIR, 'bbfaw2024Canonical.json'),
     required: true,
@@ -38,11 +44,20 @@ const SYNC_ENTRIES: SyncEntry[] = [
     dest: path.join(DEST_DIR, 'bbfawParents.json'),
     required: true,
   },
-  // KTC (KnowTheChain) 2026 data – source of truth lives in KTC folder
-  // These entries are optional until KTC is fully wired into the ETHICS pillar.
+  // KTC (KnowTheChain) 2026-v2 official score table
   {
     source: path.join(SOURCE_DIR, 'KTC folder', 'ktcParents.json'),
     dest: path.join(DEST_DIR, 'ktcParents.json'),
+    required: false,
+  },
+  {
+    source: path.join(SOURCE_DIR, 'KTC folder', 'ktcParents.ktc-2026-v2.json'),
+    dest: path.join(DEST_DIR, 'ktcParents.ktc-2026-v2.json'),
+    required: false,
+  },
+  {
+    source: path.join(SOURCE_DIR, 'KTC folder', 'ktcParents.ktc-2026-v1.json'),
+    dest: path.join(DEST_DIR, 'ktcParents.ktc-2026-v1.json'),
     required: false,
   },
   {

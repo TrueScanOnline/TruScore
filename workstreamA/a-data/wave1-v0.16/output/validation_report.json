@@ -1,0 +1,22 @@
+{
+  "validation": {
+    "ok": true,
+    "issues": [],
+    "missing_required_files": [],
+    "missing_optional_files": []
+  },
+  "validationSummary": {
+    "report_generated_at": "2026-08-16T09:05:24.183Z",
+    "rows": [
+      {
+        "report_generated_at": "2026-08-16T09:05:24.183Z",
+        "file_name": "all",
+        "validation_rule": "no_issues",
+        "status": "pass",
+        "issue_count": 0,
+        "issue_examples": "",
+        "blocking_y_n": "N"
+      }
+    ]
+  }
+}

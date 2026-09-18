@@ -1,0 +1,239 @@
+instruction_action,target_identity,resulting_id,resulting_parent_edge_state,result
+REPARENT,Anchor,B0139,P0020 Lactalis,PASS
+REPARENT,Anlene,B0143,P0020 Lactalis,PASS
+REPARENT,Anmum,B0144,P0020 Lactalis,PASS
+REPARENT,Kapiti,B0331,P0020 Lactalis,PASS
+REPARENT,Mainland,B0140,P0020 Lactalis,PASS
+REPARENT,Perfect Italiano,B0141,P0020 Lactalis,PASS
+REPARENT,Western Star,B0142,P0020 Lactalis,PASS
+RETAIN,Anchor Food Professionals,B0332,P0022 Fonterra,PASS
+RETAIN,NZMP,B0333,P0022 Fonterra,PASS
+RETAIN,Bega,B0145,P0023 Bega,PASS
+ADD,Fresh 'n Fruity,B0656,P0020 Lactalis,PASS
+ADD,Primo dairy,B0657,P0020 Lactalis,PASS
+RETAIN,Primo meat,B0351,P0027 JBS,PASS
+CHILD_EDGE,Cadbury Dairy Milk → Cadbury,B0241,B0067,PASS
+CHILD_EDGE,Caramilk → Cadbury,B0242,B0067,PASS
+CHILD_EDGE,Boost → Cadbury,B0243,B0067,PASS
+CHILD_EDGE,Crunchie → Cadbury,B0244,B0067,PASS
+CHILD_EDGE,Flake → Cadbury,B0245,B0067,PASS
+CHILD_EDGE,Freddo → Cadbury,B0246,B0067,PASS
+ADD+CHILD_EDGE,Cadbury &MORE,B0658,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Cherry Ripe,B0659,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Cadbury Favourites,B0660,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Old Gold,B0661,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Picnic,B0662,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Roses,B0663,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Cadbury Slices,B0664,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Twirl,B0665,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Cadbury Velvet,B0666,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Dream,B0667,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Pinky,B0668,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Perky Nana,B0669,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Moro,B0670,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Marvellous Creations,B0671,P0009 / child B0067,PASS
+ADD+CHILD_EDGE,Caramello Koala,B0672,P0009 / child B0067,PASS
+ADD,Fry's Turkish Delight,B0673,P0009 not Cadbury child,PASS
+ADD,Olina's Bakehouse,B0674,P0009 not Cadbury child,PASS
+CONSOLIDATE/SUPPRESS_CURRENT,Philadelphia Kraft Heinz,B0294,archived; retain B0070 Mondelez,PASS
+ADD,Kellogg's umbrella,B0675,P0007 Mars,PASS
+CHILD_EDGE,All-Bran → Kellogg's,B0540,B0675,PASS
+CHILD_EDGE,Coco Pops → Kellogg's,B0541,B0675,PASS
+CHILD_EDGE,Corn Flakes → Kellogg's,B0542,B0675,PASS
+CHILD_EDGE,Crispix → Kellogg's,B0543,B0675,PASS
+CHILD_EDGE,Crunchy Nut → Kellogg's,B0544,B0675,PASS
+CHILD_EDGE,Froot Loops → Kellogg's,B0545,B0675,PASS
+CHILD_EDGE,Frosties → Kellogg's,B0546,B0675,PASS
+CHILD_EDGE,Guardian → Kellogg's,B0547,B0675,PASS
+CHILD_EDGE,Just Right → Kellogg's,B0548,B0675,PASS
+CHILD_EDGE,Kellogg's Granola → Kellogg's,B0549,B0675,PASS
+CHILD_EDGE,K-Time → Kellogg's,B0550,B0675,PASS
+CHILD_EDGE,LCMs → Kellogg's,B0551,B0675,PASS
+CHILD_EDGE,Nutri-Grain → Kellogg's,B0552,B0675,PASS
+CHILD_EDGE,Pop-Tarts → Kellogg's,B0553,B0675,PASS
+CHILD_EDGE,Rice Bubbles → Kellogg's,B0554,B0675,PASS
+CHILD_EDGE,Special K → Kellogg's,B0555,B0675,PASS
+CHILD_EDGE,Sultana Bran → Kellogg's,B0556,B0675,PASS
+CHILD_EDGE,Sustain → Kellogg's,B0557,B0675,PASS
+RETAIN,Pringles,B0558,P0007 Mars; not Kellogg child,PASS
+ADD,Plaistowe,B0676,P0008 Nestlé,PASS
+CHILD_EDGE,Cheerios → Uncle Tobys,B0233,B0064,PASS
+SUPPRESS_CURRENT,Cheerios General Mills,B0614,archived,PASS
+ADD,Bubly,B0677,P0010 PepsiCo,PASS
+ADD,Copper Kettle,B0678,P0010 PepsiCo,PASS
+ADD,Delisio,B0679,P0010 PepsiCo,PASS
+ADD,Obela,B0680,P0010 PepsiCo,PASS
+ADD,Rockstar,B0681,P0010 PepsiCo,PASS
+ADD,Tasty Toobs,B0682,P0010 PepsiCo,PASS
+ADD,Tostitos,B0683,P0010 PepsiCo,PASS
+CHILD_EDGE,Pepsi Max → Pepsi,B0255,B0076,PASS
+SUPPRESS_CURRENT,Pepsi Asahi,B0442,archived; retain PepsiCo,PASS
+SUPPRESS_CURRENT,Gatorade Asahi,B0443,archived; retain PepsiCo,PASS
+ADD,Monster Beverage Corporation,P0159,canonical parent,PASS
+REPARENT,Monster,B0270,P0159,PASS
+HOLD,Mother,,no current mapping added,HOLD
+HOLD,L&P,,no current mapping added,HOLD
+HOLD,Pure Drop,,no current mapping added,HOLD
+OPERATIONAL,Coca-Cola Monster distribution,,unmodelled; enum cannot represent licence/distribution without semantic misuse,HOLD
+ADD,The Juice Brothers,B0684,P0023 Bega,PASS
+ADD,Simply Nuts,B0685,P0023 Bega,PASS
+ADD+CHILD_EDGE,Farmers Union Iced Coffee,B0686,P0023 Bega,PASS
+ADD,Complete Dairy,B0687,P0023 Bega,PASS
+ADD,Betta Milk,B0688,P0023 Bega,PASS
+CONSOLIDATE,Peanut Butter Company → Bega Peanut Butter,B0689,P0023; B0344 archived,PASS
+SUPPRESS_CURRENT,Dairy Farmers Saputo,B0196,archived; retain B0334 Bega,PASS
+ADD,The Alternative Dairy Co,B0690,P0025 Sanitarium,PASS
+ADD,Vegie Delights,B0691,P0025 Sanitarium,PASS
+ADD,Ricies,B0692,P0025 Sanitarium,PASS
+ADD,Skippy Cornflakes,B0693,P0025 Sanitarium,PASS
+ADD,Greater Hummus,B0694,P0025 Sanitarium,PASS
+CHILD_EDGE,Weet-Bix Bites → Weet-Bix,B0349,B0154,PASS
+ENTITY_EDGE,Goodman Fielder → Wilmar,P0040,P0047,PASS
+ADD,Bush Oven,B0695,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Buttercup,B0696,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Country Life,B0697,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Defiance,B0698,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,ETA,B0699,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Gold'n Canola,B0700,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Holbrooks,B0701,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,La Famiglia,B0702,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Mighty Soft,B0703,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Olive Grove,B0704,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Bouton d'or,B0705,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Chesdale,B0706,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Freya's,B0707,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Molenberg,B0708,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Naturalea,B0709,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Nature's Fresh,B0710,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Olivani,B0711,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Ornelle,B0712,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Quality Bakers,B0713,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Simply Oil,B0714,P0040 Goodman Fielder (→ Wilmar entity),PASS
+ADD,Tararua Dairy Co,B0715,P0040 Goodman Fielder (→ Wilmar entity),PASS
+CONSOLIDATE,CSR Sugar,B0451,P0040 retained; B0498 archived,PASS
+CONSOLIDATE,Chelsea Sugar,B0457,P0040 retained; B0499 archived,PASS
+CONSOLIDATE,Helga's,B0171,P0040 retained; B0606 archived,PASS
+CONSOLIDATE,Meadow Fresh,B0456,P0040 retained; B0604 archived,PASS
+CONSOLIDATE,Praise,B0173,P0040 retained; B0605 archived,PASS
+CONSOLIDATE,Vogel's,B0175,P0040 retained; B0607 archived,PASS
+RENAME,Yoplait AU,B0339,P0023 Bega; qualified name,PASS
+ADD,Yoplait NZ,B0716,P0040 → P0047; no bare Yoplait alias,PASS
+ADD+CHILD_EDGE,Quatro Bars,B0717,P0043 / child B0185 Arnott's,PASS
+ADD+CHILD_EDGE,Premium,B0718,P0043 / child B0185 Arnott's,PASS
+ADD+CHILD_EDGE,Snack Right,B0719,P0043 / child B0185 Arnott's,PASS
+ADD+CHILD_EDGE,Bluey,B0720,P0043 / child B0185 Arnott's,PASS
+ADD+CHILD_EDGE,Cruskits,B0721,P0043 / child B0185 Arnott's,PASS
+ADD+CHILD_EDGE,Clix,B0722,P0043 / child B0185 Arnott's,PASS
+CHILD_EDGE,Tim Tam → Arnott's,B0187,B0185,PASS
+CHILD_EDGE,Shapes → Arnott's,B0186,B0185,PASS
+CHILD_EDGE,Jatz → Arnott's,B0472,B0185,PASS
+CHILD_EDGE,Tiny Teddy → Arnott's,B0473,B0185,PASS
+CHILD_EDGE,Vita-Weat → Arnott's,B0188,B0185,PASS
+CHILD_EDGE,TeeVee Snacks → Arnott's,B0481,B0185,PASS
+CHILD_EDGE,Salada → Arnott's,B0475,B0185,PASS
+CHILD_EDGE,SAO → Arnott's,B0474,B0185,PASS
+CHILD_EDGE,Savoy → Arnott's,B0560,B0185,PASS
+CHILD_EDGE,Iced VoVo → Arnott's,B0478,B0185,PASS
+CHILD_EDGE,Milk Arrowroot → Arnott's,B0479,B0185,PASS
+CHILD_EDGE,Monte Carlo → Arnott's,B0476,B0185,PASS
+CHILD_EDGE,Nice → Arnott's,B0480,B0185,PASS
+CHILD_EDGE,Scotch Finger → Arnott's,B0477,B0185,PASS
+SUPPRESS_CURRENT,V8 Arnott's,B0485,archived; retain B0162 Campbell,PASS
+SUPPRESS_CURRENT,Arnott's under Campbell,B0621,archived; retain B0185 P0043,PASS
+HOLD,KKR → Arnott's,,no KKR entity added,HOLD
+ADD,DON,B0723,P0018 ABF (existing chain; no new GWF layer),PASS
+ADD,Jarrah,B0724,P0018 ABF (existing chain; no new GWF layer),PASS
+ADD,KR Castlemaine,B0725,P0018 ABF (existing chain; no new GWF layer),PASS
+RENAME,Tip Top Bakery,B0301,P0018 ABF,PASS
+ADD,Froneri,P0160,canonical parent,PASS
+ADD,Tip Top Ice Cream,B0726,P0160,PASS
+ADD+CHILD_EDGE,Trumpet,B0727,Froneri / child B0726,PASS
+ADD+CHILD_EDGE,Memphis Meltdown,B0728,Froneri / child B0726,PASS
+ADD+CHILD_EDGE,Fruju,B0729,Froneri / child B0726,PASS
+ADD+CHILD_EDGE,Popsicle,B0730,Froneri / child B0726,PASS
+HOLD,Froneri JV shareholders,,not modelled,HOLD
+ADD,JDE Peet's,P0161,canonical parent,PASS
+ENTITY_EDGE,JDE Peet's → KDP,P0161,P0036,PASS
+ADD,Moccona,B0731,P0161,PASS
+ADD,L'OR,B0732,P0161,PASS
+ADD,Harris,B0733,P0161,PASS
+ADD,Campos Coffee,B0734,P0161,PASS
+ADD,Pickwick,B0735,P0161,PASS
+ADD,Hummingbird,B0736,P0161,PASS
+ADD,Bell Tea,B0737,P0161,PASS
+ADD,Jed's,B0738,P0161,PASS
+ADD,Ti Ora,B0739,P0161,PASS
+RETAIN,Schweppes Asahi,B0435,P0038,PASS
+ADD,Sunkist Growers,P0162,canonical parent,PASS
+ADD,Sunkist consumer,B0740,P0162,PASS
+SUPPRESS_CURRENT,Sunkist KDP,B0417,archived,PASS
+SUPPRESS_CURRENT,Sunkist Asahi,B0446,archived,PASS
+OPERATIONAL,Asahi Sunkist licensee,,unmodelled; no semantically valid OE enum without architecture change,HOLD
+SUPPRESS_CURRENT,T2 Iced Tea Asahi,B0445,archived; fail closed,PASS
+SUPPRESS_CURRENT,Lipton Iced Tea Asahi,B0444,archived; multi-party HOLD,HOLD
+ADD,Celsius,B0741,P0037 Suntory,PASS
+ADD,The Real McCoy,B0742,P0037 Suntory,PASS
+ADD,Sheese,B0743,P0046 Saputo,PASS
+SUPPRESS_CURRENT,King Island Dairy,B0496,archived,PASS
+ADD,Ardmona,B0744,P0060 SPC,PASS
+ADD,Goulburn Valley,B0745,P0060 SPC,PASS
+ADD,Pomlife,B0746,P0060 SPC,PASS
+ADD+CHILD_EDGE,SPC ProVital,B0747,P0060 SPC,PASS
+ADD,Street Eats,B0748,P0060 SPC,PASS
+ADD,Nature One Dairy,B0749,P0060 SPC,PASS
+ADD,San Remo,B0750,P0062,PASS
+RETAIN,Fantastic,B0566,P0062,PASS
+ADD,Barnes Naturals,B0751,P0154 Hive + Wellness,PASS
+ADD,Wescobee,B0752,P0154 Hive + Wellness,PASS
+ADD,Byron Bay Honey,B0753,P0154 Hive + Wellness,PASS
+RETAIN,Capilano,B0572,P0154,PASS
+ADD,CC's,B0754,P0156 Intersnack,PASS
+ADD,Cheezels,B0755,P0156 Intersnack,PASS
+ADD,French Fries,B0756,P0156 Intersnack,PASS
+ADD,Jumpy's,B0757,P0156 Intersnack,PASS
+ADD,Natural Chip Company,B0758,P0156 Intersnack,PASS
+ADD,Samboy,B0759,P0156 Intersnack,PASS
+ADD,Thins,B0760,P0156 Intersnack,PASS
+RETAIN,Kettle,B0163,P0156,PASS
+RETAIN,Chickadees,B0654,P0156,PASS
+RETAIN,Snackbrands OE0005,OE0005,existing operational context; not duplicated,PASS
+RETAIN,Talley's Group Limited,P0158,existing extension parent,PASS
+ADD,Open Country Dairy,P0163,canonical parent,PASS
+ENTITY_EDGE,Open Country Dairy → Talley's,P0163,P0158,PASS
+ADD,Deep South,B0761,P0163,PASS
+ADD,Motueka Creamery,B0762,P0163,PASS
+ADD+CHILD_EDGE,Thomas Dux,B0763,P0001 / child B0001 Woolworths,PASS
+ADD+CHILD_EDGE,Woolworths BBQ,B0764,P0001 / child B0001 Woolworths,PASS
+ADD+CHILD_EDGE,Woolworths Cook,B0765,P0001 / child B0001 Woolworths,PASS
+ADD+CHILD_EDGE,Pams Organic,B0766,P0003 / child B0024 Pams,PASS
+ADD+CHILD_EDGE,Pams Gluten Free,B0767,P0003 / child B0024 Pams,PASS
+ADD+CHILD_EDGE,Pams Free Range,B0768,P0003 / child B0024 Pams,PASS
+CHILD_EDGE,Pams Finest → Pams,B0025,B0024,PASS
+CHILD_EDGE,Pams Superfoods → Pams,B0204,B0024,PASS
+CHILD_EDGE,Pams Plant Based → Pams,B0205,B0024,PASS
+ADD+CHILD_EDGE,MIX,B0769,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Urban Coffee Culture,B0770,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,DALEY ST Coffee,B0771,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Cucina Matese,B0772,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Coles Asia,B0773,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Coles BOM,B0774,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Coles Mum's,B0775,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,UltraLife,B0776,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,I'm Perfect,B0777,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Grower's Selection,B0778,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Made Easy,B0779,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Coles Free Range,B0780,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,GRAZE,B0781,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Drovers Choice,B0782,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,El-Amin's,B0783,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Sweetporium Co.,B0784,P0002 / child B0200 Coles,PASS
+ADD+CHILD_EDGE,Wild Tides,B0785,P0002 / child B0200 Coles,PASS
+CONSOLIDATE,Coles Brand,B0013,archived into B0200,PASS
+CONSOLIDATE,Nature's Kitchen,B0015,archived into B0201,PASS
+CHILD_EDGE,Coles Nature's Kitchen → Coles,B0201,B0200,PASS
+SUPPRESS_CURRENT,P0143 Danone duplicates,B0608-B0612,archived; retain P0012,PASS
+SUPPRESS_CURRENT,Ben & Jerry's Unilever,B0589,archived; retain B0110 P0014,PASS
+SUPPRESS_CURRENT,Birds Eye Conagra,B0632,archived; retain B0176 Simplot,PASS
+SUPPRESS_CURRENT,Healthy Choice Conagra,B0631,archived; retain McCain,PASS
+SUPPRESS_CURRENT,Jalna P0055,B0197,archived; GTIN not auto-transferred,PASS
+HOLD,Sara Lee AU owner,B0406/B0488,generic owners suppressed; no replacement owner,HOLD

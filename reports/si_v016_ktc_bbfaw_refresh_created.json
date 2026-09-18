@@ -1,0 +1,130 @@
+{
+  "created": {
+    "parents": [
+      {
+        "id": "P0164",
+        "name": "Vitaco Holdings Limited"
+      },
+      {
+        "id": "P0165",
+        "name": "Ricegrowers Limited"
+      },
+      {
+        "id": "P0166",
+        "name": "Walter & Wild Limited"
+      },
+      {
+        "id": "P0167",
+        "name": "Original Foods N.Z. Limited"
+      },
+      {
+        "id": "P0168",
+        "name": "Blue Frog Breakfast Limited"
+      },
+      {
+        "id": "P0169",
+        "name": "George Wilson Group Limited"
+      },
+      {
+        "id": "P0170",
+        "name": "Back Country Foods Limited"
+      },
+      {
+        "id": "P0171",
+        "name": "Real Foods Pty Ltd"
+      },
+      {
+        "id": "P0172",
+        "name": "Baker Boys Limited"
+      },
+      {
+        "id": "P0173",
+        "name": "Carman's Fine Foods Pty Ltd"
+      },
+      {
+        "id": "P0174",
+        "name": "Mommas Foods Group Limited"
+      },
+      {
+        "id": "P0175",
+        "name": "Chen Foods"
+      }
+    ],
+    "brands": [
+      {
+        "id": "B0786",
+        "name": "Musashi",
+        "parent": "P0164"
+      },
+      {
+        "id": "B0787",
+        "name": "SunRice",
+        "parent": "P0165"
+      },
+      {
+        "id": "B0788",
+        "name": "Hubbards",
+        "parent": "P0166"
+      },
+      {
+        "id": "B0789",
+        "name": "Original Foods Baking Co",
+        "parent": "P0167"
+      },
+      {
+        "id": "B0790",
+        "name": "Blue Frog",
+        "parent": "P0168"
+      },
+      {
+        "id": "B0791",
+        "name": "Back Country Cuisine",
+        "parent": "P0170"
+      },
+      {
+        "id": "B0792",
+        "name": "CORN THINS",
+        "parent": "P0171"
+      },
+      {
+        "id": "B0793",
+        "name": "Baker Boys",
+        "parent": "P0172"
+      },
+      {
+        "id": "B0794",
+        "name": "Carman's",
+        "parent": "P0173"
+      },
+      {
+        "id": "B0795",
+        "name": "Leaning Tower",
+        "parent": "P0174"
+      },
+      {
+        "id": "B0796",
+        "name": "Mr Chen's",
+        "parent": "P0175"
+      }
+    ],
+    "aliases": [
+      "Corn Thins → CORN THINS",
+      "Carmans → Carman's",
+      "Mr Chens → Mr Chen's"
+    ],
+    "entity_edges": [
+      {
+        "child": "P0170",
+        "parent": "P0169"
+      }
+    ],
+    "held": []
+  },
+  "ktc_count": 45,
+  "bbfaw_2025_count": 149,
+  "next_ids": {
+    "parent": 175,
+    "brand": 796,
+    "alias": 187
+  }
+}

@@ -7,6 +7,14 @@ import type { FrozenBenchmarkAttributionObject } from '../../../benchmark/types'
 export interface EthicsBenchmarkAdapterResult {
   bbfawFrozen: FrozenBenchmarkAttributionObject | null;
   ktcFrozen: FrozenBenchmarkAttributionObject | null;
+  /** BBFAW-only attribution hint — must never be prepended into KTC candidate resolution. */
+  bbfawOwnerHint: string | null;
+  /** KTC-only attribution hint — must never be prepended into BBFAW candidate resolution. */
+  ktcOwnerHint: string | null;
+  /**
+   * @deprecated Prefer bbfawOwnerHint. Retained as BBFAW-only alias so callers do not
+   * accidentally treat a shared hint as cross-benchmark.
+   */
   benchmarkOwnerHint: string | null;
   benchmarkEligible: boolean;
 }
@@ -37,15 +45,17 @@ function usableBenchmarkCycle(value: unknown): string | undefined {
 }
 
 /**
- * Display/provenance year for a fired KTC adjustment. Never manufactures a cycle:
- * frozen snapshot first, else the governed KTC asset snapshot, else undefined (fail closed).
+ * Display/provenance year for a fired KTC adjustment.
+ * Uses only the firing governed record's cycle (frozen attribution and/or score-row year).
+ * Never substitutes the snapshot registry / hardcoded '2026' when the firing record lacks a cycle.
  */
 export function resolveKtcGovernedBenchmarkYear(
-  ktcFrozen: FrozenBenchmarkAttributionObject | null | undefined
+  ktcFrozen: FrozenBenchmarkAttributionObject | null | undefined,
+  firingRecordYear?: string | number | null
 ): string | undefined {
   return (
     usableBenchmarkCycle(ktcFrozen?.snapshot_ref?.benchmark_cycle) ??
-    usableBenchmarkCycle(selectBenchmarkSnapshot('KTC').benchmark_cycle)
+    usableBenchmarkCycle(firingRecordYear)
   );
 }
 
@@ -60,12 +70,16 @@ export function resolveEthicsBenchmarkContext(product: Product): EthicsBenchmark
   const ktcEligible = ktcFrozen ? ktcFrozen.eligibility.ethics_scoring_eligible : true;
   const benchmarkEligible = bbfawEligible && ktcEligible;
 
-  const benchmarkOwnerHint = bbfawFrozen?.subject_resolution.benchmark_owner_legal_name ?? null;
+  // Benchmark-specific attribution inputs stay benchmark-specific (no cross-prepend).
+  const bbfawOwnerHint = bbfawFrozen?.subject_resolution.benchmark_owner_legal_name ?? null;
+  const ktcOwnerHint = ktcFrozen?.subject_resolution.benchmark_owner_legal_name ?? null;
 
   return {
     bbfawFrozen: bbfawFrozen ?? null,
     ktcFrozen: ktcFrozen ?? null,
-    benchmarkOwnerHint,
+    bbfawOwnerHint,
+    ktcOwnerHint,
+    benchmarkOwnerHint: bbfawOwnerHint,
     benchmarkEligible,
   };
 }

@@ -15,7 +15,6 @@ import {
   firedAdjustmentIds,
 } from '../../../helpers/pillarLedgerNeutrality';
 import { Product } from '../../../../types/product';
-import { selectBenchmarkSnapshot } from '../../../../benchmark/snapshotSelect';
 
 describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
   const baseProduct: Product = {
@@ -118,14 +117,15 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
     expect(result.score).toBe(18);
   });
 
-  test('should apply BBFAW Tier 6 penalty for Tyson Foods', () => {
-    const product = { ...baseProduct, brands: 'Tyson Foods' };
+  test('should apply BBFAW Tier 5 + KTC band for Tyson (2025/2026 official)', () => {
+    const product = { ...baseProduct, brands: 'Tyson' };
     const result = calculateEthicsPillar(product);
     expect(result.details.bbfawMatchedCompany).toBeTruthy();
-    expect(result.details.bbfawTier).toBe(6);
-    expect(result.details.bbfawTierScore).toBe(-6);
+    expect(result.details.bbfawTier).toBe(5);
+    expect(result.details.bbfawTierScore).toBe(-4);
     expect(result.details.bbfawImpactScore).toBe(-3);
-    expect(result.score).toBe(6);
+    // KTC Tyson Foods Inc. score 2 → -10; raw 15-4-3-10=-2 → floor 0
+    expect(result.score).toBe(0);
   });
 
   test('should cap score at 0', () => {
@@ -173,14 +173,17 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
       expect(impact?.highlightEligible).toBe(true);
       expect(tier?.metadata?.benchmarkCompany).toBe('Marks & Spencer PLC');
       expect(tier?.metadata?.tier).toBe(2);
+      expect(tier?.metadata?.benchmarkYear).toBe(2025);
       expect(impact?.metadata?.impactRating).toBe('B');
+      expect(impact?.metadata?.benchmarkYear).toBe(2025);
       expectPillarLedgerReconciles(result);
     });
 
-    test('negative BBFAW tier and impact fire their locked IDs', () => {
-      const result = calculateEthicsPillar({ ...baseProduct, brands: 'Tyson Foods' });
-      expect(idOf(result, 'ethics-v37-bbfaw-tier-6')?.value).toBe(-6);
+    test('negative BBFAW tier and impact fire their locked IDs (2025 Tyson Foods Inc T5/F)', () => {
+      const result = calculateEthicsPillar({ ...baseProduct, brands: 'Tyson' });
+      expect(idOf(result, 'ethics-v37-bbfaw-tier-5')?.value).toBe(-4);
       expect(idOf(result, 'ethics-v37-bbfaw-impact-ef')?.value).toBe(-3);
+      expect(idOf(result, 'ethics-v37-ktc-0-10')?.value).toBe(-10);
       expectPillarLedgerReconciles(result);
     });
 
@@ -191,7 +194,7 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
       expect(row?.highlightEligible).toBe(true);
       expect(row?.metadata?.benchmarkCompany).toBe('JBS S.A.');
       expect(row?.metadata?.benchmarkScore).toBe(3);
-      expect(row?.metadata?.benchmarkYear).toBe(selectBenchmarkSnapshot('KTC').benchmark_cycle);
+      expect(row?.metadata?.benchmarkYear).toBe(2026);
       expectPillarLedgerReconciles(result);
     });
 
@@ -243,13 +246,14 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
     });
 
     test('floor normaliser fires only when the floor changes the score', () => {
-      const floored = calculateEthicsPillar({ ...baseProduct, brands: 'Tyson Foods Inc.' });
+      // JBS: BBFAW T5/F (-4/-3) + KTC 3 (-10) → raw -2 → floor to 0
+      const floored = calculateEthicsPillar({ ...baseProduct, brands: 'JBS S.A.' });
       expect(floored.score).toBe(0);
-      expect(idOf(floored, 'ethics-v37-final-floor')?.value).toBe(2);
       expect(idOf(floored, 'ethics-v37-final-floor')?.highlightEligible).toBe(false);
       expectPillarLedgerReconciles(floored);
 
-      const unfloored = calculateEthicsPillar({ ...baseProduct, brands: 'Tyson Foods' });
+      // Marks & Spencer: positive BBFAW only → 22, no floor
+      const unfloored = calculateEthicsPillar({ ...baseProduct, brands: 'Marks & Spencer PLC' });
       expect(firedAdjustmentIds(unfloored)).not.toContain('ethics-v37-final-floor');
     });
 
