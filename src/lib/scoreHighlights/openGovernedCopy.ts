@@ -115,10 +115,12 @@ function resolveOpenIngredientClarityCopy(
       };
     }
     if (presentationClass === 'coded') {
+      const n = terms.length;
+      if (n < 1) return null;
       return {
-        l1: 'Several ingredients need decoding',
+        l1: n === 1 ? 'One ingredient needs decoding' : `${n} ingredients need decoding`,
         l2:
-          'Several additives are listed mainly by number. The codes identify them precisely, but a shopper needs to know ' +
+          `${n} additive${n === 1 ? ' is' : 's are'} listed mainly by number. The codes identify them precisely, but a shopper needs to know ` +
           'or look them up to see their names.',
       };
     }
