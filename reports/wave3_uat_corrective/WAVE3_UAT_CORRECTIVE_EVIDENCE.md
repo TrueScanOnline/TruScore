@@ -6,7 +6,7 @@
 |-------|-------|
 | Authorised baseline (start) | `cfe133ce4728a3e2bc5f7787413a76ae0c99f812` |
 | Corrective branch | `fix/wave3-uat-corrective-20260918` |
-| Final corrective SHA | _(filled at commit)_ |
+| Final corrective SHA | `0f2f4b1f6ad28b5b5ba6a49f0d504ae13a440dc3` |
 | Scope | Presentation / routing / interim image UX only — **no scoring methodology changes** |
 
 ---
@@ -160,8 +160,8 @@ No stop-condition triggered. No changes to additive detection/scoring, Open voca
 ### Report
 
 - Local: `C:\TrueScan-FoodScanner-wt-wave3-uat-corrective\reports\wave3_uat_corrective\WAVE3_UAT_CORRECTIVE_EVIDENCE.md`
-- GitHub (after push of corrective SHA): `https://github.com/TrueScanOnline/TruScore/blob/<CORRECTIVE_SHA>/reports/wave3_uat_corrective/WAVE3_UAT_CORRECTIVE_EVIDENCE.md`
-- Raw: `https://github.com/TrueScanOnline/TruScore/raw/<CORRECTIVE_SHA>/reports/wave3_uat_corrective/WAVE3_UAT_CORRECTIVE_EVIDENCE.md`
+- GitHub (after push of corrective SHA): `https://github.com/TrueScanOnline/TruScore/blob/0f2f4b1f6ad28b5b5ba6a49f0d504ae13a440dc3/reports/wave3_uat_corrective/WAVE3_UAT_CORRECTIVE_EVIDENCE.md`
+- Raw: `https://github.com/TrueScanOnline/TruScore/raw/0f2f4b1f6ad28b5b5ba6a49f0d504ae13a440dc3/reports/wave3_uat_corrective/WAVE3_UAT_CORRECTIVE_EVIDENCE.md`
 
 ### Related notes
 
