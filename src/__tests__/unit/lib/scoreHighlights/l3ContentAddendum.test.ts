@@ -231,7 +231,8 @@ describe('resolveGovernedL3Content — Addendum v1.1', () => {
       )
     ).toBe(true);
     expect(mixed?.codedAdditivesSection?.codedCount).toBe(1);
-    expect(mixed?.codedAdditivesSection?.heading).toMatch(/Coded additives/);
+    expect(mixed?.codedAdditivesSection?.heading).toBe('Coded additives');
+    expect(mixed?.codedAdditivesSection?.exploreLabel).toBe('About these Additives');
   });
 
   it('zero-flag ingredient wording L3 needs no matched-term metadata', () => {

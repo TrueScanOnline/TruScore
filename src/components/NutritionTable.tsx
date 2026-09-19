@@ -81,10 +81,9 @@ const NutritionTable = React.memo(function NutritionTable({
     initialDetailsFocus
   );
 
+  // P2: always mirror parent focus, including null, so a later Claims open cannot keep a stale highlight.
   useEffect(() => {
-    if (initialDetailsFocus != null) {
-      setDetailsFocus(initialDetailsFocus);
-    }
+    setDetailsFocus(initialDetailsFocus);
   }, [initialDetailsFocus]);
 
   const detailsVisible = detailsVisibleProp ?? internalDetailsVisible;

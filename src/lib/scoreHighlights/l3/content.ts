@@ -53,11 +53,13 @@ export interface L3TermRouteAction {
 
 /** Compact Open coded-additives block (UAT corrective — replaces one-button-per-code). */
 export interface L3CodedAdditivesSection {
-  /** Unique Open coded terms that resolved under the Open/S25 routing contract. */
+  /**
+   * Unique Open coded terms that resolved under the Open/S25 routing contract.
+   * Presentation must not surface this as a consumer-facing additive count (P1).
+   */
   codedCount: number;
-  /** S25 total unique renderedAdditiveIds — for Explore CTA only (never as Open finding count). */
-  s25TotalCount: number;
   heading: string;
+  /** Number-free CTA into the canonical S25 About these Additives destination. */
   exploreLabel: string;
 }
 
@@ -668,23 +670,13 @@ function buildCodedTermRouteActions(
 }
 
 function buildCodedAdditivesSection(
-  actions: L3TermRouteAction[],
-  renderedAdditiveIds: readonly string[] | undefined
+  actions: L3TermRouteAction[]
 ): L3CodedAdditivesSection | undefined {
   if (actions.length === 0) return undefined;
-  const s25TotalCount = renderedAdditiveIds?.length ?? 0;
-  const codedCount = actions.length;
   return {
-    codedCount,
-    s25TotalCount,
-    heading:
-      codedCount === 1
-        ? 'Coded additives — 1 identified'
-        : `Coded additives — ${codedCount} identified`,
-    exploreLabel:
-      s25TotalCount > 0
-        ? `Explore all ${s25TotalCount} additive${s25TotalCount === 1 ? '' : 's'} identified`
-        : 'Explore additives',
+    codedCount: actions.length,
+    heading: 'Coded additives',
+    exploreLabel: 'About these Additives',
   };
 }
 
@@ -714,10 +706,7 @@ function resolveIngredientWording(
     built: L3Section[],
     termRouteActions?: L3TermRouteAction[]
   ): L3ResolvedContent => {
-    const codedAdditivesSection = buildCodedAdditivesSection(
-      termRouteActions ?? [],
-      options.renderedAdditiveIds
-    );
+    const codedAdditivesSection = buildCodedAdditivesSection(termRouteActions ?? []);
     return {
       title: 'Ingredient wording explained',
       sections: built,

@@ -115,7 +115,6 @@ describe('literal copy contract — oracle independence', () => {
   it('keeps instruction-derived rows to the locked exception list', () => {
     expect(INSTRUCTION_DERIVED_CONTRACT_KEYS).toEqual([
       'Open:open-v15-ing-clarity-three-plus:broad_generic',
-      'Open:open-v15-ing-clarity-three-plus:coded',
       'Open:open-v15-origins-qualified-partial',
     ]);
   });

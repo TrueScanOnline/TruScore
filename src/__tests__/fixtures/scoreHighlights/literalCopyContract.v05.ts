@@ -923,13 +923,11 @@ const OPEN_CLARITY: LiteralCopyContractEntry[] = [
         metadata: { termPresentationClass: 'coded', matchedTerms: 'E102|E110|E129' },
       },
     ],
-    l1Template: `[N] ingredients need decoding`,
-    l2Template: `[N] additives are listed mainly by number. The codes identify them precisely, but a shopper needs to know or look them up to see their names.`,
-    l1: `3 ingredients need decoding`,
-    l2: `3 additives are listed mainly by number. The codes identify them precisely, but a shopper needs to know or look them up to see their names.`,
-    provenance: 'doc_instruction',
-    note:
-      'Wave 3 UAT corrective B2: bounded matched-term count replaces generic “Several” for coded three-plus Open Score Highlight commentary. Scoring and fired metadata unchanged.',
+    l1Template: `Several ingredients need decoding`,
+    l2Template: `Several additives are listed mainly by number. The codes identify them precisely, but a shopper needs to know or look them up to see their names.`,
+    l1: `Several ingredients need decoding`,
+    l2: `Several additives are listed mainly by number. The codes identify them precisely, but a shopper needs to know or look them up to see their names.`,
+    provenance: 'doc_literal',
   },
   {
     contractKey: 'Open:open-v15-ing-clarity-three-plus:mixed',
