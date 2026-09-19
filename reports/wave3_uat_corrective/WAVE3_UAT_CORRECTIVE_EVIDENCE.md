@@ -8,7 +8,7 @@
 | First corrective implementation | `0f2f4b1f6ad28b5b5ba6a49f0d504ae13a440dc3` |
 | Evidence-stamp tip (pre–Claude closure) | `fa9c57fb3951e331b1f66732a0720aeef2342505` |
 | Claude P1/P2 closure | `6515c3d8cfc5f949bc7b1b58231b1d13153b7b1c` |
-| Final implementation SHA | _(filled at commit)_ |
+| Final implementation SHA | 0c69be033fe62cc620413a72a18ed3f2fa3e463a |
 | Branch | `fix/wave3-uat-corrective-20260918` |
 | Scope | Presentation / routing / interim image UX / TypeScript safety only — **no scoring methodology changes** |
 
