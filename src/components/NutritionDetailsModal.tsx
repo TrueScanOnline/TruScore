@@ -38,8 +38,12 @@ export type NutritionDetailsFocusTarget = GovernedNutrientKey | readonly Governe
 function normalizeFocusTargets(
   focusTarget: NutritionDetailsFocusTarget
 ): GovernedNutrientKey[] {
-  if (!focusTarget) return [];
-  return Array.isArray(focusTarget) ? [...focusTarget] : [focusTarget];
+  if (focusTarget == null) return [];
+  // GovernedNutrientKey is a string union; typeof narrows single-key vs multi-key array safely.
+  if (typeof focusTarget === 'string') {
+    return [focusTarget];
+  }
+  return [...focusTarget];
 }
 
 interface NutritionDetailsModalProps {

@@ -1,169 +1,125 @@
 # Wave 3 Bundled Founder UAT — Corrective Pass Evidence
 
-**Disposition:** Implementation complete for independent review. **Do not cut/promote the next UAT build solely from this completion.** Founder release disposition required.
+**Disposition:** Final technical closure for targeted Claude re-review. **Do not cut/promote a UAT build** until founder/ChatGPT disposition.
 
 | Field | Value |
 |-------|-------|
-| Authorised baseline (start) | `cfe133ce4728a3e2bc5f7787413a76ae0c99f812` |
-| Corrective branch | `fix/wave3-uat-corrective-20260918` |
-| Final corrective SHA | `0f2f4b1f6ad28b5b5ba6a49f0d504ae13a440dc3` |
-| Scope | Presentation / routing / interim image UX only — **no scoring methodology changes** |
+| Original integrated baseline | `cfe133ce4728a3e2bc5f7787413a76ae0c99f812` |
+| First corrective implementation | `0f2f4b1f6ad28b5b5ba6a49f0d504ae13a440dc3` |
+| Evidence-stamp tip (pre–Claude closure) | `fa9c57fb3951e331b1f66732a0720aeef2342505` |
+| Claude P1/P2 closure | `6515c3d8cfc5f949bc7b1b58231b1d13153b7b1c` |
+| Final implementation SHA | _(filled at commit)_ |
+| Branch | `fix/wave3-uat-corrective-20260918` |
+| Scope | Presentation / routing / interim image UX / TypeScript safety only — **no scoring methodology changes** |
 
 ---
 
-## 1. Methodology / scoring preservation (G)
+## 1. History and founder dispositions
 
-Confirmed by focused regression suites (331 tests green across S25, Score Highlights, Nutrition, Claims Rescue UAT, and corrective presentation suite):
+### 1.1 First corrective pass (`cfe133c` → `0f2f4b1`)
+
+Implemented A–F presentation corrections: full-screen S25, Open compact coded list, Nutrition Per serve Details-only, Claims → Nutrition Details, vegetable-oil note only, hero small-URL + prefetch.
+
+### 1.2 Claude independent QA — P1 / P2 findings
+
+| Finding | Issue |
+|---------|--------|
+| **P1** | Open/Transparency surfaced exact numeric additive counts that could contradict unique S25 `renderedAdditiveIds` (e.g. duplicate raw codes). |
+| **P2** | `NutritionTable` kept stale `detailsFocus` when a later Claims open had `initialDetailsFocus = null`. |
+
+### 1.3 Final founder disposition (Claude P1/P2 closure → `6515c3d`)
+
+**Supersedes** the earlier Open dynamic-count requirement:
+
+- The **only** authoritative consumer-facing additive count belongs to **S25 / About these Additives** (`unique(renderedAdditiveIds).length`), including Result-card N reveal and destination count.
+- Open three-plus Highlight restored to baseline **number-free** copy (`Several ingredients need decoding` / `Several additives are listed mainly by number…`).
+- Open L3 compact list retained; heading is simply **Coded additives** (no N); CTA is **About these Additives** (no number).
+- Deterministic code + S25 display-name and single CTA preserved.
+- P2: always mirror `initialDetailsFocus`, including `null`, so consecutive Claims opens cannot leave a stale highlight.
+
+### 1.4 TypeScript closure (this tip)
+
+- **TS2322** in `NutritionDetailsModal.tsx` (multi-focus array widening) — **fixed** with `typeof focusTarget === 'string'` narrowing. Multi-nutrient Claims → Nutrition focus behaviour preserved.
+- **Accepted remaining:** Nutrition Stage 3 **TS2367** in `governedNutrientAssessment.ts` only.
+
+---
+
+## 2. Methodology / scoring preservation
 
 | Package | Preservation |
 |---------|----------------|
-| Body arithmetic / Body-6 additive scoring | Unchanged (S25 Body/Open scoring isolation tests) |
-| Planet | Unchanged (SH closed-set contract) |
-| Open v15 scoring / fired metadata | Unchanged; presentation-only coded compact UI + bounded “N additives” commentary |
-| Claims score / state / ledger | Unchanged (`claimsRescue.uat.test.ts` UAT-01…36) |
-| Overall TruScore / S12 / S12a / S28 | Not touched |
-| Food/Drink classification | Not touched |
-| Additive catalogue 315/309/6 + 33 evidence cohort | Not touched |
-| Nutrition thresholds / large-portion High | Primary card hides Per serve; Details retains; arithmetic unchanged |
-| KTC / BBFAW | Unchanged |
-| Allergens & Dietary Needs | Not activated |
-| Open vocabulary (`vegetable oil`) | **No code change** — recorded as future review candidate only |
-
-**TypeScript:** `npx tsc --noEmit` reports only the **already-accepted known Nutrition Stage 3 issue**:
-
-`src/nutrition/governedNutrientAssessment.ts(203,16): error TS2367` (`"food" | "drink"` vs `"unknown"`). **No new TypeScript errors** introduced by this corrective pass.
+| Body / Body-6 / Planet / Open v15 scoring & fired metadata | Unchanged |
+| Claims score / state / ledger | Unchanged |
+| S25 detection / merge / dedupe / catalogue | Unchanged |
+| Nutrition thresholds / large-portion High | Unchanged |
+| Open vocabulary (`vegetable oil`) | No matching-set change |
+| **W3-UAT-PERF-01** | **OPEN** — interim small-URL/prefetch only |
 
 ---
 
-## 2. Changed-file manifest (A–F)
+## 3. Changed-file map (cumulative corrective)
 
-### A — S25 About these Additives (P1)
+### Presentation / routing (A–F + P1/P2)
 
-| File | Change |
-|------|--------|
-| `src/components/AboutTheseAdditivesModal.tsx` | Dedicated **fullScreen** Modal destination; collapsed progressive disclosure; contextual expand/focus; collapsed-only `tile_summary` (A4); caller Back/X chain preserved |
-| `src/components/AboutTheseAdditivesCard.tsx` | Prominent **N additives identified** counter; 0→N reveal ~600–900 ms; reduced-motion → immediate N; a11y announces settled result once; no card when N=0 |
-| `app/result/[barcode].tsx` | Caller-aware session routing Result / Body / Open (existing); nutrition_details Claims path |
-| `src/__tests__/unit/s25/aboutTheseAdditives.test.ts` | DisplayName / route expectations aligned |
-| `src/__tests__/unit/wave3/uatCorrective.presentation.test.ts` | Full-screen + count reveal contracts |
+| Area | Key files |
+|------|-----------|
+| S25 full-screen + count reveal | `AboutTheseAdditivesModal.tsx`, `AboutTheseAdditivesCard.tsx`, Result session routing |
+| Open compact coded (number-free after P1) | `l3/content.ts`, `ScoreHighlightsGovernedL3Modal.tsx`, `openGovernedCopy.ts` |
+| Nutrition tables | `NutritionTable.tsx`, `NutritionDetailsModal.tsx` |
+| Claims → Nutrition Details + multi-focus | `hostPresentation.ts`, Result barcode, `NutritionDetailsModal.tsx` |
+| Image interim | Result barcode (`image_front_small_url` + prefetch) |
+| Notes | `OPEN_VOCAB_CANDIDATE_VEGETABLE_OIL.md`, `W3_UAT_PERF_01_BACKLOG.md` |
 
-### B — Open high-volume coded-additive presentation (P1)
-
-| File | Change |
-|------|--------|
-| `src/lib/scoreHighlights/l3/content.ts` | Compact `codedAdditivesSection`; coded count ≠ S25 total; deterministic S25 `displayName` on resolved route actions only |
-| `src/components/ScoreHighlightsGovernedL3Modal.tsx` | Compact coded list UI + single Explore CTA using S25 total count |
-| `src/lib/scoreHighlights/openGovernedCopy.ts` | Three-plus coded L1/L2 uses bounded **N** instead of “Several” |
-| `src/__tests__/fixtures/scoreHighlights/literalCopyContract.v05.ts` | Contract updated for B2 bounded-count (instruction-derived note) |
-| SH unit tests | Addendum + closed-set expectations updated for compact coded UI |
-
-### C — Nutrition Table responsive (P2)
+### This final tip (TS + evidence)
 
 | File | Change |
 |------|--------|
-| `src/components/NutritionTable.tsx` | Primary card: `Nutrient \| Per 100 \| Level` — **Per serve removed** (`showPerServe = false`) |
-| `src/components/NutritionDetailsModal.tsx` | Details: `Nutrient \| Per serve \| Per 100 \| Level`; compact H/M/L + full a11y labels; blank non-rated cells |
-
-### D — Claims Packet Context → Nutrition Details (P1)
-
-| File | Change |
-|------|--------|
-| `src/lib/scoreHighlights/l3/hostPresentation.ts` | `claims_packet_context_nutrition` → `present: 'nutrition_details'` |
-| `src/lib/scoreHighlights/l3/content.ts` | Intermediary Claims L3 content returns `null` (unused when host is nutrition_details) |
-| `app/result/[barcode].tsx` | Opens canonical Nutrition Details; maps Claims `high_nutrients` metadata to focus key(s) |
-| `src/components/NutritionDetailsModal.tsx` | Multi-nutrient highlight/scroll from existing Claims metadata |
-
-### E — Open vocabulary observation (no code)
-
-| File | Change |
-|------|--------|
-| `reports/wave3_uat_corrective/OPEN_VOCAB_CANDIDATE_VEGETABLE_OIL.md` | Corn-chip fixture note; **no** matching-set change |
-
-### F — Product-image latency interim mitigation (backlog remains OPEN)
-
-| File | Change |
-|------|--------|
-| `app/result/[barcode].tsx` | Prefer `image_front_small_url`; `ExpoImage.prefetch` on selected hero URL; no render gate |
-| `reports/wave3_uat_corrective/W3_UAT_PERF_01_BACKLOG.md` | **W3-UAT-PERF-01 remains OPEN** |
+| `src/components/NutritionDetailsModal.tsx` | Type-safe `normalizeFocusTargets` (eliminate TS2322) |
+| `reports/wave3_uat_corrective/WAVE3_UAT_CORRECTIVE_EVIDENCE.md` | Updated history / dispositions / results |
 
 ---
 
-## 3. Automated evidence (H)
+## 4. Automated evidence
 
-### Suites run (all pass)
+### Focused suites (retain ≥184)
 
 ```
 src/__tests__/unit/wave3/uatCorrective.presentation.test.ts
-src/__tests__/unit/s25/**
-src/__tests__/unit/lib/scoreHighlights/**
-src/__tests__/unit/nutrition/**
+src/__tests__/unit/lib/scoreHighlights/openGovernedCopy.test.ts
+src/__tests__/unit/lib/scoreHighlights/pipelineResolvedCopy.closedSet.test.ts
+src/__tests__/unit/lib/scoreHighlights/l3ContentAddendum.test.ts
+src/__tests__/unit/s25/aboutTheseAdditives.test.ts
+src/__tests__/unit/nutrition/nutritionTablePresentation.contract.test.ts
 src/__tests__/unit/lib/claims/claimsRescue.uat.test.ts
 ```
 
-**Result:** 16 suites / **331 tests passed**.
+**Behavioural coverage retained:**
 
-### Coverage map vs instruction H
+- Open Highlight three-plus coded: number-free baseline wording
+- Open L3: heading `Coded additives`, CTA `About these Additives` (no digits)
+- Claude fixture `Colour (E102), Antioxidant (E300), Preservative (E102)`: deduped compact list; S25 unique count separate
+- Unresolved codes: no invented S25 identities
+- About these Additives / merge: unique `renderedAdditiveIds` doctrine
+- P2: first Claims focus then second with null → no stale highlight; still opens `nutrition_details`
 
-| Requirement | Evidence |
-|-------------|----------|
-| S25 total count / dedupe | `aboutTheseAdditives.test.ts` + `uatCorrective` merge count |
-| Counter final-state / reduced-motion | `uatCorrective` card source contracts (`AdditiveCountReveal`, `isReduceMotionEnabled`, `announceForAccessibility`) |
-| Result/Body/Open caller-aware S25 nav | Modal fullScreen + Result session callers (source + existing route tests) |
-| High-count Open compact presentation | `codedAdditivesSection` tests |
-| Open coded count ≠ S25 total | `uatCorrective` codedCount=3 / s25TotalCount=6 |
-| Deterministic S25 name for resolved codes | L3 `displayName` + catalogue Tartrazine |
-| Nutrition primary column removal | `showPerServe = false` contract |
-| Nutrition Details column order / a11y | Details source order + `accessibilityLabel` High/Moderate/Low |
-| Large-portion High unchanged | Nutrition unit suites + Claims UAT-10 |
-| Claims → canonical Nutrition Details | `planInAppL3HostPresentation` + host routing |
-| Claims score/state/ledger unchanged | Full `claimsRescue.uat.test.ts` |
+### TypeScript
 
----
+```
+npx tsc --noEmit -p tsconfig.json
+```
 
-## 4. Device-equivalent presentation evidence (screenshots pending founder device re-UAT)
-
-Physical iOS/Android screenshots are **not cut in this package** (no UAT build promotion). Device-equivalent contracts verified in code/tests:
-
-| Scenario | Device-equivalent proof |
-|----------|-------------------------|
-| One-additive product | Card + modal count unit singular; expand one row |
-| High-count additives | Collapsed catalogue; no auto-expand all |
-| Direct Result S25 entry | `caller: 'result'` session; fullScreen Modal |
-| Body contextual S25 + Back | `caller: 'body'` + `aboutAdditivesBodyRestore` |
-| Open high-count coded + Back | Compact section + Explore CTA; Open L3 restore path preserved |
-| Nutrition food / drink | Primary 3-col; Details 4-col with Per serve when usable |
-| Claims adverse Packet Context → Nutrition Details | `present: 'nutrition_details'`; multi High nutrient focus from `high_nutrients` |
-| iOS / Android parity | Shared RN JS surfaces (Expo Go NZ + TestFlight AU paths unchanged) |
+Expected: **only** `governedNutrientAssessment.ts(203,16): error TS2367`. **No TS2322. No other new errors.**
 
 ---
 
-## 5. Image latency (F) — interim only
+## 5. Image latency (F)
 
-| Measure | Status |
-|---------|--------|
-| Pre-mitigation (baseline diagnosis @ cfe133c) | ~5–7 s cold hero load (AU/NZ); full-size OFF preference; no prefetch; hide-until-load |
-| Mitigation shipped | Prefer `image_front_small_url` + early `ExpoImage.prefetch` |
-| Post-mitigation cold/warm timings | **Require founder device re-measure** on corrective SHA — not claimed closed here |
-| Product retrieval regression | No retrieval path change; identity/scores/Result not gated on image |
-| **W3-UAT-PERF-01** | **OPEN** — Technical Backlog (see `W3_UAT_PERF_01_BACKLOG.md`) |
-
----
-
-## 6. Stop-condition check (I)
-
-No stop-condition triggered. No changes to additive detection/scoring, Open vocabulary matching, Claims machine register, Nutrition thresholds/Food–Drink/serving arithmetic, Body-6 scoring, S25 evidence cohort, Confidence/NR, or Allergens.
+**W3-UAT-PERF-01 remains OPEN.** Interim prefer `image_front_small_url` + prefetch does not close the backlog item.
 
 ---
 
 ## Artefacts
 
-### Report
-
-- Local: `C:\TrueScan-FoodScanner-wt-wave3-uat-corrective\reports\wave3_uat_corrective\WAVE3_UAT_CORRECTIVE_EVIDENCE.md`
-- GitHub (after push of corrective SHA): `https://github.com/TrueScanOnline/TruScore/blob/0f2f4b1f6ad28b5b5ba6a49f0d504ae13a440dc3/reports/wave3_uat_corrective/WAVE3_UAT_CORRECTIVE_EVIDENCE.md`
-- Raw: `https://github.com/TrueScanOnline/TruScore/raw/0f2f4b1f6ad28b5b5ba6a49f0d504ae13a440dc3/reports/wave3_uat_corrective/WAVE3_UAT_CORRECTIVE_EVIDENCE.md`
-
-### Related notes
-
-- [OPEN_VOCAB_CANDIDATE_VEGETABLE_OIL.md](file:///C:/TrueScan-FoodScanner-wt-wave3-uat-corrective/reports/wave3_uat_corrective/OPEN_VOCAB_CANDIDATE_VEGETABLE_OIL.md)
-- [W3_UAT_PERF_01_BACKLOG.md](file:///C:/TrueScan-FoodScanner-wt-wave3-uat-corrective/reports/wave3_uat_corrective/W3_UAT_PERF_01_BACKLOG.md)
+- Evidence: `reports/wave3_uat_corrective/WAVE3_UAT_CORRECTIVE_EVIDENCE.md`
+- [OPEN_VOCAB_CANDIDATE_VEGETABLE_OIL.md](./OPEN_VOCAB_CANDIDATE_VEGETABLE_OIL.md)
+- [W3_UAT_PERF_01_BACKLOG.md](./W3_UAT_PERF_01_BACKLOG.md)
