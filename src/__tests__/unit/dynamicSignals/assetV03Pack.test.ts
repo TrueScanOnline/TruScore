@@ -197,8 +197,8 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
     const chenT = pack.targets.find((t) => t.signal_target_id === 'TGT-029')!;
     expect(vogelT.canonical_target_id).toBe('PF_VOGELS_MPI_METAL_20260811');
     expect(vogelT.resolution_status).toBe('resolved');
-    expect(chenT.canonical_target_id).toBe('');
-    expect(chenT.resolution_status).toBe('blocked');
+    expect(chenT.canonical_target_id).toBe('PI_MRCHENS_CHILLI_OIL_250G');
+    expect(chenT.resolution_status).toBe('resolved');
     expect(
       requiresFoodRecallMatcherEligibility(
         vogel.signal_class ?? '',
@@ -214,7 +214,7 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
       )
     ).toBe(true);
 
-    // Asset matcher must not invent exact GTIN matches for Safety product targets.
+    // Asset matcher must not invent exact GTIN matches for Safety product targets without identity.
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack: {
         ...pack,
@@ -225,6 +225,7 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
         brand_id: null,
         parent_id: null,
         product_family_ids: [],
+        product_identity_ids: [],
         scanMarketPublic: 'NZ',
       },
       evaluationClock: { nowIso: () => '2026-09-18T12:00:00.000Z' },

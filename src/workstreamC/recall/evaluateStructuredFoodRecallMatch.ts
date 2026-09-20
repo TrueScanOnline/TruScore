@@ -133,7 +133,7 @@ export function evaluateStructuredFoodRecallMatch(input: {
     evaluated_at,
   };
 
-  const affected = notice.affected_variants.find((v) => v.gtin === gtin);
+  const affected = notice.affected_variants.find((v) => (v.gtin ?? '').trim() && v.gtin === gtin);
   if (affected) {
     const classified = classifyFoodRecallMarkingInput(input.markings);
     if (classified.status !== 'complete') {

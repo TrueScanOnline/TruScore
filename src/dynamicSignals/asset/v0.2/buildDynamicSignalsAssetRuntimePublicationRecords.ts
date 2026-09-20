@@ -14,13 +14,16 @@ import type { CocoaChocolateProductScopeEvidence } from './cocoaChocolateProduct
 import {
   buildDynamicSignalsAssetPublicationRecords,
   type AssetPackParsed,
+  type AssetScanIdentity,
 } from './matchDynamicSignalsAsset';
 import {
   isDynamicSignalsAssetRuntimeEnabled,
   loadADataForChainFromEmbed,
   loadDynamicSignalsAssetPackFromEmbed,
 } from './loadDynamicSignalsAssetPack';
-import { reviewedFamilyIdsForGtin } from '../../../identity/chaining/productFamilyMaps';
+import { resolveReviewedProductFamilyIdsFromScan } from '../../../identity/chaining/productFamilyMaps';
+import { resolveReviewedProductIdentityIdsFromScan } from '../../../identity/chaining/productIdentityMaps';
+import { brandIsDescendantOf } from '../../../identity/chaining/brandEntityHierarchyMaps';
 import { buildAssetGovernedFoodRecallPublicationRecords } from './buildAssetGovernedFoodRecallPublicationRecords';
 import { resolveActiveSignalsProducer } from './signalsProducerGuard';
 import type { DynamicSignalPublicationRecord } from '../../publish/types';
@@ -31,6 +34,10 @@ export { isDynamicSignalsAssetRuntimeEnabled };
 /**
  * Returns [] unless Asset is the active producer (or `pack` injected for tests).
  * Appends Asset-governed Food Recall Matcher Safety records only — never MILO-originated content.
+ *
+ * Production identity flow:
+ *   scan product fields → reviewed brand/parent chain → family/product-identity aliases
+ *   → Asset target evaluation (+ Food Recall batch/date overlay for Safety).
  */
 export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
   barcode: string;
@@ -41,7 +48,10 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
   pack?: AssetPackParsed;
   injectedBrandId?: string | null;
   injectedParentId?: string | null;
+  /** Test-only override — production must leave undefined so the resolver runs. */
   productFamilyIds?: string[];
+  /** Test-only override — production must leave undefined so the resolver runs. */
+  productIdentityIds?: string[];
   foodRecallMarkings?: FoodRecallSubmittedMarkings | null;
   evaluationClockIso?: string;
   /** Tests: bypass producer guard */
@@ -77,9 +87,37 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     parent_id = chain?.parent_id ?? null;
   }
 
+  const brandIsUnderAnchor = (scanBrandId: string, anchorBrandId: string) =>
+    brandIsDescendantOf(pack.brandHierarchy, scanBrandId, anchorBrandId);
+
   const product_family_ids =
     input.productFamilyIds ??
-    reviewedFamilyIdsForGtin(pack.familyMaps, input.barcode, input.scanMarketPublic);
+    resolveReviewedProductFamilyIdsFromScan({
+      maps: pack.familyMaps,
+      barcode: input.barcode,
+      brand_id,
+      parent_id,
+      productName: input.productName,
+      scanMarketPublic: input.scanMarketPublic,
+      brandIsUnderAnchor,
+    });
+
+  const product_identity_ids =
+    input.productIdentityIds ??
+    (pack.productIdentityMaps
+      ? resolveReviewedProductIdentityIdsFromScan({
+          maps: pack.productIdentityMaps,
+          brand_id,
+          parent_id,
+          productName: input.productName,
+          scanMarketPublic: input.scanMarketPublic,
+          brandIsUnderAnchor,
+        })
+      : []);
+
+  logs?.push(
+    `identity_resolve: brand=${brand_id ?? '(none)'} parent=${parent_id ?? '(none)'} families=${product_family_ids.join('|') || '(none)'} products=${product_identity_ids.join('|') || '(none)'}`
+  );
 
   const productScopeEvidence: CocoaChocolateProductScopeEvidence | null = input.product
     ? {
@@ -97,16 +135,19 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     ? { nowIso: () => input.evaluationClockIso as string }
     : undefined;
 
+  const scanIdentity: AssetScanIdentity = {
+    barcode: input.barcode,
+    brand_id,
+    parent_id,
+    product_family_ids,
+    product_identity_ids,
+    scanMarketPublic: input.scanMarketPublic,
+    productScopeEvidence,
+  };
+
   const assetRecords = buildDynamicSignalsAssetPublicationRecords({
     pack,
-    identity: {
-      barcode: input.barcode,
-      brand_id,
-      parent_id,
-      product_family_ids,
-      scanMarketPublic: input.scanMarketPublic,
-      productScopeEvidence,
-    },
+    identity: scanIdentity,
     logLines: logs,
     includeNonPublishable: input.includeNonPublishable ?? false,
     evaluationClock,
@@ -120,6 +161,7 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     evaluationClockIso: input.evaluationClockIso,
     logLines: logs,
     includeNonPublishable: input.includeNonPublishable ?? false,
+    scanIdentity,
   });
 
   // Dedupe by signal_id — Asset-governed recall eligibility wins for Safety notices it owns

@@ -1,4 +1,13 @@
 signal_id,recall_notice_id,eligibility_status,notes
-SIG-SR-NZ-003-20260918,RN-MPI-VOGELS-20260811,reviewed,Linked to family PF_VOGELS_MPI_METAL_20260811; live matcher still requires verified GTIN variants
-SIG-SR-AU-007,RN-FSANZ-AUSTRALHERBS-20260909,reviewed,Linked to family PF_AUSTRALHERBS_PEPPERMINT_20260909; live matcher still requires verified GTIN variants
-SIG-SR-NZ-006,RN-MPI-MONSIRE-NZ-20260904,reviewed,Linked to family PF_MONSIRE_BRIE_NZ_20260904; live matcher still requires verified GTIN variants
+SIG-SR-AU-001-20260918,RN-FSANZ-CHICKADEES-20260710,reviewed,Product identity and/or GTIN path; batch/date check when markings absent
+SIG-SR-AU-002-20260918,RN-FSANZ-ALLENS-INSIDEOUTS-20260602,reviewed,Product identity and/or GTIN path; batch/date check when markings absent
+SIG-SR-NZ-002-20260918,RN-MPI-PAMS-LASAGNE-20260227,reviewed,Product identity and/or GTIN path; batch/date check when markings absent
+SIG-SR-NZ-003-20260918,RN-MPI-VOGELS-20260811,reviewed,Family PF_VOGELS_MPI_METAL_20260811; identity and/or GTIN path
+SIG-SR-AU-004-20260918,RN-FSANZ-MRCHENS-20260818,reviewed,Product identity and/or GTIN path; batch/date check when markings absent
+SIG-SR-AU-005,RN-FSANZ-REDHAT-20260911,reviewed,Product identity and/or GTIN path; batch/date check when markings absent
+SIG-SR-AU-006,RN-FSANZ-JCSEAFOOD-20260910,reviewed,Product identity and/or GTIN path; batch/date check when markings absent
+SIG-SR-AU-007,RN-FSANZ-AUSTRALHERBS-20260909,reviewed,Family PF_AUSTRALHERBS_PEPPERMINT_20260909; identity and/or GTIN path
+SIG-SR-AU-008,RN-FSANZ-MONSIRE-AU-20260904,reviewed,Product identity and/or GTIN path; batch/date check when markings absent
+SIG-SR-NZ-004,RN-MPI-DONGWON-20260911,reviewed,Product identity and/or GTIN path; batch/date check when markings absent
+SIG-SR-NZ-005,RN-MPI-WOOLWORTHS-MULTIGRAIN-20260908,reviewed,Product identity and/or GTIN path; batch/date check when markings absent
+SIG-SR-NZ-006,RN-MPI-MONSIRE-NZ-20260904,reviewed,Family PF_MONSIRE_BRIE_NZ_20260904; identity and/or GTIN path

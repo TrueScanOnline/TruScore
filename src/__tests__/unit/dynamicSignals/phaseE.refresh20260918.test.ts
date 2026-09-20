@@ -171,12 +171,18 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
     }
   });
 
-  it('blocked exact-product residual targets fail closed (no speculative live card)', () => {
+  it('unresolved exact-product targets without canonical identity fail closed', () => {
     const pack = loadV03Pack();
-    const blocked = pack.targets.filter((t) => t.resolution_status === 'blocked');
-    expect(blocked.length).toBeGreaterThan(0);
-    for (const t of blocked) {
-      expect(String(t.canonical_target_id ?? '').trim()).toBe('');
+    const unresolved = pack.targets.filter(
+      (t) =>
+        t.propagation_mode === 'exact_only' &&
+        t.target_type === 'product' &&
+        !(t.canonical_target_id ?? '').trim()
+    );
+    // After identity correction, exact products are bound to PI_* where governed aliases exist.
+    // Residual empty canonicals (if any) must remain non-matching.
+    for (const t of unresolved) {
+      expect(t.resolution_status === 'blocked' || t.resolution_status === 'needs_review').toBe(true);
     }
     const recs = match({
       barcode: 'SHOULD_NOT_MATCH_BLOCKED',
@@ -185,6 +191,7 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
       scanMarketPublic: 'AU',
       product_name: 'Chickadees 190g',
     });
+    // Low-level matcher without product_identity_ids must not fire Safety exact_only via Asset path
     expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-001-20260918')).toBe(false);
   });
 

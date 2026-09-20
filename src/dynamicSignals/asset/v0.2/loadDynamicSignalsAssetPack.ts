@@ -8,6 +8,10 @@ import {
   type ProductFamilyMaps,
 } from '../../../identity/chaining/productFamilyMaps';
 import {
+  buildProductIdentityMapsFromCsvRecords,
+  type ProductIdentityMaps,
+} from '../../../identity/chaining/productIdentityMaps';
+import {
   buildBrandHierarchyMapsFromCsvRecords,
   buildEntityHierarchyMapsFromCsvRecords,
 } from '../../../identity/chaining/brandEntityHierarchyMaps';
@@ -51,11 +55,13 @@ export function parseAssetRecallNotices(
   const variantsByNotice = new Map<string, StructuredFoodRecallNotice['affected_variants'][number][]>();
   for (const r of variantRows) {
     const noticeId = (r.recall_notice_id ?? '').trim();
+    if (!noticeId) continue;
     const gtin = (r.gtin ?? '').trim();
-    if (!noticeId || !gtin) continue;
+    // Keep empty-GTIN rows as metadata for pack/date consumer guidance.
     const list = variantsByNotice.get(noticeId) ?? [];
     list.push({
-      recall_variant_id: (r.recall_variant_id ?? '').trim() || `RV_${noticeId}_${gtin}`,
+      recall_variant_id:
+        (r.recall_variant_id ?? '').trim() || `RV_${noticeId}_${gtin || String(list.length)}`,
       gtin,
       listed_batch_codes: parseBatchList(r.listed_batch_codes ?? ''),
       gtin_verification_status: ((r.gtin_verification_status ??
@@ -84,17 +90,18 @@ export function parseAssetRecallNotices(
   for (const r of noticeRows) {
     const recall_notice_id = (r.recall_notice_id ?? '').trim();
     if (!recall_notice_id) continue;
-    const bb_month = Number.parseInt((r.bb_month ?? '').trim(), 10);
-    const bb_year = Number.parseInt((r.bb_year ?? '').trim(), 10);
-    if (!Number.isInteger(bb_month) || !Number.isInteger(bb_year)) continue;
+    const bbMonthRaw = (r.bb_month ?? '').trim();
+    const bbYearRaw = (r.bb_year ?? '').trim();
+    const bb_month = bbMonthRaw ? Number.parseInt(bbMonthRaw, 10) : NaN;
+    const bb_year = bbYearRaw ? Number.parseInt(bbYearRaw, 10) : NaN;
     notices.push({
       recall_notice_id,
       signal_id: (r.signal_id ?? '').trim(),
       official_source_url: (r.official_source_url ?? '').trim(),
       hazard: (r.hazard ?? '').trim(),
       consumer_action: (r.consumer_action ?? '').trim(),
-      bb_month,
-      bb_year,
+      bb_month: Number.isInteger(bb_month) ? bb_month : 0,
+      bb_year: Number.isInteger(bb_year) ? bb_year : 0,
       recall_product_family_id: (r.recall_product_family_id ?? '').trim() || undefined,
       affected_variants: variantsByNotice.get(recall_notice_id) ?? [],
       related_family_gtins: relatedByNotice.get(recall_notice_id),
@@ -109,6 +116,9 @@ export type AssetPackCsvRows = {
   targets: CsvRecord[];
   productFamilies: CsvRecord[];
   productFamilyMembership: CsvRecord[];
+  productFamilyAliases?: CsvRecord[];
+  productIdentities?: CsvRecord[];
+  productIdentityAliases?: CsvRecord[];
   brandChildOfBrand: CsvRecord[];
   entityChildOfEntity: CsvRecord[];
   foodRecallEligibility: CsvRecord[];
@@ -120,7 +130,12 @@ export type AssetPackCsvRows = {
 export function buildAssetPackFromCsvRows(rows: AssetPackCsvRows): AssetPackParsed {
   const familyMaps: ProductFamilyMaps = buildProductFamilyMapsFromCsvRecords(
     rows.productFamilies,
-    rows.productFamilyMembership
+    rows.productFamilyMembership,
+    rows.productFamilyAliases ?? []
+  );
+  const productIdentityMaps: ProductIdentityMaps = buildProductIdentityMapsFromCsvRecords(
+    rows.productIdentities ?? [],
+    rows.productIdentityAliases ?? []
   );
 
   return {
@@ -128,6 +143,7 @@ export function buildAssetPackFromCsvRows(rows: AssetPackCsvRows): AssetPackPars
     signals: rows.signals,
     targets: rows.targets,
     familyMaps,
+    productIdentityMaps,
     brandHierarchy: buildBrandHierarchyMapsFromCsvRecords(rows.brandChildOfBrand),
     entityHierarchy: buildEntityHierarchyMapsFromCsvRecords(rows.entityChildOfEntity),
     recallEligibility: parseAssetRecallEligibility(rows.foodRecallEligibility),
@@ -160,13 +176,20 @@ function buildADataChainFromEmbedRows() {
 /** App/runtime pack — embedded governed CSVs (no filesystem). Cached after first parse. */
 export function loadDynamicSignalsAssetPackFromEmbed(): AssetPackParsed {
   if (cachedAssetPack) return cachedAssetPack;
-  const e = DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED;
+  const e = DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED as typeof DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED & {
+    productFamilyAliases?: CsvRecord[];
+    productIdentities?: CsvRecord[];
+    productIdentityAliases?: CsvRecord[];
+  };
   cachedAssetPack = buildAssetPackFromCsvRows({
     sources: e.sources,
     signals: e.signals,
     targets: e.targets,
     productFamilies: e.productFamilies,
     productFamilyMembership: e.productFamilyMembership,
+    productFamilyAliases: e.productFamilyAliases ?? [],
+    productIdentities: e.productIdentities ?? [],
+    productIdentityAliases: e.productIdentityAliases ?? [],
     brandChildOfBrand: e.brandChildOfBrand,
     entityChildOfEntity: e.entityChildOfEntity,
     foodRecallEligibility: e.foodRecallEligibility,

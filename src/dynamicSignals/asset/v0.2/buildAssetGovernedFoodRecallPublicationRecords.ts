@@ -16,11 +16,12 @@ import {
   evaluateStructuredFoodRecallMatch,
   isFoodRecallCorrectedPathEnabled,
   provisionalCopyForMatchState,
+  type FoodRecallMatchResult,
   type FoodRecallSubmittedMarkings,
   type StructuredFoodRecallNotice,
 } from '../../../workstreamC/recall';
 import { publicationStateForGtinVerification } from '../../../workstreamC/recall/mapFoodRecallMatchToPublicationRecord';
-import type { AssetPackParsed } from './matchDynamicSignalsAsset';
+import type { AssetPackParsed, AssetScanIdentity } from './matchDynamicSignalsAsset';
 import {
   assetExpiresAtAsValidUntil,
   isAssetSignalWithinPublicTemporalWindow,
@@ -35,6 +36,115 @@ function authorisedSourceIds(sources: CsvRecord[]): Set<string> {
     if (id) s.add(id);
   }
   return s;
+}
+
+function marketAllows(scan: 'AU' | 'NZ' | 'UNKNOWN', linkMarket: string): boolean {
+  if (scan === 'UNKNOWN') return false;
+  if (linkMarket === 'AU+NZ') return scan === 'AU' || scan === 'NZ';
+  return linkMarket === scan;
+}
+
+function targetResolutionAllowsMatch(status: string): boolean {
+  return status === 'resolved' || status === 'resolved_with_warning';
+}
+
+/**
+ * True when governed Safety targets (product_family/family_members or product/exact_only)
+ * resolve to the scan identity — no signal-name or brand hardcoding.
+ */
+export function scanIdentitySatisfiesSafetyTargets(
+  pack: AssetPackParsed,
+  signalId: string,
+  identity: AssetScanIdentity
+): boolean {
+  for (const tgt of pack.targets) {
+    if ((tgt.signal_id ?? '').trim() !== signalId) continue;
+    const linkMarket = (tgt.market_key ?? '').trim();
+    if (!marketAllows(identity.scanMarketPublic, linkMarket)) continue;
+    const resStatus = (tgt.resolution_status ?? '').trim();
+    if (!targetResolutionAllowsMatch(resStatus)) continue;
+
+    const targetType = (tgt.target_type ?? '').trim();
+    const mode = (tgt.propagation_mode ?? '').trim();
+    const canonicalId = (tgt.canonical_target_id ?? '').trim();
+    if (!canonicalId) continue;
+
+    if (targetType === 'product_family' && mode === 'family_members') {
+      if (identity.product_family_ids.includes(canonicalId)) return true;
+      continue;
+    }
+    if (targetType === 'product' && mode === 'exact_only') {
+      if (identity.barcode === canonicalId) return true;
+      const pids = identity.product_identity_ids ?? [];
+      if (pids.includes(canonicalId)) return true;
+    }
+  }
+  return false;
+}
+
+function identityRecallUpgradeReason(
+  pack: AssetPackParsed,
+  signalId: string,
+  identity: AssetScanIdentity,
+  notice: StructuredFoodRecallNotice
+): 'product_family_identity_match' | 'product_identity_match' | null {
+  for (const tgt of pack.targets) {
+    if ((tgt.signal_id ?? '').trim() !== signalId) continue;
+    const linkMarket = (tgt.market_key ?? '').trim();
+    if (!marketAllows(identity.scanMarketPublic, linkMarket)) continue;
+    const resStatus = (tgt.resolution_status ?? '').trim();
+    if (!targetResolutionAllowsMatch(resStatus)) continue;
+
+    const targetType = (tgt.target_type ?? '').trim();
+    const mode = (tgt.propagation_mode ?? '').trim();
+    const canonicalId = (tgt.canonical_target_id ?? '').trim();
+    if (!canonicalId) continue;
+
+    if (targetType === 'product' && mode === 'exact_only') {
+      if (identity.barcode === canonicalId) return 'product_identity_match';
+      const pids = identity.product_identity_ids ?? [];
+      if (pids.includes(canonicalId)) return 'product_identity_match';
+    }
+  }
+
+  for (const tgt of pack.targets) {
+    if ((tgt.signal_id ?? '').trim() !== signalId) continue;
+    const linkMarket = (tgt.market_key ?? '').trim();
+    if (!marketAllows(identity.scanMarketPublic, linkMarket)) continue;
+    const resStatus = (tgt.resolution_status ?? '').trim();
+    if (!targetResolutionAllowsMatch(resStatus)) continue;
+
+    const targetType = (tgt.target_type ?? '').trim();
+    const mode = (tgt.propagation_mode ?? '').trim();
+    const canonicalId = (tgt.canonical_target_id ?? '').trim();
+    if (!canonicalId) continue;
+
+    if (targetType === 'product_family' && mode === 'family_members') {
+      if (identity.product_family_ids.includes(canonicalId)) return 'product_family_identity_match';
+    }
+  }
+
+  const recallFamilyId = (notice.recall_product_family_id ?? '').trim();
+  if (recallFamilyId && identity.product_family_ids.includes(recallFamilyId)) {
+    return 'product_family_identity_match';
+  }
+  return null;
+}
+
+function upgradeNotApplicableForIdentityHit(
+  match: FoodRecallMatchResult,
+  reason: 'product_family_identity_match' | 'product_identity_match',
+  notice: StructuredFoodRecallNotice
+): FoodRecallMatchResult {
+  return {
+    ...match,
+    match_state: 'batch_check_required',
+    match_reason_code: reason,
+    needs_batch_entry: true,
+    severity: 'high',
+    consumer_message_key: 'food_recall.state.batch_check_required',
+    recall_product_family_id: match.recall_product_family_id ?? notice.recall_product_family_id,
+  };
 }
 
 function mapAssetGovernedMatchToPublicationRecord(input: {
@@ -114,6 +224,7 @@ export function buildAssetGovernedFoodRecallPublicationRecords(input: {
   logLines?: string[];
   /** Tests: include candidate Asset Safety Signals */
   includeNonPublishable?: boolean;
+  scanIdentity?: AssetScanIdentity;
 }): DynamicSignalPublicationRecord[] {
   const push = (s: string) => input.logLines?.push(s);
   const corrected = isFoodRecallCorrectedPathEnabled();
@@ -195,7 +306,14 @@ export function buildAssetGovernedFoodRecallPublicationRecords(input: {
     }
 
     const notice = noticeById.get(noticeId);
-    if (!notice || notice.affected_variants.length === 0) {
+    const identity = input.scanIdentity;
+    const recallFamilyId = (notice?.recall_product_family_id ?? '').trim();
+    const identityAllowsEmptyVariants =
+      identity != null &&
+      (scanIdentitySatisfiesSafetyTargets(input.pack, signalId, identity) ||
+        (recallFamilyId.length > 0 && identity.product_family_ids.includes(recallFamilyId)));
+
+    if (!notice || (notice.affected_variants.length === 0 && !identityAllowsEmptyVariants)) {
       push(
         `food_recall: skip ${signalId} — no structured affected variants for ${noticeId} (MILO/historical packs are not production content)`
       );
@@ -208,12 +326,28 @@ export function buildAssetGovernedFoodRecallPublicationRecords(input: {
       signal_id: signalId,
     };
 
-    const match = evaluateStructuredFoodRecallMatch({
+    let match = evaluateStructuredFoodRecallMatch({
       notice: governedNotice,
       gtin: input.barcode,
       markings: input.foodRecallMarkings,
       clock,
     });
+
+    if (match.match_state === 'not_applicable' && identity) {
+      const upgradeReason = identityRecallUpgradeReason(
+        input.pack,
+        signalId,
+        identity,
+        governedNotice
+      );
+      if (upgradeReason) {
+        match = upgradeNotApplicableForIdentityHit(match, upgradeReason, governedNotice);
+        push(
+          `food_recall_asset: identity_upgrade signal=${signalId} notice=${noticeId} reason=${upgradeReason}`
+        );
+      }
+    }
+
     push(
       `food_recall_asset: signal=${signalId} notice=${noticeId} state=${match.match_state} reason=${match.match_reason_code}`
     );
@@ -240,6 +374,7 @@ export function buildFoodRecallSafetyPublicationRecords(input: {
   pack?: AssetPackParsed;
   scanMarketPublic?: 'AU' | 'NZ' | 'UNKNOWN';
   includeNonPublishable?: boolean;
+  scanIdentity?: AssetScanIdentity;
 }): DynamicSignalPublicationRecord[] {
   if (!input.pack) {
     input.logLines?.push(
@@ -255,5 +390,6 @@ export function buildFoodRecallSafetyPublicationRecords(input: {
     evaluationClockIso: input.evaluationClockIso,
     logLines: input.logLines,
     includeNonPublishable: input.includeNonPublishable,
+    scanIdentity: input.scanIdentity,
   });
 }

@@ -11,6 +11,7 @@ import type { CsvRecord } from '../../../identity/workstreamA/csv';
 import type { DynamicSignalPublicationRecord } from '../../publish/types';
 import type { ProductFamilyMaps } from '../../../identity/chaining/productFamilyMaps';
 import { reviewedFamilyIdsForGtin } from '../../../identity/chaining/productFamilyMaps';
+import type { ProductIdentityMaps } from '../../../identity/chaining/productIdentityMaps';
 import type {
   BrandHierarchyMaps,
   EntityHierarchyMaps,
@@ -37,6 +38,8 @@ export type AssetScanIdentity = {
   brand_id: string | null;
   parent_id: string | null;
   product_family_ids: string[];
+  /** Governed product-identity IDs resolved from scan product data (aliases), not injected answers. */
+  product_identity_ids?: string[];
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
   productScopeEvidence?: CocoaChocolateProductScopeEvidence | null;
 };
@@ -54,6 +57,8 @@ export type AssetPackParsed = {
   signals: CsvRecord[];
   targets: CsvRecord[];
   familyMaps: ProductFamilyMaps;
+  /** Optional until embed regeneration includes product-identity CSVs. */
+  productIdentityMaps?: ProductIdentityMaps;
   brandHierarchy: BrandHierarchyMaps;
   entityHierarchy: EntityHierarchyMaps;
   /** Asset-authorised recall bindings — empty unless structured eligibility onboarded. */
@@ -107,8 +112,12 @@ function propagationMatches(
 ): boolean {
   if (!canonicalId) return false;
   switch (mode) {
-    case 'exact_only':
-      return targetType === 'product' && identity.barcode === canonicalId;
+    case 'exact_only': {
+      if (targetType !== 'product') return false;
+      if (identity.barcode === canonicalId) return true;
+      const pids = identity.product_identity_ids ?? [];
+      return pids.includes(canonicalId);
+    }
     case 'family_members':
       return targetType === 'product_family' && identity.product_family_ids.includes(canonicalId);
     case 'brand_descendants':

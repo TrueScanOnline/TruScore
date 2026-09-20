@@ -752,7 +752,13 @@ function ResultScreenContent() {
 
   useEffect(() => {
     const ctx = signalsEvalContextRef.current;
-    if (!ctx) return;
+    if (!ctx) {
+      // NA-022: Core Truth authority loss collapses eval context — clear stale Signal cards.
+      setDynamicSignalRecords([]);
+      setSignalsReadyOutcome(null);
+      signalsEvalKeyRef.current = null;
+      return;
+    }
 
     const evalKey = ctx.evalKey;
     if (signalsEvalKeyRef.current === evalKey) return;

@@ -39,6 +39,9 @@ function main() {
     targets: readCsv(path.join(packRoot, 'signal_targets.csv')),
     productFamilies: readCsv(path.join(famRoot, 'product_families.csv')),
     productFamilyMembership: readCsv(path.join(famRoot, 'product_family_membership.csv')),
+    productFamilyAliases: readCsv(path.join(famRoot, 'product_family_aliases.csv')),
+    productIdentities: readCsv(path.join(famRoot, 'product_identities.csv')),
+    productIdentityAliases: readCsv(path.join(famRoot, 'product_identity_aliases.csv')),
     brandChildOfBrand: readCsv(path.join(famRoot, 'brand_child_of_brand.csv')),
     entityChildOfEntity: readCsv(path.join(famRoot, 'entity_child_of_entity.csv')),
     foodRecallEligibility: readCsv(path.join(packRoot, 'food_recall_eligibility.csv')),
@@ -76,6 +79,9 @@ export type DynamicSignalsAssetRuntimeEmbed = {
   targets: CsvRecord[];
   productFamilies: CsvRecord[];
   productFamilyMembership: CsvRecord[];
+  productFamilyAliases: CsvRecord[];
+  productIdentities: CsvRecord[];
+  productIdentityAliases: CsvRecord[];
   brandChildOfBrand: CsvRecord[];
   entityChildOfEntity: CsvRecord[];
   foodRecallEligibility: CsvRecord[];

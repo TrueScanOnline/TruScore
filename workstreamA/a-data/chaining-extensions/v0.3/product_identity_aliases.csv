@@ -1,0 +1,21 @@
+alias_id,product_identity_id,alias_text,alias_normalized,match_mode,review_state,confidence_state,lineage_reference,notes
+PIA_CHICKADEES_MP,PI_CHICKADEES_MULTIPACK_6X19G,chickadees multipack,chickadees multipack,phrase_contains,reviewed,confirmed,FSANZ-CHICKADEES-20260710,
+PIA_CHICKADEES_6X19,PI_CHICKADEES_MULTIPACK_6X19G,6x19g,6x19g,phrase_contains,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Requires Chickadees brand anchor
+PIA_CHICKADEES_190,PI_CHICKADEES_190G,chickadees 190g,chickadees 190g,phrase_contains,reviewed,confirmed,FSANZ-CHICKADEES-20260710,
+PIA_CHICKADEES_190_ONLY,PI_CHICKADEES_190G,190g,190g,phrase_contains,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Requires Chickadees brand anchor
+PIA_CHICKADEES_90,PI_CHICKADEES_90G,chickadees 90g,chickadees 90g,phrase_contains,reviewed,confirmed,FSANZ-CHICKADEES-20260710,
+PIA_CHICKADEES_90_ONLY,PI_CHICKADEES_90G,90g,90g,phrase_contains,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Requires Chickadees brand anchor
+PIA_CHICKADEES_45,PI_CHICKADEES_45G,chickadees 45g,chickadees 45g,phrase_contains,reviewed,confirmed,FSANZ-CHICKADEES-20260710,
+PIA_CHICKADEES_45_ONLY,PI_CHICKADEES_45G,45g,45g,phrase_contains,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Requires Chickadees brand anchor
+PIA_ALLENS_INSIDEOUTS,PI_ALLENS_INSIDEOUTS_130G,inside outs,inside outs,phrase_contains,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,Allen's brand anchor
+PIA_PAMS_LASAGNE,PI_PAMS_BEEF_LASAGNE_1_3KG,beef lasagne,beef lasagne,phrase_contains,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,
+PIA_PAMS_LASAGNE_1_3,PI_PAMS_BEEF_LASAGNE_1_3KG,1.3kg,1 3kg,phrase_contains,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Normalized form of 1.3kg
+PIA_MRCHENS_CHILLI,PI_MRCHENS_CHILLI_OIL_250G,szechuan chilli oil,szechuan chilli oil,phrase_contains,reviewed,confirmed,FSANZ-MRCHENS-20260818,
+PIA_MRCHENS_CHILLI_ALT,PI_MRCHENS_CHILLI_OIL_250G,sichuan chili oil,sichuan chili oil,phrase_contains,reviewed,confirmed,FSANZ-MRCHENS-20260818,Alternate spelling
+PIA_REDHAT_COOKIA,PI_REDHAT_COOKIA_80G,red hat cookia matcha chocolate,red hat cookia matcha chocolate,phrase_contains,reviewed,confirmed,FSANZ-REDHAT-20260911,
+PIA_JCSEAFOOD_SALMON,PI_JCSEAFOOD_SALMON_275G,jc seafood sweet chilli and lime salmon,jc seafood sweet chilli and lime salmon,phrase_contains,reviewed,confirmed,FSANZ-JCSEAFOOD-20260910,
+PIA_MONSIRE_AU_1KG,PI_MONSIRE_BRIE_AU_1KG,brie mon sire,brie mon sire,phrase_contains,reviewed,confirmed,FSANZ-MONSIRE-AU-20260904,AU market
+PIA_DONGWON_BEANCURD,PI_DONGWON_BEANCURD_340G,dongwon fried bean curd,dongwon fried bean curd,phrase_contains,reviewed,confirmed,MPI-DONGWON-20260911,
+PIA_WW_MULTIGRAIN,PI_WW_MULTIGRAIN_500G,multi grain cereal,multi grain cereal,phrase_contains,reviewed,confirmed,MPI-WOOLWORTHS-MULTIGRAIN-20260908,Woolworths brand scoped
+PIA_ANCHOR_BLUE_MP,PI_ANCHOR_BLUE_MILK_POWDER_400G,blue milk powder,blue milk powder,phrase_contains,reviewed,confirmed,CONSUMERNZ-ANCHOR-BLUE-20260211,
+PIA_PAMS_SPARKLING,PI_PAMS_SPARKLING_WATER_HSR,sparkling water,sparkling water,phrase_contains,reviewed,confirmed,RNZ-590339,Pams brand scoped
