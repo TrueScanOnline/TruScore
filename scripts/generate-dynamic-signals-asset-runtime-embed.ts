@@ -32,7 +32,8 @@ function main() {
   const extRoot = famRoot;
 
   const embed = {
-    generatedAt: new Date().toISOString(),
+    // Stable stamp for deterministic regeneration proofs (content hash excludes wall-clock noise).
+    generatedAt: process.env.DSA_EMBED_GENERATED_AT?.trim() || '2026-09-18T00:00:00.000Z',
     sources: readCsv(path.join(packRoot, 'source_universe.csv')),
     signals: readCsv(path.join(packRoot, 'signals.csv')),
     targets: readCsv(path.join(packRoot, 'signal_targets.csv')),

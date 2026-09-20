@@ -198,7 +198,7 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
     expect(vogelT.canonical_target_id).toBe('PF_VOGELS_MPI_METAL_20260811');
     expect(vogelT.resolution_status).toBe('resolved');
     expect(chenT.canonical_target_id).toBe('');
-    expect(chenT.resolution_status).toBe('needs_review');
+    expect(chenT.resolution_status).toBe('blocked');
     expect(
       requiresFoodRecallMatcherEligibility(
         vogel.signal_class ?? '',

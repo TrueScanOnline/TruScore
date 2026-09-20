@@ -26,12 +26,17 @@ import type { DynamicSignalPublicationRecord } from '../../../dynamicSignals/pub
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const PACK = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.3', 'input');
-const FAM = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.2');
+const FAM = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.3');
 
-/** Within v0.3 pack window (expires_at 2026-08-19; empty publishable_from). */
-const WITHIN_WINDOW = createFixedIngestionClock('2026-08-10T12:00:00.000Z');
-const BEFORE_FROM = createFixedIngestionClock('2026-08-01T12:00:00.000Z');
-const AFTER_EXPIRY = createFixedIngestionClock('2026-09-09T12:00:00.000Z');
+/** Pure temporal helper fixtures (independent of refreshed pack dates). */
+const HELPER_WITHIN = createFixedIngestionClock('2026-08-10T12:00:00.000Z');
+const HELPER_BEFORE = createFixedIngestionClock('2026-08-01T12:00:00.000Z');
+const HELPER_AFTER = createFixedIngestionClock('2026-09-09T12:00:00.000Z');
+
+/** 2026-09-18 refresh: successors expire 2026-12-31; publishable_from 2026-09-18. */
+const WITHIN_WINDOW = createFixedIngestionClock('2026-09-18T12:00:00.000Z');
+const AFTER_EXPIRY = createFixedIngestionClock('2027-01-01T12:00:00.000Z');
+const AFTER_PREDECESSOR_ERA = createFixedIngestionClock('2026-09-09T12:00:00.000Z');
 
 function loadV03Pack(): AssetPackParsed {
   const read = (p: string) => parseCsv(fs.readFileSync(p, 'utf8'));
@@ -92,7 +97,7 @@ describe('Pass 4 NA-019 — Asset temporal public window', () => {
     expect(
       isAssetSignalWithinPublicTemporalWindow(
         { publishable_from: '2026-08-06', expires_at: '2026-08-19' },
-        BEFORE_FROM
+        HELPER_BEFORE
       )
     ).toBe(false);
   });
@@ -101,7 +106,7 @@ describe('Pass 4 NA-019 — Asset temporal public window', () => {
     expect(
       isAssetSignalWithinPublicTemporalWindow(
         { publishable_from: '2026-08-06', expires_at: '2026-08-19' },
-        WITHIN_WINDOW
+        HELPER_WITHIN
       )
     ).toBe(true);
   });
@@ -110,52 +115,43 @@ describe('Pass 4 NA-019 — Asset temporal public window', () => {
     expect(
       isAssetSignalWithinPublicTemporalWindow(
         { publishable_from: '2026-08-06', expires_at: '2026-08-19' },
-        AFTER_EXPIRY
+        HELPER_AFTER
       )
     ).toBe(false);
   });
 
   it('suppressed publication state → hidden regardless of dates', () => {
-    const pack = withSignalPatch(loadV03Pack(), 'SIG-IN-GL-001', {
+    const pack = withSignalPatch(loadV03Pack(), 'SIG-IN-GL-001-20260918', {
       signal_publication_state: 'suppressed',
-      publishable_from: '2026-08-01',
-      expires_at: '2099-12-31',
     });
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack,
       identity: cadburyIdentity(),
       evaluationClock: WITHIN_WINDOW,
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-001')).toBe(false);
+    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-001-20260918')).toBe(false);
   });
 
   it('expired publication state → hidden', () => {
-    const pack = withSignalPatch(loadV03Pack(), 'SIG-IN-GL-001', {
+    const pack = withSignalPatch(loadV03Pack(), 'SIG-IN-GL-001-20260918', {
       signal_publication_state: 'expired',
-      publishable_from: '2026-08-01',
-      expires_at: '2099-12-31',
     });
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack,
       identity: cadburyIdentity(),
       evaluationClock: WITHIN_WINDOW,
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-001')).toBe(false);
+    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-001-20260918')).toBe(false);
   });
 
   it('inactive/non-authorised source → hidden', () => {
     const pack = loadV03Pack();
-    const gl = pack.signals.find((s) => s.signal_id === 'SIG-IN-GL-001')!;
+    const gl = pack.signals.find((s) => s.signal_id === 'SIG-IN-GL-001-20260918')!;
     const sourceId = gl.source_channel_id ?? '';
     const patched: AssetPackParsed = {
       ...pack,
       sources: pack.sources.map((s) =>
         s.source_channel_id === sourceId ? { ...s, status: 'inactive' } : s
-      ),
-      signals: pack.signals.map((s) =>
-        s.signal_id === 'SIG-IN-GL-001'
-          ? { ...s, publishable_from: '2026-08-01', expires_at: '2099-12-31' }
-          : s
       ),
     };
     const recs = buildDynamicSignalsAssetPublicationRecords({
@@ -163,52 +159,51 @@ describe('Pass 4 NA-019 — Asset temporal public window', () => {
       identity: cadburyIdentity(),
       evaluationClock: WITHIN_WINDOW,
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-001')).toBe(false);
+    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-001-20260918')).toBe(false);
   });
 
-  it('current expired v0.3 pack records do not render at 2026-09-09', () => {
+  it('predecessor candidates do not render; successors hide after expires_at', () => {
     const pack = loadV03Pack();
-    expect(pack.signals.every((s) => (s.expires_at ?? '').trim() === '2026-08-19')).toBe(true);
-    const recs = buildDynamicSignalsAssetPublicationRecords({
+    const predecessors = pack.signals.filter(
+      (s) =>
+        !(s.signal_id ?? '').includes('-20260918') &&
+        ![
+          'SIG-SR-AU-005',
+          'SIG-SR-AU-006',
+          'SIG-SR-AU-007',
+          'SIG-SR-AU-008',
+          'SIG-SR-NZ-004',
+          'SIG-SR-NZ-005',
+          'SIG-SR-NZ-006',
+          'SIG-IN-GL-003',
+        ].includes(s.signal_id ?? '')
+    );
+    expect(predecessors.every((s) => s.signal_publication_state === 'candidate')).toBe(true);
+    const mid = buildDynamicSignalsAssetPublicationRecords({
+      pack,
+      identity: cadburyIdentity(),
+      evaluationClock: AFTER_PREDECESSOR_ERA,
+    });
+    expect(mid.some((r) => r.signal_id === 'SIG-IN-GL-001')).toBe(false);
+
+    const afterSucc = buildDynamicSignalsAssetPublicationRecords({
       pack,
       identity: cadburyIdentity(),
       evaluationClock: AFTER_EXPIRY,
     });
-    expect(recs).toHaveLength(0);
-
-    const staleCard: DynamicSignalPublicationRecord = {
-      signal_id: 'SIG-IN-GL-001',
-      dedupe_key: 'x',
-      signal_class: 'in_the_news',
-      signal_publication_state: 'publishable',
-      resolution_key: { gtin: '1', market_key: 'AU' },
-      state: {
-        confidence_state: 'strong',
-        review_state: 'reviewed',
-        resolution_status: 'resolved',
-      },
-      lineage_reference: 'test',
-      source_idempotency_key: 'x',
-      staleness: { valid_until: '2026-08-19T23:59:59.999Z' },
-      editorial: { priority: 0, due_at: null, last_reviewed_at: null },
-      mislink: { open_report_count: 0, last_event_at: null },
-      skeleton_card_copy: { title_display: 't', body_display: 'b', why_display: 'w' },
-    };
-    // Render gate uses system clock; on inventory date after expiry this must be false.
-    // When CI clock is controlled, still assert policy helper path above.
-    expect(isAssetSignalWithinPublicTemporalWindow({ expires_at: '2026-08-19' }, AFTER_EXPIRY)).toBe(
+    expect(afterSucc.some((r) => (r.signal_id ?? '').endsWith('-20260918'))).toBe(false);
+    expect(isAssetSignalWithinPublicTemporalWindow({ expires_at: '2026-12-31' }, AFTER_EXPIRY)).toBe(
       false
     );
-    void staleCard;
   });
 
-  it('within-window Cadbury chocolate still matches when clock is inside pack dates', () => {
+  it('within-window Cadbury chocolate matches successor SIG-IN-GL-001-20260918', () => {
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack: loadV03Pack(),
       identity: cadburyIdentity(),
       evaluationClock: WITHIN_WINDOW,
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-001')).toBe(true);
+    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-001-20260918')).toBe(true);
   });
 });
 
@@ -223,16 +218,16 @@ describe('Pass 4 NA-020 — TGT-014/015 cocoa_chocolate guard', () => {
     );
   });
 
-  it('qualifying Cadbury/Dairy Milk chocolate context continues to receive SIG-IN-GL-001', () => {
+  it('qualifying Cadbury/Dairy Milk chocolate context continues to receive SIG-IN-GL-001-20260918', () => {
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack: loadV03Pack(),
       identity: cadburyIdentity({ product_name: 'Cadbury Dairy Milk Milk Chocolate' }),
       evaluationClock: WITHIN_WINDOW,
     });
-    expect(recs.map((r) => r.signal_id)).toContain('SIG-IN-GL-001');
+    expect(recs.map((r) => r.signal_id)).toContain('SIG-IN-GL-001-20260918');
   });
 
-  it('B0067 descendant lacking positive cocoa/chocolate evidence does not receive SIG-IN-GL-001', () => {
+  it('B0067 descendant lacking positive cocoa/chocolate evidence does not receive SIG-IN-GL-001-20260918', () => {
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack: loadV03Pack(),
       identity: cadburyIdentity({
@@ -243,10 +238,10 @@ describe('Pass 4 NA-020 — TGT-014/015 cocoa_chocolate guard', () => {
       }),
       evaluationClock: WITHIN_WINDOW,
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-001')).toBe(false);
+    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-001-20260918')).toBe(false);
   });
 
-  it('Ritz and other non-Cadbury Mondelēz siblings remain negative for SIG-IN-GL-001', () => {
+  it('Ritz and other non-Cadbury Mondelēz siblings remain negative for SIG-IN-GL-001-20260918', () => {
     const ritz = buildDynamicSignalsAssetPublicationRecords({
       pack: loadV03Pack(),
       identity: {
@@ -262,16 +257,16 @@ describe('Pass 4 NA-020 — TGT-014/015 cocoa_chocolate guard', () => {
       },
       evaluationClock: WITHIN_WINDOW,
     });
-    expect(ritz.some((r) => r.signal_id === 'SIG-IN-GL-001')).toBe(false);
+    expect(ritz.some((r) => r.signal_id === 'SIG-IN-GL-001-20260918')).toBe(false);
   });
 
-  it('existing GL-002 cocoa_chocolate scope behaviour remains unchanged', () => {
+  it('existing GL-002 cocoa_chocolate scope behaviour remains unchanged on successor', () => {
     const hit = buildDynamicSignalsAssetPublicationRecords({
       pack: loadV03Pack(),
       identity: cadburyIdentity({ product_name: 'Cadbury Dairy Milk Milk Chocolate' }),
       evaluationClock: WITHIN_WINDOW,
     });
-    // GL-002 may or may not be on Cadbury targets depending on pack; assert guard still works via miss
+    expect(hit.map((r) => r.signal_id)).toContain('SIG-IN-GL-002-20260918');
     const miss = buildDynamicSignalsAssetPublicationRecords({
       pack: loadV03Pack(),
       identity: cadburyIdentity({
@@ -281,8 +276,7 @@ describe('Pass 4 NA-020 — TGT-014/015 cocoa_chocolate guard', () => {
       }),
       evaluationClock: WITHIN_WINDOW,
     });
-    expect(miss.some((r) => r.signal_id === 'SIG-IN-GL-002')).toBe(false);
-    void hit;
+    expect(miss.some((r) => r.signal_id === 'SIG-IN-GL-002-20260918')).toBe(false);
   });
 });
 
