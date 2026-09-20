@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-09-18T04:11:14.679Z",
+  "generated_at": "2026-09-20T00:21:00.917Z",
   "row_counts": {
     "bbfaw2025Canonical_companies": 149,
-    "brandAliasMap_rows": 106,
+    "brandAliasMap_rows": 105,
     "ktcParents_rows": 45,
-    "ktcBrandAliasMap_rows": 148,
+    "ktcBrandAliasMap_rows": 146,
     "benchmark_entities_written": 205,
     "benchmark_scores_written": 194
   },
