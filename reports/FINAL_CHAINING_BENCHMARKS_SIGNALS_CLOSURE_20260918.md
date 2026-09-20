@@ -2,6 +2,8 @@
 **Authority:** `Rveel_Final_Chaining_Benchmarks_Signals_Cursor_Execution_Package_20260918(1).docx`  
 **Branch:** `refresh/si-v016-ktc-bbfaw-20260918`  
 **Phase B tip (do not redo):** `46b2e634a15bf16e70f923c956f7560b4dd62483`  
+**Phase C corpus commit:** `6e1c43169bcc1d6641901e86ec20cf099a99d728`  
+**Phase D/E + §9 tip:** `f627b8c03d383a0ae2c925faf91a3d4df1d87ccc`  
 **Worktree:** `C:\TrueScan-FoodScanner-wt-si-benchmark-refresh`  
 **Clock for Decision Pack fixtures:** `2026-09-18T00:00:00Z`  
 **Benchmark snapshots (unchanged):** `ktc-2026-v2` (45) · `bbfaw-2025-v1` (149)
