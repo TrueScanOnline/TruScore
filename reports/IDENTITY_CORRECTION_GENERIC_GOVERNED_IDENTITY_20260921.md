@@ -3,7 +3,7 @@
 **Date:** 2026-09-21  
 **Branch:** `refresh/si-v016-ktc-bbfaw-20260918`  
 **Baseline (independent QA tip):** `440d010bc23bdc78dabb513db594f02c0650716e`  
-**Correction tip:** _(filled after commit)_  
+**Correction tip:** `1c11cd0baa24a4dc9e590bdfc7e36b21bfb203b4`  
 **Worktree:** `C:\TrueScan-FoodScanner-wt-si-benchmark-refresh`  
 **Wave 3:** not integrated  
 **UAT build:** not cut  
@@ -189,13 +189,17 @@ npm run generate:dsa-asset-runtime-embed
 
 ### Report
 
-- GitHub (after push): `https://github.com/TrueScanOnline/TruScore/blob/<TIP_SHA>/reports/IDENTITY_CORRECTION_GENERIC_GOVERNED_IDENTITY_20260921.md`
+- Browse: `https://github.com/TrueScanOnline/TruScore/blob/2ef949d04f734baacaeb5b08eaa8f6cc64f26ea8/reports/IDENTITY_CORRECTION_GENERIC_GOVERNED_IDENTITY_20260921.md`
 - Local: [file:///C:/TrueScan-FoodScanner-wt-si-benchmark-refresh/reports/IDENTITY_CORRECTION_GENERIC_GOVERNED_IDENTITY_20260921.md](file:///C:/TrueScan-FoodScanner-wt-si-benchmark-refresh/reports/IDENTITY_CORRECTION_GENERIC_GOVERNED_IDENTITY_20260921.md)
 
 ### Corpus JSON
 
-- GitHub (after push): `https://github.com/TrueScanOnline/TruScore/blob/<TIP_SHA>/reports/IDENTITY_CORRECTION_ORDINARY_SCAN_CORPUS_20260921.json`
+- Browse: `https://github.com/TrueScanOnline/TruScore/blob/1c11cd0baa24a4dc9e590bdfc7e36b21bfb203b4/reports/IDENTITY_CORRECTION_ORDINARY_SCAN_CORPUS_20260921.json`
 - Local: [file:///C:/TrueScan-FoodScanner-wt-si-benchmark-refresh/reports/IDENTITY_CORRECTION_ORDINARY_SCAN_CORPUS_20260921.json](file:///C:/TrueScan-FoodScanner-wt-si-benchmark-refresh/reports/IDENTITY_CORRECTION_ORDINARY_SCAN_CORPUS_20260921.json)
+
+### Correction tip
+
+- Browse: `https://github.com/TrueScanOnline/TruScore/commit/1c11cd0baa24a4dc9e590bdfc7e36b21bfb203b4`
 
 ### Baseline QA tip
 
