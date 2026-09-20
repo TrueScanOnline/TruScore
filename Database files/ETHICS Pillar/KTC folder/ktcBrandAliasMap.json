@@ -737,14 +737,6 @@
   },
   {
     "benchmark_year_parent_company": "Campbell Soup Company",
-    "canonical_brand": "Arnott's",
-    "aliases_csv": "arnotts,arnott's",
-    "current_parent_company": "Campbell Soup Company",
-    "ownership_alignment_status": "same",
-    "notes": ""
-  },
-  {
-    "benchmark_year_parent_company": "Campbell Soup Company",
     "canonical_brand": "Prego",
     "aliases_csv": "prego",
     "current_parent_company": "Campbell Soup Company",
@@ -867,14 +859,6 @@
     "benchmark_year_parent_company": "Conagra Brands, Inc.",
     "canonical_brand": "Healthy Choice",
     "aliases_csv": "healthy choice",
-    "current_parent_company": "Conagra Brands, Inc.",
-    "ownership_alignment_status": "same",
-    "notes": ""
-  },
-  {
-    "benchmark_year_parent_company": "Conagra Brands, Inc.",
-    "canonical_brand": "Birds Eye",
-    "aliases_csv": "birds eye,birdseye",
     "current_parent_company": "Conagra Brands, Inc.",
     "ownership_alignment_status": "same",
     "notes": ""

@@ -10,6 +10,8 @@ import { calculateEthicsPillar } from '../../../../lib/truscoreEngine/pillars/et
 import { resolveKtcGovernedBenchmarkYear } from '../../../../lib/truscoreEngine/pillars/ethicsBenchmarkAdapter';
 import { checkKTCParent } from '../../../../services/ktcService';
 import { checkBBFAWTier } from '../../../../services/bbfawService';
+import { resolveBrandToKTCParent } from '../../../../services/ktcBrandResolutionService';
+import { resolveBrandToParent } from '../../../../services/bbfawBrandResolutionService';
 import type { Product } from '../../../../types/product';
 import type { ProductWithTrustScore } from '../../../../types/product';
 import type { FrozenBenchmarkAttributionObject } from '../../../../benchmark/types';
@@ -111,5 +113,34 @@ describe('benchmark isolation + governed year binding', () => {
         snapshot_ref: { benchmark_cycle: '' },
       } as FrozenBenchmarkAttributionObject)
     ).toBeUndefined();
+  });
+
+  test('Arnott\'s does not inherit Campbell KTC scoring under ktc-2026-v2', () => {
+    expect(resolveBrandToKTCParent("Arnott's")).toBeNull();
+    expect(resolveBrandToKTCParent('arnotts')).toBeNull();
+    const result = calculateEthicsPillar({ ...baseProduct, brands: "Arnott's" });
+    expect(result.adjustments.some((a) => a.id.startsWith('ethics-v37-ktc-'))).toBe(false);
+    // Campbell itself remains independently scoreable
+    expect(checkKTCParent('Campbell Soup Company')).toBeTruthy();
+  });
+
+  test('Birds Eye does not inherit Conagra KTC scoring under ktc-2026-v2', () => {
+    expect(resolveBrandToKTCParent('Birds Eye')).toBeNull();
+    expect(resolveBrandToKTCParent('birdseye')).toBeNull();
+    const result = calculateEthicsPillar({ ...baseProduct, brands: 'Birds Eye' });
+    expect(result.adjustments.some((a) => a.id.startsWith('ethics-v37-ktc-'))).toBe(false);
+    expect(checkKTCParent('Conagra Brands, Inc.')).toBeTruthy();
+  });
+
+  test('unqualified Tulip does not inherit Danish Crown BBFAW scoring', () => {
+    expect(resolveBrandToParent('Tulip')).toBeNull();
+    expect(resolveBrandToParent('tulip')).toBeNull();
+    const result = calculateEthicsPillar({ ...baseProduct, brands: 'Tulip' });
+    expect(result.adjustments.some((a) => a.id.startsWith('ethics-v37-bbfaw-'))).toBe(false);
+  });
+
+  test('Magnum retains frozen Unilever KTC attribution (TMICC divergence preserved)', () => {
+    const resolved = resolveBrandToKTCParent('Magnum');
+    expect(resolved?.parentName).toBe('Unilever plc');
   });
 });

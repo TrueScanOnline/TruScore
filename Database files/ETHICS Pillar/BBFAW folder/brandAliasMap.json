@@ -42,20 +42,6 @@
     "notes": "Retailer own-brand packaged food"
   },
   {
-    "parent_entity_exact": "Danish Crown AmbA",
-    "canonical_brand": "Tulip",
-    "aliases_csv": "tulip,danish crown",
-    "brand_type": "Consumer brand / producer label",
-    "au_nz_relevance": "High",
-    "mapping_confidence": "High",
-    "seed_status": "Seeded",
-    "tier_2024": 3,
-    "impact_2024": "D",
-    "tier_delta_vs_2023": 1,
-    "impact_delta_vs_2023": 1,
-    "notes": "Packaged meat brands"
-  },
-  {
     "parent_entity_exact": "Fonterra",
     "canonical_brand": "Anchor",
     "aliases_csv": "anchor,mainland,anlene,anmum,western star",
