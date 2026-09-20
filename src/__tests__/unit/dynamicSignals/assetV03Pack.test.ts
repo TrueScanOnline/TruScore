@@ -35,8 +35,18 @@ import type { DynamicSignalPublicationRecord } from '../../../dynamicSignals/pub
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const PACK = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.3', 'input');
-const FAM = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.2');
+const FAM = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.3');
 const GL002_TARGETS = ['TGT-020', 'TGT-021', 'TGT-022', 'TGT-023', 'TGT-024', 'TGT-025'];
+const NEW_SIGNALS = new Set([
+  'SIG-SR-AU-005',
+  'SIG-SR-AU-006',
+  'SIG-SR-AU-007',
+  'SIG-SR-AU-008',
+  'SIG-SR-NZ-004',
+  'SIG-SR-NZ-005',
+  'SIG-SR-NZ-006',
+  'SIG-IN-GL-003',
+]);
 
 function loadV03Pack(): AssetPackParsed {
   const read = (p: string) => parseCsv(fs.readFileSync(p, 'utf8'));
@@ -144,13 +154,20 @@ describe('cocoa_chocolate product_scope_guard', () => {
 });
 
 describe('Dynamic Signals Asset v0.3 pack', () => {
-  it('validates and loads workbook counts (14 sources / 18 signals / 27 targets)', () => {
+  it('validates refreshed pack counts (14 sources / 44 signals / 62 targets)', () => {
     const pack = loadV03Pack();
     expect(pack.sources).toHaveLength(14);
-    expect(pack.signals).toHaveLength(18);
-    expect(pack.targets).toHaveLength(27);
+    expect(pack.signals).toHaveLength(44);
+    expect(pack.targets).toHaveLength(62);
     expect(pack.sources.some((s) => s.source_channel_id === 'SRC-FOOD-SAFETY-NEWS')).toBe(true);
-    expect(pack.signals.every((s) => s.signal_publication_state === 'publishable')).toBe(true);
+    const predecessors = pack.signals.filter(
+      (s) =>
+        !(s.signal_id ?? '').includes('-20260918') && !NEW_SIGNALS.has(s.signal_id ?? '')
+    );
+    expect(predecessors).toHaveLength(18);
+    expect(predecessors.every((s) => s.signal_publication_state === 'candidate')).toBe(true);
+    expect(pack.signals.filter((s) => (s.signal_id ?? '').endsWith('-20260918'))).toHaveLength(18);
+    expect(pack.signals.filter((s) => NEW_SIGNALS.has(s.signal_id ?? ''))).toHaveLength(8);
   });
 
   it('adding Food Safety News does not itself create a Signal', () => {
@@ -169,7 +186,7 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
     );
   });
 
-  it('new Food Safety Signals remain restricted to product/date scope and have no invented GTINs', () => {
+  it('Food Safety Signals remain product/date scoped and invent no GTINs', () => {
     const pack = loadV03Pack();
     const vogel = pack.signals.find((s) => s.signal_id === 'SIG-SR-NZ-003')!;
     const chen = pack.signals.find((s) => s.signal_id === 'SIG-SR-AU-004')!;
@@ -178,9 +195,9 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
 
     const vogelT = pack.targets.find((t) => t.signal_target_id === 'TGT-028')!;
     const chenT = pack.targets.find((t) => t.signal_target_id === 'TGT-029')!;
-    expect(vogelT.canonical_target_id).toBe('');
+    expect(vogelT.canonical_target_id).toBe('PF_VOGELS_MPI_METAL_20260811');
+    expect(vogelT.resolution_status).toBe('resolved');
     expect(chenT.canonical_target_id).toBe('');
-    expect(vogelT.resolution_status).toBe('needs_review');
     expect(chenT.resolution_status).toBe('needs_review');
     expect(
       requiresFoodRecallMatcherEligibility(
@@ -197,15 +214,11 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
       )
     ).toBe(true);
 
+    // Asset matcher must not invent exact GTIN matches for Safety product targets.
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack: {
         ...pack,
-        signals: withPublishable(pack.signals, ['SIG-SR-NZ-003', 'SIG-SR-AU-004']),
-        targets: pack.targets.map((t) =>
-          t.signal_target_id === 'TGT-028' || t.signal_target_id === 'TGT-029'
-            ? { ...t, resolution_status: 'resolved', canonical_target_id: 'SHOULD_NOT_INVENT' }
-            : t
-        ),
+        signals: withPublishable(pack.signals, ['SIG-SR-NZ-003-20260918', 'SIG-SR-AU-004-20260918']),
       },
       identity: {
         barcode: 'SHOULD_NOT_INVENT',
@@ -214,11 +227,14 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
         product_family_ids: [],
         scanMarketPublic: 'NZ',
       },
-      evaluationClock: { nowIso: () => '2026-08-10T12:00:00.000Z' },
+      evaluationClock: { nowIso: () => '2026-09-18T12:00:00.000Z' },
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-SR-NZ-003' || r.signal_id === 'SIG-SR-AU-004')).toBe(
-      false
-    );
+    expect(
+      recs.some(
+        (r) =>
+          r.signal_id === 'SIG-SR-NZ-003-20260918' || r.signal_id === 'SIG-SR-AU-004-20260918'
+      )
+    ).toBe(false);
   });
 });
 
@@ -285,7 +301,7 @@ describe('SIG-IN-GL-002 v0.3 corporate targets + cocoa_chocolate guard', () => {
     expect(streets.some((r) => r.signal_id === 'SIG-IN-GL-002')).toBe(false);
   });
 
-  it('resolved targets on SIG-IN-GL-002 match for cocoa/chocolate product under named parent', () => {
+  it('resolved successor SIG-IN-GL-002-20260918 matches for cocoa/chocolate product under named parent', () => {
     const pack = loadV03Pack();
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack,
@@ -297,15 +313,15 @@ describe('SIG-IN-GL-002 v0.3 corporate targets + cocoa_chocolate guard', () => {
         scanMarketPublic: 'AU',
         productScopeEvidence: { product_name: 'Dairy Milk Chocolate' },
       },
-      evaluationClock: { nowIso: () => '2026-08-10T12:00:00.000Z' },
+      evaluationClock: { nowIso: () => '2026-09-18T12:00:00.000Z' },
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-002')).toBe(true);
+    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-002-20260918')).toBe(true);
   });
 
   it('needs_review targets still fail closed when overlaid', () => {
     const pack = loadV03Pack();
     const overridden = pack.targets.map((t) =>
-      t.signal_id === 'SIG-IN-GL-002' ? { ...t, resolution_status: 'needs_review' } : t
+      t.signal_id === 'SIG-IN-GL-002-20260918' ? { ...t, resolution_status: 'needs_review' } : t
     );
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack: { ...pack, targets: overridden },
@@ -317,9 +333,9 @@ describe('SIG-IN-GL-002 v0.3 corporate targets + cocoa_chocolate guard', () => {
         scanMarketPublic: 'AU',
         productScopeEvidence: { product_name: 'Dairy Milk Chocolate' },
       },
-      evaluationClock: { nowIso: () => '2026-08-10T12:00:00.000Z' },
+      evaluationClock: { nowIso: () => '2026-09-18T12:00:00.000Z' },
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-002')).toBe(false);
+    expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-002-20260918')).toBe(false);
   });
 });
 

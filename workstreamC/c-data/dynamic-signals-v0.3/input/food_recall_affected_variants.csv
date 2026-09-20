@@ -1,1 +1,19 @@
 recall_notice_id,recall_variant_id,gtin,listed_batch_codes,gtin_verification_status,official_product_name,pack_size,notes
+RN-FSANZ-CHICKADEES-20260710,RV-CHICKADEES-MULTIPACK-6X19G,,listed date markings on FSANZ notice,unverified,Chickadees Multipack,6x19g (114g),GTIN not on FSANZ notice
+RN-FSANZ-CHICKADEES-20260710,RV-CHICKADEES-190G,,listed date marking on FSANZ notice,unverified,Chickadees,190g,GTIN not on FSANZ notice
+RN-FSANZ-CHICKADEES-20260710,RV-CHICKADEES-90G,,listed date marking on FSANZ notice,unverified,Chickadees,90g,GTIN not on FSANZ notice
+RN-FSANZ-CHICKADEES-20260710,RV-CHICKADEES-45G,,listed date marking on FSANZ notice,unverified,Chickadees,45g,GTIN not on FSANZ notice
+RN-FSANZ-ALLENS-INSIDEOUTS-20260602,RV-ALLENS-INSIDEOUTS-130G,,listed batch numbers and date marking,unverified,Allen's iNSiDE OUTS,130g,GTIN not governed
+RN-MPI-PAMS-LASAGNE-20260227,RV-PAMS-LASAGNE-1.3KG,,USE BY 01MAY26 (incorrect; correct 01MAR26),unverified,Pams Beef Lasagne,1.3kg,GTIN not governed
+RN-FSANZ-MRCHENS-20260818,RV-MRCHENS-250G,,"04/12/2026, 07/04/2027, 11/12/2027",unverified,Mr Chen's Szechuan Chilli Oil,250g,GTIN not on FSANZ notice
+RN-FSANZ-REDHAT-20260911,RV-REDHAT-80G,,best-before dates up to and including 25 February 2027,unverified,Red Hat Cookia Matcha Chocolate Flavor,80g,Candidate GTIN 4975186250043 not promoted
+RN-FSANZ-JCSEAFOOD-20260910,RV-JCSEAFOOD-275G,,best before 18 September 2026,unverified,JC Seafood Sweet Chilli and Lime Salmon Portions,275g,Woolworths WA
+RN-FSANZ-AUSTRALHERBS-20260909,RV-AUSTRALHERBS-250G,,best before 2 April 2029,unverified,Certified Organic Premium Peppermint Leaf,250g,GTIN not on FSANZ notice
+RN-FSANZ-AUSTRALHERBS-20260909,RV-AUSTRALHERBS-1KG,,best before 2 April 2029,unverified,Certified Organic Premium Peppermint Leaf,1kg,GTIN not on FSANZ notice
+RN-FSANZ-AUSTRALHERBS-20260909,RV-AUSTRALHERBS-5KG,,best before 2 April 2029,unverified,Certified Organic Premium Peppermint Leaf,5kg,GTIN not on FSANZ notice
+RN-FSANZ-AUSTRALHERBS-20260909,RV-AUSTRALHERBS-10KG,,best before 2 April 2029,unverified,Certified Organic Premium Peppermint Leaf,10kg,GTIN not on FSANZ notice
+RN-FSANZ-MONSIRE-AU-20260904,RV-MONSIRE-AU-1KG,,best before 13 October 2026,unverified,Brie Mon Sire,1kg,Foodland Brighton SA; not NZ packs
+RN-MPI-DONGWON-20260911,RV-DONGWON-340G,,all batches and all dates,unverified,Dongwon Fried Bean Curd,340g,Candidate GTIN 8801047559610 not promoted
+RN-MPI-WOOLWORTHS-MULTIGRAIN-20260908,RV-WW-MULTIGRAIN-500G,,best before 30 April 2027,unverified,Woolworths Multi Grain Cereal,500g,Exact-product only
+RN-MPI-MONSIRE-NZ-20260904,RV-MONSIRE-NZ-SABATO,,best before 26 September 2026,unverified,Mon Sire Brie,listed Sabato packs/weights,NZ only; not AU 1kg
+RN-MPI-VOGELS-20260811,RV-VOGELS-MPI-SCOPE,,exact Vogel's bread products and date markings listed by MPI 11 Aug 2026,unverified,Vogel's breads,exact MPI-listed products,Membership empty until verified GTINs

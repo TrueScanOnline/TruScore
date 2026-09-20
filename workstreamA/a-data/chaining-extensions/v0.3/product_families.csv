@@ -6,3 +6,6 @@ PF_WOOLWORTHS_CAGEFREE_EGGS_SA,Woolworths Cage-Free Eggs — SA tested range,AU,
 PF_KERI_FRUIT_JUICE_NZ,Keri Fruit Juice — pack transition,NZ,B0268,P0011,seeded,strong,DSA-v0.2|TGT-017,Only flavours/GTINs in documented 3L→2.4L transition
 PF_ANCHOR_BUTTER_NZ,Anchor Butter — historical grass-fed label,NZ,B0139,P0022,seeded,strong,DSA-v0.2|TGT-026,Historical label-period membership only
 PF_HOYTS_TURMERIC_AU,Hoyt's Turmeric — AU tested packs,AU,B0653,P0157,reviewed,strong,DSA-v0.2|TGT-012,Family definition reviewed under Hoyt's (B0653); membership empty until ABC-tested pack GTINs are verified — fail closed
+PF_VOGELS_MPI_METAL_20260811,Vogel's breads — exact MPI 11 Aug 2026 recall scope,NZ,B0175,P0040,reviewed,strong,MPI-VOGELS-METAL-20260811,Only exact products/date markings named by MPI; membership empty until verified GTINs supplied
+PF_AUSTRALHERBS_PEPPERMINT_20260909,Austral Herbs Certified Organic Premium Peppermint Leaf — listed sizes,AU,,,reviewed,strong,FSANZ-AUSTRALHERBS-20260909,250g/1kg/5kg/10kg packs BB 2029-04-02; membership empty until verified GTINs — fail closed
+PF_MONSIRE_BRIE_NZ_20260904,Mon Sire Brie — NZ Sabato listed packs,NZ,,,reviewed,strong,MPI-MONSIRE-NZ-20260904,NZ market-specific packs BB 2026-09-26; membership empty until verified GTINs; never cross-publish to AU 1kg
