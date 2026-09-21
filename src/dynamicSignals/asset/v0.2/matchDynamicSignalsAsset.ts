@@ -39,9 +39,6 @@ export type AssetScanIdentity = {
   /** Ordinary scanned product name — required for Workstream C product-scope evaluation. */
   productName: string;
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
-  quantity?: string | null;
-  product_quantity?: number | null;
-  product_quantity_unit?: string | null;
   productScopeEvidence?: CocoaChocolateProductScopeEvidence | null;
 };
 
@@ -87,17 +84,17 @@ function targetResolutionAllowsMatch(status: string): boolean {
 }
 
 /**
- * Product-scoped Safety & Regulatory recalls (batch/date/variant eligible) must not use
- * generic Asset product matching. Food Recall Matcher is the sole eligibility layer.
+ * Retired by the 22 Sep 2026 MVP recall doctrine. Safety product targets now publish
+ * through ordinary Asset matching once governed product scope matches; batch/date/GTIN
+ * eligibility is card qualification content, not a display trigger.
+ *
+ * @deprecated Always false — kept so callers/tests can assert Stage 2 gating is gone.
  */
 export function requiresFoodRecallMatcherEligibility(
-  signalClass: string,
-  targetType: string,
-  propagationMode: string
+  _signalClass: string,
+  _targetType: string,
+  _propagationMode: string
 ): boolean {
-  if (signalClass !== 'safety_regulatory') return false;
-  if (targetType === 'product' || propagationMode === 'exact_only') return true;
-  if (targetType === 'product_family' && propagationMode === 'family_members') return true;
   return false;
 }
 
@@ -119,9 +116,6 @@ function targetMatchesScan(
       brand_id: identity.brand_id,
       parent_id: identity.parent_id,
       scanMarketPublic: identity.scanMarketPublic,
-      quantity: identity.quantity,
-      product_quantity: identity.product_quantity,
-      product_quantity_unit: identity.product_quantity_unit,
       brandIsUnderAnchor: (scanBrandId, anchorBrandId) =>
         brandIsDescendantOf(pack.brandHierarchy, scanBrandId, anchorBrandId),
     });
@@ -223,14 +217,6 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
     const sigId = (tgt.signal_id ?? '').trim();
     const signal = signalById.get(sigId);
     if (!signal) continue;
-
-    const signalClass = (signal.signal_class ?? '').trim();
-    if (requiresFoodRecallMatcherEligibility(signalClass, targetType, mode)) {
-      push(
-        `food_recall_matcher_required: skip Asset publish for ${sigId} via ${tgt.signal_target_id} (class=${signalClass} type=${targetType} mode=${mode})`
-      );
-      continue;
-    }
 
     if (!targetMatchesScan(tgt, identity, input.pack)) {
       continue;

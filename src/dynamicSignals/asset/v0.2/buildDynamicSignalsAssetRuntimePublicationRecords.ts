@@ -5,7 +5,7 @@
  * Flow:
  *   scan → product data → Shared Identity brand/parent chain only
  *   → Dynamic Signals evaluates brand/entity targets + Workstream C product-scope criteria
- *   → Food Recall overlay for Safety batch/date qualification
+ *   → one ordinary Safety path; the Stage 2 recall overlay is retired (returns [])
  *
  * Must not import Node `fs` — Metro/EAS Bundle JavaScript cannot resolve it.
  */
@@ -42,6 +42,7 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
   pack?: AssetPackParsed;
   injectedBrandId?: string | null;
   injectedParentId?: string | null;
+  /** Retired Stage 2 input — accepted for call-site compatibility and never read. */
   foodRecallMarkings?: FoodRecallSubmittedMarkings | null;
   evaluationClockIso?: string;
   /** Tests: bypass producer guard */
@@ -103,9 +104,6 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     parent_id,
     productName: input.productName,
     scanMarketPublic: input.scanMarketPublic,
-    quantity: input.product?.quantity ?? null,
-    product_quantity: input.product?.product_quantity ?? null,
-    product_quantity_unit: input.product?.product_quantity_unit ?? null,
     productScopeEvidence,
   };
 
@@ -117,11 +115,11 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     evaluationClock,
   });
 
+  // Retired overlay — logs the Stage 2 supersession and contributes no records.
   const recallRecords = buildAssetGovernedFoodRecallPublicationRecords({
     pack,
     barcode: input.barcode,
     scanMarketPublic: input.scanMarketPublic,
-    foodRecallMarkings: input.foodRecallMarkings,
     evaluationClockIso: input.evaluationClockIso,
     logLines: logs,
     includeNonPublishable: input.includeNonPublishable ?? false,

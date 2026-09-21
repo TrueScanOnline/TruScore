@@ -24,6 +24,7 @@ export type EvaluateDynamicSignalsAssetInput = {
   productName: string;
   product?: Product | null;
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
+  /** Retired Stage 2 input — accepted for call-site compatibility and never evaluated. */
   foodRecallMarkings?: FoodRecallSubmittedMarkings | null;
   evaluationClockIso?: string;
   logLines?: string[];
@@ -50,7 +51,6 @@ export function evaluateDynamicSignalsAssetSafe(
       product: input.product,
       scanMarketPublic: input.scanMarketPublic,
       logLines: logs,
-      foodRecallMarkings: input.foodRecallMarkings,
       evaluationClockIso: input.evaluationClockIso,
       forceRun: input.forceRun,
     });

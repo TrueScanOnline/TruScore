@@ -6,7 +6,16 @@
 
 **Shared Identity dependency (ownership only):** `workstreamA/a-data/wave1-v0.16/` + `workstreamA/a-data/chaining-extensions/v0.3/` — canonical parents, brands, brand aliases, brand/entity hierarchy. **Not** products, product families, or GTIN→brand links.
 
-**Product-scope evaluation (this Workstream):** after ownership resolves, Dynamic Signals compares ordinary scan product fields against `input/signal_target_product_criteria.csv` (linked to `signal_targets`). Food recall batch/date facts remain in `food_recall_*` tables.
+**Product-scope evaluation (this Workstream):** after ownership resolves, Dynamic Signals compares the ordinary scan product name against `input/signal_target_product_criteria.csv` (linked to `signal_targets`). Food recall batch/date facts remain in `food_recall_*` tables as reference, not as display gates.
+
+## MVP recall doctrine (2026-09-22)
+
+Governing note: [`docs/uat/FOUNDER_MVP_RECALL_DECISIONS_20260922_SUPERSESSION.md`](../../../docs/uat/FOUNDER_MVP_RECALL_DECISIONS_20260922_SUPERSESSION.md).
+
+- `signal_target_product_criteria.csv` holds **alternative reviewed `product_name` descriptors** for one recalled product line. Any single descriptor match is sufficient (OR).
+- There is **no `scope_group_id`** column and **no `pack_quantity`** row. Pack size, batch, date, retailer and GTIN are card qualification content carried by the Signal's editorial fields, never display triggers.
+- Every reviewed row must carry `required_brand_id` or `required_parent_id` plus `market_key`; unanchored rows fail closed.
+- **Stage 2 is retired** from the active consumer path: no match-state progression, no manual batch/best-before entry, no `needs_batch_entry`. Safety Signals publish through ordinary Asset matching.
 
 ## Phase C refresh (2026-09-18)
 
@@ -38,7 +47,7 @@ There is **no** governed v0.3.2 asset; documentation must not reference v0.3.2.
 | Shared Identity / Chaining | Whose brand/owner is this? |
 | Dynamic Signals (this pack) | Does this approved Signal apply to the scanned product? |
 
-Product-name phrases, pack size, market, optional verified GTIN discriminators, and recall batch/date qualifications are **Signal scope**, not Chaining identities.
+Product-name phrases and market are **Signal scope**, not Chaining identities. Pack size, verified GTINs and recall batch/date qualifications are Signal *content*, not scope.
 
 ## Food Safety News access rule
 

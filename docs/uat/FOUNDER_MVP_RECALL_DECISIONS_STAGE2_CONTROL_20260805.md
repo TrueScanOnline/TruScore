@@ -1,3 +1,9 @@
+> **SUPERSEDED for MVP by [`FOUNDER_MVP_RECALL_DECISIONS_20260922_SUPERSESSION.md`](./FOUNDER_MVP_RECALL_DECISIONS_20260922_SUPERSESSION.md) (22 September 2026).**
+> The Stage 2 five-state match control, manual batch/best-before entry and markings-driven severity
+> described below are retired from the active consumer path. MVP displays a governed recall on
+> product/product-line match after Chaining; pack size, batch, date and retailer are card qualification
+> content. This document is retained unchanged as historical provenance.
+
 # Founder MVP recall decisions — Stage 2 control note
 
 **Date:** 5 August 2026  

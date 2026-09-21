@@ -1,6 +1,10 @@
 /**
+ * @deprecated Historical provenance only — not rendered on the consumer Result path.
+ * Superseded by docs/uat/FOUNDER_MVP_RECALL_DECISIONS_20260922_SUPERSESSION.md: a governed
+ * recall displays on product/product-line match after Chaining, and affected batch/date/size
+ * is card qualification content rather than manual consumer input.
+ *
  * Stage 2 MVP — manual batch + best-before month/year entry for food recalls.
- * Provisional UI — founder/legal copy approval required before launch.
  *
  * Internal field state resets whenever `barcode` changes so prior product markings
  * never carry across scans.

@@ -133,22 +133,28 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
     expect(miss.recs.some((r) => r.signal_id === 'SIG-IN-GL-003')).toBe(false);
   });
 
-  it('Chickadees 190g ordinary scan fires Safety successor with batch_check_required; unrelated snack does not', () => {
+  it('Chickadees ordinary scan fires the Safety successor with no batch markings; unrelated snack does not', () => {
     const hit = runScan({
       barcode: '9410000333333',
       productName: 'Chickadees 190g',
       brands: 'Chickadees',
       market: 'AU',
     });
-    expect(
-      hit.logs.some(
-        (l) => l.includes('identity_upgrade') && l.includes('product_scope_match')
-      )
-    ).toBe(true);
     const card = hit.recs.find((r) => r.signal_id === 'SIG-SR-AU-001-20260918');
     expect(card).toBeTruthy();
-    expect(card!.food_recall?.match_state).toBe('batch_check_required');
-    expect(card!.food_recall?.needs_batch_entry).toBe(true);
+    expect(card!.food_recall?.needs_batch_entry).toBeFalsy();
+    expect(card!.skeleton_card_copy?.title_display).toBe('Recall: selected Chickadees packs');
+    expect(card!.skeleton_card_copy?.why_display).toContain('Only the listed pack sizes');
+    expect(hit.logs.some((l) => l.includes('mvp_recall: stage2_matcher_retired'))).toBe(true);
+
+    // Pack size is qualification content — absence of a size must not suppress the recall.
+    const noSize = runScan({
+      barcode: '9410000333335',
+      productName: 'Chickadees',
+      brands: 'Chickadees',
+      market: 'AU',
+    });
+    expect(noSize.recs.some((r) => r.signal_id === 'SIG-SR-AU-001-20260918')).toBe(true);
 
     const miss = runScan({
       barcode: '9410000333334',
@@ -177,16 +183,17 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
     expect(miss.recs.some((r) => r.signal_id === 'SIG-SR-NZ-005')).toBe(false);
   });
 
-  it('AU Mon Sire 1kg does not cross-publish to NZ Mon Sire Brie family', () => {
-    // AU exact Safety target has no product-scope criteria and no verified GTIN — fail closed
-    // (aligned with phaseE.refresh20260918 Mon Sire market-separation contract).
+  it('Mon Sire Brie fires in its own market only; AU and NZ recalls never cross-publish', () => {
     const au = runScan({
       barcode: '9300000555555',
       productName: 'Brie Mon Sire 1kg',
       brands: 'Mon Sire',
       market: 'AU',
     });
-    expect(au.recs.some((r) => r.signal_id === 'SIG-SR-AU-008')).toBe(false);
+    const auCard = au.recs.find((r) => r.signal_id === 'SIG-SR-AU-008');
+    expect(auCard).toBeTruthy();
+    // Retailer / pack size / best-before stay on the card as qualification content.
+    expect(auCard!.skeleton_card_copy?.why_display).toContain('Foodland Brighton');
     expect(au.recs.some((r) => r.signal_id === 'SIG-SR-NZ-006')).toBe(false);
 
     const nz = runScan({
@@ -195,21 +202,23 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
       brands: 'Mon Sire',
       market: 'NZ',
     });
-    // NZ family may surface via Workstream C product-scope (brie) after brand resolve.
+    expect(nz.recs.map((r) => r.signal_id)).toContain('SIG-SR-NZ-006');
     expect(nz.recs.some((r) => r.signal_id === 'SIG-SR-AU-008')).toBe(false);
-    if (nz.recs.some((r) => r.signal_id === 'SIG-SR-NZ-006')) {
-      expect(nz.recs.map((r) => r.signal_id)).toContain('SIG-SR-NZ-006');
-    }
   });
 
-  it("Vogel's Original Mixed Grain Toast 750g fires SIG-SR-NZ-003-20260918; unrelated Vogel's loaf does not", () => {
-    const hit = runScan({
-      barcode: '9410000666666',
-      productName: "Vogel's Original Mixed Grain Toast 750g",
-      brands: "Vogel's",
-      market: 'NZ',
-    });
-    expect(hit.recs.map((r) => r.signal_id)).toContain('SIG-SR-NZ-003-20260918');
+  it("Vogel's recalled product line fires with or without the MPI pack size; unrelated loaf does not", () => {
+    for (const productName of [
+      "Vogel's Original Mixed Grain Toast 750g",
+      "Vogel's Original Mixed Grain Toast",
+    ]) {
+      const hit = runScan({
+        barcode: '9410000666666',
+        productName,
+        brands: "Vogel's",
+        market: 'NZ',
+      });
+      expect(hit.recs.map((r) => r.signal_id)).toContain('SIG-SR-NZ-003-20260918');
+    }
 
     const miss = runScan({
       barcode: '9410000666667',
@@ -218,6 +227,12 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
       market: 'NZ',
     });
     expect(miss.recs.some((r) => r.signal_id === 'SIG-SR-NZ-003-20260918')).toBe(false);
+  });
+
+  it('Result screen renders no Stage 2 batch/date markings entry', () => {
+    const screen = fs.readFileSync(path.join(ROOT, 'app/result/[barcode].tsx'), 'utf8');
+    expect(screen).not.toMatch(/FoodRecallMarkingsEntry/);
+    expect(screen).not.toMatch(/food_recall_needs_batch_entry/);
   });
 
   it('ungoverned brand/product fails closed (no speculative Signal)', () => {

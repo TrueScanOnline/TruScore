@@ -73,6 +73,15 @@ describe('Shared Identity chaining architecture boundary', () => {
     }
   });
 
+  it('criteria carry no scope_group_id and no pack_quantity rows (MVP product-line scope)', () => {
+    const header = fs.readFileSync(CRITERIA, 'utf8').split(/\r?\n/)[0];
+    expect(header).not.toMatch(/scope_group_id/);
+    const rows = parseCsv(fs.readFileSync(CRITERIA, 'utf8'));
+    for (const r of rows) {
+      expect((r.match_field ?? '').trim()).toBe('product_name');
+    }
+  });
+
   it('product Signals cannot match when brand_id and parent_id are both null', () => {
     const maps = buildSignalProductScopeMapsFromCsvRecords(
       parseCsv(fs.readFileSync(CRITERIA, 'utf8'))

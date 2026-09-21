@@ -1,6 +1,7 @@
 /**
- * Ordinary-scan corpus reassessment after Chaining/Signals boundary restore.
- * Chaining resolves brand/parent only; product scope is Workstream C criteria.
+ * Ordinary-scan corpus reassessment under the MVP recall doctrine (22 Sep 2026).
+ * Chaining resolves brand/parent only; product scope is alternative reviewed
+ * Workstream C product_name descriptors (OR) with no pack/batch/date gating.
  */
 import fs from 'fs';
 import path from 'path';
@@ -108,9 +109,6 @@ function main() {
     let market: 'AU' | 'NZ' = 'AU';
     let categories_tags: string[] | undefined;
     let ingredients_text: string | undefined;
-    let quantity: string | undefined;
-    let product_quantity: number | undefined;
-    let product_quantity_unit: string | undefined;
     let note = '';
 
     if (preferred) {
@@ -120,47 +118,28 @@ function main() {
       market = marketRaw === 'NZ' || (marketRaw.includes('NZ') && !marketRaw.includes('AU')) ? 'NZ' : 'AU';
 
       if (type === 'product' || type === 'product_family') {
+        // MVP scope: alternative reviewed product_name descriptors (OR). One is enough
+        // for the ordinary-scan fixture; pack size is card content, not a trigger.
         const crits = criteria.filter(
-          (c) => c.signal_target_id === tid && (c.review_state || '') === 'reviewed'
+          (c) =>
+            c.signal_target_id === tid &&
+            (c.review_state || '') === 'reviewed' &&
+            (c.match_field || 'product_name') === 'product_name'
         );
-        // Prefer one complete scope_group (AND within group) for the ordinary-scan fixture.
-        const byGroup = new Map<string, typeof crits>();
-        for (const c of crits) {
-          const gid = (c.scope_group_id || `${tid}__${c.criterion_id}`).trim();
-          const prev = byGroup.get(gid) ?? [];
-          prev.push(c);
-          byGroup.set(gid, prev);
-        }
-        const group =
-          [...byGroup.values()].sort((a, b) => b.length - a.length || b.reduce((n, r) => n + (r.match_value || '').length, 0) - a.reduce((n, r) => n + (r.match_value || '').length, 0))[0] ??
-          [];
-        if (group.length > 0) {
-          const anchor = group[0];
+        const anchor = [...crits].sort(
+          (a, b) => (b.match_value || '').length - (a.match_value || '').length
+        )[0];
+        if (anchor) {
           const brand = brandNameById(brands, (anchor.required_brand_id || '').trim());
           brandsField = brand;
-          const nameParts = group
-            .filter((c) => (c.match_field || 'product_name') === 'product_name')
-            .map((c) => c.match_value || '');
-          const qtyParts = group
-            .filter((c) => (c.match_field || '') === 'pack_quantity')
-            .map((c) => c.match_value || '');
-          const phrase = [...nameParts, ...qtyParts].filter(Boolean).join(' ');
+          const phrase = anchor.match_value || '';
           productName =
             brand && !phrase.toLowerCase().includes(brand.toLowerCase().replace(/'s$/, ''))
               ? `${brand} ${phrase}`
               : phrase;
-          // Prefer structured quantity fields when pack_quantity is a group requirement.
-          if (qtyParts[0]) {
-            quantity = qtyParts[0];
-            const m = String(qtyParts[0]).trim().match(/^([\d.]+)\s*(g|kg|mg|ml|l|cl)$/i);
-            if (m) {
-              product_quantity = Number(m[1]);
-              product_quantity_unit = m[2].toLowerCase();
-            }
-          }
           if ((anchor.market_key || '') === 'NZ') market = 'NZ';
           if ((anchor.market_key || '') === 'AU') market = 'AU';
-          note = `from scope group ${anchor.scope_group_id || '(legacy)'} (${group.map((c) => c.criterion_id).join('+')})`;
+          note = `from reviewed descriptor ${anchor.criterion_id}`;
         } else {
           productName = preferred.target_label || tid;
           note = 'no reviewed product-scope criteria — expect fail closed';
@@ -214,9 +193,6 @@ function main() {
           brands: brandsField,
           categories_tags,
           ingredients_text,
-          quantity,
-          product_quantity,
-          product_quantity_unit,
         }),
         scanMarketPublic: market,
         pack,
@@ -275,7 +251,7 @@ function main() {
   const out = {
     generated_at: new Date().toISOString(),
     clock: CLOCK,
-    architecture: 'chaining_brand_only_plus_workstream_c_product_scope',
+    architecture: 'mvp_recall_chaining_brand_only_plus_product_line_descriptors',
     total_signals: results.length,
     works_ordinary_scan: works.length,
     held: held.length,
@@ -297,7 +273,7 @@ function main() {
   const outPath = path.join(
     ROOT,
     'reports',
-    'SCOPE_GROUPS_MANDATORY_IDENTITY_ORDINARY_SCAN_CORPUS_20260922.json'
+    'MVP_RECALL_SIMPLIFICATION_ORDINARY_SCAN_CORPUS_20260922.json'
   );
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2));
   console.log(

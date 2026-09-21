@@ -177,20 +177,21 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
     expect(vogelT.resolution_status).toBe('resolved');
     expect((chenT.canonical_target_id ?? '').trim().length).toBeGreaterThan(0);
     expect(chenT.resolution_status).toBe('resolved');
+    // MVP doctrine: Stage 2 matcher gating is retired — governed product scope is the trigger.
     expect(
       requiresFoodRecallMatcherEligibility(
         vogel.signal_class ?? '',
         vogelT.target_type ?? '',
         vogelT.propagation_mode ?? ''
       )
-    ).toBe(true);
+    ).toBe(false);
     expect(
       requiresFoodRecallMatcherEligibility(
         chen.signal_class ?? '',
         chenT.target_type ?? '',
         chenT.propagation_mode ?? ''
       )
-    ).toBe(true);
+    ).toBe(false);
 
     // Asset matcher must not invent Safety product matches without ordinary scan fields / brand.
     const recs = buildDynamicSignalsAssetPublicationRecords({

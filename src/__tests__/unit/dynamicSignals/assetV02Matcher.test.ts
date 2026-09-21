@@ -1,4 +1,4 @@
-import fs from 'fs';
+﻿import fs from 'fs';
 import path from 'path';
 import { parseCsv, type CsvRecord } from '../../../identity/workstreamA/csv';
 import {
@@ -7,6 +7,7 @@ import {
   type AssetPackParsed,
 } from '../../../dynamicSignals/asset/v0.2/matchDynamicSignalsAsset';
 import { buildDynamicSignalsAssetRuntimePublicationRecords } from '../../../dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords';
+import { buildAssetGovernedFoodRecallPublicationRecords } from '../../../dynamicSignals/asset/v0.2/buildAssetGovernedFoodRecallPublicationRecords';
 import { buildProductScanResult } from '../../../services/buildProductScanResult';
 import { flattenSignalsOrdered, dedupeSignalCards } from '../../../utils/scanResultPresentation';
 import { resolveReviewedRetailChainUnified } from '../../../workstreamC/skeleton/resolveWorkstreamCRetailChain';
@@ -40,7 +41,7 @@ function loadBasePack(criteria?: CsvRecord[]): AssetPackParsed {
   const pack = loadAssetPackFromRoots({
     packRoot: PACK,
     famRoot: FAM,
-    // v0.2 pack has no criteria file — reuse migrated v0.3 criteria keyed by TGT-* ids.
+    // v0.2 pack has no criteria file â€” reuse migrated v0.3 criteria keyed by TGT-* ids.
     signalTargetProductCriteria: criteria ?? readCsvFile(CRITERIA_V03),
   });
   return pack;
@@ -72,7 +73,7 @@ function loadA() {
   };
 }
 
-describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
+describe('Dynamic Signals Asset v0.2 â€” remediation matcher', () => {
   const prevAsset = process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET;
   const prevSkel = process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT;
   afterEach(() => {
@@ -159,23 +160,20 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
     expect(flat.some((c) => c.id === 'SIG-IN-GL-001')).toBe(true);
   });
 
-  it('batch/date-limited Safety recall cannot become a generic barcode-wide Asset publish', () => {
+  it('Stage 2 matcher gating is retired: Safety product targets publish through ordinary Asset matching', () => {
     expect(
       requiresFoodRecallMatcherEligibility('safety_regulatory', 'product', 'exact_only')
-    ).toBe(true);
+    ).toBe(false);
+    expect(
+      requiresFoodRecallMatcherEligibility('safety_regulatory', 'product_family', 'family_members')
+    ).toBe(false);
 
     let pack = loadBasePack();
     pack = {
       ...pack,
       signals: withPublishable(pack.signals, ['SIG-SR-AU-002']),
       targets: pack.targets.map((t) =>
-        t.signal_target_id === 'TGT-005'
-          ? {
-              ...t,
-              canonical_target_id: '9312345678901',
-              resolution_status: 'resolved',
-            }
-          : t
+        t.signal_target_id === 'TGT-005' ? { ...t, resolution_status: 'resolved' } : t
       ),
     };
     const logs: string[] = [];
@@ -190,8 +188,10 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
       },
       logLines: logs,
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-002')).toBe(false);
-    expect(logs.some((l) => l.includes('food_recall_matcher_required'))).toBe(true);
+    const card = recs.find((r) => r.signal_id === 'SIG-SR-AU-002');
+    expect(card).toBeTruthy();
+    expect(card!.signal_class).toBe('safety_regulatory');
+    expect(logs.some((l) => l.includes('food_recall_matcher_required'))).toBe(false);
   });
 
   it('exact-product positive for non-Safety News still works; sibling negative', () => {
@@ -461,7 +461,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
     expect(result.scores?.pillars).toEqual({ body: 14, planet: 13, ethics: 14, open: 14 });
   });
 
-  it('Finding B retired: GTIN→brand scaffold is not used for ownership resolution', () => {
+  it('Finding B retired: GTINâ†’brand scaffold is not used for ownership resolution', () => {
     const { aData, brandRows, aliasRows } = loadA();
     const aData2 = {
       ...aData,
@@ -494,7 +494,12 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
   });
 });
 
-describe('Dynamic Signals Asset v0.2 — sole production Signal-content authority', () => {
+/**
+ * MVP recall doctrine (22 Sep 2026): a governed Safety Signal displays when the scanned
+ * product line matches after Chaining. Affected pack size, batch, date and retailer are
+ * card qualification content carried by the Signal's own editorial copy.
+ */
+describe('Dynamic Signals Asset v0.2 — MVP Safety recall path', () => {
   const prevAsset = process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET;
   const prevSkel = process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT;
   const prevRecall = process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH;
@@ -505,256 +510,116 @@ describe('Dynamic Signals Asset v0.2 — sole production Signal-content authorit
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = prevRecall;
   });
 
-  const governedFixtureGtin = '9410000002701';
-  const governedNoticeId = 'RN_TEST_ASSET_GOVERNED_2026';
-  const relatedFamilyGtin = '9410000009991';
-
-  function packWithGovernedRecall(overrides?: {
-    eligibility_status?: string;
-    includeVariants?: boolean;
-    publishable?: boolean;
-  }): AssetPackParsed {
+  /** SIG-SR-AU-002 / TGT-005: Allen's iNSiDE OUTS, AU, brand B0059 / parent P0008. */
+  function safetyPack(): AssetPackParsed {
     const pack = loadBasePack();
-    const publishable = overrides?.publishable !== false;
     return {
       ...pack,
-      signals: publishable ? withPublishable(pack.signals, ['SIG-SR-AU-002']) : pack.signals,
-      recallEligibility: [
-        {
-          signal_id: 'SIG-SR-AU-002',
-          recall_notice_id: governedNoticeId,
-          eligibility_status: overrides?.eligibility_status ?? 'reviewed',
-        },
-      ],
-      recallNotices:
-        overrides?.includeVariants === false
-          ? []
-          : [
-              {
-                recall_notice_id: governedNoticeId,
-                signal_id: 'SIG-SR-AU-002',
-                official_source_url:
-                  'https://www.foodstandards.gov.au/food-recalls/recall-alert/nestle-australia-ltd-allens-inside-outs-130g',
-                hazard: 'May contain plastic.',
-                consumer_action: 'Do not eat. Return for refund.',
-                bb_month: 6,
-                bb_year: 2027,
-                affected_variants: [
-                  {
-                    recall_variant_id: 'RV_TEST_ALLENS_130G',
-                    gtin: governedFixtureGtin,
-                    listed_batch_codes: ['6072T941', '6088T941'],
-                    gtin_verification_status: 'controlled_test_synthetic',
-                    official_product_name: "Allen's iNSiDE OUTS 130g (test fixture)",
-                    pack_size: '130g',
-                  },
-                ],
-                related_family_gtins: [
-                  {
-                    gtin: relatedFamilyGtin,
-                    gtin_verification_status: 'controlled_test_synthetic',
-                  },
-                ],
-              },
-            ],
+      signals: withPublishable(pack.signals, ['SIG-SR-AU-002']),
+      targets: pack.targets.map((t) =>
+        t.signal_target_id === 'TGT-005' ? { ...t, resolution_status: 'resolved' } : t
+      ),
     };
   }
 
-  it('Asset disabled / no governed recall → no production Safety Signal', () => {
+  function runScan(input: {
+    productName: string;
+    market: 'AU' | 'NZ';
+    barcode?: string;
+    logs?: string[];
+  }) {
+    return buildDynamicSignalsAssetRuntimePublicationRecords({
+      barcode: input.barcode ?? '9312345678901',
+      productName: input.productName,
+      scanMarketPublic: input.market,
+      injectedBrandId: 'B0059',
+      injectedParentId: 'P0008',
+      pack: safetyPack(),
+      forceRun: true,
+      logLines: input.logs,
+    });
+  }
+
+  it('product-line match publishes one Safety card using the Signal editorial copy', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const recs = runScan({ productName: "Allen's iNSiDE OUTS 130g", market: 'AU' });
+    const safety = recs.filter((r) => r.signal_id === 'SIG-SR-AU-002');
+    expect(safety).toHaveLength(1);
+    expect(safety[0].skeleton_card_copy?.title_display).toBe("Recall: Allen's iNSiDE OUTS 130g");
+    expect(safety[0].skeleton_card_copy?.body_display).toContain('may contain plastic');
+    expect(safety[0].skeleton_card_copy?.why_display).toContain('Only the 130g product');
+  });
+
+  it('no batch/date markings are required, and no batch entry is ever requested', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const card = runScan({ productName: "Allen's iNSiDE OUTS 130g", market: 'AU' }).find(
+      (r) => r.signal_id === 'SIG-SR-AU-002'
+    );
+    expect(card).toBeTruthy();
+    expect(card!.food_recall?.needs_batch_entry).toBeFalsy();
+    expect(card!.food_recall?.match_state).toBeUndefined();
+  });
+
+  it('absence of batch, date or pack size does not suppress a relevant recall', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    for (const productName of ["Allen's iNSiDE OUTS", "Allen's iNSiDE OUTS 130g"]) {
+      const recs = runScan({ productName, market: 'AU' });
+      expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-002')).toBe(true);
+    }
+  });
+
+  it('sibling product line does not fire', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const recs = runScan({ productName: "Allen's Party Mix 190g", market: 'AU' });
+    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-002')).toBe(false);
+  });
+
+  it('wrong market does not fire', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const recs = runScan({ productName: "Allen's iNSiDE OUTS 130g", market: 'NZ' });
+    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-002')).toBe(false);
+  });
+
+  it('Stage 2 recall overlay contributes nothing and records its supersession', () => {
+    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
+    const logs: string[] = [];
+    runScan({ productName: "Allen's iNSiDE OUTS 130g", market: 'AU', logs });
+    expect(logs.some((l) => l.includes('mvp_recall: stage2_matcher_retired'))).toBe(true);
+
+    expect(
+      buildAssetGovernedFoodRecallPublicationRecords({
+        pack: safetyPack(),
+        barcode: '9312345678901',
+        scanMarketPublic: 'AU',
+      })
+    ).toHaveLength(0);
+  });
+
+  it('Asset disabled → no production Safety Signal', () => {
     process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '0';
     process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = '0';
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const logs: string[] = [];
     const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
-      barcode: governedFixtureGtin,
-      productName: 'Test',
+      barcode: '9312345678901',
+      productName: "Allen's iNSiDE OUTS 130g",
       scanMarketPublic: 'AU',
-      foodRecallMarkings: { batchCodeRaw: '6072T941', bestBeforeMonth: 6, bestBeforeYear: 2027 },
-      logLines: logs,
     });
     expect(recs).toHaveLength(0);
-    expect(recs.some((r) => r.signal_class === 'safety_regulatory')).toBe(false);
   });
 
-  it('Asset active + historical MILO pack present → MILO does not surface unless MILO is a governed Asset Signal', () => {
+  it('historical MILO pack cannot originate a production Signal', () => {
     process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '1';
     process.env.EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT = '0';
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const miloGtin = MILO_AFFECTED_VARIANTS[0].gtin;
-    const logs: string[] = [];
     const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
-      barcode: miloGtin,
+      barcode: MILO_AFFECTED_VARIANTS[0].gtin,
       productName: 'MILO Dipped',
       scanMarketPublic: 'AU',
-      foodRecallMarkings: {
-        batchCodeRaw: MILO_AFFECTED_VARIANTS[0].listed_batch_codes[0],
-        bestBeforeMonth: 8,
-        bestBeforeYear: 2026,
-      },
       pack: loadBasePack(),
       forceRun: true,
-      logLines: logs,
     });
     expect(recs.some((r) => r.signal_id === MILO_SIGNAL_ID)).toBe(false);
     expect(recs.some((r) => r.signal_id === 'SIG_REG_AU_001')).toBe(false);
-    expect(logs.some((l) => l.includes('no Asset recall_eligibility') || l.includes('no governed'))).toBe(
-      true
-    );
-  });
-
-  it('affected GTIN + matching batch/date → confirmed_affected', () => {
-    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const pack = packWithGovernedRecall();
-    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
-      barcode: governedFixtureGtin,
-      productName: "Allen's iNSiDE OUTS",
-      scanMarketPublic: 'AU',
-      foodRecallMarkings: {
-        batchCodeRaw: '6072T941',
-        bestBeforeMonth: 6,
-        bestBeforeYear: 2027,
-      },
-      pack,
-      forceRun: true,
-    });
-    const safety = recs.find((r) => r.signal_id === 'SIG-SR-AU-002');
-    expect(safety?.food_recall?.match_state).toBe('confirmed_affected');
-    expect(safety?.food_recall?.severity_override).toBe('high');
-  });
-
-  it('affected GTIN + missing/partial batch/date → batch_check_required', () => {
-    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const pack = packWithGovernedRecall();
-    const missing = buildDynamicSignalsAssetRuntimePublicationRecords({
-      barcode: governedFixtureGtin,
-      productName: "Allen's iNSiDE OUTS",
-      scanMarketPublic: 'AU',
-      foodRecallMarkings: null,
-      pack,
-      forceRun: true,
-    });
-    expect(missing.find((r) => r.signal_id === 'SIG-SR-AU-002')?.food_recall?.match_state).toBe(
-      'batch_check_required'
-    );
-    expect(missing.find((r) => r.signal_id === 'SIG-SR-AU-002')?.food_recall?.needs_batch_entry).toBe(
-      true
-    );
-
-    const partial = buildDynamicSignalsAssetRuntimePublicationRecords({
-      barcode: governedFixtureGtin,
-      productName: "Allen's iNSiDE OUTS",
-      scanMarketPublic: 'AU',
-      foodRecallMarkings: { batchCodeRaw: '6072T941' },
-      pack,
-      forceRun: true,
-    });
-    expect(partial.find((r) => r.signal_id === 'SIG-SR-AU-002')?.food_recall?.match_state).toBe(
-      'batch_check_required'
-    );
-  });
-
-  it('affected GTIN + complete unlisted batch/date → batch_not_listed; card present; never says safe', () => {
-    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const pack = packWithGovernedRecall();
-    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
-      barcode: governedFixtureGtin,
-      productName: "Allen's iNSiDE OUTS",
-      scanMarketPublic: 'AU',
-      foodRecallMarkings: {
-        batchCodeRaw: '9999XXXX',
-        bestBeforeMonth: 6,
-        bestBeforeYear: 2027,
-      },
-      pack,
-      forceRun: true,
-    });
-    const safety = recs.find((r) => r.signal_id === 'SIG-SR-AU-002');
-    expect(safety).toBeTruthy();
-    expect(safety!.food_recall?.match_state).toBe('batch_not_listed');
-    expect(safety!.food_recall?.severity_override).toBe('medium');
-    const copy = `${safety!.skeleton_card_copy?.title_display} ${safety!.skeleton_card_copy?.body_display} ${safety!.skeleton_card_copy?.why_display}`.toLowerCase();
-    expect(copy).toContain('does not independently confirm that the product is safe');
-    expect(copy).not.toMatch(/\b(is safe to|confirmed safe|product is safe\.|this product is safe)\b/);
-  });
-
-  it('reviewed recall-family member without exact affected variant → related_recall_variant_unconfirmed', () => {
-    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const pack = packWithGovernedRecall();
-    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
-      barcode: relatedFamilyGtin,
-      productName: 'Related family SKU',
-      scanMarketPublic: 'AU',
-      pack,
-      forceRun: true,
-    });
-    const safety = recs.find((r) => r.signal_id === 'SIG-SR-AU-002');
-    expect(safety?.food_recall?.match_state).toBe('related_recall_variant_unconfirmed');
-    expect(safety?.food_recall?.severity_override).toBe('low');
-  });
-
-  it('unrelated/non-member GTIN → not_applicable, no card', () => {
-    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const pack = packWithGovernedRecall();
-    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
-      barcode: '9410000000000',
-      productName: 'Unrelated product',
-      scanMarketPublic: 'AU',
-      foodRecallMarkings: {
-        batchCodeRaw: '6072T941',
-        bestBeforeMonth: 6,
-        bestBeforeYear: 2027,
-      },
-      pack,
-      forceRun: true,
-    });
-    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-002')).toBe(false);
-    expect(recs.some((r) => r.signal_class === 'safety_regulatory')).toBe(false);
-  });
-
-  it('stable card identity across batch_check_required → confirmed_affected / batch_not_listed', () => {
-    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const pack = packWithGovernedRecall();
-    const run = (markings: { batchCodeRaw?: string; bestBeforeMonth?: number; bestBeforeYear?: number } | null) =>
-      buildDynamicSignalsAssetRuntimePublicationRecords({
-        barcode: governedFixtureGtin,
-        productName: "Allen's iNSiDE OUTS",
-        scanMarketPublic: 'AU',
-        foodRecallMarkings: markings,
-        pack,
-        forceRun: true,
-      }).find((r) => r.signal_id === 'SIG-SR-AU-002')!;
-
-    const check = run(null);
-    const confirmed = run({
-      batchCodeRaw: '6072T941',
-      bestBeforeMonth: 6,
-      bestBeforeYear: 2027,
-    });
-    const notListed = run({
-      batchCodeRaw: '9999XXXX',
-      bestBeforeMonth: 6,
-      bestBeforeYear: 2027,
-    });
-    expect(check.food_recall?.match_state).toBe('batch_check_required');
-    expect(confirmed.food_recall?.match_state).toBe('confirmed_affected');
-    expect(notListed.food_recall?.match_state).toBe('batch_not_listed');
-    expect(check.dedupe_key).toBe(confirmed.dedupe_key);
-    expect(confirmed.dedupe_key).toBe(notListed.dedupe_key);
-    expect(check.dedupe_key).toContain(governedNoticeId);
-    expect(check.dedupe_key).toContain(governedFixtureGtin);
-  });
-
-  it('historical MILO pack remains incapable of originating a production Signal absent governed Asset record', () => {
-    process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const pack = loadBasePack();
-    const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
-      barcode: governedFixtureGtin,
-      productName: 'Test',
-      scanMarketPublic: 'AU',
-      foodRecallMarkings: { batchCodeRaw: '6072T941', bestBeforeMonth: 6, bestBeforeYear: 2027 },
-      pack,
-      forceRun: true,
-    });
-    expect(recs.some((r) => r.signal_class === 'safety_regulatory')).toBe(false);
   });
 });
+

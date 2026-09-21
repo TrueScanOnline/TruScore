@@ -98,8 +98,7 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
     expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-002-20260918')).toBe(false);
   });
 
-  it('AU Mon Sire exact target does not publish without verified GTIN; NZ family is market-separated', () => {
-    // Safety product/family targets require Food Recall Matcher — Asset path alone fails closed.
+  it('Mon Sire Brie publishes in its own market only; AU and NZ recalls stay separated', () => {
     const au = match({
       barcode: '9300000000001',
       brand_id: 'B0798',
@@ -107,7 +106,7 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
       scanMarketPublic: 'AU',
       productName: 'Brie Mon Sire 1kg',
     });
-    expect(au.some((r) => r.signal_id === 'SIG-SR-AU-008')).toBe(false);
+    expect(au.map((r) => r.signal_id)).toContain('SIG-SR-AU-008');
     expect(au.some((r) => r.signal_id === 'SIG-SR-NZ-006')).toBe(false);
 
     const nz = match({
@@ -117,8 +116,18 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
       scanMarketPublic: 'NZ',
       productName: 'Mon Sire Brie Sabato',
     });
+    expect(nz.map((r) => r.signal_id)).toContain('SIG-SR-NZ-006');
     expect(nz.some((r) => r.signal_id === 'SIG-SR-AU-008')).toBe(false);
-    expect(nz.some((r) => r.signal_id === 'SIG-SR-NZ-006')).toBe(false);
+
+    // Unrelated Mon Sire line stays out of scope in both markets.
+    const sibling = match({
+      barcode: '9300000000002',
+      brand_id: 'B0798',
+      parent_id: 'P0177',
+      scanMarketPublic: 'AU',
+      productName: 'Mon Sire Mascarpone 250g',
+    });
+    expect(sibling.some((r) => r.signal_id === 'SIG-SR-AU-008')).toBe(false);
   });
 
   it('Woolworths Multi Grain cereal does not entity-propagate to unrelated Woolworths products', () => {
@@ -157,15 +166,25 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
     for (const t of unresolved) {
       expect(t.resolution_status === 'blocked' || t.resolution_status === 'needs_review').toBe(true);
     }
-    const recs = match({
+    // Chaining must resolve before any product Signal — unresolved identity fails closed.
+    const unresolvedIdentity = match({
       barcode: 'SHOULD_NOT_MATCH_BLOCKED',
+      brand_id: null,
+      parent_id: null,
+      scanMarketPublic: 'AU',
+      productName: 'Chickadees 190g',
+    });
+    expect(unresolvedIdentity.some((r) => r.signal_id === 'SIG-SR-AU-001-20260918')).toBe(false);
+
+    // With reviewed Chaining identity the governed product line does publish (MVP doctrine).
+    const resolvedIdentity = match({
+      barcode: '9310000333333',
       brand_id: 'B0654',
       parent_id: 'P0156',
       scanMarketPublic: 'AU',
       productName: 'Chickadees 190g',
     });
-    // Safety exact_only must not fire via Asset path alone (Food Recall Matcher required).
-    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-001-20260918')).toBe(false);
+    expect(resolvedIdentity.map((r) => r.signal_id)).toContain('SIG-SR-AU-001-20260918');
   });
 
   it('predecessor→successor dedupe lineage: one publishable head per dedupe_key family', () => {

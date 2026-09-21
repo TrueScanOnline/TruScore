@@ -39,10 +39,6 @@ import NutritionTable from '../../src/components/NutritionTable';
 import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
-import FoodRecallMarkingsEntry, {
-  foodRecallMarkingsEntryVisible,
-  foodRecallShowEditDetails,
-} from '../../src/components/FoodRecallMarkingsEntry';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
 import {
   attachDynamicSignalRecordsToScanResult,
@@ -59,7 +55,6 @@ import {
 } from '../../src/dynamicSignals/asset/v0.2/evaluateDynamicSignalsAssetProgressive';
 import { resolveActiveSignalsProducer } from '../../src/dynamicSignals/asset/v0.2/signalsProducerGuard';
 import type { DynamicSignalPublicationRecord } from '../../src/dynamicSignals/publish/types';
-import type { FoodRecallSubmittedMarkings } from '../../src/workstreamC/recall';
 import { resolveSharedIdentityContext } from '../../src/identity/resolveSharedIdentityContext';
 import { logScanObs, generateScanId } from '../../src/services/scanObservability';
 import { getUserCountryCode } from '../../src/utils/countryDetection';
@@ -267,8 +262,6 @@ function ResultScreenContent() {
     | 'ecoscore'
   >('truScore');
   const [shareInitialMessage, setShareInitialMessage] = useState('');
-  const [foodRecallMarkings, setFoodRecallMarkings] = useState<FoodRecallSubmittedMarkings | null>(null);
-  const [foodRecallEditing, setFoodRecallEditing] = useState(false);
   /** Progressive Signals — attached after primary product/TruScore is ready. */
   const [dynamicSignalRecords, setDynamicSignalRecords] = useState<DynamicSignalPublicationRecord[]>([]);
   const [signalsReadyOutcome, setSignalsReadyOutcome] = useState<SignalsReadyOutcome | null>(null);
@@ -282,7 +275,6 @@ function ResultScreenContent() {
     productName: string;
     scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
     producerLogs: string[];
-    foodRecallMarkings: FoodRecallSubmittedMarkings | null;
   }>(null);
   const productResultReadyLoggedRef = useRef<string | null>(null);
   const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number; hasImportedIngredients?: boolean } | null>(null);
@@ -298,8 +290,6 @@ function ResultScreenContent() {
   }
 
   useEffect(() => {
-    setFoodRecallMarkings(null);
-    setFoodRecallEditing(false);
     setDynamicSignalRecords([]);
     setSignalsReadyOutcome(null);
     signalsEvalKeyRef.current = null;
@@ -710,8 +700,8 @@ function ResultScreenContent() {
   }, [primaryScanResult, product, barcode]);
 
   // Progressive Signals — after primary is available. Re-run only when material
-  // reviewed identity (or market / producer / recall markings) changes — not on
-  // harmless product_enhanced completeness merges.
+  // reviewed identity (or market / producer) changes — not on harmless
+  // product_enhanced completeness merges.
   // NA-003 Candidate 2: Signals / identity / Chaining inputs require Core Truth authority.
   const signalsEvalContext = useMemo(() => {
     const primaryBc = getPrimaryBarcode(barcode);
@@ -732,7 +722,7 @@ function ResultScreenContent() {
     const evalKey = dynamicSignalsEvaluationKey({
       barcode: primaryBc,
       scanMarketPublic,
-      foodRecallMarkings,
+      foodRecallMarkings: null,
       producerActive: producer === 'asset',
       identityState,
     });
@@ -743,9 +733,8 @@ function ResultScreenContent() {
       productName: productNameForSignalsIdentity(productForScan),
       scanMarketPublic,
       producerLogs,
-      foodRecallMarkings,
     };
-  }, [product, barcode, foodRecallMarkings]);
+  }, [product, barcode]);
 
   latestSignalsEvalKeyRef.current = signalsEvalContext?.evalKey ?? null;
   signalsEvalContextRef.current = signalsEvalContext;
@@ -772,7 +761,6 @@ function ResultScreenContent() {
       productName,
       scanMarketPublic,
       producerLogs,
-      foodRecallMarkings: markings,
     } = ctx;
     const assetLogs: string[] = [...producerLogs];
 
@@ -782,7 +770,6 @@ function ResultScreenContent() {
         productName,
         product: productForScan,
         scanMarketPublic,
-        foodRecallMarkings: markings,
         logLines: assetLogs,
       });
       const stale = !shouldCommitDynamicSignalsEvaluation({
@@ -837,26 +824,6 @@ function ResultScreenContent() {
 
   // Silence unused-state lint until UI surfaces progressive outcome.
   void signalsReadyOutcome;
-
-  const foodRecallNeedsBatchEntry = useMemo(() => {
-    return !!scanResult?.signals?.safety_regulatory?.some((c) => c.food_recall_needs_batch_entry);
-  }, [scanResult]);
-
-  const foodRecallMatchState = useMemo(() => {
-    return scanResult?.signals?.safety_regulatory?.find((c) => c.food_recall_match_state)
-      ?.food_recall_match_state;
-  }, [scanResult]);
-
-  const showFoodRecallEntry = foodRecallMarkingsEntryVisible({
-    needsBatchEntry: foodRecallNeedsBatchEntry,
-    editing: foodRecallEditing,
-  });
-
-  const showFoodRecallEditDetails = foodRecallShowEditDetails({
-    matchState: foodRecallMatchState,
-    editing: foodRecallEditing,
-    needsBatchEntry: foodRecallNeedsBatchEntry,
-  });
 
   const bannerAlerts: BannerAlertsData | null = useMemo(() => {
     if (!scanResult) return null;
@@ -1561,28 +1528,6 @@ function ResultScreenContent() {
             alertsData={bannerAlerts}
           />
         )}
-
-        <FoodRecallMarkingsEntry
-          key={barcode}
-          barcode={barcode}
-          visible={showFoodRecallEntry}
-          initial={foodRecallEditing ? foodRecallMarkings : null}
-          onApply={(m) => {
-            setFoodRecallMarkings(m);
-            setFoodRecallEditing(false);
-          }}
-        />
-        {showFoodRecallEditDetails ? (
-          <TouchableOpacity
-            style={{ marginHorizontal: 16, marginBottom: 12, paddingVertical: 8 }}
-            onPress={() => setFoodRecallEditing(true)}
-            accessibilityLabel="food-recall-edit-details"
-          >
-            <Text style={{ color: '#c62828', fontWeight: '600', fontSize: 14 }}>
-              Edit details / Check again
-            </Text>
-          </TouchableOpacity>
-        ) : null}
 
         {scanResult?.terminal_state === 'partial' && (
           <View

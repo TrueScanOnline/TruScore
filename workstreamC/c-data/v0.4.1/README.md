@@ -1,8 +1,13 @@
-# Workstream C recall assets — v0.4.1 (Stage 2 MVP)
+# Workstream C recall assets — v0.4.1 (Stage 2, historical)
+
+> **Active MVP authority: [`docs/uat/FOUNDER_MVP_RECALL_DECISIONS_20260922_SUPERSESSION.md`](../../../docs/uat/FOUNDER_MVP_RECALL_DECISIONS_20260922_SUPERSESSION.md).**
+> Recall display is triggered by governed product / product-line scope after Chaining. The Stage 2
+> match-state progression, manual batch and best-before entry, and markings-driven severity described
+> here are retired from the consumer path. Everything below is historical provenance.
 
 **Does not modify** `workstreamC/c-data/v0.4/`.
 
-Runtime source of truth for Stage 2 MVP lives in:
+Historical Stage 2 runtime files, retained unwired from consumer publication:
 
 - `src/workstreamC/recall/miloRecallPack.ts`
 - `src/workstreamC/recall/evaluateFoodRecallMatch.ts`
