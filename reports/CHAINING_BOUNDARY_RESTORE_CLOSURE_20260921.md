@@ -3,7 +3,7 @@
 **Date:** 2026-09-21  
 **Branch:** `refresh/si-v016-ktc-bbfaw-20260918`  
 **Baseline tip:** `e32626f73ac02302302080e78f1b397f0c998358`  
-**Correction tip:** _(filled after commit)_  
+**Correction tip:** d33371e7b2d86688835b5e608d9b09d2601743f4  
 **Wave 3:** not merged  
 **UAT build:** not cut  
 
