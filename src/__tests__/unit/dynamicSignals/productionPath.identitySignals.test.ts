@@ -1,40 +1,23 @@
 /**
- * Production-path Dynamic Signals identity correction proofs.
+ * Production-path Dynamic Signals — Chaining = brand/parent only; product scope = Workstream C.
  * Starts from ordinary scan/product payload fields — does NOT inject product_family_id
  * or product_identity_id answers into the resolver.
  */
 import fs from 'fs';
 import path from 'path';
 import type { Product } from '../../../types/product';
-import { parseCsv } from '../../../identity/workstreamA/csv';
 import { buildAssetPackFromCsvRows } from '../../../dynamicSignals/asset/v0.2/loadDynamicSignalsAssetPack';
 import { buildDynamicSignalsAssetRuntimePublicationRecords } from '../../../dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords';
 import { __resetDynamicSignalsAssetEmbedCacheForTests } from '../../../dynamicSignals/asset/v0.2/loadDynamicSignalsAssetPack';
+import { loadAssetPackFromRoots, readCsvFile } from './_assetPackTestHelpers';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const PACK = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.3', 'input');
 const FAM = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.3');
-const A = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.16', 'input');
 const CLOCK = '2026-09-18T12:00:00.000Z';
 
 function loadProductionPack() {
-  const read = (p: string) => (fs.existsSync(p) ? parseCsv(fs.readFileSync(p, 'utf8')) : []);
-  return buildAssetPackFromCsvRows({
-    sources: read(path.join(PACK, 'source_universe.csv')),
-    signals: read(path.join(PACK, 'signals.csv')),
-    targets: read(path.join(PACK, 'signal_targets.csv')),
-    productFamilies: read(path.join(FAM, 'product_families.csv')),
-    productFamilyMembership: read(path.join(FAM, 'product_family_membership.csv')),
-    productFamilyAliases: read(path.join(FAM, 'product_family_aliases.csv')),
-    productIdentities: read(path.join(FAM, 'product_identities.csv')),
-    productIdentityAliases: read(path.join(FAM, 'product_identity_aliases.csv')),
-    brandChildOfBrand: read(path.join(FAM, 'brand_child_of_brand.csv')),
-    entityChildOfEntity: read(path.join(FAM, 'entity_child_of_entity.csv')),
-    foodRecallEligibility: read(path.join(PACK, 'food_recall_eligibility.csv')),
-    foodRecallNotices: read(path.join(PACK, 'food_recall_notices.csv')),
-    foodRecallAffectedVariants: read(path.join(PACK, 'food_recall_affected_variants.csv')),
-    foodRecallRelatedGtins: read(path.join(PACK, 'food_recall_related_gtins.csv')),
-  });
+  return loadAssetPackFromRoots({ packRoot: PACK, famRoot: FAM });
 }
 
 function product(partial: Partial<Product> & { product_name: string; brands?: string }): Product {
@@ -80,28 +63,27 @@ function runScan(input: {
     forceRun: true,
     evaluationClockIso: CLOCK,
     logLines: logs,
-    // Intentionally do NOT pass productFamilyIds / productIdentityIds
+    // Intentionally do NOT inject product family / identity IDs — ordinary scan fields only.
   });
   return { recs, logs };
 }
 
-describe('Production-path generic identity → Signals (no injected family/product IDs)', () => {
+describe('Production-path: Chaining=brand only + Workstream C product scope', () => {
   beforeEach(() => {
     process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '1';
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
     __resetDynamicSignalsAssetEmbedCacheForTests();
   });
 
-  it('Leggo\'s tomato paste scan fires SIG-IN-AU-001-20260918; Leggo\'s sauce does not', () => {
+  it("Leggo's tomato paste scan fires SIG-IN-AU-001-20260918; Leggo's sauce does not", () => {
     const hit = runScan({
       barcode: '9310000111111',
       productName: "Leggo's Tomato Paste 140g",
       brands: "Leggo's",
       market: 'AU',
     });
-    expect(hit.logs.some((l) => l.includes('identity_resolve:') && l.includes('PF_LEGGOS'))).toBe(
-      true
-    );
+    expect(hit.logs.some((l) => l.includes('identity_resolve:') && l.includes('B0179'))).toBe(true);
+    expect(hit.logs.some((l) => l.includes('product scope is Workstream C'))).toBe(true);
     expect(hit.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-001-20260918');
 
     const miss = runScan({
@@ -113,7 +95,7 @@ describe('Production-path generic identity → Signals (no injected family/produ
     expect(miss.recs.some((r) => r.signal_id === 'SIG-IN-AU-001-20260918')).toBe(false);
   });
 
-  it('Hoyt\'s turmeric fires; Hoyt\'s paprika sibling does not', () => {
+  it("Hoyt's turmeric fires; Hoyt's paprika sibling does not", () => {
     const hit = runScan({
       barcode: '9310000222222',
       productName: "Hoyt's Ground Turmeric 50g",
@@ -158,7 +140,11 @@ describe('Production-path generic identity → Signals (no injected family/produ
       brands: 'Chickadees',
       market: 'AU',
     });
-    expect(hit.logs.some((l) => l.includes('PI_CHICKADEES_190G'))).toBe(true);
+    expect(
+      hit.logs.some(
+        (l) => l.includes('identity_upgrade') && l.includes('product_scope_match')
+      )
+    ).toBe(true);
     const card = hit.recs.find((r) => r.signal_id === 'SIG-SR-AU-001-20260918');
     expect(card).toBeTruthy();
     expect(card!.food_recall?.match_state).toBe('batch_check_required');
@@ -221,20 +207,45 @@ describe('Production-path generic identity → Signals (no injected family/produ
     expect(miss.recs.length).toBe(0);
   });
 
-  it('resolver source files contain no Signal/brand hardcoding markers in identity modules', () => {
+  it('resolver/matcher source has no Leggo/Chickadees/signal_id=== hardcoding and no productFamilyMaps under chaining', () => {
     const files = [
-      path.join(ROOT, 'src/identity/chaining/productFamilyMaps.ts'),
-      path.join(ROOT, 'src/identity/chaining/productIdentityMaps.ts'),
       path.join(ROOT, 'src/dynamicSignals/asset/v0.2/buildDynamicSignalsAssetRuntimePublicationRecords.ts'),
+      path.join(ROOT, 'src/dynamicSignals/asset/v0.2/matchDynamicSignalsAsset.ts'),
+      path.join(ROOT, 'src/dynamicSignals/productScope/signalProductScopeEvaluator.ts'),
+      path.join(ROOT, 'src/identity/chaining/brandEntityHierarchyMaps.ts'),
     ];
     for (const f of files) {
       const src = fs.readFileSync(f, 'utf8');
       expect(src).not.toMatch(/if\s*\(\s*brand\s*==/i);
       expect(src).not.toMatch(/signal_id\s*===\s*['"]SIG-/);
       expect(src).not.toMatch(/Leggo|Chickadees|Hoyt|Mondelez/);
+      expect(src).not.toMatch(/productFamilyMaps|productIdentityMaps/);
     }
+    expect(fs.existsSync(path.join(ROOT, 'src/identity/chaining/productFamilyMaps.ts'))).toBe(false);
+    expect(fs.existsSync(path.join(ROOT, 'src/identity/chaining/productIdentityMaps.ts'))).toBe(false);
+  });
+
+  it('production pack loads signal_target_product_criteria (not chaining product_* files)', () => {
+    const pack = loadProductionPack();
+    expect(pack.productScopeMaps.criteriaByTargetId.size).toBeGreaterThan(0);
+    const criteriaPath = path.join(PACK, 'signal_target_product_criteria.csv');
+    expect(fs.existsSync(criteriaPath)).toBe(true);
+    expect(fs.existsSync(path.join(FAM, 'product_families.csv'))).toBe(false);
+    // buildAssetPackFromCsvRows shape: only signalTargetProductCriteria
+    const rebuilt = buildAssetPackFromCsvRows({
+      sources: readCsvFile(path.join(PACK, 'source_universe.csv')),
+      signals: readCsvFile(path.join(PACK, 'signals.csv')),
+      targets: readCsvFile(path.join(PACK, 'signal_targets.csv')),
+      signalTargetProductCriteria: readCsvFile(criteriaPath),
+      brandChildOfBrand: readCsvFile(path.join(FAM, 'brand_child_of_brand.csv')),
+      entityChildOfEntity: readCsvFile(path.join(FAM, 'entity_child_of_entity.csv')),
+      foodRecallEligibility: [],
+      foodRecallNotices: [],
+      foodRecallAffectedVariants: [],
+      foodRecallRelatedGtins: [],
+    });
+    expect(rebuilt.productScopeMaps.criteriaByTargetId.size).toBe(
+      pack.productScopeMaps.criteriaByTargetId.size
+    );
   });
 });
-
-// Silence unused A path import intent (A-data is loaded via pack brandRows through runtime when embed used)
-void A;

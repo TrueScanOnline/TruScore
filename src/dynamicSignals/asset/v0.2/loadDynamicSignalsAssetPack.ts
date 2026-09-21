@@ -1,21 +1,19 @@
 /**
  * Pure Asset pack parsers + Metro-safe embed loader (no Node `fs`).
+ *
+ * Shared Identity embed: brands / parents / brand aliases / brand+entity hierarchy only.
+ * Product scope criteria belong to Workstream C (signal_target_product_criteria).
  */
 
 import type { CsvRecord } from '../../../identity/workstreamA/csv';
-import {
-  buildProductFamilyMapsFromCsvRecords,
-  type ProductFamilyMaps,
-} from '../../../identity/chaining/productFamilyMaps';
-import {
-  buildProductIdentityMapsFromCsvRecords,
-  type ProductIdentityMaps,
-} from '../../../identity/chaining/productIdentityMaps';
 import {
   buildBrandHierarchyMapsFromCsvRecords,
   buildEntityHierarchyMapsFromCsvRecords,
 } from '../../../identity/chaining/brandEntityHierarchyMaps';
 import { buildADataMapsFromCsvRecords } from '../../../workstreamC/skeleton/workstreamCPublicationCore';
+import {
+  buildSignalProductScopeMapsFromCsvRecords,
+} from '../../productScope/signalProductScopeEvaluator';
 import type {
   AssetPackParsed,
   AssetRecallEligibilityBinding,
@@ -57,7 +55,6 @@ export function parseAssetRecallNotices(
     const noticeId = (r.recall_notice_id ?? '').trim();
     if (!noticeId) continue;
     const gtin = (r.gtin ?? '').trim();
-    // Keep empty-GTIN rows as metadata for pack/date consumer guidance.
     const list = variantsByNotice.get(noticeId) ?? [];
     list.push({
       recall_variant_id:
@@ -102,7 +99,7 @@ export function parseAssetRecallNotices(
       consumer_action: (r.consumer_action ?? '').trim(),
       bb_month: Number.isInteger(bb_month) ? bb_month : 0,
       bb_year: Number.isInteger(bb_year) ? bb_year : 0,
-      recall_product_family_id: (r.recall_product_family_id ?? '').trim() || undefined,
+      recall_product_family_id: undefined,
       affected_variants: variantsByNotice.get(recall_notice_id) ?? [],
       related_family_gtins: relatedByNotice.get(recall_notice_id),
     });
@@ -114,11 +111,7 @@ export type AssetPackCsvRows = {
   sources: CsvRecord[];
   signals: CsvRecord[];
   targets: CsvRecord[];
-  productFamilies: CsvRecord[];
-  productFamilyMembership: CsvRecord[];
-  productFamilyAliases?: CsvRecord[];
-  productIdentities?: CsvRecord[];
-  productIdentityAliases?: CsvRecord[];
+  signalTargetProductCriteria: CsvRecord[];
   brandChildOfBrand: CsvRecord[];
   entityChildOfEntity: CsvRecord[];
   foodRecallEligibility: CsvRecord[];
@@ -128,22 +121,11 @@ export type AssetPackCsvRows = {
 };
 
 export function buildAssetPackFromCsvRows(rows: AssetPackCsvRows): AssetPackParsed {
-  const familyMaps: ProductFamilyMaps = buildProductFamilyMapsFromCsvRecords(
-    rows.productFamilies,
-    rows.productFamilyMembership,
-    rows.productFamilyAliases ?? []
-  );
-  const productIdentityMaps: ProductIdentityMaps = buildProductIdentityMapsFromCsvRecords(
-    rows.productIdentities ?? [],
-    rows.productIdentityAliases ?? []
-  );
-
   return {
     sources: rows.sources,
     signals: rows.signals,
     targets: rows.targets,
-    familyMaps,
-    productIdentityMaps,
+    productScopeMaps: buildSignalProductScopeMapsFromCsvRecords(rows.signalTargetProductCriteria),
     brandHierarchy: buildBrandHierarchyMapsFromCsvRecords(rows.brandChildOfBrand),
     entityHierarchy: buildEntityHierarchyMapsFromCsvRecords(rows.entityChildOfEntity),
     recallEligibility: parseAssetRecallEligibility(rows.foodRecallEligibility),
@@ -159,37 +141,28 @@ type ADataChainEmbed = ReturnType<typeof buildADataChainFromEmbedRows>;
 
 let cachedAssetPack: AssetPackParsed | null = null;
 let cachedADataChain: ADataChainEmbed | null = null;
-/** Test/observability: how many times pack CSV rows were parsed into Maps. */
 let assetPackParseCount = 0;
 let aDataParseCount = 0;
 
 function buildADataChainFromEmbedRows() {
   const e = DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED;
+  // GTIN→brand scaffold retired from active Chaining — pass empty gtin rows.
   return {
-    aData: buildADataMapsFromCsvRecords(e.brandRows, e.parentRows, e.gtinRows),
+    aData: buildADataMapsFromCsvRecords(e.brandRows, e.parentRows, []),
     brandRows: e.brandRows,
     aliasRows: e.aliasRows,
     brandChildRows: e.brandChildOfBrand,
   };
 }
 
-/** App/runtime pack — embedded governed CSVs (no filesystem). Cached after first parse. */
 export function loadDynamicSignalsAssetPackFromEmbed(): AssetPackParsed {
   if (cachedAssetPack) return cachedAssetPack;
-  const e = DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED as typeof DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED & {
-    productFamilyAliases?: CsvRecord[];
-    productIdentities?: CsvRecord[];
-    productIdentityAliases?: CsvRecord[];
-  };
+  const e = DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED;
   cachedAssetPack = buildAssetPackFromCsvRows({
     sources: e.sources,
     signals: e.signals,
     targets: e.targets,
-    productFamilies: e.productFamilies,
-    productFamilyMembership: e.productFamilyMembership,
-    productFamilyAliases: e.productFamilyAliases ?? [],
-    productIdentities: e.productIdentities ?? [],
-    productIdentityAliases: e.productIdentityAliases ?? [],
+    signalTargetProductCriteria: e.signalTargetProductCriteria ?? [],
     brandChildOfBrand: e.brandChildOfBrand,
     entityChildOfEntity: e.entityChildOfEntity,
     foodRecallEligibility: e.foodRecallEligibility,
@@ -201,7 +174,6 @@ export function loadDynamicSignalsAssetPackFromEmbed(): AssetPackParsed {
   return cachedAssetPack;
 }
 
-/** Shared Identity rows for retail-chain resolution on device. Cached after first parse. */
 export function loadADataForChainFromEmbed() {
   if (cachedADataChain) return cachedADataChain;
   cachedADataChain = buildADataChainFromEmbedRows();
@@ -213,7 +185,6 @@ export function getDynamicSignalsAssetEmbedCacheStats() {
   return { assetPackParseCount, aDataParseCount, packCached: cachedAssetPack != null };
 }
 
-/** Jest only — clears singleton cache between isolation proofs. */
 export function __resetDynamicSignalsAssetEmbedCacheForTests() {
   cachedAssetPack = null;
   cachedADataChain = null;

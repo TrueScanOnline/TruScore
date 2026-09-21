@@ -314,7 +314,7 @@ describe('resolveWorkstreamCRetailChain', () => {
     expect(chain?.brand_id).not.toBe('B0769');
   });
 
-  it('Coles-family product with brands-field MIX still receives SIG-SR-AU-003 without signal guard', () => {
+  it('Coles-family product with brands-field MIX still receives SIG-SR-AU-003-20260918 without signal guard', () => {
     process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '1';
     const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
       barcode: '9300000000100',
@@ -326,13 +326,12 @@ describe('resolveWorkstreamCRetailChain', () => {
       } as any,
       scanMarketPublic: 'AU',
       forceRun: true,
-      // NA-019: embed pack expires_at 2026-08-19 — keep chaining assertion in-window.
-      evaluationClockIso: '2026-08-10T12:00:00.000Z',
+      evaluationClockIso: '2026-09-18T12:00:00.000Z',
     });
-    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-003')).toBe(true);
+    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-003-20260918')).toBe(true);
   });
 
-  it('S&B Japanese Curry Mix does not receive SIG-SR-AU-003', () => {
+  it('S&B Japanese Curry Mix does not receive SIG-SR-AU-003-20260918', () => {
     process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '1';
     const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
       barcode: '4901002156565',
@@ -344,7 +343,9 @@ describe('resolveWorkstreamCRetailChain', () => {
       } as any,
       scanMarketPublic: 'AU',
       forceRun: true,
+      evaluationClockIso: '2026-09-18T12:00:00.000Z',
     });
+    expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-003-20260918')).toBe(false);
     expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-003')).toBe(false);
   });
 });

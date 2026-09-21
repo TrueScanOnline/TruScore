@@ -1,14 +1,11 @@
 /**
- * Maps a real scanned product + frozen Workstream A v0.15 CSV snapshots (read-only) to a reviewed
- * retail chain for Workstream C subject-link matching. Does not mutate A-data on disk.
+ * Maps a real scanned product + Shared Identity brand/parent/alias rows to a reviewed
+ * retail ownership chain. Does not mutate A-data on disk.
  *
- * MVP identity contract (Wave 1 clarification 2026-08-07):
- * Product → Brand/Sub-brand → Parent/Responsible Entity — levels coexist, they do not compete.
- * Resolved chain exposes brand_id (specific) + parent_id (entity). Signal eligibility is evaluated
- * only at each Signal’s approved subject scope (brand vs parent vs product_family vs product).
- *
- * Product title may refine a broad same-entity brand (e.g. Nestlé → KitKat) via reviewed aliases.
- * generic_name must not independently establish or override the primary brand.
+ * Shared Identity contract (founder architecture 2026-09-21):
+ * Brand/Sub-brand → Parent/Responsible Entity only.
+ * Product / product-family / GTIN→brand mapping is not part of Chaining.
+ * Dynamic Signals evaluates product scope from Workstream C criteria after ownership resolves.
  */
 
 import type { Product } from '../../types/product';
@@ -452,30 +449,12 @@ export function resolveReviewedRetailChainUnified(input: {
       }
     }
     push?.('chain_resolve: identity_resolution found no reviewed brand/parent chain from product fields');
-    const gtinFallback = tryReviewedGtinChain(input.barcode, input.aData, push);
-    if (gtinFallback) return gtinFallback;
+    // GTIN→brand scaffold retired from active Shared Identity — no barcode ownership fallback.
     return null;
   }
 
-  return tryReviewedGtinChain(input.barcode, input.aData, push);
-}
-
-function tryReviewedGtinChain(
-  barcode: string,
-  aData: ADataMaps,
-  push?: (s: string) => void
-): ResolvedRetailChain | null {
-  const g = aData.gtinRows.get(barcode);
-  if (g && g.link_review_state === 'reviewed') {
-    const b = aData.brandsById.get(g.brand_id);
-    const p = aData.parentsById.get(g.parent_id);
-    if (b?.review_state === 'reviewed' && p?.review_state === 'reviewed' && b.parent_id === g.parent_id) {
-      push?.(
-        `chain_resolve: brand_id=${g.brand_id} parent_id=${g.parent_id} source=gtin_link_supplementary`
-      );
-      return { brand_id: g.brand_id, parent_id: g.parent_id, source: 'gtin_link' };
-    }
-  }
+  // No product-field brand evidence and no GTIN ownership path — fail closed.
+  push?.('chain_resolve: fail_closed — no reviewed brand/parent from product fields; GTIN→brand scaffold retired');
   return null;
 }
 

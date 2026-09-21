@@ -1,17 +1,12 @@
 /**
- * Rveel Dynamic Signals Asset v0.2 — deterministic target matcher (remediation).
+ * Rveel Dynamic Signals Asset v0.2 — deterministic target matcher.
  *
- * Eligibility: market_key + target_type + canonical_target_id + propagation_mode,
- * then optional product_scope_guard (currently cocoa_chocolate).
- * Safety & Regulatory product recalls with exact/batch/date scope are NOT published here —
- * they must go through the Food Recall Matcher.
+ * Ownership (brand/entity) uses Shared Identity hierarchy.
+ * Product / product_family scope uses Workstream C signal_target_product_criteria only.
  */
 
 import type { CsvRecord } from '../../../identity/workstreamA/csv';
 import type { DynamicSignalPublicationRecord } from '../../publish/types';
-import type { ProductFamilyMaps } from '../../../identity/chaining/productFamilyMaps';
-import { reviewedFamilyIdsForGtin } from '../../../identity/chaining/productFamilyMaps';
-import type { ProductIdentityMaps } from '../../../identity/chaining/productIdentityMaps';
 import type {
   BrandHierarchyMaps,
   EntityHierarchyMaps,
@@ -32,14 +27,17 @@ import {
   assetExpiresAtAsValidUntil,
   isAssetSignalWithinPublicTemporalWindow,
 } from './assetSignalTemporalPolicy';
+import {
+  signalTargetProductScopeMatches,
+  type SignalProductScopeMaps,
+} from '../../productScope/signalProductScopeEvaluator';
 
 export type AssetScanIdentity = {
   barcode: string;
   brand_id: string | null;
   parent_id: string | null;
-  product_family_ids: string[];
-  /** Governed product-identity IDs resolved from scan product data (aliases), not injected answers. */
-  product_identity_ids?: string[];
+  /** Ordinary scanned product name — required for Workstream C product-scope evaluation. */
+  productName: string;
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
   productScopeEvidence?: CocoaChocolateProductScopeEvidence | null;
 };
@@ -56,9 +54,7 @@ export type AssetPackParsed = {
   sources: CsvRecord[];
   signals: CsvRecord[];
   targets: CsvRecord[];
-  familyMaps: ProductFamilyMaps;
-  /** Optional until embed regeneration includes product-identity CSVs. */
-  productIdentityMaps?: ProductIdentityMaps;
+  productScopeMaps: SignalProductScopeMaps;
   brandHierarchy: BrandHierarchyMaps;
   entityHierarchy: EntityHierarchyMaps;
   /** Asset-authorised recall bindings — empty unless structured eligibility onboarded. */
@@ -89,7 +85,7 @@ function targetResolutionAllowsMatch(status: string): boolean {
 
 /**
  * Product-scoped Safety & Regulatory recalls (batch/date/variant eligible) must not use
- * generic Asset exact_only / product matching. Food Recall Matcher is the sole eligibility layer.
+ * generic Asset product matching. Food Recall Matcher is the sole eligibility layer.
  */
 export function requiresFoodRecallMatcherEligibility(
   signalClass: string,
@@ -102,39 +98,44 @@ export function requiresFoodRecallMatcherEligibility(
   return false;
 }
 
-function propagationMatches(
-  mode: string,
-  targetType: string,
-  canonicalId: string,
+function targetMatchesScan(
+  tgt: CsvRecord,
   identity: AssetScanIdentity,
-  brandHierarchy: BrandHierarchyMaps,
-  entityHierarchy: EntityHierarchyMaps
+  pack: AssetPackParsed
 ): boolean {
-  if (!canonicalId) return false;
-  switch (mode) {
-    case 'exact_only': {
-      if (targetType !== 'product') return false;
-      if (identity.barcode === canonicalId) return true;
-      const pids = identity.product_identity_ids ?? [];
-      return pids.includes(canonicalId);
-    }
-    case 'family_members':
-      return targetType === 'product_family' && identity.product_family_ids.includes(canonicalId);
-    case 'brand_descendants':
-      return (
-        targetType === 'brand' &&
-        brandIsDescendantOf(brandHierarchy, identity.brand_id, canonicalId)
-      );
-    case 'entity_descendants':
-      return (
-        targetType === 'entity' &&
-        entityOwnsOrIsAncestorOf(entityHierarchy, identity.parent_id, canonicalId)
-      );
-    case 'operational_descendants':
-      return false;
-    default:
-      return false;
+  const targetType = (tgt.target_type ?? '').trim();
+  const mode = (tgt.propagation_mode ?? '').trim();
+  const canonicalId = (tgt.canonical_target_id ?? '').trim();
+  const targetId = (tgt.signal_target_id ?? '').trim();
+
+  if (targetType === 'product' || targetType === 'product_family') {
+    // Product scope is entirely Workstream C criteria — not Shared Identity.
+    return signalTargetProductScopeMatches(pack.productScopeMaps, targetId, {
+      barcode: identity.barcode,
+      productName: identity.productName,
+      brand_id: identity.brand_id,
+      parent_id: identity.parent_id,
+      scanMarketPublic: identity.scanMarketPublic,
+      brandIsUnderAnchor: (scanBrandId, anchorBrandId) =>
+        brandIsDescendantOf(pack.brandHierarchy, scanBrandId, anchorBrandId),
+    });
   }
+
+  if (mode === 'brand_descendants') {
+    return (
+      targetType === 'brand' &&
+      !!canonicalId &&
+      brandIsDescendantOf(pack.brandHierarchy, identity.brand_id, canonicalId)
+    );
+  }
+  if (mode === 'entity_descendants') {
+    return (
+      targetType === 'entity' &&
+      !!canonicalId &&
+      entityOwnsOrIsAncestorOf(pack.entityHierarchy, identity.parent_id, canonicalId)
+    );
+  }
+  return false;
 }
 
 function signalToPublicationRecord(
@@ -169,7 +170,6 @@ function signalToPublicationRecord(
       return u && /^https?:\/\//i.test(u) ? u : undefined;
     })(),
     source_idempotency_key: `dsa_v0_2|${sigId}|${barcode}`,
-    // NA-019: persist end-normalized expires_at so render-layer staleness matches matcher gate.
     staleness: { valid_until: assetExpiresAtAsValidUntil(signal.expires_at) },
     editorial: {
       priority: 0,
@@ -190,7 +190,6 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
   identity: AssetScanIdentity;
   logLines?: string[];
   includeNonPublishable?: boolean;
-  /** Injected evaluation clock (tests / deterministic UAT). Defaults to system clock. */
   evaluationClock?: IngestionClock;
 }): DynamicSignalPublicationRecord[] {
   const push = (s: string) => input.logLines?.push(s);
@@ -199,16 +198,7 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
   const signalById = new Map(input.pack.signals.map((r) => [r.signal_id ?? '', r]));
   const out: DynamicSignalPublicationRecord[] = [];
   const seen = new Set<string>();
-
-  const familyIds =
-    input.identity.product_family_ids.length > 0
-      ? input.identity.product_family_ids
-      : reviewedFamilyIdsForGtin(
-          input.pack.familyMaps,
-          input.identity.barcode,
-          input.identity.scanMarketPublic
-        );
-  const identity: AssetScanIdentity = { ...input.identity, product_family_ids: familyIds };
+  const identity = input.identity;
 
   for (const tgt of input.pack.targets) {
     const linkMarket = (tgt.market_key ?? '').trim();
@@ -220,9 +210,9 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
       continue;
     }
 
-    const canonicalId = (tgt.canonical_target_id ?? '').trim();
     const targetType = (tgt.target_type ?? '').trim();
     const mode = (tgt.propagation_mode ?? '').trim();
+    const canonicalId = (tgt.canonical_target_id ?? '').trim();
 
     const sigId = (tgt.signal_id ?? '').trim();
     const signal = signalById.get(sigId);
@@ -236,16 +226,7 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
       continue;
     }
 
-    if (
-      !propagationMatches(
-        mode,
-        targetType,
-        canonicalId,
-        identity,
-        input.pack.brandHierarchy,
-        input.pack.entityHierarchy
-      )
-    ) {
+    if (!targetMatchesScan(tgt, identity, input.pack)) {
       continue;
     }
 
@@ -264,7 +245,6 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
     }
 
     const pubState = (signal.signal_publication_state ?? '').trim();
-    // NA-019: suppressed / expired / non-publishable never reach consumer cards.
     if (pubState === 'suppressed' || pubState === 'expired') {
       push(`lifecycle_hold: ${sigId} signal_publication_state=${pubState} — not public`);
       continue;
@@ -274,7 +254,6 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
       continue;
     }
 
-    // NA-019: publication state alone is insufficient — temporal window must also be valid.
     if (
       !isAssetSignalWithinPublicTemporalWindow(
         {
@@ -310,4 +289,13 @@ export function buildDynamicSignalsAssetPublicationRecords(input: {
 
   push(`attach: dsa_v0_2 built ${out.length} record(s)`);
   return out;
+}
+
+/** Exported for Food Recall overlay — same product-scope rules as Asset matcher. */
+export function assetTargetProductScopeMatches(
+  pack: AssetPackParsed,
+  tgt: CsvRecord,
+  identity: AssetScanIdentity
+): boolean {
+  return targetMatchesScan(tgt, identity, pack);
 }

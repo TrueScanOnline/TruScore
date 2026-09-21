@@ -1,5 +1,8 @@
 /**
  * Node/tests-only loader — imports `fs`. Do not import from app runtime paths.
+ *
+ * Shared Identity: brand/entity hierarchy only.
+ * Product scope: Workstream C signal_target_product_criteria.
  */
 
 import fs from 'fs';
@@ -28,8 +31,7 @@ export function loadDynamicSignalsAssetPackFromDisk(roots?: {
     sources: read(path.join(packRoot, 'source_universe.csv')),
     signals: read(path.join(packRoot, 'signals.csv')),
     targets: read(path.join(packRoot, 'signal_targets.csv')),
-    productFamilies: read(path.join(famRoot, 'product_families.csv')),
-    productFamilyMembership: read(path.join(famRoot, 'product_family_membership.csv')),
+    signalTargetProductCriteria: read(path.join(packRoot, 'signal_target_product_criteria.csv')),
     brandChildOfBrand: read(path.join(famRoot, 'brand_child_of_brand.csv')),
     entityChildOfEntity: read(path.join(famRoot, 'entity_child_of_entity.csv')),
     foodRecallEligibility: read(path.join(packRoot, 'food_recall_eligibility.csv')),

@@ -1,6 +1,6 @@
 /**
- * Ordinary-scan corpus reassessment for Dynamic Signals identity correction.
- * Starts from product name/brand/market only — does not inject family/product IDs.
+ * Ordinary-scan corpus reassessment after Chaining/Signals boundary restore.
+ * Chaining resolves brand/parent only; product scope is Workstream C criteria.
  */
 import fs from 'fs';
 import path from 'path';
@@ -24,11 +24,7 @@ function loadPack() {
     sources: read(path.join(PACK, 'source_universe.csv')),
     signals: read(path.join(PACK, 'signals.csv')),
     targets: read(path.join(PACK, 'signal_targets.csv')),
-    productFamilies: read(path.join(FAM, 'product_families.csv')),
-    productFamilyMembership: read(path.join(FAM, 'product_family_membership.csv')),
-    productFamilyAliases: read(path.join(FAM, 'product_family_aliases.csv')),
-    productIdentities: read(path.join(FAM, 'product_identities.csv')),
-    productIdentityAliases: read(path.join(FAM, 'product_identity_aliases.csv')),
+    signalTargetProductCriteria: read(path.join(PACK, 'signal_target_product_criteria.csv')),
     brandChildOfBrand: read(path.join(FAM, 'brand_child_of_brand.csv')),
     entityChildOfEntity: read(path.join(FAM, 'entity_child_of_entity.csv')),
     foodRecallEligibility: read(path.join(PACK, 'food_recall_eligibility.csv')),
@@ -56,165 +52,18 @@ function product(partial: Partial<Product> & { product_name: string; brands?: st
   } as Product;
 }
 
-type Fixture = {
-  barcode: string;
-  productName: string;
-  brands: string;
-  market: 'AU' | 'NZ';
-  categories_tags?: string[];
-  ingredients_text?: string;
-  note: string;
-};
-
-function brandNameById(
-  brands: ReturnType<typeof read>,
-  brandId: string
-): string {
+function brandNameById(brands: ReturnType<typeof read>, brandId: string): string {
   const row = brands.find((b) => (b.brand_id || '').trim() === brandId);
-  return (row?.canonical_brand_name || row?.brand_name || '').trim();
+  return (row?.canonical_brand_name || '').trim();
 }
 
-function parentNameById(
-  parents: ReturnType<typeof read>,
-  parentId: string
-): string {
+function parentNameById(parents: ReturnType<typeof read>, parentId: string): string {
   const row = parents.find((p) => (p.parent_id || '').trim() === parentId);
-  return (row?.canonical_parent_name || row?.parent_name || '').trim();
+  return (row?.canonical_parent_name || '').trim();
 }
 
-function fixtureForTarget(
-  target: {
-    target_type?: string;
-    canonical_target_id?: string;
-    market?: string;
-    market_key?: string;
-    propagation_mode?: string;
-  },
-  ctx: {
-    families: ReturnType<typeof read>;
-    familyAliases: ReturnType<typeof read>;
-    identities: ReturnType<typeof read>;
-    identityAliases: ReturnType<typeof read>;
-    brands: ReturnType<typeof read>;
-    parents: ReturnType<typeof read>;
-  }
-): Fixture | null {
-  const canon = (target.canonical_target_id || '').trim();
-  if (!canon) return null;
-  const marketRaw = String(target.market || target.market_key || 'AU');
-  const market: 'AU' | 'NZ' = marketRaw.includes('NZ') && !marketRaw.includes('AU') ? 'NZ' : marketRaw.includes('NZ') ? 'NZ' : 'AU';
-  // Prefer NZ when market_key is NZ-only
-  const marketFinal: 'AU' | 'NZ' =
-    marketRaw === 'NZ' ? 'NZ' : marketRaw === 'AU' ? 'AU' : marketRaw.includes('NZ') && !marketRaw.startsWith('AU') ? 'NZ' : 'AU';
-
-  const type = (target.target_type || '').trim();
-
-  if (type === 'product' || canon.startsWith('PI_')) {
-    const ident = ctx.identities.find((r) => r.product_identity_id === canon);
-    if (!ident) return null;
-    const aliases = ctx.identityAliases.filter((a) => a.product_identity_id === canon);
-    // Prefer longest alias phrase so phrase_contains is discriminative
-    const alias = [...aliases].sort(
-      (a, b) => (b.alias_text || '').length - (a.alias_text || '').length
-    )[0];
-    const brand =
-      brandNameById(ctx.brands, (ident.anchor_brand_id || '').trim()) ||
-      (ident.display_name || '').split(' ')[0] ||
-      '';
-    const productName = alias?.alias_text || ident.display_name || '';
-    // Ensure brand appears in product name for brand-leading retail titles when needed
-    const finalName =
-      brand && !productName.toLowerCase().includes(brand.toLowerCase().replace(/'s$/, ''))
-        ? `${brand} ${productName}`
-        : productName;
-    return {
-      barcode: `93${String(Math.abs(hash(canon)) % 1e10).padStart(10, '0')}`,
-      productName: finalName,
-      brands: brand,
-      market: ((ident.market_key || marketFinal) as string).includes('NZ') && !(ident.market_key || '').includes('AU')
-        ? 'NZ'
-        : ((ident.market_key || '') === 'AU' ? 'AU' : marketFinal),
-      note: `from PI ${canon} alias="${alias?.alias_text || ''}"`,
-    };
-  }
-
-  if (type === 'product_family' || canon.startsWith('PF_')) {
-    const fam = ctx.families.find((r) => r.product_family_id === canon);
-    if (!fam) return null;
-    const aliases = ctx.familyAliases.filter((a) => a.product_family_id === canon);
-    const alias = [...aliases].sort(
-      (a, b) => (b.alias_text || '').length - (a.alias_text || '').length
-    )[0];
-    const brand = brandNameById(ctx.brands, (fam.anchor_brand_id || '').trim());
-    const phrase = alias?.alias_text || fam.display_name || '';
-    const productName = brand ? `${brand} ${phrase}` : phrase;
-    const mk = fam.market_key || marketFinal;
-    return {
-      barcode: `93${String(Math.abs(hash(canon)) % 1e10).padStart(10, '0')}`,
-      productName,
-      brands: brand,
-      market: mk === 'NZ' ? 'NZ' : 'AU',
-      note: `from PF ${canon} alias="${alias?.alias_text || ''}"`,
-    };
-  }
-
-  if (type === 'brand') {
-    const brand = brandNameById(ctx.brands, canon);
-    if (!brand) return null;
-    return {
-      barcode: `93${String(Math.abs(hash(canon)) % 1e10).padStart(10, '0')}`,
-      productName: `${brand} Product`,
-      brands: brand,
-      market: marketFinal,
-      note: `from brand ${canon}`,
-    };
-  }
-
-  if (type === 'parent' || type === 'entity') {
-    const parent = parentNameById(ctx.parents, canon);
-    // Entity Signals often fire via descendant brands (e.g. Cadbury under Mondelez P0009)
-    if (canon === 'P0009' || canon === 'P0008' || /mondelez|nestl/i.test(parent)) {
-      return {
-        barcode: '9300617064879',
-        productName: 'Cadbury Dairy Milk Milk Chocolate',
-        brands: 'Cadbury',
-        market: 'AU',
-        categories_tags: ['en:chocolates'],
-        ingredients_text: 'milk, sugar, cocoa',
-        note: `from entity ${canon} via Cadbury/chocolate descendant context`,
-      };
-    }
-    if (canon === 'P0002' || /coles/i.test(parent)) {
-      return {
-        barcode: `93${String(Math.abs(hash(canon)) % 1e10).padStart(10, '0')}`,
-        productName: 'Coles Brand Product',
-        brands: 'Coles',
-        market: 'AU',
-        note: `from entity ${canon} via Coles brand`,
-      };
-    }
-    // Talley's — look for a reviewed brand under this parent
-    const childBrand = ctx.brands.find((b) => (b.parent_id || '').trim() === canon);
-    if (childBrand) {
-      const bname = (childBrand.canonical_brand_name || '').trim();
-      return {
-        barcode: `93${String(Math.abs(hash(canon)) % 1e10).padStart(10, '0')}`,
-        productName: `${bname} Product`,
-        brands: bname,
-        market: marketFinal,
-        note: `from entity ${canon} via child brand ${childBrand.brand_id}`,
-      };
-    }
-    return {
-      barcode: `93${String(Math.abs(hash(canon)) % 1e10).padStart(10, '0')}`,
-      productName: `${parent || canon} Product`,
-      brands: parent || '',
-      market: marketFinal,
-      note: `from entity/parent ${canon}`,
-    };
-  }
-
-  return null;
+function pubState(sig: { signal_publication_state?: string; publication_state?: string }) {
+  return String(sig.signal_publication_state || sig.publication_state || '').trim();
 }
 
 function hash(s: string) {
@@ -223,35 +72,20 @@ function hash(s: string) {
   return h;
 }
 
-function pubState(sig: { signal_publication_state?: string; publication_state?: string }) {
-  return String(sig.signal_publication_state || sig.publication_state || '').trim();
-}
-
 function main() {
   process.env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET = '1';
   process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
 
   const pack = loadPack();
-  const families = read(path.join(FAM, 'product_families.csv'));
-  const familyAliases = read(path.join(FAM, 'product_family_aliases.csv'));
-  const identities = read(path.join(FAM, 'product_identities.csv'));
-  const identityAliases = read(path.join(FAM, 'product_identity_aliases.csv'));
-  const brands = read(path.join(A, 'canonical_brands.csv'));
-  const parents = read(path.join(A, 'canonical_parents.csv'));
-  // Extension brands
-  const brandExt = read(path.join(FAM, 'canonical_brands_extension.csv'));
-  const parentExt = read(path.join(FAM, 'canonical_parents_extension.csv'));
-  const allBrands = [...brands, ...brandExt];
-  const allParents = [...parents, ...parentExt];
-
-  const ctx = {
-    families,
-    familyAliases,
-    identities,
-    identityAliases,
-    brands: allBrands,
-    parents: allParents,
-  };
+  const criteria = read(path.join(PACK, 'signal_target_product_criteria.csv'));
+  const brands = [
+    ...read(path.join(A, 'canonical_brands.csv')),
+    ...read(path.join(FAM, 'canonical_brands_extension.csv')),
+  ];
+  const parents = [
+    ...read(path.join(A, 'canonical_parents.csv')),
+    ...read(path.join(FAM, 'canonical_parents_extension.csv')),
+  ];
 
   const results: Array<Record<string, string>> = [];
 
@@ -260,48 +94,101 @@ function main() {
     const state = pubState(sig as any);
     const tgts = pack.targets.filter((t) => t.signal_id === sid);
     const resolvedTgts = tgts.filter(
-      (t) => t.resolution_status === 'resolved' && (t.canonical_target_id || '').trim()
+      (t) => t.resolution_status === 'resolved' || t.resolution_status === 'resolved_with_warning'
     );
 
-    // Prefer product/product_family targets for fixture selection; else first resolved
     const preferred =
       resolvedTgts.find((t) => t.target_type === 'product') ||
       resolvedTgts.find((t) => t.target_type === 'product_family') ||
       resolvedTgts.find((t) => t.target_type === 'brand') ||
       resolvedTgts[0];
 
-    let fx: Fixture | null = preferred ? fixtureForTarget(preferred as any, ctx) : null;
+    let productName = '';
+    let brandsField = '';
+    let market: 'AU' | 'NZ' = 'AU';
+    let categories_tags: string[] | undefined;
+    let ingredients_text: string | undefined;
+    let note = '';
 
-    // Manual overrides only where auto fixture needs cocoa evidence or known retail title
-    if (sid === 'SIG-IN-GL-001-20260918' || sid === 'SIG-IN-GL-002-20260918' || sid === 'SIG-IN-GL-001' || sid === 'SIG-IN-GL-002') {
-      fx = {
-        barcode: '9300617064879',
-        productName: 'Cadbury Dairy Milk Milk Chocolate',
-        brands: 'Cadbury',
-        market: 'AU',
-        categories_tags: ['en:chocolates'],
-        ingredients_text: 'milk, sugar, cocoa',
-        note: 'cocoa-guarded chocolate context',
-      };
+    if (preferred) {
+      const type = (preferred.target_type || '').trim();
+      const tid = (preferred.signal_target_id || '').trim();
+      const marketRaw = String(preferred.market_key || 'AU');
+      market = marketRaw === 'NZ' || (marketRaw.includes('NZ') && !marketRaw.includes('AU')) ? 'NZ' : 'AU';
+
+      if (type === 'product' || type === 'product_family') {
+        const crits = criteria.filter(
+          (c) => c.signal_target_id === tid && (c.review_state || '') === 'reviewed'
+        );
+        const best = [...crits].sort(
+          (a, b) => (b.match_value || '').length - (a.match_value || '').length
+        )[0];
+        if (best) {
+          const brand = brandNameById(brands, (best.required_brand_id || '').trim());
+          brandsField = brand;
+          const phrase = best.match_value || '';
+          productName =
+            brand && !phrase.toLowerCase().includes(brand.toLowerCase().replace(/'s$/, ''))
+              ? `${brand} ${phrase}`
+              : phrase;
+          if ((best.market_key || '') === 'NZ') market = 'NZ';
+          if ((best.market_key || '') === 'AU') market = 'AU';
+          note = `from criteria ${best.criterion_id}`;
+        } else {
+          productName = preferred.target_label || tid;
+          note = 'no reviewed product-scope criteria — expect fail closed';
+        }
+      } else if (type === 'brand') {
+        brandsField = brandNameById(brands, (preferred.canonical_target_id || '').trim());
+        const guard = (preferred.product_scope_guard || '').trim();
+        if (guard === 'cocoa_chocolate') {
+          productName = `${brandsField || 'Brand'} Milk Chocolate`;
+          categories_tags = ['en:chocolates'];
+          ingredients_text = 'milk, sugar, cocoa';
+          note = 'brand target with cocoa_chocolate guard evidence';
+        } else {
+          productName = `${brandsField || preferred.canonical_target_id} Product`;
+          note = 'brand target';
+        }
+      } else if (type === 'entity' || type === 'parent') {
+        const canon = (preferred.canonical_target_id || '').trim();
+        const guard = (preferred.product_scope_guard || '').trim();
+        if (canon === 'P0009' || canon === 'P0008' || guard === 'cocoa_chocolate') {
+          brandsField = 'Cadbury';
+          productName = 'Cadbury Dairy Milk Milk Chocolate';
+          categories_tags = ['en:chocolates'];
+          ingredients_text = 'milk, sugar, cocoa';
+          note = `entity ${canon} via Cadbury descendant (cocoa evidence)`;
+        } else if (canon === 'P0002') {
+          brandsField = 'Coles';
+          productName = 'Coles Brand Product';
+          note = `entity ${canon}`;
+        } else {
+          const child = brands.find((b) => (b.parent_id || '').trim() === canon);
+          brandsField = (child?.canonical_brand_name || parentNameById(parents, canon) || '').trim();
+          productName = `${brandsField || canon} Product`;
+          note = `entity ${canon}`;
+        }
+      }
     }
 
     const logs: string[] = [];
     let fired = false;
     let identityLog = '';
     let matchState = '';
-
-    if (fx) {
+    if (productName) {
+      const barcode = `93${String(Math.abs(hash(sid)) % 1e10).padStart(10, '0')}`;
       const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
-        barcode: fx.barcode,
-        productName: fx.productName,
+        barcode,
+        productName,
         product: product({
-          barcode: fx.barcode,
-          product_name: fx.productName,
-          brands: fx.brands,
-          categories_tags: fx.categories_tags,
-          ingredients_text: fx.ingredients_text,
+          barcode,
+          product_name: productName,
+          brands: brandsField,
+          categories_tags,
+          ingredients_text,
         }),
-        scanMarketPublic: fx.market,
+        scanMarketPublic: market,
         pack,
         forceRun: true,
         evaluationClockIso: CLOCK,
@@ -316,33 +203,22 @@ function main() {
     let status: 'works_ordinary_scan' | 'held' = fired ? 'works_ordinary_scan' : 'held';
     let holdReason = '';
     if (!fired) {
-      if (state && state !== 'publishable' && state !== 'candidate') {
-        holdReason = `signal_publication_state=${state} (not publishable)`;
-      } else if (resolvedTgts.length === 0) {
-        holdReason =
-          'No resolved target with canonical_target_id — missing governed identity binding on target row';
-      } else if (!fx) {
-        holdReason = `Could not derive ordinary-scan fixture from target type ${preferred?.target_type} / ${preferred?.canonical_target_id}`;
-      } else if (!identityLog || identityLog.includes('brand=(none)')) {
-        holdReason = `Brand/parent chain did not resolve from ordinary scan fields (brands="${fx.brands}" product="${fx.productName}"). Missing brand alias or canonical brand in A-data. ${fx.note}`;
+      if (!preferred) {
+        holdReason = 'No resolved target';
       } else if (
-        identityLog.includes('families=(none)') &&
-        identityLog.includes('products=(none)') &&
-        resolvedTgts.some((t) => t.target_type === 'product' || t.target_type === 'product_family')
+        (preferred.target_type === 'product' || preferred.target_type === 'product_family') &&
+        !criteria.some(
+          (c) =>
+            c.signal_target_id === preferred.signal_target_id && (c.review_state || '') === 'reviewed'
+        )
       ) {
-        holdReason = `Brand resolved but no product_family/product_identity alias matched scan name "${fx.productName}". Needed: ${resolvedTgts.map((t) => t.canonical_target_id).join(', ')}. ${fx.note}`;
-      } else if (state === 'candidate' || state === 'held_for_review' || state === 'predecessor' || !state) {
-        // Predecessors are expected held for public path; still report identity capability
-        const idOk =
-          (identityLog.includes('families=') && !identityLog.includes('families=(none)')) ||
-          (identityLog.includes('products=') && !identityLog.includes('products=(none)'));
-        if (idOk || (identityLog.includes('brand=') && !identityLog.includes('brand=(none)'))) {
-          holdReason = `Identity path capable (${identityLog}) but signal_publication_state=${state || '(empty/candidate predecessor)'} — not public head. ${fx.note}`;
-        } else {
-          holdReason = `Did not publish. state=${state || '(empty)'}. ${identityLog}. Targets: ${resolvedTgts.map((t) => `${t.canonical_target_id}/${t.target_type}/${t.propagation_mode}`).join('; ')}. ${fx.note}`;
-        }
+        holdReason = `No reviewed Workstream C product-scope criteria for target ${preferred.signal_target_id} (${preferred.target_label}). Ordinary scan cannot establish product scope — fail closed. ${note}`;
+      } else if (!identityLog || identityLog.includes('brand=(none)')) {
+        holdReason = `Brand/parent chain did not resolve from scan brands="${brandsField}" product="${productName}". ${note}`;
+      } else if (state && state !== 'publishable') {
+        holdReason = `Identity capable (${identityLog}) but signal_publication_state=${state}. ${note}`;
       } else {
-        holdReason = `Identity context present (${identityLog}) but Signal did not publish under publishable gate. Targets: ${resolvedTgts.map((t) => `${t.canonical_target_id}/${t.target_type}/${t.propagation_mode}`).join('; ')}. state=${state}. ${fx.note}`;
+        holdReason = `Identity present (${identityLog}) but Signal did not publish. state=${state || '(empty)'}. ${note}`;
       }
     }
 
@@ -352,12 +228,11 @@ function main() {
       signal_class: String(sig.signal_class || ''),
       status,
       hold_reason: holdReason,
-      fixture_product: fx?.productName || '',
-      fixture_brands: fx?.brands || '',
-      fixture_market: fx?.market || '',
+      fixture_product: productName,
+      fixture_brands: brandsField,
+      fixture_market: market,
       identity_log: identityLog,
       match_state: matchState,
-      resolved_targets: resolvedTgts.map((t) => t.canonical_target_id).join('|'),
     });
   }
 
@@ -370,6 +245,7 @@ function main() {
   const out = {
     generated_at: new Date().toISOString(),
     clock: CLOCK,
+    architecture: 'chaining_brand_only_plus_workstream_c_product_scope',
     total_signals: results.length,
     works_ordinary_scan: works.length,
     held: held.length,
@@ -388,18 +264,20 @@ function main() {
     })),
     results,
   };
-  const outPath = path.join(ROOT, 'reports', 'IDENTITY_CORRECTION_ORDINARY_SCAN_CORPUS_20260921.json');
+  const outPath = path.join(
+    ROOT,
+    'reports',
+    'CHAINING_BOUNDARY_ORDINARY_SCAN_CORPUS_20260921.json'
+  );
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2));
   console.log(
     JSON.stringify(
       {
-        total: out.total_signals,
         works: out.works_ordinary_scan,
         held: out.held,
         publishable_works: out.publishable_works_ordinary_scan,
         publishable_held: out.publishable_held,
         publishable_works_ids: out.publishable_works_ids,
-        publishable_held_ids: out.publishable_held_ids,
         publishable_held_details: out.publishable_held_details,
       },
       null,

@@ -3,7 +3,10 @@
 **Workbook source:** `Rveel_Dynamic_Signals_Asset_20260819_v0_3_FINAL.xlsx` (founder-approved v0.3 predecessor baseline; not runtime).  
 **Repo-native source:** `workstreamC/c-data/dynamic-signals-v0.3/`  
 **Historical v0.2:** `workstreamC/c-data/dynamic-signals-v0.2/` — unchanged.  
-**Accepted Chaining (identity dependency for Asset matching):** `workstreamA/a-data/wave1-v0.16/` + `workstreamA/a-data/chaining-extensions/v0.3/`.
+
+**Shared Identity dependency (ownership only):** `workstreamA/a-data/wave1-v0.16/` + `workstreamA/a-data/chaining-extensions/v0.3/` — canonical parents, brands, brand aliases, brand/entity hierarchy. **Not** products, product families, or GTIN→brand links.
+
+**Product-scope evaluation (this Workstream):** after ownership resolves, Dynamic Signals compares ordinary scan product fields against `input/signal_target_product_criteria.csv` (linked to `signal_targets`). Food recall batch/date facts remain in `food_recall_*` tables.
 
 ## Phase C refresh (2026-09-18)
 
@@ -13,7 +16,6 @@
 | Successors (18) | `signal_id` = predecessor + `-20260918`; same `dedupe_key`; `supersedes_signal_id` set; `expires_at=2026-12-31`; evidence policy `RVEEL-SIGNALS-MVP-2026-09-v0.4` |
 | New records (8) | `SIG-SR-AU-005`…`008`, `SIG-SR-NZ-004`…`006`, `SIG-IN-GL-003` with locked package copy |
 | Publishable heads | Successors/new records with ≥1 `resolved` target (see `TARGET_RESOLUTION.md`) |
-| Held residuals | Exact-product targets without verified GTIN — `reports/phase_c_held_targets.md` |
 
 ## Row counts (canonical repo CSVs)
 
@@ -23,13 +25,20 @@
 | Reveal_Domains → `input/reveal_domains.csv` | 14 |
 | Signals → `input/signals.csv` | 44 (18 pred + 18 succ + 8 new) |
 | Signal_Targets → `input/signal_targets.csv` | 62 |
+| Signal target product criteria → `input/signal_target_product_criteria.csv` | Workstream C product-scope terms |
 | Controlled_Values → `input/controlled_values.csv` | 55 |
-| Food recall notices | 12 |
-| Food recall affected variants | 18 documentation rows with empty GTINs (unverified; matcher skips empty GTIN) |
-| Food recall eligibility | 3 family-linked reviewed bindings (Vogel’s / Austral Herbs / Mon Sire NZ) — live fire still needs verified GTINs |
-| Food recall related_gtins | 0 (prefer empty over speculation; candidate GTINs not promoted) |
+| Food recall notices / variants / eligibility / related_gtins | see `input/food_recall_*.csv` |
 
 There is **no** governed v0.3.2 asset; documentation must not reference v0.3.2.
+
+## Architecture boundary
+
+| Layer | Answers |
+|-------|---------|
+| Shared Identity / Chaining | Whose brand/owner is this? |
+| Dynamic Signals (this pack) | Does this approved Signal apply to the scanned product? |
+
+Product-name phrases, pack size, market, optional verified GTIN discriminators, and recall batch/date qualifications are **Signal scope**, not Chaining identities.
 
 ## Food Safety News access rule
 

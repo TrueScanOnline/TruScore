@@ -3,18 +3,13 @@
  * (Mon Sire AU/NZ separation, Woolworths non-propagation, Mondelez / comparator negatives,
  * candidate-GTIN fail-closed, residual exact-product fail-closed).
  */
-import fs from 'fs';
 import path from 'path';
-import { parseCsv, type CsvRecord } from '../../../identity/workstreamA/csv';
-import { buildProductFamilyMapsFromCsvRecords } from '../../../identity/chaining/productFamilyMaps';
-import {
-  buildBrandHierarchyMapsFromCsvRecords,
-  buildEntityHierarchyMapsFromCsvRecords,
-} from '../../../identity/chaining/brandEntityHierarchyMaps';
+import type { CsvRecord } from '../../../identity/workstreamA/csv';
 import {
   buildDynamicSignalsAssetPublicationRecords,
   type AssetPackParsed,
 } from '../../../dynamicSignals/asset/v0.2/matchDynamicSignalsAsset';
+import { loadAssetPackFromRoots } from './_assetPackTestHelpers';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const PACK = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.3', 'input');
@@ -22,33 +17,15 @@ const FAM = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.
 const CLOCK = { nowIso: () => '2026-09-18T00:00:00.000Z' };
 
 function loadV03Pack(): AssetPackParsed {
-  const read = (p: string) => parseCsv(fs.readFileSync(p, 'utf8'));
-  return {
-    sources: read(path.join(PACK, 'source_universe.csv')),
-    signals: read(path.join(PACK, 'signals.csv')),
-    targets: read(path.join(PACK, 'signal_targets.csv')),
-    familyMaps: buildProductFamilyMapsFromCsvRecords(
-      read(path.join(FAM, 'product_families.csv')),
-      read(path.join(FAM, 'product_family_membership.csv'))
-    ),
-    brandHierarchy: buildBrandHierarchyMapsFromCsvRecords(
-      read(path.join(FAM, 'brand_child_of_brand.csv'))
-    ),
-    entityHierarchy: buildEntityHierarchyMapsFromCsvRecords(
-      read(path.join(FAM, 'entity_child_of_entity.csv'))
-    ),
-    recallEligibility: [],
-    recallNotices: [],
-  };
+  return loadAssetPackFromRoots({ packRoot: PACK, famRoot: FAM });
 }
 
 function match(input: {
   barcode: string;
   brand_id: string | null;
   parent_id: string | null;
-  product_family_ids?: string[];
   scanMarketPublic: 'AU' | 'NZ';
-  product_name?: string;
+  productName?: string;
 }) {
   return buildDynamicSignalsAssetPublicationRecords({
     pack: loadV03Pack(),
@@ -56,10 +33,10 @@ function match(input: {
       barcode: input.barcode,
       brand_id: input.brand_id,
       parent_id: input.parent_id,
-      product_family_ids: input.product_family_ids ?? [],
+      productName: input.productName ?? '',
       scanMarketPublic: input.scanMarketPublic,
-      productScopeEvidence: input.product_name
-        ? { product_name: input.product_name }
+      productScopeEvidence: input.productName
+        ? { product_name: input.productName }
         : undefined,
     },
     evaluationClock: CLOCK,
@@ -73,7 +50,7 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
       brand_id: 'B0241',
       parent_id: 'P0009',
       scanMarketPublic: 'AU',
-      product_name: 'Original Crackers',
+      productName: 'Original Crackers',
     });
     expect(au.map((r) => r.signal_id)).toContain('SIG-IN-GL-003');
     expect(au.find((r) => r.signal_id === 'SIG-IN-GL-003')?.skeleton_card_copy?.title_display).toContain(
@@ -85,7 +62,7 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
       brand_id: 'B0241',
       parent_id: 'P0009',
       scanMarketPublic: 'NZ',
-      product_name: 'Cadbury Dairy Milk',
+      productName: 'Cadbury Dairy Milk',
     });
     expect(nz.map((r) => r.signal_id)).toContain('SIG-IN-GL-003');
   });
@@ -103,7 +80,7 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
         brand_id: c.brand_id,
         parent_id: c.parent_id,
         scanMarketPublic: 'AU',
-        product_name: c.name,
+        productName: c.name,
       });
       expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-003')).toBe(false);
     }
@@ -115,32 +92,30 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
       brand_id: 'B0069',
       parent_id: 'P0009',
       scanMarketPublic: 'AU',
-      product_name: 'Ritz Crackers',
+      productName: 'Ritz Crackers',
     });
     expect(recs.map((r) => r.signal_id)).toContain('SIG-IN-GL-003');
     expect(recs.some((r) => r.signal_id === 'SIG-IN-GL-002-20260918')).toBe(false);
   });
 
   it('AU Mon Sire exact target does not publish without verified GTIN; NZ family is market-separated', () => {
+    // Safety product/family targets require Food Recall Matcher — Asset path alone fails closed.
     const au = match({
       barcode: '9300000000001',
-      brand_id: null,
-      parent_id: null,
-      product_family_ids: ['PF_MONSIRE_BRIE_NZ_20260904'],
+      brand_id: 'B0798',
+      parent_id: 'P0177',
       scanMarketPublic: 'AU',
-      product_name: 'Brie Mon Sire 1kg',
+      productName: 'Brie Mon Sire 1kg',
     });
     expect(au.some((r) => r.signal_id === 'SIG-SR-AU-008')).toBe(false);
-    // NZ family Safety still routes through Food Recall Matcher (not Asset family_members).
     expect(au.some((r) => r.signal_id === 'SIG-SR-NZ-006')).toBe(false);
 
     const nz = match({
       barcode: '9410000000001',
-      brand_id: null,
-      parent_id: null,
-      product_family_ids: ['PF_MONSIRE_BRIE_NZ_20260904'],
+      brand_id: 'B0798',
+      parent_id: 'P0177',
       scanMarketPublic: 'NZ',
-      product_name: 'Mon Sire Brie Sabato',
+      productName: 'Mon Sire Brie Sabato',
     });
     expect(nz.some((r) => r.signal_id === 'SIG-SR-AU-008')).toBe(false);
     expect(nz.some((r) => r.signal_id === 'SIG-SR-NZ-006')).toBe(false);
@@ -152,7 +127,7 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
       brand_id: 'B0001',
       parent_id: 'P0001',
       scanMarketPublic: 'NZ',
-      product_name: 'Woolworths Milk 2L',
+      productName: 'Woolworths Milk 2L',
     });
     expect(recs.some((r) => r.signal_id === 'SIG-SR-NZ-005')).toBe(false);
   });
@@ -179,8 +154,6 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
         t.target_type === 'product' &&
         !(t.canonical_target_id ?? '').trim()
     );
-    // After identity correction, exact products are bound to PI_* where governed aliases exist.
-    // Residual empty canonicals (if any) must remain non-matching.
     for (const t of unresolved) {
       expect(t.resolution_status === 'blocked' || t.resolution_status === 'needs_review').toBe(true);
     }
@@ -189,9 +162,9 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
       brand_id: 'B0654',
       parent_id: 'P0156',
       scanMarketPublic: 'AU',
-      product_name: 'Chickadees 190g',
+      productName: 'Chickadees 190g',
     });
-    // Low-level matcher without product_identity_ids must not fire Safety exact_only via Asset path
+    // Safety exact_only must not fire via Asset path alone (Food Recall Matcher required).
     expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-001-20260918')).toBe(false);
   });
 
@@ -217,14 +190,13 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
     }
   });
 
-  it('family-bound in_the_news successor fires when product_family_ids include PF', () => {
+  it('family-bound in_the_news successor fires via Workstream C product-scope + brand', () => {
     const recs = match({
       barcode: '9300000111111',
       brand_id: 'B0179',
       parent_id: 'P0041',
-      product_family_ids: ['PF_LEGGOS_TOMATO_PASTE_AU'],
       scanMarketPublic: 'AU',
-      product_name: "Leggo's Tomato Paste",
+      productName: "Leggo's Tomato Paste",
     });
     expect(recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-001-20260918');
     const hit = recs.find((r) => r.signal_id === 'SIG-IN-AU-001-20260918')!;

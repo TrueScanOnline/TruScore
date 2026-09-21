@@ -2,14 +2,8 @@
  * Pass 4 corrective — NA-019 temporal public window + NA-020 Cadbury cocoa_chocolate guard.
  */
 
-import fs from 'fs';
 import path from 'path';
-import { parseCsv, type CsvRecord } from '../../../identity/workstreamA/csv';
-import { buildProductFamilyMapsFromCsvRecords } from '../../../identity/chaining/productFamilyMaps';
-import {
-  buildBrandHierarchyMapsFromCsvRecords,
-  buildEntityHierarchyMapsFromCsvRecords,
-} from '../../../identity/chaining/brandEntityHierarchyMaps';
+import type { CsvRecord } from '../../../identity/workstreamA/csv';
 import {
   buildDynamicSignalsAssetPublicationRecords,
   type AssetPackParsed,
@@ -23,6 +17,7 @@ import { isPublicationRecordPubliclyRenderable } from '../../../signals/signalRe
 import { calculateTruScore } from '../../../lib/truscoreEngine';
 import type { Product } from '../../../types/product';
 import type { DynamicSignalPublicationRecord } from '../../../dynamicSignals/publish/types';
+import { loadAssetPackFromRoots } from '../dynamicSignals/_assetPackTestHelpers';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const PACK = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.3', 'input');
@@ -39,24 +34,7 @@ const AFTER_EXPIRY = createFixedIngestionClock('2027-01-01T12:00:00.000Z');
 const AFTER_PREDECESSOR_ERA = createFixedIngestionClock('2026-09-09T12:00:00.000Z');
 
 function loadV03Pack(): AssetPackParsed {
-  const read = (p: string) => parseCsv(fs.readFileSync(p, 'utf8'));
-  return {
-    sources: read(path.join(PACK, 'source_universe.csv')),
-    signals: read(path.join(PACK, 'signals.csv')),
-    targets: read(path.join(PACK, 'signal_targets.csv')),
-    familyMaps: buildProductFamilyMapsFromCsvRecords(
-      read(path.join(FAM, 'product_families.csv')),
-      read(path.join(FAM, 'product_family_membership.csv'))
-    ),
-    brandHierarchy: buildBrandHierarchyMapsFromCsvRecords(
-      read(path.join(FAM, 'brand_child_of_brand.csv'))
-    ),
-    entityHierarchy: buildEntityHierarchyMapsFromCsvRecords(
-      read(path.join(FAM, 'entity_child_of_entity.csv'))
-    ),
-    recallEligibility: [],
-    recallNotices: [],
-  };
+  return loadAssetPackFromRoots({ packRoot: PACK, famRoot: FAM });
 }
 
 function cadburyIdentity(overrides?: {
@@ -66,14 +44,15 @@ function cadburyIdentity(overrides?: {
   ingredients_text?: string;
   scanMarketPublic?: 'AU' | 'NZ';
 }) {
+  const productName = overrides?.product_name ?? 'Cadbury Dairy Milk Milk Chocolate';
   return {
     barcode: '9300617064879',
     brand_id: overrides?.brand_id ?? 'B0241',
     parent_id: 'P0009',
-    product_family_ids: [] as string[],
+    productName,
     scanMarketPublic: overrides?.scanMarketPublic ?? ('AU' as const),
     productScopeEvidence: {
-      product_name: overrides?.product_name ?? 'Cadbury Dairy Milk Milk Chocolate',
+      product_name: productName,
       categories_tags: overrides?.categories_tags ?? ['en:chocolates'],
       ingredients_text: overrides?.ingredients_text,
     },
@@ -248,7 +227,7 @@ describe('Pass 4 NA-020 — TGT-014/015 cocoa_chocolate guard', () => {
         barcode: '9310123456789',
         brand_id: 'B0069',
         parent_id: 'P0009',
-        product_family_ids: [],
+        productName: 'Ritz Crackers',
         scanMarketPublic: 'AU',
         productScopeEvidence: {
           product_name: 'Ritz Crackers',

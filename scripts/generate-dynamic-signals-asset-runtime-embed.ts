@@ -1,6 +1,8 @@
 /**
  * Generate Metro-safe embedded Dynamic Signals Asset pack + A-data rows.
  * Source pack: workstreamC/c-data/dynamic-signals-v0.3/input
+ * Shared Identity: brands / parents / aliases / brand+entity hierarchy only.
+ * Product scope: Workstream C signal_target_product_criteria.
  * App runtime must not import Node `fs` — EAS Bundle JavaScript fails otherwise.
  *
  * Usage: npx ts-node --project scripts/tsconfig.json scripts/generate-dynamic-signals-asset-runtime-embed.ts
@@ -37,11 +39,7 @@ function main() {
     sources: readCsv(path.join(packRoot, 'source_universe.csv')),
     signals: readCsv(path.join(packRoot, 'signals.csv')),
     targets: readCsv(path.join(packRoot, 'signal_targets.csv')),
-    productFamilies: readCsv(path.join(famRoot, 'product_families.csv')),
-    productFamilyMembership: readCsv(path.join(famRoot, 'product_family_membership.csv')),
-    productFamilyAliases: readCsv(path.join(famRoot, 'product_family_aliases.csv')),
-    productIdentities: readCsv(path.join(famRoot, 'product_identities.csv')),
-    productIdentityAliases: readCsv(path.join(famRoot, 'product_identity_aliases.csv')),
+    signalTargetProductCriteria: readCsv(path.join(packRoot, 'signal_target_product_criteria.csv')),
     brandChildOfBrand: readCsv(path.join(famRoot, 'brand_child_of_brand.csv')),
     entityChildOfEntity: readCsv(path.join(famRoot, 'entity_child_of_entity.csv')),
     foodRecallEligibility: readCsv(path.join(packRoot, 'food_recall_eligibility.csv')),
@@ -56,10 +54,8 @@ function main() {
       ...readCsv(path.join(aRoot, 'canonical_parents.csv')),
       ...readCsv(path.join(extRoot, 'canonical_parents_extension.csv')),
     ],
-    gtinRows: [
-      ...readCsv(path.join(aRoot, 'gtin_brand_links.csv')),
-      ...readCsv(path.join(extRoot, 'gtin_brand_links_extension.csv')),
-    ],
+    // GTIN→brand scaffold retired from active Chaining / runtime embed consumption.
+    gtinRows: [] as ReturnType<typeof readCsv>,
     aliasRows: [
       ...readCsv(path.join(aRoot, 'brand_aliases.csv')),
       ...readCsv(path.join(extRoot, 'brand_aliases_extension.csv')),
@@ -69,6 +65,7 @@ function main() {
   const body = `/* AUTO-GENERATED — do not edit by hand.
  * Run: npm run generate:dsa-asset-runtime-embed
  * Source: governed Dynamic Signals Asset v0.3 CSVs + Shared Identity (wave1-v0.16 + chaining-extensions/v0.3).
+ * Product scope: Workstream C signal_target_product_criteria. GTIN→brand rows are not embedded.
  */
 import type { CsvRecord } from '../../../identity/workstreamA/csv';
 
@@ -77,11 +74,7 @@ export type DynamicSignalsAssetRuntimeEmbed = {
   sources: CsvRecord[];
   signals: CsvRecord[];
   targets: CsvRecord[];
-  productFamilies: CsvRecord[];
-  productFamilyMembership: CsvRecord[];
-  productFamilyAliases: CsvRecord[];
-  productIdentities: CsvRecord[];
-  productIdentityAliases: CsvRecord[];
+  signalTargetProductCriteria: CsvRecord[];
   brandChildOfBrand: CsvRecord[];
   entityChildOfEntity: CsvRecord[];
   foodRecallEligibility: CsvRecord[];
@@ -104,7 +97,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
   fs.writeFileSync(OUT, body, 'utf8');
   console.log(`Wrote ${path.relative(ROOT, OUT)}`);
   console.log(
-    `rows: signals=${embed.signals.length} targets=${embed.targets.length} brands=${embed.brandRows.length} gtins=${embed.gtinRows.length}`
+    `rows: signals=${embed.signals.length} targets=${embed.targets.length} brands=${embed.brandRows.length} criteria=${embed.signalTargetProductCriteria.length} gtins=${embed.gtinRows.length}`
   );
 }
 

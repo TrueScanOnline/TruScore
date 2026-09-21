@@ -1,11 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { parseCsv, type CsvRecord } from '../../../identity/workstreamA/csv';
-import { buildProductFamilyMapsFromCsvRecords } from '../../../identity/chaining/productFamilyMaps';
-import {
-  buildBrandHierarchyMapsFromCsvRecords,
-  buildEntityHierarchyMapsFromCsvRecords,
-} from '../../../identity/chaining/brandEntityHierarchyMaps';
 import {
   buildDynamicSignalsAssetPublicationRecords,
   requiresFoodRecallMatcherEligibility,
@@ -22,31 +17,33 @@ import {
   MILO_AFFECTED_VARIANTS,
   MILO_SIGNAL_ID,
 } from '../../../workstreamC/recall/miloRecallPack';
+import {
+  loadAssetPackFromRoots,
+  readCsvFile,
+  withProductScopeCriteria,
+} from './_assetPackTestHelpers';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const PACK = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.2', 'input');
+const CRITERIA_V03 = path.join(
+  ROOT,
+  'workstreamC',
+  'c-data',
+  'dynamic-signals-v0.3',
+  'input',
+  'signal_target_product_criteria.csv'
+);
 const FAM = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.2');
 const A_DATA = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.15', 'input');
 
-function loadBasePack(): AssetPackParsed {
-  const read = (p: string) => parseCsv(fs.readFileSync(p, 'utf8'));
-  return {
-    sources: read(path.join(PACK, 'source_universe.csv')),
-    signals: read(path.join(PACK, 'signals.csv')),
-    targets: read(path.join(PACK, 'signal_targets.csv')),
-    familyMaps: buildProductFamilyMapsFromCsvRecords(
-      read(path.join(FAM, 'product_families.csv')),
-      read(path.join(FAM, 'product_family_membership.csv'))
-    ),
-    brandHierarchy: buildBrandHierarchyMapsFromCsvRecords(
-      read(path.join(FAM, 'brand_child_of_brand.csv'))
-    ),
-    entityHierarchy: buildEntityHierarchyMapsFromCsvRecords(
-      read(path.join(FAM, 'entity_child_of_entity.csv'))
-    ),
-    recallEligibility: [],
-    recallNotices: [],
-  };
+function loadBasePack(criteria?: CsvRecord[]): AssetPackParsed {
+  const pack = loadAssetPackFromRoots({
+    packRoot: PACK,
+    famRoot: FAM,
+    // v0.2 pack has no criteria file — reuse migrated v0.3 criteria keyed by TGT-* ids.
+    signalTargetProductCriteria: criteria ?? readCsvFile(CRITERIA_V03),
+  });
+  return pack;
 }
 
 function withPublishable(signals: CsvRecord[], ids: string[]): CsvRecord[] {
@@ -62,34 +59,6 @@ function withPublishable(signals: CsvRecord[], ids: string[]): CsvRecord[] {
         }
       : s
   );
-}
-
-function withMembership(
-  pack: AssetPackParsed,
-  rows: { gtin: string; family_id: string; market_key: string }[],
-  familyReviewState = 'reviewed'
-): AssetPackParsed {
-  const membership: CsvRecord[] = rows.map((r, i) => ({
-    membership_id: `M_TEST_${i}`,
-    product_family_id: r.family_id,
-    gtin: r.gtin,
-    market_key: r.market_key,
-    review_state: 'reviewed',
-    confidence_state: 'strong',
-    effective_from: '2026-01-01',
-    effective_to: '',
-    lineage_reference: 'test',
-    notes: 'test fixture only',
-  }));
-  const familyRows = parseCsv(fs.readFileSync(path.join(FAM, 'product_families.csv'), 'utf8')).map((f) =>
-    rows.some((r) => r.family_id === f.product_family_id)
-      ? { ...f, review_state: familyReviewState }
-      : f
-  );
-  return {
-    ...pack,
-    familyMaps: buildProductFamilyMapsFromCsvRecords(familyRows, membership),
-  };
 }
 
 function loadA() {
@@ -119,12 +88,8 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
     expect(pack.targets).toHaveLength(25);
   });
 
-  it('candidate Signals do not render publicly even when target would match', () => {
+  it('candidate Signals do not render publicly even when product-scope would match', () => {
     let pack = loadBasePack();
-    // SIG-IN-AU-001 remains candidate/held — family membership reviewed only in fixture
-    pack = withMembership(pack, [
-      { gtin: '9300000000999', family_id: 'PF_LEGGOS_TOMATO_PASTE_AU', market_key: 'AU' },
-    ]);
     pack = {
       ...pack,
       targets: pack.targets.map((t) =>
@@ -138,7 +103,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9300000000999',
         brand_id: 'B0179',
         parent_id: 'P0041',
-        product_family_ids: ['PF_LEGGOS_TOMATO_PASTE_AU'],
+        productName: "Leggo's Tomato Paste 140g",
         scanMarketPublic: 'AU',
       },
       logLines: logs,
@@ -156,7 +121,6 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
       expect(s.signal_publication_state).toBe('publishable');
       expect(s.review_state).toBe('reviewed');
     }
-    // Held Signals remain candidate
     expect(pack.signals.find((r) => r.signal_id === 'SIG-IN-AU-001')?.signal_publication_state).toBe(
       'candidate'
     );
@@ -174,7 +138,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9300601234567',
         brand_id: 'B0067',
         parent_id: 'P0009',
-        product_family_ids: [],
+        productName: 'Cadbury Chocolate',
         scanMarketPublic: 'AU',
       },
     });
@@ -222,7 +186,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9312345678901',
         brand_id: 'B0059',
         parent_id: 'P0008',
-        product_family_ids: [],
+        productName: "Allen's iNSiDE OUTS",
         scanMarketPublic: 'AU',
       },
       logLines: logs,
@@ -232,8 +196,6 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
   });
 
   it('exact-product positive for non-Safety News still works; sibling negative', () => {
-    // Use a synthetic in_the_news exact_only by adapting a family signal is overkill —
-    // brand exact already covered. Here: entity Coles remains Asset-eligible (not recall matcher).
     let pack = loadBasePack();
     pack = {
       ...pack,
@@ -248,7 +210,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9300000000100',
         brand_id: 'B0013',
         parent_id: 'P0002',
-        product_family_ids: [],
+        productName: 'Coles Own Brand Item',
         scanMarketPublic: 'AU',
       },
     });
@@ -256,12 +218,8 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
     expect(hit[0].state.resolution_status).toBe('resolved');
   });
 
-  it('family_members: multiple pack sizes inherit when family+membership reviewed; outsider does not', () => {
+  it('product_family scope: tomato-paste product names match; unrelated Leggo product does not', () => {
     let pack = loadBasePack();
-    pack = withMembership(pack, [
-      { gtin: '9411111111111', family_id: 'PF_LEGGOS_TOMATO_PASTE_AU', market_key: 'AU' },
-      { gtin: '9411111111112', family_id: 'PF_LEGGOS_TOMATO_PASTE_AU', market_key: 'AU' },
-    ]);
     pack = {
       ...pack,
       signals: withPublishable(pack.signals, ['SIG-IN-AU-001']),
@@ -270,14 +228,14 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
       ),
     };
 
-    for (const gtin of ['9411111111111', '9411111111112']) {
+    for (const name of ["Leggo's Tomato Paste 140g", "Leggo's Tomato Paste 500g"]) {
       const recs = buildDynamicSignalsAssetPublicationRecords({
         pack,
         identity: {
-          barcode: gtin,
+          barcode: '9411111111111',
           brand_id: 'B0179',
           parent_id: 'P0041',
-          product_family_ids: [],
+          productName: name,
           scanMarketPublic: 'AU',
         },
       });
@@ -290,20 +248,18 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9499999999999',
         brand_id: 'B0179',
         parent_id: 'P0041',
-        product_family_ids: [],
+        productName: "Leggo's Pasta Sauce Traditional",
         scanMarketPublic: 'AU',
       },
     });
     expect(outsider).toHaveLength(0);
   });
 
-  it('unreviewed family or membership cannot match', () => {
-    let pack = loadBasePack();
-    pack = withMembership(
-      pack,
-      [{ gtin: '9411111111111', family_id: 'PF_LEGGOS_TOMATO_PASTE_AU', market_key: 'AU' }],
-      'seeded' // family not reviewed
+  it('unreviewed product-scope criteria cannot match', () => {
+    const seeded = readCsvFile(CRITERIA_V03).map((r) =>
+      (r.signal_target_id ?? '') === 'TGT-009' ? { ...r, review_state: 'seeded' } : r
     );
+    let pack = withProductScopeCriteria(loadBasePack([]), seeded);
     pack = {
       ...pack,
       signals: withPublishable(pack.signals, ['SIG-IN-AU-001']),
@@ -317,7 +273,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9411111111111',
         brand_id: 'B0179',
         parent_id: 'P0041',
-        product_family_ids: [],
+        productName: "Leggo's Tomato Paste 140g",
         scanMarketPublic: 'AU',
       },
     });
@@ -336,7 +292,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9300601234567',
         brand_id: 'B0241',
         parent_id: 'P0009',
-        product_family_ids: [],
+        productName: 'Cadbury Dairy Milk',
         scanMarketPublic: 'AU',
       },
     });
@@ -348,7 +304,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9310123456789',
         brand_id: 'B0069',
         parent_id: 'P0009',
-        product_family_ids: [],
+        productName: 'Ritz Crackers',
         scanMarketPublic: 'AU',
       },
     });
@@ -367,7 +323,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9300601234568',
         brand_id: 'B0067',
         parent_id: 'P0009',
-        product_family_ids: [],
+        productName: 'Cadbury Chocolate',
         scanMarketPublic: 'AU',
       },
     });
@@ -379,7 +335,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9300601234567',
         brand_id: 'B0241',
         parent_id: 'P0009',
-        product_family_ids: [],
+        productName: 'Cadbury Dairy Milk Chocolate',
         scanMarketPublic: 'AU',
       },
     });
@@ -401,7 +357,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9300000000100',
         brand_id: 'B0013',
         parent_id: 'P0002',
-        product_family_ids: [],
+        productName: 'Coles Own Brand Item',
         scanMarketPublic: 'AU',
       },
     });
@@ -413,7 +369,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9300000000101',
         brand_id: 'B0066',
         parent_id: 'P0008',
-        product_family_ids: [],
+        productName: 'Nestle Product',
         scanMarketPublic: 'AU',
       },
     });
@@ -432,10 +388,8 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
     expect(resolveActiveSignalsProducer(logs2)).toBe('none');
   });
 
-  it('AU/NZ market isolation', () => {
-    let pack = withMembership(loadBasePack(), [
-      { gtin: '9411111111111', family_id: 'PF_LEGGOS_TOMATO_PASTE_AU', market_key: 'AU' },
-    ]);
+  it('AU/NZ market isolation for product-scope criteria', () => {
+    let pack = loadBasePack();
     pack = {
       ...pack,
       signals: withPublishable(pack.signals, ['SIG-IN-AU-001']),
@@ -449,7 +403,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9411111111111',
         brand_id: 'B0179',
         parent_id: 'P0041',
-        product_family_ids: ['PF_LEGGOS_TOMATO_PASTE_AU'],
+        productName: "Leggo's Tomato Paste 140g",
         scanMarketPublic: 'NZ',
       },
     });
@@ -464,7 +418,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: 'any',
         brand_id: null,
         parent_id: null,
-        product_family_ids: [],
+        productName: '',
         scanMarketPublic: 'AU',
       },
     });
@@ -491,7 +445,7 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
         barcode: '9300601234567',
         brand_id: 'B0067',
         parent_id: 'P0009',
-        product_family_ids: [],
+        productName: 'Cadbury Chocolate',
         scanMarketPublic: 'AU',
       },
     });
@@ -508,12 +462,13 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
     expect(result.scores?.pillars).toEqual({ body: 14, planet: 13, ethics: 14, open: 14 });
   });
 
-  it('Finding B: reviewed GTIN supplementary when product identity fails', () => {
+  it('Finding B retired: GTIN→brand scaffold is not used for ownership resolution', () => {
     const { aData, brandRows, aliasRows } = loadA();
     const aData2 = {
       ...aData,
       gtinRows: new Map(aData.gtinRows),
     };
+    // Even if a GTIN row were injected, active Chaining must not consult it.
     aData2.gtinRows.set('9990001112223', {
       brand_id: 'B0060',
       parent_id: 'P0008',
@@ -534,8 +489,9 @@ describe('Dynamic Signals Asset v0.2 — remediation matcher', () => {
       logLines: logs,
       applyCadburyUatBridge: false,
     });
-    expect(chain?.brand_id).toBe('B0060');
-    expect(logs.some((l) => l.includes('gtin_link_supplementary'))).toBe(true);
+    expect(chain).toBeNull();
+    expect(logs.some((l) => l.includes('gtin_link'))).toBe(false);
+    expect(logs.some((l) => l.includes('gtin_link_supplementary'))).toBe(false);
   });
 });
 
@@ -552,7 +508,6 @@ describe('Dynamic Signals Asset v0.2 — sole production Signal-content authorit
 
   const governedFixtureGtin = '9410000002701';
   const governedNoticeId = 'RN_TEST_ASSET_GOVERNED_2026';
-
   const relatedFamilyGtin = '9410000009991';
 
   function packWithGovernedRecall(overrides?: {
@@ -628,7 +583,6 @@ describe('Dynamic Signals Asset v0.2 — sole production Signal-content authorit
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
     const miloGtin = MILO_AFFECTED_VARIANTS[0].gtin;
     const logs: string[] = [];
-    // Production disk pack has empty recall_eligibility — MILO Stage 2 pack still exists in code.
     const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
       barcode: miloGtin,
       productName: 'MILO Dipped',
@@ -793,7 +747,7 @@ describe('Dynamic Signals Asset v0.2 — sole production Signal-content authorit
 
   it('historical MILO pack remains incapable of originating a production Signal absent governed Asset record', () => {
     process.env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH = '1';
-    const pack = loadBasePack(); // empty eligibility
+    const pack = loadBasePack();
     const recs = buildDynamicSignalsAssetRuntimePublicationRecords({
       barcode: governedFixtureGtin,
       productName: 'Test',

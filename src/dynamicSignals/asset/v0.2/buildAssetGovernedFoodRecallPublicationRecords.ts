@@ -22,6 +22,7 @@ import {
 } from '../../../workstreamC/recall';
 import { publicationStateForGtinVerification } from '../../../workstreamC/recall/mapFoodRecallMatchToPublicationRecord';
 import type { AssetPackParsed, AssetScanIdentity } from './matchDynamicSignalsAsset';
+import { assetTargetProductScopeMatches } from './matchDynamicSignalsAsset';
 import {
   assetExpiresAtAsValidUntil,
   isAssetSignalWithinPublicTemporalWindow,
@@ -49,8 +50,8 @@ function targetResolutionAllowsMatch(status: string): boolean {
 }
 
 /**
- * True when governed Safety targets (product_family/family_members or product/exact_only)
- * resolve to the scan identity — no signal-name or brand hardcoding.
+ * True when governed Safety product/product_family targets match via Workstream C
+ * product-scope criteria (ordinary scan fields + brand/parent chain).
  */
 export function scanIdentitySatisfiesSafetyTargets(
   pack: AssetPackParsed,
@@ -66,18 +67,11 @@ export function scanIdentitySatisfiesSafetyTargets(
 
     const targetType = (tgt.target_type ?? '').trim();
     const mode = (tgt.propagation_mode ?? '').trim();
-    const canonicalId = (tgt.canonical_target_id ?? '').trim();
-    if (!canonicalId) continue;
+    if (targetType !== 'product' && targetType !== 'product_family') continue;
+    if (targetType === 'product' && mode !== 'exact_only') continue;
+    if (targetType === 'product_family' && mode !== 'family_members') continue;
 
-    if (targetType === 'product_family' && mode === 'family_members') {
-      if (identity.product_family_ids.includes(canonicalId)) return true;
-      continue;
-    }
-    if (targetType === 'product' && mode === 'exact_only') {
-      if (identity.barcode === canonicalId) return true;
-      const pids = identity.product_identity_ids ?? [];
-      if (pids.includes(canonicalId)) return true;
-    }
+    if (assetTargetProductScopeMatches(pack, tgt, identity)) return true;
   }
   return false;
 }
@@ -86,54 +80,16 @@ function identityRecallUpgradeReason(
   pack: AssetPackParsed,
   signalId: string,
   identity: AssetScanIdentity,
-  notice: StructuredFoodRecallNotice
-): 'product_family_identity_match' | 'product_identity_match' | null {
-  for (const tgt of pack.targets) {
-    if ((tgt.signal_id ?? '').trim() !== signalId) continue;
-    const linkMarket = (tgt.market_key ?? '').trim();
-    if (!marketAllows(identity.scanMarketPublic, linkMarket)) continue;
-    const resStatus = (tgt.resolution_status ?? '').trim();
-    if (!targetResolutionAllowsMatch(resStatus)) continue;
-
-    const targetType = (tgt.target_type ?? '').trim();
-    const mode = (tgt.propagation_mode ?? '').trim();
-    const canonicalId = (tgt.canonical_target_id ?? '').trim();
-    if (!canonicalId) continue;
-
-    if (targetType === 'product' && mode === 'exact_only') {
-      if (identity.barcode === canonicalId) return 'product_identity_match';
-      const pids = identity.product_identity_ids ?? [];
-      if (pids.includes(canonicalId)) return 'product_identity_match';
-    }
-  }
-
-  for (const tgt of pack.targets) {
-    if ((tgt.signal_id ?? '').trim() !== signalId) continue;
-    const linkMarket = (tgt.market_key ?? '').trim();
-    if (!marketAllows(identity.scanMarketPublic, linkMarket)) continue;
-    const resStatus = (tgt.resolution_status ?? '').trim();
-    if (!targetResolutionAllowsMatch(resStatus)) continue;
-
-    const targetType = (tgt.target_type ?? '').trim();
-    const mode = (tgt.propagation_mode ?? '').trim();
-    const canonicalId = (tgt.canonical_target_id ?? '').trim();
-    if (!canonicalId) continue;
-
-    if (targetType === 'product_family' && mode === 'family_members') {
-      if (identity.product_family_ids.includes(canonicalId)) return 'product_family_identity_match';
-    }
-  }
-
-  const recallFamilyId = (notice.recall_product_family_id ?? '').trim();
-  if (recallFamilyId && identity.product_family_ids.includes(recallFamilyId)) {
-    return 'product_family_identity_match';
-  }
-  return null;
+  _notice: StructuredFoodRecallNotice
+): 'product_scope_match' | null {
+  return scanIdentitySatisfiesSafetyTargets(pack, signalId, identity)
+    ? 'product_scope_match'
+    : null;
 }
 
 function upgradeNotApplicableForIdentityHit(
   match: FoodRecallMatchResult,
-  reason: 'product_family_identity_match' | 'product_identity_match',
+  reason: 'product_scope_match',
   notice: StructuredFoodRecallNotice
 ): FoodRecallMatchResult {
   return {
@@ -307,11 +263,8 @@ export function buildAssetGovernedFoodRecallPublicationRecords(input: {
 
     const notice = noticeById.get(noticeId);
     const identity = input.scanIdentity;
-    const recallFamilyId = (notice?.recall_product_family_id ?? '').trim();
     const identityAllowsEmptyVariants =
-      identity != null &&
-      (scanIdentitySatisfiesSafetyTargets(input.pack, signalId, identity) ||
-        (recallFamilyId.length > 0 && identity.product_family_ids.includes(recallFamilyId)));
+      identity != null && scanIdentitySatisfiesSafetyTargets(input.pack, signalId, identity);
 
     if (!notice || (notice.affected_variants.length === 0 && !identityAllowsEmptyVariants)) {
       push(
