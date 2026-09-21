@@ -2,7 +2,6 @@ export const WORKSTREAM_A_FILES = {
   CANONICAL_PARENTS: 'canonical_parents.csv',
   CANONICAL_BRANDS: 'canonical_brands.csv',
   BRAND_ALIASES: 'brand_aliases.csv',
-  GTIN_BRAND_LINKS: 'gtin_brand_links.csv',
   OPERATIONAL_ENTITIES: 'operational_entities.csv',
   OWNERSHIP_CHANGE_CANDIDATES: 'ownership_change_candidates.csv',
   STEWARDSHIP_ACTION_LOG: 'stewardship_action_log.csv',
@@ -12,6 +11,11 @@ export const WORKSTREAM_A_FILES = {
   PARENT_EXTENSION_CANDIDATES: 'parent_extension_candidates.csv',
   ALIAS_HARVEST_CANDIDATES: 'alias_harvest_candidates.csv',
   CATALOGUE_AUDIT_OBSERVATIONS: 'catalogue_audit_observations.csv',
+} as const;
+
+/** Retired from active Shared Identity (v0.16+). Historical packs may still carry this filename. */
+export const RETIRED_WORKSTREAM_A_FILES = {
+  GTIN_BRAND_LINKS: 'gtin_brand_links.csv',
 } as const;
 
 export type WorkstreamAFileName = (typeof WORKSTREAM_A_FILES)[keyof typeof WORKSTREAM_A_FILES];
@@ -213,7 +217,6 @@ export interface WorkstreamATemplateSet {
   [WORKSTREAM_A_FILES.CANONICAL_PARENTS]: CanonicalParentRow[];
   [WORKSTREAM_A_FILES.CANONICAL_BRANDS]: CanonicalBrandRow[];
   [WORKSTREAM_A_FILES.BRAND_ALIASES]: BrandAliasRow[];
-  [WORKSTREAM_A_FILES.GTIN_BRAND_LINKS]: GtinBrandLinkRow[];
   [WORKSTREAM_A_FILES.OPERATIONAL_ENTITIES]: OperationalEntityRow[];
   [WORKSTREAM_A_FILES.OWNERSHIP_CHANGE_CANDIDATES]: OwnershipChangeCandidateRow[];
   [WORKSTREAM_A_FILES.STEWARDSHIP_ACTION_LOG]: StewardshipActionLogRow[];

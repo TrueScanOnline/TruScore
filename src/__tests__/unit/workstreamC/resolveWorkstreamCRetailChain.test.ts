@@ -16,11 +16,10 @@ const BRAND_CHILD = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extension
 function loadFrozenADataMaps() {
   const brandRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'canonical_brands.csv'), 'utf8'));
   const parentRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'canonical_parents.csv'), 'utf8'));
-  const gtinRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'gtin_brand_links.csv'), 'utf8'));
   const aliasRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'brand_aliases.csv'), 'utf8'));
   const brandChildRows = parseCsv(fs.readFileSync(BRAND_CHILD, 'utf8'));
   return {
-    aData: buildADataMapsFromCsvRecords(brandRows, parentRows, gtinRows),
+    aData: buildADataMapsFromCsvRecords(brandRows, parentRows, []),
     brandRows,
     aliasRows,
     brandChildRows,

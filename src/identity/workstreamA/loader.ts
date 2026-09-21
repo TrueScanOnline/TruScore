@@ -2,18 +2,20 @@ import fs from 'fs';
 import path from 'path';
 import { parseCsv, type CsvRecord } from './csv';
 import {
+  RETIRED_WORKSTREAM_A_FILES,
   WORKSTREAM_A_FILES,
   type WorkstreamAFileName,
 } from './schema';
 import {
   WORKSTREAM_A_OPTIONAL_FILES,
   WORKSTREAM_A_REQUIRED_FILES,
+  type RetiredWorkstreamAFileName,
 } from './templates';
 
 export interface WorkstreamAPackLoadResult {
   inputRoot: string;
   outputRoot: string;
-  rowsByFile: Partial<Record<WorkstreamAFileName, CsvRecord[]>>;
+  rowsByFile: Partial<Record<WorkstreamAFileName | RetiredWorkstreamAFileName, CsvRecord[]>>;
   missingRequiredFiles: WorkstreamAFileName[];
   missingOptionalFiles: WorkstreamAFileName[];
 }
@@ -64,6 +66,14 @@ export function loadWorkstreamAPackFromCsv(
     if (rows === null) {
       missingOptionalFiles.push(fileName);
     } else {
+      rowsByFile[fileName] = rows;
+    }
+  }
+
+  // Retired scaffold — load when present for historical pack validation; skip when absent.
+  for (const fileName of Object.values(RETIRED_WORKSTREAM_A_FILES)) {
+    const rows = readCsvIfPresent(path.join(inputRoot, fileName));
+    if (rows !== null) {
       rowsByFile[fileName] = rows;
     }
   }

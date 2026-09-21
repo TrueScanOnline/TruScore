@@ -1,11 +1,13 @@
 import { WORKSTREAM_A_ENUM_DICTIONARY, WORKSTREAM_A_REVIEW_STATES } from './enums';
-import { WORKSTREAM_A_FILES, type WorkstreamAFileName } from './schema';
+import { RETIRED_WORKSTREAM_A_FILES, WORKSTREAM_A_FILES, type WorkstreamAFileName } from './schema';
 import type { CsvRecord } from './csv';
 import {
   WORKSTREAM_A_REQUIRED_COLUMNS,
+  RETIRED_WORKSTREAM_A_REQUIRED_COLUMNS,
   WORKSTREAM_A_OPTIONAL_FILES,
   WORKSTREAM_A_REQUIRED_FILES,
   buildEnumDictionaryRows,
+  type RetiredWorkstreamAFileName,
 } from './templates';
 
 function isGtin(value: string): boolean {
@@ -29,8 +31,12 @@ export interface WorkstreamAValidationResult {
   missing_optional_files: WorkstreamAFileName[];
 }
 
+export type WorkstreamARowsByFile = Partial<
+  Record<WorkstreamAFileName | RetiredWorkstreamAFileName, CsvRecord[]>
+>;
+
 export interface ValidatePackInput {
-  rowsByFile: Partial<Record<WorkstreamAFileName, CsvRecord[]>>;
+  rowsByFile: WorkstreamARowsByFile;
   mode: ValidationMode;
 }
 
@@ -54,6 +60,20 @@ function ensureColumns(
   issues: ValidationIssue[]
 ): void {
   const columns = WORKSTREAM_A_REQUIRED_COLUMNS[fileName];
+  const first = rows[0] ?? {};
+  for (const column of columns) {
+    if (!(column in first) && rows.length > 0) {
+      addIssue(issues, 'error', fileName, 'required_column_presence', `Missing column '${column}'.`);
+    }
+  }
+}
+
+function ensureRetiredColumns(
+  fileName: RetiredWorkstreamAFileName,
+  rows: CsvRecord[],
+  issues: ValidationIssue[]
+): void {
+  const columns = RETIRED_WORKSTREAM_A_REQUIRED_COLUMNS[fileName];
   const first = rows[0] ?? {};
   for (const column of columns) {
     if (!(column in first) && rows.length > 0) {
@@ -111,7 +131,8 @@ export function validateWorkstreamAPack(input: ValidatePackInput): WorkstreamAVa
   const parents = rowsByFile[WORKSTREAM_A_FILES.CANONICAL_PARENTS] ?? [];
   const brands = rowsByFile[WORKSTREAM_A_FILES.CANONICAL_BRANDS] ?? [];
   const aliases = rowsByFile[WORKSTREAM_A_FILES.BRAND_ALIASES] ?? [];
-  const gtinLinks = rowsByFile[WORKSTREAM_A_FILES.GTIN_BRAND_LINKS] ?? [];
+  // Retired scaffold — validate only when historical packs still supply the file.
+  const gtinLinks = rowsByFile[RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS] ?? [];
   const operationalEntities = rowsByFile[WORKSTREAM_A_FILES.OPERATIONAL_ENTITIES] ?? [];
   const ownershipCandidates = rowsByFile[WORKSTREAM_A_FILES.OWNERSHIP_CHANGE_CANDIDATES] ?? [];
   const stewardship = rowsByFile[WORKSTREAM_A_FILES.STEWARDSHIP_ACTION_LOG] ?? [];
@@ -121,8 +142,15 @@ export function validateWorkstreamAPack(input: ValidatePackInput): WorkstreamAVa
   const parentCandidates = rowsByFile[WORKSTREAM_A_FILES.PARENT_EXTENSION_CANDIDATES] ?? [];
   const controlSurface = rowsByFile[WORKSTREAM_A_FILES.WAVE1_CONTROL_SURFACE] ?? [];
 
-  for (const [fileName, rows] of Object.entries(rowsByFile) as [WorkstreamAFileName, CsvRecord[]][]) {
-    ensureColumns(fileName, rows, issues);
+  for (const [fileName, rows] of Object.entries(rowsByFile)) {
+    if (!rows) continue;
+    if (fileName === RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS) {
+      ensureRetiredColumns(fileName, rows, issues);
+      continue;
+    }
+    if ((WORKSTREAM_A_REQUIRED_COLUMNS as Record<string, readonly string[]>)[fileName]) {
+      ensureColumns(fileName as WorkstreamAFileName, rows, issues);
+    }
   }
 
   const parentIds = new Set<string>();
@@ -229,16 +257,16 @@ export function validateWorkstreamAPack(input: ValidatePackInput): WorkstreamAVa
 
   for (const row of gtinLinks) {
     if (!isGtin(row.gtin)) {
-      addIssue(issues, 'error', WORKSTREAM_A_FILES.GTIN_BRAND_LINKS, 'gtin_validation', `${row.gtin} is not a valid GTIN.`);
+      addIssue(issues, 'error', RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS, 'gtin_validation', `${row.gtin} is not a valid GTIN.`);
     }
-    validateEnum(WORKSTREAM_A_FILES.GTIN_BRAND_LINKS, row.link_review_state, 'review_state', issues, row.gtin);
-    validateEnum(WORKSTREAM_A_FILES.GTIN_BRAND_LINKS, row.source_type, 'product_link_source_type', issues, row.gtin);
+    validateEnum(RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS, row.link_review_state, 'review_state', issues, row.gtin);
+    validateEnum(RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS, row.source_type, 'product_link_source_type', issues, row.gtin);
     const expectedParent = brandParentById.get(row.brand_id);
     if (!expectedParent) {
       addIssue(
         issues,
         'error',
-        WORKSTREAM_A_FILES.GTIN_BRAND_LINKS,
+        RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS,
         'cross_file_integrity',
         `${row.gtin} references unknown brand_id '${row.brand_id}'.`
       );
@@ -246,13 +274,13 @@ export function validateWorkstreamAPack(input: ValidatePackInput): WorkstreamAVa
       addIssue(
         issues,
         'error',
-        WORKSTREAM_A_FILES.GTIN_BRAND_LINKS,
+        RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS,
         'cross_file_integrity',
         `${row.gtin} has parent '${row.parent_id}' but brand '${row.brand_id}' resolves to '${expectedParent}'.`
       );
     }
     if (hasValue(row.source_id) && !sourceIds.has(row.source_id ?? '')) {
-      addIssue(issues, 'error', WORKSTREAM_A_FILES.GTIN_BRAND_LINKS, 'source_registry_linkage', `${row.gtin} has unknown source_id '${row.source_id}'.`);
+      addIssue(issues, 'error', RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS, 'source_registry_linkage', `${row.gtin} has unknown source_id '${row.source_id}'.`);
     }
   }
 

@@ -39,6 +39,9 @@ export type AssetScanIdentity = {
   /** Ordinary scanned product name — required for Workstream C product-scope evaluation. */
   productName: string;
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
+  quantity?: string | null;
+  product_quantity?: number | null;
+  product_quantity_unit?: string | null;
   productScopeEvidence?: CocoaChocolateProductScopeEvidence | null;
 };
 
@@ -116,6 +119,9 @@ function targetMatchesScan(
       brand_id: identity.brand_id,
       parent_id: identity.parent_id,
       scanMarketPublic: identity.scanMarketPublic,
+      quantity: identity.quantity,
+      product_quantity: identity.product_quantity,
+      product_quantity_unit: identity.product_quantity_unit,
       brandIsUnderAnchor: (scanBrandId, anchorBrandId) =>
         brandIsDescendantOf(pack.brandHierarchy, scanBrandId, anchorBrandId),
     });

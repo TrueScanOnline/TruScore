@@ -1,8 +1,10 @@
 /**
  * Workstream C — generic Signal product-scope evaluator.
  *
- * Consumes governed criteria linked to signal_target_id + resolved brand/parent
- * from Shared Identity + ordinary scan product fields.
+ * Scope groups: conditions within one scope_group_id are AND;
+ * alternative complete groups for a target are OR.
+ * Brand/parent and market anchors are mandatory.
+ * Product-specific Signals fail closed when Chaining identity is unresolved.
  * No brand/product/Signal-id hardcoding.
  */
 
@@ -12,6 +14,7 @@ import { normalizeForBrandComparison } from '../../identity/workstreamA/catalogu
 export type SignalProductScopeCriterion = {
   criterion_id: string;
   signal_target_id: string;
+  scope_group_id: string;
   market_key: string;
   required_brand_id: string;
   required_parent_id: string;
@@ -32,7 +35,10 @@ export type ProductScopeScanContext = {
   brand_id: string | null;
   parent_id: string | null;
   scanMarketPublic: 'AU' | 'NZ' | 'UNKNOWN';
-  /** Optional: brandIsDescendantOf for required_brand_id under child brands */
+  /** OFF / scan pack quantity string when present */
+  quantity?: string | null;
+  product_quantity?: number | null;
+  product_quantity_unit?: string | null;
   brandIsUnderAnchor?: (scanBrandId: string, anchorBrandId: string) => boolean;
 };
 
@@ -45,16 +51,23 @@ export function buildSignalProductScopeMapsFromCsvRecords(
     const signal_target_id = (r.signal_target_id ?? '').trim();
     const criterion_id = (r.criterion_id ?? '').trim();
     const match_value = (r.match_value ?? '').trim();
+    const required_brand_id = (r.required_brand_id ?? '').trim();
+    const required_parent_id = (r.required_parent_id ?? '').trim();
+    // Product-scope rows must be Chaining-anchored — skip unanchored reviewed rows (fail closed).
+    if (!required_brand_id && !required_parent_id) continue;
     if (!signal_target_id || !criterion_id || !match_value) continue;
+    const scope_group_id =
+      (r.scope_group_id ?? '').trim() || `${signal_target_id}__${criterion_id}`;
     const match_value_normalized =
       (r.match_value_normalized ?? '').trim() || normalizeForBrandComparison(match_value);
     if (!match_value_normalized) continue;
     const row: SignalProductScopeCriterion = {
       criterion_id,
       signal_target_id,
+      scope_group_id,
       market_key: (r.market_key ?? '').trim(),
-      required_brand_id: (r.required_brand_id ?? '').trim(),
-      required_parent_id: (r.required_parent_id ?? '').trim(),
+      required_brand_id,
+      required_parent_id,
       match_field: ((r.match_field ?? '').trim() || 'product_name').toLowerCase(),
       match_mode: ((r.match_mode ?? '').trim() || 'phrase_contains').toLowerCase(),
       match_value,
@@ -75,10 +88,7 @@ function marketAllows(marketKey: string, scanMarketPublic: 'AU' | 'NZ' | 'UNKNOW
   return marketKey === scanMarketPublic;
 }
 
-function brandAnchorOk(
-  requiredBrandId: string,
-  ctx: ProductScopeScanContext
-): boolean {
+function brandAnchorOk(requiredBrandId: string, ctx: ProductScopeScanContext): boolean {
   if (!requiredBrandId) return true;
   const bid = (ctx.brand_id ?? '').trim();
   if (!bid) return false;
@@ -92,10 +102,35 @@ function parentAnchorOk(requiredParentId: string, ctx: ProductScopeScanContext):
   return !!parent && parent === requiredParentId;
 }
 
+function normalizePackQuantityToken(input: string): string {
+  // Collapse "190 g" / "1.3 kg" style forms after base normalisation.
+  return normalizeForBrandComparison(input)
+    .replace(/(\d)\s+(g|kg|mg|ml|l|cl)\b/g, '$1$2')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function packQuantityHaystack(ctx: ProductScopeScanContext): string {
+  const parts: string[] = [];
+  if (ctx.product_quantity != null && Number.isFinite(ctx.product_quantity)) {
+    const unit = (ctx.product_quantity_unit ?? '').trim();
+    parts.push(unit ? `${ctx.product_quantity} ${unit}` : String(ctx.product_quantity));
+  }
+  if (typeof ctx.quantity === 'string' && ctx.quantity.trim()) {
+    parts.push(ctx.quantity.trim());
+  }
+  if (ctx.productName) {
+    parts.push(ctx.productName);
+  }
+  return normalizePackQuantityToken(parts.join(' '));
+}
+
 function fieldValue(field: string, ctx: ProductScopeScanContext): string {
   switch (field) {
     case 'product_name':
       return normalizeForBrandComparison(ctx.productName ?? '');
+    case 'pack_quantity':
+      return packQuantityHaystack(ctx);
     case 'gtin':
     case 'barcode':
       return normalizeForBrandComparison(ctx.barcode ?? '');
@@ -106,18 +141,33 @@ function fieldValue(field: string, ctx: ProductScopeScanContext): string {
 
 function termMatches(criterion: SignalProductScopeCriterion, hayNormalized: string): boolean {
   if (!hayNormalized || !criterion.match_value_normalized) return false;
+  const needleRaw =
+    criterion.match_field === 'pack_quantity'
+      ? normalizePackQuantityToken(criterion.match_value_normalized)
+      : criterion.match_value_normalized;
   if (criterion.match_mode === 'exact_normalized') {
-    return hayNormalized === criterion.match_value_normalized;
+    return hayNormalized === needleRaw;
   }
-  // phrase_contains (default): whole-phrase token boundary via padded spaces
   const hay = ` ${hayNormalized} `;
-  const needle = ` ${criterion.match_value_normalized} `;
+  const needle = ` ${needleRaw} `;
   return hay.includes(needle);
 }
 
+function criterionSatisfied(
+  c: SignalProductScopeCriterion,
+  ctx: ProductScopeScanContext
+): boolean {
+  if (!marketAllows(c.market_key, ctx.scanMarketPublic)) return false;
+  if (!brandAnchorOk(c.required_brand_id, ctx)) return false;
+  if (!parentAnchorOk(c.required_parent_id, ctx)) return false;
+  const hay = fieldValue(c.match_field, ctx);
+  if (!hay) return false;
+  return termMatches(c, hay);
+}
+
 /**
- * True when at least one reviewed criterion for the target matches the scan.
- * Fail closed when no criteria exist or none match.
+ * True when one complete reviewed scope group matches (AND within group, OR across groups).
+ * Fail closed when Chaining brand/parent is unresolved, or no criteria / incomplete group.
  */
 export function signalTargetProductScopeMatches(
   maps: SignalProductScopeMaps,
@@ -126,16 +176,25 @@ export function signalTargetProductScopeMatches(
 ): boolean {
   const tid = (signalTargetId ?? '').trim();
   if (!tid) return false;
+
+  // Mandatory Shared Identity resolution for any product-specific Signal.
+  if (!(ctx.brand_id ?? '').trim() && !(ctx.parent_id ?? '').trim()) {
+    return false;
+  }
+
   const criteria = maps.criteriaByTargetId.get(tid);
   if (!criteria || criteria.length === 0) return false;
 
+  const byGroup = new Map<string, SignalProductScopeCriterion[]>();
   for (const c of criteria) {
-    if (!marketAllows(c.market_key, ctx.scanMarketPublic)) continue;
-    if (!brandAnchorOk(c.required_brand_id, ctx)) continue;
-    if (!parentAnchorOk(c.required_parent_id, ctx)) continue;
-    const hay = fieldValue(c.match_field, ctx);
-    if (!hay) continue;
-    if (termMatches(c, hay)) return true;
+    const prev = byGroup.get(c.scope_group_id) ?? [];
+    prev.push(c);
+    byGroup.set(c.scope_group_id, prev);
+  }
+
+  for (const group of byGroup.values()) {
+    if (group.length === 0) continue;
+    if (group.every((c) => criterionSatisfied(c, ctx))) return true;
   }
   return false;
 }

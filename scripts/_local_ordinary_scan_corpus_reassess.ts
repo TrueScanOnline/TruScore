@@ -108,6 +108,9 @@ function main() {
     let market: 'AU' | 'NZ' = 'AU';
     let categories_tags: string[] | undefined;
     let ingredients_text: string | undefined;
+    let quantity: string | undefined;
+    let product_quantity: number | undefined;
+    let product_quantity_unit: string | undefined;
     let note = '';
 
     if (preferred) {
@@ -120,20 +123,44 @@ function main() {
         const crits = criteria.filter(
           (c) => c.signal_target_id === tid && (c.review_state || '') === 'reviewed'
         );
-        const best = [...crits].sort(
-          (a, b) => (b.match_value || '').length - (a.match_value || '').length
-        )[0];
-        if (best) {
-          const brand = brandNameById(brands, (best.required_brand_id || '').trim());
+        // Prefer one complete scope_group (AND within group) for the ordinary-scan fixture.
+        const byGroup = new Map<string, typeof crits>();
+        for (const c of crits) {
+          const gid = (c.scope_group_id || `${tid}__${c.criterion_id}`).trim();
+          const prev = byGroup.get(gid) ?? [];
+          prev.push(c);
+          byGroup.set(gid, prev);
+        }
+        const group =
+          [...byGroup.values()].sort((a, b) => b.length - a.length || b.reduce((n, r) => n + (r.match_value || '').length, 0) - a.reduce((n, r) => n + (r.match_value || '').length, 0))[0] ??
+          [];
+        if (group.length > 0) {
+          const anchor = group[0];
+          const brand = brandNameById(brands, (anchor.required_brand_id || '').trim());
           brandsField = brand;
-          const phrase = best.match_value || '';
+          const nameParts = group
+            .filter((c) => (c.match_field || 'product_name') === 'product_name')
+            .map((c) => c.match_value || '');
+          const qtyParts = group
+            .filter((c) => (c.match_field || '') === 'pack_quantity')
+            .map((c) => c.match_value || '');
+          const phrase = [...nameParts, ...qtyParts].filter(Boolean).join(' ');
           productName =
             brand && !phrase.toLowerCase().includes(brand.toLowerCase().replace(/'s$/, ''))
               ? `${brand} ${phrase}`
               : phrase;
-          if ((best.market_key || '') === 'NZ') market = 'NZ';
-          if ((best.market_key || '') === 'AU') market = 'AU';
-          note = `from criteria ${best.criterion_id}`;
+          // Prefer structured quantity fields when pack_quantity is a group requirement.
+          if (qtyParts[0]) {
+            quantity = qtyParts[0];
+            const m = String(qtyParts[0]).trim().match(/^([\d.]+)\s*(g|kg|mg|ml|l|cl)$/i);
+            if (m) {
+              product_quantity = Number(m[1]);
+              product_quantity_unit = m[2].toLowerCase();
+            }
+          }
+          if ((anchor.market_key || '') === 'NZ') market = 'NZ';
+          if ((anchor.market_key || '') === 'AU') market = 'AU';
+          note = `from scope group ${anchor.scope_group_id || '(legacy)'} (${group.map((c) => c.criterion_id).join('+')})`;
         } else {
           productName = preferred.target_label || tid;
           note = 'no reviewed product-scope criteria — expect fail closed';
@@ -187,6 +214,9 @@ function main() {
           brands: brandsField,
           categories_tags,
           ingredients_text,
+          quantity,
+          product_quantity,
+          product_quantity_unit,
         }),
         scanMarketPublic: market,
         pack,
@@ -267,7 +297,7 @@ function main() {
   const outPath = path.join(
     ROOT,
     'reports',
-    'CHAINING_BOUNDARY_ORDINARY_SCAN_CORPUS_20260921.json'
+    'SCOPE_GROUPS_MANDATORY_IDENTITY_ORDINARY_SCAN_CORPUS_20260922.json'
   );
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2));
   console.log(

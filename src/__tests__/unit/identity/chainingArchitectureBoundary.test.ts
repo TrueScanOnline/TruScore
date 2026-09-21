@@ -4,38 +4,23 @@
  */
 import fs from 'fs';
 import path from 'path';
+import { parseCsv } from '../../../identity/workstreamA/csv';
+import {
+  buildSignalProductScopeMapsFromCsvRecords,
+  signalTargetProductScopeMatches,
+} from '../../../dynamicSignals/productScope/signalProductScopeEvaluator';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const CHAIN_V03 = path.join(ROOT, 'workstreamA', 'a-data', 'chaining-extensions', 'v0.3');
-const WAVE1_GTIN = path.join(
-  ROOT,
-  'workstreamA',
-  'a-data',
-  'wave1-v0.16',
-  'input',
-  'gtin_brand_links.csv'
-);
+const WAVE1_INPUT = path.join(ROOT, 'workstreamA', 'a-data', 'wave1-v0.16', 'input');
 const CHAINING_SRC = path.join(ROOT, 'src', 'identity', 'chaining');
-const EMBED_LOADER = path.join(
+const CRITERIA = path.join(
   ROOT,
-  'src',
-  'dynamicSignals',
-  'asset',
-  'v0.2',
-  'loadDynamicSignalsAssetPack.ts'
-);
-const EMBED_GENERATED = path.join(
-  ROOT,
-  'src',
-  'dynamicSignals',
-  'asset',
-  'v0.2',
-  'dynamicSignalsAssetRuntimeEmbed.generated.ts'
-);
-const GENERATOR = path.join(
-  ROOT,
-  'scripts',
-  'generate-dynamic-signals-asset-runtime-embed.ts'
+  'workstreamC',
+  'c-data',
+  'dynamic-signals-v0.3',
+  'input',
+  'signal_target_product_criteria.csv'
 );
 
 const FORBIDDEN_PRODUCT_CSVS = [
@@ -54,33 +39,12 @@ describe('Shared Identity chaining architecture boundary', () => {
     }
   });
 
-  it('wave1-v0.16 gtin_brand_links is header-only OR embed consumption uses empty gtinRows', () => {
-    const loaderSrc = fs.readFileSync(EMBED_LOADER, 'utf8');
-    const generatorSrc = fs.readFileSync(GENERATOR, 'utf8');
-    const embedSrc = fs.readFileSync(EMBED_GENERATED, 'utf8');
+  it('wave1-v0.16/input has no gtin_brand_links.csv', () => {
+    expect(fs.existsSync(path.join(WAVE1_INPUT, 'gtin_brand_links.csv'))).toBe(false);
+  });
 
-    const loaderEmptiesGtin =
-      /buildADataMapsFromCsvRecords\(\s*e\.brandRows\s*,\s*e\.parentRows\s*,\s*\[\s*\]/.test(
-        loaderSrc
-      );
-    const generatorEmptiesGtin = /gtinRows:\s*\[\s*\]/.test(generatorSrc);
-    const embedHasEmptyGtinArray = /"gtinRows":\s*\[\s*\]/.test(embedSrc);
-
-    let gtinHeaderOnly = false;
-    if (fs.existsSync(WAVE1_GTIN)) {
-      const lines = fs
-        .readFileSync(WAVE1_GTIN, 'utf8')
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter(Boolean);
-      gtinHeaderOnly = lines.length <= 1;
-    } else {
-      gtinHeaderOnly = true; // absent
-    }
-
-    expect(
-      gtinHeaderOnly || loaderEmptiesGtin || generatorEmptiesGtin || embedHasEmptyGtinArray
-    ).toBe(true);
+  it('chaining-extensions/v0.3 has no gtin_brand_links_extension.csv', () => {
+    expect(fs.existsSync(path.join(CHAIN_V03, 'gtin_brand_links_extension.csv'))).toBe(false);
   });
 
   it('src/identity/chaining has no productFamilyMaps.ts or productIdentityMaps.ts', () => {
@@ -96,5 +60,32 @@ describe('Shared Identity chaining architecture boundary', () => {
     expect(readme.toLowerCase()).toMatch(/parents?\s*\+\s*brands?\s*\+\s*aliases?\s*\+\s*hierarchy/);
     expect(readme.toLowerCase()).toMatch(/workstream c/);
     expect(readme).toMatch(/signal_target_product_criteria/);
+  });
+
+  it('every reviewed signal_target_product_criteria row has required_brand_id or required_parent_id', () => {
+    const rows = parseCsv(fs.readFileSync(CRITERIA, 'utf8'));
+    const reviewed = rows.filter((r) => (r.review_state ?? '').trim() === 'reviewed');
+    expect(reviewed.length).toBeGreaterThan(0);
+    for (const r of reviewed) {
+      const brand = (r.required_brand_id ?? '').trim();
+      const parent = (r.required_parent_id ?? '').trim();
+      expect(brand || parent).toBeTruthy();
+    }
+  });
+
+  it('product Signals cannot match when brand_id and parent_id are both null', () => {
+    const maps = buildSignalProductScopeMapsFromCsvRecords(
+      parseCsv(fs.readFileSync(CRITERIA, 'utf8'))
+    );
+    // Use a known product-scoped target with criteria (Pams Beef Lasagne).
+    expect(
+      signalTargetProductScopeMatches(maps, 'TGT-105', {
+        barcode: '9410000000001',
+        productName: 'Pams Beef Lasagne 1.3kg',
+        brand_id: null,
+        parent_id: null,
+        scanMarketPublic: 'NZ',
+      })
+    ).toBe(false);
   });
 });

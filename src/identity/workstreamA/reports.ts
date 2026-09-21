@@ -1,6 +1,6 @@
 import type { CsvRecord } from './csv';
 import { buildCatalogueCoverageMetrics } from './catalogueAudit';
-import { WORKSTREAM_A_FILES } from './schema';
+import { RETIRED_WORKSTREAM_A_FILES, WORKSTREAM_A_FILES } from './schema';
 
 export interface ValidationSummaryRow {
   report_generated_at: string;
@@ -118,7 +118,7 @@ export function buildCoverageScorecard(input: {
   const parents = input.rowsByFile[WORKSTREAM_A_FILES.CANONICAL_PARENTS] ?? [];
   const brands = input.rowsByFile[WORKSTREAM_A_FILES.CANONICAL_BRANDS] ?? [];
   const aliases = input.rowsByFile[WORKSTREAM_A_FILES.BRAND_ALIASES] ?? [];
-  const gtinLinks = input.rowsByFile[WORKSTREAM_A_FILES.GTIN_BRAND_LINKS] ?? [];
+  const gtinLinks = input.rowsByFile[RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS] ?? [];
   const operationalEntities = input.rowsByFile[WORKSTREAM_A_FILES.OPERATIONAL_ENTITIES] ?? [];
   const changes = input.rowsByFile[WORKSTREAM_A_FILES.OWNERSHIP_CHANGE_CANDIDATES] ?? [];
   const controlSurface = input.rowsByFile[WORKSTREAM_A_FILES.WAVE1_CONTROL_SURFACE] ?? [];
@@ -148,7 +148,7 @@ export function buildIdentityGapReport(input: {
   reportGeneratedAt?: string;
 }): WorkstreamAIdentityGapReport {
   const generatedAt = input.reportGeneratedAt ?? new Date().toISOString();
-  const gtinLinks = input.rowsByFile[WORKSTREAM_A_FILES.GTIN_BRAND_LINKS] ?? [];
+  const gtinLinks = input.rowsByFile[RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS] ?? [];
   const controlSurface = input.rowsByFile[WORKSTREAM_A_FILES.WAVE1_CONTROL_SURFACE] ?? [];
   const changes = input.rowsByFile[WORKSTREAM_A_FILES.OWNERSHIP_CHANGE_CANDIDATES] ?? [];
   const aliasCandidates = input.rowsByFile[WORKSTREAM_A_FILES.ALIAS_HARVEST_CANDIDATES] ?? [];

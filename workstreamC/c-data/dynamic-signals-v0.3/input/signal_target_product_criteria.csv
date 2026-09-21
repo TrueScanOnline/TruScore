@@ -1,55 +1,85 @@
-criterion_id,signal_target_id,market_key,required_brand_id,required_parent_id,match_field,match_mode,match_value,match_value_normalized,review_state,confidence_state,lineage_reference,notes
-SPC-0001,TGT-001,AU,B0654,P0156,product_name,phrase_contains,chickadees multipack,chickadees multipack,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_MULTIPACK_6X19G / PIA_CHICKADEES_MP
-SPC-0002,TGT-001,AU,B0654,P0156,product_name,phrase_contains,6x19g,6x19g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_MULTIPACK_6X19G / PIA_CHICKADEES_6X19
-SPC-0003,TGT-002,AU,B0654,P0156,product_name,phrase_contains,chickadees 190g,chickadees 190g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_190G / PIA_CHICKADEES_190
-SPC-0004,TGT-002,AU,B0654,P0156,product_name,phrase_contains,190g,190g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_190G / PIA_CHICKADEES_190_ONLY
-SPC-0005,TGT-003,AU,B0654,P0156,product_name,phrase_contains,chickadees 90g,chickadees 90g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_90G / PIA_CHICKADEES_90
-SPC-0006,TGT-003,AU,B0654,P0156,product_name,phrase_contains,90g,90g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_90G / PIA_CHICKADEES_90_ONLY
-SPC-0007,TGT-004,AU,B0654,P0156,product_name,phrase_contains,chickadees 45g,chickadees 45g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_45G / PIA_CHICKADEES_45
-SPC-0008,TGT-004,AU,B0654,P0156,product_name,phrase_contains,45g,45g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_45G / PIA_CHICKADEES_45_ONLY
-SPC-0009,TGT-005,AU,B0059,P0008,product_name,phrase_contains,inside outs,inside outs,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,Migrated from PI_ALLENS_INSIDEOUTS_130G / PIA_ALLENS_INSIDEOUTS
-SPC-0010,TGT-007,NZ,B0024,P0003,product_name,phrase_contains,beef lasagne,beef lasagne,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Migrated from PI_PAMS_BEEF_LASAGNE_1_3KG / PIA_PAMS_LASAGNE
-SPC-0011,TGT-007,NZ,B0024,P0003,product_name,phrase_contains,1.3kg,1 3kg,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Migrated from PI_PAMS_BEEF_LASAGNE_1_3KG / PIA_PAMS_LASAGNE_1_3
-SPC-0012,TGT-009,AU,B0179,P0041,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_LEGGOS_TOMATO_PASTE_AU / PFA_LEGGOS_TOMATO_PASTE
-SPC-0013,TGT-010,AU,B0032,P0004,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_REMANO_TOMATO_PASTE_AU / PFA_REMANO_TOMATO_PASTE
-SPC-0014,TGT-011,AU,B0200,P0002,product_name,phrase_contains,italian tomato paste,italian tomato paste,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_COLES_ITALIAN_TOMATO_PASTE_AU / PFA_COLES_ITALIAN_TOMATO_PASTE
-SPC-0015,TGT-012,AU,B0653,P0157,product_name,phrase_contains,turmeric,turmeric,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_HOYTS_TURMERIC_AU / PFA_HOYTS_TURMERIC
-SPC-0016,TGT-013,AU,B0001,P0001,product_name,phrase_contains,cage free eggs,cage free eggs,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_WOOLWORTHS_CAGEFREE_EGGS_SA / PFA_WW_CAGEFREE_EGGS
-SPC-0017,TGT-013,AU,B0001,P0001,product_name,phrase_contains,cage-free eggs,cage free eggs,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_WOOLWORTHS_CAGEFREE_EGGS_SA / PFA_WW_CAGEFREE_EGGS_HYPHEN
-SPC-0018,TGT-017,NZ,B0268,P0011,product_name,phrase_contains,fruit juice,fruit juice,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_KERI_FRUIT_JUICE_NZ / PFA_KERI_FRUIT_JUICE
-SPC-0019,TGT-018,NZ,B0139,P0020,product_name,phrase_contains,blue milk powder,blue milk powder,reviewed,confirmed,CONSUMERNZ-ANCHOR-BLUE-20260211,Migrated from PI_ANCHOR_BLUE_MILK_POWDER_400G / PIA_ANCHOR_BLUE_MP
-SPC-0020,TGT-019,NZ,B0024,P0003,product_name,phrase_contains,sparkling water,sparkling water,reviewed,confirmed,RNZ-590339,Migrated from PI_PAMS_SPARKLING_WATER_HSR / PIA_PAMS_SPARKLING
-SPC-0021,TGT-026,NZ,B0139,P0020,product_name,phrase_contains,butter,butter,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_ANCHOR_BUTTER_NZ / PFA_ANCHOR_BUTTER
-SPC-0022,TGT-029,AU,B0796,P0175,product_name,phrase_contains,szechuan chilli oil,szechuan chilli oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Migrated from PI_MRCHENS_CHILLI_OIL_250G / PIA_MRCHENS_CHILLI
-SPC-0023,TGT-029,AU,B0796,P0175,product_name,phrase_contains,sichuan chili oil,sichuan chili oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Migrated from PI_MRCHENS_CHILLI_OIL_250G / PIA_MRCHENS_CHILLI_ALT
-SPC-0024,TGT-100,AU,B0654,P0156,product_name,phrase_contains,chickadees multipack,chickadees multipack,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_MULTIPACK_6X19G / PIA_CHICKADEES_MP
-SPC-0025,TGT-100,AU,B0654,P0156,product_name,phrase_contains,6x19g,6x19g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_MULTIPACK_6X19G / PIA_CHICKADEES_6X19
-SPC-0026,TGT-101,AU,B0654,P0156,product_name,phrase_contains,chickadees 190g,chickadees 190g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_190G / PIA_CHICKADEES_190
-SPC-0027,TGT-101,AU,B0654,P0156,product_name,phrase_contains,190g,190g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_190G / PIA_CHICKADEES_190_ONLY
-SPC-0028,TGT-102,AU,B0654,P0156,product_name,phrase_contains,chickadees 90g,chickadees 90g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_90G / PIA_CHICKADEES_90
-SPC-0029,TGT-102,AU,B0654,P0156,product_name,phrase_contains,90g,90g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_90G / PIA_CHICKADEES_90_ONLY
-SPC-0030,TGT-103,AU,B0654,P0156,product_name,phrase_contains,chickadees 45g,chickadees 45g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_45G / PIA_CHICKADEES_45
-SPC-0031,TGT-103,AU,B0654,P0156,product_name,phrase_contains,45g,45g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Migrated from PI_CHICKADEES_45G / PIA_CHICKADEES_45_ONLY
-SPC-0032,TGT-104,AU,B0059,P0008,product_name,phrase_contains,inside outs,inside outs,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,Migrated from PI_ALLENS_INSIDEOUTS_130G / PIA_ALLENS_INSIDEOUTS
-SPC-0033,TGT-105,NZ,B0024,P0003,product_name,phrase_contains,beef lasagne,beef lasagne,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Migrated from PI_PAMS_BEEF_LASAGNE_1_3KG / PIA_PAMS_LASAGNE
-SPC-0034,TGT-105,NZ,B0024,P0003,product_name,phrase_contains,1.3kg,1 3kg,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Migrated from PI_PAMS_BEEF_LASAGNE_1_3KG / PIA_PAMS_LASAGNE_1_3
-SPC-0035,TGT-107,AU,B0179,P0041,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_LEGGOS_TOMATO_PASTE_AU / PFA_LEGGOS_TOMATO_PASTE
-SPC-0036,TGT-108,AU,B0032,P0004,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_REMANO_TOMATO_PASTE_AU / PFA_REMANO_TOMATO_PASTE
-SPC-0037,TGT-109,AU,B0200,P0002,product_name,phrase_contains,italian tomato paste,italian tomato paste,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_COLES_ITALIAN_TOMATO_PASTE_AU / PFA_COLES_ITALIAN_TOMATO_PASTE
-SPC-0038,TGT-110,AU,B0653,P0157,product_name,phrase_contains,turmeric,turmeric,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_HOYTS_TURMERIC_AU / PFA_HOYTS_TURMERIC
-SPC-0039,TGT-111,AU,B0001,P0001,product_name,phrase_contains,cage free eggs,cage free eggs,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_WOOLWORTHS_CAGEFREE_EGGS_SA / PFA_WW_CAGEFREE_EGGS
-SPC-0040,TGT-111,AU,B0001,P0001,product_name,phrase_contains,cage-free eggs,cage free eggs,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_WOOLWORTHS_CAGEFREE_EGGS_SA / PFA_WW_CAGEFREE_EGGS_HYPHEN
-SPC-0041,TGT-114,NZ,B0268,P0011,product_name,phrase_contains,fruit juice,fruit juice,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_KERI_FRUIT_JUICE_NZ / PFA_KERI_FRUIT_JUICE
-SPC-0042,TGT-115,NZ,B0139,P0020,product_name,phrase_contains,blue milk powder,blue milk powder,reviewed,confirmed,CONSUMERNZ-ANCHOR-BLUE-20260211,Migrated from PI_ANCHOR_BLUE_MILK_POWDER_400G / PIA_ANCHOR_BLUE_MP
-SPC-0043,TGT-116,NZ,B0024,P0003,product_name,phrase_contains,sparkling water,sparkling water,reviewed,confirmed,RNZ-590339,Migrated from PI_PAMS_SPARKLING_WATER_HSR / PIA_PAMS_SPARKLING
-SPC-0044,TGT-123,NZ,B0139,P0020,product_name,phrase_contains,butter,butter,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_ANCHOR_BUTTER_NZ / PFA_ANCHOR_BUTTER
-SPC-0045,TGT-126,AU,B0796,P0175,product_name,phrase_contains,szechuan chilli oil,szechuan chilli oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Migrated from PI_MRCHENS_CHILLI_OIL_250G / PIA_MRCHENS_CHILLI
-SPC-0046,TGT-126,AU,B0796,P0175,product_name,phrase_contains,sichuan chili oil,sichuan chili oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Migrated from PI_MRCHENS_CHILLI_OIL_250G / PIA_MRCHENS_CHILLI_ALT
-SPC-0047,TGT-127,AU,,,product_name,phrase_contains,red hat cookia matcha chocolate,red hat cookia matcha chocolate,reviewed,confirmed,FSANZ-REDHAT-20260911,Migrated from PI_REDHAT_COOKIA_80G / PIA_REDHAT_COOKIA
-SPC-0048,TGT-128,AU,,,product_name,phrase_contains,jc seafood sweet chilli and lime salmon,jc seafood sweet chilli and lime salmon,reviewed,confirmed,FSANZ-JCSEAFOOD-20260910,Migrated from PI_JCSEAFOOD_SALMON_275G / PIA_JCSEAFOOD_SALMON
-SPC-0049,TGT-129,AU,B0797,P0176,product_name,phrase_contains,peppermint leaf,peppermint leaf,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_AUSTRALHERBS_PEPPERMINT_20260909 / PFA_AUSTRAL_PEPPERMINT
-SPC-0050,TGT-129,AU,B0797,P0176,product_name,phrase_contains,certified organic premium peppermint,certified organic premium peppermint,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_AUSTRALHERBS_PEPPERMINT_20260909 / PFA_AUSTRAL_PEPPERMINT_CERT
-SPC-0051,TGT-130,AU,B0798,P0177,product_name,phrase_contains,brie mon sire,brie mon sire,reviewed,confirmed,FSANZ-MONSIRE-AU-20260904,Migrated from PI_MONSIRE_BRIE_AU_1KG / PIA_MONSIRE_AU_1KG
-SPC-0052,TGT-131,NZ,,,product_name,phrase_contains,dongwon fried bean curd,dongwon fried bean curd,reviewed,confirmed,MPI-DONGWON-20260911,Migrated from PI_DONGWON_BEANCURD_340G / PIA_DONGWON_BEANCURD
-SPC-0053,TGT-132,NZ,B0001,P0001,product_name,phrase_contains,multi grain cereal,multi grain cereal,reviewed,confirmed,MPI-WOOLWORTHS-MULTIGRAIN-20260908,Migrated from PI_WW_MULTIGRAIN_500G / PIA_WW_MULTIGRAIN
-SPC-0054,TGT-133,NZ,B0798,P0177,product_name,phrase_contains,brie,brie,reviewed,strong,DSA-v0.3|family-alias,Migrated from PF_MONSIRE_BRIE_NZ_20260904 / PFA_MONSIRE_BRIE_NZ
+criterion_id,signal_target_id,scope_group_id,market_key,required_brand_id,required_parent_id,match_field,match_mode,match_value,match_value_normalized,review_state,confidence_state,lineage_reference,notes
+SPC-0001,TGT-001,TGT-001__pack,AU,B0654,P0156,product_name,phrase_contains,chickadees multipack,chickadees multipack,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: product line + pack quantity
+SPC-0002,TGT-001,TGT-001__pack,AU,B0654,P0156,pack_quantity,phrase_contains,6x19g,6x19g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: pack quantity discriminator
+SPC-0003,TGT-100,TGT-100__pack,AU,B0654,P0156,product_name,phrase_contains,chickadees multipack,chickadees multipack,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: product line + pack quantity
+SPC-0004,TGT-100,TGT-100__pack,AU,B0654,P0156,pack_quantity,phrase_contains,6x19g,6x19g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: pack quantity discriminator
+SPC-0005,TGT-002,TGT-002__pack,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: product line + pack quantity
+SPC-0006,TGT-002,TGT-002__pack,AU,B0654,P0156,pack_quantity,phrase_contains,190g,190g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: pack quantity discriminator
+SPC-0007,TGT-101,TGT-101__pack,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: product line + pack quantity
+SPC-0008,TGT-101,TGT-101__pack,AU,B0654,P0156,pack_quantity,phrase_contains,190g,190g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: pack quantity discriminator
+SPC-0009,TGT-003,TGT-003__pack,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: product line + pack quantity
+SPC-0010,TGT-003,TGT-003__pack,AU,B0654,P0156,pack_quantity,phrase_contains,90g,90g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: pack quantity discriminator
+SPC-0011,TGT-102,TGT-102__pack,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: product line + pack quantity
+SPC-0012,TGT-102,TGT-102__pack,AU,B0654,P0156,pack_quantity,phrase_contains,90g,90g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: pack quantity discriminator
+SPC-0013,TGT-004,TGT-004__pack,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: product line + pack quantity
+SPC-0014,TGT-004,TGT-004__pack,AU,B0654,P0156,pack_quantity,phrase_contains,45g,45g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: pack quantity discriminator
+SPC-0015,TGT-103,TGT-103__pack,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: product line + pack quantity
+SPC-0016,TGT-103,TGT-103__pack,AU,B0654,P0156,pack_quantity,phrase_contains,45g,45g,reviewed,confirmed,FSANZ-CHICKADEES-20260710,AND group: pack quantity discriminator
+SPC-0017,TGT-005,TGT-005__pack,AU,B0059,P0008,product_name,phrase_contains,inside outs,inside outs,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,AND: product line
+SPC-0018,TGT-005,TGT-005__pack,AU,B0059,P0008,pack_quantity,phrase_contains,130g,130g,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,AND: 130g pack
+SPC-0019,TGT-104,TGT-104__pack,AU,B0059,P0008,product_name,phrase_contains,inside outs,inside outs,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,AND: product line
+SPC-0020,TGT-104,TGT-104__pack,AU,B0059,P0008,pack_quantity,phrase_contains,130g,130g,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,AND: 130g pack
+SPC-0021,TGT-007,TGT-007__pack,NZ,B0024,P0003,product_name,phrase_contains,beef lasagne,beef lasagne,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,AND: product line
+SPC-0022,TGT-007,TGT-007__pack,NZ,B0024,P0003,pack_quantity,phrase_contains,1.3kg,1 3kg,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,AND: 1.3kg pack (normalized 1.3→1 3)
+SPC-0023,TGT-105,TGT-105__pack,NZ,B0024,P0003,product_name,phrase_contains,beef lasagne,beef lasagne,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,AND: product line
+SPC-0024,TGT-105,TGT-105__pack,NZ,B0024,P0003,pack_quantity,phrase_contains,1.3kg,1 3kg,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,AND: 1.3kg pack (normalized 1.3→1 3)
+SPC-0025,TGT-009,TGT-009__g1,AU,B0179,P0041,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,ABC-106940742-LEGGOS,Complete single-phrase scope group
+SPC-0026,TGT-107,TGT-107__g1,AU,B0179,P0041,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,ABC-106940742-LEGGOS,Complete single-phrase scope group
+SPC-0027,TGT-010,TGT-010__g1,AU,B0032,P0004,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,ABC-106940742-REMANO,Complete single-phrase scope group
+SPC-0028,TGT-108,TGT-108__g1,AU,B0032,P0004,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,ABC-106940742-REMANO,Complete single-phrase scope group
+SPC-0029,TGT-011,TGT-011__g1,AU,B0200,P0002,product_name,phrase_contains,italian tomato paste,italian tomato paste,reviewed,strong,ABC-106940742-COLES-TOMATO,Complete single-phrase scope group
+SPC-0030,TGT-109,TGT-109__g1,AU,B0200,P0002,product_name,phrase_contains,italian tomato paste,italian tomato paste,reviewed,strong,ABC-106940742-COLES-TOMATO,Complete single-phrase scope group
+SPC-0031,TGT-012,TGT-012__g1,AU,B0653,P0157,product_name,phrase_contains,turmeric,turmeric,reviewed,strong,ABC-106960116-HOYTS,Complete single-phrase scope group
+SPC-0032,TGT-110,TGT-110__g1,AU,B0653,P0157,product_name,phrase_contains,turmeric,turmeric,reviewed,strong,ABC-106960116-HOYTS,Complete single-phrase scope group
+SPC-0033,TGT-017,TGT-017__g1,NZ,B0268,P0011,product_name,phrase_contains,fruit juice,fruit juice,reviewed,strong,CONSUMERNZ-KERI-20260211,Complete single-phrase scope group
+SPC-0034,TGT-114,TGT-114__g1,NZ,B0268,P0011,product_name,phrase_contains,fruit juice,fruit juice,reviewed,strong,CONSUMERNZ-KERI-20260211,Complete single-phrase scope group
+SPC-0035,TGT-018,TGT-018__g1,NZ,B0139,P0020,product_name,phrase_contains,blue milk powder,blue milk powder,reviewed,confirmed,CONSUMERNZ-ANCHOR-BLUE-20260211,Complete single-phrase scope group
+SPC-0036,TGT-115,TGT-115__g1,NZ,B0139,P0020,product_name,phrase_contains,blue milk powder,blue milk powder,reviewed,confirmed,CONSUMERNZ-ANCHOR-BLUE-20260211,Complete single-phrase scope group
+SPC-0037,TGT-019,TGT-019__g1,NZ,B0024,P0003,product_name,phrase_contains,sparkling water,sparkling water,reviewed,confirmed,RNZ-590339,Complete single-phrase scope group
+SPC-0038,TGT-116,TGT-116__g1,NZ,B0024,P0003,product_name,phrase_contains,sparkling water,sparkling water,reviewed,confirmed,RNZ-590339,Complete single-phrase scope group
+SPC-0039,TGT-026,TGT-026__g1,NZ,B0139,P0020,product_name,phrase_contains,butter,butter,reviewed,strong,NZH-ANCHOR-GRASSFED-20260331,Complete single-phrase scope group
+SPC-0040,TGT-123,TGT-123__g1,NZ,B0139,P0020,product_name,phrase_contains,butter,butter,reviewed,strong,NZH-ANCHOR-GRASSFED-20260331,Complete single-phrase scope group
+SPC-0041,TGT-132,TGT-132__g1,NZ,B0001,P0001,product_name,phrase_contains,multi grain cereal,multi grain cereal,reviewed,confirmed,MPI-WOOLWORTHS-MULTIGRAIN-20260908,Complete single-phrase scope group
+SPC-0042,TGT-013,TGT-013__cage_free,AU,B0001,P0001,product_name,phrase_contains,cage free eggs,cage free eggs,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Alternative complete label form
+SPC-0043,TGT-013,TGT-013__cage_free_hyphen,AU,B0001,P0001,product_name,phrase_contains,cage-free eggs,cage free eggs,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Alternative complete label form (hyphen)
+SPC-0044,TGT-111,TGT-111__cage_free,AU,B0001,P0001,product_name,phrase_contains,cage free eggs,cage free eggs,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Alternative complete label form
+SPC-0045,TGT-111,TGT-111__cage_free_hyphen,AU,B0001,P0001,product_name,phrase_contains,cage-free eggs,cage free eggs,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Alternative complete label form (hyphen)
+SPC-0046,TGT-029,TGT-029__szechuan,AU,B0796,P0175,product_name,phrase_contains,szechuan chilli oil,szechuan chilli oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,OR alternative spelling; AND with pack size
+SPC-0047,TGT-029,TGT-029__szechuan,AU,B0796,P0175,pack_quantity,phrase_contains,250g,250g,reviewed,confirmed,FSANZ-MRCHENS-20260818,AND pack size
+SPC-0048,TGT-029,TGT-029__sichuan,AU,B0796,P0175,product_name,phrase_contains,sichuan chili oil,sichuan chili oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,OR alternative spelling; AND with pack size
+SPC-0049,TGT-029,TGT-029__sichuan,AU,B0796,P0175,pack_quantity,phrase_contains,250g,250g,reviewed,confirmed,FSANZ-MRCHENS-20260818,AND pack size
+SPC-0050,TGT-126,TGT-126__szechuan,AU,B0796,P0175,product_name,phrase_contains,szechuan chilli oil,szechuan chilli oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,OR alternative spelling; AND with pack size
+SPC-0051,TGT-126,TGT-126__szechuan,AU,B0796,P0175,pack_quantity,phrase_contains,250g,250g,reviewed,confirmed,FSANZ-MRCHENS-20260818,AND pack size
+SPC-0052,TGT-126,TGT-126__sichuan,AU,B0796,P0175,product_name,phrase_contains,sichuan chili oil,sichuan chili oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,OR alternative spelling; AND with pack size
+SPC-0053,TGT-126,TGT-126__sichuan,AU,B0796,P0175,pack_quantity,phrase_contains,250g,250g,reviewed,confirmed,FSANZ-MRCHENS-20260818,AND pack size
+SPC-0054,TGT-129,TGT-129__peppermint,AU,B0797,P0176,product_name,phrase_contains,peppermint leaf,peppermint leaf,reviewed,strong,FSANZ-AUSTRALHERBS-20260909,Alternative complete product-line phrase
+SPC-0055,TGT-129,TGT-129__certified,AU,B0797,P0176,product_name,phrase_contains,certified organic premium peppermint,certified organic premium peppermint,reviewed,strong,FSANZ-AUSTRALHERBS-20260909,Alternative complete official line phrase
+,,,,,,,,,,,,,
+SPC-0058,TGT-133,TGT-133__brie,NZ,B0798,P0177,product_name,phrase_contains,brie,brie,reviewed,strong,MPI-MONSIRE-NZ-20260904,NZ Mon Sire Brie family phrase
+SPC-0059,TGT-127,TGT-127__g1,AU,B0799,P0178,product_name,phrase_contains,red hat cookia matcha chocolate,red hat cookia matcha chocolate,reviewed,confirmed,FSANZ-REDHAT-20260911,Anchored to governed Red Hat brand
+SPC-0060,TGT-128,TGT-128__g1,AU,B0800,P0179,product_name,phrase_contains,jc seafood sweet chilli and lime salmon,jc seafood sweet chilli and lime salmon,reviewed,confirmed,FSANZ-JCSEAFOOD-20260910,Anchored to governed JC Seafood brand
+SPC-0061,TGT-131,TGT-131__g1,NZ,B0801,P0180,product_name,phrase_contains,dongwon fried bean curd,dongwon fried bean curd,reviewed,confirmed,MPI-DONGWON-20260911,Anchored to governed Dongwon brand
+SPC-0062,TGT-028,TGT-028__mpi_1,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain very thin,original mixed grain very thin,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0063,TGT-028,TGT-028__mpi_1,NZ,B0175,P0040,pack_quantity,phrase_contains,750g,750g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0064,TGT-028,TGT-028__mpi_2,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain sandwich,original mixed grain sandwich,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0065,TGT-028,TGT-028__mpi_2,NZ,B0175,P0040,pack_quantity,phrase_contains,750g,750g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0066,TGT-028,TGT-028__mpi_3,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain toast,original mixed grain toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0067,TGT-028,TGT-028__mpi_3,NZ,B0175,P0040,pack_quantity,phrase_contains,750g,750g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0068,TGT-028,TGT-028__mpi_4,NZ,B0175,P0040,product_name,phrase_contains,dark rye toast,dark rye toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0069,TGT-028,TGT-028__mpi_4,NZ,B0175,P0040,pack_quantity,phrase_contains,720g,720g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0070,TGT-028,TGT-028__mpi_5,NZ,B0175,P0040,product_name,phrase_contains,sprouted whole grain toast,sprouted whole grain toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0071,TGT-028,TGT-028__mpi_5,NZ,B0175,P0040,pack_quantity,phrase_contains,720g,720g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0072,TGT-028,TGT-028__mpi_6,NZ,B0175,P0040,product_name,phrase_contains,fruit and spice extra thick,fruit and spice extra thick,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0073,TGT-028,TGT-028__mpi_6,NZ,B0175,P0040,pack_quantity,phrase_contains,720g,720g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0074,TGT-125,TGT-125__mpi_1,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain very thin,original mixed grain very thin,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0075,TGT-125,TGT-125__mpi_1,NZ,B0175,P0040,pack_quantity,phrase_contains,750g,750g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0076,TGT-125,TGT-125__mpi_2,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain sandwich,original mixed grain sandwich,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0077,TGT-125,TGT-125__mpi_2,NZ,B0175,P0040,pack_quantity,phrase_contains,750g,750g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0078,TGT-125,TGT-125__mpi_3,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain toast,original mixed grain toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0079,TGT-125,TGT-125__mpi_3,NZ,B0175,P0040,pack_quantity,phrase_contains,750g,750g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0080,TGT-125,TGT-125__mpi_4,NZ,B0175,P0040,product_name,phrase_contains,dark rye toast,dark rye toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0081,TGT-125,TGT-125__mpi_4,NZ,B0175,P0040,pack_quantity,phrase_contains,720g,720g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0082,TGT-125,TGT-125__mpi_5,NZ,B0175,P0040,product_name,phrase_contains,sprouted whole grain toast,sprouted whole grain toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0083,TGT-125,TGT-125__mpi_5,NZ,B0175,P0040,pack_quantity,phrase_contains,720g,720g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size
+SPC-0084,TGT-125,TGT-125__mpi_6,NZ,B0175,P0040,product_name,phrase_contains,fruit and spice extra thick,fruit and spice extra thick,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; AND with pack size
+SPC-0085,TGT-125,TGT-125__mpi_6,NZ,B0175,P0040,pack_quantity,phrase_contains,720g,720g,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI pack size

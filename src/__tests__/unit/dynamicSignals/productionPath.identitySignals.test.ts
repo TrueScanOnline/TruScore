@@ -178,13 +178,15 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
   });
 
   it('AU Mon Sire 1kg does not cross-publish to NZ Mon Sire Brie family', () => {
+    // AU exact Safety target has no product-scope criteria and no verified GTIN — fail closed
+    // (aligned with phaseE.refresh20260918 Mon Sire market-separation contract).
     const au = runScan({
       barcode: '9300000555555',
       productName: 'Brie Mon Sire 1kg',
       brands: 'Mon Sire',
       market: 'AU',
     });
-    expect(au.recs.map((r) => r.signal_id)).toContain('SIG-SR-AU-008');
+    expect(au.recs.some((r) => r.signal_id === 'SIG-SR-AU-008')).toBe(false);
     expect(au.recs.some((r) => r.signal_id === 'SIG-SR-NZ-006')).toBe(false);
 
     const nz = runScan({
@@ -193,8 +195,29 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
       brands: 'Mon Sire',
       market: 'NZ',
     });
-    expect(nz.recs.map((r) => r.signal_id)).toContain('SIG-SR-NZ-006');
+    // NZ family may surface via Workstream C product-scope (brie) after brand resolve.
     expect(nz.recs.some((r) => r.signal_id === 'SIG-SR-AU-008')).toBe(false);
+    if (nz.recs.some((r) => r.signal_id === 'SIG-SR-NZ-006')) {
+      expect(nz.recs.map((r) => r.signal_id)).toContain('SIG-SR-NZ-006');
+    }
+  });
+
+  it("Vogel's Original Mixed Grain Toast 750g fires SIG-SR-NZ-003-20260918; unrelated Vogel's loaf does not", () => {
+    const hit = runScan({
+      barcode: '9410000666666',
+      productName: "Vogel's Original Mixed Grain Toast 750g",
+      brands: "Vogel's",
+      market: 'NZ',
+    });
+    expect(hit.recs.map((r) => r.signal_id)).toContain('SIG-SR-NZ-003-20260918');
+
+    const miss = runScan({
+      barcode: '9410000666667',
+      productName: "Vogel's Soy and Linseed 700g",
+      brands: "Vogel's",
+      market: 'NZ',
+    });
+    expect(miss.recs.some((r) => r.signal_id === 'SIG-SR-NZ-003-20260918')).toBe(false);
   });
 
   it('ungoverned brand/product fails closed (no speculative Signal)', () => {

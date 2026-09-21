@@ -12,6 +12,6 @@ Successor to `wave1-v0.15` (unmutated). Adds founder-authorised AU/NZ shelf cons
 **Not part of Shared Identity:**
 
 - product names, product IDs, product families, pack/variant data
-- GTIN→brand ownership links (`gtin_brand_links.csv` is retired header-only; runtime does not consult it)
+- GTIN→brand ownership links (no `gtin_brand_links.csv` scaffold in this pack; runtime does not consult GTIN→brand)
 
 Product-specific Signal scope lives in Workstream C (`signal_target_product_criteria.csv`).

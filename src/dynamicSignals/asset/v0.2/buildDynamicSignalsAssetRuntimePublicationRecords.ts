@@ -103,6 +103,9 @@ export function buildDynamicSignalsAssetRuntimePublicationRecords(input: {
     parent_id,
     productName: input.productName,
     scanMarketPublic: input.scanMarketPublic,
+    quantity: input.product?.quantity ?? null,
+    product_quantity: input.product?.product_quantity ?? null,
+    product_quantity_unit: input.product?.product_quantity_unit ?? null,
     productScopeEvidence,
   };
 

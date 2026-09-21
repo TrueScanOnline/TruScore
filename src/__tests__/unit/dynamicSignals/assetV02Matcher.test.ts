@@ -64,10 +64,9 @@ function withPublishable(signals: CsvRecord[], ids: string[]): CsvRecord[] {
 function loadA() {
   const brandRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'canonical_brands.csv'), 'utf8'));
   const parentRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'canonical_parents.csv'), 'utf8'));
-  const gtinRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'gtin_brand_links.csv'), 'utf8'));
   const aliasRows = parseCsv(fs.readFileSync(path.join(A_DATA, 'brand_aliases.csv'), 'utf8'));
   return {
-    aData: buildADataMapsFromCsvRecords(brandRows, parentRows, gtinRows),
+    aData: buildADataMapsFromCsvRecords(brandRows, parentRows, []),
     brandRows,
     aliasRows,
   };

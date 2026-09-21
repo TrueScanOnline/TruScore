@@ -1,4 +1,5 @@
 import {
+  RETIRED_WORKSTREAM_A_FILES,
   WORKSTREAM_A_FILES,
   buildCoverageScorecard,
   buildEnumDictionaryRows,
@@ -56,7 +57,7 @@ function baseRows() {
         source_id: 'src:manual-review',
       },
     ],
-    [WORKSTREAM_A_FILES.GTIN_BRAND_LINKS]: [
+    [RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS]: [
       {
         gtin: '9300601249114',
         brand_id: 'brand:kitkat',
@@ -109,6 +110,7 @@ describe('Workstream A A5 scaffolding', () => {
     const templates = buildTemplateCsvMap();
     expect(Object.keys(templates)).toContain(WORKSTREAM_A_FILES.CANONICAL_PARENTS);
     expect(Object.keys(templates)).toContain(WORKSTREAM_A_FILES.CATALOGUE_AUDIT_OBSERVATIONS);
+    expect(Object.keys(templates)).not.toContain(RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS);
     expect(templates[WORKSTREAM_A_FILES.ENUM_DICTIONARY]).toContain('enum_name,enum_value');
   });
 
@@ -121,9 +123,20 @@ describe('Workstream A A5 scaffolding', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('validates active pack without retired gtin_brand_links', () => {
+    const rows = baseRows();
+    delete (rows as Record<string, unknown>)[RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS];
+    const result = validateWorkstreamAPack({
+      mode: 'populated',
+      rowsByFile: rows,
+    });
+    expect(result.issues.filter((i) => i.level === 'error')).toEqual([]);
+    expect(result.ok).toBe(true);
+  });
+
   it('detects gtin and alias-parent integrity failures', () => {
     const rows = baseRows();
-    rows[WORKSTREAM_A_FILES.GTIN_BRAND_LINKS][0].gtin = 'bad';
+    rows[RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS][0].gtin = 'bad';
     rows[WORKSTREAM_A_FILES.BRAND_ALIASES][0].parent_id = 'parent:wrong';
     const result = validateWorkstreamAPack({
       mode: 'populated',
@@ -143,4 +156,3 @@ describe('Workstream A A5 scaffolding', () => {
     expect(gap.top_gap_notes).toContain('No gaps in sample');
   });
 });
-

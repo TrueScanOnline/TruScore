@@ -8,6 +8,8 @@ Included artefacts:
 - `brand_aliases_extension.csv`
 - `brand_child_of_brand.csv` / `entity_child_of_entity.csv`
 
+**No GTIN scaffold** in this directory (no `gtin_brand_links_extension.csv`).
+
 Product / product-family scope for Signal resolution lives in Workstream C
 (`workstreamC/c-data/dynamic-signals-v0.3/input/signal_target_product_criteria.csv`).
 This directory must **not** contain `product_families`, `product_family_aliases`,

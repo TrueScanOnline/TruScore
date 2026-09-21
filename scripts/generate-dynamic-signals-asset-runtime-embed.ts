@@ -54,8 +54,6 @@ function main() {
       ...readCsv(path.join(aRoot, 'canonical_parents.csv')),
       ...readCsv(path.join(extRoot, 'canonical_parents_extension.csv')),
     ],
-    // GTIN→brand scaffold retired from active Chaining / runtime embed consumption.
-    gtinRows: [] as ReturnType<typeof readCsv>,
     aliasRows: [
       ...readCsv(path.join(aRoot, 'brand_aliases.csv')),
       ...readCsv(path.join(extRoot, 'brand_aliases_extension.csv')),
@@ -83,7 +81,6 @@ export type DynamicSignalsAssetRuntimeEmbed = {
   foodRecallRelatedGtins: CsvRecord[];
   brandRows: CsvRecord[];
   parentRows: CsvRecord[];
-  gtinRows: CsvRecord[];
   aliasRows: CsvRecord[];
 };
 
@@ -97,7 +94,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
   fs.writeFileSync(OUT, body, 'utf8');
   console.log(`Wrote ${path.relative(ROOT, OUT)}`);
   console.log(
-    `rows: signals=${embed.signals.length} targets=${embed.targets.length} brands=${embed.brandRows.length} criteria=${embed.signalTargetProductCriteria.length} gtins=${embed.gtinRows.length}`
+    `rows: signals=${embed.signals.length} targets=${embed.targets.length} brands=${embed.brandRows.length} criteria=${embed.signalTargetProductCriteria.length}`
   );
 }
 

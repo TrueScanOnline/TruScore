@@ -1,12 +1,18 @@
 import { WORKSTREAM_A_ENUM_DICTIONARY } from './enums';
 import { toCsv, type CsvRecord } from './csv';
-import { WORKSTREAM_A_FILES, type WorkstreamAFileName } from './schema';
+import {
+  RETIRED_WORKSTREAM_A_FILES,
+  WORKSTREAM_A_FILES,
+  type WorkstreamAFileName,
+} from './schema';
+
+export type RetiredWorkstreamAFileName =
+  (typeof RETIRED_WORKSTREAM_A_FILES)[keyof typeof RETIRED_WORKSTREAM_A_FILES];
 
 export const WORKSTREAM_A_REQUIRED_FILES: readonly WorkstreamAFileName[] = [
   WORKSTREAM_A_FILES.CANONICAL_PARENTS,
   WORKSTREAM_A_FILES.CANONICAL_BRANDS,
   WORKSTREAM_A_FILES.BRAND_ALIASES,
-  WORKSTREAM_A_FILES.GTIN_BRAND_LINKS,
   WORKSTREAM_A_FILES.OPERATIONAL_ENTITIES,
   WORKSTREAM_A_FILES.OWNERSHIP_CHANGE_CANDIDATES,
   WORKSTREAM_A_FILES.STEWARDSHIP_ACTION_LOG,
@@ -69,18 +75,6 @@ export const WORKSTREAM_A_COLUMNS: Record<WorkstreamAFileName, readonly string[]
     'review_state',
     'source_reference',
     'source_id',
-    'notes_internal',
-  ],
-  [WORKSTREAM_A_FILES.GTIN_BRAND_LINKS]: [
-    'gtin',
-    'brand_id',
-    'parent_id',
-    'link_review_state',
-    'source_type',
-    'source_reference',
-    'source_id',
-    'product_name',
-    'last_reviewed_at',
     'notes_internal',
   ],
   [WORKSTREAM_A_FILES.OPERATIONAL_ENTITIES]: [
@@ -241,14 +235,6 @@ export const WORKSTREAM_A_REQUIRED_COLUMNS: Record<WorkstreamAFileName, readonly
     'review_state',
     'source_reference',
   ],
-  [WORKSTREAM_A_FILES.GTIN_BRAND_LINKS]: [
-    'gtin',
-    'brand_id',
-    'parent_id',
-    'link_review_state',
-    'source_type',
-    'source_reference',
-  ],
   [WORKSTREAM_A_FILES.OPERATIONAL_ENTITIES]: [
     'operational_entity_id',
     'operational_entity_name',
@@ -339,6 +325,36 @@ export const WORKSTREAM_A_REQUIRED_COLUMNS: Record<WorkstreamAFileName, readonly
     'normalized_brand_candidate',
     'match_status',
     'audit_date',
+  ],
+};
+
+/** Historical pack validation only — not part of active Shared Identity templates. */
+export const RETIRED_WORKSTREAM_A_COLUMNS: Record<RetiredWorkstreamAFileName, readonly string[]> = {
+  [RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS]: [
+    'gtin',
+    'brand_id',
+    'parent_id',
+    'link_review_state',
+    'source_type',
+    'source_reference',
+    'source_id',
+    'product_name',
+    'last_reviewed_at',
+    'notes_internal',
+  ],
+};
+
+export const RETIRED_WORKSTREAM_A_REQUIRED_COLUMNS: Record<
+  RetiredWorkstreamAFileName,
+  readonly string[]
+> = {
+  [RETIRED_WORKSTREAM_A_FILES.GTIN_BRAND_LINKS]: [
+    'gtin',
+    'brand_id',
+    'parent_id',
+    'link_review_state',
+    'source_type',
+    'source_reference',
   ],
 };
 
