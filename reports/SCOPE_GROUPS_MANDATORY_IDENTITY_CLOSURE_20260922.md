@@ -105,4 +105,4 @@ NA-022, Anchor alias correction, benchmarks, Signal commentary, scoring, Wave 3.
 
 ## Tip SHA
 
-Stamped on commit of this closure (see git tip after push).
+`0ced973472e7cf5452f7e8adbebb1e64371391e1`
