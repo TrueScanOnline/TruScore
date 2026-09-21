@@ -3,7 +3,7 @@
 **Branch:** `refresh/si-v016-ktc-bbfaw-20260918`
 **Worktree:** `C:\TrueScan-FoodScanner-wt-si-benchmark-refresh`
 **Starting tip:** `0531f30`
-**Substantive SHA:** _see "Commit and tip" below_
+**Substantive SHA:** `eb8066a`
 **Build:** not cut (explicitly out of scope for this change).
 
 Governing authority: [`docs/uat/FOUNDER_MVP_RECALL_DECISIONS_20260922_SUPERSESSION.md`](../docs/uat/FOUNDER_MVP_RECALL_DECISIONS_20260922_SUPERSESSION.md).
@@ -114,4 +114,10 @@ No change to `.env.development`, `app.config.js` defaults or EAS profiles. `EXPO
 
 ## 9. Commit and tip
 
-Substantive commit and branch tip are recorded in the follow-up stamp at the bottom of this file.
+| | SHA |
+|---|---|
+| Starting tip | `0531f30` |
+| Substantive commit (all code, data, tests, docs) | `eb8066a` |
+| Branch tip | `eb8066a` plus this SHA stamp commit |
+
+The stamp commit contains only this section of this report, so `eb8066a` is the SHA to review for the change itself.
