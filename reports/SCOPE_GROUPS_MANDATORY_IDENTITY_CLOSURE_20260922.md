@@ -105,4 +105,5 @@ NA-022, Anchor alias correction, benchmarks, Signal commentary, scoring, Wave 3.
 
 ## Tip SHA
 
-`0ced973472e7cf5452f7e8adbebb1e64371391e1`
+Branch tip for independent QA: `bd3211964b8c45448a5e4979e8654f7136075c5d`  
+Substantive correction: `0ced973472e7cf5452f7e8adbebb1e64371391e1`
