@@ -72,11 +72,25 @@ build/
 !src/data/ethics/brandAliasMap.json
 !src/data/ethics/bbfawParents.json
 !src/data/ethics/bbfaw2024Canonical.json
+!src/data/ethics/bbfaw2025Canonical.json
 !src/data/ethics/ktcParents.json
 !src/data/ethics/ktcBrandAliasMap.json
+# S25 About These Additives runtime assets (required for Metro bundle)
+!src/s25/assets/catalogue_315.json
+!src/s25/assets/classes_25.json
+!src/s25/assets/source_profiles.json
+!src/s25/assets/surface_copy.json
+!src/s25/assets/ingestion_manifest.json
+# Claims machine register (required for TruScore Claims matching)
+!src/lib/truscoreEngine/claims/machineRegister/packetClaimMachineRegister.v1.json
 # Explicitly exclude large data JSON files
 barcode_*.json
 data/*.json
+
+# Local build/export scratch (must not enter EAS archive)
+reports/_tmp*/
+reports/_tmp_*
+
 
 # Excel and Office files
 *.xlsx
