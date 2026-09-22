@@ -139,4 +139,6 @@ No benchmark CSV edits, scoring methodology changes, or Wave 3 branch merge perf
 
 ## Final integration tip SHA
 
-**`af62a2f06dfb5eded0036e812667f08b51177e34`**
+**`1f57d33c4d4c6cbca46404b09dec73e5dee0f80e`**
+
+Integration merge: `44f5d03d75d4c460994e76af3a49f2683a7e23f9` · assurance commit: `af62a2f06dfb5eded0036e812667f08b51177e34`
