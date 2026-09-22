@@ -94,7 +94,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Note: with a checked-in android/ directory, EAS uses this native versionCode.
         // Keep in sync with eas.json uat-dynamic-signals-android RVEEL_ANDROID_VERSION_CODE.
-        versionCode 20
+        versionCode 21
         versionName "10.0.0"
     }
     signingConfigs {

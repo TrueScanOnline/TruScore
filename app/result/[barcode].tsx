@@ -874,6 +874,17 @@ function ResultScreenContent() {
     });
   }, [product?.trust_score, product?.barcode, barcode, product, scanResult?.terminal_state]);
 
+  // Must stay above loading/error early returns — otherwise product-ready renders call one more hook.
+  const heroImageUrl =
+    product?.image_front_small_url || product?.image_front_url || product?.image_url || null;
+  useEffect(() => {
+    const url = heroImageUrl?.trim();
+    if (!url) return;
+    ExpoImage.prefetch(url).catch(() => {
+      // Prefetch is best-effort; hero still loads on mount with existing fallbacks.
+    });
+  }, [heroImageUrl]);
+
   const loadProduct = async () => {
     setLoading(true);
     setError(null);
@@ -1401,14 +1412,6 @@ function ResultScreenContent() {
   const imageUrl =
     product.image_front_small_url || product.image_front_url || product.image_url || null;
   const isWebSearchProduct = isWebSearchFallback(product);
-
-  useEffect(() => {
-    const url = imageUrl?.trim();
-    if (!url) return;
-    ExpoImage.prefetch(url).catch(() => {
-      // Prefetch is best-effort; hero still loads on mount with existing fallbacks.
-    });
-  }, [imageUrl]);
 
   // Combine Open Food Facts data with user contributions
   // CRITICAL: If user has overridden default country, prioritize user-contributed country
