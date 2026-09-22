@@ -139,4 +139,4 @@ No benchmark CSV edits, scoring methodology changes, or Wave 3 branch merge perf
 
 ## Final integration tip SHA
 
-Stamped on commit of this report (see git tip after push).
+**`af62a2f06dfb5eded0036e812667f08b51177e34`**
