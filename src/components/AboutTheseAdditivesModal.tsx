@@ -7,13 +7,16 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   LayoutChangeEvent,
   Linking,
+  Modal,
+  SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import InfoModal from './InfoModal';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   COLOUR_ADDITIVE_IDS,
   COLOUR_CLUSTER_EVIDENCE_STORY,
@@ -286,6 +289,8 @@ export default function AboutTheseAdditivesModal({
   focusAdditiveIds = [],
 }: AboutTheseAdditivesModalProps) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
   const items = useMemo(
     () => buildRenderList(merged, ingredientsText),
     [merged, ingredientsText]
@@ -319,19 +324,18 @@ export default function AboutTheseAdditivesModal({
   }, [items, focusAdditiveIds]);
 
   const [expanded, setExpanded] = useState<Set<string>>(initialExpanded);
-  const [scrollToY, setScrollToY] = useState<number | undefined>(undefined);
   const yByKey = useRef<Record<string, number>>({});
 
   useEffect(() => {
     if (visible) {
       setExpanded(new Set(initialExpanded));
-      // Defer scroll until layout
       requestAnimationFrame(() => {
         const focusKey = [...initialExpanded][0];
         if (focusKey && yByKey.current[focusKey] != null) {
-          setScrollToY(yByKey.current[focusKey]);
-        } else {
-          setScrollToY(undefined);
+          scrollRef.current?.scrollTo({
+            y: Math.max(0, yByKey.current[focusKey]! - 8),
+            animated: true,
+          });
         }
       });
     }
@@ -341,6 +345,9 @@ export default function AboutTheseAdditivesModal({
 
   const title = getSurfaceCopy('surface_title') || 'About these Additives';
   const intro = getSurfaceCopy('surface_intro');
+  const additiveCount = merged.renderedAdditiveIds.length;
+  const countUnit =
+    additiveCount === 1 ? 'additive identified' : 'additives identified';
 
   const toggle = (key: string) => {
     setExpanded((prev) => {
@@ -352,177 +359,262 @@ export default function AboutTheseAdditivesModal({
   };
 
   const showBack = caller === 'body' || caller === 'open';
+  const handleRequestClose = () => {
+    if (showBack && onBack) onBack();
+    else onClose();
+  };
 
   return (
-    <InfoModal
+    <Modal
       visible={visible}
-      onClose={onClose}
-      onBack={showBack ? onBack : undefined}
-      title={title}
-      icon="beaker-outline"
-      iconColor={colors.primary}
-      scrollToY={scrollToY}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={handleRequestClose}
     >
-      <BodyText>{intro}</BodyText>
-
-      {items.map((item) => {
-        const key = entryFocusKey(item);
-        const isOpen = expanded.has(key);
-        const profile =
-          !item.isBody6 && item.entry.source_preparation_render_mode === 'STANDARD_PROFILE_AND_COPY'
-            ? getSourceProfile(item.entry.source_preparation_profile)
-            : undefined;
-
-        return (
-          <View
-            key={key}
-            style={[styles.entry, { borderColor: colors.border }]}
-            onLayout={(e: LayoutChangeEvent) => {
-              yByKey.current[key] = e.nativeEvent.layout.y;
-            }}
+      <SafeAreaView style={[styles.screen, { backgroundColor: colors.card, paddingTop: insets.top }]}>
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <View style={styles.headerLeft}>
+            {showBack ? (
+              <TouchableOpacity
+                onPress={onBack}
+                style={[styles.headerBtn, { backgroundColor: colors.surface }]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel="Back"
+              >
+                <Ionicons name="chevron-back" size={24} color={colors.text} />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.headerBtnSpacer} />
+            )}
+            <Ionicons name="beaker-outline" size={22} color={colors.primary} />
+            <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={2}>
+              {title}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={onClose}
+            style={[styles.headerBtn, { backgroundColor: colors.surface }]}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
           >
-            <TouchableOpacity
-              onPress={() => toggle(key)}
-              style={styles.entryHeader}
-              accessibilityRole="button"
-              accessibilityState={{ expanded: isOpen }}
-            >
-              <View style={styles.entryHeaderText}>
-                <Text style={[styles.entryTitle, { color: colors.text }]}>
-                  {item.colourGroupIds && item.colourGroupIds.length > 1
-                    ? 'Colour additives'
-                    : item.entry.entry_title}
-                </Text>
-                {item.entry.tile_summary ? (
-                  <Text style={[styles.tileSummary, { color: colors.textSecondary }]}>
-                    {item.entry.tile_summary}
-                  </Text>
-                ) : null}
-                {profile ? (
-                  <View style={styles.profileRow}>
-                    <ProfileGlyph glyphKey={profile.glyph_key} />
-                    <Text style={[styles.profileLabel, { color: colors.textSecondary }]}>
-                      {profile.consumer_label}
+            <Ionicons name="close" size={24} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          ref={scrollRef}
+          style={styles.content}
+          contentContainerStyle={[styles.contentContainer, { paddingBottom: 24 + insets.bottom }]}
+          showsVerticalScrollIndicator
+        >
+          <View
+            style={styles.countHero}
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={`${additiveCount} ${countUnit}`}
+          >
+            <Text style={[styles.countHeroNumber, { color: colors.text }]}>{additiveCount}</Text>
+            <Text style={[styles.countHeroUnit, { color: colors.textSecondary }]}>{countUnit}</Text>
+          </View>
+
+          {intro ? <BodyText>{intro}</BodyText> : null}
+
+          {items.map((item) => {
+            const key = entryFocusKey(item);
+            const isOpen = expanded.has(key);
+            const profile =
+              !item.isBody6 &&
+              item.entry.source_preparation_render_mode === 'STANDARD_PROFILE_AND_COPY'
+                ? getSourceProfile(item.entry.source_preparation_profile)
+                : undefined;
+
+            return (
+              <View
+                key={key}
+                style={[styles.entry, { borderColor: colors.border }]}
+                onLayout={(e: LayoutChangeEvent) => {
+                  yByKey.current[key] = e.nativeEvent.layout.y;
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => toggle(key)}
+                  style={styles.entryHeader}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: isOpen }}
+                >
+                  <View style={styles.entryHeaderText}>
+                    <Text style={[styles.entryTitle, { color: colors.text }]}>
+                      {item.colourGroupIds && item.colourGroupIds.length > 1
+                        ? 'Colour additives'
+                        : item.entry.entry_title}
                     </Text>
+                    {/* Collapsed-only tile_summary — avoid stacking with expanded_summary (A4). */}
+                    {!isOpen && item.entry.tile_summary ? (
+                      <Text style={[styles.tileSummary, { color: colors.textSecondary }]}>
+                        {item.entry.tile_summary}
+                      </Text>
+                    ) : null}
+                    {!isOpen && profile ? (
+                      <View style={styles.profileRow}>
+                        <ProfileGlyph glyphKey={profile.glyph_key} />
+                        <Text style={[styles.profileLabel, { color: colors.textSecondary }]}>
+                          {profile.consumer_label}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
+                  <Ionicons
+                    name={isOpen ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color={colors.textSecondary}
+                  />
+                </TouchableOpacity>
+
+                {isOpen ? (
+                  item.isBody6 ? (
+                    <Body6Expanded item={item} colourLedgerIds={colourLedgerIds} />
+                  ) : (
+                    <StandardExpanded item={item} />
+                  )
                 ) : null}
               </View>
-              <Ionicons
-                name={isOpen ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
-
-            {isOpen ? (
-              item.isBody6 ? (
-                <Body6Expanded item={item} colourLedgerIds={colourLedgerIds} />
-              ) : (
-                <StandardExpanded item={item} />
-              )
-            ) : null}
-          </View>
-        );
-      })}
-    </InfoModal>
+            );
+          })}
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 8,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  headerBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerBtnSpacer: {
+    width: 36,
+  },
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  countHero: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 10,
+    marginBottom: 12,
+    flexWrap: 'wrap',
+  },
+  countHeroNumber: {
+    fontSize: 40,
+    fontWeight: '700',
+    lineHeight: 44,
+    fontVariant: ['tabular-nums'],
+  },
+  countHeroUnit: {
+    fontSize: 16,
+    fontWeight: '500',
+    lineHeight: 22,
+  },
   entry: {
-    marginTop: 16,
+    marginTop: 10,
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
   },
   entryHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 6,
   },
   entryHeaderText: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   entryTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
   },
   tileSummary: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 4,
+    marginTop: 2,
   },
   profileLabel: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 12,
   },
   expandedBlock: {
-    marginTop: 12,
+    marginTop: 10,
     gap: 8,
   },
-  subBlock: {
-    marginTop: 8,
-    gap: 4,
-  },
   sectionHeading: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
     marginBottom: 4,
   },
-  subheading: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginTop: 4,
-  },
   bodyText: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
   },
-  tile: {
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 8,
+  subBlock: {
     gap: 4,
   },
-  tileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 4,
-  },
-  swatch: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.15)',
-  },
-  tileTitle: {
-    fontSize: 16,
+  subheading: {
+    fontSize: 14,
     fontWeight: '600',
-    flex: 1,
+    marginTop: 4,
   },
   microFactRow: {
     marginTop: 4,
+    gap: 2,
   },
   microFactLabel: {
     fontSize: 13,
     fontWeight: '600',
   },
   microFactValue: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 2,
+    fontSize: 13,
+    lineHeight: 18,
   },
   sourceList: {
-    marginTop: 10,
+    marginTop: 6,
     gap: 6,
   },
   sourceRow: {
@@ -532,7 +624,27 @@ const styles = StyleSheet.create({
   },
   sourceLinkText: {
     fontSize: 13,
-    fontWeight: '500',
-    flex: 1,
+    flexShrink: 1,
+  },
+  tile: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 6,
+  },
+  tileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  swatch: {
+    width: 14,
+    height: 14,
+    borderRadius: 3,
+  },
+  tileTitle: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

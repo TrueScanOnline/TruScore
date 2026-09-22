@@ -161,7 +161,12 @@ describe('S25 Open coded-term route actions (presentation only)', () => {
       { renderedAdditiveIds: ['e102'] }
     );
     expect(content?.termRouteActions).toEqual([
-      { term: 'E102', label: 'About this additive', additiveId: 'e102' },
+      {
+        term: 'E102',
+        label: 'About this additive',
+        additiveId: 'e102',
+        displayName: 'Tartrazine',
+      },
     ]);
   });
 

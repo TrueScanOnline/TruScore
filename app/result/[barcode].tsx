@@ -36,6 +36,8 @@ import CertBadge from '../../src/components/CertBadge';
 import EcoScore from '../../src/components/EcoScore';
 import UniversalPricingCard from '../../src/components/UniversalPricingCard';
 import NutritionTable from '../../src/components/NutritionTable';
+import type { NutritionDetailsFocusTarget } from '../../src/components/NutritionDetailsModal';
+import { Image as ExpoImage } from 'expo-image';
 import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
@@ -239,6 +241,9 @@ function ResultScreenContent() {
   const [governedL3Request, setGovernedL3Request] = useState<ScoreHighlightsGovernedL3Request | null>(
     null
   );
+  const [nutritionDetailsVisible, setNutritionDetailsVisible] = useState(false);
+  const [nutritionDetailsFocus, setNutritionDetailsFocus] =
+    useState<NutritionDetailsFocusTarget>(null);
   const [allergensAdditivesModalVisible, setAllergensAdditivesModalVisible] = useState(false);
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
@@ -586,7 +591,7 @@ function ResultScreenContent() {
   }, []);
 
   const openAboutAdditivesFromOpen = useCallback(
-    (additiveId: string) => {
+    (additiveId?: string) => {
       if (governedL3Request) {
         setAboutAdditivesOpenRestore(governedL3Request);
         setGovernedL3Request(null);
@@ -595,11 +600,32 @@ function ResultScreenContent() {
         setAboutAdditivesSession({
           visible: true,
           caller: 'open',
-          focusAdditiveIds: [additiveId],
+          focusAdditiveIds: additiveId ? [additiveId] : [],
         });
       });
     },
     [governedL3Request]
+  );
+
+  const mapClaimsHighNutrientsToFocus = useCallback(
+    (metadata?: Record<string, string | number | boolean>): NutritionDetailsFocusTarget => {
+      const raw = metadata?.high_nutrients;
+      if (typeof raw !== 'string' || !raw.trim()) return null;
+      const labels = raw.split('|').map((s) => s.trim().toLowerCase()).filter(Boolean);
+      const map: Record<string, 'totalSugars' | 'saturatedFat' | 'sodium'> = {
+        'total sugars': 'totalSugars',
+        'saturated fat': 'saturatedFat',
+        sodium: 'sodium',
+      };
+      const keys: Array<'totalSugars' | 'saturatedFat' | 'sodium'> = [];
+      for (const label of labels) {
+        const key = map[label];
+        if (key && !keys.includes(key)) keys.push(key);
+      }
+      if (keys.length === 0) return null;
+      return keys.length === 1 ? keys[0] : keys;
+    },
+    []
   );
 
   const openInAppScoreHighlightL3 = useCallback(
@@ -632,13 +658,18 @@ function ResultScreenContent() {
           });
           return;
         }
+        if (plan.present === 'nutrition_details') {
+          setNutritionDetailsFocus(mapClaimsHighNutrientsToFocus(story.metadata));
+          setNutritionDetailsVisible(true);
+          return;
+        }
         setGovernedL3Request({
           target: route.target as ScoreHighlightL3InAppTarget,
           story,
         });
       });
     },
-    []
+    [mapClaimsHighNutrientsToFocus]
   );
 
   // Primary product/TruScore result — never gated on Dynamic Signals evaluation.
@@ -1366,8 +1397,18 @@ function ResultScreenContent() {
   }
 
   const manufacturingCountry = extractManufacturingCountry(product);
-  const imageUrl = product.image_url || product.image_front_url || product.image_front_small_url;
+  // UAT interim mitigation (F): prefer small front image for hero; fall back to full.
+  const imageUrl =
+    product.image_front_small_url || product.image_front_url || product.image_url || null;
   const isWebSearchProduct = isWebSearchFallback(product);
+
+  useEffect(() => {
+    const url = imageUrl?.trim();
+    if (!url) return;
+    ExpoImage.prefetch(url).catch(() => {
+      // Prefetch is best-effort; hero still loads on mount with existing fallbacks.
+    });
+  }, [imageUrl]);
 
   // Combine Open Food Facts data with user contributions
   // CRITICAL: If user has overridden default country, prioritize user-contributed country
@@ -1766,6 +1807,12 @@ function ResultScreenContent() {
               setShareInitialMessage(prefill);
               setShareModalVisible(true);
             }}
+            detailsVisible={nutritionDetailsVisible}
+            onDetailsVisibleChange={(v) => {
+              setNutritionDetailsVisible(v);
+              if (!v) setNutritionDetailsFocus(null);
+            }}
+            initialDetailsFocus={nutritionDetailsFocus}
           />
 
         {/* Country of Manufacture — governed Product Origins surface (Open Origins L3 deep-link) */}

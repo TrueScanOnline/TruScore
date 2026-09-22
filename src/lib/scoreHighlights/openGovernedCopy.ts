@@ -115,6 +115,7 @@ function resolveOpenIngredientClarityCopy(
       };
     }
     if (presentationClass === 'coded') {
+      // P1 founder disposition: Open Highlight stays number-free; S25 owns the authoritative count.
       return {
         l1: 'Several ingredients need decoding',
         l2:

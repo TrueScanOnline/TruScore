@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Share, Platform, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -81,6 +81,11 @@ const NutritionTable = React.memo(function NutritionTable({
     initialDetailsFocus
   );
 
+  // P2: always mirror parent focus, including null, so a later Claims open cannot keep a stale highlight.
+  useEffect(() => {
+    setDetailsFocus(initialDetailsFocus);
+  }, [initialDetailsFocus]);
+
   const detailsVisible = detailsVisibleProp ?? internalDetailsVisible;
   const setDetailsVisible = useCallback(
     (visible: boolean) => {
@@ -122,7 +127,8 @@ const NutritionTable = React.memo(function NutritionTable({
     ]
   );
 
-  const showPerServe = assessment.serving.usable === true;
+  // UAT corrective C1: Per serve is Details-only; primary card is Nutrient | Per 100 | Level.
+  const showPerServe = false;
   const kcalPer100g = useMemo(() => resolveKcalPer100g(nutriments), [nutriments]);
   const burnMinutes = useMemo(
     () => (kcalPer100g !== undefined ? computeBurnMinutesFromKcal(kcalPer100g) : null),

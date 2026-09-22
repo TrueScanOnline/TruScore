@@ -14,6 +14,7 @@
 
 import type { ScoreHighlightL3InAppTarget } from './targets';
 import { normalizeCodedTermToAdditiveId } from '../../../s25/normalize';
+import { getCatalogueEntry } from '../../../s25/loadAsset';
 
 export type L3Metadata = Record<string, string | number | boolean> | undefined;
 
@@ -46,6 +47,20 @@ export interface L3TermRouteAction {
   term: string;
   label: string;
   additiveId: string;
+  /** Governed S25 consumer_display_name when deterministically resolved — presentation only. */
+  displayName?: string;
+}
+
+/** Compact Open coded-additives block (UAT corrective — replaces one-button-per-code). */
+export interface L3CodedAdditivesSection {
+  /**
+   * Unique Open coded terms that resolved under the Open/S25 routing contract.
+   * Presentation must not surface this as a consumer-facing additive count (P1).
+   */
+  codedCount: number;
+  heading: string;
+  /** Number-free CTA into the canonical S25 About these Additives destination. */
+  exploreLabel: string;
 }
 
 export interface L3ResolvedContent {
@@ -59,6 +74,8 @@ export interface L3ResolvedContent {
   action?: L3ActionFragment;
   /** Present for Open coded terms whose resolved ID is in the current scan's renderedAdditiveIds. */
   termRouteActions?: L3TermRouteAction[];
+  /** Compact coded-additives section + single Explore CTA. */
+  codedAdditivesSection?: L3CodedAdditivesSection;
 }
 
 export interface L3ResolveOptions {
@@ -640,13 +657,27 @@ function buildCodedTermRouteActions(
     if (!additiveId || !rendered.has(additiveId)) continue;
     if (seenTargets.has(additiveId)) continue;
     seenTargets.add(additiveId);
+    const entry = getCatalogueEntry(additiveId);
+    const displayName = entry?.consumer_display_name?.trim() || undefined;
     actions.push({
       term: terms[i],
       label: 'About this additive',
       additiveId,
+      ...(displayName ? { displayName } : {}),
     });
   }
   return actions;
+}
+
+function buildCodedAdditivesSection(
+  actions: L3TermRouteAction[]
+): L3CodedAdditivesSection | undefined {
+  if (actions.length === 0) return undefined;
+  return {
+    codedCount: actions.length,
+    heading: 'Coded additives',
+    exploreLabel: 'About these Additives',
+  };
 }
 
 function resolveIngredientWording(
@@ -655,7 +686,6 @@ function resolveIngredientWording(
 ): L3ResolvedContent | null {
   const presentationClass = metadata?.termPresentationClass;
   const terms = splitPipe(metadata?.matchedTerms);
-  const decoded = splitPipe(metadata?.decodedAdditiveNames);
   const termClasses = splitPipe(metadata?.termPresentationClasses);
 
   const sections: L3Section[] = [
@@ -675,13 +705,17 @@ function resolveIngredientWording(
   const withAction = (
     built: L3Section[],
     termRouteActions?: L3TermRouteAction[]
-  ): L3ResolvedContent => ({
-    title: 'Ingredient wording explained',
-    sections: built,
-    sources: [OPEN_INGREDIENT_SOURCE],
-    ...(options.userContributionRouteLive === true && { action: OPEN_CONTRIBUTION_ACTION }),
-    ...(termRouteActions && termRouteActions.length > 0 && { termRouteActions }),
-  });
+  ): L3ResolvedContent => {
+    const codedAdditivesSection = buildCodedAdditivesSection(termRouteActions ?? []);
+    return {
+      title: 'Ingredient wording explained',
+      sections: built,
+      sources: [OPEN_INGREDIENT_SOURCE],
+      ...(options.userContributionRouteLive === true && { action: OPEN_CONTRIBUTION_ACTION }),
+      ...(termRouteActions && termRouteActions.length > 0 && { termRouteActions }),
+      ...(codedAdditivesSection && { codedAdditivesSection }),
+    };
+  };
 
   // Zero-flag clarity (+1) carries no presentation class or matched terms.
   if (!presentationClass && terms.length === 0) {
@@ -696,8 +730,6 @@ function resolveIngredientWording(
   if (!presentationClass || terms.length === 0) return null;
 
   const quoted = (t: string) => `“${t}”`;
-  const codedLine = (term: string, plain: string | undefined) =>
-    plain ? `${quoted(term)} — ${plain}` : quoted(term);
 
   if (presentationClass === 'broad_generic') {
     sections.push({
@@ -713,8 +745,8 @@ function resolveIngredientWording(
   }
 
   if (presentationClass === 'coded') {
+    // Compact list lives in codedAdditivesSection; keep a neutral body only.
     sections.push({
-      heading: terms.map((t, i) => codedLine(t, decoded[i])).join('; '),
       body:
         terms.length === 1
           ? 'The code identifies the additive precisely, but a shopper needs to know or look up the number to see the additive’s name.'
@@ -730,11 +762,10 @@ function resolveIngredientWording(
     // Mixed must retain each term's classification; fail closed without per-term classes.
     if (termClasses.length !== terms.length) return null;
     const broad: string[] = [];
-    const coded: string[] = [];
-    let decodedIdx = 0;
+    const codedTerms: string[] = [];
     for (let i = 0; i < terms.length; i++) {
       if (termClasses[i] === 'coded') {
-        coded.push(codedLine(terms[i], decoded[decodedIdx++]));
+        codedTerms.push(terms[i]);
       } else if (termClasses[i] === 'broad_generic') {
         broad.push(quoted(terms[i]));
       } else {
@@ -747,10 +778,10 @@ function resolveIngredientWording(
         body: broad.join('; '),
       });
     }
-    if (coded.length > 0) {
+    if (codedTerms.length > 0) {
       sections.push({
-        heading: 'Coded additive numbers',
-        body: coded.join('; '),
+        body:
+          'Coded additive numbers on this list identify additives precisely, but a shopper needs to know or look them up to see their names.',
       });
     }
     return withAction(
@@ -788,16 +819,9 @@ export function resolveGovernedL3Content(
     case 'ethics_organic':
       return resolveEthicsCert(target, metadata, options);
     case 'claims_packet_context_nutrition':
-      return {
-        title: 'Nutrition details',
-        sections: [
-          {
-            body:
-              'This Claims finding uses the same nutrition check shown on the Nutrition details card for total sugars, saturated fat and sodium. View Nutrition details to review those ratings and sources.',
-          },
-        ],
-        sources: [],
-      };
+      // UAT corrective: Claims Packet Context routes to canonical Nutrition Details host
+      // (not an intermediary prose modal). Content is unused when present === 'nutrition_details'.
+      return null;
     case 'ethics_ktc':
       return resolveKtc(metadata);
     case 'ethics_bbfaw':

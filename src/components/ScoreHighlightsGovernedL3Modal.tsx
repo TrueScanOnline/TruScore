@@ -25,8 +25,8 @@ interface ScoreHighlightsGovernedL3ModalProps {
   onBack?: () => void;
   /** S25 — canonical rendered additive IDs for Open coded-term deep-links. */
   renderedAdditiveIds?: readonly string[];
-  /** S25 — Open coded-term deep-link into About these Additives. */
-  onOpenAboutAdditive?: (additiveId: string) => void;
+  /** S25 — Open coded-term deep-link into About these Additives (optional focus id). */
+  onOpenAboutAdditive?: (additiveId?: string) => void;
 }
 
 export default function ScoreHighlightsGovernedL3Modal({
@@ -74,7 +74,30 @@ export default function ScoreHighlightsGovernedL3Modal({
         </View>
       ))}
 
-      {content.termRouteActions && content.termRouteActions.length > 0 ? (
+      {content.codedAdditivesSection && content.termRouteActions && content.termRouteActions.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={[styles.sectionHeading, { color: colors.text }]}>
+            {content.codedAdditivesSection.heading}
+          </Text>
+          {content.termRouteActions.map((action) => (
+            <View key={action.additiveId} style={styles.codedRow}>
+              <Text style={[styles.codedTerm, { color: colors.text }]}>
+                {action.term}
+                {action.displayName ? ` — ${action.displayName}` : ''}
+              </Text>
+            </View>
+          ))}
+          <TouchableOpacity
+            style={[styles.exploreCta, { backgroundColor: colors.primary }]}
+            onPress={() => onOpenAboutAdditive?.()}
+            accessibilityRole="button"
+            accessibilityLabel={content.codedAdditivesSection.exploreLabel}
+          >
+            <Text style={styles.exploreCtaText}>{content.codedAdditivesSection.exploreLabel}</Text>
+            <Ionicons name="chevron-forward" size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      ) : content.termRouteActions && content.termRouteActions.length > 0 ? (
         <View style={styles.section}>
           {content.termRouteActions.map((action) => (
             <TouchableOpacity
@@ -176,6 +199,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
+  },
+  codedRow: {
+    paddingVertical: 4,
+  },
+  codedTerm: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  exploreCta: {
+    marginTop: 12,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  exploreCtaText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
   },
   componentRow: {
     borderWidth: 1,

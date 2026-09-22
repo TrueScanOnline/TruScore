@@ -171,18 +171,36 @@ describe('resolveGovernedL3Content — Addendum v1.1', () => {
   });
 
   it('coded ingredient wording shows decoded names only where metadata supplies them', () => {
-    const coded = resolveGovernedL3Content('ingredient_wording', 'open-v15-ing-clarity-one', {
-      termPresentationClass: 'coded',
-      matchedTerms: 'E102',
-      decodedAdditiveNames: 'Tartrazine',
-    });
-    expect(coded?.sections.some((s) => s.heading === '“E102” — Tartrazine')).toBe(true);
+    const coded = resolveGovernedL3Content(
+      'ingredient_wording',
+      'open-v15-ing-clarity-one',
+      {
+        termPresentationClass: 'coded',
+        matchedTerms: 'E102',
+        decodedAdditiveNames: 'Tartrazine',
+      },
+      { renderedAdditiveIds: ['e102'] }
+    );
+    // UAT corrective B3/B4: compact coded section + catalogue displayName when resolved.
+    expect(coded?.sections.some((s) => s.heading === '“E102” — Tartrazine')).toBe(false);
+    expect(coded?.codedAdditivesSection?.codedCount).toBe(1);
+    expect(coded?.termRouteActions?.[0]?.term).toBe('E102');
+    expect(coded?.termRouteActions?.[0]?.displayName).toBe('Tartrazine');
 
-    const undecoded = resolveGovernedL3Content('ingredient_wording', 'open-v15-ing-clarity-one', {
-      termPresentationClass: 'coded',
-      matchedTerms: 'E102',
-    });
-    expect(undecoded?.sections.some((s) => s.heading === '“E102”')).toBe(true);
+    const undecoded = resolveGovernedL3Content(
+      'ingredient_wording',
+      'open-v15-ing-clarity-one',
+      {
+        termPresentationClass: 'coded',
+        matchedTerms: 'E102',
+      },
+      { renderedAdditiveIds: ['e102'] }
+    );
+    expect(undecoded?.sections.some((s) => s.heading === '“E102”')).toBe(false);
+    expect(undecoded?.codedAdditivesSection?.codedCount).toBe(1);
+    expect(undecoded?.termRouteActions?.[0]?.term).toBe('E102');
+    // displayName comes from governed S25 catalogue when ID resolves — not from Open decodedAdditiveNames alone.
+    expect(undecoded?.termRouteActions?.[0]?.displayName).toBe('Tartrazine');
   });
 
   it('mixed ingredient wording fails closed without per-term classification', () => {
@@ -193,14 +211,28 @@ describe('resolveGovernedL3Content — Addendum v1.1', () => {
       })
     ).toBeNull();
 
-    const mixed = resolveGovernedL3Content('ingredient_wording', 'open-v15-ing-clarity-two', {
-      termPresentationClass: 'mixed',
-      termPresentationClasses: 'broad_generic|coded',
-      matchedTerms: 'vegetable oil|E102',
-      decodedAdditiveNames: 'Tartrazine',
-    });
+    const mixed = resolveGovernedL3Content(
+      'ingredient_wording',
+      'open-v15-ing-clarity-two',
+      {
+        termPresentationClass: 'mixed',
+        termPresentationClasses: 'broad_generic|coded',
+        matchedTerms: 'vegetable oil|E102',
+        decodedAdditiveNames: 'Tartrazine',
+      },
+      { renderedAdditiveIds: ['e102'] }
+    );
     expect(mixed?.sections.some((s) => s.heading === 'Broad or generic terms')).toBe(true);
-    expect(mixed?.sections.some((s) => s.heading === 'Coded additive numbers')).toBe(true);
+    // UAT corrective B3: coded terms use compact codedAdditivesSection (no per-term heading stack).
+    expect(mixed?.sections.some((s) => s.heading === 'Coded additive numbers')).toBe(false);
+    expect(
+      mixed?.sections.some((s) =>
+        (s.body ?? '').includes('Coded additive numbers on this list identify additives')
+      )
+    ).toBe(true);
+    expect(mixed?.codedAdditivesSection?.codedCount).toBe(1);
+    expect(mixed?.codedAdditivesSection?.heading).toBe('Coded additives');
+    expect(mixed?.codedAdditivesSection?.exploreLabel).toBe('About these Additives');
   });
 
   it('zero-flag ingredient wording L3 needs no matched-term metadata', () => {

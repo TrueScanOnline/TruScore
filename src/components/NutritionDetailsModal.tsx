@@ -32,7 +32,19 @@ import {
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export type NutritionDetailsFocusTarget = GovernedNutrientKey | null;
+/** One or more governed nutrient keys from Claims Packet Context (existing high_nutrients metadata). */
+export type NutritionDetailsFocusTarget = GovernedNutrientKey | readonly GovernedNutrientKey[] | null;
+
+function normalizeFocusTargets(
+  focusTarget: NutritionDetailsFocusTarget
+): GovernedNutrientKey[] {
+  if (focusTarget == null) return [];
+  // GovernedNutrientKey is a string union; typeof narrows single-key vs multi-key array safely.
+  if (typeof focusTarget === 'string') {
+    return [focusTarget];
+  }
+  return [...focusTarget];
+}
 
 interface NutritionDetailsModalProps {
   visible: boolean;
@@ -64,16 +76,19 @@ export default function NutritionDetailsModal({
   const { units } = useSettingsStore();
   const scrollRef = useRef<ScrollView>(null);
   const sectionY = useRef<Partial<Record<GovernedNutrientKey, number>>>({});
+  const focusKeys = normalizeFocusTargets(focusTarget);
+  const focusSet = new Set(focusKeys);
+  const focusKeySig = focusKeys.join('|');
 
   useEffect(() => {
-    if (!visible || !focusTarget) return;
-    const y = sectionY.current[focusTarget];
+    if (!visible || focusKeys.length === 0) return;
+    const y = sectionY.current[focusKeys[0]];
     if (y != null) {
       requestAnimationFrame(() => {
         scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: true });
       });
     }
-  }, [visible, focusTarget]);
+  }, [visible, focusKeySig]);
 
   const showPerServe = assessment.serving.usable === true;
   const per100Label =
@@ -225,7 +240,7 @@ export default function NutritionDetailsModal({
       }}
       style={[
         styles.section,
-        focusTarget === key && { borderColor: colors.primary, borderWidth: 1.5, borderRadius: 10, padding: 10 },
+        focusSet.has(key) && { borderColor: colors.primary, borderWidth: 1.5, borderRadius: 10, padding: 10 },
       ]}
       accessibilityLabel={`${title} section`}
     >
@@ -272,6 +287,11 @@ export default function NutritionDetailsModal({
             <View style={[styles.table, { borderColor: colors.border }]}>
               <View style={[styles.tableHeader, { borderBottomColor: colors.border }]}>
                 <Text style={[styles.th, styles.thLabel, { color: colors.textSecondary }]} />
+                {showPerServe ? (
+                  <Text style={[styles.th, { color: colors.textSecondary }]}>
+                    {t('nutrition.perServe', 'Per serve')}
+                  </Text>
+                ) : null}
                 <Text style={[styles.th, { color: colors.textSecondary }]}>
                   {assessment.per100Basis === '100ml'
                     ? t('nutrition.per100ml', 'Per 100 mL')
@@ -279,27 +299,59 @@ export default function NutritionDetailsModal({
                       ? t('nutrition.per100g', 'Per 100g')
                       : t('nutrition.per100gOrMl', 'Per 100 g/mL')}
                 </Text>
-                {showPerServe ? (
-                  <Text style={[styles.th, { color: colors.textSecondary }]}>
-                    {t('nutrition.perServe', 'Per serve')}
-                  </Text>
-                ) : null}
                 <Text style={[styles.th, { color: colors.textSecondary }]}>{t('nutrition.level')}</Text>
               </View>
-              {rows.map((row) => (
-                <View key={row.key} style={[styles.tr, { borderBottomColor: colors.border }]}>
-                  <Text style={[styles.td, styles.tdLabel, { color: colors.text }]}>{row.label}</Text>
-                  <Text style={[styles.td, { color: colors.text }]}>{formatCell(row.per100, row.unit)}</Text>
-                  {showPerServe ? (
-                    <Text style={[styles.td, { color: colors.text }]}>
-                      {formatCell(row.perServe, row.unit)}
-                    </Text>
-                  ) : null}
-                  <Text style={[styles.td, { color: colors.text }]}>
-                    {row.level && row.level !== 'unavailable' ? levelLabel(row.level) : '—'}
-                  </Text>
-                </View>
-              ))}
+              {rows.map((row) => {
+                const rated =
+                  row.level && row.level !== 'unavailable'
+                    ? row.level === 'high'
+                      ? 'H'
+                      : row.level === 'moderate'
+                        ? 'M'
+                        : 'L'
+                    : null;
+                const levelColor =
+                  row.level === 'high'
+                    ? '#c0392b'
+                    : row.level === 'moderate'
+                      ? '#d68910'
+                      : row.level === 'low'
+                        ? '#1e8449'
+                        : colors.border;
+                const a11yLevel =
+                  row.level === 'high'
+                    ? 'High'
+                    : row.level === 'moderate'
+                      ? 'Moderate'
+                      : row.level === 'low'
+                        ? 'Low'
+                        : undefined;
+                return (
+                  <View key={row.key} style={[styles.tr, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.td, styles.tdLabel, { color: colors.text }]}>{row.label}</Text>
+                    {showPerServe ? (
+                      <Text style={[styles.td, { color: colors.text }]}>
+                        {formatCell(row.perServe, row.unit)}
+                      </Text>
+                    ) : null}
+                    <Text style={[styles.td, { color: colors.text }]}>{formatCell(row.per100, row.unit)}</Text>
+                    <View style={styles.tdLevel}>
+                      {rated && a11yLevel ? (
+                        <View
+                          style={styles.levelCompact}
+                          accessibilityRole="text"
+                          accessibilityLabel={`${row.label}: ${a11yLevel}`}
+                        >
+                          <View style={[styles.levelDot, { backgroundColor: levelColor }]} />
+                          <Text style={[styles.levelLetter, { color: colors.text }]}>{rated}</Text>
+                        </View>
+                      ) : (
+                        <Text style={[styles.td, { color: colors.textSecondary }]}>{''}</Text>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
             </View>
 
             {/* How these ratings work — exact copy */}
@@ -553,4 +605,8 @@ const styles = StyleSheet.create({
   tr: { flexDirection: 'row', borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 6, paddingHorizontal: 6 },
   td: { flex: 1, fontSize: 12, textAlign: 'right' },
   tdLabel: { flex: 1.2, textAlign: 'left', fontWeight: '500' },
+  tdLevel: { flex: 0.7, alignItems: 'flex-end', justifyContent: 'center' },
+  levelCompact: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  levelDot: { width: 8, height: 8, borderRadius: 4 },
+  levelLetter: { fontSize: 12, fontWeight: '700' },
 });
