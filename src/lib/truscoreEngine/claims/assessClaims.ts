@@ -14,7 +14,7 @@ import { matchAdmittedObservations, getMachineRegisterVersion } from './matchReg
 import { claimsNutrientVersionIdentities } from './nutrientContextAdapter';
 import type {
   AdmittedPacketObservation,
-  BenchmarkCheckStatus,
+  ClaimsBenchmarkCheck,
   ClaimsAssessmentResult,
   ClaimsCommentaryPayload,
   ClaimsFiredAdjustment,
@@ -30,7 +30,9 @@ export interface AssessClaimsInput {
   nutrientContext: ClaimsNutrientContext | null;
   novaGroup?: number | null;
   certifiedOrganicFired: boolean;
-  benchmarkChecks: { source: 'ktc' | 'bbfaw'; status: BenchmarkCheckStatus }[];
+  /** KTC/BBFAW check statuses for assessment_state and Rateability publication. */
+  benchmarkChecks: ClaimsBenchmarkCheck[];
+  /** Other certification schemes fired (Fairtrade, MSC, …) — prevents assessed_neutral. */
   otherCertificationFired: boolean;
   registerVersionExpected?: string;
 }
@@ -85,6 +87,7 @@ function emptyResult(
     suppressed_candidates: [],
     commentary_payload: { route: 'none' },
     commentary_by_event_id: {},
+    publication_packet_lane: 'unassessed_or_incomplete',
     ...partial,
   };
 }
@@ -253,6 +256,39 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
     assessment_state = 'unassessed';
   }
 
+  // Rateability Packet lane — consume Claims assessment truth only (no invented coverage).
+  // Assessed when: governed packet claims/certs were admitted & evaluated (incl. zero adjustment),
+  // OR upstream packet_coverage_state === complete (no-claim complete coverage).
+  // incomplete + empty/unmatched OFF labels must NOT become “no packet claims” / assessed.
+  const packetFamilies = new Set(['packet_context', 'organic_claim_only', 'certifications']);
+  const packetOrCertScored =
+    packetPoints !== 0 ||
+    organicClaimOnlyPoints !== 0 ||
+    input.certifiedOrganicFired ||
+    input.otherCertificationFired ||
+    fired.some((f) => packetFamilies.has(f.family));
+  const governedPacketClaimsAdmitted = match.matched.length > 0;
+  let publication_packet_lane: ClaimsAssessmentResult['publication_packet_lane'] =
+    'unassessed_or_incomplete';
+  if (
+    packetOrCertScored ||
+    governedPacketClaimsAdmitted ||
+    input.packetCoverageState === 'complete'
+  ) {
+    publication_packet_lane = 'assessed';
+    if (
+      governedPacketClaimsAdmitted &&
+      !packetOrCertScored &&
+      input.packetCoverageState !== 'complete'
+    ) {
+      diagnostics.push({
+        code: 'packet_lane_assessed_no_adjustment',
+        detail:
+          'Packet publication lane assessed after governed claim admission with zero packet scoring adjustment',
+      });
+    }
+  }
+
   if (
     (packetPoints === 1 || packetPoints === -3) &&
     commentary_payload.suppressed_reason
@@ -280,5 +316,6 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
     commentary_payload,
     commentary_by_event_id: commentaryByEvent,
     diagnostics,
+    publication_packet_lane,
   };
 }

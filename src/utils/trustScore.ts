@@ -28,7 +28,10 @@ function hasSufficientDataForTrustScore(product: Product): boolean {
  *
  * Review 1 Pass 2 (NA-001): always recalculates — calculated TruScore cache has no runtime authority.
  */
-export async function calculateTrustScore(product: Product): Promise<ProductWithTrustScore> {
+export async function calculateTrustScore(
+  product: Product,
+  options?: { publicationSettled?: boolean }
+): Promise<ProductWithTrustScore> {
   // Wave 3: OFF-legacy nutrient_levels fill is a no-op. Consumer ratings use assessGovernedNutrients.
   applyResolvedNutrientLevels(product);
 
@@ -52,7 +55,13 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
     hasEcoScore: !!product.ecoscore_grade,
     ecoscore_grade: product.ecoscore_grade,
   });
-  const truScoreResult = calculateTruScore(product, undefined, getPlanetScoringContext());
+  const scoringContext = {
+    ...getPlanetScoringContext(),
+    ...(options?.publicationSettled !== undefined
+      ? { publicationSettled: options.publicationSettled }
+      : {}),
+  };
+  const truScoreResult = calculateTruScore(product, undefined, scoringContext);
 
   // Technical scoring failure → unavailable/non-assessment (never Overall 0 / all-zero pillars)
   if (truScoreResult.scoringUnavailable || truScoreResult.truscore == null) {
@@ -133,6 +142,7 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
       hasOrigin: truScoreResult.hasOrigin,
     },
     _truscore_analysis: analysis ?? undefined,
+    _publication: truScoreResult.publication,
   };
 }
 

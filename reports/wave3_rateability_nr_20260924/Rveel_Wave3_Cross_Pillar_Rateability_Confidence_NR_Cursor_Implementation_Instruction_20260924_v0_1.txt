@@ -1,0 +1,311 @@
+RVEEL | WAVE 3 | CURSOR EXECUTION PACKAGE
+
+Cursor Implementation Instruction
+
+Cross-Pillar Rateability, Confidence, NR, S11/S26 & First-Paint Plumbing
+
+Document status
+
+IMPLEMENTATION INSTRUCTION - execute the controlling specification deterministically. Do not infer methodology, thresholds, consumer meaning or final UI design.
+
+Version
+
+v0.1
+
+Issue date
+
+24 September 2026
+
+Authority
+
+Founders + ChatGPT product methodology / specification
+
+Implementation owner
+
+Cursor - deterministic execution only
+
+Independent assurance
+
+Claude - after implementation and evidence package are coherent
+
+
+
+MISSIONImplement the approved cross-pillar publication and Confidence plumbing for Body, Planet, Claims, Transparency and Overall. Preserve every existing scoring methodology and fired-adjustment ledger. Expose minimal UAT-visible states now; final result-surface consolidation and Wave 5 visual polish are explicitly deferred.
+
+
+
+1. Controlling input
+
+Primary controlling artefact: Rveel_Wave3_Cross_Pillar_Rateability_Confidence_NR_Controlling_Specification_20260924_v0_1.docx. The implementation must conform literally to its pillar gates, Confidence rules, copy codes, contribution-opportunity behaviour, first-paint contract, S28 additions and negative assurance.
+
+Claims scoring remains controlled by Rveel_Wave3_Claims_Controlling_Specification_20260912_v0_2 and its governed supporting assets.
+
+Transparency/Open scoring remains controlled by Open v15 v1.1.
+
+Body and Planet scoring remain controlled by their existing approved production methodology; do not change arithmetic.
+
+S12/S12a Score Highlights and existing L1/L2/L3 commentary remain out of scope except for ensuring the new S11/S26 objects do not interfere with them.
+
+2. Pre-implementation gate
+
+Report current branch, HEAD SHA and relevant release/tag ancestry before edits.
+
+Confirm whether the approved Claims Rescue implementation is present on the target branch. If it is not present, stop the Claims-binding portion and report the exact dependency. Do not re-create Claims Rescue logic from this instruction.
+
+Identify the existing legacy Confidence derivation feeding the current “High confidence” UI badge (W3-S11) and the current W3-S26 Data Limitations rendering/path. Report the exact files/functions/types before modifying them.
+
+Identify the existing initial product retrieval/enrichment completion or merge boundary used after “Seeing what we can find…”. If no deterministic completion boundary exists, report that gap before introducing any timer or heuristic.
+
+Identify existing contribution route keys/destinations for ingredients/nutrition and Product Origins. Confirm there is no live governed Claims packet contribution route unless one has separately been implemented and approved.
+
+3. Required implementation
+
+3.1 Add cross-pillar publication model
+
+Create/reuse a single semantic publication object per pillar and Overall with publicationStatus=checking|nr|rated; internalScore; publishedScore; confidence; assessment-lane state; source-quality/provenance; S26 object; contributionOpportunity; diagnostic reason/code.
+
+Use existing repository naming/types where economical, but produce a one-to-one mapping to the controlling specification in the completion report.
+
+Do not expose internalScore when checking or NR. publishedScore must be null/absent until Rated.
+
+3.2 Body
+
+Nutrition lane resolved by usable governed Nutri-Score A-E OR approved Whole Produce / Nutri-Score-equivalent rescue.
+
+Processing lane resolved by usable governed NOVA 1-4 OR approved inferred NOVA 1 rescue.
+
+Neither lane -> NR. Exactly one -> Rated Limited. Both -> Rated Moderate. Both may resolve High only where both lane evidence is explicitly governed authoritative.
+
+OFF/community/User Contribution evidence must not produce Body High for MVP.
+
+Body additives continue scoring exactly as controlled but must not participate in Body Rateability or Confidence.
+
+3.3 Planet
+
+No usable broad environmental assessment and no +1/+2 governed packaging fallback -> NR.
+
+Packaging fallback +1/+2 -> Rated Limited.
+
+Current usable OFF Green-Score/environmental A-E -> Rated Moderate.
+
+Do not implement an artificial Planet Moderate cap. Any future High path must come only from a separately governed authoritative broad-assessment source/method profile; do not infer one now.
+
+No Planet contribution CTA from this package.
+
+3.4 Claims
+
+Create/consume explicit Packet and Benchmark publication-lane truth independent of the fired-adjustment ledger.
+
+Packet lane assessed when governed packet claims/certifications assessment is substantively complete: scored finding, governed zero-adjustment finding, or admissible established absence all count.
+
+Benchmark lane assessed only when BOTH KTC and BBFAW reach successful terminal governed check outcomes. Hit/no-hit both count; failed/pending/unresolved/incomplete do not.
+
+Neither lane -> NR. One lane -> Rated Limited. Both lanes -> Rated Moderate. High requires both lanes and authoritative packet evidence; ordinary OFF/User Contribution remains no higher than Moderate.
+
+Do not manufacture +0 fired adjustments. A no-adjustment lane may still support publication and Confidence.
+
+Preserve existing Claims v0.2 scoring assessment state for diagnostics, but do not force publication logic to infer lane completion from that three-state field alone if it cannot represent a governed zero-adjustment assessment accurately.
+
+Emit Claims packet contributionOpportunity when the Packet lane is incomplete, with routeStatus=future unless a separately governed Wave 4 route is present. Do not render a dead CTA/card.
+
+3.5 Transparency
+
+Ingredient lane resolved when usable governed ingredient wording has been assessed under Open v15, including zero governed flags.
+
+Origins lane resolved only for governed resolved disclosure outcomes. Insufficient evidence is unassessed/unresolved. Conflicting origin evidence is assessed_unresolved_conflict and does NOT count as resolved.
+
+No resolved lane -> NR. One resolved lane -> Rated Limited. Both resolved -> Rated Moderate. Both explicitly authoritative for the scored disclosure -> High.
+
+Ingredient resolved + Origins conflict -> Rated Limited with the governed conflict S26 explanation.
+
+OFF/community/User Contribution evidence must not produce Transparency High for MVP.
+
+3.6 Overall
+
+If any pillar is NR, Overall is NR/unrevealed. Do not renormalise and do not insert base 15 for an unrated pillar.
+
+If all four are Rated, publish existing Overall arithmetic and set Overall Confidence to the lowest pillar Confidence: any Limited -> Limited; otherwise any Moderate -> Moderate; all High -> High.
+
+Overall must receive its own S26 object. Do not make the UI reconstruct Overall explanation from pillar S26 strings.
+
+4. S11 / S26 binding and provisional copy
+
+Rebind W3-S11 to the new Confidence state. A Rated result may show High / Moderate / Limited. An NR/checking result shows no Confidence label.
+
+Disconnect/retire any legacy Confidence algorithm that can still drive W3-S11 independently of this package. Preserve the existing visual component only if it can bind cleanly to the new state.
+
+Componentise W3-S26 into Body, Planet, Claims, Transparency and Overall explanation objects.
+
+Use the exact copy codes/strings from section 11 of the controlling specification. Every S26 explanation must retain the literal prefix “(Awaiting founder approval)” in this release.
+
+S26 is not a Score Highlight and must not enter S12/S12a candidate selection.
+
+For UAT, place pillar/Overall Confidence and S26 somewhere efficient on the existing result surfaces. Do not redesign the final hierarchy, spacing, reveal animation or card consolidation.
+
+5. Contribution plumbing
+
+Pillar
+
+Emit opportunity when
+
+Route rule
+
+Body
+
+Material Nutrition/Processing evidence gap is actionable through the approved ingredients/nutrition flow.
+
+Use existing governed route if live; one coherent opportunity only.
+
+Planet
+
+Never from this package.
+
+none
+
+Claims
+
+Packet lane incomplete.
+
+Set routeStatus=future and preserve domain metadata; no CTA until Wave 4 destination is governed/live.
+
+Transparency
+
+Ingredient and/or Origins lane missing.
+
+Use existing governed ingredients/Origins destination if live; do not duplicate CTAs.
+
+Overall
+
+Never directly.
+
+Overall S26 identifies unrevealed pillar(s); no Overall contribution workflow.
+
+
+
+The evidence-gap state must persist even where routeStatus is future/none. Never create generic “improve your Confidence” contribution copy.
+
+6. First-paint / refresh implementation
+
+While the ordinary initial scan/enrichment cycle is active, render the existing “Seeing what we can find…” state. Keep all pillar and Overall numeric scores suppressed; no final Confidence or S26.
+
+Use the existing deterministic enrichment merge/completion signal as the publish barrier. Do not introduce a timer.
+
+At settlement, derive all four pillar publication objects, then Overall, and publish one consolidated snapshot.
+
+Rated pillar -> numeric score + Confidence + S26. NR pillar -> non-numeric/unrevealed + S26, no Confidence.
+
+All four Rated -> Overall numeric + Overall Confidence + Overall S26. Any NR -> Overall non-numeric/unrevealed + Overall S26, no Confidence.
+
+Prevent routine initial-cycle flicker such as Checking -> NR -> Rated, default 15 flashes, intermediate scores or legacy Confidence flashes.
+
+Allow later changes only through a genuine governed reassessment event caused by new admitted evidence, explicit refresh/new scan, or an existing later-update mechanism. Preserve traceability.
+
+7. Source-quality mapping
+
+Implement/consume only three semantic source-quality classes: authoritative; community_or_user; other_or_unknown.
+
+Map OFF/community data and primary User Contributions to community_or_user.
+
+Do not classify any source authoritative from its URL/name/string. authoritative requires an existing or separately supplied governed mapping that states the source is authoritative for that product fact/disclosure.
+
+Treat current OFF Green-Score as the current Moderate Planet route; do not create an artificial cap flag.
+
+Claims KTC/BBFAW are governed benchmark assets for Benchmark-lane assessment. Packet evidence still controls whether Claims can reach High.
+
+If current repository source values do not map deterministically under these rules, use other_or_unknown, report them, and do not invent a higher classification.
+
+8. S28 / diagnostics
+
+Preserve current fired-adjustment ledger, exact points and provenance.
+
+Add per-pillar/Overall publicationStatus, publishedScore/null, Confidence, lane states, source-quality inputs, S26 code and contributionOpportunity/routeStatus.
+
+For Claims show Packet/Benchmark lane outcomes separately from fired score events.
+
+For Transparency show Origins conflict as assessed_unresolved_conflict rather than silently treating it as missing or resolved.
+
+Keep S28 founder/UAT-only and non-discoverable to ordinary release users.
+
+9. Required tests
+
+Implement automated/unit/integration coverage for every acceptance fixture in section 16 of the controlling specification. At minimum, provide explicit evidence for the following critical paths:
+
+Body: neither lane NR; each single lane Limited; both Moderate; rescue equivalence; additives do not affect Confidence.
+
+Planet: none NR; packaging fallback Limited; current Green-Score Moderate.
+
+Claims: packet-only zero-adjustment Rated Limited; benchmark-only no-hit Rated Limited; both assessed Moderate; benchmark failure not counted; no synthetic +0; future Claims contribution route has no CTA.
+
+Transparency: each single lane Limited; both Moderate; Origins conflict does not uplift; conflict-only NR.
+
+Overall: any NR -> Overall NR; minimum pillar Confidence aggregation; Overall S26 always present for settled Overall state.
+
+First paint: no score/default/legacy Confidence flicker before settlement; one consolidated publish snapshot.
+
+10. Stop conditions
+
+Stop the affected path and report if implementation requires changing a locked scoring threshold, point value, fired-adjustment rule or Highlights eligibility.
+
+Stop Claims binding if the approved Claims Rescue implementation is absent or its emitted assessment metadata materially contradicts the controlling Claims v0.2 specification.
+
+Stop first-paint work if there is no deterministic completion/merge boundary and the only proposed solution is a guessed timeout/heuristic.
+
+Stop rather than infer a source as authoritative when provenance classification is not governed.
+
+Do not stop for final UI placement questions; use minimal UAT rendering and report the temporary placement.
+
+11. Completion report required from Cursor
+
+Branch, pre-change SHA, post-change SHA and commit list.
+
+Changed-file list with one-line purpose per file.
+
+Exact mapping from the semantic publication contract to implemented types/functions/fields.
+
+Exact mapping of Body/Planet/Claims/Transparency lane states to existing scorer/evidence outputs.
+
+Legacy W3-S11 Confidence logic found and how it was replaced/disconnected.
+
+W3-S26 bindings and temporary UAT placement for each pillar and Overall.
+
+Contribution route bindings, including explicit proof that Claims routeStatus=future produces no dead CTA.
+
+Initial enrichment settlement boundary used and evidence that no arbitrary timer was introduced.
+
+Automated test results plus canonical fixture outputs for all section 16 acceptance cases.
+
+S28 diagnostic screenshots/output showing score arithmetic, lane truth, Rateability, Confidence, S26 code and provenance together.
+
+Any unmapped provenance/source values classified other_or_unknown and any non-blocking implementation observations.
+
+Negative assurance statement confirming no scoring/Highlights methodology was changed and no final UI redesign was undertaken.
+
+12. Cursor prohibitions
+
+Do not invent evidence thresholds, lane definitions, Confidence levels, source authority, copy, contribution routes or UI meaning.
+
+Do not use score movement as a Rateability proxy.
+
+Do not generate a percentage Confidence or weighted completeness formula.
+
+Do not create synthetic +0 score events.
+
+Do not let Body additives affect Body Rateability/Confidence.
+
+Do not make packaging a co-requirement with Green-Score.
+
+Do not require Claims hit/fired evidence for assessment completion.
+
+Do not treat conflicted Origins as resolved.
+
+Do not average Overall Confidence.
+
+Do not expose internal/default 15 while NR/checking.
+
+Do not create a Claims contribution card in Wave 3.
+
+Do not redesign final surfaces or Wave 5 visual presentation.
+
+Do not expose S28 to ordinary users.
+
+SUCCESS CONDITIONThe implementation is complete when the repository emits and minimally renders the exact governed publication/Confidence/S26 states, the initial scan publishes atomically after deterministic settlement, every acceptance fixture passes, diagnostics prove the state derivation, and no locked scoring or Highlights methodology has changed.

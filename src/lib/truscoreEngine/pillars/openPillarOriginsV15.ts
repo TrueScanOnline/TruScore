@@ -30,6 +30,15 @@ export interface OpenOriginsV15Assessment {
   value: number;
   provenance: 'off_raw_origins' | 'off_insufficient' | 'off_conflict' | 'none';
   detail: string;
+  /**
+   * Non-scoring diagnostic truth (S28 / Rateability contribution prefill).
+   * Never creates synthetic +0 fired events or Highlights.
+   */
+  diagnostic?: {
+    freeTextContradiction?: boolean;
+    structuredCountryCandidate?: string;
+    conflictingFreeText?: string;
+  };
 }
 
 export interface OriginsTagsEvidenceAudit {
@@ -260,14 +269,22 @@ export function assessOpenOriginsV15(
     singleEligible.eligible &&
     !freeTextOriginsConsistentWithStructuredTag(product, structuredCountries[0])
   ) {
+    // Fail-closed +8 guard: scoring remains insufficient/unresolved (0). Contradiction is
+    // diagnostic only — no conflict score event, no Highlight, no synthetic +0.
+    const freeText =
+      typeof product.origins === 'string' ? product.origins.trim() : '';
     return {
       id: 'open-v15-origins-insufficient',
       value: 0,
       provenance: 'off_insufficient',
       detail: 'Free-text origins not mechanically consistent with structured origin tag',
+      diagnostic: {
+        freeTextContradiction: true,
+        structuredCountryCandidate: structuredCountries[0],
+        conflictingFreeText: freeText,
+      },
     };
   }
-
   // Multi-ingredient: do not infer completeness or percentages from partial OFF data.
   if (multiIngredient) {
     if (structuredCountries.length > 0) {

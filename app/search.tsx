@@ -36,6 +36,7 @@ import {
   applySearchFilters,
 } from '../src/utils/searchFilterUtils';
 import { useTheme } from '../src/theme';
+import { listPublishedOverallScore } from '../src/utils/listPublishedScore';
 
 type NavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<SearchStackParamList>,
@@ -333,16 +334,20 @@ export default function SearchScreen() {
                     <Text style={[styles.resultBarcode, { color: colors.textSecondary }]}>
                       {t('search.barcode')}: {item.barcode}
                     </Text>
-                    {item.product?.trust_score !== undefined && item.product?.trust_score !== null && (
+                    {(() => {
+                      const published = listPublishedOverallScore(item.product);
+                      if (published === null) return null;
+                      return (
                       <View style={styles.resultScore}>
                         <Text style={[styles.resultScoreLabel, { color: colors.textSecondary }]}>
                           {t('result.trustScore')}:
                         </Text>
                         <Text style={[styles.resultScoreValue, { color: colors.primary }]}>
-                          {item.product.trust_score}/100
+                          {published}/100
                         </Text>
                       </View>
-                    )}
+                      );
+                    })()}
                   </View>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.border} />

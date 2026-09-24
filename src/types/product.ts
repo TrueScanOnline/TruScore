@@ -363,6 +363,19 @@ export interface ProductWithTrustScore extends Product {
   /** Full TruScore analysis (pillar breakdown + data source trace). Set when score is calculated. */
   _truscore_analysis?: import('./truscoreAnalysis').TruScoreAnalysis;
   /**
+   * Wave 3 Cross-Pillar Rateability / Confidence / NR publication snapshot.
+   * Consumer UI must reveal publishedScore/confidence only; internalScore is diagnostic.
+   */
+  _publication?: import('../lib/rateability').CrossPillarPublicationSnapshot;
+  /**
+   * True once the ordinary initial assessment cycle has settled (merge success/failure
+   * or USER_CONTRIBUTED_MERGE_RACE_MS). Latched for the scan cycle — late same-cycle
+   * callbacks must not clear this or flip consumer publication back to Checking.
+   */
+  _assessmentCycleSettled?: boolean;
+  /** Diagnostic reason for the settlement latch (merge_completed | merge_timeout | merge_failed). */
+  _assessmentCycleSettleReason?: string;
+  /**
    * Phase 6 Slice 1 transitional runtime attachment (internal only; not public contract).
    * This is temporary plumbing for early slices and not the long-term authoritative handoff pattern.
    */

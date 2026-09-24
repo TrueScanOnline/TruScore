@@ -10,15 +10,28 @@ import { View, Text, StyleSheet, Linking, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import type { TruScoreAnalysis } from '../types/truscoreAnalysis';
+import type { CrossPillarPublicationSnapshot } from '../lib/rateability';
 import InfoModal from './InfoModal';
 
 interface TruScoreAnalysisModalProps {
   visible: boolean;
   onClose: () => void;
   analysis: TruScoreAnalysis | null | undefined;
+  /** Prefer live product publication over analysis embed when present. */
+  publication?: CrossPillarPublicationSnapshot | null;
+  /** Aligns S28 settled diagnostic with the real assessment-cycle latch. */
+  assessmentCycleSettled?: boolean;
+  assessmentCycleSettleReason?: string;
 }
 
-export default function TruScoreAnalysisModal({ visible, onClose, analysis }: TruScoreAnalysisModalProps) {
+export default function TruScoreAnalysisModal({
+  visible,
+  onClose,
+  analysis,
+  publication: publicationProp,
+  assessmentCycleSettled,
+  assessmentCycleSettleReason,
+}: TruScoreAnalysisModalProps) {
   const { colors } = useTheme();
 
   if (!analysis) {
@@ -32,6 +45,7 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
   }
 
   const { fetchTrace, pillars, totalScore, barcode, claimsAssessment } = analysis;
+  const publication = publicationProp ?? analysis.publication;
 
   return (
     <InfoModal
@@ -196,6 +210,48 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
                   : ''}
               </Text>
             ) : null}
+          </View>
+        ) : null}
+
+        {/* Wave 3 Rateability / Confidence / NR (§14) — founder/UAT only */}
+        {publication ? (
+          <View style={[styles.claimsBlock, { borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Rateability / Confidence / NR (S28)
+            </Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+              Publication gates are separate from scoring arithmetic. publishedScore is null while
+              checking/nr. Settlement follows the initial enrichment cycle — not the first-paint race.
+            </Text>
+            <Text
+              style={[styles.claimsLine, { color: colors.text }]}
+              testID="s28-assessment-cycle-settled"
+            >
+              assessment_cycle_settled:{' '}
+              {assessmentCycleSettled === true || publication.settled === true ? 'true' : 'false'}
+              {assessmentCycleSettleReason ? ` · reason=${assessmentCycleSettleReason}` : ''}
+            </Text>
+            {(
+              [
+                ['Body', publication.body],
+                ['Planet', publication.planet],
+                ['Claims', publication.claims],
+                ['Transparency', publication.transparency],
+                ['Overall', publication.overall],
+              ] as const
+            ).map(([name, pub]) => (
+              <View key={name} style={styles.claimsItem}>
+                <Text style={[styles.claimsLine, { color: colors.text }]} testID={`s28-pub-${name}`}>
+                  {name}: status={pub.publicationStatus} · published=
+                  {pub.publishedScore == null ? 'null' : pub.publishedScore} · confidence=
+                  {pub.confidence ?? 'null'} · reason={pub.confidenceReasonCode}
+                </Text>
+                <Text style={[styles.claimsLine, { color: colors.textSecondary }]}>
+                  lanes={JSON.stringify(pub.assessmentLanes)} · s26={pub.s26?.code ?? 'none'} ·
+                  contrib={pub.s26?.contributionOpportunity?.routeStatus ?? 'n/a'}
+                </Text>
+              </View>
+            ))}
           </View>
         ) : null}
 

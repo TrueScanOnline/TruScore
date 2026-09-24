@@ -12,8 +12,14 @@ import { powershellLogger } from '../utils/powershellLogger';
 export const USER_CONTRIBUTED_BACKEND_TIMEOUT_MS = 12000;
 
 /**
- * Max time to wait for mergeUserContributedData before scoring/display.
- * Must be >= USER_CONTRIBUTED_BACKEND_TIMEOUT_MS so a cold backend can still return a row.
+ * Max time to wait for mergeUserContributedData before the *initial* assessment merge cycle
+ * is treated as deterministically timed out/closed.
+ * Must be >= USER_CONTRIBUTED_BACKEND_TIMEOUT_MS so a cold backend can still return a row
+ * (or abort) before this ceiling. Value = 12000 + 2500 = 14500 ms.
+ *
+ * This is a genuine terminal boundary for the ordinary initial contribution lookup — not a
+ * first-paint/performance race. On expiry, publication settles once; later same-cycle merge
+ * completion must not mutate the settled snapshot.
  */
 export const USER_CONTRIBUTED_MERGE_RACE_MS = USER_CONTRIBUTED_BACKEND_TIMEOUT_MS + 2500;
 

@@ -45,6 +45,7 @@ import {
   resolveEthicsBenchmarkContext,
   resolveKtcGovernedBenchmarkYear,
 } from './ethicsBenchmarkAdapter';
+import { frozenIneligibleNotApplicableResolution } from './frozenBenchmarkRateability';
 import {
   ETHICS_V37_ADJUSTMENT_REGISTRY,
   ethicsV37BbfawImpactAdjustmentId,
@@ -358,32 +359,76 @@ export function calculateEthicsPillar(
     packetCoverageState: options?.packetCoverageState,
   });
 
+  const hasBenchmarkSubject =
+    productCandidates.length > 0 ||
+    !!benchmarkCtx.bbfawOwnerHint ||
+    !!benchmarkCtx.ktcOwnerHint;
+  const hasBbfawSubject = bbfawCandidates.length > 0;
+  const hasKtcSubject = ktcCandidates.length > 0;
+
   const benchmarkChecks: ClaimsAssessmentResult['benchmark_checks'] = [
-    {
-      source: 'ktc',
-      status: !benchmarkCtx.benchmarkEligible
-        ? 'not_applicable'
-        : ktcMatched
-          ? ktcScoreAdjustment > 0
-            ? 'positive'
-            : ktcScoreAdjustment < 0
-              ? 'adverse'
-              : 'no_finding'
-          : 'no_finding',
-    },
-    {
-      source: 'bbfaw',
-      status: !benchmarkCtx.benchmarkEligible
-        ? 'not_applicable'
-        : companyName && (tier || impactRating)
-          ? bbfawTierScore + bbfawImpactScore > 0
-            ? 'positive'
-            : bbfawTierScore + bbfawImpactScore < 0
-              ? 'adverse'
-              : 'no_finding'
-          : 'no_finding',
-    },
+    (() => {
+      // Lookups run only when benchmarkEligible — never stamp no_finding if the check did not run.
+      if (!benchmarkCtx.benchmarkEligible) {
+        return {
+          source: 'ktc' as const,
+          status: 'not_applicable' as const,
+          not_applicable_resolution: benchmarkCtx.ktcFrozen
+            ? frozenIneligibleNotApplicableResolution(benchmarkCtx.ktcFrozen)
+            : ('skipped_or_unavailable' as const),
+        };
+      }
+      if (!hasKtcSubject) {
+        return {
+          source: 'ktc' as const,
+          status: 'not_applicable' as const,
+          not_applicable_resolution: 'skipped_or_unavailable' as const,
+        };
+      }
+      if (ktcMatched) {
+        return {
+          source: 'ktc' as const,
+          status:
+            ktcScoreAdjustment > 0
+              ? ('positive' as const)
+              : ktcScoreAdjustment < 0
+                ? ('adverse' as const)
+                : ('no_finding' as const),
+        };
+      }
+      // Valid subject + completed finite-asset lookup with no matching row
+      return { source: 'ktc' as const, status: 'no_finding' as const };
+    })(),
+    (() => {
+      if (!benchmarkCtx.benchmarkEligible) {
+        return {
+          source: 'bbfaw' as const,
+          status: 'not_applicable' as const,
+          not_applicable_resolution: benchmarkCtx.bbfawFrozen
+            ? frozenIneligibleNotApplicableResolution(benchmarkCtx.bbfawFrozen)
+            : ('skipped_or_unavailable' as const),
+        };
+      }
+      if (!hasBbfawSubject) {
+        return {
+          source: 'bbfaw' as const,
+          status: 'not_applicable' as const,
+          not_applicable_resolution: 'skipped_or_unavailable' as const,
+        };
+      }
+      if (companyName && (tier || impactRating)) {
+        const net = bbfawTierScore + bbfawImpactScore;
+        return {
+          source: 'bbfaw' as const,
+          status:
+            net > 0 ? ('positive' as const) : net < 0 ? ('adverse' as const) : ('no_finding' as const),
+        };
+      }
+      // Valid subject + completed finite-asset lookup with no matching row
+      return { source: 'bbfaw' as const, status: 'no_finding' as const };
+    })(),
   ];
+  void hasBenchmarkSubject;
 
   const claimsAssessment = assessClaimsPacketAndOrganic({
     admittedObservations: obsBundle.observations,

@@ -1,11 +1,9 @@
 /**
  * Share-path score resolution without coercing null/unavailable → 0.
- * Null overall TruScore must not become score-bearing share content.
+ * Uses Wave 3 publication publishedScore only — never internal arithmetic while checking/NR.
  *
  * NA-018 / Pass 3: Overall and pillar assessment sharing may derive only from the
- * authorised current TruScoreResult supplied by Result (or an equivalently explicit
- * authority-bound assessment object). Raw product.trust_score /
- * product.trust_score_breakdown must never resurrect an assessment when truScore is null.
+ * authorised current TruScoreResult supplied by Result.
  */
 
 import type { TruScoreResult } from '../lib/truscoreEngine';
@@ -22,29 +20,60 @@ function isGenuineNumber(v: unknown): v is number {
 }
 
 /**
- * Overall share score from the authorised TruScoreResult only.
- * Missing/null truScore → no assessment content (product-info share may still proceed without scores).
+ * Overall share score from publication.overall.publishedScore when present;
+ * otherwise falls back to authorised truscore only when no publication snapshot exists.
+ * checking/NR → null (never internal sum).
  */
 export function resolveShareOverallScore(
   truScore: TruScoreResult | null | undefined
 ): number | null {
-  if (truScore == null) {
-    return null;
+  if (truScore == null) return null;
+  const pub = truScore.publication;
+  if (pub) {
+    if (pub.overall.publicationStatus !== 'rated') return null;
+    const published = pub.overall.publishedScore;
+    return isGenuineNumber(published) ? published : null;
   }
   const ts = truScore.truscore;
   return isGenuineNumber(ts) ? ts : null;
 }
 
 /**
- * Pillar breakdown for share only when all four values are genuine numbers on the
- * authorised TruScoreResult. Does not coerce missing pillars to 0 and does not read
- * product.trust_score_breakdown.
+ * Pillar breakdown for share from each pillar's publishedScore only.
+ * Any checking/NR pillar → null breakdown (suppress score-bearing pillar share).
  */
 export function resolveGenuinePillarBreakdown(
   truScore: TruScoreResult | null | undefined
 ): GenuinePillarBreakdown | null {
-  if (truScore == null) {
-    return null;
+  if (truScore == null) return null;
+  const pub = truScore.publication;
+  if (pub) {
+    const body = pub.body;
+    const planet = pub.planet;
+    const claims = pub.claims;
+    const transparency = pub.transparency;
+    if (
+      body.publicationStatus !== 'rated' ||
+      planet.publicationStatus !== 'rated' ||
+      claims.publicationStatus !== 'rated' ||
+      transparency.publicationStatus !== 'rated'
+    ) {
+      return null;
+    }
+    if (
+      !isGenuineNumber(body.publishedScore) ||
+      !isGenuineNumber(planet.publishedScore) ||
+      !isGenuineNumber(claims.publishedScore) ||
+      !isGenuineNumber(transparency.publishedScore)
+    ) {
+      return null;
+    }
+    return {
+      Body: body.publishedScore,
+      Planet: planet.publishedScore,
+      Ethics: claims.publishedScore,
+      Open: transparency.publishedScore,
+    };
   }
   const b = truScore.breakdown;
   if (
@@ -59,7 +88,7 @@ export function resolveGenuinePillarBreakdown(
   return null;
 }
 
-/** Breakdown for share only when overall is a scored number and pillars are genuine. */
+/** Breakdown for share only when overall is a scored number and pillars are all rated. */
 export function resolveShareBreakdownForOverall(
   overall: number | null,
   truScore: TruScoreResult | null | undefined

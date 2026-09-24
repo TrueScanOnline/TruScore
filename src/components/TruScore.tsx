@@ -9,6 +9,7 @@ import { useTheme } from '../theme';
 import {
   getTruScoreConsumerPresentation,
 } from '../utils/truScorePresentation';
+import { publishedScoreDisplay } from '../lib/rateability';
 
 type TruScorePillar = 'Body' | 'Planet' | 'Ethics' | 'Open';
 
@@ -17,20 +18,26 @@ interface TruScoreProps {
   size?: 'small' | 'medium' | 'large';
   /** When provided, pillar rows become the W3-S12a pillar look-through entry point. */
   onPillarPress?: (pillar: TruScorePillar) => void;
+  /** First-paint barrier: until settled, all scores remain unrevealed (§12). */
+  publicationSettled?: boolean;
 }
 
-const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPillarPress }: TruScoreProps) {
+const TruScore = React.memo(function TruScore({
+  truScore,
+  size = 'medium',
+  onPillarPress,
+  publicationSettled = true,
+}: TruScoreProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { truscore, breakdown } = truScore;
-  const presentation = getTruScoreConsumerPresentation(truScore);
+  const { breakdown, publication } = truScore;
+  const presentation = getTruScoreConsumerPresentation(truScore, { publicationSettled });
 
-  // Color based on score (scored path only; never call with null)
   const getScoreColor = (s: number) => {
-    if (s >= 80) return '#16a085'; // Green (excellent)
-    if (s >= 60) return '#4dd09f'; // Light green (good)
-    if (s >= 40) return '#ffd93d'; // Yellow (fair)
-    return '#ff6b6b'; // Red (poor)
+    if (s >= 80) return '#16a085';
+    if (s >= 60) return '#4dd09f';
+    if (s >= 40) return '#ffd93d';
+    return '#ff6b6b';
   };
 
   const getScoreLabel = (s: number) => {
@@ -40,7 +47,7 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
     return t('trust.poor') || 'Poor';
   };
 
-  const getPillarColor = (pillar: string, value: number) => {
+  const getPillarColor = (value: number) => {
     if (value >= 20) return '#16a085';
     if (value >= 15) return '#4dd09f';
     if (value >= 10) return '#ffd93d';
@@ -54,6 +61,24 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
   };
 
   const currentStyles = sizeStyles[size];
+
+  const pillarPublished = (pillar: TruScorePillar): number | null => {
+    if (!publicationSettled || publication?.overall.publicationStatus === 'checking') {
+      return null;
+    }
+    const map = {
+      Body: publication?.body,
+      Planet: publication?.planet,
+      Ethics: publication?.claims,
+      Open: publication?.transparency,
+    } as const;
+    const pub = map[pillar];
+    if (pub) {
+      return pub.publicationStatus === 'rated' ? pub.publishedScore : null;
+    }
+    const value = breakdown[pillar];
+    return typeof value === 'number' && !Number.isNaN(value) ? value : null;
+  };
 
   if (presentation.kind === 'unavailable') {
     return (
@@ -76,28 +101,44 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
     );
   }
 
-  const scored = presentation.score;
+  const scored = presentation.kind === 'scored' ? presentation.score : null;
+  const overallDisplay =
+    presentation.kind === 'scored'
+      ? String(presentation.score)
+      : publishedScoreDisplay(null);
 
   return (
     <View style={[styles.container, currentStyles.container]}>
-      {/* Main Score */}
-      <View style={[styles.scoreCircle, { borderColor: getScoreColor(scored), backgroundColor: colors.card }]}>
-        <Text style={[styles.scoreText, currentStyles.score, { color: getScoreColor(scored) }]}>
-          {scored}
-        </Text>
-      </View>
-      <Text style={[styles.label, currentStyles.label, { color: colors.text }]}>
-        {getScoreLabel(scored)}
-      </Text>
+      {scored != null ? (
+        <>
+          <View style={[styles.scoreCircle, { borderColor: getScoreColor(scored), backgroundColor: colors.card }]}>
+            <Text style={[styles.scoreText, currentStyles.score, { color: getScoreColor(scored) }]}>
+              {scored}
+            </Text>
+          </View>
+          <Text style={[styles.label, currentStyles.label, { color: colors.text }]}>
+            {getScoreLabel(scored)}
+          </Text>
+        </>
+      ) : (
+        <>
+          <View style={[styles.scoreCircle, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <Text style={[styles.scoreText, currentStyles.score, { color: colors.textSecondary }]}>
+              {overallDisplay}
+            </Text>
+          </View>
+          <Text style={[styles.label, currentStyles.label, { color: colors.textSecondary }]}>
+            {presentation.kind === 'checking' ? presentation.title : 'Unrevealed'}
+          </Text>
+        </>
+      )}
       <Text style={[styles.subLabel, { color: colors.textSecondary }]}>{productIdentity.publicScoreName}</Text>
 
-      {/* Pillar Bars - internal order Body, Planet, Ethics, Open; consumer labels applied on render */}
       <View style={styles.pillarsContainer}>
         {(['Body', 'Planet', 'Ethics', 'Open'] as const).map((pillar) => {
           const label = consumerPillarLabel(pillar);
-          const value = breakdown[pillar];
-          // Never coerce null/missing pillar to 0 for display
-          if (typeof value !== 'number' || Number.isNaN(value)) {
+          const value = pillarPublished(pillar);
+          if (value == null) {
             return (
               <View key={pillar} style={styles.pillarRow}>
                 <Text style={[styles.pillarLabel, { color: colors.text }]}>{label}</Text>
@@ -115,7 +156,7 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
                     styles.pillarBar,
                     {
                       width: `${(value / 25) * 100}%`,
-                      backgroundColor: getPillarColor(pillar, value),
+                      backgroundColor: getPillarColor(value),
                     },
                   ]}
                 />
@@ -148,92 +189,46 @@ const TruScore = React.memo(function TruScore({ truScore, size = 'medium', onPil
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    justifyContent: 'center',
+    width: '100%',
   },
+  smallContainer: { paddingVertical: 8 },
+  mediumContainer: { paddingVertical: 12 },
+  largeContainer: { paddingVertical: 16 },
   scoreCircle: {
-    borderWidth: 4,
-    borderRadius: 1000,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 3,
     alignItems: 'center',
     justifyContent: 'center',
-    // backgroundColor will be set dynamically via style prop
+    marginBottom: 8,
   },
-  scoreText: {
-    fontWeight: 'bold',
-  },
-  label: {
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  subLabel: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  unavailableExplanation: {
-    marginTop: 8,
-    paddingHorizontal: 12,
-    lineHeight: 18,
-  },
-  pillarsContainer: {
-    width: '100%',
-    marginTop: 20,
-    gap: 12,
-  },
+  scoreText: { fontWeight: '700' },
+  smallScore: { fontSize: 28 },
+  mediumScore: { fontSize: 34 },
+  largeScore: { fontSize: 40 },
+  label: { fontWeight: '600', marginBottom: 2 },
+  smallLabel: { fontSize: 14 },
+  mediumLabel: { fontSize: 16 },
+  largeLabel: { fontSize: 18 },
+  subLabel: { fontSize: 12, marginBottom: 12 },
+  unavailableExplanation: { fontSize: 13, lineHeight: 18, paddingHorizontal: 12 },
+  pillarsContainer: { width: '100%', marginTop: 4 },
   pillarRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 8,
   },
-  pillarLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    width: 60,
-  },
+  pillarLabel: { width: 100, fontSize: 13, fontWeight: '500' },
   pillarBarContainer: {
     flex: 1,
     height: 8,
     borderRadius: 4,
     overflow: 'hidden',
+    marginHorizontal: 8,
   },
-  pillarBar: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  pillarValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    width: 40,
-    textAlign: 'right',
-  },
-  // Small
-  smallContainer: {
-    padding: 8,
-  },
-  smallScore: {
-    fontSize: 24,
-  },
-  smallLabel: {
-    fontSize: 14,
-  },
-  // Medium
-  mediumContainer: {
-    padding: 16,
-  },
-  mediumScore: {
-    fontSize: 48,
-  },
-  mediumLabel: {
-    fontSize: 18,
-  },
-  // Large
-  largeContainer: {
-    padding: 24,
-  },
-  largeScore: {
-    fontSize: 72,
-  },
-  largeLabel: {
-    fontSize: 24,
-  },
+  pillarBar: { height: '100%', borderRadius: 4 },
+  pillarValue: { width: 44, fontSize: 12, textAlign: 'right' },
 });
 
 export default TruScore;

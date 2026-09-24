@@ -219,6 +219,12 @@ function ResultScreenContent() {
   const [truScore, setTruScore] = useState<TruScoreResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingPhase, setLoadingPhase] = useState<string>('initializing');
+  /**
+   * Wave 3: score/Confidence/S26 publication latch. Once the initial assessment cycle
+   * settles, never flip consumer publication back to Checking for the same barcode load.
+   */
+  const [publicationSettled, setPublicationSettled] = useState(false);
+  const publicationSettledRef = useRef(false);
   const [progressiveProduct, setProgressiveProduct] = useState<ProductWithTrustScore | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -248,6 +254,11 @@ function ResultScreenContent() {
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [manufacturingCountryModalVisible, setManufacturingCountryModalVisible] = useState(false);
+  const [originsContributionPrefill, setOriginsContributionPrefill] = useState<{
+    structuredOriginCountry?: string;
+    conflictingFreeTextOrigins?: string;
+    originsTags?: string[];
+  } | null>(null);
   const [packagingInfoModalVisible, setPackagingInfoModalVisible] = useState(false);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
@@ -500,6 +511,8 @@ function ResultScreenContent() {
           // Governed fired-adjustment ledger from the same scoring run — the only input the
           // Score Highlights selection engine reads (W3-S12/S12a).
           analysis: product._truscore_analysis,
+          // Wave 3 Rateability / Confidence / NR — consumer reveal uses publishedScore.
+          publication: product._publication ?? product._truscore_analysis?.publication,
         };
         setTruScore(score);
       } else {
@@ -888,6 +901,22 @@ function ResultScreenContent() {
   const loadProduct = async () => {
     setLoading(true);
     setError(null);
+    publicationSettledRef.current = false;
+    setPublicationSettled(false);
+
+    const acceptProductUpdate = (next: ProductWithTrustScore): boolean => {
+      // Once settled, ignore same-cycle payloads that would unsettle publication / flip Checking.
+      if (publicationSettledRef.current && next._assessmentCycleSettled === false) {
+        return false;
+      }
+      if (next._assessmentCycleSettled === true) {
+        publicationSettledRef.current = true;
+        setPublicationSettled(true);
+      }
+      setProgressiveProduct(next);
+      setProduct(next);
+      return true;
+    };
     
     try {
       console.log('[ResultScreen] Loading product for barcode:', barcode, 'Platform:', Platform.OS);
@@ -966,17 +995,24 @@ function ResultScreenContent() {
           
           // CRITICAL: Update product IMMEDIATELY - don't wait for anything
           // This enables instant display (< 100ms) instead of waiting for TruScore
-          setProgressiveProduct(productWithScore);
-          setProduct(productWithScore); // Update main product immediately
+          if (!acceptProductUpdate(productWithScore)) {
+            return;
+          }
           setLoading(false); // Stop loading spinner - show product immediately
           
           console.log(`[ResultScreen] ⚡ INSTANT display: ${progress.phase}`, productWithScore.product_name, 
-            `TruScore: ${productWithScore.trust_score || 'calculating...'}`);
+            `TruScore: ${productWithScore.trust_score || 'calculating...'}`,
+            `settled=${productWithScore._assessmentCycleSettled === true}`);
           
           // Background merge complete: product now has extended _fetchTrace (all DBs that contributed)
           if (progress.phase === 'product_enhanced') {
             const traceLen = productWithScore._truscore_analysis?.fetchTrace?.length ?? 0;
             console.log(`[ResultScreen] ✅ Product enhanced (merge complete): TruScore ${productWithScore.trust_score}, fetch trace: ${traceLen} source(s) – Score breakdown reflects all DBs used`);
+          }
+          if (progress.phase === 'product_refined') {
+            console.log(
+              `[ResultScreen] ✅ Assessment cycle settled: ${productWithScore._assessmentCycleSettleReason ?? 'unknown'}`
+            );
           }
           if (progress.phase === 'complete') {
             console.log(`[ResultScreen] ✅ Product complete with TruScore: ${productWithScore.trust_score}`);
@@ -1043,8 +1079,8 @@ function ResultScreenContent() {
             trust_score: productData.trust_score ?? null,
           });
         }
-        setProduct(productData);
-        setProgressiveProduct(productData);
+        // Prefer acceptProductUpdate so a late unsettled return cannot overwrite a settled refine.
+        acceptProductUpdate(productData);
         setLoadingPhase('complete');
         // Update scan history with product name
         try {
@@ -1653,6 +1689,7 @@ function ResultScreenContent() {
             truScore={truScore}
             size="medium"
             onPillarPress={scoreHighlights ? openScoreHighlightsPillar : undefined}
+            publicationSettled={publicationSettled}
           />
 
           {/* S28 — founder/UAT only when build-entitled AND Settings Score diagnostics On */}
@@ -1669,10 +1706,14 @@ function ResultScreenContent() {
             </TouchableOpacity>
           )}
           
-          {/* Confidence Badge - Data Quality Indicator */}
-          {product && product.confidence !== undefined && (
+          {/* W3-S11 Confidence — Overall Rated only; suppressed while enrichment checking */}
+          {product && product._publication && (
             <View style={styles.confidenceBadgeContainer}>
-              <ConfidenceBadge product={product} size="small" />
+              <ConfidenceBadge
+                product={product}
+                size="small"
+                publicationSettled={publicationSettled}
+              />
             </View>
           )}
 
@@ -2128,7 +2169,10 @@ function ResultScreenContent() {
                   {/* ALWAYS show "Update Country" button - moved inside card at bottom */}
                 <TouchableOpacity
                     style={[styles.updateCountryButton, { backgroundColor: colors.primary, marginTop: 16 }]}
-                  onPress={() => setManufacturingCountryModalVisible(true)}
+                  onPress={() => {
+                    setOriginsContributionPrefill(null);
+                    setManufacturingCountryModalVisible(true);
+                  }}
                   activeOpacity={0.8}
                 >
                   <Ionicons name="create-outline" size={18} color="#fff" />
@@ -2141,7 +2185,10 @@ function ResultScreenContent() {
               ) : (
                 <TouchableOpacity
                   style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#ff6b6b' }]}
-                  onPress={() => setManufacturingCountryModalVisible(true)}
+                  onPress={() => {
+                    setOriginsContributionPrefill(null);
+                    setManufacturingCountryModalVisible(true);
+                  }}
                   activeOpacity={0.7}
                 >
                   <View style={styles.cardHeaderLeft}>
@@ -2651,7 +2698,15 @@ function ResultScreenContent() {
           onPress={openAboutAdditivesFromResult}
         />
 
-        <ProductDataLimitationsCard product={product} onOpenManualEdit={handleEditProduct} />
+        <ProductDataLimitationsCard
+          product={product}
+          onOpenManualEdit={handleEditProduct}
+          onOpenOrigins={(prefill) => {
+            setOriginsContributionPrefill(prefill ?? null);
+            setManufacturingCountryModalVisible(true);
+          }}
+          publicationSettled={publicationSettled}
+        />
 
         {/* Scan Another Product — bottom of page */}
         <View style={styles.scanAnotherFooter}>
@@ -2689,6 +2744,9 @@ function ResultScreenContent() {
         visible={showScoreDiagnostics && truScoreAnalysisModalVisible}
         onClose={() => setTruScoreAnalysisModalVisible(false)}
         analysis={product?._truscore_analysis}
+        publication={product?._publication}
+        assessmentCycleSettled={publicationSettled}
+        assessmentCycleSettleReason={product?._assessmentCycleSettleReason}
       />
 
       {/* W3-S12a / L2 shared Score Highlights look-through */}
@@ -2754,10 +2812,15 @@ function ResultScreenContent() {
       {/* Manufacturing Country Contribution Modal */}
       <ManufacturingCountryModal
         visible={manufacturingCountryModalVisible}
+        initialCountry={originsContributionPrefill?.structuredOriginCountry ?? null}
+        conflictingFreeTextOrigins={
+          originsContributionPrefill?.conflictingFreeTextOrigins ?? null
+        }
         onClose={() => {
           // Only close if modal is actually visible (prevent rapid state changes)
           if (manufacturingCountryModalVisible) {
             setManufacturingCountryModalVisible(false);
+            setOriginsContributionPrefill(null);
           }
         }}
         onSubmit={async (country: string, hasImportedIngredients?: boolean) => {

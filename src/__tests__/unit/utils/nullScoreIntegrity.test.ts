@@ -204,6 +204,85 @@ describe('null-score integrity — sharing semantics', () => {
     });
     expect(productInfo.message).not.toMatch(/55\/100/);
   });
+
+  test('NR publication suppresses Overall share and unrated pillar base-15', () => {
+    const nrPubPillar = {
+      publicationStatus: 'nr' as const,
+      internalScore: 15,
+      publishedScore: null,
+      confidence: null,
+      sourceQuality: 'community_or_user' as const,
+      s26: null,
+      confidenceReasonCode: 'nr',
+      assessmentLanes: {},
+      diagnostic: {},
+    };
+    const nrResult: TruScoreResult = {
+      truscore: 60,
+      breakdown: { Body: 15, Planet: 15, Ethics: 15, Open: 15 },
+      scoringUnavailable: false,
+      hasNutriScore: false,
+      hasEcoScore: false,
+      hasOrigin: false,
+      publication: {
+        settled: true,
+        body: nrPubPillar,
+        planet: nrPubPillar,
+        claims: nrPubPillar,
+        transparency: nrPubPillar,
+        overall: {
+          ...nrPubPillar,
+          internalScore: 60,
+          publicationStatus: 'nr',
+        },
+      },
+    };
+
+    expect(resolveShareOverallScore(nrResult)).toBeNull();
+    expect(resolveGenuinePillarBreakdown(nrResult)).toBeNull();
+    expect(resolveShareBreakdownForOverall(null, nrResult)).toBeNull();
+
+    const cardData = getShareCardData(baseProduct, nrResult);
+    expect(cardData.truScore).toBeNull();
+    expect(cardData.breakdown).toBeUndefined();
+
+    const message = generateShareMessage(baseProduct, nrResult);
+    expect(message).not.toMatch(/60\/100/);
+    expect(message).not.toMatch(/\b15\/25\b/);
+    expect(message).not.toMatch(/Body: 15/);
+
+    const content = truScoreShareContent(nrResult, baseProduct);
+    expect(content.message).not.toMatch(/60\/100/);
+    expect(content.message).not.toMatch(/\b15\/25\b/);
+  });
+
+  test('checking publication also suppresses share of internal scores', () => {
+    const checkingPillar = {
+      publicationStatus: 'checking' as const,
+      internalScore: 18,
+      publishedScore: null,
+      confidence: null,
+      sourceQuality: 'community_or_user' as const,
+      s26: null,
+      confidenceReasonCode: 'checking',
+      assessmentLanes: {},
+      diagnostic: {},
+    };
+    const checking: TruScoreResult = {
+      truscore: 72,
+      breakdown: { Body: 18, Planet: 18, Ethics: 18, Open: 18 },
+      publication: {
+        settled: false,
+        body: checkingPillar,
+        planet: checkingPillar,
+        claims: checkingPillar,
+        transparency: checkingPillar,
+        overall: { ...checkingPillar, internalScore: 72 },
+      },
+    };
+    expect(resolveShareOverallScore(checking)).toBeNull();
+    expect(getShareCardData(baseProduct, checking).truScore).toBeNull();
+  });
 });
 
 describe('null-score integrity — Open v15 + score neutrality smoke', () => {

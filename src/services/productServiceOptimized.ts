@@ -461,6 +461,12 @@ async function revalidateLocalProductFromOffInBackground(
  * eligibility (successful canonical World OFF retrieval, or an already-stamped local record).
  * `source === 'openfoodfacts'` alone must never grant the stamp.
  */
+/**
+ * First paint may return before user-contributed merge finishes, but assessment publication
+ * stays unsettled until the ordinary initial merge cycle completes (success / failure /
+ * deterministic USER_CONTRIBUTED_MERGE_RACE_MS barrier). Late same-cycle callbacks must not
+ * unsettle a settled snapshot or send the UI back to Checking.
+ */
 async function processProductForDisplay(
   product: Product,
   barcode: string,
@@ -468,27 +474,62 @@ async function processProductForDisplay(
   options: { stampAuthority: boolean }
 ): Promise<ProductWithTrustScore> {
   const mergePromise = mergeUserContributedData(product, barcode).catch(() => product);
-  const quickMerged = await Promise.race([
-    mergePromise,
-    new Promise<Product>((resolve) =>
-      setTimeout(() => resolve(product), USER_CONTRIBUTED_FIRST_PAINT_RACE_MS)
-    ),
-  ]);
-  mergePromise
-    .then(async (fullyMerged) => {
-      try {
-        const refined = await scoreWithGovernedTransforms(fullyMerged, {
+  let settlementFired = false;
+  let earlyPaintReturned = false;
+
+  const settleWith = async (
+    merged: Product,
+    reason: 'merge_completed' | 'merge_timeout' | 'merge_failed'
+  ): Promise<ProductWithTrustScore | null> => {
+    if (settlementFired) return null;
+    settlementFired = true;
+    const scored = await scoreWithGovernedTransforms(merged, {
+      stampAuthority: options.stampAuthority,
+      publicationSettled: true,
+    });
+    scored._assessmentCycleSettled = true;
+    scored._assessmentCycleSettleReason = reason;
+    // If chrome already painted unsettled, publish the one settled snapshot via callback.
+    if (earlyPaintReturned) {
+      onFullyMerged?.(scored);
+    }
+    return scored;
+  };
+
+  const mergeSettlePromise = mergePromise.then((merged) =>
+    settleWith(merged, 'merge_completed')
+  );
+
+  const earlyOrSettled = await Promise.race([
+    mergeSettlePromise.then((settled) => settled!),
+    new Promise<ProductWithTrustScore>((resolve) => {
+      setTimeout(async () => {
+        const quick = await scoreWithGovernedTransforms(product, {
           stampAuthority: options.stampAuthority,
+          publicationSettled: false,
         });
-        onFullyMerged?.(refined);
-      } catch (e) {
-        logger.debug('Full user-merge refine failed (non-critical):', e);
-      }
-    })
-    .catch(() => {});
-  return scoreWithGovernedTransforms(quickMerged, {
-    stampAuthority: options.stampAuthority,
-  });
+        quick._assessmentCycleSettled = false;
+        earlyPaintReturned = true;
+        resolve(quick);
+      }, USER_CONTRIBUTED_FIRST_PAINT_RACE_MS);
+    }),
+  ]);
+
+  if (!earlyOrSettled._assessmentCycleSettled) {
+    // Same initial cycle: merge completion (above) or governed MERGE race timeout.
+    void Promise.race([
+      mergeSettlePromise,
+      new Promise<ProductWithTrustScore | null>((resolve) => {
+        setTimeout(async () => {
+          resolve(await settleWith(product, 'merge_timeout'));
+        }, USER_CONTRIBUTED_MERGE_RACE_MS);
+      }),
+    ]).catch(async () => {
+      await settleWith(product, 'merge_failed');
+    });
+  }
+
+  return earlyOrSettled;
 }
 
 /**
@@ -512,9 +553,13 @@ async function processProductFast(product: Product, barcode: string): Promise<Pr
     mergedProduct = product;
   }
 
-  return scoreWithGovernedTransforms(mergedProduct, {
+  const scored = await scoreWithGovernedTransforms(mergedProduct, {
     stampAuthority: true,
+    publicationSettled: true,
   });
+  scored._assessmentCycleSettled = true;
+  scored._assessmentCycleSettleReason = 'merge_completed';
+  return scored;
 }
 
 /**
@@ -522,11 +567,13 @@ async function processProductFast(product: Product, barcode: string): Promise<Pr
  */
 async function scoreWithGovernedTransforms(
   product: Product,
-  options: { stampAuthority: boolean }
+  options: { stampAuthority: boolean; publicationSettled?: boolean }
 ): Promise<ProductWithTrustScore> {
   const prepared = applyGovernedProductTransforms(product, {
     stampAuthority: options.stampAuthority,
   });
   const productWithConfidence = applyConfidenceScore(prepared);
-  return calculateTrustScore(productWithConfidence);
+  return calculateTrustScore(productWithConfidence, {
+    publicationSettled: options.publicationSettled,
+  });
 }

@@ -18,6 +18,7 @@ import type { FavouritesStackParamList } from '../src/navigation/tabStackParamLi
 import { useFavoritesStore } from '../src/store/useFavoritesStore';
 import { fetchProduct } from '../src/services/productService';
 import { useTheme } from '../src/theme';
+import { listPublishedOverallScore } from '../src/utils/listPublishedScore';
 
 type NavigationProp = NativeStackNavigationProp<FavouritesStackParamList>;
 
@@ -153,16 +154,20 @@ export default function FavouritesScreen() {
                   <Text style={[styles.favoriteBarcode, { color: colors.textSecondary }]}>
                     {t('search.barcode')}: {item.barcode}
                   </Text>
-                  {item.product?.trust_score !== undefined && (
+                  {(() => {
+                    const published = listPublishedOverallScore(item.product);
+                    if (published === null) return null;
+                    return (
                     <View style={styles.favoriteScore}>
                       <Text style={[styles.favoriteScoreLabel, { color: colors.textSecondary }]}>
                         {t('result.trustScore')}: 
                       </Text>
                       <Text style={[styles.favoriteScoreValue, { color: colors.primary }]}>
-                        {item.product.trust_score}/100
+                        {published}/100
                       </Text>
                     </View>
-                  )}
+                    );
+                  })()}
                 </View>
               </View>
               <TouchableOpacity
