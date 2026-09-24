@@ -98,7 +98,7 @@
         "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "1",
         "EXPO_PUBLIC_STORE_RELEASE": "0",
-        "RVEEL_IOS_BUILD_NUMBER": "45"
+        "RVEEL_IOS_BUILD_NUMBER": "46"
       },
       "ios": {
         "simulator": false,
@@ -116,7 +116,7 @@
         "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "1",
         "EXPO_PUBLIC_STORE_RELEASE": "0",
-        "RVEEL_ANDROID_VERSION_CODE": "21"
+        "RVEEL_ANDROID_VERSION_CODE": "22"
       },
       "android": {
         "buildType": "apk"
