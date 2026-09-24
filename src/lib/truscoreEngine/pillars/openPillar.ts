@@ -70,6 +70,12 @@ export interface OpenPillarResult {
     originsAdjustmentId: OpenV15AdjustmentId;
     originsAdjustment: number;
     originsProvenance: string;
+    /** Non-scoring Origins diagnostic (contradiction / contribution prefill). */
+    originsDiagnostic?: {
+      freeTextContradiction?: boolean;
+      structuredCountryCandidate?: string;
+      conflictingFreeText?: string;
+    };
   };
 }
 
@@ -165,6 +171,9 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
       originsAdjustmentId: originsAssessment.id,
       originsAdjustment: originsAdj.value,
       originsProvenance: originsAssessment.provenance,
+      ...(originsAssessment.diagnostic
+        ? { originsDiagnostic: originsAssessment.diagnostic }
+        : {}),
     },
   };
 

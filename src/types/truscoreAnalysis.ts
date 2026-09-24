@@ -66,6 +66,11 @@ export interface TruScoreAnalysis {
    * Internal/UAT Score Diagnostics surface only; never an ordinary-user feature.
    */
   claimsAssessment?: ClaimsAssessmentResult;
+  /**
+   * Wave 3 Cross-Pillar Rateability / Confidence / NR — S28 diagnostic additions (§14).
+   * Founder/UAT Score Diagnostics only.
+   */
+  publication?: import('../lib/rateability').CrossPillarPublicationSnapshot;
   /** Timestamp when this analysis was generated (matches the score on screen) */
   generatedAt: number;
 }

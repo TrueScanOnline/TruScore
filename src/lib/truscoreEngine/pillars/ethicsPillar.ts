@@ -367,6 +367,11 @@ export function calculateEthicsPillar(
               ? 'adverse'
               : 'no_finding'
           : 'no_finding',
+      // Sole current not_applicable path: frozen attribution completed and established
+      // ethics scoring is not applicable for the resolved entity — counts as assessed.
+      ...(!benchmarkCtx.benchmarkEligible
+        ? { not_applicable_resolution: 'completed_no_applicable_result' as const }
+        : {}),
     },
     {
       source: 'bbfaw',
@@ -379,6 +384,9 @@ export function calculateEthicsPillar(
               ? 'adverse'
               : 'no_finding'
           : 'no_finding',
+      ...(!benchmarkCtx.benchmarkEligible
+        ? { not_applicable_resolution: 'completed_no_applicable_result' as const }
+        : {}),
     },
   ];
 

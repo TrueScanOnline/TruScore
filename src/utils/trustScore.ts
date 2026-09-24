@@ -133,6 +133,7 @@ export async function calculateTrustScore(product: Product): Promise<ProductWith
       hasOrigin: truScoreResult.hasOrigin,
     },
     _truscore_analysis: analysis ?? undefined,
+    _publication: truScoreResult.publication,
   };
 }
 

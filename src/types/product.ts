@@ -363,6 +363,11 @@ export interface ProductWithTrustScore extends Product {
   /** Full TruScore analysis (pillar breakdown + data source trace). Set when score is calculated. */
   _truscore_analysis?: import('./truscoreAnalysis').TruScoreAnalysis;
   /**
+   * Wave 3 Cross-Pillar Rateability / Confidence / NR publication snapshot.
+   * Consumer UI must reveal publishedScore/confidence only; internalScore is diagnostic.
+   */
+  _publication?: import('../lib/rateability').CrossPillarPublicationSnapshot;
+  /**
    * Phase 6 Slice 1 transitional runtime attachment (internal only; not public contract).
    * This is temporary plumbing for early slices and not the long-term authoritative handoff pattern.
    */

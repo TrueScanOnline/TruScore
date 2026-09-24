@@ -235,6 +235,11 @@ function ResultScreenContent() {
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [manufacturingCountryModalVisible, setManufacturingCountryModalVisible] = useState(false);
+  const [originsContributionPrefill, setOriginsContributionPrefill] = useState<{
+    structuredOriginCountry?: string;
+    conflictingFreeTextOrigins?: string;
+    originsTags?: string[];
+  } | null>(null);
   const [packagingInfoModalVisible, setPackagingInfoModalVisible] = useState(false);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
@@ -492,6 +497,8 @@ function ResultScreenContent() {
           // Governed fired-adjustment ledger from the same scoring run — the only input the
           // Score Highlights selection engine reads (W3-S12/S12a).
           analysis: product._truscore_analysis,
+          // Wave 3 Rateability / Confidence / NR — consumer reveal uses publishedScore.
+          publication: product._publication ?? product._truscore_analysis?.publication,
         };
         setTruScore(score);
       } else {
@@ -1577,6 +1584,7 @@ function ResultScreenContent() {
             truScore={truScore}
             size="medium"
             onPillarPress={scoreHighlights ? openScoreHighlightsPillar : undefined}
+            publicationSettled={loadingPhase === 'complete'}
           />
 
           {/* S28 — founder/UAT only when build-entitled AND Settings Score diagnostics On */}
@@ -1593,10 +1601,14 @@ function ResultScreenContent() {
             </TouchableOpacity>
           )}
           
-          {/* Confidence Badge - Data Quality Indicator */}
-          {product && product.confidence !== undefined && (
+          {/* W3-S11 Confidence — Overall Rated only; suppressed while enrichment checking */}
+          {product && product._publication && (
             <View style={styles.confidenceBadgeContainer}>
-              <ConfidenceBadge product={product} size="small" />
+              <ConfidenceBadge
+                product={product}
+                size="small"
+                publicationSettled={loadingPhase === 'complete'}
+              />
             </View>
           )}
 
@@ -2572,7 +2584,15 @@ function ResultScreenContent() {
           }}
         />
 
-        <ProductDataLimitationsCard product={product} onOpenManualEdit={handleEditProduct} />
+        <ProductDataLimitationsCard
+          product={product}
+          onOpenManualEdit={handleEditProduct}
+          onOpenOrigins={(prefill) => {
+            setOriginsContributionPrefill(prefill ?? null);
+            setManufacturingCountryModalVisible(true);
+          }}
+          publicationSettled={loadingPhase === 'complete'}
+        />
 
         {/* Scan Another Product — bottom of page */}
         <View style={styles.scanAnotherFooter}>
@@ -2669,10 +2689,15 @@ function ResultScreenContent() {
       {/* Manufacturing Country Contribution Modal */}
       <ManufacturingCountryModal
         visible={manufacturingCountryModalVisible}
+        initialCountry={originsContributionPrefill?.structuredOriginCountry ?? null}
+        conflictingFreeTextOrigins={
+          originsContributionPrefill?.conflictingFreeTextOrigins ?? null
+        }
         onClose={() => {
           // Only close if modal is actually visible (prevent rapid state changes)
           if (manufacturingCountryModalVisible) {
             setManufacturingCountryModalVisible(false);
+            setOriginsContributionPrefill(null);
           }
         }}
         onSubmit={async (country: string, hasImportedIngredients?: boolean) => {

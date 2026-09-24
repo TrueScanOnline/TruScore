@@ -1,10 +1,16 @@
-// Confidence scoring system for product data sources
-// Provides 0-1 confidence scores based on source reliability
+/**
+ * Confidence scoring — legacy source-reliability numeric helpers.
+ *
+ * Wave 3 (20260924): W3-S11 consumer Confidence is bound to
+ * `src/lib/rateability` Overall Confidence (limited/moderate/high).
+ * Do NOT drive the Confidence badge from this module.
+ * `applyConfidenceScore` may still stamp product.confidence for diagnostics only.
+ */
 
 import { Product } from '../types/product';
 
 /**
- * Source reliability levels
+ * Source reliability levels (legacy numeric path — not W3-S11 labels)
  */
 export type SourceReliability = 'high' | 'medium' | 'low';
 
@@ -19,7 +25,7 @@ const SOURCE_CONFIDENCE_MAP: Partial<Record<NonNullable<Product['source']>, { co
   'usda_fooddata': { confidence: 0.90, reliability: 'high' },
   'gs1_datasource': { confidence: 0.90, reliability: 'high' },
   'openfoodfacts': { confidence: 0.85, reliability: 'high' },
-  
+
   // Medium confidence sources (0.5-0.7) - Store APIs and verified sources
   'woolworths_au': { confidence: 0.70, reliability: 'medium' },
   'coles_au': { confidence: 0.70, reliability: 'medium' },
@@ -33,23 +39,20 @@ const SOURCE_CONFIDENCE_MAP: Partial<Record<NonNullable<Product['source']>, { co
   'go_upc': { confidence: 0.60, reliability: 'medium' },
   'buycott': { confidence: 0.60, reliability: 'medium' },
   'barcode_lookup': { confidence: 0.55, reliability: 'medium' },
-  
+
   // Low confidence sources (0.3-0.5) - Free APIs and fallback sources
   'open_gtin': { confidence: 0.45, reliability: 'low' },
   'barcode_monster': { confidence: 0.40, reliability: 'low' },
   'upcitemdb': { confidence: 0.50, reliability: 'low' },
   'barcode_spider': { confidence: 0.45, reliability: 'low' },
   'web_search': { confidence: 0.30, reliability: 'low' },
-  
+
   // Default for unknown sources
   'unknown': { confidence: 0.50, reliability: 'medium' },
 };
 
 /**
  * Get confidence score and reliability for a product source
- * 
- * @param source - Product source type
- * @returns Confidence score (0-1) and reliability level
  */
 export function getSourceConfidence(
   source?: Product['source']
@@ -57,24 +60,20 @@ export function getSourceConfidence(
   if (!source) {
     return SOURCE_CONFIDENCE_MAP['unknown'];
   }
-  
-  if (!source) {
-    return SOURCE_CONFIDENCE_MAP['unknown'] || { confidence: 0.5, reliability: 'medium' };
-  }
-  
-  return SOURCE_CONFIDENCE_MAP[source] || SOURCE_CONFIDENCE_MAP['unknown'] || { confidence: 0.5, reliability: 'medium' };
+
+  return (
+    SOURCE_CONFIDENCE_MAP[source] ||
+    SOURCE_CONFIDENCE_MAP['unknown'] || { confidence: 0.5, reliability: 'medium' }
+  );
 }
 
 /**
- * Apply confidence score to a product
- * Adds confidence and sourceReliability fields to the product
- * 
- * @param product - Product to apply confidence score to
- * @returns Product with confidence score applied
+ * Apply legacy numeric confidence score to a product (diagnostics only).
+ * Does not drive W3-S11 consumer Confidence labels.
  */
 export function applyConfidenceScore(product: Product): Product {
   const { confidence, reliability } = getSourceConfidence(product.source);
-  
+
   return {
     ...product,
     confidence,
@@ -83,10 +82,7 @@ export function applyConfidenceScore(product: Product): Product {
 }
 
 /**
- * Get confidence label for display
- * 
- * @param reliability - Source reliability level
- * @returns User-friendly label
+ * @deprecated Wave 3 — use `overallConfidenceLabel` from `src/lib/rateability`.
  */
 export function getConfidenceLabel(reliability: SourceReliability): string {
   switch (reliability) {
@@ -102,10 +98,7 @@ export function getConfidenceLabel(reliability: SourceReliability): string {
 }
 
 /**
- * Get confidence description for display
- * 
- * @param reliability - Source reliability level
- * @returns User-friendly description
+ * @deprecated Wave 3 — use S26 explanation objects from rateability publication.
  */
 export function getConfidenceDescription(reliability: SourceReliability): string {
   switch (reliability) {
@@ -119,4 +112,3 @@ export function getConfidenceDescription(reliability: SourceReliability): string
       return 'Data source reliability unknown';
   }
 }
-

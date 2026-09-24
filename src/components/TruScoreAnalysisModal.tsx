@@ -176,6 +176,40 @@ export default function TruScoreAnalysisModal({ visible, onClose, analysis }: Tr
           </View>
         ) : null}
 
+        {/* Wave 3 Rateability / Confidence / NR (§14) — founder/UAT only */}
+        {analysis.publication ? (
+          <View style={[styles.claimsBlock, { borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Rateability / Confidence / NR (S28)
+            </Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+              Publication gates are separate from scoring arithmetic. publishedScore is null while
+              checking/nr.
+            </Text>
+            {(
+              [
+                ['Body', analysis.publication.body],
+                ['Planet', analysis.publication.planet],
+                ['Claims', analysis.publication.claims],
+                ['Transparency', analysis.publication.transparency],
+                ['Overall', analysis.publication.overall],
+              ] as const
+            ).map(([name, pub]) => (
+              <View key={name} style={styles.claimsItem}>
+                <Text style={[styles.claimsLine, { color: colors.text }]} testID={`s28-pub-${name}`}>
+                  {name}: status={pub.publicationStatus} · published=
+                  {pub.publishedScore == null ? 'null' : pub.publishedScore} · confidence=
+                  {pub.confidence ?? 'null'} · reason={pub.confidenceReasonCode}
+                </Text>
+                <Text style={[styles.claimsLine, { color: colors.textSecondary }]}>
+                  lanes={JSON.stringify(pub.assessmentLanes)} · s26={pub.s26?.code ?? 'none'} ·
+                  contrib={pub.s26?.contributionOpportunity?.routeStatus ?? 'n/a'}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         {/* Data sources: which DBs were queried, order, hit/miss */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Data sources (query order)</Text>
         <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>

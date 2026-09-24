@@ -242,7 +242,16 @@ describe('Open Pillar v15', () => {
       };
       const result = calculateOpenPillar(product);
       expect(result.adjustments.some((a) => a.id === 'open-v15-origins-evidently-complete')).toBe(false);
+      // Fail-closed: insufficient/unresolved (0). No conflict score event / Highlight.
       expect(result.adjustments.some((a) => a.id === 'open-v15-origins-insufficient')).toBe(true);
+      expect(result.adjustments.some((a) => a.id === 'open-v15-origins-conflict')).toBe(false);
+      expect(result.details.originsAdjustment).toBe(0);
+      expect(result.details.originsProvenance).toBe('off_insufficient');
+      expect(result.details.originsDiagnostic?.freeTextContradiction).toBe(true);
+      expect(result.details.originsDiagnostic?.structuredCountryCandidate).toBe('new zealand');
+      expect(result.adjustments.find((a) => a.id === 'open-v15-origins-insufficient')?.highlightEligible).toBe(
+        false
+      );
     });
 
     test('vague sole ingredient with structured tag present fails +8', () => {

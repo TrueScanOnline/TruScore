@@ -1,18 +1,26 @@
-// Confidence badge component - displays data quality indicator
+/**
+ * W3-S11 Confidence badge — bound to Wave 3 Overall Confidence state.
+ * Legacy source-reliability High/Medium/Low derivation is disconnected.
+ * Rated only: High / Moderate / Limited. Checking/NR: no label.
+ */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
-import { Product } from '../types/product';
-import { getSourceConfidence, getConfidenceLabel, getConfidenceDescription } from '../utils/confidenceScoring';
+import { Product, ProductWithTrustScore } from '../types/product';
+import { overallConfidenceLabel } from '../lib/rateability';
 import { useTheme } from '../theme';
 
 interface ConfidenceBadgeProps {
-  product: Product;
+  product: Product | ProductWithTrustScore;
   size?: 'small' | 'medium' | 'large';
   showLabel?: boolean;
   showDescription?: boolean;
   onPress?: () => void;
+  /**
+   * When false (enrichment still in progress), suppress Confidence even if
+   * an internal publication snapshot exists — first-paint contract (§12).
+   */
+  publicationSettled?: boolean;
 }
 
 export default function ConfidenceBadge({
@@ -21,62 +29,58 @@ export default function ConfidenceBadge({
   showLabel = true,
   showDescription = false,
   onPress,
+  publicationSettled = true,
 }: ConfidenceBadgeProps) {
-  const { t } = useTranslation();
   const { colors } = useTheme();
-  
-  // Get confidence from product or calculate from source
-  const confidence = product.confidence ?? getSourceConfidence(product.source).confidence;
-  const reliability = product.sourceReliability ?? getSourceConfidence(product.source).reliability;
-  
-  // Get label text - use simple, user-friendly labels (plain English)
-  const getReliabilityLabel = () => {
-    switch (reliability) {
-      case 'high':
-        return 'High confidence';
-      case 'medium':
-        return 'Medium confidence';
-      case 'low':
-        return 'Low confidence';
-      default:
-        return 'Unknown';
-    }
-  };
-  
-  // Get badge color based on reliability
+  const publication = (product as ProductWithTrustScore)._publication;
+
+  if (!publicationSettled || !publication) {
+    return null;
+  }
+
+  const label = overallConfidenceLabel(publication.overall);
+  if (!label) {
+    return null;
+  }
+
+  const confidence = publication.overall.confidence;
   const getBadgeColor = () => {
-    switch (reliability) {
+    switch (confidence) {
       case 'high':
-        return '#16a085'; // Green
-      case 'medium':
-        return '#ffd93d'; // Yellow
-      case 'low':
-        return '#ffa500'; // Orange
+        return '#16a085';
+      case 'moderate':
+        return '#ffd93d';
+      case 'limited':
+        return '#ffa500';
       default:
         return colors.textSecondary;
     }
   };
-  
-  // Get icon based on reliability
-  const getIcon = () => {
-    switch (reliability) {
+
+  const getIcon = (): keyof typeof Ionicons.glyphMap => {
+    switch (confidence) {
       case 'high':
         return 'checkmark-circle';
-      case 'medium':
+      case 'moderate':
         return 'information-circle';
-      case 'low':
+      case 'limited':
         return 'alert-circle';
       default:
         return 'help-circle';
     }
   };
-  
+
+  const description =
+    publication.overall.s26?.explanation ??
+    (confidence === 'high'
+      ? 'All four pillars rated with High confidence'
+      : confidence === 'moderate'
+        ? 'All four pillars rated; overall confidence is Moderate'
+        : 'All four pillars rated; overall confidence is Limited');
+
   const badgeColor = getBadgeColor();
   const iconName = getIcon();
-  const label = getReliabilityLabel();
-  const description = getConfidenceDescription(reliability);
-  
-  // Size styles
+
   const sizeStyles = {
     small: {
       container: styles.smallContainer,
@@ -97,20 +101,24 @@ export default function ConfidenceBadge({
       description: styles.largeDescription,
     },
   };
-  
+
   const currentSize = sizeStyles[size];
-  
+
   const badgeContent = (
-    <View style={[styles.badge, currentSize.container, { backgroundColor: badgeColor + '20', borderColor: badgeColor }]}>
+    <View
+      style={[
+        styles.badge,
+        currentSize.container,
+        { backgroundColor: badgeColor + '20', borderColor: badgeColor },
+      ]}
+    >
       <Ionicons name={iconName} size={currentSize.icon} color={badgeColor} />
       {showLabel && (
-        <Text style={[currentSize.text, { color: badgeColor }]}>
-          {label}
-        </Text>
+        <Text style={[currentSize.text, { color: badgeColor }]}>{label}</Text>
       )}
     </View>
   );
-  
+
   if (onPress) {
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
@@ -123,7 +131,7 @@ export default function ConfidenceBadge({
       </TouchableOpacity>
     );
   }
-  
+
   return (
     <View>
       {badgeContent}
@@ -141,11 +149,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20, // More oval/pill-shaped
-    borderWidth: 1.5, // Slightly thicker border for better visibility
+    borderRadius: 20,
+    borderWidth: 1.5,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    minWidth: 120, // Ensure consistent width
+    minWidth: 120,
   },
   smallContainer: {
     paddingHorizontal: 10,
@@ -199,11 +207,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-
-
-
-
-
-
-

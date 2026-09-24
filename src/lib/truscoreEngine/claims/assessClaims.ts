@@ -12,7 +12,7 @@ import {
 import { matchAdmittedObservations, getMachineRegisterVersion } from './matchRegister';
 import type {
   AdmittedPacketObservation,
-  BenchmarkCheckStatus,
+  ClaimsBenchmarkCheck,
   ClaimsAssessmentResult,
   ClaimsFiredAdjustment,
   ClaimsNutrientContext,
@@ -30,7 +30,7 @@ export interface AssessClaimsInput {
   /** Certified Organic certification fired (+3). */
   certifiedOrganicFired: boolean;
   /** KTC/BBFAW check statuses for assessment_state and neutral copy. */
-  benchmarkChecks: { source: 'ktc' | 'bbfaw'; status: BenchmarkCheckStatus }[];
+  benchmarkChecks: ClaimsBenchmarkCheck[];
   /** Other certification schemes fired (Fairtrade, MSC, …) — prevents assessed_neutral. */
   otherCertificationFired: boolean;
   /** Expected register version; mismatch fails closed for new recognition. */

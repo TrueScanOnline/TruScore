@@ -1,0 +1,1197 @@
+RVEEL | WAVE 3 | CONSUMER INTERPRETATION & TRUST
+
+Cross-Pillar Rateability, Confidence & NR
+
+Controlling Specification - Body / Planet / Claims / Transparency / Overall
+
+Document status
+
+FOUNDER-APPROVED ARCHITECTURE / IMPLEMENTATION-READY. Consumer Confidence/NR explanation copy is provisional for UAT and must retain the explicit founder-approval prefix until separately approved.
+
+Version
+
+v0.1
+
+Issue date
+
+24 September 2026
+
+Authority
+
+Founders + ChatGPT product methodology / specification
+
+Implementation owner
+
+Cursor - deterministic execution only
+
+Independent assurance
+
+Claude - after implementation and evidence package are coherent
+
+
+
+CONTROL PURPOSEThis specification defines when a pillar or Overall result may be published, how High / Moderate / Limited Confidence is assigned to a Rated result, how NR is handled, how W3-S11 and W3-S26 are repurposed, when contribution opportunities are emitted, and how first-paint/enrichment must behave. It does not reopen approved scoring methodologies or Score Highlights.
+
+
+
+1. Authority, scope and non-scope
+
+This document is the controlling authority for cross-pillar publication eligibility, Confidence, NR, S11/S26 integration and the associated first-paint publication contract. It amends earlier Wave 3 working material only in those areas. Pillar scoring arithmetic and already-locked Highlights remain controlled by their respective specifications.
+
+Priority
+
+Authority
+
+Controls
+
+1
+
+This Cross-Pillar Rateability, Confidence & NR Specification
+
+Rateability, Confidence, NR, Overall publication, S11/S26, contribution-opportunity plumbing, first-paint/refresh and diagnostic additions.
+
+2
+
+Rveel_Wave3_Claims_Controlling_Specification_20260912_v0_2
+
+Claims scoring, Packet Claim Context, certifications/Organic, KTC/BBFAW scoring, Claims assessment truth and Claims-specific safeguards.
+
+3
+
+Rveel_Wave3_Open_v15_Scoring_Methodology_Founder_Locked_20260908_v1_1
+
+Transparency (legacy internal Open) scoring and its ingredient/origins evidence semantics.
+
+4
+
+Rveel_TruScore_Controlling_Specification_Wave2_Final_20260831 + current founder-locked Body/Planet controls
+
+Body and Planet scoring arithmetic and unchanged predecessor logic.
+
+5
+
+Rveel_Wave3_Consolidated_Score_Highlights...v0_5 + L3/pillar commentary controls
+
+S12/S12a/S28, fired-ledger separation, contribution-prompt presentation rules and existing commentary contracts.
+
+6
+
+Rveel_Wave3_Consumer_Interpretation_Trust_Working_Baseline...v0_5
+
+Wave 3 doctrine, S11/S26 disposition, missing-data and contribution principles.
+
+7
+
+Rveel_MVP_Launch_Plan_and_Scope_Baseline_FINAL_20260804_v0_5
+
+MVP scope and launch integrity expectations.
+
+
+
+1.1 In scope
+
+Body, Planet, Claims and Transparency pillar publication eligibility.
+
+High / Moderate / Limited Confidence for Rated pillar results.
+
+Overall publication and Overall Confidence.
+
+NR as the internal not-publishable state and the consumer unrevealed/veiled treatment.
+
+W3-S11 Confidence status rebinding and W3-S26 componentised explanation objects.
+
+Material contribution-opportunity signals; not the Wave 4 contribution UI/workflow.
+
+First-paint, enrichment-settlement and later genuine reassessment behaviour.
+
+S28 diagnostic additions and deterministic UAT.
+
+1.2 Explicit non-scope
+
+No change to Body, Planet, Claims or Transparency scoring weights, thresholds, arithmetic, caps/floors or fired-adjustment eligibility.
+
+No reopening of Packet Claim Context, Claims Highlights, Nutrition Enhancement, About these Additives, S12/S12a/S28 architecture or existing locked commentary.
+
+No final cloak animation, final card hierarchy, final surface consolidation or Wave 5 visual polish.
+
+No implementation of the Claims packet-evidence contribution card/route. Wave 3 prepares the pipe; Wave 4 connects the governed destination.
+
+No percentage Confidence, evidence weighting formula or field-count completeness score.
+
+No synthetic +0 score events to prove assessment completion.
+
+2. Cross-pillar governing doctrine
+
+Every pillar and Overall default internally to NR. The consumer does not see the label “NR”; the score remains unrevealed until its publication gate is met.
+
+Score, Rateability, Confidence, Highlights and S28 are separate layers. None may substitute for another.
+
+Rateability asks whether enough substantive assessment has been completed to reveal a meaningful score.
+
+Confidence applies only after Rateability is cleared and asks how robust the revealed result is given assessment breadth and evidence quality/maturity.
+
+A Rated result receives the Confidence justified by the settled evidence immediately. Limited is the lowest publishable Confidence, not a mandatory first step.
+
+Assessed absence/neutrality may count where the pillar methodology supports it. A fired adjustment is not required to prove assessment.
+
+Score direction does not determine Confidence. A high or low numeric score can carry any permitted Confidence state.
+
+Material unresolved conflict does not create a lower numeric Confidence by itself. A conflicted lane is assessed but unresolved and does not count as a resolved lane for Confidence uplift.
+
+Ordinary OFF/community evidence and primary User Contribution evidence can support publication but do not support High Confidence for MVP. Persistent/corroborated community verification is reserved for post-MVP consideration.
+
+High requires evidence explicitly classified by a governed source mapping as authoritative for the product fact/disclosure being relied upon. Runtime must never infer authority from a source name, URL or brand.
+
+If any required pillar is NR, Overall is NR. Remaining pillars are not renormalised and an internal base 15 is never carried into a public Overall result.
+
+Overall Confidence is the lowest Confidence among the four Rated pillar results.
+
+MVP SIMPLICITY RULEDo not create an evidence percentage, weighted Confidence formula or universal “assessment completeness” score. Use only the deterministic pillar lanes and source-quality rules below.
+
+
+
+3. Common publication states and source-quality contract
+
+State
+
+Consumer meaning
+
+Score visible?
+
+Confidence visible?
+
+checking
+
+Ordinary initial retrieval/enrichment is still in progress.
+
+No
+
+No
+
+nr
+
+Settled evidence does not clear the pillar/Overall publication gate.
+
+No
+
+No
+
+rated
+
+Settled evidence clears the publication gate.
+
+Yes
+
+High / Moderate / Limited
+
+
+
+NR remains the canonical internal label. For interim Wave 3 UAT rendering, an NR score must be non-numeric (for example an em dash or suppressed value). Do not blur or mask the internal calculated/default number. Final reveal/cloak styling is deferred.
+
+3.1 Minimal source-quality classes
+
+Class
+
+Meaning
+
+Confidence consequence
+
+authoritative
+
+Explicitly founder/governance-classified as authoritative and traceable for the specific product fact or disclosure.
+
+May support High where the pillar breadth rule also permits High.
+
+community_or_user
+
+OFF/community-sourced data or primary User Contribution, including strong traceable packet contribution.
+
+May support Rated Limited/Moderate; no High for MVP.
+
+other_or_unknown
+
+Derived/rescue/legacy/unknown provenance unless a controlling rule explicitly maps it otherwise.
+
+Can satisfy a lane when the scoring methodology says it does, but does not independently create High.
+
+
+
+KTC and BBFAW are finite governed benchmark assets for the Claims benchmark lane. Their successful governed checks count as substantive assessment regardless of whether a scoring hit occurs. Retailer/manufacturer/regulator/GS1-like source names must not be auto-promoted to “authoritative”; an explicit governed mapping is required.
+
+4. Body publication and Confidence
+
+Body has two Rateability/Confidence lanes. Governed additives remain scoring-only for this purpose.
+
+Lane
+
+Resolved when
+
+Nutrition
+
+A usable governed Nutri-Score A-E is available OR the approved Whole Produce / Nutri-Score-equivalent rescue applies.
+
+Processing
+
+A usable governed NOVA 1-4 assessment is available OR the approved inferred NOVA 1 rescue applies.
+
+
+
+Nutrition
+
+Processing
+
+Body publication
+
+Confidence
+
+No
+
+No
+
+NR
+
+—
+
+Yes
+
+No
+
+Rated
+
+Limited
+
+No
+
+Yes
+
+Rated
+
+Limited
+
+Yes
+
+Yes
+
+Rated
+
+Moderate
+
+Yes - authoritative
+
+Yes - authoritative
+
+Rated
+
+High
+
+
+
+Whole Produce occupies the Nutrition lane; it does not require a separate Rateability exception.
+
+Inferred NOVA 1 rescue occupies the Processing lane; it does not require a separate Rateability exception.
+
+Body additives can change the numeric Body score whenever the scoring methodology permits, but their presence, absence, count or evidence quality does not alter Body Rateability or Confidence.
+
+Ordinary OFF/community and primary User Contribution evidence means the two-lane state resolves Moderate, not High.
+
+An unrecognised/invalid Nutri-Score or unresolved NOVA value does not count as a resolved lane merely because a field is populated.
+
+5. Planet publication and Confidence
+
+Settled Planet assessment
+
+Publication
+
+Confidence
+
+No usable broad environmental assessment and no scored governed packaging fallback
+
+NR
+
+—
+
+Governed AU/NZ packaging fallback scores +1 or +2
+
+Rated
+
+Limited
+
+Usable current OFF Green-Score / environmental A-E route
+
+Rated
+
+Moderate
+
+Future governed broad environmental route explicitly supported by authoritative, traceable source/method profile
+
+Rated
+
+High eligible
+
+
+
+Packaging is a legitimate but narrow fallback assessment. It does not need to coexist with Green-Score.
+
+The current OFF Green-Score route resolves Moderate because of the evidence/method profile itself. Do not implement a separate hard-coded “Planet max Moderate” rule.
+
+Current methodology limitations include OFF/community input provenance and EU/France-centric transport/logistics assumptions that may be poorly representative for some AU/NZ local-product contexts.
+
+Planet missing-evidence states do not create an MVP User Contribution CTA because packaging is not an active contribution domain and missing Green-Score is not directly user-fixable through the approved MVP routes.
+
+6. Claims publication and Confidence
+
+Claims uses two substantive publication lanes. Lane assessment is separate from the fired-adjustment ledger and must not be inferred from score movement.
+
+Lane
+
+Counts as assessed when
+
+Packet
+
+The governed packet claims/certifications assessment has been substantively completed. This includes: a scored packet claim/certification; a governed packet observation that legitimately produces no adjustment; or an admissible assessment establishing that no governed packet claim/certification is present.
+
+Benchmark
+
+Both KTC and BBFAW governed checks reach successful terminal outcomes against the finite founder-approved assets, regardless of hit/no-hit. Failed, pending, unresolved or incomplete checks do not count.
+
+
+
+Packet lane
+
+Benchmark lane
+
+Claims publication
+
+Confidence
+
+No
+
+No
+
+NR
+
+—
+
+Yes
+
+No
+
+Rated
+
+Limited
+
+No
+
+Yes
+
+Rated
+
+Limited
+
+Yes
+
+Yes
+
+Rated
+
+Moderate
+
+Yes - authoritative packet evidence
+
+Yes - successfully governed
+
+Rated
+
+High eligible
+
+
+
+A lane counts because it was successfully assessed, not because points fired. No synthetic +0 adjustment may be created.
+
+A single assessed lane may reveal Claims at Limited, including a 15/25 result where no genuine scoring adjustment fired.
+
+Both lanes assessed move Claims to Moderate even where one or both lanes produced no scoring hit.
+
+A User Contribution may establish packet evidence, including that no governed packet claim/certification is present. For MVP it supports no higher than Moderate.
+
+Persistent/corroborated user verification may be capable of higher maturity post-MVP; this is reserved and must not be implemented now.
+
+The existing Claims v0.2 assessment-state truth is preserved for scoring diagnostics. Cross-pillar publication must consume explicit Packet/Benchmark lane truth rather than forcing zero-adjustment cases into a fired-ledger state.
+
+7. Transparency publication and Confidence
+
+Consumer label: Transparency. Legacy internal identifiers may continue to use Open where already controlled.
+
+Lane
+
+Resolved when
+
+Ingredient clarity
+
+Governably assessable ingredient wording has been assessed under Open v15, whether it produces zero governed flags or one/more scoring flags.
+
+Origins disclosure
+
+A governed Origins disclosure outcome is resolved (complete, partial, qualified or verified packet gap). Rveel/OFF insufficient evidence is unresolved/unavailable. Conflicting origin evidence is assessed but unresolved.
+
+
+
+Ingredient lane
+
+Origins lane
+
+Transparency publication
+
+Confidence
+
+No
+
+No resolved outcome
+
+NR
+
+—
+
+Yes
+
+Unavailable or conflicted
+
+Rated
+
+Limited
+
+No
+
+Resolved
+
+Rated
+
+Limited
+
+Yes
+
+Resolved
+
+Rated
+
+Moderate
+
+Yes - authoritative
+
+Resolved - authoritative
+
+Rated
+
+High
+
+
+
+An attempted-but-conflicted Origins lane remains “assessed but unresolved”; it does not count as the second resolved lane for Moderate.
+
+If Origins is conflicted but Ingredient clarity is resolved, Transparency remains Rated Limited and S26 explains the conflict.
+
+If the only attempted lane is conflicted/unresolved and no other lane is resolved, Transparency remains NR.
+
+Authority must relate to the disclosure being scored. Rveel knowing a fact from another database does not by itself establish that the product made that fact knowable.
+
+8. Overall result (currently labelled TruScore)
+
+Consumer naming of the Overall result is not controlled here. The current TruScore label may remain pending later surface/naming decisions.
+
+Pillar states
+
+Overall publication
+
+Overall Confidence
+
+Any one or more pillars NR
+
+NR / unrevealed
+
+—
+
+All Rated; at least one Limited
+
+Rated
+
+Limited
+
+All Rated; none Limited; at least one Moderate
+
+Rated
+
+Moderate
+
+All four High
+
+Rated
+
+High
+
+
+
+Overall Confidence is the minimum/lowest pillar Confidence; do not average or weight Confidence.
+
+Do not renormalise the Overall score over the remaining Rated pillars.
+
+Do not retain an NR pillar at internal base 15 for public Overall arithmetic/presentation.
+
+Overall has its own S26 explanation object in both Rated and NR states; it is not reconstructed by the UI from pillar prose.
+
+9. W3-S11 and W3-S26 component contract
+
+Surface
+
+Disposition
+
+Normative role
+
+W3-S11 Confidence
+
+KEEP / REBUILD LOGIC
+
+Reusable compact Confidence state for Rated results: High / Moderate / Limited. The legacy “High confidence” derivation must not survive unless it independently maps exactly to this specification.
+
+W3-S26 Data Limitations
+
+KEEP PURPOSE / COMPONENTISE / INTEGRATE
+
+Separate Body, Planet, Claims, Transparency and Overall explanation object. Rated: explains Confidence/material limitation. NR: explains why score remains unrevealed and, where actionable, carries one contribution opportunity.
+
+NR veil / unrevealed state
+
+NEW PUBLICATION STATE
+
+Suppress numeric consumer score. No Confidence label. Final visual reveal/cloak effect deferred; interim UAT must be non-numeric.
+
+
+
+SURFACE CONSOLIDATIONFinal surface consolidation is not a dependency for this implementation. The state objects must be reusable and minimally rendered for UAT now; later Wave 3 surface consolidation / Wave 5 polish may reposition or restyle them without changing methodology or plumbing.
+
+
+
+10. Contribution-opportunity plumbing
+
+Pillar
+
+Material trigger
+
+Contribution domain
+
+Wave 3 route behaviour
+
+Body
+
+Missing usable Nutrition lane and/or actionable Processing evidence
+
+ingredients / nutrition
+
+Emit one coherent opportunity. Render action only if an existing governed destination can collect the required evidence.
+
+Planet
+
+Planet Rateability/Confidence gap
+
+none
+
+No contribution CTA from this package.
+
+Claims
+
+Packet lane incomplete/unassessed
+
+claims packet evidence / certifications
+
+Emit contribution opportunity metadata, but route is FUTURE/NOT LIVE until Wave 4 implements the governed Claims packet-evidence contribution journey. No dead CTA/card.
+
+Transparency
+
+Ingredient lane missing and/or Origins lane missing
+
+ingredients and/or Product Origins
+
+Emit one coherent opportunity; route to governed live destination if it exists. Conflict/dispute routing renders only when a governed correction/verification destination exists.
+
+Overall
+
+One or more pillar gaps
+
+none at Overall
+
+No separate Overall contribution workflow. Overall S26 points to unrevealed pillar(s); the actionable route belongs to the relevant product/pillar evidence flow.
+
+
+
+Never ask a user generically to “improve Confidence”. The invitation must correspond to a specific material evidence gap that an approved contribution route can actually address. Evidence-gap state must exist independently of whether the contribution UI is live.
+
+11. Provisional S26 consumer explanation contract
+
+PROVISIONAL COPY CONTROLEvery explanation string in this section must render with the literal prefix “(Awaiting founder approval)” for Wave 3 UAT. The High / Moderate / Limited label itself does not carry the prefix. The prefix may be removed only by a later founder-approved editorial update; removing/editing copy must not change the state logic.
+
+
+
+11.1 Body
+
+State / code
+
+Provisional UAT explanation
+
+BODY_NR
+
+(Awaiting founder approval) We do not yet have a usable nutritional-quality assessment or food-processing assessment, so we cannot reveal Body.
+
+BODY_LIMITED_NUTRITION_ONLY
+
+(Awaiting founder approval) We could assess nutritional quality, but we do not yet have a usable food-processing assessment.
+
+BODY_LIMITED_PROCESSING_ONLY
+
+(Awaiting founder approval) We could assess food processing, but we do not yet have a usable nutritional-quality assessment.
+
+BODY_MODERATE
+
+(Awaiting founder approval) We could assess both nutritional quality and food processing. The available product evidence supports a Moderate-confidence result.
+
+BODY_HIGH
+
+(Awaiting founder approval) We could assess both nutritional quality and food processing using authoritative, traceable product evidence.
+
+
+
+11.2 Planet
+
+State / code
+
+Provisional UAT explanation
+
+PLANET_NR
+
+(Awaiting founder approval) We do not yet have a usable environmental assessment or qualifying packaging assessment, so we cannot reveal Planet.
+
+PLANET_LIMITED_PACKAGING
+
+(Awaiting founder approval) We could assess this product’s primary packaging, but a broader environmental assessment was not available.
+
+PLANET_MODERATE
+
+(Awaiting founder approval) A broader environmental assessment was available for this product, but the current source data and methodology have limitations, so confidence is Moderate.
+
+PLANET_HIGH
+
+(Awaiting founder approval) A broader environmental assessment was available and is supported by authoritative, traceable product evidence.
+
+
+
+11.3 Claims
+
+State / code
+
+Provisional UAT explanation
+
+CLAIMS_NR
+
+(Awaiting founder approval) We do not yet have enough packet evidence or completed benchmark checks to reveal Claims.
+
+CLAIMS_LIMITED_PACKET_ONLY
+
+(Awaiting founder approval) We assessed packet claims and certifications, but the governed company benchmark checks have not both been successfully completed.
+
+CLAIMS_LIMITED_BENCHMARK_ONLY
+
+(Awaiting founder approval) We completed the governed company benchmark checks, but packet claims and certifications have not yet been substantively assessed.
+
+CLAIMS_MODERATE
+
+(Awaiting founder approval) We assessed both packet claims and certifications and the governed company benchmark checks. The available evidence supports a Moderate-confidence result.
+
+CLAIMS_HIGH
+
+(Awaiting founder approval) We assessed both packet claims and certifications and the governed company benchmark checks using authoritative, traceable evidence.
+
+
+
+11.4 Transparency
+
+State / code
+
+Provisional UAT explanation
+
+TRANSPARENCY_NR
+
+(Awaiting founder approval) We do not yet have a resolved ingredient-wording assessment or origin-disclosure assessment, so we cannot reveal Transparency.
+
+TRANSPARENCY_LIMITED_INGREDIENT_ONLY
+
+(Awaiting founder approval) We could assess ingredient-wording clarity, but origin disclosure has not yet been resolved.
+
+TRANSPARENCY_LIMITED_ORIGINS_ONLY
+
+(Awaiting founder approval) We could assess origin disclosure, but ingredient-wording clarity has not yet been resolved.
+
+TRANSPARENCY_LIMITED_ORIGINS_CONFLICT
+
+(Awaiting founder approval) We could assess ingredient-wording clarity, but the available origin evidence conflicts and is not yet resolved.
+
+TRANSPARENCY_MODERATE
+
+(Awaiting founder approval) We resolved both ingredient-wording clarity and origin disclosure. The available evidence supports a Moderate-confidence result.
+
+TRANSPARENCY_HIGH
+
+(Awaiting founder approval) We resolved both ingredient-wording clarity and origin disclosure using authoritative, traceable disclosure evidence.
+
+
+
+11.5 Overall
+
+State / code
+
+Provisional UAT explanation
+
+OVERALL_NR
+
+(Awaiting founder approval) We cannot reveal the overall result until all four pillars can be rated. Check the unrevealed pillar result for what is still missing.
+
+OVERALL_LIMITED
+
+(Awaiting founder approval) All four pillar scores are available. Overall confidence is Limited because at least one pillar has Limited confidence.
+
+OVERALL_MODERATE
+
+(Awaiting founder approval) All four pillar scores are available. No pillar is Limited, and at least one pillar has Moderate confidence, so overall confidence is Moderate.
+
+OVERALL_HIGH
+
+(Awaiting founder approval) All four pillar scores are supported by High-confidence assessments.
+
+
+
+12. First-paint and refresh contract
+
+On initial scan/retrieval, use the existing consumer loading state “Seeing what we can find…”. All pillar and Overall numeric scores remain unrevealed; no Confidence label or final S26 explanation renders.
+
+The scoring/evidence layer may calculate internally during enrichment, but consumer publication waits for the ordinary initial retrieval/enrichment cycle to settle.
+
+At settlement, publish one consolidated snapshot. Each pillar independently resolves to Rated (numeric score + Confidence + S26) or NR (non-numeric/unrevealed + S26; no Confidence).
+
+After all pillar publication states are settled, Overall resolves: all four Rated -> numeric Overall + Overall Confidence + Overall S26; any NR -> unrevealed Overall + Overall S26; no Overall Confidence.
+
+Routine first-cycle enrichment must not produce Checking -> NR -> Rated milliseconds later, nor flash internal 15/intermediate score/legacy Confidence values.
+
+Use an existing explicit merge/completion boundary where available. Do not invent a timer. If no deterministic completion boundary exists, Cursor must stop that affected first-paint path and report the exact gap before inventing behaviour.
+
+A later genuine reassessment may change NR/Rateability, score or Confidence when genuinely new evidence is admitted (for example a completed contribution, explicit refresh/new scan, or governed later evidence update).
+
+Final animation, “Updating…” treatment, cloak effect and layout remain deferred. Wave 3 only requires accurate state plumbing and minimal UAT-visible rendering.
+
+13. Normative semantic data contract
+
+The following is a semantic contract. Cursor may map to existing repository types/names where necessary, but must provide a one-to-one mapping and may not change the meanings.
+
+Field
+
+Allowed / required semantics
+
+publicationStatus
+
+checking | nr | rated
+
+internalScore
+
+Existing scorer numeric truth retained for diagnostics/arithmetic. Never exposed as consumer score while publicationStatus != rated.
+
+publishedScore
+
+number only when rated; null/absent when checking or nr.
+
+confidence
+
+limited | moderate | high only when rated; null/absent otherwise.
+
+assessmentLanes
+
+Per-pillar lane statuses needed by this specification. Must distinguish resolved, unresolved/conflicted and unassessed where applicable.
+
+sourceQuality
+
+authoritative | community_or_user | other_or_unknown, derived only from explicit governed provenance mapping; no runtime guessing.
+
+s26.code
+
+One of the governed explanation codes in section 11.
+
+s26.copyStatus
+
+provisional_awaiting_founder_approval for this release.
+
+s26.contributionOpportunity
+
+Optional structured opportunity: domain, material=true/false, routeStatus=live|future|none, routeKey only when governed/live.
+
+diagnostic
+
+S28-compatible lane states, rateability result, Confidence, source-quality/provenance, limitation code and original fired-adjustment ledger/provenance.
+
+
+
+13.1 Recommended pillar lane state values
+
+Pillar
+
+Lane
+
+Required states
+
+Body
+
+nutrition / processing
+
+resolved | unassessed
+
+Planet
+
+broad_environment / packaging_fallback
+
+resolved | unassessed (fallback scored state is narrow but resolved)
+
+Claims
+
+packet / benchmark
+
+assessed | unassessed_or_incomplete; benchmark success does not require hit
+
+Transparency
+
+ingredient_clarity / origins
+
+resolved | unassessed; Origins also supports assessed_unresolved_conflict
+
+
+
+14. S28 diagnostic truth additions
+
+Preserve the existing exhaustive fired-adjustment ledger, exact points and provenance unchanged.
+
+Add the settled publicationStatus and publishedScore/null state for each pillar and Overall.
+
+Add the exact lane states used by the Rateability/Confidence decision.
+
+Add final Confidence and the rule/reason code that produced it.
+
+Add sourceQuality/provenance inputs used for any High uplift or Moderate limitation.
+
+Add S26 code and contributionOpportunity metadata, including routeStatus.
+
+For Claims, retain scoring assessment-state truth but also show Packet/Benchmark publication-lane truth so zero-adjustment assessments remain visible without synthetic fired events.
+
+S28 remains founder/UAT-only and must not become discoverable through ordinary-user launch settings.
+
+15. Deterministic decision procedure
+
+Wait for the initial assessment settlement boundary; until then publicationStatus=checking.
+
+Consume each pillar scorer’s existing approved arithmetic and evidence metadata without changing scoring.
+
+Resolve the pillar-specific assessment lanes exactly as sections 4-7 define.
+
+Apply the pillar publication gate. If it fails, set publicationStatus=nr, suppress publishedScore/confidence, resolve the NR S26 code and any actionable contribution opportunity.
+
+If the gate passes, set publicationStatus=rated and publishedScore to the existing approved pillar score.
+
+Assign the structural Confidence from the resolved lanes/fallback route.
+
+Apply only the explicit authoritative-source High uplift where permitted. OFF/community/User Contribution never create High in MVP; do not downgrade below the structural Confidence merely because the source is community/user unless a pillar rule expressly requires it.
+
+Resolve the exact S26 explanation code and contribution opportunity metadata.
+
+After all four pillar states settle, apply the Overall any-NR gate and lowest-Confidence rule.
+
+Publish one consolidated consumer snapshot and append the diagnostic truth to S28.
+
+16. UAT acceptance matrix
+
+ID
+
+Fixture
+
+Expected
+
+G-01
+
+Initial scan in progress
+
+All scores non-numeric/unrevealed; no Confidence; “Seeing what we can find…” only.
+
+G-02
+
+Initial enrichment returns intermediate base 15 before completion
+
+15 never appears publicly before settlement.
+
+B-01
+
+No Nutri/Whole Produce lane; no NOVA/rescue lane; additives may or may not fire internally
+
+Body NR; additives do not unlock publication.
+
+B-02
+
+Nutrition lane only
+
+Body Rated Limited.
+
+B-03
+
+Processing lane only
+
+Body Rated Limited.
+
+B-04
+
+Both lanes from OFF/community evidence
+
+Body Rated Moderate.
+
+B-05
+
+Both lanes explicitly authoritative
+
+Body Rated High.
+
+B-06
+
+Whole Produce rescue only
+
+Body Rated Limited.
+
+B-07
+
+Whole Produce rescue + inferred NOVA 1 rescue
+
+Body Rated Moderate unless both lane provenance is explicitly governed authoritative.
+
+P-01
+
+No Green-Score and no +1/+2 packaging fallback
+
+Planet NR.
+
+P-02
+
+Packaging fallback +1 or +2
+
+Planet Rated Limited.
+
+P-03
+
+Current OFF Green-Score A-E
+
+Planet Rated Moderate.
+
+C-01
+
+Neither Packet nor Benchmark lane assessed
+
+Claims NR.
+
+C-02
+
+Packet lane assessed; no fired adjustment; benchmark incomplete
+
+Claims Rated 15 Limited; no synthetic +0.
+
+C-03
+
+Benchmark lane successfully checked; no hit; packet unassessed
+
+Claims Rated 15 Limited.
+
+C-04
+
+Packet scored/non-scoring assessed + KTC and BBFAW successful
+
+Claims Rated Moderate.
+
+C-05
+
+KTC/BBFAW fires; User Contribution establishes no packet claim/certification
+
+Claims Rated Moderate; contribution source does not create High.
+
+C-06
+
+Both lanes assessed; one benchmark check failed/pending
+
+Benchmark lane not assessed; Claims Limited if Packet lane assessed, otherwise NR.
+
+T-01
+
+Ingredient clarity resolved only (including zero governed flags)
+
+Transparency Rated Limited.
+
+T-02
+
+Origins resolved only
+
+Transparency Rated Limited.
+
+T-03
+
+Both lanes resolved from ordinary OFF/community evidence
+
+Transparency Rated Moderate.
+
+T-04
+
+Ingredient resolved; Origins assessed but conflicted
+
+Transparency Rated Limited; conflict S26 copy.
+
+T-05
+
+Origins conflict only; ingredient unavailable
+
+Transparency NR.
+
+T-06
+
+Both lanes explicitly authoritative for disclosure
+
+Transparency Rated High.
+
+O-01
+
+Any pillar NR
+
+Overall NR/unrevealed; no Overall Confidence; Overall S26 present.
+
+O-02
+
+All Rated with one Limited
+
+Overall Rated Limited.
+
+O-03
+
+All Rated; none Limited; at least one Moderate
+
+Overall Rated Moderate.
+
+O-04
+
+All four High
+
+Overall Rated High.
+
+S-01
+
+Claims packet contribution opportunity but Wave 4 route absent
+
+S26 limitation present; opportunity routeStatus=future; no dead CTA/card.
+
+S-02
+
+Rated pillar
+
+S11 Confidence state and pillar S26 explanation both present in minimal UAT rendering.
+
+S-03
+
+NR pillar
+
+No Confidence label; non-numeric score; pillar S26 explanation present.
+
+R-01
+
+Genuine later admitted evidence clears missing lane
+
+A new governed reassessment may legitimately change NR -> Rated or Confidence; change is traceable in diagnostics.
+
+
+
+17. Negative assurance - must not happen
+
+Do not infer Rateability from score movement or non-base arithmetic.
+
+Do not display NR as “very low confidence”.
+
+Do not display internal/default 15 while NR or checking.
+
+Do not create synthetic +0 fired adjustments.
+
+Do not let Body additives affect Body Rateability/Confidence.
+
+Do not require packaging alongside Green-Score.
+
+Do not require Claims packet/benchmark hits for a lane to count as assessed.
+
+Do not count failed/pending KTC/BBFAW checks as a completed benchmark lane.
+
+Do not count conflicted Origins as a resolved Transparency lane.
+
+Do not average, weight or renormalise Overall Confidence.
+
+Do not infer source authority from URL, source name, retailer/manufacturer string or domain.
+
+Do not show a Claims contribution action until the governed Wave 4 destination is live.
+
+Do not redesign the final result surface under this package.
+
+Do not use S26 copy as a Score Highlight or modify S12/S12a promotion.
+
+Do not make S28 available to ordinary release users.
+
+18. Implementation dependency and staged consequences
+
+The approved Claims Rescue implementation is a functional dependency for final cross-pillar Claims plumbing because this package consumes the revised Claims evidence/assessment outputs. If the target branch does not yet contain the approved Claims Rescue implementation, Cursor must stop the Claims binding portion and report the dependency rather than re-create Claims logic here.
+
+About these Additives enhancement is not a dependency: additives do not determine Body Rateability or Confidence.
+
+Final surface consolidation is not a dependency. Minimal temporary rendering is required only so founders/Claude can UAT the state plumbing.
+
+Wave 4 will connect the future Claims packet contribution destination and may later define persistent/corroborated verification maturity. This package must expose the necessary opportunity/state fields now but must not implement that workflow.
+
+Wave 5 may redesign placement, styling, reveal animation and final consumer hierarchy without changing these states/rules.
+
+Appendix A - Source register
+
+Artefact
+
+Role
+
+Rveel_Wave3_Claims_Controlling_Specification_20260912_v0_2.docx
+
+Prevailing Claims scoring and assessment source; explicitly deferred cross-pillar Confidence/NR to this package.
+
+Rveel_Wave3_Open_v15_Scoring_Methodology_Founder_Locked_20260908_v1_1.docx
+
+Prevailing Transparency/Open scoring and unresolved Origins semantics.
+
+Rveel_TruScore_Controlling_Specification_Wave2_Final_20260831.xlsx
+
+Predecessor Body/Planet and unchanged scoring baseline, subject to later founder-locked amendments.
+
+Rveel_Wave3_Consolidated_Score_Highlights_Controlling_Specification_S12_S12a_S28_with_S27_Context_20260905_v0_5.docx
+
+One-way fired-ledger architecture, contextual contribution prompts and S28 separation.
+
+Rveel_Wave3_Body_Score_Highlights_Founder_Locked_Commentary_L3_ID_Contract_S27_Context_20260905_v0_6.docx
+
+Body rescue and diagnostic distinctions.
+
+Rveel_Wave3_Consumer_Interpretation_Trust_Working_Baseline_Decision_Register_20260901_v0_5.docx
+
+S11/S26 disposition, Confidence/missing-data and contribution doctrine.
+
+Rveel_MVP_Launch_Plan_and_Scope_Baseline_FINAL_20260804_v0_5.docx
+
+MVP scope, honesty/missing-data expectations and staged delivery boundaries.
+
+
+
+Appendix B - Founder decision status
+
+Founder-approved and implementation-ready: all Rateability gates, pillar Confidence rules, Overall rule, S11/S26 roles, contribution trigger logic, Claims future-route plumbing, first-paint principles and the decision that final surface consolidation is not a dependency.
+
+Provisional pending founder editorial approval: the exact S26 consumer explanation strings in section 11. They are intentionally implementation-ready for UAT only and must retain the literal “(Awaiting founder approval)” prefix until separately approved.

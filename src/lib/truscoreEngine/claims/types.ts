@@ -16,6 +16,27 @@ export type BenchmarkCheckStatus =
   | 'adverse'
   | 'failed';
 
+/**
+ * Distinguishes overloaded `not_applicable` outcomes for Rateability publication.
+ * Only `completed_no_applicable_result` counts as a successfully assessed benchmark check.
+ * Bare `not_applicable` without this field must not be treated as completed (fail closed).
+ */
+export type BenchmarkNotApplicableResolution =
+  | 'completed_no_applicable_result'
+  | 'skipped_or_unavailable';
+
+export type ClaimsBenchmarkCheck = {
+  source: 'ktc' | 'bbfaw';
+  status: BenchmarkCheckStatus;
+  /**
+   * Required semantics when status is `not_applicable`.
+   * `completed_no_applicable_result` — governed check ran and established no applicable result
+   * for the resolved entity (counts as assessed for Rateability).
+   * `skipped_or_unavailable` — check was not executed / unresolved / unavailable (does not count).
+   */
+  not_applicable_resolution?: BenchmarkNotApplicableResolution;
+};
+
 export type ClaimsCanonicalAdjustmentId =
   | 'claims.packet_context.positive.v1'
   | 'claims.packet_context.adverse.v1'
@@ -128,7 +149,7 @@ export interface ClaimsAssessmentResult {
     display_text: string;
   }[];
   nutrient_context: ClaimsNutrientContext | null;
-  benchmark_checks: { source: 'ktc' | 'bbfaw'; status: BenchmarkCheckStatus }[];
+  benchmark_checks: ClaimsBenchmarkCheck[];
   packet_context_points: 1 | -3 | 0;
   organic_claim_only_points: 0 | 1;
   fired_adjustments: ClaimsFiredAdjustment[];

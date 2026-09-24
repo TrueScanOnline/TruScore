@@ -22,6 +22,13 @@ interface ManufacturingCountryModalProps {
   onSubmit: (country: string, hasImportedIngredients?: boolean) => Promise<void>;
   barcode: string;
   productName?: string;
+  /**
+   * Optional prefill from Rateability Origins contribution opportunity —
+   * structured origins_tags country candidate for validate/correct (not a blank start).
+   */
+  initialCountry?: string | null;
+  /** Conflicting free-text Origins preserved as context when present. */
+  conflictingFreeTextOrigins?: string | null;
 }
 
 export default function ManufacturingCountryModal({
@@ -30,6 +37,8 @@ export default function ManufacturingCountryModal({
   onSubmit,
   barcode,
   productName,
+  initialCountry,
+  conflictingFreeTextOrigins,
 }: ManufacturingCountryModalProps) {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
@@ -60,24 +69,26 @@ export default function ManufacturingCountryModal({
     }
   }, [t]);
 
-  // Reset state when modal opens - only once per open
+  // Reset state when modal opens - only once per open; prefill structured candidate when provided
   useEffect(() => {
     if (visible && !hasInitializedRef.current) {
-      // Reset to step 1 and clear selection when modal opens
       logger.debug('[ManufacturingCountryModal] Modal opened - resetting state');
       setStep(1);
-      setSelectedCountry(null);
+      const prefilled =
+        initialCountry && typeof initialCountry === 'string'
+          ? findCountryByName(initialCountry.trim()) ?? null
+          : null;
+      setSelectedCountry(prefilled);
       setHasImportedIngredients(false);
       setSubmitting(false);
       isClosingRef.current = false;
       hasInitializedRef.current = true;
     } else if (!visible) {
-      // Reset initialization flag when modal closes
       logger.debug('[ManufacturingCountryModal] Modal closed - resetting flags');
       hasInitializedRef.current = false;
       isClosingRef.current = false;
     }
-  }, [visible]);
+  }, [visible, initialCountry]);
 
   // Debug: Log step changes and scroll to top when step changes
   useEffect(() => {
@@ -266,6 +277,16 @@ export default function ManufacturingCountryModal({
                     {getTranslation('manufacturingCountry.instructionText',
                       'Look at the product packaging or label. Find text that says "Product of [Country]" or "Made in [Country]".')}
                   </Text>
+                  {initialCountry ? (
+                    <Text style={[styles.instructionText, { color: colors.text, marginTop: 8 }]}>
+                      Current structured origin on file: {initialCountry}. Please validate or correct it.
+                    </Text>
+                  ) : null}
+                  {conflictingFreeTextOrigins ? (
+                    <Text style={[styles.instructionText, { color: colors.textSecondary, marginTop: 4 }]}>
+                      Conflicting free-text origin also on file: “{conflictingFreeTextOrigins}”.
+                    </Text>
+                  ) : null}
                 </View>
 
                 <View style={[styles.exampleCard, { backgroundColor: colors.card, borderColor: colors.border }]}>

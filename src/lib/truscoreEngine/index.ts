@@ -28,6 +28,7 @@ import { calculateBodyPillar, BodyPillarResult } from './pillars/bodyPillar';
 import { calculatePlanetPillar, PlanetPillarResult } from './pillars/planetPillar';
 import { calculateEthicsPillar, EthicsPillarResult } from './pillars/ethicsPillar';
 import { calculateOpenPillar, OpenPillarResult } from './pillars/openPillar';
+import { settleCrossPillarPublication } from '../rateability';
 
 export interface Insight {
   type: 'geopolitical' | 'ethical' | 'environmental';
@@ -49,12 +50,20 @@ export type TruScoreScoringContext = {
    * Pending evidence must not be passed here.
    */
   promotedContributionEvidence?: import('../../contributions/types').ContributionEvidence[];
+  /**
+   * Wave 3 Rateability: when false, publicationStatus stays `checking` (first-paint barrier).
+   * Defaults to true for engine/diagnostic settlement of a complete product snapshot.
+   */
+  publicationSettled?: boolean;
+  /** Explicit authoritative lane overrides — never inferred from URL/source name. */
+  authoritativeLaneOverrides?: import('../rateability').AuthoritativeLaneOverrides;
 };
 
 export interface TruScoreResult {
   /**
    * Overall TruScore 0–100, or null when scoring is unavailable / non-assessment
    * (technical calculation failure — never a substantive numeric score).
+   * This remains internal scorer arithmetic; consumer reveal uses `publication.overall.publishedScore`.
    */
   truscore: number | null;
   breakdown: {
@@ -78,6 +87,11 @@ export interface TruScoreResult {
   };
   /** Full analysis (fetch trace + per-pillar source attribution). Built when pillarDetails exist. */
   analysis?: TruScoreAnalysis;
+  /**
+   * Wave 3 Cross-Pillar Rateability / Confidence / NR publication snapshot.
+   * Consumer surfaces must use publishedScore/confidence/s26 — never internalScore while checking/nr.
+   */
+  publication?: import('../rateability').CrossPillarPublicationSnapshot;
 }
 
 /** Identifiable non-assessment result for technical calculation failures. */
@@ -239,6 +253,16 @@ export function calculateTruScore(
         ethics: ethicsResult,
         open: openResult,
       },
+      publication: settleCrossPillarPublication({
+        product: scoringProduct,
+        body: bodyResult,
+        planet: planetResult,
+        ethics: ethicsResult,
+        open: openResult,
+        overallInternalScore: truscore,
+        settled: scoringContext?.publicationSettled !== false,
+        authoritative: scoringContext?.authoritativeLaneOverrides,
+      }),
     };
     result.analysis = buildTruScoreAnalysis(scoringProduct, result) ?? undefined;
 
@@ -412,6 +436,7 @@ export function buildTruScoreAnalysis(
       Open: toPillarAnalysis('Open', pd.open),
     },
     ...(claimsAssessment ? { claimsAssessment } : {}),
+    ...(result.publication ? { publication: result.publication } : {}),
     generatedAt: Date.now(),
   };
   return analysis;
