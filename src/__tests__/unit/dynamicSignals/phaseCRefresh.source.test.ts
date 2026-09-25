@@ -120,18 +120,21 @@ describe('Phase C Dynamic Signals source refresh', () => {
     }
   });
 
-  it('Mon Sire AU/NZ targets remain market-separated exact scopes', () => {
+  it('Mon Sire AU/NZ targets remain market-separated product scopes', () => {
     const au = targets.find((t) => t.signal_id === 'SIG-SR-AU-008');
     const nz = targets.find((t) => t.signal_id === 'SIG-SR-NZ-006');
     expect(au).toBeDefined();
     expect(nz).toBeDefined();
     expect(au!.market_key).toBe('AU');
     expect(nz!.market_key).toBe('NZ');
+    expect(au!.target_type).toBe('product');
+    expect(nz!.target_type).toBe('product_family');
     expect(au!.propagation_mode).toBe('exact_only');
-    expect(au!.canonical_target_id ?? '').toBe('');
-    expect(au!.resolution_status).toBe('needs_review');
-    // NZ may resolve to NZ-only family — must not share AU canonical
-    expect(nz!.canonical_target_id).not.toBe(au!.canonical_target_id || 'P0009');
+    expect(nz!.propagation_mode).toBe('family_members');
+    // Distinct product-scope anchors — never share a cross-market canonical
+    expect(au!.canonical_target_id).toBeTruthy();
+    expect(nz!.canonical_target_id).toBeTruthy();
+    expect(nz!.canonical_target_id).not.toBe(au!.canonical_target_id);
     expect((nz!.scope_review_summary ?? '').toLowerCase()).toMatch(/never cross|nz-only|sabato/);
     expect((au!.scope_review_summary ?? '').toLowerCase()).toMatch(/au-only|must not cross|foodland/);
   });

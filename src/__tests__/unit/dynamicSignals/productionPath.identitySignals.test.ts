@@ -75,27 +75,26 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
     __resetDynamicSignalsAssetEmbedCacheForTests();
   });
 
-  it("Leggo's tomato paste scan fires SIG-IN-AU-001-20260918; Leggo's sauce does not", () => {
-    const hit = runScan({
+  it("Leggo's brand-wide News fires for tomato paste and pasta sauce (no product-name gate)", () => {
+    const paste = runScan({
       barcode: '9310000111111',
       productName: "Leggo's Tomato Paste 140g",
       brands: "Leggo's",
       market: 'AU',
     });
-    expect(hit.logs.some((l) => l.includes('identity_resolve:') && l.includes('B0179'))).toBe(true);
-    expect(hit.logs.some((l) => l.includes('product scope is Workstream C'))).toBe(true);
-    expect(hit.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-001-20260918');
+    expect(paste.logs.some((l) => l.includes('identity_resolve:') && l.includes('B0179'))).toBe(true);
+    expect(paste.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-001-20260918');
 
-    const miss = runScan({
+    const sauce = runScan({
       barcode: '9310000111112',
       productName: "Leggo's Pasta Sauce Traditional",
       brands: "Leggo's",
       market: 'AU',
     });
-    expect(miss.recs.some((r) => r.signal_id === 'SIG-IN-AU-001-20260918')).toBe(false);
+    expect(sauce.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-001-20260918');
   });
 
-  it("Hoyt's turmeric fires; Hoyt's paprika sibling does not", () => {
+  it("Hoyt's brand-wide News fires for turmeric and paprika sibling", () => {
     const hit = runScan({
       barcode: '9310000222222',
       productName: "Hoyt's Ground Turmeric 50g",
@@ -104,13 +103,13 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
     });
     expect(hit.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-004-20260918');
 
-    const miss = runScan({
+    const sibling = runScan({
       barcode: '9310000222223',
       productName: "Hoyt's Paprika 50g",
       brands: "Hoyt's",
       market: 'AU',
     });
-    expect(miss.recs.some((r) => r.signal_id === 'SIG-IN-AU-004-20260918')).toBe(false);
+    expect(sibling.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-004-20260918');
   });
 
   it('Mondelez entity Signal fires for Cadbury chocolate without cocoa guard; Mars comparator does not', () => {

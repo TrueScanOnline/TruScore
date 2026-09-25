@@ -156,7 +156,9 @@ describe('Result Signals scheduling — material identity eval key', () => {
       'reviewed:B0241:P0009'
     );
     expect(hold.last.outcome).toBe('attached');
-    expect(signalIds(hold.last)).toEqual(expect.arrayContaining(['SIG-IN-GL-001', 'SIG-IN-GL-002']));
+    expect(signalIds(hold.last)).toEqual(
+      expect.arrayContaining(['SIG-IN-GL-001-20260918', 'SIG-IN-GL-002-20260918'])
+    );
   });
 
   it('same reviewed chain + harmless nutrition/image/label enrichment → no additional Signal evaluation', () => {
@@ -206,7 +208,9 @@ describe('Result Signals scheduling — material identity eval key', () => {
   it('reviewed identity A → materially different reviewed identity B → Signals reflect B', () => {
     let hold = emptyHold();
     hold = applyIdentityAwareScheduler(sufficientCadburyDairyMilkProduct(), hold);
-    expect(signalIds(hold.last)).toEqual(expect.arrayContaining(['SIG-IN-GL-001', 'SIG-IN-GL-002']));
+    expect(signalIds(hold.last)).toEqual(
+      expect.arrayContaining(['SIG-IN-GL-001-20260918', 'SIG-IN-GL-002-20260918'])
+    );
 
     expect(resolveMaterialRetailIdentityStateForAsset({ barcode: BARCODE, product: kitKatReviewedProduct() })).toBe(
       'reviewed:B0060:P0008'
@@ -214,7 +218,7 @@ describe('Result Signals scheduling — material identity eval key', () => {
     hold = applyIdentityAwareScheduler(kitKatReviewedProduct(), hold);
     expect(hold.evaluations).toBe(2);
     expect(hold.last.outcome).toBe('attached');
-    expect(signalIds(hold.last)).toEqual(expect.arrayContaining(['SIG-IN-GL-002']));
+    expect(signalIds(hold.last)).toEqual(expect.arrayContaining(['SIG-IN-GL-002-20260918']));
   });
 
   it('older asynchronous evaluation cannot overwrite the result for a newer identity state', async () => {
@@ -248,7 +252,9 @@ describe('Result Signals scheduling — material identity eval key', () => {
     await older;
     expect(published).not.toBeNull();
     expect(published!.outcome).toBe('attached');
-    expect(signalIds(published!)).toEqual(expect.arrayContaining(['SIG-IN-GL-001', 'SIG-IN-GL-002']));
+    expect(signalIds(published!)).toEqual(
+      expect.arrayContaining(['SIG-IN-GL-001-20260918', 'SIG-IN-GL-002-20260918'])
+    );
 
     const staleCommit = shouldCommitDynamicSignalsEvaluation({
       evaluationKey: identityEvalKey(insufficientIdentityProduct()),

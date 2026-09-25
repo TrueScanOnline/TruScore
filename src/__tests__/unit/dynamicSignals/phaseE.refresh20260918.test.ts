@@ -209,7 +209,7 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
     }
   });
 
-  it('family-bound in_the_news successor fires via Workstream C product-scope + brand', () => {
+  it('brand-bound in_the_news successor fires via Shared Identity brand_descendants (no product-name gate)', () => {
     const recs = match({
       barcode: '9300000111111',
       brand_id: 'B0179',

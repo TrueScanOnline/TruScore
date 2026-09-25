@@ -11,26 +11,6 @@ SPC-0009,TGT-005,AU,B0059,P0008,product_name,phrase_contains,inside outs,inside 
 SPC-0010,TGT-104,AU,B0059,P0008,product_name,phrase_contains,inside outs,inside outs,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,Reviewed product-line descriptor; pack size is card qualification content
 SPC-0011,TGT-007,NZ,B0024,P0003,product_name,phrase_contains,beef lasagne,beef lasagne,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Reviewed product-line descriptor; 1.3kg pack is card qualification content
 SPC-0012,TGT-105,NZ,B0024,P0003,product_name,phrase_contains,beef lasagne,beef lasagne,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Reviewed product-line descriptor; 1.3kg pack is card qualification content
-SPC-0013,TGT-009,AU,B0179,P0041,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,ABC-106940742-LEGGOS,Reviewed product-line descriptor
-SPC-0014,TGT-107,AU,B0179,P0041,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,ABC-106940742-LEGGOS,Reviewed product-line descriptor
-SPC-0015,TGT-010,AU,B0032,P0004,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,ABC-106940742-REMANO,Reviewed product-line descriptor
-SPC-0016,TGT-108,AU,B0032,P0004,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,ABC-106940742-REMANO,Reviewed product-line descriptor
-SPC-0017,TGT-011,AU,B0200,P0002,product_name,phrase_contains,italian tomato paste,italian tomato paste,reviewed,strong,ABC-106940742-COLES-TOMATO,Reviewed product-line descriptor
-SPC-0018,TGT-109,AU,B0200,P0002,product_name,phrase_contains,italian tomato paste,italian tomato paste,reviewed,strong,ABC-106940742-COLES-TOMATO,Reviewed product-line descriptor
-SPC-0019,TGT-012,AU,B0653,P0157,product_name,phrase_contains,turmeric,turmeric,reviewed,strong,ABC-106960116-HOYTS,Reviewed product-line descriptor
-SPC-0020,TGT-110,AU,B0653,P0157,product_name,phrase_contains,turmeric,turmeric,reviewed,strong,ABC-106960116-HOYTS,Reviewed product-line descriptor
-SPC-0021,TGT-013,AU,B0001,P0001,product_name,phrase_contains,cage free eggs,cage free eggs,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Alternative reviewed label form
-SPC-0022,TGT-013,AU,B0001,P0001,product_name,phrase_contains,cage-free eggs,cage free eggs,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Alternative reviewed label form (hyphen)
-SPC-0023,TGT-111,AU,B0001,P0001,product_name,phrase_contains,cage free eggs,cage free eggs,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Alternative reviewed label form
-SPC-0024,TGT-111,AU,B0001,P0001,product_name,phrase_contains,cage-free eggs,cage free eggs,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Alternative reviewed label form (hyphen)
-SPC-0025,TGT-017,NZ,B0268,P0011,product_name,phrase_contains,fruit juice,fruit juice,reviewed,strong,CONSUMERNZ-KERI-20260211,Reviewed product-line descriptor
-SPC-0026,TGT-114,NZ,B0268,P0011,product_name,phrase_contains,fruit juice,fruit juice,reviewed,strong,CONSUMERNZ-KERI-20260211,Reviewed product-line descriptor
-SPC-0027,TGT-018,NZ,B0139,P0020,product_name,phrase_contains,blue milk powder,blue milk powder,reviewed,confirmed,CONSUMERNZ-ANCHOR-BLUE-20260211,Reviewed product-line descriptor
-SPC-0028,TGT-115,NZ,B0139,P0020,product_name,phrase_contains,blue milk powder,blue milk powder,reviewed,confirmed,CONSUMERNZ-ANCHOR-BLUE-20260211,Reviewed product-line descriptor
-SPC-0029,TGT-019,NZ,B0024,P0003,product_name,phrase_contains,sparkling water,sparkling water,reviewed,confirmed,RNZ-590339,Reviewed product-line descriptor
-SPC-0030,TGT-116,NZ,B0024,P0003,product_name,phrase_contains,sparkling water,sparkling water,reviewed,confirmed,RNZ-590339,Reviewed product-line descriptor
-SPC-0031,TGT-026,NZ,B0139,P0020,product_name,phrase_contains,butter,butter,reviewed,strong,NZH-ANCHOR-GRASSFED-20260331,Reviewed product-line descriptor
-SPC-0032,TGT-123,NZ,B0139,P0020,product_name,phrase_contains,butter,butter,reviewed,strong,NZH-ANCHOR-GRASSFED-20260331,Reviewed product-line descriptor
 SPC-0033,TGT-132,NZ,B0001,P0001,product_name,phrase_contains,multi grain cereal,multi grain cereal,reviewed,confirmed,MPI-WOOLWORTHS-MULTIGRAIN-20260908,Reviewed product-line descriptor
 SPC-0034,TGT-029,AU,B0796,P0175,product_name,phrase_contains,szechuan chilli oil,szechuan chilli oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Alternative reviewed spelling
 SPC-0035,TGT-029,AU,B0796,P0175,product_name,phrase_contains,sichuan chili oil,sichuan chili oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Alternative reviewed spelling

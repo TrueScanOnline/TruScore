@@ -88,12 +88,22 @@ describe('Dynamic Signals Asset v0.2 â€” remediation matcher', () => {
     expect(pack.targets).toHaveLength(25);
   });
 
-  it('candidate Signals do not render publicly even when product-scope would match', () => {
+  it('candidate Signals do not render publicly even when brand match would otherwise succeed', () => {
     let pack = loadBasePack();
     pack = {
       ...pack,
       targets: pack.targets.map((t) =>
-        t.signal_target_id === 'TGT-009' ? { ...t, resolution_status: 'resolved' } : t
+        t.signal_target_id === 'TGT-009'
+          ? {
+              ...t,
+              resolution_status: 'resolved',
+              target_type: 'brand',
+              canonical_target_id: 'B0179',
+              propagation_mode: 'brand_descendants',
+              coverage_state: 'brand_context',
+              product_scope_guard: '',
+            }
+          : t
       ),
     };
     const logs: string[] = [];
@@ -217,17 +227,31 @@ describe('Dynamic Signals Asset v0.2 â€” remediation matcher', () => {
     expect(hit[0].state.resolution_status).toBe('resolved');
   });
 
-  it('product_family scope: tomato-paste product names match; unrelated Leggo product does not', () => {
+  it('brand-wide News: Leggo brand descendants match irrespective of SKU name phrase', () => {
     let pack = loadBasePack();
     pack = {
       ...pack,
       signals: withPublishable(pack.signals, ['SIG-IN-AU-001']),
       targets: pack.targets.map((t) =>
-        t.signal_target_id === 'TGT-009' ? { ...t, resolution_status: 'resolved' } : t
+        t.signal_target_id === 'TGT-009'
+          ? {
+              ...t,
+              resolution_status: 'resolved',
+              target_type: 'brand',
+              canonical_target_id: 'B0179',
+              propagation_mode: 'brand_descendants',
+              coverage_state: 'brand_context',
+              product_scope_guard: '',
+            }
+          : t
       ),
     };
 
-    for (const name of ["Leggo's Tomato Paste 140g", "Leggo's Tomato Paste 500g"]) {
+    for (const name of [
+      "Leggo's Tomato Paste 140g",
+      "Leggo's Tomato Paste 500g",
+      "Leggo's Pasta Sauce Traditional",
+    ]) {
       const recs = buildDynamicSignalsAssetPublicationRecords({
         pack,
         identity: {
@@ -241,38 +265,38 @@ describe('Dynamic Signals Asset v0.2 â€” remediation matcher', () => {
       expect(recs.map((r) => r.signal_id)).toEqual(['SIG-IN-AU-001']);
     }
 
-    const outsider = buildDynamicSignalsAssetPublicationRecords({
+    const otherBrand = buildDynamicSignalsAssetPublicationRecords({
       pack,
       identity: {
         barcode: '9499999999999',
-        brand_id: 'B0179',
-        parent_id: 'P0041',
-        productName: "Leggo's Pasta Sauce Traditional",
+        brand_id: 'B0001',
+        parent_id: 'P0001',
+        productName: "Woolworths Tomato Paste",
         scanMarketPublic: 'AU',
       },
     });
-    expect(outsider).toHaveLength(0);
+    expect(otherBrand).toHaveLength(0);
   });
 
-  it('unreviewed product-scope criteria cannot match', () => {
+  it('Safety product-scope: unreviewed criteria cannot match', () => {
     const seeded = readCsvFile(CRITERIA_V03).map((r) =>
-      (r.signal_target_id ?? '') === 'TGT-009' ? { ...r, review_state: 'seeded' } : r
+      (r.signal_target_id ?? '') === 'TGT-100' ? { ...r, review_state: 'seeded' } : r
     );
     let pack = withProductScopeCriteria(loadBasePack([]), seeded);
     pack = {
       ...pack,
-      signals: withPublishable(pack.signals, ['SIG-IN-AU-001']),
+      signals: withPublishable(pack.signals, ['SIG-SR-AU-001-20260918']),
       targets: pack.targets.map((t) =>
-        t.signal_target_id === 'TGT-009' ? { ...t, resolution_status: 'resolved' } : t
+        t.signal_target_id === 'TGT-100' ? { ...t, resolution_status: 'resolved' } : t
       ),
     };
     const recs = buildDynamicSignalsAssetPublicationRecords({
       pack,
       identity: {
         barcode: '9411111111111',
-        brand_id: 'B0179',
-        parent_id: 'P0041',
-        productName: "Leggo's Tomato Paste 140g",
+        brand_id: 'B0654',
+        parent_id: 'P0156',
+        productName: 'Chickadees 190g',
         scanMarketPublic: 'AU',
       },
     });
@@ -387,13 +411,23 @@ describe('Dynamic Signals Asset v0.2 â€” remediation matcher', () => {
     expect(resolveActiveSignalsProducer(logs2)).toBe('none');
   });
 
-  it('AU/NZ market isolation for product-scope criteria', () => {
+  it('AU/NZ market isolation for brand-wide News targets', () => {
     let pack = loadBasePack();
     pack = {
       ...pack,
       signals: withPublishable(pack.signals, ['SIG-IN-AU-001']),
       targets: pack.targets.map((t) =>
-        t.signal_target_id === 'TGT-009' ? { ...t, resolution_status: 'resolved' } : t
+        t.signal_target_id === 'TGT-009'
+          ? {
+              ...t,
+              resolution_status: 'resolved',
+              target_type: 'brand',
+              canonical_target_id: 'B0179',
+              propagation_mode: 'brand_descendants',
+              coverage_state: 'brand_context',
+              product_scope_guard: '',
+            }
+          : t
       ),
     };
     const nzLeak = buildDynamicSignalsAssetPublicationRecords({
