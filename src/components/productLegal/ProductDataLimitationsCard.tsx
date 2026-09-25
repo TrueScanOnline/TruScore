@@ -4,7 +4,7 @@
  * Provisional S26 copy retains “(Awaiting founder approval)” prefix (§11).
  * Minimal UAT placement; final surface consolidation deferred to Wave 5.
  */
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +37,11 @@ type Props = {
   }) => void;
   /** When false, suppress S26 (assessment cycle still checking). */
   publicationSettled?: boolean;
+  /**
+   * Parent bump (e.g. Confidence badge) opens the S26 modal without using the teaser.
+   * Overall explanation is included in the modal pillar rows.
+   */
+  openRequestKey?: number;
 };
 
 type PillarKey = 'body' | 'planet' | 'claims' | 'transparency' | 'overall';
@@ -154,6 +159,7 @@ export default function ProductDataLimitationsCard({
   onOpenManualEdit,
   onOpenOrigins,
   publicationSettled = true,
+  openRequestKey = 0,
 }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -161,6 +167,12 @@ export default function ProductDataLimitationsCard({
 
   const open = useCallback(() => setModalVisible(true), []);
   const close = useCallback(() => setModalVisible(false), []);
+
+  useEffect(() => {
+    if (openRequestKey > 0) {
+      setModalVisible(true);
+    }
+  }, [openRequestKey]);
 
   const publication = (product as ProductWithTrustScore | null | undefined)?._publication;
 

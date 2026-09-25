@@ -17,16 +17,26 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
   const { t } = useTranslation();
   const { colors } = useTheme();
 
+  const s27Prefix = '[Awaiting founder edit]';
+  const rawTitle = t('infoModal.trustScore.title') || 'Understanding Rveel Score';
+  const title = rawTitle.startsWith(s27Prefix) ? rawTitle : `${s27Prefix} ${rawTitle}`;
+  const rawDescription =
+    t('infoModal.trustScore.description') ||
+    'Rveel Score is a comprehensive rating (0-100) based entirely on recognized public systems. Four equal pillars (25 points each): Body, Planet, Claims, and Transparency.';
+  const description = rawDescription.startsWith(s27Prefix)
+    ? rawDescription
+    : `${s27Prefix} ${rawDescription}`;
+
   return (
     <InfoModal
       visible={visible}
       onClose={onClose}
-      title={t('infoModal.trustScore.title')}
+      title={title}
       icon="shield-checkmark"
       iconColor={colors.primary}
     >
       <Text style={[styles.description, { color: colors.textSecondary }]}>
-        {t('infoModal.trustScore.description') || 'Rveel Score is a comprehensive rating (0-100) based entirely on recognized public systems. Four equal pillars (25 points each): Body, Planet, Claims, and Transparency.'}
+        {description}
       </Text>
 
       <View style={styles.section}>

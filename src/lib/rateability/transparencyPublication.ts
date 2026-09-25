@@ -85,7 +85,9 @@ function transparencyContribution(
 ): ContributionOpportunity | undefined {
   if (ingredient === 'resolved' && origins === 'resolved') return undefined;
 
-  if (ingredient === 'resolved' && origins === 'unassessed') {
+  // Unresolved Origins is the Transparency live contribution path (Wave 4 richer model deferred).
+  // ingredients_nutrition may already appear on Body / elsewhere — do not suppress Origins for that.
+  if (origins === 'unassessed') {
     const prefill = buildOriginsPrefill(product, open);
     return {
       material: true,
@@ -96,7 +98,7 @@ function transparencyContribution(
     };
   }
 
-  if (ingredient === 'unassessed' && origins === 'resolved') {
+  if (ingredient === 'unassessed') {
     return {
       material: true,
       domain: 'ingredients_nutrition',
@@ -105,33 +107,7 @@ function transparencyContribution(
     };
   }
 
-  if (ingredient === 'unassessed' && origins === 'unassessed') {
-    // Prefer ingredients gap; if Origins contradiction diagnostic exists, still expose origins opp
-    // when that is the actionable validate/correct path for available structured evidence.
-    if (open.details.originsDiagnostic?.freeTextContradiction) {
-      const prefill = buildOriginsPrefill(product, open);
-      return {
-        material: true,
-        domain: 'origins',
-        routeStatus: 'live',
-        routeKey: 'origins',
-        ...(prefill ? { prefill } : {}),
-      };
-    }
-    return {
-      material: true,
-      domain: 'ingredients_nutrition',
-      routeStatus: 'live',
-      routeKey: 'ingredients_nutrition',
-    };
-  }
-
-  return {
-    material: true,
-    domain: 'ingredients_nutrition',
-    routeStatus: 'live',
-    routeKey: 'ingredients_nutrition',
-  };
+  return undefined;
 }
 
 function resolveTransparencyS26(

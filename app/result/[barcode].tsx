@@ -123,6 +123,7 @@ import CarbonFootprintCard from '../../src/features/product/cards/CarbonFootprin
 import PackagingOffCardContent from '../../src/components/PackagingOffCardContent';
 import { crashReporter } from '../../src/utils/crashReporter';
 import { getPrimaryBarcode } from '../../src/utils/barcodeNormalization';
+import { shouldPreserveSettledResultOnLoadMiss } from '../../src/utils/resultPublicationLoadGuard';
 import ShareModal from '../../src/components/ShareModal';
 import ProductHeroSection from '../../src/components/product/ProductHeroSection';
 import ProductDisclaimerCard from '../../src/components/productLegal/ProductDisclaimerCard';
@@ -225,10 +226,14 @@ function ResultScreenContent() {
    */
   const [publicationSettled, setPublicationSettled] = useState(false);
   const publicationSettledRef = useRef(false);
+  /** Barcode for which publicationSettled is latched — used to ignore late network reruns. */
+  const settledForBarcodeRef = useRef<string | null>(null);
   const [progressiveProduct, setProgressiveProduct] = useState<ProductWithTrustScore | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [truScoreModalVisible, setTruScoreModalVisible] = useState(false);
+  /** Bump to open W3-S26 from the Overall Confidence badge (not W3-S27). */
+  const [s26OpenRequestKey, setS26OpenRequestKey] = useState(0);
   const [truScoreAnalysisModalVisible, setTruScoreAnalysisModalVisible] = useState(false);
   const [ecoScoreModalVisible, setEcoScoreModalVisible] = useState(false);
   const [scoreHighlightsRequest, setScoreHighlightsRequest] =
@@ -313,6 +318,10 @@ function ResultScreenContent() {
     latestSignalsEvalKeyRef.current = null;
     signalsEvalContextRef.current = null;
     productResultReadyLoggedRef.current = null;
+    // New barcode — drop prior publication latch so Checking can run for this scan.
+    settledForBarcodeRef.current = null;
+    publicationSettledRef.current = false;
+    setPublicationSettled(false);
   }, [barcode]);
 
   useEffect(() => {
@@ -899,10 +908,19 @@ function ResultScreenContent() {
   }, [heroImageUrl]);
 
   const loadProduct = async () => {
+    const preserveSettledPublication = shouldPreserveSettledResultOnLoadMiss({
+      publicationSettled: publicationSettledRef.current,
+      settledBarcode: settledForBarcodeRef.current,
+      requestBarcode: barcode,
+    });
+
     setLoading(true);
     setError(null);
-    publicationSettledRef.current = false;
-    setPublicationSettled(false);
+    // Network/offline reruns for an already settled barcode must not flip Checking.
+    if (!preserveSettledPublication) {
+      publicationSettledRef.current = false;
+      setPublicationSettled(false);
+    }
 
     const acceptProductUpdate = (next: ProductWithTrustScore): boolean => {
       // Once settled, ignore same-cycle payloads that would unsettle publication / flip Checking.
@@ -912,6 +930,7 @@ function ResultScreenContent() {
       if (next._assessmentCycleSettled === true) {
         publicationSettledRef.current = true;
         setPublicationSettled(true);
+        settledForBarcodeRef.current = barcode;
       }
       setProgressiveProduct(next);
       setProduct(next);
@@ -1094,8 +1113,17 @@ function ResultScreenContent() {
           // Continue - not critical
         }
       } else {
+        if (preserveSettledPublication) {
+          // Late same-barcode network/offline rerun returned no product — keep published Result.
+          console.warn(
+            '[ResultScreen] Ignoring load miss after settled publication (network rerun)'
+          );
+          setLoadingPhase('complete');
+          setLoading(false);
+          return;
+        }
         if (lastFetchPhase === 'retrieval_error') {
-          console.warn('[ResultScreen] OFF retrieval_error — not conflated with not_found');
+          console.warn('[ResultScreen] retrieval_error — not conflated with not_found');
           if (scanIdRef.current) {
             logScanObs({
               event: 'retrieval_error',
@@ -1627,16 +1655,14 @@ function ResultScreenContent() {
           </View>
         )}
 
-        {/* TruScore Card - v1.4 */}
+        {/* TruScore Card - v1.4. W3-S27 only via info glyph; Confidence badge opens W3-S26. */}
         {truScore ? (
-          <TouchableOpacity
+          <View
             style={[styles.card, { 
               backgroundColor: colors.card,
               borderColor: getTruScoreColor(truScore.truscore),
               borderWidth: 2,
             }]}
-            onPress={() => setTruScoreModalVisible(true)}
-            activeOpacity={0.7}
           >
           <View style={styles.cardHeader}>
             {/* Top line: Icons */}
@@ -1649,6 +1675,8 @@ function ResultScreenContent() {
                   }}
                   style={styles.infoButton}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Understanding Rveel Score"
                 >
                   <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
                 </TouchableOpacity>
@@ -1706,13 +1734,14 @@ function ResultScreenContent() {
             </TouchableOpacity>
           )}
           
-          {/* W3-S11 Confidence — Overall Rated only; suppressed while enrichment checking */}
+          {/* W3-S11 Confidence — opens Overall W3-S26 (not W3-S27) */}
           {product && product._publication && (
             <View style={styles.confidenceBadgeContainer}>
               <ConfidenceBadge
                 product={product}
                 size="small"
                 publicationSettled={publicationSettled}
+                onPress={() => setS26OpenRequestKey((k) => k + 1)}
               />
             </View>
           )}
@@ -1726,7 +1755,7 @@ function ResultScreenContent() {
               />
             </View>
           )}
-        </TouchableOpacity>
+        </View>
         ) : (
           /* Insufficient Data Card */
           <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -2706,6 +2735,7 @@ function ResultScreenContent() {
             setManufacturingCountryModalVisible(true);
           }}
           publicationSettled={publicationSettled}
+          openRequestKey={s26OpenRequestKey}
         />
 
         {/* Scan Another Product — bottom of page */}

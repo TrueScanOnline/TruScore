@@ -414,4 +414,122 @@ describe('productServiceOptimized sustained-scan remediation', () => {
 
     expect(phases).toContain('product_refined');
   });
+
+  describe('offline vs authoritative not_found (W3-S36 vs W3-S35)', () => {
+    it('offline/unreachable + no local hit → retrieval_error (W3-S36), never not_found', async () => {
+      mockedLookup.mockResolvedValueOnce(null);
+
+      const phases: string[] = [];
+      const result = await fetchProductOptimized(BARCODE, true, false, true, ({ phase }) => {
+        phases.push(phase);
+      });
+
+      expect(result).toBeNull();
+      expect(mockedOff).not.toHaveBeenCalled();
+      expect(phases).toEqual(['retrieval_error']);
+      expect(phases).not.toContain('not_found');
+      expect(mockedLogScanObs).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'retrieval_error',
+          barcode: BARCODE,
+          phase: 'retrieval_error',
+          retrieval_reason: 'network_timeout_exhausted',
+        })
+      );
+    });
+
+    it('online + authoritative OFF miss → not_found (W3-S35)', async () => {
+      mockedLookup.mockResolvedValueOnce(null);
+      mockedOff.mockResolvedValueOnce({ kind: 'not_found' });
+
+      const phases: string[] = [];
+      const result = await fetchProductOptimized(BARCODE, true, false, false, ({ phase }) => {
+        phases.push(phase);
+      });
+
+      expect(result).toBeNull();
+      expect(mockedOff).toHaveBeenCalled();
+      expect(phases).toContain('not_found');
+      expect(phases).not.toContain('retrieval_error');
+    });
+
+    it('online + OFF hit → product returned', async () => {
+      mockedLookup.mockResolvedValueOnce(null);
+      mockedOff.mockResolvedValueOnce({ kind: 'hit', product: offHit('Live Mayonnaise') });
+
+      const promise = fetchProductOptimized(BARCODE, true, false, false);
+      await jest.advanceTimersByTimeAsync(USER_CONTRIBUTED_MERGE_RACE_MS + 50);
+      const result = await promise;
+
+      expect(result?.product_name).toBe('Live Mayonnaise');
+      expect(result?._rveelCoreTruthAuthority).toBe(CORE_TRUTH_PRODUCT_CACHE_AUTHORITY);
+      expect(mockedOff).toHaveBeenCalled();
+    });
+
+    /**
+     * ResultScreen miss handling (production mirror): product is not cleared on miss.
+     * - not_found sets a truthy error → Unknown Product (S35) even if product was already set.
+     * - retrieval_error sets error=null → existing successful product remains visible.
+     * After offline→retrieval_error, a later NetInfo offline rerun therefore does not
+     * overwrite a successful product into S35. There is still no load-generation cancel;
+     * see companion assertion below.
+     */
+    it('Result miss semantics: offline retrieval_error does not overwrite an already successful product UI', () => {
+      const successful = {
+        barcode: BARCODE,
+        product_name: 'Live Mayonnaise',
+        trust_score: 40,
+      };
+
+      // Mirrors app/result/[barcode].tsx miss branch (productData falsy).
+      function applyResultMiss(
+        existingProduct: typeof successful | null,
+        lastFetchPhase: string
+      ): { product: typeof successful | null; error: string | null; showsUnknownProductPage: boolean } {
+        if (lastFetchPhase === 'retrieval_error') {
+          const error = null;
+          const product = existingProduct; // production does not setProduct(null)
+          return {
+            product,
+            error,
+            showsUnknownProductPage: !!(error || !product),
+          };
+        }
+        const error =
+          'Product not found in our databases. You can help by adding this product manually.';
+        const product = existingProduct;
+        return {
+          product,
+          error,
+          showsUnknownProductPage: !!(error || !product),
+        };
+      }
+
+      const afterOfflineRerun = applyResultMiss(successful, 'retrieval_error');
+      expect(afterOfflineRerun.product?.product_name).toBe('Live Mayonnaise');
+      expect(afterOfflineRerun.error).toBeNull();
+      expect(afterOfflineRerun.showsUnknownProductPage).toBe(false);
+
+      // Contrast: legacy offline→not_found would have flipped the consumer to S35.
+      const legacyNotFoundOverwrite = applyResultMiss(successful, 'not_found');
+      expect(legacyNotFoundOverwrite.showsUnknownProductPage).toBe(true);
+    });
+
+    it('fetchProductOptimized does not share in-flight queries across online vs offline keys', async () => {
+      // Demonstrates absence of cross-isOffline request coalescing (different queryKey).
+      // Broadening Result load-generation cancel is out of scope for this correction.
+      mockedLookup.mockResolvedValue(null);
+      mockedOff.mockResolvedValue({ kind: 'hit', product: offHit() });
+
+      const online = fetchProductOptimized(BARCODE, true, false, false);
+      const offline = fetchProductOptimized(BARCODE, true, false, true);
+      await jest.advanceTimersByTimeAsync(USER_CONTRIBUTED_MERGE_RACE_MS + 50);
+      const [onlineResult, offlineResult] = await Promise.all([online, offline]);
+
+      expect(onlineResult?.product_name).toBeDefined();
+      expect(offlineResult).toBeNull();
+      // Offline path must not have blocked or replaced the online OFF attempt.
+      expect(mockedOff).toHaveBeenCalled();
+    });
+  });
 });

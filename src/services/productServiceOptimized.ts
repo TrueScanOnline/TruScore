@@ -171,8 +171,19 @@ async function executeFetchProductOptimized(
   }
 
   if (isOffline) {
-    logger.warn(`Product not in cache (offline mode): ${primaryBarcode}`);
-    onProgress?.({ phase: 'not_found' });
+    // Local miss with no network attempt — must not claim authoritative Product not found (W3-S35).
+    // Surface as retrieval_error (W3-S36) so consumers are not told the product is absent from databases.
+    logger.warn(
+      `Product not in cache (offline/unreachable): ${primaryBarcode} — retrieval_error (not conflated with not_found)`
+    );
+    logScanObs({
+      event: 'retrieval_error',
+      scan_id: primaryBarcode,
+      barcode: primaryBarcode,
+      retrieval_reason: 'network_timeout_exhausted',
+      phase: 'retrieval_error',
+    });
+    onProgress?.({ phase: 'retrieval_error' });
     return null;
   }
 
