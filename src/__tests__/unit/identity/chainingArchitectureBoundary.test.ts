@@ -68,8 +68,10 @@ describe('Shared Identity chaining architecture boundary', () => {
     expect(reviewed.length).toBeGreaterThan(0);
     for (const r of reviewed) {
       const field = (r.match_field ?? '').trim();
-      expect(field === 'product_name' || field === 'gtin').toBe(true);
-      if (field === 'product_name') {
+      expect(
+        field === 'product_name' || field === 'gtin' || field === 'product_name_exclude'
+      ).toBe(true);
+      if (field === 'product_name' || field === 'product_name_exclude') {
         const brand = (r.required_brand_id ?? '').trim();
         const parent = (r.required_parent_id ?? '').trim();
         expect(brand || parent).toBeTruthy();
@@ -83,7 +85,9 @@ describe('Shared Identity chaining architecture boundary', () => {
     const rows = parseCsv(fs.readFileSync(CRITERIA, 'utf8'));
     for (const r of rows) {
       const field = (r.match_field ?? '').trim();
-      expect(field === 'product_name' || field === 'gtin').toBe(true);
+      expect(
+        field === 'product_name' || field === 'gtin' || field === 'product_name_exclude'
+      ).toBe(true);
       expect(field).not.toBe('pack_quantity');
     }
   });

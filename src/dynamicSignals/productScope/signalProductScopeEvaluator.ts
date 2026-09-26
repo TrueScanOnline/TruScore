@@ -1,15 +1,22 @@
 /**
- * Workstream C — Signal product-scope evaluator (workbook 20260926).
+ * Workstream C — Signal product-scope evaluator (workbook 20260926 / FINAL v1.1).
  *
  * For product / exact_only targets (after market gate at publication layer):
  *   product relevance = GTIN exact match against verified_gtins
- *                    OR (Chaining identity to required brand/parent AND phrase match)
- * Criteria are OR'd. A non-matching GTIN does not veto a valid name+identity match.
+ *                    OR (Chaining identity to required brand/parent
+ *                        AND positive product-name phrase
+ *                        AND no product-name exclusion match)
+ *
+ * Positive phrase criteria are OR'd. Exclusion criteria block only the
+ * identity+name route; a verified GTIN hit is never vetoed by an exclusion.
  * Pack size, batch, date and retailer remain qualification content, never scope gates.
+ * product_name_exclude is not a product_scope_guard.
  */
 
 import type { CsvRecord } from '../../identity/workstreamA/csv';
 import { normalizeForBrandComparison } from '../../identity/workstreamA/catalogueAudit';
+
+export type SignalProductScopeMatchField = 'product_name' | 'gtin' | 'product_name_exclude';
 
 export type SignalProductScopeCriterion = {
   criterion_id: string;
@@ -17,7 +24,7 @@ export type SignalProductScopeCriterion = {
   market_key: string;
   required_brand_id: string;
   required_parent_id: string;
-  match_field: 'product_name' | 'gtin';
+  match_field: SignalProductScopeMatchField;
   match_mode: string;
   match_value: string;
   match_value_normalized: string;
@@ -48,7 +55,13 @@ export function buildSignalProductScopeMapsFromCsvRecords(
   for (const r of rows) {
     if ((r.review_state ?? '').trim() !== 'reviewed') continue;
     const match_field_raw = ((r.match_field ?? '').trim() || 'product_name').toLowerCase();
-    if (match_field_raw !== 'product_name' && match_field_raw !== 'gtin') continue;
+    if (
+      match_field_raw !== 'product_name' &&
+      match_field_raw !== 'gtin' &&
+      match_field_raw !== 'product_name_exclude'
+    ) {
+      continue;
+    }
 
     const signal_target_id = (r.signal_target_id ?? '').trim();
     const criterion_id = (r.criterion_id ?? '').trim();
@@ -57,9 +70,15 @@ export function buildSignalProductScopeMapsFromCsvRecords(
     const required_parent_id = (r.required_parent_id ?? '').trim();
     if (!signal_target_id || !criterion_id || !match_value) continue;
 
-    // Phrase criteria must be Chaining-anchored. GTIN criteria may carry anchors for
-    // provenance but do not require them to load (barcode path is identity-independent).
-    if (match_field_raw === 'product_name' && !required_brand_id && !required_parent_id) continue;
+    // Phrase / exclusion criteria must be Chaining-anchored.
+    // GTIN criteria may carry anchors for provenance but do not require them to load.
+    if (
+      (match_field_raw === 'product_name' || match_field_raw === 'product_name_exclude') &&
+      !required_brand_id &&
+      !required_parent_id
+    ) {
+      continue;
+    }
 
     let match_value_normalized =
       (r.match_value_normalized ?? '').trim() ||
@@ -124,6 +143,12 @@ function gtinMatches(criterion: SignalProductScopeCriterion, barcode: string): b
   return scan === criterion.match_value_normalized;
 }
 
+function identityAnchorsOk(c: SignalProductScopeCriterion, ctx: ProductScopeScanContext): boolean {
+  if (!brandAnchorOk(c.required_brand_id, ctx)) return false;
+  if (!parentAnchorOk(c.required_parent_id, ctx)) return false;
+  return true;
+}
+
 function criterionSatisfied(
   c: SignalProductScopeCriterion,
   ctx: ProductScopeScanContext
@@ -135,16 +160,14 @@ function criterionSatisfied(
     return gtinMatches(c, ctx.barcode ?? '');
   }
 
-  // Phrase path: market + Chaining identity anchors + product_name phrase.
-  if (!brandAnchorOk(c.required_brand_id, ctx)) return false;
-  if (!parentAnchorOk(c.required_parent_id, ctx)) return false;
+  // Phrase / exclusion path: market + Chaining identity anchors + product_name phrase.
+  if (!identityAnchorsOk(c, ctx)) return false;
   return termMatches(c, normalizeForBrandComparison(ctx.productName ?? ''));
 }
 
 /**
- * True when any one reviewed criterion matches.
- * GTIN-only scans may match without Chaining identity.
- * Phrase matches still require identity when no GTIN criterion hits.
+ * True when any one reviewed positive criterion matches and no exclusion blocks
+ * the name route (exclusions never veto a GTIN hit).
  */
 export function signalTargetProductScopeMatches(
   maps: SignalProductScopeMaps,
@@ -170,5 +193,19 @@ export function signalTargetProductScopeMatches(
     return false;
   }
 
-  return phraseCriteria.some((c) => criterionSatisfied(c, ctx));
+  const hasPositivePhrase = phraseCriteria.some((c) => criterionSatisfied(c, ctx));
+  if (!hasPositivePhrase) return false;
+
+  // Exclusion layer: any matching governed exclusion blocks the name route only.
+  const exclusionCriteria = criteria.filter((c) => c.match_field === 'product_name_exclude');
+  if (exclusionCriteria.length === 0) return true;
+
+  const hay = normalizeForBrandComparison(ctx.productName ?? '');
+  const blocked = exclusionCriteria.some((c) => {
+    if (!marketAllows(c.market_key, ctx.scanMarketPublic)) return false;
+    // Exclusions use the same whole-word/phrase normalisation as positives.
+    // Identity already validated by the positive hit; still require market match.
+    return termMatches(c, hay);
+  });
+  return !blocked;
 }

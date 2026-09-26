@@ -172,7 +172,12 @@ describe('News / product targeting — workbook 20260926', () => {
         } else {
           expect(rows.length).toBeGreaterThan(0);
           expect(
-            rows.every((c) => c.match_field === 'product_name' || c.match_field === 'gtin')
+            rows.every(
+              (c) =>
+                c.match_field === 'product_name' ||
+                c.match_field === 'gtin' ||
+                c.match_field === 'product_name_exclude'
+            )
           ).toBe(true);
         }
       }
@@ -265,7 +270,7 @@ describe('News / product targeting — workbook 20260926', () => {
       const a = runScan({
         barcode: '9300675096362',
         productName: 'Keri Pulpy Orange Fruit Drink',
-        brands: 'Keri',
+        brands: 'Keri Juice Co',
         market: 'NZ',
       });
       const b = runScan({
@@ -276,9 +281,20 @@ describe('News / product targeting — workbook 20260926', () => {
       });
       expect(a.recs.map((r) => r.signal_id)).toContain('SIG-IN-NZ-001-20260918');
       expect(b.recs.map((r) => r.signal_id)).toContain('SIG-IN-NZ-001-20260918');
+
+      // Sibling Coca-Cola brands must remain negative.
+      for (const brands of ['Coca-Cola', 'Fanta', 'Pump']) {
+        const miss = runScan({
+          barcode: '9300000555555',
+          productName: `${brands} Soft Drink`,
+          brands,
+          market: 'NZ',
+        });
+        expect(miss.recs.some((r) => r.signal_id === 'SIG-IN-NZ-001-20260918')).toBe(false);
+      }
     });
 
-    it("Leggo's tomato-based positive; non-tomato sibling negative", () => {
+    it("Leggo's tomato-based positive including plural tomatoes; non-tomato sibling negative", () => {
       const tomato = runScan({
         barcode: '9300645020809',
         productName: "Leggo's Tomato Paste",
@@ -286,6 +302,22 @@ describe('News / product targeting — workbook 20260926', () => {
         market: 'AU',
       });
       expect(tomato.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-001-20260918');
+
+      const diced = runScan({
+        barcode: '9300000222201',
+        productName: "Leggo's Diced Tomatoes",
+        brands: "Leggo's",
+        market: 'AU',
+      });
+      expect(diced.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-001-20260918');
+
+      const crushed = runScan({
+        barcode: '9300000222202',
+        productName: "Leggo's Crushed Tomatoes",
+        brands: "Leggo's",
+        market: 'NZ',
+      });
+      expect(crushed.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-001-20260918');
 
       const passata = runScan({
         barcode: '9300000222222',
@@ -304,14 +336,44 @@ describe('News / product targeting — workbook 20260926', () => {
       expect(pesto.recs.some((r) => r.signal_id === 'SIG-IN-AU-001-20260918')).toBe(false);
     });
 
-    it('Woolworths egg positive and unrelated Woolworths-product negative', () => {
-      const eggs = runScan({
-        barcode: '9339687306558',
-        productName: 'Woolworths Free Range Eggs 12 pack',
+    it('Woolworths egg positives, Easter exclusion, Thomas Dux child inheritance, GTIN bypass', () => {
+      for (const name of [
+        'Woolworths Free Range Eggs',
+        'Woolworths Cage Free Eggs',
+        'Woolworths Barn Laid Eggs',
+      ]) {
+        const eggs = runScan({
+          barcode: '9300000666601',
+          productName: name,
+          brands: 'Woolworths',
+          market: 'AU',
+        });
+        expect(eggs.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-005-20260918');
+      }
+
+      const thomasDux = runScan({
+        barcode: '9300000666602',
+        productName: 'Thomas Dux Free Range Eggs',
+        brands: 'Thomas Dux',
+        market: 'AU',
+      });
+      expect(thomasDux.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-005-20260918');
+
+      const easter = runScan({
+        barcode: '9300000666603',
+        productName: 'Woolworths Easter Eggs Milk Chocolate',
         brands: 'Woolworths',
         market: 'AU',
       });
-      expect(eggs.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-005-20260918');
+      expect(easter.recs.some((r) => r.signal_id === 'SIG-IN-AU-005-20260918')).toBe(false);
+
+      const noodles = runScan({
+        barcode: '9300000666604',
+        productName: 'Woolworths Egg Noodles',
+        brands: 'Woolworths',
+        market: 'AU',
+      });
+      expect(noodles.recs.some((r) => r.signal_id === 'SIG-IN-AU-005-20260918')).toBe(false);
 
       const milk = runScan({
         barcode: '9300000444444',
@@ -320,6 +382,41 @@ describe('News / product targeting — workbook 20260926', () => {
         market: 'AU',
       });
       expect(milk.recs.some((r) => r.signal_id === 'SIG-IN-AU-005-20260918')).toBe(false);
+
+      // Governed GTIN remains positive even with exclusion terms in the product name.
+      const gtinBypass = runScan({
+        barcode: '9339687306558',
+        productName: 'Woolworths Easter Eggs Milk Chocolate Mystery Pack',
+        brands: 'Woolworths',
+        market: 'AU',
+      });
+      expect(gtinBypass.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-005-20260918');
+    });
+
+    it("Mr Chen's both spelling variants fire; unrelated Mr Chen's remains negative", () => {
+      const szechuan = runScan({
+        barcode: '9300000777701',
+        productName: "Mr Chen's Szechuan Chilli Oil 250g",
+        brands: "Mr Chen's",
+        market: 'AU',
+      });
+      expect(szechuan.recs.map((r) => r.signal_id)).toContain('SIG-SR-AU-004-20260918');
+
+      const sichuan = runScan({
+        barcode: '9300000777702',
+        productName: "Mr Chen's Sichuan Chili Oil 250g",
+        brands: "Mr Chen's",
+        market: 'AU',
+      });
+      expect(sichuan.recs.map((r) => r.signal_id)).toContain('SIG-SR-AU-004-20260918');
+
+      const miss = runScan({
+        barcode: '9300000777703',
+        productName: "Mr Chen's Sweet Soy Sauce",
+        brands: "Mr Chen's",
+        market: 'AU',
+      });
+      expect(miss.recs.some((r) => r.signal_id === 'SIG-SR-AU-004-20260918')).toBe(false);
     });
 
     it('Cadbury cocoa guard fires; Ritz does not; GL-003 still fires for Ritz', () => {

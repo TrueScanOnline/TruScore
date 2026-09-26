@@ -1,11 +1,11 @@
 /**
  * Mechanically sync Dynamic Signals v0.3 CSVs from founder workbook
- * Rveel_Dynamic_Signals_Asset_20260926_FINAL.xlsx
+ * Rveel_Dynamic_Signals_Asset_20260926_FINAL_v1_1.xlsx
  *
  * - Current publishable heads/targets = workbook exactly
  * - Historical predecessor targets/signals retained as non-publishable lineage
- * - Criteria derived from product_match_terms + verified_gtins only
- * - Does not touch Chaining A-data
+ * - Criteria derived from product_match_terms + product_exclude_terms + verified_gtins
+ * - Does not invent Signal-specific brand logic (Chaining aliases are separate A-data)
  */
 const fs = require('fs');
 const path = require('path');
@@ -13,7 +13,7 @@ const XLSX = require('xlsx');
 
 const ROOT = path.resolve(__dirname, '..');
 const WB =
-  'C:\\Users\\leigh\\Desktop\\Rveel_Dynamic_Signals_Asset_20260926_FINAL.xlsx';
+  'C:\\Users\\leigh\\Desktop\\Rveel_Dynamic_Signals_Asset_20260926_FINAL_v1_1.xlsx';
 const PACK = path.join(ROOT, 'workstreamC', 'c-data', 'dynamic-signals-v0.3', 'input');
 
 function parseCsv(text) {
@@ -191,6 +191,7 @@ const targetHeaders = [
   'required_brand_id',
   'required_parent_id',
   'product_match_terms',
+  'product_exclude_terms',
   'verified_gtins',
   'verified_gtin_evidence',
   'scope_review_summary',
@@ -262,6 +263,7 @@ for (const t of wbTargets) {
   const parent = String(t.required_parent_id || '').trim();
   const lineage = String(t.lineage_reference || '').trim();
   const terms = pipeSplit(t.product_match_terms);
+  const excludes = pipeSplit(t.product_exclude_terms);
   const gtins = pipeSplit(t.verified_gtins);
 
   for (const term of terms) {
@@ -281,6 +283,25 @@ for (const t of wbTargets) {
       confidence_state: String(t.confidence_state || 'confirmed').trim() || 'confirmed',
       lineage_reference: lineage,
       notes: 'Derived mechanically from workbook product_match_terms',
+    });
+  }
+  for (const term of excludes) {
+    const norm = normalizePhrase(term);
+    if (!norm) continue;
+    criteriaOut.push({
+      criterion_id: nextId(),
+      signal_target_id: tid,
+      market_key: market,
+      required_brand_id: brand,
+      required_parent_id: parent,
+      match_field: 'product_name_exclude',
+      match_mode: 'phrase_contains',
+      match_value: term,
+      match_value_normalized: norm,
+      review_state: 'reviewed',
+      confidence_state: String(t.confidence_state || 'confirmed').trim() || 'confirmed',
+      lineage_reference: lineage,
+      notes: 'Derived mechanically from workbook product_exclude_terms',
     });
   }
   for (const gtin of gtins) {
@@ -333,6 +354,7 @@ fs.writeFileSync(path.join(PACK, 'controlled_values.csv'), toCsv(wbControlled, c
 const gtinSet = new Set();
 for (const t of wbTargets) pipeSplit(t.verified_gtins).forEach((g) => gtinSet.add(g.replace(/\D/g, '')));
 const phraseCount = criteriaOut.filter((c) => c.match_field === 'product_name' && wbTargetIds.has(c.signal_target_id)).length;
+const excludeCount = criteriaOut.filter((c) => c.match_field === 'product_name_exclude' && wbTargetIds.has(c.signal_target_id)).length;
 const gtinCritCount = criteriaOut.filter((c) => c.match_field === 'gtin' && wbTargetIds.has(c.signal_target_id)).length;
 const publishableTargets = targetsOut.filter((t) => wbSignalIds.has(String(t.signal_id).trim()));
 const activeFamily = publishableTargets.filter(
@@ -340,6 +362,7 @@ const activeFamily = publishableTargets.filter(
 );
 
 const summary = {
+  workbook: path.basename(WB),
   workbook_signals: wbSignals.length,
   workbook_targets: wbTargets.length,
   signals_out: signalsOut.length,
@@ -347,6 +370,7 @@ const summary = {
   publishable_targets: publishableTargets.length,
   criteria_out: criteriaOut.length,
   active_phrase_criteria: phraseCount,
+  active_exclude_criteria: excludeCount,
   active_gtin_criteria: gtinCritCount,
   unique_verified_gtins: gtinSet.size,
   gtin_set: [...gtinSet].sort(),

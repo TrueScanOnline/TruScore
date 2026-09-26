@@ -157,6 +157,76 @@ describe('productScope simple reviewed descriptors', () => {
     }
   });
 
+  it('product_name_exclude blocks name route but never vetoes verified GTIN', () => {
+    const eggsWithExclude = buildSignalProductScopeMapsFromCsvRecords([
+      ...eggsCriteria(),
+      {
+        criterion_id: 'SPC-EGGS-EX-EASTER',
+        signal_target_id: EGGS_TARGET,
+        market_key: 'AU+NZ',
+        required_brand_id: 'B0001',
+        required_parent_id: 'P0001',
+        match_field: 'product_name_exclude',
+        match_mode: 'phrase_contains',
+        match_value: 'easter',
+        match_value_normalized: 'easter',
+        review_state: 'reviewed',
+      },
+      {
+        criterion_id: 'SPC-EGGS-EX-CHOCOLATE',
+        signal_target_id: EGGS_TARGET,
+        market_key: 'AU+NZ',
+        required_brand_id: 'B0001',
+        required_parent_id: 'P0001',
+        match_field: 'product_name_exclude',
+        match_mode: 'phrase_contains',
+        match_value: 'chocolate',
+        match_value_normalized: 'chocolate',
+        review_state: 'reviewed',
+      },
+      {
+        criterion_id: 'SPC-EGGS-EX-MILK',
+        signal_target_id: EGGS_TARGET,
+        market_key: 'AU+NZ',
+        required_brand_id: 'B0001',
+        required_parent_id: 'P0001',
+        match_field: 'product_name_exclude',
+        match_mode: 'phrase_contains',
+        match_value: 'milk',
+        match_value_normalized: 'milk',
+        review_state: 'reviewed',
+      },
+    ]);
+    const base = {
+      brand_id: 'B0001',
+      parent_id: 'P0001',
+      scanMarketPublic: 'AU' as const,
+    };
+    expect(
+      signalTargetProductScopeMatches(eggsWithExclude, EGGS_TARGET, {
+        ...base,
+        barcode: '9300000222299',
+        productName: 'Woolworths Easter Eggs Milk Chocolate',
+      })
+    ).toBe(false);
+    expect(
+      signalTargetProductScopeMatches(eggsWithExclude, EGGS_TARGET, {
+        ...base,
+        barcode: '9339687306558',
+        productName: 'Woolworths Easter Eggs Milk Chocolate',
+      })
+    ).toBe(true);
+    expect(
+      signalTargetProductScopeMatches(eggsWithExclude, EGGS_TARGET, {
+        ...base,
+        barcode: '9300000222298',
+        productName: 'Thomas Dux Free Range Eggs',
+        brand_id: 'B0763',
+        brandIsUnderAnchor: (scan, anchor) => scan === 'B0763' && anchor === 'B0001',
+      })
+    ).toBe(true);
+  });
+
   it('any one of several reviewed product-line descriptors is sufficient', () => {
     const base = {
       barcode: '9410000666666',

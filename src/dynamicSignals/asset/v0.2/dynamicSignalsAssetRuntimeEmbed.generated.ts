@@ -1630,6 +1630,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0654",
       "required_parent_id": "P0156",
       "product_match_terms": "chickadees",
+      "product_exclude_terms": "",
       "verified_gtins": "9310988019279 | 9310988019309 | 9310988016353",
       "verified_gtin_evidence": "9310988019279 -> https://brandz-cms.s3-ap-southeast-2.amazonaws.com/brochures/June2021/FJJSibPGCSrBxX8a6qp8.pdf ; https://www.inlanddistributors.com.au/SHOP | 9310988019309 -> https://www.woolworths.com.au/shop/help/product-recalls/2026-product-recalls/chickadees-90g ; https://www.inlanddistributors.com.au/SHOP | 9310988016353 -> https://www.foodlandsa.com.au/wp-content/uploads/2023/09/FINAL_Win-a-Year-of-Groceries_Terms-and-Conditions_Participating-Products.pdf ; https://world.openfoodfacts.org/product/9310988016353",
       "scope_review_summary": "Bounded Chickadees product target. A verified GTIN match may establish relevance directly; otherwise Chaining must resolve Chickadees and the reviewed product-name term must match. Pack size and date markings do not gate publication.",
@@ -1651,6 +1652,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0059",
       "required_parent_id": "P0008",
       "product_match_terms": "inside outs | insideouts",
+      "product_exclude_terms": "",
       "verified_gtins": "9300605162921",
       "verified_gtin_evidence": "9300605162921 -> https://drakes.com.au/wp-content/uploads/2026/06/Inside-Outs-customer-letter-AU-recall.pdf ; https://www.woolworths.com.au/shop/help/product-recalls/2026-product-recalls/allen-s-inside-outs-130g",
       "scope_review_summary": "Bounded Allen's iNSiDE OUTS product target. Verified GTIN is positive-only alternative evidence; otherwise resolved Allen's identity plus a reviewed product-name term is required. Pack size, batch and date do not gate publication.",
@@ -1672,6 +1674,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0024",
       "required_parent_id": "P0003",
       "product_match_terms": "beef lasagne",
+      "product_exclude_terms": "",
       "verified_gtins": "9415077182329 | 9415077370979",
       "verified_gtin_evidence": "9415077182329 -> https://www.pams.co.nz/product-finder/5307712 | 9415077370979 -> https://kiwisquare.co.nz/grocery/product/pams-beef-lasagne-350g-9415077370979?fallbackTitle=Pams+Beef+Lasagne+350g",
       "scope_review_summary": "Bounded Pams Beef Lasagne product target. Verified GTIN is positive-only alternative evidence; otherwise resolved Pams identity plus the reviewed product-name term is required. Pack size and printed date do not gate publication.",
@@ -1693,6 +1696,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0175",
       "required_parent_id": "P0040",
       "product_match_terms": "original mixed grain very thin | original mixed grain sandwich | original mixed grain toast | dark rye toast | sprouted whole grain toast | fruit and spice extra thick",
+      "product_exclude_terms": "",
       "verified_gtins": "9414987012252",
       "verified_gtin_evidence": "9414987012252 -> https://world.openfoodfacts.org/product/9414987012252/toast-sprouted-whole-grains-vogel-s ; https://www.mpi.govt.nz/news/media-releases/various-vogels-breads-recalled-due-to-possible-presence-of-small-metal-pieces",
       "scope_review_summary": "One bounded Vogel's recall target covering the six MPI-named bread lines. Any reviewed product-name alternative or verified GTIN may establish relevance. Pack weight, Best Before and South Island distribution are consumer qualification, not firing gates.",
@@ -1713,10 +1717,11 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "propagation_mode": "exact_only",
       "required_brand_id": "B0796",
       "required_parent_id": "P0175",
-      "product_match_terms": "szechuan chilli oil",
+      "product_match_terms": "szechuan chilli oil | sichuan chili oil",
+      "product_exclude_terms": "",
       "verified_gtins": "9349673005624",
       "verified_gtin_evidence": "9349673005624 -> https://www.woolworths.com.au/shop/help/product-recalls/2026-product-recalls/mr-chens-szechuan-chilli-oil-250g ; https://www.foodstandards.gov.au/food-recalls/recall-alert/chen-foods-mr-chens-szechuan-chilli-oil-250g",
-      "scope_review_summary": "Bounded Mr Chen's Szechuan Chilli Oil product target. Verified GTIN is positive-only alternative evidence; otherwise resolved Mr Chen's identity plus the reviewed product-name term is required. Pack size and best-before dates do not gate publication.",
+      "scope_review_summary": "Bounded Mr Chen's Szechuan/Sichuan Chilli/Chili Oil product target. A verified GTIN match may establish relevance directly; otherwise resolved Mr Chen's identity plus one reviewed spelling variant must match. Pack size and best-before dates do not gate publication.",
       "coverage_state": "exact_product",
       "confidence_state": "confirmed",
       "review_state": "reviewed",
@@ -1735,6 +1740,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0799",
       "required_parent_id": "P0178",
       "product_match_terms": "cookia matcha chocolate flavor | cookia matcha chocolate flavour",
+      "product_exclude_terms": "",
       "verified_gtins": "4975186250043",
       "verified_gtin_evidence": "4975186250043 -> https://seijoishii.com/products/4975186250043 ; https://fanbi-store.jp/shop/g/g30292/",
       "scope_review_summary": "Bounded Red Hat Cookia Matcha Chocolate product target. Verified GTIN is positive-only alternative evidence; otherwise resolved Red Hat identity plus a reviewed product-name term is required. Pack size and best-before dates do not gate publication.",
@@ -1756,6 +1762,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0800",
       "required_parent_id": "P0179",
       "product_match_terms": "sweet chilli and lime salmon portions | sweet chilli & lime salmon portions",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Bounded JC Seafood salmon-portions product target. Verified GTIN is positive-only alternative evidence; otherwise resolved JC Seafood identity plus a reviewed product-name term is required. Pack size, retailer and best-before date do not gate publication.",
@@ -1777,6 +1784,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0797",
       "required_parent_id": "P0176",
       "product_match_terms": "certified organic premium peppermint leaf | premium peppermint leaf",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Bounded Austral Herbs peppermint-leaf product target. Verified GTIN is positive-only alternative evidence; otherwise resolved Austral Herbs identity plus a reviewed product-name term is required. Pack size and best-before date do not gate publication.",
@@ -1798,6 +1806,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0798",
       "required_parent_id": "P0177",
       "product_match_terms": "brie",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Bounded Mon Sire Brie product target for the Australian recall. Verified GTIN is positive-only alternative evidence; otherwise resolved Mon Sire identity plus the reviewed 'brie' term is required. Pack size, retailer and best-before date do not gate publication. AU market separation remains mandatory.",
@@ -1819,6 +1828,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0801",
       "required_parent_id": "P0180",
       "product_match_terms": "fried bean curd",
+      "product_exclude_terms": "",
       "verified_gtins": "8801047559610",
       "verified_gtin_evidence": "8801047559610 -> https://www.hanyangmart.com/products/dongwon-seasoned-fried-bean-curd-340g ; https://www.mpi.govt.nz/food-safety-home/food-recalls-and-complaints/recalled-food-products/dongwon-brand-fried-bean-curd-recalled-due-to-the-presence-of-undeclared-allergens-egg-milk-sesame",
       "scope_review_summary": "Bounded Dongwon Fried Bean Curd product target. Verified GTIN is positive-only alternative evidence; otherwise resolved Dongwon identity plus the reviewed product-name term is required. Pack size and retailer do not gate publication.",
@@ -1840,6 +1850,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0001",
       "required_parent_id": "P0001",
       "product_match_terms": "multi grain cereal | multigrain cereal",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Bounded Woolworths Multi Grain Cereal product target. Verified GTIN is positive-only alternative evidence; otherwise resolved Woolworths identity plus a reviewed product-name term is required. Pack size, retailer and best-before date do not gate publication.",
@@ -1861,6 +1872,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0798",
       "required_parent_id": "P0177",
       "product_match_terms": "brie",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Bounded Mon Sire Brie product target for the New Zealand recall. Verified GTIN is positive-only alternative evidence; otherwise resolved Mon Sire identity plus the reviewed 'brie' term is required. Pack weight, retailer and best-before date do not gate publication. NZ market separation remains mandatory.",
@@ -1882,6 +1894,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Company-level Coles context. Resolve P0002 and current governed descendants through Chaining. AU+NZ is the delivery market; the underlying court conduct occurred in Australia and is qualified on-card.",
@@ -1902,10 +1915,11 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "propagation_mode": "exact_only",
       "required_brand_id": "B0179",
       "required_parent_id": "P0041",
-      "product_match_terms": "tomato | passata",
+      "product_match_terms": "tomato | tomatoes | passata",
+      "product_exclude_terms": "",
       "verified_gtins": "9300645020823 | 9300645020809 | 9300645022421 | 9300645014495",
       "verified_gtin_evidence": "9300645020823 -> https://www.jbmetro.com.au/140g-leggos-tomato-paste-twin-pack-5501.html ; https://pub.joel.net.au/dumps/myigatas.com.au/volumes/images/News/Covid19/Items-available-for-customers-to-order-on-IGA-Shop-Online.pdf | 9300645020809 -> https://cals.com.au/pasta-sauce/leggo-s-australian-grown-tomato-paste-no-added-salt-140g-x-2-pack/ | 9300645022421 -> https://cuugo.com/product/woolworths/85045/leggos-australian-grown-tomato-paste-no-added-salt ; https://cals.com.au/pasta-sauce/leggo-s-australian-grown-tomato-paste-no-added-salt-500g/ | 9300645014495 -> https://cuugo.com/product/woolworths/259592/leggos-australian-grown-tomato-paste-triple-concentrate-squeeze ; https://cals.com.au/pasta-sauce/leggo-s-australian-grown-tomato-paste-triple-concentrate-squeeze-400g/",
-      "scope_review_summary": "Bounded Leggo's tomato-based product range. A verified GTIN may establish relevance directly; otherwise Chaining must resolve Leggo's and a reviewed product-name term must positively indicate tomato-based relevance. This includes tomato paste and other tomato-based Leggo's products, but does not propagate to non-tomato Leggo's products. Products whose crowdsourced names do not reveal tomato relevance may remain under-fire until a verified GTIN is governed.",
+      "scope_review_summary": "Bounded Leggo's tomato-based product range. A verified GTIN may establish relevance directly; otherwise Chaining must resolve Leggo's and a reviewed positive product-name term must match. The positive terms cover tomato/tomatoes/passata naming. Do not propagate to non-tomato Leggo's products; products whose names do not reveal tomato relevance may remain under-fire until a verified GTIN is governed.",
       "coverage_state": "exact_product",
       "confidence_state": "strong",
       "review_state": "reviewed",
@@ -1924,6 +1938,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0032",
       "required_parent_id": "P0004",
       "product_match_terms": "tomato paste",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Bounded Remano tomato-paste product line. A verified GTIN match may establish relevance directly; otherwise Chaining must resolve Remano and the reviewed product-name term must match. Do not propagate to unrelated Remano or Aldi products.",
@@ -1945,6 +1960,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0200",
       "required_parent_id": "P0002",
       "product_match_terms": "italian tomato paste",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Bounded Coles Italian Tomato Paste product line. A verified GTIN match may establish relevance directly; otherwise Chaining must resolve the Coles own-label identity and the reviewed product-name term must match. Do not propagate to other Coles tomato products or the wider Coles range.",
@@ -1966,6 +1982,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0653",
       "required_parent_id": "P0157",
       "product_match_terms": "turmeric",
+      "product_exclude_terms": "",
       "verified_gtins": "9300725012182",
       "verified_gtin_evidence": "9300725012182 -> https://hoytsfood.com.au/wp-content/uploads/2020/07/Metcash-Products.pdf ; https://cuugo.com/product/woolworths/574896/hoyt-s-turmeric",
       "scope_review_summary": "Bounded Hoyt's turmeric product line. A verified GTIN match may establish relevance directly; otherwise Chaining must resolve Hoyt's and the reviewed product-name term must match. Do not propagate to other Hoyt's spices.",
@@ -1987,9 +2004,10 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0001",
       "required_parent_id": "P0001",
       "product_match_terms": "eggs",
+      "product_exclude_terms": "easter | chocolate | milk",
       "verified_gtins": "9339687306558 | 9339687306565 | 9339687265794 | 9339687138920 | 9300633636982",
       "verified_gtin_evidence": "9339687306558 -> https://cuugo.com/product/woolworths/224762/woolworths-12-large-free-range-eggs ; https://cals.com.au/eggs/woolworths-12-large-free-range-eggs-600g/ | 9339687306565 -> https://cuugo.com/product/woolworths/224763/woolworths-12-x-large-free-range-eggs ; https://cals.com.au/eggs/woolworths-12-x-large-free-range-eggs-700g/ | 9339687265794 -> https://cuugo.com/product/woolworths/165367/woolworths-12-extra-large-cage-free-eggs ; https://cals.com.au/eggs/woolworths-12-extra-large-cage-free-eggs-700g/ | 9339687138920 -> https://cuugo.com/product/woolworths/74593/woolworths-18-large-cage-free-eggs ; https://cals.com.au/eggs/woolworths-18-large-cage-free-eggs-900g/ | 9300633636982 -> https://www.foodauthority.nsw.gov.au/news/recalls/bridgewater-poultry-eggs",
-      "scope_review_summary": "Woolworths-branded eggs as one bounded product scope. Match any Woolworths egg packet by verified GTIN or resolved Woolworths identity plus the reviewed 'eggs' term. Do not narrow by cage-free, free-range, barn-laid or other egg type. Do not propagate to unrelated Woolworths products.",
+      "scope_review_summary": "Woolworths-owned egg product scope across the governed Woolworths brand path, including governed child-brand descendants. A verified GTIN may establish relevance directly. On the identity + product-name route, a positive 'eggs' match is blocked where the product name also contains any governed exclusion term: easter, chocolate or milk. This prevents obvious confectionery false positives without narrowing by cage-free/free-range/barn-laid subtype.",
       "coverage_state": "exact_product",
       "confidence_state": "strong",
       "review_state": "reviewed",
@@ -2008,6 +2026,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Cadbury brand target across AU/NZ through Chaining. The cocoa_chocolate guard is an additional fail-closed narrowing layer; do not propagate to non-Cadbury Mondelēz brands.",
@@ -2029,6 +2048,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Keri brand-level transparency context. Resolve B0268 through Chaining across AU/NZ. No product-name or GTIN gate is required and the Signal must not propagate to Coca-Cola parent or sibling brands.",
@@ -2050,6 +2070,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0139",
       "required_parent_id": "P0020",
       "product_match_terms": "anchor blue milk powder | blue milk powder",
+      "product_exclude_terms": "",
       "verified_gtins": "9415262047969 | 9415262050044",
       "verified_gtin_evidence": "9415262047969 -> https://www.thewarehouse.co.nz/p/anchor-blue-milk-powder-1kg/R2700254.html ; https://world.openfoodfacts.org/product/9415262047969 | 9415262050044 -> https://www.buyanz.com/product/11011 ; https://www.letogift.co.nz/product/20063",
       "scope_review_summary": "Bounded Anchor Blue Milk Powder product scope. A verified GTIN match may establish relevance directly; otherwise Chaining must resolve Anchor and a reviewed product-name term must match. Do not propagate to liquid milk or unrelated Anchor products.",
@@ -2071,6 +2092,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0024",
       "required_parent_id": "P0003",
       "product_match_terms": "sparkling water",
+      "product_exclude_terms": "",
       "verified_gtins": "9415077134649",
       "verified_gtin_evidence": "9415077134649 -> https://www.pams.co.nz/product-finder/5261954",
       "scope_review_summary": "Bounded Pams sparkling-water product scope. A verified GTIN match may establish relevance directly; otherwise Chaining must resolve Pams and the reviewed product-name term must match. Do not propagate to unrelated Pams products.",
@@ -2092,6 +2114,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Corporate cocoa/chocolate target named in the source. Resolve the governed entity and current/relevant lineage as authorised; then apply the cocoa_chocolate guard. The guard narrows the base entity scope and never broadens it.",
@@ -2113,6 +2136,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Corporate cocoa/chocolate target named in the source. Resolve the governed entity and current/relevant lineage as authorised; then apply the cocoa_chocolate guard. The guard narrows the base entity scope and never broadens it.",
@@ -2134,6 +2158,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Corporate cocoa/chocolate target named in the source. Resolve the governed entity and current/relevant lineage as authorised; then apply the cocoa_chocolate guard. The guard narrows the base entity scope and never broadens it.",
@@ -2155,6 +2180,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Corporate cocoa/chocolate target named in the source. Resolve the governed entity and current/relevant lineage as authorised; then apply the cocoa_chocolate guard. The guard narrows the base entity scope and never broadens it.",
@@ -2176,6 +2202,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Corporate cocoa/chocolate target named in the source. Resolve the governed entity and current/relevant lineage as authorised; then apply the cocoa_chocolate guard. The guard narrows the base entity scope and never broadens it.",
@@ -2197,6 +2224,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Explicit publication-time Magnum bridge. Resolve B0105 through Chaining and apply the cocoa_chocolate guard. Do not propagate the historical finding to unrelated current TMICC brands.",
@@ -2218,6 +2246,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "B0139",
       "required_parent_id": "P0020",
       "product_match_terms": "butter",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Bounded Anchor butter product line. A verified GTIN match may establish relevance directly; otherwise Chaining must resolve Anchor and the reviewed product-name term must match. Do not propagate to liquid milk, milk powder or unrelated Anchor products.",
@@ -2239,6 +2268,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Company-level Talley's context across governed AU/NZ descendants. Resolve P0158 through Chaining. Source geography and allegation scope remain consumer qualification and do not narrow the delivery market by default.",
@@ -2260,6 +2290,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Company-level Mondelez target across AU/NZ through Chaining. No product_scope_guard. Comparator companies mentioned in the source are not targets.",
@@ -2281,6 +2312,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Only listed date markings.",
@@ -2302,6 +2334,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Only listed date marking.",
@@ -2323,6 +2356,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Only listed date marking.",
@@ -2344,6 +2378,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Only listed date marking.",
@@ -2365,6 +2400,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Only listed batch numbers and date marking.",
@@ -2386,6 +2422,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Only product labelled USE BY 01MAY26; correct date was 01MAR26.",
@@ -2407,6 +2444,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "All current Coles-owned/private-label product descendants in AU; exclude third-party brands merely stocked by Coles.",
@@ -2428,6 +2466,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Brand-wide In-the-News for governed brand B0179 in market AU. No product_scope_guard; scanned SKU name is not an eligibility gate. (Restored from product/product_family+product_name conflation.) Prior label: Leggo's Tomato Paste — AU",
@@ -2449,6 +2488,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Brand-wide In-the-News for governed brand B0032 in market AU. No product_scope_guard; scanned SKU name is not an eligibility gate. (Restored from product/product_family+product_name conflation.) Prior label: Remano Tomato Paste — AU",
@@ -2470,6 +2510,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Brand-wide In-the-News for governed brand B0200 in market AU. No product_scope_guard; scanned SKU name is not an eligibility gate. (Restored from product/product_family+product_name conflation.) Prior label: Coles Italian Tomato Paste — AU",
@@ -2491,6 +2532,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Brand-wide In-the-News for governed brand B0653 in market AU. No product_scope_guard; scanned SKU name is not an eligibility gate. (Restored from product/product_family+product_name conflation.) Prior label: Hoyt's Turmeric — AU",
@@ -2512,6 +2554,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Brand-wide In-the-News for governed brand B0001 in market AU. No product_scope_guard; scanned SKU name is not an eligibility gate. (Restored from product/product_family+product_name conflation.) Prior label: Woolworths Cage-Free Eggs — tested South Australian range",
@@ -2533,6 +2576,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Cadbury/Mondelēz chocolate context only; exclude Ritz, Philadelphia and other non-chocolate Mondelēz brands.",
@@ -2554,6 +2598,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Cadbury/Mondelēz chocolate context only; exclude non-chocolate Mondelēz brands.",
@@ -2575,6 +2620,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Brand-wide In-the-News for governed brand B0268 in market NZ. No product_scope_guard; scanned SKU name is not an eligibility gate. (Restored from product/product_family+product_name conflation.) Prior label: Keri Fruit Juice — documented 3L to 2.4L transition",
@@ -2596,6 +2642,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Brand-wide In-the-News for governed brand B0139 in market NZ. No product_scope_guard; scanned SKU name is not an eligibility gate. (Restored from product/product_family+product_name conflation.) Prior label: Anchor Blue Milk Powder 400g",
@@ -2617,6 +2664,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Brand-wide In-the-News for governed brand B0024 in market NZ. No product_scope_guard; scanned SKU name is not an eligibility gate. (Restored from product/product_family+product_name conflation.) Prior label: Pams sparkling water with outdated two-star HSR",
@@ -2638,6 +2686,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Corporate cocoa/chocolate target named in Global Witness source; positive product-scope evidence required.",
@@ -2659,6 +2708,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Corporate cocoa/chocolate target named in Global Witness source; positive product-scope evidence required.",
@@ -2680,6 +2730,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Corporate cocoa/chocolate target named in Global Witness source; positive product-scope evidence required.",
@@ -2701,6 +2752,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Corporate cocoa/chocolate target named in Global Witness source; positive product-scope evidence required.",
@@ -2722,6 +2774,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Publication-time corporate subject named by Global Witness; positive product-scope evidence required.",
@@ -2743,6 +2796,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Explicit publication-time bridge for Unilever/Magnum; do not propagate to all current TMICC brands.",
@@ -2764,6 +2818,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Brand-wide In-the-News for governed brand B0139 in market NZ. No product_scope_guard; scanned SKU name is not an eligibility gate. (Restored from product/product_family+product_name conflation.) Prior label: Anchor Butter — affected historical label period",
@@ -2785,6 +2840,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "All current NZ consumer-brand/product descendants for company-context display; do not imply every site or product was directly involved in each underlying allegation.",
@@ -2806,6 +2862,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Only exact products/date markings named by MPI; no propagation to all Vogel's products outside the recall.",
@@ -2827,6 +2884,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "required_brand_id": "",
       "required_parent_id": "",
       "product_match_terms": "",
+      "product_exclude_terms": "",
       "verified_gtins": "",
       "verified_gtin_evidence": "",
       "scope_review_summary": "Only the 250g product with best-before dates 04/12/2026, 07/04/2027 or 11/12/2027.",
@@ -3115,6 +3173,21 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "market_key": "AU",
       "required_brand_id": "B0796",
       "required_parent_id": "P0175",
+      "match_field": "product_name",
+      "match_mode": "phrase_contains",
+      "match_value": "sichuan chili oil",
+      "match_value_normalized": "sichuan chili oil",
+      "review_state": "reviewed",
+      "confidence_state": "confirmed",
+      "lineage_reference": "FSANZ-MRCHENS-20260818",
+      "notes": "Derived mechanically from workbook product_match_terms"
+    },
+    {
+      "criterion_id": "SPC-0020",
+      "signal_target_id": "TGT-126",
+      "market_key": "AU",
+      "required_brand_id": "B0796",
+      "required_parent_id": "P0175",
       "match_field": "gtin",
       "match_mode": "exact",
       "match_value": "9349673005624",
@@ -3125,7 +3198,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0020",
+      "criterion_id": "SPC-0021",
       "signal_target_id": "TGT-127",
       "market_key": "AU",
       "required_brand_id": "B0799",
@@ -3140,7 +3213,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0021",
+      "criterion_id": "SPC-0022",
       "signal_target_id": "TGT-127",
       "market_key": "AU",
       "required_brand_id": "B0799",
@@ -3155,7 +3228,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0022",
+      "criterion_id": "SPC-0023",
       "signal_target_id": "TGT-127",
       "market_key": "AU",
       "required_brand_id": "B0799",
@@ -3170,7 +3243,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0023",
+      "criterion_id": "SPC-0024",
       "signal_target_id": "TGT-128",
       "market_key": "AU",
       "required_brand_id": "B0800",
@@ -3185,7 +3258,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0024",
+      "criterion_id": "SPC-0025",
       "signal_target_id": "TGT-128",
       "market_key": "AU",
       "required_brand_id": "B0800",
@@ -3200,7 +3273,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0025",
+      "criterion_id": "SPC-0026",
       "signal_target_id": "TGT-129",
       "market_key": "AU",
       "required_brand_id": "B0797",
@@ -3215,7 +3288,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0026",
+      "criterion_id": "SPC-0027",
       "signal_target_id": "TGT-129",
       "market_key": "AU",
       "required_brand_id": "B0797",
@@ -3230,7 +3303,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0027",
+      "criterion_id": "SPC-0028",
       "signal_target_id": "TGT-130",
       "market_key": "AU",
       "required_brand_id": "B0798",
@@ -3245,7 +3318,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0028",
+      "criterion_id": "SPC-0029",
       "signal_target_id": "TGT-131",
       "market_key": "NZ",
       "required_brand_id": "B0801",
@@ -3260,7 +3333,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0029",
+      "criterion_id": "SPC-0030",
       "signal_target_id": "TGT-131",
       "market_key": "NZ",
       "required_brand_id": "B0801",
@@ -3275,7 +3348,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0030",
+      "criterion_id": "SPC-0031",
       "signal_target_id": "TGT-132",
       "market_key": "NZ",
       "required_brand_id": "B0001",
@@ -3290,7 +3363,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0031",
+      "criterion_id": "SPC-0032",
       "signal_target_id": "TGT-132",
       "market_key": "NZ",
       "required_brand_id": "B0001",
@@ -3305,7 +3378,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0032",
+      "criterion_id": "SPC-0033",
       "signal_target_id": "TGT-133",
       "market_key": "NZ",
       "required_brand_id": "B0798",
@@ -3320,7 +3393,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0033",
+      "criterion_id": "SPC-0034",
       "signal_target_id": "TGT-107",
       "market_key": "AU+NZ",
       "required_brand_id": "B0179",
@@ -3335,7 +3408,22 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0034",
+      "criterion_id": "SPC-0035",
+      "signal_target_id": "TGT-107",
+      "market_key": "AU+NZ",
+      "required_brand_id": "B0179",
+      "required_parent_id": "P0041",
+      "match_field": "product_name",
+      "match_mode": "phrase_contains",
+      "match_value": "tomatoes",
+      "match_value_normalized": "tomatoes",
+      "review_state": "reviewed",
+      "confidence_state": "strong",
+      "lineage_reference": "ABC-106940742-LEGGOS",
+      "notes": "Derived mechanically from workbook product_match_terms"
+    },
+    {
+      "criterion_id": "SPC-0036",
       "signal_target_id": "TGT-107",
       "market_key": "AU+NZ",
       "required_brand_id": "B0179",
@@ -3350,7 +3438,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0035",
+      "criterion_id": "SPC-0037",
       "signal_target_id": "TGT-107",
       "market_key": "AU+NZ",
       "required_brand_id": "B0179",
@@ -3365,7 +3453,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0036",
+      "criterion_id": "SPC-0038",
       "signal_target_id": "TGT-107",
       "market_key": "AU+NZ",
       "required_brand_id": "B0179",
@@ -3380,7 +3468,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0037",
+      "criterion_id": "SPC-0039",
       "signal_target_id": "TGT-107",
       "market_key": "AU+NZ",
       "required_brand_id": "B0179",
@@ -3395,7 +3483,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0038",
+      "criterion_id": "SPC-0040",
       "signal_target_id": "TGT-107",
       "market_key": "AU+NZ",
       "required_brand_id": "B0179",
@@ -3410,7 +3498,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0039",
+      "criterion_id": "SPC-0041",
       "signal_target_id": "TGT-108",
       "market_key": "AU+NZ",
       "required_brand_id": "B0032",
@@ -3425,7 +3513,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0040",
+      "criterion_id": "SPC-0042",
       "signal_target_id": "TGT-109",
       "market_key": "AU+NZ",
       "required_brand_id": "B0200",
@@ -3440,7 +3528,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0041",
+      "criterion_id": "SPC-0043",
       "signal_target_id": "TGT-110",
       "market_key": "AU+NZ",
       "required_brand_id": "B0653",
@@ -3455,7 +3543,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0042",
+      "criterion_id": "SPC-0044",
       "signal_target_id": "TGT-110",
       "market_key": "AU+NZ",
       "required_brand_id": "B0653",
@@ -3470,7 +3558,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0043",
+      "criterion_id": "SPC-0045",
       "signal_target_id": "TGT-111",
       "market_key": "AU+NZ",
       "required_brand_id": "B0001",
@@ -3485,7 +3573,52 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0044",
+      "criterion_id": "SPC-0046",
+      "signal_target_id": "TGT-111",
+      "market_key": "AU+NZ",
+      "required_brand_id": "B0001",
+      "required_parent_id": "P0001",
+      "match_field": "product_name_exclude",
+      "match_mode": "phrase_contains",
+      "match_value": "easter",
+      "match_value_normalized": "easter",
+      "review_state": "reviewed",
+      "confidence_state": "strong",
+      "lineage_reference": "ABC-106960116-WOOLWORTHS-EGGS",
+      "notes": "Derived mechanically from workbook product_exclude_terms"
+    },
+    {
+      "criterion_id": "SPC-0047",
+      "signal_target_id": "TGT-111",
+      "market_key": "AU+NZ",
+      "required_brand_id": "B0001",
+      "required_parent_id": "P0001",
+      "match_field": "product_name_exclude",
+      "match_mode": "phrase_contains",
+      "match_value": "chocolate",
+      "match_value_normalized": "chocolate",
+      "review_state": "reviewed",
+      "confidence_state": "strong",
+      "lineage_reference": "ABC-106960116-WOOLWORTHS-EGGS",
+      "notes": "Derived mechanically from workbook product_exclude_terms"
+    },
+    {
+      "criterion_id": "SPC-0048",
+      "signal_target_id": "TGT-111",
+      "market_key": "AU+NZ",
+      "required_brand_id": "B0001",
+      "required_parent_id": "P0001",
+      "match_field": "product_name_exclude",
+      "match_mode": "phrase_contains",
+      "match_value": "milk",
+      "match_value_normalized": "milk",
+      "review_state": "reviewed",
+      "confidence_state": "strong",
+      "lineage_reference": "ABC-106960116-WOOLWORTHS-EGGS",
+      "notes": "Derived mechanically from workbook product_exclude_terms"
+    },
+    {
+      "criterion_id": "SPC-0049",
       "signal_target_id": "TGT-111",
       "market_key": "AU+NZ",
       "required_brand_id": "B0001",
@@ -3500,7 +3633,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0045",
+      "criterion_id": "SPC-0050",
       "signal_target_id": "TGT-111",
       "market_key": "AU+NZ",
       "required_brand_id": "B0001",
@@ -3515,7 +3648,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0046",
+      "criterion_id": "SPC-0051",
       "signal_target_id": "TGT-111",
       "market_key": "AU+NZ",
       "required_brand_id": "B0001",
@@ -3530,7 +3663,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0047",
+      "criterion_id": "SPC-0052",
       "signal_target_id": "TGT-111",
       "market_key": "AU+NZ",
       "required_brand_id": "B0001",
@@ -3545,7 +3678,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0048",
+      "criterion_id": "SPC-0053",
       "signal_target_id": "TGT-111",
       "market_key": "AU+NZ",
       "required_brand_id": "B0001",
@@ -3560,7 +3693,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0049",
+      "criterion_id": "SPC-0054",
       "signal_target_id": "TGT-115",
       "market_key": "AU+NZ",
       "required_brand_id": "B0139",
@@ -3575,7 +3708,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0050",
+      "criterion_id": "SPC-0055",
       "signal_target_id": "TGT-115",
       "market_key": "AU+NZ",
       "required_brand_id": "B0139",
@@ -3590,7 +3723,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0051",
+      "criterion_id": "SPC-0056",
       "signal_target_id": "TGT-115",
       "market_key": "AU+NZ",
       "required_brand_id": "B0139",
@@ -3605,7 +3738,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0052",
+      "criterion_id": "SPC-0057",
       "signal_target_id": "TGT-115",
       "market_key": "AU+NZ",
       "required_brand_id": "B0139",
@@ -3620,7 +3753,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0053",
+      "criterion_id": "SPC-0058",
       "signal_target_id": "TGT-116",
       "market_key": "AU+NZ",
       "required_brand_id": "B0024",
@@ -3635,7 +3768,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook product_match_terms"
     },
     {
-      "criterion_id": "SPC-0054",
+      "criterion_id": "SPC-0059",
       "signal_target_id": "TGT-116",
       "market_key": "AU+NZ",
       "required_brand_id": "B0024",
@@ -3650,7 +3783,7 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "notes": "Derived mechanically from workbook verified_gtins"
     },
     {
-      "criterion_id": "SPC-0055",
+      "criterion_id": "SPC-0060",
       "signal_target_id": "TGT-123",
       "market_key": "AU+NZ",
       "required_brand_id": "B0139",
@@ -24387,6 +24520,21 @@ export const DYNAMIC_SIGNALS_ASSET_RUNTIME_EMBED: DynamicSignalsAssetRuntimeEmbe
       "source_id": "SRC_SI_V016_SHELF_REFRESH",
       "source_reference": "founder-authorised shelf candidates 20260918",
       "notes_internal": "wave1-v0.16 shelf refresh 20260918"
+    },
+    {
+      "alias_id": "A0188",
+      "alias_text": "Keri Juice Co",
+      "alias_normalized": "keri juice co",
+      "alias_type": "packaging_variation",
+      "alias_source_type": "manual_stewardship",
+      "brand_id": "B0268",
+      "canonical_brand_name": "Keri",
+      "parent_id": "P0011",
+      "parent_display_name": "The Coca-Cola Company",
+      "review_state": "reviewed",
+      "source_id": "SRC_COCA_COLA_AU_BRANDS",
+      "source_reference": "SRC_COCA_COLA_AU_BRANDS",
+      "notes_internal": "Founder-authorised OFF brand-form alias: Keri Juice Co to B0268 Keri (DSA FINAL v1.1)"
     },
     {
       "alias_id": "A_EXT_HOYTS_1",

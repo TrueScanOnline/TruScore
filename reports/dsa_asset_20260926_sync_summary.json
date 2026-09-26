@@ -1,11 +1,13 @@
 {
+  "workbook": "Rveel_Dynamic_Signals_Asset_20260926_FINAL_v1_1.xlsx",
   "workbook_signals": 26,
   "workbook_targets": 31,
   "signals_out": 44,
   "targets_out": 58,
   "publishable_targets": 31,
-  "criteria_out": 69,
-  "active_phrase_criteria": 32,
+  "criteria_out": 74,
+  "active_phrase_criteria": 34,
+  "active_exclude_criteria": 3,
   "active_gtin_criteria": 23,
   "unique_verified_gtins": 23,
   "gtin_set": [
