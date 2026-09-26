@@ -14,6 +14,8 @@
 | Implementation commit | Initial: `f3ccdc660bbac8196d5e925202b77177e8a9c146`; Body wording: `a458e32be782937d034e0b2c44a30fafc21de2fe`; QA corrective: see tip below |
 | Branch tip | `git rev-parse HEAD` on `wave4a/evidence-epoch-admission-20260926` after QA corrective commit |
 | QA baseline tip (Claude assurance) | `a458e32be782937d034e0b2c44a30fafc21de2fe` |
+| QA corrective tip | `adb97a328b1eb89f59737eaf07294346bf9f5a5e` |
+| Final hardening tip | `git rev-parse HEAD` after final hardening commit |
 | Working tree at start | Clean except local extract helper |
 | Unrelated merge/cherry-pick | **None** |
 
@@ -111,9 +113,9 @@ npm run test:wave4a0 -- --no-coverage
 npm run test:wave4-contributions -- --no-coverage
 ```
 
-### Results (2026-09-26 — QA corrective tip)
+### Results (2026-09-26 — final hardening tip)
 
-- `test:wave4a0`: **3 suites, 55 tests, all PASS** (was 35 before corrective pass)
+- `test:wave4a0`: **3 suites, 65 tests, all PASS** (was 55 after QA corrective; was 35 at initial foundation)
 - `test:wave4-contributions`: **4 suites, 38 tests, all PASS** (unchanged count)
 
 ### §8 falsification mapping
@@ -146,6 +148,15 @@ npm run test:wave4-contributions -- --no-coverage
 | **4. Variant identity** | QA-4 base + variant independently addressable/versioned | PASS |
 | **5. Production recordClass allowlist** | QA-5 explicit production required; absent/unknown/malformed/historical/test/fixture/developer fail closed; epoch alone insufficient; Jest stamps developer; admission/retry cannot upgrade | PASS |
 
+### Final hardening adversarial mapping (founder-directed freeze pass)
+
+| Section | Closed behaviour | Tests | Result |
+|---|---|---|---|
+| **H1** | Asserted `cross_user_eligible` without qualifying confirmations cannot create production receiver eligibility; forged stored fields irrelevant; legitimate confirmations still work | `H1 Asserted cross_user_eligible…` (3) | PASS |
+| **H2** | Missing-local recovery recovers payload but strips stale assessment authority; no consumption via rehydration; no progressive elevation; withdrawal/`review_required` preservation intact | `H2 Missing-local recovery…` (4) | PASS |
+| **H3** | `variantKey` canonicalised at submission; whitespace-equivalent keys share version history; no overwrite of base/prior | `H3 variantKey canonicalisation…` (2) | PASS |
+| **H4** | Controlled production-class override exercises `submitGovernedEvidence` → `admitGovernedEvidence`; authority still requires governed confirmations | `H4 Production submit → admit path…` (1) | PASS |
+
 ### Body receiver corrective note (founder-authorised)
 
 Before (initial tip): extensibility “proved” by mutating stored `receiverEligibility` map.  
@@ -159,11 +170,11 @@ On tip `95c7d16`, pre-existing Wave 4 ORG-02/ORG-06 expectations that Open score
 
 ### New contract paths (live)
 
-- `submitGovernedEvidence` → stamps epoch + recordClass from runtime determinant + `submitted` + recovery checkpoint (production class only)
+- `submitGovernedEvidence` → stamps epoch + recordClass from runtime determinant + `submitted` + recovery checkpoint (production class only); canonicalises `variantKey`
 - `admitGovernedEvidence` / `submitAndAdmitGovernedEvidence` → governed admission
-- `toScoringProduct` → applies promoted evidence only via `canApplyToProductionReceiver` + prevailing selection
+- `toScoringProduct` → applies promoted evidence only via `canApplyToProductionReceiver` + prevailing selection **per evidence key**
 - `selectPrevailingAdmittedEvidence` / `getPrevailingAdmittedEvidenceForKey`
-- `retryPendingRemotePersist` / `listPendingRecovery` / `resolveRecoveryPersistPayload`
+- `retryPendingRemotePersist` / `listPendingRecovery` / `resolveRecoveryPersistPayload` / `stripStaleAssessmentAuthorityForMissingLocalRecovery`
 - `registerBodyReceiverPredicate` / `evaluateBodyReceiverEligibility`
 
 ### Compatibility / legacy paths retained
@@ -173,23 +184,25 @@ On tip `95c7d16`, pre-existing Wave 4 ORG-02/ORG-06 expectations that Open score
 - `unifiedContributionService` pending accumulate unchanged (not production-authoritative).
 - Callers that only `submitGovernedEvidence` without admit will **not** affect production assessment until a later package wires admit into UI flows (intentional fail closed).
 
-## G. Unresolved / blockers (explicit 4A.1 / design gates)
+## G. Unresolved / blockers (explicit later dependencies)
 
-1. **Functional Spec v0.2 Required Controlling Inputs** were not present in-repo / Desktop pack beyond this instruction — methodology cells not invented. Body receiver slot remains fail-closed in 4A.0 until 4A.2 registers approved evidence-type × methodology predicates via `bodyReceiverRegistry`.
+1. **Functional Spec v0.2 Required Controlling Inputs** — methodology cells not invented. Body receiver slot remains fail-closed until 4A.2 registers approved predicates via `bodyReceiverRegistry`.
 2. **Call-site cutover:** Manual Edit / CoM still submit without automatic admit — assessment stays fail closed until 4A.1+ wires controlled admission (by design).
-3. **Backend authority gate (blocking for shared-remote production):** no remote evidence may become production assessment-authoritative while the backend accepts client-supplied authority fields without server-side admission/recomputation. **Not redesigned/deployed in this pass.** Preserve as explicit pre-production gate.
-4. **Multi-device / server version collision (blocking for shared-remote production):** version allocation is local; two devices can independently produce the same `…|v1`, colliding at backend upsert. **Explicit 4A.1 pre-production/shared-remote design dependency** for founder disposition. Not implemented in this pass.
-5. **Value-derived evidence key / correction semantics:** AU→NZ can create a new key rather than a new version. Preserve for Origins/4A.3 design disposition. Not redesigned in this pass.
-6. **ORG-02/ORG-06 Open delta** — weakened/masked regression-test issue; founder backlog; do not retune Open methodology here.
-7. **NOVA1 Rescuer / Body6 / Whole Produce** not inspected/modified (deferred to 4A.2). OFF Nutri-Score/NOVA substitution via contribution evidence remains prohibited generally.
+3. **Backend authority gate (blocking for shared-remote production):** no remote evidence may become production assessment-authoritative while the backend accepts client-supplied authority fields without server-side admission/recomputation. **Not redesigned/deployed in this pass.**
+4. **Multi-device / server version collision (blocking for shared-remote production):** version allocation is local; two devices can independently produce the same `…|v1`, colliding at backend upsert. **Explicit pre-production/shared-remote design dependency.**
+5. **Origins subject/key semantics → 4A.3:** For the same governed product/variant contribution **subject**, the later successfully admitted user contribution prevails; earlier same-subject contributions are historical. Origins may legitimately hold multiple concurrent facts (made in / packed in / processed in / sourced from / multiple countries). A later contribution about one subject must not erase unrelated Origins facts. Do not compare unrelated Origins records by per-key version as a global winner; do not invent a timestamp winner across subjects. **Detailed subject/key/correction semantics belong to 4A.3 — not implemented in 4A.0.**
+6. **Value-derived evidence key / correction semantics** (e.g. AU→NZ new key vs new version) — preserve for Origins/4A.3 disposition.
+7. **ORG-02/ORG-06 Open delta** — weakened/masked regression-test issue; founder backlog; do not retune Open methodology here.
+8. **NOVA1 Rescuer / Body6 / Whole Produce** deferred to 4A.2. OFF Nutri-Score/NOVA substitution via contribution evidence remains prohibited.
 
 ## H. Recommendation
 
 | Question | Answer |
 |---|---|
-| Ready for founder review / independent QA re-review of this corrective pass? | **Yes** — five authorised contract defects closed with adversarial suite evidence |
-| Can 4A.1 safely depend on this contract for **local/single-device** epoch + admission + receiver + prevailing + recovery? | **Yes**, provided 4A.1 uses `admit*` paths, recomputed receiver eligibility, and explicit `recordClass=production` |
-| Can 4A.1 declare **shared-remote / multi-device production readiness**? | **No** — unresolved backend authority gate + multi-device version-collision gate must be disposed before that claim |
+| Ready for founder acceptance / freeze of 4A.0 foundation? | **Yes** — QA corrective + final hardening closed with mapped adversarial coverage |
+| Can 4A.1 safely depend on this contract for **local/single-device** epoch + admission + receiver + prevailing + recovery? | **Yes**, provided 4A.1 uses `admit*` paths, confirmation-record eligibility, and explicit `recordClass=production` |
+| Can 4A.1 declare **shared-remote / multi-device production readiness**? | **No** — unresolved backend authority + multi-device version-collision gates |
+| Origins multi-subject / correction semantics? | **4A.3 dependency** — not changed in 4A.0 |
 | Next package should | Wire capture/UI to `submit` → `admit`; keep fixtures off production class; avoid bulk migration; dispose remote/server-authority + multi-device versioning before shared-remote production |
 
 ## I. QA corrective delta (vs tip `a458e32`)
@@ -202,9 +215,27 @@ On tip `95c7d16`, pre-existing Wave 4 ORG-02/ORG-06 expectations that Open score
 | Variant identity | `buildEvidenceId` omitted `variantKey` | `variantKey` in durable `evidenceId` + evidence key |
 | Production recordClass | Denylist of fixture/test/developer; absent class + epoch could be production | Explicit allowlist `recordClass===production`; creation stamped via `__DEV__`/`NODE_ENV=test`/`JEST_WORKER_ID` → developer, else production |
 
-**Signals / EAS / release / pillar methodology / scoring files:** unchanged in this corrective pass.
+## J. Final hardening delta (vs tip `adb97a3`)
 
-**Parallel Signals ancestry note:** Dynamic Signals MVP work continues on separate branch lineage from `95c7d16` (e.g. `signals/dsa-asset-20260926-final`). This Wave 4A.0 corrective tip does not merge or depend on Signals pack changes.
+| Authorised correction | Before | After |
+|---|---|---|
+| Asserted lifecycle eligibility | `state === cross_user_eligible` alone could grant receiver eligibility | Confirmation threshold always taken from governed confirmation records; asserted state without qualifying confirmations fails closed |
+| Missing-local recovery | Absent local rehydrated full checkpoint snapshot including promotion/eligibility | Payload recovered; assessment authority stripped (`state→pending`, `canonicalPromoted=false`, eligibility cleared); lifecycle required to regain authority |
+| `variantKey` | Trim inconsistently / compared raw at submit | `canonicalizeVariantKey` once at submission for versioning, keys, IDs, storage, comparisons |
+| Production path assurance | No direct submit→admit production-class path test under Jest | `H4` uses `__setContributionCreationRecordClassForTests('production')` without weakening runtime Jest→developer default |
+
+**Closed in this final hardening pass:**
+- asserted `cross_user_eligible` cannot independently create production authority;
+- missing-local recovery cannot restore stale assessment authority;
+- `variantKey` is canonicalised consistently;
+- production submission→admission has direct path-level test coverage.
+
+**Signals / EAS / release / pillar methodology / scoring files:** unchanged.  
+**Backend / multi-device architecture:** unchanged.  
+**Origins cross-key/subject semantics:** unchanged (4A.3 dependency recorded).  
+**4A.1:** not started.
+
+**Parallel Signals ancestry note:** Dynamic Signals MVP work continues on separate branch lineage from `95c7d16` (e.g. `signals/dsa-asset-20260926-final`). This Wave 4A.0 tip does not merge or depend on Signals pack changes.
 
 ## Dual-device UAT
 

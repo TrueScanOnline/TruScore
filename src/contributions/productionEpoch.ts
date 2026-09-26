@@ -60,7 +60,19 @@ export function isKnownContributionRecordClass(
  * Does not invent a new environment architecture. UAT on TestFlight is a
  * production-class runtime; Expo Go / Jest are not.
  */
+let __testCreationRecordClassOverride: ContributionRecordClass | null = null;
+
+/** Test-only override — never used by production runtime. */
+export function __setContributionCreationRecordClassForTests(
+  recordClass: ContributionRecordClass | null
+): void {
+  __testCreationRecordClassOverride = recordClass;
+}
+
 export function resolveContributionCreationRecordClass(): ContributionRecordClass {
+  if (__testCreationRecordClassOverride != null) {
+    return __testCreationRecordClassOverride;
+  }
   if (process.env.JEST_WORKER_ID != null || process.env.NODE_ENV === 'test') {
     return 'developer';
   }

@@ -1,4 +1,4 @@
-import { buildEvidenceId, normalizeClaimKey } from './evidenceVersion';
+import { buildEvidenceId, canonicalizeVariantKey, normalizeClaimKey } from './evidenceVersion';
 import {
   admitEvidence,
   evidenceKeyOf,
@@ -64,12 +64,15 @@ export async function submitGovernedEvidence(params: {
     params.exactWording ||
     (structured ? buildExactWordingFromStructured(structured) : params.claimValue.trim());
 
+  // Canonicalise once at the submission boundary for versioning/identity consistency.
+  const variantKey = canonicalizeVariantKey(params.variantKey);
+
   const existing = await getLocalEvidenceForBarcode(params.barcode);
   const sameClaim = existing.filter(
     (e) =>
       e.domain === params.domain &&
       normalizeClaimKey(e.claimKey) === claimKey &&
-      (params.variantKey ? e.variantKey === params.variantKey : !e.variantKey)
+      canonicalizeVariantKey(e.variantKey) === variantKey
   );
 
   // Correction creates a new version — never overwrite an existing evidenceId/version.
@@ -93,14 +96,14 @@ export async function submitGovernedEvidence(params: {
       domain: params.domain,
       claimKey,
       evidenceVersion,
-      variantKey: params.variantKey,
+      variantKey,
     }),
     barcode: params.barcode,
     domain: params.domain,
     evidenceVersion,
     claimKey,
     claimValue: claimValue.trim(),
-    variantKey: params.variantKey,
+    variantKey,
     labelsTags: params.labelsTags,
     certificationLane,
     originStructured: structured,
@@ -231,7 +234,7 @@ export async function getPrevailingAdmittedEvidenceForKey(params: {
     barcode: params.barcode,
     domain: params.domain,
     claimKey: normalizeClaimKey(params.claimKey),
-    variantKey: params.variantKey,
+    variantKey: canonicalizeVariantKey(params.variantKey),
   });
 }
 

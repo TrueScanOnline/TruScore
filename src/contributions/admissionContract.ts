@@ -19,6 +19,7 @@ import {
   type ContributionAdmissionStatus,
 } from './admissionTypes';
 import { evaluateBodyReceiverEligibility } from './bodyReceiverRegistry';
+import { canonicalizeVariantKey } from './evidenceVersion';
 import {
   CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
   carriesCurrentProductionEpoch,
@@ -52,7 +53,8 @@ export function buildEvidenceKey(parts: EvidenceKeyParts): string {
   const claim = String(parts.claimKey || '')
     .trim()
     .toLowerCase();
-  const variant = parts.variantKey ? `|var:${String(parts.variantKey).trim()}` : '';
+  const variantCanon = canonicalizeVariantKey(parts.variantKey);
+  const variant = variantCanon ? `|var:${variantCanon}` : '';
   return `${barcode}|${parts.domain}|${claim}${variant}`;
 }
 
@@ -103,14 +105,22 @@ function otherActiveConfirmations(evidence: ContributionEvidence): number {
 }
 
 /**
- * Whether review_required may preserve assessment eligibility via controlled
- * recomputation (confirmation threshold already met), not via stored maps or
- * legacy scoringEligible flags.
+ * Confirmation threshold from governed confirmation records — never from asserted
+ * lifecycle state alone. Stored `state: cross_user_eligible` is insufficient.
  */
-function reviewRequiredPreservesReceiverEligibility(evidence: ContributionEvidence): boolean {
-  if (evidence.state !== 'review_required') return false;
+function confirmationThresholdMet(evidence: ContributionEvidence): boolean {
   const thresholds = getCommunityVerificationThresholds(evidence.domain);
   return otherActiveConfirmations(evidence) >= thresholds.independentConfirmationsRequired;
+}
+
+/**
+ * Whether governance state may participate in receiver eligibility once the
+ * confirmation threshold is independently verified from confirmation records.
+ */
+function governanceStateAllowsReceiverEligibility(evidence: ContributionEvidence): boolean {
+  if (evidence.state === 'cross_user_eligible') return confirmationThresholdMet(evidence);
+  if (evidence.state === 'review_required') return confirmationThresholdMet(evidence);
+  return false;
 }
 
 /**
@@ -193,8 +203,7 @@ export function computeReceiverEligibility(
     const policy = getCommunityVerificationPolicy('origins');
     const eligible =
       policy.canonicalPromotionPermission === true &&
-      (evidence.state === 'cross_user_eligible' ||
-        (evidence.state === 'review_required' && reviewRequiredPreservesReceiverEligibility(evidence)));
+      governanceStateAllowsReceiverEligibility(evidence);
     return {
       open_origins: {
         eligible,
@@ -205,7 +214,9 @@ export function computeReceiverEligibility(
           ? evidence.state === 'review_required'
             ? 'review_required preserves open_origins eligibility via controlled recomputation'
             : 'admitted origins evidence × open_v15 receiving methodology'
-          : 'origins not assessment-eligible for open_origins receiver',
+          : !confirmationThresholdMet(evidence)
+            ? 'asserted lifecycle state without qualifying confirmations — fail closed'
+            : 'origins not assessment-eligible for open_origins receiver',
       },
       ethics_certifications: empty.ethics_certifications,
       body_ingredients_nutrition: bodyEntry,
@@ -223,8 +234,7 @@ export function computeReceiverEligibility(
     const eligible =
       policy.canonicalPromotionPermission === true &&
       laneA === true &&
-      (evidence.state === 'cross_user_eligible' ||
-        (evidence.state === 'review_required' && reviewRequiredPreservesReceiverEligibility(evidence)));
+      governanceStateAllowsReceiverEligibility(evidence);
     return {
       open_origins: empty.open_origins,
       ethics_certifications: {
@@ -238,7 +248,9 @@ export function computeReceiverEligibility(
             ? evidence.state === 'review_required'
               ? 'review_required preserves ethics_certifications eligibility via controlled recomputation'
               : 'admitted Lane A certification evidence × ethics receiving methodology'
-            : 'certifications not assessment-eligible for ethics receiver',
+            : !confirmationThresholdMet(evidence)
+              ? 'asserted lifecycle state without qualifying confirmations — fail closed'
+              : 'certifications not assessment-eligible for ethics receiver',
       },
       body_ingredients_nutrition: bodyEntry,
     };

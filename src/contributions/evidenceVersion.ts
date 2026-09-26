@@ -9,6 +9,18 @@ export function normalizeClaimKey(value: string): string {
     .replace(/\s+/g, ' ');
 }
 
+/**
+ * Canonicalise variantKey once at the governed submission boundary.
+ * Whitespace-equivalent keys must allocate the same identity/version history.
+ * No fuzzy matching, alias resolution, or product inference.
+ */
+export function canonicalizeVariantKey(
+  value: string | null | undefined
+): string | undefined {
+  const trimmed = String(value ?? '').trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 export function buildEvidenceId(params: {
   barcode: string;
   domain: Extract<ContributionDomain, 'origins' | 'certifications'>;
@@ -19,8 +31,7 @@ export function buildEvidenceId(params: {
 }): string {
   const barcode = String(params.barcode || '').trim();
   const claim = normalizeClaimKey(params.claimKey);
-  const variant = params.variantKey
-    ? `|var:${String(params.variantKey).trim()}`
-    : '';
+  const variantCanon = canonicalizeVariantKey(params.variantKey);
+  const variant = variantCanon ? `|var:${variantCanon}` : '';
   return `${barcode}|${params.domain}|${claim}${variant}|v${params.evidenceVersion}`;
 }

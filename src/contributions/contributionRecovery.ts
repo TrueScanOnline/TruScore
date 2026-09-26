@@ -125,9 +125,10 @@ export async function listPendingRecovery(): Promise<ContributionRecoveryCheckpo
 
 /**
  * Resolve which evidence payload to use for a recovery retry.
- * Prefer current local authoritative state; use checkpoint snapshot only when
- * the local record is absent. Never elevate authority beyond the snapshot's
- * legitimate state when rehydrating an absent record.
+ * Prefer current local authoritative state.
+ * When local is absent, recover the contribution payload from the checkpoint but
+ * strip stale promotion/assessment authority — recovered rows must pass through
+ * the legitimate governed lifecycle before regaining assessment authority.
  */
 export function resolveRecoveryPersistPayload(
   checkpoint: ContributionRecoveryCheckpoint,
@@ -136,10 +137,26 @@ export function resolveRecoveryPersistPayload(
   if (local) {
     return local;
   }
-  // Absent local: rehydrate snapshot but strip any elevation that would exceed
-  // checkpoint legitimacy (snapshot must remain as captured — caller already
-  // gated checkpoint creation on production class/epoch).
-  return checkpoint.evidenceSnapshot;
+  return stripStaleAssessmentAuthorityForMissingLocalRecovery(checkpoint.evidenceSnapshot);
+}
+
+/**
+ * Preserve recoverable contribution content while clearing assessment authority
+ * that existed only because the checkpoint was taken after promotion.
+ */
+export function stripStaleAssessmentAuthorityForMissingLocalRecovery(
+  snapshot: ContributionEvidence
+): ContributionEvidence {
+  return {
+    ...snapshot,
+    // Demote governance participation so asserted cross_user_eligible / promotion
+    // at checkpoint time cannot re-enter production assessment via rehydration alone.
+    state: 'pending',
+    canonicalPromoted: false,
+    scoringEligible: false,
+    receiverEligibility: undefined,
+    // Keep admissionStatus, confirmations, disputes, claim payload for recovery.
+  };
 }
 
 /**

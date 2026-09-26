@@ -23,6 +23,7 @@ import {
 import { toScoringProduct } from '../../../contributions/eligibilityBoundary';
 import {
   CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
+  __setContributionCreationRecordClassForTests,
   carriesCurrentProductionEpoch,
   describeEpochAuthority,
   isExplicitProductionRecordClass,
@@ -38,12 +39,18 @@ import {
   listPendingRecovery,
   resolveRecoveryPersistPayload,
   retryPendingRemotePersist,
+  stripStaleAssessmentAuthorityForMissingLocalRecovery,
 } from '../../../contributions/contributionRecovery';
-import { buildEvidenceId } from '../../../contributions/evidenceVersion';
+import { buildEvidenceId, canonicalizeVariantKey } from '../../../contributions/evidenceVersion';
 import {
   getLocalEvidenceById,
+  getLocalEvidenceForBarcode,
   upsertLocalEvidence,
 } from '../../../contributions/evidenceStore';
+import {
+  admitGovernedEvidence,
+  submitGovernedEvidence,
+} from '../../../contributions/submitGovernedEvidence';
 import { calculateTruScore } from '../../../lib/truscoreEngine';
 import type { ContributionEvidence } from '../../../contributions/types';
 import type { Product } from '../../../types/product';
@@ -829,6 +836,274 @@ describe('Wave 4A.0 §8 falsification cases', () => {
       };
       expect(await checkpointMaterialCompletion(developer, evidenceKeyOf(developer))).toBeNull();
       expect(admitEvidence(developer, { admissionReason: 'no' }).ok).toBe(false);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Final hardening (founder-directed 4A.0 pass)
+  // -------------------------------------------------------------------------
+
+  describe('H1 Asserted cross_user_eligible is not independently authoritative', () => {
+    it('admitted production record asserting cross_user_eligible with zero confirmations cannot obtain receiver eligibility', () => {
+      const asserted: ContributionEvidence = {
+        ...productionSubmitted(baseOrigin()),
+        admissionStatus: 'admitted',
+        admission: { admittedAt: 1, admissionReason: 'x', ruleVersion: 'x' },
+        state: 'cross_user_eligible',
+        confirmations: [],
+        scoringEligible: true,
+        canonicalPromoted: true,
+        receiverEligibility: {
+          open_origins: {
+            eligible: true,
+            methodologyId: 'forged',
+            methodologyVersion: 'attack',
+            basisRuleVersion: 'attack',
+            reason: 'forged',
+          },
+        },
+      };
+      expect(isAssessmentEligibleForReceiver(asserted, 'open_origins')).toBe(false);
+      expect(canApplyToProductionReceiver(asserted, 'open_origins')).toBe(false);
+      expect(computeReceiverEligibility(asserted).open_origins?.eligible).toBe(false);
+      expect(toScoringProduct(offBare(), [asserted])?.manufacturing_places).toBeUndefined();
+    });
+
+    it('forged stored eligibility fields do not change the zero-confirmation fail-closed result', () => {
+      const asserted: ContributionEvidence = {
+        ...productionSubmitted(baseCertLaneA()),
+        admissionStatus: 'admitted',
+        admission: { admittedAt: 1, admissionReason: 'x', ruleVersion: 'x' },
+        state: 'cross_user_eligible',
+        confirmations: [],
+        scoringEligible: true,
+        canonicalPromoted: true,
+        receiverEligibility: {
+          ethics_certifications: {
+            eligible: true,
+            methodologyId: 'forged',
+            methodologyVersion: 'attack',
+            basisRuleVersion: 'attack',
+            reason: 'forged',
+          },
+        },
+      };
+      expect(isAssessmentEligibleForReceiver(asserted, 'ethics_certifications')).toBe(false);
+    });
+
+    it('legitimately confirmed record continues to obtain receiver eligibility under the governed contract', () => {
+      const legitimate = admitAndVerify(baseOrigin());
+      expect(legitimate.state).toBe('cross_user_eligible');
+      expect(legitimate.confirmations.length).toBeGreaterThanOrEqual(1);
+      expect(isAssessmentEligibleForReceiver(legitimate, 'open_origins')).toBe(true);
+      expect(canApplyToProductionReceiver(legitimate, 'open_origins')).toBe(true);
+    });
+  });
+
+  describe('H2 Missing-local recovery fail-closed for assessment authority', () => {
+    const EVIDENCE_KEY = '@rveel_contribution_evidence_v1';
+
+    it('when current local row is absent, checkpoint cannot restore stale production assessment authority', async () => {
+      const admitted = admitAndVerify(baseOrigin());
+      expect(admitted.canonicalPromoted).toBe(true);
+      const checkpoint = await checkpointMaterialCompletion(admitted, evidenceKeyOf(admitted));
+      expect(checkpoint).not.toBeNull();
+
+      // Simulate missing local row while checkpoint remains.
+      memory.delete(EVIDENCE_KEY);
+      expect(await getLocalEvidenceById(admitted.evidenceId)).toBeNull();
+
+      const stripped = stripStaleAssessmentAuthorityForMissingLocalRecovery(checkpoint!.evidenceSnapshot);
+      expect(stripped.state).toBe('pending');
+      expect(stripped.canonicalPromoted).toBe(false);
+      expect(isAssessmentEligibleForReceiver(stripped, 'open_origins')).toBe(false);
+      expect(canApplyToProductionReceiver(stripped, 'open_origins')).toBe(false);
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true });
+      await retryPendingRemotePersist();
+
+      const local = await getLocalEvidenceById(admitted.evidenceId);
+      expect(local).not.toBeNull();
+      expect(local?.state).toBe('pending');
+      expect(local?.canonicalPromoted).toBe(false);
+      expect(isAssessmentEligibleForReceiver(local!, 'open_origins')).toBe(false);
+      expect(toScoringProduct(offBare(), [local!])?.manufacturing_places).toBeUndefined();
+    });
+
+    it('recovered checkpoint data cannot enter production consumption merely through rehydration', async () => {
+      const admitted = admitAndVerify(baseCertLaneA());
+      await checkpointMaterialCompletion(admitted, evidenceKeyOf(admitted));
+      memory.delete(EVIDENCE_KEY);
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true });
+      await retryPendingRemotePersist();
+      const local = await getLocalEvidenceById(admitted.evidenceId);
+      expect(canApplyToProductionReceiver(local!, 'ethics_certifications')).toBe(false);
+      expect(toScoringProduct(offBare(), [local!])?.labels_tags ?? []).not.toContain('en:fair-trade');
+    });
+
+    it('repeated retry does not progressively elevate recovered evidence', async () => {
+      const admitted = admitAndVerify(baseOrigin());
+      await checkpointMaterialCompletion(admitted, evidenceKeyOf(admitted));
+      memory.delete(EVIDENCE_KEY);
+
+      (global.fetch as jest.Mock).mockRejectedValue(new Error('down'));
+      await retryPendingRemotePersist();
+      await retryPendingRemotePersist();
+
+      const local = await getLocalEvidenceById(admitted.evidenceId);
+      expect(local?.state).toBe('pending');
+      expect(local?.canonicalPromoted).toBe(false);
+      expect(isAssessmentEligibleForReceiver(local!, 'open_origins')).toBe(false);
+    });
+
+    it('withdrawal after checkpoint remains protected; dispute/review_required preservation remains intact', async () => {
+      const admitted = admitAndVerify(baseOrigin());
+      await checkpointMaterialCompletion(admitted, evidenceKeyOf(admitted));
+      const withdrawn = applyFounderAdminAction(admitted, 'withdraw');
+      await upsertLocalEvidence(withdrawn);
+      (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true });
+      await retryPendingRemotePersist();
+      expect((await getLocalEvidenceById(admitted.evidenceId))?.state).toBe('withdrawn');
+
+      const cert = admitAndVerify(baseCertLaneA());
+      await checkpointMaterialCompletion(cert, evidenceKeyOf(cert));
+      const d1 = disputeEvidence(cert, 'user_c', 'claim_not_present');
+      const d2 = disputeEvidence(d1.evidence, 'user_d', 'wrong_product');
+      await upsertLocalEvidence(d2.evidence);
+      (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true });
+      await retryPendingRemotePersist();
+      const preserved = await getLocalEvidenceById(cert.evidenceId);
+      expect(preserved?.state).toBe('review_required');
+      expect(preserved?.disputes).toHaveLength(2);
+    });
+  });
+
+  describe('H3 variantKey canonicalisation at submission boundary', () => {
+    it('whitespace-equivalent variant keys resolve consistently and increment the same version history', async () => {
+      expect(canonicalizeVariantKey('  500g  ')).toBe('500g');
+      expect(canonicalizeVariantKey('500g')).toBe('500g');
+
+      const first = await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'New Zealand',
+        originStructured: { claimType: 'made_in', primaryCountry: 'New Zealand' },
+        variantKey: '  500g  ',
+        asProductionEpoch: true,
+      });
+      expect(first.variantKey).toBe('500g');
+      expect(first.evidenceVersion).toBe(1);
+      expect(first.evidenceId).toContain('|var:500g|');
+
+      const second = await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'New Zealand',
+        originStructured: { claimType: 'made_in', primaryCountry: 'New Zealand' },
+        variantKey: '500g',
+        asProductionEpoch: true,
+      });
+      expect(second.variantKey).toBe('500g');
+      expect(second.evidenceVersion).toBe(2);
+      expect(second.evidenceId).not.toBe(first.evidenceId);
+      expect(second.evidenceId).toContain('|var:500g|v2');
+
+      const rows = await getLocalEvidenceForBarcode(BARCODE);
+      const variants = rows.filter((r) => canonicalizeVariantKey(r.variantKey) === '500g');
+      expect(variants).toHaveLength(2);
+      expect(variants.map((v) => v.evidenceVersion).sort()).toEqual([1, 2]);
+      // No conflicting duplicate v1.
+      expect(variants.filter((v) => v.evidenceVersion === 1)).toHaveLength(1);
+    });
+
+    it('whitespace variant submit does not overwrite admitted base or prior variant evidence', async () => {
+      const base = admitAndVerify(baseOrigin());
+      await upsertLocalEvidence(base);
+
+      const v1 = await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'New Zealand',
+        originStructured: { claimType: 'made_in', primaryCountry: 'New Zealand' },
+        variantKey: '500g',
+        asProductionEpoch: true,
+      });
+      await upsertLocalEvidence({
+        ...v1,
+        admissionStatus: 'admitted',
+        recordClass: 'production',
+        productionEpoch: CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
+      });
+
+      const v2 = await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'New Zealand',
+        originStructured: { claimType: 'made_in', primaryCountry: 'New Zealand' },
+        variantKey: ' 500g ',
+        asProductionEpoch: true,
+      });
+      expect(v2.evidenceVersion).toBe(2);
+
+      const stillBase = await getLocalEvidenceById(base.evidenceId);
+      expect(stillBase?.evidenceId).toBe(base.evidenceId);
+      expect(stillBase?.admissionStatus).toBe('admitted');
+      const stillV1 = await getLocalEvidenceById(v1.evidenceId);
+      expect(stillV1?.evidenceId).toBe(v1.evidenceId);
+    });
+  });
+
+  describe('H4 Production submit → admit path (controlled test override)', () => {
+    afterEach(() => {
+      __setContributionCreationRecordClassForTests(null);
+    });
+
+    it('submitGovernedEvidence → admitGovernedEvidence on genuine production-class path', async () => {
+      __setContributionCreationRecordClassForTests('production');
+      expect(resolveContributionCreationRecordClass()).toBe('production');
+
+      const submitted = await submitGovernedEvidence({
+        barcode: '9300000000999',
+        domain: 'origins',
+        claimValue: 'Australia',
+        originStructured: { claimType: 'made_in', primaryCountry: 'Australia' },
+        asProductionEpoch: true,
+      });
+      expect(submitted.recordClass).toBe('production');
+      expect(submitted.productionEpoch).toBe(CURRENT_PRODUCTION_CONTRIBUTION_EPOCH);
+      expect(submitted.admissionStatus).toBe('submitted');
+      expect(isAssessmentEligibleForReceiver(submitted, 'open_origins')).toBe(false);
+
+      const admitted = await admitGovernedEvidence(submitted.evidenceId, {
+        admissionReason: 'hardening_production_path_test',
+      });
+      expect(admitted.ok).toBe(true);
+      expect(admitted.evidence?.admissionStatus).toBe('admitted');
+      expect(admitted.evidence?.recordClass).toBe('production');
+
+      // Authority still requires governed confirmations — not stored fields.
+      expect(isAssessmentEligibleForReceiver(admitted.evidence!, 'open_origins')).toBe(false);
+      const forged = {
+        ...admitted.evidence!,
+        state: 'cross_user_eligible' as const,
+        scoringEligible: true,
+        canonicalPromoted: true,
+        receiverEligibility: {
+          open_origins: {
+            eligible: true,
+            methodologyId: 'forged',
+            methodologyVersion: 'x',
+            basisRuleVersion: 'x',
+            reason: 'forged',
+          },
+        },
+      };
+      expect(isAssessmentEligibleForReceiver(forged, 'open_origins')).toBe(false);
+
+      const confirmed = confirmAndPromoteIfEligible(admitted.evidence!, 'user_other').evidence;
+      expect(isAssessmentEligibleForReceiver(confirmed, 'open_origins')).toBe(true);
+      expect(canApplyToProductionReceiver(confirmed, 'open_origins')).toBe(true);
     });
   });
 });
