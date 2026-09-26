@@ -39,22 +39,25 @@ function pamsCriteria(): CsvRecord[] {
 function eggsCriteria(): CsvRecord[] {
   return [
     criterion({
-      criterion_id: 'SPC-0023',
+      criterion_id: 'SPC-EGGS-NAME',
       signal_target_id: EGGS_TARGET,
-      market_key: 'AU',
+      market_key: 'AU+NZ',
       required_brand_id: 'B0001',
       required_parent_id: 'P0001',
-      match_value: 'cage free eggs',
+      match_value: 'eggs',
     }),
-    criterion({
-      criterion_id: 'SPC-0024',
+    {
+      criterion_id: 'SPC-EGGS-GTIN',
       signal_target_id: EGGS_TARGET,
-      market_key: 'AU',
+      market_key: 'AU+NZ',
       required_brand_id: 'B0001',
       required_parent_id: 'P0001',
-      match_value: 'cage-free eggs',
-      match_value_normalized: 'cage free eggs',
-    }),
+      match_field: 'gtin',
+      match_mode: 'exact',
+      match_value: '9339687306558',
+      match_value_normalized: '9339687306558',
+      review_state: 'reviewed',
+    },
   ];
 }
 
@@ -140,14 +143,14 @@ describe('productScope simple reviewed descriptors', () => {
     ).toBe(false);
   });
 
-  it('alternative label forms are OR alternatives, not conjunctions', () => {
+  it('alternative Woolworths egg labels match governed eggs term', () => {
     const base = {
       barcode: '9300000222222',
       brand_id: 'B0001',
       parent_id: 'P0001',
       scanMarketPublic: 'AU' as const,
     };
-    for (const name of ['Woolworths Cage Free Eggs 12pk', 'Woolworths Cage-Free Eggs 12pk']) {
+    for (const name of ['Woolworths Cage Free Eggs 12pk', 'Woolworths Free Range Eggs 12pk']) {
       expect(signalTargetProductScopeMatches(eggsMaps, EGGS_TARGET, { ...base, productName: name })).toBe(
         true
       );
@@ -181,7 +184,7 @@ describe('productScope simple reviewed descriptors', () => {
     ).toBe(false);
   });
 
-  it('non-product_name criteria (pack_quantity/gtin) are ignored during migration', () => {
+  it('pack_quantity criteria remain ignored; gtin exact is a live positive path', () => {
     const maps = buildSignalProductScopeMapsFromCsvRecords([
       criterion({
         criterion_id: 'SPC-QTY',
@@ -190,11 +193,34 @@ describe('productScope simple reviewed descriptors', () => {
         match_value: '1.3kg',
         match_value_normalized: '1 3kg',
       }),
+      {
+        criterion_id: 'SPC-GTIN',
+        signal_target_id: PAMS_TARGET,
+        market_key: 'NZ',
+        required_brand_id: 'B0024',
+        required_parent_id: 'P0003',
+        match_field: 'gtin',
+        match_mode: 'exact',
+        match_value: '9415077182329',
+        match_value_normalized: '9415077182329',
+        review_state: 'reviewed',
+      },
     ]);
-    expect(maps.criteriaByTargetId.has(PAMS_TARGET)).toBe(false);
     expect(
       signalTargetProductScopeMatches(maps, PAMS_TARGET, pamsCtx({ productName: 'Pams Beef Lasagne 1.3kg' }))
     ).toBe(false);
+    expect(
+      signalTargetProductScopeMatches(
+        maps,
+        PAMS_TARGET,
+        pamsCtx({
+          barcode: '9415077182329',
+          productName: '',
+          brand_id: null,
+          parent_id: null,
+        })
+      )
+    ).toBe(true);
   });
 
   it('unanchored reviewed rows fail closed', () => {

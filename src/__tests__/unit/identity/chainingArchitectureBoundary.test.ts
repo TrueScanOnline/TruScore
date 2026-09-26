@@ -62,14 +62,18 @@ describe('Shared Identity chaining architecture boundary', () => {
     expect(readme).toMatch(/signal_target_product_criteria/);
   });
 
-  it('every reviewed signal_target_product_criteria row has required_brand_id or required_parent_id', () => {
+  it('every reviewed phrase criterion is Chaining-anchored; gtin rows are allowed', () => {
     const rows = parseCsv(fs.readFileSync(CRITERIA, 'utf8'));
     const reviewed = rows.filter((r) => (r.review_state ?? '').trim() === 'reviewed');
     expect(reviewed.length).toBeGreaterThan(0);
     for (const r of reviewed) {
-      const brand = (r.required_brand_id ?? '').trim();
-      const parent = (r.required_parent_id ?? '').trim();
-      expect(brand || parent).toBeTruthy();
+      const field = (r.match_field ?? '').trim();
+      expect(field === 'product_name' || field === 'gtin').toBe(true);
+      if (field === 'product_name') {
+        const brand = (r.required_brand_id ?? '').trim();
+        const parent = (r.required_parent_id ?? '').trim();
+        expect(brand || parent).toBeTruthy();
+      }
     }
   });
 
@@ -78,7 +82,9 @@ describe('Shared Identity chaining architecture boundary', () => {
     expect(header).not.toMatch(/scope_group_id/);
     const rows = parseCsv(fs.readFileSync(CRITERIA, 'utf8'));
     for (const r of rows) {
-      expect((r.match_field ?? '').trim()).toBe('product_name');
+      const field = (r.match_field ?? '').trim();
+      expect(field === 'product_name' || field === 'gtin').toBe(true);
+      expect(field).not.toBe('pack_quantity');
     }
   });
 

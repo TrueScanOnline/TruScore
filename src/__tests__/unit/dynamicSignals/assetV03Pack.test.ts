@@ -132,11 +132,11 @@ describe('cocoa_chocolate product_scope_guard', () => {
 });
 
 describe('Dynamic Signals Asset v0.3 pack', () => {
-  it('validates refreshed pack counts (14 sources / 44 signals / 62 targets)', () => {
+  it('validates refreshed pack counts (14 sources / 44 signals / 58 targets)', () => {
     const pack = loadV03Pack();
     expect(pack.sources).toHaveLength(14);
     expect(pack.signals).toHaveLength(44);
-    expect(pack.targets).toHaveLength(62);
+    expect(pack.targets).toHaveLength(58);
     expect(pack.sources.some((s) => s.source_channel_id === 'SRC-FOOD-SAFETY-NEWS')).toBe(true);
     const predecessors = pack.signals.filter(
       (s) =>
@@ -171,8 +171,8 @@ describe('Dynamic Signals Asset v0.3 pack', () => {
     expect(vogel.signal_class).toBe('safety_regulatory');
     expect(chen.signal_class).toBe('safety_regulatory');
 
-    const vogelT = pack.targets.find((t) => t.signal_target_id === 'TGT-028')!;
-    const chenT = pack.targets.find((t) => t.signal_target_id === 'TGT-029')!;
+    const vogelT = pack.targets.find((t) => t.signal_target_id === 'TGT-125')!;
+    const chenT = pack.targets.find((t) => t.signal_target_id === 'TGT-126')!;
     expect((vogelT.canonical_target_id ?? '').trim().length).toBeGreaterThan(0);
     expect(vogelT.resolution_status).toBe('resolved');
     expect((chenT.canonical_target_id ?? '').trim().length).toBeGreaterThan(0);

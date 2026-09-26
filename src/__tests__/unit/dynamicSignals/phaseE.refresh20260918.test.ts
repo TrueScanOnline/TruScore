@@ -141,7 +141,7 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
     expect(recs.some((r) => r.signal_id === 'SIG-SR-NZ-005')).toBe(false);
   });
 
-  it('candidate Red Hat / Dongwon GTINs do not become publishable matches', () => {
+  it('workbook-governed Red Hat / Dongwon GTINs publish via verified_gtins path', () => {
     for (const gtin of ['4975186250043', '8801047559610']) {
       const recs = match({
         barcode: gtin,
@@ -150,7 +150,7 @@ describe('Phase E §8.4–8.5 Dynamic Signals refresh', () => {
         scanMarketPublic: gtin.startsWith('88') ? 'NZ' : 'AU',
       });
       expect(recs.some((r) => r.signal_id === 'SIG-SR-AU-005' || r.signal_id === 'SIG-SR-NZ-004')).toBe(
-        false
+        true
       );
     }
   });

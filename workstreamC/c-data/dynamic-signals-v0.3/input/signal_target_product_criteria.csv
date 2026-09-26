@@ -1,37 +1,70 @@
 criterion_id,signal_target_id,market_key,required_brand_id,required_parent_id,match_field,match_mode,match_value,match_value_normalized,review_state,confidence_state,lineage_reference,notes
+SPC-0001,TGT-100,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Derived mechanically from workbook product_match_terms
+SPC-0002,TGT-100,AU,B0654,P0156,gtin,exact,9310988019279,9310988019279,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Derived mechanically from workbook verified_gtins
+SPC-0003,TGT-100,AU,B0654,P0156,gtin,exact,9310988019309,9310988019309,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Derived mechanically from workbook verified_gtins
+SPC-0004,TGT-100,AU,B0654,P0156,gtin,exact,9310988016353,9310988016353,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Derived mechanically from workbook verified_gtins
+SPC-0005,TGT-104,AU,B0059,P0008,product_name,phrase_contains,inside outs,inside outs,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,Derived mechanically from workbook product_match_terms
+SPC-0006,TGT-104,AU,B0059,P0008,product_name,phrase_contains,insideouts,insideouts,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,Derived mechanically from workbook product_match_terms
+SPC-0007,TGT-104,AU,B0059,P0008,gtin,exact,9300605162921,9300605162921,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,Derived mechanically from workbook verified_gtins
+SPC-0008,TGT-105,NZ,B0024,P0003,product_name,phrase_contains,beef lasagne,beef lasagne,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Derived mechanically from workbook product_match_terms
+SPC-0009,TGT-105,NZ,B0024,P0003,gtin,exact,9415077182329,9415077182329,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Derived mechanically from workbook verified_gtins
+SPC-0010,TGT-105,NZ,B0024,P0003,gtin,exact,9415077370979,9415077370979,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Derived mechanically from workbook verified_gtins
+SPC-0011,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain very thin,original mixed grain very thin,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Derived mechanically from workbook product_match_terms
+SPC-0012,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain sandwich,original mixed grain sandwich,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Derived mechanically from workbook product_match_terms
+SPC-0013,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain toast,original mixed grain toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Derived mechanically from workbook product_match_terms
+SPC-0014,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,dark rye toast,dark rye toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Derived mechanically from workbook product_match_terms
+SPC-0015,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,sprouted whole grain toast,sprouted whole grain toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Derived mechanically from workbook product_match_terms
+SPC-0016,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,fruit and spice extra thick,fruit and spice extra thick,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Derived mechanically from workbook product_match_terms
+SPC-0017,TGT-125,NZ,B0175,P0040,gtin,exact,9414987012252,9414987012252,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Derived mechanically from workbook verified_gtins
+SPC-0018,TGT-126,AU,B0796,P0175,product_name,phrase_contains,szechuan chilli oil,szechuan chilli oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Derived mechanically from workbook product_match_terms
+SPC-0019,TGT-126,AU,B0796,P0175,gtin,exact,9349673005624,9349673005624,reviewed,confirmed,FSANZ-MRCHENS-20260818,Derived mechanically from workbook verified_gtins
+SPC-0020,TGT-127,AU,B0799,P0178,product_name,phrase_contains,cookia matcha chocolate flavor,cookia matcha chocolate flavor,reviewed,confirmed,FSANZ-REDHAT-20260911,Derived mechanically from workbook product_match_terms
+SPC-0021,TGT-127,AU,B0799,P0178,product_name,phrase_contains,cookia matcha chocolate flavour,cookia matcha chocolate flavour,reviewed,confirmed,FSANZ-REDHAT-20260911,Derived mechanically from workbook product_match_terms
+SPC-0022,TGT-127,AU,B0799,P0178,gtin,exact,4975186250043,4975186250043,reviewed,confirmed,FSANZ-REDHAT-20260911,Derived mechanically from workbook verified_gtins
+SPC-0023,TGT-128,AU,B0800,P0179,product_name,phrase_contains,sweet chilli and lime salmon portions,sweet chilli and lime salmon portions,reviewed,confirmed,FSANZ-JCSEAFOOD-20260910,Derived mechanically from workbook product_match_terms
+SPC-0024,TGT-128,AU,B0800,P0179,product_name,phrase_contains,sweet chilli & lime salmon portions,sweet chilli lime salmon portions,reviewed,confirmed,FSANZ-JCSEAFOOD-20260910,Derived mechanically from workbook product_match_terms
+SPC-0025,TGT-129,AU,B0797,P0176,product_name,phrase_contains,certified organic premium peppermint leaf,certified organic premium peppermint leaf,reviewed,confirmed,FSANZ-AUSTRALHERBS-20260909,Derived mechanically from workbook product_match_terms
+SPC-0026,TGT-129,AU,B0797,P0176,product_name,phrase_contains,premium peppermint leaf,premium peppermint leaf,reviewed,confirmed,FSANZ-AUSTRALHERBS-20260909,Derived mechanically from workbook product_match_terms
+SPC-0027,TGT-130,AU,B0798,P0177,product_name,phrase_contains,brie,brie,reviewed,confirmed,FSANZ-MONSIRE-AU-20260904,Derived mechanically from workbook product_match_terms
+SPC-0028,TGT-131,NZ,B0801,P0180,product_name,phrase_contains,fried bean curd,fried bean curd,reviewed,confirmed,MPI-DONGWON-20260911,Derived mechanically from workbook product_match_terms
+SPC-0029,TGT-131,NZ,B0801,P0180,gtin,exact,8801047559610,8801047559610,reviewed,confirmed,MPI-DONGWON-20260911,Derived mechanically from workbook verified_gtins
+SPC-0030,TGT-132,NZ,B0001,P0001,product_name,phrase_contains,multi grain cereal,multi grain cereal,reviewed,confirmed,MPI-WOOLWORTHS-MULTIGRAIN-20260908,Derived mechanically from workbook product_match_terms
+SPC-0031,TGT-132,NZ,B0001,P0001,product_name,phrase_contains,multigrain cereal,multigrain cereal,reviewed,confirmed,MPI-WOOLWORTHS-MULTIGRAIN-20260908,Derived mechanically from workbook product_match_terms
+SPC-0032,TGT-133,NZ,B0798,P0177,product_name,phrase_contains,brie,brie,reviewed,confirmed,MPI-MONSIRE-NZ-20260904,Derived mechanically from workbook product_match_terms
+SPC-0033,TGT-107,AU+NZ,B0179,P0041,product_name,phrase_contains,tomato,tomato,reviewed,strong,ABC-106940742-LEGGOS,Derived mechanically from workbook product_match_terms
+SPC-0034,TGT-107,AU+NZ,B0179,P0041,product_name,phrase_contains,passata,passata,reviewed,strong,ABC-106940742-LEGGOS,Derived mechanically from workbook product_match_terms
+SPC-0035,TGT-107,AU+NZ,B0179,P0041,gtin,exact,9300645020823,9300645020823,reviewed,strong,ABC-106940742-LEGGOS,Derived mechanically from workbook verified_gtins
+SPC-0036,TGT-107,AU+NZ,B0179,P0041,gtin,exact,9300645020809,9300645020809,reviewed,strong,ABC-106940742-LEGGOS,Derived mechanically from workbook verified_gtins
+SPC-0037,TGT-107,AU+NZ,B0179,P0041,gtin,exact,9300645022421,9300645022421,reviewed,strong,ABC-106940742-LEGGOS,Derived mechanically from workbook verified_gtins
+SPC-0038,TGT-107,AU+NZ,B0179,P0041,gtin,exact,9300645014495,9300645014495,reviewed,strong,ABC-106940742-LEGGOS,Derived mechanically from workbook verified_gtins
+SPC-0039,TGT-108,AU+NZ,B0032,P0004,product_name,phrase_contains,tomato paste,tomato paste,reviewed,strong,ABC-106940742-REMANO,Derived mechanically from workbook product_match_terms
+SPC-0040,TGT-109,AU+NZ,B0200,P0002,product_name,phrase_contains,italian tomato paste,italian tomato paste,reviewed,strong,ABC-106940742-COLES-TOMATO,Derived mechanically from workbook product_match_terms
+SPC-0041,TGT-110,AU+NZ,B0653,P0157,product_name,phrase_contains,turmeric,turmeric,reviewed,strong,ABC-106960116-HOYTS,Derived mechanically from workbook product_match_terms
+SPC-0042,TGT-110,AU+NZ,B0653,P0157,gtin,exact,9300725012182,9300725012182,reviewed,strong,ABC-106960116-HOYTS,Derived mechanically from workbook verified_gtins
+SPC-0043,TGT-111,AU+NZ,B0001,P0001,product_name,phrase_contains,eggs,eggs,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Derived mechanically from workbook product_match_terms
+SPC-0044,TGT-111,AU+NZ,B0001,P0001,gtin,exact,9339687306558,9339687306558,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Derived mechanically from workbook verified_gtins
+SPC-0045,TGT-111,AU+NZ,B0001,P0001,gtin,exact,9339687306565,9339687306565,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Derived mechanically from workbook verified_gtins
+SPC-0046,TGT-111,AU+NZ,B0001,P0001,gtin,exact,9339687265794,9339687265794,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Derived mechanically from workbook verified_gtins
+SPC-0047,TGT-111,AU+NZ,B0001,P0001,gtin,exact,9339687138920,9339687138920,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Derived mechanically from workbook verified_gtins
+SPC-0048,TGT-111,AU+NZ,B0001,P0001,gtin,exact,9300633636982,9300633636982,reviewed,strong,ABC-106960116-WOOLWORTHS-EGGS,Derived mechanically from workbook verified_gtins
+SPC-0049,TGT-115,AU+NZ,B0139,P0020,product_name,phrase_contains,anchor blue milk powder,anchor blue milk powder,reviewed,strong,CONSUMERNZ-ANCHOR-BLUE-20260211,Derived mechanically from workbook product_match_terms
+SPC-0050,TGT-115,AU+NZ,B0139,P0020,product_name,phrase_contains,blue milk powder,blue milk powder,reviewed,strong,CONSUMERNZ-ANCHOR-BLUE-20260211,Derived mechanically from workbook product_match_terms
+SPC-0051,TGT-115,AU+NZ,B0139,P0020,gtin,exact,9415262047969,9415262047969,reviewed,strong,CONSUMERNZ-ANCHOR-BLUE-20260211,Derived mechanically from workbook verified_gtins
+SPC-0052,TGT-115,AU+NZ,B0139,P0020,gtin,exact,9415262050044,9415262050044,reviewed,strong,CONSUMERNZ-ANCHOR-BLUE-20260211,Derived mechanically from workbook verified_gtins
+SPC-0053,TGT-116,AU+NZ,B0024,P0003,product_name,phrase_contains,sparkling water,sparkling water,reviewed,strong,RNZ-590339,Derived mechanically from workbook product_match_terms
+SPC-0054,TGT-116,AU+NZ,B0024,P0003,gtin,exact,9415077134649,9415077134649,reviewed,strong,RNZ-590339,Derived mechanically from workbook verified_gtins
+SPC-0055,TGT-123,AU+NZ,B0139,P0020,product_name,phrase_contains,butter,butter,reviewed,strong,NZH-ANCHOR-GRASSFED-20260331,Derived mechanically from workbook product_match_terms
 SPC-0001,TGT-001,AU,B0654,P0156,product_name,phrase_contains,chickadees multipack,chickadees multipack,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Reviewed product-line descriptor; pack size is card qualification content
-SPC-0002,TGT-100,AU,B0654,P0156,product_name,phrase_contains,chickadees multipack,chickadees multipack,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Reviewed product-line descriptor; pack size is card qualification content
 SPC-0003,TGT-002,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Reviewed product-line descriptor; pack size is card qualification content
-SPC-0004,TGT-101,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Reviewed product-line descriptor; pack size is card qualification content
 SPC-0005,TGT-003,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Reviewed product-line descriptor; pack size is card qualification content
-SPC-0006,TGT-102,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Reviewed product-line descriptor; pack size is card qualification content
 SPC-0007,TGT-004,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Reviewed product-line descriptor; pack size is card qualification content
-SPC-0008,TGT-103,AU,B0654,P0156,product_name,phrase_contains,chickadees,chickadees,reviewed,confirmed,FSANZ-CHICKADEES-20260710,Reviewed product-line descriptor; pack size is card qualification content
 SPC-0009,TGT-005,AU,B0059,P0008,product_name,phrase_contains,inside outs,inside outs,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,Reviewed product-line descriptor; pack size is card qualification content
-SPC-0010,TGT-104,AU,B0059,P0008,product_name,phrase_contains,inside outs,inside outs,reviewed,confirmed,FSANZ-ALLENS-INSIDEOUTS-20260602,Reviewed product-line descriptor; pack size is card qualification content
 SPC-0011,TGT-007,NZ,B0024,P0003,product_name,phrase_contains,beef lasagne,beef lasagne,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Reviewed product-line descriptor; 1.3kg pack is card qualification content
-SPC-0012,TGT-105,NZ,B0024,P0003,product_name,phrase_contains,beef lasagne,beef lasagne,reviewed,confirmed,MPI-PAMS-LASAGNE-20260227,Reviewed product-line descriptor; 1.3kg pack is card qualification content
-SPC-0033,TGT-132,NZ,B0001,P0001,product_name,phrase_contains,multi grain cereal,multi grain cereal,reviewed,confirmed,MPI-WOOLWORTHS-MULTIGRAIN-20260908,Reviewed product-line descriptor
 SPC-0034,TGT-029,AU,B0796,P0175,product_name,phrase_contains,szechuan chilli oil,szechuan chilli oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Alternative reviewed spelling
 SPC-0035,TGT-029,AU,B0796,P0175,product_name,phrase_contains,sichuan chili oil,sichuan chili oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Alternative reviewed spelling
-SPC-0036,TGT-126,AU,B0796,P0175,product_name,phrase_contains,szechuan chilli oil,szechuan chilli oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Alternative reviewed spelling
-SPC-0037,TGT-126,AU,B0796,P0175,product_name,phrase_contains,sichuan chili oil,sichuan chili oil,reviewed,confirmed,FSANZ-MRCHENS-20260818,Alternative reviewed spelling
-SPC-0038,TGT-129,AU,B0797,P0176,product_name,phrase_contains,peppermint leaf,peppermint leaf,reviewed,strong,FSANZ-AUSTRALHERBS-20260909,Alternative reviewed product-line phrase
-SPC-0039,TGT-129,AU,B0797,P0176,product_name,phrase_contains,certified organic premium peppermint,certified organic premium peppermint,reviewed,strong,FSANZ-AUSTRALHERBS-20260909,Alternative reviewed official line phrase
-SPC-0040,TGT-130,AU,B0798,P0177,product_name,phrase_contains,brie,brie,reviewed,strong,FSANZ-MONSIRE-AU-20260904,AU Mon Sire Brie product line; 1kg/Foodland/best-before are card qualification content
-SPC-0041,TGT-133,NZ,B0798,P0177,product_name,phrase_contains,brie,brie,reviewed,strong,MPI-MONSIRE-NZ-20260904,NZ Mon Sire Brie product line
-SPC-0042,TGT-127,AU,B0799,P0178,product_name,phrase_contains,red hat cookia matcha chocolate,red hat cookia matcha chocolate,reviewed,confirmed,FSANZ-REDHAT-20260911,Anchored to governed Red Hat brand
-SPC-0043,TGT-128,AU,B0800,P0179,product_name,phrase_contains,jc seafood sweet chilli and lime salmon,jc seafood sweet chilli and lime salmon,reviewed,confirmed,FSANZ-JCSEAFOOD-20260910,Anchored to governed JC Seafood brand
-SPC-0044,TGT-131,NZ,B0801,P0180,product_name,phrase_contains,dongwon fried bean curd,dongwon fried bean curd,reviewed,confirmed,MPI-DONGWON-20260911,Anchored to governed Dongwon brand
 SPC-0045,TGT-028,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain very thin,original mixed grain very thin,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
 SPC-0046,TGT-028,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain sandwich,original mixed grain sandwich,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
 SPC-0047,TGT-028,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain toast,original mixed grain toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
 SPC-0048,TGT-028,NZ,B0175,P0040,product_name,phrase_contains,dark rye toast,dark rye toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
 SPC-0049,TGT-028,NZ,B0175,P0040,product_name,phrase_contains,sprouted whole grain toast,sprouted whole grain toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
 SPC-0050,TGT-028,NZ,B0175,P0040,product_name,phrase_contains,fruit and spice extra thick,fruit and spice extra thick,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
-SPC-0051,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain very thin,original mixed grain very thin,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
-SPC-0052,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain sandwich,original mixed grain sandwich,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
-SPC-0053,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,original mixed grain toast,original mixed grain toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
-SPC-0054,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,dark rye toast,dark rye toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
-SPC-0055,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,sprouted whole grain toast,sprouted whole grain toast,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content
-SPC-0056,TGT-125,NZ,B0175,P0040,product_name,phrase_contains,fruit and spice extra thick,fruit and spice extra thick,reviewed,confirmed,MPI-VOGELS-METAL-20260811,Official MPI product line; pack size is card qualification content

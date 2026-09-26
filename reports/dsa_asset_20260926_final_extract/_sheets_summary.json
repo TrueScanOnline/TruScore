@@ -1,0 +1,100 @@
+[
+  {
+    "sheet": "Source_Universe",
+    "rows": 14,
+    "cols": [
+      "source_channel_id",
+      "publisher_name",
+      "channel_name",
+      "publisher_type",
+      "editorial_function",
+      "geographic_reach",
+      "eligible_signal_class",
+      "approved_domain",
+      "status",
+      "effective_from",
+      "effective_to"
+    ]
+  },
+  {
+    "sheet": "Reveal_Domains",
+    "rows": 14,
+    "cols": [
+      "reveal_domain",
+      "internal_term",
+      "description",
+      "status"
+    ]
+  },
+  {
+    "sheet": "Signals",
+    "rows": 26,
+    "cols": [
+      "signal_id",
+      "dedupe_key",
+      "signal_class",
+      "market_key",
+      "source_channel_id",
+      "source_record_id",
+      "source_published_at",
+      "source_url",
+      "source_title",
+      "reveal_domain",
+      "signal_headline",
+      "signal_summary",
+      "scope_qualification",
+      "subject_response",
+      "subject_response_status",
+      "subject_response_source_url",
+      "confidence_state",
+      "review_state",
+      "signal_publication_state",
+      "editorial_review_required",
+      "editorial_review_state",
+      "detected_at",
+      "reviewed_at",
+      "last_material_update_at",
+      "publishable_from",
+      "expires_at",
+      "supersedes_signal_id",
+      "lineage_reference",
+      "rationale_summary",
+      "evidence_policy_version"
+    ]
+  },
+  {
+    "sheet": "Signal_Targets",
+    "rows": 31,
+    "cols": [
+      "signal_target_id",
+      "signal_id",
+      "market_key",
+      "target_type",
+      "target_label",
+      "canonical_target_id",
+      "propagation_mode",
+      "required_brand_id",
+      "required_parent_id",
+      "product_match_terms",
+      "verified_gtins",
+      "verified_gtin_evidence",
+      "scope_review_summary",
+      "coverage_state",
+      "confidence_state",
+      "review_state",
+      "resolution_status",
+      "lineage_reference",
+      "product_scope_guard"
+    ]
+  },
+  {
+    "sheet": "Controlled_Values",
+    "rows": 60,
+    "cols": [
+      "dimension",
+      "value",
+      "label",
+      "definition"
+    ]
+  }
+]
