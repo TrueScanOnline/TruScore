@@ -17,6 +17,13 @@ export * from './productionEpoch';
 export * from './admissionTypes';
 export * from './admissionContract';
 export {
+  registerBodyReceiverPredicate,
+  evaluateBodyReceiverEligibility,
+  listRegisteredBodyReceiverPredicateCount,
+  __clearBodyReceiverPredicatesForTests,
+} from './bodyReceiverRegistry';
+export type { BodyReceiverPredicate, BodyReceiverPredicateResult } from './bodyReceiverRegistry';
+export {
   submitGovernedEvidence,
   submitAndAdmitGovernedEvidence,
   admitGovernedEvidence,

@@ -4,11 +4,22 @@
  * Survives ordinary network/server failure so a completed local contribution can
  * be retried for remote persist / admission acknowledgement.
  * Not a full offline contribution system and not background synchronisation.
+ *
+ * Retry must never overwrite a newer local authoritative record with a stale
+ * checkpoint snapshot. Snapshot rehydration is only a fallback when the local
+ * record is genuinely absent, and cannot elevate authority beyond the checkpoint.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CURRENT_PRODUCTION_CONTRIBUTION_EPOCH } from './productionEpoch';
-import { persistEvidenceRemote, upsertLocalEvidence } from './evidenceStore';
+import {
+  CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
+  isExplicitProductionRecordClass,
+} from './productionEpoch';
+import {
+  getLocalEvidenceById,
+  persistEvidenceRemote,
+  upsertLocalEvidence,
+} from './evidenceStore';
 import type { ContributionEvidence } from './types';
 import { logger } from '../utils/logger';
 
@@ -55,8 +66,8 @@ export function buildRecoveryId(evidenceId: string, completedAt: number): string
 
 /**
  * Persist a materially completed local contribution checkpoint before/alongside
- * remote attempts. Fixtures/test epochs are rejected so they cannot acquire
- * production recovery authority via restart/rehydration.
+ * remote attempts. Non-production record classes / epochs are rejected so they
+ * cannot acquire production recovery authority via restart/rehydration.
  */
 export async function checkpointMaterialCompletion(
   evidence: ContributionEvidence,
@@ -65,11 +76,7 @@ export async function checkpointMaterialCompletion(
   if (evidence.productionEpoch !== CURRENT_PRODUCTION_CONTRIBUTION_EPOCH) {
     return null;
   }
-  if (
-    evidence.recordClass === 'fixture' ||
-    evidence.recordClass === 'test' ||
-    evidence.recordClass === 'developer'
-  ) {
+  if (!isExplicitProductionRecordClass(evidence.recordClass ?? null)) {
     return null;
   }
 
@@ -117,8 +124,27 @@ export async function listPendingRecovery(): Promise<ContributionRecoveryCheckpo
 }
 
 /**
+ * Resolve which evidence payload to use for a recovery retry.
+ * Prefer current local authoritative state; use checkpoint snapshot only when
+ * the local record is absent. Never elevate authority beyond the snapshot's
+ * legitimate state when rehydrating an absent record.
+ */
+export function resolveRecoveryPersistPayload(
+  checkpoint: ContributionRecoveryCheckpoint,
+  local: ContributionEvidence | null
+): ContributionEvidence {
+  if (local) {
+    return local;
+  }
+  // Absent local: rehydrate snapshot but strip any elevation that would exceed
+  // checkpoint legitimacy (snapshot must remain as captured — caller already
+  // gated checkpoint creation on production class/epoch).
+  return checkpoint.evidenceSnapshot;
+}
+
+/**
  * Retry remote persist for materially completed checkpoints.
- * Rehydrates local evidence snapshot then best-effort remote POST.
+ * Preserves current local authoritative state; never overwrites with a stale snapshot.
  */
 export async function retryPendingRemotePersist(): Promise<{
   attempted: number;
@@ -131,8 +157,15 @@ export async function retryPendingRemotePersist(): Promise<{
 
   for (const checkpoint of pending) {
     try {
-      await upsertLocalEvidence(checkpoint.evidenceSnapshot);
-      const ok = await persistEvidenceRemote(checkpoint.evidenceSnapshot);
+      const local = await getLocalEvidenceById(checkpoint.evidenceId);
+      const payload = resolveRecoveryPersistPayload(checkpoint, local);
+
+      // Only rehydrate snapshot into local store when the record is genuinely absent.
+      if (!local) {
+        await upsertLocalEvidence(payload);
+      }
+
+      const ok = await persistEvidenceRemote(payload);
       const rows = await readAll();
       if (ok) {
         await writeAll(

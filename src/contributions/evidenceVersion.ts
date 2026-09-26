@@ -14,8 +14,13 @@ export function buildEvidenceId(params: {
   domain: Extract<ContributionDomain, 'origins' | 'certifications'>;
   claimKey: string;
   evidenceVersion: number;
+  /** When present, participates in durable identity so variants cannot collide with base. */
+  variantKey?: string;
 }): string {
   const barcode = String(params.barcode || '').trim();
   const claim = normalizeClaimKey(params.claimKey);
-  return `${barcode}|${params.domain}|${claim}|v${params.evidenceVersion}`;
+  const variant = params.variantKey
+    ? `|var:${String(params.variantKey).trim()}`
+    : '';
+  return `${barcode}|${params.domain}|${claim}${variant}|v${params.evidenceVersion}`;
 }

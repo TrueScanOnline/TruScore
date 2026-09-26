@@ -10,7 +10,11 @@
 
 import type { Product } from '../types/product';
 import { CONTRIBUTION_POLICY } from '../config/contributionPolicy';
-import { canApplyToProductionReceiver } from './admissionContract';
+import {
+  canApplyToProductionReceiver,
+  evidenceKeyOf,
+  selectPrevailingAdmittedEvidence,
+} from './admissionContract';
 import type { ContributionEvidence, RveelPendingContributionFields } from './types';
 import { RVEEL_PENDING_FIELD_MARK } from './types';
 import { canPromoteToCanonicalProduct } from './lifecycle';
@@ -63,19 +67,31 @@ function applyPromotedCertifications(
   next: ProductWithContributionMark,
   promotedEvidence: ContributionEvidence[]
 ): void {
-  const promotedTags = promotedEvidence
-    .filter((e) => {
-      if (e.domain !== 'certifications') return false;
-      if (carriesCurrentProductionEpoch(e)) {
-        return canApplyToProductionReceiver(e, 'ethics_certifications');
-      }
-      // Compat: pre-epoch records do not enter production scoring Product.
-      return false;
-    })
-    .flatMap((e) => e.labelsTags || [e.claimValue || e.claimKey]);
+  // Only prevailing admitted production evidence per evidence key may contribute.
+  // Superseded / older admitted versions must not regain precedence via union.
+  const certCandidates = promotedEvidence.filter((e) => e.domain === 'certifications');
+  const keysSeen = new Set<string>();
+  const prevailingTags: string[] = [];
 
-  if (promotedTags.length > 0) {
-    next.labels_tags = [...new Set([...(next.labels_tags || []), ...promotedTags])];
+  for (const candidate of certCandidates) {
+    const key = evidenceKeyOf(candidate);
+    if (keysSeen.has(key)) continue;
+    keysSeen.add(key);
+
+    const prevailing = selectPrevailingAdmittedEvidence(promotedEvidence, {
+      barcode: candidate.barcode,
+      domain: 'certifications',
+      claimKey: candidate.claimKey,
+      variantKey: candidate.variantKey,
+    });
+    if (!prevailing) continue;
+    if (!carriesCurrentProductionEpoch(prevailing)) continue;
+    if (!canApplyToProductionReceiver(prevailing, 'ethics_certifications')) continue;
+    prevailingTags.push(...(prevailing.labelsTags || [prevailing.claimValue || prevailing.claimKey]));
+  }
+
+  if (prevailingTags.length > 0) {
+    next.labels_tags = [...new Set([...(next.labels_tags || []), ...prevailingTags])];
   }
 }
 
@@ -92,18 +108,48 @@ function applyPromotedOrigins(
   next: ProductWithContributionMark,
   promotedEvidence: ContributionEvidence[]
 ): void {
-  const promotedOrigins = promotedEvidence.filter((e) => {
-    if (e.domain !== 'origins') return false;
-    if (carriesCurrentProductionEpoch(e)) {
-      return canApplyToProductionReceiver(e, 'open_origins');
-    }
-    // Compat: pre-epoch records do not enter production scoring Product.
-    return false;
-  });
-  if (promotedOrigins.length === 0) return;
+  // Prevailing-admitted-evidence contract: do not let later activity on an older
+  // admitted version (or unadmitted drafts) displace the prevailing version via
+  // updatedAt recency. Use selectPrevailingAdmittedEvidence per evidence key.
+  const originCandidates = promotedEvidence.filter((e) => e.domain === 'origins');
+  if (originCandidates.length === 0) return;
 
-  // Use the latest promoted evidence version for the barcode claim set.
-  const chosen = promotedOrigins.reduce((a, b) => (a.updatedAt >= b.updatedAt ? a : b));
+  const keysSeen = new Set<string>();
+  let chosen: ContributionEvidence | null = null;
+
+  for (const candidate of originCandidates) {
+    const key = evidenceKeyOf(candidate);
+    if (keysSeen.has(key)) continue;
+    keysSeen.add(key);
+
+    const prevailing = selectPrevailingAdmittedEvidence(promotedEvidence, {
+      barcode: candidate.barcode,
+      domain: 'origins',
+      claimKey: candidate.claimKey,
+      variantKey: candidate.variantKey,
+    });
+    if (!prevailing) continue;
+    if (!carriesCurrentProductionEpoch(prevailing)) continue;
+    if (!canApplyToProductionReceiver(prevailing, 'open_origins')) continue;
+
+    // Among distinct claim keys, prefer highest evidenceVersion then admittedAt —
+    // never updatedAt activity on superseded versions.
+    if (!chosen) {
+      chosen = prevailing;
+      continue;
+    }
+    if (prevailing.evidenceVersion !== chosen.evidenceVersion) {
+      chosen =
+        prevailing.evidenceVersion > chosen.evidenceVersion ? prevailing : chosen;
+      continue;
+    }
+    const prevAdmitted = prevailing.admission?.admittedAt ?? prevailing.updatedAt;
+    const chosenAdmitted = chosen.admission?.admittedAt ?? chosen.updatedAt;
+    if (prevAdmitted >= chosenAdmitted) chosen = prevailing;
+  }
+
+  if (!chosen) return;
+
   const country =
     chosen.originStructured?.primaryCountry?.trim() ||
     chosen.claimValue.trim() ||

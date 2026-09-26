@@ -27,7 +27,10 @@ import {
   buildExactWordingFromStructured,
   type OriginStructuredEvidence,
 } from './originStructured';
-import { CURRENT_PRODUCTION_CONTRIBUTION_EPOCH } from './productionEpoch';
+import {
+  CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
+  resolveContributionCreationRecordClass,
+} from './productionEpoch';
 import type { ContributionEvidence } from './types';
 import type { ContributionDisputeReason, ContributionDomain } from '../config/contributionPolicy';
 
@@ -78,7 +81,11 @@ export async function submitGovernedEvidence(params: {
       ? resolveCertificationLane({ labelsTags: params.labelsTags, claimValue })
       : undefined;
 
-  const asProduction = params.asProductionEpoch !== false;
+  // Runtime determinant: Jest/Expo Go → developer; release/TestFlight → production.
+  // asProductionEpoch cannot upgrade a non-production runtime into production class.
+  const runtimeClass = resolveContributionCreationRecordClass();
+  const wantsEpoch = params.asProductionEpoch !== false;
+  const isProductionClass = runtimeClass === 'production' && wantsEpoch;
 
   const evidence = createPendingEvidence({
     evidenceId: buildEvidenceId({
@@ -86,6 +93,7 @@ export async function submitGovernedEvidence(params: {
       domain: params.domain,
       claimKey,
       evidenceVersion,
+      variantKey: params.variantKey,
     }),
     barcode: params.barcode,
     domain: params.domain,
@@ -100,7 +108,7 @@ export async function submitGovernedEvidence(params: {
     createdAt: Date.now(),
     imageUrl: params.imageUrl,
     exactWording,
-    ...(asProduction
+    ...(isProductionClass
       ? {
           productionEpoch: CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
           recordClass: 'production' as const,
@@ -108,17 +116,26 @@ export async function submitGovernedEvidence(params: {
           sourceProvenance: 'primary_user_submission',
           receiverEligibility: undefined,
         }
-      : {
-          productionEpoch: null,
-          recordClass: 'historical' as const,
-          admissionStatus: undefined,
-        }),
+      : wantsEpoch
+        ? {
+            // Dev/Jest/UAT-Metro: may carry epoch for wiring tests but never production class.
+            productionEpoch: CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
+            recordClass: runtimeClass,
+            admissionStatus: 'submitted' as const,
+            sourceProvenance: 'primary_user_submission',
+            receiverEligibility: undefined,
+          }
+        : {
+            productionEpoch: null,
+            recordClass: 'historical' as const,
+            admissionStatus: undefined,
+          }),
   });
 
   await upsertLocalEvidence(evidence);
 
   const key = evidenceKeyOf(evidence);
-  const checkpoint = asProduction ? await checkpointMaterialCompletion(evidence, key) : null;
+  const checkpoint = isProductionClass ? await checkpointMaterialCompletion(evidence, key) : null;
   const remoteOk = await persistEvidenceRemote(evidence).catch(() => false);
   if (checkpoint && remoteOk) {
     await markRecoveryRemoteSynced(checkpoint.recoveryId);

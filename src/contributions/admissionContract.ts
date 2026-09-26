@@ -7,9 +7,10 @@
  *
  * Domain-global `scoringEligible` is retained only as a compatibility mirror and
  * is not the controlling production assessment authority.
+ * Stored `receiverEligibility` maps are never authoritative for production gates.
  */
 
-import { getCommunityVerificationPolicy } from '../config/contributionPolicy';
+import { getCommunityVerificationPolicy, getCommunityVerificationThresholds } from '../config/contributionPolicy';
 import { isLaneACertificationEvidence } from './certificationLane';
 import {
   ADMISSION_RULE_VERSION,
@@ -17,10 +18,12 @@ import {
   type AssessmentReceiverId,
   type ContributionAdmissionStatus,
 } from './admissionTypes';
+import { evaluateBodyReceiverEligibility } from './bodyReceiverRegistry';
 import {
   CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
   carriesCurrentProductionEpoch,
   describeEpochAuthority,
+  isExplicitProductionRecordClass,
   type ContributionRecordClass,
 } from './productionEpoch';
 import type { ContributionEvidence } from './types';
@@ -95,9 +98,25 @@ export function deriveCompatScoringEligibleMirror(
   return Object.values(receiverEligibility).some((entry) => entry?.eligible === true);
 }
 
+function otherActiveConfirmations(evidence: ContributionEvidence): number {
+  return evidence.confirmations.filter((c) => c.contributorId !== evidence.submitterId).length;
+}
+
+/**
+ * Whether review_required may preserve assessment eligibility via controlled
+ * recomputation (confirmation threshold already met), not via stored maps or
+ * legacy scoringEligible flags.
+ */
+function reviewRequiredPreservesReceiverEligibility(evidence: ContributionEvidence): boolean {
+  if (evidence.state !== 'review_required') return false;
+  const thresholds = getCommunityVerificationThresholds(evidence.domain);
+  return otherActiveConfirmations(evidence) >= thresholds.independentConfirmationsRequired;
+}
+
 /**
  * Compute receiver-specific eligibility from admitted evidence type × approved
  * receiving methodology. Fail closed when methodology is not approved for the type.
+ * Never trusts stored receiverEligibility or domain-global scoringEligible as authority.
  */
 export function computeReceiverEligibility(
   evidence: ContributionEvidence
@@ -119,7 +138,7 @@ export function computeReceiverEligibility(
       reason: 'not_evaluated',
     },
     // 4A.0: fail closed — no approved Body receiving methodology registered yet.
-    // Not a permanent ban: 4A.2 may set eligible=true for approved predicates.
+    // 4A.2 extensibility: register predicates via bodyReceiverRegistry (code/governance).
     // Does not authorise substituting contribution evidence for OFF Nutri-Score/NOVA.
     body_ingredients_nutrition: {
       eligible: false,
@@ -145,7 +164,8 @@ export function computeReceiverEligibility(
   }
 
   // Governance: review_required must not itself determine eligibility — preserve prior
-  // eligibility computation inputs (policy + lane). Withdrawn/superseded close eligibility.
+  // eligibility via controlled recomputation (confirmation threshold), not stored maps.
+  // Withdrawn/superseded close eligibility.
   if (evidence.state === 'superseded' || evidence.state === 'withdrawn') {
     return {
       open_origins: {
@@ -160,15 +180,22 @@ export function computeReceiverEligibility(
     };
   }
 
+  const bodyEval = evaluateBodyReceiverEligibility(evidence);
+  const bodyEntry = {
+    eligible: bodyEval.eligible,
+    methodologyId: bodyEval.methodologyId,
+    methodologyVersion: bodyEval.methodologyVersion,
+    basisRuleVersion,
+    reason: bodyEval.reason,
+  };
+
   if (evidence.domain === 'origins') {
     const policy = getCommunityVerificationPolicy('origins');
-    const priorEligible = evidence.receiverEligibility?.open_origins?.eligible === true;
     const eligible =
       policy.canonicalPromotionPermission === true &&
       (evidence.state === 'cross_user_eligible' ||
-        (evidence.state === 'review_required' && (priorEligible || evidence.scoringEligible === true)));
+        (evidence.state === 'review_required' && reviewRequiredPreservesReceiverEligibility(evidence)));
     return {
-      ...empty,
       open_origins: {
         eligible,
         methodologyId: 'open_v15',
@@ -176,10 +203,12 @@ export function computeReceiverEligibility(
         basisRuleVersion,
         reason: eligible
           ? evidence.state === 'review_required'
-            ? 'review_required preserves prior open_origins eligibility (governance-only)'
+            ? 'review_required preserves open_origins eligibility via controlled recomputation'
             : 'admitted origins evidence × open_v15 receiving methodology'
           : 'origins not assessment-eligible for open_origins receiver',
       },
+      ethics_certifications: empty.ethics_certifications,
+      body_ingredients_nutrition: bodyEntry,
     };
   }
 
@@ -190,15 +219,14 @@ export function computeReceiverEligibility(
       claimValue: evidence.claimValue,
       certificationLane: evidence.certificationLane,
     });
-    const priorEligible = evidence.receiverEligibility?.ethics_certifications?.eligible === true;
     // Lane B remains non-scoring; only Lane A may be ethics-receiver eligible.
     const eligible =
       policy.canonicalPromotionPermission === true &&
       laneA === true &&
       (evidence.state === 'cross_user_eligible' ||
-        (evidence.state === 'review_required' && (priorEligible || evidence.scoringEligible === true)));
+        (evidence.state === 'review_required' && reviewRequiredPreservesReceiverEligibility(evidence)));
     return {
-      ...empty,
+      open_origins: empty.open_origins,
       ethics_certifications: {
         eligible,
         methodologyId: 'ethics_pillar',
@@ -208,16 +236,24 @@ export function computeReceiverEligibility(
           ? 'Lane B certification evidence is governed but not ethics-assessment-eligible'
           : eligible
             ? evidence.state === 'review_required'
-              ? 'review_required preserves prior ethics_certifications eligibility (governance-only)'
+              ? 'review_required preserves ethics_certifications eligibility via controlled recomputation'
               : 'admitted Lane A certification evidence × ethics receiving methodology'
             : 'certifications not assessment-eligible for ethics receiver',
       },
+      body_ingredients_nutrition: bodyEntry,
     };
   }
 
-  return empty;
+  return {
+    ...empty,
+    body_ingredients_nutrition: bodyEntry,
+  };
 }
 
+/**
+ * Production assessment eligibility — always recomputes from controlled methodology
+ * predicates. Stored receiverEligibility maps and scoringEligible are never trusted.
+ */
 export function isAssessmentEligibleForReceiver(
   evidence: ContributionEvidence,
   receiverId: AssessmentReceiverId
@@ -226,11 +262,8 @@ export function isAssessmentEligibleForReceiver(
   if (!isGovernedAdmitted(evidence)) return false;
   if (evidence.state === 'superseded' || evidence.state === 'withdrawn') return false;
 
-  const entry = evidence.receiverEligibility?.[receiverId];
-  if (entry) return entry.eligible === true;
-
-  // Fail closed if receiver map missing — do not fall back to domain-global scoringEligible.
-  return false;
+  const computed = computeReceiverEligibility(evidence);
+  return computed[receiverId]?.eligible === true;
 }
 
 /**
@@ -243,7 +276,6 @@ export function canApplyToProductionReceiver(
 ): boolean {
   if (!isAssessmentEligibleForReceiver(evidence, receiverId)) return false;
   if (!evidence.canonicalPromoted) return false;
-  // review_required does not withdraw; eligibility already preserved in receiver map.
   return true;
 }
 
@@ -279,6 +311,15 @@ export function admitEvidence(
     };
   }
 
+  // Never upgrade non-production / absent recordClass to production on admission.
+  if (!isExplicitProductionRecordClass(evidence.recordClass ?? null)) {
+    return {
+      ok: false,
+      evidence,
+      reason: 'admission_requires_explicit_recordClass_production',
+    };
+  }
+
   const timestamp = params.timestamp ?? Date.now();
   const admitted: ContributionEvidence = {
     ...evidence,
@@ -290,7 +331,7 @@ export function admitEvidence(
       admittedBy: params.admittedBy,
     },
     updatedAt: timestamp,
-    recordClass: (evidence.recordClass || 'production') as ContributionRecordClass,
+    recordClass: 'production' as ContributionRecordClass,
     productionEpoch: CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
   };
   const receiverEligibility = computeReceiverEligibility(admitted);
