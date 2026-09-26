@@ -66,6 +66,7 @@
     "test:e2e:user-submission-cards": "ts-node --project scripts/tsconfig.json scripts/e2e-user-submission-cards.ts",
     "test:csv-database": "jest src/__tests__/unit/services/csvDatabaseService.test.ts",
     "test:wave4-contributions": "jest src/__tests__/unit/config/contributionPolicy.test.ts src/__tests__/unit/contributions/lifecycle.test.ts src/__tests__/unit/contributions/eligibilityBoundary.test.ts src/__tests__/unit/contributions/scanIsolation.test.ts",
+    "test:wave4a0": "jest src/__tests__/unit/contributions/wave4a0AdmissionContract.test.ts src/__tests__/unit/contributions/eligibilityBoundary.test.ts src/__tests__/unit/contributions/lifecycle.test.ts",
     "inventory:wave4-contributions": "ts-node --project scripts/tsconfig.json scripts/wave4-contribution-exposure-inventory.ts",
     "test": "jest",
     "setup-backend": "powershell -ExecutionPolicy Bypass -File scripts/setup-backend.ps1",

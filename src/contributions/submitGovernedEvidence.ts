@@ -1,5 +1,10 @@
 import { buildEvidenceId, normalizeClaimKey } from './evidenceVersion';
 import {
+  admitEvidence,
+  evidenceKeyOf,
+  selectPrevailingAdmittedEvidence,
+} from './admissionContract';
+import {
   confirmAndPromoteIfEligible,
   confirmEvidence,
   createPendingEvidence,
@@ -12,12 +17,17 @@ import {
   getLocalEvidenceForBarcode,
   getLocalEvidenceById,
 } from './evidenceStore';
+import {
+  checkpointMaterialCompletion,
+  markRecoveryRemoteSynced,
+} from './contributionRecovery';
 import { getContributorId } from './contributorIdentity';
 import { resolveCertificationLane } from './certificationLane';
 import {
   buildExactWordingFromStructured,
   type OriginStructuredEvidence,
 } from './originStructured';
+import { CURRENT_PRODUCTION_CONTRIBUTION_EPOCH } from './productionEpoch';
 import type { ContributionEvidence } from './types';
 import type { ContributionDisputeReason, ContributionDomain } from '../config/contributionPolicy';
 
@@ -29,6 +39,12 @@ export async function submitGovernedEvidence(params: {
   imageUrl?: string;
   exactWording?: string;
   originStructured?: OriginStructuredEvidence;
+  variantKey?: string;
+  /**
+   * When true (default for production cutover paths), stamp current production epoch
+   * and leave admissionStatus=submitted (not yet admitted).
+   */
+  asProductionEpoch?: boolean;
 }): Promise<ContributionEvidence> {
   const submitterId = await getContributorId();
   const structured = params.originStructured;
@@ -47,14 +63,22 @@ export async function submitGovernedEvidence(params: {
 
   const existing = await getLocalEvidenceForBarcode(params.barcode);
   const sameClaim = existing.filter(
-    (e) => e.domain === params.domain && normalizeClaimKey(e.claimKey) === claimKey
+    (e) =>
+      e.domain === params.domain &&
+      normalizeClaimKey(e.claimKey) === claimKey &&
+      (params.variantKey ? e.variantKey === params.variantKey : !e.variantKey)
   );
-  const evidenceVersion = sameClaim.length === 0 ? 1 : Math.max(...sameClaim.map((e) => e.evidenceVersion));
+
+  // Correction creates a new version — never overwrite an existing evidenceId/version.
+  const evidenceVersion =
+    sameClaim.length === 0 ? 1 : Math.max(...sameClaim.map((e) => e.evidenceVersion)) + 1;
 
   const certificationLane =
     params.domain === 'certifications'
       ? resolveCertificationLane({ labelsTags: params.labelsTags, claimValue })
       : undefined;
+
+  const asProduction = params.asProductionEpoch !== false;
 
   const evidence = createPendingEvidence({
     evidenceId: buildEvidenceId({
@@ -68,6 +92,7 @@ export async function submitGovernedEvidence(params: {
     evidenceVersion,
     claimKey,
     claimValue: claimValue.trim(),
+    variantKey: params.variantKey,
     labelsTags: params.labelsTags,
     certificationLane,
     originStructured: structured,
@@ -75,11 +100,76 @@ export async function submitGovernedEvidence(params: {
     createdAt: Date.now(),
     imageUrl: params.imageUrl,
     exactWording,
+    ...(asProduction
+      ? {
+          productionEpoch: CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
+          recordClass: 'production' as const,
+          admissionStatus: 'submitted' as const,
+          sourceProvenance: 'primary_user_submission',
+          receiverEligibility: undefined,
+        }
+      : {
+          productionEpoch: null,
+          recordClass: 'historical' as const,
+          admissionStatus: undefined,
+        }),
   });
 
   await upsertLocalEvidence(evidence);
-  await persistEvidenceRemote(evidence).catch(() => false);
+
+  const key = evidenceKeyOf(evidence);
+  const checkpoint = asProduction ? await checkpointMaterialCompletion(evidence, key) : null;
+  const remoteOk = await persistEvidenceRemote(evidence).catch(() => false);
+  if (checkpoint && remoteOk) {
+    await markRecoveryRemoteSynced(checkpoint.recoveryId);
+  }
+
   return evidence;
+}
+
+/**
+ * Explicit governed admission. Raw/submitted upload success is not admission.
+ * Only current production-epoch submitted evidence may be admitted.
+ */
+export async function admitGovernedEvidence(
+  evidenceId: string,
+  params?: { admissionReason?: string; admittedBy?: string }
+): Promise<{ ok: boolean; evidence: ContributionEvidence | null; reason?: string }> {
+  const existing = await getLocalEvidenceById(evidenceId);
+  if (!existing) return { ok: false, evidence: null, reason: 'not_found' };
+
+  const result = admitEvidence(existing, {
+    admissionReason: params?.admissionReason || 'primary_user_evidence_admission',
+    admittedBy: params?.admittedBy,
+  });
+  if (!result.ok) {
+    return { ok: false, evidence: result.evidence, reason: result.reason };
+  }
+
+  await upsertLocalEvidence(result.evidence);
+  const key = evidenceKeyOf(result.evidence);
+  const checkpoint = await checkpointMaterialCompletion(result.evidence, key);
+  const remoteOk = await persistEvidenceRemote(result.evidence).catch(() => false);
+  if (checkpoint && remoteOk) {
+    await markRecoveryRemoteSynced(checkpoint.recoveryId);
+  }
+  return { ok: true, evidence: result.evidence };
+}
+
+/** Submit then admit under the production contract (controlled creation path). */
+export async function submitAndAdmitGovernedEvidence(
+  params: Parameters<typeof submitGovernedEvidence>[0]
+): Promise<{ ok: boolean; evidence: ContributionEvidence; reason?: string }> {
+  const submitted = await submitGovernedEvidence({ ...params, asProductionEpoch: true });
+  const admitted = await admitGovernedEvidence(submitted.evidenceId);
+  if (!admitted.ok || !admitted.evidence) {
+    return {
+      ok: false,
+      evidence: submitted,
+      reason: admitted.reason || 'admission_failed',
+    };
+  }
+  return { ok: true, evidence: admitted.evidence };
 }
 
 async function persistUpdatedEvidence(evidence: ContributionEvidence): Promise<void> {
@@ -111,6 +201,21 @@ export async function disputeGovernedEvidence(
   const result = disputeEvidence(existing, id, reason, Date.now(), note);
   if (result.ok) await persistUpdatedEvidence(result.evidence);
   return result;
+}
+
+export async function getPrevailingAdmittedEvidenceForKey(params: {
+  barcode: string;
+  domain: ContributionEvidence['domain'];
+  claimKey: string;
+  variantKey?: string;
+}): Promise<ContributionEvidence | null> {
+  const rows = await getLocalEvidenceForBarcode(params.barcode);
+  return selectPrevailingAdmittedEvidence(rows, {
+    barcode: params.barcode,
+    domain: params.domain,
+    claimKey: normalizeClaimKey(params.claimKey),
+    variantKey: params.variantKey,
+  });
 }
 
 export { confirmEvidence, disputeEvidence, markCanonicalPromoted, confirmAndPromoteIfEligible };

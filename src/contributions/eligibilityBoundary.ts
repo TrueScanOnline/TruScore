@@ -2,13 +2,19 @@
  * Single promotion/eligibility boundary upstream of Ethics/Open/TruScore.
  * Pending Rveel contribution fields never enter the scoring-ready Product.
  * Verified + promoted evidence may enter the existing pillar input fields only.
+ *
+ * Wave 4A.0: production assessment consumption is gated by production epoch +
+ * governed admission + receiver-specific eligibility. Domain-global scoringEligible
+ * is not controlling.
  */
 
 import type { Product } from '../types/product';
 import { CONTRIBUTION_POLICY } from '../config/contributionPolicy';
+import { canApplyToProductionReceiver } from './admissionContract';
 import type { ContributionEvidence, RveelPendingContributionFields } from './types';
 import { RVEEL_PENDING_FIELD_MARK } from './types';
 import { canPromoteToCanonicalProduct } from './lifecycle';
+import { carriesCurrentProductionEpoch } from './productionEpoch';
 
 export type ProductWithContributionMark = Product & {
   [RVEEL_PENDING_FIELD_MARK]?: RveelPendingContributionFields;
@@ -43,12 +49,29 @@ function isStandaloneLocalContribution(product: ProductWithContributionMark): bo
   );
 }
 
+/**
+ * Legacy Wave 4 promotion path (pre-epoch / non-production-contract records).
+ * Retained for inspection/compat only. Must not grant production authority
+ * to pre-epoch records via toScoringProduct.
+ */
+export function isLegacyPromotable(evidence: ContributionEvidence): boolean {
+  if (carriesCurrentProductionEpoch(evidence)) return false;
+  return canPromoteToCanonicalProduct(evidence) && evidence.canonicalPromoted;
+}
+
 function applyPromotedCertifications(
   next: ProductWithContributionMark,
   promotedEvidence: ContributionEvidence[]
 ): void {
   const promotedTags = promotedEvidence
-    .filter((e) => e.domain === 'certifications' && canPromoteToCanonicalProduct(e) && e.canonicalPromoted)
+    .filter((e) => {
+      if (e.domain !== 'certifications') return false;
+      if (carriesCurrentProductionEpoch(e)) {
+        return canApplyToProductionReceiver(e, 'ethics_certifications');
+      }
+      // Compat: pre-epoch records do not enter production scoring Product.
+      return false;
+    })
     .flatMap((e) => e.labelsTags || [e.claimValue || e.claimKey]);
 
   if (promotedTags.length > 0) {
@@ -69,9 +92,14 @@ function applyPromotedOrigins(
   next: ProductWithContributionMark,
   promotedEvidence: ContributionEvidence[]
 ): void {
-  const promotedOrigins = promotedEvidence.filter(
-    (e) => e.domain === 'origins' && canPromoteToCanonicalProduct(e) && e.canonicalPromoted
-  );
+  const promotedOrigins = promotedEvidence.filter((e) => {
+    if (e.domain !== 'origins') return false;
+    if (carriesCurrentProductionEpoch(e)) {
+      return canApplyToProductionReceiver(e, 'open_origins');
+    }
+    // Compat: pre-epoch records do not enter production scoring Product.
+    return false;
+  });
   if (promotedOrigins.length === 0) return;
 
   // Use the latest promoted evidence version for the barcode claim set.
@@ -101,7 +129,7 @@ function applyPromotedOrigins(
  * Product representation that pillar scoring may consume.
  * Trusted external fields stay. Standalone local contribution records cannot
  * supply nutrition, ingredients, origin, or certification tags to scoring.
- * Promoted (cross_user_eligible + policy + lane) evidence may be applied.
+ * Production-epoch admitted + receiver-eligible + promoted evidence may be applied.
  */
 export function toScoringProduct(
   product: Product | null | undefined,

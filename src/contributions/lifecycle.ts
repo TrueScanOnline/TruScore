@@ -4,7 +4,9 @@ import {
   resolveVerificationLifecycleState,
   type ContributionDisputeReason,
 } from '../config/contributionPolicy';
+import { refreshReceiverEligibility } from './admissionContract';
 import { isLaneACertificationEvidence } from './certificationLane';
+import { carriesCurrentProductionEpoch } from './productionEpoch';
 import type { ContributionEvidence, DisputeResponse, FounderAdminAction } from './types';
 
 function otherActiveConfirmations(evidence: ContributionEvidence): number {
@@ -39,12 +41,20 @@ function computeScoringEligible(evidence: ContributionEvidence): boolean {
   return false;
 }
 
+function applyProductionReceiverRefresh(evidence: ContributionEvidence): ContributionEvidence {
+  // Production-admitted records: receiverEligibility is controlling; scoringEligible is mirror only.
+  if (carriesCurrentProductionEpoch(evidence) && evidence.admissionStatus === 'admitted') {
+    return refreshReceiverEligibility(evidence);
+  }
+  return evidence;
+}
+
 function recomputeState(evidence: ContributionEvidence): ContributionEvidence {
   if (evidence.state === 'superseded' || evidence.state === 'withdrawn') {
-    return { ...evidence, scoringEligible: false, canonicalPromoted: false };
+    const closed = { ...evidence, scoringEligible: false, canonicalPromoted: false };
+    return applyProductionReceiverRefresh(closed);
   }
 
-  const policy = getCommunityVerificationPolicy(evidence.domain);
   const disputes = uniqueActiveDisputes(evidence);
   const confirmations = otherActiveConfirmations(evidence);
   const nextState = resolveVerificationLifecycleState({
@@ -56,19 +66,21 @@ function recomputeState(evidence: ContributionEvidence): ContributionEvidence {
 
   if (nextState === 'review_required') {
     // MVP: review_required does not auto-withdraw or alter prior scoring eligibility.
-    return {
+    // It is governance-only — does not determine assessment eligibility by itself.
+    const reviewed = {
       ...evidence,
-      state: 'review_required',
+      state: 'review_required' as const,
       scoringEligible: evidence.scoringEligible,
       canonicalPromoted: evidence.canonicalPromoted,
     };
+    return applyProductionReceiverRefresh(reviewed);
   }
 
   if (nextState === 'cross_user_eligible') {
     const scoringEligible = computeScoringEligible(evidence);
-    return {
+    const eligible = {
       ...evidence,
-      state: 'cross_user_eligible',
+      state: 'cross_user_eligible' as const,
       scoringEligible,
       certificationLane:
         evidence.domain === 'certifications'
@@ -77,18 +89,20 @@ function recomputeState(evidence: ContributionEvidence): ContributionEvidence {
               claimValue: evidence.claimValue,
               certificationLane: evidence.certificationLane,
             })
-            ? 'A'
-            : 'B'
+            ? ('A' as const)
+            : ('B' as const)
           : evidence.certificationLane,
     };
+    return applyProductionReceiverRefresh(eligible);
   }
 
-  return {
+  const pending = {
     ...evidence,
-    state: 'pending',
+    state: 'pending' as const,
     scoringEligible: false,
     canonicalPromoted: false,
   };
+  return applyProductionReceiverRefresh(pending);
 }
 
 export function createPendingEvidence(
@@ -138,7 +152,7 @@ export function confirmEvidence(
       disputes: evidence.disputes.filter((d) => d.contributorId !== contributorId),
       confirmations: [
         ...evidence.confirmations.filter((c) => c.contributorId !== contributorId),
-        { contributorId, timestamp },
+        { contributorId, timestamp, evidenceVersion: evidence.evidenceVersion },
       ],
       updatedAt: timestamp,
     };
@@ -147,7 +161,10 @@ export function confirmEvidence(
 
   const next = {
     ...evidence,
-    confirmations: [...evidence.confirmations, { contributorId, timestamp }],
+    confirmations: [
+      ...evidence.confirmations,
+      { contributorId, timestamp, evidenceVersion: evidence.evidenceVersion },
+    ],
     updatedAt: timestamp,
   };
   return { ok: true, evidence: recomputeState(next) };
@@ -179,7 +196,13 @@ export function disputeEvidence(
     confirmations = evidence.confirmations.filter((c) => c.contributorId !== contributorId);
   }
 
-  const dispute: DisputeResponse = { contributorId, timestamp, reason, note };
+  const dispute: DisputeResponse = {
+    contributorId,
+    timestamp,
+    reason,
+    note,
+    evidenceVersion: evidence.evidenceVersion,
+  };
   const next = {
     ...evidence,
     confirmations,
