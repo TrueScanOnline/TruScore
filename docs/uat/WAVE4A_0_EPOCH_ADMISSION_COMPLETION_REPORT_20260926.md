@@ -11,7 +11,8 @@
 | Starting branch (inspected) | `fix/wave3-rateability-corrective-20260924` |
 | Starting SHA | `95c7d16dd46f64714baa4540d859b2d49eab4cda` |
 | Implementation branch | `wave4a/evidence-epoch-admission-20260926` (from starting SHA; no unrelated merge/cherry-pick) |
-| Ending SHA | `be6ed970e422caf274f8cb6184f1c57e1f24ed2f` (package tip; impl `f3ccdc6`) |
+| Implementation commit | `f3ccdc660bbac8196d5e925202b77177e8a9c146` |
+| Branch tip | `git rev-parse HEAD` on `wave4a/evidence-epoch-admission-20260926` (docs stamp commits may follow) |
 | Working tree at start | Clean except local extract helper |
 | Unrelated merge/cherry-pick | **None** |
 
