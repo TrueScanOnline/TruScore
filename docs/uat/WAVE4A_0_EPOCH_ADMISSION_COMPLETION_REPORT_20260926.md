@@ -74,7 +74,7 @@
 |---|---|
 | Epoch | `productionEpoch === 'wave4a.0'`; absent ⇒ pre-epoch fail closed; `fixture`/`test`/`developer` structurally excluded |
 | Admission | `admissionStatus`: raw → submitted → admitted; `admitEvidence` requires auditable reason + rule version |
-| Receiver eligibility | `receiverEligibility[open_origins \| ethics_certifications \| body_ingredients_nutrition]`; Body always fail closed for local contribution |
+| Receiver eligibility | `receiverEligibility[open_origins \| ethics_certifications \| body_ingredients_nutrition]`; Body slot fail-closed in 4A.0 because no approved Body receiving methodology is registered (not a permanent ban) |
 | `scoringEligible` | **Compat mirror only** — not controlling for production assessment |
 | Prevailing | `selectPrevailingAdmittedEvidence` — latest admitted production-epoch version per evidence key; draft cannot displace |
 | Corrections | New `evidenceVersion` / `evidenceId`; history retained |
@@ -127,8 +127,13 @@ npm run test:wave4-contributions -- --no-coverage
 | Material completion survives failure/retry | `§8.11` | PASS |
 | Unauthorised pillar behaviour unchanged | `§8.12` + CERT-02/NUT/W1 | PASS |
 | Domain-global `scoringEligible` not controlling | dedicated case in suite | PASS |
+| Body fail-closed: no approved Body methodology registered in 4A.0 | `Body receiver — 4A.0 fail-closed default` | PASS |
+| Body contract not a permanent prohibition (map-driven future predicates) | same describe / second case | PASS |
 
-### Baseline note (not a 4A.0 regression)
+### Body receiver corrective note (founder-authorised, post-initial package)
+
+Before: `computeReceiverEligibility` used permanent wording (“never assessment-eligible for Body”).  
+After: fail-closed default `BODY_RECEIVER_4A0_UNREGISTERED_REASON` — “No approved Body receiving methodology is registered in Wave 4A.0.” Shared receiver map remains extensible for 4A.2. No Body6/Whole Produce/NOVA1/Nutri-Score/NOVA methodology changes.
 
 On tip `95c7d16`, pre-existing Wave 4 ORG-02/ORG-06 expectations that Open score **delta** vs bare equals a fixed +4 already failed (Open returned 15 for bare and trusted NZ tags alike). 4A.0 tests assert **field preservation / source consistency / epoch gating** rather than retuning Open methodology (out of scope).
 
@@ -151,11 +156,11 @@ On tip `95c7d16`, pre-existing Wave 4 ORG-02/ORG-06 expectations that Open score
 
 ## G. Unresolved / blockers
 
-1. **Functional Spec v0.2 Required Controlling Inputs** were not present in-repo / Desktop pack beyond this instruction — methodology cells not invented; Body local contribution remains fail closed.
+1. **Functional Spec v0.2 Required Controlling Inputs** were not present in-repo / Desktop pack beyond this instruction — methodology cells not invented. Body receiver slot remains fail-closed in 4A.0 (`BODY_RECEIVER_4A0_UNREGISTERED_REASON`) until 4A.2 registers approved evidence-type × methodology predicates; not a permanent architectural prohibition.
 2. **Call-site cutover:** Manual Edit / CoM still submit without automatic admit — assessment stays fail closed until 4A.1+ wires controlled admission (by design).
 3. **Backend deploy** not authorised — remote persist remains best-effort; recovery retries when backend available.
 4. **Open score delta vs bare** for string-only origin is baseline-sensitive on this tip — separate from 4A.0; do not treat as epoch defect.
-5. **NOVA1 Rescuer** not inspected/modified (deferred to 4A.2 per instruction §11).
+5. **NOVA1 Rescuer / Body6 / Whole Produce** not inspected/modified (deferred to 4A.2 per instruction §11). OFF Nutri-Score/NOVA substitution via contribution evidence remains prohibited generally.
 
 ## H. Recommendation
 

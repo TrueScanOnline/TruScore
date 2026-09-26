@@ -13,6 +13,7 @@ import { getCommunityVerificationPolicy } from '../config/contributionPolicy';
 import { isLaneACertificationEvidence } from './certificationLane';
 import {
   ADMISSION_RULE_VERSION,
+  BODY_RECEIVER_4A0_UNREGISTERED_REASON,
   type AssessmentReceiverId,
   type ContributionAdmissionStatus,
 } from './admissionTypes';
@@ -27,6 +28,7 @@ import type { ContributionEvidence } from './types';
 export {
   ADMISSION_RULE_VERSION,
   ASSESSMENT_RECEIVER_IDS,
+  BODY_RECEIVER_4A0_UNREGISTERED_REASON,
   CONTRIBUTION_ADMISSION_STATUSES,
   type AssessmentReceiverId,
   type ContributionAdmissionRecord,
@@ -116,13 +118,15 @@ export function computeReceiverEligibility(
       basisRuleVersion,
       reason: 'not_evaluated',
     },
+    // 4A.0: fail closed — no approved Body receiving methodology registered yet.
+    // Not a permanent ban: 4A.2 may set eligible=true for approved predicates.
+    // Does not authorise substituting contribution evidence for OFF Nutri-Score/NOVA.
     body_ingredients_nutrition: {
       eligible: false,
       methodologyId: 'body_pillar',
       methodologyVersion: 'as_built',
       basisRuleVersion,
-      reason:
-        'local contribution evidence is never assessment-eligible for Body; authority is OFF public retrieval',
+      reason: BODY_RECEIVER_4A0_UNREGISTERED_REASON,
     },
   } satisfies NonNullable<ContributionEvidence['receiverEligibility']>;
 

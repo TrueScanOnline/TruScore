@@ -4,6 +4,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   admitEvidence,
+  BODY_RECEIVER_4A0_UNREGISTERED_REASON,
   canApplyToProductionReceiver,
   computeReceiverEligibility,
   evidenceKeyOf,
@@ -369,5 +370,46 @@ describe('Wave 4A.0 §8 falsification cases', () => {
     };
     expect(isAssessmentEligibleForReceiver(spoofed, 'open_origins')).toBe(false);
     expect(toScoringProduct(offBare(), [spoofed])?.manufacturing_places).toBeUndefined();
+  });
+
+  describe('Body receiver — 4A.0 fail-closed default (not permanent prohibition)', () => {
+    it('fail-closes Body eligibility because no approved Body receiving methodology is registered in 4A.0', () => {
+      const admitted = admitAndVerify(baseOrigin());
+      const computed = computeReceiverEligibility(admitted);
+      expect(computed.body_ingredients_nutrition?.eligible).toBe(false);
+      expect(computed.body_ingredients_nutrition?.reason).toBe(BODY_RECEIVER_4A0_UNREGISTERED_REASON);
+      expect(computed.body_ingredients_nutrition?.reason).not.toMatch(/never/i);
+      expect(isAssessmentEligibleForReceiver(admitted, 'body_ingredients_nutrition')).toBe(false);
+
+      const cert = admitAndVerify(baseCertLaneA());
+      expect(cert.receiverEligibility?.body_ingredients_nutrition?.eligible).toBe(false);
+      expect(cert.receiverEligibility?.body_ingredients_nutrition?.reason).toBe(
+        BODY_RECEIVER_4A0_UNREGISTERED_REASON
+      );
+    });
+
+    it('shared contract does not permanently prohibit future approved Body receiver predicates', () => {
+      // Simulate a later package registering an approved Body predicate on the shared map.
+      // 4A.0 does not implement Body6/Whole Produce/NOVA1 — this only proves the gate is map-driven.
+      const admitted = admitAndVerify(baseCertLaneA());
+      const withFutureBodyRegistration: ContributionEvidence = {
+        ...admitted,
+        receiverEligibility: {
+          ...admitted.receiverEligibility,
+          body_ingredients_nutrition: {
+            eligible: true,
+            methodologyId: 'body6_additives_placeholder',
+            methodologyVersion: 'future_4a2',
+            basisRuleVersion: 'founder_authorised_placeholder',
+            reason: 'simulated future approved Body receiving methodology (not implemented in 4A.0)',
+          },
+        },
+      };
+      expect(isAssessmentEligibleForReceiver(withFutureBodyRegistration, 'body_ingredients_nutrition')).toBe(
+        true
+      );
+      // 4A.0 compute path remains fail-closed until predicates are actually registered.
+      expect(computeReceiverEligibility(admitted).body_ingredients_nutrition?.eligible).toBe(false);
+    });
   });
 });
