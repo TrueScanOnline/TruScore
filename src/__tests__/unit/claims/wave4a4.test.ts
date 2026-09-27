@@ -187,6 +187,44 @@ describe('Wave 4A.4 packet claims receiver', () => {
     expect(handed[0]?.outcome).toBe('submitted');
   });
 
+  it('caps a both-lane Claims result to Limited when it depends on primary packet evidence', () => {
+    const ethics = calculateEthicsPillar(food(), { packetCoverageState: 'complete' });
+    const assessment = ethics.details.claimsAssessment;
+    if (!assessment) throw new Error('claims assessment missing');
+    const withBenchmarks = {
+      ...ethics,
+      details: {
+        ...ethics.details,
+        primaryUserClaimsDependence: true,
+        claimsAssessment: {
+          ...assessment,
+          benchmark_checks: [
+            { source: 'ktc' as const, status: 'no_finding' as const },
+            { source: 'bbfaw' as const, status: 'no_finding' as const },
+          ],
+        },
+      },
+    };
+    const dependent = publishClaimsPillar({
+      product: food(),
+      ethics: withBenchmarks,
+      authoritative: { claimsPacket: true, claimsBenchmark: true },
+    });
+    expect(dependent.confidence).toBe('limited');
+    expect(dependent.confidenceReasonCode).toBe('claims_primary_contribution_limited');
+    expect(dependent.s26?.code).toBe('CLAIMS_LIMITED_PRIMARY_CONTRIBUTION');
+
+    const independent = publishClaimsPillar({
+      product: food(),
+      ethics: {
+        ...withBenchmarks,
+        details: { ...withBenchmarks.details, primaryUserClaimsDependence: false },
+      },
+      authoritative: { claimsPacket: true, claimsBenchmark: true },
+    });
+    expect(independent.confidence).toBe('high');
+  });
+
   it('sends an admitted organic certification through the existing certification path', async () => {
     const cert = admitAt(
       await submitGovernedEvidence({
