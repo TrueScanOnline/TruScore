@@ -88,7 +88,9 @@ export async function calculateTrustScore(
       ? { publicationSettled: options.publicationSettled }
       : {}),
   };
-  const truScoreResult = calculateTruScore(product, undefined, scoringContext);
+  const productForPublication =
+    governedOrigins.length > 0 ? { ...product, rveelGovernedOrigins: governedOrigins } : product;
+  const truScoreResult = calculateTruScore(productForPublication, undefined, scoringContext);
   const overlay = toScoringProduct(product, localEvidence);
   const displayIngredients = product.ingredients_text?.trim()
     ? product.ingredients_text

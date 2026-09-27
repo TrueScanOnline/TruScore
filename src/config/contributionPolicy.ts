@@ -44,7 +44,6 @@ export const ORIGIN_PERCENTAGE_QUALIFIERS = [
   'exactly',
   'more_than',
   'less_than',
-  'other_unclear',
 ] as const;
 export type OriginPercentageQualifier = (typeof ORIGIN_PERCENTAGE_QUALIFIERS)[number];
 

@@ -8,6 +8,7 @@ import { canApplyToProductionReceiver } from '../contributions/admissionContract
 import {
   ingredientSubjectKey,
   normalizeIngredientSubject,
+  supportedPercentageQualifier,
   type OriginStructuredEvidence,
 } from '../contributions/originStructured';
 import type { ContributionEvidence } from '../contributions/types';
@@ -109,7 +110,8 @@ function toFact(evidence: ContributionEvidence): GovernedOriginFact | null {
         ? normalizeIngredientSubject(structured.ingredientSubject) || undefined
         : undefined,
     percentage,
-    percentageQualifier: percentage != null ? structured.percentageQualifier : undefined,
+    percentageQualifier:
+      percentage != null ? supportedPercentageQualifier(structured.percentageQualifier) : undefined,
     originQualification: structured.originQualification,
     additionalOriginStatement: structured.additionalOriginStatement?.trim() || undefined,
     confidence: 'limited',

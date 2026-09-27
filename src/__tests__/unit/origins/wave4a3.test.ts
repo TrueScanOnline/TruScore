@@ -15,6 +15,9 @@ import {
   setSourceFraming,
 } from '../../../packetContribution';
 import { toScoringProduct } from '../../../contributions/eligibilityBoundary';
+import { calculateOpenPillar } from '../../../lib/truscoreEngine/pillars/openPillar';
+import { publishTransparencyPillar } from '../../../lib/rateability/transparencyPublication';
+import type { GovernedOriginFact } from '../../../origins/governedFacts';
 import type { Product } from '../../../types/product';
 
 const BARCODE = '9300673111111';
@@ -229,5 +232,229 @@ describe('Wave 4A.3 product origins', () => {
     expect(scoring?.manufacturing_places_tags).toBeUndefined();
     expect(scoring?.origins_tags).toBeUndefined();
     expect(typeof scoring?.manufacturing_places === 'string' || scoring?.manufacturing_places == null).toBe(true);
+  });
+
+  it('keeps a stated percentage when the qualifier is not a supported semantic', async () => {
+    const stored = await submitGovernedEvidence({
+      barcode: BARCODE,
+      domain: 'origins',
+      claimValue: 'Ghana',
+      asProductionEpoch: true,
+      originStructured: {
+        claimType: 'ingredient_origin',
+        primaryCountry: 'Ghana',
+        ingredientSubject: 'Cocoa mass',
+        ingredientOriginPercentage: 40,
+        percentageQualifier: 'other_unclear' as never,
+      },
+    });
+    const facts = selectPrevailingOriginFacts([admitAt(stored, 1)]);
+    expect(stored.originStructured?.ingredientOriginPercentage).toBe(40);
+    expect(stored.originStructured?.percentageQualifier).toBeUndefined();
+    expect(stored.exactWording).toContain('40%');
+    expect(facts[0]?.percentage).toBe(40);
+    expect(facts[0]?.percentageQualifier).toBeUndefined();
+  });
+});
+
+function honeyProduct(facts?: GovernedOriginFact[]): Product {
+  return {
+    barcode: BARCODE,
+    product_name: 'Honey',
+    source: 'openfoodfacts',
+    ingredients_text: 'honey',
+    ingredients_text_en: 'honey',
+    ingredients_lc: 'en',
+    lang: 'en',
+    additives_tags: [],
+    ...(facts ? { rveelGovernedOrigins: facts } : {}),
+  } as Product;
+}
+
+describe('Wave 4A.3 Transparency origins disclosure', () => {
+  async function ingredientFact(
+    input: {
+      subject: string;
+      country: string;
+      wording: string;
+      percentage?: number;
+      qualifier?: 'at_least' | 'exactly' | 'more_than' | 'less_than';
+    }
+  ): Promise<GovernedOriginFact> {
+    const stored = admitAt(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: input.country || input.subject,
+        exactWording: input.wording,
+        asProductionEpoch: true,
+        originStructured: {
+          claimType: 'ingredient_origin',
+          primaryCountry: input.country,
+          ingredientSubject: input.subject,
+          ingredientOriginPercentage: input.percentage,
+          percentageQualifier: input.qualifier,
+        },
+      }),
+      1
+    );
+    const fact = selectPrevailingOriginFacts([stored])[0];
+    if (!fact) throw new Error('expected ingredient origin fact');
+    return fact;
+  }
+
+  it('resolves the existing origins lane from a single-ingredient origin without changing Open scoring', async () => {
+    const fact = await ingredientFact({
+      subject: 'Honey',
+      country: 'New Zealand',
+      wording: 'Honey from New Zealand',
+    });
+    const bare = calculateOpenPillar(honeyProduct());
+    const open = calculateOpenPillar(honeyProduct([fact]));
+    expect(open.score).toBe(bare.score);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(honeyProduct([fact]).origins_tags).toBeUndefined();
+    const published = publishTransparencyPillar({
+      product: honeyProduct([fact]),
+      open,
+      authoritative: { transparencyIngredient: true, transparencyOrigins: true },
+    });
+    expect(published.assessmentLanes.origins).toBe('resolved');
+    expect(published.confidence).toBe('limited');
+    expect(published.s26?.code).toBe('TRANSPARENCY_LIMITED_PRIMARY_CONTRIBUTION');
+    expect(published.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
+  });
+
+  it('does not resolve the lane from manufacture evidence or from a percentage without a qualifier', async () => {
+    const made = selectPrevailingOriginFacts([
+      admitAt(
+        await submitGovernedEvidence({
+          barcode: BARCODE,
+          domain: 'origins',
+          claimValue: 'New Zealand',
+          exactWording: 'Made in New Zealand',
+          asProductionEpoch: true,
+          originStructured: { claimType: 'made_in', primaryCountry: 'New Zealand' },
+        }),
+        1
+      ),
+    ]);
+    const madeOpen = calculateOpenPillar(honeyProduct(made));
+    const madePublished = publishTransparencyPillar({ product: honeyProduct(made), open: madeOpen });
+    expect(madePublished.assessmentLanes.origins).toBe('unassessed');
+
+    const unqualified = await ingredientFact({
+      subject: 'Honey',
+      country: 'New Zealand',
+      wording: 'Honey 80% New Zealand',
+      percentage: 80,
+    });
+    const unqualifiedPublished = publishTransparencyPillar({
+      product: honeyProduct([unqualified]),
+      open: calculateOpenPillar(honeyProduct([unqualified])),
+    });
+    expect(unqualified.percentage).toBe(80);
+    expect(unqualified.percentageQualifier).toBeUndefined();
+    expect(unqualifiedPublished.assessmentLanes.origins).toBe('unassessed');
+  });
+
+  it('uses an exact percentage band or a qualified partial statement, and leaves Open tags untouched', async () => {
+    const exact = await ingredientFact({
+      subject: 'Honey',
+      country: 'New Zealand',
+      wording: 'Honey exactly 80% New Zealand',
+      percentage: 80,
+      qualifier: 'exactly',
+    });
+    const exactOpen = calculateOpenPillar(honeyProduct([exact]));
+    const exactPublished = publishTransparencyPillar({
+      product: honeyProduct([exact]),
+      open: exactOpen,
+    });
+    expect(exactOpen.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(exactPublished.assessmentLanes.origins).toBe('resolved');
+    expect(exactPublished.diagnostic.originsDisclosureRequirement).toBe('stated_percentage_band');
+    expect(exactPublished.confidence).toBe('limited');
+
+    const qualified = await ingredientFact({
+      subject: 'Honey',
+      country: 'New Zealand',
+      wording: 'Honey from at least 80% New Zealand',
+      percentage: 80,
+      qualifier: 'at_least',
+    });
+    const qualifiedPublished = publishTransparencyPillar({
+      product: honeyProduct([qualified]),
+      open: calculateOpenPillar(honeyProduct([qualified])),
+    });
+    expect(qualifiedPublished.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
+    expect(qualifiedPublished.assessmentLanes.origins).toBe('resolved');
+  });
+
+  it('keeps an existing Open origins resolution at its own confidence', async () => {
+    const fact = await ingredientFact({
+      subject: 'Honey',
+      country: 'New Zealand',
+      wording: 'Honey from New Zealand',
+    });
+    const product = honeyProduct([fact]);
+    product.origins_tags = ['en:new-zealand'];
+    const open = calculateOpenPillar(product);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    const published = publishTransparencyPillar({ product, open });
+    expect(published.assessmentLanes.origins).toBe('resolved');
+    expect(published.confidence).toBe('moderate');
+    expect(published.diagnostic.originsDisclosureSource).toBe('off');
+  });
+
+  it('fails closed on a contradicting free-text origin and on two ingredient countries', async () => {
+    const fact = await ingredientFact({
+      subject: 'Honey',
+      country: 'New Zealand',
+      wording: 'Honey from New Zealand',
+    });
+    const product = honeyProduct([fact]);
+    product.origins = 'australia';
+    const published = publishTransparencyPillar({
+      product,
+      open: calculateOpenPillar(product),
+    });
+    expect(published.assessmentLanes.origins).toBe('unassessed');
+
+    const cocoa = await ingredientFact({
+      subject: 'Cocoa mass',
+      country: 'Ghana',
+      wording: 'Cocoa mass from Ghana',
+    });
+    const sugar = selectPrevailingOriginFacts([
+      admitAt(
+        await submitGovernedEvidence({
+          barcode: BARCODE,
+          domain: 'origins',
+          claimValue: 'Australia',
+          exactWording: 'Cane sugar from Australia',
+          asProductionEpoch: true,
+          originStructured: {
+            claimType: 'ingredient_origin',
+            primaryCountry: 'Australia',
+            ingredientSubject: 'Cane sugar',
+          },
+        }),
+        2
+      ),
+    ])[0];
+    const multi = {
+      ...honeyProduct(),
+      product_name: 'Chocolate',
+      ingredients_text: 'cocoa mass, cane sugar',
+      ingredients_text_en: 'cocoa mass, cane sugar',
+      rveelGovernedOrigins: [cocoa, sugar].filter((row): row is GovernedOriginFact => !!row),
+    } as Product;
+    const multiPublished = publishTransparencyPillar({
+      product: multi,
+      open: calculateOpenPillar(multi),
+    });
+    expect(multiPublished.assessmentLanes.origins).toBe('unassessed');
+    expect(calculateOpenPillar(multi).details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
   });
 });

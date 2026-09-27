@@ -83,6 +83,13 @@ function isRecognizedOffCountry(normalizedTag: string): boolean {
   return RECOGNIZED_OFF_COUNTRY_KEYS.has(mechanicalCountryKey(normalizedTag));
 }
 
+/** Same country list the Origins lane already uses. Does not write origins_tags. */
+export function isRecognizedOriginCountry(value: string): boolean {
+  const normalized = normalizeOriginTag(value);
+  if (!normalized || isPlaceholderOriginValue(normalized)) return false;
+  return isRecognizedOffCountry(normalized);
+}
+
 /**
  * Inspect the complete supplied `origins_tags` evidence set before deduplication.
  * Malformed, empty, placeholder and unrecognised entries mark the set dirty (+8 ineligible).
@@ -156,7 +163,7 @@ function hasManufacturingOnlySignal(product: Product): boolean {
   return hasMfgTags || hasMfgString;
 }
 
-function ingredientTokensForOriginsGate(ingredientsText: string): string[] {
+export function ingredientTokensForOriginsGate(ingredientsText: string): string[] {
   const tokens = tokenizeIngredientsText(ingredientsText);
   if (tokens.length > 0) return tokens;
   const trimmed = ingredientsText.trim();
@@ -167,16 +174,16 @@ function ingredientTokensForOriginsGate(ingredientsText: string): string[] {
  * When free-text `origins` is present alongside a single structured tag, require narrow
  * whole-string mechanical normalization match — no conjunction parsing or splitting.
  */
-function freeTextOriginsConsistentWithStructuredTag(
+export function freeTextOriginsConsistentWithStructuredTag(
   product: Product,
   normalizedStructuredTag: string
 ): boolean {
   if (typeof product.origins !== 'string' || !product.origins.trim()) return true;
   const normalizedOrigins = normalizeOriginTag(product.origins);
-  return normalizedOrigins === normalizedStructuredTag;
+  return normalizedOrigins === normalizeOriginTag(normalizedStructuredTag);
 }
 
-function singleIngredientEvidentlyCompleteEligible(
+export function singleIngredientEvidentlyCompleteEligible(
   ingredientsText: string,
   governedFlagCount: number
 ): { eligible: boolean; reason?: string } {

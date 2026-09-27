@@ -25,6 +25,7 @@ import { getContributorId } from './contributorIdentity';
 import { resolveCertificationLane } from './certificationLane';
 import {
   buildExactWordingFromStructured,
+  supportedPercentageQualifier,
   type OriginStructuredEvidence,
 } from './originStructured';
 import {
@@ -50,7 +51,12 @@ export async function submitGovernedEvidence(params: {
   asProductionEpoch?: boolean;
 }): Promise<ContributionEvidence> {
   const submitterId = await getContributorId();
-  const structured = params.originStructured;
+  const structured = params.originStructured
+    ? {
+        ...params.originStructured,
+        percentageQualifier: supportedPercentageQualifier(params.originStructured.percentageQualifier),
+      }
+    : undefined;
   const claimValue =
     params.domain === 'origins' && structured?.primaryCountry
       ? structured.primaryCountry

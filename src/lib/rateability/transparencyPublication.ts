@@ -5,6 +5,7 @@
 
 import type { Product } from '../../types/product';
 import type { OpenPillarResult } from '../truscoreEngine/pillars/openPillar';
+import { resolveGovernedOriginsDisclosure } from '../../origins/disclosureReceiver';
 import { formatS26Explanation } from './s26Copy';
 import { applyAuthoritativeHighUplift, defaultProductSourceQuality } from './sourceQuality';
 import type {
@@ -27,21 +28,18 @@ function ingredientLaneResolved(open: OpenPillarResult): boolean {
   );
 }
 
-function originsLaneState(open: OpenPillarResult): TransparencyOriginsLaneState {
+function offOriginsDisclosureResolved(open: OpenPillarResult): boolean {
   // Registry conflict ID retained for possible future wiring; free-text contradiction
   // is intentionally insufficient/unresolved (correction 2) — do not map to conflict lane.
   if (open.details.originsAdjustmentId === 'open-v15-origins-evidently-complete') {
-    return 'resolved';
+    return true;
   }
-  if (
+  return (
     typeof open.details.originsAdjustmentId === 'string' &&
     (open.details.originsAdjustmentId.startsWith('open-v15-origins-pct-') ||
       open.details.originsAdjustmentId === 'open-v15-origins-qualified-partial' ||
       open.details.originsAdjustmentId === 'open-v15-origins-packet-gap')
-  ) {
-    return 'resolved';
-  }
-  return 'unassessed';
+  );
 }
 
 function buildOriginsPrefill(
@@ -139,7 +137,13 @@ export function publishTransparencyPillar(args: {
   const ingredient: TransparencyIngredientLaneState = ingredientLaneResolved(open)
     ? 'resolved'
     : 'unassessed';
-  const origins = originsLaneState(open);
+  const offOriginsResolved = offOriginsDisclosureResolved(open);
+  const contributionDisclosure = offOriginsResolved
+    ? null
+    : resolveGovernedOriginsDisclosure(product, open, product.rveelGovernedOrigins);
+  const origins: TransparencyOriginsLaneState =
+    offOriginsResolved || contributionDisclosure?.resolved ? 'resolved' : 'unassessed';
+  const primaryOriginsDependence = contributionDisclosure?.resolved === true;
 
   if (checking) {
     return {
@@ -189,14 +193,20 @@ export function publishTransparencyPillar(args: {
   let structural: ConfidenceLevel = bothResolved ? 'moderate' : 'limited';
   const ingAuth = !!authoritative?.transparencyIngredient;
   const origAuth = !!authoritative?.transparencyOrigins;
-  const confidence = applyAuthoritativeHighUplift({
+  let confidence = applyAuthoritativeHighUplift({
     structural: structural === 'moderate' && ingAuth && origAuth ? 'high' : structural,
     bothLanesResolved: bothResolved,
     laneAAuthoritative: ingAuth,
     laneBAuthoritative: origAuth,
   });
+  if (primaryOriginsDependence && (confidence === 'moderate' || confidence === 'high')) {
+    confidence = 'limited';
+  }
 
-  const code = resolveTransparencyS26(ingredient, origins, confidence, true);
+  const code =
+    primaryOriginsDependence && bothResolved
+      ? 'TRANSPARENCY_LIMITED_PRIMARY_CONTRIBUTION'
+      : resolveTransparencyS26(ingredient, origins, confidence, true);
   const opp = transparencyContribution(product, open, ingredient, origins);
 
   return {
@@ -211,8 +221,9 @@ export function publishTransparencyPillar(args: {
       explanation: formatS26Explanation(code),
       ...(opp ? { contributionOpportunity: opp } : {}),
     },
-    confidenceReasonCode:
-      confidence === 'high'
+    confidenceReasonCode: primaryOriginsDependence
+      ? 'transparency_primary_contribution_limited'
+      : confidence === 'high'
         ? 'transparency_both_authoritative'
         : confidence === 'moderate'
           ? 'transparency_both_lanes'
@@ -227,6 +238,14 @@ export function publishTransparencyPillar(args: {
       originsProvenance: open.details.originsProvenance,
       originsDiagnostic: open.details.originsDiagnostic ?? null,
       freeTextContradiction: !!open.details.originsDiagnostic?.freeTextContradiction,
+      originsDisclosureSource: offOriginsResolved
+        ? 'off'
+        : primaryOriginsDependence
+          ? 'primary_contribution'
+          : 'unresolved',
+      ...(contributionDisclosure?.resolved
+        ? { originsDisclosureRequirement: contributionDisclosure.requirement }
+        : {}),
     },
   };
 }

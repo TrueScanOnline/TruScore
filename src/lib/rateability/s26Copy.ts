@@ -55,6 +55,8 @@ const S26_TRANSPARENCY: Record<string, string> = {
     'We could assess origin disclosure, but ingredient-wording clarity has not yet been resolved.',
   TRANSPARENCY_LIMITED_ORIGINS_CONFLICT:
     'We could assess ingredient-wording clarity, but the available origin evidence conflicts and is not yet resolved.',
+  TRANSPARENCY_LIMITED_PRIMARY_CONTRIBUTION:
+    'This Transparency result uses origin information you added. Confidence is Limited.',
   TRANSPARENCY_MODERATE:
     'We resolved both ingredient-wording clarity and origin disclosure. The available evidence supports a Moderate-confidence result.',
   TRANSPARENCY_HIGH:

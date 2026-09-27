@@ -2,7 +2,7 @@ import type {
   OriginClaimType,
   OriginPercentageQualifier,
 } from '../config/contributionPolicy';
-import { ORIGIN_CLAIM_TYPES } from '../config/contributionPolicy';
+import { ORIGIN_CLAIM_TYPES, ORIGIN_PERCENTAGE_QUALIFIERS } from '../config/contributionPolicy';
 
 export type OriginQualification = 'local' | 'imported' | 'multiple';
 
@@ -38,8 +38,17 @@ const QUALIFIER_LABEL: Record<OriginPercentageQualifier, string> = {
   exactly: '',
   more_than: 'more than',
   less_than: 'less than',
-  other_unclear: '',
 };
+
+const SUPPORTED_PERCENTAGE_QUALIFIERS = new Set<string>(ORIGIN_PERCENTAGE_QUALIFIERS);
+
+/** Supported qualifier, or unset. Does not classify an unclear percentage. */
+export function supportedPercentageQualifier(
+  value: string | undefined
+): OriginPercentageQualifier | undefined {
+  if (!value || !SUPPORTED_PERCENTAGE_QUALIFIERS.has(value)) return undefined;
+  return value as OriginPercentageQualifier;
+}
 
 export function isOriginClaimType(value: string): value is OriginClaimType {
   return (ORIGIN_CLAIM_TYPES as readonly string[]).includes(value);
@@ -49,10 +58,10 @@ export function isOriginClaimType(value: string): value is OriginClaimType {
 export function buildExactWordingFromStructured(structured: OriginStructuredEvidence): string {
   const head = `${CLAIM_TYPE_LABEL[structured.claimType]} ${structured.primaryCountry}`.trim();
   const pct = structured.ingredientOriginPercentage;
-  const qualifier = structured.percentageQualifier;
+  const qualifier = supportedPercentageQualifier(structured.percentageQualifier);
   const ingredientCountry = structured.ingredientOriginCountry || structured.primaryCountry;
-  if (pct != null && Number.isFinite(pct) && qualifier) {
-    const q = QUALIFIER_LABEL[qualifier];
+  if (pct != null && Number.isFinite(pct)) {
+    const q = qualifier ? QUALIFIER_LABEL[qualifier] : '';
     const pctPhrase = q ? `${q} ${pct}%` : `${pct}%`;
     return `${head} from ${pctPhrase} ${ingredientCountry} ingredients`.replace(/\s+/g, ' ').trim();
   }
