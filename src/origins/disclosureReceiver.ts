@@ -7,7 +7,6 @@
 import type { Product } from '../types/product';
 import type { OpenPillarResult } from '../lib/truscoreEngine/pillars/openPillar';
 import {
-  freeTextOriginsConsistentWithStructuredTag,
   ingredientTokensForOriginsGate,
   isRecognizedOriginCountry,
   singleIngredientEvidentlyCompleteEligible,
@@ -70,15 +69,11 @@ export function resolveGovernedOriginsDisclosure(
   const single = ingredients.usable
     ? singleIngredientEvidentlyCompleteEligible(ingredients.scoringText, open.details.governedFlagCount)
     : { eligible: false };
-  const country = countries[0];
-  const freeTextAgrees = freeTextOriginsConsistentWithStructuredTag(product, country);
   const subjectMatchesSingle =
     single.eligible &&
     tokens.length === 1 &&
     ingredientOrigins.length === 1 &&
     ingredientSubjectKey(ingredientOrigins[0].ingredientSubject) === ingredientSubjectKey(tokens[0]);
-
-  if (!freeTextAgrees) return { resolved: false };
 
   const fact = ingredientOrigins.length === 1 ? ingredientOrigins[0] : undefined;
   if (subjectMatchesSingle && fact && (fact.percentage == null || (fact.percentageQualifier === 'exactly' && fact.percentage === 100))) {

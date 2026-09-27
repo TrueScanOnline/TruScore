@@ -6,6 +6,7 @@
 import type { Product } from '../../types/product';
 import type { OpenPillarResult } from '../truscoreEngine/pillars/openPillar';
 import { resolveGovernedOriginsDisclosure } from '../../origins/disclosureReceiver';
+import { admittedIngredientOriginConflictsWithOff } from '../../origins/offUserPrecedence';
 import { formatS26Explanation } from './s26Copy';
 import { applyAuthoritativeHighUplift, defaultProductSourceQuality } from './sourceQuality';
 import type {
@@ -138,12 +139,18 @@ export function publishTransparencyPillar(args: {
     ? 'resolved'
     : 'unassessed';
   const offOriginsResolved = offOriginsDisclosureResolved(open);
-  const contributionDisclosure = offOriginsResolved
-    ? null
-    : resolveGovernedOriginsDisclosure(product, open, product.rveelGovernedOrigins);
+  const admittedConflictsWithOff = admittedIngredientOriginConflictsWithOff(
+    product,
+    product.rveelGovernedOrigins
+  );
+  const contributionDisclosure =
+    offOriginsResolved && !admittedConflictsWithOff
+      ? null
+      : resolveGovernedOriginsDisclosure(product, open, product.rveelGovernedOrigins);
+  const useOffOrigins = offOriginsResolved && !admittedConflictsWithOff;
   const origins: TransparencyOriginsLaneState =
-    offOriginsResolved || contributionDisclosure?.resolved ? 'resolved' : 'unassessed';
-  const primaryOriginsDependence = contributionDisclosure?.resolved === true;
+    useOffOrigins || contributionDisclosure?.resolved ? 'resolved' : 'unassessed';
+  const primaryOriginsDependence = !useOffOrigins && contributionDisclosure?.resolved === true;
 
   if (checking) {
     return {
@@ -238,11 +245,12 @@ export function publishTransparencyPillar(args: {
       originsProvenance: open.details.originsProvenance,
       originsDiagnostic: open.details.originsDiagnostic ?? null,
       freeTextContradiction: !!open.details.originsDiagnostic?.freeTextContradiction,
-      originsDisclosureSource: offOriginsResolved
+      originsDisclosureSource: useOffOrigins
         ? 'off'
         : primaryOriginsDependence
           ? 'primary_contribution'
           : 'unresolved',
+      ...(admittedConflictsWithOff ? { admittedUserPrevailsOverOff: true } : {}),
       ...(contributionDisclosure?.resolved
         ? { originsDisclosureRequirement: contributionDisclosure.requirement }
         : {}),

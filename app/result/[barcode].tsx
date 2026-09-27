@@ -40,6 +40,7 @@ import NutritionTable from '../../src/components/NutritionTable';
 import type { NutritionDetailsFocusTarget } from '../../src/components/NutritionDetailsModal';
 import { Image as ExpoImage } from 'expo-image';
 import { PRODUCT_ORIGINS_EXPLAINER_HOOK } from '../../src/origins/governedFacts';
+import { admittedUserOriginPrevailsForDisplay } from '../../src/origins/offUserPrecedence';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
@@ -1476,6 +1477,10 @@ function ResultScreenContent() {
   }
 
   const manufacturingCountry = extractManufacturingCountry(product);
+  const admittedOriginPrevails = admittedUserOriginPrevailsForDisplay(
+    product,
+    product.rveelGovernedOrigins
+  );
   // UAT interim mitigation (F): prefer small front image for hero; fall back to full.
   const imageUrl =
     product.image_front_small_url || product.image_front_url || product.image_url || null;
@@ -1484,11 +1489,13 @@ function ResultScreenContent() {
   // Combine Open Food Facts data with user contributions
   // CRITICAL: If user has overridden default country, prioritize user-contributed country
   // This ensures when user changes default country, their entry is displayed with verification status
-  const displayManufacturingCountry = (userContributedCountry?.country && 
-                                      manufacturingCountry && 
+  const displayManufacturingCountry = admittedOriginPrevails
+    ? null
+    : (userContributedCountry?.country &&
+                                      manufacturingCountry &&
                                       userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase())
-    ? userContributedCountry.country  // User overrode default - show user's country
-    : (manufacturingCountry || userContributedCountry?.country || null); // Otherwise use default or user-contributed
+    ? userContributedCountry.country
+    : (manufacturingCountry || userContributedCountry?.country || null);
 
   const shareManufacturingCountryLabel = (() => {
     const raw = displayManufacturingCountry || userContributedCountry?.country;

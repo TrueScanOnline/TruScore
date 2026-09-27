@@ -17,6 +17,7 @@ import {
 import { toScoringProduct } from '../../../contributions/eligibilityBoundary';
 import { calculateOpenPillar } from '../../../lib/truscoreEngine/pillars/openPillar';
 import { publishTransparencyPillar } from '../../../lib/rateability/transparencyPublication';
+import { admittedUserOriginPrevailsForDisplay } from '../../../origins/offUserPrecedence';
 import type { GovernedOriginFact } from '../../../origins/governedFacts';
 import type { Product } from '../../../types/product';
 
@@ -407,20 +408,76 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(published.diagnostic.originsDisclosureSource).toBe('off');
   });
 
-  it('fails closed on a contradicting free-text origin and on two ingredient countries', async () => {
+  it('lets an admitted ingredient origin prevail over conflicting OFF origin data', async () => {
     const fact = await ingredientFact({
       subject: 'Honey',
       country: 'New Zealand',
       wording: 'Honey from New Zealand',
     });
     const product = honeyProduct([fact]);
+    product.origins_tags = ['en:australia'];
     product.origins = 'australia';
+    const open = calculateOpenPillar(product);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
     const published = publishTransparencyPillar({
       product,
-      open: calculateOpenPillar(product),
+      open,
+      authoritative: { transparencyIngredient: true, transparencyOrigins: true },
     });
-    expect(published.assessmentLanes.origins).toBe('unassessed');
+    expect(product.origins_tags).toEqual(['en:australia']);
+    expect(product.origins).toBe('australia');
+    expect(published.assessmentLanes.origins).toBe('resolved');
+    expect(published.confidence).toBe('limited');
+    expect(published.diagnostic.originsDisclosureSource).toBe('primary_contribution');
+    expect(published.diagnostic.admittedUserPrevailsOverOff).toBe(true);
+    expect(published.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
+    expect(admittedUserOriginPrevailsForDisplay(product, [fact])).toBe(true);
 
+    const agreed = honeyProduct([fact]);
+    agreed.origins_tags = ['en:new-zealand'];
+    const agreedOpen = calculateOpenPillar(agreed);
+    const agreedPublished = publishTransparencyPillar({ product: agreed, open: agreedOpen });
+    expect(agreedPublished.confidence).toBe('moderate');
+    expect(agreedPublished.diagnostic.originsDisclosureSource).toBe('off');
+    expect(admittedUserOriginPrevailsForDisplay(agreed, [fact])).toBe(false);
+
+    const madeIn: GovernedOriginFact = {
+      evidenceId: 'made-nz',
+      subjectKey: 'made_in',
+      claimType: 'made_in',
+      countries: ['New Zealand'],
+      confidence: 'limited',
+    };
+    const manufactured = honeyProduct([madeIn]);
+    manufactured.manufacturing_places = 'Australia';
+    expect(admittedUserOriginPrevailsForDisplay(manufactured, [madeIn])).toBe(true);
+    expect(manufactured.manufacturing_places).toBe('Australia');
+    const manufacturePublished = publishTransparencyPillar({
+      product: manufactured,
+      open: calculateOpenPillar(manufactured),
+    });
+    expect(manufacturePublished.assessmentLanes.origins).toBe('unassessed');
+  });
+
+  it('does not let conflicting OFF origin data fill a lane the admitted fact does not establish', async () => {
+    const fact = await ingredientFact({
+      subject: 'Honey',
+      country: 'New Zealand',
+      wording: 'Honey 80% New Zealand',
+      percentage: 80,
+    });
+    const product = honeyProduct([fact]);
+    product.origins_tags = ['en:australia'];
+    const open = calculateOpenPillar(product);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    const published = publishTransparencyPillar({ product, open });
+    expect(product.origins_tags).toEqual(['en:australia']);
+    expect(published.assessmentLanes.origins).toBe('unassessed');
+    expect(published.diagnostic.admittedUserPrevailsOverOff).toBe(true);
+    expect(open.score).toBe(calculateOpenPillar({ ...product, rveelGovernedOrigins: undefined }).score);
+  });
+
+  it('leaves two ingredient countries unresolved', async () => {
     const cocoa = await ingredientFact({
       subject: 'Cocoa mass',
       country: 'Ghana',

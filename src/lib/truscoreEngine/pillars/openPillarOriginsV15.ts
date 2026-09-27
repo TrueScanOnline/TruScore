@@ -83,6 +83,11 @@ function isRecognizedOffCountry(normalizedTag: string): boolean {
   return RECOGNIZED_OFF_COUNTRY_KEYS.has(mechanicalCountryKey(normalizedTag));
 }
 
+/** Same country key the Origins lane already uses. Does not write origins_tags. */
+export function originCountryKey(value: string): string {
+  return mechanicalCountryKey(normalizeOriginTag(value));
+}
+
 /** Same country list the Origins lane already uses. Does not write origins_tags. */
 export function isRecognizedOriginCountry(value: string): boolean {
   const normalized = normalizeOriginTag(value);
