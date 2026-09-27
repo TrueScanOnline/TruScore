@@ -58,9 +58,16 @@ export type ContributionEvidence = {
    */
   ingredientsNutrition?: {
     ingredientsText?: string;
-    nutriments?: Record<string, number>;
-    nutritionBasis?: 'per_100g' | 'per_serving';
-    /** True only when the consumer confirmed the panel is complete. Default false. */
+    nutritionBasis?: 'per_100g' | 'per_100ml' | 'per_serving';
+    /**
+     * Established packet amounts only. An omitted attribute is not stated.
+     * A value of 0 is a stated zero. Not a local Nutri-Score or NOVA input.
+     */
+    nutriments?: import('../ingredientsNutrition/nutritionSchema').StatedNutritionAmount[];
+    /**
+     * True only when the established amounts cover the required panel on one basis.
+     * A consumer completeness choice is not an input.
+     */
     nutritionComplete: boolean;
   };
   state: ContributionLifecycleState;

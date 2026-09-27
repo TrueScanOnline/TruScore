@@ -8,7 +8,7 @@ const ingredientsNutritionBodyPredicate: Parameters<typeof registerBodyReceiverP
     if (!carriesCurrentProductionEpoch(evidence) || !isGovernedAdmitted(evidence)) return null;
     const payload = evidence.ingredientsNutrition;
     const ingredients = payload?.ingredientsText?.trim();
-    const nutritionKeys = payload?.nutriments ? Object.keys(payload.nutriments) : [];
+    const nutritionKeys = payload?.nutriments?.length ? payload.nutriments : [];
     if (!ingredients && nutritionKeys.length === 0) return null;
     return {
       eligible: true,
@@ -31,5 +31,5 @@ export function ingredientsNutritionHasEstablishedFacts(evidence: ContributionEv
   const payload = evidence.ingredientsNutrition;
   if (!payload) return false;
   if (payload.ingredientsText?.trim()) return true;
-  return !!payload.nutriments && Object.values(payload.nutriments).some((value) => Number.isFinite(value));
+  return !!payload.nutriments && payload.nutriments.some((amount) => Number.isFinite(amount.value));
 }

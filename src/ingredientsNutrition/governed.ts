@@ -19,37 +19,32 @@ import {
 } from '../contributions/productionEpoch';
 import type { ContributionEvidence } from '../contributions/types';
 import { registerIngredientsNutritionBodyReceiver } from './bodyReceiver';
+import { establishNutrition, type StatedNutritionAmount } from './nutritionSchema';
 
 export type IngredientsNutritionDraft = {
   barcode: string;
   variantKey?: string;
   ingredientsText?: string;
-  nutriments?: Record<string, number>;
-  nutritionBasis?: 'per_100g' | 'per_serving';
-  nutritionComplete?: boolean;
+  nutritionBasis?: string;
+  amounts?: Array<{ attribute?: string; value?: unknown; unit?: string }>;
   imageUrl?: string;
 };
-
-function finiteNutriments(input: Record<string, number> | undefined): Record<string, number> | undefined {
-  if (!input) return undefined;
-  const next: Record<string, number> = {};
-  for (const [key, value] of Object.entries(input)) {
-    if (!key.trim() || !Number.isFinite(value)) continue;
-    next[key] = value;
-  }
-  return Object.keys(next).length > 0 ? next : undefined;
-}
 
 export async function submitIngredientsNutritionEvidence(
   draft: IngredientsNutritionDraft
 ): Promise<ContributionEvidence> {
   registerIngredientsNutritionBodyReceiver();
   const ingredientsText = draft.ingredientsText?.trim() || undefined;
-  const nutriments = finiteNutriments(draft.nutriments);
-  if (!ingredientsText && !nutriments) {
+  const nutrition = establishNutrition({ basis: draft.nutritionBasis, amounts: draft.amounts });
+  if (!ingredientsText && !nutrition) {
     throw new Error('ingredients_nutrition_requires_a_fact');
   }
-  const claimValue = ingredientsText || `nutrition:${Object.keys(nutriments || {}).sort().join(',')}`;
+  const claimValue =
+    ingredientsText ||
+    `nutrition:${(nutrition?.amounts || [])
+      .map((amount: StatedNutritionAmount) => amount.attribute)
+      .sort()
+      .join(',')}`;
   const claimKey = normalizeClaimKey(ingredientsText ? `ingredients:${ingredientsText}` : claimValue);
   const variantKey = canonicalizeVariantKey(draft.variantKey);
   const existing = await getLocalEvidenceForBarcode(draft.barcode);
@@ -81,18 +76,15 @@ export async function submitIngredientsNutritionEvidence(
     exactWording: ingredientsText,
     ingredientsNutrition: {
       ingredientsText,
-      nutriments,
-      nutritionBasis: draft.nutritionBasis,
-      nutritionComplete: draft.nutritionComplete === true && !!nutriments,
+      nutriments: nutrition?.amounts,
+      nutritionBasis: nutrition?.basis,
+      nutritionComplete: nutrition?.nutritionComplete === true,
     },
     productionEpoch: CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
     recordClass: runtimeClass,
     admissionStatus: 'submitted',
     sourceProvenance: 'primary_user_submission',
   });
-  if (evidence.ingredientsNutrition) {
-    evidence.ingredientsNutrition.nutritionComplete = draft.nutritionComplete === true && !!nutriments;
-  }
   await upsertLocalEvidence(evidence);
   const checkpoint =
     runtimeClass === 'production' ? await checkpointMaterialCompletion(evidence, evidenceKeyOf(evidence)) : null;

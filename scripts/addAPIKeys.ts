@@ -35,12 +35,13 @@ function addAPIKeysToEnv() {
 # EXPO_PUBLIC_BACKEND_URL=https://YOUR-VERCEL-URL.vercel.app
 
 # ============================================
-# OPEN FOOD FACTS CREDENTIALS (RECOMMENDED)
+# OPEN FOOD FACTS WRITE CREDENTIALS (SERVER ONLY — NOT THE APP)
 # ============================================
 # Create account at: https://world.openfoodfacts.org
 # Use your username (not email) as user_id
-# EXPO_PUBLIC_OFF_USER_ID=your_off_username
-# EXPO_PUBLIC_OFF_PASSWORD=your_off_password
+# Set these on the server, not as EXPO_PUBLIC_ values:
+# OFF_WRITE_USER_ID=your_off_username
+# OFF_WRITE_PASSWORD=your_off_password
 
 `;
   }

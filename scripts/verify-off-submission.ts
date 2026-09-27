@@ -2,8 +2,8 @@
  * Verifies authenticated Open Food Facts writes use the same endpoint and fields
  * as the app (https://world.openfoodfacts.org/cgi/product_jqm2.pl).
  *
- * Credentials: EXPO_PUBLIC_OFF_USER_ID + EXPO_PUBLIC_OFF_PASSWORD in environment
- * or repo-root .env (same names as the Expo app).
+ * Credentials: OFF_WRITE_USER_ID + OFF_WRITE_PASSWORD in the environment
+ * or repo-root .env. These are server write credentials, not app-public env.
  *
  * OFF expects user_id = account username from your profile when you signed up;
  * if you store an email in USER_ID, this script also tries the local-part (before @).
@@ -22,7 +22,7 @@ function loadEnvFile(): void {
   if (!fs.existsSync(envPath)) return;
   const content = fs.readFileSync(envPath, 'utf8');
   for (const line of content.split('\n')) {
-    const m = line.match(/^\s*(EXPO_PUBLIC_OFF_USER_ID|EXPO_PUBLIC_OFF_PASSWORD)\s*=\s*(.*)$/);
+    const m = line.match(/^\s*(OFF_WRITE_USER_ID|OFF_WRITE_PASSWORD)\s*=\s*(.*)$/);
     if (!m) continue;
     const key = m[1];
     let val = m[2].trim();
@@ -92,11 +92,11 @@ async function trySubmit(
 
 async function main(): Promise<void> {
   loadEnvFile();
-  const rawUser = process.env.EXPO_PUBLIC_OFF_USER_ID || '';
-  const password = process.env.EXPO_PUBLIC_OFF_PASSWORD || '';
+  const rawUser = process.env.OFF_WRITE_USER_ID || '';
+  const password = process.env.OFF_WRITE_PASSWORD || '';
   if (!rawUser || !password) {
     console.error(
-      'Missing EXPO_PUBLIC_OFF_USER_ID or EXPO_PUBLIC_OFF_PASSWORD (.env at repo root or environment).'
+      'Missing OFF_WRITE_USER_ID or OFF_WRITE_PASSWORD (.env at repo root or environment).'
     );
     process.exit(1);
   }
@@ -110,7 +110,7 @@ async function main(): Promise<void> {
   let attempt = 0;
   for (const userId of pickUserIds(rawUser)) {
     attempt++;
-    const label = attempt === 1 ? 'primary EXPO_PUBLIC_OFF_USER_ID' : 'alternate (email local-part)';
+    const label = attempt === 1 ? 'primary OFF_WRITE_USER_ID' : 'alternate (email local-part)';
     process.stdout.write(`Attempt ${attempt} (${label})… `);
     const { ok, snippet, authSuspect } = await trySubmit(userId, password, barcode);
     if (ok) {
@@ -128,7 +128,7 @@ async function main(): Promise<void> {
   }
 
   console.error(
-    '❌ All attempts failed. Set EXPO_PUBLIC_OFF_USER_ID to your Open Food Facts **username** ' +
+    '❌ All attempts failed. Set OFF_WRITE_USER_ID to your Open Food Facts **username** ' +
       '(see https://world.openfoodfacts.org/ profile / settings — often not your full email).'
   );
   process.exit(1);

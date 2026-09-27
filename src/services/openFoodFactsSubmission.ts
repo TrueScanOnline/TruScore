@@ -11,28 +11,9 @@ const OFF_EDIT_API = `${OFF_API_BASE}/cgi/product_jqm2.pl`;
 const OFF_IMAGE_UPLOAD_API = `${OFF_API_BASE}/cgi/product_image_upload.pl`;
 const USER_AGENT = 'Rveel/1.0.0 (truescan@example.com)'; // TODO: Update with actual contact email
 
-// Get Open Food Facts credentials from environment variables
-// Users can optionally provide their OFF credentials to enable auto-submission
-// To get credentials:
-// 1. Create account at https://world.openfoodfacts.org
-// 2. Use your username (not email) as user_id
-// 3. Add to .env: EXPO_PUBLIC_OFF_USER_ID and EXPO_PUBLIC_OFF_PASSWORD
+/** Client builds do not carry an Open Food Facts password. Authenticated writes go through the server. */
 function getOFFCredentials(): { userId?: string; password?: string } {
-  // Try to get from app.config.js extra (for Expo)
-  const userId = process.env.EXPO_PUBLIC_OFF_USER_ID;
-  const password = process.env.EXPO_PUBLIC_OFF_PASSWORD;
-  
-  // If no credentials, we'll use anonymous submission (limited functionality)
-  // Anonymous mode may have rate limits and reduced functionality
-  if (!userId || !password) {
-    logger.warn('[OFF Submission] ⚠️  Open Food Facts credentials not configured. Using anonymous mode (may have limitations).');
-    logger.warn('[OFF Submission] To enable full functionality, add EXPO_PUBLIC_OFF_USER_ID and EXPO_PUBLIC_OFF_PASSWORD to .env');
-  }
-  
-  return {
-    userId: userId || undefined,
-    password: password || undefined,
-  };
+  return {};
 }
 
 /**
@@ -295,9 +276,8 @@ export async function submitManufacturingCountryToOpenFoodFacts(
 }
 
 /**
- * Check if Open Food Facts credentials are configured
+ * Authenticated Open Food Facts writes are server-side. The client does not hold those credentials.
  */
 export function hasOFFCredentials(): boolean {
-  const credentials = getOFFCredentials();
-  return !!(credentials.userId && credentials.password);
+  return false;
 }

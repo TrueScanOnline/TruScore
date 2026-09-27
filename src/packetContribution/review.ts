@@ -38,13 +38,13 @@ export async function addManualEvidenceUnit(params: {
   support: SupportCoverage;
   disposition?: ReviewDisposition;
   section?: 'ingredients' | 'nutrition';
-  nutriments?: Record<string, number>;
-  nutritionBasis?: 'per_100g' | 'per_serving';
+  nutritionAmounts?: import('../ingredientsNutrition/nutritionSchema').StatedNutritionAmount[];
+  nutritionBasis?: import('../ingredientsNutrition/nutritionSchema').NutritionBasis;
 }): Promise<PacketEvidenceUnit> {
   const session = await getSession(params.sessionId);
   if (!session) throw new Error('packet_session_missing');
   const statement = params.statement.trim();
-  if (!statement && !params.nutriments) throw new Error('manual_statement_required');
+  if (!statement && !params.nutritionAmounts?.length) throw new Error('manual_statement_required');
   const unit: PacketEvidenceUnit = {
     unitId: `eu_manual_${session.sessionId}_${session.units.length + 1}`,
     sessionId: session.sessionId,
@@ -57,7 +57,7 @@ export async function addManualEvidenceUnit(params: {
     disposition: params.disposition ?? null,
     status: 'open',
     section: params.section,
-    nutriments: params.nutriments,
+    nutritionAmounts: params.nutritionAmounts,
     nutritionBasis: params.nutritionBasis,
   };
   await upsertSession({ ...session, units: [...session.units, unit] });

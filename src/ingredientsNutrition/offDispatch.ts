@@ -1,7 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getBackendUrl } from '../config/backendConfig';
 import type { ContributionEvidence } from '../contributions/types';
+import { projectOffWriteFields } from './nutritionSchema';
 
 export const OFF_DISPATCH_STORAGE_KEY = '@rveel_in_off_dispatch_v1';
+export const OFF_WRITE_PATH = '/api/off-product-write';
 
 export type OffDispatchStatus = 'saved' | 'sent' | 'failed_retryable';
 
@@ -16,26 +19,45 @@ export type OffDispatchRecord = {
   updatedAt: number;
 };
 
-type FetchLike = (url: string, init: { method: string; body: FormData }) => Promise<{ ok: boolean; status: number }>;
-
-function payloadFromEvidence(evidence: ContributionEvidence): Record<string, string> {
-  const fields: Record<string, string> = { code: evidence.barcode };
-  const payload = evidence.ingredientsNutrition;
-  const ingredients = payload?.ingredientsText?.trim();
-  if (ingredients) fields.ingredients_text = ingredients;
-  if (payload?.nutritionBasis) fields.nutrition_data_per = payload.nutritionBasis === 'per_serving' ? 'serving' : '100g';
-  for (const [key, value] of Object.entries(payload?.nutriments || {})) {
-    if (!key.trim() || !Number.isFinite(value)) continue;
-    fields[`nutriment_${key}`] = String(value);
-  }
-  return fields;
-}
+type FetchLike = (
+  url: string,
+  init: { method: string; headers: Record<string, string>; body: string }
+) => Promise<{ ok: boolean; status: number; json?: () => Promise<unknown> }>;
 
 export function hashOffPayload(fields: Record<string, string>): string {
   return Object.keys(fields)
     .sort()
     .map((key) => `${key}=${fields[key]}`)
     .join('&');
+}
+
+function writePayload(evidence: ContributionEvidence): {
+  fields: Record<string, string>;
+  body: Record<string, unknown>;
+} | null {
+  const nutrition = evidence.ingredientsNutrition;
+  const established = nutrition?.nutriments?.length
+    ? {
+        basis: nutrition.nutritionBasis!,
+        amounts: nutrition.nutriments,
+        nutritionComplete: nutrition.nutritionComplete,
+      }
+    : undefined;
+  const fields = projectOffWriteFields({
+    barcode: evidence.barcode,
+    ingredientsText: nutrition?.ingredientsText,
+    nutrition: established && nutrition?.nutritionBasis ? established : undefined,
+  });
+  if (!fields) return null;
+  return {
+    fields,
+    body: {
+      barcode: evidence.barcode,
+      ingredientsText: nutrition?.ingredientsText,
+      basis: nutrition?.nutritionBasis,
+      amounts: nutrition?.nutriments || [],
+    },
+  };
 }
 
 async function readAll(): Promise<OffDispatchRecord[]> {
@@ -54,47 +76,47 @@ async function writeAll(rows: OffDispatchRecord[]): Promise<void> {
 }
 
 /**
- * Send only established Ingredients & Nutrition fields.
- * Saved, sent, and later OFF-derived classification are different states.
+ * Ask the server to write established fields. The client never holds an OFF password.
+ * Saved, sent, visible-on-OFF, and a later derived classification stay different states.
  */
 export async function dispatchIngredientsNutritionToOff(params: {
   evidence: ContributionEvidence;
   fetchImpl?: FetchLike;
   now?: number;
 }): Promise<OffDispatchRecord> {
-  const fields = payloadFromEvidence(params.evidence);
-  delete fields.code;
-  if (Object.keys(fields).length === 0) {
-    throw new Error('off_dispatch_has_no_established_fields');
-  }
-  fields.code = params.evidence.barcode;
-  const payloadHash = hashOffPayload(fields);
+  const projected = writePayload(params.evidence);
+  if (!projected) throw new Error('off_dispatch_has_no_established_fields');
+  const payloadHash = hashOffPayload(projected.fields);
   const rows = await readAll();
-  const existing = rows.find((row) => row.evidenceId === params.evidence.evidenceId && row.payloadHash === payloadHash);
+  const existing = rows.find(
+    (row) => row.evidenceId === params.evidence.evidenceId && row.payloadHash === payloadHash
+  );
   if (existing?.status === 'sent') return existing;
 
   const now = params.now ?? Date.now();
   const attempt = (existing?.attemptCount || 0) + 1;
-  const endpoint = 'https://world.openfoodfacts.org/cgi/product_jqm2.pl';
+  const endpoint = `${getBackendUrl()}${OFF_WRITE_PATH}`;
   let status: OffDispatchStatus = 'failed_retryable';
   let lastError: string | undefined;
   try {
-    const body = new FormData();
-    for (const [key, value] of Object.entries(fields)) {
-      if (value.trim()) body.append(key, value);
-    }
-    const userId = process.env.EXPO_PUBLIC_OFF_USER_ID?.trim();
-    const password = process.env.EXPO_PUBLIC_OFF_PASSWORD?.trim();
-    if (userId && password) {
-      body.append('user_id', userId);
-      body.append('password', password);
-    }
     const fetchImpl = params.fetchImpl || fetch;
-    const response = await fetchImpl(endpoint, { method: 'POST', body });
-    if (response.ok) status = 'sent';
+    const response = await fetchImpl(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(projected.body),
+    });
+    const payload = response.json ? await response.json().catch(() => null) : null;
+    const serverStatus =
+      payload && typeof payload === 'object' && 'status' in payload
+        ? String((payload as { status?: unknown }).status)
+        : '';
+    if (response.ok && serverStatus === 'sent') status = 'sent';
     else {
       status = 'failed_retryable';
-      lastError = `off_http_${response.status}`;
+      lastError =
+        payload && typeof payload === 'object' && 'error' in payload
+          ? String((payload as { error?: unknown }).error)
+          : `off_http_${response.status}`;
     }
   } catch (error) {
     status = 'failed_retryable';
@@ -104,7 +126,7 @@ export async function dispatchIngredientsNutritionToOff(params: {
     evidenceId: params.evidence.evidenceId,
     barcode: params.evidence.barcode,
     payloadHash,
-    fields,
+    fields: projected.fields,
     status,
     attemptCount: attempt,
     lastError,

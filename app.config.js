@@ -223,13 +223,6 @@ module.exports = {
       // Used for manual-products, share-event telemetry, etc.
       EXPO_PUBLIC_BACKEND_URL:
         process.env.EXPO_PUBLIC_BACKEND_URL || 'https://truscoreapi.vercel.app',
-      // Open Food Facts API Credentials (Recommended for full functionality)
-      // Create account at: https://world.openfoodfacts.org
-      // Use your username (not email) as user_id
-      // These credentials enable automatic product submission to Open Food Facts
-      // Add to .env: EXPO_PUBLIC_OFF_USER_ID and EXPO_PUBLIC_OFF_PASSWORD
-      EXPO_PUBLIC_OFF_USER_ID: process.env.EXPO_PUBLIC_OFF_USER_ID || '',
-      EXPO_PUBLIC_OFF_PASSWORD: process.env.EXPO_PUBLIC_OFF_PASSWORD || '',
     },
   },
 };

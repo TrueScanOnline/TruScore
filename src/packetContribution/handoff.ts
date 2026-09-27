@@ -66,9 +66,9 @@ export async function handoffReviewedUnits(params: {
     }
     const source = session.sourceAssets.find((asset) => asset.assetId === unit.support.sourceAssetId);
     if (unit.domain === 'ingredients_nutrition') {
-      const nutriments = unit.section === 'nutrition' ? unit.nutriments : undefined;
       const ingredientsText = unit.section === 'nutrition' ? undefined : unit.statement;
-      const hasNutrition = !!nutriments && Object.values(nutriments).some((value) => Number.isFinite(value));
+      const amounts = unit.section === 'nutrition' ? unit.nutritionAmounts : undefined;
+      const hasNutrition = !!amounts?.some((amount) => Number.isFinite(amount.value));
       if (!ingredientsText?.trim() && !hasNutrition) {
         results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'no_established_facts' });
         continue;
@@ -77,9 +77,8 @@ export async function handoffReviewedUnits(params: {
         barcode: session.barcode,
         variantKey: session.variantKey,
         ingredientsText,
-        nutriments,
+        amounts,
         nutritionBasis: unit.nutritionBasis,
-        nutritionComplete: false,
         imageUrl: source ? `private://${source.privateKey}` : undefined,
       });
       if (submitted.admissionStatus === 'admitted') {

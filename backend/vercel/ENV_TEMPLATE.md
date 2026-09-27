@@ -88,6 +88,19 @@ It is a **secret key** Vercel gives you when you attach **Blob** storage to your
 
 ---
 
+## SERVER-ONLY — Open Food Facts packet write
+
+`/api/off-product-write` reads these names. Do not prefix them with `EXPO_PUBLIC_`. They must not be placed in the app env or `app.config.js`.
+
+```
+OFF_WRITE_USER_ID=open_food_facts_username
+OFF_WRITE_PASSWORD=open_food_facts_password
+```
+
+A successful response is `sent`. It does not mean the edit is visible on Open Food Facts, and it does not create a Nutri-Score or NOVA group.
+
+---
+
 ## AFTER ADDING VARIABLES
 
 From repo root (or use your existing script):

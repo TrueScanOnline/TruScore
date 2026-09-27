@@ -28,6 +28,11 @@ import {
   type EvidenceUnitDomain,
   type PacketContributionSession,
 } from '../packetContribution';
+import {
+  NUTRITION_FIELDS,
+  type NutritionAttribute,
+  type NutritionBasis,
+} from '../ingredientsNutrition/nutritionSchema';
 
 type Preview = {
   tempKey: string;
@@ -62,6 +67,9 @@ export default function PacketContributionModal({
   const [statement, setStatement] = useState('');
   const [domain, setDomain] = useState<EvidenceUnitDomain>('unspecified');
   const [section, setSection] = useState<'ingredients' | 'nutrition'>('ingredients');
+  const [nutritionAttribute, setNutritionAttribute] = useState<NutritionAttribute | null>(null);
+  const [nutritionBasis, setNutritionBasis] = useState<NutritionBasis | null>(null);
+  const [sodiumUnit, setSodiumUnit] = useState<'mg' | 'g' | null>(null);
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
@@ -180,23 +188,33 @@ export default function PacketContributionModal({
       setNotice('Mark the photo as only the relevant information, or take a closer photo, before saving this statement.');
       return;
     }
-    const sugars = Number(statement);
-    const nutritionNumbers =
-      domain === 'ingredients_nutrition' && section === 'nutrition' && Number.isFinite(sugars)
-        ? { sugars_100g: sugars }
-        : undefined;
-    if (domain === 'ingredients_nutrition' && section === 'nutrition' && !nutritionNumbers) {
-      setNotice('Enter one nutrition value as a number. A partial entry is not a complete panel, and it does not create a Nutri-Score or NOVA group.');
-      return;
+    const field = NUTRITION_FIELDS.find((item) => item.attribute === nutritionAttribute);
+    const numeric = Number(statement);
+    if (domain === 'ingredients_nutrition' && section === 'nutrition') {
+      if (!field || !nutritionBasis || !Number.isFinite(numeric) || numeric < 0) {
+        setNotice('Choose the nutrient, its basis, and a number from the pack. An unclear unit or basis is not saved.');
+        return;
+      }
+      if (field.attribute === 'sodium' && sodiumUnit !== 'mg' && sodiumUnit !== 'g') {
+        setNotice('Choose milligrams or grams for sodium. An unlabelled number is not saved.');
+        return;
+      }
     }
+    const statedUnit = field?.attribute === 'sodium' ? sodiumUnit || undefined : field?.acceptedUnits[0];
+    const nutritionAmounts =
+      domain === 'ingredients_nutrition' && section === 'nutrition' && field && statedUnit && nutritionBasis
+        ? [{ attribute: field.attribute, value: numeric, unit: statedUnit }]
+        : undefined;
     const unit = await addManualEvidenceUnit({
       sessionId: session.sessionId,
       domain,
-      statement: nutritionNumbers ? `Sugars ${sugars} per 100g` : statement,
+      statement: nutritionAmounts
+        ? `${field?.packetConcept} ${numeric} ${nutritionAmounts[0].unit} ${nutritionBasis}`
+        : statement,
       support: { coverage: 'whole_image', sourceAssetId: asset.assetId },
       section: domain === 'ingredients_nutrition' ? section : undefined,
-      nutriments: nutritionNumbers,
-      nutritionBasis: nutritionNumbers ? 'per_100g' : undefined,
+      nutritionAmounts,
+      nutritionBasis: nutritionAmounts ? nutritionBasis || undefined : undefined,
     });
     const reviewed = await applyReviewAction({
       sessionId: session.sessionId,
@@ -309,6 +327,35 @@ export default function PacketContributionModal({
               {(['ingredients', 'nutrition'] as const).map((item) => (
                 <TouchableOpacity key={item} onPress={() => setSection(item)}>
                   <Text style={{ color: section === item ? colors.primary : colors.textSecondary }}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+          {domain === 'ingredients_nutrition' && section === 'nutrition' ? (
+            <View style={styles.row}>
+              {NUTRITION_FIELDS.map((item) => (
+                <TouchableOpacity key={item.attribute} onPress={() => setNutritionAttribute(item.attribute)}>
+                  <Text style={{ color: nutritionAttribute === item.attribute ? colors.primary : colors.textSecondary }}>
+                    {item.packetConcept} ({item.acceptedUnits.join('/')})
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+          {domain === 'ingredients_nutrition' && section === 'nutrition' && nutritionAttribute === 'sodium' ? (
+            <View style={styles.row}>
+              {(['mg', 'g'] as const).map((item) => (
+                <TouchableOpacity key={item} onPress={() => setSodiumUnit(item)}>
+                  <Text style={{ color: sodiumUnit === item ? colors.primary : colors.textSecondary }}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+          {domain === 'ingredients_nutrition' && section === 'nutrition' ? (
+            <View style={styles.row}>
+              {(['per_100g', 'per_100ml', 'per_serving'] as const).map((item) => (
+                <TouchableOpacity key={item} onPress={() => setNutritionBasis(item)}>
+                  <Text style={{ color: nutritionBasis === item ? colors.primary : colors.textSecondary }}>{item}</Text>
                 </TouchableOpacity>
               ))}
             </View>

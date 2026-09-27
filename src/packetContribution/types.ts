@@ -107,8 +107,8 @@ export type PacketEvidenceUnit = {
   chosenOption?: string;
   /** Ingredients list versus nutrition facts. Omitted for other domains. */
   section?: 'ingredients' | 'nutrition';
-  nutriments?: Record<string, number>;
-  nutritionBasis?: 'per_100g' | 'per_serving';
+  nutritionAmounts?: import('../ingredientsNutrition/nutritionSchema').StatedNutritionAmount[];
+  nutritionBasis?: import('../ingredientsNutrition/nutritionSchema').NutritionBasis;
   /** Set only after a governed submit (not admission). */
   governedEvidenceId?: string;
   submittedAt?: number;

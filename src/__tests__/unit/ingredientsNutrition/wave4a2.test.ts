@@ -12,6 +12,7 @@ import {
   dispatchIngredientsNutritionToOff,
   offDispatchConsumerCopy,
 } from '../../../ingredientsNutrition/offDispatch';
+import { establishNutrition, nutritionPanelIsComplete, projectOffWriteFields } from '../../../ingredientsNutrition/nutritionSchema';
 import {
   addManualEvidenceUnit,
   applyReviewAction,
@@ -67,28 +68,61 @@ describe('Wave 4A.2 ingredients and nutrition', () => {
     });
     const nutrition = await submitIngredientsNutritionEvidence({
       barcode: BARCODE,
-      nutriments: { sugars_100g: 4 },
       nutritionBasis: 'per_100g',
-      nutritionComplete: false,
+      amounts: [{ attribute: 'sugars', value: 4, unit: 'g' }],
     });
     expect(ingredients.admissionStatus).toBe('submitted');
     expect(nutrition.admissionStatus).toBe('submitted');
     expect(ingredients.ingredientsNutrition?.nutritionComplete).toBe(false);
     expect(nutrition.ingredientsNutrition?.nutritionComplete).toBe(false);
-    expect(nutrition.ingredientsNutrition?.nutriments?.sugars_100g).toBe(4);
+    expect(nutrition.ingredientsNutrition?.nutriments?.[0]).toEqual({
+      attribute: 'sugars',
+      value: 4,
+      unit: 'g',
+    });
 
-    const claimedComplete = await submitIngredientsNutritionEvidence({
+    const callerSaysComplete = await submitIngredientsNutritionEvidence({
       barcode: BARCODE,
-      nutriments: { sugars_100g: 4 },
-      nutritionComplete: true,
+      nutritionBasis: 'per_100g',
+      amounts: [{ attribute: 'sugars', value: 0, unit: 'g' }],
     });
-    expect(claimedComplete.ingredientsNutrition?.nutritionComplete).toBe(true);
-    const refusedComplete = await submitIngredientsNutritionEvidence({
+    expect(callerSaysComplete.ingredientsNutrition?.nutritionComplete).toBe(false);
+    expect(callerSaysComplete.ingredientsNutrition?.nutriments?.[0]?.value).toBe(0);
+
+    const full = await submitIngredientsNutritionEvidence({
       barcode: BARCODE,
-      ingredientsText: 'peas only',
-      nutritionComplete: true,
+      nutritionBasis: 'per_100g',
+      amounts: [
+        { attribute: 'energy-kj', value: 0, unit: 'kJ' },
+        { attribute: 'fat', value: 0, unit: 'g' },
+        { attribute: 'saturated-fat', value: 0, unit: 'g' },
+        { attribute: 'carbohydrates', value: 0, unit: 'g' },
+        { attribute: 'sugars', value: 0, unit: 'g' },
+        { attribute: 'proteins', value: 0, unit: 'g' },
+        { attribute: 'sodium', value: 0, unit: 'mg' },
+      ],
     });
-    expect(refusedComplete.ingredientsNutrition?.nutritionComplete).toBe(false);
+    expect(full.ingredientsNutrition?.nutritionComplete).toBe(true);
+    expect(
+      nutritionPanelIsComplete({
+        basis: 'per_100g',
+        amounts: [{ attribute: 'sugars', value: 4, unit: 'g' }],
+      })
+    ).toBe(false);
+    expect(establishNutrition({ basis: 'per_100g', amounts: [{ attribute: 'sugars', value: 4, unit: 'kcal' }] })).toBe(
+      undefined
+    );
+    expect(establishNutrition({ amounts: [{ attribute: 'sugars', value: 4, unit: 'g' }] })).toBe(undefined);
+    expect(establishNutrition({ basis: 'per_100g', amounts: [{ attribute: 'sugars', value: 4 }] })).toBe(undefined);
+    const statedZero = projectOffWriteFields({
+      barcode: BARCODE,
+      nutrition: establishNutrition({
+        basis: 'per_100ml',
+        amounts: [{ attribute: 'sodium', value: 0, unit: 'mg' }],
+      }),
+    });
+    expect(statedZero).toMatchObject({ nutrition_data_per: '100ml', nutriment_sodium_100g: '0' });
+    expect(statedZero && 'nutriment_sodium' in statedZero).toBe(false);
   });
 
   it('does not turn an unreviewed machine proposal or unadmitted submit into a governed scoring fact', async () => {
@@ -239,8 +273,11 @@ describe('Wave 4A.2 ingredients and nutrition', () => {
       (
         await submitIngredientsNutritionEvidence({
           barcode: BARCODE,
-          nutriments: { 'energy-kcal_100g': 40, fat_100g: 0 },
           nutritionBasis: 'per_100g',
+          amounts: [
+            { attribute: 'energy-kcal', value: 40, unit: 'kcal' },
+            { attribute: 'fat', value: 0, unit: 'g' },
+          ],
         })
       ).evidenceId
     );
@@ -284,8 +321,8 @@ describe('Wave 4A.2 ingredients and nutrition', () => {
         await submitIngredientsNutritionEvidence({
           barcode: BARCODE,
           ingredientsText: 'peas',
-          nutriments: { sugars_100g: 2 },
           nutritionBasis: 'per_100g',
+          amounts: [{ attribute: 'sugars', value: 2, unit: 'g' }],
         })
       ).evidenceId
     );
@@ -303,17 +340,31 @@ describe('Wave 4A.2 ingredients and nutrition', () => {
 
     const sent = await dispatchIngredientsNutritionToOff({
       evidence: admitted,
-      fetchImpl: async (_url, init) => {
+      fetchImpl: async (url, init) => {
         calls += 1;
-        const keys = [...(init.body as FormData).keys()];
-        expect(keys).toEqual(expect.arrayContaining(['code', 'ingredients_text', 'nutriment_sugars_100g']));
-        expect(keys).not.toContain('product_name');
-        expect(keys).not.toContain('nutriscore_grade');
-        expect(keys).not.toContain('nova_group');
-        return { ok: true, status: 200 };
+        const body = JSON.parse(init.body) as Record<string, unknown>;
+        expect(url).toContain('/api/off-product-write');
+        expect(body.password).toBeUndefined();
+        expect(body.user_id).toBeUndefined();
+        expect(JSON.stringify(body)).not.toMatch(/EXPO_PUBLIC_OFF/);
+        expect(body.ingredientsText).toBe('peas');
+        expect(body.amounts).toEqual([{ attribute: 'sugars', value: 2, unit: 'g' }]);
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ success: true, status: 'sent', visibleOnOff: false, derivedClassification: false }),
+        };
       },
     });
     expect(sent.status).toBe('sent');
+    expect(sent.fields).toMatchObject({
+      ingredients_text: 'peas',
+      nutrition_data_per: '100g',
+      nutriment_sugars_100g: '2',
+    });
+    expect(sent.fields.nutriscore_grade).toBeUndefined();
+    expect(sent.fields.nova_group).toBeUndefined();
+    expect(sent.fields.password).toBeUndefined();
     expect(sent.attemptCount).toBe(2);
     expect(offDispatchConsumerCopy('sent')).not.toMatch(/will derive|Nutri-Score is available|NOVA group is available/i);
     const again = await dispatchIngredientsNutritionToOff({
