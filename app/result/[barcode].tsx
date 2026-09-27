@@ -116,6 +116,7 @@ import { sanitizeCountryForDisplay } from '../../src/utils/countryDisplayName';
 import { logger } from '../../src/utils/logger';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import PacketContributionModal from '../../src/components/PacketContributionModal';
+import { calculateTrustScore } from '../../src/utils/trustScore';
 // import PendingContributionsBanner from '../../src/components/PendingContributionsBanner'; // Temporarily disabled
 import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
 import { ManualProductData } from '../../src/types/manualProduct';
@@ -2909,6 +2910,10 @@ function ResultScreenContent() {
         visible={packetContributionVisible}
         barcode={barcode}
         onClose={() => setPacketContributionVisible(false)}
+        onSharedEvidenceAdmitted={async () => {
+          if (!product) return;
+          setProduct(await calculateTrustScore(product));
+        }}
       />
 
       {/* Camera Capture Modal */}

@@ -28,6 +28,7 @@ import {
   type EvidenceUnitDomain,
   type PacketContributionSession,
 } from '../packetContribution';
+import { transmitSessionToAuthority } from '../evidenceAuthority/device';
 import {
   NUTRITION_FIELDS,
   type NutritionAttribute,
@@ -55,11 +56,13 @@ export default function PacketContributionModal({
   barcode,
   variantKey,
   onClose,
+  onSharedEvidenceAdmitted,
 }: {
   visible: boolean;
   barcode: string;
   variantKey?: string;
   onClose: () => void;
+  onSharedEvidenceAdmitted?: () => void | Promise<void>;
 }) {
   const { colors } = useTheme();
   const [session, setSession] = useState<PacketContributionSession | null>(null);
@@ -271,14 +274,24 @@ export default function PacketContributionModal({
     setBusy(true);
     try {
       const results = await handoffReviewedUnits({ sessionId: session.sessionId });
+      const authority = await transmitSessionToAuthority(session.sessionId);
       setSession(await openSessionForProduct({ barcode, variantKey }));
       const submitted = results.filter((item) => item.outcome === 'submitted').length;
       const held = results.filter((item) => item.outcome === 'held_for_later_receiver').length;
-      setNotice(
-        held > 0
-          ? `${submitted} submitted for governed review. ${held} kept locally until that section’s receiver exists.`
-          : `${submitted} submitted for governed review. Nothing was scored from this step.`
-      );
+      if (authority.admitted) {
+        setNotice('Admitted to shared evidence. This result is refreshing from the server snapshot.');
+        await onSharedEvidenceAdmitted?.();
+      } else if (authority.pendingOutbox) {
+        setNotice(
+          `${submitted} kept for sending. Nothing was scored from an unsent contribution.`
+        );
+      } else {
+        setNotice(
+          held > 0
+            ? `${submitted} submitted for governed review. ${held} kept locally until that section’s receiver exists.`
+            : `${submitted} submitted for governed review. Nothing was scored from this step.`
+        );
+      }
     } finally {
       setBusy(false);
     }

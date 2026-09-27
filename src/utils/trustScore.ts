@@ -9,9 +9,10 @@ import { assessGovernedNutrientsFromProduct } from '../nutrition/governedNutrien
 import { logger } from './logger';
 import { powershellLogger } from './powershellLogger';
 import { hasCoreTruthAuthority } from '../config/coreTruthProductCacheAuthority';
-import { getLocalEvidenceForBarcode } from '../contributions/evidenceStore';
+import type { ContributionEvidence } from '../contributions/types';
 import { toScoringProduct } from '../contributions/eligibilityBoundary';
-import { offDispatchConsumerCopy, latestOffDispatchStatus } from '../ingredientsNutrition/offDispatch';
+import { offDispatchConsumerCopy } from '../ingredientsNutrition/offDispatch';
+import { loadAuthoritativeAssessment } from '../evidenceAuthority/assessment';
 import { selectPrevailingOriginFacts } from '../origins/governedFacts';
 import {
   packetClaimsToObservations,
@@ -29,14 +30,13 @@ function hasSufficientDataForTrustScore(product: Product): boolean {
 }
 
 async function packetNutritionStatus(
-  barcode: string | undefined,
-  rows: Awaited<ReturnType<typeof getLocalEvidenceForBarcode>>
+  rows: ContributionEvidence[],
+  offDispatchStatus: string | null
 ): Promise<string | undefined> {
   const admitted = rows.filter((row) => row.admissionStatus === 'admitted' && row.ingredientsNutrition);
   if (admitted.length === 0) return undefined;
-  const dispatchStatus = barcode ? await latestOffDispatchStatus(barcode) : null;
-  if (dispatchStatus === 'sent' || dispatchStatus === 'failed_retryable') {
-    return offDispatchConsumerCopy(dispatchStatus);
+  if (offDispatchStatus === 'sent' || offDispatchStatus === 'failed_retryable') {
+    return offDispatchConsumerCopy(offDispatchStatus);
   }
   const incompleteNutrition = admitted.some(
     (row) => row.ingredientsNutrition?.nutriments && row.ingredientsNutrition.nutritionComplete !== true
@@ -81,9 +81,8 @@ export async function calculateTrustScore(
     hasEcoScore: !!product.ecoscore_grade,
     ecoscore_grade: product.ecoscore_grade,
   });
-  const storedEvidence = product.barcode
-    ? await getLocalEvidenceForBarcode(product.barcode).catch(() => [])
-    : [];
+  const assessment = product.barcode ? await loadAuthoritativeAssessment(product.barcode) : null;
+  const storedEvidence = assessment?.evidence ?? [];
   const localEvidence = storedEvidence.filter(
     (row) => row.domain === 'ingredients_nutrition' || row.domain === 'certifications'
   );
@@ -105,7 +104,7 @@ export async function calculateTrustScore(
   const displayIngredients = product.ingredients_text?.trim()
     ? product.ingredients_text
     : overlay?.ingredients_text;
-  const nutritionStatus = await packetNutritionStatus(product.barcode, localEvidence);
+  const nutritionStatus = await packetNutritionStatus(localEvidence, assessment?.offDispatchStatus ?? null);
 
   // Technical scoring failure → unavailable/non-assessment (never Overall 0 / all-zero pillars)
   if (truScoreResult.scoringUnavailable || truScoreResult.truscore == null) {

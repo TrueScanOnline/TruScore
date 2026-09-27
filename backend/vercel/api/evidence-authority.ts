@@ -1,0 +1,129 @@
+/**
+ * POST/GET /api/evidence-authority
+ *
+ * Server Wave 4A evidence authority. Contributor identity comes from a
+ * server-issued credential. Client admission, epoch, and eligibility fields
+ * are not accepted. Postgres is required.
+ */
+
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { EvidenceAuthority } from '../../../src/evidenceAuthority/authority';
+import type { EvidenceFactInput } from '../../../src/evidenceAuthority/types';
+import { PostgresAuthorityStore } from '../lib/evidenceAuthorityPg';
+
+function handleCORS(res: VercelResponse) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Rveel-Founder-Admin');
+}
+
+function bearer(req: VercelRequest): string | null {
+  const header = req.headers.authorization;
+  if (typeof header === 'string' && header.toLowerCase().startsWith('bearer ')) return header.slice(7).trim();
+  return null;
+}
+
+function bytesFromBase64(value: string): Uint8Array {
+  return Uint8Array.from(Buffer.from(value, 'base64'));
+}
+
+let authorityPromise: Promise<EvidenceAuthority> | null = null;
+
+async function authority(): Promise<EvidenceAuthority> {
+  if (!authorityPromise) {
+    authorityPromise = (async () => {
+      const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+      if (!connectionString) throw new Error('evidence_authority_database_unconfigured');
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString,
+        ssl: connectionString.includes('sslmode=require') ? { rejectUnauthorized: false } : undefined,
+        max: 5,
+      });
+      const env = process.env.RVEEL_EVIDENCE_AUTHORITY_ENV === 'production' ? 'production' : 'uat';
+      const target = process.env.OFF_WRITE_TARGET?.trim() || '';
+      const credentials = !!process.env.OFF_WRITE_USER_ID?.trim() && !!process.env.OFF_WRITE_PASSWORD?.trim();
+      const execute = process.env.OFF_WRITE_EXECUTE === '1';
+      return new EvidenceAuthority(new PostgresAuthorityStore(pool), {
+        authorityEnv: env,
+        founderAdminToken: process.env.RVEEL_FOUNDER_ADMIN_TOKEN,
+        offTarget: target,
+        offCredentialsConfigured: credentials,
+        offExecute: execute,
+        offTransport: async ({ target: offTarget, fields }) => {
+          if (!execute || !credentials || /world\.openfoodfacts\.org/i.test(offTarget)) {
+            return { ok: false, status: 0 };
+          }
+          const form = new URLSearchParams(fields);
+          form.set('user_id', process.env.OFF_WRITE_USER_ID || '');
+          form.set('password', process.env.OFF_WRITE_PASSWORD || '');
+          const response = await fetch(offTarget, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: form,
+          });
+          return { ok: response.ok, status: response.status };
+        },
+      });
+    })();
+  }
+  return authorityPromise;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  handleCORS(res);
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  try {
+    const service = await authority();
+    if (req.method === 'GET') {
+      const barcode = typeof req.query.barcode === 'string' ? req.query.barcode.trim() : '';
+      if (!/^\d{8,14}$/.test(barcode)) return res.status(400).json({ success: false, error: 'Valid barcode required' });
+      return res.status(200).json({ success: true, snapshot: await service.snapshot(barcode) });
+    }
+    if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
+    const body = (req.body && typeof req.body === 'object' ? req.body : {}) as Record<string, unknown>;
+    const action = typeof body.action === 'string' ? body.action : '';
+    if (action === 'issue-credential') {
+      return res.status(201).json({ success: true, ...(await service.issueCredential()) });
+    }
+    if (action === 'withdraw' || action === 'suppress') {
+      const admin = req.headers['x-rveel-founder-admin'];
+      const token = typeof admin === 'string' ? admin : undefined;
+      const versionId = typeof body.versionId === 'string' ? body.versionId : '';
+      const result = await service.govern(token, versionId, action);
+      return res.status(result.ok ? 200 : 403).json(result);
+    }
+    const contributorId = await service.authenticate(bearer(req));
+    if (!contributorId) return res.status(401).json({ success: false, error: 'contributor_credential_required' });
+    if (action === 'confirm' || action === 'dispute') {
+      const versionId = typeof body.versionId === 'string' ? body.versionId : '';
+      const result =
+        action === 'confirm'
+          ? await service.confirm(contributorId, versionId)
+          : await service.dispute(contributorId, versionId, 'other');
+      return res.status(result.ok ? 200 : 409).json(result);
+    }
+    if (action !== 'submit') return res.status(400).json({ success: false, error: 'Invalid action' });
+    const barcode = typeof body.barcode === 'string' ? body.barcode.trim() : '';
+    const idempotencyKey = typeof body.idempotencyKey === 'string' ? body.idempotencyKey.trim() : '';
+    const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
+    const sourceBase64 = typeof body.sourceBase64 === 'string' ? body.sourceBase64 : '';
+    if (!/^\d{8,14}$/.test(barcode) || !idempotencyKey || !declaredSha256 || !sourceBase64) {
+      return res.status(400).json({ success: false, error: 'submission_incomplete' });
+    }
+    const facts = Array.isArray(body.facts) ? (body.facts as EvidenceFactInput[]) : [];
+    const outcome = await service.submit(contributorId, {
+      idempotencyKey,
+      barcode,
+      declaredSha256,
+      sourceBytes: bytesFromBase64(sourceBase64),
+      contentType: typeof body.contentType === 'string' ? body.contentType : undefined,
+      facts,
+    });
+    return res.status(200).json({ success: outcome.status === 'admitted', outcome });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'evidence_authority_failed';
+    const status = message === 'evidence_authority_database_unconfigured' ? 503 : 500;
+    return res.status(status).json({ success: false, error: message });
+  }
+}
