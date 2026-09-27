@@ -1,7 +1,7 @@
 /**
  * Wave 4A shared evidence authority.
- * Applied by the Postgres adapter. Kept identical to
- * db/migrations/20260928_wave4a_evidence_authority.sql.
+ * Applied only by backend/vercel/scripts/apply-evidence-authority-schema.cjs.
+ * Kept identical to db/migrations/20260928_wave4a_evidence_authority.sql.
  */
 export const EVIDENCE_AUTHORITY_SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS evidence_contributors (

@@ -22,6 +22,7 @@ import {
 } from '../../../evidenceAuthority/assessment';
 import { MemoryAuthorityStore } from '../../../evidenceAuthority/memoryStore';
 import { EVIDENCE_AUTHORITY_SCHEMA_SQL } from '../../../evidenceAuthority/schemaSql';
+import { assertEvidenceAuthoritySchemaReady } from '../../../evidenceAuthority/schemaReady';
 import { SCHEMA_IDENTITY_GAPS } from '../../../evidenceAuthority/subjects';
 import type { EvidenceFactInput } from '../../../evidenceAuthority/types';
 import { selectPrevailingOriginFacts } from '../../../origins/governedFacts';
@@ -32,6 +33,7 @@ import { publishClaimsPillar } from '../../../lib/rateability/claimsPublication'
 import { publishTransparencyPillar } from '../../../lib/rateability/transparencyPublication';
 import type { BodyPillarResult } from '../../../lib/truscoreEngine/pillars/bodyPillar';
 import { sha256Hex } from '../../../packetContribution/sha256';
+import { PostgresAuthorityStore } from '../../../../backend/vercel/lib/evidenceAuthorityPg';
 import type { Product } from '../../../types/product';
 import { calculateTrustScore } from '../../../utils/trustScore';
 
@@ -78,7 +80,6 @@ async function send(
 
 beforeEach(() => {
   memory.clear();
-  delete process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
   delete process.env.EXPO_PUBLIC_BACKEND_URL;
   (AsyncStorage.getItem as jest.Mock).mockImplementation(async (key: string) => memory.get(key) ?? null);
   (AsyncStorage.setItem as jest.Mock).mockImplementation(async (key: string, value: string) => {
@@ -101,7 +102,34 @@ describe('Wave 4A shared evidence authority', () => {
       'utf8'
     );
     expect(pg).toContain('FOR UPDATE');
+    expect(pg).not.toContain('EVIDENCE_AUTHORITY_SCHEMA_SQL');
+    expect(pg).toContain('assertSchemaReady');
+    const script = fs.readFileSync(
+      path.join(process.cwd(), 'backend/vercel/scripts/apply-evidence-authority-schema.cjs'),
+      'utf8'
+    );
+    expect(script).toContain('20260928_wave4a_evidence_authority.sql');
+    const api = fs.readFileSync(path.join(process.cwd(), 'backend/vercel/api/evidence-authority.ts'), 'utf8');
+    expect(api).toContain('evidence_authority_schema_unavailable');
+    expect(api).not.toContain('CREATE TABLE');
     expect(SCHEMA_IDENTITY_GAPS.length).toBeGreaterThan(0);
+    expect(() => assertEvidenceAuthoritySchemaReady(null)).toThrow('evidence_authority_schema_unavailable');
+    expect(() => assertEvidenceAuthoritySchemaReady('public.evidence_versions')).not.toThrow();
+  });
+
+  it('fails a runtime evidence request when the authority schema is absent', async () => {
+    const queries: string[] = [];
+    const store = new PostgresAuthorityStore({
+      query: async (sql: string) => {
+        queries.push(sql);
+        return { rows: [{ relation: null }] };
+      },
+      connect: async () => {
+        throw new Error('schema check must fail before a connection is used to write');
+      },
+    });
+    await expect(store.transaction(async () => undefined)).rejects.toThrow('evidence_authority_schema_unavailable');
+    expect(queries.join('\n')).not.toContain('CREATE TABLE');
   });
 
   it('allocates distinct versions for concurrent same-subject submissions', async () => {
@@ -161,21 +189,31 @@ describe('Wave 4A shared evidence authority', () => {
   });
 
   it('ignores forged client authority fields and admits without a confirmation', async () => {
-    const authority = service('uat');
-    const contributor = await authority.issueCredential();
-    const outcome = await send(authority, contributor.contributorId, [packet('High protein')], 'forged');
-    const row = outcome.snapshot?.prevailing[0];
-    expect(row?.evidence.productionEpoch).toBe('wave4a.uat');
-    expect(row?.evidence.canonicalPromoted).toBe(false);
-    expect(row?.evidence.confirmations).toEqual([]);
-    expect(row?.evidence.admission?.admittedBy).toBe('wave4a-evidence-authority');
-    const projected = projectSnapshotForAssessment(outcome.snapshot, 'uat');
-    expect(isAssessmentEligibleForReceiver(projected[0], 'claims_packet')).toBe(true);
+    const uat = service('uat');
+    const uatContributor = await uat.issueCredential();
+    const uatOutcome = await send(uat, uatContributor.contributorId, [packet('High protein')], 'forged-uat');
+    const uatRow = uatOutcome.snapshot?.prevailing[0];
+    expect(uatRow?.evidence.productionEpoch).toBe('wave4a.uat');
+    expect(uatRow?.evidence.canonicalPromoted).toBe(false);
+    expect(uatRow?.evidence.admission?.admittedBy).toBe('wave4a-evidence-authority');
+    const uatProjected = projectSnapshotForAssessment(uatOutcome.snapshot);
+    expect(uatProjected[0].productionEpoch).toBe('wave4a.uat');
+    expect(uatProjected[0].recordClass).toBeUndefined();
+    expect(isAssessmentEligibleForReceiver(uatProjected[0], 'claims_packet')).toBe(false);
+
+    const production = service('production');
+    const contributor = await production.issueCredential();
+    const outcome = await send(production, contributor.contributorId, [packet('High protein')], 'forged-production');
+    const projected = projectSnapshotForAssessment(outcome.snapshot);
+    expect(projected[0].productionEpoch).toBe('wave4a.0');
+    expect(projected[0].recordClass).toBe('production');
+    expect(projected[0].canonicalPromoted).toBe(false);
     expect(projected[0].confirmations).toHaveLength(0);
+    expect(isAssessmentEligibleForReceiver(projected[0], 'claims_packet')).toBe(true);
   });
 
   it('rejects self-confirmation and marks review_required after two disputes without withdrawing', async () => {
-    const authority = service();
+    const authority = service('production');
     const author = await authority.issueCredential();
     const other = await authority.issueCredential();
     const third = await authority.issueCredential();
@@ -201,12 +239,12 @@ describe('Wave 4A shared evidence authority', () => {
     const snapshot = await authority.snapshot(BARCODE);
     expect(snapshot.prevailing[0].governance).toBe('review_required');
     expect(snapshot.prevailing[0].evidence.state).not.toBe('withdrawn');
-    const projected = projectSnapshotForAssessment(snapshot, 'uat');
+    const projected = projectSnapshotForAssessment(snapshot);
     expect(isAssessmentEligibleForReceiver(projected[0], 'claims_packet')).toBe(true);
   });
 
   it('gives both devices the same prevailing snapshot and keeps absence off positive subjects', async () => {
-    const authority = service();
+    const authority = service('production');
     const deviceA = await authority.issueCredential();
     const deviceB = await authority.issueCredential();
     await send(authority, deviceA.contributorId, [packet('High protein'), { domain: 'packet_claims', packetAbsence: true }], 'both');
@@ -219,7 +257,7 @@ describe('Wave 4A shared evidence authority', () => {
         expect.stringContaining('packet_claims|register:'),
       ])
     );
-    const projected = projectSnapshotForAssessment(left, 'uat');
+    const projected = projectSnapshotForAssessment(left);
     expect(selectPrevailingPacketClaims(projected).map((row) => row.exactWording)).toContain('High protein');
     expect(selectAdmittedPacketAbsence(projected)).toBe(true);
     expect(deviceB.contributorId).not.toBe(deviceA.contributorId);
@@ -233,7 +271,10 @@ describe('Wave 4A shared evidence authority', () => {
     const contributor = await uat.issueCredential();
     const outcome = await send(uat, contributor.contributorId, [packet('High protein')], 'uat-only');
     expect((await production.snapshot(BARCODE)).prevailing).toHaveLength(0);
-    expect(projectSnapshotForAssessment(outcome.snapshot, 'production')).toEqual([]);
+    expect(projectSnapshotForAssessment(outcome.snapshot)[0].productionEpoch).toBe('wave4a.uat');
+    expect(isAssessmentEligibleForReceiver(projectSnapshotForAssessment(outcome.snapshot)[0], 'claims_packet')).toBe(
+      false
+    );
     expect(outcome.snapshot?.epoch).toBe('wave4a.uat');
     expect(outcome.snapshot?.recordClass).toBe('uat');
     expect(hash).toBe(createHash('sha256').update(bytes).digest('hex'));
@@ -322,7 +363,7 @@ describe('Wave 4A shared evidence authority', () => {
   });
 
   it('caps Confidence at Limited when a published pillar uses primary contribution evidence', async () => {
-    const authority = service();
+    const authority = service('production');
     const contributor = await authority.issueCredential();
     const outcome = await send(
       authority,
@@ -330,7 +371,7 @@ describe('Wave 4A shared evidence authority', () => {
       [packet('High protein'), { domain: 'packet_claims', packetAbsence: true }],
       'confidence'
     );
-    const projected = projectSnapshotForAssessment(outcome.snapshot, 'uat');
+    const projected = projectSnapshotForAssessment(outcome.snapshot);
     const ethics = calculateEthicsPillar(
       { barcode: BARCODE, product_name: 'Oats', labels_tags: [], nutriments: {} } as Product,
       { admittedPacketAbsence: selectAdmittedPacketAbsence(projected) }
@@ -389,7 +430,7 @@ describe('Wave 4A shared evidence authority', () => {
       ],
       'origin-confidence'
     );
-    const originFacts = selectPrevailingOriginFacts(projectSnapshotForAssessment(origin.snapshot, 'uat'));
+    const originFacts = selectPrevailingOriginFacts(projectSnapshotForAssessment(origin.snapshot));
     const honey = {
       barcode: BARCODE,
       product_name: 'Honey',
@@ -408,6 +449,62 @@ describe('Wave 4A shared evidence authority', () => {
     });
     expect(transparency.confidence).toBe('limited');
     expect(transparency.s26?.code).toBe('TRANSPARENCY_LIMITED_PRIMARY_CONTRIBUTION');
+  });
+
+  it('uses the frozen origin subject for each claim type and versions a later country', async () => {
+    const authority = service('production');
+    const contributor = await authority.issueCredential();
+    const origin = (
+      claimType: 'made_in' | 'packed_in' | 'grown_in' | 'produced_in' | 'ingredient_origin',
+      country: string,
+      ingredientSubject?: string
+    ): EvidenceFactInput => ({
+      domain: 'origins',
+      claimValue: country,
+      exactWording: `${claimType} ${country}`,
+      originStructured: { claimType, primaryCountry: country, ingredientSubject },
+    });
+    await send(
+      authority,
+      contributor.contributorId,
+      [
+        origin('made_in', 'New Zealand'),
+        origin('packed_in', 'Australia'),
+        origin('grown_in', 'Fiji', 'sugar'),
+        origin('produced_in', 'Italy', 'tomatoes'),
+        origin('ingredient_origin', 'Ghana', 'cocoa'),
+        origin('ingredient_origin', 'New Zealand', 'honey'),
+      ],
+      'origin-subjects'
+    );
+    expect((await authority.snapshot(BARCODE)).prevailing.map((row) => row.subjectKey).sort()).toEqual([
+      'origins|grown_in',
+      'origins|ingredient_origin:cocoa',
+      'origins|ingredient_origin:honey',
+      'origins|made_in',
+      'origins|packed_in',
+      'origins|produced_in',
+    ]);
+    await send(authority, contributor.contributorId, [origin('made_in', 'Australia')], 'made-in-australia');
+    const madeIn = (await authority.history(BARCODE)).filter((row) => row.subjectKey === 'origins|made_in');
+    expect(madeIn.map((row) => row.versionNo).sort()).toEqual([1, 2]);
+    expect(madeIn.find((row) => row.versionNo === 1)?.content.claimValue).toBe('New Zealand');
+    expect(
+      (await authority.snapshot(BARCODE)).prevailing.find((row) => row.subjectKey === 'origins|made_in')?.evidence
+        .claimValue
+    ).toBe('Australia');
+    await send(authority, contributor.contributorId, [origin('grown_in', 'Brazil', 'coffee')], 'grown-coffee');
+    const grown = (await authority.history(BARCODE)).filter((row) => row.subjectKey === 'origins|grown_in');
+    expect(grown.map((row) => row.versionNo).sort()).toEqual([1, 2]);
+    expect(
+      (await authority.snapshot(BARCODE)).prevailing.filter((row) => row.subjectKey === 'origins|grown_in')
+    ).toHaveLength(1);
+    expect(
+      (await authority.snapshot(BARCODE)).prevailing
+        .map((row) => row.subjectKey)
+        .filter((key) => key.startsWith('origins|ingredient_origin:'))
+        .sort()
+    ).toEqual(['origins|ingredient_origin:cocoa', 'origins|ingredient_origin:honey']);
   });
 
   it('rejects a mismatched source hash before admission', async () => {

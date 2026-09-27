@@ -123,7 +123,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ success: outcome.status === 'admitted', outcome });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'evidence_authority_failed';
-    const status = message === 'evidence_authority_database_unconfigured' ? 503 : 500;
+    const status =
+      message === 'evidence_authority_database_unconfigured' ||
+      message === 'evidence_authority_schema_unavailable'
+        ? 503
+        : 500;
     return res.status(status).json({ success: false, error: message });
   }
 }

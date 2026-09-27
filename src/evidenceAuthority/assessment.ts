@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CURRENT_PRODUCTION_CONTRIBUTION_EPOCH } from '../contributions/productionEpoch';
 import type { ContributionEvidence } from '../contributions/types';
-import type { AuthorityEnv, SharedEvidenceSnapshot } from './types';
+import type { SharedEvidenceSnapshot } from './types';
 
 export type AssessmentLoad = {
   evidence: ContributionEvidence[];
@@ -9,25 +8,26 @@ export type AssessmentLoad = {
   source: 'remote' | 'cache' | 'none';
 };
 
-function appAuthorityEnv(): AuthorityEnv {
-  return process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV === 'production' ? 'production' : 'uat';
+function backendCacheScope(): string {
+  return process.env.EXPO_PUBLIC_BACKEND_URL || 'unconfigured-backend';
 }
 
-function cacheKey(env: AuthorityEnv, barcode: string): string {
-  return `@rveel_evidence_snapshot_v1:${env}:${barcode}`;
+function cacheKey(barcode: string): string {
+  return `@rveel_evidence_snapshot_v1:${backendCacheScope()}:${barcode}`;
 }
 
+/**
+ * The connected backend's snapshot is the outcome. This does not read or
+ * stamp an evidence epoch or record class.
+ * Packet rows keep the authority subject in the variant slot the frozen
+ * Packet Claims receiver already uses to separate subjects.
+ */
 export function projectSnapshotForAssessment(
-  snapshot: SharedEvidenceSnapshot | null,
-  appEnv: AuthorityEnv = appAuthorityEnv()
+  snapshot: SharedEvidenceSnapshot | null
 ): ContributionEvidence[] {
-  if (!snapshot || snapshot.authorityEnv !== appEnv) return [];
+  if (!snapshot) return [];
   return snapshot.prevailing.map((row) => {
     const evidence: ContributionEvidence = { ...row.evidence, confirmations: [], disputes: [] };
-    if (appEnv !== 'production') {
-      evidence.productionEpoch = CURRENT_PRODUCTION_CONTRIBUTION_EPOCH;
-      evidence.recordClass = 'production';
-    }
     if (evidence.domain === 'packet_claims') {
       evidence.variantKey = row.subjectKey;
     }
@@ -35,12 +35,12 @@ export function projectSnapshotForAssessment(
   });
 }
 
-async function readCache(env: AuthorityEnv, barcode: string): Promise<SharedEvidenceSnapshot | null> {
+async function readCache(barcode: string): Promise<SharedEvidenceSnapshot | null> {
   try {
-    const raw = await AsyncStorage.getItem(cacheKey(env, barcode));
+    const raw = await AsyncStorage.getItem(cacheKey(barcode));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SharedEvidenceSnapshot;
-    if (parsed?.authorityEnv !== env || parsed.barcode !== barcode) return null;
+    if (!parsed || parsed.barcode !== barcode) return null;
     return parsed;
   } catch {
     return null;
@@ -48,7 +48,7 @@ async function readCache(env: AuthorityEnv, barcode: string): Promise<SharedEvid
 }
 
 async function writeCache(snapshot: SharedEvidenceSnapshot): Promise<void> {
-  await AsyncStorage.setItem(cacheKey(snapshot.authorityEnv, snapshot.barcode), JSON.stringify(snapshot));
+  await AsyncStorage.setItem(cacheKey(snapshot.barcode), JSON.stringify(snapshot));
 }
 
 export async function rememberSnapshot(snapshot: SharedEvidenceSnapshot): Promise<void> {
@@ -56,32 +56,31 @@ export async function rememberSnapshot(snapshot: SharedEvidenceSnapshot): Promis
 }
 
 /**
- * Authoritative snapshot, then the read-only device cache.
+ * Authoritative snapshot from the configured backend, then the read-only cache.
  * A miss of both yields no contribution evidence. Local unsent rows are not read.
  */
 export async function loadAuthoritativeAssessment(
   barcode: string | undefined,
   deps?: { fetchSnapshot?: (barcode: string) => Promise<SharedEvidenceSnapshot | null> }
 ): Promise<AssessmentLoad> {
-  const env = appAuthorityEnv();
   if (!barcode) return { evidence: [], offDispatchStatus: null, source: 'none' };
   const fetchSnapshot = deps?.fetchSnapshot ?? defaultFetchSnapshot;
   try {
     const remote = await fetchSnapshot(barcode);
-    if (remote && remote.authorityEnv === env && remote.barcode === barcode) {
+    if (remote && remote.barcode === barcode) {
       await writeCache(remote);
       return {
-        evidence: projectSnapshotForAssessment(remote, env),
+        evidence: projectSnapshotForAssessment(remote),
         offDispatchStatus: remote.offDispatch[0]?.status ?? null,
         source: 'remote',
       };
     }
     return { evidence: [], offDispatchStatus: null, source: 'remote' };
   } catch {
-    const cached = await readCache(env, barcode);
+    const cached = await readCache(barcode);
     if (cached) {
       return {
-        evidence: projectSnapshotForAssessment(cached, env),
+        evidence: projectSnapshotForAssessment(cached),
         offDispatchStatus: cached.offDispatch[0]?.status ?? null,
         source: 'cache',
       };

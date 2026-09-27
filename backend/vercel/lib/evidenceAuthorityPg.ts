@@ -1,4 +1,4 @@
-import { EVIDENCE_AUTHORITY_SCHEMA_SQL } from '../../../src/evidenceAuthority/schemaSql';
+import { assertEvidenceAuthoritySchemaReady } from '../../../src/evidenceAuthority/schemaReady';
 import type { AuthorityStore, AuthorityTx, SubjectRow } from '../../../src/evidenceAuthority/store';
 import type {
   ContributorRecord,
@@ -45,18 +45,21 @@ function versionFrom(row: Record<string, unknown>): VersionRecord {
 }
 
 export class PostgresAuthorityStore implements AuthorityStore {
-  private migrated = false;
+  private schemaReady = false;
 
   constructor(private readonly pool: PoolLike) {}
 
-  async migrate(): Promise<void> {
-    if (this.migrated) return;
-    await this.pool.query(EVIDENCE_AUTHORITY_SCHEMA_SQL);
-    this.migrated = true;
+  /** Confirms the explicit migration has already been applied. Does not create tables. */
+  async assertSchemaReady(): Promise<void> {
+    if (this.schemaReady) return;
+    const found = await this.pool.query(`SELECT to_regclass('public.evidence_versions') AS relation`);
+    const relation = found.rows[0]?.relation;
+    assertEvidenceAuthoritySchemaReady(relation == null ? null : String(relation));
+    this.schemaReady = true;
   }
 
   async transaction<T>(fn: (tx: AuthorityTx) => Promise<T>): Promise<T> {
-    await this.migrate();
+    await this.assertSchemaReady();
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
@@ -72,7 +75,7 @@ export class PostgresAuthorityStore implements AuthorityStore {
   }
 
   async saveContributor(row: ContributorRecord): Promise<void> {
-    await this.migrate();
+    await this.assertSchemaReady();
     await this.pool.query(
       `INSERT INTO evidence_contributors (contributor_id, token_hash, account_id, created_at)
        VALUES ($1, $2, $3, $4)`,
@@ -81,7 +84,7 @@ export class PostgresAuthorityStore implements AuthorityStore {
   }
 
   async findContributorByTokenHash(tokenHash: string): Promise<ContributorRecord | null> {
-    await this.migrate();
+    await this.assertSchemaReady();
     const found = await this.pool.query(
       `SELECT contributor_id, token_hash, account_id, created_at FROM evidence_contributors WHERE token_hash = $1`,
       [tokenHash]
@@ -97,7 +100,7 @@ export class PostgresAuthorityStore implements AuthorityStore {
   }
 
   async linkAccount(contributorId: string, accountId: string): Promise<void> {
-    await this.migrate();
+    await this.assertSchemaReady();
     await this.pool.query(`UPDATE evidence_contributors SET account_id = $2 WHERE contributor_id = $1`, [
       contributorId,
       accountId,
