@@ -1,6 +1,8 @@
-// Photo OCR Service
-// Extracts product information from photos using OCR (Optical Character Recognition)
-// Enables photo-based product addition (like Yuka)
+/**
+ * Retired from the packet contribution path.
+ * Wave 4A.1 extraction lives in src/packetContribution and must abstain explicitly.
+ * This stub must not be shown to consumers as a successful read of the pack.
+ */
 
 import { logger } from '../utils/logger';
 import { ManualProductData } from '../types/manualProduct';

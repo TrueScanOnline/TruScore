@@ -87,6 +87,14 @@ function RootLayout() {
             critical: true,
           },
           {
+            name: 'wave4a1UatContributionCutover',
+            task: async () => {
+              const { ensureWave4a1UatCutoverOnce } = await import('../src/packetContribution/uatReset');
+              await ensureWave4a1UatCutoverOnce();
+            },
+            critical: false,
+          },
+          {
             name: 'rateLimiter',
             task: async () => {
               const { initializeRateLimits } = await import('../src/utils/rateLimiter');

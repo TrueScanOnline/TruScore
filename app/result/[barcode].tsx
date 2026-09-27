@@ -109,6 +109,7 @@ import { sanitizeText } from '../../src/utils/validation';
 import { sanitizeCountryForDisplay } from '../../src/utils/countryDisplayName';
 import { logger } from '../../src/utils/logger';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
+import PacketContributionModal from '../../src/components/PacketContributionModal';
 // import PendingContributionsBanner from '../../src/components/PendingContributionsBanner'; // Temporarily disabled
 import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
 import { ManualProductData } from '../../src/types/manualProduct';
@@ -266,6 +267,7 @@ function ResultScreenContent() {
   } | null>(null);
   const [packagingInfoModalVisible, setPackagingInfoModalVisible] = useState(false);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
+  const [packetContributionVisible, setPacketContributionVisible] = useState(false);
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
   const [editMode, setEditMode] = useState(false);
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -1855,6 +1857,17 @@ function ResultScreenContent() {
             </View>
           )}
 
+        <TouchableOpacity
+          onPress={() => setPacketContributionVisible(true)}
+          style={{ marginHorizontal: 16, marginBottom: 12 }}
+          accessibilityRole="button"
+          accessibilityLabel="Photograph the pack"
+        >
+          <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '600' }}>
+            Photograph the pack
+          </Text>
+        </TouchableOpacity>
+
         {/* Nutrition Facts — card body opens Nutrition Details; pencil glyph alone opens contribution */}
           <NutritionTable
             nutriments={product.nutriments}
@@ -2829,6 +2842,12 @@ function ResultScreenContent() {
         visible={processingLevelModalVisible}
         onClose={() => setProcessingLevelModalVisible(false)}
         novaGroup={product?.nova_group}
+      />
+
+      <PacketContributionModal
+        visible={packetContributionVisible}
+        barcode={barcode}
+        onClose={() => setPacketContributionVisible(false)}
       />
 
       {/* Camera Capture Modal */}

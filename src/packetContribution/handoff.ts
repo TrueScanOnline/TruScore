@@ -1,0 +1,106 @@
+import { submitGovernedEvidence } from '../contributions/submitGovernedEvidence';
+import { getSession, upsertSession } from './sessionStore';
+import { supportIsBounded } from './review';
+import type { PacketEvidenceUnit } from './types';
+
+export type HandoffResult =
+  | {
+      unitId: string;
+      outcome: 'submitted';
+      evidenceId: string;
+      admissionStatus: 'submitted';
+      idempotent: boolean;
+    }
+  | {
+      unitId: string;
+      outcome: 'held_for_later_receiver';
+      reason: string;
+    }
+  | {
+      unitId: string;
+      outcome: 'skipped';
+      reason: string;
+    };
+
+type SubmitFn = typeof submitGovernedEvidence;
+
+/**
+ * Prepare reviewed units into the frozen 4A.0 submit contract.
+ * Does not admit, promote, or write scoring fields.
+ */
+export async function handoffReviewedUnits(params: {
+  sessionId: string;
+  submit?: SubmitFn;
+  now?: number;
+}): Promise<HandoffResult[]> {
+  const session = await getSession(params.sessionId);
+  if (!session) throw new Error('packet_session_missing');
+  const submit = params.submit || submitGovernedEvidence;
+  const results: HandoffResult[] = [];
+  const units = [...session.units];
+
+  for (let index = 0; index < units.length; index += 1) {
+    const unit = units[index];
+    if (unit.status === 'set_aside') {
+      results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'set_aside' });
+      continue;
+    }
+    if (unit.status !== 'reviewed') {
+      results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'not_reviewed' });
+      continue;
+    }
+    if (unit.governedEvidenceId) {
+      results.push({
+        unitId: unit.unitId,
+        outcome: 'submitted',
+        evidenceId: unit.governedEvidenceId,
+        admissionStatus: 'submitted',
+        idempotent: true,
+      });
+      continue;
+    }
+    if (!supportIsBounded(session, unit.support)) {
+      results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'unbounded_support' });
+      continue;
+    }
+    if (unit.domain !== 'origins' && unit.domain !== 'certifications') {
+      results.push({
+        unitId: unit.unitId,
+        outcome: 'held_for_later_receiver',
+        reason: 'domain_receiver_not_in_4a0',
+      });
+      continue;
+    }
+    const source = session.sourceAssets.find((asset) => asset.assetId === unit.support.sourceAssetId);
+    const evidence = await submit({
+      barcode: session.barcode,
+      domain: unit.domain,
+      claimValue: unit.statement,
+      exactWording: unit.statement,
+      imageUrl: source ? `private://${source.privateKey}` : undefined,
+      variantKey: session.variantKey,
+      asProductionEpoch: true,
+      ...(unit.domain === 'origins'
+        ? { originStructured: { claimType: 'other' as const, primaryCountry: unit.statement } }
+        : { labelsTags: [unit.statement] }),
+    });
+    if (evidence.admissionStatus === 'admitted') {
+      throw new Error('packet_handoff_must_not_admit');
+    }
+    units[index] = {
+      ...unit,
+      governedEvidenceId: evidence.evidenceId,
+      submittedAt: params.now ?? Date.now(),
+    };
+    results.push({
+      unitId: unit.unitId,
+      outcome: 'submitted',
+      evidenceId: evidence.evidenceId,
+      admissionStatus: 'submitted',
+      idempotent: false,
+    });
+  }
+
+  await upsertSession({ ...session, units });
+  return results;
+}

@@ -30,7 +30,6 @@ import CertificationMultiPicker from './CertificationMultiPicker';
 import { findCountryByName, Country } from '../utils/countries';
 import { getTruscoreCertificationPickerTags } from '../services/ethicsCertificationsService';
 import { Product } from '../types/product';
-import { extractProductDataFromPhoto, verifyOCRData } from '../services/photoOcrService';
 import { logger } from '../utils/logger';
 import { useSettingsStore } from '../store/useSettingsStore';
 import {
@@ -168,61 +167,6 @@ export default function ManualProductEntryModal({
   const handleImageCapture = async (uri: string) => {
     setImageUri(uri);
     setCameraModalVisible(false);
-    
-    // NEW: Extract product data from photo using OCR (like Yuka)
-    try {
-      setLoading(true);
-      const extractedData = await extractProductDataFromPhoto(uri, barcode);
-      
-      // Auto-fill form fields with extracted data
-      if (extractedData.product_name) {
-        setProductName(extractedData.product_name);
-      }
-      if (extractedData.ingredients_text) {
-        setIngredients(extractedData.ingredients_text);
-      }
-      if (extractedData.brands) {
-        setBrand(extractedData.brands);
-      }
-      if (extractedData.nutriments) {
-        if (extractedData.nutriments['energy-kcal']) {
-          setEnergy(extractedData.nutriments['energy-kcal'].toString());
-        }
-        if (extractedData.nutriments.proteins_100g) {
-          setProtein(extractedData.nutriments.proteins_100g.toString());
-        }
-        if (extractedData.nutriments.fat_100g) {
-          setFat(extractedData.nutriments.fat_100g.toString());
-        }
-        if (extractedData.nutriments.carbohydrates_100g) {
-          setCarbs(extractedData.nutriments.carbohydrates_100g.toString());
-        }
-        if (extractedData.nutriments.sugars_100g) {
-          setSugars(extractedData.nutriments.sugars_100g.toString());
-        }
-        if (extractedData.nutriments.salt_100g) {
-          setSalt(extractedData.nutriments.salt_100g.toString());
-        }
-        if (extractedData.nutriments.fiber_100g) {
-          setFiber(extractedData.nutriments.fiber_100g.toString());
-        }
-        if (extractedData.nutriments['saturated-fat_100g']) {
-          setSaturatedFat(extractedData.nutriments['saturated-fat_100g'].toString());
-        }
-      }
-      
-      // Show success message
-      Alert.alert(
-        t('product.ocrSuccess') || 'Data Extracted',
-        t('product.ocrSuccessMessage') || 'Product information extracted from photo. Please review and edit if needed.',
-        [{ text: t('common.ok') || 'OK' }]
-      );
-    } catch (error) {
-      logger.warn('[ManualProductEntry] OCR extraction failed (non-critical):', error);
-      // Continue - user can manually enter data
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handlePickFromGallery = async () => {
@@ -238,78 +182,19 @@ export default function ManualProductEntryModal({
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
+        allowsEditing: false,
+        quality: 1,
       });
 
       if (!result.canceled && result.assets[0]) {
-        // Copy image to cache directory
         const imageDir = `${FileSystem.cacheDirectory}truescan/`;
         await FileSystem.makeDirectoryAsync(imageDir, { intermediates: true });
         const imagePath = `${imageDir}${barcode}_${Date.now()}.jpg`;
-        
         await FileSystem.copyAsync({
           from: result.assets[0].uri,
           to: imagePath,
         });
-        
         setImageUri(imagePath);
-        
-        // NEW: Extract product data from photo using OCR (like Yuka)
-        try {
-          setLoading(true);
-          const extractedData = await extractProductDataFromPhoto(imagePath, barcode);
-          
-          // Auto-fill form fields with extracted data
-          if (extractedData.product_name) {
-            setProductName(extractedData.product_name);
-          }
-          if (extractedData.ingredients_text) {
-            setIngredients(extractedData.ingredients_text);
-          }
-          if (extractedData.brands) {
-            setBrand(extractedData.brands);
-          }
-          if (extractedData.nutriments) {
-            if (extractedData.nutriments['energy-kcal']) {
-              setEnergy(extractedData.nutriments['energy-kcal'].toString());
-            }
-            if (extractedData.nutriments.proteins_100g) {
-              setProtein(extractedData.nutriments.proteins_100g.toString());
-            }
-            if (extractedData.nutriments.fat_100g) {
-              setFat(extractedData.nutriments.fat_100g.toString());
-            }
-            if (extractedData.nutriments.carbohydrates_100g) {
-              setCarbs(extractedData.nutriments.carbohydrates_100g.toString());
-            }
-            if (extractedData.nutriments.sugars_100g) {
-              setSugars(extractedData.nutriments.sugars_100g.toString());
-            }
-            if (extractedData.nutriments.salt_100g) {
-              setSalt(extractedData.nutriments.salt_100g.toString());
-            }
-            if (extractedData.nutriments.fiber_100g) {
-              setFiber(extractedData.nutriments.fiber_100g.toString());
-            }
-            if (extractedData.nutriments['saturated-fat_100g']) {
-              setSaturatedFat(extractedData.nutriments['saturated-fat_100g'].toString());
-            }
-          }
-          
-          // Show success message
-          Alert.alert(
-            t('product.ocrSuccess') || 'Data Extracted',
-            t('product.ocrSuccessMessage') || 'Product information extracted from photo. Please review and edit if needed.',
-            [{ text: t('common.ok') || 'OK' }]
-          );
-        } catch (error) {
-          logger.warn('[ManualProductEntry] OCR extraction failed (non-critical):', error);
-          // Continue - user can manually enter data
-        } finally {
-          setLoading(false);
-        }
       }
     } catch (error) {
       logger.error('Error picking image:', error);
