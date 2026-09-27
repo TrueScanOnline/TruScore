@@ -76,9 +76,9 @@ Your `.env` file should now have:
 
 ```env
 EXPO_PUBLIC_BACKEND_URL=https://truscoreapi-lrjqh5uj5-leightons-projects-d328c774.vercel.app
-EXPO_PUBLIC_OFF_USER_ID=crwmlw
-EXPO_PUBLIC_OFF_PASSWORD=Lm996849!
 ```
+
+Open Food Facts writes use server-side `OFF_WRITE_USER_ID` and `OFF_WRITE_PASSWORD` only. Do not put them in the app.
 
 ---
 

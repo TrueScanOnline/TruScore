@@ -11,12 +11,7 @@
 ## ✅ STEP 2: Open Food Facts Credentials
 **Status:** ✅ **COMPLETE**
 
-**Credentials Configured:**
-- Username: `crwmlw`
-- Password: `Lm996849!`
-- Email: `truescan.onlone@gmail.com`
-
-**Location:** `.env` file updated
+**Credentials:** server-side `OFF_WRITE_USER_ID` and `OFF_WRITE_PASSWORD` only. Do not put them in the app.
 
 ---
 

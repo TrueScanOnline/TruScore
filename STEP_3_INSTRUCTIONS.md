@@ -6,9 +6,7 @@
 ## ✅ WHAT'S DONE
 
 1. ✅ **Step 1:** Backend deployed (you confirmed)
-2. ✅ **Step 2:** Open Food Facts credentials added to `.env`:
-   - Username: `crwmlw`
-   - Password: `Lm996849!`
+2. ✅ **Step 2:** Open Food Facts write credentials are server-side only: `OFF_WRITE_USER_ID` and `OFF_WRITE_PASSWORD`. Do not put them in the app.
 
 ---
 

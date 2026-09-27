@@ -12,9 +12,7 @@
 - **Status:** Successfully deployed
 
 ### Step 2: Open Food Facts Credentials ✅
-- **Username:** `crwmlw`
-- **Password:** `Lm996849!`
-- **Status:** Configured in `.env` file
+- **Configuration:** server-side `OFF_WRITE_USER_ID` and `OFF_WRITE_PASSWORD` only. Do not put them in the app.
 
 ### Step 3: Vercel Environment Variables ⚠️
 - **Neon Database:** Connected
@@ -75,9 +73,9 @@ curl "https://truscoreapi-lrjqh5uj5-leightons-projects-d328c774.vercel.app/api/u
 ### Mobile App (`.env`):
 ```env
 EXPO_PUBLIC_BACKEND_URL=https://truscoreapi-lrjqh5uj5-leightons-projects-d328c774.vercel.app
-EXPO_PUBLIC_OFF_USER_ID=crwmlw
-EXPO_PUBLIC_OFF_PASSWORD=Lm996849!
 ```
+
+Open Food Facts writes use server-side `OFF_WRITE_USER_ID` and `OFF_WRITE_PASSWORD` only. Do not put them in the app.
 
 ### Vercel Environment Variables:
 - `POSTGRES_URL` = Neon connection string
