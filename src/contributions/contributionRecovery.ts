@@ -7,7 +7,8 @@
  *
  * Retry must never overwrite a newer local authoritative record with a stale
  * checkpoint snapshot. Snapshot rehydration is only a fallback when the local
- * record is genuinely absent, and cannot elevate authority beyond the checkpoint.
+ * record is genuinely absent. Rehydration suspends admission participation so a
+ * checkpoint cannot restore production assessment authority by itself.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -149,13 +150,15 @@ export function stripStaleAssessmentAuthorityForMissingLocalRecovery(
 ): ContributionEvidence {
   return {
     ...snapshot,
-    // Demote governance participation so asserted cross_user_eligible / promotion
-    // at checkpoint time cannot re-enter production assessment via rehydration alone.
+    // Missing-local rehydration is not a fresh governed admission.
+    // Suspend admission participation so checkpoint promotion/eligibility cannot
+    // re-enter production assessment until admitEvidence runs again.
+    // Claim payload, confirmations, disputes, and the admission audit object remain.
+    admissionStatus: 'submitted',
     state: 'pending',
     canonicalPromoted: false,
     scoringEligible: false,
     receiverEligibility: undefined,
-    // Keep admissionStatus, confirmations, disputes, claim payload for recovery.
   };
 }
 

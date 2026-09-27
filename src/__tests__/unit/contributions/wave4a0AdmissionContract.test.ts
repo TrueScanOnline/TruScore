@@ -31,6 +31,7 @@ import {
 } from '../../../contributions/productionEpoch';
 import {
   __clearBodyReceiverPredicatesForTests,
+  listRegisteredBodyReceiverPredicateCount,
   registerBodyReceiverPredicate,
 } from '../../../contributions/bodyReceiverRegistry';
 import {
@@ -452,7 +453,7 @@ describe('Wave 4A.0 §8 falsification cases', () => {
   // -------------------------------------------------------------------------
 
   describe('QA-1 Receiver eligibility authority', () => {
-    it('forged stored open_origins eligible:true cannot grant production eligibility', () => {
+    it('forged stored open_origins map is not authority; admitted pending primary participates by recomputation', () => {
       const forged: ContributionEvidence = {
         ...productionSubmitted(baseOrigin()),
         admissionStatus: 'admitted',
@@ -470,9 +471,16 @@ describe('Wave 4A.0 §8 falsification cases', () => {
           },
         },
       };
-      expect(isAssessmentEligibleForReceiver(forged, 'open_origins')).toBe(false);
-      expect(canApplyToProductionReceiver(forged, 'open_origins')).toBe(false);
-      expect(toScoringProduct(offBare(), [forged])?.manufacturing_places).toBeUndefined();
+      expect(computeReceiverEligibility(forged).open_origins?.methodologyId).toBe('open_v15');
+      expect(computeReceiverEligibility(forged).open_origins?.eligible).toBe(true);
+      expect(isAssessmentEligibleForReceiver(forged, 'open_origins')).toBe(true);
+      expect(canApplyToProductionReceiver(forged, 'open_origins')).toBe(true);
+      expect(toScoringProduct(offBare(), [forged])?.manufacturing_places).toBe('New Zealand');
+
+      const notAdmitted: ContributionEvidence = { ...forged, admissionStatus: 'submitted' };
+      expect(isAssessmentEligibleForReceiver(notAdmitted, 'open_origins')).toBe(false);
+      expect(canApplyToProductionReceiver(notAdmitted, 'open_origins')).toBe(false);
+      expect(toScoringProduct(offBare(), [notAdmitted])?.manufacturing_places).toBeUndefined();
     });
 
     it('forged stored Body eligible:true cannot grant production eligibility', () => {
@@ -493,8 +501,7 @@ describe('Wave 4A.0 §8 falsification cases', () => {
       expect(isAssessmentEligibleForReceiver(forgedBody, 'body_ingredients_nutrition')).toBe(false);
     });
 
-    it('legacy domain-global scoringEligible cannot independently grant production receiver eligibility on review_required', () => {
-      // review_required with scoringEligible:true but WITHOUT confirmation threshold met.
+    it('review_required preserves admitted Lane A participation; scoringEligible and stored maps are not the authority', () => {
       const spoofed: ContributionEvidence = {
         ...productionSubmitted(baseCertLaneA()),
         admissionStatus: 'admitted',
@@ -517,8 +524,14 @@ describe('Wave 4A.0 §8 falsification cases', () => {
           },
         },
       };
-      expect(isAssessmentEligibleForReceiver(spoofed, 'ethics_certifications')).toBe(false);
-      expect(computeReceiverEligibility(spoofed).ethics_certifications?.eligible).toBe(false);
+      const computed = computeReceiverEligibility(spoofed);
+      expect(computed.ethics_certifications?.eligible).toBe(true);
+      expect(computed.ethics_certifications?.methodologyId).toBe('ethics_pillar');
+      expect(isAssessmentEligibleForReceiver(spoofed, 'ethics_certifications')).toBe(true);
+
+      const notAdmitted: ContributionEvidence = { ...spoofed, admissionStatus: 'submitted' };
+      expect(isAssessmentEligibleForReceiver(notAdmitted, 'ethics_certifications')).toBe(false);
+      expect(computeReceiverEligibility(notAdmitted).ethics_certifications?.eligible).toBe(false);
     });
 
     it('review_required preserves eligibility via controlled recomputation when confirmation threshold was met', () => {
@@ -843,8 +856,8 @@ describe('Wave 4A.0 §8 falsification cases', () => {
   // Final hardening (founder-directed 4A.0 pass)
   // -------------------------------------------------------------------------
 
-  describe('H1 Asserted cross_user_eligible is not independently authoritative', () => {
-    it('admitted production record asserting cross_user_eligible with zero confirmations cannot obtain receiver eligibility', () => {
+  describe('H1 Asserted lifecycle state is not independently authoritative', () => {
+    it('admitted primary with zero confirmations participates; a forged stored map is not the authority', () => {
       const asserted: ContributionEvidence = {
         ...productionSubmitted(baseOrigin()),
         admissionStatus: 'admitted',
@@ -863,13 +876,23 @@ describe('Wave 4A.0 §8 falsification cases', () => {
           },
         },
       };
-      expect(isAssessmentEligibleForReceiver(asserted, 'open_origins')).toBe(false);
-      expect(canApplyToProductionReceiver(asserted, 'open_origins')).toBe(false);
-      expect(computeReceiverEligibility(asserted).open_origins?.eligible).toBe(false);
-      expect(toScoringProduct(offBare(), [asserted])?.manufacturing_places).toBeUndefined();
+      expect(computeReceiverEligibility(asserted).open_origins?.methodologyId).toBe('open_v15');
+      expect(computeReceiverEligibility(asserted).open_origins?.eligible).toBe(true);
+      expect(isAssessmentEligibleForReceiver(asserted, 'open_origins')).toBe(true);
+      expect(canApplyToProductionReceiver(asserted, 'open_origins')).toBe(true);
+      expect(toScoringProduct(offBare(), [asserted])?.manufacturing_places).toBe('New Zealand');
+
+      const notAdmitted: ContributionEvidence = {
+        ...asserted,
+        admissionStatus: 'submitted',
+        admission: undefined,
+      };
+      expect(isAssessmentEligibleForReceiver(notAdmitted, 'open_origins')).toBe(false);
+      expect(canApplyToProductionReceiver(notAdmitted, 'open_origins')).toBe(false);
+      expect(toScoringProduct(offBare(), [notAdmitted])?.manufacturing_places).toBeUndefined();
     });
 
-    it('forged stored eligibility fields do not change the zero-confirmation fail-closed result', () => {
+    it('forged stored ethics map does not supply methodology; admitted Lane A with zero confirmations still participates', () => {
       const asserted: ContributionEvidence = {
         ...productionSubmitted(baseCertLaneA()),
         admissionStatus: 'admitted',
@@ -888,7 +911,10 @@ describe('Wave 4A.0 §8 falsification cases', () => {
           },
         },
       };
-      expect(isAssessmentEligibleForReceiver(asserted, 'ethics_certifications')).toBe(false);
+      expect(computeReceiverEligibility(asserted).ethics_certifications?.methodologyId).toBe('ethics_pillar');
+      expect(isAssessmentEligibleForReceiver(asserted, 'ethics_certifications')).toBe(true);
+      const notAdmitted: ContributionEvidence = { ...asserted, admissionStatus: 'submitted' };
+      expect(isAssessmentEligibleForReceiver(notAdmitted, 'ethics_certifications')).toBe(false);
     });
 
     it('legitimately confirmed record continues to obtain receiver eligibility under the governed contract', () => {
@@ -915,6 +941,7 @@ describe('Wave 4A.0 §8 falsification cases', () => {
 
       const stripped = stripStaleAssessmentAuthorityForMissingLocalRecovery(checkpoint!.evidenceSnapshot);
       expect(stripped.state).toBe('pending');
+      expect(stripped.admissionStatus).toBe('submitted');
       expect(stripped.canonicalPromoted).toBe(false);
       expect(isAssessmentEligibleForReceiver(stripped, 'open_origins')).toBe(false);
       expect(canApplyToProductionReceiver(stripped, 'open_origins')).toBe(false);
@@ -1082,8 +1109,13 @@ describe('Wave 4A.0 §8 falsification cases', () => {
       expect(admitted.evidence?.admissionStatus).toBe('admitted');
       expect(admitted.evidence?.recordClass).toBe('production');
 
-      // Authority still requires governed confirmations — not stored fields.
-      expect(isAssessmentEligibleForReceiver(admitted.evidence!, 'open_origins')).toBe(false);
+      // Admitted primary participates immediately. Confirmation is maturity, not a gate.
+      expect(admitted.evidence?.state).toBe('pending');
+      expect(admitted.evidence?.canonicalPromoted).toBe(false);
+      expect(admitted.evidence?.confirmations).toHaveLength(0);
+      expect(isAssessmentEligibleForReceiver(admitted.evidence!, 'open_origins')).toBe(true);
+      expect(canApplyToProductionReceiver(admitted.evidence!, 'open_origins')).toBe(true);
+
       const forged = {
         ...admitted.evidence!,
         state: 'cross_user_eligible' as const,
@@ -1099,11 +1131,181 @@ describe('Wave 4A.0 §8 falsification cases', () => {
           },
         },
       };
-      expect(isAssessmentEligibleForReceiver(forged, 'open_origins')).toBe(false);
+      expect(computeReceiverEligibility(forged).open_origins?.methodologyId).toBe('open_v15');
+      expect(isAssessmentEligibleForReceiver(forged, 'open_origins')).toBe(true);
+      expect(canApplyToProductionReceiver(forged, 'open_origins')).toBe(true);
 
       const confirmed = confirmAndPromoteIfEligible(admitted.evidence!, 'user_other').evidence;
+      expect(confirmed.state).toBe('cross_user_eligible');
+      expect(confirmed.canonicalPromoted).toBe(true);
       expect(isAssessmentEligibleForReceiver(confirmed, 'open_origins')).toBe(true);
       expect(canApplyToProductionReceiver(confirmed, 'open_origins')).toBe(true);
     });
+  });
+});
+
+describe('Primary evidence initial receiver participation', () => {
+  beforeEach(() => {
+    __clearBodyReceiverPredicatesForTests();
+  });
+
+  function admitPrimary(evidence: ContributionEvidence): ContributionEvidence {
+    const admitted = admitEvidence(productionSubmitted(evidence), {
+      admissionReason: 'primary_user_evidence_admission',
+    });
+    expect(admitted.ok).toBe(true);
+    return admitted.evidence;
+  }
+
+  it('Case A — admitted primary, zero confirmations, participates in open_origins', () => {
+    const admitted = admitPrimary(baseOrigin());
+    expect(admitted.state).toBe('pending');
+    expect(admitted.confirmations).toHaveLength(0);
+    expect(admitted.canonicalPromoted).toBe(false);
+    expect(isAssessmentEligibleForReceiver(admitted, 'open_origins')).toBe(true);
+    expect(canApplyToProductionReceiver(admitted, 'open_origins')).toBe(true);
+    expect(toScoringProduct(offBare(), [admitted])?.manufacturing_places).toBe('New Zealand');
+    expect(isAssessmentEligibleForReceiver(admitted, 'ethics_certifications')).toBe(false);
+    expect(isAssessmentEligibleForReceiver(admitted, 'body_ingredients_nutrition')).toBe(false);
+  });
+
+  it('Case A — admitted Lane A certification, zero confirmations, participates in ethics', () => {
+    const admitted = admitPrimary(baseCertLaneA());
+    expect(admitted.confirmations).toHaveLength(0);
+    expect(admitted.canonicalPromoted).toBe(false);
+    expect(isAssessmentEligibleForReceiver(admitted, 'ethics_certifications')).toBe(true);
+    expect(canApplyToProductionReceiver(admitted, 'ethics_certifications')).toBe(true);
+    expect(toScoringProduct(offBare(), [admitted])?.labels_tags).toContain('en:fair-trade');
+  });
+
+  it('Case B — one valid independent confirmation advances verification maturity and remains eligible', () => {
+    const admitted = admitPrimary(baseOrigin());
+    const confirmed = confirmAndPromoteIfEligible(admitted, 'user_other').evidence;
+    expect(confirmed.confirmations).toHaveLength(1);
+    expect(confirmed.confirmations[0]?.contributorId).toBe('user_other');
+    expect(confirmed.state).toBe('cross_user_eligible');
+    expect(confirmed.canonicalPromoted).toBe(true);
+    expect(isAssessmentEligibleForReceiver(confirmed, 'open_origins')).toBe(true);
+    expect(canApplyToProductionReceiver(confirmed, 'open_origins')).toBe(true);
+    expect(toScoringProduct(offBare(), [confirmed])?.manufacturing_places).toBe('New Zealand');
+  });
+
+  it('Case C — unadmitted evidence asserting cross_user_eligible, stored eligibility and canonicalPromoted fails closed', () => {
+    const forged: ContributionEvidence = {
+      ...productionSubmitted(baseOrigin()),
+      admissionStatus: 'submitted',
+      state: 'cross_user_eligible',
+      scoringEligible: true,
+      canonicalPromoted: true,
+      receiverEligibility: {
+        open_origins: {
+          eligible: true,
+          methodologyId: 'forged',
+          methodologyVersion: 'attack',
+          basisRuleVersion: 'attack',
+          reason: 'forged',
+        },
+      },
+    };
+    expect(isAssessmentEligibleForReceiver(forged, 'open_origins')).toBe(false);
+    expect(canApplyToProductionReceiver(forged, 'open_origins')).toBe(false);
+    expect(toScoringProduct(offBare(), [forged])?.manufacturing_places).toBeUndefined();
+  });
+
+  it('Case D — admitted then withdrawn fails closed', () => {
+    const withdrawn = applyFounderAdminAction(admitPrimary(baseOrigin()), 'withdraw');
+    expect(withdrawn.state).toBe('withdrawn');
+    expect(isAssessmentEligibleForReceiver(withdrawn, 'open_origins')).toBe(false);
+    expect(canApplyToProductionReceiver(withdrawn, 'open_origins')).toBe(false);
+    expect(toScoringProduct(offBare(), [withdrawn])?.manufacturing_places).toBeUndefined();
+  });
+
+  it('Case E — superseded and non-prevailing admitted versions fail closed for consumption', () => {
+    const v1 = admitPrimary(baseOrigin());
+    const superseded = applyFounderAdminAction(v1, 'supersede');
+    expect(superseded.state).toBe('superseded');
+    expect(canApplyToProductionReceiver(superseded, 'open_origins')).toBe(false);
+    expect(selectPrevailingAdmittedEvidence([superseded], {
+      barcode: BARCODE,
+      domain: 'origins',
+      claimKey: 'made_in:new zealand',
+    })).toBeNull();
+
+    const older = admitPrimary(
+      baseOrigin({
+        claimValue: 'New Zealand older',
+        originStructured: { claimType: 'made_in', primaryCountry: 'New Zealand older' },
+      })
+    );
+    const newer = admitPrimary(
+      baseOrigin({
+        evidenceId: `${BARCODE}|origins|made_in:new zealand|v2`,
+        evidenceVersion: 2,
+        claimValue: 'New Zealand newer',
+        originStructured: { claimType: 'made_in', primaryCountry: 'New Zealand newer' },
+        createdAt: 2,
+      })
+    );
+    const prevailing = selectPrevailingAdmittedEvidence([older, newer], {
+      barcode: BARCODE,
+      domain: 'origins',
+      claimKey: 'made_in:new zealand',
+    });
+    expect(prevailing?.evidenceVersion).toBe(2);
+    const scoring = toScoringProduct(offBare(), [older, newer]);
+    expect(scoring?.manufacturing_places).toBe('New Zealand newer');
+    expect(scoring?.manufacturing_places).not.toBe('New Zealand older');
+  });
+
+  it('Case F — unregistered Body receiver stays fail-closed for admitted primary evidence', () => {
+    const admitted = admitPrimary(baseOrigin());
+    expect(listRegisteredBodyReceiverPredicateCount()).toBe(0);
+    expect(computeReceiverEligibility(admitted).body_ingredients_nutrition?.eligible).toBe(false);
+    expect(computeReceiverEligibility(admitted).body_ingredients_nutrition?.reason).toBe(
+      BODY_RECEIVER_4A0_UNREGISTERED_REASON
+    );
+    expect(isAssessmentEligibleForReceiver(admitted, 'body_ingredients_nutrition')).toBe(false);
+    expect(canApplyToProductionReceiver(admitted, 'body_ingredients_nutrition')).toBe(false);
+  });
+
+  it('Case G — Lane B certification remains non-scoring after admission', () => {
+    const laneB = admitPrimary(
+      baseCertLaneA({
+        evidenceId: `${BARCODE}|certifications|carbon neutral|v1`,
+        claimKey: 'carbon neutral',
+        claimValue: 'en:carbon-neutral',
+        labelsTags: ['en:carbon-neutral'],
+        certificationLane: 'B',
+      })
+    );
+    expect(laneB.certificationLane).toBe('B');
+    expect(isAssessmentEligibleForReceiver(laneB, 'ethics_certifications')).toBe(false);
+    expect(canApplyToProductionReceiver(laneB, 'ethics_certifications')).toBe(false);
+    expect(computeReceiverEligibility(laneB).ethics_certifications?.reason).toMatch(/Lane B/);
+    const scored = calculateTruScore(offBare(), undefined, {
+      promotedContributionEvidence: [laneB],
+    });
+    expect(scored.breakdown.Ethics).toBe(calculateTruScore(offBare()).breakdown.Ethics);
+  });
+
+  it('Case H — review_required does not withdraw evidence or change the admitted primary score', () => {
+    const admitted = admitPrimary(baseCertLaneA());
+    const baseline = calculateTruScore(offBare(), undefined, {
+      promotedContributionEvidence: [admitted],
+    });
+    expect(baseline.breakdown.Ethics).toBe(21);
+
+    const d1 = disputeEvidence(admitted, 'user_c', 'claim_not_present');
+    const d2 = disputeEvidence(d1.evidence, 'user_d', 'wrong_product');
+    expect(d2.evidence.state).toBe('review_required');
+    expect(d2.evidence.state).not.toBe('withdrawn');
+    expect(d2.evidence.admissionStatus).toBe('admitted');
+    expect(canApplyToProductionReceiver(d2.evidence, 'ethics_certifications')).toBe(true);
+
+    const afterReview = calculateTruScore(offBare(), undefined, {
+      promotedContributionEvidence: [d2.evidence],
+    });
+    expect(afterReview.breakdown.Ethics).toBe(baseline.breakdown.Ethics);
+    expect(afterReview.truscore).toBe(baseline.truscore);
   });
 });

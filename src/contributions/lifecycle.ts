@@ -263,7 +263,7 @@ export function markCanonicalPromoted(
   };
 }
 
-/** Confirm then promote when policy + lane allow — single governed path into scorers. */
+/** Confirm then promote when policy + lane allow — verification maturity, not the assessment-participation gate. */
 export function confirmAndPromoteIfEligible(
   evidence: ContributionEvidence,
   contributorId: string,

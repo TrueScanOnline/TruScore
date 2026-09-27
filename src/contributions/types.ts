@@ -60,6 +60,10 @@ export type ContributionEvidence = {
    * authority — use receiverEligibility / isAssessmentEligibleForReceiver.
    */
   scoringEligible: boolean;
+  /**
+   * Verification/canonical-maturity marker set by markCanonicalPromoted after
+   * cross_user_eligible. Not an assessment-participation predicate.
+   */
   canonicalPromoted: boolean;
   /**
    * Wave 4A.0 production epoch. Absent/null ⇒ pre-epoch / legacy — fail closed

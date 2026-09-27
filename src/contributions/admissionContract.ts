@@ -10,7 +10,7 @@
  * Stored `receiverEligibility` maps are never authoritative for production gates.
  */
 
-import { getCommunityVerificationPolicy, getCommunityVerificationThresholds } from '../config/contributionPolicy';
+import { getCommunityVerificationPolicy } from '../config/contributionPolicy';
 import { isLaneACertificationEvidence } from './certificationLane';
 import {
   ADMISSION_RULE_VERSION,
@@ -100,33 +100,14 @@ export function deriveCompatScoringEligibleMirror(
   return Object.values(receiverEligibility).some((entry) => entry?.eligible === true);
 }
 
-function otherActiveConfirmations(evidence: ContributionEvidence): number {
-  return evidence.confirmations.filter((c) => c.contributorId !== evidence.submitterId).length;
-}
-
-/**
- * Confirmation threshold from governed confirmation records — never from asserted
- * lifecycle state alone. Stored `state: cross_user_eligible` is insufficient.
- */
-function confirmationThresholdMet(evidence: ContributionEvidence): boolean {
-  const thresholds = getCommunityVerificationThresholds(evidence.domain);
-  return otherActiveConfirmations(evidence) >= thresholds.independentConfirmationsRequired;
-}
-
-/**
- * Whether governance state may participate in receiver eligibility once the
- * confirmation threshold is independently verified from confirmation records.
- */
-function governanceStateAllowsReceiverEligibility(evidence: ContributionEvidence): boolean {
-  if (evidence.state === 'cross_user_eligible') return confirmationThresholdMet(evidence);
-  if (evidence.state === 'review_required') return confirmationThresholdMet(evidence);
-  return false;
-}
-
 /**
  * Compute receiver-specific eligibility from admitted evidence type × approved
  * receiving methodology. Fail closed when methodology is not approved for the type.
- * Never trusts stored receiverEligibility or domain-global scoringEligible as authority.
+ *
+ * Initial assessment participation does not require independent confirmation,
+ * `cross_user_eligible`, or `canonicalPromoted`. Those remain verification /
+ * canonical-maturity facts (lifecycle.ts). Stored receiverEligibility maps,
+ * scoringEligible, and asserted lifecycle state are never authoritative.
  */
 export function computeReceiverEligibility(
   evidence: ContributionEvidence
@@ -173,9 +154,9 @@ export function computeReceiverEligibility(
     };
   }
 
-  // Governance: review_required must not itself determine eligibility — preserve prior
-  // eligibility via controlled recomputation (confirmation threshold), not stored maps.
-  // Withdrawn/superseded close eligibility.
+  // review_required is governance-only: it does not withdraw evidence or close
+  // an otherwise eligible receiver. Withdrawn/superseded close eligibility.
+  // pending / cross_user_eligible are likewise not participation prerequisites.
   if (evidence.state === 'superseded' || evidence.state === 'withdrawn') {
     return {
       open_origins: {
@@ -201,9 +182,7 @@ export function computeReceiverEligibility(
 
   if (evidence.domain === 'origins') {
     const policy = getCommunityVerificationPolicy('origins');
-    const eligible =
-      policy.canonicalPromotionPermission === true &&
-      governanceStateAllowsReceiverEligibility(evidence);
+    const eligible = policy.canonicalPromotionPermission === true;
     return {
       open_origins: {
         eligible,
@@ -214,9 +193,7 @@ export function computeReceiverEligibility(
           ? evidence.state === 'review_required'
             ? 'review_required preserves open_origins eligibility via controlled recomputation'
             : 'admitted origins evidence × open_v15 receiving methodology'
-          : !confirmationThresholdMet(evidence)
-            ? 'asserted lifecycle state without qualifying confirmations — fail closed'
-            : 'origins not assessment-eligible for open_origins receiver',
+          : 'origins not assessment-eligible for open_origins receiver',
       },
       ethics_certifications: empty.ethics_certifications,
       body_ingredients_nutrition: bodyEntry,
@@ -231,10 +208,7 @@ export function computeReceiverEligibility(
       certificationLane: evidence.certificationLane,
     });
     // Lane B remains non-scoring; only Lane A may be ethics-receiver eligible.
-    const eligible =
-      policy.canonicalPromotionPermission === true &&
-      laneA === true &&
-      governanceStateAllowsReceiverEligibility(evidence);
+    const eligible = policy.canonicalPromotionPermission === true && laneA === true;
     return {
       open_origins: empty.open_origins,
       ethics_certifications: {
@@ -248,9 +222,7 @@ export function computeReceiverEligibility(
             ? evidence.state === 'review_required'
               ? 'review_required preserves ethics_certifications eligibility via controlled recomputation'
               : 'admitted Lane A certification evidence × ethics receiving methodology'
-            : !confirmationThresholdMet(evidence)
-              ? 'asserted lifecycle state without qualifying confirmations — fail closed'
-              : 'certifications not assessment-eligible for ethics receiver',
+            : 'certifications not assessment-eligible for ethics receiver',
       },
       body_ingredients_nutrition: bodyEntry,
     };
@@ -279,16 +251,17 @@ export function isAssessmentEligibleForReceiver(
 }
 
 /**
- * Production promotion into a scoring Product field is allowed only when the
- * receiver-specific contract passes. Domain-global scoringEligible is ignored.
+ * Production projection into a scoring Product field.
+ * Requires recomputed receiver eligibility only.
+ * `canonicalPromoted` is verification/canonical maturity and is not an
+ * assessment-participation predicate (a forged true flag grants nothing;
+ * a false flag does not block admitted primary evidence).
  */
 export function canApplyToProductionReceiver(
   evidence: ContributionEvidence,
   receiverId: AssessmentReceiverId
 ): boolean {
-  if (!isAssessmentEligibleForReceiver(evidence, receiverId)) return false;
-  if (!evidence.canonicalPromoted) return false;
-  return true;
+  return isAssessmentEligibleForReceiver(evidence, receiverId);
 }
 
 export function admitEvidence(

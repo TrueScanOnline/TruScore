@@ -175,7 +175,8 @@ function applyPromotedOrigins(
  * Product representation that pillar scoring may consume.
  * Trusted external fields stay. Standalone local contribution records cannot
  * supply nutrition, ingredients, origin, or certification tags to scoring.
- * Production-epoch admitted + receiver-eligible + promoted evidence may be applied.
+ * Production-epoch admitted + receiver-eligible evidence may be applied.
+ * Independent confirmation and canonicalPromoted are not required.
  */
 export function toScoringProduct(
   product: Product | null | undefined,
