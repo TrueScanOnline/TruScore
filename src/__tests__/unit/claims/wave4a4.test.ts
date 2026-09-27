@@ -198,6 +198,7 @@ describe('Wave 4A.4 packet claims receiver', () => {
         primaryUserClaimsDependence: true,
         claimsAssessment: {
           ...assessment,
+          publication_packet_lane: 'assessed',
           benchmark_checks: [
             { source: 'ktc' as const, status: 'no_finding' as const },
             { source: 'bbfaw' as const, status: 'no_finding' as const },

@@ -28,6 +28,7 @@ import {
   supportedPercentageQualifier,
   type OriginStructuredEvidence,
 } from './originStructured';
+import { GOVERNED_PACKET_ABSENCE_CLAIM } from './admissionTypes';
 import {
   CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
   resolveContributionCreationRecordClass,
@@ -42,6 +43,8 @@ export async function submitGovernedEvidence(params: {
   labelsTags?: string[];
   imageUrl?: string;
   exactWording?: string;
+  /** Reviewed affirmation that no governed packet claim or certification is present. */
+  packetAbsence?: boolean;
   originStructured?: OriginStructuredEvidence;
   variantKey?: string;
   /**
@@ -57,20 +60,25 @@ export async function submitGovernedEvidence(params: {
         percentageQualifier: supportedPercentageQualifier(params.originStructured.percentageQualifier),
       }
     : undefined;
-  const claimValue =
-    params.domain === 'origins' && structured?.primaryCountry
+  const packetAbsence = params.domain === 'packet_claims' && params.packetAbsence === true;
+  const claimValue = packetAbsence
+    ? GOVERNED_PACKET_ABSENCE_CLAIM
+    : params.domain === 'origins' && structured?.primaryCountry
       ? structured.primaryCountry
       : params.claimValue;
   const claimKey = normalizeClaimKey(
     params.domain === 'origins' && structured
       ? `${structured.claimType}:${structured.primaryCountry}`
       : params.domain === 'packet_claims'
-        ? params.exactWording || claimValue
+        ? packetAbsence
+          ? GOVERNED_PACKET_ABSENCE_CLAIM
+          : params.exactWording || claimValue
         : claimValue
   );
-  const exactWording =
-    params.exactWording ||
-    (structured ? buildExactWordingFromStructured(structured) : params.claimValue.trim());
+  const exactWording = packetAbsence
+    ? ''
+    : params.exactWording ||
+      (structured ? buildExactWordingFromStructured(structured) : params.claimValue.trim());
 
   // Canonicalise once at the submission boundary for versioning/identity consistency.
   const variantKey = canonicalizeVariantKey(params.variantKey);

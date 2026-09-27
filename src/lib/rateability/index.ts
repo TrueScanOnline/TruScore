@@ -10,6 +10,7 @@ export { publishBodyPillar } from './bodyPublication';
 export { publishPlanetPillar } from './planetPublication';
 export {
   publishClaimsPillar,
+  consumerClaimsScore,
   isClaimsPacketLaneAssessed,
   isClaimsBenchmarkLaneAssessed,
   isBenchmarkCheckSuccessfullyAssessed,

@@ -35,6 +35,8 @@ type Props = {
     conflictingFreeTextOrigins?: string;
     originsTags?: string[];
   }) => void;
+  /** Opens the live Packet Claims contribution journey. */
+  onOpenPacketClaims?: () => void;
   /** When false, suppress S26 (assessment cycle still checking). */
   publicationSettled?: boolean;
   /**
@@ -140,12 +142,16 @@ function S26PillarBlock({
           label={
             opp?.routeKey === 'origins'
               ? 'Validate or correct origin information'
-              : 'Edit or add product information'
+              : opp?.routeKey === 'packet_claims'
+                ? 'Add packet claim information'
+                : 'Edit or add product information'
           }
           accessibilityLabel={
             opp?.routeKey === 'origins'
               ? 'Open origins contribution'
-              : 'Open manual edit to add or correct product information'
+              : opp?.routeKey === 'packet_claims'
+                ? 'Open packet claims contribution'
+                : 'Open manual edit to add or correct product information'
           }
           primaryColor={colors.primary}
         />
@@ -158,6 +164,7 @@ export default function ProductDataLimitationsCard({
   product,
   onOpenManualEdit,
   onOpenOrigins,
+  onOpenPacketClaims,
   publicationSettled = true,
   openRequestKey = 0,
 }: Props) {
@@ -193,6 +200,7 @@ export default function ProductDataLimitationsCard({
       return onOpenOrigins ? () => onOpenOrigins(prefill) : undefined;
     }
     if (routeKey === 'ingredients_nutrition') return onOpenManualEdit;
+    if (routeKey === 'packet_claims') return onOpenPacketClaims;
     return undefined;
   };
 

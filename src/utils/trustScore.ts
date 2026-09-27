@@ -15,6 +15,7 @@ import { offDispatchConsumerCopy, latestOffDispatchStatus } from '../ingredients
 import { selectPrevailingOriginFacts } from '../origins/governedFacts';
 import {
   packetClaimsToObservations,
+  selectAdmittedPacketAbsence,
   selectPrevailingPacketClaims,
 } from '../claims/packetClaimReceiver';
 
@@ -92,6 +93,7 @@ export async function calculateTrustScore(
     ...getPlanetScoringContext(),
     promotedContributionEvidence: localEvidence,
     admittedPacketObservations: packetClaimsToObservations(governedPacketClaims),
+    admittedPacketAbsence: selectAdmittedPacketAbsence(storedEvidence),
     ...(options?.publicationSettled !== undefined
       ? { publicationSettled: options.publicationSettled }
       : {}),

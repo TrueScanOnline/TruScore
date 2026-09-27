@@ -2789,6 +2789,7 @@ function ResultScreenContent() {
             setOriginsContributionPrefill(prefill ?? null);
             setManufacturingCountryModalVisible(true);
           }}
+          onOpenPacketClaims={() => setPacketContributionVisible(true)}
           publicationSettled={publicationSettled}
           openRequestKey={s26OpenRequestKey}
         />
@@ -2839,7 +2840,17 @@ function ResultScreenContent() {
         visible={scoreHighlightsRequest != null}
         request={scoreHighlightsRequest}
         selection={scoreHighlights}
-        pillarScores={truScore?.breakdown}
+        pillarScores={
+          truScore
+            ? {
+                ...truScore.breakdown,
+                Ethics:
+                  truScore.publication?.claims.publicationStatus === 'rated'
+                    ? truScore.publication.claims.publishedScore
+                    : null,
+              }
+            : undefined
+        }
         firedAdjustments={scoreHighlightsLedger ?? undefined}
         onClose={() => setScoreHighlightsRequest(null)}
         onOpenInAppL3={openInAppScoreHighlightL3}

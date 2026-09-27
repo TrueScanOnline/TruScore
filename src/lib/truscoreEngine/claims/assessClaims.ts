@@ -34,6 +34,11 @@ export interface AssessClaimsInput {
   benchmarkChecks: ClaimsBenchmarkCheck[];
   /** Other certification schemes fired (Fairtrade, MSC, …) — prevents assessed_neutral. */
   otherCertificationFired: boolean;
+  /**
+   * Admitted primary affirmation that the reviewed packet has no governed claim or certification.
+   * Silence, an empty register and incomplete coverage are not this flag.
+   */
+  admittedPacketAbsence?: boolean;
   registerVersionExpected?: string;
 }
 
@@ -245,7 +250,7 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
   let assessment_state: ClaimsAssessmentResult['assessment_state'] = 'unassessed';
   if (anyScoringClaimOrCert || anyBenchmarkFired) {
     assessment_state = 'assessed_scored';
-  } else if (input.packetCoverageState === 'complete') {
+  } else if (input.packetCoverageState === 'complete' || input.admittedPacketAbsence === true) {
     assessment_state = 'assessed_neutral';
     const nonScoring = [
       ...setC.map((c) => ({ display_text: c.display_text })),
@@ -256,10 +261,9 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
     assessment_state = 'unassessed';
   }
 
-  // Rateability Packet lane — consume Claims assessment truth only (no invented coverage).
-  // Assessed when: governed packet claims/certs were admitted & evaluated (incl. zero adjustment),
-  // OR upstream packet_coverage_state === complete (no-claim complete coverage).
-  // incomplete + empty/unmatched OFF labels must NOT become “no packet claims” / assessed.
+  // Packet lane is assessed only from governed evaluation:
+  // a matched claim, a fired certification, or an admitted packet-absence affirmation.
+  // packet_coverage_state, register silence, empty OFF labels and missing cert data do not.
   const packetFamilies = new Set(['packet_context', 'organic_claim_only', 'certifications']);
   const packetOrCertScored =
     packetPoints !== 0 ||
@@ -268,13 +272,10 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
     input.otherCertificationFired ||
     fired.some((f) => packetFamilies.has(f.family));
   const governedPacketClaimsAdmitted = match.matched.length > 0;
+  const admittedPacketAbsence = input.admittedPacketAbsence === true;
   let publication_packet_lane: ClaimsAssessmentResult['publication_packet_lane'] =
     'unassessed_or_incomplete';
-  if (
-    packetOrCertScored ||
-    governedPacketClaimsAdmitted ||
-    input.packetCoverageState === 'complete'
-  ) {
+  if (packetOrCertScored || governedPacketClaimsAdmitted || admittedPacketAbsence) {
     publication_packet_lane = 'assessed';
     if (
       governedPacketClaimsAdmitted &&

@@ -55,11 +55,7 @@ function withClaimsAssessment(
     Pick<ClaimsAssessmentResult, 'assessment_state' | 'packet_coverage_state' | 'benchmark_checks'>
 ): EthicsPillarResult {
   const derivedPacketLane: ClaimsAssessmentResult['publication_packet_lane'] =
-    assessment.publication_packet_lane ??
-    (assessment.assessment_state === 'assessed_neutral' ||
-    assessment.assessment_state === 'assessed_scored'
-      ? 'assessed'
-      : 'unassessed_or_incomplete');
+    assessment.publication_packet_lane ?? 'unassessed_or_incomplete';
   const full: ClaimsAssessmentResult = {
     schema_version: 'claims-assessment-v1',
     register_version: 'test',
@@ -446,6 +442,7 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
       const ethics = withClaimsAssessment(calculateEthicsPillar(product), {
         assessment_state: 'assessed_neutral',
         packet_coverage_state: 'complete',
+        publication_packet_lane: 'assessed',
         benchmark_checks: [
           { source: 'ktc', status: 'failed' },
           { source: 'bbfaw', status: 'no_finding' },
@@ -503,6 +500,7 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
       const ethics = withClaimsAssessment(calculateEthicsPillar(product), {
         assessment_state: 'assessed_neutral',
         packet_coverage_state: 'complete',
+        publication_packet_lane: 'assessed',
         benchmark_checks: [
           { source: 'ktc', status: 'no_finding' },
           { source: 'bbfaw', status: 'adverse' },
@@ -526,6 +524,7 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
       const ethics = withClaimsAssessment(calculateEthicsPillar(product), {
         assessment_state: 'assessed_neutral',
         packet_coverage_state: 'complete',
+        publication_packet_lane: 'assessed',
         benchmark_checks: [
           { source: 'ktc', status: 'positive' },
           { source: 'bbfaw', status: 'positive' },
@@ -549,6 +548,7 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
       const ethics = withClaimsAssessment(calculateEthicsPillar(product), {
         assessment_state: 'assessed_neutral',
         packet_coverage_state: 'complete',
+        publication_packet_lane: 'assessed',
         benchmark_checks: [
           { source: 'ktc', status: 'failed' },
           { source: 'bbfaw', status: 'no_finding' },
@@ -756,6 +756,7 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
       let ethics = withClaimsAssessment(calculateEthicsPillar(product), {
         assessment_state: 'assessed_neutral',
         packet_coverage_state: 'complete',
+        publication_packet_lane: 'assessed',
         benchmark_checks: [
           { source: 'ktc', status: 'no_finding' },
           { source: 'bbfaw', status: 'no_finding' },
@@ -815,11 +816,11 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
   });
 
   describe('S — surfaces / contribution', () => {
-    it('S-01: Claims packet opportunity routeStatus=future; no live routeKey', () => {
+    it('S-01: unresolved Claims packet opportunity binds to the live packet claims route', () => {
       const snap = settleFromProduct(baseProduct());
-      if (snap.claims.publicationStatus === 'nr') {
-        expect(snap.claims.s26?.contributionOpportunity?.routeStatus).toBe('future');
-        expect(snap.claims.s26?.contributionOpportunity?.routeKey).toBeUndefined();
+      if (snap.claims.assessmentLanes.packet !== 'assessed') {
+        expect(snap.claims.s26?.contributionOpportunity?.routeStatus).toBe('live');
+        expect(snap.claims.s26?.contributionOpportunity?.routeKey).toBe('packet_claims');
       }
     });
 
@@ -984,7 +985,7 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
       expect(assessment.publication_packet_lane).toBe('unassessed_or_incomplete');
     });
 
-    it('complete packet coverage with no governed claims assesses Packet lane (upstream truth)', () => {
+    it('complete packet coverage with no governed claims does not establish packet absence', () => {
       const product = baseProduct({
         brands: '',
         nutriments: { sugars_100g: 1 },
@@ -994,7 +995,7 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
       const assessment = ethics.details.claimsAssessment!;
       expect(assessment.admitted_claims.length).toBe(0);
       expect(assessment.packet_coverage_state).toBe('complete');
-      expect(assessment.publication_packet_lane).toBe('assessed');
+      expect(assessment.publication_packet_lane).toBe('unassessed_or_incomplete');
     });
 
     it('consistent free-text Origins must not populate conflictingFreeTextOrigins', () => {

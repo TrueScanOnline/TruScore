@@ -68,6 +68,8 @@ import {
 /** Optional Claims Rescue inputs (packet admissions + coverage). Defaults fail closed. */
 export interface CalculateEthicsPillarOptions {
   admittedPacketObservations?: AdmittedPacketObservation[];
+  /** Admitted affirmation that the reviewed packet has no governed claim or certification. */
+  admittedPacketAbsence?: boolean;
   packetCoverageState?: PacketCoverageState;
   novaGroup?: number | null;
 }
@@ -440,10 +442,12 @@ export function calculateEthicsPillar(
     certifiedOrganicFired,
     otherCertificationFired,
     benchmarkChecks,
+    admittedPacketAbsence: options?.admittedPacketAbsence === true,
   });
   const userAdmissions = options?.admittedPacketObservations ?? [];
+  const userAbsence = options?.admittedPacketAbsence === true;
   let primaryUserClaimsDependence = false;
-  if (userAdmissions.length > 0) {
+  if (userAdmissions.length > 0 || userAbsence) {
     const baselineBundle = buildClaimsObservationsFromProduct(product, {
       packetCoverageState: options?.packetCoverageState,
     });
@@ -455,6 +459,7 @@ export function calculateEthicsPillar(
       certifiedOrganicFired,
       otherCertificationFired,
       benchmarkChecks,
+      admittedPacketAbsence: false,
     });
     primaryUserClaimsDependence =
       baseline.packet_context_points !== claimsAssessment.packet_context_points ||

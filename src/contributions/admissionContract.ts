@@ -15,6 +15,7 @@ import { isLaneACertificationEvidence } from './certificationLane';
 import {
   ADMISSION_RULE_VERSION,
   BODY_RECEIVER_4A0_UNREGISTERED_REASON,
+  GOVERNED_PACKET_ABSENCE_CLAIM,
   type AssessmentReceiverId,
   type ContributionAdmissionStatus,
 } from './admissionTypes';
@@ -246,8 +247,10 @@ export function computeReceiverEligibility(
   }
 
   if (evidence.domain === 'packet_claims') {
-    const wording = (evidence.exactWording || evidence.claimValue || '').trim();
-    const eligible = wording.length > 0;
+    const absence =
+      evidence.claimValue === GOVERNED_PACKET_ABSENCE_CLAIM && !(evidence.exactWording || '').trim();
+    const wording = (evidence.exactWording || (absence ? '' : evidence.claimValue) || '').trim();
+    const eligible = absence || wording.length > 0;
     return {
       open_origins: empty.open_origins,
       ethics_certifications: empty.ethics_certifications,
@@ -258,7 +261,9 @@ export function computeReceiverEligibility(
         methodologyVersion: 'v0.2',
         basisRuleVersion,
         reason: eligible
-          ? 'admitted packet wording may enter the existing Claims register'
+          ? absence
+            ? 'admitted packet-absence affirmation may resolve the Packet lane'
+            : 'admitted packet wording may enter the existing Claims register'
           : 'packet claim evidence has no exact wording',
       },
     };

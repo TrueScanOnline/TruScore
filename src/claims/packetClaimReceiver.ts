@@ -4,13 +4,24 @@
  */
 
 import { canApplyToProductionReceiver, evidenceKeyOf, selectPrevailingAdmittedEvidence } from '../contributions/admissionContract';
+import { GOVERNED_PACKET_ABSENCE_CLAIM } from '../contributions/admissionTypes';
 import type { ContributionEvidence } from '../contributions/types';
 import type { AdmittedPacketObservation } from '../lib/truscoreEngine/claims/types';
+
+export { GOVERNED_PACKET_ABSENCE_CLAIM };
 
 export type GovernedPacketClaimFact = {
   evidenceId: string;
   exactWording: string;
 };
+
+export function isGovernedPacketAbsence(evidence: ContributionEvidence): boolean {
+  return (
+    evidence.domain === 'packet_claims' &&
+    evidence.claimValue === GOVERNED_PACKET_ABSENCE_CLAIM &&
+    !(evidence.exactWording || '').trim()
+  );
+}
 
 function wordingOf(evidence: ContributionEvidence): string {
   return (evidence.exactWording || evidence.claimValue || '').trim();
@@ -21,7 +32,7 @@ export function selectPrevailingPacketClaims(evidence: ContributionEvidence[]): 
   const seen = new Set<string>();
   const facts: GovernedPacketClaimFact[] = [];
   for (const candidate of evidence) {
-    if (candidate.domain !== 'packet_claims') continue;
+    if (candidate.domain !== 'packet_claims' || isGovernedPacketAbsence(candidate)) continue;
     const key = evidenceKeyOf(candidate);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -37,6 +48,20 @@ export function selectPrevailingPacketClaims(evidence: ContributionEvidence[]): 
     facts.push({ evidenceId: prevailing.evidenceId, exactWording });
   }
   return facts;
+}
+
+/** Later admitted absence affirmation for this barcode prevails. Wording rows are a different subject. */
+export function selectAdmittedPacketAbsence(evidence: ContributionEvidence[]): boolean {
+  const absenceRows = evidence.filter(isGovernedPacketAbsence);
+  const first = absenceRows[0];
+  if (!first) return false;
+  const prevailing = selectPrevailingAdmittedEvidence(evidence, {
+    barcode: first.barcode,
+    domain: 'packet_claims',
+    claimKey: first.claimKey,
+    variantKey: first.variantKey,
+  });
+  return !!prevailing && canApplyToProductionReceiver(prevailing, 'claims_packet');
 }
 
 export function packetClaimsToObservations(facts: GovernedPacketClaimFact[]): AdmittedPacketObservation[] {

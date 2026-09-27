@@ -52,6 +52,8 @@ export type TruScoreScoringContext = {
   promotedContributionEvidence?: import('../../contributions/types').ContributionEvidence[];
   /** Admitted packet wording for the existing Claims register. */
   admittedPacketObservations?: import('./claims/types').AdmittedPacketObservation[];
+  /** Admitted affirmation that the reviewed packet has no governed claim or certification. */
+  admittedPacketAbsence?: boolean;
   /**
    * Wave 3 Rateability: when false, publicationStatus stays `checking` (first-paint barrier).
    * Defaults to true for engine/diagnostic settlement of a complete product snapshot.
@@ -185,6 +187,7 @@ export function calculateTruScore(
     const ethicsResult = runPillarOrThrow('Ethics', () =>
       calculateEthicsPillar(scoringProduct, {
         admittedPacketObservations: scoringContext?.admittedPacketObservations,
+        admittedPacketAbsence: scoringContext?.admittedPacketAbsence === true,
       })
     );
     const openResult = runPillarOrThrow('Open', () => calculateOpenPillar(scoringProduct));

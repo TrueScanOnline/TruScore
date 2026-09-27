@@ -76,6 +76,7 @@ const TruScore = React.memo(function TruScore({
     if (pub) {
       return pub.publicationStatus === 'rated' ? pub.publishedScore : null;
     }
+    if (pillar === 'Ethics') return null;
     const value = breakdown[pillar];
     return typeof value === 'number' && !Number.isNaN(value) ? value : null;
   };

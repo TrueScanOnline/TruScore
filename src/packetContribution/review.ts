@@ -47,16 +47,20 @@ export async function addManualEvidenceUnit(params: {
   originPercentage?: number;
   originPercentageQualifier?: import('../config/contributionPolicy').OriginPercentageQualifier;
   originQualification?: import('../contributions/originStructured').OriginQualification;
+  packetAbsenceAffirmation?: boolean;
 }): Promise<PacketEvidenceUnit> {
   const session = await getSession(params.sessionId);
   if (!session) throw new Error('packet_session_missing');
   const statement = params.statement.trim();
-  if (!statement && !params.nutritionAmounts?.length) throw new Error('manual_statement_required');
+  if (!statement && !params.nutritionAmounts?.length && params.packetAbsenceAffirmation !== true) {
+    throw new Error('manual_statement_required');
+  }
   const unit: PacketEvidenceUnit = {
     unitId: `eu_manual_${session.sessionId}_${session.units.length + 1}`,
     sessionId: session.sessionId,
     domain: params.domain,
-    statement: statement || 'Nutrition facts',
+    statement: statement || (params.packetAbsenceAffirmation ? '' : 'Nutrition facts'),
+    packetAbsenceAffirmation: params.packetAbsenceAffirmation === true,
     support: params.support,
     origin: 'manual',
     extractionRunId: null,

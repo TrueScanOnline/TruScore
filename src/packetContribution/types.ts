@@ -96,6 +96,11 @@ export type PacketEvidenceUnit = {
   domain: EvidenceUnitDomain;
   /** User-visible proposal or manual statement. Not governed truth. */
   statement: string;
+  /**
+   * Reviewed affirmation that this packet has no governed claim or certification.
+   * Machine silence and an empty statement do not set this.
+   */
+  packetAbsenceAffirmation?: boolean;
   support: SupportCoverage;
   origin: 'machine_proposal' | 'manual';
   extractionRunId: string | null;

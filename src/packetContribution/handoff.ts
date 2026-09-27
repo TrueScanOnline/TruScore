@@ -98,6 +98,33 @@ export async function handoffReviewedUnits(params: {
       });
       continue;
     }
+    if (unit.domain === 'packet_claims' && unit.packetAbsenceAffirmation === true) {
+      const evidence = await submit({
+        barcode: session.barcode,
+        domain: 'packet_claims',
+        claimValue: 'governed_packet_absence',
+        packetAbsence: true,
+        imageUrl: source ? `private://${source.privateKey}` : undefined,
+        variantKey: session.variantKey,
+        asProductionEpoch: true,
+      });
+      if (evidence.admissionStatus === 'admitted') {
+        throw new Error('packet_handoff_must_not_admit');
+      }
+      units[index] = {
+        ...unit,
+        governedEvidenceId: evidence.evidenceId,
+        submittedAt: params.now ?? Date.now(),
+      };
+      results.push({
+        unitId: unit.unitId,
+        outcome: 'submitted',
+        evidenceId: evidence.evidenceId,
+        admissionStatus: 'submitted',
+        idempotent: false,
+      });
+      continue;
+    }
     if (unit.domain === 'packet_claims') {
       const wording = unit.statement.trim();
       if (!wording) {

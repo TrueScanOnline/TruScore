@@ -179,6 +179,29 @@ export default function PacketContributionModal({
     }
   };
 
+  const affirmPacketAbsence = async () => {
+    if (!session) return;
+    const asset = session.sourceAssets.find((item) => item.framing === 'targeted');
+    if (!asset) {
+      setNotice('Mark a photo as only the relevant pack information before confirming that no claim or certification is present.');
+      return;
+    }
+    const unit = await addManualEvidenceUnit({
+      sessionId: session.sessionId,
+      domain: 'packet_claims',
+      statement: '',
+      packetAbsenceAffirmation: true,
+      support: { coverage: 'whole_image', sourceAssetId: asset.assetId },
+    });
+    await applyReviewAction({
+      sessionId: session.sessionId,
+      unitId: unit.unitId,
+      action: 'manual_entry',
+    });
+    setSession(await openSessionForProduct({ barcode, variantKey }));
+    setNotice('Saved for submission. This step does not score the product.');
+  };
+
   const addManual = async () => {
     if (!session || !statement.trim()) return;
     const asset = session.sourceAssets.find((item) => item.framing === 'targeted') || session.sourceAssets[0];
@@ -386,10 +409,17 @@ export default function PacketContributionModal({
           <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={addManual}>
             <Text style={styles.buttonText}>Save statement</Text>
           </TouchableOpacity>
+          {domain === 'packet_claims' ? (
+            <TouchableOpacity style={[styles.button, { backgroundColor: colors.card }]} onPress={affirmPacketAbsence}>
+              <Text style={[styles.buttonText, { color: colors.text }]}>No claim or certification on this pack</Text>
+            </TouchableOpacity>
+          ) : null}
 
           {(session?.units || []).map((unit) => (
             <View key={unit.unitId} style={[styles.card, { borderColor: colors.border }]}>
-              <Text style={{ color: colors.text }}>{unit.statement}</Text>
+              <Text style={{ color: colors.text }}>
+                {unit.packetAbsenceAffirmation ? 'No claim or certification on this pack' : unit.statement}
+              </Text>
               <Text style={{ color: colors.textSecondary }}>{unit.status}</Text>
               {unit.status === 'open' ? (
                 <TouchableOpacity onPress={() => setAside(unit.unitId)}>

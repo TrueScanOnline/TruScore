@@ -206,8 +206,8 @@ export interface ClaimsAssessmentResult {
   diagnostics: ClaimsDiagnostic[];
   /**
    * Rateability Packet publication lane (orthogonal to assessment_state / fired ledger).
-   * `assessed` when a governed packet/certifications assessment completed — including
-   * zero-adjustment outcomes after OFF-label (or other admitted) evidence was evaluated.
+   * `assessed` only after a governed packet claim/certification was evaluated, or after an
+   * admitted packet-absence affirmation. Coverage flags, silence and unmatched text do not set it.
    */
   publication_packet_lane: 'assessed' | 'unassessed_or_incomplete';
 }

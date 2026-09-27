@@ -28,6 +28,9 @@ export type AssessmentReceiverId = (typeof ASSESSMENT_RECEIVER_IDS)[number];
 
 export const ADMISSION_RULE_VERSION = 'wave4a.0-admission-v1' as const;
 
+/** Admitted affirmation that a reviewed packet has no governed claim or certification. Not register wording. */
+export const GOVERNED_PACKET_ABSENCE_CLAIM = 'governed_packet_absence';
+
 /**
  * 4A.0 fail-closed default for the Body receiver slot.
  * Not a permanent architectural prohibition — no approved Body receiving

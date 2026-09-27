@@ -37,26 +37,21 @@ export function isBenchmarkCheckSuccessfullyAssessed(check: ClaimsBenchmarkCheck
   return false;
 }
 
-/** Packet lane: consume Claims publication_packet_lane — not score movement or invented coverage. */
+/**
+ * Packet lane publication predicate.
+ * True only when Claims assessment set publication_packet_lane to assessed.
+ * Coverage, claim counts, point movement, an empty ledger and assessment_state are not inputs.
+ */
 export function isClaimsPacketLaneAssessed(assessment: ClaimsAssessmentResult | undefined): boolean {
-  if (!assessment) return false;
-  if (assessment.publication_packet_lane === 'assessed') return true;
-  if (assessment.publication_packet_lane === 'unassessed_or_incomplete') return false;
-  // Backward-compatible fallback if older assessment objects lack the field
-  if (assessment.packet_coverage_state === 'complete') return true;
-  if (assessment.admitted_claims?.length > 0) return true;
-  if (assessment.packet_context_points !== 0) return true;
-  if (assessment.organic_claim_only_points !== 0) return true;
-  const packetFamilies = new Set(['packet_context', 'organic_claim_only', 'certifications']);
-  if (assessment.fired_adjustments.some((f) => packetFamilies.has(f.family))) return true;
-  return false;
+  return assessment?.publication_packet_lane === 'assessed';
 }
 
-function ethicsCertFired(ethics: EthicsPillarResult): boolean {
-  const d = ethics.details;
-  if (d.certificationsAdjustment !== 0) return true;
-  if (d.certificationsWinningScheme) return true;
-  return false;
+/** Consumer Claims score. Internal base 15 stays on internalScore and is not this value. */
+export function consumerClaimsScore(
+  claims: { publicationStatus: string; publishedScore: number | null } | null | undefined
+): number | null {
+  if (!claims || claims.publicationStatus !== 'rated') return null;
+  return typeof claims.publishedScore === 'number' ? claims.publishedScore : null;
 }
 
 /** Both KTC and BBFAW must reach successful terminal outcomes (§6). */
@@ -74,8 +69,9 @@ function claimsContributionOpportunity(packet: ClaimsLaneState): ContributionOpp
   if (packet === 'assessed') return undefined;
   return {
     material: true,
-    domain: 'claims_packet_evidence',
-    routeStatus: 'future',
+    domain: 'packet_claims',
+    routeStatus: 'live',
+    routeKey: 'packet_claims',
   };
 }
 
@@ -103,8 +99,7 @@ export function publishClaimsPillar(args: {
   const sourceQuality = defaultProductSourceQuality(product);
   const assessment = ethics.details.claimsAssessment;
 
-  const packetAssessed =
-    isClaimsPacketLaneAssessed(assessment) || ethicsCertFired(ethics);
+  const packetAssessed = isClaimsPacketLaneAssessed(assessment);
   const benchmarkAssessed = isClaimsBenchmarkLaneAssessed(assessment);
 
   const packet: ClaimsLaneState = packetAssessed ? 'assessed' : 'unassessed_or_incomplete';
