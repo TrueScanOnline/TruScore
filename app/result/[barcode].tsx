@@ -40,6 +40,10 @@ import NutritionTable from '../../src/components/NutritionTable';
 import type { NutritionDetailsFocusTarget } from '../../src/components/NutritionDetailsModal';
 import { Image as ExpoImage } from 'expo-image';
 import { PRODUCT_ORIGINS_EXPLAINER_HOOK } from '../../src/origins/governedFacts';
+import {
+  PACKET_CLAIMS_CARD_TITLE,
+  PACKET_CLAIMS_EXPLAINER_HOOK,
+} from '../../src/claims/packetClaimReceiver';
 import { admittedUserOriginPrevailsForDisplay } from '../../src/origins/offUserPrecedence';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
@@ -263,6 +267,7 @@ function ResultScreenContent() {
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [manufacturingCountryModalVisible, setManufacturingCountryModalVisible] = useState(false);
   const [productOriginsExplainerVisible, setProductOriginsExplainerVisible] = useState(false);
+  const [packetClaimsExplainerVisible, setPacketClaimsExplainerVisible] = useState(false);
   const [originsContributionPrefill, setOriginsContributionPrefill] = useState<{
     structuredOriginCountry?: string;
     conflictingFreeTextOrigins?: string;
@@ -2423,18 +2428,21 @@ function ResultScreenContent() {
             },
           ]}
           accessibilityRole="button"
-          accessibilityLabel={t('result.certifications')}
+          accessibilityLabel={PACKET_CLAIMS_CARD_TITLE}
           accessibilityHint={t('result.certificationsCardOpenEditA11y', 'Opens edit product to update certifications')}
         >
           <View style={styles.certificationsCardHeaderRow}>
             <View style={styles.certificationsCardTitleRow}>
               <Ionicons name="shield-checkmark" size={24} color="#16a085" />
               <Text style={[styles.cardTitle, styles.certificationsCardTitleText, { color: colors.text }]}>
-                {t('result.packetClaims', 'Packet Claims')}
+                {PACKET_CLAIMS_CARD_TITLE}
               </Text>
             </View>
             <Ionicons name="create-outline" size={22} color={colors.primary} accessibilityLabel={t('common.edit', 'Edit')} />
           </View>
+          <TouchableOpacity onPress={() => setPacketClaimsExplainerVisible(true)}>
+            <Text style={{ color: colors.primary }}>L1 / L2 / L3</Text>
+          </TouchableOpacity>
           {(product.rveelGovernedPacketClaims || []).map((claim) => (
             <Text key={claim.evidenceId} style={{ color: colors.text }}>
               {claim.exactWording}
@@ -2449,14 +2457,14 @@ function ResultScreenContent() {
                 <CertBadge key={cert.id} certification={cert} />
               ))}
             </View>
-          ) : (
+          ) : product._publication?.claims.publicationStatus === 'rated' ? (
             <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
               {t(
                 'result.certificationsEmpty',
                 'No certifications on file. Tap this card to add labels from the pack (e.g. organic, fair trade).'
               )}
             </Text>
-          )}
+          ) : null}
           <TouchableOpacity
             onPress={handleEditProduct}
             activeOpacity={0.7}
@@ -2910,6 +2918,22 @@ function ResultScreenContent() {
         onCapture={handleCaptureImage}
         barcode={barcode}
       />
+
+      <Modal visible={packetClaimsExplainerVisible} animationType="slide" onRequestClose={() => setPacketClaimsExplainerVisible(false)}>
+        <View style={{ flex: 1, padding: 24, backgroundColor: colors.background }}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>{PACKET_CLAIMS_CARD_TITLE}</Text>
+          {PACKET_CLAIMS_EXPLAINER_HOOK.levels.map((level) => (
+            <Text key={level} style={{ color: colors.text, marginTop: 12 }}>
+              {level}
+              {'\n'}
+              {PACKET_CLAIMS_EXPLAINER_HOOK.content}
+            </Text>
+          ))}
+          <TouchableOpacity onPress={() => setPacketClaimsExplainerVisible(false)}>
+            <Text style={{ color: colors.primary, marginTop: 24 }}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
 
       <Modal visible={productOriginsExplainerVisible} animationType="slide" onRequestClose={() => setProductOriginsExplainerVisible(false)}>
         <View style={{ flex: 1, padding: 24, backgroundColor: colors.background }}>

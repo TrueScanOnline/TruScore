@@ -4,15 +4,20 @@ import { __setContributionCreationRecordClassForTests } from '../../../contribut
 import { submitGovernedEvidence } from '../../../contributions/submitGovernedEvidence';
 import type { ContributionEvidence } from '../../../contributions/types';
 import {
+  PACKET_CLAIMS_CARD_TITLE,
+  PACKET_CLAIMS_EXPLAINER_HOOK,
   selectAdmittedPacketAbsence,
   selectPrevailingPacketClaims,
 } from '../../../claims/packetClaimReceiver';
 import { calculateEthicsPillar } from '../../../lib/truscoreEngine/pillars/ethicsPillar';
 import {
+  consumerClaimsCommentary,
   consumerClaimsScore,
   isClaimsPacketLaneAssessed,
   publishClaimsPillar,
 } from '../../../lib/rateability/claimsPublication';
+import fs from 'fs';
+import path from 'path';
 import { selectScoreHighlights } from '../../../lib/scoreHighlights';
 import {
   addManualEvidenceUnit,
@@ -89,6 +94,13 @@ describe('Wave 4A.4 Claims publication closure', () => {
     expect(published.s26?.code).toBe('CLAIMS_NR');
     expect(published.s26?.contributionOpportunity?.routeStatus).toBe('live');
     expect(published.s26?.contributionOpportunity?.routeKey).toBe('packet_claims');
+    expect(consumerClaimsScore(published)).toBeNull();
+    expect(
+      consumerClaimsCommentary(published.publicationStatus, {
+        route: 'assessed_neutral',
+        l2: 'We checked the packet for the product claims and certifications we currently assess, and our independent company-level benchmark checks did not produce a positive or adverse finding.',
+      })
+    ).toBeNull();
   });
 
   it('does not let incomplete coverage, silence, or an empty register establish packet absence', () => {
@@ -152,6 +164,11 @@ describe('Wave 4A.4 Claims publication closure', () => {
     expect(packetOnly.confidence).toBe('limited');
     expect(packetOnly.confidenceReasonCode).toBe('claims_primary_contribution_limited');
     expect(consumerClaimsScore(packetOnly)).toBe(15);
+    expect(`${consumerClaimsScore(packetOnly)}/25`).toBe('15/25');
+    expect(assessment.fired_adjustments.some((row) => row.points === 0)).toBe(false);
+    expect(consumerClaimsCommentary(packetOnly.publicationStatus, assessment.commentary_payload)?.route).not.toBe(
+      'none'
+    );
   });
 
   it('publishes benchmark-only and both-lane neutral results from the lane flags', () => {
@@ -178,6 +195,9 @@ describe('Wave 4A.4 Claims publication closure', () => {
     expect(benchmarkOnly.confidence).toBe('limited');
     expect(benchmarkOnly.s26?.code).toBe('CLAIMS_LIMITED_BENCHMARK_ONLY');
     expect(benchmarkOnly.assessmentLanes.packet).toBe('unassessed_or_incomplete');
+    expect(benchmarkOnly.publishedScore).toBe(15);
+    expect(`${benchmarkOnly.publishedScore}/25`).toBe('15/25');
+    expect(ethics.adjustments.filter((row) => row.highlightEligible && row.id.startsWith('claims.'))).toHaveLength(0);
 
     const both = calculateEthicsPillar(food(), { admittedPacketAbsence: true });
     const bothAssessment = both.details.claimsAssessment!;
@@ -222,6 +242,82 @@ describe('Wave 4A.4 Claims publication closure', () => {
     });
     expect(independent.confidence).toBe('high');
     expect(independent.publishedScore).toBe(15);
+    expect(bothAssessment.fired_adjustments).toHaveLength(0);
+    expect(`${dependent.publishedScore}/25`).toBe('15/25');
+  });
+
+  it('lets the later admitted packet row prevail when absence and a positive claim contradict', async () => {
+    const positive = admitEvidence(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'packet_claims',
+        claimValue: 'High protein',
+        exactWording: 'High protein',
+        asProductionEpoch: true,
+      }),
+      { admissionReason: 'primary_user_packet_claim', timestamp: 1 }
+    );
+    const absence = admitEvidence(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'packet_claims',
+        claimValue: 'ignored',
+        packetAbsence: true,
+        asProductionEpoch: true,
+      }),
+      { admissionReason: 'primary_user_packet_absence', timestamp: 2 }
+    );
+    if (!positive.ok || !absence.ok) throw new Error('admission failed');
+    const history = [positive.evidence, absence.evidence];
+    expect(history.map((row) => row.evidenceId).sort()).toEqual(
+      [positive.evidence.evidenceId, absence.evidence.evidenceId].sort()
+    );
+    expect(selectPrevailingPacketClaims(history)).toHaveLength(0);
+    expect(selectAdmittedPacketAbsence(history)).toBe(true);
+
+    const organic = admitEvidence(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'packet_claims',
+        claimValue: 'Organic',
+        exactWording: 'Organic',
+        asProductionEpoch: true,
+      }),
+      { admissionReason: 'primary_user_packet_claim', timestamp: 3 }
+    );
+    if (!organic.ok) throw new Error(organic.reason);
+    const after = [...history, organic.evidence];
+    expect(after).toHaveLength(3);
+    expect(selectAdmittedPacketAbsence(after)).toBe(false);
+    expect(selectPrevailingPacketClaims(after).map((row) => row.exactWording)).toEqual(['Organic']);
+
+    const compatible = admitEvidence(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'packet_claims',
+        claimValue: 'Gluten free',
+        exactWording: 'Gluten free',
+        asProductionEpoch: true,
+      }),
+      { admissionReason: 'primary_user_packet_claim', timestamp: 4 }
+    );
+    if (!compatible.ok) throw new Error(compatible.reason);
+    const wordings = selectPrevailingPacketClaims([...after, compatible.evidence]).map((row) => row.exactWording);
+    expect(wordings.sort()).toEqual(['Gluten free', 'Organic']);
+  });
+
+  it('keeps the Packet Claims title and an empty L1/L2/L3 hook', () => {
+    expect(PACKET_CLAIMS_CARD_TITLE).toBe('Packet Claims');
+    expect(PACKET_CLAIMS_EXPLAINER_HOOK).toEqual({
+      surface: 'packet_claims',
+      levels: ['L1', 'L2', 'L3'],
+      editorial: 'deferred',
+      content: '(Awaiting founder input)',
+    });
+    const screen = fs.readFileSync(path.join(__dirname, '../../../../app/result/[barcode].tsx'), 'utf8');
+    expect(screen).toContain('{PACKET_CLAIMS_CARD_TITLE}');
+    expect(screen).toContain('PACKET_CLAIMS_EXPLAINER_HOOK.levels.map');
+    expect(screen).toContain('PACKET_CLAIMS_EXPLAINER_HOOK.content');
   });
 
   it('submits a reviewed absence affirmation and does not treat capture or extraction silence as assessment', async () => {

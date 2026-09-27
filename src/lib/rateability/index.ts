@@ -11,6 +11,7 @@ export { publishPlanetPillar } from './planetPublication';
 export {
   publishClaimsPillar,
   consumerClaimsScore,
+  consumerClaimsCommentary,
   isClaimsPacketLaneAssessed,
   isClaimsBenchmarkLaneAssessed,
   isBenchmarkCheckSuccessfullyAssessed,

@@ -54,6 +54,12 @@ export function consumerClaimsScore(
   return typeof claims.publishedScore === 'number' ? claims.publishedScore : null;
 }
 
+/** Consumer commentary follows publication. An NR Claims result does not carry a neutral or scoring story. */
+export function consumerClaimsCommentary<T>(publicationStatus: string, commentary: T | null | undefined): T | null {
+  if (publicationStatus !== 'rated') return null;
+  return commentary ?? null;
+}
+
 /** Both KTC and BBFAW must reach successful terminal outcomes (§6). */
 export function isClaimsBenchmarkLaneAssessed(
   assessment: ClaimsAssessmentResult | undefined

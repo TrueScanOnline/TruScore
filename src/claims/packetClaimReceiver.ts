@@ -5,10 +5,21 @@
 
 import { canApplyToProductionReceiver, evidenceKeyOf, selectPrevailingAdmittedEvidence } from '../contributions/admissionContract';
 import { GOVERNED_PACKET_ABSENCE_CLAIM } from '../contributions/admissionTypes';
+import { canonicalizeVariantKey } from '../contributions/evidenceVersion';
 import type { ContributionEvidence } from '../contributions/types';
 import type { AdmittedPacketObservation } from '../lib/truscoreEngine/claims/types';
 
 export { GOVERNED_PACKET_ABSENCE_CLAIM };
+
+export const PACKET_CLAIMS_CARD_TITLE = 'Packet Claims';
+
+/** Same L1/L2/L3 provision as Product Origins. Editorial copy is not authored here. */
+export const PACKET_CLAIMS_EXPLAINER_HOOK = {
+  surface: 'packet_claims' as const,
+  levels: ['L1', 'L2', 'L3'] as const,
+  editorial: 'deferred' as const,
+  content: '(Awaiting founder input)' as const,
+};
 
 export type GovernedPacketClaimFact = {
   evidenceId: string;
@@ -27,12 +38,32 @@ function wordingOf(evidence: ContributionEvidence): string {
   return (evidence.exactWording || evidence.claimValue || '').trim();
 }
 
-/** Later admitted row for the same wording prevails. Other wordings stay. */
-export function selectPrevailingPacketClaims(evidence: ContributionEvidence[]): GovernedPacketClaimFact[] {
+function packetSubjectKey(evidence: ContributionEvidence): string {
+  return `${evidence.barcode}|${canonicalizeVariantKey(evidence.variantKey) ?? ''}`;
+}
+
+function admittedAtOf(evidence: ContributionEvidence): number {
+  return evidence.admission?.admittedAt ?? evidence.updatedAt ?? 0;
+}
+
+type CurrentPacketControl = {
+  facts: GovernedPacketClaimFact[];
+  absence: boolean;
+};
+
+/**
+ * Same barcode and variant are one packet subject.
+ * Compatible wordings stay together.
+ * An absence affirmation and a positive claim cannot both control that subject:
+ * the later admitted row prevails. Earlier rows stay in the store.
+ */
+function selectCurrentPacketControl(evidence: ContributionEvidence[]): CurrentPacketControl {
   const seen = new Set<string>();
-  const facts: GovernedPacketClaimFact[] = [];
+  const positives: Array<GovernedPacketClaimFact & { subject: string; admittedAt: number }> = [];
+  const absenceBySubject = new Map<string, ContributionEvidence>();
+
   for (const candidate of evidence) {
-    if (candidate.domain !== 'packet_claims' || isGovernedPacketAbsence(candidate)) continue;
+    if (candidate.domain !== 'packet_claims') continue;
     const key = evidenceKeyOf(candidate);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -43,25 +74,56 @@ export function selectPrevailingPacketClaims(evidence: ContributionEvidence[]): 
       variantKey: candidate.variantKey,
     });
     if (!prevailing || !canApplyToProductionReceiver(prevailing, 'claims_packet')) continue;
+    const subject = packetSubjectKey(prevailing);
+    if (isGovernedPacketAbsence(prevailing)) {
+      const current = absenceBySubject.get(subject);
+      if (!current || admittedAtOf(prevailing) >= admittedAtOf(current)) {
+        absenceBySubject.set(subject, prevailing);
+      }
+      continue;
+    }
     const exactWording = wordingOf(prevailing);
     if (!exactWording) continue;
-    facts.push({ evidenceId: prevailing.evidenceId, exactWording });
+    positives.push({
+      evidenceId: prevailing.evidenceId,
+      exactWording,
+      subject,
+      admittedAt: admittedAtOf(prevailing),
+    });
   }
-  return facts;
+
+  const facts: GovernedPacketClaimFact[] = [];
+  let absence = false;
+  const subjects = new Set<string>([
+    ...positives.map((row) => row.subject),
+    ...absenceBySubject.keys(),
+  ]);
+  for (const subject of subjects) {
+    const subjectPositives = positives.filter((row) => row.subject === subject);
+    const absenceRow = absenceBySubject.get(subject);
+    if (!absenceRow) {
+      facts.push(...subjectPositives.map(({ evidenceId, exactWording }) => ({ evidenceId, exactWording })));
+      continue;
+    }
+    const absenceAt = admittedAtOf(absenceRow);
+    const laterPositives = subjectPositives.filter((row) => row.admittedAt > absenceAt);
+    if (laterPositives.length > 0) {
+      facts.push(...laterPositives.map(({ evidenceId, exactWording }) => ({ evidenceId, exactWording })));
+      continue;
+    }
+    absence = true;
+  }
+  return { facts, absence };
 }
 
-/** Later admitted absence affirmation for this barcode prevails. Wording rows are a different subject. */
+/** Later admitted row for the same wording prevails. A later absence on the same packet does not. */
+export function selectPrevailingPacketClaims(evidence: ContributionEvidence[]): GovernedPacketClaimFact[] {
+  return selectCurrentPacketControl(evidence).facts;
+}
+
+/** True when the later admitted row for a packet subject is an absence affirmation. */
 export function selectAdmittedPacketAbsence(evidence: ContributionEvidence[]): boolean {
-  const absenceRows = evidence.filter(isGovernedPacketAbsence);
-  const first = absenceRows[0];
-  if (!first) return false;
-  const prevailing = selectPrevailingAdmittedEvidence(evidence, {
-    barcode: first.barcode,
-    domain: 'packet_claims',
-    claimKey: first.claimKey,
-    variantKey: first.variantKey,
-  });
-  return !!prevailing && canApplyToProductionReceiver(prevailing, 'claims_packet');
+  return selectCurrentPacketControl(evidence).absence;
 }
 
 export function packetClaimsToObservations(facts: GovernedPacketClaimFact[]): AdmittedPacketObservation[] {
