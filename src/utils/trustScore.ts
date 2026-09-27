@@ -13,6 +13,10 @@ import { getLocalEvidenceForBarcode } from '../contributions/evidenceStore';
 import { toScoringProduct } from '../contributions/eligibilityBoundary';
 import { offDispatchConsumerCopy, latestOffDispatchStatus } from '../ingredientsNutrition/offDispatch';
 import { selectPrevailingOriginFacts } from '../origins/governedFacts';
+import {
+  packetClaimsToObservations,
+  selectPrevailingPacketClaims,
+} from '../claims/packetClaimReceiver';
 
 /**
  * Scoring eligibility after Review 1 Pass 2 (NA-003):
@@ -79,11 +83,15 @@ export async function calculateTrustScore(
   const storedEvidence = product.barcode
     ? await getLocalEvidenceForBarcode(product.barcode).catch(() => [])
     : [];
-  const localEvidence = storedEvidence.filter((row) => row.domain === 'ingredients_nutrition');
+  const localEvidence = storedEvidence.filter(
+    (row) => row.domain === 'ingredients_nutrition' || row.domain === 'certifications'
+  );
   const governedOrigins = selectPrevailingOriginFacts(storedEvidence);
+  const governedPacketClaims = selectPrevailingPacketClaims(storedEvidence);
   const scoringContext = {
     ...getPlanetScoringContext(),
     promotedContributionEvidence: localEvidence,
+    admittedPacketObservations: packetClaimsToObservations(governedPacketClaims),
     ...(options?.publicationSettled !== undefined
       ? { publicationSettled: options.publicationSettled }
       : {}),
@@ -171,6 +179,7 @@ export async function calculateTrustScore(
     ingredients_text: displayIngredients,
     rveelPacketNutritionStatus: nutritionStatus,
     rveelGovernedOrigins: governedOrigins.length > 0 ? governedOrigins : undefined,
+    rveelGovernedPacketClaims: governedPacketClaims.length > 0 ? governedPacketClaims : undefined,
     trust_score: truScore,
     trust_score_breakdown: breakdown,
     // Add v1.3 metadata for UI transparency warnings

@@ -22,6 +22,7 @@ export const ASSESSMENT_RECEIVER_IDS = [
   'open_origins',
   'ethics_certifications',
   'body_ingredients_nutrition',
+  'claims_packet',
 ] as const;
 export type AssessmentReceiverId = (typeof ASSESSMENT_RECEIVER_IDS)[number];
 

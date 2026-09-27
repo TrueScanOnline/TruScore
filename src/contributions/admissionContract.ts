@@ -138,6 +138,13 @@ export function computeReceiverEligibility(
       basisRuleVersion,
       reason: BODY_RECEIVER_4A0_UNREGISTERED_REASON,
     },
+    claims_packet: {
+      eligible: false,
+      methodologyId: 'claims_rescue_v0_2',
+      methodologyVersion: 'v0.2',
+      basisRuleVersion,
+      reason: 'not_evaluated',
+    },
   } satisfies NonNullable<ContributionEvidence['receiverEligibility']>;
 
   if (!carriesCurrentProductionEpoch(evidence) || !isGovernedAdmitted(evidence)) {
@@ -151,6 +158,10 @@ export function computeReceiverEligibility(
         reason: 'requires current production epoch and governed admission',
       },
       body_ingredients_nutrition: empty.body_ingredients_nutrition,
+      claims_packet: {
+        ...empty.claims_packet,
+        reason: 'requires current production epoch and governed admission',
+      },
     };
   }
 
@@ -168,6 +179,10 @@ export function computeReceiverEligibility(
         reason: `governance state ${evidence.state} closes eligibility`,
       },
       body_ingredients_nutrition: empty.body_ingredients_nutrition,
+      claims_packet: {
+        ...empty.claims_packet,
+        reason: `governance state ${evidence.state} closes eligibility`,
+      },
     };
   }
 
@@ -197,6 +212,7 @@ export function computeReceiverEligibility(
       },
       ethics_certifications: empty.ethics_certifications,
       body_ingredients_nutrition: bodyEntry,
+      claims_packet: empty.claims_packet,
     };
   }
 
@@ -225,6 +241,26 @@ export function computeReceiverEligibility(
             : 'certifications not assessment-eligible for ethics receiver',
       },
       body_ingredients_nutrition: bodyEntry,
+      claims_packet: empty.claims_packet,
+    };
+  }
+
+  if (evidence.domain === 'packet_claims') {
+    const wording = (evidence.exactWording || evidence.claimValue || '').trim();
+    const eligible = wording.length > 0;
+    return {
+      open_origins: empty.open_origins,
+      ethics_certifications: empty.ethics_certifications,
+      body_ingredients_nutrition: bodyEntry,
+      claims_packet: {
+        eligible,
+        methodologyId: 'claims_rescue_v0_2',
+        methodologyVersion: 'v0.2',
+        basisRuleVersion,
+        reason: eligible
+          ? 'admitted packet wording may enter the existing Claims register'
+          : 'packet claim evidence has no exact wording',
+      },
     };
   }
 

@@ -105,6 +105,8 @@ export interface EthicsPillarResult {
     certificationsOrganicMatchSource?: 'off_tags_or_hierarchy' | 'label_or_cert_text' | 'product_name' | null;
     /** Wave 3 Claims Rescue assessment truth (S28 / Confidence handoff). */
     claimsAssessment?: ClaimsAssessmentResult;
+    /** True when admitted packet wording changed the Claims assessment versus OFF-only evidence. */
+    primaryUserClaimsDependence?: boolean;
   };
 }
 
@@ -439,6 +441,27 @@ export function calculateEthicsPillar(
     otherCertificationFired,
     benchmarkChecks,
   });
+  const userAdmissions = options?.admittedPacketObservations ?? [];
+  let primaryUserClaimsDependence = false;
+  if (userAdmissions.length > 0) {
+    const baselineBundle = buildClaimsObservationsFromProduct(product, {
+      packetCoverageState: options?.packetCoverageState,
+    });
+    const baseline = assessClaimsPacketAndOrganic({
+      admittedObservations: baselineBundle.observations,
+      packetCoverageState: baselineBundle.packetCoverageState,
+      nutrientContext,
+      novaGroup: options?.novaGroup ?? null,
+      certifiedOrganicFired,
+      otherCertificationFired,
+      benchmarkChecks,
+    });
+    primaryUserClaimsDependence =
+      baseline.packet_context_points !== claimsAssessment.packet_context_points ||
+      baseline.organic_claim_only_points !== claimsAssessment.organic_claim_only_points ||
+      (claimsAssessment.publication_packet_lane === 'assessed' &&
+        baseline.publication_packet_lane !== 'assessed');
+  }
 
   for (const event of claimsAssessment.fired_adjustments) {
     const id = event.id as EthicsV37AdjustmentId;
@@ -487,6 +510,7 @@ export function calculateEthicsPillar(
       certificationsEligibleSchemes: certEval.eligibleSchemes,
       certificationsOrganicMatchSource: certEval.organicMatchSource ?? null,
       claimsAssessment,
+      primaryUserClaimsDependence,
     },
   };
 

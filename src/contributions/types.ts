@@ -31,7 +31,7 @@ export type DisputeResponse = ContributorResponse & {
 export type ContributionEvidence = {
   evidenceId: string;
   barcode: string;
-  domain: Extract<ContributionDomain, 'origins' | 'certifications' | 'ingredients_nutrition'>;
+  domain: Extract<ContributionDomain, 'origins' | 'certifications' | 'ingredients_nutrition' | 'packet_claims'>;
   /** Increments when the same GTIN+domain claim wording/value changes. */
   evidenceVersion: number;
   /** Normalized claim key (country name or OFF label tag). */

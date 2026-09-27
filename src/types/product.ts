@@ -180,6 +180,8 @@ export interface Product {
   rveelPacketNutritionStatus?: string;
   /** Admitted Product Origins facts for the existing origins card. Not an Open score input. */
   rveelGovernedOrigins?: import('../origins/governedFacts').GovernedOriginFact[];
+  /** Admitted packet wording shown on the Packet Claims card. Not a set label. */
+  rveelGovernedPacketClaims?: import('../claims/packetClaimReceiver').GovernedPacketClaimFact[];
   ingredients_text_en?: string;
   ingredients?: Ingredient[];
   ingredients_analysis?: {

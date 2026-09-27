@@ -40,6 +40,8 @@ const S26_CLAIMS: Record<string, string> = {
     'We assessed packet claims and certifications, but the governed company benchmark checks have not both been successfully completed.',
   CLAIMS_LIMITED_BENCHMARK_ONLY:
     'We completed the governed company benchmark checks, but packet claims and certifications have not yet been substantively assessed.',
+  CLAIMS_LIMITED_PRIMARY_CONTRIBUTION:
+    'This Claims result uses packet information you added. Confidence is Limited.',
   CLAIMS_MODERATE:
     'We assessed both packet claims and certifications and the governed company benchmark checks. The available evidence supports a Moderate-confidence result.',
   CLAIMS_HIGH:

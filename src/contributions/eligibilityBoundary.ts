@@ -23,6 +23,7 @@ import { scoreBodyMvpAdditives } from '../lib/truscoreEngine/pillars/bodyAdditiv
 import { evaluateWholeProduceEligibility } from '../lib/truscoreEngine/wholeProduceEligibility';
 import { assignNOVA1IfHighConfidence } from '../utils/novaAssessment';
 import { registerIngredientsNutritionBodyReceiver } from '../ingredientsNutrition/bodyReceiver';
+import { evaluateEthicsCertifications } from '../services/ethicsCertificationsService';
 
 export type ProductWithContributionMark = Product & {
   [RVEEL_PENDING_FIELD_MARK]?: RveelPendingContributionFields;
@@ -30,6 +31,8 @@ export type ProductWithContributionMark = Product & {
   _database?: string;
   /** True when this scoring copy's Body result depends on admitted primary packet evidence. */
   _rveelPrimaryContributionBodyDependence?: boolean;
+  /** True when certification scoring changed because of admitted primary packet evidence. */
+  _rveelPrimaryContributionClaimsDependence?: boolean;
 };
 
 const USER_ORIGIN_KEYS = [
@@ -97,7 +100,16 @@ function applyPromotedCertifications(
   }
 
   if (prevailingTags.length > 0) {
+    const before = evaluateEthicsCertifications(next);
     next.labels_tags = [...new Set([...(next.labels_tags || []), ...prevailingTags])];
+    const after = evaluateEthicsCertifications(next);
+    if (
+      before.adjustment !== after.adjustment ||
+      before.winningScheme !== after.winningScheme ||
+      before.organicMatchSource !== after.organicMatchSource
+    ) {
+      next._rveelPrimaryContributionClaimsDependence = true;
+    }
   }
 }
 

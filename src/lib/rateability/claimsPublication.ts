@@ -164,15 +164,25 @@ export function publishClaimsPillar(args: {
     packetAssessed && benchmarkAssessed ? 'moderate' : 'limited';
   const packetAuth = !!authoritative?.claimsPacket;
   const benchmarkAuth = !!authoritative?.claimsBenchmark;
-  const confidence = applyAuthoritativeHighUplift({
+  let confidence = applyAuthoritativeHighUplift({
     structural:
       structural === 'moderate' && packetAuth && benchmarkAuth ? 'high' : structural,
     bothLanesResolved: packetAssessed && benchmarkAssessed,
     laneAAuthoritative: packetAuth,
     laneBAuthoritative: benchmarkAuth,
   });
+  const primaryContributionDependent =
+    (product as Product & { _rveelPrimaryContributionClaimsDependence?: boolean })
+      ._rveelPrimaryContributionClaimsDependence === true ||
+    ethics.details.primaryUserClaimsDependence === true;
+  if (primaryContributionDependent && (confidence === 'moderate' || confidence === 'high')) {
+    confidence = 'limited';
+  }
 
-  const code = resolveClaimsS26(packet, benchmark, confidence, true);
+  const code =
+    primaryContributionDependent && packetAssessed && benchmarkAssessed
+      ? 'CLAIMS_LIMITED_PRIMARY_CONTRIBUTION'
+      : resolveClaimsS26(packet, benchmark, confidence, true);
   const opp = claimsContributionOpportunity(packet);
 
   return {
@@ -187,8 +197,9 @@ export function publishClaimsPillar(args: {
       explanation: formatS26Explanation(code),
       ...(opp ? { contributionOpportunity: opp } : {}),
     },
-    confidenceReasonCode:
-      confidence === 'high'
+    confidenceReasonCode: primaryContributionDependent
+      ? 'claims_primary_contribution_limited'
+      : confidence === 'high'
         ? 'claims_both_lanes_authoritative'
         : confidence === 'moderate'
           ? 'claims_both_lanes'

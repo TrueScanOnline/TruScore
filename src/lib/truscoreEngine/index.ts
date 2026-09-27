@@ -50,6 +50,8 @@ export type TruScoreScoringContext = {
    * Pending evidence must not be passed here.
    */
   promotedContributionEvidence?: import('../../contributions/types').ContributionEvidence[];
+  /** Admitted packet wording for the existing Claims register. */
+  admittedPacketObservations?: import('./claims/types').AdmittedPacketObservation[];
   /**
    * Wave 3 Rateability: when false, publicationStatus stays `checking` (first-paint barrier).
    * Defaults to true for engine/diagnostic settlement of a complete product snapshot.
@@ -180,7 +182,11 @@ export function calculateTruScore(
     // Calculate each pillar independently — any technical failure → unavailable (not a numeric score)
     const bodyResult = runPillarOrThrow('Body', () => calculateBodyPillar(scoringProduct));
     const planetResult = runPillarOrThrow('Planet', () => calculatePlanetPillar(scoringProduct));
-    const ethicsResult = runPillarOrThrow('Ethics', () => calculateEthicsPillar(scoringProduct));
+    const ethicsResult = runPillarOrThrow('Ethics', () =>
+      calculateEthicsPillar(scoringProduct, {
+        admittedPacketObservations: scoringContext?.admittedPacketObservations,
+      })
+    );
     const openResult = runPillarOrThrow('Open', () => calculateOpenPillar(scoringProduct));
 
     const requireFinite = (pillar: string, score: unknown): number => {

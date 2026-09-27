@@ -7,7 +7,12 @@
  * Runtime-neutral: safe for React Native and Vercel Node (no platform imports).
  */
 
-export const CONTRIBUTION_DOMAINS = ['ingredients_nutrition', 'origins', 'certifications'] as const;
+export const CONTRIBUTION_DOMAINS = [
+  'ingredients_nutrition',
+  'origins',
+  'certifications',
+  'packet_claims',
+] as const;
 export type ContributionDomain = (typeof CONTRIBUTION_DOMAINS)[number];
 
 export const CONTRIBUTION_LIFECYCLE_STATES = [
@@ -89,6 +94,11 @@ export const CONTRIBUTION_POLICY = {
     /** Lane A recognised schemes may promote; Lane B stays non-scoring. */
     canonicalPromotionPermission: true,
   },
+  packetClaims: {
+    /** Recognition is register-owned. Admission does not require a second user. */
+    independentConfirmationsRequired: 1,
+    canonicalPromotionPermission: true,
+  },
 } as const;
 
 export type ContributionPolicy = typeof CONTRIBUTION_POLICY;
@@ -103,6 +113,7 @@ export type CommunityVerificationThresholds = {
 export function getDomainPolicy(domain: ContributionDomain) {
   if (domain === 'ingredients_nutrition') return CONTRIBUTION_POLICY.ingredientsNutrition;
   if (domain === 'origins') return CONTRIBUTION_POLICY.origins;
+  if (domain === 'packet_claims') return CONTRIBUTION_POLICY.packetClaims;
   return CONTRIBUTION_POLICY.certifications;
 }
 

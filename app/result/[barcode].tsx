@@ -2430,11 +2430,19 @@ function ResultScreenContent() {
             <View style={styles.certificationsCardTitleRow}>
               <Ionicons name="shield-checkmark" size={24} color="#16a085" />
               <Text style={[styles.cardTitle, styles.certificationsCardTitleText, { color: colors.text }]}>
-                {t('result.certifications')}
+                {t('result.packetClaims', 'Packet Claims')}
               </Text>
             </View>
             <Ionicons name="create-outline" size={22} color={colors.primary} accessibilityLabel={t('common.edit', 'Edit')} />
           </View>
+          {(product.rveelGovernedPacketClaims || []).map((claim) => (
+            <Text key={claim.evidenceId} style={{ color: colors.text }}>
+              {claim.exactWording}
+            </Text>
+          ))}
+          {(product._publication?.claims.confidenceReasonCode === 'claims_primary_contribution_limited') ? (
+            <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
+          ) : null}
           {product.certifications && product.certifications.length > 0 ? (
             <View style={styles.certificationsContainer}>
               {product.certifications.map((cert) => (

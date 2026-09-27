@@ -37,7 +37,7 @@ import type { ContributionDisputeReason, ContributionDomain } from '../config/co
 
 export async function submitGovernedEvidence(params: {
   barcode: string;
-  domain: Extract<ContributionDomain, 'origins' | 'certifications'>;
+  domain: Extract<ContributionDomain, 'origins' | 'certifications' | 'packet_claims'>;
   claimValue: string;
   labelsTags?: string[];
   imageUrl?: string;
@@ -64,7 +64,9 @@ export async function submitGovernedEvidence(params: {
   const claimKey = normalizeClaimKey(
     params.domain === 'origins' && structured
       ? `${structured.claimType}:${structured.primaryCountry}`
-      : claimValue
+      : params.domain === 'packet_claims'
+        ? params.exactWording || claimValue
+        : claimValue
   );
   const exactWording =
     params.exactWording ||
