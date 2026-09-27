@@ -1,7 +1,9 @@
 /**
  * Transparency Origins Disclosure receiver.
- * Open scoring and origins_tags stay unchanged. An admitted ingredient-origin fact
- * can resolve the existing lane only when it meets that lane's current requirements.
+ * Open scoring and origins_tags stay unchanged.
+ * ingredient_origin, grown_in, and produced_in may enter the existing v15
+ * completeness rules. made_in and packed_in do not. grown_in and produced_in
+ * do not become a scored state unless the admitted evidence meets one.
  */
 
 import type { Product } from '../types/product';
@@ -39,28 +41,47 @@ function exactPercentageInExistingBand(percentage: number): boolean {
   );
 }
 
+const DISCLOSURE_CLAIM_TYPES = new Set(['ingredient_origin', 'grown_in', 'produced_in']);
+
+function isQualifiedQualifier(fact: GovernedOriginFact): boolean {
+  return (
+    fact.percentageQualifier === 'at_least' ||
+    fact.percentageQualifier === 'more_than' ||
+    fact.percentageQualifier === 'less_than'
+  );
+}
+
+function subjectMatchesSingleIngredient(
+  facts: GovernedOriginFact[],
+  tokens: string[],
+  singleEligible: boolean
+): boolean {
+  return (
+    singleEligible &&
+    tokens.length === 1 &&
+    facts.length === 1 &&
+    ingredientSubjectKey(facts[0].ingredientSubject) === ingredientSubjectKey(tokens[0])
+  );
+}
+
 /**
- * Fail closed unless the admitted facts establish ingredient-origin disclosure
- * the existing lane already accepts: single-ingredient complete, an exact
- * completeness percentage in a registered band, or a qualified/unquantified
- * partial statement. Manufacture, pack, grow, and produce claims do not.
+ * Existing v15 states only: single-ingredient complete, an exact completeness
+ * percentage in a registered band, or a qualified/unquantified partial statement.
+ * grown_in and produced_in use the same states and do not receive the
+ * unquantified-partial path from a country alone.
  */
 export function resolveGovernedOriginsDisclosure(
   product: Product,
   open: OpenPillarResult,
   facts: GovernedOriginFact[] | undefined
 ): OriginsDisclosureResolution {
-  const ingredientOrigins = (facts || []).filter((fact) => fact.claimType === 'ingredient_origin');
-  if (ingredientOrigins.length === 0) return { resolved: false };
+  const scoringFacts = (facts || []).filter((fact) => DISCLOSURE_CLAIM_TYPES.has(fact.claimType));
+  if (scoringFacts.length === 0) return { resolved: false };
 
-  const countries = [...new Set(ingredientOrigins.flatMap(recognizedCountries))];
+  const countries = [...new Set(scoringFacts.flatMap(recognizedCountries))];
   if (countries.length !== 1) return { resolved: false };
 
-  if (
-    ingredientOrigins.some(
-      (fact) => fact.percentage != null && fact.percentageQualifier == null
-    )
-  ) {
+  if (scoringFacts.some((fact) => fact.percentage != null && fact.percentageQualifier == null)) {
     return { resolved: false };
   }
 
@@ -69,36 +90,68 @@ export function resolveGovernedOriginsDisclosure(
   const single = ingredients.usable
     ? singleIngredientEvidentlyCompleteEligible(ingredients.scoringText, open.details.governedFlagCount)
     : { eligible: false };
-  const subjectMatchesSingle =
-    single.eligible &&
-    tokens.length === 1 &&
-    ingredientOrigins.length === 1 &&
-    ingredientSubjectKey(ingredientOrigins[0].ingredientSubject) === ingredientSubjectKey(tokens[0]);
 
-  const fact = ingredientOrigins.length === 1 ? ingredientOrigins[0] : undefined;
-  if (subjectMatchesSingle && fact && (fact.percentage == null || (fact.percentageQualifier === 'exactly' && fact.percentage === 100))) {
+  const ingredientOrigins = scoringFacts.filter((fact) => fact.claimType === 'ingredient_origin');
+  const placeOrigins = scoringFacts.filter(
+    (fact) => fact.claimType === 'grown_in' || fact.claimType === 'produced_in'
+  );
+
+  const ingredientMatch = subjectMatchesSingleIngredient(ingredientOrigins, tokens, single.eligible);
+  const placeMatch = subjectMatchesSingleIngredient(placeOrigins, tokens, single.eligible);
+  const ingredientFact = ingredientOrigins.length === 1 ? ingredientOrigins[0] : undefined;
+  const placeFact = placeOrigins.length === 1 ? placeOrigins[0] : undefined;
+
+  if (
+    ingredientMatch &&
+    ingredientFact &&
+    (ingredientFact.percentage == null ||
+      (ingredientFact.percentageQualifier === 'exactly' && ingredientFact.percentage === 100))
+  ) {
     return { resolved: true, requirement: 'evidently_complete' };
   }
 
   if (
-    subjectMatchesSingle &&
-    fact &&
-    fact.percentageQualifier === 'exactly' &&
-    fact.percentage != null &&
-    exactPercentageInExistingBand(fact.percentage)
+    placeMatch &&
+    placeFact &&
+    placeOrigins.length === scoringFacts.length &&
+    (placeFact.percentage == null ||
+      (placeFact.percentageQualifier === 'exactly' && placeFact.percentage === 100))
+  ) {
+    return { resolved: true, requirement: 'evidently_complete' };
+  }
+
+  if (
+    ingredientMatch &&
+    ingredientFact &&
+    ingredientFact.percentageQualifier === 'exactly' &&
+    ingredientFact.percentage != null &&
+    exactPercentageInExistingBand(ingredientFact.percentage)
   ) {
     return { resolved: true, requirement: 'stated_percentage_band' };
   }
 
-  const qualified = ingredientOrigins.some(
-    (row) =>
-      row.percentageQualifier === 'at_least' ||
-      row.percentageQualifier === 'more_than' ||
-      row.percentageQualifier === 'less_than'
-  );
-  const unquantifiedPartial = ingredientOrigins.every((row) => row.percentage == null);
-  const hasStatement = ingredientOrigins.some((row) => !!row.exactWording?.trim());
-  if (hasStatement && (qualified || (unquantifiedPartial && !single.eligible))) {
+  if (
+    placeMatch &&
+    placeFact &&
+    placeOrigins.length === scoringFacts.length &&
+    placeFact.percentageQualifier === 'exactly' &&
+    placeFact.percentage != null &&
+    exactPercentageInExistingBand(placeFact.percentage)
+  ) {
+    return { resolved: true, requirement: 'stated_percentage_band' };
+  }
+
+  const ingredientQualified = ingredientOrigins.some(isQualifiedQualifier);
+  const ingredientUnquantified =
+    ingredientOrigins.length > 0 && ingredientOrigins.every((row) => row.percentage == null);
+  const ingredientStatement = ingredientOrigins.some((row) => !!row.exactWording?.trim());
+  if (ingredientStatement && (ingredientQualified || (ingredientUnquantified && !single.eligible))) {
+    return { resolved: true, requirement: 'qualified_partial' };
+  }
+
+  const placeQualified = placeOrigins.some(isQualifiedQualifier);
+  const placeStatement = placeOrigins.some((row) => !!row.exactWording?.trim());
+  if (placeStatement && placeQualified) {
     return { resolved: true, requirement: 'qualified_partial' };
   }
 

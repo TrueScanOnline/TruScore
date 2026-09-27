@@ -106,7 +106,9 @@ function toFact(evidence: ContributionEvidence): GovernedOriginFact | null {
     countries: statedCountries(structured),
     exactWording: evidence.exactWording?.trim() || undefined,
     ingredientSubject:
-      structured.claimType === 'ingredient_origin'
+      structured.claimType === 'ingredient_origin' ||
+      structured.claimType === 'grown_in' ||
+      structured.claimType === 'produced_in'
         ? normalizeIngredientSubject(structured.ingredientSubject) || undefined
         : undefined,
     percentage,

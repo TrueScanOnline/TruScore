@@ -54,6 +54,27 @@ export function ingredientOriginsForOffSubject(
 }
 
 /**
+ * True when admitted disclosure evidence for the single ingredient names a different
+ * country from OFF origins_tags or free-text origins. made_in and packed_in are not
+ * scoring subjects.
+ */
+export function admittedScoringOriginConflictsWithOff(
+  product: Product,
+  facts: GovernedOriginFact[] | undefined
+): boolean {
+  if (admittedIngredientOriginConflictsWithOff(product, facts)) return true;
+  const subject = singleIngredientKey(product);
+  const offKeys = offIngredientOriginKeys(product);
+  if (!subject || offKeys.length === 0) return false;
+  const placeFacts = (facts || []).filter(
+    (fact) => fact.claimType === 'grown_in' || fact.claimType === 'produced_in'
+  );
+  const admittedKeys = [...new Set(placeFacts.flatMap((fact) => recognizedKeys(fact.countries)))];
+  if (admittedKeys.length === 0) return false;
+  return admittedKeys.length !== offKeys.length || admittedKeys.some((key) => !offKeys.includes(key));
+}
+
+/**
  * True when an admitted ingredient-origin fact names a different country from OFF
  * origins_tags or free-text origins for that ingredient.
  */

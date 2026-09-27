@@ -6,7 +6,7 @@
 import type { Product } from '../../types/product';
 import type { OpenPillarResult } from '../truscoreEngine/pillars/openPillar';
 import { resolveGovernedOriginsDisclosure } from '../../origins/disclosureReceiver';
-import { admittedIngredientOriginConflictsWithOff } from '../../origins/offUserPrecedence';
+import { admittedScoringOriginConflictsWithOff } from '../../origins/offUserPrecedence';
 import { formatS26Explanation } from './s26Copy';
 import { applyAuthoritativeHighUplift, defaultProductSourceQuality } from './sourceQuality';
 import type {
@@ -139,7 +139,7 @@ export function publishTransparencyPillar(args: {
     ? 'resolved'
     : 'unassessed';
   const offOriginsResolved = offOriginsDisclosureResolved(open);
-  const admittedConflictsWithOff = admittedIngredientOriginConflictsWithOff(
+  const admittedConflictsWithOff = admittedScoringOriginConflictsWithOff(
     product,
     product.rveelGovernedOrigins
   );

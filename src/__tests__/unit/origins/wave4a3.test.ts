@@ -514,4 +514,144 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(multiPublished.assessmentLanes.origins).toBe('unassessed');
     expect(calculateOpenPillar(multi).details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
   });
+
+  async function placeFact(input: {
+    claimType: 'grown_in' | 'produced_in' | 'made_in' | 'packed_in';
+    country: string;
+    wording: string;
+    subject?: string;
+    percentage?: number;
+    qualifier?: 'at_least' | 'exactly' | 'more_than' | 'less_than';
+  }): Promise<GovernedOriginFact> {
+    const stored = admitAt(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: input.country,
+        exactWording: input.wording,
+        asProductionEpoch: true,
+        originStructured: {
+          claimType: input.claimType,
+          primaryCountry: input.country,
+          ingredientSubject: input.subject,
+          ingredientOriginPercentage: input.percentage,
+          percentageQualifier: input.qualifier,
+        },
+      }),
+      3
+    );
+    const fact = selectPrevailingOriginFacts([stored])[0];
+    if (!fact) throw new Error('expected place origin fact');
+    return fact;
+  }
+
+  it('lets grown_in and produced_in enter disclosure completeness only when a v15 state is established', async () => {
+    const bareGrown = await placeFact({
+      claimType: 'grown_in',
+      country: 'New Zealand',
+      wording: 'Grown in New Zealand',
+    });
+    const bareProduct = honeyProduct([bareGrown]);
+    const bareOpen = calculateOpenPillar(bareProduct);
+    const barePublished = publishTransparencyPillar({ product: bareProduct, open: bareOpen });
+    expect(bareOpen.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(barePublished.assessmentLanes.origins).toBe('unassessed');
+    expect(bareGrown.claimType).toBe('grown_in');
+
+    const qualifiedGrown = await placeFact({
+      claimType: 'grown_in',
+      country: 'New Zealand',
+      wording: 'Grown in New Zealand from at least 80% New Zealand honey',
+      percentage: 80,
+      qualifier: 'at_least',
+    });
+    const qualifiedProduct = honeyProduct([qualifiedGrown]);
+    const qualifiedOpen = calculateOpenPillar(qualifiedProduct);
+    const qualifiedPublished = publishTransparencyPillar({ product: qualifiedProduct, open: qualifiedOpen });
+    expect(qualifiedOpen.score).toBe(bareOpen.score);
+    expect(qualifiedPublished.assessmentLanes.origins).toBe('resolved');
+    expect(qualifiedPublished.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
+    expect(qualifiedPublished.confidence).toBe('limited');
+
+    const produced = await placeFact({
+      claimType: 'produced_in',
+      country: 'New Zealand',
+      wording: 'Honey produced in New Zealand, exactly 80%',
+      subject: 'Honey',
+      percentage: 80,
+      qualifier: 'exactly',
+    });
+    const producedProduct = honeyProduct([produced]);
+    const producedOpen = calculateOpenPillar(producedProduct);
+    const producedPublished = publishTransparencyPillar({ product: producedProduct, open: producedOpen });
+    expect(producedOpen.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(producedPublished.assessmentLanes.origins).toBe('resolved');
+    expect(producedPublished.diagnostic.originsDisclosureRequirement).toBe('stated_percentage_band');
+    expect(produced.ingredientSubject).toBe('Honey');
+  });
+
+  it('does not let made_in or packed_in resolve the Transparency origins lane', async () => {
+    const made = await placeFact({
+      claimType: 'made_in',
+      country: 'New Zealand',
+      wording: 'Made in New Zealand from at least 80% New Zealand ingredients',
+      percentage: 80,
+      qualifier: 'at_least',
+    });
+    const packed = await placeFact({
+      claimType: 'packed_in',
+      country: 'Fiji',
+      wording: 'Packed in Fiji',
+    });
+    const product = honeyProduct([made, packed]);
+    product.origins_tags = ['en:australia'];
+    const open = calculateOpenPillar(product);
+    const published = publishTransparencyPillar({ product, open });
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(published.assessmentLanes.origins).toBe('resolved');
+    expect(published.diagnostic.originsDisclosureSource).toBe('off');
+    expect(published.confidence).toBe('moderate');
+    expect(product.origins_tags).toEqual(['en:australia']);
+    expect(product.rveelGovernedOrigins?.map((fact) => fact.claimType).sort()).toEqual(['made_in', 'packed_in']);
+  });
+
+  it('keeps admitted grown_in ahead of conflicting OFF origin data', async () => {
+    const grown = await placeFact({
+      claimType: 'grown_in',
+      country: 'New Zealand',
+      wording: 'Honey grown in New Zealand from at least 80% New Zealand honey',
+      subject: 'Honey',
+      percentage: 80,
+      qualifier: 'at_least',
+    });
+    const product = honeyProduct([grown]);
+    product.origins_tags = ['en:australia'];
+    const open = calculateOpenPillar(product);
+    const published = publishTransparencyPillar({
+      product,
+      open,
+      authoritative: { transparencyIngredient: true, transparencyOrigins: true },
+    });
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(product.origins_tags).toEqual(['en:australia']);
+    expect(published.assessmentLanes.origins).toBe('resolved');
+    expect(published.confidence).toBe('limited');
+    expect(published.diagnostic.originsDisclosureSource).toBe('primary_contribution');
+    expect(published.diagnostic.admittedUserPrevailsOverOff).toBe(true);
+    expect(published.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
+
+    const insufficient = await placeFact({
+      claimType: 'produced_in',
+      country: 'New Zealand',
+      wording: 'Produced in New Zealand',
+    });
+    const blocked = honeyProduct([insufficient]);
+    blocked.origins_tags = ['en:australia'];
+    const blockedOpen = calculateOpenPillar(blocked);
+    const blockedPublished = publishTransparencyPillar({ product: blocked, open: blockedOpen });
+    expect(blocked.origins_tags).toEqual(['en:australia']);
+    expect(blockedOpen.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(blockedPublished.assessmentLanes.origins).toBe('unassessed');
+    expect(blockedPublished.diagnostic.admittedUserPrevailsOverOff).toBe(true);
+  });
 });
