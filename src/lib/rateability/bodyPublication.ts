@@ -117,14 +117,23 @@ export function publishBodyPillar(args: {
 
   let structural: ConfidenceLevel =
     nutrition === 'resolved' && processing === 'resolved' ? 'moderate' : 'limited';
-  const confidence = applyAuthoritativeHighUplift({
+  let confidence = applyAuthoritativeHighUplift({
     structural: structural === 'moderate' && nutritionAuth && processingAuth ? 'high' : structural,
     bothLanesResolved: nutrition === 'resolved' && processing === 'resolved',
     laneAAuthoritative: nutritionAuth,
     laneBAuthoritative: processingAuth,
   });
+  const primaryContributionDependent =
+    (product as Product & { _rveelPrimaryContributionBodyDependence?: boolean })
+      ._rveelPrimaryContributionBodyDependence === true;
+  if (primaryContributionDependent && (confidence === 'moderate' || confidence === 'high')) {
+    confidence = 'limited';
+  }
 
-  const code = resolveBodyS26(nutrition, processing, confidence, true);
+  const code =
+    primaryContributionDependent && nutrition === 'resolved' && processing === 'resolved'
+      ? 'BODY_LIMITED_PRIMARY_CONTRIBUTION'
+      : resolveBodyS26(nutrition, processing, confidence, true);
   const opp = bodyContributionOpportunity(nutrition, processing);
 
   return {
@@ -140,7 +149,9 @@ export function publishBodyPillar(args: {
       ...(opp ? { contributionOpportunity: opp } : {}),
     },
     confidenceReasonCode:
-      confidence === 'high'
+      primaryContributionDependent
+        ? 'body_primary_contribution_limited'
+        : confidence === 'high'
         ? 'body_both_lanes_authoritative'
         : confidence === 'moderate'
           ? 'body_both_lanes'

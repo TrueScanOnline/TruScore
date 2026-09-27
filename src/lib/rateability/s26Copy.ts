@@ -14,6 +14,8 @@ const S26_BODY: Record<string, string> = {
     'We could assess nutritional quality, but we do not yet have a usable food-processing assessment.',
   BODY_LIMITED_PROCESSING_ONLY:
     'We could assess food processing, but we do not yet have a usable nutritional-quality assessment.',
+  BODY_LIMITED_PRIMARY_CONTRIBUTION:
+    'This Body result uses packet information you added. Confidence is Limited.',
   BODY_MODERATE:
     'We could assess both nutritional quality and food processing. The available product evidence supports a Moderate-confidence result.',
   BODY_HIGH:

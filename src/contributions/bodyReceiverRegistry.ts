@@ -22,7 +22,9 @@ const registeredBodyPredicates: BodyReceiverPredicate[] = [];
 
 /** Production API for later packages — not used by 4A.0 callers. */
 export function registerBodyReceiverPredicate(predicate: BodyReceiverPredicate): () => void {
-  registeredBodyPredicates.push(predicate);
+  if (!registeredBodyPredicates.includes(predicate)) {
+    registeredBodyPredicates.push(predicate);
+  }
   return () => {
     const idx = registeredBodyPredicates.indexOf(predicate);
     if (idx >= 0) registeredBodyPredicates.splice(idx, 1);

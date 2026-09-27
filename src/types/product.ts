@@ -176,6 +176,8 @@ export interface Product {
 
   // Ingredients
   ingredients_text?: string;
+  /** Short consumer status for a saved packet ingredients or nutrition contribution. */
+  rveelPacketNutritionStatus?: string;
   ingredients_text_en?: string;
   ingredients?: Ingredient[];
   ingredients_analysis?: {

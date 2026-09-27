@@ -1,4 +1,5 @@
 import { submitGovernedEvidence } from '../contributions/submitGovernedEvidence';
+import { submitIngredientsNutritionEvidence } from '../ingredientsNutrition/governed';
 import { getSession, upsertSession } from './sessionStore';
 import { supportIsBounded } from './review';
 import type { PacketEvidenceUnit } from './types';
@@ -63,6 +64,41 @@ export async function handoffReviewedUnits(params: {
       results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'unbounded_support' });
       continue;
     }
+    const source = session.sourceAssets.find((asset) => asset.assetId === unit.support.sourceAssetId);
+    if (unit.domain === 'ingredients_nutrition') {
+      const nutriments = unit.section === 'nutrition' ? unit.nutriments : undefined;
+      const ingredientsText = unit.section === 'nutrition' ? undefined : unit.statement;
+      const hasNutrition = !!nutriments && Object.values(nutriments).some((value) => Number.isFinite(value));
+      if (!ingredientsText?.trim() && !hasNutrition) {
+        results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'no_established_facts' });
+        continue;
+      }
+      const submitted = await submitIngredientsNutritionEvidence({
+        barcode: session.barcode,
+        variantKey: session.variantKey,
+        ingredientsText,
+        nutriments,
+        nutritionBasis: unit.nutritionBasis,
+        nutritionComplete: false,
+        imageUrl: source ? `private://${source.privateKey}` : undefined,
+      });
+      if (submitted.admissionStatus === 'admitted') {
+        throw new Error('packet_handoff_must_not_admit');
+      }
+      units[index] = {
+        ...unit,
+        governedEvidenceId: submitted.evidenceId,
+        submittedAt: params.now ?? Date.now(),
+      };
+      results.push({
+        unitId: unit.unitId,
+        outcome: 'submitted',
+        evidenceId: submitted.evidenceId,
+        admissionStatus: 'submitted',
+        idempotent: false,
+      });
+      continue;
+    }
     if (unit.domain !== 'origins' && unit.domain !== 'certifications') {
       results.push({
         unitId: unit.unitId,
@@ -71,7 +107,6 @@ export async function handoffReviewedUnits(params: {
       });
       continue;
     }
-    const source = session.sourceAssets.find((asset) => asset.assetId === unit.support.sourceAssetId);
     const evidence = await submit({
       barcode: session.barcode,
       domain: unit.domain,

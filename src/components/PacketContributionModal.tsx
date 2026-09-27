@@ -61,6 +61,7 @@ export default function PacketContributionModal({
   const [busy, setBusy] = useState(false);
   const [statement, setStatement] = useState('');
   const [domain, setDomain] = useState<EvidenceUnitDomain>('unspecified');
+  const [section, setSection] = useState<'ingredients' | 'nutrition'>('ingredients');
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
@@ -179,11 +180,23 @@ export default function PacketContributionModal({
       setNotice('Mark the photo as only the relevant information, or take a closer photo, before saving this statement.');
       return;
     }
+    const sugars = Number(statement);
+    const nutritionNumbers =
+      domain === 'ingredients_nutrition' && section === 'nutrition' && Number.isFinite(sugars)
+        ? { sugars_100g: sugars }
+        : undefined;
+    if (domain === 'ingredients_nutrition' && section === 'nutrition' && !nutritionNumbers) {
+      setNotice('Enter one nutrition value as a number. A partial entry is not a complete panel, and it does not create a Nutri-Score or NOVA group.');
+      return;
+    }
     const unit = await addManualEvidenceUnit({
       sessionId: session.sessionId,
       domain,
-      statement,
+      statement: nutritionNumbers ? `Sugars ${sugars} per 100g` : statement,
       support: { coverage: 'whole_image', sourceAssetId: asset.assetId },
+      section: domain === 'ingredients_nutrition' ? section : undefined,
+      nutriments: nutritionNumbers,
+      nutritionBasis: nutritionNumbers ? 'per_100g' : undefined,
     });
     const reviewed = await applyReviewAction({
       sessionId: session.sessionId,
@@ -291,6 +304,20 @@ export default function PacketContributionModal({
               </TouchableOpacity>
             ))}
           </View>
+          {domain === 'ingredients_nutrition' ? (
+            <View style={styles.row}>
+              {(['ingredients', 'nutrition'] as const).map((item) => (
+                <TouchableOpacity key={item} onPress={() => setSection(item)}>
+                  <Text style={{ color: section === item ? colors.primary : colors.textSecondary }}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+          {domain === 'ingredients_nutrition' ? (
+            <Text style={[styles.body, { color: colors.textSecondary }]}>
+              Ingredients and nutrition can be saved separately. A partial nutrition entry is not a complete panel, and it does not create a Nutri-Score or NOVA group.
+            </Text>
+          ) : null}
           <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={addManual}>
             <Text style={styles.buttonText}>Save statement</Text>
           </TouchableOpacity>

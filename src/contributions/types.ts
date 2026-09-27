@@ -31,7 +31,7 @@ export type DisputeResponse = ContributorResponse & {
 export type ContributionEvidence = {
   evidenceId: string;
   barcode: string;
-  domain: Extract<ContributionDomain, 'origins' | 'certifications'>;
+  domain: Extract<ContributionDomain, 'origins' | 'certifications' | 'ingredients_nutrition'>;
   /** Increments when the same GTIN+domain claim wording/value changes. */
   evidenceVersion: number;
   /** Normalized claim key (country name or OFF label tag). */
@@ -52,6 +52,17 @@ export type ContributionEvidence = {
   imageUrl?: string;
   /** Exact extracted/confirmed packet wording/transcript. */
   exactWording?: string;
+  /**
+   * Ingredients & Nutrition payload. Nutrition values are for OFF handoff only.
+   * They are not a local Nutri-Score or NOVA input.
+   */
+  ingredientsNutrition?: {
+    ingredientsText?: string;
+    nutriments?: Record<string, number>;
+    nutritionBasis?: 'per_100g' | 'per_serving';
+    /** True only when the consumer confirmed the panel is complete. Default false. */
+    nutritionComplete: boolean;
+  };
   state: ContributionLifecycleState;
   confirmations: ContributorResponse[];
   disputes: DisputeResponse[];

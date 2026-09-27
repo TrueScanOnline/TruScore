@@ -105,7 +105,11 @@ export type PacketEvidenceUnit = {
   reviewAction?: ReviewAction;
   correctionText?: string;
   chosenOption?: string;
-  /** Set only after a 4A.0 submit (not admission). */
+  /** Ingredients list versus nutrition facts. Omitted for other domains. */
+  section?: 'ingredients' | 'nutrition';
+  nutriments?: Record<string, number>;
+  nutritionBasis?: 'per_100g' | 'per_serving';
+  /** Set only after a governed submit (not admission). */
   governedEvidenceId?: string;
   submittedAt?: number;
 };

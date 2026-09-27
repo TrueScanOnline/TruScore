@@ -2444,6 +2444,11 @@ function ResultScreenContent() {
         ) : null}
 
         {/* Ingredients */}
+        {product.rveelPacketNutritionStatus ? (
+          <Text style={[styles.certificationsUpdateButtonText, { color: colors.textSecondary, marginBottom: 8 }]}>
+            {product.rveelPacketNutritionStatus}
+          </Text>
+        ) : null}
         {product.ingredients_text && (() => {
           // Filter out barcode patterns (8-14 digits) from ingredients_text
           let ingredientsText = product.ingredients_text.trim();

@@ -25,6 +25,7 @@ function hasActiveResponse(evidence: ContributionEvidence, contributorId: string
 }
 
 function computeScoringEligible(evidence: ContributionEvidence): boolean {
+  if (evidence.domain !== 'origins' && evidence.domain !== 'certifications') return false;
   const policy = getCommunityVerificationPolicy(evidence.domain);
   if (!policy.canonicalPromotionPermission) return false;
   if (evidence.domain === 'origins') return true;
@@ -53,6 +54,10 @@ function recomputeState(evidence: ContributionEvidence): ContributionEvidence {
   if (evidence.state === 'superseded' || evidence.state === 'withdrawn') {
     const closed = { ...evidence, scoringEligible: false, canonicalPromoted: false };
     return applyProductionReceiverRefresh(closed);
+  }
+
+  if (evidence.domain === 'ingredients_nutrition') {
+    return applyProductionReceiverRefresh(evidence);
   }
 
   const disputes = uniqueActiveDisputes(evidence);
@@ -138,6 +143,9 @@ export function confirmEvidence(
   contributorId: string,
   timestamp = Date.now()
 ): { ok: boolean; evidence: ContributionEvidence; reason?: string } {
+  if (evidence.domain === 'ingredients_nutrition') {
+    return { ok: false, evidence, reason: 'community_verification_not_applicable' };
+  }
   if (evidence.state === 'superseded' || evidence.state === 'withdrawn') {
     return { ok: false, evidence, reason: 'closed' };
   }
@@ -177,6 +185,9 @@ export function disputeEvidence(
   timestamp = Date.now(),
   note?: string
 ): { ok: boolean; evidence: ContributionEvidence; reason?: string } {
+  if (evidence.domain === 'ingredients_nutrition') {
+    return { ok: false, evidence, reason: 'community_verification_not_applicable' };
+  }
   if (evidence.state === 'superseded' || evidence.state === 'withdrawn') {
     return { ok: false, evidence, reason: 'closed' };
   }
@@ -243,6 +254,7 @@ export function automaticWithdrawalEnabled(domain: 'origins' | 'certifications')
 }
 
 export function canPromoteToCanonicalProduct(evidence: ContributionEvidence): boolean {
+  if (evidence.domain !== 'origins' && evidence.domain !== 'certifications') return false;
   const policy = getCommunityVerificationPolicy(evidence.domain);
   if (!policy.canonicalPromotionPermission) return false;
   if (evidence.state !== 'cross_user_eligible') return false;

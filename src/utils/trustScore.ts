@@ -9,6 +9,9 @@ import { assessGovernedNutrientsFromProduct } from '../nutrition/governedNutrien
 import { logger } from './logger';
 import { powershellLogger } from './powershellLogger';
 import { hasCoreTruthAuthority } from '../config/coreTruthProductCacheAuthority';
+import { getLocalEvidenceForBarcode } from '../contributions/evidenceStore';
+import { toScoringProduct } from '../contributions/eligibilityBoundary';
+import { offDispatchConsumerCopy, latestOffDispatchStatus } from '../ingredientsNutrition/offDispatch';
 
 /**
  * Scoring eligibility after Review 1 Pass 2 (NA-003):
@@ -17,6 +20,23 @@ import { hasCoreTruthAuthority } from '../config/coreTruthProductCacheAuthority'
  */
 function hasSufficientDataForTrustScore(product: Product): boolean {
   return hasCoreTruthAuthority(product);
+}
+
+async function packetNutritionStatus(
+  barcode: string | undefined,
+  rows: Awaited<ReturnType<typeof getLocalEvidenceForBarcode>>
+): Promise<string | undefined> {
+  const admitted = rows.filter((row) => row.admissionStatus === 'admitted' && row.ingredientsNutrition);
+  if (admitted.length === 0) return undefined;
+  const dispatchStatus = barcode ? await latestOffDispatchStatus(barcode) : null;
+  if (dispatchStatus === 'sent' || dispatchStatus === 'failed_retryable') {
+    return offDispatchConsumerCopy(dispatchStatus);
+  }
+  const incompleteNutrition = admitted.some(
+    (row) => row.ingredientsNutrition?.nutriments && row.ingredientsNutrition.nutritionComplete !== true
+  );
+  if (incompleteNutrition) return 'Saved in Rveel. This nutrition entry is not a complete panel.';
+  return offDispatchConsumerCopy(null);
 }
 
 /**
@@ -55,13 +75,24 @@ export async function calculateTrustScore(
     hasEcoScore: !!product.ecoscore_grade,
     ecoscore_grade: product.ecoscore_grade,
   });
+  const localEvidence = product.barcode
+    ? (await getLocalEvidenceForBarcode(product.barcode).catch(() => [])).filter(
+        (row) => row.domain === 'ingredients_nutrition'
+      )
+    : [];
   const scoringContext = {
     ...getPlanetScoringContext(),
+    promotedContributionEvidence: localEvidence,
     ...(options?.publicationSettled !== undefined
       ? { publicationSettled: options.publicationSettled }
       : {}),
   };
   const truScoreResult = calculateTruScore(product, undefined, scoringContext);
+  const overlay = toScoringProduct(product, localEvidence);
+  const displayIngredients = product.ingredients_text?.trim()
+    ? product.ingredients_text
+    : overlay?.ingredients_text;
+  const nutritionStatus = await packetNutritionStatus(product.barcode, localEvidence);
 
   // Technical scoring failure → unavailable/non-assessment (never Overall 0 / all-zero pillars)
   if (truScoreResult.scoringUnavailable || truScoreResult.truscore == null) {
@@ -100,7 +131,7 @@ export async function calculateTrustScore(
     // Legacy fields (for backward compatibility and display)
     sustainability: (planet / 25) * 100, // Convert to 0-100 for compatibility
     bodySafety: (body / 25) * 100,
-    processing: calculateProcessingScore(product), // Still calculated for educational display
+    processing: calculateProcessingScore(overlay ?? product), // Still calculated for educational display
     transparency: (open / 25) * 100,
     reasons: [],
   };
@@ -123,9 +154,10 @@ export async function calculateTrustScore(
   // Always build analysis from current product when we have pillar details, so fetch trace
   // reflects this product (e.g. post-merge OFF+Spoonacular), not a cached analysis from
   // an earlier product (e.g. progressive OFF+OBF).
+  const analysisSource = overlay ?? product;
   const analysis =
     truScoreResult.pillarDetails
-      ? buildTruScoreAnalysis(product, truScoreResult)
+      ? buildTruScoreAnalysis(analysisSource, truScoreResult)
       : (truScoreResult.analysis ?? null);
   if (analysis) {
     powershellLogger.truScoreAnalysis(analysis);
@@ -133,6 +165,8 @@ export async function calculateTrustScore(
 
   return {
     ...product,
+    ingredients_text: displayIngredients,
+    rveelPacketNutritionStatus: nutritionStatus,
     trust_score: truScore,
     trust_score_breakdown: breakdown,
     // Add v1.3 metadata for UI transparency warnings

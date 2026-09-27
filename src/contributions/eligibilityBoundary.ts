@@ -19,11 +19,17 @@ import type { ContributionEvidence, RveelPendingContributionFields } from './typ
 import { RVEEL_PENDING_FIELD_MARK } from './types';
 import { canPromoteToCanonicalProduct } from './lifecycle';
 import { carriesCurrentProductionEpoch } from './productionEpoch';
+import { scoreBodyMvpAdditives } from '../lib/truscoreEngine/pillars/bodyAdditiveScoring';
+import { evaluateWholeProduceEligibility } from '../lib/truscoreEngine/wholeProduceEligibility';
+import { assignNOVA1IfHighConfidence } from '../utils/novaAssessment';
+import { registerIngredientsNutritionBodyReceiver } from '../ingredientsNutrition/bodyReceiver';
 
 export type ProductWithContributionMark = Product & {
   [RVEEL_PENDING_FIELD_MARK]?: RveelPendingContributionFields;
   _source?: string;
   _database?: string;
+  /** True when this scoring copy's Body result depends on admitted primary packet evidence. */
+  _rveelPrimaryContributionBodyDependence?: boolean;
 };
 
 const USER_ORIGIN_KEYS = [
@@ -223,6 +229,7 @@ export function toScoringProduct(
 
   applyPromotedCertifications(next, promotedEvidence);
   applyPromotedOrigins(next, promotedEvidence);
+  applyAdmittedIngredientsNutrition(next, promotedEvidence);
 
   delete next[RVEEL_PENDING_FIELD_MARK];
   return next;
@@ -239,6 +246,53 @@ export function markPendingContributionFields(
       ...fields,
     },
   };
+}
+
+function applyAdmittedIngredientsNutrition(
+  next: ProductWithContributionMark,
+  promotedEvidence: ContributionEvidence[]
+): void {
+  registerIngredientsNutritionBodyReceiver();
+  const candidates = promotedEvidence.filter((row) => row.domain === 'ingredients_nutrition');
+  if (candidates.length === 0) return;
+  let chosen: ContributionEvidence | null = null;
+  const seen = new Set<string>();
+  for (const candidate of candidates) {
+    const key = evidenceKeyOf(candidate);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const prevailing = selectPrevailingAdmittedEvidence(promotedEvidence, {
+      barcode: candidate.barcode,
+      domain: 'ingredients_nutrition',
+      claimKey: candidate.claimKey,
+      variantKey: candidate.variantKey,
+    });
+    if (!prevailing || !canApplyToProductionReceiver(prevailing, 'body_ingredients_nutrition')) continue;
+    if (!prevailing.ingredientsNutrition?.ingredientsText?.trim()) continue;
+    if (!chosen || prevailing.evidenceVersion > chosen.evidenceVersion) chosen = prevailing;
+  }
+  const ingredientsText = chosen?.ingredientsNutrition?.ingredientsText?.trim();
+  if (!chosen || !ingredientsText) return;
+  if (next.ingredients_text?.trim()) return;
+
+  const beforeAdditives = scoreBodyMvpAdditives(next);
+  const beforeWholeProduce = evaluateWholeProduceEligibility(next).eligible;
+  const beforeNova = next.nova_group;
+  next.ingredients_text = ingredientsText;
+  if (beforeNova == null) {
+    assignNOVA1IfHighConfidence(next);
+  }
+  const afterAdditives = scoreBodyMvpAdditives(next);
+  const afterWholeProduce = evaluateWholeProduceEligibility(next).eligible;
+  const novaRescueFired =
+    beforeNova == null && next.nova_group === 1 && next.nova1Provenance === 'inferred';
+  const body6Changed =
+    beforeAdditives.elementDeduction !== afterAdditives.elementDeduction ||
+    beforeAdditives.matches.length !== afterAdditives.matches.length;
+  const wholeProduceEnabled = !beforeWholeProduce && afterWholeProduce;
+  if (body6Changed || wholeProduceEnabled || novaRescueFired) {
+    next._rveelPrimaryContributionBodyDependence = true;
+  }
 }
 
 /** Remove scoring-ready origin/cert/nutrition keys from a contribution overlay. */
