@@ -12,6 +12,7 @@ import { hasCoreTruthAuthority } from '../config/coreTruthProductCacheAuthority'
 import { getLocalEvidenceForBarcode } from '../contributions/evidenceStore';
 import { toScoringProduct } from '../contributions/eligibilityBoundary';
 import { offDispatchConsumerCopy, latestOffDispatchStatus } from '../ingredientsNutrition/offDispatch';
+import { selectPrevailingOriginFacts } from '../origins/governedFacts';
 
 /**
  * Scoring eligibility after Review 1 Pass 2 (NA-003):
@@ -75,11 +76,11 @@ export async function calculateTrustScore(
     hasEcoScore: !!product.ecoscore_grade,
     ecoscore_grade: product.ecoscore_grade,
   });
-  const localEvidence = product.barcode
-    ? (await getLocalEvidenceForBarcode(product.barcode).catch(() => [])).filter(
-        (row) => row.domain === 'ingredients_nutrition'
-      )
+  const storedEvidence = product.barcode
+    ? await getLocalEvidenceForBarcode(product.barcode).catch(() => [])
     : [];
+  const localEvidence = storedEvidence.filter((row) => row.domain === 'ingredients_nutrition');
+  const governedOrigins = selectPrevailingOriginFacts(storedEvidence);
   const scoringContext = {
     ...getPlanetScoringContext(),
     promotedContributionEvidence: localEvidence,
@@ -167,6 +168,7 @@ export async function calculateTrustScore(
     ...product,
     ingredients_text: displayIngredients,
     rveelPacketNutritionStatus: nutritionStatus,
+    rveelGovernedOrigins: governedOrigins.length > 0 ? governedOrigins : undefined,
     trust_score: truScore,
     trust_score_breakdown: breakdown,
     // Add v1.3 metadata for UI transparency warnings

@@ -33,6 +33,7 @@ import {
   type NutritionAttribute,
   type NutritionBasis,
 } from '../ingredientsNutrition/nutritionSchema';
+import { PRODUCT_ORIGINS_CLAIM_TYPES, type ProductOriginsClaimType } from '../origins/governedFacts';
 
 type Preview = {
   tempKey: string;
@@ -70,6 +71,7 @@ export default function PacketContributionModal({
   const [nutritionAttribute, setNutritionAttribute] = useState<NutritionAttribute | null>(null);
   const [nutritionBasis, setNutritionBasis] = useState<NutritionBasis | null>(null);
   const [sodiumUnit, setSodiumUnit] = useState<'mg' | 'g' | null>(null);
+  const [originClaimType, setOriginClaimType] = useState<ProductOriginsClaimType | null>(null);
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
@@ -200,6 +202,10 @@ export default function PacketContributionModal({
         return;
       }
     }
+    if (domain === 'origins' && !originClaimType) {
+      setNotice('Choose the origin statement on the pack. A missing statement is not saved as an origin.');
+      return;
+    }
     const statedUnit = field?.attribute === 'sodium' ? sodiumUnit || undefined : field?.acceptedUnits[0];
     const nutritionAmounts =
       domain === 'ingredients_nutrition' && section === 'nutrition' && field && statedUnit && nutritionBasis
@@ -215,6 +221,9 @@ export default function PacketContributionModal({
       section: domain === 'ingredients_nutrition' ? section : undefined,
       nutritionAmounts,
       nutritionBasis: nutritionAmounts ? nutritionBasis || undefined : undefined,
+      originClaimType: domain === 'origins' ? originClaimType || undefined : undefined,
+      originCountry: domain === 'origins' && originClaimType !== 'ingredient_origin' ? statement : undefined,
+      ingredientSubject: domain === 'origins' && originClaimType === 'ingredient_origin' ? statement : undefined,
     });
     const reviewed = await applyReviewAction({
       sessionId: session.sessionId,
@@ -356,6 +365,15 @@ export default function PacketContributionModal({
               {(['per_100g', 'per_100ml', 'per_serving'] as const).map((item) => (
                 <TouchableOpacity key={item} onPress={() => setNutritionBasis(item)}>
                   <Text style={{ color: nutritionBasis === item ? colors.primary : colors.textSecondary }}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+          {domain === 'origins' ? (
+            <View style={styles.row}>
+              {PRODUCT_ORIGINS_CLAIM_TYPES.map((item) => (
+                <TouchableOpacity key={item} onPress={() => setOriginClaimType(item)}>
+                  <Text style={{ color: originClaimType === item ? colors.primary : colors.textSecondary }}>{item}</Text>
                 </TouchableOpacity>
               ))}
             </View>

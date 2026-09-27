@@ -40,6 +40,13 @@ export async function addManualEvidenceUnit(params: {
   section?: 'ingredients' | 'nutrition';
   nutritionAmounts?: import('../ingredientsNutrition/nutritionSchema').StatedNutritionAmount[];
   nutritionBasis?: import('../ingredientsNutrition/nutritionSchema').NutritionBasis;
+  originClaimType?: import('../config/contributionPolicy').OriginClaimType;
+  originCountry?: string;
+  originCountries?: string[];
+  ingredientSubject?: string;
+  originPercentage?: number;
+  originPercentageQualifier?: import('../config/contributionPolicy').OriginPercentageQualifier;
+  originQualification?: import('../contributions/originStructured').OriginQualification;
 }): Promise<PacketEvidenceUnit> {
   const session = await getSession(params.sessionId);
   if (!session) throw new Error('packet_session_missing');
@@ -59,6 +66,13 @@ export async function addManualEvidenceUnit(params: {
     section: params.section,
     nutritionAmounts: params.nutritionAmounts,
     nutritionBasis: params.nutritionBasis,
+    originClaimType: params.originClaimType,
+    originCountry: params.originCountry,
+    originCountries: params.originCountries,
+    ingredientSubject: params.ingredientSubject,
+    originPercentage: params.originPercentage,
+    originPercentageQualifier: params.originPercentageQualifier,
+    originQualification: params.originQualification,
   };
   await upsertSession({ ...session, units: [...session.units, unit] });
   return unit;

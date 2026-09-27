@@ -228,6 +228,8 @@ describe('Wave 4A.1 packet contribution foundation', () => {
       sessionId: session.sessionId,
       domain: 'origins',
       statement: 'New Zealand',
+      originClaimType: 'made_in',
+      originCountry: 'New Zealand',
       support: { coverage: 'whole_image', sourceAssetId: photo.asset.assetId },
     });
     await expect(
@@ -293,6 +295,8 @@ describe('Wave 4A.1 packet contribution foundation', () => {
       sessionId: session.sessionId,
       domain: 'origins',
       statement: 'New Zealand',
+      originClaimType: 'made_in',
+      originCountry: 'New Zealand',
       support: { coverage: 'whole_image', sourceAssetId: photo.asset.assetId },
     });
     await applyReviewAction({

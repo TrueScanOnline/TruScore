@@ -178,6 +178,8 @@ export interface Product {
   ingredients_text?: string;
   /** Short consumer status for a saved packet ingredients or nutrition contribution. */
   rveelPacketNutritionStatus?: string;
+  /** Admitted Product Origins facts for the existing origins card. Not an Open score input. */
+  rveelGovernedOrigins?: import('../origins/governedFacts').GovernedOriginFact[];
   ingredients_text_en?: string;
   ingredients?: Ingredient[];
   ingredients_analysis?: {

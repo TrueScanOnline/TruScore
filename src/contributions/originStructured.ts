@@ -4,14 +4,23 @@ import type {
 } from '../config/contributionPolicy';
 import { ORIGIN_CLAIM_TYPES } from '../config/contributionPolicy';
 
+export type OriginQualification = 'local' | 'imported' | 'multiple';
+
 export type OriginStructuredEvidence = {
   claimType: OriginClaimType;
+  /** First stated country. Empty when the packet names no country. */
   primaryCountry: string;
+  /** Further countries explicitly stated. Not inferred from wording. */
+  countries?: string[];
+  /** Packet wording for ingredient_origin. No ontology. */
+  ingredientSubject?: string;
   ingredientOriginPercentage?: number;
   percentageQualifier?: OriginPercentageQualifier;
   ingredientOriginCountry?: string;
-  /** Optional second packet statement (packed in / imported ingredients, etc.). */
+  /** Optional second packet statement, stored as written. */
   additionalOriginStatement?: string;
+  /** Set only when the packet explicitly says local, imported, or more than one origin. */
+  originQualification?: OriginQualification;
 };
 
 const CLAIM_TYPE_LABEL: Record<OriginClaimType, string> = {
@@ -20,6 +29,7 @@ const CLAIM_TYPE_LABEL: Record<OriginClaimType, string> = {
   grown_in: 'Grown in',
   packed_in: 'Packed in',
   processed_in: 'Processed in',
+  ingredient_origin: 'Ingredient origin',
   other: 'Origin',
 };
 
@@ -50,6 +60,15 @@ export function buildExactWordingFromStructured(structured: OriginStructuredEvid
     return `${head}. ${structured.additionalOriginStatement.trim()}`;
   }
   return head;
+}
+
+/** Trim and collapse whitespace. Case and wording stay as printed. */
+export function normalizeIngredientSubject(value: string | undefined): string {
+  return String(value || '').trim().replace(/\s+/g, ' ');
+}
+
+export function ingredientSubjectKey(value: string | undefined): string {
+  return normalizeIngredientSubject(value).toLowerCase();
 }
 
 /** OFF-style manufacturing place tag for the existing Open complete-origin path. */

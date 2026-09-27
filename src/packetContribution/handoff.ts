@@ -106,6 +106,53 @@ export async function handoffReviewedUnits(params: {
       });
       continue;
     }
+    if (unit.domain === 'origins') {
+      const claimType = unit.originClaimType;
+      const primaryCountry = unit.originCountry?.trim() || '';
+      const ingredientSubject = unit.ingredientSubject?.trim() || '';
+      if (!claimType || claimType === 'other') {
+        results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'origin_claim_not_explicit' });
+        continue;
+      }
+      if (!primaryCountry && !ingredientSubject && !unit.statement.trim()) {
+        results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'origin_statement_absent' });
+        continue;
+      }
+      const evidence = await submit({
+        barcode: session.barcode,
+        domain: 'origins',
+        claimValue: primaryCountry || ingredientSubject || unit.statement,
+        exactWording: unit.statement,
+        imageUrl: source ? `private://${source.privateKey}` : undefined,
+        variantKey: session.variantKey,
+        asProductionEpoch: true,
+        originStructured: {
+          claimType,
+          primaryCountry,
+          countries: unit.originCountries,
+          ingredientSubject: ingredientSubject || undefined,
+          ingredientOriginPercentage: unit.originPercentage,
+          percentageQualifier: unit.originPercentageQualifier,
+          originQualification: unit.originQualification,
+        },
+      });
+      if (evidence.admissionStatus === 'admitted') {
+        throw new Error('packet_handoff_must_not_admit');
+      }
+      units[index] = {
+        ...unit,
+        governedEvidenceId: evidence.evidenceId,
+        submittedAt: params.now ?? Date.now(),
+      };
+      results.push({
+        unitId: unit.unitId,
+        outcome: 'submitted',
+        evidenceId: evidence.evidenceId,
+        admissionStatus: 'submitted',
+        idempotent: false,
+      });
+      continue;
+    }
     const evidence = await submit({
       barcode: session.barcode,
       domain: unit.domain,
@@ -114,9 +161,7 @@ export async function handoffReviewedUnits(params: {
       imageUrl: source ? `private://${source.privateKey}` : undefined,
       variantKey: session.variantKey,
       asProductionEpoch: true,
-      ...(unit.domain === 'origins'
-        ? { originStructured: { claimType: 'other' as const, primaryCountry: unit.statement } }
-        : { labelsTags: [unit.statement] }),
+      labelsTags: [unit.statement],
     });
     if (evidence.admissionStatus === 'admitted') {
       throw new Error('packet_handoff_must_not_admit');

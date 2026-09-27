@@ -34,6 +34,7 @@ export const ORIGIN_CLAIM_TYPES = [
   'grown_in',
   'packed_in',
   'processed_in',
+  'ingredient_origin',
   'other',
 ] as const;
 export type OriginClaimType = (typeof ORIGIN_CLAIM_TYPES)[number];

@@ -109,6 +109,13 @@ export type PacketEvidenceUnit = {
   section?: 'ingredients' | 'nutrition';
   nutritionAmounts?: import('../ingredientsNutrition/nutritionSchema').StatedNutritionAmount[];
   nutritionBasis?: import('../ingredientsNutrition/nutritionSchema').NutritionBasis;
+  originClaimType?: import('../config/contributionPolicy').OriginClaimType;
+  originCountry?: string;
+  originCountries?: string[];
+  ingredientSubject?: string;
+  originPercentage?: number;
+  originPercentageQualifier?: import('../config/contributionPolicy').OriginPercentageQualifier;
+  originQualification?: import('../contributions/originStructured').OriginQualification;
   /** Set only after a governed submit (not admission). */
   governedEvidenceId?: string;
   submittedAt?: number;

@@ -12,6 +12,7 @@ import {
   Share,
   Dimensions,
   Platform,
+  Modal,
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -38,7 +39,7 @@ import UniversalPricingCard from '../../src/components/UniversalPricingCard';
 import NutritionTable from '../../src/components/NutritionTable';
 import type { NutritionDetailsFocusTarget } from '../../src/components/NutritionDetailsModal';
 import { Image as ExpoImage } from 'expo-image';
-import { calculateTruScore, TruScoreResult } from '../../src/lib/truscoreEngine';
+import { PRODUCT_ORIGINS_EXPLAINER_HOOK } from '../../src/origins/governedFacts';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
@@ -260,6 +261,7 @@ function ResultScreenContent() {
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [manufacturingCountryModalVisible, setManufacturingCountryModalVisible] = useState(false);
+  const [productOriginsExplainerVisible, setProductOriginsExplainerVisible] = useState(false);
   const [originsContributionPrefill, setOriginsContributionPrefill] = useState<{
     structuredOriginCountry?: string;
     conflictingFreeTextOrigins?: string;
@@ -1942,7 +1944,7 @@ function ResultScreenContent() {
 
           return (
             <>
-              {displayManufacturingCountry ? (
+              {(displayManufacturingCountry || (product.rveelGovernedOrigins?.length || 0) > 0) ? (
                 <>
                   <View style={[styles.card, { 
                     backgroundColor: colors.card, 
@@ -2021,10 +2023,30 @@ function ResultScreenContent() {
                     </View>
                   </View>
                   {/* Second line: Heading */}
-                  <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.countryOfManufacture', 'Country of Manufacture')}</Text>
+                  <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.productOrigins', 'Product Origins')}</Text>
+                  <TouchableOpacity onPress={() => setProductOriginsExplainerVisible(true)}>
+                    <Text style={{ color: colors.primary }}>L1 / L2 / L3</Text>
+                  </TouchableOpacity>
                 </View>
+                  {(product.rveelGovernedOrigins || []).map((fact) => (
+                    <Text key={fact.evidenceId} style={{ color: colors.text }}>
+                      {fact.claimType.replace(/_/g, ' ')}
+                      {fact.ingredientSubject ? ` · ${fact.ingredientSubject}` : ''}
+                      {fact.countries.length > 0 ? ` · ${fact.countries.join(', ')}` : ''}
+                      {fact.percentage != null
+                        ? ` · ${fact.percentageQualifier ? `${fact.percentageQualifier.replace(/_/g, ' ')} ` : ''}${fact.percentage}%`
+                        : ''}
+                      {fact.originQualification ? ` · ${fact.originQualification}` : ''}
+                      {fact.exactWording ? ` · “${fact.exactWording}”` : ''}
+                    </Text>
+                  ))}
+                  {(product.rveelGovernedOrigins?.length || 0) > 0 ? (
+                    <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
+                  ) : null}
                   <View style={styles.originContainer}>
-                    <CountryFlag country={displayManufacturingCountry} />
+                    {displayManufacturingCountry ? (
+                      <CountryFlag country={displayManufacturingCountry} />
+                    ) : null}
                     {(() => {
                       const shouldShow = userContributedCountry?.hasImportedIngredients === true;
                       console.log('[ResultScreen] Badge display check:', {
@@ -2236,7 +2258,7 @@ function ResultScreenContent() {
                   <View style={styles.cardHeaderLeft}>
                     <Ionicons name="globe-outline" size={24} color={colors.text} />
                     <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-                      {t('result.countryOfManufacture', 'Country of Manufacture')}
+                      {t('result.productOrigins', 'Product Origins')}
                     </Text>
                   </View>
                   <View style={styles.contributeContainer}>
@@ -2862,6 +2884,20 @@ function ResultScreenContent() {
         onCapture={handleCaptureImage}
         barcode={barcode}
       />
+
+      <Modal visible={productOriginsExplainerVisible} animationType="slide" onRequestClose={() => setProductOriginsExplainerVisible(false)}>
+        <View style={{ flex: 1, padding: 24, backgroundColor: colors.background }}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Product Origins</Text>
+          {PRODUCT_ORIGINS_EXPLAINER_HOOK.levels.map((level) => (
+            <Text key={level} style={{ color: colors.text, marginTop: 12 }}>
+              {level}: editorial deferred
+            </Text>
+          ))}
+          <TouchableOpacity onPress={() => setProductOriginsExplainerVisible(false)}>
+            <Text style={{ color: colors.primary, marginTop: 24 }}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
 
       {/* Manufacturing Country Contribution Modal */}
       <ManufacturingCountryModal
