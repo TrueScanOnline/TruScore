@@ -14,8 +14,8 @@ export type PrivateByteStore = {
   put(key: string, bytes: Uint8Array): Promise<void>;
   get(key: string): Promise<Uint8Array | null>;
   delete(key: string): Promise<void>;
-  /** Delete private packet objects. Must not touch unrelated app files. */
-  clearPacketObjects(): Promise<void>;
+  /** Delete private packet objects only. Must not touch unrelated app files. */
+  clearPacketObjects(): Promise<string[]>;
 };
 
 const memoryBytes = new Map<string, Uint8Array>();
@@ -32,9 +32,14 @@ export const memoryPrivateByteStore: PrivateByteStore = {
     memoryBytes.delete(key);
   },
   async clearPacketObjects() {
+    const removed: string[] = [];
     for (const key of [...memoryBytes.keys()]) {
-      if (key.startsWith('packet/')) memoryBytes.delete(key);
+      if (key.startsWith('packet/')) {
+        memoryBytes.delete(key);
+        removed.push(key);
+      }
     }
+    return removed;
   },
 };
 
@@ -95,7 +100,10 @@ export async function activateDevicePrivateByteStore(): Promise<void> {
       await FileSystem.deleteAsync(`${root}${key}`, { idempotent: true });
     },
     async clearPacketObjects() {
+      const info = await FileSystem.getInfoAsync(root);
+      if (!info.exists) return [];
       await FileSystem.deleteAsync(root, { idempotent: true });
+      return [root];
     },
   };
 }

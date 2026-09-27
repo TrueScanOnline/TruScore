@@ -43,7 +43,9 @@ export type { HandoffResult } from './handoff';
 export {
   ensureWave4a1UatCutoverOnce,
   resetWave4a1UatContributionState,
-  isUatContributionKey,
+  GOVERNED_EVIDENCE_STORAGE_KEY,
+  UAT_CUTOVER_WHOLE_KEYS,
+  UAT_CUTOVER_WHOLE_KEY_PREFIXES,
   WAVE4A1_UAT_CUTOVER_ID,
 } from './uatReset';
 export { runBoundedFeasibilityComparison, countFeasibilityDefects } from './feasibility';
