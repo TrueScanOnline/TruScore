@@ -394,6 +394,7 @@
     "nutritionCardOpenEditA11y": "Opens edit product to update nutrition information.",
     "ingredientsEmpty": "No ingredients on file. Tap this card or the button below to add them from the pack.",
     "nutritionFacts": "Nutrition Facts",
+    "nutritionAndIngredients": "Nutrition & Ingredients",
     "servingSize": "Serving size",
     "ingredients": "Ingredients",
     "processingLevel": "Processing Level",

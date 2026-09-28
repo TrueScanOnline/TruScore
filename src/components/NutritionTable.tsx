@@ -43,7 +43,11 @@ interface NutritionTableProps {
   onEdit?: () => void;
   shareContext?: NutritionTableShareContext;
   onRequestNutritionSharePrefill?: (prefill: string) => void;
+  /** Result card title. Defaults to Nutrition Facts for other callers. */
+  title?: string;
   cardFooter?: React.ReactNode;
+  /** Renders after Feel the Burn when that strip is shown, otherwise after the nutrition body. */
+  afterBurn?: React.ReactNode;
   /** Optional external control of Nutrition Details visibility. */
   detailsVisible?: boolean;
   onDetailsVisibleChange?: (visible: boolean) => void;
@@ -67,7 +71,9 @@ const NutritionTable = React.memo(function NutritionTable({
   onEdit,
   shareContext,
   onRequestNutritionSharePrefill,
+  title,
   cardFooter,
+  afterBurn,
   detailsVisible: detailsVisibleProp,
   onDetailsVisibleChange,
   initialDetailsFocus = null,
@@ -135,6 +141,7 @@ const NutritionTable = React.memo(function NutritionTable({
     [kcalPer100g]
   );
   const showBurnStrip = burnMinutes !== null && kcalPer100g !== undefined;
+  const cardTitle = title ?? t('result.nutritionFacts');
 
   const handleBurnSharePrefill = useCallback(
     (prefill: string) => {
@@ -162,7 +169,7 @@ const NutritionTable = React.memo(function NutritionTable({
         <View style={styles.titleContainer}>
           <View style={styles.titleLeft}>
             <Ionicons name="nutrition" size={24} color={colors.primary} />
-            <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{t('result.nutritionFacts')}</Text>
+            <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{cardTitle}</Text>
           </View>
           <View style={styles.headerButtons}>
             {onEdit && (
@@ -192,6 +199,7 @@ const NutritionTable = React.memo(function NutritionTable({
         </View>
         <Text style={[styles.noDataText, { color: colors.textTertiary }]}>{t('nutrition.notAvailable')}</Text>
         {cardFooter}
+        {afterBurn}
       </View>
     );
   }
@@ -313,7 +321,7 @@ const NutritionTable = React.memo(function NutritionTable({
           accessibilityLabel={t('nutrition.openDetailsA11y', 'Open nutrition details')}
         >
           <Ionicons name="nutrition" size={24} color={colors.primary} />
-          <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{t('result.nutritionFacts')}</Text>
+          <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{cardTitle}</Text>
         </Pressable>
         <View style={styles.headerButtons}>
           {onEdit && (
@@ -500,6 +508,8 @@ const NutritionTable = React.memo(function NutritionTable({
           </TouchableOpacity>
         </View>
       )}
+
+      {afterBurn}
 
       {showBurnStrip && burnMinutes && kcalPer100g !== undefined && (
         <NutritionBurnInfoModal

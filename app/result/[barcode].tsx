@@ -34,7 +34,6 @@ import TruScore from '../../src/components/TruScore';
 import ConfidenceBadge from '../../src/components/ConfidenceBadge';
 import CountryFlag from '../../src/components/CountryFlag';
 import CertBadge from '../../src/components/CertBadge';
-import EcoScore from '../../src/components/EcoScore';
 import UniversalPricingCard from '../../src/components/UniversalPricingCard';
 import NutritionTable from '../../src/components/NutritionTable';
 import type { NutritionDetailsFocusTarget } from '../../src/components/NutritionDetailsModal';
@@ -70,7 +69,6 @@ import InsightsCarousel from '../../src/components/InsightsCarousel';
 import TruScoreInfoModal from '../../src/components/TrustScoreInfoModal';
 import TruScoreAnalysisModal from '../../src/components/TruScoreAnalysisModal';
 import { productIdentity } from '../../src/config/productIdentity';
-import EcoScoreInfoModal from '../../src/components/EcoScoreInfoModal';
 import AllergensAdditivesModal from '../../src/components/AllergensAdditivesModal';
 import AboutTheseAdditivesCard from '../../src/components/AboutTheseAdditivesCard';
 import ProcessingLevelModal from '../../src/components/ProcessingLevelModal';
@@ -98,7 +96,7 @@ import {
 import type { ScoreHighlightL3InAppTarget } from '../../src/lib/scoreHighlights/l3/targets';
 import { planInAppL3HostPresentation } from '../../src/lib/scoreHighlights/l3/hostPresentation';
 import { mapBodyLedgerIdToCanonical, mergeRenderedAdditives } from '../../src/s25';
-import { extractManufacturingCountry, calculateEcoScore } from '../../src/services/openFoodFacts';
+import { extractManufacturingCountry } from '../../src/services/openFoodFacts';
 import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
@@ -109,7 +107,6 @@ import { submitManufacturingCountry, getManufacturingCountry, hasUserSubmitted }
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
 import ManufacturingCountryModal from '../../src/components/ManufacturingCountryModal';
 import { PalmOilCard } from '../../src/features/product/cards/PalmOilCard';
-import PackagingInfoModal from '../../src/components/PackagingInfoModal';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
 import { sanitizeText } from '../../src/utils/validation';
 import { sanitizeCountryForDisplay } from '../../src/utils/countryDisplayName';
@@ -117,18 +114,10 @@ import { logger } from '../../src/utils/logger';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import PacketContributionModal from '../../src/components/PacketContributionModal';
 import { calculateTrustScore } from '../../src/utils/trustScore';
-// import PendingContributionsBanner from '../../src/components/PendingContributionsBanner'; // Temporarily disabled
 import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
 import { ManualProductData } from '../../src/types/manualProduct';
 import { cacheProduct } from '../../src/services/cacheService';
-import {
-  getProductPageAlertsInsights,
-  shouldShowCarbonFootprintCard,
-  shouldShowEcoScoreCard,
-  shouldShowPackagingCard,
-} from '../../src/utils/productInfoCardVisibility';
-import CarbonFootprintCard from '../../src/features/product/cards/CarbonFootprintCard/CarbonFootprintCard';
-import PackagingOffCardContent from '../../src/components/PackagingOffCardContent';
+import { getProductPageAlertsInsights } from '../../src/utils/productInfoCardVisibility';
 import { crashReporter } from '../../src/utils/crashReporter';
 import { getPrimaryBarcode } from '../../src/utils/barcodeNormalization';
 import { shouldPreserveSettledResultOnLoadMiss } from '../../src/utils/resultPublicationLoadGuard';
@@ -174,6 +163,188 @@ function authoritativeProductForScan(
   if (getPrimaryBarcode(product.barcode) !== getPrimaryBarcode(routeBarcode)) return null;
   if (!hasCoreTruthAuthority(product)) return null;
   return product;
+}
+
+function ResultIngredientsSection({
+  barcode,
+  ingredientsText,
+  novaGroup,
+  onEdit,
+  onShareIngredients,
+  onShareProcessing,
+  onOpenProcessingLevel,
+}: {
+  barcode: string;
+  ingredientsText?: string | null;
+  novaGroup?: number | null;
+  onEdit: () => void;
+  onShareIngredients: () => void;
+  onShareProcessing: () => void;
+  onOpenProcessingLevel: () => void;
+}) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const sectionStyle = [
+    styles.ingredientsSection,
+    { borderTopColor: colors.border },
+  ];
+
+  const filled = (() => {
+    if (!ingredientsText) return null;
+    let text = ingredientsText.trim();
+    const isBarcodePattern = /^\d{8,14}$/.test(text.replace(/\s/g, ''));
+    if (isBarcodePattern) return null;
+    text = text.replace(/<[^>]*>/g, '').trim();
+    const barcodePattern = new RegExp(`\\b${barcode}\\b`, 'gi');
+    text = text.replace(barcodePattern, '').trim();
+    text = text.replace(/\b\d{8,14}\b/g, '').trim();
+    text = text.replace(/[,\s]+/g, ' ').trim();
+    if (!text || text.length < 3) return null;
+    return text;
+  })();
+
+  if (filled) {
+    const novaColor =
+      novaGroup === 1 || novaGroup === 2
+        ? '#16a085'
+        : novaGroup === 3
+          ? '#ff9500'
+          : '#ff6b6b';
+    return (
+      <Pressable
+        onPress={onEdit}
+        style={({ pressed }) => [sectionStyle, { opacity: pressed ? 0.96 : 1 }]}
+        accessibilityRole="button"
+        accessibilityLabel={t('result.ingredients')}
+        accessibilityHint={t(
+          'result.ingredientsCardOpenEditA11y',
+          'Opens edit product to update ingredients.'
+        )}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderTop}>
+            <View style={styles.cardHeaderLeft}>
+              <Ionicons name="flask" size={24} color={colors.primary} />
+            </View>
+            <View style={styles.cardHeaderRight}>
+              <TouchableOpacity
+                onPress={onEdit}
+                style={styles.shareButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="create-outline" size={20} color={colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onShareIngredients}
+                style={styles.shareButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="share-outline" size={20} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
+        </View>
+        <Text style={[styles.ingredientsText, { color: colors.text }]}>{filled}</Text>
+        {novaGroup ? (
+          <View style={[styles.novaContainer, { borderTopColor: colors.border }]}>
+            <TouchableOpacity
+              style={styles.novaHeader}
+              onPress={onOpenProcessingLevel}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.novaLabel, { color: colors.text }]}>{t('result.processingLevel')}:</Text>
+              <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+            </TouchableOpacity>
+            <View style={styles.novaContent}>
+              <Text style={[styles.novaValue, { color: novaColor }]}>
+                NOVA {novaGroup} ({t(`nova.${novaGroup}`)})
+              </Text>
+              <TouchableOpacity
+                onPress={onShareProcessing}
+                style={styles.shareButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="share-outline" size={20} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null}
+        <TouchableOpacity
+          onPress={onEdit}
+          activeOpacity={0.7}
+          style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('result.addIngredientsHere', 'Add ingredients here')}
+        >
+          <Ionicons name="add-circle-outline" size={20} color="#16a085" />
+          <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
+            {t('result.addIngredientsHere', 'Add ingredients here')}
+          </Text>
+        </TouchableOpacity>
+      </Pressable>
+    );
+  }
+
+  if (!ingredientsText || !ingredientsText.trim()) {
+    return (
+      <Pressable
+        onPress={onEdit}
+        style={({ pressed }) => [sectionStyle, { opacity: pressed ? 0.96 : 1 }]}
+        accessibilityRole="button"
+        accessibilityLabel={t('result.ingredients')}
+        accessibilityHint={t(
+          'result.ingredientsCardOpenEditA11y',
+          'Opens edit product to update ingredients.'
+        )}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderTop}>
+            <View style={styles.cardHeaderLeft}>
+              <Ionicons name="flask" size={24} color={colors.primary} />
+            </View>
+            <View style={styles.cardHeaderRight}>
+              <TouchableOpacity
+                onPress={onEdit}
+                style={styles.shareButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="create-outline" size={20} color={colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onShareIngredients}
+                style={styles.shareButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="share-outline" size={20} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
+        </View>
+        <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
+          {t(
+            'result.ingredientsEmpty',
+            'No ingredients on file. Tap this card or the button below to add them from the pack.'
+          )}
+        </Text>
+        <TouchableOpacity
+          onPress={onEdit}
+          activeOpacity={0.7}
+          style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('result.addIngredientsHere', 'Add ingredients here')}
+        >
+          <Ionicons name="add-circle-outline" size={20} color="#16a085" />
+          <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
+            {t('result.addIngredientsHere', 'Add ingredients here')}
+          </Text>
+        </TouchableOpacity>
+      </Pressable>
+    );
+  }
+
+  return null;
 }
 
 function ResultScreenContent() {
@@ -243,7 +414,6 @@ function ResultScreenContent() {
   /** Bump to open W3-S26 from the Overall Confidence badge (not W3-S27). */
   const [s26OpenRequestKey, setS26OpenRequestKey] = useState(0);
   const [truScoreAnalysisModalVisible, setTruScoreAnalysisModalVisible] = useState(false);
-  const [ecoScoreModalVisible, setEcoScoreModalVisible] = useState(false);
   const [scoreHighlightsRequest, setScoreHighlightsRequest] =
     useState<ScoreHighlightsLookThroughRequest | null>(null);
   /** Saved Body L2 look-through so About-these-additives Back can restore it. */
@@ -274,7 +444,6 @@ function ResultScreenContent() {
     conflictingFreeTextOrigins?: string;
     originsTags?: string[];
   } | null>(null);
-  const [packagingInfoModalVisible, setPackagingInfoModalVisible] = useState(false);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [packetContributionVisible, setPacketContributionVisible] = useState(false);
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
@@ -1510,8 +1679,6 @@ function ResultScreenContent() {
     return cleaned || undefined;
   })();
   
-  // Calculate Eco-Score using the proper function to ensure grade is calculated from score if missing
-  const calculatedEcoScore = product ? calculateEcoScore(product) : null;
   const productPageAlertsInsights = getProductPageAlertsInsights(hasAlertsMasterEnabled, truScore);
 
   const handleCaptureImage = async (imageUri: string) => {
@@ -1620,15 +1787,6 @@ function ResultScreenContent() {
         }
       >
         <ProductDisclaimerCard />
-        {/* Pending Contributions Banner - Shows when user has unsubmitted contributions */}
-        {/* <PendingContributionsBanner 
-          barcode={barcode}
-          onSubmitted={() => {
-            // Refresh product data after submission
-            handleRefresh();
-          }}
-        /> */}
-        
         <ProductHeroSection
           colors={colors}
           darkMode={!!darkMode}
@@ -1914,7 +2072,24 @@ function ResultScreenContent() {
               if (!v) setNutritionDetailsFocus(null);
             }}
             initialDetailsFocus={nutritionDetailsFocus}
+            title={t('result.nutritionAndIngredients', 'Nutrition & Ingredients')}
+            afterBurn={
+              <ResultIngredientsSection
+                barcode={barcode}
+                ingredientsText={product.ingredients_text}
+                novaGroup={product.nova_group}
+                onEdit={handleEditProduct}
+                onShareIngredients={() => handleShare('ingredients')}
+                onShareProcessing={() => handleShare('processing')}
+                onOpenProcessingLevel={() => setProcessingLevelModalVisible(true)}
+              />
+            }
           />
+
+        <AboutTheseAdditivesCard
+          count={s25Merged.renderedAdditiveIds.length}
+          onPress={openAboutAdditivesFromResult}
+        />
 
         {/* Country of Manufacture — governed Product Origins surface (Open Origins L3 deep-link) */}
         <View
@@ -2294,128 +2469,6 @@ function ResultScreenContent() {
         })()}
         </View>
 
-        {/* Eco-Score — only when OFF provides a numeric score to display */}
-        {product && shouldShowEcoScoreCard(product) && calculatedEcoScore && (() => {
-          // Calculate grade from score if missing
-          const grade = calculatedEcoScore.grade || 
-            (calculatedEcoScore.score >= 80 ? 'a' :
-             calculatedEcoScore.score >= 70 ? 'b' :
-             calculatedEcoScore.score >= 55 ? 'c' :
-             calculatedEcoScore.score >= 40 ? 'd' : 'e');
-          
-          // Get border color matching grade
-          const gradeColors: Record<string, string> = {
-            a: '#16a085', // Green
-            b: '#4dd09f', // Light green
-            c: '#ffd93d', // Yellow
-            d: '#ff9800', // Orange
-            e: '#ff6b6b', // Red
-          };
-          const borderColor = gradeColors[grade] || '#95a5a6';
-          
-          return (
-          <TouchableOpacity
-            style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor }]}
-            onPress={() => setEcoScoreModalVisible(true)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.ecoScoreHeader}>
-              <View style={styles.ecoScoreHeaderLeft}>
-                <Ionicons name="leaf" size={24} color={colors.primary} />
-                <Text style={[styles.ecoScoreTitle, { color: colors.text, marginLeft: 8 }]}>
-                  {t('result.ecoScore', 'Eco-Score')}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setEcoScoreModalVisible(true);
-                  }}
-                  style={styles.infoButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.cardHeaderRight}>
-                <TouchableOpacity
-                  onPress={() => handleShare('ecoscore')}
-                  style={styles.shareButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="share-outline" size={20} color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.ecoScoreContent}>
-              <EcoScore ecoScore={calculatedEcoScore} />
-            </View>
-          </TouchableOpacity>
-          );
-        })(        )}
-
-        {/* Palm oil: scored in Planet/TruScore and insights; product card hidden (PalmOilCard). */}
-        <PalmOilCard
-          product={product ?? undefined}
-          onShare={() => handleShare('palmOil')}
-          premiumFeatures={[]}
-        />
-
-        {/* Packaging — tap card for modal (OFF + recycling + sources) */}
-        {shouldShowPackagingCard(product) && (
-          <View
-            style={[
-              styles.card,
-              styles.packagingCardCompact,
-              {
-                backgroundColor: colors.card,
-                borderWidth: 2,
-                borderColor: '#16a085',
-              },
-            ]}
-          >
-            <View style={styles.packagingCardHeaderSection}>
-              <View style={styles.packagingCardHeaderTop}>
-                <Pressable
-                  onPress={() => setPackagingInfoModalVisible(true)}
-                  style={({ pressed }) => [styles.packagingCardHeaderPressable, { opacity: pressed ? 0.92 : 1 }]}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('result.packaging')}
-                  accessibilityHint={t('result.packagingCardOpenModalA11y')}
-                >
-                  <View style={styles.packagingCardHeaderRow}>
-                    <Ionicons name="cube-outline" size={22} color="#16a085" style={styles.packagingCardHeaderIcon} />
-                    <View style={styles.packagingCardTitleWrap}>
-                      <Text style={[styles.packagingCardTitle, { color: colors.text }]}>
-                        {t('result.packaging')}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-                  </View>
-                </Pressable>
-                <TouchableOpacity
-                  onPress={handleEditProduct}
-                  style={styles.shareButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="create-outline" size={20} color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <ScrollView
-              style={styles.packagingCardScroll}
-              contentContainerStyle={styles.packagingCardScrollContent}
-              nestedScrollEnabled
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator
-            >
-              <PackagingOffCardContent product={product} />
-            </ScrollView>
-          </View>
-        )}
-
-        {shouldShowCarbonFootprintCard(product) && (
-          <CarbonFootprintCard product={product} premiumFeatures={[]} layout="result" />
-        )}
-
         {/* Ethics / Certifications — tap card to edit labels (manual entry modal) */}
         <Pressable
           onPress={handleEditProduct}
@@ -2480,6 +2533,13 @@ function ResultScreenContent() {
           </TouchableOpacity>
         </Pressable>
 
+        {/* Palm oil: scored in Planet/TruScore and insights; product card hidden (PalmOilCard). */}
+        <PalmOilCard
+          product={product ?? undefined}
+          onShare={() => handleShare('palmOil')}
+          premiumFeatures={[]}
+        />
+
         {/* Price Information — deferred for MVP */}
         {isMvpPricingUiEnabled() ? (
           <UniversalPricingCard
@@ -2488,204 +2548,6 @@ function ResultScreenContent() {
             product={product}
           />
         ) : null}
-
-        {/* Ingredients */}
-        {product.rveelPacketNutritionStatus ? (
-          <Text style={[styles.certificationsUpdateButtonText, { color: colors.textSecondary, marginBottom: 8 }]}>
-            {product.rveelPacketNutritionStatus}
-          </Text>
-        ) : null}
-        {product.ingredients_text && (() => {
-          // Filter out barcode patterns (8-14 digits) from ingredients_text
-          let ingredientsText = product.ingredients_text.trim();
-          
-          // Check if entire text is just a barcode pattern
-          const isBarcodePattern = /^\d{8,14}$/.test(ingredientsText.replace(/\s/g, ''));
-          if (isBarcodePattern) {
-            return null; // Don't display barcode as ingredients
-          }
-          
-          // CRITICAL: Strip HTML tags from ingredients_text (e.g., <span class="allergen">)
-          // This handles cases where ingredients contain HTML markup
-          ingredientsText = ingredientsText.replace(/<[^>]*>/g, '').trim();
-          
-          // CRITICAL: Remove barcode from ingredients text if it appears within the text
-          // This handles cases where barcode is embedded in ingredients_text
-          const barcodePattern = new RegExp(`\\b${barcode}\\b`, 'gi');
-          ingredientsText = ingredientsText.replace(barcodePattern, '').trim();
-          
-          // Also remove any standalone 8-14 digit sequences that might be barcodes
-          ingredientsText = ingredientsText.replace(/\b\d{8,14}\b/g, '').trim();
-          
-          // Clean up extra spaces and commas
-          ingredientsText = ingredientsText.replace(/[,\s]+/g, ' ').trim();
-          
-          // If after filtering, we have no meaningful content, don't display
-          if (!ingredientsText || ingredientsText.length < 3) {
-            return null;
-          }
-          
-          // Ordinary Ingredients card: no independent raw-field risk border.
-          // Governed interpretation remains Score Highlights / L3 (and Body NOVA via scoring path).
-          
-          return (
-            <Pressable
-              onPress={handleEditProduct}
-              style={({ pressed }) => [
-                styles.card,
-                {
-                  backgroundColor: colors.card,
-                  borderWidth: 2,
-                  borderColor: colors.border,
-                  opacity: pressed ? 0.96 : 1,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t('result.ingredients')}
-              accessibilityHint={t(
-                'result.ingredientsCardOpenEditA11y',
-                'Opens edit product to update ingredients.'
-              )}
-            >
-              <View style={styles.cardHeader}>
-                {/* Top line: Icons */}
-                <View style={styles.cardHeaderTop}>
-                  <View style={styles.cardHeaderLeft}>
-                    <Ionicons name="flask" size={24} color={colors.primary} />
-                  </View>
-                  <View style={styles.cardHeaderRight}>
-                    <TouchableOpacity
-                      onPress={handleEditProduct}
-                      style={styles.shareButton}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                      <Ionicons name="create-outline" size={20} color={colors.primary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => handleShare('ingredients')}
-                      style={styles.shareButton}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                      <Ionicons name="share-outline" size={20} color={colors.primary} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                {/* Second line: Heading */}
-                <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
-              </View>
-              <Text style={[styles.ingredientsText, { color: colors.text }]}>{ingredientsText}</Text>
-            {product.nova_group && (() => {
-              // Determine color based on NOVA score
-              const novaColor = product.nova_group === 1 || product.nova_group === 2
-                ? '#16a085'  // Green for NOVA 1 or 2
-                : product.nova_group === 3
-                ? '#ff9500'  // Orange for NOVA 3
-                : '#ff6b6b'; // Red for NOVA 4
-              
-              return (
-                <View style={[styles.novaContainer, { borderTopColor: colors.border }]}>
-                  <TouchableOpacity
-                    style={styles.novaHeader}
-                    onPress={() => setProcessingLevelModalVisible(true)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.novaLabel, { color: colors.text }]}>{t('result.processingLevel')}:</Text>
-                    <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                  <View style={styles.novaContent}>
-                    <Text style={[styles.novaValue, { color: novaColor }]}>
-                      NOVA {product.nova_group} ({t(`nova.${product.nova_group}`)})
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => handleShare('processing')}
-                      style={styles.shareButton}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                      <Ionicons name="share-outline" size={20} color={colors.primary} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })()}
-              <TouchableOpacity
-                onPress={handleEditProduct}
-                activeOpacity={0.7}
-                style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
-                accessibilityRole="button"
-                accessibilityLabel={t('result.addIngredientsHere', 'Add ingredients here')}
-              >
-                <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-                <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
-                  {t('result.addIngredientsHere', 'Add ingredients here')}
-                </Text>
-              </TouchableOpacity>
-          </Pressable>
-          );
-        })()}
-
-        {(!product.ingredients_text || !product.ingredients_text.trim()) && (
-          <Pressable
-            onPress={handleEditProduct}
-            style={({ pressed }) => [
-              styles.card,
-              {
-                backgroundColor: colors.card,
-                borderWidth: 2,
-                borderColor: '#16a085',
-                opacity: pressed ? 0.96 : 1,
-              },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t('result.ingredients')}
-            accessibilityHint={t(
-              'result.ingredientsCardOpenEditA11y',
-              'Opens edit product to update ingredients.'
-            )}
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardHeaderTop}>
-                <View style={styles.cardHeaderLeft}>
-                  <Ionicons name="flask" size={24} color={colors.primary} />
-                </View>
-                <View style={styles.cardHeaderRight}>
-                  <TouchableOpacity
-                    onPress={handleEditProduct}
-                    style={styles.shareButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="create-outline" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => handleShare('ingredients')}
-                    style={styles.shareButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="share-outline" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
-            </View>
-            <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
-              {t(
-                'result.ingredientsEmpty',
-                'No ingredients on file. Tap this card or the button below to add them from the pack.'
-              )}
-            </Text>
-            <TouchableOpacity
-              onPress={handleEditProduct}
-              activeOpacity={0.7}
-              style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
-              accessibilityRole="button"
-              accessibilityLabel={t('result.addIngredientsHere', 'Add ingredients here')}
-            >
-              <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-              <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
-                {t('result.addIngredientsHere', 'Add ingredients here')}
-              </Text>
-            </TouchableOpacity>
-          </Pressable>
-        )}
 
         {/* Allergens & Additives — deferred for MVP */}
         {isMvpAllergensUiEnabled() && (product.allergens_tags || product.additives_tags) && (
@@ -2785,11 +2647,6 @@ function ResultScreenContent() {
           </PremiumGate>
         )}
 
-        {/* S25 — About these Additives (conditional; after Ingredients & Nutrition) */}
-        <AboutTheseAdditivesCard
-          count={s25Merged.renderedAdditiveIds.length}
-          onPress={openAboutAdditivesFromResult}
-        />
 
         <ProductDataLimitationsCard
           product={product}
@@ -2883,11 +2740,6 @@ function ResultScreenContent() {
         onOpenAboutAdditive={openAboutAdditivesFromOpen}
       />
 
-      {/* Eco-Score Info Modal */}
-      <EcoScoreInfoModal
-        visible={ecoScoreModalVisible}
-        onClose={() => setEcoScoreModalVisible(false)}
-      />
 
       {/* Allergens & Additives Modal — deferred for MVP */}
       {isMvpAllergensUiEnabled() &&
@@ -3059,14 +2911,6 @@ function ResultScreenContent() {
         productName={product?.product_name}
       />
 
-      {/* Packaging Info Modal */}
-      {shouldShowPackagingCard(product) && (
-        <PackagingInfoModal
-          visible={packagingInfoModalVisible}
-          onClose={() => setPackagingInfoModalVisible(false)}
-          product={product}
-        />
-      )}
 
       {/* Manual Product Entry Modal */}
       <ManualProductEntryModal
@@ -3384,45 +3228,6 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     padding: 4,
-  },
-  ecoScoreHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    position: 'relative',
-  },
-  ecoScoreHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  ecoScoreTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  ecoScoreContent: {
-    minHeight: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ecoScorePlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 24,
-    gap: 12,
-  },
-  ecoScorePlaceholderText: {
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  infoButtonAbsolute: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    padding: 4,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   trustScoreContainer: {
     width: '100%',
@@ -4056,93 +3861,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 4,
   },
-  packagingContent: {
-    marginTop: 12,
-  },
-  packagingCardCompact: {
-    maxHeight: 288,
-    padding: 12,
-    paddingTop: 12,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  packagingCardHeaderSection: {
-    marginBottom: 10,
-    flexShrink: 0,
-  },
-  packagingCardHeaderTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  packagingCardHeaderPressable: {
-    flex: 1,
-    minWidth: 0,
-  },
-  packagingCardHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    minWidth: 0,
-  },
-  packagingCardHeaderIcon: {
-    marginTop: 2,
-    flexShrink: 0,
-  },
-  packagingCardTitleWrap: {
-    flex: 1,
-    minWidth: 0,
-  },
-  packagingCardTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    lineHeight: 22,
-    marginTop: 0,
-    marginBottom: 0,
-  },
-  packagingCardScroll: {
-    flexGrow: 1,
-    minHeight: 72,
-    maxHeight: 188,
-  },
-  packagingCardScrollContent: {
-    paddingTop: 2,
-    paddingBottom: 12,
-  },
-  packagingStatusRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  packagingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
-  },
-  packagingBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  recyclabilityScore: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  ingredientsSection: {
+    marginTop: 16,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  recyclabilityLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  recyclabilityValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   partialScanBanner: {
     flexDirection: 'row',
