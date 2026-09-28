@@ -115,8 +115,20 @@ export class MemoryAuthorityStore implements AuthorityStore {
               verified: true,
               contributorId: found.contributorId,
               barcode: found.barcode,
+              contentType: found.contentType,
+              bytes: found.bytes.slice(),
             }
           : null;
+      },
+      async findVerifiedAssetByBinding(binding) {
+        const found = state.assets.find(
+          (item) =>
+            item.sha256 === binding.sha256 &&
+            item.contributorId === binding.contributorId &&
+            item.barcode === binding.barcode &&
+            item.contentType === binding.contentType
+        );
+        return found ? { assetId: found.assetId, sha256: found.sha256 } : null;
       },
       async putChunk(chunk) {
         const found = state.chunks.find(

@@ -34,7 +34,15 @@ export type AuthorityTx = {
     verified: boolean;
     contributorId: string;
     barcode: string;
+    contentType: string | null;
+    bytes: Uint8Array;
   } | null>;
+  findVerifiedAssetByBinding(binding: {
+    sha256: string;
+    contributorId: string;
+    barcode: string;
+    contentType: string;
+  }): Promise<{ assetId: string; sha256: string } | null>;
   putChunk(chunk: AssetChunkRecord): Promise<'stored' | 'duplicate' | 'conflict'>;
   listChunks(uploadId: string): Promise<AssetChunkRecord[]>;
   finalizedUpload(uploadId: string): Promise<{ assetId: string; sha256: string } | null>;

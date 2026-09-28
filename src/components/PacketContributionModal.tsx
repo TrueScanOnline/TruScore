@@ -415,6 +415,19 @@ export default function PacketContributionModal({
         }
       }
       if (created.length === 0) return;
+      if (targeted.length === 0) {
+        const latest = await getSession(session.sessionId);
+        if (latest) {
+          await upsertSession({
+            ...latest,
+            units: latest.units.map((unit) =>
+              created.includes(unit.unitId) && unit.packetAbsenceAffirmation !== true
+                ? { ...unit, support: { coverage: 'whole_image' as const, sourceAssetId: `manual-text:${unit.unitId}` } }
+                : unit
+            ),
+          });
+        }
+      }
       for (const unitId of created) await markReviewed(unitId);
       const handed = await handoffReviewedUnits({
         sessionId: session.sessionId,

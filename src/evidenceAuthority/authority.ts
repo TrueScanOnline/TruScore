@@ -18,6 +18,13 @@ import {
 } from '../ingredientsNutrition/nutritionSchema';
 import type { NutritionAttribute } from '../ingredientsNutrition/nutritionSchema';
 import { sha256Hex } from '../packetContribution/sha256';
+import {
+  MANUAL_TEXT_CONTENT_TYPE,
+  manualTextFactsMatch,
+  manualTextSha256,
+  parseManualTextDocument,
+  type ManualTextDraft,
+} from './manualTextAsset';
 import type { ContributionEvidence } from '../contributions/types';
 import { deriveEvidenceFacts } from './subjects';
 import type { AuthorityStore, AuthorityTx } from './store';
@@ -161,6 +168,11 @@ export class EvidenceAuthority {
         return outcome;
       }
       let sharedAssetId: string | null = null;
+      if (input.contentType === MANUAL_TEXT_CONTENT_TYPE) {
+        const outcome = empty('pending_source');
+        await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+        return outcome;
+      }
       if (input.sourceBytes?.length) {
         const actualHash = sha256Hex(input.sourceBytes);
         if (!input.declaredSha256 || input.declaredSha256 !== actualHash) {
@@ -178,7 +190,7 @@ export class EvidenceAuthority {
           barcode: input.barcode,
         });
       }
-      const resolved: Array<{ fact: DerivedFact; assetId: string }> = [];
+      const resolved: Array<{ fact: DerivedFact; assetId: string; manualText: boolean }> = [];
       for (const fact of derived.facts) {
         const assetId = fact.finalizedAssetId || sharedAssetId;
         if (!assetId) {
@@ -198,14 +210,41 @@ export class EvidenceAuthority {
             await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
             return outcome;
           }
+          if (asset.contentType === MANUAL_TEXT_CONTENT_TYPE) {
+            const document = parseManualTextDocument(asset.bytes);
+            const storedHash = sha256Hex(asset.bytes);
+            const group = derived.facts.filter((item) => item.finalizedAssetId === fact.finalizedAssetId);
+            const absence = group.some(
+              (item) => item.subjectKey === 'packet_claims|absence|scope:whole_packet'
+            );
+            if (
+              !document ||
+              storedHash !== asset.sha256 ||
+              absence ||
+              !manualTextFactsMatch(document, group, input.barcode)
+            ) {
+              const outcome = empty(absence || !document ? 'pending_source' : 'source_hash_mismatch');
+              await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+              return outcome;
+            }
+          }
         }
-        resolved.push({ fact, assetId });
+        const manualText = fact.finalizedAssetId
+          ? (await tx.getAsset(fact.finalizedAssetId))?.contentType === MANUAL_TEXT_CONTENT_TYPE
+          : false;
+        resolved.push({
+          fact: manualText
+            ? { ...fact, region: undefined, machineRunId: undefined, derivedAssetId: undefined }
+            : fact,
+          assetId,
+          manualText,
+        });
       }
       const versionIds: string[] = [];
       const admissionSeqs: number[] = [];
       const admittedForOff: VersionRecord[] = [];
       const unitAdmission = new Map<string, boolean>();
-      for (const { fact, assetId } of resolved) {
+      for (const { fact, assetId, manualText } of resolved) {
         const subject = await tx.ensureSubject({
           subjectId: `subject_${randomBytes(6).toString('hex')}`,
           barcode: input.barcode,
@@ -214,11 +253,11 @@ export class EvidenceAuthority {
           createdAt: this.now(),
         });
         const versionNo = await tx.nextVersionNo(subject.subjectId);
-        const regionId = fact.region ? `region_${randomBytes(4).toString('hex')}` : null;
-        if (fact.region && regionId) {
+        const regionId = !manualText && fact.region ? `region_${randomBytes(4).toString('hex')}` : null;
+        if (!manualText && fact.region && regionId) {
           await tx.putRegion({ regionId, assetId, transform: fact.region });
         }
-        const submitted = this.submittedEvidence(input.barcode, fact, versionNo, contributorId, assetId);
+        const submitted = this.submittedEvidence(input.barcode, fact, versionNo, contributorId, assetId, manualText);
         const shadow: ContributionEvidence = {
           ...submitted,
           productionEpoch: CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
@@ -436,7 +475,8 @@ export class EvidenceAuthority {
     fact: ReturnType<typeof deriveEvidenceFacts>['facts'][number],
     versionNo: number,
     contributorId: string,
-    assetId: string
+    assetId: string,
+    manualText = false
   ): ContributionEvidence {
     const createdAt = this.now();
     return createPendingEvidence({
@@ -457,7 +497,7 @@ export class EvidenceAuthority {
       labelsTags: fact.labelsTags,
       originStructured: fact.originStructured,
       ingredientsNutrition: fact.ingredientsNutrition,
-      imageUrl: `private://evidence/${assetId}`,
+      ...(manualText ? {} : { imageUrl: `private://evidence/${assetId}` }),
       sourceProvenance: provenanceLabel(fact),
       submitterId: contributorId,
       createdAt,
@@ -631,6 +671,9 @@ export class EvidenceAuthority {
     barcode: string;
   }): Promise<{ ok: true; assetId: string; sha256: string } | { ok: false; reason: string }> {
     if (!input.contributorId || !input.barcode) return { ok: false, reason: 'source_not_owned' };
+    if (input.contentType === MANUAL_TEXT_CONTENT_TYPE) {
+      return { ok: false, reason: 'manual_text_not_an_image' };
+    }
     return this.store.transaction(async (tx) => {
       const already = await tx.finalizedUpload(input.uploadId);
       if (already) {
@@ -685,6 +728,40 @@ export class EvidenceAuthority {
       });
       await tx.rememberFinalizedUpload(input.uploadId, assetId, hash);
       return { ok: true, assetId, sha256: hash };
+    });
+  }
+
+  async finalizeManualTextAsset(
+    input: ManualTextDraft & { contributorId: string }
+  ): Promise<
+    | { ok: true; assetId: string; sha256: string; contentType: typeof MANUAL_TEXT_CONTENT_TYPE }
+    | { ok: false; reason: string }
+  > {
+    if (!input.contributorId || !input.barcode?.trim()) return { ok: false, reason: 'source_not_owned' };
+    if (input.packetAbsence === true) return { ok: false, reason: 'packet_absence_requires_packet_evidence' };
+    const canonical = manualTextSha256({ ...input, barcode: input.barcode.trim() });
+    if (!canonical) return { ok: false, reason: 'manual_text_incomplete' };
+    const barcode = input.barcode.trim();
+    return this.store.transaction(async (tx) => {
+      const existing = await tx.findVerifiedAssetByBinding({
+        sha256: canonical.sha256,
+        contributorId: input.contributorId,
+        barcode,
+        contentType: MANUAL_TEXT_CONTENT_TYPE,
+      });
+      if (existing) {
+        return { ok: true, assetId: existing.assetId, sha256: existing.sha256, contentType: MANUAL_TEXT_CONTENT_TYPE };
+      }
+      const assetId = `asset_${randomBytes(6).toString('hex')}`;
+      await tx.putAsset({
+        assetId,
+        sha256: canonical.sha256,
+        bytes: canonical.bytes,
+        contentType: MANUAL_TEXT_CONTENT_TYPE,
+        contributorId: input.contributorId,
+        barcode,
+      });
+      return { ok: true, assetId, sha256: canonical.sha256, contentType: MANUAL_TEXT_CONTENT_TYPE };
     });
   }
 }

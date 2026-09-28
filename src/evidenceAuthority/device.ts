@@ -6,6 +6,7 @@ import { getSession } from '../packetContribution/sessionStore';
 import type { PacketContributionSession, PacketEvidenceUnit } from '../packetContribution/types';
 import { governedCertificationLabels } from '../contributions/certificationLane';
 import { expectedAuthorityEnv, rememberSnapshot } from './assessment';
+import type { ManualTextDraft } from './manualTextAsset';
 import type { EvidenceFactInput, SharedEvidenceSnapshot, SubmissionOutcome } from './types';
 
 const OUTBOX_KEY = '@rveel_evidence_outbox_v1';
@@ -242,6 +243,47 @@ async function postAuthority(token: string, body: Record<string, unknown>): Prom
   });
 }
 
+async function finalizeManualTextAsset(token: string, session: PacketContributionSession, unit: PacketEvidenceUnit): Promise<string> {
+  const labels = unit.domain === 'certifications' ? governedCertificationLabels(unit.statement) : undefined;
+  const draft: ManualTextDraft = {
+    barcode: session.barcode,
+    variantKey: session.variantKey,
+    sessionId: session.sessionId,
+    unitId: unit.unitId,
+    domain: unit.domain as ManualTextDraft['domain'],
+    statement: unit.statement,
+    ingredientsText: unit.domain === 'ingredients_nutrition' && unit.section !== 'nutrition' ? unit.statement : undefined,
+    nutritionBasis: unit.nutritionBasis,
+    nutritionAmounts: unit.nutritionAmounts,
+    originClaimType: unit.originClaimType,
+    originCountry: unit.originCountry,
+    ingredientSubject: unit.ingredientSubject,
+    labelsTags: labels,
+    packetAbsence: unit.packetAbsenceAffirmation === true,
+  };
+  const response = await postAuthority(token, {
+    action: 'finalize-manual-text',
+    barcode: draft.barcode,
+    variantKey: draft.variantKey,
+    sessionId: draft.sessionId,
+    unitId: draft.unitId,
+    domain: draft.domain,
+    statement: draft.statement,
+    ingredientsText: draft.ingredientsText,
+    nutritionBasis: draft.nutritionBasis,
+    nutritionAmounts: draft.nutritionAmounts,
+    originClaimType: draft.originClaimType,
+    originCountry: draft.originCountry,
+    ingredientSubject: draft.ingredientSubject,
+    labelsTags: draft.labelsTags,
+    packetAbsence: draft.packetAbsence,
+  });
+  if (!response.ok) throw new Error('manual_text_not_finalized');
+  const body = (await response.json()) as { assetId?: string };
+  if (!body.assetId) throw new Error('manual_text_not_finalized');
+  return body.assetId;
+}
+
 async function uploadFinalizedAsset(
   token: string,
   bytes: Uint8Array,
@@ -310,10 +352,20 @@ export async function transmitSessionToAuthority(sessionId: string): Promise<Aut
   try {
     const token = await credentialToken();
     for (const sourceId of sourceIds) {
+      const related = pendingUnits.filter((unit) => unit.support.sourceAssetId === sourceId);
       const source = session.sourceAssets.find((asset) => asset.assetId === sourceId);
       const bytes = source ? await getPrivateByteStore().get(source.privateKey) : null;
-      if (!source || !bytes?.length) return { ...none, pendingOutbox: true };
-      finalized.set(sourceId, await uploadFinalizedAsset(token, bytes, source.contentSha256, session.barcode));
+      if (source && bytes?.length) {
+        finalized.set(sourceId, await uploadFinalizedAsset(token, bytes, source.contentSha256, session.barcode));
+        continue;
+      }
+      const manualOnly =
+        related.length === 1 &&
+        related[0].origin === 'manual' &&
+        related[0].packetAbsenceAffirmation !== true &&
+        related[0].support.sourceAssetId.startsWith('manual-text:');
+      if (!manualOnly) return { ...none, pendingOutbox: true };
+      finalized.set(sourceId, await finalizeManualTextAsset(token, session, related[0]));
     }
     const facts = evidenceFactsForUnits(session, pendingUnits, finalized);
     if (facts.length === 0 || facts.some((fact) => !fact.finalizedAssetId)) {

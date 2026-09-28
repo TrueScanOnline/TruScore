@@ -24,6 +24,12 @@ function text(value: unknown): string {
   return String(value ?? '');
 }
 
+function bytesOf(value: unknown): Uint8Array {
+  if (value instanceof Uint8Array) return value;
+  if (typeof Buffer !== 'undefined' && Buffer.isBuffer(value)) return new Uint8Array(value);
+  return new Uint8Array();
+}
+
 function versionFrom(row: Record<string, unknown>): VersionRecord {
   return {
     versionId: text(row.version_id),
@@ -141,7 +147,8 @@ export class PostgresAuthorityStore implements AuthorityStore {
       },
       async getAsset(assetId) {
         const found = await client.query(
-          `SELECT asset_id, sha256, verified, contributor_id, barcode FROM evidence_source_assets WHERE asset_id = $1`,
+          `SELECT asset_id, sha256, verified, contributor_id, barcode, content_type, bytes
+             FROM evidence_source_assets WHERE asset_id = $1`,
           [assetId]
         );
         const row = found.rows[0];
@@ -152,7 +159,19 @@ export class PostgresAuthorityStore implements AuthorityStore {
           verified: true,
           contributorId: text(row.contributor_id),
           barcode: text(row.barcode),
+          contentType: row.content_type == null ? null : text(row.content_type),
+          bytes: bytesOf(row.bytes),
         };
+      },
+      async findVerifiedAssetByBinding(binding) {
+        const found = await client.query(
+          `SELECT asset_id, sha256 FROM evidence_source_assets
+            WHERE sha256 = $1 AND contributor_id = $2 AND barcode = $3 AND content_type = $4 AND verified = TRUE
+            LIMIT 1`,
+          [binding.sha256, binding.contributorId, binding.barcode, binding.contentType]
+        );
+        const row = found.rows[0];
+        return row ? { assetId: text(row.asset_id), sha256: text(row.sha256) } : null;
       },
       async putChunk(chunk: AssetChunkRecord) {
         const inserted = await client.query(

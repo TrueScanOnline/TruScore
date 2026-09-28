@@ -133,26 +133,43 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
       continue;
     }
     if (input.domain === 'certifications') {
-      const tags = (input.labelsTags?.length ? input.labelsTags : [input.claimValue || input.exactWording || ''])
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0);
-      for (const tag of tags) {
-        const scheme = normalizeClaimKey(tag);
-        pushUnique(facts, {
-          domain: 'certifications',
-          subjectKey: `certifications|scheme:${scheme}`,
-          claimKey: scheme,
-          claimValue: tag,
-          exactWording: input.exactWording || tag,
-          variantKey: input.variantKey,
-          labelsTags: [tag],
-          machineRunId: input.machineRunId,
-          region: input.region,
+      const governed = (input.labelsTags || []).map((tag) => tag.trim()).filter((tag) => tag.length > 0);
+      if (governed.length > 0) {
+        for (const tag of governed) {
+          const scheme = normalizeClaimKey(tag);
+          pushUnique(facts, {
+            domain: 'certifications',
+            subjectKey: `certifications|scheme:${scheme}`,
+            claimKey: scheme,
+            claimValue: tag,
+            exactWording: input.exactWording || tag,
+            variantKey: input.variantKey,
+            labelsTags: [tag],
+            machineRunId: input.machineRunId,
+            region: input.region,
+            finalizedAssetId: input.finalizedAssetId,
+            derivedAssetId: input.derivedAssetId,
+            unitId: input.unitId,
+          });
+        }
+        continue;
+      }
+      const wording = (input.exactWording || input.claimValue || '').trim();
+      if (!wording) continue;
+      const scheme = normalizeClaimKey(wording);
+      pushUnique(facts, {
+        domain: 'certifications',
+        subjectKey: `certifications|scheme:${scheme}`,
+        claimKey: scheme,
+        claimValue: wording,
+        exactWording: wording,
+        variantKey: input.variantKey,
+        machineRunId: input.machineRunId,
+        region: input.region,
         finalizedAssetId: input.finalizedAssetId,
         derivedAssetId: input.derivedAssetId,
         unitId: input.unitId,
-        });
-      }
+      });
       continue;
     }
     if (input.domain === 'ingredients_nutrition') {

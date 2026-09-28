@@ -9,6 +9,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { EvidenceAuthority, OFF_STAGING_HOSTNAME, officialOffStagingTarget } from '../../../src/evidenceAuthority/authority';
 import type { EvidenceFactInput } from '../../../src/evidenceAuthority/types';
+import type { ManualTextDomain } from '../../../src/evidenceAuthority/manualTextAsset';
 import { PostgresAuthorityStore } from '../lib/evidenceAuthorityPg';
 
 function handleCORS(res: VercelResponse) {
@@ -129,6 +130,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         totalBytes,
         declaredSha256,
         bytes: bytesFromBase64(chunkBase64),
+      });
+      return res.status(result.ok ? 200 : 409).json(result);
+    }
+    if (action === 'finalize-manual-text') {
+      const barcode = typeof body.barcode === 'string' ? body.barcode.trim() : '';
+      const sessionId = typeof body.sessionId === 'string' ? body.sessionId.trim() : '';
+      const unitId = typeof body.unitId === 'string' ? body.unitId.trim() : '';
+      const domain = typeof body.domain === 'string' ? body.domain : '';
+      const allowed: ManualTextDomain[] = ['ingredients_nutrition', 'origins', 'packet_claims', 'certifications'];
+      if (!/^\d{8,14}$/.test(barcode) || !sessionId || !unitId || !allowed.includes(domain as ManualTextDomain)) {
+        return res.status(400).json({ success: false, error: 'manual_text_incomplete' });
+      }
+      if (body.packetAbsence === true) {
+        return res.status(400).json({ success: false, error: 'packet_absence_requires_packet_evidence' });
+      }
+      const result = await service.finalizeManualTextAsset({
+        contributorId,
+        barcode,
+        sessionId,
+        unitId,
+        domain: domain as ManualTextDomain,
+        variantKey: typeof body.variantKey === 'string' ? body.variantKey : undefined,
+        statement: typeof body.statement === 'string' ? body.statement : undefined,
+        ingredientsText: typeof body.ingredientsText === 'string' ? body.ingredientsText : undefined,
+        nutritionBasis: typeof body.nutritionBasis === 'string' ? body.nutritionBasis : undefined,
+        nutritionAmounts: Array.isArray(body.nutritionAmounts)
+          ? (body.nutritionAmounts as Array<{ attribute?: string; value?: unknown; unit?: string }>)
+          : undefined,
+        originClaimType: typeof body.originClaimType === 'string' ? body.originClaimType : undefined,
+        originCountry: typeof body.originCountry === 'string' ? body.originCountry : undefined,
+        ingredientSubject: typeof body.ingredientSubject === 'string' ? body.ingredientSubject : undefined,
+        labelsTags: Array.isArray(body.labelsTags) ? body.labelsTags.filter((tag) => typeof tag === 'string') : undefined,
+        packetAbsence: false,
       });
       return res.status(result.ok ? 200 : 409).json(result);
     }
