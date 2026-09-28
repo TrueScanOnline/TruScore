@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getBackendUrl } from '../config/backendConfig';
 import { getPrivateByteStore } from '../packetContribution/sourceAssets';
+import { sha256Hex } from '../packetContribution/sha256';
 import { getSession } from '../packetContribution/sessionStore';
 import type { PacketContributionSession, PacketEvidenceUnit } from '../packetContribution/types';
 import { rememberSnapshot } from './assessment';
@@ -8,13 +9,25 @@ import type { EvidenceFactInput, SharedEvidenceSnapshot, SubmissionOutcome } fro
 
 const OUTBOX_KEY = '@rveel_evidence_outbox_v1';
 const CREDENTIAL_KEY = '@rveel_evidence_contributor_credential_v1';
+/** Raw bytes per request. Base64 of this stays inside one Vercel body. */
+export const EVIDENCE_ASSET_CHUNK_BYTES = 256 * 1024;
+
+type UnitRef = { unitId: string; revision: string };
 
 type OutboxItem = {
   idempotencyKey: string;
   sessionId: string;
   barcode: string;
-  status: 'unsent' | 'acknowledged';
+  unitRefs: UnitRef[];
+  status: 'unsent' | 'acknowledged' | 'refused';
   createdAt: number;
+};
+
+export type AuthorityTransmitResult = {
+  admitted: boolean;
+  admittedUnitIds: string[];
+  pendingOutbox: boolean;
+  snapshot: SharedEvidenceSnapshot | null;
 };
 
 function randomKey(): string {
@@ -34,6 +47,43 @@ function bytesToBase64(bytes: Uint8Array): string {
   return globalThis.btoa(binary);
 }
 
+export function splitAssetChunks(bytes: Uint8Array, chunkBytes = EVIDENCE_ASSET_CHUNK_BYTES): Uint8Array[] {
+  if (!bytes.length) return [];
+  const parts: Uint8Array[] = [];
+  for (let index = 0; index < bytes.length; index += chunkBytes) {
+    parts.push(bytes.subarray(index, Math.min(bytes.length, index + chunkBytes)));
+  }
+  return parts;
+}
+
+function sameRefs(left: UnitRef[], right: UnitRef[]): boolean {
+  if (left.length !== right.length) return false;
+  const key = (ref: UnitRef) => `${ref.unitId}:${ref.revision}`;
+  const wanted = new Set(right.map(key));
+  return left.every((ref) => wanted.has(key(ref)));
+}
+
+export function unitRevision(unit: PacketEvidenceUnit): string {
+  return sha256Hex(
+    new TextEncoder().encode(
+      JSON.stringify({
+        unitId: unit.unitId,
+        domain: unit.domain,
+        section: unit.section ?? null,
+        statement: unit.statement,
+        correctionText: unit.correctionText ?? null,
+        packetAbsence: unit.packetAbsenceAffirmation === true,
+        nutritionBasis: unit.nutritionBasis ?? null,
+        nutritionAmounts: unit.nutritionAmounts ?? null,
+        originClaimType: unit.originClaimType ?? null,
+        originCountry: unit.originCountry ?? null,
+        ingredientSubject: unit.ingredientSubject ?? null,
+        support: unit.support,
+      })
+    )
+  );
+}
+
 async function readOutbox(): Promise<OutboxItem[]> {
   const raw = await AsyncStorage.getItem(OUTBOX_KEY);
   if (!raw) return [];
@@ -50,37 +100,60 @@ async function writeOutbox(items: OutboxItem[]): Promise<void> {
 }
 
 export async function listUnsentSubmissions(): Promise<OutboxItem[]> {
-  return (await readOutbox()).filter((item) => item.status === 'unsent');
+  return (await readOutbox()).filter((item) => item.status === 'unsent' && item.unitRefs?.length);
 }
 
-function factsFromSession(session: PacketContributionSession): EvidenceFactInput[] {
-  const facts: EvidenceFactInput[] = [];
-  for (const unit of session.units) {
-    if (unit.status !== 'reviewed') continue;
-    facts.push(...factsFromUnit(session, unit));
-  }
-  return facts;
+function provenanceFor(
+  session: PacketContributionSession,
+  unit: PacketEvidenceUnit,
+  finalizedAssetIds: ReadonlyMap<string, string>
+): Pick<EvidenceFactInput, 'finalizedAssetId' | 'derivedAssetId' | 'region' | 'machineRunId' | 'unitId'> {
+  const derived =
+    unit.support.coverage === 'region'
+      ? session.derivedAssets.find((asset) => asset.derivedAssetId === unit.support.derivedAssetId)
+      : undefined;
+  const region = derived?.transform.kind === 'region' ? derived.transform : undefined;
+  return {
+    unitId: unit.unitId,
+    machineRunId: unit.extractionRunId || undefined,
+    finalizedAssetId: finalizedAssetIds.get(unit.support.sourceAssetId),
+    derivedAssetId: unit.support.coverage === 'region' ? unit.support.derivedAssetId : undefined,
+    region: region ? { x: region.x, y: region.y, width: region.width, height: region.height } : undefined,
+  };
 }
 
-function factsFromUnit(session: PacketContributionSession, unit: PacketEvidenceUnit): EvidenceFactInput[] {
+export function evidenceFactsForUnits(
+  session: PacketContributionSession,
+  units: PacketEvidenceUnit[],
+  finalizedAssetIds: ReadonlyMap<string, string>
+): EvidenceFactInput[] {
+  return units.flatMap((unit) => factsFromUnit(session, unit, provenanceFor(session, unit, finalizedAssetIds)));
+}
+
+function factsFromUnit(
+  session: PacketContributionSession,
+  unit: PacketEvidenceUnit,
+  provenance: Pick<EvidenceFactInput, 'finalizedAssetId' | 'derivedAssetId' | 'region' | 'machineRunId' | 'unitId'>
+): EvidenceFactInput[] {
   if (unit.domain === 'ingredients_nutrition') {
     return [
       {
+        ...provenance,
         domain: 'ingredients_nutrition',
         variantKey: session.variantKey,
         ingredientsText: unit.section === 'nutrition' ? undefined : unit.statement,
         nutriments: unit.section === 'nutrition' ? unit.nutritionAmounts : undefined,
         nutritionBasis: unit.nutritionBasis,
-        machineRunId: unit.extractionRunId || undefined,
       },
     ];
   }
   if (unit.domain === 'packet_claims' && unit.packetAbsenceAffirmation === true) {
-    return [{ domain: 'packet_claims', packetAbsence: true, variantKey: session.variantKey }];
+    return [{ ...provenance, domain: 'packet_claims', packetAbsence: true, variantKey: session.variantKey }];
   }
   if (unit.domain === 'packet_claims') {
     return [
       {
+        ...provenance,
         domain: 'packet_claims',
         exactWording: unit.statement,
         claimValue: unit.statement,
@@ -91,6 +164,7 @@ function factsFromUnit(session: PacketContributionSession, unit: PacketEvidenceU
   if (unit.domain === 'origins' && unit.originClaimType && unit.originClaimType !== 'other') {
     return [
       {
+        ...provenance,
         domain: 'origins',
         exactWording: unit.statement,
         claimValue: unit.originCountry || unit.ingredientSubject || unit.statement,
@@ -110,6 +184,7 @@ function factsFromUnit(session: PacketContributionSession, unit: PacketEvidenceU
   if (unit.domain === 'certifications' && unit.statement.trim()) {
     return [
       {
+        ...provenance,
         domain: 'certifications',
         claimValue: unit.statement,
         exactWording: unit.statement,
@@ -121,10 +196,14 @@ function factsFromUnit(session: PacketContributionSession, unit: PacketEvidenceU
   return [];
 }
 
+function authorityUrl(): string {
+  return `${getBackendUrl().replace(/\/$/, '')}/api/evidence-authority`;
+}
+
 async function credentialToken(): Promise<string> {
   const existing = await AsyncStorage.getItem(CREDENTIAL_KEY);
   if (existing) return existing;
-  const response = await fetch(`${getBackendUrl().replace(/\/$/, '')}/api/evidence-authority`, {
+  const response = await fetch(authorityUrl(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'issue-credential' }),
@@ -136,61 +215,130 @@ async function credentialToken(): Promise<string> {
   return body.token;
 }
 
-export async function transmitSessionToAuthority(sessionId: string): Promise<{
-  admitted: boolean;
-  pendingOutbox: boolean;
-  snapshot: SharedEvidenceSnapshot | null;
-}> {
+async function postAuthority(token: string, body: Record<string, unknown>): Promise<Response> {
+  return fetch(authorityUrl(), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+async function uploadFinalizedAsset(token: string, bytes: Uint8Array, declaredSha256: string): Promise<string> {
+  const uploadId = randomKey();
+  const parts = splitAssetChunks(bytes);
+  for (let index = 0; index < parts.length; index += 1) {
+    const response = await postAuthority(token, {
+      action: 'upload-asset-chunk',
+      uploadId,
+      chunkIndex: index,
+      chunkCount: parts.length,
+      totalBytes: bytes.length,
+      declaredSha256,
+      chunkBase64: bytesToBase64(parts[index]),
+    });
+    if (!response.ok) throw new Error('asset_chunk_failed');
+  }
+  const finalized = await postAuthority(token, {
+    action: 'finalize-asset',
+    uploadId,
+    declaredSha256,
+    contentType: 'application/octet-stream',
+  });
+  if (!finalized.ok) throw new Error('asset_not_finalized');
+  const body = (await finalized.json()) as { assetId?: string };
+  if (!body.assetId) throw new Error('asset_not_finalized');
+  return body.assetId;
+}
+
+export async function transmitSessionToAuthority(sessionId: string): Promise<AuthorityTransmitResult> {
+  const none: AuthorityTransmitResult = { admitted: false, admittedUnitIds: [], pendingOutbox: false, snapshot: null };
   const session = await getSession(sessionId);
-  if (!session) return { admitted: false, pendingOutbox: false, snapshot: null };
+  if (!session) return none;
   const items = await readOutbox();
-  let item = items.find((row) => row.sessionId === sessionId);
+  const acknowledged = new Set(
+    items
+      .filter((item) => item.status === 'acknowledged')
+      .flatMap((item) => item.unitRefs || [])
+      .map((ref) => `${ref.unitId}:${ref.revision}`)
+  );
+  const pendingUnits = session.units.filter(
+    (unit) => unit.status === 'reviewed' && !acknowledged.has(`${unit.unitId}:${unitRevision(unit)}`)
+  );
+  if (pendingUnits.length === 0) return none;
+  const unitRefs = pendingUnits.map((unit) => ({ unitId: unit.unitId, revision: unitRevision(unit) }));
+  let item = items.find((row) => row.sessionId === sessionId && row.status === 'unsent' && sameRefs(row.unitRefs || [], unitRefs));
   if (!item) {
     item = {
       idempotencyKey: randomKey(),
       sessionId,
       barcode: session.barcode,
+      unitRefs,
       status: 'unsent',
       createdAt: Date.now(),
     };
     items.push(item);
     await writeOutbox(items);
   }
-  if (item.status === 'acknowledged') {
-    return { admitted: true, pendingOutbox: false, snapshot: null };
-  }
-  const source = session.sourceAssets[0];
-  const bytes = source ? await getPrivateByteStore().get(source.privateKey) : null;
-  if (!source || !bytes?.length) return { admitted: false, pendingOutbox: true, snapshot: null };
+  const sourceIds = [...new Set(pendingUnits.map((unit) => unit.support.sourceAssetId))];
+  const finalized = new Map<string, string>();
   try {
     const token = await credentialToken();
-    const response = await fetch(`${getBackendUrl().replace(/\/$/, '')}/api/evidence-authority`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        action: 'submit',
-        idempotencyKey: item.idempotencyKey,
-        barcode: session.barcode,
-        declaredSha256: source.contentSha256,
-        contentType: 'application/octet-stream',
-        sourceBase64: bytesToBase64(bytes),
-        facts: factsFromSession(session),
-      }),
+    for (const sourceId of sourceIds) {
+      const source = session.sourceAssets.find((asset) => asset.assetId === sourceId);
+      const bytes = source ? await getPrivateByteStore().get(source.privateKey) : null;
+      if (!source || !bytes?.length) return { ...none, pendingOutbox: true };
+      finalized.set(sourceId, await uploadFinalizedAsset(token, bytes, source.contentSha256));
+    }
+    const facts = evidenceFactsForUnits(session, pendingUnits, finalized);
+    if (facts.length === 0 || facts.some((fact) => !fact.finalizedAssetId)) {
+      return { ...none, pendingOutbox: true };
+    }
+    const response = await postAuthority(token, {
+      action: 'submit',
+      idempotencyKey: item.idempotencyKey,
+      barcode: session.barcode,
+      facts,
     });
-    if (!response.ok) return { admitted: false, pendingOutbox: true, snapshot: null };
+    if (!response.ok) return { ...none, pendingOutbox: true };
     const body = (await response.json()) as { outcome?: SubmissionOutcome };
     const snapshot = body.outcome?.snapshot ?? null;
-    if (body.outcome?.status === 'admitted' && snapshot) {
+    const admittedUnitIds = body.outcome?.admittedUnitIds || [];
+    if (body.outcome?.status === 'admitted' && admittedUnitIds.length > 0 && snapshot) {
       await rememberSnapshot(snapshot);
       item.status = 'acknowledged';
+      item.unitRefs = unitRefs.filter((ref) => admittedUnitIds.includes(ref.unitId));
+      const refused = unitRefs.filter((ref) => !admittedUnitIds.includes(ref.unitId));
+      if (refused.length > 0) {
+        items.push({
+          idempotencyKey: randomKey(),
+          sessionId,
+          barcode: session.barcode,
+          unitRefs: refused,
+          status: 'refused',
+          createdAt: Date.now(),
+        });
+      }
       await writeOutbox(items);
-      return { admitted: true, pendingOutbox: false, snapshot };
+      return { admitted: true, admittedUnitIds, pendingOutbox: false, snapshot };
     }
-    return { admitted: false, pendingOutbox: true, snapshot };
+    if (body.outcome && body.outcome.status !== 'admitted' && body.outcome.status !== 'pending_source') {
+      item.status = 'refused';
+      await writeOutbox(items);
+    }
+    return { admitted: false, admittedUnitIds: [], pendingOutbox: item.status === 'unsent', snapshot };
   } catch {
-    return { admitted: false, pendingOutbox: true, snapshot: null };
+    return { ...none, pendingOutbox: true };
+  }
+}
+
+/** Retry completed unsent batches. Does not require the contribution modal. */
+export async function retryUnsentEvidenceSubmissions(): Promise<void> {
+  const unsent = await listUnsentSubmissions();
+  const sessionIds = [...new Set(unsent.map((item) => item.sessionId))];
+  for (const sessionId of sessionIds) {
+    await transmitSessionToAuthority(sessionId);
   }
 }

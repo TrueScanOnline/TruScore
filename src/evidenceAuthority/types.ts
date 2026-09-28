@@ -34,13 +34,19 @@ export type EvidenceFactInput = {
   certificationScope?: string;
   machineRunId?: string;
   region?: { x: number; y: number; width: number; height: number };
+  /** Server asset id from a finalized chunked upload. */
+  finalizedAssetId?: string;
+  derivedAssetId?: string;
+  /** Device unit this fact was reviewed from. Acknowledgement is per unit. */
+  unitId?: string;
 };
 
 export type EvidenceSubmissionInput = {
   idempotencyKey: string;
   barcode: string;
-  sourceBytes: Uint8Array;
-  declaredSha256: string;
+  /** Direct bytes remain for tests. Device submissions reference finalizedAssetId on each fact. */
+  sourceBytes?: Uint8Array;
+  declaredSha256?: string;
   contentType?: string;
   facts: EvidenceFactInput[];
   /**
@@ -71,14 +77,17 @@ export type SharedEvidenceSnapshot = {
     target: string | null;
     readBackStatus: string;
     fields: Record<string, string>;
+    lineage: OffFieldLineage[];
   }>;
 };
 
 export type SubmissionOutcome = {
   idempotencyKey: string;
-  status: 'admitted' | 'rejected' | 'pending_source' | 'source_hash_mismatch' | 'no_facts';
+  status: 'admitted' | 'rejected' | 'pending_source' | 'source_hash_mismatch' | 'source_not_finalized' | 'no_facts';
   versionIds: string[];
   admissionSeqs: number[];
+  /** Units whose facts in this transmission were all admitted. */
+  admittedUnitIds: string[];
   gaps: string[];
   snapshot: SharedEvidenceSnapshot | null;
 };
@@ -95,6 +104,9 @@ export type DerivedFact = {
   ingredientsNutrition?: ContributionEvidence['ingredientsNutrition'];
   machineRunId?: string;
   region?: { x: number; y: number; width: number; height: number };
+  finalizedAssetId?: string;
+  derivedAssetId?: string;
+  unitId?: string;
 };
 
 export type VersionRecord = {
@@ -135,6 +147,13 @@ export type ResponseRecord = {
   createdAt: number;
 };
 
+export type OffFieldLineage = {
+  offField: string;
+  versionId: string;
+  subjectKey: string;
+  basis: string;
+};
+
 export type DispatchRecord = {
   dispatchId: string;
   submissionKey: string;
@@ -143,8 +162,18 @@ export type DispatchRecord = {
   status: 'pending_unconfigured' | 'pending' | 'sent' | 'failed_retryable';
   target: string | null;
   fields: Record<string, string>;
+  lineage: OffFieldLineage[];
   readBackStatus: 'not_run' | 'read';
   createdAt: number;
+};
+
+export type AssetChunkRecord = {
+  uploadId: string;
+  chunkIndex: number;
+  chunkCount: number;
+  totalBytes: number;
+  declaredSha256: string;
+  bytes: Uint8Array;
 };
 
 export type ContributorRecord = {

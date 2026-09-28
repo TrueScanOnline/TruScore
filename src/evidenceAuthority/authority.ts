@@ -11,22 +11,33 @@ import {
 import { CURRENT_PRODUCTION_CONTRIBUTION_EPOCH } from '../contributions/productionEpoch';
 import type { ContributionDisputeReason } from '../config/contributionPolicy';
 import { registerIngredientsNutritionBodyReceiver } from '../ingredientsNutrition/bodyReceiver';
-import { projectOffWriteFields } from '../ingredientsNutrition/nutritionSchema';
+import {
+  nutritionField,
+  projectOffWriteFields,
+  type NutritionBasis,
+} from '../ingredientsNutrition/nutritionSchema';
+import type { NutritionAttribute } from '../ingredientsNutrition/nutritionSchema';
 import { sha256Hex } from '../packetContribution/sha256';
 import type { ContributionEvidence } from '../contributions/types';
 import { deriveEvidenceFacts } from './subjects';
 import type { AuthorityStore, AuthorityTx } from './store';
 import type {
+  AssetChunkRecord,
   AuthorityEnv,
   AuthorityRecordClass,
+  DerivedFact,
   DispatchRecord,
   EvidenceSubmissionInput,
+  OffFieldLineage,
   SharedEvidenceSnapshot,
   SubmissionOutcome,
   VersionRecord,
 } from './types';
 
 const ADMITTED_BY = 'wave4a-evidence-authority';
+const OFF_STAGING_TARGET = 'https://world.openfoodfacts.net/cgi/product_jqm2.pl';
+const LIVE_OFF_HOST = /world\.openfoodfacts\.org/i;
+const STAGING_OFF_HOST = /world\.openfoodfacts\.net/i;
 
 export type OffTransport = (input: {
   target: string;
@@ -107,56 +118,61 @@ export class EvidenceAuthority {
     const outcome = await this.store.transaction(async (tx) => {
       const existing = await tx.getSubmission(input.idempotencyKey);
       if (existing) return existing;
-      const gaps = deriveEvidenceFacts(input.facts).gaps;
-      if (!input.sourceBytes?.length) {
-        const outcome: SubmissionOutcome = {
-          idempotencyKey: input.idempotencyKey,
-          status: 'pending_source',
-          versionIds: [],
-          admissionSeqs: [],
-          gaps,
-          snapshot: null,
-        };
-        await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
-        return outcome;
-      }
-      const actualHash = sha256Hex(input.sourceBytes);
-      if (!input.declaredSha256 || input.declaredSha256 !== actualHash) {
-        const outcome: SubmissionOutcome = {
-          idempotencyKey: input.idempotencyKey,
-          status: 'source_hash_mismatch',
-          versionIds: [],
-          admissionSeqs: [],
-          gaps,
-          snapshot: null,
-        };
-        await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
-        return outcome;
-      }
       const derived = deriveEvidenceFacts(input.facts);
+      const gaps = derived.gaps;
+      const empty = (status: SubmissionOutcome['status']): SubmissionOutcome => ({
+        idempotencyKey: input.idempotencyKey,
+        status,
+        versionIds: [],
+        admissionSeqs: [],
+        admittedUnitIds: [],
+        gaps,
+        snapshot: null,
+      });
       if (derived.facts.length === 0) {
-        const outcome: SubmissionOutcome = {
-          idempotencyKey: input.idempotencyKey,
-          status: 'no_facts',
-          versionIds: [],
-          admissionSeqs: [],
-          gaps: derived.gaps,
-          snapshot: null,
-        };
+        const outcome = empty('no_facts');
         await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
         return outcome;
       }
-      const assetId = `asset_${randomBytes(6).toString('hex')}`;
-      await tx.putAsset({
-        assetId,
-        sha256: actualHash,
-        bytes: input.sourceBytes,
-        contentType: input.contentType ?? null,
-      });
+      let sharedAssetId: string | null = null;
+      if (input.sourceBytes?.length) {
+        const actualHash = sha256Hex(input.sourceBytes);
+        if (!input.declaredSha256 || input.declaredSha256 !== actualHash) {
+          const outcome = empty('source_hash_mismatch');
+          await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+          return outcome;
+        }
+        sharedAssetId = `asset_${randomBytes(6).toString('hex')}`;
+        await tx.putAsset({
+          assetId: sharedAssetId,
+          sha256: actualHash,
+          bytes: input.sourceBytes,
+          contentType: input.contentType ?? null,
+        });
+      }
+      const resolved: Array<{ fact: DerivedFact; assetId: string }> = [];
+      for (const fact of derived.facts) {
+        const assetId = fact.finalizedAssetId || sharedAssetId;
+        if (!assetId) {
+          const outcome = empty('pending_source');
+          await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+          return outcome;
+        }
+        if (fact.finalizedAssetId) {
+          const asset = await tx.getAsset(fact.finalizedAssetId);
+          if (!asset?.verified) {
+            const outcome = empty('source_not_finalized');
+            await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+            return outcome;
+          }
+        }
+        resolved.push({ fact, assetId });
+      }
       const versionIds: string[] = [];
       const admissionSeqs: number[] = [];
       const admittedForOff: VersionRecord[] = [];
-      for (const fact of derived.facts) {
+      const unitAdmission = new Map<string, boolean>();
+      for (const { fact, assetId } of resolved) {
         const subject = await tx.ensureSubject({
           subjectId: `subject_${randomBytes(6).toString('hex')}`,
           barcode: input.barcode,
@@ -184,12 +200,13 @@ export class EvidenceAuthority {
           admittedBy: ADMITTED_BY,
           timestamp: this.now(),
         });
-        const eligible =
-          admitted.ok && isAssessmentEligibleForReceiver(admitted.evidence, receiverFor(fact.domain));
+        const serverAdmitted = admitted.ok;
+        const scoringEligible =
+          serverAdmitted && isAssessmentEligibleForReceiver(admitted.evidence, receiverFor(fact.domain));
         const versionId = `ver_${randomBytes(6).toString('hex')}`;
-        const admissionSeq = eligible ? await tx.nextAdmissionSeq() : null;
+        const admissionSeq = serverAdmitted ? await tx.nextAdmissionSeq() : null;
         const content: ContributionEvidence = {
-          ...(admitted.ok ? admitted.evidence : submitted),
+          ...(serverAdmitted ? admitted.evidence : submitted),
           productionEpoch: this.epoch,
           recordClass: this.config.authorityEnv === 'production' ? 'production' : undefined,
           canonicalPromoted: false,
@@ -198,7 +215,7 @@ export class EvidenceAuthority {
           evidenceId: submitted.evidenceId,
           evidenceVersion: versionNo,
         };
-        if (!eligible) {
+        if (!serverAdmitted) {
           content.admissionStatus = 'rejected';
           content.admission = undefined;
         }
@@ -214,7 +231,7 @@ export class EvidenceAuthority {
           content,
           sourceAssetId: assetId,
           regionId,
-          admissionStatus: eligible ? 'admitted' : 'rejected',
+          admissionStatus: serverAdmitted ? 'admitted' : 'rejected',
           admissionSeq,
           governance: 'active',
           authorityEpoch: this.epoch,
@@ -225,14 +242,23 @@ export class EvidenceAuthority {
         await tx.appendEvent({
           eventId: `evt_${randomBytes(4).toString('hex')}`,
           versionId,
-          kind: eligible ? 'admitted' : 'rejected',
+          kind: serverAdmitted ? 'admitted' : 'rejected',
           actorId: ADMITTED_BY,
-          detail: { reason: eligible ? 'server_wave4a_admission' : admitted.ok ? 'receiver_ineligible' : admitted.reason },
+          detail: {
+            reason: serverAdmitted
+              ? scoringEligible
+                ? 'server_wave4a_admission'
+                : 'admitted_not_scoring_eligible'
+              : admitted.reason,
+          },
           createdAt: this.now(),
         });
         versionIds.push(versionId);
         if (admissionSeq != null) admissionSeqs.push(admissionSeq);
-        if (eligible) admittedForOff.push(row);
+        if (fact.unitId) {
+          unitAdmission.set(fact.unitId, (unitAdmission.get(fact.unitId) ?? true) && serverAdmitted);
+        }
+        if (serverAdmitted && scoringEligible && fact.domain === 'ingredients_nutrition') admittedForOff.push(row);
       }
       await this.queueOffDispatch(tx, input.barcode, input.idempotencyKey, admittedForOff);
       const outcome: SubmissionOutcome = {
@@ -240,6 +266,7 @@ export class EvidenceAuthority {
         status: admissionSeqs.length > 0 ? 'admitted' : 'rejected',
         versionIds,
         admissionSeqs,
+        admittedUnitIds: [...unitAdmission.entries()].filter(([, admitted]) => admitted).map(([unitId]) => unitId),
         gaps: derived.gaps,
         snapshot: await this.snapshotFrom(tx, input.barcode),
       };
@@ -398,11 +425,21 @@ export class EvidenceAuthority {
       originStructured: fact.originStructured,
       ingredientsNutrition: fact.ingredientsNutrition,
       imageUrl: `private://evidence/${assetId}`,
-      sourceProvenance: fact.machineRunId,
+      sourceProvenance: provenanceLabel(fact),
       submitterId: contributorId,
       createdAt,
       admissionStatus: 'submitted',
     });
+  }
+
+  private offPlan(): { target: string | null; execute: boolean } {
+    if (this.config.authorityEnv !== 'uat') return { target: null, execute: false };
+    const requested = (this.config.offTarget || OFF_STAGING_TARGET).trim();
+    if (LIVE_OFF_HOST.test(requested) || !STAGING_OFF_HOST.test(requested)) {
+      return { target: null, execute: false };
+    }
+    const execute = this.config.offExecute === true && this.config.offCredentialsConfigured === true;
+    return { target: requested, execute };
   }
 
   private async queueOffDispatch(
@@ -410,38 +447,70 @@ export class EvidenceAuthority {
     barcode: string,
     submissionKey: string,
     admitted: VersionRecord[]
-  ): void {
+  ): Promise<void> {
     const rows = admitted.filter((row) => row.domain === 'ingredients_nutrition');
     if (rows.length === 0) return;
-    const ingredients = rows.find((row) => row.content.ingredientsNutrition?.ingredientsText)?.content.ingredientsNutrition;
-    const amounts = rows.flatMap((row) => row.content.ingredientsNutrition?.nutriments || []);
-    const basis = rows.find((row) => row.content.ingredientsNutrition?.nutritionBasis)?.content.ingredientsNutrition
-      ?.nutritionBasis;
-    const fields = projectOffWriteFields({
-      barcode,
-      ingredientsText: ingredients?.ingredientsText,
-      nutrition: basis && amounts.length > 0 ? { basis, amounts, nutritionComplete: false } : undefined,
-    });
-    if (!fields) return;
-    const target = this.config.offTarget?.trim() || '';
-    const productionOff = /world\.openfoodfacts\.org/i.test(target);
-    const executable =
-      this.config.offExecute === true &&
-      !!target &&
-      this.config.offCredentialsConfigured === true &&
-      !productionOff;
-    const row: DispatchRecord = {
-      dispatchId: `off_${randomBytes(4).toString('hex')}`,
-      submissionKey,
-      versionId: rows[0].versionId,
-      barcode,
-      status: executable ? 'pending' : 'pending_unconfigured',
-      target: target || null,
-      fields,
-      readBackStatus: 'not_run',
-      createdAt: this.now(),
-    };
-    await tx.putDispatch(row);
+    const groups = new Map<string, VersionRecord[]>();
+    for (const row of rows) {
+      const nutrition = row.content.ingredientsNutrition;
+      const amounts = nutrition?.nutriments || [];
+      const basis = nutrition?.nutritionBasis;
+      const key = amounts.length > 0 && basis ? `basis:${basis}` : nutrition?.ingredientsText ? 'ingredients_text' : '';
+      if (!key) continue;
+      const list = groups.get(key) || [];
+      list.push(row);
+      groups.set(key, list);
+    }
+    const plan = this.offPlan();
+    for (const [key, group] of groups) {
+      const basis = key.startsWith('basis:') ? (key.slice('basis:'.length) as NutritionBasis) : undefined;
+      const ingredientsText =
+        key === 'ingredients_text'
+          ? group.find((row) => row.content.ingredientsNutrition?.ingredientsText)?.content.ingredientsNutrition
+              ?.ingredientsText
+          : undefined;
+      const amounts = basis ? group.flatMap((row) => row.content.ingredientsNutrition?.nutriments || []) : [];
+      const fields = projectOffWriteFields({
+        barcode,
+        ingredientsText,
+        nutrition: basis && amounts.length > 0 ? { basis, amounts, nutritionComplete: false } : undefined,
+      });
+      if (!fields) continue;
+      const lineage: OffFieldLineage[] = [];
+      for (const row of group) {
+        const nutrition = row.content.ingredientsNutrition;
+        if (key === 'ingredients_text' && nutrition?.ingredientsText) {
+          lineage.push({
+            offField: 'ingredients_text',
+            versionId: row.versionId,
+            subjectKey: row.subjectKey,
+            basis: 'ingredients_text',
+          });
+        }
+        for (const amount of nutrition?.nutriments || []) {
+          const suffix = nutrition?.nutritionBasis === 'per_serving' ? 'serving' : '100g';
+          lineage.push({
+            offField: `nutriment_${nutritionField(amount.attribute as NutritionAttribute).offNutrient}_${suffix}`,
+            versionId: row.versionId,
+            subjectKey: row.subjectKey,
+            basis: nutrition?.nutritionBasis || key,
+          });
+        }
+      }
+      const row: DispatchRecord = {
+        dispatchId: `off_${randomBytes(4).toString('hex')}`,
+        submissionKey,
+        versionId: group[0].versionId,
+        barcode,
+        status: plan.execute ? 'pending' : 'pending_unconfigured',
+        target: plan.target,
+        fields,
+        lineage,
+        readBackStatus: 'not_run',
+        createdAt: this.now(),
+      };
+      await tx.putDispatch(row);
+    }
   }
 
   private async flushOff(outcome: SubmissionOutcome): Promise<void> {
@@ -495,7 +564,88 @@ export class EvidenceAuthority {
         target: row.target,
         readBackStatus: row.readBackStatus,
         fields: row.fields,
+        lineage: row.lineage,
       })),
     };
   }
+
+  async putAssetChunk(
+    chunk: AssetChunkRecord
+  ): Promise<{ ok: true; stored: 'stored' | 'duplicate' } | { ok: false; reason: string }> {
+    if (chunk.chunkIndex < 0 || chunk.chunkCount < 1 || chunk.chunkIndex >= chunk.chunkCount) {
+      return { ok: false, reason: 'chunk_index' };
+    }
+    if (!chunk.bytes.length || !chunk.declaredSha256 || !chunk.uploadId) {
+      return { ok: false, reason: 'chunk_incomplete' };
+    }
+    return this.store.transaction(async (tx) => {
+      const finalized = await tx.finalizedUpload(chunk.uploadId);
+      if (finalized && finalized.sha256 !== chunk.declaredSha256) {
+        return { ok: false, reason: 'upload_finalized_hash_conflict' };
+      }
+      const stored = await tx.putChunk(chunk);
+      if (stored === 'conflict') return { ok: false, reason: 'chunk_conflict' };
+      return { ok: true, stored: stored === 'duplicate' ? 'duplicate' : 'stored' };
+    });
+  }
+
+  async finalizeAssetUpload(input: {
+    uploadId: string;
+    declaredSha256: string;
+    contentType?: string;
+  }): Promise<{ ok: true; assetId: string; sha256: string } | { ok: false; reason: string }> {
+    return this.store.transaction(async (tx) => {
+      const already = await tx.finalizedUpload(input.uploadId);
+      if (already) {
+        if (already.sha256 !== input.declaredSha256) return { ok: false, reason: 'source_hash_mismatch' };
+        return { ok: true, assetId: already.assetId, sha256: already.sha256 };
+      }
+      const chunks = await tx.listChunks(input.uploadId);
+      if (chunks.length === 0) return { ok: false, reason: 'incomplete_asset' };
+      const count = chunks[0].chunkCount;
+      const total = chunks[0].totalBytes;
+      const declared = chunks[0].declaredSha256;
+      if (
+        chunks.some(
+          (chunk) => chunk.chunkCount !== count || chunk.totalBytes !== total || chunk.declaredSha256 !== declared
+        )
+      ) {
+        return { ok: false, reason: 'chunk_manifest_mismatch' };
+      }
+      if (declared !== input.declaredSha256) return { ok: false, reason: 'source_hash_mismatch' };
+      const ordered = [...chunks].sort((left, right) => left.chunkIndex - right.chunkIndex);
+      if (ordered.length !== count || ordered.some((chunk, index) => chunk.chunkIndex !== index)) {
+        return { ok: false, reason: 'incomplete_asset' };
+      }
+      const bytes = new Uint8Array(total);
+      let offset = 0;
+      for (const chunk of ordered) {
+        bytes.set(chunk.bytes, offset);
+        offset += chunk.bytes.length;
+      }
+      if (offset !== total) return { ok: false, reason: 'incomplete_asset' };
+      const hash = sha256Hex(bytes);
+      if (hash !== declared) return { ok: false, reason: 'source_hash_mismatch' };
+      const assetId = `asset_${randomBytes(6).toString('hex')}`;
+      await tx.putAsset({
+        assetId,
+        sha256: hash,
+        bytes,
+        contentType: input.contentType ?? null,
+      });
+      await tx.rememberFinalizedUpload(input.uploadId, assetId, hash);
+      return { ok: true, assetId, sha256: hash };
+    });
+  }
+}
+
+function provenanceLabel(fact: DerivedFact): string | undefined {
+  const parts = [
+    fact.machineRunId,
+    fact.derivedAssetId ? `derived:${fact.derivedAssetId}` : undefined,
+    fact.region
+      ? `region:${fact.region.x},${fact.region.y},${fact.region.width},${fact.region.height}`
+      : undefined,
+  ].filter((part): part is string => !!part);
+  return parts.length > 0 ? parts.join('|') : undefined;
 }

@@ -41,22 +41,33 @@ async function authority(): Promise<EvidenceAuthority> {
         max: 5,
       });
       const env = process.env.RVEEL_EVIDENCE_AUTHORITY_ENV === 'production' ? 'production' : 'uat';
-      const target = process.env.OFF_WRITE_TARGET?.trim() || '';
-      const credentials = !!process.env.OFF_WRITE_USER_ID?.trim() && !!process.env.OFF_WRITE_PASSWORD?.trim();
-      const execute = process.env.OFF_WRITE_EXECUTE === '1';
+      const stagingTarget = (
+        process.env.OFF_STAGING_WRITE_TARGET || 'https://world.openfoodfacts.net/cgi/product_jqm2.pl'
+      ).trim();
+      const stagingUser = process.env.OFF_STAGING_WRITE_USER_ID?.trim() || '';
+      const stagingPassword = process.env.OFF_STAGING_WRITE_PASSWORD?.trim() || '';
+      const stagingCredentials = stagingUser.length > 0 && stagingPassword.length > 0;
+      const liveHost = /world\.openfoodfacts\.org/i.test(stagingTarget);
+      const stagingHost = /world\.openfoodfacts\.net/i.test(stagingTarget);
+      const execute =
+        env === 'uat' &&
+        process.env.OFF_STAGING_WRITE_EXECUTE === '1' &&
+        stagingCredentials &&
+        stagingHost &&
+        !liveHost;
       return new EvidenceAuthority(new PostgresAuthorityStore(pool), {
         authorityEnv: env,
         founderAdminToken: process.env.RVEEL_FOUNDER_ADMIN_TOKEN,
-        offTarget: target,
-        offCredentialsConfigured: credentials,
+        offTarget: env === 'uat' && !liveHost ? stagingTarget : '',
+        offCredentialsConfigured: env === 'uat' && stagingCredentials,
         offExecute: execute,
         offTransport: async ({ target: offTarget, fields }) => {
-          if (!execute || !credentials || /world\.openfoodfacts\.org/i.test(offTarget)) {
+          if (!execute || !stagingCredentials || /world\.openfoodfacts\.org/i.test(offTarget) || !/world\.openfoodfacts\.net/i.test(offTarget)) {
             return { ok: false, status: 0 };
           }
           const form = new URLSearchParams(fields);
-          form.set('user_id', process.env.OFF_WRITE_USER_ID || '');
-          form.set('password', process.env.OFF_WRITE_PASSWORD || '');
+          form.set('user_id', stagingUser);
+          form.set('password', stagingPassword);
           const response = await fetch(offTarget, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -103,20 +114,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           : await service.dispute(contributorId, versionId, 'other');
       return res.status(result.ok ? 200 : 409).json(result);
     }
+    if (action === 'upload-asset-chunk') {
+      const chunkBase64 = typeof body.chunkBase64 === 'string' ? body.chunkBase64 : '';
+      const uploadId = typeof body.uploadId === 'string' ? body.uploadId.trim() : '';
+      const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
+      const chunkIndex = Number(body.chunkIndex);
+      const chunkCount = Number(body.chunkCount);
+      const totalBytes = Number(body.totalBytes);
+      if (!uploadId || !declaredSha256 || !chunkBase64 || !Number.isInteger(chunkIndex) || !Number.isInteger(chunkCount)) {
+        return res.status(400).json({ success: false, error: 'chunk_incomplete' });
+      }
+      const result = await service.putAssetChunk({
+        uploadId,
+        chunkIndex,
+        chunkCount,
+        totalBytes,
+        declaredSha256,
+        bytes: bytesFromBase64(chunkBase64),
+      });
+      return res.status(result.ok ? 200 : 409).json(result);
+    }
+    if (action === 'finalize-asset') {
+      const uploadId = typeof body.uploadId === 'string' ? body.uploadId.trim() : '';
+      const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
+      if (!uploadId || !declaredSha256) return res.status(400).json({ success: false, error: 'finalize_incomplete' });
+      const result = await service.finalizeAssetUpload({
+        uploadId,
+        declaredSha256,
+        contentType: typeof body.contentType === 'string' ? body.contentType : undefined,
+      });
+      return res.status(result.ok ? 200 : 409).json(result);
+    }
     if (action !== 'submit') return res.status(400).json({ success: false, error: 'Invalid action' });
     const barcode = typeof body.barcode === 'string' ? body.barcode.trim() : '';
     const idempotencyKey = typeof body.idempotencyKey === 'string' ? body.idempotencyKey.trim() : '';
     const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
     const sourceBase64 = typeof body.sourceBase64 === 'string' ? body.sourceBase64 : '';
-    if (!/^\d{8,14}$/.test(barcode) || !idempotencyKey || !declaredSha256 || !sourceBase64) {
+    const facts = Array.isArray(body.facts) ? (body.facts as EvidenceFactInput[]) : [];
+    const referencesFinalizedAsset = facts.some(
+      (fact) => typeof fact?.finalizedAssetId === 'string' && fact.finalizedAssetId.length > 0
+    );
+    if (!/^\d{8,14}$/.test(barcode) || !idempotencyKey || (!sourceBase64 && !referencesFinalizedAsset)) {
       return res.status(400).json({ success: false, error: 'submission_incomplete' });
     }
-    const facts = Array.isArray(body.facts) ? (body.facts as EvidenceFactInput[]) : [];
+    if (sourceBase64 && !declaredSha256) {
+      return res.status(400).json({ success: false, error: 'submission_incomplete' });
+    }
     const outcome = await service.submit(contributorId, {
       idempotencyKey,
       barcode,
-      declaredSha256,
-      sourceBytes: bytesFromBase64(sourceBase64),
+      declaredSha256: declaredSha256 || undefined,
+      sourceBytes: sourceBase64 ? bytesFromBase64(sourceBase64) : undefined,
       contentType: typeof body.contentType === 'string' ? body.contentType : undefined,
       facts,
     });

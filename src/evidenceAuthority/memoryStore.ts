@@ -1,4 +1,5 @@
 import type {
+  AssetChunkRecord,
   ContributorRecord,
   DispatchRecord,
   EventRecord,
@@ -13,6 +14,8 @@ type MemoryState = {
   subjects: SubjectRow[];
   submissions: Array<{ key: string; contributorId: string; barcode: string; outcome: SubmissionOutcome }>;
   assets: Array<{ assetId: string; sha256: string; bytes: Uint8Array; contentType: string | null }>;
+  chunks: AssetChunkRecord[];
+  finalizedUploads: Array<{ uploadId: string; assetId: string; sha256: string }>;
   regions: Array<{ regionId: string; assetId: string; transform: Record<string, number> }>;
   versions: VersionRecord[];
   events: EventRecord[];
@@ -31,6 +34,8 @@ export class MemoryAuthorityStore implements AuthorityStore {
     subjects: [],
     submissions: [],
     assets: [],
+    chunks: [],
+    finalizedUploads: [],
     regions: [],
     versions: [],
     events: [],
@@ -93,6 +98,40 @@ export class MemoryAuthorityStore implements AuthorityStore {
       },
       async putAsset(asset) {
         state.assets.push({ ...asset, bytes: asset.bytes.slice() });
+      },
+      async getAsset(assetId) {
+        const found = state.assets.find((item) => item.assetId === assetId);
+        return found ? { assetId: found.assetId, sha256: found.sha256, verified: true } : null;
+      },
+      async putChunk(chunk) {
+        const found = state.chunks.find(
+          (item) => item.uploadId === chunk.uploadId && item.chunkIndex === chunk.chunkIndex
+        );
+        if (found) {
+          const same =
+            found.chunkCount === chunk.chunkCount &&
+            found.totalBytes === chunk.totalBytes &&
+            found.declaredSha256 === chunk.declaredSha256 &&
+            found.bytes.length === chunk.bytes.length &&
+            found.bytes.every((value, index) => value === chunk.bytes[index]);
+          return same ? 'duplicate' : 'conflict';
+        }
+        state.chunks.push({ ...chunk, bytes: chunk.bytes.slice() });
+        return 'stored';
+      },
+      async listChunks(uploadId) {
+        return state.chunks
+          .filter((item) => item.uploadId === uploadId)
+          .map((item) => ({ ...item, bytes: item.bytes.slice() }));
+      },
+      async finalizedUpload(uploadId) {
+        const found = state.finalizedUploads.find((item) => item.uploadId === uploadId);
+        return found ? { ...found } : null;
+      },
+      async rememberFinalizedUpload(uploadId, assetId, sha256) {
+        if (!state.finalizedUploads.some((item) => item.uploadId === uploadId)) {
+          state.finalizedUploads.push({ uploadId, assetId, sha256 });
+        }
       },
       async putRegion(region) {
         state.regions.push(clone(region));

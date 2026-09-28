@@ -32,6 +32,22 @@ CREATE TABLE IF NOT EXISTS evidence_source_assets (
   created_at BIGINT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS evidence_asset_chunks (
+  upload_id TEXT NOT NULL,
+  chunk_index INTEGER NOT NULL,
+  chunk_count INTEGER NOT NULL,
+  total_bytes INTEGER NOT NULL,
+  declared_sha256 TEXT NOT NULL,
+  chunk_bytes BYTEA NOT NULL,
+  PRIMARY KEY (upload_id, chunk_index)
+);
+
+CREATE TABLE IF NOT EXISTS evidence_asset_uploads (
+  upload_id TEXT PRIMARY KEY,
+  asset_id TEXT NOT NULL REFERENCES evidence_source_assets(asset_id),
+  sha256 TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS evidence_regions (
   region_id TEXT PRIMARY KEY,
   asset_id TEXT NOT NULL REFERENCES evidence_source_assets(asset_id),
@@ -96,9 +112,12 @@ CREATE TABLE IF NOT EXISTS evidence_off_dispatch (
   status TEXT NOT NULL,
   target TEXT,
   fields_json JSONB NOT NULL,
+  lineage_json JSONB NOT NULL DEFAULT '[]'::jsonb,
   read_back_status TEXT NOT NULL,
   created_at BIGINT NOT NULL
 );
+
+ALTER TABLE evidence_off_dispatch ADD COLUMN IF NOT EXISTS lineage_json JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE OR REPLACE FUNCTION evidence_versions_content_immutable() RETURNS trigger AS $$
 BEGIN

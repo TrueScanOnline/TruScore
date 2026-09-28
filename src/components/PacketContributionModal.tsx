@@ -278,8 +278,13 @@ export default function PacketContributionModal({
       setSession(await openSessionForProduct({ barcode, variantKey }));
       const submitted = results.filter((item) => item.outcome === 'submitted').length;
       const held = results.filter((item) => item.outcome === 'held_for_later_receiver').length;
-      if (authority.admitted) {
-        setNotice('Admitted to shared evidence. This result is refreshing from the server snapshot.');
+      if (authority.admitted && authority.admittedUnitIds.length > 0) {
+        const count = authority.admittedUnitIds.length;
+        setNotice(
+          count === 1
+            ? 'Admitted 1 reviewed unit from this send. This result is refreshing from the server snapshot.'
+            : `Admitted ${count} reviewed units from this send. This result is refreshing from the server snapshot.`
+        );
         await onSharedEvidenceAdmitted?.();
       } else if (authority.pendingOutbox) {
         setNotice(

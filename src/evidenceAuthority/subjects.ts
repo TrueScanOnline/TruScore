@@ -84,6 +84,9 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
         variantKey: input.variantKey,
         machineRunId: input.machineRunId,
         region: input.region,
+        finalizedAssetId: input.finalizedAssetId,
+        derivedAssetId: input.derivedAssetId,
+        unitId: input.unitId,
       });
       continue;
     }
@@ -100,6 +103,9 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
         variantKey: input.variantKey,
         machineRunId: input.machineRunId,
         region: input.region,
+        finalizedAssetId: input.finalizedAssetId,
+        derivedAssetId: input.derivedAssetId,
+        unitId: input.unitId,
       });
       continue;
     }
@@ -120,6 +126,9 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
         originStructured: input.originStructured,
         machineRunId: input.machineRunId,
         region: input.region,
+        finalizedAssetId: input.finalizedAssetId,
+        derivedAssetId: input.derivedAssetId,
+        unitId: input.unitId,
       });
       continue;
     }
@@ -139,6 +148,9 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
           labelsTags: [tag],
           machineRunId: input.machineRunId,
           region: input.region,
+        finalizedAssetId: input.finalizedAssetId,
+        derivedAssetId: input.derivedAssetId,
+        unitId: input.unitId,
         });
       }
       continue;
@@ -156,6 +168,9 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
           ingredientsNutrition: { ingredientsText: text, nutritionComplete: false },
           machineRunId: input.machineRunId,
           region: input.region,
+        finalizedAssetId: input.finalizedAssetId,
+        derivedAssetId: input.derivedAssetId,
+        unitId: input.unitId,
         });
       }
       const nutrition = establishNutrition({
@@ -177,6 +192,9 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
             },
             machineRunId: input.machineRunId,
             region: input.region,
+        finalizedAssetId: input.finalizedAssetId,
+        derivedAssetId: input.derivedAssetId,
+        unitId: input.unitId,
           });
         }
       }

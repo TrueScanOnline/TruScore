@@ -1,4 +1,5 @@
 import type {
+  AssetChunkRecord,
   ContributorRecord,
   DispatchRecord,
   EventRecord,
@@ -20,6 +21,11 @@ export type AuthorityTx = {
   getSubmission(key: string): Promise<SubmissionOutcome | null>;
   putSubmission(record: { key: string; contributorId: string; barcode: string; outcome: SubmissionOutcome }): Promise<void>;
   putAsset(asset: { assetId: string; sha256: string; bytes: Uint8Array; contentType: string | null }): Promise<void>;
+  getAsset(assetId: string): Promise<{ assetId: string; sha256: string; verified: boolean } | null>;
+  putChunk(chunk: AssetChunkRecord): Promise<'stored' | 'duplicate' | 'conflict'>;
+  listChunks(uploadId: string): Promise<AssetChunkRecord[]>;
+  finalizedUpload(uploadId: string): Promise<{ assetId: string; sha256: string } | null>;
+  rememberFinalizedUpload(uploadId: string, assetId: string, sha256: string): Promise<void>;
   putRegion(region: {
     regionId: string;
     assetId: string;

@@ -1,10 +1,12 @@
 import { assertEvidenceAuthoritySchemaReady } from '../../../src/evidenceAuthority/schemaReady';
 import type { AuthorityStore, AuthorityTx, SubjectRow } from '../../../src/evidenceAuthority/store';
 import type {
+  AssetChunkRecord,
   ContributorRecord,
   DispatchRecord,
   EventRecord,
   GovernanceState,
+  OffFieldLineage,
   ResponseRecord,
   SubmissionOutcome,
   VersionRecord,
@@ -125,6 +127,79 @@ export class PostgresAuthorityStore implements AuthorityStore {
           `INSERT INTO evidence_source_assets (asset_id, sha256, byte_length, content_type, bytes, verified, created_at)
            VALUES ($1, $2, $3, $4, $5, TRUE, $6)`,
           [asset.assetId, asset.sha256, asset.bytes.byteLength, asset.contentType, Buffer.from(asset.bytes), Date.now()]
+        );
+      },
+      async getAsset(assetId) {
+        const found = await client.query(
+          `SELECT asset_id, sha256, verified FROM evidence_source_assets WHERE asset_id = $1`,
+          [assetId]
+        );
+        const row = found.rows[0];
+        if (!row || row.verified !== true) return null;
+        return { assetId: text(row.asset_id), sha256: text(row.sha256), verified: true };
+      },
+      async putChunk(chunk: AssetChunkRecord) {
+        const inserted = await client.query(
+          `INSERT INTO evidence_asset_chunks (
+             upload_id, chunk_index, chunk_count, total_bytes, declared_sha256, chunk_bytes
+           ) VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT (upload_id, chunk_index) DO NOTHING
+           RETURNING chunk_index`,
+          [
+            chunk.uploadId,
+            chunk.chunkIndex,
+            chunk.chunkCount,
+            chunk.totalBytes,
+            chunk.declaredSha256,
+            Buffer.from(chunk.bytes),
+          ]
+        );
+        if (inserted.rows.length > 0) return 'stored' as const;
+        const existing = await client.query(
+          `SELECT chunk_count, total_bytes, declared_sha256, chunk_bytes
+           FROM evidence_asset_chunks WHERE upload_id = $1 AND chunk_index = $2`,
+          [chunk.uploadId, chunk.chunkIndex]
+        );
+        const row = existing.rows[0];
+        const storedBytes = row?.chunk_bytes;
+        const sameBytes =
+          Buffer.isBuffer(storedBytes) && Buffer.from(chunk.bytes).equals(storedBytes);
+        const same =
+          !!row &&
+          Number(row.chunk_count) === chunk.chunkCount &&
+          Number(row.total_bytes) === chunk.totalBytes &&
+          text(row.declared_sha256) === chunk.declaredSha256 &&
+          sameBytes;
+        return same ? ('duplicate' as const) : ('conflict' as const);
+      },
+      async listChunks(uploadId) {
+        const found = await client.query(
+          `SELECT upload_id, chunk_index, chunk_count, total_bytes, declared_sha256, chunk_bytes
+           FROM evidence_asset_chunks WHERE upload_id = $1 ORDER BY chunk_index ASC`,
+          [uploadId]
+        );
+        return found.rows.map((row) => ({
+          uploadId: text(row.upload_id),
+          chunkIndex: Number(row.chunk_index),
+          chunkCount: Number(row.chunk_count),
+          totalBytes: Number(row.total_bytes),
+          declaredSha256: text(row.declared_sha256),
+          bytes: Uint8Array.from(Buffer.isBuffer(row.chunk_bytes) ? row.chunk_bytes : Buffer.from(row.chunk_bytes as Uint8Array)),
+        }));
+      },
+      async finalizedUpload(uploadId) {
+        const found = await client.query(
+          `SELECT asset_id, sha256 FROM evidence_asset_uploads WHERE upload_id = $1`,
+          [uploadId]
+        );
+        const row = found.rows[0];
+        return row ? { assetId: text(row.asset_id), sha256: text(row.sha256) } : null;
+      },
+      async rememberFinalizedUpload(uploadId, assetId, sha256) {
+        await client.query(
+          `INSERT INTO evidence_asset_uploads (upload_id, asset_id, sha256) VALUES ($1, $2, $3)
+           ON CONFLICT (upload_id) DO NOTHING`,
+          [uploadId, assetId, sha256]
         );
       },
       async putRegion(region) {
@@ -268,8 +343,8 @@ export class PostgresAuthorityStore implements AuthorityStore {
       async putDispatch(row: DispatchRecord) {
         await client.query(
           `INSERT INTO evidence_off_dispatch (
-             dispatch_id, submission_key, version_id, barcode, status, target, fields_json, read_back_status, created_at
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9)`,
+             dispatch_id, submission_key, version_id, barcode, status, target, fields_json, lineage_json, read_back_status, created_at
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9, $10)`,
           [
             row.dispatchId,
             row.submissionKey,
@@ -278,6 +353,7 @@ export class PostgresAuthorityStore implements AuthorityStore {
             row.status,
             row.target,
             JSON.stringify(row.fields),
+            JSON.stringify(row.lineage),
             row.readBackStatus,
             row.createdAt,
           ]
@@ -285,7 +361,7 @@ export class PostgresAuthorityStore implements AuthorityStore {
       },
       async dispatchesForBarcode(barcode) {
         const found = await client.query(
-          `SELECT dispatch_id, submission_key, version_id, barcode, status, target, fields_json, read_back_status, created_at
+          `SELECT dispatch_id, submission_key, version_id, barcode, status, target, fields_json, lineage_json, read_back_status, created_at
            FROM evidence_off_dispatch WHERE barcode = $1 ORDER BY created_at ASC`,
           [barcode]
         );
@@ -297,6 +373,7 @@ export class PostgresAuthorityStore implements AuthorityStore {
           status: text(row.status) as DispatchRecord['status'],
           target: row.target ? text(row.target) : null,
           fields: (row.fields_json as Record<string, string>) || {},
+          lineage: (row.lineage_json as OffFieldLineage[]) || [],
           readBackStatus: text(row.read_back_status) as DispatchRecord['readBackStatus'],
           createdAt: Number(row.created_at),
         }));

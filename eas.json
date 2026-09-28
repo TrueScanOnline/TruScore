@@ -8,7 +8,8 @@
         "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
         "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
-        "EXPO_PUBLIC_STORE_RELEASE": "1"
+        "EXPO_PUBLIC_STORE_RELEASE": "1",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production"
       },
       "android": {
         "buildType": "apk"
@@ -27,7 +28,8 @@
         "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
         "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
-        "EXPO_PUBLIC_STORE_RELEASE": "1"
+        "EXPO_PUBLIC_STORE_RELEASE": "1",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production"
       },
       "android": {
         "buildType": "apk"
@@ -46,7 +48,8 @@
         "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
         "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
-        "EXPO_PUBLIC_STORE_RELEASE": "0"
+        "EXPO_PUBLIC_STORE_RELEASE": "0",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat"
       },
       "android": {
         "buildType": "apk"
@@ -63,7 +66,8 @@
         "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
         "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
-        "EXPO_PUBLIC_STORE_RELEASE": "1"
+        "EXPO_PUBLIC_STORE_RELEASE": "1",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production"
       },
       "android": {
         "buildType": "app-bundle"
@@ -82,7 +86,8 @@
         "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
         "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
-        "EXPO_PUBLIC_STORE_RELEASE": "1"
+        "EXPO_PUBLIC_STORE_RELEASE": "1",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production"
       },
       "android": {
         "buildType": "apk"
@@ -98,6 +103,7 @@
         "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "1",
         "EXPO_PUBLIC_STORE_RELEASE": "0",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat",
         "RVEEL_IOS_BUILD_NUMBER": "46"
       },
       "ios": {
@@ -116,6 +122,7 @@
         "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "1",
         "EXPO_PUBLIC_STORE_RELEASE": "0",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat",
         "RVEEL_ANDROID_VERSION_CODE": "22"
       },
       "android": {
@@ -130,6 +137,7 @@
         "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
         "EXPO_PUBLIC_STORE_RELEASE": "1",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production",
         "RVEEL_IOS_BUILD_NUMBER": "29"
       },
       "ios": {
@@ -146,6 +154,7 @@
         "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "0",
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
         "EXPO_PUBLIC_STORE_RELEASE": "1",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production",
         "RVEEL_IOS_BUILD_NUMBER": "30"
       },
       "ios": {
