@@ -29,6 +29,31 @@ export function resolveCertificationLane(params: {
   return hasScoringScheme ? 'A' : 'B';
 }
 
+const GOVERNED_SCHEME_TAGS: Record<string, string> = {
+  fairtrade: 'en:fair-trade',
+  rainforest_alliance: 'en:rainforest-alliance',
+  asc: 'en:asc',
+  msc: 'en:marine-stewardship-council',
+  organic: 'en:organic',
+};
+
+/**
+ * Existing Ethics schemes only. Unmapped wording stays reviewed evidence without a scoring tag.
+ */
+export function governedCertificationLabels(statement: string): string[] | undefined {
+  const trimmed = statement.trim();
+  if (!trimmed) return undefined;
+  const evaluation = evaluateEthicsCertifications({
+    barcode: 'cert-map',
+    product_name: trimmed,
+    labels_tags: [],
+  } as Product);
+  const tags = evaluation.eligibleSchemes
+    .map((scheme) => GOVERNED_SCHEME_TAGS[scheme])
+    .filter((tag): tag is string => typeof tag === 'string' && tag.length > 0);
+  return tags.length > 0 ? tags : undefined;
+}
+
 export function isLaneACertificationEvidence(params: {
   labelsTags?: string[];
   claimValue?: string;

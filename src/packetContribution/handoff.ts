@@ -1,3 +1,4 @@
+import { governedCertificationLabels } from '../contributions/certificationLane';
 import { submitGovernedEvidence } from '../contributions/submitGovernedEvidence';
 import { submitIngredientsNutritionEvidence } from '../ingredientsNutrition/governed';
 import { getSession, upsertSession } from './sessionStore';
@@ -33,10 +34,14 @@ export async function handoffReviewedUnits(params: {
   sessionId: string;
   submit?: SubmitFn;
   now?: number;
+  /** Recovered journeys transmit through the shared authority and must not post the retired route. */
+  persistRemote?: boolean;
 }): Promise<HandoffResult[]> {
   const session = await getSession(params.sessionId);
   if (!session) throw new Error('packet_session_missing');
-  const submit = params.submit || submitGovernedEvidence;
+  const submit =
+    params.submit ||
+    ((input) => submitGovernedEvidence({ ...input, persistRemote: params.persistRemote }));
   const results: HandoffResult[] = [];
   const units = [...session.units];
 
@@ -60,7 +65,10 @@ export async function handoffReviewedUnits(params: {
       });
       continue;
     }
-    if (!supportIsBounded(session, unit.support)) {
+    const hasBoundedSupport = supportIsBounded(session, unit.support);
+    const manualTextOnly =
+      unit.origin === 'manual' && unit.packetAbsenceAffirmation !== true && !hasBoundedSupport;
+    if (!hasBoundedSupport && !manualTextOnly) {
       results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'unbounded_support' });
       continue;
     }
@@ -80,6 +88,7 @@ export async function handoffReviewedUnits(params: {
         amounts,
         nutritionBasis: unit.nutritionBasis,
         imageUrl: source ? `private://${source.privateKey}` : undefined,
+        persistRemote: params.persistRemote,
       });
       if (submitted.admissionStatus === 'admitted') {
         throw new Error('packet_handoff_must_not_admit');
@@ -220,7 +229,12 @@ export async function handoffReviewedUnits(params: {
       imageUrl: source ? `private://${source.privateKey}` : undefined,
       variantKey: session.variantKey,
       asProductionEpoch: true,
-      labelsTags: [unit.statement],
+      ...(unit.domain === 'certifications'
+        ? (() => {
+            const labelsTags = governedCertificationLabels(unit.statement);
+            return labelsTags ? { labelsTags } : {};
+          })()
+        : {}),
     });
     if (evidence.admissionStatus === 'admitted') {
       throw new Error('packet_handoff_must_not_admit');

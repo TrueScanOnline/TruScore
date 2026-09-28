@@ -103,9 +103,8 @@ import { isWebSearchFallback } from '../../src/services/webSearchFallback';
 import { useTheme } from '../../src/theme';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
-import { submitManufacturingCountry, getManufacturingCountry, hasUserSubmitted } from '../../src/services/manufacturingCountryService';
+import { getManufacturingCountry, hasUserSubmitted } from '../../src/services/manufacturingCountryService';
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
-import ManufacturingCountryModal from '../../src/components/ManufacturingCountryModal';
 import { PalmOilCard } from '../../src/features/product/cards/PalmOilCard';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
 import { sanitizeText } from '../../src/utils/validation';
@@ -113,6 +112,12 @@ import { sanitizeCountryForDisplay } from '../../src/utils/countryDisplayName';
 import { logger } from '../../src/utils/logger';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import PacketContributionModal from '../../src/components/PacketContributionModal';
+import {
+  CONTRIBUTION_NOTICE_ADDED,
+  CONTRIBUTION_NOTICE_SAVED,
+  resultContributionActions,
+  type ContributionEntryContext,
+} from '../../src/contribution/resultContributionActions';
 import { calculateTrustScore } from '../../src/utils/trustScore';
 import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
 import { ManualProductData } from '../../src/types/manualProduct';
@@ -169,7 +174,8 @@ function ResultIngredientsSection({
   barcode,
   ingredientsText,
   novaGroup,
-  onEdit,
+  showAddIngredients,
+  onAddIngredients,
   onShareIngredients,
   onShareProcessing,
   onOpenProcessingLevel,
@@ -177,7 +183,8 @@ function ResultIngredientsSection({
   barcode: string;
   ingredientsText?: string | null;
   novaGroup?: number | null;
-  onEdit: () => void;
+  showAddIngredients: boolean;
+  onAddIngredients: () => void;
   onShareIngredients: () => void;
   onShareProcessing: () => void;
   onOpenProcessingLevel: () => void;
@@ -211,29 +218,13 @@ function ResultIngredientsSection({
           ? '#ff9500'
           : '#ff6b6b';
     return (
-      <Pressable
-        onPress={onEdit}
-        style={({ pressed }) => [sectionStyle, { opacity: pressed ? 0.96 : 1 }]}
-        accessibilityRole="button"
-        accessibilityLabel={t('result.ingredients')}
-        accessibilityHint={t(
-          'result.ingredientsCardOpenEditA11y',
-          'Opens edit product to update ingredients.'
-        )}
-      >
+      <View style={sectionStyle}>
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
               <Ionicons name="flask" size={24} color={colors.primary} />
             </View>
             <View style={styles.cardHeaderRight}>
-              <TouchableOpacity
-                onPress={onEdit}
-                style={styles.shareButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="create-outline" size={20} color={colors.primary} />
-              </TouchableOpacity>
               <TouchableOpacity
                 onPress={onShareIngredients}
                 style={styles.shareButton}
@@ -270,47 +261,31 @@ function ResultIngredientsSection({
             </View>
           </View>
         ) : null}
-        <TouchableOpacity
-          onPress={onEdit}
-          activeOpacity={0.7}
-          style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
-          accessibilityRole="button"
-          accessibilityLabel={t('result.addIngredientsHere', 'Add ingredients here')}
-        >
-          <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-          <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
-            {t('result.addIngredientsHere', 'Add ingredients here')}
-          </Text>
-        </TouchableOpacity>
-      </Pressable>
+        {showAddIngredients ? (
+          <TouchableOpacity
+            onPress={onAddIngredients}
+            activeOpacity={0.7}
+            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+            accessibilityRole="button"
+            accessibilityLabel="Add ingredients"
+          >
+            <Ionicons name="add-circle-outline" size={20} color="#16a085" />
+            <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Add ingredients</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     );
   }
 
   if (!ingredientsText || !ingredientsText.trim()) {
     return (
-      <Pressable
-        onPress={onEdit}
-        style={({ pressed }) => [sectionStyle, { opacity: pressed ? 0.96 : 1 }]}
-        accessibilityRole="button"
-        accessibilityLabel={t('result.ingredients')}
-        accessibilityHint={t(
-          'result.ingredientsCardOpenEditA11y',
-          'Opens edit product to update ingredients.'
-        )}
-      >
+      <View style={sectionStyle}>
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
               <Ionicons name="flask" size={24} color={colors.primary} />
             </View>
             <View style={styles.cardHeaderRight}>
-              <TouchableOpacity
-                onPress={onEdit}
-                style={styles.shareButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="create-outline" size={20} color={colors.primary} />
-              </TouchableOpacity>
               <TouchableOpacity
                 onPress={onShareIngredients}
                 style={styles.shareButton}
@@ -323,24 +298,21 @@ function ResultIngredientsSection({
           <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
         </View>
         <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
-          {t(
-            'result.ingredientsEmpty',
-            'No ingredients on file. Tap this card or the button below to add them from the pack.'
-          )}
+          {t('result.ingredientsEmpty', 'No ingredients on file.')}
         </Text>
-        <TouchableOpacity
-          onPress={onEdit}
-          activeOpacity={0.7}
-          style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
-          accessibilityRole="button"
-          accessibilityLabel={t('result.addIngredientsHere', 'Add ingredients here')}
-        >
-          <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-          <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
-            {t('result.addIngredientsHere', 'Add ingredients here')}
-          </Text>
-        </TouchableOpacity>
-      </Pressable>
+        {showAddIngredients ? (
+          <TouchableOpacity
+            onPress={onAddIngredients}
+            activeOpacity={0.7}
+            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+            accessibilityRole="button"
+            accessibilityLabel="Add ingredients"
+          >
+            <Ionicons name="add-circle-outline" size={20} color="#16a085" />
+            <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Add ingredients</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     );
   }
 
@@ -436,16 +408,13 @@ function ResultScreenContent() {
   const [allergensAdditivesModalVisible, setAllergensAdditivesModalVisible] = useState(false);
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
-  const [manufacturingCountryModalVisible, setManufacturingCountryModalVisible] = useState(false);
   const [productOriginsExplainerVisible, setProductOriginsExplainerVisible] = useState(false);
   const [packetClaimsExplainerVisible, setPacketClaimsExplainerVisible] = useState(false);
-  const [originsContributionPrefill, setOriginsContributionPrefill] = useState<{
-    structuredOriginCountry?: string;
-    conflictingFreeTextOrigins?: string;
-    originsTags?: string[];
-  } | null>(null);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [packetContributionVisible, setPacketContributionVisible] = useState(false);
+  const [contributionEntry, setContributionEntry] = useState<ContributionEntryContext>('ingredients');
+  const [ingredientNutritionSheetVisible, setIngredientNutritionSheetVisible] = useState(false);
+  const [contributionNotice, setContributionNotice] = useState<string | null>(null);
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
   const [editMode, setEditMode] = useState(false);
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -1408,6 +1377,17 @@ function ResultScreenContent() {
     setManualProductModalVisible(true);
   };
 
+  const openContribution = (entry: ContributionEntryContext) => {
+    setContributionEntry(entry);
+    setIngredientNutritionSheetVisible(false);
+    setPacketContributionVisible(true);
+  };
+
+  const showContributionNotice = (message: string) => {
+    setContributionNotice(message);
+    setTimeout(() => setContributionNotice(null), 4000);
+  };
+
   const handleContribute = () => {
     // Open Open Food Facts with barcode pre-filled for adding/editing product
     const offUrl = `https://world.openfoodfacts.org/cgi/product.pl?type=edit&code=${barcode}`;
@@ -1671,6 +1651,8 @@ function ResultScreenContent() {
                                       userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase())
     ? userContributedCountry.country
     : (manufacturingCountry || userContributedCountry?.country || null);
+
+  const contributionActions = resultContributionActions(product);
 
   const shareManufacturingCountryLabel = (() => {
     const raw = displayManufacturingCountry || userContributedCountry?.country;
@@ -2030,18 +2012,11 @@ function ResultScreenContent() {
             </View>
           )}
 
-        <TouchableOpacity
-          onPress={() => setPacketContributionVisible(true)}
-          style={{ marginHorizontal: 16, marginBottom: 12 }}
-          accessibilityRole="button"
-          accessibilityLabel="Photograph the pack"
-        >
-          <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '600' }}>
-            Photograph the pack
-          </Text>
-        </TouchableOpacity>
+        {contributionNotice ? (
+          <Text style={{ marginHorizontal: 16, marginBottom: 12, color: colors.text }}>{contributionNotice}</Text>
+        ) : null}
 
-        {/* Nutrition Facts — card body opens Nutrition Details; pencil glyph alone opens contribution */}
+        {/* Nutrition Facts — card body opens Nutrition Details; pencil opens applicable updates */}
           <NutritionTable
             nutriments={product.nutriments}
             categoriesTags={product.categories_tags}
@@ -2056,7 +2031,11 @@ function ResultScreenContent() {
             nutritionDataPer={product.nutrition_data_per}
             nutritionDataPreparedPer={product.nutrition_data_prepared_per}
             onShare={() => handleShare('nutrition')}
-            onEdit={handleEditProduct}
+            onEdit={
+              contributionActions.updateNutrition || contributionActions.updateIngredients
+                ? () => setIngredientNutritionSheetVisible(true)
+                : undefined
+            }
             shareContext={{
               productName: product.product_name || product.product_name_en || '',
               barcode: product.barcode,
@@ -2074,15 +2053,28 @@ function ResultScreenContent() {
             initialDetailsFocus={nutritionDetailsFocus}
             title={t('result.nutritionAndIngredients', 'Nutrition & Ingredients')}
             afterBurn={
-              <ResultIngredientsSection
-                barcode={barcode}
-                ingredientsText={product.ingredients_text}
-                novaGroup={product.nova_group}
-                onEdit={handleEditProduct}
-                onShareIngredients={() => handleShare('ingredients')}
-                onShareProcessing={() => handleShare('processing')}
-                onOpenProcessingLevel={() => setProcessingLevelModalVisible(true)}
-              />
+              <>
+                <ResultIngredientsSection
+                  barcode={barcode}
+                  ingredientsText={product.ingredients_text}
+                  novaGroup={product.nova_group}
+                  showAddIngredients={contributionActions.addIngredients}
+                  onAddIngredients={() => openContribution('ingredients')}
+                  onShareIngredients={() => handleShare('ingredients')}
+                  onShareProcessing={() => handleShare('processing')}
+                  onOpenProcessingLevel={() => setProcessingLevelModalVisible(true)}
+                />
+                {contributionActions.addNutrition ? (
+                  <TouchableOpacity
+                    onPress={() => openContribution('nutrition')}
+                    style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Add nutrition"
+                  >
+                    <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Add nutrition</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </>
             }
           />
 
@@ -2097,393 +2089,62 @@ function ResultScreenContent() {
             productOriginsOffsetYRef.current = e.nativeEvent.layout.y;
           }}
         >
-        {(() => {
-          // Helper function to determine if verify button should be shown
-          const shouldShowVerifyButton = () => {
-            // Show button if country exists but needs verification
-            if (displayManufacturingCountry) {
-              // Don't show if from Open Food Facts (always verified)
-              if (manufacturingCountry) return false;
-              
-              // Show if user hasn't submitted yet, OR if submitted but not verified
-              if (!hasSubmitted) return true;
-              
-              // Show if user-contributed but not fully verified
-              if (userContributedCountry && userContributedCountry.confidence !== 'verified') {
-                return true;
-              }
-            }
-            return false;
-          };
-
-          // Helper function to get button text based on status
-          const getVerifyButtonText = () => {
-            if (!displayManufacturingCountry) {
-              return t('manufacturingCountry.contributeTitle', 'Enter Manufacturing Country');
-            }
-            if (userContributedCountry?.confidence === 'unverified') {
-              return t('manufacturingCountry.unverified', 'Help Verify This Country');
-            }
-            if (userContributedCountry?.confidence === 'disputed') {
-              return t('manufacturingCountry.disputed', 'Resolve Dispute - Verify Country');
-            }
-            return t('manufacturingCountry.reportDifferent', 'Verify or Update Country');
-          };
-
-          return (
-            <>
-              {(displayManufacturingCountry || (product.rveelGovernedOrigins?.length || 0) > 0) ? (
-                <>
-                  <View style={[styles.card, { 
-                    backgroundColor: colors.card, 
-                    borderColor: (() => {
-                      // Check if user has overridden the default country
-                      const hasOverriddenDefault = manufacturingCountry && 
-                                                   userContributedCountry?.country && 
-                                                   userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase();
-                      
-                      if (hasOverriddenDefault) {
-                        // User overrode - show status-based border color
-                        if ((userContributedCountry.verifiedCount || 0) >= 3) {
-                          return '#16a085'; // Green when verified
-                        } else if (userContributedCountry.confidence === 'disputed') {
-                          return '#ff9800'; // Orange when disputed
-                        } else {
-                          return '#ffd93d'; // Yellow when in verification
-                        }
-                      }
-                      return '#16a085'; // Green for default or verified
-                    })(),
-                    borderWidth: 2 
-                  }]}>
-                  <View style={styles.cardHeader}>
-                    {/* Top line: Icons */}
-                    <View style={styles.cardHeaderTop}>
-                      <View style={styles.cardHeaderLeft}>
-                        <Ionicons name="globe-outline" size={24} color={colors.text} />
-                      </View>
-                      <View style={styles.cardHeaderRight}>
-                      <View style={styles.confidenceBadge}>
-                      {(() => {
-                        // Check if user has overridden the default country
-                        const hasOverriddenDefault = manufacturingCountry && 
-                                                     userContributedCountry?.country && 
-                                                     userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase();
-                        
-                        if (hasOverriddenDefault) {
-                          // User overrode default - show user-contributed confidence level
-                          if (userContributedCountry.confidence === 'verified') {
-                            return <Ionicons name="checkmark-circle" size={16} color="#16a085" />;
-                          } else if (userContributedCountry.confidence === 'community') {
-                            return <Ionicons name="people" size={16} color="#4dd09f" />;
-                          } else if (userContributedCountry.confidence === 'unverified') {
-                            return <Ionicons name="help-circle" size={16} color="#ffd93d" />;
-                          } else if (userContributedCountry.confidence === 'disputed') {
-                            return <Ionicons name="warning" size={16} color="#ff9800" />;
-                          }
-                          return <Ionicons name="help-circle" size={16} color="#ffd93d" />;
-                        } else if (manufacturingCountry) {
-                          // Open Food Facts data - verified source (no override)
-                          return <Ionicons name="checkmark-circle" size={16} color="#16a085" />;
-                        } else if (userContributedCountry) {
-                          // User-contributed data (no default) - show confidence level
-                          if (userContributedCountry.confidence === 'verified') {
-                            return <Ionicons name="checkmark-circle" size={16} color="#16a085" />;
-                          } else if (userContributedCountry.confidence === 'community') {
-                            return <Ionicons name="people" size={16} color="#4dd09f" />;
-                          } else if (userContributedCountry.confidence === 'unverified') {
-                            return <Ionicons name="help-circle" size={16} color="#ffd93d" />;
-                          } else if (userContributedCountry.confidence === 'disputed') {
-                            return <Ionicons name="warning" size={16} color="#ff9800" />;
-                          }
-                          return null;
-                        }
-                        return null;
-                      })()}
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => handleShare('countryOfManufacture')}
-                        style={styles.shareButton}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <Ionicons name="share-outline" size={20} color={colors.primary} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  {/* Second line: Heading */}
-                  <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.productOrigins', 'Product Origins')}</Text>
-                  <TouchableOpacity onPress={() => setProductOriginsExplainerVisible(true)}>
-                    <Text style={{ color: colors.primary }}>L1 / L2 / L3</Text>
-                  </TouchableOpacity>
-                </View>
-                  {(product.rveelGovernedOrigins || []).map((fact) => (
-                    <Text key={fact.evidenceId} style={{ color: colors.text }}>
-                      {fact.claimType.replace(/_/g, ' ')}
-                      {fact.ingredientSubject ? ` · ${fact.ingredientSubject}` : ''}
-                      {fact.countries.length > 0 ? ` · ${fact.countries.join(', ')}` : ''}
-                      {fact.percentage != null
-                        ? ` · ${fact.percentageQualifier ? `${fact.percentageQualifier.replace(/_/g, ' ')} ` : ''}${fact.percentage}%`
-                        : ''}
-                      {fact.originQualification ? ` · ${fact.originQualification}` : ''}
-                      {fact.exactWording ? ` · “${fact.exactWording}”` : ''}
-                    </Text>
-                  ))}
-                  {(product.rveelGovernedOrigins?.length || 0) > 0 ? (
-                    <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
-                  ) : null}
-                  <View style={styles.originContainer}>
-                    {displayManufacturingCountry ? (
-                      <CountryFlag country={displayManufacturingCountry} />
-                    ) : null}
-                    {(() => {
-                      const shouldShow = userContributedCountry?.hasImportedIngredients === true;
-                      console.log('[ResultScreen] Badge display check:', {
-                        userContributedCountry: userContributedCountry ? 'exists' : 'null',
-                        hasImportedIngredients: userContributedCountry?.hasImportedIngredients,
-                        shouldShow,
-                        displayManufacturingCountry,
-                      });
-                      return shouldShow ? (
-                        <View style={[styles.importedIngredientsBadge, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}>
-                          <Ionicons name="globe" size={16} color={colors.primary} />
-                          <Text style={[styles.importedIngredientsText, { color: colors.primary }]}>
-                            {t('manufacturingCountry.withImportedIngredients', 'With some imported ingredients')}
-                          </Text>
-                        </View>
-                      ) : null;
-                    })()}
-                  </View>
-                  
-                  {/* Community Country Statistics - Show after 3+ submissions */}
-                  {communityCountryStats.length >= 3 && (
-                    <View style={[styles.communityStatsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                      <View style={styles.communityStatsHeader}>
-                        <Ionicons name="people" size={20} color={colors.primary} />
-                        <Text style={[styles.communityStatsTitle, { color: colors.text }]}>
-                          {t('manufacturingCountry.communitySelected', 'Community Selected Countries')}
-                        </Text>
-                      </View>
-                      <View style={styles.communityStatsList}>
-                        {communityCountryStats.slice(0, 5).map((stat, index) => (
-                          <View key={index} style={styles.communityStatItem}>
-                            <View style={styles.communityStatLeft}>
-                              <View style={[styles.communityStatRank, { backgroundColor: index === 0 ? colors.primary : colors.border }]}>
-                                <Text style={[styles.communityStatRankText, { color: index === 0 ? '#fff' : colors.text }]}>
-                                  {index + 1}
-                                </Text>
-                              </View>
-                              <Text style={[styles.communityStatCountry, { color: colors.text }]}>
-                                {sanitizeCountryForDisplay(stat.country)}
-                              </Text>
-                            </View>
-                            <Text style={[styles.communityStatCount, { color: colors.textSecondary }]}>
-                              {stat.count} {stat.count === 1 ? 'user' : 'users'}
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Validation Status Message and Progress Indicators */}
-                  {/* Show validation status when:
-                      1. No default country AND user has contributed, OR
-                      2. User has overridden default country with a different country */}
-                  {((!manufacturingCountry && userContributedCountry) ||
-                    (manufacturingCountry && userContributedCountry?.country && 
-                     userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase())) && (
-                    <View style={styles.validationStatusContainer}>
-                      {/* Always show authentication status until verified by 3 users */}
-                      {(userContributedCountry.verifiedCount || 0) >= 3 ? (
-                        /* Show authenticated message when verified by 3+ users */
-                        <View style={[styles.validationMessageContainer, { backgroundColor: '#16a085' + '20', borderColor: '#16a085', borderWidth: 1 }]}>
-                          <Ionicons name="shield-checkmark" size={24} color="#16a085" />
-                          <View style={styles.validationMessageContent}>
-                            <Text style={[styles.validationMessage, { color: '#16a085', fontWeight: '600' }]}>
-                              {t('manufacturingCountry.authenticated', 'Country of origin authenticated by 3 independent users')}
-                            </Text>
-                            <View style={styles.verificationBadgeContainer}>
-                              {[1, 2, 3].map((index) => (
-                                <View key={index} style={[styles.verificationBadge, { backgroundColor: '#16a085' }]}>
-                                  <Ionicons name="checkmark" size={12} color="#fff" />
-                                </View>
-                              ))}
-                            </View>
-                          </View>
-                        </View>
-                      ) : (
-                        <>
-                          {/* Show "not authenticated" message until verified by 3 users */}
-                          <View style={[
-                            styles.validationMessageContainer,
-                            {
-                              backgroundColor: userContributedCountry.confidence === 'disputed' 
-                                ? '#ff9800' + '15' 
-                                : '#ffd93d' + '15',
-                              borderColor: userContributedCountry.confidence === 'disputed' ? '#ff9800' : '#ffd93d',
-                              borderWidth: 1,
-                            }
-                          ]}>
-                            <Ionicons 
-                              name={userContributedCountry.confidence === 'disputed' ? "warning" : "shield-outline"} 
-                              size={24} 
-                              color={userContributedCountry.confidence === 'disputed' ? '#ff9800' : '#ffd93d'} 
-                            />
-                            <View style={styles.validationMessageContent}>
-                              <Text style={[
-                                styles.validationMessage,
-                                {
-                                  color: userContributedCountry.confidence === 'disputed' ? '#ff9800' : colors.text,
-                                  fontWeight: '500',
-                                }
-                              ]}>
-                                {t('manufacturingCountry.notAuthenticated', 'The country of origin has not been authenticated yet')}
-                              </Text>
-                              {userContributedCountry.confidence === 'disputed' && (
-                                <Text style={[styles.disputedNote, { color: '#ff9800' }]}>
-                                  {t('manufacturingCountry.disputedNote', 'Conflicting submissions detected')}
-                                </Text>
-                              )}
-                            </View>
-                          </View>
-                          
-                          {/* Visual validation progress indicators showing degree of validation */}
-                          <View style={styles.validationProgressContainer}>
-                            <Text style={[styles.validationProgressLabel, { color: colors.textSecondary, marginBottom: 12 }]}>
-                              {t('manufacturingCountry.communityVerification', 'Community Verification Progress')}:
-                            </Text>
-                            
-                            {/* Visual validation icons with better design */}
-                            <View style={styles.validationIconsContainer}>
-                              {[1, 2, 3].map((index) => {
-                                const verifiedCount = userContributedCountry.verifiedCount || 0;
-                                const isFilled = verifiedCount >= index;
-                                const isActive = verifiedCount === index && index < 3; // Highlight current progress
-                                
-                                // Determine icon and color based on validation level
-                                let iconName: keyof typeof Ionicons.glyphMap = "person-outline";
-                                let iconColor = '#d0d0d0';
-                                let backgroundColor = colors.background;
-                                
-                                if (isFilled) {
-                                  iconName = "person";
-                                  if (verifiedCount >= 3) {
-                                    iconColor = '#16a085'; // Green when fully verified
-                                    backgroundColor = '#16a085' + '20';
-                                  } else {
-                                    iconColor = '#4dd09f'; // Light green for partial
-                                    backgroundColor = '#4dd09f' + '20';
-                                  }
-                                } else if (isActive && index === verifiedCount + 1) {
-                                  iconColor = '#ffd93d'; // Yellow for next needed
-                                  backgroundColor = '#ffd93d' + '15';
-                                }
-                                
-                                return (
-                                  <View 
-                                    key={index}
-                                    style={[
-                                      styles.validationIcon,
-                                      { 
-                                        backgroundColor,
-                                        borderColor: iconColor,
-                                        borderWidth: isFilled || isActive ? 2 : 1,
-                                      }
-                                    ]}
-                                  >
-                                    <Ionicons 
-                                      name={iconName} 
-                                      size={20} 
-                                      color={iconColor} 
-                                    />
-                                    {isFilled && (
-                                      <View style={[styles.checkmarkBadge, { backgroundColor: iconColor }]}>
-                                        <Ionicons name="checkmark" size={10} color="#fff" />
-                                      </View>
-                                    )}
-                                  </View>
-                                );
-                              })}
-                            </View>
-                            
-                            {/* Progress text with clear status */}
-                            <View style={styles.validationProgressTextContainer}>
-                              <Text style={[styles.validationProgressText, { color: colors.text, fontWeight: '600' }]}>
-                                {t('manufacturingCountry.communityVerificationInProgress', 'COMMUNITY VERIFICATION IN PROGRESS...')}
-                              </Text>
-                            </View>
-                          </View>
-                        </>
-                      )}
-                    </View>
-                  )}
-                
-                  {/* ALWAYS show "Update Country" button - moved inside card at bottom */}
-                <TouchableOpacity
-                    style={[styles.updateCountryButton, { backgroundColor: colors.primary, marginTop: 16 }]}
-                  onPress={() => {
-                    setOriginsContributionPrefill(null);
-                    setManufacturingCountryModalVisible(true);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="create-outline" size={18} color="#fff" />
-                  <Text style={styles.updateCountryButtonText}>
-                    {t('manufacturingCountry.updateCountry', 'Update Country')}
-                  </Text>
-                </TouchableOpacity>
-                </View>
-              </>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#ff6b6b' }]}
-                  onPress={() => {
-                    setOriginsContributionPrefill(null);
-                    setManufacturingCountryModalVisible(true);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.cardHeaderLeft}>
-                    <Ionicons name="globe-outline" size={24} color={colors.text} />
-                    <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-                      {t('result.productOrigins', 'Product Origins')}
-                    </Text>
-                  </View>
-                  <View style={styles.contributeContainer}>
-                    <Text style={[styles.countryNotDisclosedTitle, { color: '#d32f2f', marginTop: 0 }]}>
-                      {t('manufacturingCountry.notDisclosed', 'Country of manufacture is not disclosed by the brand!')}
-                    </Text>
-                    <View>
-                      <Text style={[styles.countryNotDisclosedSubtitle, { color: '#16a085' }]}>
-                        {t('manufacturingCountry.contributeDescriptionLine1', 'Is it on the packaging?')}
-                      </Text>
-                      <Text style={[styles.countryNotDisclosedSubtitle, { color: '#16a085' }]}>
-                        {t('manufacturingCountry.contributeDescriptionLine2', 'Click here to add ...')}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              )}
-            </>
-          );
-        })()}
+        <View style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#16a085' }]}>
+          <View style={styles.cardHeaderLeft}>
+            <Ionicons name="globe-outline" size={24} color={colors.text} />
+            <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
+              {t('result.productOrigins', 'Product Origins')}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => setProductOriginsExplainerVisible(true)}>
+            <Text style={{ color: colors.primary }}>L1 / L2 / L3</Text>
+          </TouchableOpacity>
+          {(product.rveelGovernedOrigins || []).map((fact) => (
+            <Text key={fact.evidenceId} style={{ color: colors.text }}>
+              {fact.exactWording || fact.countries.join(', ')}
+            </Text>
+          ))}
+          {contributionActions.originsAction === 'add' ? (
+            <TouchableOpacity
+              onPress={() => openContribution('origins')}
+              accessibilityRole="button"
+              accessibilityLabel="Add product origins"
+            >
+              <Text style={{ color: colors.primary }}>Add product origins</Text>
+            </TouchableOpacity>
+          ) : null}
+          {contributionActions.originsAction === 'complete' ? (
+            <TouchableOpacity
+              onPress={() => openContribution('origins')}
+              accessibilityRole="button"
+              accessibilityLabel="Complete product origins"
+            >
+              <Text style={{ color: colors.primary }}>Complete product origins</Text>
+            </TouchableOpacity>
+          ) : null}
+          {contributionActions.originsAction === 'update' ? (
+            <TouchableOpacity
+              onPress={() => openContribution('origins')}
+              accessibilityRole="button"
+              accessibilityLabel="Update product origins"
+            >
+              <Text style={{ color: colors.primary }}>Update product origins</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
         </View>
 
         {/* Ethics / Certifications — tap card to edit labels (manual entry modal) */}
-        <Pressable
-          onPress={handleEditProduct}
-          style={({ pressed }) => [
+        <View
+          style={[
             styles.card,
             styles.certificationsCardFrame,
             {
               backgroundColor: colors.card,
               borderColor: '#16a085',
-              opacity: pressed ? 0.92 : 1,
             },
           ]}
-          accessibilityRole="button"
           accessibilityLabel={PACKET_CLAIMS_CARD_TITLE}
-          accessibilityHint={t('result.certificationsCardOpenEditA11y', 'Opens edit product to update certifications')}
         >
           <View style={styles.certificationsCardHeaderRow}>
             <View style={styles.certificationsCardTitleRow}>
@@ -2519,19 +2180,37 @@ function ResultScreenContent() {
               )}
             </Text>
           ) : null}
+          {contributionActions.packetClaimsAction ? (
           <TouchableOpacity
-            onPress={handleEditProduct}
+            onPress={() => openContribution('packetClaims')}
             activeOpacity={0.7}
             style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
             accessibilityRole="button"
-            accessibilityLabel={t('result.addCertificationsHere', 'Add certifications here')}
+            accessibilityLabel={
+              contributionActions.packetClaimsAction === 'update' ? 'Update packet claims' : 'Add packet claims'
+            }
           >
             <Ionicons name="add-circle-outline" size={20} color="#16a085" />
             <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
-              {t('result.addCertificationsHere', 'Add certifications here')}
+              {contributionActions.packetClaimsAction === 'update' ? 'Update packet claims' : 'Add packet claims'}
             </Text>
           </TouchableOpacity>
-        </Pressable>
+          ) : null}
+          <TouchableOpacity
+            onPress={() => openContribution('certifications')}
+            activeOpacity={0.7}
+            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+            accessibilityRole="button"
+            accessibilityLabel={
+              contributionActions.certificationsAction === 'update' ? 'Update certifications' : 'Add certifications'
+            }
+          >
+            <Ionicons name="add-circle-outline" size={20} color="#16a085" />
+            <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
+              {contributionActions.certificationsAction === 'update' ? 'Update certifications' : 'Add certifications'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Palm oil: scored in Planet/TruScore and insights; product card hidden (PalmOilCard). */}
         <PalmOilCard
@@ -2586,7 +2265,7 @@ function ResultScreenContent() {
                       </View>
                       <View style={styles.cardHeaderRight}>
                         <TouchableOpacity
-                          onPress={handleEditProduct}
+                          onPress={openAllergensModal}
                           style={styles.shareButton}
                           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
@@ -2650,12 +2329,11 @@ function ResultScreenContent() {
 
         <ProductDataLimitationsCard
           product={product}
-          onOpenManualEdit={handleEditProduct}
-          onOpenOrigins={(prefill) => {
-            setOriginsContributionPrefill(prefill ?? null);
-            setManufacturingCountryModalVisible(true);
-          }}
-          onOpenPacketClaims={() => setPacketContributionVisible(true)}
+          onOpenIngredients={() => openContribution('ingredients')}
+          onOpenNutrition={() => openContribution('nutrition')}
+          onOpenOrigins={() => openContribution('origins')}
+          onOpenPacketClaims={() => openContribution('packetClaims')}
+          suppressLiveRoutes={['ingredients_nutrition', 'origins', 'packet_claims']}
           publicationSettled={publicationSettled}
           openRequestKey={s26OpenRequestKey}
         />
@@ -2758,14 +2436,44 @@ function ResultScreenContent() {
         novaGroup={product?.nova_group}
       />
 
+      <Modal
+        visible={ingredientNutritionSheetVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIngredientNutritionSheetVisible(false)}
+      >
+        <TouchableOpacity
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' }}
+          activeOpacity={1}
+          onPress={() => setIngredientNutritionSheetVisible(false)}
+        >
+          <View style={{ backgroundColor: colors.card, padding: 20, gap: 16 }}>
+            {contributionActions.updateNutrition ? (
+              <TouchableOpacity onPress={() => openContribution('nutrition')} accessibilityRole="button">
+                <Text style={{ color: colors.text, fontSize: 18 }}>Update nutrition</Text>
+              </TouchableOpacity>
+            ) : null}
+            {contributionActions.updateIngredients ? (
+              <TouchableOpacity onPress={() => openContribution('ingredients')} accessibilityRole="button">
+                <Text style={{ color: colors.text, fontSize: 18 }}>Update ingredients</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       <PacketContributionModal
         visible={packetContributionVisible}
         barcode={barcode}
+        entryContext={contributionEntry}
+        initialIngredients={product?.ingredients_text || ''}
         onClose={() => setPacketContributionVisible(false)}
         onSharedEvidenceAdmitted={async () => {
           if (!product) return;
           setProduct(await calculateTrustScore(product));
+          showContributionNotice(CONTRIBUTION_NOTICE_ADDED);
         }}
+        onSharedEvidenceFailed={() => showContributionNotice(CONTRIBUTION_NOTICE_SAVED)}
       />
 
       {/* Camera Capture Modal */}
@@ -2805,112 +2513,6 @@ function ResultScreenContent() {
           </TouchableOpacity>
         </View>
       </Modal>
-
-      {/* Manufacturing Country Contribution Modal */}
-      <ManufacturingCountryModal
-        visible={manufacturingCountryModalVisible}
-        initialCountry={originsContributionPrefill?.structuredOriginCountry ?? null}
-        conflictingFreeTextOrigins={
-          originsContributionPrefill?.conflictingFreeTextOrigins ?? null
-        }
-        onClose={() => {
-          // Only close if modal is actually visible (prevent rapid state changes)
-          if (manufacturingCountryModalVisible) {
-            setManufacturingCountryModalVisible(false);
-            setOriginsContributionPrefill(null);
-          }
-        }}
-        onSubmit={async (country: string, hasImportedIngredients?: boolean) => {
-          const result = await submitManufacturingCountry(barcode, country, undefined, hasImportedIngredients);
-          if (result.success) {
-            // Check if this is a repeat submission
-            if (result.alreadySubmitted) {
-              // Show friendly message for repeat submissions
-              Alert.alert(
-                'Thank You!',
-                result.message || 'Thank you for your previous submission, we can only allow one submission from each user.',
-                [{ text: t('common.ok') || 'OK' }]
-              );
-              // Close modal after showing message
-              setManufacturingCountryModalVisible(false);
-            } else {
-              // New submission - show success message
-              Alert.alert(
-                'Thank You!',
-                "Thank you for submitting the 'country of manufacture' information, this helps us spread the word to keep everyone informed.",
-                [{ text: t('common.ok') || 'OK' }]
-              );
-              // Refresh user-contributed country and community stats
-              // Add a small delay to ensure data is saved before reloading
-              await new Promise(resolve => setTimeout(resolve, 100));
-              const offCountry = extractManufacturingCountry(product);
-              const contributed = await getManufacturingCountry(barcode);
-              
-              console.log('[ResultScreen] Reloaded country data after submission:', {
-                offCountry,
-                contributedCountry: contributed.country,
-                hasImportedIngredients: contributed.hasImportedIngredients,
-              });
-              
-              if (!offCountry) {
-                // No Open Food Facts country - use user-contributed data if available
-                if (contributed.country) {
-                  setUserContributedCountry({
-                    country: contributed.country,
-                    confidence: contributed.confidence as 'verified' | 'community' | 'unverified' | 'disputed',
-                    verifiedCount: contributed.verifiedCount || 0,
-                    hasImportedIngredients: contributed.hasImportedIngredients || false,
-                  });
-                } else {
-                  setUserContributedCountry(null);
-                }
-              } else {
-                // We have Open Food Facts country - check if user has overridden it
-                if (contributed.country && contributed.country.toUpperCase() !== offCountry.toUpperCase()) {
-                  // User has submitted a different country than default - prioritize user's country
-                  setUserContributedCountry({
-                    country: contributed.country,
-                    confidence: contributed.confidence as 'verified' | 'community' | 'unverified' | 'disputed',
-                    verifiedCount: contributed.verifiedCount || 0,
-                    hasImportedIngredients: contributed.hasImportedIngredients || false,
-                  });
-                  
-                  // Get community country statistics
-                  const { getCommunityCountryStats } = await import('../../src/services/manufacturingCountryService');
-                  const stats = await getCommunityCountryStats(barcode);
-                  setCommunityCountryStats(stats);
-                } else if (contributed.hasImportedIngredients) {
-                  // Same country as default, but has imported ingredients flag
-                  setUserContributedCountry({
-                    country: '', // Empty since we use Open Food Facts country
-                    confidence: 'verified' as const,
-                    verifiedCount: 0,
-                    hasImportedIngredients: true,
-                  });
-                } else {
-                  setUserContributedCountry(null);
-                }
-              }
-              
-              // Refresh community country statistics
-              const { getCommunityCountryStats } = await import('../../src/services/manufacturingCountryService');
-              const stats = await getCommunityCountryStats(barcode);
-              setCommunityCountryStats(stats);
-              
-              setHasSubmitted(true);
-              // Close modal after successful submission
-              setManufacturingCountryModalVisible(false);
-              // Refresh product to show new country
-              await loadProduct();
-            }
-          } else {
-            throw new Error(result.message);
-          }
-        }}
-        barcode={barcode}
-        productName={product?.product_name}
-      />
-
 
       {/* Manual Product Entry Modal */}
       <ManualProductEntryModal

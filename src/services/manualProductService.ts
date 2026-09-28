@@ -16,7 +16,6 @@ import { powershellLogger } from '../utils/powershellLogger';
 import { buildVercelManualProductPayload } from '../utils/vercelProprietaryManualProduct';
 import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
 import { applyResolvedNutrientLevels } from '../utils/resolveNutrientLevels';
-import { submitGovernedEvidence } from '../contributions/submitGovernedEvidence';
 import { markPendingContributionFields } from '../contributions/eligibilityBoundary';
 
 const STORAGE_KEY_PREFIX = '@truescan_manual_product_';
@@ -347,35 +346,7 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
         // Continue - local save was successful
       }
       
-      // Governed Origins / Certifications evidence (not scoring-ready Product fields)
-      try {
-        const originClaim = data.manufacturing_places?.trim() || data.countries?.trim();
-        if (originClaim) {
-          await submitGovernedEvidence({
-            barcode: data.barcode,
-            domain: 'origins',
-            claimValue: originClaim,
-            exactWording: originClaim,
-            originStructured: {
-              claimType: 'made_in',
-              primaryCountry: originClaim,
-            },
-          });
-        }
-        if (data.labels_tags && data.labels_tags.length > 0) {
-          for (const tag of data.labels_tags) {
-            await submitGovernedEvidence({
-              barcode: data.barcode,
-              domain: 'certifications',
-              claimValue: tag,
-              labelsTags: [tag],
-              exactWording: tag,
-            });
-          }
-        }
-      } catch (evidenceError) {
-        logger.warn('[ManualProductService] Governed evidence persist failed (non-blocking):', evidenceError);
-      }
+      // Local product record only. Governed Wave 4A evidence is submitted through the shared authority.
 
       // ===== USER CONTRIBUTION FLOW: STEP 3 - VERCEL (allergens/additives residual only) =====
       const proprietaryPayload = buildVercelManualProductPayload(data);

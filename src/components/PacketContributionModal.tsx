@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Modal,
   ScrollView,
@@ -18,14 +17,15 @@ import { useTheme } from '../theme';
 import {
   activateDevicePrivateByteStore,
   addManualEvidenceUnit,
-  applyReviewAction,
   commitStagedCapture,
+  getSession,
   handoffReviewedUnits,
   openSessionForProduct,
-  rejectStagedCapture,
   runExtraction,
   setSourceFraming,
-  type EvidenceUnitDomain,
+  upsertSession,
+  abstainingExtractionProducer,
+  type ExtractionProducer,
   type PacketContributionSession,
 } from '../packetContribution';
 import { transmitSessionToAuthority } from '../evidenceAuthority/device';
@@ -33,14 +33,95 @@ import {
   NUTRITION_FIELDS,
   type NutritionAttribute,
   type NutritionBasis,
+  type StatedNutritionAmount,
 } from '../ingredientsNutrition/nutritionSchema';
 import { PRODUCT_ORIGINS_CLAIM_TYPES, type ProductOriginsClaimType } from '../origins/governedFacts';
+import type { ContributionEntryContext } from '../contribution/resultContributionActions';
 
 type Preview = {
   tempKey: string;
   uri: string;
   source: 'camera' | 'gallery';
   bytes: Uint8Array;
+};
+
+type OriginDraft = {
+  claimType: ProductOriginsClaimType;
+  place: string;
+  ingredient: string;
+};
+
+const ORIGIN_LABELS: Record<ProductOriginsClaimType, string> = {
+  grown_in: 'Grown in',
+  produced_in: 'Produced in',
+  made_in: 'Made in',
+  packed_in: 'Packed in',
+  ingredient_origin: 'Ingredient origin',
+};
+
+const BASIS_LABELS: { basis: NutritionBasis; label: string }[] = [
+  { basis: 'per_100g', label: 'Per 100 g' },
+  { basis: 'per_100ml', label: 'Per 100 mL' },
+  { basis: 'per_serving', label: 'Per serving' },
+];
+
+const JOURNEY: Record<
+  ContributionEntryContext,
+  {
+    header: string;
+    instruction: string;
+    manual: string;
+    review: string;
+    submit: string;
+    another?: string;
+  }
+> = {
+  ingredients: {
+    header: 'Ingredients',
+    instruction: 'Photograph the ingredient list. Include the whole list.',
+    manual: 'Type ingredients instead',
+    review: 'Check ingredients',
+    submit: 'Submit ingredients',
+  },
+  nutrition: {
+    header: 'Nutrition',
+    instruction: 'Photograph the nutrition information panel.',
+    manual: 'Enter nutrition instead',
+    review: 'Check nutrition',
+    submit: 'Submit nutrition',
+  },
+  origins: {
+    header: 'Product origins',
+    instruction: 'Photograph where the pack states this product or ingredient comes from.',
+    manual: 'Enter origin statement instead',
+    review: 'Check product origins',
+    submit: 'Submit product origins',
+    another: 'Add another origin statement',
+  },
+  packetClaims: {
+    header: 'Packet claims',
+    instruction: 'Photograph the claim or certification on the pack.',
+    manual: 'Type a claim instead',
+    review: 'Check packet claims',
+    submit: 'Submit packet claims',
+    another: 'Add another claim',
+  },
+  certifications: {
+    header: 'Certifications',
+    instruction: 'Photograph the certification mark.',
+    manual: 'Enter certification instead',
+    review: 'Check certifications',
+    submit: 'Submit certifications',
+    another: 'Add another certification',
+  },
+};
+
+const DOMAIN_FOR_CONTEXT: Record<ContributionEntryContext, 'ingredients_nutrition' | 'origins' | 'packet_claims' | 'certifications'> = {
+  ingredients: 'ingredients_nutrition',
+  nutrition: 'ingredients_nutrition',
+  origins: 'origins',
+  packetClaims: 'packet_claims',
+  certifications: 'certifications',
 };
 
 async function readUriBytes(uri: string): Promise<Uint8Array> {
@@ -51,424 +132,522 @@ async function readUriBytes(uri: string): Promise<Uint8Array> {
   return bytes;
 }
 
+function contextForProposal(
+  domain: string | undefined,
+  section: 'ingredients' | 'nutrition' | undefined
+): ContributionEntryContext | null {
+  if (domain === 'ingredients_nutrition') return section === 'nutrition' ? 'nutrition' : 'ingredients';
+  if (domain === 'origins') return 'origins';
+  if (domain === 'packet_claims') return 'packetClaims';
+  if (domain === 'certifications') return 'certifications';
+  return null;
+}
+
 export default function PacketContributionModal({
   visible,
   barcode,
   variantKey,
+  entryContext,
+  initialIngredients,
+  producer = abstainingExtractionProducer,
   onClose,
   onSharedEvidenceAdmitted,
+  onSharedEvidenceFailed,
 }: {
   visible: boolean;
   barcode: string;
   variantKey?: string;
+  entryContext: ContributionEntryContext;
+  initialIngredients?: string;
+  producer?: ExtractionProducer;
   onClose: () => void;
   onSharedEvidenceAdmitted?: () => void | Promise<void>;
+  onSharedEvidenceFailed?: () => void;
 }) {
   const { colors } = useTheme();
   const [session, setSession] = useState<PacketContributionSession | null>(null);
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [busy, setBusy] = useState(false);
-  const [statement, setStatement] = useState('');
-  const [domain, setDomain] = useState<EvidenceUnitDomain>('unspecified');
-  const [section, setSection] = useState<'ingredients' | 'nutrition'>('ingredients');
-  const [nutritionAttribute, setNutritionAttribute] = useState<NutritionAttribute | null>(null);
-  const [nutritionBasis, setNutritionBasis] = useState<NutritionBasis | null>(null);
-  const [sodiumUnit, setSodiumUnit] = useState<'mg' | 'g' | null>(null);
-  const [originClaimType, setOriginClaimType] = useState<ProductOriginsClaimType | null>(null);
-  const [notice, setNotice] = useState('');
+  const [phase, setPhase] = useState<'capture' | 'entry' | 'review'>('capture');
+  const [ingredientsText, setIngredientsText] = useState(initialIngredients || '');
+  const [basis, setBasis] = useState<NutritionBasis | null>(null);
+  const [amounts, setAmounts] = useState<Partial<Record<NutritionAttribute, string>>>({});
+  const [sodiumUnit, setSodiumUnit] = useState<'mg' | 'g'>('mg');
+  const [origins, setOrigins] = useState<OriginDraft[]>([
+    { claimType: 'grown_in', place: '', ingredient: '' },
+  ]);
+  const [claims, setClaims] = useState<string[]>(['']);
+  const [certs, setCerts] = useState<string[]>(['']);
+  const [absence, setAbsence] = useState(false);
+  const [skippedProposals, setSkippedProposals] = useState<string[]>([]);
+  const [activeContext, setActiveContext] = useState<ContributionEntryContext>(entryContext);
 
   useEffect(() => {
     if (!visible) return;
     let cancelled = false;
+    setPhase('capture');
+    setActiveContext(entryContext);
+    setIngredientsText(initialIngredients || '');
+    setAbsence(false);
+    setSkippedProposals([]);
     (async () => {
-      setBusy(true);
-      try {
-        await activateDevicePrivateByteStore();
-        const opened = await openSessionForProduct({ barcode, variantKey });
-        if (!cancelled) setSession(opened);
-      } finally {
-        if (!cancelled) setBusy(false);
-      }
-    })();
+      await activateDevicePrivateByteStore();
+      const opened = await openSessionForProduct({ barcode, variantKey });
+      if (!cancelled) setSession(opened);
+    })().catch(() => {
+      if (!cancelled) setSession(null);
+    });
     return () => {
       cancelled = true;
     };
-  }, [visible, barcode, variantKey]);
+  }, [visible, barcode, variantKey, entryContext, initialIngredients]);
 
-  const stageAssets = async (assets: ImagePicker.ImagePickerAsset[], source: 'camera' | 'gallery') => {
-    const next: Preview[] = [];
-    for (const asset of assets) {
-      let uri = asset.uri;
-      if (source === 'gallery') {
-        const stripped = await ImageManipulator.manipulateAsync(uri, [], {
+  const targeted = useMemo(
+    () => (session?.sourceAssets || []).filter((asset) => asset.framing === 'targeted'),
+    [session]
+  );
+  const showReadPhotos = producer.kind !== 'abstaining' && targeted.length > 0;
+  const proposals = useMemo(() => {
+    if (producer.kind === 'abstaining' || !session) return [];
+    return session.extractionRuns.flatMap((run) =>
+      run.observations
+        .map((observation) => ({
+          id: observation.observationId,
+          context: contextForProposal(observation.proposedDomain, observation.proposedSection),
+        }))
+        .filter(
+          (item): item is { id: string; context: ContributionEntryContext } =>
+            item.context !== null && item.context !== activeContext && !skippedProposals.includes(item.id)
+        )
+    );
+  }, [producer.kind, session, activeContext, skippedProposals]);
+
+  const stage = async (uri: string, source: 'camera' | 'gallery') => {
+    const bytes = await readUriBytes(uri);
+    const staged = await commitStagedCapture({
+      sessionId: session!.sessionId,
+      bytes,
+      source,
+      now: Date.now(),
+    });
+    const framed = await setSourceFraming(staged.session.sessionId, staged.asset.assetId, 'targeted');
+    setSession(framed);
+    setPreviews((current) => [
+      ...current,
+      { tempKey: staged.asset.assetId, uri, source, bytes },
+    ]);
+  };
+
+  const captureCamera = async () => {
+    if (!session) return;
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) return;
+    const shot = await ImagePicker.launchCameraAsync({ quality: 1 });
+    if (shot.canceled || !shot.assets[0]) return;
+    setBusy(true);
+    try {
+      await stage(shot.assets[0].uri, 'camera');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const captureGallery = async () => {
+    if (!session) return;
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      quality: 1,
+      allowsMultipleSelection: true,
+    });
+    if (picked.canceled || picked.assets.length === 0) return;
+    setBusy(true);
+    try {
+      for (const asset of picked.assets) {
+        const manipulated = await ImageManipulator.manipulateAsync(asset.uri, [], {
           compress: 1,
           format: ImageManipulator.SaveFormat.JPEG,
         });
-        uri = stripped.uri;
+        await stage(manipulated.uri, 'gallery');
       }
-      const bytes = await readUriBytes(uri);
-      const tempKey = `packet/preview/${Date.now()}_${next.length}`;
-      next.push({ tempKey, uri, source, bytes });
-    }
-    setPreviews((current) => [...current, ...next]);
-  };
-
-  const takePhoto = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Camera permission is needed to photograph the pack.');
-      return;
-    }
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 1,
-    });
-    if (!result.canceled) await stageAssets(result.assets, 'camera');
-  };
-
-  const pickGallery = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Photo library permission is needed to import pack photos.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      allowsMultipleSelection: true,
-      quality: 1,
-    });
-    if (!result.canceled) await stageAssets(result.assets, 'gallery');
-  };
-
-  const usePreview = async (preview: Preview) => {
-    if (!session) return;
-    setBusy(true);
-    try {
-      const committed = await commitStagedCapture({
-        sessionId: session.sessionId,
-        bytes: preview.bytes,
-        source: preview.source,
-        metadata: undefined,
-      });
-      setSession(committed.session);
-      setPreviews((current) => current.filter((item) => item.tempKey !== preview.tempKey));
-      setNotice(committed.duplicate ? 'That photo is already in this contribution.' : 'Photo kept with this contribution.');
     } finally {
       setBusy(false);
     }
   };
 
-  const retakePreview = async (preview: Preview) => {
-    await rejectStagedCapture(preview.tempKey);
+  const retake = async (preview: Preview) => {
+    if (!session) return;
+    const latest = await getSession(session.sessionId);
+    if (!latest) return;
+    const next = await upsertSession({
+      ...latest,
+      sourceAssets: latest.sourceAssets.filter((item) => item.assetId !== preview.tempKey),
+      units: latest.units.filter((unit) => unit.support.sourceAssetId !== preview.tempKey),
+    });
+    setSession(next);
     setPreviews((current) => current.filter((item) => item.tempKey !== preview.tempKey));
   };
 
-  const markTargeted = async (assetId: string) => {
-    if (!session) return;
-    setSession(await setSourceFraming(session.sessionId, assetId, 'targeted'));
-  };
-
-  const extract = async () => {
-    if (!session) return;
+  const readPhotos = async () => {
+    if (!session || producer.kind === 'abstaining') return;
     setBusy(true);
     try {
-      const result = await runExtraction({ sessionId: session.sessionId });
-      setSession(result.session);
-      setNotice(result.run.statusDetail);
+      const extracted = await runExtraction({ sessionId: session.sessionId, producer });
+      setSession(extracted.session);
     } finally {
       setBusy(false);
     }
   };
 
-  const affirmPacketAbsence = async () => {
-    if (!session) return;
-    const asset = session.sourceAssets.find((item) => item.framing === 'targeted');
-    if (!asset) {
-      setNotice('Mark a photo as only the relevant pack information before confirming that no claim or certification is present.');
-      return;
-    }
-    const unit = await addManualEvidenceUnit({
-      sessionId: session.sessionId,
-      domain: 'packet_claims',
-      statement: '',
-      packetAbsenceAffirmation: true,
-      support: { coverage: 'whole_image', sourceAssetId: asset.assetId },
-    });
-    await applyReviewAction({
-      sessionId: session.sessionId,
-      unitId: unit.unitId,
-      action: 'manual_entry',
-    });
-    setSession(await openSessionForProduct({ barcode, variantKey }));
-    setNotice('Saved for submission. This step does not score the product.');
+  const supportFor = () => {
+    const asset = targeted[0];
+    if (asset) return { coverage: 'whole_image' as const, sourceAssetId: asset.assetId };
+    return { coverage: 'whole_image' as const, sourceAssetId: 'manual-text-only' };
   };
 
-  const addManual = async () => {
-    if (!session || !statement.trim()) return;
-    const asset = session.sourceAssets.find((item) => item.framing === 'targeted') || session.sourceAssets[0];
-    if (!asset) {
-      setNotice('Add a photo first, or continue with text only after a targeted photo is kept.');
-      return;
-    }
-    if (asset.framing !== 'targeted') {
-      setNotice('Mark the photo as only the relevant information, or take a closer photo, before saving this statement.');
-      return;
-    }
-    const field = NUTRITION_FIELDS.find((item) => item.attribute === nutritionAttribute);
-    const numeric = Number(statement);
-    if (domain === 'ingredients_nutrition' && section === 'nutrition') {
-      if (!field || !nutritionBasis || !Number.isFinite(numeric) || numeric < 0) {
-        setNotice('Choose the nutrient, its basis, and a number from the pack. An unclear unit or basis is not saved.');
-        return;
-      }
-      if (field.attribute === 'sodium' && sodiumUnit !== 'mg' && sodiumUnit !== 'g') {
-        setNotice('Choose milligrams or grams for sodium. An unlabelled number is not saved.');
-        return;
-      }
-    }
-    if (domain === 'origins' && !originClaimType) {
-      setNotice('Choose the origin statement on the pack. A missing statement is not saved as an origin.');
-      return;
-    }
-    const statedUnit = field?.attribute === 'sodium' ? sodiumUnit || undefined : field?.acceptedUnits[0];
-    const nutritionAmounts =
-      domain === 'ingredients_nutrition' && section === 'nutrition' && field && statedUnit && nutritionBasis
-        ? [{ attribute: field.attribute, value: numeric, unit: statedUnit }]
-        : undefined;
-    const unit = await addManualEvidenceUnit({
-      sessionId: session.sessionId,
-      domain,
-      statement: nutritionAmounts
-        ? `${field?.packetConcept} ${numeric} ${nutritionAmounts[0].unit} ${nutritionBasis}`
-        : statement,
-      support: { coverage: 'whole_image', sourceAssetId: asset.assetId },
-      section: domain === 'ingredients_nutrition' ? section : undefined,
-      nutritionAmounts,
-      nutritionBasis: nutritionAmounts ? nutritionBasis || undefined : undefined,
-      originClaimType: domain === 'origins' ? originClaimType || undefined : undefined,
-      originCountry: domain === 'origins' && originClaimType !== 'ingredient_origin' ? statement : undefined,
-      ingredientSubject: domain === 'origins' && originClaimType === 'ingredient_origin' ? statement : undefined,
+  const markReviewed = async (unitId: string) => {
+    const latest = await getSession(session!.sessionId);
+    if (!latest) return;
+    await upsertSession({
+      ...latest,
+      units: latest.units.map((unit) =>
+        unit.unitId === unitId ? { ...unit, status: 'reviewed' as const, reviewAction: 'manual_entry' as const } : unit
+      ),
     });
-    const reviewed = await applyReviewAction({
-      sessionId: session.sessionId,
-      unitId: unit.unitId,
-      action: 'manual_entry',
-      correctionText: statement,
-    });
-    const refreshed = await openSessionForProduct({ barcode, variantKey });
-    setSession(refreshed);
-    setStatement('');
-    setNotice(reviewed.status === 'reviewed' ? 'Saved for submission. Other photos stay in this contribution.' : 'Saved.');
-  };
-
-  const setAside = async (unitId: string) => {
-    if (!session) return;
-    await applyReviewAction({ sessionId: session.sessionId, unitId, action: 'set_aside' });
-    setSession(await openSessionForProduct({ barcode, variantKey }));
   };
 
   const submit = async () => {
     if (!session) return;
     setBusy(true);
     try {
-      const results = await handoffReviewedUnits({ sessionId: session.sessionId });
-      const authority = await transmitSessionToAuthority(session.sessionId);
-      setSession(await openSessionForProduct({ barcode, variantKey }));
-      const submitted = results.filter((item) => item.outcome === 'submitted').length;
-      const held = results.filter((item) => item.outcome === 'held_for_later_receiver').length;
-      if (authority.admitted && authority.admittedUnitIds.length > 0) {
-        const count = authority.admittedUnitIds.length;
-        setNotice(
-          count === 1
-            ? 'Admitted 1 reviewed unit from this send. This result is refreshing from the server snapshot.'
-            : `Admitted ${count} reviewed units from this send. This result is refreshing from the server snapshot.`
-        );
-        await onSharedEvidenceAdmitted?.();
-      } else if (authority.pendingOutbox) {
-        setNotice(
-          `${submitted} kept for sending. Nothing was scored from an unsent contribution.`
-        );
+      const context = activeContext;
+      const domain = DOMAIN_FOR_CONTEXT[context];
+      const support = supportFor();
+      const created: string[] = [];
+      if (context === 'ingredients') {
+        const text = ingredientsText.trim();
+        if (!text) return;
+        const unit = await addManualEvidenceUnit({
+          sessionId: session.sessionId,
+          domain,
+          section: 'ingredients',
+          statement: text,
+          support,
+        });
+        created.push(unit.unitId);
+      } else if (context === 'nutrition') {
+        if (!basis) return;
+        const stated: StatedNutritionAmount[] = [];
+        for (const field of NUTRITION_FIELDS) {
+          const raw = (amounts[field.attribute] || '').trim();
+          if (!raw) continue;
+          const value = Number(raw);
+          if (!Number.isFinite(value) || value < 0) continue;
+          const unit = field.attribute === 'sodium' ? sodiumUnit : field.acceptedUnits[0];
+          stated.push({ attribute: field.attribute, value, unit });
+        }
+        if (stated.length === 0) return;
+        const unit = await addManualEvidenceUnit({
+          sessionId: session.sessionId,
+          domain,
+          section: 'nutrition',
+          statement: 'Nutrition facts',
+          nutritionBasis: basis,
+          nutritionAmounts: stated,
+          support,
+        });
+        created.push(unit.unitId);
+      } else if (context === 'origins') {
+        for (const row of origins) {
+          const place = row.place.trim();
+          if (!place) continue;
+          if (row.claimType === 'ingredient_origin' && !row.ingredient.trim()) continue;
+          const statement =
+            row.claimType === 'ingredient_origin'
+              ? `${row.ingredient.trim()} ${ORIGIN_LABELS[row.claimType]} ${place}`
+              : `${ORIGIN_LABELS[row.claimType]} ${place}`;
+          const unit = await addManualEvidenceUnit({
+            sessionId: session.sessionId,
+            domain,
+            statement,
+            originClaimType: row.claimType,
+            originCountry: place,
+            originCountries: [place],
+            ingredientSubject: row.claimType === 'ingredient_origin' ? row.ingredient.trim() : undefined,
+            support,
+          });
+          created.push(unit.unitId);
+        }
+      } else if (context === 'packetClaims') {
+        if (absence) {
+          if (targeted.length === 0) return;
+          const unit = await addManualEvidenceUnit({
+            sessionId: session.sessionId,
+            domain,
+            statement: '',
+            packetAbsenceAffirmation: true,
+            support: { coverage: 'whole_image', sourceAssetId: targeted[0].assetId },
+          });
+          created.push(unit.unitId);
+        }
+        for (const claim of claims) {
+          const text = claim.trim();
+          if (!text) continue;
+          const unit = await addManualEvidenceUnit({
+            sessionId: session.sessionId,
+            domain,
+            statement: text,
+            support,
+          });
+          created.push(unit.unitId);
+        }
       } else {
-        setNotice(
-          held > 0
-            ? `${submitted} submitted for governed review. ${held} kept locally until that section’s receiver exists.`
-            : `${submitted} submitted for governed review. Nothing was scored from this step.`
-        );
+        for (const cert of certs) {
+          const text = cert.trim();
+          if (!text) continue;
+          const unit = await addManualEvidenceUnit({
+            sessionId: session.sessionId,
+            domain,
+            statement: text,
+            support,
+          });
+          created.push(unit.unitId);
+        }
       }
+      if (created.length === 0) return;
+      for (const unitId of created) await markReviewed(unitId);
+      const handed = await handoffReviewedUnits({
+        sessionId: session.sessionId,
+        persistRemote: false,
+      });
+      const submitted = handed.filter((item) => item.outcome === 'submitted');
+      if (submitted.length === 0) {
+        onSharedEvidenceFailed?.();
+        return;
+      }
+      const transmitted = await transmitSessionToAuthority(session.sessionId);
+      if (!transmitted.admitted) {
+        onSharedEvidenceFailed?.();
+        return;
+      }
+      await onSharedEvidenceAdmitted?.();
+      onClose();
+    } catch {
+      onSharedEvidenceFailed?.();
     } finally {
       setBusy(false);
     }
   };
 
-  const preview = previews[0];
+  const journey = JOURNEY[activeContext];
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.screen, { backgroundColor: colors.background }]}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <Text style={[styles.title, { color: colors.text }]}>Photograph the pack</Text>
-          <Text style={[styles.body, { color: colors.textSecondary }]}>
-            Photograph the information on the pack clearly. Take more than one photo if needed.
-          </Text>
-          {busy ? <ActivityIndicator /> : null}
-          {notice ? <Text style={[styles.notice, { color: colors.text }]}>{notice}</Text> : null}
-
-          {preview ? (
-            <View style={[styles.card, { borderColor: colors.border }]}>
-              <Image source={{ uri: preview.uri }} style={styles.preview} />
-              <View style={styles.row}>
-                <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={() => usePreview(preview)}>
-                  <Text style={styles.buttonText}>Use</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.button, { backgroundColor: colors.card }]} onPress={() => retakePreview(preview)}>
-                  <Text style={[styles.buttonText, { color: colors.text }]}>Retake</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
+      <ScrollView style={[styles.page, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+        <Text style={[styles.header, { color: colors.text }]}>{journey.header}</Text>
+        {phase === 'capture' ? (
+          <View>
+            <Text style={[styles.body, { color: colors.text }]}>{journey.instruction}</Text>
             <View style={styles.row}>
-              <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={takePhoto}>
+              <TouchableOpacity onPress={captureCamera} style={styles.button} accessibilityRole="button">
                 <Text style={styles.buttonText}>Camera</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={pickGallery}>
+              <TouchableOpacity onPress={captureGallery} style={styles.button} accessibilityRole="button">
                 <Text style={styles.buttonText}>Gallery</Text>
               </TouchableOpacity>
             </View>
-          )}
-
-          {(session?.sourceAssets || []).map((asset) => (
-            <View key={asset.assetId} style={[styles.card, { borderColor: colors.border }]}>
-              <Text style={{ color: colors.text }}>
-                Photo kept · {asset.source} · {asset.framing === 'targeted' ? 'one section' : 'not yet marked as one section'}
-              </Text>
-              {asset.framing !== 'targeted' ? (
-                <TouchableOpacity onPress={() => markTargeted(asset.assetId)}>
-                  <Text style={{ color: colors.primary }}>This photo shows only the relevant information</Text>
+            {previews.map((preview) => (
+              <View key={preview.tempKey} style={styles.previewRow}>
+                <Image source={{ uri: preview.uri }} style={styles.thumb} />
+                <TouchableOpacity onPress={() => retake(preview)}>
+                  <Text style={{ color: colors.primary }}>Retake</Text>
                 </TouchableOpacity>
-              ) : null}
-            </View>
-          ))}
-
-          <TouchableOpacity style={[styles.button, { backgroundColor: colors.card }]} onPress={extract}>
-            <Text style={[styles.buttonText, { color: colors.text }]}>Read the photos</Text>
-          </TouchableOpacity>
-
-          <Text style={[styles.body, { color: colors.textSecondary }]}>
-            If reading the pack does not work, type the statement yourself. It is not scored from this screen.
-          </Text>
-          <TextInput
-            value={statement}
-            onChangeText={setStatement}
-            placeholder="What the pack says"
-            placeholderTextColor={colors.textSecondary}
-            style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-          />
-          <View style={styles.row}>
-            {(['origins', 'certifications', 'ingredients_nutrition', 'packet_claims'] as const).map((item) => (
-              <TouchableOpacity key={item} onPress={() => setDomain(item)}>
-                <Text style={{ color: domain === item ? colors.primary : colors.textSecondary }}>{item}</Text>
-              </TouchableOpacity>
+              </View>
             ))}
-          </View>
-          {domain === 'ingredients_nutrition' ? (
-            <View style={styles.row}>
-              {(['ingredients', 'nutrition'] as const).map((item) => (
-                <TouchableOpacity key={item} onPress={() => setSection(item)}>
-                  <Text style={{ color: section === item ? colors.primary : colors.textSecondary }}>{item}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : null}
-          {domain === 'ingredients_nutrition' && section === 'nutrition' ? (
-            <View style={styles.row}>
-              {NUTRITION_FIELDS.map((item) => (
-                <TouchableOpacity key={item.attribute} onPress={() => setNutritionAttribute(item.attribute)}>
-                  <Text style={{ color: nutritionAttribute === item.attribute ? colors.primary : colors.textSecondary }}>
-                    {item.packetConcept} ({item.acceptedUnits.join('/')})
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : null}
-          {domain === 'ingredients_nutrition' && section === 'nutrition' && nutritionAttribute === 'sodium' ? (
-            <View style={styles.row}>
-              {(['mg', 'g'] as const).map((item) => (
-                <TouchableOpacity key={item} onPress={() => setSodiumUnit(item)}>
-                  <Text style={{ color: sodiumUnit === item ? colors.primary : colors.textSecondary }}>{item}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : null}
-          {domain === 'ingredients_nutrition' && section === 'nutrition' ? (
-            <View style={styles.row}>
-              {(['per_100g', 'per_100ml', 'per_serving'] as const).map((item) => (
-                <TouchableOpacity key={item} onPress={() => setNutritionBasis(item)}>
-                  <Text style={{ color: nutritionBasis === item ? colors.primary : colors.textSecondary }}>{item}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : null}
-          {domain === 'origins' ? (
-            <View style={styles.row}>
-              {PRODUCT_ORIGINS_CLAIM_TYPES.map((item) => (
-                <TouchableOpacity key={item} onPress={() => setOriginClaimType(item)}>
-                  <Text style={{ color: originClaimType === item ? colors.primary : colors.textSecondary }}>{item}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : null}
-          {domain === 'ingredients_nutrition' ? (
-            <Text style={[styles.body, { color: colors.textSecondary }]}>
-              Ingredients and nutrition can be saved separately. A partial nutrition entry is not a complete panel, and it does not create a Nutri-Score or NOVA group.
-            </Text>
-          ) : null}
-          <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={addManual}>
-            <Text style={styles.buttonText}>Save statement</Text>
-          </TouchableOpacity>
-          {domain === 'packet_claims' ? (
-            <TouchableOpacity style={[styles.button, { backgroundColor: colors.card }]} onPress={affirmPacketAbsence}>
-              <Text style={[styles.buttonText, { color: colors.text }]}>No claim or certification on this pack</Text>
+            {showReadPhotos ? (
+              <TouchableOpacity onPress={readPhotos} style={styles.button}>
+                <Text style={styles.buttonText}>Read photos</Text>
+              </TouchableOpacity>
+            ) : null}
+            {proposals.length > 0 ? (
+              <View>
+                <Text style={[styles.body, { color: colors.text }]}>Also found on this photo</Text>
+                {proposals.map((proposal) => (
+                  <View key={proposal.id} style={styles.row}>
+                    <TouchableOpacity onPress={() => setActiveContext(proposal.context)}>
+                      <Text style={{ color: colors.primary }}>Review</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setSkippedProposals((rows) => [...rows, proposal.id])}>
+                      <Text style={{ color: colors.primary }}>Skip</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+            <TouchableOpacity onPress={() => setPhase('entry')} style={styles.button}>
+              <Text style={styles.buttonText}>{journey.manual}</Text>
             </TouchableOpacity>
-          ) : null}
-
-          {(session?.units || []).map((unit) => (
-            <View key={unit.unitId} style={[styles.card, { borderColor: colors.border }]}>
-              <Text style={{ color: colors.text }}>
-                {unit.packetAbsenceAffirmation ? 'No claim or certification on this pack' : unit.statement}
-              </Text>
-              <Text style={{ color: colors.textSecondary }}>{unit.status}</Text>
-              {unit.status === 'open' ? (
-                <TouchableOpacity onPress={() => setAside(unit.unitId)}>
-                  <Text style={{ color: colors.primary }}>Set this aside</Text>
+            <TouchableOpacity onPress={() => setPhase('review')} style={styles.button}>
+              <Text style={styles.buttonText}>{journey.review}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+        {phase === 'entry' || phase === 'review' ? (
+          <View>
+            <Text style={[styles.header, { color: colors.text }]}>{journey.review}</Text>
+            {activeContext === 'ingredients' ? (
+              <TextInput
+                value={ingredientsText}
+                onChangeText={setIngredientsText}
+                multiline
+                placeholder="Ingredients"
+                style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+              />
+            ) : null}
+            {activeContext === 'nutrition' ? (
+              <View>
+                <View style={styles.row}>
+                  {BASIS_LABELS.map((item) => (
+                    <TouchableOpacity key={item.basis} onPress={() => setBasis(item.basis)}>
+                      <Text style={{ color: basis === item.basis ? colors.primary : colors.text }}>{item.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {NUTRITION_FIELDS.map((field) => (
+                  <View key={field.attribute}>
+                    <Text style={{ color: colors.text }}>{field.packetConcept}</Text>
+                    <TextInput
+                      value={amounts[field.attribute] || ''}
+                      onChangeText={(value) => setAmounts((current) => ({ ...current, [field.attribute]: value }))}
+                      keyboardType="decimal-pad"
+                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                    />
+                    {field.attribute === 'sodium' ? (
+                      <View style={styles.row}>
+                        <TouchableOpacity onPress={() => setSodiumUnit('mg')}>
+                          <Text style={{ color: sodiumUnit === 'mg' ? colors.primary : colors.text }}>mg</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setSodiumUnit('g')}>
+                          <Text style={{ color: sodiumUnit === 'g' ? colors.primary : colors.text }}>g</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <Text style={{ color: colors.textSecondary }}>{field.acceptedUnits[0]}</Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            ) : null}
+            {activeContext === 'origins'
+              ? origins.map((row, index) => (
+                  <View key={`${row.claimType}-${index}`}>
+                    <Text style={{ color: colors.text }}>What does the pack say?</Text>
+                    <View style={styles.row}>
+                      {PRODUCT_ORIGINS_CLAIM_TYPES.map((claimType) => (
+                        <TouchableOpacity
+                          key={claimType}
+                          onPress={() =>
+                            setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, claimType } : item)))
+                          }
+                        >
+                          <Text style={{ color: row.claimType === claimType ? colors.primary : colors.text }}>
+                            {ORIGIN_LABELS[claimType]}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    {row.claimType === 'ingredient_origin' ? (
+                      <TextInput
+                        value={row.ingredient}
+                        onChangeText={(value) =>
+                          setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, ingredient: value } : item)))
+                        }
+                        placeholder="Ingredient named on the pack"
+                        style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                      />
+                    ) : null}
+                    <TextInput
+                      value={row.place}
+                      onChangeText={(value) =>
+                        setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, place: value } : item)))
+                      }
+                      placeholder="Country or place stated on the pack"
+                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                    />
+                  </View>
+                ))
+              : null}
+            {activeContext === 'origins' && journey.another ? (
+              <TouchableOpacity
+                onPress={() => setOrigins((rows) => [...rows, { claimType: 'grown_in', place: '', ingredient: '' }])}
+              >
+                <Text style={{ color: colors.primary }}>{journey.another}</Text>
+              </TouchableOpacity>
+            ) : null}
+            {activeContext === 'packetClaims'
+              ? claims.map((claim, index) => (
+                  <TextInput
+                    key={`claim-${index}`}
+                    value={claim}
+                    onChangeText={(value) => setClaims((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)))}
+                    placeholder="What does the pack say?"
+                    style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                  />
+                ))
+              : null}
+            {activeContext === 'packetClaims' ? (
+              <View>
+                <TouchableOpacity onPress={() => setClaims((rows) => [...rows, ''])}>
+                  <Text style={{ color: colors.primary }}>{journey.another}</Text>
                 </TouchableOpacity>
-              ) : null}
-            </View>
-          ))}
-
-          <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={submit}>
-            <Text style={styles.buttonText}>Submit reviewed statements</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onClose}>
-            <Text style={{ color: colors.textSecondary }}>Close</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
+                {targeted.length > 0 ? (
+                  <TouchableOpacity onPress={() => setAbsence(true)}>
+                    <Text style={{ color: colors.primary }}>
+                      I checked the pack and couldn’t find a relevant claim or certification.
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            ) : null}
+            {activeContext === 'certifications'
+              ? certs.map((cert, index) => (
+                  <TextInput
+                    key={`cert-${index}`}
+                    value={cert}
+                    onChangeText={(value) => setCerts((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)))}
+                    placeholder="Certification"
+                    style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                  />
+                ))
+              : null}
+            {activeContext === 'certifications' ? (
+              <TouchableOpacity onPress={() => setCerts((rows) => [...rows, ''])}>
+                <Text style={{ color: colors.primary }}>{journey.another}</Text>
+              </TouchableOpacity>
+            ) : null}
+            <TouchableOpacity onPress={submit} style={styles.button} accessibilityRole="button">
+              <Text style={styles.buttonText}>{journey.submit}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+        {busy ? <ActivityIndicator /> : null}
+        <TouchableOpacity onPress={onClose}>
+          <Text style={{ color: colors.primary }}>Close</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  content: { padding: 20, gap: 12 },
-  title: { fontSize: 22, fontWeight: '700' },
-  body: { fontSize: 16, lineHeight: 22 },
-  notice: { fontSize: 15 },
-  card: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 8 },
-  preview: { width: '100%', height: 220, borderRadius: 8 },
-  row: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
-  button: { borderRadius: 10, paddingVertical: 12, paddingHorizontal: 16 },
+  page: { flex: 1 },
+  content: { padding: 16, gap: 12 },
+  header: { fontSize: 22, fontWeight: '700' },
+  body: { fontSize: 16 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  button: { backgroundColor: '#16a085', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10 },
   buttonText: { color: '#fff', fontWeight: '600' },
-  input: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 16 },
+  previewRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  thumb: { width: 72, height: 72, borderRadius: 8 },
+  input: { borderWidth: 1, borderRadius: 8, padding: 8, minHeight: 44 },
 });

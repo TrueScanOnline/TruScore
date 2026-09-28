@@ -4,6 +4,7 @@ import { getPrivateByteStore } from '../packetContribution/sourceAssets';
 import { sha256Hex } from '../packetContribution/sha256';
 import { getSession } from '../packetContribution/sessionStore';
 import type { PacketContributionSession, PacketEvidenceUnit } from '../packetContribution/types';
+import { governedCertificationLabels } from '../contributions/certificationLane';
 import { expectedAuthorityEnv, rememberSnapshot } from './assessment';
 import type { EvidenceFactInput, SharedEvidenceSnapshot, SubmissionOutcome } from './types';
 
@@ -182,13 +183,14 @@ function factsFromUnit(
     ];
   }
   if (unit.domain === 'certifications' && unit.statement.trim()) {
+    const labelsTags = governedCertificationLabels(unit.statement);
     return [
       {
         ...provenance,
         domain: 'certifications',
         claimValue: unit.statement,
         exactWording: unit.statement,
-        labelsTags: [unit.statement],
+        ...(labelsTags ? { labelsTags } : {}),
         variantKey: session.variantKey,
       },
     ];

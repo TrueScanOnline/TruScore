@@ -50,6 +50,9 @@ export type MachineObservation = {
   confidence?: number;
   alternatives?: string[];
   support: SupportCoverage;
+  /** Set only by an extraction producer. Consumers are not asked to classify a photo. */
+  proposedDomain?: EvidenceUnitDomain;
+  proposedSection?: 'ingredients' | 'nutrition';
 };
 
 export type ExtractionProducerKind = 'vlm' | 'ocr_assisted' | 'ocr_degraded' | 'abstaining' | 'other';

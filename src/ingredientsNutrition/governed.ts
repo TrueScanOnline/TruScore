@@ -28,6 +28,8 @@ export type IngredientsNutritionDraft = {
   nutritionBasis?: string;
   amounts?: Array<{ attribute?: string; value?: unknown; unit?: string }>;
   imageUrl?: string;
+  /** When false, keep the local submitted row and do not post the retired contribution route. */
+  persistRemote?: boolean;
 };
 
 export async function submitIngredientsNutritionEvidence(
@@ -86,6 +88,7 @@ export async function submitIngredientsNutritionEvidence(
     sourceProvenance: 'primary_user_submission',
   });
   await upsertLocalEvidence(evidence);
+  if (draft.persistRemote === false) return evidence;
   const checkpoint =
     runtimeClass === 'production' ? await checkpointMaterialCompletion(evidence, evidenceKeyOf(evidence)) : null;
   const remoteOk = await persistEvidenceRemote(evidence).catch(() => false);

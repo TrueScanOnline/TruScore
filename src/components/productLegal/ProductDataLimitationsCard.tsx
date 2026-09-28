@@ -23,8 +23,15 @@ const INCOMPLETE_DATA_CARD_BORDER_RED = '#d32f2f';
 
 type Props = {
   product: Product | ProductWithTrustScore | null | undefined;
-  /** Opens manual product entry when a live ingredients/nutrition route is actionable. */
-  onOpenManualEdit?: () => void;
+  /** Opens the ingredients journey. */
+  onOpenIngredients?: () => void;
+  /** Opens the nutrition journey. */
+  onOpenNutrition?: () => void;
+  /**
+   * Route keys already shown on the originating Result card.
+   * Those actions are not repeated here.
+   */
+  suppressLiveRoutes?: string[];
   /**
    * Opens Product Origins contribution when live.
    * Prefill carries structured origins_tags candidate + conflicting free text only when
@@ -127,7 +134,9 @@ function S26PillarBlock({
             ? ' · Unrevealed'
             : ''}
       </Text>
-      <Text style={[styles.pillarBody, { color: colors.textSecondary }]}>{s26.explanation}</Text>
+      <Text style={[styles.pillarBody, { color: colors.textSecondary }]}>
+        {s26.explanation.replace(/^\(Awaiting founder approval\)\s*/, '')}
+      </Text>
       {opp?.prefill?.structuredOriginCountry ? (
         <Text style={[styles.futureNote, { color: colors.textSecondary }]}>
           Suggested origin for validation: {opp.prefill.structuredOriginCountry}
@@ -141,17 +150,17 @@ function S26PillarBlock({
           onPress={onLiveAction}
           label={
             opp?.routeKey === 'origins'
-              ? 'Validate or correct origin information'
+              ? 'Add product origins'
               : opp?.routeKey === 'packet_claims'
-                ? 'Add packet claim information'
-                : 'Edit or add product information'
+                ? 'Add packet claims'
+                : 'Add ingredients'
           }
           accessibilityLabel={
             opp?.routeKey === 'origins'
-              ? 'Open origins contribution'
+              ? 'Add product origins'
               : opp?.routeKey === 'packet_claims'
-                ? 'Open packet claims contribution'
-                : 'Open manual edit to add or correct product information'
+                ? 'Add packet claims'
+                : 'Add ingredients'
           }
           primaryColor={colors.primary}
         />
@@ -162,9 +171,11 @@ function S26PillarBlock({
 
 export default function ProductDataLimitationsCard({
   product,
-  onOpenManualEdit,
+  onOpenIngredients,
+  onOpenNutrition,
   onOpenOrigins,
   onOpenPacketClaims,
+  suppressLiveRoutes = [],
   publicationSettled = true,
   openRequestKey = 0,
 }: Props) {
@@ -196,10 +207,11 @@ export default function ProductDataLimitationsCard({
   }
 
   const resolveAction = (routeKey?: string, prefill?: ContributionOpportunity['prefill']) => {
+    if (routeKey && suppressLiveRoutes.includes(routeKey)) return undefined;
     if (routeKey === 'origins') {
       return onOpenOrigins ? () => onOpenOrigins(prefill) : undefined;
     }
-    if (routeKey === 'ingredients_nutrition') return onOpenManualEdit;
+    if (routeKey === 'ingredients_nutrition') return onOpenIngredients ?? onOpenNutrition;
     if (routeKey === 'packet_claims') return onOpenPacketClaims;
     return undefined;
   };

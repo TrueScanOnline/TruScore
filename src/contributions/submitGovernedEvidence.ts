@@ -52,6 +52,8 @@ export async function submitGovernedEvidence(params: {
    * and leave admissionStatus=submitted (not yet admitted).
    */
   asProductionEpoch?: boolean;
+  /** When false, keep the local submitted row and do not post the retired contribution route. */
+  persistRemote?: boolean;
 }): Promise<ContributionEvidence> {
   const submitterId = await getContributorId();
   const structured = params.originStructured
@@ -152,12 +154,13 @@ export async function submitGovernedEvidence(params: {
   });
 
   await upsertLocalEvidence(evidence);
-
-  const key = evidenceKeyOf(evidence);
-  const checkpoint = isProductionClass ? await checkpointMaterialCompletion(evidence, key) : null;
-  const remoteOk = await persistEvidenceRemote(evidence).catch(() => false);
-  if (checkpoint && remoteOk) {
-    await markRecoveryRemoteSynced(checkpoint.recoveryId);
+  if (params.persistRemote !== false) {
+    const key = evidenceKeyOf(evidence);
+    const checkpoint = isProductionClass ? await checkpointMaterialCompletion(evidence, key) : null;
+    const remoteOk = await persistEvidenceRemote(evidence).catch(() => false);
+    if (checkpoint && remoteOk) {
+      await markRecoveryRemoteSynced(checkpoint.recoveryId);
+    }
   }
 
   return evidence;

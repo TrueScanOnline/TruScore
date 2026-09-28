@@ -58,10 +58,8 @@ describe('Wave 4A.5 Result surface', () => {
     expect(emptyReturn).not.toContain('styles.burnStrip');
     expect(en.nutrition.notAvailable.length).toBeGreaterThan(0);
     expect(result).toContain('result.ingredientsEmpty');
-    expect(result).toContain('result.ingredientsCardOpenEditA11y');
     expect(result).toContain('onOpenProcessingLevel={() => setProcessingLevelModalVisible(true)}');
     expect(result).toContain('NOVA {novaGroup}');
-    expect(result).toContain('onEdit={handleEditProduct}');
     expect(nutrition).toContain('NutritionDetailsModal');
     expect(nutrition).toContain('NutritionBurnInfoModal');
   });
@@ -70,7 +68,6 @@ describe('Wave 4A.5 Result surface', () => {
     let cursor = result.indexOf('<ProductDisclaimerCard />');
     const order = [
       '<ProductHeroSection',
-      'Photograph the pack',
       "t('result.nutritionAndIngredients', 'Nutrition & Ingredients')",
       '<AboutTheseAdditivesCard',
       "t('result.productOrigins', 'Product Origins')",
@@ -123,7 +120,6 @@ describe('Wave 4A.5 Result surface', () => {
     expect(result).toContain('<ProductDisclaimerCard />');
     expect(result).toContain('<ProductHeroSection');
     expect(result).toContain('<BannerAlertsCard');
-    expect(result).toContain('Photograph the pack');
     expect(result).toContain('<TruScore');
     expect(result).toContain('<ConfidenceBadge');
     expect(result).toContain('What we found');

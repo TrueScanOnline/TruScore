@@ -15,7 +15,8 @@ describe('Nutrition Table Wave 3 presentation contracts', () => {
   it('result path uses NutritionTable without whole-card edit Pressable', () => {
     const src = read('app/result/[barcode].tsx');
     expect(src).toContain('<NutritionTable');
-    expect(src).toContain('onEdit={handleEditProduct}');
+    expect(src).toContain('openContribution(\'nutrition\')');
+    expect(src).not.toContain('onEdit={handleEditProduct}');
     // Whole-card contribution Pressable around NutritionTable removed
     expect(src).not.toMatch(/Pressable[\s\S]{0,200}onPress=\{handleEditProduct\}[\s\S]{0,400}<NutritionTable/);
     expect(src).not.toContain('addNutritionFactsHere');

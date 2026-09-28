@@ -7,7 +7,6 @@ import { validateCountrySubmission, RateLimiter } from '../utils/validation';
 import { logger } from '../utils/logger';
 import { uploadProductPhoto } from './photoUploadService';
 import { CONTRIBUTION_POLICY } from '../config/contributionPolicy';
-import { submitGovernedEvidence } from '../contributions/submitGovernedEvidence';
 import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
 
 // Rate limiter: max 1 submission per barcode per user (enforced by userId check)
@@ -113,20 +112,6 @@ export async function submitManufacturingCountry(
         message: 'Too many submissions. Please try again later.',
       };
     }
-
-    await submitGovernedEvidence({
-      barcode,
-      domain: 'origins',
-      claimValue: validatedCountry,
-      imageUrl: validatedPhotoUrl ?? undefined,
-      exactWording: validatedCountry,
-      originStructured: {
-        claimType: 'made_in',
-        primaryCountry: validatedCountry,
-      },
-    }).catch((err) => {
-      logger.warn('[ManufacturingCountryService] Governed evidence persist failed (non-blocking):', err);
-    });
 
     // Try to submit to backend API first (for global sharing)
     try {

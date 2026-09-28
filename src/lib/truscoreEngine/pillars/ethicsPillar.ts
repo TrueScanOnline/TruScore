@@ -166,6 +166,32 @@ function pushAdjustment(
 }
 
 /**
+ * When the caller omits packet coverage, a false incomplete default must not
+ * remain after the governed packet lane has actually been assessed.
+ * Explicit coverage and the unassessed/silence case are left unchanged.
+ * Does not add a fired adjustment or change the numeric score.
+ */
+function alignOmittedPacketCoverage<
+  T extends {
+    publication_packet_lane: string;
+    packet_coverage_state: string;
+    assessment_state: string;
+  },
+>(assessment: T, coverageExplicit: boolean): T {
+  if (coverageExplicit || assessment.publication_packet_lane !== 'assessed') return assessment;
+  if (assessment.packet_coverage_state !== 'incomplete' && assessment.assessment_state !== 'unassessed') {
+    return assessment;
+  }
+  return {
+    ...assessment,
+    packet_coverage_state:
+      assessment.packet_coverage_state === 'incomplete' ? 'complete' : assessment.packet_coverage_state,
+    assessment_state:
+      assessment.assessment_state === 'unassessed' ? 'assessed_neutral' : assessment.assessment_state,
+  };
+}
+
+/**
  * Claims pillar score (internal Ethics key): Base 15 + BBFAW + KTC + max one certification
  * + Packet Claim Context + Organic claim-only, clamped 0–25.
  */
@@ -514,7 +540,10 @@ export function calculateEthicsPillar(
       certificationsWinningScheme: certEval.winningScheme,
       certificationsEligibleSchemes: certEval.eligibleSchemes,
       certificationsOrganicMatchSource: certEval.organicMatchSource ?? null,
-      claimsAssessment,
+      claimsAssessment: alignOmittedPacketCoverage(
+        claimsAssessment,
+        options?.packetCoverageState != null
+      ),
       primaryUserClaimsDependence,
     },
   };
