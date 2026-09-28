@@ -14,7 +14,11 @@ import {
   selectPrevailingPacketClaims,
 } from '../../../claims/packetClaimReceiver';
 import { stampCoreTruthAuthority } from '../../../config/coreTruthProductCacheAuthority';
-import { EvidenceAuthority } from '../../../evidenceAuthority/authority';
+import {
+  EvidenceAuthority,
+  MAX_EVIDENCE_CHUNK_COUNT,
+  MAX_EVIDENCE_ORIGINAL_BYTES,
+} from '../../../evidenceAuthority/authority';
 import {
   SNAPSHOT_CACHE_MAX_AGE_MS,
   loadAuthoritativeAssessment,
@@ -652,7 +656,16 @@ describe('Wave 4A shared evidence authority', () => {
       declaredSha256: declared,
       bytes: parts[0],
     })).toEqual({ ok: true, stored: 'duplicate' });
-    expect((await authority.finalizeAssetUpload({ uploadId, declaredSha256: declared })).ok).toBe(false);
+    expect(
+      (
+        await authority.finalizeAssetUpload({
+          uploadId,
+          declaredSha256: declared,
+          contributorId: contributor.contributorId,
+          barcode: BARCODE,
+        })
+      ).ok
+    ).toBe(false);
     const missing = await send(
       authority,
       contributor.contributorId,
@@ -671,10 +684,20 @@ describe('Wave 4A shared evidence authority', () => {
         bytes: parts[index],
       });
     }
-    const finalized = await authority.finalizeAssetUpload({ uploadId, declaredSha256: declared });
+    const finalized = await authority.finalizeAssetUpload({
+      uploadId,
+      declaredSha256: declared,
+      contributorId: contributor.contributorId,
+      barcode: BARCODE,
+    });
     expect(finalized.ok).toBe(true);
     if (!finalized.ok) return;
-    const repeated = await authority.finalizeAssetUpload({ uploadId, declaredSha256: declared });
+    const repeated = await authority.finalizeAssetUpload({
+      uploadId,
+      declaredSha256: declared,
+      contributorId: contributor.contributorId,
+      barcode: BARCODE,
+    });
     expect(repeated).toMatchObject({ ok: true, assetId: finalized.assetId, sha256: declared });
     const region = { x: 1, y: 2, width: 3, height: 4 };
     const admitted = await send(
@@ -871,10 +894,12 @@ describe('Wave 4A shared evidence authority', () => {
     expect(facts[1].derivedAssetId).toBe('crop-b');
     expect(facts[0].finalizedAssetId).not.toBe(facts[1].finalizedAssetId);
     memory.set(PACKET_SESSION_STORAGE_KEY, JSON.stringify([{ ...session, units: [session.units[0]] }]));
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
     const keys: string[] = [];
     let failSubmit = true;
     (global.fetch as jest.Mock).mockImplementation(async (_url: string, init?: { body?: string }) => {
-      const body = JSON.parse(String(init?.body)) as {
+      if (!init?.body) return { ok: true, json: async () => ({ authorityEnv: 'uat' }) };
+      const body = JSON.parse(init.body) as {
         action?: string;
         idempotencyKey?: string;
         uploadId?: string;
@@ -933,5 +958,191 @@ describe('Wave 4A shared evidence authority', () => {
     const again = await transmitSessionToAuthority('session-1');
     expect(again.admitted).toBe(false);
     expect(keys).toHaveLength(3);
+  });
+
+  it('lets only the uploading contributor cite a finalized asset for its product', async () => {
+    const authority = service('uat');
+    const owner = await authority.issueCredential();
+    const other = await authority.issueCredential();
+    const original = new Uint8Array([1, 2, 3, 4]);
+    const declared = sha256Hex(original);
+    await authority.putAssetChunk({
+      uploadId: 'owned-upload',
+      chunkIndex: 0,
+      chunkCount: 1,
+      totalBytes: original.length,
+      declaredSha256: declared,
+      bytes: original,
+    });
+    const finalized = await authority.finalizeAssetUpload({
+      uploadId: 'owned-upload',
+      declaredSha256: declared,
+      contributorId: owner.contributorId,
+      barcode: BARCODE,
+    });
+    expect(finalized.ok).toBe(true);
+    if (!finalized.ok) return;
+    const stolen = await send(
+      authority,
+      other.contributorId,
+      [{ ...packet('High protein'), finalizedAssetId: finalized.assetId }],
+      'stolen-asset',
+      { sourceBytes: new Uint8Array() }
+    );
+    expect(stolen.status).toBe('source_not_owned');
+    expect(await authority.history(BARCODE)).toHaveLength(0);
+    const otherProduct = await authority.submit(owner.contributorId, {
+      idempotencyKey: 'other-product',
+      barcode: '00001111',
+      facts: [{ ...packet('High protein'), finalizedAssetId: finalized.assetId }],
+    });
+    expect(otherProduct.status).toBe('source_not_owned');
+    const owned = await send(
+      authority,
+      owner.contributorId,
+      [{ ...packet('High protein'), finalizedAssetId: finalized.assetId }],
+      'owned-asset',
+      { sourceBytes: new Uint8Array() }
+    );
+    expect(owned.status).toBe('admitted');
+    expect((await authority.history(BARCODE)).every((row) => row.sourceAssetId === finalized.assetId)).toBe(true);
+  });
+
+  it('accepts only the exact OFF staging hostname and stays off by default', async () => {
+    const transport = jest.fn(async () => ({ ok: true, status: 200 }));
+    const rejected = [
+      'https://world.openfoodfacts.net.evil.example/cgi/product_jqm2.pl',
+      'https://preview.world.openfoodfacts.net/cgi/product_jqm2.pl',
+      'https://evil.example/world.openfoodfacts.net',
+      'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
+      'not a url',
+    ];
+    for (const offTarget of rejected) {
+      const authority = service('uat', {
+        offTarget,
+        offCredentialsConfigured: true,
+        offExecute: true,
+        offTransport: transport,
+      });
+      const contributor = await authority.issueCredential();
+      const outcome = await send(
+        authority,
+        contributor.contributorId,
+        [{ domain: 'ingredients_nutrition', ingredientsText: 'oats' }],
+        `off-${offTarget.length}`
+      );
+      expect(outcome.snapshot?.offDispatch[0].target).toBeNull();
+      expect(outcome.snapshot?.offDispatch[0].status).toBe('pending_unconfigured');
+    }
+    expect(transport).not.toHaveBeenCalled();
+    const idle = service('uat', { offTransport: transport });
+    const idleContributor = await idle.issueCredential();
+    const idleOutcome = await send(
+      idle,
+      idleContributor.contributorId,
+      [{ domain: 'ingredients_nutrition', ingredientsText: 'rye' }],
+      'off-default-host'
+    );
+    expect(idleOutcome.snapshot?.offDispatch[0]).toMatchObject({
+      status: 'pending_unconfigured',
+      target: 'https://world.openfoodfacts.net/cgi/product_jqm2.pl',
+    });
+    expect(transport).not.toHaveBeenCalled();
+  });
+
+  it('rejects chunk manifests outside the byte and count bounds before reconstruction', async () => {
+    const authority = service('uat');
+    const contributor = await authority.issueCredential();
+    expect(
+      await authority.putAssetChunk({
+        uploadId: 'too-big',
+        chunkIndex: 0,
+        chunkCount: 1,
+        totalBytes: MAX_EVIDENCE_ORIGINAL_BYTES + 1,
+        declaredSha256: 'aa',
+        bytes: new Uint8Array([1]),
+      })
+    ).toEqual({ ok: false, reason: 'chunk_bounds' });
+    expect(
+      await authority.putAssetChunk({
+        uploadId: 'too-many',
+        chunkIndex: 0,
+        chunkCount: MAX_EVIDENCE_CHUNK_COUNT + 1,
+        totalBytes: 2,
+        declaredSha256: 'aa',
+        bytes: new Uint8Array([1]),
+      })
+    ).toEqual({ ok: false, reason: 'chunk_bounds' });
+    const uploadId = 'short-sum';
+    await authority.putAssetChunk({
+      uploadId,
+      chunkIndex: 0,
+      chunkCount: 1,
+      totalBytes: 8,
+      declaredSha256: sha256Hex(new Uint8Array(8)),
+      bytes: new Uint8Array([1, 2]),
+    });
+    const finalized = await authority.finalizeAssetUpload({
+      uploadId,
+      declaredSha256: sha256Hex(new Uint8Array(8)),
+      contributorId: contributor.contributorId,
+      barcode: BARCODE,
+    });
+    expect(finalized).toEqual({ ok: false, reason: 'chunk_bounds' });
+    const cited = await send(
+      authority,
+      contributor.contributorId,
+      [{ ...packet('High protein'), finalizedAssetId: 'asset-never-finalized' }],
+      'unreconstructed',
+      { sourceBytes: new Uint8Array() }
+    );
+    expect(cited.status).toBe('source_not_finalized');
+  });
+
+  it('does not transmit when the server authority environment does not match the build', async () => {
+    const session: PacketContributionSession = {
+      schema: PACKET_SESSION_SCHEMA,
+      sessionId: 'guard-session',
+      barcode: BARCODE,
+      createdAt: 1,
+      updatedAt: 1,
+      status: 'open',
+      sourceAssets: [],
+      derivedAssets: [],
+      extractionRuns: [],
+      units: [
+        {
+          unitId: 'guard-unit',
+          sessionId: 'guard-session',
+          domain: 'packet_claims',
+          statement: 'High protein',
+          support: { coverage: 'whole_image', sourceAssetId: 'local-a' },
+          origin: 'manual',
+          extractionRunId: null,
+          observationId: null,
+          disposition: null,
+          status: 'reviewed',
+        },
+      ],
+    };
+    memory.set(PACKET_SESSION_STORAGE_KEY, JSON.stringify([session]));
+    const actions: string[] = [];
+    (global.fetch as jest.Mock).mockImplementation(async (_url: string, init?: { method?: string; body?: string }) => {
+      actions.push(init?.body ? (JSON.parse(init.body) as { action?: string }).action || 'post' : 'probe');
+      if (!init?.body) return { ok: true, json: async () => ({ authorityEnv: 'production' }) };
+      return { ok: true, json: async () => ({ token: 'should-not-issue', assetId: 'should-not-upload' }) };
+    });
+    delete process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
+    const unset = await transmitSessionToAuthority('guard-session');
+    expect(unset).toMatchObject({ admitted: false, pendingOutbox: false, snapshot: null });
+    expect(actions).toEqual([]);
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+    const mismatched = await transmitSessionToAuthority('guard-session');
+    expect(mismatched).toMatchObject({ admitted: false, pendingOutbox: false, snapshot: null });
+    expect(actions).toEqual(['probe']);
+    (global.fetch as jest.Mock).mockRejectedValue(new Error('authority_unreachable'));
+    const unreachable = await transmitSessionToAuthority('guard-session');
+    expect(unreachable).toMatchObject({ admitted: false, pendingOutbox: false, snapshot: null });
+    expect(actions).toEqual(['probe']);
   });
 });

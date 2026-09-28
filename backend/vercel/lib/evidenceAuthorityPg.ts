@@ -124,19 +124,35 @@ export class PostgresAuthorityStore implements AuthorityStore {
       },
       async putAsset(asset) {
         await client.query(
-          `INSERT INTO evidence_source_assets (asset_id, sha256, byte_length, content_type, bytes, verified, created_at)
-           VALUES ($1, $2, $3, $4, $5, TRUE, $6)`,
-          [asset.assetId, asset.sha256, asset.bytes.byteLength, asset.contentType, Buffer.from(asset.bytes), Date.now()]
+          `INSERT INTO evidence_source_assets (
+             asset_id, sha256, byte_length, content_type, bytes, verified, contributor_id, barcode, created_at
+           ) VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7, $8)`,
+          [
+            asset.assetId,
+            asset.sha256,
+            asset.bytes.byteLength,
+            asset.contentType,
+            Buffer.from(asset.bytes),
+            asset.contributorId,
+            asset.barcode,
+            Date.now(),
+          ]
         );
       },
       async getAsset(assetId) {
         const found = await client.query(
-          `SELECT asset_id, sha256, verified FROM evidence_source_assets WHERE asset_id = $1`,
+          `SELECT asset_id, sha256, verified, contributor_id, barcode FROM evidence_source_assets WHERE asset_id = $1`,
           [assetId]
         );
         const row = found.rows[0];
         if (!row || row.verified !== true) return null;
-        return { assetId: text(row.asset_id), sha256: text(row.sha256), verified: true };
+        return {
+          assetId: text(row.asset_id),
+          sha256: text(row.sha256),
+          verified: true,
+          contributorId: text(row.contributor_id),
+          barcode: text(row.barcode),
+        };
       },
       async putChunk(chunk: AssetChunkRecord) {
         const inserted = await client.query(

@@ -20,8 +20,21 @@ export type SubjectRow = {
 export type AuthorityTx = {
   getSubmission(key: string): Promise<SubmissionOutcome | null>;
   putSubmission(record: { key: string; contributorId: string; barcode: string; outcome: SubmissionOutcome }): Promise<void>;
-  putAsset(asset: { assetId: string; sha256: string; bytes: Uint8Array; contentType: string | null }): Promise<void>;
-  getAsset(assetId: string): Promise<{ assetId: string; sha256: string; verified: boolean } | null>;
+  putAsset(asset: {
+    assetId: string;
+    sha256: string;
+    bytes: Uint8Array;
+    contentType: string | null;
+    contributorId: string;
+    barcode: string;
+  }): Promise<void>;
+  getAsset(assetId: string): Promise<{
+    assetId: string;
+    sha256: string;
+    verified: boolean;
+    contributorId: string;
+    barcode: string;
+  } | null>;
   putChunk(chunk: AssetChunkRecord): Promise<'stored' | 'duplicate' | 'conflict'>;
   listChunks(uploadId: string): Promise<AssetChunkRecord[]>;
   finalizedUpload(uploadId: string): Promise<{ assetId: string; sha256: string } | null>;

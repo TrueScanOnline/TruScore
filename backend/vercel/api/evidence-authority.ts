@@ -7,7 +7,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { EvidenceAuthority } from '../../../src/evidenceAuthority/authority';
+import { EvidenceAuthority, OFF_STAGING_HOSTNAME, officialOffStagingTarget } from '../../../src/evidenceAuthority/authority';
 import type { EvidenceFactInput } from '../../../src/evidenceAuthority/types';
 import { PostgresAuthorityStore } from '../lib/evidenceAuthorityPg';
 
@@ -41,34 +41,31 @@ async function authority(): Promise<EvidenceAuthority> {
         max: 5,
       });
       const env = process.env.RVEEL_EVIDENCE_AUTHORITY_ENV === 'production' ? 'production' : 'uat';
-      const stagingTarget = (
-        process.env.OFF_STAGING_WRITE_TARGET || 'https://world.openfoodfacts.net/cgi/product_jqm2.pl'
-      ).trim();
+      const configuredTarget = process.env.OFF_STAGING_WRITE_TARGET?.trim() || '';
+      const stagingTarget = officialOffStagingTarget(configuredTarget || undefined);
       const stagingUser = process.env.OFF_STAGING_WRITE_USER_ID?.trim() || '';
       const stagingPassword = process.env.OFF_STAGING_WRITE_PASSWORD?.trim() || '';
       const stagingCredentials = stagingUser.length > 0 && stagingPassword.length > 0;
-      const liveHost = /world\.openfoodfacts\.org/i.test(stagingTarget);
-      const stagingHost = /world\.openfoodfacts\.net/i.test(stagingTarget);
       const execute =
         env === 'uat' &&
         process.env.OFF_STAGING_WRITE_EXECUTE === '1' &&
         stagingCredentials &&
-        stagingHost &&
-        !liveHost;
+        stagingTarget !== null;
       return new EvidenceAuthority(new PostgresAuthorityStore(pool), {
         authorityEnv: env,
         founderAdminToken: process.env.RVEEL_FOUNDER_ADMIN_TOKEN,
-        offTarget: env === 'uat' && !liveHost ? stagingTarget : '',
+        offTarget: env === 'uat' ? configuredTarget : '',
         offCredentialsConfigured: env === 'uat' && stagingCredentials,
         offExecute: execute,
         offTransport: async ({ target: offTarget, fields }) => {
-          if (!execute || !stagingCredentials || /world\.openfoodfacts\.org/i.test(offTarget) || !/world\.openfoodfacts\.net/i.test(offTarget)) {
+          const accepted = officialOffStagingTarget(offTarget);
+          if (!execute || !stagingCredentials || !accepted || new URL(accepted).hostname !== OFF_STAGING_HOSTNAME) {
             return { ok: false, status: 0 };
           }
           const form = new URLSearchParams(fields);
           form.set('user_id', stagingUser);
           form.set('password', stagingPassword);
-          const response = await fetch(offTarget, {
+          const response = await fetch(accepted, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: form,
@@ -88,6 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const service = await authority();
     if (req.method === 'GET') {
       const barcode = typeof req.query.barcode === 'string' ? req.query.barcode.trim() : '';
+      if (!barcode) return res.status(200).json({ success: true, authorityEnv: service.authorityEnv });
       if (!/^\d{8,14}$/.test(barcode)) return res.status(400).json({ success: false, error: 'Valid barcode required' });
       return res.status(200).json({ success: true, snapshot: await service.snapshot(barcode) });
     }
@@ -137,11 +135,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === 'finalize-asset') {
       const uploadId = typeof body.uploadId === 'string' ? body.uploadId.trim() : '';
       const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
-      if (!uploadId || !declaredSha256) return res.status(400).json({ success: false, error: 'finalize_incomplete' });
+      const barcode = typeof body.barcode === 'string' ? body.barcode.trim() : '';
+      if (!uploadId || !declaredSha256 || !/^\d{8,14}$/.test(barcode)) {
+        return res.status(400).json({ success: false, error: 'finalize_incomplete' });
+      }
       const result = await service.finalizeAssetUpload({
         uploadId,
         declaredSha256,
         contentType: typeof body.contentType === 'string' ? body.contentType : undefined,
+        contributorId,
+        barcode,
       });
       return res.status(result.ok ? 200 : 409).json(result);
     }

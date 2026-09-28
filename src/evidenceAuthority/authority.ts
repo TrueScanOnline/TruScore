@@ -36,8 +36,34 @@ import type {
 
 const ADMITTED_BY = 'wave4a-evidence-authority';
 const OFF_STAGING_TARGET = 'https://world.openfoodfacts.net/cgi/product_jqm2.pl';
-const LIVE_OFF_HOST = /world\.openfoodfacts\.org/i;
-const STAGING_OFF_HOST = /world\.openfoodfacts\.net/i;
+export const OFF_STAGING_HOSTNAME = 'world.openfoodfacts.net';
+/** Full-quality phone originals stay bounded without recompression. */
+export const MAX_EVIDENCE_ORIGINAL_BYTES = 32 * 1024 * 1024;
+export const MAX_EVIDENCE_CHUNK_COUNT = 256;
+
+/** Unset uses the official staging URL. Any other hostname is rejected. */
+export function officialOffStagingTarget(raw?: string | null): string | null {
+  const value = (raw ?? '').trim();
+  if (!value) return OFF_STAGING_TARGET;
+  try {
+    const url = new URL(value);
+    if (url.hostname !== OFF_STAGING_HOSTNAME) return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+function withinChunkBounds(chunkCount: number, totalBytes: number): boolean {
+  return (
+    Number.isSafeInteger(chunkCount) &&
+    Number.isSafeInteger(totalBytes) &&
+    chunkCount >= 1 &&
+    chunkCount <= MAX_EVIDENCE_CHUNK_COUNT &&
+    totalBytes >= 1 &&
+    totalBytes <= MAX_EVIDENCE_ORIGINAL_BYTES
+  );
+}
 
 export type OffTransport = (input: {
   target: string;
@@ -148,6 +174,8 @@ export class EvidenceAuthority {
           sha256: actualHash,
           bytes: input.sourceBytes,
           contentType: input.contentType ?? null,
+          contributorId,
+          barcode: input.barcode,
         });
       }
       const resolved: Array<{ fact: DerivedFact; assetId: string }> = [];
@@ -162,6 +190,11 @@ export class EvidenceAuthority {
           const asset = await tx.getAsset(fact.finalizedAssetId);
           if (!asset?.verified) {
             const outcome = empty('source_not_finalized');
+            await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+            return outcome;
+          }
+          if (asset.contributorId !== contributorId || asset.barcode !== input.barcode) {
+            const outcome = empty('source_not_owned');
             await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
             return outcome;
           }
@@ -434,10 +467,8 @@ export class EvidenceAuthority {
 
   private offPlan(): { target: string | null; execute: boolean } {
     if (this.config.authorityEnv !== 'uat') return { target: null, execute: false };
-    const requested = (this.config.offTarget || OFF_STAGING_TARGET).trim();
-    if (LIVE_OFF_HOST.test(requested) || !STAGING_OFF_HOST.test(requested)) {
-      return { target: null, execute: false };
-    }
+    const requested = officialOffStagingTarget(this.config.offTarget);
+    if (!requested) return { target: null, execute: false };
     const execute = this.config.offExecute === true && this.config.offCredentialsConfigured === true;
     return { target: requested, execute };
   }
@@ -575,6 +606,9 @@ export class EvidenceAuthority {
     if (chunk.chunkIndex < 0 || chunk.chunkCount < 1 || chunk.chunkIndex >= chunk.chunkCount) {
       return { ok: false, reason: 'chunk_index' };
     }
+    if (!withinChunkBounds(chunk.chunkCount, chunk.totalBytes) || chunk.bytes.byteLength > MAX_EVIDENCE_ORIGINAL_BYTES) {
+      return { ok: false, reason: 'chunk_bounds' };
+    }
     if (!chunk.bytes.length || !chunk.declaredSha256 || !chunk.uploadId) {
       return { ok: false, reason: 'chunk_incomplete' };
     }
@@ -593,10 +627,17 @@ export class EvidenceAuthority {
     uploadId: string;
     declaredSha256: string;
     contentType?: string;
+    contributorId: string;
+    barcode: string;
   }): Promise<{ ok: true; assetId: string; sha256: string } | { ok: false; reason: string }> {
+    if (!input.contributorId || !input.barcode) return { ok: false, reason: 'source_not_owned' };
     return this.store.transaction(async (tx) => {
       const already = await tx.finalizedUpload(input.uploadId);
       if (already) {
+        const owned = await tx.getAsset(already.assetId);
+        if (!owned || owned.contributorId !== input.contributorId || owned.barcode !== input.barcode) {
+          return { ok: false, reason: 'source_not_owned' };
+        }
         if (already.sha256 !== input.declaredSha256) return { ok: false, reason: 'source_hash_mismatch' };
         return { ok: true, assetId: already.assetId, sha256: already.sha256 };
       }
@@ -617,11 +658,18 @@ export class EvidenceAuthority {
       if (ordered.length !== count || ordered.some((chunk, index) => chunk.chunkIndex !== index)) {
         return { ok: false, reason: 'incomplete_asset' };
       }
-      const bytes = new Uint8Array(total);
+      if (!withinChunkBounds(count, total)) return { ok: false, reason: 'chunk_bounds' };
+      let sum = 0;
+      for (const chunk of ordered) {
+        sum += chunk.bytes.byteLength;
+        if (sum > MAX_EVIDENCE_ORIGINAL_BYTES) return { ok: false, reason: 'chunk_bounds' };
+      }
+      if (sum !== total) return { ok: false, reason: 'chunk_bounds' };
+      const bytes = new Uint8Array(sum);
       let offset = 0;
       for (const chunk of ordered) {
         bytes.set(chunk.bytes, offset);
-        offset += chunk.bytes.length;
+        offset += chunk.bytes.byteLength;
       }
       if (offset !== total) return { ok: false, reason: 'incomplete_asset' };
       const hash = sha256Hex(bytes);
@@ -632,6 +680,8 @@ export class EvidenceAuthority {
         sha256: hash,
         bytes,
         contentType: input.contentType ?? null,
+        contributorId: input.contributorId,
+        barcode: input.barcode,
       });
       await tx.rememberFinalizedUpload(input.uploadId, assetId, hash);
       return { ok: true, assetId, sha256: hash };

@@ -29,8 +29,13 @@ CREATE TABLE IF NOT EXISTS evidence_source_assets (
   content_type TEXT,
   bytes BYTEA NOT NULL,
   verified BOOLEAN NOT NULL,
+  contributor_id TEXT NOT NULL,
+  barcode TEXT NOT NULL,
   created_at BIGINT NOT NULL
 );
+
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS contributor_id TEXT;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS barcode TEXT;
 
 CREATE TABLE IF NOT EXISTS evidence_asset_chunks (
   upload_id TEXT NOT NULL,

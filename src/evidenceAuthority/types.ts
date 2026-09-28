@@ -83,7 +83,7 @@ export type SharedEvidenceSnapshot = {
 
 export type SubmissionOutcome = {
   idempotencyKey: string;
-  status: 'admitted' | 'rejected' | 'pending_source' | 'source_hash_mismatch' | 'source_not_finalized' | 'no_facts';
+  status: 'admitted' | 'rejected' | 'pending_source' | 'source_hash_mismatch' | 'source_not_finalized' | 'source_not_owned' | 'no_facts';
   versionIds: string[];
   admissionSeqs: number[];
   /** Units whose facts in this transmission were all admitted. */

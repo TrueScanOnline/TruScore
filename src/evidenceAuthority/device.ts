@@ -4,7 +4,7 @@ import { getPrivateByteStore } from '../packetContribution/sourceAssets';
 import { sha256Hex } from '../packetContribution/sha256';
 import { getSession } from '../packetContribution/sessionStore';
 import type { PacketContributionSession, PacketEvidenceUnit } from '../packetContribution/types';
-import { rememberSnapshot } from './assessment';
+import { expectedAuthorityEnv, rememberSnapshot } from './assessment';
 import type { EvidenceFactInput, SharedEvidenceSnapshot, SubmissionOutcome } from './types';
 
 const OUTBOX_KEY = '@rveel_evidence_outbox_v1';
@@ -200,6 +200,20 @@ function authorityUrl(): string {
   return `${getBackendUrl().replace(/\/$/, '')}/api/evidence-authority`;
 }
 
+/** Acceptance guard only. The server still stamps environment and epoch. */
+async function targetAuthorityAccepted(): Promise<boolean> {
+  const expected = expectedAuthorityEnv();
+  if (!expected) return false;
+  try {
+    const response = await fetch(authorityUrl(), { method: 'GET' });
+    if (!response.ok) return false;
+    const body = (await response.json()) as { authorityEnv?: string };
+    return body.authorityEnv === expected;
+  } catch {
+    return false;
+  }
+}
+
 async function credentialToken(): Promise<string> {
   const existing = await AsyncStorage.getItem(CREDENTIAL_KEY);
   if (existing) return existing;
@@ -226,7 +240,12 @@ async function postAuthority(token: string, body: Record<string, unknown>): Prom
   });
 }
 
-async function uploadFinalizedAsset(token: string, bytes: Uint8Array, declaredSha256: string): Promise<string> {
+async function uploadFinalizedAsset(
+  token: string,
+  bytes: Uint8Array,
+  declaredSha256: string,
+  barcode: string
+): Promise<string> {
   const uploadId = randomKey();
   const parts = splitAssetChunks(bytes);
   for (let index = 0; index < parts.length; index += 1) {
@@ -245,6 +264,7 @@ async function uploadFinalizedAsset(token: string, bytes: Uint8Array, declaredSh
     action: 'finalize-asset',
     uploadId,
     declaredSha256,
+    barcode,
     contentType: 'application/octet-stream',
   });
   if (!finalized.ok) throw new Error('asset_not_finalized');
@@ -268,6 +288,7 @@ export async function transmitSessionToAuthority(sessionId: string): Promise<Aut
     (unit) => unit.status === 'reviewed' && !acknowledged.has(`${unit.unitId}:${unitRevision(unit)}`)
   );
   if (pendingUnits.length === 0) return none;
+  if (!(await targetAuthorityAccepted())) return none;
   const unitRefs = pendingUnits.map((unit) => ({ unitId: unit.unitId, revision: unitRevision(unit) }));
   let item = items.find((row) => row.sessionId === sessionId && row.status === 'unsent' && sameRefs(row.unitRefs || [], unitRefs));
   if (!item) {
@@ -290,7 +311,7 @@ export async function transmitSessionToAuthority(sessionId: string): Promise<Aut
       const source = session.sourceAssets.find((asset) => asset.assetId === sourceId);
       const bytes = source ? await getPrivateByteStore().get(source.privateKey) : null;
       if (!source || !bytes?.length) return { ...none, pendingOutbox: true };
-      finalized.set(sourceId, await uploadFinalizedAsset(token, bytes, source.contentSha256));
+      finalized.set(sourceId, await uploadFinalizedAsset(token, bytes, source.contentSha256, session.barcode));
     }
     const facts = evidenceFactsForUnits(session, pendingUnits, finalized);
     if (facts.length === 0 || facts.some((fact) => !fact.finalizedAssetId)) {

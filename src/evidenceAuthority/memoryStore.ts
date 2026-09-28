@@ -13,7 +13,14 @@ type MemoryState = {
   contributors: ContributorRecord[];
   subjects: SubjectRow[];
   submissions: Array<{ key: string; contributorId: string; barcode: string; outcome: SubmissionOutcome }>;
-  assets: Array<{ assetId: string; sha256: string; bytes: Uint8Array; contentType: string | null }>;
+  assets: Array<{
+    assetId: string;
+    sha256: string;
+    bytes: Uint8Array;
+    contentType: string | null;
+    contributorId: string;
+    barcode: string;
+  }>;
   chunks: AssetChunkRecord[];
   finalizedUploads: Array<{ uploadId: string; assetId: string; sha256: string }>;
   regions: Array<{ regionId: string; assetId: string; transform: Record<string, number> }>;
@@ -101,7 +108,15 @@ export class MemoryAuthorityStore implements AuthorityStore {
       },
       async getAsset(assetId) {
         const found = state.assets.find((item) => item.assetId === assetId);
-        return found ? { assetId: found.assetId, sha256: found.sha256, verified: true } : null;
+        return found
+          ? {
+              assetId: found.assetId,
+              sha256: found.sha256,
+              verified: true,
+              contributorId: found.contributorId,
+              barcode: found.barcode,
+            }
+          : null;
       },
       async putChunk(chunk) {
         const found = state.chunks.find(
