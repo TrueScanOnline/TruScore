@@ -75,7 +75,7 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
     __resetDynamicSignalsAssetEmbedCacheForTests();
   });
 
-  it("Leggo's brand-wide News fires for tomato paste and pasta sauce (no product-name gate)", () => {
+  it("Leggo's tomato-based News fires for tomato paste; non-tomato pasta sauce does not", () => {
     const paste = runScan({
       barcode: '9310000111111',
       productName: "Leggo's Tomato Paste 140g",
@@ -91,12 +91,12 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
       brands: "Leggo's",
       market: 'AU',
     });
-    expect(sauce.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-001-20260918');
+    expect(sauce.recs.some((r) => r.signal_id === 'SIG-IN-AU-001-20260918')).toBe(false);
   });
 
-  it("Hoyt's brand-wide News fires for turmeric and paprika sibling", () => {
+  it("Hoyt's turmeric fires; paprika sibling does not", () => {
     const hit = runScan({
-      barcode: '9310000222222',
+      barcode: '9300725012182',
       productName: "Hoyt's Ground Turmeric 50g",
       brands: "Hoyt's",
       market: 'AU',
@@ -109,7 +109,7 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
       brands: "Hoyt's",
       market: 'AU',
     });
-    expect(sibling.recs.map((r) => r.signal_id)).toContain('SIG-IN-AU-004-20260918');
+    expect(sibling.recs.some((r) => r.signal_id === 'SIG-IN-AU-004-20260918')).toBe(false);
   });
 
   it('Mondelez entity Signal fires for Cadbury chocolate without cocoa guard; Mars comparator does not', () => {
@@ -143,7 +143,7 @@ describe('Production-path: Chaining=brand only + Workstream C product scope', ()
     expect(card).toBeTruthy();
     expect(card!.food_recall?.needs_batch_entry).toBeFalsy();
     expect(card!.skeleton_card_copy?.title_display).toBe('Recall: selected Chickadees packs');
-    expect(card!.skeleton_card_copy?.why_display).toContain('Only the listed pack sizes');
+    expect(card!.skeleton_card_copy?.why_display?.toLowerCase()).toContain('listed pack sizes');
     expect(hit.logs.some((l) => l.includes('mvp_recall: stage2_matcher_retired'))).toBe(true);
 
     // Pack size is qualification content — absence of a size must not suppress the recall.

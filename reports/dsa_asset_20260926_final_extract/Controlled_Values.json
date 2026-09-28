@@ -1,0 +1,362 @@
+[
+  {
+    "dimension": "publisher_type",
+    "value": "Official Authority",
+    "label": "Official Authority",
+    "definition": "Government regulator, statutory authority or official food-safety body."
+  },
+  {
+    "dimension": "publisher_type",
+    "value": "Public Broadcaster",
+    "label": "Public Broadcaster",
+    "definition": "Publicly funded national broadcaster or newsroom."
+  },
+  {
+    "dimension": "publisher_type",
+    "value": "Commercial News Publisher",
+    "label": "Commercial News Publisher",
+    "definition": "Commercial national newsroom or publisher."
+  },
+  {
+    "dimension": "publisher_type",
+    "value": "Consumer Organisation",
+    "label": "Consumer Organisation",
+    "definition": "Consumer testing, advocacy or product-investigation body."
+  },
+  {
+    "dimension": "publisher_type",
+    "value": "Specialist Evidence Organisation",
+    "label": "Specialist Evidence Organisation",
+    "definition": "Specialist evidence-led organisation producing reporting, investigation or analysis using identifiable sources or disclosed methods."
+  },
+  {
+    "dimension": "editorial_function",
+    "value": "Food Recall Registry",
+    "label": "Food Recall Registry",
+    "definition": "Official consumer-facing product recall and withdrawal notices."
+  },
+  {
+    "dimension": "editorial_function",
+    "value": "Regulatory & Enforcement Reporting",
+    "label": "Regulatory & Enforcement Reporting",
+    "definition": "Official proceedings, findings, warnings, undertakings and enforcement outcomes."
+  },
+  {
+    "dimension": "editorial_function",
+    "value": "National Mainstream Reporting",
+    "label": "National Mainstream Reporting",
+    "definition": "National reporting capable of recurring named product, brand or company coverage."
+  },
+  {
+    "dimension": "editorial_function",
+    "value": "Dedicated Investigative & Verification Journalism",
+    "label": "Dedicated Investigative & Verification Journalism",
+    "definition": "Original investigation, testing, documents, fieldwork or verification."
+  },
+  {
+    "dimension": "editorial_function",
+    "value": "Consumer Testing & Advocacy",
+    "label": "Consumer Testing & Advocacy",
+    "definition": "Product testing, comparison and consumer-focused investigation."
+  },
+  {
+    "dimension": "editorial_function",
+    "value": "Specialist Evidence & Watchdog Investigation",
+    "label": "Specialist Evidence & Watchdog Investigation",
+    "definition": "Evidence-led specialist reporting or investigation using identifiable sources or disclosed methods."
+  },
+  {
+    "dimension": "signal_class",
+    "value": "safety_regulatory",
+    "label": "Food Safety",
+    "definition": "Official food recalls, allergen or food-safety notices, withdrawal notices, and equivalent approved food-safety reporting concerning a product or identifiable product range."
+  },
+  {
+    "dimension": "signal_class",
+    "value": "in_the_news",
+    "label": "In the News",
+    "definition": "Approved current reporting, investigation, or non-food-safety regulator/enforcement developments about a product, brand or company."
+  },
+  {
+    "dimension": "market_key",
+    "value": "AU",
+    "label": "Australia",
+    "definition": "Market-specific delivery scope. Use where founders expressly restrict the Signal to Australia; FSANZ food recalls are AU by default."
+  },
+  {
+    "dimension": "market_key",
+    "value": "NZ",
+    "label": "New Zealand",
+    "definition": "Market-specific delivery scope. Use where founders expressly restrict the Signal to New Zealand; MPI/New Zealand Food Safety recalls are NZ by default."
+  },
+  {
+    "dimension": "market_key",
+    "value": "AU+NZ",
+    "label": "Australia and New Zealand",
+    "definition": "Default eligible delivery market for In the News Signals unless founders expressly narrow the market. Source/event geography is qualified in the Signal copy and does not itself limit firing. Food recalls remain authority-market-specific: FSANZ → AU; MPI/New Zealand Food Safety → NZ."
+  },
+  {
+    "dimension": "source_status",
+    "value": "active",
+    "label": "Active",
+    "definition": "Authorised source channel."
+  },
+  {
+    "dimension": "source_status",
+    "value": "inactive",
+    "label": "Inactive",
+    "definition": "Retained identifier but not authorised for new Signal records."
+  },
+  {
+    "dimension": "confidence_state",
+    "value": "confirmed",
+    "label": "Confirmed",
+    "definition": "Highest evidence and identity confidence."
+  },
+  {
+    "dimension": "confidence_state",
+    "value": "strong",
+    "label": "Strong",
+    "definition": "Strong evidence and defensible identity/scope."
+  },
+  {
+    "dimension": "confidence_state",
+    "value": "probable",
+    "label": "Probable",
+    "definition": "Insufficient for public publication."
+  },
+  {
+    "dimension": "confidence_state",
+    "value": "low",
+    "label": "Low",
+    "definition": "Insufficient for public publication."
+  },
+  {
+    "dimension": "confidence_state",
+    "value": "rejected",
+    "label": "Rejected",
+    "definition": "Rejected evidence or resolution."
+  },
+  {
+    "dimension": "review_state",
+    "value": "seeded",
+    "label": "Seeded",
+    "definition": "Initial governed data row awaiting review."
+  },
+  {
+    "dimension": "review_state",
+    "value": "provisional",
+    "label": "Provisional",
+    "definition": "Reviewed in part but not final."
+  },
+  {
+    "dimension": "review_state",
+    "value": "reviewed",
+    "label": "Reviewed",
+    "definition": "Governed review complete."
+  },
+  {
+    "dimension": "review_state",
+    "value": "disputed",
+    "label": "Disputed",
+    "definition": "Material challenge or conflict under review."
+  },
+  {
+    "dimension": "review_state",
+    "value": "archived",
+    "label": "Archived",
+    "definition": "No longer active; retained for history."
+  },
+  {
+    "dimension": "signal_publication_state",
+    "value": "candidate",
+    "label": "Candidate",
+    "definition": "Ingested or drafted; not public."
+  },
+  {
+    "dimension": "signal_publication_state",
+    "value": "held_for_review",
+    "label": "Held for Review",
+    "definition": "Awaiting required review or resolution."
+  },
+  {
+    "dimension": "signal_publication_state",
+    "value": "publishable",
+    "label": "Publishable",
+    "definition": "All class, scope, review and resolution gates pass."
+  },
+  {
+    "dimension": "signal_publication_state",
+    "value": "suppressed",
+    "label": "Suppressed",
+    "definition": "Not eligible for public display."
+  },
+  {
+    "dimension": "signal_publication_state",
+    "value": "expired",
+    "label": "Expired",
+    "definition": "Past the approved public display horizon."
+  },
+  {
+    "dimension": "resolution_status",
+    "value": "resolved",
+    "label": "Resolved",
+    "definition": "Canonical target resolved without material warning."
+  },
+  {
+    "dimension": "resolution_status",
+    "value": "resolved_with_warning",
+    "label": "Resolved with Warning",
+    "definition": "Target resolved with an approved qualification."
+  },
+  {
+    "dimension": "resolution_status",
+    "value": "ambiguous",
+    "label": "Ambiguous",
+    "definition": "Multiple plausible targets or unresolved scope conflict."
+  },
+  {
+    "dimension": "resolution_status",
+    "value": "blocked",
+    "label": "Blocked",
+    "definition": "Must not become publishable."
+  },
+  {
+    "dimension": "resolution_status",
+    "value": "needs_review",
+    "label": "Needs Review",
+    "definition": "Must remain candidate or held for review."
+  },
+  {
+    "dimension": "target_type",
+    "value": "product",
+    "label": "Product",
+    "definition": "A bounded reviewed product or product line. In an allowed market, relevance is established by either an exact match to a verified GTIN governed on the Signal target, or by resolved Chaining brand/entity identity plus a founder-reviewed product-name term. GTIN is positive-only evidence and is not stored in Chaining."
+  },
+  {
+    "dimension": "target_type",
+    "value": "product_family",
+    "label": "Product Family",
+    "definition": "Historical value only for MVP. Product-family determination is de-scoped; no current publishable MVP target may depend on product_family."
+  },
+  {
+    "dimension": "target_type",
+    "value": "brand",
+    "label": "Brand",
+    "definition": "A canonical brand or sub-brand governed in Chaining. Current MVP brand targets use a canonical B-ID with brand_descendants propagation; product/GTIN facts are not stored in Chaining."
+  },
+  {
+    "dimension": "target_type",
+    "value": "entity",
+    "label": "Entity",
+    "definition": "A canonical current entity governed in Chaining. Current MVP entity targets use a canonical P-ID with entity_descendants propagation."
+  },
+  {
+    "dimension": "target_type",
+    "value": "operational_entity",
+    "label": "Operational Entity",
+    "definition": "A governed manufacturer, importer, distributor, licensee or other selected operator used where operational scope is the approved basis; resolve through the existing Chaining operational relationship."
+  },
+  {
+    "dimension": "subject_response_status",
+    "value": "not_applicable",
+    "label": "Not Applicable",
+    "definition": "Used where a subject response is not relevant, typically official recall records."
+  },
+  {
+    "dimension": "subject_response_status",
+    "value": "pending_review",
+    "label": "Pending Review",
+    "definition": "The source may contain a response, but it has not yet been captured and reviewed."
+  },
+  {
+    "dimension": "subject_response_status",
+    "value": "captured_from_source",
+    "label": "Captured from Source",
+    "definition": "The approved source itself contains the subject/company response."
+  },
+  {
+    "dimension": "subject_response_status",
+    "value": "captured_from_separate_public_statement",
+    "label": "Captured from Separate Public Statement",
+    "definition": "A separate public statement from the subject/company is linked and summarised."
+  },
+  {
+    "dimension": "subject_response_status",
+    "value": "not_reported",
+    "label": "Not Reported",
+    "definition": "No subject response is reported in the approved source; this is not treated as a refusal to comment."
+  },
+  {
+    "dimension": "subject_response_status",
+    "value": "declined_to_comment",
+    "label": "Declined to Comment",
+    "definition": "The source explicitly reports that the subject declined to comment or respond."
+  },
+  {
+    "dimension": "propagation_mode",
+    "value": "exact_only",
+    "label": "Exact Only",
+    "definition": "Do not propagate beyond the bounded product scope defined by the target. A verified GTIN or reviewed product-name match may establish relevance. Pack size, batch/date, retailer and similar source qualifications do not create additional MVP firing gates unless expressly founder-approved."
+  },
+  {
+    "dimension": "propagation_mode",
+    "value": "family_members",
+    "label": "Family Members",
+    "definition": "Historical value only for MVP. Family-members propagation is de-scoped and must not be used by a current publishable MVP target."
+  },
+  {
+    "dimension": "propagation_mode",
+    "value": "brand_descendants",
+    "label": "Brand Descendants",
+    "definition": "Match products resolving through Chaining to the canonical brand or its governed child-brand descendants. Chaining remains brand/entity ownership and alias governance only."
+  },
+  {
+    "dimension": "propagation_mode",
+    "value": "entity_descendants",
+    "label": "Entity Descendants",
+    "definition": "Match current product/brand descendants whose governed Chaining ownership path resolves to the canonical entity."
+  },
+  {
+    "dimension": "propagation_mode",
+    "value": "operational_descendants",
+    "label": "Operational Descendants",
+    "definition": "Match reviewed products linked to the selected operational entity where that relationship is the approved scope basis."
+  },
+  {
+    "dimension": "product_scope_guard",
+    "value": "cocoa_chocolate",
+    "label": "Cocoa / Chocolate",
+    "definition": "Optional additional narrowing after the base brand/entity target matches. Pass only where available product evidence positively indicates cocoa or chocolate relevance; otherwise fail closed. This is the only approved MVP product-scope guard."
+  },
+  {
+    "dimension": "target_field",
+    "value": "product_match_terms",
+    "label": "Product Match Terms",
+    "definition": "Pipe-separated founder-reviewed positive product-name phrases for a product target. Terms are alternatives (OR). Name matching is used only with the governed Chaining identity path; failure to match does not veto a verified GTIN match."
+  },
+  {
+    "dimension": "target_field",
+    "value": "verified_gtins",
+    "label": "Verified GTINs",
+    "definition": "Pipe-separated founder-reviewed exact GTINs stored in the Dynamic Signals asset as positive-only product evidence. A matching GTIN may establish product relevance even where crowdsourced product/brand text is poor. Missing or non-matching GTINs do not veto a valid identity + product-name match."
+  },
+  {
+    "dimension": "target_field",
+    "value": "scope_review_summary",
+    "label": "Scope Review Summary",
+    "definition": "Internal targeting governance: why the target type, propagation and optional guard are correct and what the Signal must not propagate to. It is not consumer copy and must not silently introduce pack/date/batch gates."
+  },
+  {
+    "dimension": "signal_field",
+    "value": "scope_qualification",
+    "label": "Scope Qualification",
+    "definition": "Consumer-facing qualification of the source/event scope, including affected packs, batches, dates, retailer or geography where relevant. It informs the consumer but does not become a runtime firing rule unless founders expressly approve that gate."
+  },
+  {
+    "dimension": "target_field",
+    "value": "verified_gtin_evidence",
+    "label": "Verified GTIN Evidence",
+    "definition": "Compact provenance for GTINs promoted into verified_gtins. Each governed GTIN should retain at least one product-code source URL; corroborating evidence may be included. Candidate or rejected GTINs do not enter the runtime verified_gtins list."
+  }
+]

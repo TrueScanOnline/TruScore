@@ -1,0 +1,86 @@
+[
+  {
+    "reveal_domain": "unsafe_products",
+    "internal_term": "Unsafe Products",
+    "description": "Contamination, undeclared allergens, foreign matter, dangerous mislabelling, recalls or other product safety hazards.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "food_fraud",
+    "internal_term": "Food Fraud",
+    "description": "Adulteration, substitution, counterfeit composition or concealed ingredients.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "false_origin_claims",
+    "internal_term": "False Origin Claims",
+    "description": "False, misleading or materially incomplete geographic-origin representations.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "misleading_health_claims",
+    "internal_term": "Misleading Health Claims",
+    "description": "Misleading nutrition, health, wellness or product-benefit claims.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "predatory_marketing",
+    "internal_term": "Predatory Marketing",
+    "description": "Child targeting, health halos or other marketing that exploits consumer misunderstanding or vulnerability.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "misleading_portions",
+    "internal_term": "Misleading Portions",
+    "description": "Serving sizes, preparation directions or consumption assumptions that obscure product impact or usable value.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "shrinkflation",
+    "internal_term": "Shrinkflation",
+    "description": "Reduced quantity, quality or usable value without adequate visibility to consumers.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "labour_rights",
+    "internal_term": "Labour Rights",
+    "description": "Child labour, forced labour, unsafe work, wage abuse or worker exploitation.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "animal_welfare",
+    "internal_term": "Animal Welfare",
+    "description": "Farming, handling or treatment of animals, including misleading welfare claims.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "environmental_harm",
+    "internal_term": "Environmental Harm",
+    "description": "Deforestation, pollution, biodiversity loss or other material ecological damage.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "greenwashing",
+    "internal_term": "Greenwashing",
+    "description": "Misleading environmental, sustainability or ethical representations.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "unfair_trading",
+    "internal_term": "Unfair Trading",
+    "description": "Misleading pricing, promotions, unfair terms or other consumer/supplier trading practices that do not principally concern competitive market structure.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "anti_competitive_behaviour",
+    "internal_term": "Anti-Competitive Behaviour",
+    "description": "Conduct or concentrated market power that suppresses competition, excludes smaller rivals, blocks entry or unfairly squeezes suppliers and producers.",
+    "status": "active"
+  },
+  {
+    "reveal_domain": "corporate_misconduct",
+    "internal_term": "Corporate Misconduct",
+    "description": "Bribery, corruption, concealment or serious governance failures.",
+    "status": "active"
+  }
+]

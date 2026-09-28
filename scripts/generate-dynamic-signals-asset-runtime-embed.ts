@@ -2,7 +2,8 @@
  * Generate Metro-safe embedded Dynamic Signals Asset pack + A-data rows.
  * Source pack: workstreamC/c-data/dynamic-signals-v0.3/input
  * Shared Identity: brands / parents / aliases / brand+entity hierarchy only.
- * Product scope: Workstream C signal_target_product_criteria.
+ * Product scope: Workstream C signal_target_product_criteria
+ *   (product_name phrase_contains OR gtin exact; derived from workbook terms/GTINs).
  * App runtime must not import Node `fs` — EAS Bundle JavaScript fails otherwise.
  *
  * Usage: npx ts-node --project scripts/tsconfig.json scripts/generate-dynamic-signals-asset-runtime-embed.ts
@@ -63,7 +64,7 @@ function main() {
   const body = `/* AUTO-GENERATED — do not edit by hand.
  * Run: npm run generate:dsa-asset-runtime-embed
  * Source: governed Dynamic Signals Asset v0.3 CSVs + Shared Identity (wave1-v0.16 + chaining-extensions/v0.3).
- * Product scope: Workstream C signal_target_product_criteria. GTIN→brand rows are not embedded.
+ * Product scope: Workstream C signal_target_product_criteria (phrase + verified GTIN).
  */
 import type { CsvRecord } from '../../../identity/workstreamA/csv';
 

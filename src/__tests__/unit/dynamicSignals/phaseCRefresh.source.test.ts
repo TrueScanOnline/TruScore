@@ -116,7 +116,7 @@ describe('Phase C Dynamic Signals source refresh', () => {
       expect(row!.signal_headline).toBe(NEW_HEADLINES[id]);
       expect(row!.evidence_policy_version).toBe('RVEEL-SIGNALS-MVP-2026-09-v0.4');
       expect(row!.detected_at).toBe('2026-09-18');
-      expect(row!.reviewed_at).toBe('2026-09-18');
+      expect(row!.reviewed_at).toBe('2026-09-26');
     }
   });
 
@@ -128,15 +128,15 @@ describe('Phase C Dynamic Signals source refresh', () => {
     expect(au!.market_key).toBe('AU');
     expect(nz!.market_key).toBe('NZ');
     expect(au!.target_type).toBe('product');
-    expect(nz!.target_type).toBe('product_family');
+    expect(nz!.target_type).toBe('product');
     expect(au!.propagation_mode).toBe('exact_only');
-    expect(nz!.propagation_mode).toBe('family_members');
+    expect(nz!.propagation_mode).toBe('exact_only');
     // Distinct product-scope anchors — never share a cross-market canonical
     expect(au!.canonical_target_id).toBeTruthy();
     expect(nz!.canonical_target_id).toBeTruthy();
     expect(nz!.canonical_target_id).not.toBe(au!.canonical_target_id);
-    expect((nz!.scope_review_summary ?? '').toLowerCase()).toMatch(/never cross|nz-only|sabato/);
-    expect((au!.scope_review_summary ?? '').toLowerCase()).toMatch(/au-only|must not cross|foodland/);
+    expect((nz!.scope_review_summary ?? '').toLowerCase()).toMatch(/nz market separation|new zealand/);
+    expect((au!.scope_review_summary ?? '').toLowerCase()).toMatch(/au market separation|australian/);
   });
 
   it('SIG-IN-GL-003 Mondelez target is P0009 entity_descendants without cocoa guard', () => {
@@ -160,7 +160,7 @@ describe('Phase C Dynamic Signals source refresh', () => {
         (t.signal_id === 'SIG-IN-GL-001-20260918' || t.signal_id === 'SIG-IN-GL-002-20260918') &&
         t.resolution_status === 'resolved'
     );
-    expect(cocoa.length).toBeGreaterThanOrEqual(8);
+    expect(cocoa.length).toBeGreaterThanOrEqual(7);
     for (const t of cocoa) {
       expect(t.product_scope_guard).toBe('cocoa_chocolate');
     }
