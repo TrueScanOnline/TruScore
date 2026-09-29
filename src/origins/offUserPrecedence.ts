@@ -4,6 +4,7 @@
  */
 
 import type { Product } from '../types/product';
+import { COUNTRIES } from '../utils/countries';
 import {
   getStructuredOffOriginTags,
   ingredientTokensForOriginsGate,
@@ -111,13 +112,22 @@ function displayedOffOrigin(product: Product): DisplayedOffOrigin | null {
   return null;
 }
 
+/** Recognised OFF tag or place, written as the existing country name. Unrecognised values stay out. */
+function recognisedOffCountryDisplayName(value: string): string | null {
+  if (!isRecognizedOriginCountry(value)) return null;
+  const key = originCountryKey(value);
+  return COUNTRIES.find((country) => originCountryKey(country.name) === key)?.name ?? null;
+}
+
 /** OFF country shown on Product Origins when prevailing governed evidence has not displaced it. */
 export function offOriginCountryForDisplay(
   product: Product,
   facts: GovernedOriginFact[] | undefined
 ): string | null {
   if (admittedUserOriginPrevailsForDisplay(product, facts)) return null;
-  return displayedOffOrigin(product)?.country ?? null;
+  const country = displayedOffOrigin(product)?.country;
+  if (!country) return null;
+  return recognisedOffCountryDisplayName(country);
 }
 
 /** Card should omit the conflicting OFF country. The product fields are left intact. */

@@ -12,6 +12,7 @@ import { MemoryAuthorityStore } from '../../../evidenceAuthority/memoryStore';
 import type { EvidenceFactInput } from '../../../evidenceAuthority/types';
 import { PACKET_SESSION_STORAGE_KEY } from '../../../packetContribution/sessionStore';
 import { PACKET_SESSION_SCHEMA, type PacketContributionSession } from '../../../packetContribution/types';
+import { selectPrevailingOriginFacts } from '../../../origins/governedFacts';
 import { sha256Hex } from '../../../packetContribution/sha256';
 
 const BARCODE = '9300673555555';
@@ -614,6 +615,96 @@ describe('manual_text fact integrity', () => {
     expect(admitted.snapshot?.prevailing[0]?.evidence.exactWording).toBe(wording);
     expect(admitted.snapshot?.prevailing[0]?.evidence.originStructured?.claimType).toBe('made_in');
     expect(admitted.snapshot?.prevailing[0]?.evidence.originStructured?.primaryCountry).toBe('New Zealand');
+  });
+
+  test('reconstructs manual Origins from the canonical document and drops unreviewed semantics', async () => {
+    const wording = 'Grown in Australia';
+    const authority = service();
+    const { contributorId } = await authority.issueCredential();
+    const assetId = await textAsset(authority, contributorId, {
+      contributorId,
+      barcode: BARCODE,
+      sessionId: 'sess-origin-canonical',
+      unitId: 'unit-grown',
+      domain: 'origins',
+      statement: wording,
+      originClaimType: 'grown_in',
+      originCountry: 'Australia',
+    });
+    const injected = {
+      claimType: 'grown_in' as const,
+      primaryCountry: 'Australia',
+      countries: ['Australia', 'China'],
+      ingredientOriginPercentage: 100,
+      percentageQualifier: 'exactly' as const,
+      originQualification: 'imported' as const,
+      additionalOriginStatement: 'Also packed in China',
+      ingredientOriginCountry: 'China',
+    };
+    const admitted = await authority.submit(contributorId, {
+      idempotencyKey: 'origin-canonical',
+      barcode: BARCODE,
+      facts: [
+        {
+          domain: 'origins',
+          exactWording: wording,
+          claimValue: 'Australia',
+          originStructured: injected,
+          finalizedAssetId: assetId,
+          unitId: 'unit-grown',
+        },
+      ],
+    });
+    expect(admitted.status).toBe('admitted');
+    const evidence = admitted.snapshot?.prevailing[0]?.evidence;
+    expect(evidence?.exactWording).toBe(wording);
+    expect(evidence?.originStructured).toEqual({ claimType: 'grown_in', primaryCountry: 'Australia' });
+    const stored = (await authority.history(BARCODE))[0]?.content;
+    expect(stored?.exactWording).toBe(wording);
+    expect(stored?.originStructured).toEqual({ claimType: 'grown_in', primaryCountry: 'Australia' });
+    const [fact] = selectPrevailingOriginFacts(admitted.snapshot?.prevailing.map((row) => row.evidence) || []);
+    expect(fact?.countries).toEqual(['Australia']);
+    expect(fact?.percentage).toBeUndefined();
+    expect(fact?.percentageQualifier).toBeUndefined();
+    expect(fact?.originQualification).toBeUndefined();
+    expect(fact?.additionalOriginStatement).toBeUndefined();
+  });
+
+  test('an image-backed Origins fact still keeps the structured semantics the client reviewed', async () => {
+    const authority = service();
+    const { contributorId } = await authority.issueCredential();
+    const sourceBytes = new TextEncoder().encode('origin-photo');
+    const admitted = await authority.submit(contributorId, {
+      idempotencyKey: 'image-origin-semantics',
+      barcode: BARCODE,
+      sourceBytes,
+      declaredSha256: sha256Hex(sourceBytes),
+      contentType: 'image/jpeg',
+      facts: [
+        {
+          domain: 'origins',
+          exactWording: 'Grown in Australia',
+          claimValue: 'Australia',
+          originStructured: {
+            claimType: 'grown_in',
+            primaryCountry: 'Australia',
+            countries: ['Australia', 'China'],
+            ingredientOriginPercentage: 100,
+            percentageQualifier: 'exactly',
+            originQualification: 'imported',
+          },
+        },
+      ],
+    });
+    expect(admitted.status).toBe('admitted');
+    expect(admitted.snapshot?.prevailing[0]?.evidence.originStructured).toEqual({
+      claimType: 'grown_in',
+      primaryCountry: 'Australia',
+      countries: ['Australia', 'China'],
+      ingredientOriginPercentage: 100,
+      percentageQualifier: 'exactly',
+      originQualification: 'imported',
+    });
   });
 
   test('a forged certification tag cannot become the scoring label', async () => {

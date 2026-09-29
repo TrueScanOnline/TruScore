@@ -5,6 +5,7 @@
 
 import { GOVERNED_PACKET_ABSENCE_CLAIM } from '../contributions/admissionTypes';
 import { governedCertificationLabels } from '../contributions/certificationLane';
+import { isOriginClaimType, type OriginStructuredEvidence } from '../contributions/originStructured';
 import { establishNutrition, type NutritionBasis, type StatedNutritionAmount } from '../ingredientsNutrition/nutritionSchema';
 import { sha256Hex } from '../packetContribution/sha256';
 import { deriveEvidenceFacts } from './subjects';
@@ -179,6 +180,32 @@ function parseCanonicalAmounts(rendered: string): StatedNutritionAmount[] {
   });
 }
 
+/**
+ * Origins structured content the current manual document actually represents.
+ * claimType, primaryCountry, ingredientSubject, and the statement are the whole model.
+ * Every other Origins semantic is absent.
+ */
+export function canonicalManualOriginContent(document: ManualTextDocument): {
+  exactWording: string;
+  claimValue: string;
+  originStructured: OriginStructuredEvidence;
+} | null {
+  if (document.domain !== 'origins') return null;
+  const claimType = document.structured.originClaimType || '';
+  if (!isOriginClaimType(claimType) || claimType === 'other') return null;
+  const primaryCountry = document.structured.originCountry?.trim() || '';
+  const ingredientSubject = document.structured.ingredientSubject?.trim() || '';
+  return {
+    exactWording: document.statement,
+    claimValue: primaryCountry || ingredientSubject || document.statement,
+    originStructured: {
+      claimType,
+      primaryCountry,
+      ...(ingredientSubject ? { ingredientSubject } : {}),
+    },
+  };
+}
+
 function inputFromDocument(document: ManualTextDocument): EvidenceFactInput {
   const shared = {
     unitId: document.unitId,
@@ -197,16 +224,16 @@ function inputFromDocument(document: ManualTextDocument): EvidenceFactInput {
     };
   }
   if (document.domain === 'origins') {
+    const canonical = canonicalManualOriginContent(document);
+    if (!canonical) {
+      return { ...shared, domain: 'origins' };
+    }
     return {
       ...shared,
       domain: 'origins',
-      exactWording: document.statement,
-      claimValue: document.structured.originCountry || document.structured.ingredientSubject || document.statement,
-      originStructured: {
-        claimType: document.structured.originClaimType as 'made_in',
-        primaryCountry: document.structured.originCountry || '',
-        ingredientSubject: document.structured.ingredientSubject,
-      },
+      exactWording: canonical.exactWording,
+      claimValue: canonical.claimValue,
+      originStructured: canonical.originStructured,
     };
   }
   if (document.domain === 'packet_claims') {

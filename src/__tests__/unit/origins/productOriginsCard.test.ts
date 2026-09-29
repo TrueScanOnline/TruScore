@@ -27,6 +27,18 @@ function product(extra: Partial<Product> = {}): Product {
 }
 
 describe('Product Origins Result presentation', () => {
+  test('normalises recognised OFF country tags before display', () => {
+    expect(
+      productOriginsCardPresentation(product({ manufacturing_places_tags: ['en:australia'] })).offCountry
+    ).toBe('Australia');
+    expect(productOriginsCardPresentation(product({ manufacturing_places: 'new-zealand' })).offCountry).toBe(
+      'New Zealand'
+    );
+    expect(
+      productOriginsCardPresentation(product({ origins_tags: ['en:not-a-real-country'] })).offCountry
+    ).toBeNull();
+  });
+
   test('shows OFF country when no governed origin displaces it', () => {
     const card = productOriginsCardPresentation(product({ manufacturing_places: 'New Zealand' }));
     expect(card.offCountry).toBe('New Zealand');

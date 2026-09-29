@@ -20,6 +20,7 @@ import type { NutritionAttribute } from '../ingredientsNutrition/nutritionSchema
 import { sha256Hex } from '../packetContribution/sha256';
 import {
   MANUAL_TEXT_CONTENT_TYPE,
+  canonicalManualOriginContent,
   manualTextSha256,
   manualTextSubmissionMatches,
   parseManualTextDocument,
@@ -198,6 +199,7 @@ export class EvidenceAuthority {
           await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
           return outcome;
         }
+        let governedFact = fact;
         if (fact.finalizedAssetId) {
           const asset = await tx.getAsset(fact.finalizedAssetId);
           if (!asset?.verified) {
@@ -228,6 +230,20 @@ export class EvidenceAuthority {
               await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
               return outcome;
             }
+            if (document.domain === 'origins') {
+              const canonical = canonicalManualOriginContent(document);
+              if (!canonical) {
+                const outcome = empty('source_hash_mismatch');
+                await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+                return outcome;
+              }
+              governedFact = {
+                ...fact,
+                exactWording: canonical.exactWording,
+                claimValue: canonical.claimValue,
+                originStructured: canonical.originStructured,
+              };
+            }
           }
         }
         const manualText = fact.finalizedAssetId
@@ -235,7 +251,7 @@ export class EvidenceAuthority {
           : false;
         resolved.push({
           fact: manualText
-            ? { ...fact, region: undefined, machineRunId: undefined, derivedAssetId: undefined }
+            ? { ...governedFact, region: undefined, machineRunId: undefined, derivedAssetId: undefined }
             : fact,
           assetId,
           manualText,
