@@ -86,7 +86,8 @@ describe('Wave 4A.5 Result surface', () => {
     expect(result).toContain('{PACKET_CLAIMS_CARD_TITLE}');
     expect(result).toContain('PACKET_CLAIMS_EXPLAINER_HOOK');
     expect(result).toContain('rveelGovernedPacketClaims');
-    expect(result).toContain('rveelGovernedOrigins');
+    expect(result).toContain('productOriginsCardPresentation');
+    expect(read('src/origins/productOriginsCard.ts')).toContain('rveelGovernedOrigins');
     expect(result).not.toContain('CertificationsCard');
   });
 

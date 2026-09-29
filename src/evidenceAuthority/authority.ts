@@ -20,8 +20,8 @@ import type { NutritionAttribute } from '../ingredientsNutrition/nutritionSchema
 import { sha256Hex } from '../packetContribution/sha256';
 import {
   MANUAL_TEXT_CONTENT_TYPE,
-  manualTextFactsMatch,
   manualTextSha256,
+  manualTextSubmissionMatches,
   parseManualTextDocument,
   type ManualTextDraft,
 } from './manualTextAsset';
@@ -214,14 +214,15 @@ export class EvidenceAuthority {
             const document = parseManualTextDocument(asset.bytes);
             const storedHash = sha256Hex(asset.bytes);
             const group = derived.facts.filter((item) => item.finalizedAssetId === fact.finalizedAssetId);
-            const absence = group.some(
-              (item) => item.subjectKey === 'packet_claims|absence|scope:whole_packet'
-            );
+            const inputs = input.facts.filter((item) => item.finalizedAssetId === fact.finalizedAssetId);
+            const absence =
+              inputs.some((item) => item.packetAbsence === true) ||
+              group.some((item) => item.subjectKey === 'packet_claims|absence|scope:whole_packet');
             if (
               !document ||
               storedHash !== asset.sha256 ||
               absence ||
-              !manualTextFactsMatch(document, group, input.barcode)
+              !manualTextSubmissionMatches({ document, inputs, derived: group, barcode: input.barcode })
             ) {
               const outcome = empty(absence || !document ? 'pending_source' : 'source_hash_mismatch');
               await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
@@ -240,6 +241,20 @@ export class EvidenceAuthority {
           manualText,
         });
       }
+      const companionIds = [...new Set(input.facts.flatMap((item) => item.companionFinalizedAssetIds || []))];
+      for (const companionId of companionIds) {
+        const companion = await tx.getAsset(companionId);
+        if (!companion?.verified || companion.contentType === MANUAL_TEXT_CONTENT_TYPE) {
+          const outcome = empty('source_not_finalized');
+          await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+          return outcome;
+        }
+        if (companion.contributorId !== contributorId || companion.barcode !== input.barcode) {
+          const outcome = empty('source_not_owned');
+          await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+          return outcome;
+        }
+      }
       const versionIds: string[] = [];
       const admissionSeqs: number[] = [];
       const admittedForOff: VersionRecord[] = [];
@@ -257,7 +272,15 @@ export class EvidenceAuthority {
         if (!manualText && fact.region && regionId) {
           await tx.putRegion({ regionId, assetId, transform: fact.region });
         }
-        const submitted = this.submittedEvidence(input.barcode, fact, versionNo, contributorId, assetId, manualText);
+        const submitted = this.submittedEvidence(
+          input.barcode,
+          fact,
+          versionNo,
+          contributorId,
+          assetId,
+          manualText,
+          companionsForUnit(input.facts, fact.unitId)
+        );
         const shadow: ContributionEvidence = {
           ...submitted,
           productionEpoch: CURRENT_PRODUCTION_CONTRIBUTION_EPOCH,
@@ -476,7 +499,8 @@ export class EvidenceAuthority {
     versionNo: number,
     contributorId: string,
     assetId: string,
-    manualText = false
+    manualText = false,
+    associatedSourceAssetIds: string[] = []
   ): ContributionEvidence {
     const createdAt = this.now();
     return createPendingEvidence({
@@ -498,6 +522,7 @@ export class EvidenceAuthority {
       originStructured: fact.originStructured,
       ingredientsNutrition: fact.ingredientsNutrition,
       ...(manualText ? {} : { imageUrl: `private://evidence/${assetId}` }),
+      ...(associatedSourceAssetIds.length > 0 ? { associatedSourceAssetIds } : {}),
       sourceProvenance: provenanceLabel(fact),
       submitterId: contributorId,
       createdAt,
@@ -764,6 +789,15 @@ export class EvidenceAuthority {
       return { ok: true, assetId, sha256: canonical.sha256, contentType: MANUAL_TEXT_CONTENT_TYPE };
     });
   }
+}
+
+function companionsForUnit(facts: EvidenceSubmissionInput['facts'], unitId: string | undefined): string[] {
+  if (!unitId) return [];
+  return [
+    ...new Set(
+      facts.filter((fact) => fact.unitId === unitId).flatMap((fact) => fact.companionFinalizedAssetIds || [])
+    ),
+  ];
 }
 
 function provenanceLabel(fact: DerivedFact): string | undefined {

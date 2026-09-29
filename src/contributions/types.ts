@@ -50,6 +50,8 @@ export type ContributionEvidence = {
   updatedAt: number;
   /** Packet image URL — source evidence. */
   imageUrl?: string;
+  /** Additional kept photographs persisted with this admitted version. */
+  associatedSourceAssetIds?: string[];
   /** Exact extracted/confirmed packet wording/transcript. */
   exactWording?: string;
   /**

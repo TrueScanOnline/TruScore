@@ -4,9 +4,11 @@
  */
 
 import { GOVERNED_PACKET_ABSENCE_CLAIM } from '../contributions/admissionTypes';
-import { establishNutrition, type StatedNutritionAmount } from '../ingredientsNutrition/nutritionSchema';
+import { governedCertificationLabels } from '../contributions/certificationLane';
+import { establishNutrition, type NutritionBasis, type StatedNutritionAmount } from '../ingredientsNutrition/nutritionSchema';
 import { sha256Hex } from '../packetContribution/sha256';
-import type { DerivedFact } from './types';
+import { deriveEvidenceFacts } from './subjects';
+import type { DerivedFact, EvidenceFactInput } from './types';
 
 export const MANUAL_TEXT_CONTENT_TYPE = 'manual_text';
 
@@ -83,10 +85,6 @@ export function buildManualTextDocument(draft: ManualTextDraft): ManualTextDocum
   const originClaimType = draft.originClaimType?.trim() || '';
   const originCountry = draft.originCountry?.trim() || '';
   const ingredientSubject = draft.ingredientSubject?.trim() || '';
-  const labels = (draft.labelsTags || [])
-    .map((tag) => tag.trim())
-    .filter((tag) => tag.length > 0)
-    .sort();
   let statement = draft.statement?.trim() || '';
   if (ingredientsText) statement = ingredientsText;
   else if (nutrition) statement = nutrition.amounts;
@@ -94,6 +92,13 @@ export function buildManualTextDocument(draft: ManualTextDraft): ManualTextDocum
   if (draft.domain === 'packet_claims' && statement === GOVERNED_PACKET_ABSENCE_CLAIM) return null;
   if (draft.domain === 'ingredients_nutrition' && !ingredientsText && !nutrition) return null;
   if (draft.domain === 'origins' && !originClaimType) return null;
+  const labels =
+    draft.domain === 'certifications'
+      ? [...(governedCertificationLabels(statement) || [])].sort()
+      : (draft.labelsTags || [])
+          .map((tag) => tag.trim())
+          .filter((tag) => tag.length > 0)
+          .sort();
 
   const structured = sortedRecord({
     ...(ingredientsText ? { ingredientsText } : {}),
@@ -149,14 +154,6 @@ export function parseManualTextDocument(bytes: Uint8Array): ManualTextDocument |
   }
 }
 
-function isPacketAbsenceFact(fact: DerivedFact): boolean {
-  return (
-    fact.domain === 'packet_claims' &&
-    (fact.subjectKey === 'packet_claims|absence|scope:whole_packet' ||
-      (fact.claimValue === GOVERNED_PACKET_ABSENCE_CLAIM && !(fact.exactWording || '').trim()))
-  );
-}
-
 function labelsKey(tags: string[] | undefined): string {
   return (tags || [])
     .map((tag) => tag.trim())
@@ -165,63 +162,126 @@ function labelsKey(tags: string[] | undefined): string {
     .join('|');
 }
 
-/**
- * The admitted facts for one manual_text asset must reconstruct that asset.
- * Packet absence never matches.
- */
-export function manualTextFactsMatch(
-  document: ManualTextDocument,
-  facts: DerivedFact[],
-  barcode: string
-): boolean {
-  if (document.barcode !== barcode) return false;
-  const mine = facts.filter((fact) => fact.unitId === document.unitId);
-  if (mine.length === 0) return false;
-  if (mine.some((fact) => isPacketAbsenceFact(fact))) return false;
-  if (mine.some((fact) => fact.domain !== document.domain)) return false;
-  if (mine.some((fact) => (fact.variantKey ?? '') !== document.variantKey)) return false;
+function parseCanonicalAmounts(rendered: string): StatedNutritionAmount[] {
+  return rendered.split(';').flatMap((part) => {
+    const eq = part.indexOf('=');
+    const space = part.lastIndexOf(' ');
+    if (eq < 1 || space <= eq) return [];
+    const value = Number(part.slice(eq + 1, space));
+    if (!Number.isFinite(value)) return [];
+    return [
+      {
+        attribute: part.slice(0, eq) as StatedNutritionAmount['attribute'],
+        value,
+        unit: part.slice(space + 1),
+      },
+    ];
+  });
+}
 
+function inputFromDocument(document: ManualTextDocument): EvidenceFactInput {
+  const shared = {
+    unitId: document.unitId,
+    variantKey: document.variantKey || undefined,
+    finalizedAssetId: 'manual-document',
+  };
   if (document.domain === 'ingredients_nutrition') {
-    const wantsIngredients = !!document.structured.ingredientsText;
-    const wantsNutrition = !!document.structured.nutritionAmounts;
-    if (!wantsIngredients && !wantsNutrition) return false;
-    const ingredientsOk =
-      !wantsIngredients ||
-      mine.some(
-        (fact) =>
-          fact.exactWording === document.statement && fact.ingredientsNutrition?.ingredientsText === document.statement
-      );
-    const rendered = mine
-      .flatMap((fact) => fact.ingredientsNutrition?.nutriments || [])
-      .map((amount) => `${amount.attribute}=${amount.value} ${amount.unit}`)
-      .sort()
-      .join(';');
-    const basis = mine.find((fact) => fact.ingredientsNutrition?.nutritionBasis)?.ingredientsNutrition?.nutritionBasis;
-    const nutritionOk =
-      !wantsNutrition ||
-      (rendered === document.structured.nutritionAmounts &&
-        basis === document.structured.nutritionBasis &&
-        document.statement === rendered);
-    return ingredientsOk && nutritionOk;
+    return {
+      ...shared,
+      domain: 'ingredients_nutrition',
+      ingredientsText: document.structured.ingredientsText,
+      nutritionBasis: document.structured.nutritionBasis as NutritionBasis | undefined,
+      nutriments: document.structured.nutritionAmounts
+        ? parseCanonicalAmounts(document.structured.nutritionAmounts)
+        : undefined,
+    };
   }
   if (document.domain === 'origins') {
-    return mine.some((fact) => {
-      const structured = fact.originStructured;
-      return (
-        fact.exactWording === document.statement &&
-        (structured?.claimType || '') === (document.structured.originClaimType || '') &&
-        (structured?.primaryCountry || '') === (document.structured.originCountry || '') &&
-        (structured?.ingredientSubject || '') === (document.structured.ingredientSubject || '')
-      );
-    });
+    return {
+      ...shared,
+      domain: 'origins',
+      exactWording: document.statement,
+      claimValue: document.structured.originCountry || document.structured.ingredientSubject || document.statement,
+      originStructured: {
+        claimType: document.structured.originClaimType as 'made_in',
+        primaryCountry: document.structured.originCountry || '',
+        ingredientSubject: document.structured.ingredientSubject,
+      },
+    };
   }
   if (document.domain === 'packet_claims') {
-    return mine.some((fact) => fact.exactWording === document.statement);
+    return {
+      ...shared,
+      domain: 'packet_claims',
+      exactWording: document.statement,
+      claimValue: document.statement,
+    };
   }
-  if (document.domain === 'certifications') {
-    return mine.some(
-      (fact) => fact.exactWording === document.statement && labelsKey(fact.labelsTags) === (document.structured.labelsTags || '')
-    );
-  }
-  return false;
+  return {
+    ...shared,
+    domain: 'certifications',
+    exactWording: document.statement,
+    claimValue: document.statement,
+  };
+}
+
+function projectFact(fact: DerivedFact): string {
+  const nutriments = (fact.ingredientsNutrition?.nutriments || [])
+    .map((amount) => `${amount.attribute}=${amount.value} ${amount.unit}`)
+    .sort()
+    .join(';');
+  return JSON.stringify({
+    unitId: fact.unitId || '',
+    domain: fact.domain,
+    subjectKey: fact.subjectKey,
+    claimKey: fact.claimKey,
+    claimValue: fact.claimValue,
+    exactWording: fact.exactWording || '',
+    variantKey: fact.variantKey || '',
+    labelsTags: labelsKey(fact.labelsTags),
+    originClaimType: fact.originStructured?.claimType || '',
+    originCountry: fact.originStructured?.primaryCountry || '',
+    ingredientSubject: fact.originStructured?.ingredientSubject || '',
+    ingredientsText: fact.ingredientsNutrition?.ingredientsText || '',
+    nutritionBasis: fact.ingredientsNutrition?.nutritionBasis || '',
+    nutriments,
+  });
+}
+
+function sameFactSet(left: DerivedFact[], right: DerivedFact[]): boolean {
+  const a = left.map(projectFact).sort();
+  const b = right.map(projectFact).sort();
+  return a.length === b.length && a.every((item, index) => item === b[index]);
+}
+
+function isSubset(part: DerivedFact[], whole: DerivedFact[]): boolean {
+  const allowed = new Set(whole.map(projectFact));
+  return part.every((fact) => allowed.has(projectFact(fact)));
+}
+
+/**
+ * Every fact that cites the manual_text asset must be that reviewed unit and
+ * must reconstruct the canonical document. One matching fact does not admit the others.
+ */
+export function manualTextSubmissionMatches(params: {
+  document: ManualTextDocument;
+  inputs: EvidenceFactInput[];
+  derived: DerivedFact[];
+  barcode: string;
+}): boolean {
+  const { document, inputs, derived, barcode } = params;
+  if (document.barcode !== barcode) return false;
+  if (inputs.length === 0 || derived.length === 0) return false;
+  if (inputs.some((fact) => fact.packetAbsence === true)) return false;
+  if (inputs.some((fact) => (fact.unitId || '') !== document.unitId)) return false;
+  if (derived.some((fact) => (fact.unitId || '') !== document.unitId)) return false;
+  if (derived.some((fact) => fact.domain !== document.domain)) return false;
+  if (derived.some((fact) => fact.subjectKey === 'packet_claims|absence|scope:whole_packet')) return false;
+
+  const expected = deriveEvidenceFacts([inputFromDocument(document)]).facts;
+  if (expected.length === 0 || !sameFactSet(derived, expected)) return false;
+  return inputs.every((input) => {
+    const alone = deriveEvidenceFacts([{ ...input, unitId: document.unitId, variantKey: document.variantKey || undefined }]).facts;
+    return alone.length > 0 && isSubset(alone, expected);
+  });
 }

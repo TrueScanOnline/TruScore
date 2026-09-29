@@ -109,16 +109,20 @@ function provenanceFor(
   session: PacketContributionSession,
   unit: PacketEvidenceUnit,
   finalizedAssetIds: ReadonlyMap<string, string>
-): Pick<EvidenceFactInput, 'finalizedAssetId' | 'derivedAssetId' | 'region' | 'machineRunId' | 'unitId'> {
+): Pick<EvidenceFactInput, 'finalizedAssetId' | 'companionFinalizedAssetIds' | 'derivedAssetId' | 'region' | 'machineRunId' | 'unitId'> {
   const derived =
     unit.support.coverage === 'region'
       ? session.derivedAssets.find((asset) => asset.derivedAssetId === unit.support.derivedAssetId)
       : undefined;
   const region = derived?.transform.kind === 'region' ? derived.transform : undefined;
+  const companions = (unit.companionSourceAssetIds || [])
+    .map((assetId) => finalizedAssetIds.get(assetId))
+    .filter((assetId): assetId is string => !!assetId);
   return {
     unitId: unit.unitId,
     machineRunId: unit.extractionRunId || undefined,
     finalizedAssetId: finalizedAssetIds.get(unit.support.sourceAssetId),
+    ...(companions.length > 0 ? { companionFinalizedAssetIds: companions } : {}),
     derivedAssetId: unit.support.coverage === 'region' ? unit.support.derivedAssetId : undefined,
     region: region ? { x: region.x, y: region.y, width: region.width, height: region.height } : undefined,
   };
@@ -347,18 +351,22 @@ export async function transmitSessionToAuthority(sessionId: string): Promise<Aut
     items.push(item);
     await writeOutbox(items);
   }
-  const sourceIds = [...new Set(pendingUnits.map((unit) => unit.support.sourceAssetId))];
+  const sourceIds = [
+    ...new Set(
+      pendingUnits.flatMap((unit) => [unit.support.sourceAssetId, ...(unit.companionSourceAssetIds || [])])
+    ),
+  ];
   const finalized = new Map<string, string>();
   try {
     const token = await credentialToken();
     for (const sourceId of sourceIds) {
-      const related = pendingUnits.filter((unit) => unit.support.sourceAssetId === sourceId);
       const source = session.sourceAssets.find((asset) => asset.assetId === sourceId);
       const bytes = source ? await getPrivateByteStore().get(source.privateKey) : null;
       if (source && bytes?.length) {
         finalized.set(sourceId, await uploadFinalizedAsset(token, bytes, source.contentSha256, session.barcode));
         continue;
       }
+      const related = pendingUnits.filter((unit) => unit.support.sourceAssetId === sourceId);
       const manualOnly =
         related.length === 1 &&
         related[0].origin === 'manual' &&

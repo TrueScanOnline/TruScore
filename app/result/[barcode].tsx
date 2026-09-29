@@ -43,7 +43,6 @@ import {
   PACKET_CLAIMS_CARD_TITLE,
   PACKET_CLAIMS_EXPLAINER_HOOK,
 } from '../../src/claims/packetClaimReceiver';
-import { admittedUserOriginPrevailsForDisplay } from '../../src/origins/offUserPrecedence';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
@@ -96,16 +95,15 @@ import {
 import type { ScoreHighlightL3InAppTarget } from '../../src/lib/scoreHighlights/l3/targets';
 import { planInAppL3HostPresentation } from '../../src/lib/scoreHighlights/l3/hostPresentation';
 import { mapBodyLedgerIdToCanonical, mergeRenderedAdditives } from '../../src/s25';
-import { extractManufacturingCountry } from '../../src/services/openFoodFacts';
 import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
 import { useTheme } from '../../src/theme';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
-import { getManufacturingCountry, hasUserSubmitted } from '../../src/services/manufacturingCountryService';
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
 import { PalmOilCard } from '../../src/features/product/cards/PalmOilCard';
+import { productOriginsCardPresentation, originFactLabel } from '../../src/origins/productOriginsCard';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
 import { sanitizeText } from '../../src/utils/validation';
 import { sanitizeCountryForDisplay } from '../../src/utils/countryDisplayName';
@@ -447,11 +445,8 @@ function ResultScreenContent() {
     producerLogs: string[];
   }>(null);
   const productResultReadyLoggedRef = useRef<string | null>(null);
-  const [userContributedCountry, setUserContributedCountry] = useState<{ country: string; confidence: string; verifiedCount: number; hasImportedIngredients?: boolean } | null>(null);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isUserContributed, setIsUserContributed] = useState(false);
   const [insightsExpanded, setInsightsExpanded] = useState(true);
-  const [communityCountryStats, setCommunityCountryStats] = useState<Array<{ country: string; count: number }>>([]);
 
   if (lastBarcodeForScan.current !== barcode) {
     lastBarcodeForScan.current = barcode;
@@ -490,116 +485,6 @@ function ResultScreenContent() {
       });
     });
   }, [barcode, isPremium, isOffline]);
-
-  // Check for user-contributed manufacturing country (must be before early returns)
-  useEffect(() => {
-    const checkUserContributedCountry = async () => {
-      if (product) {
-        try {
-          const offCountry = extractManufacturingCountry(product);
-          
-          // Always load user-contributed data to check for imported ingredients flag
-          const contributed = await getManufacturingCountry(barcode);
-          
-          console.log('[ResultScreen] Loaded country data:', {
-            offCountry,
-            contributedCountry: contributed.country,
-            hasImportedIngredients: contributed.hasImportedIngredients,
-            confidence: contributed.confidence,
-          });
-          
-          if (!offCountry) {
-            // No Open Food Facts country - use user-contributed data if available
-            if (contributed.country) {
-              setUserContributedCountry({
-                country: contributed.country,
-                confidence: contributed.confidence as 'verified' | 'community' | 'unverified' | 'disputed',
-                verifiedCount: contributed.verifiedCount || 0,
-                hasImportedIngredients: contributed.hasImportedIngredients || false,
-              });
-              
-              // Get community country statistics (top countries by submission count)
-              try {
-                const { getCommunityCountryStats } = await import('../../src/services/manufacturingCountryService');
-                const stats = await getCommunityCountryStats(barcode);
-                setCommunityCountryStats(stats);
-              } catch (statsError) {
-                console.warn('[ResultScreen] Error loading community country stats:', statsError);
-                setCommunityCountryStats([]);
-              }
-            } else {
-              setUserContributedCountry(null);
-              setCommunityCountryStats([]);
-            }
-
-            // Check if current user has already submitted
-            try {
-              const userHasSubmitted = await hasUserSubmitted(barcode);
-              setHasSubmitted(userHasSubmitted);
-            } catch (submitError) {
-              console.warn('[ResultScreen] Error checking user submission:', submitError);
-              setHasSubmitted(false);
-            }
-          } else {
-            // We have Open Food Facts country - check if user has overridden it
-            if (contributed.country && contributed.country.toUpperCase() !== offCountry.toUpperCase()) {
-              // User has submitted a different country than default - prioritize user's country
-              setUserContributedCountry({
-                country: contributed.country,
-                confidence: contributed.confidence as 'verified' | 'community' | 'unverified' | 'disputed',
-                verifiedCount: contributed.verifiedCount || 0,
-                hasImportedIngredients: contributed.hasImportedIngredients || false,
-              });
-              
-              // Get community country statistics
-              try {
-                const { getCommunityCountryStats } = await import('../../src/services/manufacturingCountryService');
-                const stats = await getCommunityCountryStats(barcode);
-                setCommunityCountryStats(stats);
-              } catch (statsError) {
-                console.warn('[ResultScreen] Error loading community country stats:', statsError);
-                setCommunityCountryStats([]);
-              }
-              
-              // Check if current user has already submitted
-              try {
-                const userHasSubmitted = await hasUserSubmitted(barcode);
-                setHasSubmitted(userHasSubmitted);
-              } catch (submitError) {
-                console.warn('[ResultScreen] Error checking user submission:', submitError);
-                setHasSubmitted(false);
-              }
-            } else if (contributed.hasImportedIngredients) {
-              // Same country as default, but has imported ingredients flag
-              setUserContributedCountry({
-                country: '', // Empty since we use Open Food Facts country
-                confidence: 'verified' as const,
-                verifiedCount: 0,
-                hasImportedIngredients: true,
-              });
-              setHasSubmitted(false);
-              setCommunityCountryStats([]);
-            } else {
-              // No user override and no imported ingredients flag
-              setUserContributedCountry(null);
-              setHasSubmitted(false);
-              setCommunityCountryStats([]);
-            }
-          }
-        } catch (error) {
-          // Non-critical error - log but don't break the UI
-          console.warn('[ResultScreen] Error checking user-contributed country:', error);
-          setUserContributedCountry(null);
-          setCommunityCountryStats([]);
-          setHasSubmitted(false);
-        }
-      }
-    };
-    
-    if (product) {
-      checkUserContributedCountry();
-    }
-  }, [barcode, product]);
 
   // Check if product is user-contributed (manual entry)
   useEffect(() => {
@@ -1369,14 +1254,6 @@ function ResultScreenContent() {
     setShareModalVisible(true);
   };
 
-  // Handle editing product data - opens modal in edit mode
-  const handleEditProduct = () => {
-    if (!product) return;
-    setEditProductData(product);
-    setEditMode(true);
-    setManualProductModalVisible(true);
-  };
-
   const openContribution = (entry: ContributionEntryContext) => {
     setContributionEntry(entry);
     setIngredientNutritionSheetVisible(false);
@@ -1631,31 +1508,16 @@ function ResultScreenContent() {
     );
   }
 
-  const manufacturingCountry = extractManufacturingCountry(product);
-  const admittedOriginPrevails = admittedUserOriginPrevailsForDisplay(
-    product,
-    product.rveelGovernedOrigins
-  );
+  const originsCard = productOriginsCardPresentation(product);
   // UAT interim mitigation (F): prefer small front image for hero; fall back to full.
   const imageUrl =
     product.image_front_small_url || product.image_front_url || product.image_url || null;
   const isWebSearchProduct = isWebSearchFallback(product);
 
-  // Combine Open Food Facts data with user contributions
-  // CRITICAL: If user has overridden default country, prioritize user-contributed country
-  // This ensures when user changes default country, their entry is displayed with verification status
-  const displayManufacturingCountry = admittedOriginPrevails
-    ? null
-    : (userContributedCountry?.country &&
-                                      manufacturingCountry &&
-                                      userContributedCountry.country.toUpperCase() !== manufacturingCountry.toUpperCase())
-    ? userContributedCountry.country
-    : (manufacturingCountry || userContributedCountry?.country || null);
-
   const contributionActions = resultContributionActions(product);
 
   const shareManufacturingCountryLabel = (() => {
-    const raw = displayManufacturingCountry || userContributedCountry?.country;
+    const raw = originsCard.offCountry || originsCard.facts.flatMap((fact) => fact.countries)[0];
     if (!raw) return undefined;
     const cleaned = sanitizeCountryForDisplay(raw);
     return cleaned || undefined;
@@ -2090,20 +1952,54 @@ function ResultScreenContent() {
           }}
         >
         <View style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#16a085' }]}>
-          <View style={styles.cardHeaderLeft}>
-            <Ionicons name="globe-outline" size={24} color={colors.text} />
-            <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
-              {t('result.productOrigins', 'Product Origins')}
-            </Text>
+          <View style={styles.cardHeaderTop}>
+            <View style={styles.cardHeaderLeft}>
+              <Ionicons name="globe-outline" size={24} color={colors.text} />
+              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
+                {t('result.productOrigins', 'Product Origins')}
+              </Text>
+            </View>
+            {originsCard.offCountry || originsCard.facts.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => handleShare('countryOfManufacture')}
+                style={styles.shareButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel="Share product origins"
+              >
+                <Ionicons name="share-outline" size={20} color={colors.primary} />
+              </TouchableOpacity>
+            ) : null}
           </View>
           <TouchableOpacity onPress={() => setProductOriginsExplainerVisible(true)}>
             <Text style={{ color: colors.primary }}>L1 / L2 / L3</Text>
           </TouchableOpacity>
-          {(product.rveelGovernedOrigins || []).map((fact) => (
-            <Text key={fact.evidenceId} style={{ color: colors.text }}>
-              {fact.exactWording || fact.countries.join(', ')}
-            </Text>
+          {originsCard.offCountry ? (
+            <View style={styles.originContainer}>
+              <CountryFlag country={originsCard.offCountry} />
+            </View>
+          ) : null}
+          {originsCard.facts.map((fact) => (
+            <View key={fact.evidenceId}>
+              <Text style={{ color: colors.text }}>
+                {originFactLabel(fact.claimType)}
+                {fact.ingredientSubject ? ` · ${fact.ingredientSubject}` : ''}
+                {fact.countries.length > 0 ? ` · ${fact.countries.join(', ')}` : ''}
+                {fact.percentage != null
+                  ? ` · ${fact.percentageQualifier ? `${fact.percentageQualifier.replace(/_/g, ' ')} ` : ''}${fact.percentage}%`
+                  : ''}
+                {fact.exactWording ? ` · “${fact.exactWording}”` : ''}
+              </Text>
+              {fact.countries.map((country) => (
+                <View key={`${fact.evidenceId}-${country}`} style={styles.originContainer}>
+                  <CountryFlag country={country} />
+                </View>
+              ))}
+            </View>
           ))}
+          {originsCard.limitedConfidence ? (
+            <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
+          ) : null}
           {contributionActions.originsAction === 'add' ? (
             <TouchableOpacity
               onPress={() => openContribution('origins')}
@@ -2134,7 +2030,7 @@ function ResultScreenContent() {
         </View>
         </View>
 
-        {/* Ethics / Certifications — tap card to edit labels (manual entry modal) */}
+        {/* Packet Claims */}
         <View
           style={[
             styles.card,
@@ -2153,7 +2049,6 @@ function ResultScreenContent() {
                 {PACKET_CLAIMS_CARD_TITLE}
               </Text>
             </View>
-            <Ionicons name="create-outline" size={22} color={colors.primary} accessibilityLabel={t('common.edit', 'Edit')} />
           </View>
           <TouchableOpacity onPress={() => setPacketClaimsExplainerVisible(true)}>
             <Text style={{ color: colors.primary }}>L1 / L2 / L3</Text>
@@ -2172,13 +2067,6 @@ function ResultScreenContent() {
                 <CertBadge key={cert.id} certification={cert} />
               ))}
             </View>
-          ) : product._publication?.claims.publicationStatus === 'rated' ? (
-            <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
-              {t(
-                'result.certificationsEmpty',
-                'No certifications on file. Tap this card to add labels from the pack (e.g. organic, fair trade).'
-              )}
-            </Text>
           ) : null}
           {contributionActions.packetClaimsAction ? (
           <TouchableOpacity

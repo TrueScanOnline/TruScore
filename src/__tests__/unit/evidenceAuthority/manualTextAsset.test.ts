@@ -5,7 +5,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isAssessmentEligibleForReceiver } from '../../../contributions/admissionContract';
 import { EvidenceAuthority } from '../../../evidenceAuthority/authority';
-import { transmitSessionToAuthority } from '../../../evidenceAuthority/device';
+import { evidenceFactsForUnits, transmitSessionToAuthority } from '../../../evidenceAuthority/device';
 import { deriveEvidenceFacts } from '../../../evidenceAuthority/subjects';
 import { MANUAL_TEXT_CONTENT_TYPE, manualTextSha256 } from '../../../evidenceAuthority/manualTextAsset';
 import { MemoryAuthorityStore } from '../../../evidenceAuthority/memoryStore';
@@ -447,3 +447,334 @@ describe('manual contribution transmission', () => {
     expect(actions).toEqual(['issue-credential']);
   });
 });
+
+describe('manual_text fact integrity', () => {
+  async function textAsset(
+    authority: EvidenceAuthority,
+    contributorId: string,
+    draft: Parameters<EvidenceAuthority['finalizeManualTextAsset']>[0]
+  ) {
+    const finalized = await authority.finalizeManualTextAsset(draft);
+    expect(finalized.ok).toBe(true);
+    if (!finalized.ok) throw new Error(finalized.reason);
+    return finalized.assetId;
+  }
+
+  test('rejects a same-unit fact that the canonical document does not contain', async () => {
+    const authority = service();
+    const { contributorId } = await authority.issueCredential();
+    const assetId = await textAsset(authority, contributorId, {
+      contributorId,
+      barcode: BARCODE,
+      sessionId: 'sess-inject',
+      unitId: 'unit-inject',
+      domain: 'ingredients_nutrition',
+      statement: 'oats water',
+      ingredientsText: 'oats water',
+    });
+    const injected = await authority.submit(contributorId, {
+      idempotencyKey: 'same-unit-injection',
+      barcode: BARCODE,
+      facts: [
+        {
+          domain: 'ingredients_nutrition',
+          ingredientsText: 'oats water',
+          finalizedAssetId: assetId,
+          unitId: 'unit-inject',
+        },
+        {
+          domain: 'packet_claims',
+          exactWording: 'High protein',
+          claimValue: 'High protein',
+          finalizedAssetId: assetId,
+          unitId: 'unit-inject',
+        },
+      ],
+    });
+    expect(injected.status).toBe('source_hash_mismatch');
+    expect(injected.snapshot).toBeNull();
+  });
+
+  test('rejects a different-unit fact that reuses a manual_text asset', async () => {
+    const authority = service();
+    const { contributorId } = await authority.issueCredential();
+    const assetId = await textAsset(authority, contributorId, {
+      contributorId,
+      barcode: BARCODE,
+      sessionId: 'sess-other-unit',
+      unitId: 'unit-real',
+      domain: 'packet_claims',
+      statement: 'No added sugar',
+    });
+    const injected = await authority.submit(contributorId, {
+      idempotencyKey: 'different-unit-injection',
+      barcode: BARCODE,
+      facts: [
+        {
+          domain: 'packet_claims',
+          exactWording: 'No added sugar',
+          claimValue: 'No added sugar',
+          finalizedAssetId: assetId,
+          unitId: 'unit-real',
+        },
+        {
+          domain: 'packet_claims',
+          exactWording: 'High protein',
+          claimValue: 'High protein',
+          finalizedAssetId: assetId,
+          unitId: 'unit-other',
+        },
+      ],
+    });
+    expect(injected.status).toBe('source_hash_mismatch');
+    expect(injected.versionIds).toEqual([]);
+  });
+
+  test('admits one reviewed nutrition unit only when every stated amount matches', async () => {
+    const authority = service();
+    const { contributorId } = await authority.issueCredential();
+    const assetId = await textAsset(authority, contributorId, {
+      contributorId,
+      barcode: BARCODE,
+      sessionId: 'sess-nutrition',
+      unitId: 'unit-nutrition',
+      domain: 'ingredients_nutrition',
+      nutritionBasis: 'per_100g',
+      nutritionAmounts: [
+        { attribute: 'sugars', value: 4, unit: 'g' },
+        { attribute: 'energy-kj', value: 210, unit: 'kJ' },
+      ],
+    });
+    const partial = await authority.submit(contributorId, {
+      idempotencyKey: 'nutrition-partial',
+      barcode: BARCODE,
+      facts: [
+        {
+          domain: 'ingredients_nutrition',
+          nutritionBasis: 'per_100g',
+          nutriments: [{ attribute: 'sugars', value: 4, unit: 'g' }],
+          finalizedAssetId: assetId,
+          unitId: 'unit-nutrition',
+        },
+      ],
+    });
+    expect(partial.status).toBe('source_hash_mismatch');
+    const admitted = await authority.submit(contributorId, {
+      idempotencyKey: 'nutrition-complete',
+      barcode: BARCODE,
+      facts: [
+        {
+          domain: 'ingredients_nutrition',
+          nutritionBasis: 'per_100g',
+          nutriments: [
+            { attribute: 'sugars', value: 4, unit: 'g' },
+            { attribute: 'energy-kj', value: 210, unit: 'kJ' },
+          ],
+          finalizedAssetId: assetId,
+          unitId: 'unit-nutrition',
+        },
+      ],
+    });
+    expect(admitted.status).toBe('admitted');
+    expect(admitted.snapshot?.prevailing.map((row) => row.evidence.claimKey).sort()).toEqual([
+      'energy-kj|per_100g',
+      'sugars|per_100g',
+    ]);
+  });
+
+  test('keeps typed origin wording and does not rebuild it from the structured controls', async () => {
+    const wording = 'at least 80% from New Zealand';
+    const authority = service();
+    const { contributorId } = await authority.issueCredential();
+    const assetId = await textAsset(authority, contributorId, {
+      contributorId,
+      barcode: BARCODE,
+      sessionId: 'sess-origin',
+      unitId: 'unit-origin',
+      domain: 'origins',
+      statement: wording,
+      originClaimType: 'made_in',
+      originCountry: 'New Zealand',
+    });
+    const admitted = await authority.submit(contributorId, {
+      idempotencyKey: 'origin-wording',
+      barcode: BARCODE,
+      facts: [
+        {
+          domain: 'origins',
+          exactWording: wording,
+          claimValue: 'New Zealand',
+          originStructured: { claimType: 'made_in', primaryCountry: 'New Zealand' },
+          finalizedAssetId: assetId,
+          unitId: 'unit-origin',
+        },
+      ],
+    });
+    expect(admitted.status).toBe('admitted');
+    expect(admitted.snapshot?.prevailing[0]?.evidence.exactWording).toBe(wording);
+    expect(admitted.snapshot?.prevailing[0]?.evidence.originStructured?.claimType).toBe('made_in');
+    expect(admitted.snapshot?.prevailing[0]?.evidence.originStructured?.primaryCountry).toBe('New Zealand');
+  });
+
+  test('a forged certification tag cannot become the scoring label', async () => {
+    const authority = service();
+    const { contributorId } = await authority.issueCredential();
+    const unmapped = await authority.finalizeManualTextAsset({
+      contributorId,
+      barcode: BARCODE,
+      sessionId: 'sess-forged',
+      unitId: 'unit-forged',
+      domain: 'certifications',
+      statement: 'Supports local growers',
+      labelsTags: ['en:fair-trade'],
+    });
+    const recognised = await authority.finalizeManualTextAsset({
+      contributorId,
+      barcode: BARCODE,
+      sessionId: 'sess-forged',
+      unitId: 'unit-forged-fair',
+      domain: 'certifications',
+      statement: 'Fairtrade',
+      labelsTags: ['en:organic'],
+    });
+    const recognisedAgain = await authority.finalizeManualTextAsset({
+      contributorId,
+      barcode: BARCODE,
+      sessionId: 'sess-forged',
+      unitId: 'unit-forged-fair',
+      domain: 'certifications',
+      statement: 'Fairtrade',
+    });
+    expect(unmapped.ok && recognised.ok && recognisedAgain.ok).toBe(true);
+    if (!unmapped.ok || !recognised.ok || !recognisedAgain.ok) return;
+    expect(recognisedAgain.assetId).toBe(recognised.assetId);
+    const laneB = await authority.submit(contributorId, {
+      idempotencyKey: 'forged-lane-b',
+      barcode: BARCODE,
+      facts: [
+        {
+          domain: 'certifications',
+          exactWording: 'Supports local growers',
+          claimValue: 'Supports local growers',
+          labelsTags: ['en:fair-trade'],
+          finalizedAssetId: unmapped.assetId,
+          unitId: 'unit-forged',
+        },
+      ],
+    });
+    expect(laneB.status).toBe('admitted');
+    expect(laneB.snapshot?.prevailing[0]?.evidence.labelsTags).toBeUndefined();
+    expect(laneB.snapshot?.prevailing[0]?.evidence.certificationLane).toBe('B');
+    expect(isAssessmentEligibleForReceiver(laneB.snapshot!.prevailing[0].evidence, 'ethics_certifications')).toBe(false);
+    const laneA = await authority.submit(contributorId, {
+      idempotencyKey: 'forged-lane-a',
+      barcode: BARCODE,
+      facts: [
+        {
+          domain: 'certifications',
+          exactWording: 'Fairtrade',
+          claimValue: 'Fairtrade',
+          labelsTags: ['en:organic'],
+          finalizedAssetId: recognised.assetId,
+          unitId: 'unit-forged-fair',
+        },
+      ],
+    });
+    expect(laneA.status).toBe('admitted');
+    expect(laneA.snapshot?.prevailing.find((row) => row.evidence.exactWording === 'Fairtrade')?.evidence.labelsTags).toEqual([
+      'en:fair-trade',
+    ]);
+  });
+});
+
+describe('kept photographs', () => {
+  test('every retained photograph is uploaded with the reviewed unit', () => {
+    const session: PacketContributionSession = {
+      schema: PACKET_SESSION_SCHEMA,
+      sessionId: 'photos',
+      barcode: BARCODE,
+      createdAt: 1,
+      updatedAt: 1,
+      status: 'open',
+      sourceAssets: [],
+      derivedAssets: [],
+      extractionRuns: [],
+      units: [
+        {
+          unitId: 'unit-photos',
+          sessionId: 'photos',
+          domain: 'packet_claims',
+          statement: 'No added sugar',
+          support: { coverage: 'whole_image', sourceAssetId: 'local-a' },
+          companionSourceAssetIds: ['local-b', 'local-c'],
+          origin: 'manual',
+          extractionRunId: null,
+          observationId: null,
+          disposition: null,
+          status: 'reviewed',
+        },
+      ],
+    };
+    const facts = evidenceFactsForUnits(
+      session,
+      session.units,
+      new Map([
+        ['local-a', 'server-a'],
+        ['local-b', 'server-b'],
+        ['local-c', 'server-c'],
+      ])
+    );
+    expect(facts[0]?.finalizedAssetId).toBe('server-a');
+    expect(facts[0]?.companionFinalizedAssetIds).toEqual(['server-b', 'server-c']);
+  });
+
+  test('a second kept photograph is stored on the admitted evidence', async () => {
+    const authority = service();
+    const { contributorId } = await authority.issueCredential();
+    const firstBytes = new TextEncoder().encode('photo-a');
+    const secondBytes = new TextEncoder().encode('photo-b');
+    const upload = async (uploadId: string, bytes: Uint8Array) => {
+      const declaredSha256 = sha256Hex(bytes);
+      expect(
+        await authority.putAssetChunk({
+          uploadId,
+          chunkIndex: 0,
+          chunkCount: 1,
+          totalBytes: bytes.length,
+          declaredSha256,
+          bytes,
+        })
+      ).toEqual({ ok: true, stored: 'stored' });
+      const finalized = await authority.finalizeAssetUpload({
+        uploadId,
+        declaredSha256,
+        contentType: 'image/jpeg',
+        contributorId,
+        barcode: BARCODE,
+      });
+      expect(finalized.ok).toBe(true);
+      if (!finalized.ok) throw new Error(finalized.reason);
+      return finalized.assetId;
+    };
+    const primary = await upload('upload-a', firstBytes);
+    const companion = await upload('upload-b', secondBytes);
+    const admitted = await authority.submit(contributorId, {
+      idempotencyKey: 'two-photos',
+      barcode: BARCODE,
+      facts: [
+        {
+          domain: 'packet_claims',
+          exactWording: 'No added sugar',
+          claimValue: 'No added sugar',
+          finalizedAssetId: primary,
+          companionFinalizedAssetIds: [companion],
+          unitId: 'unit-photos',
+        },
+      ],
+    });
+    expect(admitted.status).toBe('admitted');
+    expect(admitted.snapshot?.prevailing[0]?.evidence.imageUrl).toBe(`private://evidence/${primary}`);
+    expect(admitted.snapshot?.prevailing[0]?.evidence.associatedSourceAssetIds).toEqual([companion]);
+  });
+});
+

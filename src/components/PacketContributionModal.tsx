@@ -47,6 +47,7 @@ type Preview = {
 
 type OriginDraft = {
   claimType: ProductOriginsClaimType;
+  wording: string;
   place: string;
   ingredient: string;
 };
@@ -78,21 +79,21 @@ const JOURNEY: Record<
 > = {
   ingredients: {
     header: 'Ingredients',
-    instruction: 'Photograph the ingredient list. Include the whole list.',
+    instruction: 'Photograph the ingredients list, or choose a photo you already took.',
     manual: 'Type ingredients instead',
     review: 'Check ingredients',
     submit: 'Submit ingredients',
   },
   nutrition: {
     header: 'Nutrition',
-    instruction: 'Photograph the nutrition information panel.',
+    instruction: 'Photograph the nutrition information panel, or choose a photo you already took.',
     manual: 'Enter nutrition instead',
     review: 'Check nutrition',
     submit: 'Submit nutrition',
   },
   origins: {
     header: 'Product origins',
-    instruction: 'Photograph where the pack states this product or ingredient comes from.',
+    instruction: 'Photograph the origin statement on the pack, or choose a photo you already took.',
     manual: 'Enter origin statement instead',
     review: 'Check product origins',
     submit: 'Submit product origins',
@@ -100,7 +101,7 @@ const JOURNEY: Record<
   },
   packetClaims: {
     header: 'Packet claims',
-    instruction: 'Photograph the claim or certification on the pack.',
+    instruction: 'Photograph the claim on the pack, or choose a photo you already took.',
     manual: 'Type a claim instead',
     review: 'Check packet claims',
     submit: 'Submit packet claims',
@@ -108,7 +109,7 @@ const JOURNEY: Record<
   },
   certifications: {
     header: 'Certifications',
-    instruction: 'Photograph the certification mark.',
+    instruction: 'Photograph the certification mark or wording on the pack, or choose a photo you already took.',
     manual: 'Enter certification instead',
     review: 'Check certifications',
     submit: 'Submit certifications',
@@ -174,7 +175,7 @@ export default function PacketContributionModal({
   const [amounts, setAmounts] = useState<Partial<Record<NutritionAttribute, string>>>({});
   const [sodiumUnit, setSodiumUnit] = useState<'mg' | 'g'>('mg');
   const [origins, setOrigins] = useState<OriginDraft[]>([
-    { claimType: 'grown_in', place: '', ingredient: '' },
+    { claimType: 'grown_in', wording: '', place: '', ingredient: '' },
   ]);
   const [claims, setClaims] = useState<string[]>(['']);
   const [certs, setCerts] = useState<string[]>(['']);
@@ -360,16 +361,13 @@ export default function PacketContributionModal({
       } else if (context === 'origins') {
         for (const row of origins) {
           const place = row.place.trim();
-          if (!place) continue;
+          const wording = row.wording.trim();
+          if (!wording || !place) continue;
           if (row.claimType === 'ingredient_origin' && !row.ingredient.trim()) continue;
-          const statement =
-            row.claimType === 'ingredient_origin'
-              ? `${row.ingredient.trim()} ${ORIGIN_LABELS[row.claimType]} ${place}`
-              : `${ORIGIN_LABELS[row.claimType]} ${place}`;
           const unit = await addManualEvidenceUnit({
             sessionId: session.sessionId,
             domain,
-            statement,
+            statement: wording,
             originClaimType: row.claimType,
             originCountry: place,
             originCountries: [place],
@@ -415,18 +413,30 @@ export default function PacketContributionModal({
         }
       }
       if (created.length === 0) return;
-      if (targeted.length === 0) {
-        const latest = await getSession(session.sessionId);
-        if (latest) {
-          await upsertSession({
-            ...latest,
-            units: latest.units.map((unit) =>
-              created.includes(unit.unitId) && unit.packetAbsenceAffirmation !== true
-                ? { ...unit, support: { coverage: 'whole_image' as const, sourceAssetId: `manual-text:${unit.unitId}` } }
-                : unit
-            ),
-          });
-        }
+      const latest = await getSession(session.sessionId);
+      if (latest) {
+        const companions = targeted.slice(1).map((asset) => asset.assetId);
+        await upsertSession({
+          ...latest,
+          units: latest.units.map((unit) => {
+            if (!created.includes(unit.unitId)) return unit;
+            const photoSupport =
+              targeted.length > 0 && unit.packetAbsenceAffirmation === true
+                ? { coverage: 'whole_image' as const, sourceAssetId: targeted[0].assetId }
+                : unit.support;
+            if (targeted.length === 0 && unit.packetAbsenceAffirmation !== true) {
+              return {
+                ...unit,
+                support: { coverage: 'whole_image' as const, sourceAssetId: `manual-text:${unit.unitId}` },
+              };
+            }
+            return {
+              ...unit,
+              support: photoSupport,
+              ...(companions.length > 0 ? { companionSourceAssetIds: companions } : {}),
+            };
+          }),
+        });
       }
       for (const unitId of created) await markReviewed(unitId);
       const handed = await handoffReviewedUnits({
@@ -509,16 +519,20 @@ export default function PacketContributionModal({
           <View>
             <Text style={[styles.header, { color: colors.text }]}>{journey.review}</Text>
             {activeContext === 'ingredients' ? (
-              <TextInput
-                value={ingredientsText}
-                onChangeText={setIngredientsText}
-                multiline
-                placeholder="Ingredients"
-                style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-              />
+              <View>
+                <Text style={{ color: colors.text }}>Ingredients</Text>
+                <TextInput
+                  value={ingredientsText}
+                  onChangeText={setIngredientsText}
+                  multiline
+                  placeholder="Ingredients"
+                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                />
+              </View>
             ) : null}
             {activeContext === 'nutrition' ? (
               <View>
+                <Text style={{ color: colors.text }}>Values are shown</Text>
                 <View style={styles.row}>
                   {BASIS_LABELS.map((item) => (
                     <TouchableOpacity key={item.basis} onPress={() => setBasis(item.basis)}>
@@ -555,6 +569,15 @@ export default function PacketContributionModal({
               ? origins.map((row, index) => (
                   <View key={`${row.claimType}-${index}`}>
                     <Text style={{ color: colors.text }}>What does the pack say?</Text>
+                    <TextInput
+                      value={row.wording}
+                      onChangeText={(value) =>
+                        setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, wording: value } : item)))
+                      }
+                      multiline
+                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                    />
+                    <Text style={{ color: colors.text }}>Type of origin statement</Text>
                     <View style={styles.row}>
                       {PRODUCT_ORIGINS_CLAIM_TYPES.map((claimType) => (
                         <TouchableOpacity
@@ -570,15 +593,19 @@ export default function PacketContributionModal({
                       ))}
                     </View>
                     {row.claimType === 'ingredient_origin' ? (
-                      <TextInput
-                        value={row.ingredient}
-                        onChangeText={(value) =>
-                          setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, ingredient: value } : item)))
-                        }
-                        placeholder="Ingredient named on the pack"
-                        style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                      />
+                      <View>
+                        <Text style={{ color: colors.text }}>Ingredient named on the pack</Text>
+                        <TextInput
+                          value={row.ingredient}
+                          onChangeText={(value) =>
+                            setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, ingredient: value } : item)))
+                          }
+                          placeholder="Ingredient named on the pack"
+                          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                        />
+                      </View>
                     ) : null}
+                    <Text style={{ color: colors.text }}>Country or place stated on the pack</Text>
                     <TextInput
                       value={row.place}
                       onChangeText={(value) =>
@@ -592,20 +619,22 @@ export default function PacketContributionModal({
               : null}
             {activeContext === 'origins' && journey.another ? (
               <TouchableOpacity
-                onPress={() => setOrigins((rows) => [...rows, { claimType: 'grown_in', place: '', ingredient: '' }])}
+                onPress={() => setOrigins((rows) => [...rows, { claimType: 'grown_in', wording: '', place: '', ingredient: '' }])}
               >
                 <Text style={{ color: colors.primary }}>{journey.another}</Text>
               </TouchableOpacity>
             ) : null}
             {activeContext === 'packetClaims'
               ? claims.map((claim, index) => (
-                  <TextInput
-                    key={`claim-${index}`}
-                    value={claim}
-                    onChangeText={(value) => setClaims((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)))}
-                    placeholder="What does the pack say?"
-                    style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                  />
+                  <View key={`claim-${index}`}>
+                    <Text style={{ color: colors.text }}>Claim on the pack</Text>
+                    <TextInput
+                      value={claim}
+                      onChangeText={(value) => setClaims((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)))}
+                      placeholder="Claim on the pack"
+                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                    />
+                  </View>
                 ))
               : null}
             {activeContext === 'packetClaims' ? (
@@ -624,13 +653,15 @@ export default function PacketContributionModal({
             ) : null}
             {activeContext === 'certifications'
               ? certs.map((cert, index) => (
-                  <TextInput
-                    key={`cert-${index}`}
-                    value={cert}
-                    onChangeText={(value) => setCerts((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)))}
-                    placeholder="Certification"
-                    style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                  />
+                  <View key={`cert-${index}`}>
+                    <Text style={{ color: colors.text }}>Certification shown on the pack</Text>
+                    <TextInput
+                      value={cert}
+                      onChangeText={(value) => setCerts((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)))}
+                      placeholder="Certification shown on the pack"
+                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                    />
+                  </View>
                 ))
               : null}
             {activeContext === 'certifications' ? (

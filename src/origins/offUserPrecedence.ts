@@ -111,6 +111,15 @@ function displayedOffOrigin(product: Product): DisplayedOffOrigin | null {
   return null;
 }
 
+/** OFF country shown on Product Origins when prevailing governed evidence has not displaced it. */
+export function offOriginCountryForDisplay(
+  product: Product,
+  facts: GovernedOriginFact[] | undefined
+): string | null {
+  if (admittedUserOriginPrevailsForDisplay(product, facts)) return null;
+  return displayedOffOrigin(product)?.country ?? null;
+}
+
 /** Card should omit the conflicting OFF country. The product fields are left intact. */
 export function admittedUserOriginPrevailsForDisplay(
   product: Product,

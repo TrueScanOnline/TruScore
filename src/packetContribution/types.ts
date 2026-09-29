@@ -105,6 +105,8 @@ export type PacketEvidenceUnit = {
    */
   packetAbsenceAffirmation?: boolean;
   support: SupportCoverage;
+  /** Other kept photographs for this reviewed unit. Primary support remains the source asset. */
+  companionSourceAssetIds?: string[];
   origin: 'machine_proposal' | 'manual';
   extractionRunId: string | null;
   observationId: string | null;

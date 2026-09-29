@@ -1,4 +1,5 @@
 import { GOVERNED_PACKET_ABSENCE_CLAIM } from '../contributions/admissionTypes';
+import { governedCertificationLabels } from '../contributions/certificationLane';
 import { normalizeClaimKey } from '../contributions/evidenceVersion';
 import { originSubjectKey } from '../origins/governedFacts';
 import { establishNutrition } from '../ingredientsNutrition/nutritionSchema';
@@ -133,7 +134,9 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
       continue;
     }
     if (input.domain === 'certifications') {
-      const governed = (input.labelsTags || []).map((tag) => tag.trim()).filter((tag) => tag.length > 0);
+      const wording = (input.exactWording || input.claimValue || '').trim();
+      if (!wording) continue;
+      const governed = governedCertificationLabels(wording) || [];
       if (governed.length > 0) {
         for (const tag of governed) {
           const scheme = normalizeClaimKey(tag);
@@ -142,7 +145,7 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
             subjectKey: `certifications|scheme:${scheme}`,
             claimKey: scheme,
             claimValue: tag,
-            exactWording: input.exactWording || tag,
+            exactWording: wording,
             variantKey: input.variantKey,
             labelsTags: [tag],
             machineRunId: input.machineRunId,
@@ -154,8 +157,6 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
         }
         continue;
       }
-      const wording = (input.exactWording || input.claimValue || '').trim();
-      if (!wording) continue;
       const scheme = normalizeClaimKey(wording);
       pushUnique(facts, {
         domain: 'certifications',

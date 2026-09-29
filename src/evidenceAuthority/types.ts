@@ -36,6 +36,8 @@ export type EvidenceFactInput = {
   region?: { x: number; y: number; width: number; height: number };
   /** Server asset id from a finalized chunked upload. */
   finalizedAssetId?: string;
+  /** Other kept photographs for the same reviewed unit. Not a replacement source. */
+  companionFinalizedAssetIds?: string[];
   derivedAssetId?: string;
   /** Device unit this fact was reviewed from. Acknowledgement is per unit. */
   unitId?: string;
