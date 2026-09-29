@@ -12,13 +12,18 @@ import { hasCoreTruthAuthority } from '../config/coreTruthProductCacheAuthority'
 import type { ContributionEvidence } from '../contributions/types';
 import { toScoringProduct } from '../contributions/eligibilityBoundary';
 import { offDispatchConsumerCopy } from '../ingredientsNutrition/offDispatch';
-import { loadAuthoritativeAssessment } from '../evidenceAuthority/assessment';
+import { loadAuthoritativeAssessment, projectSnapshotForAssessment } from '../evidenceAuthority/assessment';
 import { selectPrevailingOriginFacts } from '../origins/governedFacts';
 import {
   packetClaimsToObservations,
   selectAdmittedPacketAbsence,
   selectPrevailingPacketClaims,
 } from '../claims/packetClaimReceiver';
+import {
+  projectAdmittedIngredientsDisplay,
+  projectGovernedCertificationNames,
+} from '../contribution/governedDisplayProjection';
+import type { SharedEvidenceSnapshot } from '../evidenceAuthority/types';
 
 /**
  * Scoring eligibility after Review 1 Pass 2 (NA-003):
@@ -56,7 +61,7 @@ async function packetNutritionStatus(
  */
 export async function calculateTrustScore(
   product: Product,
-  options?: { publicationSettled?: boolean }
+  options?: { publicationSettled?: boolean; authoritativeSnapshot?: SharedEvidenceSnapshot | null }
 ): Promise<ProductWithTrustScore> {
   // Wave 3: OFF-legacy nutrient_levels fill is a no-op. Consumer ratings use assessGovernedNutrients.
   applyResolvedNutrientLevels(product);
@@ -81,8 +86,18 @@ export async function calculateTrustScore(
     hasEcoScore: !!product.ecoscore_grade,
     ecoscore_grade: product.ecoscore_grade,
   });
-  const assessment = product.barcode ? await loadAuthoritativeAssessment(product.barcode) : null;
-  const storedEvidence = assessment?.evidence ?? [];
+  const provided = options?.authoritativeSnapshot;
+  const assessment = provided
+    ? null
+    : product.barcode
+      ? await loadAuthoritativeAssessment(product.barcode)
+      : null;
+  const storedEvidence = provided
+    ? projectSnapshotForAssessment(provided)
+    : (assessment?.evidence ?? []);
+  const offDispatchStatus = provided
+    ? (provided.offDispatch[0]?.status ?? null)
+    : (assessment?.offDispatchStatus ?? null);
   const localEvidence = storedEvidence.filter(
     (row) => row.domain === 'ingredients_nutrition' || row.domain === 'certifications'
   );
@@ -101,10 +116,13 @@ export async function calculateTrustScore(
     governedOrigins.length > 0 ? { ...product, rveelGovernedOrigins: governedOrigins } : product;
   const truScoreResult = calculateTruScore(productForPublication, undefined, scoringContext);
   const overlay = toScoringProduct(product, localEvidence);
-  const displayIngredients = product.ingredients_text?.trim()
-    ? product.ingredients_text
-    : overlay?.ingredients_text;
-  const nutritionStatus = await packetNutritionStatus(localEvidence, assessment?.offDispatchStatus ?? null);
+  const ingredientsProjection = projectAdmittedIngredientsDisplay(
+    product.ingredients_text,
+    overlay?.ingredients_text
+  );
+  const nutritionStatus = await packetNutritionStatus(localEvidence, offDispatchStatus);
+  const governedCertifications = projectGovernedCertificationNames(storedEvidence);
+  const packetAbsenceEstablished = selectAdmittedPacketAbsence(storedEvidence);
 
   // Technical scoring failure → unavailable/non-assessment (never Overall 0 / all-zero pillars)
   if (truScoreResult.scoringUnavailable || truScoreResult.truscore == null) {
@@ -177,8 +195,10 @@ export async function calculateTrustScore(
 
   return {
     ...product,
-    ingredients_text: displayIngredients,
+    ...ingredientsProjection,
     rveelPacketNutritionStatus: nutritionStatus,
+    rveelGovernedCertifications: governedCertifications.length > 0 ? governedCertifications : undefined,
+    rveelPacketAbsenceEstablished: packetAbsenceEstablished || undefined,
     rveelGovernedOrigins: governedOrigins.length > 0 ? governedOrigins : undefined,
     rveelGovernedPacketClaims: governedPacketClaims.length > 0 ? governedPacketClaims : undefined,
     trust_score: truScore,

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -36,7 +36,15 @@ import {
   type StatedNutritionAmount,
 } from '../ingredientsNutrition/nutritionSchema';
 import { PRODUCT_ORIGINS_CLAIM_TYPES, type ProductOriginsClaimType } from '../origins/governedFacts';
-import type { ContributionEntryContext } from '../contribution/resultContributionActions';
+import type { OriginPercentageQualifier } from '../config/contributionPolicy';
+import type { OriginQualification } from '../contributions/originStructured';
+import {
+  PACKET_ABSENCE_CONSUMER_COPY,
+  type ContributionEntryContext,
+} from '../contribution/resultContributionActions';
+import { admissionCompletedEveryReviewedUnit } from '../contribution/governedDisplayProjection';
+import type { SupportCoverage } from '../packetContribution/types';
+import type { SharedEvidenceSnapshot } from '../evidenceAuthority/types';
 
 type Preview = {
   tempKey: string;
@@ -50,7 +58,31 @@ type OriginDraft = {
   wording: string;
   place: string;
   ingredient: string;
+  percentage: string;
+  qualifier?: OriginPercentageQualifier;
+  qualification?: OriginQualification;
 };
+
+const EMPTY_ORIGIN: OriginDraft = {
+  claimType: 'grown_in',
+  wording: '',
+  place: '',
+  ingredient: '',
+  percentage: '',
+};
+
+const QUALIFIER_LABELS: { value: OriginPercentageQualifier; label: string }[] = [
+  { value: 'at_least', label: 'At least' },
+  { value: 'exactly', label: 'Exactly' },
+  { value: 'more_than', label: 'More than' },
+  { value: 'less_than', label: 'Less than' },
+];
+
+const QUALIFICATION_LABELS: { value: OriginQualification; label: string }[] = [
+  { value: 'local', label: 'Local' },
+  { value: 'imported', label: 'Imported' },
+  { value: 'multiple', label: 'More than one origin' },
+];
 
 const ORIGIN_LABELS: Record<ProductOriginsClaimType, string> = {
   grown_in: 'Grown in',
@@ -100,29 +132,21 @@ const JOURNEY: Record<
     another: 'Add another origin statement',
   },
   packetClaims: {
-    header: 'Packet claims',
-    instruction: 'Photograph the claim on the pack, or choose a photo you already took.',
-    manual: 'Type a claim instead',
-    review: 'Check packet claims',
-    submit: 'Submit packet claims',
+    header: 'Packet claims and certifications',
+    instruction: 'Photograph the claim or certification on the pack, or choose a photo you already took.',
+    manual: 'Type what the pack says instead',
+    review: 'Check packet claims and certifications',
+    submit: 'Submit packet claims and certifications',
     another: 'Add another claim',
   },
   certifications: {
-    header: 'Certifications',
-    instruction: 'Photograph the certification mark or wording on the pack, or choose a photo you already took.',
-    manual: 'Enter certification instead',
-    review: 'Check certifications',
-    submit: 'Submit certifications',
+    header: 'Packet claims and certifications',
+    instruction: 'Photograph the claim or certification on the pack, or choose a photo you already took.',
+    manual: 'Type what the pack says instead',
+    review: 'Check packet claims and certifications',
+    submit: 'Submit packet claims and certifications',
     another: 'Add another certification',
   },
-};
-
-const DOMAIN_FOR_CONTEXT: Record<ContributionEntryContext, 'ingredients_nutrition' | 'origins' | 'packet_claims' | 'certifications'> = {
-  ingredients: 'ingredients_nutrition',
-  nutrition: 'ingredients_nutrition',
-  origins: 'origins',
-  packetClaims: 'packet_claims',
-  certifications: 'certifications',
 };
 
 async function readUriBytes(uri: string): Promise<Uint8Array> {
@@ -131,6 +155,14 @@ async function readUriBytes(uri: string): Promise<Uint8Array> {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
   return bytes;
+}
+
+function placesFromPack(place: string): string[] {
+  return [...new Set(place.split(',').map((part) => part.trim()).filter((part) => part.length > 0))];
+}
+
+function packetInformationContext(context: ContributionEntryContext): boolean {
+  return context === 'packetClaims' || context === 'certifications';
 }
 
 function contextForProposal(
@@ -150,6 +182,8 @@ export default function PacketContributionModal({
   variantKey,
   entryContext,
   initialIngredients,
+  initialAmounts,
+  initialOrigins,
   producer = abstainingExtractionProducer,
   onClose,
   onSharedEvidenceAdmitted,
@@ -160,9 +194,11 @@ export default function PacketContributionModal({
   variantKey?: string;
   entryContext: ContributionEntryContext;
   initialIngredients?: string;
+  initialAmounts?: Partial<Record<NutritionAttribute, string>>;
+  initialOrigins?: OriginDraft[];
   producer?: ExtractionProducer;
   onClose: () => void;
-  onSharedEvidenceAdmitted?: () => void | Promise<void>;
+  onSharedEvidenceAdmitted?: (snapshot: SharedEvidenceSnapshot | null, complete: boolean) => void | Promise<void>;
   onSharedEvidenceFailed?: () => void;
 }) {
   const { colors } = useTheme();
@@ -174,23 +210,37 @@ export default function PacketContributionModal({
   const [basis, setBasis] = useState<NutritionBasis | null>(null);
   const [amounts, setAmounts] = useState<Partial<Record<NutritionAttribute, string>>>({});
   const [sodiumUnit, setSodiumUnit] = useState<'mg' | 'g'>('mg');
-  const [origins, setOrigins] = useState<OriginDraft[]>([
-    { claimType: 'grown_in', wording: '', place: '', ingredient: '' },
-  ]);
+  const [origins, setOrigins] = useState<OriginDraft[]>([EMPTY_ORIGIN]);
   const [claims, setClaims] = useState<string[]>(['']);
   const [certs, setCerts] = useState<string[]>(['']);
   const [absence, setAbsence] = useState(false);
   const [skippedProposals, setSkippedProposals] = useState<string[]>([]);
+  const [includedContexts, setIncludedContexts] = useState<ContributionEntryContext[]>([entryContext]);
+  const [proposalSupport, setProposalSupport] = useState<Partial<Record<ContributionEntryContext, SupportCoverage>>>({});
   const [activeContext, setActiveContext] = useState<ContributionEntryContext>(entryContext);
+  const initialIngredientsRef = useRef(initialIngredients);
+  const initialAmountsRef = useRef(initialAmounts);
+  const initialOriginsRef = useRef(initialOrigins);
+  initialIngredientsRef.current = initialIngredients;
+  initialAmountsRef.current = initialAmounts;
+  initialOriginsRef.current = initialOrigins;
 
   useEffect(() => {
     if (!visible) return;
     let cancelled = false;
     setPhase('capture');
     setActiveContext(entryContext);
-    setIngredientsText(initialIngredients || '');
+    setIncludedContexts(packetInformationContext(entryContext) ? ['packetClaims', 'certifications'] : [entryContext]);
+    setIngredientsText(initialIngredientsRef.current || '');
+    setAmounts(initialAmountsRef.current || {});
+    const seeded = initialOriginsRef.current;
+    setOrigins(seeded && seeded.length > 0 ? seeded : [EMPTY_ORIGIN]);
+    setClaims(['']);
+    setCerts(['']);
+    setBasis(null);
     setAbsence(false);
     setSkippedProposals([]);
+    setProposalSupport({});
     (async () => {
       await activateDevicePrivateByteStore();
       const opened = await openSessionForProduct({ barcode, variantKey });
@@ -201,7 +251,7 @@ export default function PacketContributionModal({
     return () => {
       cancelled = true;
     };
-  }, [visible, barcode, variantKey, entryContext, initialIngredients]);
+  }, [visible, barcode, variantKey, entryContext]);
 
   const targeted = useMemo(
     () => (session?.sourceAssets || []).filter((asset) => asset.framing === 'targeted'),
@@ -214,14 +264,16 @@ export default function PacketContributionModal({
       run.observations
         .map((observation) => ({
           id: observation.observationId,
+          text: observation.text,
+          support: observation.support,
           context: contextForProposal(observation.proposedDomain, observation.proposedSection),
         }))
         .filter(
-          (item): item is { id: string; context: ContributionEntryContext } =>
-            item.context !== null && item.context !== activeContext && !skippedProposals.includes(item.id)
+          (item): item is { id: string; text: string; support: SupportCoverage; context: ContributionEntryContext } =>
+            item.context !== null && !includedContexts.includes(item.context) && !skippedProposals.includes(item.id)
         )
     );
-  }, [producer.kind, session, activeContext, skippedProposals]);
+  }, [producer.kind, session, includedContexts, skippedProposals]);
 
   const stage = async (uri: string, source: 'camera' | 'gallery') => {
     const bytes = await readUriBytes(uri);
@@ -300,7 +352,36 @@ export default function PacketContributionModal({
     }
   };
 
-  const supportFor = () => {
+  const acceptProposal = (proposal: {
+    id: string;
+    text: string;
+    support: SupportCoverage;
+    context: ContributionEntryContext;
+  }) => {
+    const next = packetInformationContext(proposal.context)
+      ? (['packetClaims', 'certifications'] as ContributionEntryContext[])
+      : [proposal.context];
+    setIncludedContexts((rows) => [...new Set([...rows, ...next])]);
+    setProposalSupport((current) => ({ ...current, [proposal.context]: proposal.support }));
+    if (proposal.context === 'ingredients') {
+      setIngredientsText((current) => current.trim() || proposal.text);
+    } else if (proposal.context === 'packetClaims') {
+      setClaims((rows) => (rows.length === 1 && !rows[0].trim() ? [proposal.text] : [...rows, proposal.text]));
+    } else if (proposal.context === 'certifications') {
+      setCerts((rows) => (rows.length === 1 && !rows[0].trim() ? [proposal.text] : [...rows, proposal.text]));
+    } else if (proposal.context === 'origins') {
+      setOrigins((rows) => {
+        const empty = rows.length === 1 && !rows[0].wording.trim() && !rows[0].place.trim();
+        const drafted = { ...EMPTY_ORIGIN, wording: proposal.text };
+        return empty ? [drafted] : [...rows, drafted];
+      });
+    }
+    setActiveContext(proposal.context);
+    setPhase('review');
+  };
+
+  const supportFor = (context?: ContributionEntryContext) => {
+    if (context && proposalSupport[context]) return proposalSupport[context];
     const asset = targeted[0];
     if (asset) return { coverage: 'whole_image' as const, sourceAssetId: asset.assetId };
     return { coverage: 'whole_image' as const, sourceAssetId: 'manual-text-only' };
@@ -321,67 +402,74 @@ export default function PacketContributionModal({
     if (!session) return;
     setBusy(true);
     try {
-      const context = activeContext;
-      const domain = DOMAIN_FOR_CONTEXT[context];
-      const support = supportFor();
       const created: string[] = [];
-      if (context === 'ingredients') {
+      const contexts = includedContexts;
+      if (contexts.includes('ingredients')) {
         const text = ingredientsText.trim();
-        if (!text) return;
-        const unit = await addManualEvidenceUnit({
-          sessionId: session.sessionId,
-          domain,
-          section: 'ingredients',
-          statement: text,
-          support,
-        });
-        created.push(unit.unitId);
-      } else if (context === 'nutrition') {
-        if (!basis) return;
-        const stated: StatedNutritionAmount[] = [];
-        for (const field of NUTRITION_FIELDS) {
-          const raw = (amounts[field.attribute] || '').trim();
-          if (!raw) continue;
-          const value = Number(raw);
-          if (!Number.isFinite(value) || value < 0) continue;
-          const unit = field.attribute === 'sodium' ? sodiumUnit : field.acceptedUnits[0];
-          stated.push({ attribute: field.attribute, value, unit });
-        }
-        if (stated.length === 0) return;
-        const unit = await addManualEvidenceUnit({
-          sessionId: session.sessionId,
-          domain,
-          section: 'nutrition',
-          statement: 'Nutrition facts',
-          nutritionBasis: basis,
-          nutritionAmounts: stated,
-          support,
-        });
-        created.push(unit.unitId);
-      } else if (context === 'origins') {
-        for (const row of origins) {
-          const place = row.place.trim();
-          const wording = row.wording.trim();
-          if (!wording || !place) continue;
-          if (row.claimType === 'ingredient_origin' && !row.ingredient.trim()) continue;
+        if (text) {
           const unit = await addManualEvidenceUnit({
             sessionId: session.sessionId,
-            domain,
-            statement: wording,
-            originClaimType: row.claimType,
-            originCountry: place,
-            originCountries: [place],
-            ingredientSubject: row.claimType === 'ingredient_origin' ? row.ingredient.trim() : undefined,
-            support,
+            domain: 'ingredients_nutrition',
+            section: 'ingredients',
+            statement: text,
+            support: supportFor('ingredients'),
           });
           created.push(unit.unitId);
         }
-      } else if (context === 'packetClaims') {
-        if (absence) {
-          if (targeted.length === 0) return;
+      }
+      if (contexts.includes('nutrition')) {
+        if (basis) {
+          const stated: StatedNutritionAmount[] = [];
+          for (const field of NUTRITION_FIELDS) {
+            const raw = (amounts[field.attribute] || '').trim();
+            if (!raw) continue;
+            const value = Number(raw);
+            if (!Number.isFinite(value) || value < 0) continue;
+            const unit = field.attribute === 'sodium' ? sodiumUnit : field.acceptedUnits[0];
+            stated.push({ attribute: field.attribute, value, unit });
+          }
+          if (stated.length > 0) {
+            const unit = await addManualEvidenceUnit({
+              sessionId: session.sessionId,
+              domain: 'ingredients_nutrition',
+              section: 'nutrition',
+              statement: 'Nutrition facts',
+              nutritionBasis: basis,
+              nutritionAmounts: stated,
+              support: supportFor('nutrition'),
+            });
+            created.push(unit.unitId);
+          }
+        }
+      }
+      if (contexts.includes('origins')) {
+        for (const row of origins) {
+          const places = placesFromPack(row.place);
+          const wording = row.wording.trim();
+          if (!wording || places.length === 0) continue;
+          if (row.claimType === 'ingredient_origin' && !row.ingredient.trim()) continue;
+          const percentage = Number(row.percentage);
           const unit = await addManualEvidenceUnit({
             sessionId: session.sessionId,
-            domain,
+            domain: 'origins',
+            statement: wording,
+            originClaimType: row.claimType,
+            originCountry: places[0],
+            originCountries: places.length > 1 ? places : undefined,
+            ingredientSubject: row.claimType === 'ingredient_origin' ? row.ingredient.trim() : undefined,
+            originPercentage: Number.isFinite(percentage) && row.percentage.trim() ? percentage : undefined,
+            originPercentageQualifier: row.qualifier,
+            originQualification: row.qualification,
+            support: supportFor('origins'),
+          });
+          created.push(unit.unitId);
+        }
+      }
+      if (contexts.includes('packetClaims') || contexts.includes('certifications')) {
+        if (absence && targeted.length > 0) {
+          const unit = await addManualEvidenceUnit({
+            sessionId: session.sessionId,
+            domain: 'packet_claims',
             statement: '',
             packetAbsenceAffirmation: true,
             support: { coverage: 'whole_image', sourceAssetId: targeted[0].assetId },
@@ -393,21 +481,20 @@ export default function PacketContributionModal({
           if (!text) continue;
           const unit = await addManualEvidenceUnit({
             sessionId: session.sessionId,
-            domain,
+            domain: 'packet_claims',
             statement: text,
-            support,
+            support: supportFor('packetClaims'),
           });
           created.push(unit.unitId);
         }
-      } else {
         for (const cert of certs) {
           const text = cert.trim();
           if (!text) continue;
           const unit = await addManualEvidenceUnit({
             sessionId: session.sessionId,
-            domain,
+            domain: 'certifications',
             statement: text,
-            support,
+            support: supportFor('certifications'),
           });
           created.push(unit.unitId);
         }
@@ -453,7 +540,8 @@ export default function PacketContributionModal({
         onSharedEvidenceFailed?.();
         return;
       }
-      await onSharedEvidenceAdmitted?.();
+      const complete = admissionCompletedEveryReviewedUnit(created, transmitted.admittedUnitIds);
+      await onSharedEvidenceAdmitted?.(transmitted.snapshot, complete);
       onClose();
     } catch {
       onSharedEvidenceFailed?.();
@@ -497,7 +585,8 @@ export default function PacketContributionModal({
                 <Text style={[styles.body, { color: colors.text }]}>Also found on this photo</Text>
                 {proposals.map((proposal) => (
                   <View key={proposal.id} style={styles.row}>
-                    <TouchableOpacity onPress={() => setActiveContext(proposal.context)}>
+                    <Text style={{ color: colors.text }}>{proposal.text}</Text>
+                    <TouchableOpacity onPress={() => acceptProposal(proposal)}>
                       <Text style={{ color: colors.primary }}>Review</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setSkippedProposals((rows) => [...rows, proposal.id])}>
@@ -518,6 +607,28 @@ export default function PacketContributionModal({
         {phase === 'entry' || phase === 'review' ? (
           <View>
             <Text style={[styles.header, { color: colors.text }]}>{journey.review}</Text>
+            {phase === 'review'
+              ? previews.map((preview) => (
+                  <View key={preview.tempKey} style={styles.previewRow}>
+                    <Image source={{ uri: preview.uri }} style={styles.thumb} />
+                    <TouchableOpacity onPress={() => retake(preview)}>
+                      <Text style={{ color: colors.primary }}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              : null}
+            <TouchableOpacity
+              onPress={() => {
+                if (phase === 'review' && activeContext !== entryContext) {
+                  setActiveContext(entryContext);
+                  setPhase('entry');
+                  return;
+                }
+                setPhase(phase === 'review' ? 'entry' : 'capture');
+              }}
+            >
+              <Text style={{ color: colors.primary }}>Back</Text>
+            </TouchableOpacity>
             {activeContext === 'ingredients' ? (
               <View>
                 <Text style={{ color: colors.text }}>Ingredients</Text>
@@ -528,6 +639,9 @@ export default function PacketContributionModal({
                   placeholder="Ingredients"
                   style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                 />
+                <TouchableOpacity onPress={() => setIngredientsText('')}>
+                  <Text style={{ color: colors.primary }}>Remove</Text>
+                </TouchableOpacity>
               </View>
             ) : null}
             {activeContext === 'nutrition' ? (
@@ -614,18 +728,62 @@ export default function PacketContributionModal({
                       placeholder="Country or place stated on the pack"
                       style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                     />
+                    <Text style={{ color: colors.text }}>Percentage stated on the pack</Text>
+                    <TextInput
+                      value={row.percentage}
+                      onChangeText={(value) =>
+                        setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, percentage: value } : item)))
+                      }
+                      keyboardType="decimal-pad"
+                      placeholder="Percentage stated on the pack"
+                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                    />
+                    <View style={styles.row}>
+                      {QUALIFIER_LABELS.map((item) => (
+                        <TouchableOpacity
+                          key={item.value}
+                          onPress={() =>
+                            setOrigins((rows) =>
+                              rows.map((entry, itemIndex) =>
+                                itemIndex === index ? { ...entry, qualifier: item.value } : entry
+                              )
+                            )
+                          }
+                        >
+                          <Text style={{ color: row.qualifier === item.value ? colors.primary : colors.text }}>{item.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    <View style={styles.row}>
+                      {QUALIFICATION_LABELS.map((item) => (
+                        <TouchableOpacity
+                          key={item.value}
+                          onPress={() =>
+                            setOrigins((rows) =>
+                              rows.map((entry, itemIndex) =>
+                                itemIndex === index ? { ...entry, qualification: item.value } : entry
+                              )
+                            )
+                          }
+                        >
+                          <Text style={{ color: row.qualification === item.value ? colors.primary : colors.text }}>{item.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    <TouchableOpacity onPress={() => setOrigins((rows) => rows.filter((_, itemIndex) => itemIndex !== index))}>
+                      <Text style={{ color: colors.primary }}>Remove</Text>
+                    </TouchableOpacity>
                   </View>
                 ))
               : null}
             {activeContext === 'origins' && journey.another ? (
-              <TouchableOpacity
-                onPress={() => setOrigins((rows) => [...rows, { claimType: 'grown_in', wording: '', place: '', ingredient: '' }])}
-              >
+              <TouchableOpacity onPress={() => setOrigins((rows) => [...rows, EMPTY_ORIGIN])}>
                 <Text style={{ color: colors.primary }}>{journey.another}</Text>
               </TouchableOpacity>
             ) : null}
-            {activeContext === 'packetClaims'
-              ? claims.map((claim, index) => (
+            {packetInformationContext(activeContext) ? (
+              <View>
+                {claims.map((claim, index) => (
                   <View key={`claim-${index}`}>
                     <Text style={{ color: colors.text }}>Claim on the pack</Text>
                     <TextInput
@@ -634,25 +792,15 @@ export default function PacketContributionModal({
                       placeholder="Claim on the pack"
                       style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                     />
+                    <TouchableOpacity onPress={() => setClaims((rows) => rows.filter((_, itemIndex) => itemIndex !== index))}>
+                      <Text style={{ color: colors.primary }}>Remove</Text>
+                    </TouchableOpacity>
                   </View>
-                ))
-              : null}
-            {activeContext === 'packetClaims' ? (
-              <View>
+                ))}
                 <TouchableOpacity onPress={() => setClaims((rows) => [...rows, ''])}>
-                  <Text style={{ color: colors.primary }}>{journey.another}</Text>
+                  <Text style={{ color: colors.primary }}>Add another claim</Text>
                 </TouchableOpacity>
-                {targeted.length > 0 ? (
-                  <TouchableOpacity onPress={() => setAbsence(true)}>
-                    <Text style={{ color: colors.primary }}>
-                      I checked the pack and couldn’t find a relevant claim or certification.
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-            ) : null}
-            {activeContext === 'certifications'
-              ? certs.map((cert, index) => (
+                {certs.map((cert, index) => (
                   <View key={`cert-${index}`}>
                     <Text style={{ color: colors.text }}>Certification shown on the pack</Text>
                     <TextInput
@@ -661,13 +809,20 @@ export default function PacketContributionModal({
                       placeholder="Certification shown on the pack"
                       style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                     />
+                    <TouchableOpacity onPress={() => setCerts((rows) => rows.filter((_, itemIndex) => itemIndex !== index))}>
+                      <Text style={{ color: colors.primary }}>Remove</Text>
+                    </TouchableOpacity>
                   </View>
-                ))
-              : null}
-            {activeContext === 'certifications' ? (
-              <TouchableOpacity onPress={() => setCerts((rows) => [...rows, ''])}>
-                <Text style={{ color: colors.primary }}>{journey.another}</Text>
-              </TouchableOpacity>
+                ))}
+                <TouchableOpacity onPress={() => setCerts((rows) => [...rows, ''])}>
+                  <Text style={{ color: colors.primary }}>Add another certification</Text>
+                </TouchableOpacity>
+                {targeted.length > 0 ? (
+                  <TouchableOpacity onPress={() => setAbsence((current) => !current)}>
+                    <Text style={{ color: absence ? colors.primary : colors.text }}>{PACKET_ABSENCE_CONSUMER_COPY}</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             ) : null}
             <TouchableOpacity onPress={submit} style={styles.button} accessibilityRole="button">
               <Text style={styles.buttonText}>{journey.submit}</Text>

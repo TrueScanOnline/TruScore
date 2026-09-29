@@ -555,7 +555,8 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     const bareOpen = calculateOpenPillar(bareProduct);
     const barePublished = publishTransparencyPillar({ product: bareProduct, open: bareOpen });
     expect(bareOpen.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
-    expect(barePublished.assessmentLanes.origins).toBe('unassessed');
+    expect(barePublished.assessmentLanes.origins).toBe('resolved');
+    expect(barePublished.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
     expect(bareGrown.claimType).toBe('grown_in');
 
     const qualifiedGrown = await placeFact({
@@ -651,7 +652,9 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     const blockedPublished = publishTransparencyPillar({ product: blocked, open: blockedOpen });
     expect(blocked.origins_tags).toEqual(['en:australia']);
     expect(blockedOpen.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
-    expect(blockedPublished.assessmentLanes.origins).toBe('unassessed');
+    expect(blockedPublished.assessmentLanes.origins).toBe('resolved');
+    expect(blockedPublished.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
+    expect(blockedPublished.diagnostic.originsDisclosureSource).toBe('primary_contribution');
     expect(blockedPublished.diagnostic.admittedUserPrevailsOverOff).toBe(true);
   });
 });

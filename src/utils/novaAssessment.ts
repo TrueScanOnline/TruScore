@@ -13,6 +13,7 @@ import {
   INGREDIENT_PROCESSED_MARKERS,
   splitIngredientPartsNova,
 } from './ingredientTextPrimitives';
+import { characterisingIngredientIdentity } from '../contributions/originStructured';
 import { markNova1ProvenanceInferred } from './nova1Provenance';
 
 export interface NOVA1Assessment {
@@ -107,7 +108,7 @@ function isFlourAndWaterOnly(parts: string[]): boolean {
 }
 
 function isSingleQualifyingIngredient(part: string): boolean {
-  const n = stripLeadingQualifiers(part);
+  const n = stripLeadingQualifiers(characterisingIngredientIdentity(part));
   if (!n) return false;
   if (NOVA1_SINGLE_WHITELIST.has(n)) return true;
   if (n.endsWith(' peas') && NOVA1_SINGLE_WHITELIST.has(n.replace(/^.*?\s/, ''))) return true;

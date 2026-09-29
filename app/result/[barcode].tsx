@@ -113,9 +113,17 @@ import PacketContributionModal from '../../src/components/PacketContributionModa
 import {
   CONTRIBUTION_NOTICE_ADDED,
   CONTRIBUTION_NOTICE_SAVED,
+  PACKET_ABSENCE_CONSUMER_COPY,
+  PACKET_INFORMATION_ADD,
+  PACKET_INFORMATION_UPDATE,
   resultContributionActions,
   type ContributionEntryContext,
 } from '../../src/contribution/resultContributionActions';
+import {
+  nutritionAmountsFromExisting,
+  originDraftsFromGovernedFacts,
+} from '../../src/contribution/governedDisplayProjection';
+import { subscribeEvidenceAdmission } from '../../src/evidenceAuthority/device';
 import { calculateTrustScore } from '../../src/utils/trustScore';
 import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
 import { ManualProductData } from '../../src/types/manualProduct';
@@ -173,7 +181,9 @@ function ResultIngredientsSection({
   ingredientsText,
   novaGroup,
   showAddIngredients,
+  showUpdateIngredients,
   onAddIngredients,
+  onUpdateIngredients,
   onShareIngredients,
   onShareProcessing,
   onOpenProcessingLevel,
@@ -182,7 +192,9 @@ function ResultIngredientsSection({
   ingredientsText?: string | null;
   novaGroup?: number | null;
   showAddIngredients: boolean;
+  showUpdateIngredients: boolean;
   onAddIngredients: () => void;
+  onUpdateIngredients: () => void;
   onShareIngredients: () => void;
   onShareProcessing: () => void;
   onOpenProcessingLevel: () => void;
@@ -271,6 +283,18 @@ function ResultIngredientsSection({
             <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Add ingredients</Text>
           </TouchableOpacity>
         ) : null}
+        {showUpdateIngredients ? (
+          <TouchableOpacity
+            onPress={onUpdateIngredients}
+            activeOpacity={0.7}
+            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+            accessibilityRole="button"
+            accessibilityLabel="Update ingredients"
+          >
+            <Ionicons name="create-outline" size={20} color="#16a085" />
+            <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Update ingredients</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     );
   }
@@ -308,6 +332,18 @@ function ResultIngredientsSection({
           >
             <Ionicons name="add-circle-outline" size={20} color="#16a085" />
             <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Add ingredients</Text>
+          </TouchableOpacity>
+        ) : null}
+        {showUpdateIngredients ? (
+          <TouchableOpacity
+            onPress={onUpdateIngredients}
+            activeOpacity={0.7}
+            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+            accessibilityRole="button"
+            accessibilityLabel="Update ingredients"
+          >
+            <Ionicons name="create-outline" size={20} color="#16a085" />
+            <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Update ingredients</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -366,6 +402,8 @@ function ResultScreenContent() {
   };
 
   const [product, setProduct] = useState<ProductWithTrustScore | null>(null);
+  const productRef = useRef<ProductWithTrustScore | null>(null);
+  productRef.current = product;
   const [truScore, setTruScore] = useState<TruScoreResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingPhase, setLoadingPhase] = useState<string>('initializing');
@@ -466,6 +504,16 @@ function ResultScreenContent() {
     settledForBarcodeRef.current = null;
     publicationSettledRef.current = false;
     setPublicationSettled(false);
+  }, [barcode]);
+
+  useEffect(() => {
+    return subscribeEvidenceAdmission((admittedBarcode, snapshot) => {
+      const current = productRef.current;
+      if (!current || getPrimaryBarcode(admittedBarcode) !== getPrimaryBarcode(barcode)) return;
+      void calculateTrustScore(current, { authoritativeSnapshot: snapshot }).then((next) => {
+        if (getPrimaryBarcode(next.barcode) === getPrimaryBarcode(barcode)) setProduct(next);
+      });
+    });
   }, [barcode]);
 
   useEffect(() => {
@@ -1916,12 +1964,17 @@ function ResultScreenContent() {
             title={t('result.nutritionAndIngredients', 'Nutrition & Ingredients')}
             afterBurn={
               <>
+                {product.rveelPacketNutritionStatus ? (
+                  <Text style={{ color: colors.text, marginBottom: 8 }}>{product.rveelPacketNutritionStatus}</Text>
+                ) : null}
                 <ResultIngredientsSection
                   barcode={barcode}
-                  ingredientsText={product.ingredients_text}
+                  ingredientsText={product.rveelGovernedIngredientsText || product.ingredients_text}
                   novaGroup={product.nova_group}
                   showAddIngredients={contributionActions.addIngredients}
+                  showUpdateIngredients={contributionActions.updateIngredients}
                   onAddIngredients={() => openContribution('ingredients')}
+                  onUpdateIngredients={() => openContribution('ingredients')}
                   onShareIngredients={() => handleShare('ingredients')}
                   onShareProcessing={() => handleShare('processing')}
                   onOpenProcessingLevel={() => setProcessingLevelModalVisible(true)}
@@ -1988,6 +2041,7 @@ function ResultScreenContent() {
                 {fact.percentage != null
                   ? ` · ${fact.percentageQualifier ? `${fact.percentageQualifier.replace(/_/g, ' ')} ` : ''}${fact.percentage}%`
                   : ''}
+                {fact.originQualification ? ` · ${fact.originQualification}` : ''}
                 {fact.exactWording ? ` · “${fact.exactWording}”` : ''}
               </Text>
               {fact.countries.map((country) => (
@@ -2068,36 +2122,34 @@ function ResultScreenContent() {
               ))}
             </View>
           ) : null}
-          {contributionActions.packetClaimsAction ? (
+          {(product.rveelGovernedCertifications || []).map((name) => (
+            <Text key={name} style={{ color: colors.text }}>
+              {name}
+            </Text>
+          ))}
+          {product.rveelPacketAbsenceEstablished ? (
+            <Text style={{ color: colors.text }}>{PACKET_ABSENCE_CONSUMER_COPY}</Text>
+          ) : null}
+          {contributionActions.packetInformationAction ? (
           <TouchableOpacity
             onPress={() => openContribution('packetClaims')}
             activeOpacity={0.7}
             style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
             accessibilityRole="button"
             accessibilityLabel={
-              contributionActions.packetClaimsAction === 'update' ? 'Update packet claims' : 'Add packet claims'
+              contributionActions.packetInformationAction === 'update'
+                ? PACKET_INFORMATION_UPDATE
+                : PACKET_INFORMATION_ADD
             }
           >
             <Ionicons name="add-circle-outline" size={20} color="#16a085" />
             <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
-              {contributionActions.packetClaimsAction === 'update' ? 'Update packet claims' : 'Add packet claims'}
+              {contributionActions.packetInformationAction === 'update'
+                ? PACKET_INFORMATION_UPDATE
+                : PACKET_INFORMATION_ADD}
             </Text>
           </TouchableOpacity>
           ) : null}
-          <TouchableOpacity
-            onPress={() => openContribution('certifications')}
-            activeOpacity={0.7}
-            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
-            accessibilityRole="button"
-            accessibilityLabel={
-              contributionActions.certificationsAction === 'update' ? 'Update certifications' : 'Add certifications'
-            }
-          >
-            <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-            <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
-              {contributionActions.certificationsAction === 'update' ? 'Update certifications' : 'Add certifications'}
-            </Text>
-          </TouchableOpacity>
         </View>
 
         {/* Palm oil: scored in Planet/TruScore and insights; product card hidden (PalmOilCard). */}
@@ -2354,12 +2406,14 @@ function ResultScreenContent() {
         visible={packetContributionVisible}
         barcode={barcode}
         entryContext={contributionEntry}
-        initialIngredients={product?.ingredients_text || ''}
+        initialIngredients={product?.rveelGovernedIngredientsText || product?.ingredients_text || ''}
+        initialAmounts={nutritionAmountsFromExisting(product?.nutriments as Record<string, unknown> | undefined)}
+        initialOrigins={originDraftsFromGovernedFacts(product?.rveelGovernedOrigins)}
         onClose={() => setPacketContributionVisible(false)}
-        onSharedEvidenceAdmitted={async () => {
+        onSharedEvidenceAdmitted={async (snapshot, complete) => {
           if (!product) return;
-          setProduct(await calculateTrustScore(product));
-          showContributionNotice(CONTRIBUTION_NOTICE_ADDED);
+          setProduct(await calculateTrustScore(product, { authoritativeSnapshot: snapshot }));
+          if (complete) showContributionNotice(CONTRIBUTION_NOTICE_ADDED);
         }}
         onSharedEvidenceFailed={() => showContributionNotice(CONTRIBUTION_NOTICE_SAVED)}
       />

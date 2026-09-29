@@ -13,6 +13,31 @@ const OUTBOX_KEY = '@rveel_evidence_outbox_v1';
 const CREDENTIAL_KEY = '@rveel_evidence_contributor_credential_v1';
 /** Raw bytes per request. Base64 of this stays inside one Vercel body. */
 export const EVIDENCE_ASSET_CHUNK_BYTES = 256 * 1024;
+/** A stalled authority request becomes durable outbox state instead of an open wait. */
+const AUTHORITY_REQUEST_TIMEOUT_MS = 20000;
+
+type AdmissionListener = (barcode: string, snapshot: SharedEvidenceSnapshot) => void;
+const admissionListeners = new Set<AdmissionListener>();
+
+export function subscribeEvidenceAdmission(listener: AdmissionListener): () => void {
+  admissionListeners.add(listener);
+  return () => {
+    admissionListeners.delete(listener);
+  };
+}
+
+function notifyEvidenceAdmission(barcode: string, snapshot: SharedEvidenceSnapshot): void {
+  for (const listener of admissionListeners) listener(barcode, snapshot);
+}
+
+function authoritySignal(): AbortSignal {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), AUTHORITY_REQUEST_TIMEOUT_MS);
+  if (typeof timer === 'object' && timer && 'unref' in timer && typeof timer.unref === 'function') {
+    timer.unref();
+  }
+  return controller.signal;
+}
 
 type UnitRef = { unitId: string; revision: string };
 
@@ -212,7 +237,7 @@ async function targetAuthorityAccepted(): Promise<boolean> {
   const expected = expectedAuthorityEnv();
   if (!expected) return false;
   try {
-    const response = await fetch(authorityUrl(), { method: 'GET' });
+    const response = await fetch(authorityUrl(), { method: 'GET', signal: authoritySignal() });
     if (!response.ok) return false;
     const body = (await response.json()) as { authorityEnv?: string };
     return body.authorityEnv === expected;
@@ -228,6 +253,7 @@ async function credentialToken(): Promise<string> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'issue-credential' }),
+    signal: authoritySignal(),
   });
   if (!response.ok) throw new Error('contributor_credential_unavailable');
   const body = (await response.json()) as { token?: string };
@@ -244,6 +270,7 @@ async function postAuthority(token: string, body: Record<string, unknown>): Prom
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(body),
+    signal: authoritySignal(),
   });
 }
 
@@ -261,6 +288,10 @@ async function finalizeManualTextAsset(token: string, session: PacketContributio
     nutritionAmounts: unit.nutritionAmounts,
     originClaimType: unit.originClaimType,
     originCountry: unit.originCountry,
+    originCountries: unit.originCountries,
+    originPercentage: unit.originPercentage,
+    originPercentageQualifier: unit.originPercentageQualifier,
+    originQualification: unit.originQualification,
     ingredientSubject: unit.ingredientSubject,
     labelsTags: labels,
     packetAbsence: unit.packetAbsenceAffirmation === true,
@@ -278,6 +309,10 @@ async function finalizeManualTextAsset(token: string, session: PacketContributio
     nutritionAmounts: draft.nutritionAmounts,
     originClaimType: draft.originClaimType,
     originCountry: draft.originCountry,
+    originCountries: draft.originCountries,
+    originPercentage: draft.originPercentage,
+    originPercentageQualifier: draft.originPercentageQualifier,
+    originQualification: draft.originQualification,
     ingredientSubject: draft.ingredientSubject,
     labelsTags: draft.labelsTags,
     packetAbsence: draft.packetAbsence,
@@ -405,6 +440,7 @@ export async function transmitSessionToAuthority(sessionId: string): Promise<Aut
         });
       }
       await writeOutbox(items);
+      notifyEvidenceAdmission(session.barcode, snapshot);
       return { admitted: true, admittedUnitIds, pendingOutbox: false, snapshot };
     }
     if (body.outcome && body.outcome.status !== 'admitted' && body.outcome.status !== 'pending_source') {

@@ -113,6 +113,20 @@ describe('consumer contribution journey recovery', () => {
     expect(resolved.addIngredients).toBe(false);
     expect(resolved.updateIngredients).toBe(true);
     expect(resolved.originsAction).toBe('complete');
+
+    const processingStillOpen = resultContributionActions(
+      published({
+        nutrition: 'resolved',
+        processing: 'unassessed',
+        ingredient: 'resolved',
+        origins: 'resolved',
+        transparencyRated: true,
+        packet: 'assessed',
+      })
+    );
+    expect(processingStillOpen.addIngredients).toBe(false);
+    expect(processingStillOpen.updateIngredients).toBe(true);
+    expect(processingStillOpen.packetInformationAction).toBe('update');
   });
 
   it('does not invent a certification scoring tag for unmapped wording', () => {

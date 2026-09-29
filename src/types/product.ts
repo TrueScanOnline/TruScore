@@ -176,8 +176,17 @@ export interface Product {
 
   // Ingredients
   ingredients_text?: string;
+  /**
+   * Contributed ingredients shown when the source product has none.
+   * Not a scoring-source field. Scoring reads authoritative evidence on a clone.
+   */
+  rveelGovernedIngredientsText?: string;
   /** Short consumer status for a saved packet ingredients or nutrition contribution. */
   rveelPacketNutritionStatus?: string;
+  /** Prevailing admitted certification wording. Not copied onto labels_tags. */
+  rveelGovernedCertifications?: string[];
+  /** Established packet-claim absence. Consumer copy only; not a scoring event. */
+  rveelPacketAbsenceEstablished?: boolean;
   /** Admitted Product Origins facts for the existing origins card. Not an Open score input. */
   rveelGovernedOrigins?: import('../origins/governedFacts').GovernedOriginFact[];
   /** Admitted packet wording shown on the Packet Claims card. Not a set label. */

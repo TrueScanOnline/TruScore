@@ -160,6 +160,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           : undefined,
         originClaimType: typeof body.originClaimType === 'string' ? body.originClaimType : undefined,
         originCountry: typeof body.originCountry === 'string' ? body.originCountry : undefined,
+        originCountries: Array.isArray(body.originCountries)
+          ? body.originCountries.filter((country) => typeof country === 'string')
+          : undefined,
+        originPercentage: typeof body.originPercentage === 'number' ? body.originPercentage : undefined,
+        originPercentageQualifier:
+          typeof body.originPercentageQualifier === 'string' ? body.originPercentageQualifier : undefined,
+        originQualification: typeof body.originQualification === 'string' ? body.originQualification : undefined,
         ingredientSubject: typeof body.ingredientSubject === 'string' ? body.ingredientSubject : undefined,
         labelsTags: Array.isArray(body.labelsTags) ? body.labelsTags.filter((tag) => typeof tag === 'string') : undefined,
         packetAbsence: false,

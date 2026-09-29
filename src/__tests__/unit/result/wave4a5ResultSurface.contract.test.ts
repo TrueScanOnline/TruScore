@@ -30,7 +30,7 @@ describe('Wave 4A.5 Result surface', () => {
   it('uses the consolidated consumer title Nutrition & Ingredients', () => {
     expect(en.result.nutritionAndIngredients).toBe('Nutrition & Ingredients');
     expect(result).toContain("t('result.nutritionAndIngredients', 'Nutrition & Ingredients')");
-    expect(result).not.toContain('rveelPacketNutritionStatus');
+    expect(result).toContain('rveelPacketNutritionStatus');
   });
 
   it('renders Nutrition, then Feel the Burn, then Ingredients when Burn is eligible', () => {

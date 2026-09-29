@@ -5,7 +5,7 @@
 
 import { GOVERNED_PACKET_ABSENCE_CLAIM } from '../contributions/admissionTypes';
 import { governedCertificationLabels } from '../contributions/certificationLane';
-import { isOriginClaimType, type OriginStructuredEvidence } from '../contributions/originStructured';
+import { isOriginClaimType, supportedPercentageQualifier, type OriginQualification, type OriginStructuredEvidence } from '../contributions/originStructured';
 import { establishNutrition, type NutritionBasis, type StatedNutritionAmount } from '../ingredientsNutrition/nutritionSchema';
 import { sha256Hex } from '../packetContribution/sha256';
 import { deriveEvidenceFacts } from './subjects';
@@ -27,6 +27,10 @@ export type ManualTextDraft = {
   nutritionAmounts?: StatedNutritionAmount[];
   originClaimType?: string;
   originCountry?: string;
+  originCountries?: string[];
+  originPercentage?: number;
+  originPercentageQualifier?: string;
+  originQualification?: string;
   ingredientSubject?: string;
   labelsTags?: string[];
   packetAbsence?: boolean;
@@ -85,7 +89,19 @@ export function buildManualTextDocument(draft: ManualTextDraft): ManualTextDocum
   const nutrition = canonicalNutritionAmounts(draft.nutritionAmounts, draft.nutritionBasis);
   const originClaimType = draft.originClaimType?.trim() || '';
   const originCountry = draft.originCountry?.trim() || '';
+  const originCountries = (draft.originCountries || [])
+    .map((country) => country.trim())
+    .filter((country) => country.length > 0);
   const ingredientSubject = draft.ingredientSubject?.trim() || '';
+  const originPercentage =
+    draft.originPercentage != null && Number.isFinite(draft.originPercentage) ? String(draft.originPercentage) : '';
+  const originPercentageQualifier = supportedPercentageQualifier(draft.originPercentageQualifier) || '';
+  const originQualification =
+    draft.originQualification === 'local' ||
+    draft.originQualification === 'imported' ||
+    draft.originQualification === 'multiple'
+      ? draft.originQualification
+      : '';
   let statement = draft.statement?.trim() || '';
   if (ingredientsText) statement = ingredientsText;
   else if (nutrition) statement = nutrition.amounts;
@@ -106,6 +122,10 @@ export function buildManualTextDocument(draft: ManualTextDraft): ManualTextDocum
     ...(nutrition ? { nutritionBasis: nutrition.basis, nutritionAmounts: nutrition.amounts } : {}),
     ...(originClaimType ? { originClaimType } : {}),
     ...(originCountry ? { originCountry } : {}),
+    ...(originCountries.length > 1 ? { originCountries: originCountries.join('|') } : {}),
+    ...(originPercentage ? { originPercentage } : {}),
+    ...(originPercentage && originPercentageQualifier ? { originPercentageQualifier } : {}),
+    ...(originQualification ? { originQualification } : {}),
     ...(ingredientSubject ? { ingredientSubject } : {}),
     ...(labels.length > 0 ? { labelsTags: labels.join('|') } : {}),
   });
@@ -181,9 +201,9 @@ function parseCanonicalAmounts(rendered: string): StatedNutritionAmount[] {
 }
 
 /**
- * Origins structured content the current manual document actually represents.
- * claimType, primaryCountry, ingredientSubject, and the statement are the whole model.
- * Every other Origins semantic is absent.
+ * Origins structured content the manual document represents.
+ * Exact wording stays the statement. Countries, percentage, qualifier, and
+ * qualification are included only when the reviewed document contains them.
  */
 export function canonicalManualOriginContent(document: ManualTextDocument): {
   exactWording: string;
@@ -195,13 +215,31 @@ export function canonicalManualOriginContent(document: ManualTextDocument): {
   if (!isOriginClaimType(claimType) || claimType === 'other') return null;
   const primaryCountry = document.structured.originCountry?.trim() || '';
   const ingredientSubject = document.structured.ingredientSubject?.trim() || '';
+  const countries = (document.structured.originCountries || '')
+    .split('|')
+    .map((country) => country.trim())
+    .filter((country) => country.length > 0);
+  const uniqueCountries = [...new Set([primaryCountry, ...countries].filter((country) => country.length > 0))];
+  const percentage = Number(document.structured.originPercentage);
+  const qualifier = supportedPercentageQualifier(document.structured.originPercentageQualifier);
+  const qualification = document.structured.originQualification;
+  const originQualification: OriginQualification | undefined =
+    qualification === 'local' || qualification === 'imported' || qualification === 'multiple'
+      ? qualification
+      : undefined;
   return {
     exactWording: document.statement,
     claimValue: primaryCountry || ingredientSubject || document.statement,
     originStructured: {
       claimType,
       primaryCountry,
+      ...(uniqueCountries.length > 1 ? { countries: uniqueCountries } : {}),
       ...(ingredientSubject ? { ingredientSubject } : {}),
+      ...(Number.isFinite(percentage) && percentage >= 0 && percentage <= 100
+        ? { ingredientOriginPercentage: percentage }
+        : {}),
+      ...(Number.isFinite(percentage) && qualifier ? { percentageQualifier: qualifier } : {}),
+      ...(originQualification ? { originQualification } : {}),
     },
   };
 }

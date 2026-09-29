@@ -2,8 +2,10 @@
  * Transparency Origins Disclosure receiver.
  * Open scoring and origins_tags stay unchanged.
  * ingredient_origin, grown_in, and produced_in may enter the existing v15
- * completeness rules. made_in and packed_in do not. grown_in and produced_in
- * do not become a scored state unless the admitted evidence meets one.
+ * completeness rules. made_in and packed_in do not. A Grown in or Produced in
+ * statement uses the existing completeness check. When that statement names no
+ * ingredient and the product has one governed ingredient, that identity is used.
+ * Ambiguous ingredient identity fails closed.
  */
 
 import type { Product } from '../types/product';
@@ -51,6 +53,17 @@ function isQualifiedQualifier(fact: GovernedOriginFact): boolean {
   );
 }
 
+function placeMatchesSoleIngredient(
+  facts: GovernedOriginFact[],
+  tokens: string[],
+  singleEligible: boolean
+): boolean {
+  if (!singleEligible || tokens.length !== 1 || facts.length !== 1) return false;
+  const named = ingredientSubjectKey(facts[0].ingredientSubject);
+  if (!named) return true;
+  return named === ingredientSubjectKey(tokens[0]);
+}
+
 function subjectMatchesSingleIngredient(
   facts: GovernedOriginFact[],
   tokens: string[],
@@ -67,8 +80,9 @@ function subjectMatchesSingleIngredient(
 /**
  * Existing v15 states only: single-ingredient complete, an exact completeness
  * percentage in a registered band, or a qualified/unquantified partial statement.
- * grown_in and produced_in use the same states and do not receive the
- * unquantified-partial path from a country alone.
+ * grown_in and produced_in use the same states. A country alone does not take
+ * the unquantified-partial path. An unambiguous single ingredient may satisfy
+ * the existing completeness check.
  */
 export function resolveGovernedOriginsDisclosure(
   product: Product,
@@ -97,7 +111,7 @@ export function resolveGovernedOriginsDisclosure(
   );
 
   const ingredientMatch = subjectMatchesSingleIngredient(ingredientOrigins, tokens, single.eligible);
-  const placeMatch = subjectMatchesSingleIngredient(placeOrigins, tokens, single.eligible);
+  const placeMatch = placeMatchesSoleIngredient(placeOrigins, tokens, single.eligible);
   const ingredientFact = ingredientOrigins.length === 1 ? ingredientOrigins[0] : undefined;
   const placeFact = placeOrigins.length === 1 ? placeOrigins[0] : undefined;
 

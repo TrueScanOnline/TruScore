@@ -15,6 +15,10 @@ export type ContributionEntryContext =
 export const CONTRIBUTION_NOTICE_ADDED = 'Thanks - your contribution has been added.';
 export const CONTRIBUTION_NOTICE_SAVED =
   'We couldn’t submit this yet. Your contribution has been saved on this device so you can try again.';
+export const PACKET_INFORMATION_ADD = 'Add packet claims or certifications';
+export const PACKET_INFORMATION_UPDATE = 'Update packet claims or certifications';
+export const PACKET_ABSENCE_CONSUMER_COPY =
+  'I checked the pack and couldn’t find a relevant claim or certification.';
 
 export type OriginsContributionAction = 'add' | 'complete' | 'update';
 export type AssessedContributionAction = 'add' | 'update';
@@ -27,13 +31,16 @@ export type ResultContributionActions = {
   originsAction: OriginsContributionAction | null;
   packetClaimsAction: AssessedContributionAction | null;
   certificationsAction: AssessedContributionAction;
+  /** One consumer entry for packet claims and certifications. */
+  packetInformationAction: AssessedContributionAction | null;
 };
 
 export function resultContributionActions(product: Product): ResultContributionActions {
   const publication = product._publication;
   const certifications = Array.isArray(product.certifications) ? product.certifications : [];
-  const certificationsAction: AssessedContributionAction =
-    certifications.length > 0 ? 'update' : 'add';
+  const governedCertifications = product.rveelGovernedCertifications || [];
+  const hasCertifications = certifications.length > 0 || governedCertifications.length > 0;
+  const certificationsAction: AssessedContributionAction = hasCertifications ? 'update' : 'add';
 
   if (!publication || publication.settled !== true) {
     return {
@@ -44,11 +51,11 @@ export function resultContributionActions(product: Product): ResultContributionA
       originsAction: null,
       packetClaimsAction: null,
       certificationsAction,
+      packetInformationAction: null,
     };
   }
 
   const nutritionResolved = publication.body.assessmentLanes.nutrition === 'resolved';
-  const processingResolved = publication.body.assessmentLanes.processing === 'resolved';
   const ingredientResolved =
     publication.transparency.assessmentLanes.ingredient_clarity === 'resolved';
   const origins = publication.transparency.assessmentLanes.origins;
@@ -66,11 +73,12 @@ export function resultContributionActions(product: Product): ResultContributionA
 
   return {
     addNutrition: !nutritionResolved,
-    addIngredients: !processingResolved || !ingredientResolved,
+    addIngredients: !ingredientResolved,
     updateNutrition: nutritionResolved,
-    updateIngredients: processingResolved && ingredientResolved,
+    updateIngredients: ingredientResolved,
     originsAction,
     packetClaimsAction: packetAssessed ? 'update' : 'add',
     certificationsAction,
+    packetInformationAction: packetAssessed || hasCertifications ? 'update' : 'add',
   };
 }

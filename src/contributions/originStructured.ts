@@ -76,8 +76,18 @@ export function normalizeIngredientSubject(value: string | undefined): string {
   return String(value || '').trim().replace(/\s+/g, ' ');
 }
 
+/**
+ * Comparison identity only. A trailing characterising percentage such as
+ * "Strawberries (100%)" compares as "Strawberries". Stored wording is unchanged.
+ */
+export function characterisingIngredientIdentity(value: string | undefined): string {
+  return normalizeIngredientSubject(value)
+    .replace(/\s*\(\s*\d+(?:\.\d+)?\s*%\s*\)\s*$/u, '')
+    .trim();
+}
+
 export function ingredientSubjectKey(value: string | undefined): string {
-  return normalizeIngredientSubject(value).toLowerCase();
+  return characterisingIngredientIdentity(value).toLowerCase();
 }
 
 /** OFF-style manufacturing place tag for the existing Open complete-origin path. */
