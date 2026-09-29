@@ -86,7 +86,13 @@ export function characterisingIngredientIdentity(value: string | undefined): str
     .trim();
 }
 
+/** Authoritative subject identity. Percentage wording stays part of the subject. */
 export function ingredientSubjectKey(value: string | undefined): string {
+  return normalizeIngredientSubject(value).toLowerCase();
+}
+
+/** NOVA-1 and Origins matching only. Not a Shared Evidence Authority subject key. */
+export function ingredientComparisonKey(value: string | undefined): string {
   return characterisingIngredientIdentity(value).toLowerCase();
 }
 

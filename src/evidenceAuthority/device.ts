@@ -104,6 +104,10 @@ export function unitRevision(unit: PacketEvidenceUnit): string {
         nutritionAmounts: unit.nutritionAmounts ?? null,
         originClaimType: unit.originClaimType ?? null,
         originCountry: unit.originCountry ?? null,
+        originCountries: unit.originCountries ?? null,
+        originPercentage: unit.originPercentage ?? null,
+        originPercentageQualifier: unit.originPercentageQualifier ?? null,
+        originQualification: unit.originQualification ?? null,
         ingredientSubject: unit.ingredientSubject ?? null,
         support: unit.support,
       })

@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
 import { Product, ProductWithTrustScore } from '../../types/product';
+import { PACKET_INFORMATION_ADD } from '../../contribution/resultContributionActions';
 import type {
   ContributionOpportunity,
   CrossPillarPublicationSnapshot,
@@ -152,14 +153,14 @@ function S26PillarBlock({
             opp?.routeKey === 'origins'
               ? 'Add product origins'
               : opp?.routeKey === 'packet_claims'
-                ? 'Add packet claims'
+                ? PACKET_INFORMATION_ADD
                 : 'Add ingredients'
           }
           accessibilityLabel={
             opp?.routeKey === 'origins'
               ? 'Add product origins'
               : opp?.routeKey === 'packet_claims'
-                ? 'Add packet claims'
+                ? PACKET_INFORMATION_ADD
                 : 'Add ingredients'
           }
           primaryColor={colors.primary}

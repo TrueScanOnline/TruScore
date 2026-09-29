@@ -12,7 +12,7 @@ import {
   originCountryKey,
 } from '../lib/truscoreEngine/pillars/openPillarOriginsV15';
 import { resolveOpenV15ScoringIngredients } from '../lib/truscoreEngine/pillars/openPillarIngredientsLanguage';
-import { ingredientSubjectKey } from '../contributions/originStructured';
+import { ingredientComparisonKey } from '../contributions/originStructured';
 import type { GovernedOriginFact } from './governedFacts';
 
 function recognizedKeys(countries: string[]): string[] {
@@ -37,7 +37,7 @@ function singleIngredientKey(product: Product): string | null {
   if (!ingredients.usable) return null;
   const tokens = ingredientTokensForOriginsGate(ingredients.scoringText);
   if (tokens.length !== 1) return null;
-  return ingredientSubjectKey(tokens[0]);
+  return ingredientComparisonKey(tokens[0]);
 }
 
 /** Ingredient-origin facts for the same ingredient OFF origin data describes. */
@@ -50,7 +50,7 @@ export function ingredientOriginsForOffSubject(
   return (facts || []).filter(
     (fact) =>
       fact.claimType === 'ingredient_origin' &&
-      ingredientSubjectKey(fact.ingredientSubject) === subject
+      ingredientComparisonKey(fact.ingredientSubject) === subject
   );
 }
 

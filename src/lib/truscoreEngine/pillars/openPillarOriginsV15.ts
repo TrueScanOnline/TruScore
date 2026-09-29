@@ -10,7 +10,6 @@
  */
 
 import { Product } from '../../../types/product';
-import { characterisingIngredientIdentity } from '../../../contributions/originStructured';
 import { COUNTRIES } from '../../../utils/countries';
 import { tokenizeIngredientsText } from './openPillarHiddenTerms';
 import type { OpenV15AdjustmentId } from './openPillarV15Registry';
@@ -170,11 +169,9 @@ function hasManufacturingOnlySignal(product: Product): boolean {
 }
 
 export function ingredientTokensForOriginsGate(ingredientsText: string): string[] {
-  const tokens = tokenizeIngredientsText(ingredientsText)
-    .map((token) => characterisingIngredientIdentity(token))
-    .filter((token) => token.length > 0);
+  const tokens = tokenizeIngredientsText(ingredientsText);
   if (tokens.length > 0) return tokens;
-  const trimmed = characterisingIngredientIdentity(ingredientsText);
+  const trimmed = ingredientsText.trim();
   return trimmed ? [trimmed] : [];
 }
 

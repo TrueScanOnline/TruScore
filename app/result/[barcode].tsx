@@ -113,14 +113,14 @@ import PacketContributionModal from '../../src/components/PacketContributionModa
 import {
   CONTRIBUTION_NOTICE_ADDED,
   CONTRIBUTION_NOTICE_SAVED,
-  PACKET_ABSENCE_CONSUMER_COPY,
+  PACKET_ABSENCE_PRODUCT_STATE,
   PACKET_INFORMATION_ADD,
   PACKET_INFORMATION_UPDATE,
   resultContributionActions,
   type ContributionEntryContext,
 } from '../../src/contribution/resultContributionActions';
 import {
-  nutritionAmountsFromExisting,
+  nutritionPrefillFromSource,
   originDraftsFromGovernedFacts,
 } from '../../src/contribution/governedDisplayProjection';
 import { subscribeEvidenceAdmission } from '../../src/evidenceAuthority/device';
@@ -2051,7 +2051,13 @@ function ResultScreenContent() {
               ))}
             </View>
           ))}
-          {originsCard.limitedConfidence ? (
+          {product._publication?.transparency.confidence === 'high' ? (
+            <Text style={{ color: colors.textSecondary }}>High confidence</Text>
+          ) : null}
+          {product._publication?.transparency.confidence === 'moderate' ? (
+            <Text style={{ color: colors.textSecondary }}>Moderate confidence</Text>
+          ) : null}
+          {product._publication?.transparency.confidence === 'limited' ? (
             <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
           ) : null}
           {contributionActions.originsAction === 'add' ? (
@@ -2128,7 +2134,7 @@ function ResultScreenContent() {
             </Text>
           ))}
           {product.rveelPacketAbsenceEstablished ? (
-            <Text style={{ color: colors.text }}>{PACKET_ABSENCE_CONSUMER_COPY}</Text>
+            <Text style={{ color: colors.text }}>{PACKET_ABSENCE_PRODUCT_STATE}</Text>
           ) : null}
           {contributionActions.packetInformationAction ? (
           <TouchableOpacity
@@ -2273,7 +2279,6 @@ function ResultScreenContent() {
           onOpenNutrition={() => openContribution('nutrition')}
           onOpenOrigins={() => openContribution('origins')}
           onOpenPacketClaims={() => openContribution('packetClaims')}
-          suppressLiveRoutes={['ingredients_nutrition', 'origins', 'packet_claims']}
           publicationSettled={publicationSettled}
           openRequestKey={s26OpenRequestKey}
         />
@@ -2407,8 +2412,12 @@ function ResultScreenContent() {
         barcode={barcode}
         entryContext={contributionEntry}
         initialIngredients={product?.rveelGovernedIngredientsText || product?.ingredients_text || ''}
-        initialAmounts={nutritionAmountsFromExisting(product?.nutriments as Record<string, unknown> | undefined)}
-        initialOrigins={originDraftsFromGovernedFacts(product?.rveelGovernedOrigins)}
+        initialNutrition={nutritionPrefillFromSource(
+          product?.nutriments as Record<string, unknown> | undefined,
+          product?.nutrition_data_per
+        )}
+        initialOriginContext={originDraftsFromGovernedFacts(product?.rveelGovernedOrigins)}
+        knownOffOrigin={originsCard.offCountry}
         onClose={() => setPacketContributionVisible(false)}
         onSharedEvidenceAdmitted={async (snapshot, complete) => {
           if (!product) return;

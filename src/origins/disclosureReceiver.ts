@@ -16,7 +16,7 @@ import {
   singleIngredientEvidentlyCompleteEligible,
 } from '../lib/truscoreEngine/pillars/openPillarOriginsV15';
 import { resolveOpenV15ScoringIngredients } from '../lib/truscoreEngine/pillars/openPillarIngredientsLanguage';
-import { ingredientSubjectKey } from '../contributions/originStructured';
+import { ingredientComparisonKey } from '../contributions/originStructured';
 import type { GovernedOriginFact } from './governedFacts';
 
 export type OriginsDisclosureRequirement =
@@ -59,9 +59,9 @@ function placeMatchesSoleIngredient(
   singleEligible: boolean
 ): boolean {
   if (!singleEligible || tokens.length !== 1 || facts.length !== 1) return false;
-  const named = ingredientSubjectKey(facts[0].ingredientSubject);
+  const named = ingredientComparisonKey(facts[0].ingredientSubject);
   if (!named) return true;
-  return named === ingredientSubjectKey(tokens[0]);
+  return named === ingredientComparisonKey(tokens[0]);
 }
 
 function subjectMatchesSingleIngredient(
@@ -73,7 +73,7 @@ function subjectMatchesSingleIngredient(
     singleEligible &&
     tokens.length === 1 &&
     facts.length === 1 &&
-    ingredientSubjectKey(facts[0].ingredientSubject) === ingredientSubjectKey(tokens[0])
+    ingredientComparisonKey(facts[0].ingredientSubject) === ingredientComparisonKey(tokens[0])
   );
 }
 

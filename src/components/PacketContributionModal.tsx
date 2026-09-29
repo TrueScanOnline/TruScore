@@ -33,16 +33,23 @@ import {
   NUTRITION_FIELDS,
   type NutritionAttribute,
   type NutritionBasis,
-  type StatedNutritionAmount,
 } from '../ingredientsNutrition/nutritionSchema';
 import { PRODUCT_ORIGINS_CLAIM_TYPES, type ProductOriginsClaimType } from '../origins/governedFacts';
 import type { OriginPercentageQualifier } from '../config/contributionPolicy';
 import type { OriginQualification } from '../contributions/originStructured';
 import {
   PACKET_ABSENCE_CONSUMER_COPY,
+  CONTRIBUTION_NOTICE_PARTIAL,
   type ContributionEntryContext,
 } from '../contribution/resultContributionActions';
-import { admissionCompletedEveryReviewedUnit } from '../contribution/governedDisplayProjection';
+import {
+  nutritionAmountsToSubmit,
+  originDraftSignature,
+  originRowsToSubmit,
+  retainedAfterPartialAdmission,
+  type NutritionSourcePrefill,
+  type OriginContributionDraft,
+} from '../contribution/governedDisplayProjection';
 import type { SupportCoverage } from '../packetContribution/types';
 import type { SharedEvidenceSnapshot } from '../evidenceAuthority/types';
 
@@ -53,15 +60,7 @@ type Preview = {
   bytes: Uint8Array;
 };
 
-type OriginDraft = {
-  claimType: ProductOriginsClaimType;
-  wording: string;
-  place: string;
-  ingredient: string;
-  percentage: string;
-  qualifier?: OriginPercentageQualifier;
-  qualification?: OriginQualification;
-};
+type OriginDraft = OriginContributionDraft & { intent: 'new' | 'edited' };
 
 const EMPTY_ORIGIN: OriginDraft = {
   claimType: 'grown_in',
@@ -69,6 +68,7 @@ const EMPTY_ORIGIN: OriginDraft = {
   place: '',
   ingredient: '',
   percentage: '',
+  intent: 'new',
 };
 
 const QUALIFIER_LABELS: { value: OriginPercentageQualifier; label: string }[] = [
@@ -182,8 +182,9 @@ export default function PacketContributionModal({
   variantKey,
   entryContext,
   initialIngredients,
-  initialAmounts,
-  initialOrigins,
+  initialNutrition,
+  initialOriginContext,
+  knownOffOrigin,
   producer = abstainingExtractionProducer,
   onClose,
   onSharedEvidenceAdmitted,
@@ -194,8 +195,9 @@ export default function PacketContributionModal({
   variantKey?: string;
   entryContext: ContributionEntryContext;
   initialIngredients?: string;
-  initialAmounts?: Partial<Record<NutritionAttribute, string>>;
-  initialOrigins?: OriginDraft[];
+  initialNutrition?: NutritionSourcePrefill;
+  initialOriginContext?: OriginContributionDraft[];
+  knownOffOrigin?: string | null;
   producer?: ExtractionProducer;
   onClose: () => void;
   onSharedEvidenceAdmitted?: (snapshot: SharedEvidenceSnapshot | null, complete: boolean) => void | Promise<void>;
@@ -211,6 +213,8 @@ export default function PacketContributionModal({
   const [amounts, setAmounts] = useState<Partial<Record<NutritionAttribute, string>>>({});
   const [sodiumUnit, setSodiumUnit] = useState<'mg' | 'g'>('mg');
   const [origins, setOrigins] = useState<OriginDraft[]>([EMPTY_ORIGIN]);
+  const [originContext, setOriginContext] = useState<OriginContributionDraft[]>([]);
+  const [offOriginContext, setOffOriginContext] = useState<string | null>(null);
   const [claims, setClaims] = useState<string[]>(['']);
   const [certs, setCerts] = useState<string[]>(['']);
   const [absence, setAbsence] = useState(false);
@@ -218,12 +222,17 @@ export default function PacketContributionModal({
   const [includedContexts, setIncludedContexts] = useState<ContributionEntryContext[]>([entryContext]);
   const [proposalSupport, setProposalSupport] = useState<Partial<Record<ContributionEntryContext, SupportCoverage>>>({});
   const [activeContext, setActiveContext] = useState<ContributionEntryContext>(entryContext);
+  const [nutritionEdited, setNutritionEdited] = useState<NutritionAttribute[]>([]);
+  const [partialNotice, setPartialNotice] = useState<string | null>(null);
   const initialIngredientsRef = useRef(initialIngredients);
-  const initialAmountsRef = useRef(initialAmounts);
-  const initialOriginsRef = useRef(initialOrigins);
+  const initialNutritionRef = useRef(initialNutrition);
+  const initialOriginContextRef = useRef(initialOriginContext);
+  const knownOffOriginRef = useRef(knownOffOrigin);
+  const nutritionBaselineRef = useRef<NutritionSourcePrefill>({ basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' });
   initialIngredientsRef.current = initialIngredients;
-  initialAmountsRef.current = initialAmounts;
-  initialOriginsRef.current = initialOrigins;
+  initialNutritionRef.current = initialNutrition;
+  initialOriginContextRef.current = initialOriginContext;
+  knownOffOriginRef.current = knownOffOrigin;
 
   useEffect(() => {
     if (!visible) return;
@@ -232,15 +241,21 @@ export default function PacketContributionModal({
     setActiveContext(entryContext);
     setIncludedContexts(packetInformationContext(entryContext) ? ['packetClaims', 'certifications'] : [entryContext]);
     setIngredientsText(initialIngredientsRef.current || '');
-    setAmounts(initialAmountsRef.current || {});
-    const seeded = initialOriginsRef.current;
-    setOrigins(seeded && seeded.length > 0 ? seeded : [EMPTY_ORIGIN]);
+    const nutrition = initialNutritionRef.current;
+    nutritionBaselineRef.current = nutrition || { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' };
+    setBasis(nutrition?.basis ?? null);
+    setAmounts(nutrition?.amounts ?? {});
+    setSodiumUnit(nutrition?.sodiumUnit ?? 'mg');
+    setNutritionEdited([]);
+    setOriginContext(initialOriginContextRef.current || []);
+    setOffOriginContext(knownOffOriginRef.current || null);
+    setOrigins([EMPTY_ORIGIN]);
     setClaims(['']);
     setCerts(['']);
-    setBasis(null);
     setAbsence(false);
     setSkippedProposals([]);
     setProposalSupport({});
+    setPartialNotice(null);
     (async () => {
       await activateDevicePrivateByteStore();
       const opened = await openSessionForProduct({ barcode, variantKey });
@@ -403,6 +418,7 @@ export default function PacketContributionModal({
     setBusy(true);
     try {
       const created: string[] = [];
+      const observations: { unitId: string; label: string; kind: 'ingredients' | 'nutrition' | 'origin' | 'claim' | 'cert' | 'absence'; index: number }[] = [];
       const contexts = includedContexts;
       if (contexts.includes('ingredients')) {
         const text = ingredientsText.trim();
@@ -415,39 +431,41 @@ export default function PacketContributionModal({
             support: supportFor('ingredients'),
           });
           created.push(unit.unitId);
+          observations.push({ unitId: unit.unitId, label: text, kind: 'ingredients', index: 0 });
         }
       }
-      if (contexts.includes('nutrition')) {
-        if (basis) {
-          const stated: StatedNutritionAmount[] = [];
-          for (const field of NUTRITION_FIELDS) {
-            const raw = (amounts[field.attribute] || '').trim();
-            if (!raw) continue;
-            const value = Number(raw);
-            if (!Number.isFinite(value) || value < 0) continue;
-            const unit = field.attribute === 'sodium' ? sodiumUnit : field.acceptedUnits[0];
-            stated.push({ attribute: field.attribute, value, unit });
-          }
-          if (stated.length > 0) {
-            const unit = await addManualEvidenceUnit({
-              sessionId: session.sessionId,
-              domain: 'ingredients_nutrition',
-              section: 'nutrition',
-              statement: 'Nutrition facts',
-              nutritionBasis: basis,
-              nutritionAmounts: stated,
-              support: supportFor('nutrition'),
-            });
-            created.push(unit.unitId);
-          }
+      if (contexts.includes('nutrition') && basis) {
+        const stated = nutritionAmountsToSubmit(
+          { basis, amounts, sodiumUnit },
+          nutritionBaselineRef.current,
+          nutritionEdited
+        );
+        if (stated.length > 0) {
+          const unit = await addManualEvidenceUnit({
+            sessionId: session.sessionId,
+            domain: 'ingredients_nutrition',
+            section: 'nutrition',
+            statement: 'Nutrition facts',
+            nutritionBasis: basis,
+            nutritionAmounts: stated,
+            support: supportFor('nutrition'),
+          });
+          created.push(unit.unitId);
+          observations.push({
+            unitId: unit.unitId,
+            label: stated.map((amount) => `${amount.attribute} ${amount.value} ${amount.unit}`).join(', '),
+            kind: 'nutrition',
+            index: 0,
+          });
         }
       }
       if (contexts.includes('origins')) {
-        for (const row of origins) {
+        const originRows = originRowsToSubmit(origins);
+        for (let index = 0; index < originRows.length; index += 1) {
+          const row = originRows[index];
           const places = placesFromPack(row.place);
           const wording = row.wording.trim();
           if (!wording || places.length === 0) continue;
-          if (row.claimType === 'ingredient_origin' && !row.ingredient.trim()) continue;
           const percentage = Number(row.percentage);
           const unit = await addManualEvidenceUnit({
             sessionId: session.sessionId,
@@ -463,10 +481,14 @@ export default function PacketContributionModal({
             support: supportFor('origins'),
           });
           created.push(unit.unitId);
+          observations.push({ unitId: unit.unitId, label: wording, kind: 'origin', index });
         }
       }
       if (contexts.includes('packetClaims') || contexts.includes('certifications')) {
-        if (absence && targeted.length > 0) {
+        const positiveClaims = claims.map((claim) => claim.trim()).filter((claim) => claim.length > 0);
+        const positiveCerts = certs.map((cert) => cert.trim()).filter((cert) => cert.length > 0);
+        const absenceOnly = absence && positiveClaims.length === 0 && positiveCerts.length === 0;
+        if (absenceOnly && targeted.length > 0) {
           const unit = await addManualEvidenceUnit({
             sessionId: session.sessionId,
             domain: 'packet_claims',
@@ -475,28 +497,33 @@ export default function PacketContributionModal({
             support: { coverage: 'whole_image', sourceAssetId: targeted[0].assetId },
           });
           created.push(unit.unitId);
+          observations.push({ unitId: unit.unitId, label: PACKET_ABSENCE_CONSUMER_COPY, kind: 'absence', index: 0 });
         }
-        for (const claim of claims) {
-          const text = claim.trim();
-          if (!text) continue;
-          const unit = await addManualEvidenceUnit({
-            sessionId: session.sessionId,
-            domain: 'packet_claims',
-            statement: text,
-            support: supportFor('packetClaims'),
-          });
-          created.push(unit.unitId);
-        }
-        for (const cert of certs) {
-          const text = cert.trim();
-          if (!text) continue;
-          const unit = await addManualEvidenceUnit({
-            sessionId: session.sessionId,
-            domain: 'certifications',
-            statement: text,
-            support: supportFor('certifications'),
-          });
-          created.push(unit.unitId);
+        if (!absenceOnly) {
+          for (let index = 0; index < claims.length; index += 1) {
+            const text = claims[index].trim();
+            if (!text) continue;
+            const unit = await addManualEvidenceUnit({
+              sessionId: session.sessionId,
+              domain: 'packet_claims',
+              statement: text,
+              support: supportFor('packetClaims'),
+            });
+            created.push(unit.unitId);
+            observations.push({ unitId: unit.unitId, label: text, kind: 'claim', index });
+          }
+          for (let index = 0; index < certs.length; index += 1) {
+            const text = certs[index].trim();
+            if (!text) continue;
+            const unit = await addManualEvidenceUnit({
+              sessionId: session.sessionId,
+              domain: 'certifications',
+              statement: text,
+              support: supportFor('certifications'),
+            });
+            created.push(unit.unitId);
+            observations.push({ unitId: unit.unitId, label: text, kind: 'cert', index });
+          }
         }
       }
       if (created.length === 0) return;
@@ -540,9 +567,43 @@ export default function PacketContributionModal({
         onSharedEvidenceFailed?.();
         return;
       }
-      const complete = admissionCompletedEveryReviewedUnit(created, transmitted.admittedUnitIds);
-      await onSharedEvidenceAdmitted?.(transmitted.snapshot, complete);
-      onClose();
+      const retained = retainedAfterPartialAdmission(observations, transmitted.admittedUnitIds);
+      await onSharedEvidenceAdmitted?.(transmitted.snapshot, retained.complete);
+      if (retained.complete) {
+        onClose();
+        return;
+      }
+      const held = await getSession(session.sessionId);
+      if (held) {
+        const refusedIds = new Set(retained.refused.map((row) => row.unitId));
+        await upsertSession({
+          ...held,
+          units: held.units.map((unit) => (refusedIds.has(unit.unitId) ? { ...unit, status: 'open' as const } : unit)),
+        });
+      }
+      const admittedKinds = new Set(retained.admitted.map((row) => row.kind));
+      if (admittedKinds.has('ingredients')) setIngredientsText('');
+      if (admittedKinds.has('nutrition')) {
+        setAmounts({});
+        setBasis(null);
+        setNutritionEdited([]);
+      }
+      if (admittedKinds.has('absence')) setAbsence(false);
+      const admittedClaims = new Set(retained.admitted.filter((row) => row.kind === 'claim').map((row) => row.index));
+      const admittedCerts = new Set(retained.admitted.filter((row) => row.kind === 'cert').map((row) => row.index));
+      const admittedOrigins = new Set(retained.admitted.filter((row) => row.kind === 'origin').map((row) => row.index));
+      if (admittedClaims.size > 0) setClaims((rows) => rows.map((row, index) => (admittedClaims.has(index) ? '' : row)));
+      if (admittedCerts.size > 0) setCerts((rows) => rows.map((row, index) => (admittedCerts.has(index) ? '' : row)));
+      if (admittedOrigins.size > 0) {
+        setOrigins((rows) => {
+          const remaining = originRowsToSubmit(rows).filter((_, index) => !admittedOrigins.has(index));
+          return remaining.length > 0 ? remaining : [EMPTY_ORIGIN];
+        });
+      }
+      setPartialNotice(
+        `${CONTRIBUTION_NOTICE_PARTIAL} Not added: ${retained.refused.map((row) => row.label).join('; ')}`
+      );
+      setPhase('review');
     } catch {
       onSharedEvidenceFailed?.();
     } finally {
@@ -659,22 +720,82 @@ export default function PacketContributionModal({
                     <Text style={{ color: colors.text }}>{field.packetConcept}</Text>
                     <TextInput
                       value={amounts[field.attribute] || ''}
-                      onChangeText={(value) => setAmounts((current) => ({ ...current, [field.attribute]: value }))}
+                      onChangeText={(value) => {
+                        setNutritionEdited((current) =>
+                          current.includes(field.attribute) ? current : [...current, field.attribute]
+                        );
+                        setAmounts((current) => ({ ...current, [field.attribute]: value }));
+                      }}
                       keyboardType="decimal-pad"
                       style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                     />
                     {field.attribute === 'sodium' ? (
                       <View style={styles.row}>
-                        <TouchableOpacity onPress={() => setSodiumUnit('mg')}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSodiumUnit('mg');
+                            setNutritionEdited((current) => (current.includes('sodium') ? current : [...current, 'sodium']));
+                            setAmounts((current) => {
+                              if (sodiumUnit !== 'g') return current;
+                              const grams = Number(current.sodium);
+                              if (!Number.isFinite(grams)) return current;
+                              return { ...current, sodium: String(grams * 1000) };
+                            });
+                          }}
+                        >
                           <Text style={{ color: sodiumUnit === 'mg' ? colors.primary : colors.text }}>mg</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setSodiumUnit('g')}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSodiumUnit('g');
+                            setNutritionEdited((current) => (current.includes('sodium') ? current : [...current, 'sodium']));
+                            setAmounts((current) => {
+                              if (sodiumUnit !== 'mg') return current;
+                              const milligrams = Number(current.sodium);
+                              if (!Number.isFinite(milligrams)) return current;
+                              return { ...current, sodium: String(milligrams / 1000) };
+                            });
+                          }}
+                        >
                           <Text style={{ color: sodiumUnit === 'g' ? colors.primary : colors.text }}>g</Text>
                         </TouchableOpacity>
                       </View>
                     ) : (
                       <Text style={{ color: colors.textSecondary }}>{field.acceptedUnits[0]}</Text>
                     )}
+                  </View>
+                ))}
+              </View>
+            ) : null}
+            {activeContext === 'origins' ? (
+              <View>
+                {offOriginContext ? (
+                  <Text style={{ color: colors.text }}>{`Already known: ${offOriginContext}`}</Text>
+                ) : null}
+                {originContext.map((row) => (
+                  <View key={row.evidenceId || row.wording}>
+                    <Text style={{ color: colors.text }}>
+                      {ORIGIN_LABELS[row.claimType]}
+                      {row.ingredient ? ` · ${row.ingredient}` : ''}
+                      {row.place ? ` · ${row.place}` : ''}
+                      {row.wording ? ` · “${row.wording}”` : ''}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setOrigins((rows) => {
+                          if (row.evidenceId && rows.some((item) => item.evidenceId === row.evidenceId)) return rows;
+                          const edited: OriginDraft = {
+                            ...row,
+                            intent: 'edited',
+                            baseline: row.baseline || originDraftSignature(row),
+                          };
+                          const blankOnly = rows.length === 1 && !rows[0].wording.trim() && !rows[0].place.trim();
+                          return blankOnly ? [edited] : [...rows, edited];
+                        })
+                      }
+                    >
+                      <Text style={{ color: colors.primary }}>Correct this statement</Text>
+                    </TouchableOpacity>
                   </View>
                 ))}
               </View>
@@ -788,7 +909,10 @@ export default function PacketContributionModal({
                     <Text style={{ color: colors.text }}>Claim on the pack</Text>
                     <TextInput
                       value={claim}
-                      onChangeText={(value) => setClaims((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)))}
+                      onChangeText={(value) => {
+                        if (value.trim()) setAbsence(false);
+                        setClaims((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)));
+                      }}
                       placeholder="Claim on the pack"
                       style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                     />
@@ -805,7 +929,10 @@ export default function PacketContributionModal({
                     <Text style={{ color: colors.text }}>Certification shown on the pack</Text>
                     <TextInput
                       value={cert}
-                      onChangeText={(value) => setCerts((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)))}
+                      onChangeText={(value) => {
+                        if (value.trim()) setAbsence(false);
+                        setCerts((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)));
+                      }}
                       placeholder="Certification shown on the pack"
                       style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                     />
@@ -818,7 +945,13 @@ export default function PacketContributionModal({
                   <Text style={{ color: colors.primary }}>Add another certification</Text>
                 </TouchableOpacity>
                 {targeted.length > 0 ? (
-                  <TouchableOpacity onPress={() => setAbsence((current) => !current)}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setAbsence(true);
+                      setClaims(['']);
+                      setCerts(['']);
+                    }}
+                  >
                     <Text style={{ color: absence ? colors.primary : colors.text }}>{PACKET_ABSENCE_CONSUMER_COPY}</Text>
                   </TouchableOpacity>
                 ) : null}
@@ -829,6 +962,7 @@ export default function PacketContributionModal({
             </TouchableOpacity>
           </View>
         ) : null}
+        {partialNotice ? <Text style={{ color: colors.text }}>{partialNotice}</Text> : null}
         {busy ? <ActivityIndicator /> : null}
         <TouchableOpacity onPress={onClose}>
           <Text style={{ color: colors.primary }}>Close</Text>

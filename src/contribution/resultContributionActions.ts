@@ -19,6 +19,9 @@ export const PACKET_INFORMATION_ADD = 'Add packet claims or certifications';
 export const PACKET_INFORMATION_UPDATE = 'Update packet claims or certifications';
 export const PACKET_ABSENCE_CONSUMER_COPY =
   'I checked the pack and couldn’t find a relevant claim or certification.';
+/** Admitted absence as product state. The first-person sentence stays on the contribution form. */
+export const PACKET_ABSENCE_PRODUCT_STATE = 'No relevant claim or certification was found on the pack.';
+export const CONTRIBUTION_NOTICE_PARTIAL = 'Only part of your contribution was added.';
 
 export type OriginsContributionAction = 'add' | 'complete' | 'update';
 export type AssessedContributionAction = 'add' | 'update';
@@ -79,6 +82,6 @@ export function resultContributionActions(product: Product): ResultContributionA
     originsAction,
     packetClaimsAction: packetAssessed ? 'update' : 'add',
     certificationsAction,
-    packetInformationAction: packetAssessed || hasCertifications ? 'update' : 'add',
+    packetInformationAction: packetAssessed ? 'update' : 'add',
   };
 }
