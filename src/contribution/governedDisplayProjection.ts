@@ -3,6 +3,8 @@
  * These fields are not written back as source product data.
  */
 
+import type { Product } from '../types/product';
+import { resultContributionActions } from './resultContributionActions';
 import type { ContributionEvidence } from '../contributions/types';
 import { evidenceKeyOf, selectPrevailingAdmittedEvidence } from '../contributions/admissionContract';
 import type { OriginPercentageQualifier } from '../config/contributionPolicy';
@@ -196,4 +198,19 @@ export function retainedAfterPartialAdmission<T extends SubmittedObservation>(
     admitted,
     refused,
   };
+}
+
+/** Body Data Limitations buttons. Reads the Result contribution actions and adds no assessment rule. */
+export function bodyDataLimitationActions(product: Product): Array<{
+  label: 'Add nutrition' | 'Add ingredients';
+  destination: 'nutrition' | 'ingredients';
+}> {
+  const actions = resultContributionActions(product);
+  const rows: Array<{
+    label: 'Add nutrition' | 'Add ingredients';
+    destination: 'nutrition' | 'ingredients';
+  }> = [];
+  if (actions.addNutrition) rows.push({ label: 'Add nutrition', destination: 'nutrition' });
+  if (actions.addIngredients) rows.push({ label: 'Add ingredients', destination: 'ingredients' });
+  return rows;
 }

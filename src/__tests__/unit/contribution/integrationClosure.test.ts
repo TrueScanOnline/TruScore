@@ -10,6 +10,7 @@ import {
   retainedAfterPartialAdmission,
 } from '../../../contribution/governedDisplayProjection';
 import { resultContributionActions } from '../../../contribution/resultContributionActions';
+import { bodyDataLimitationActions } from '../../../contribution/governedDisplayProjection';
 import {
   buildManualTextDocument,
   canonicalManualOriginContent,
@@ -25,13 +26,17 @@ import { assessNOVAGroup1 } from '../../../utils/novaAssessment';
 
 const REPO = path.resolve(__dirname, '../../../..');
 
-function laneProduct(ingredient: 'resolved' | 'unassessed', processing: 'resolved' | 'unassessed'): Product {
+function laneProduct(
+  ingredient: 'resolved' | 'unassessed',
+  processing: 'resolved' | 'unassessed',
+  nutrition: 'resolved' | 'unassessed' = 'resolved'
+): Product {
   return {
     barcode: '9300000000000',
     certifications: [],
     _publication: {
       settled: true,
-      body: { assessmentLanes: { nutrition: 'resolved', processing } },
+      body: { assessmentLanes: { nutrition, processing } },
       transparency: {
         publicationStatus: 'rated',
         assessmentLanes: { ingredient_clarity: ingredient, origins: 'unassessed' },
@@ -174,6 +179,18 @@ describe('functional-to-consumer integration closure', () => {
     ]);
     expect(submitted.map((row) => row.evidenceId)).toEqual([undefined]);
     expect(submitted.map((row) => row.wording)).toEqual(['Packed in Australia']);
+    expect(originRowsToSubmit(existing)).toEqual([]);
+    const corrected = originRowsToSubmit([
+      {
+        ...existing[0],
+        intent: 'edited',
+        wording: 'Made in Australia from at least 75% Australian ingredients',
+      },
+    ]);
+    expect(corrected.map((row) => row.wording)).toEqual([
+      'Made in Australia from at least 75% Australian ingredients',
+    ]);
+    expect(corrected[0]?.evidenceId).toBe('contributor-a');
   });
 
   it('retains refused observations and does not treat admitted units as still to send', () => {
@@ -200,12 +217,33 @@ describe('functional-to-consumer integration closure', () => {
     expect(modal).toContain('Claim on the pack');
     expect(modal).toContain('Certification shown on the pack');
     expect(modal).toContain('retainedAfterPartialAdmission');
-    expect(modal).toContain('Correct this statement');
-    expect(modal).toContain('Already known:');
+    expect(modal).toContain('Product information');
+    expect(modal).toContain('Correct');
+    expect(modal).not.toContain('Already known');
+    expect(modal).toContain("intent: 'edited'");
     expect(modal).not.toContain('Lane A');
     expect(result).toContain('rveelPacketNutritionStatus');
     expect(result).toContain('authoritativeSnapshot');
     expect(result).toContain('subscribeEvidenceAdmission');
+  });
+
+  it('routes Body Data Limitations from the existing contribution actions', () => {
+    expect(bodyDataLimitationActions(laneProduct('resolved', 'unassessed', 'resolved'))).toEqual([]);
+    expect(bodyDataLimitationActions(laneProduct('resolved', 'resolved', 'unassessed'))).toEqual([
+      { label: 'Add nutrition', destination: 'nutrition' },
+    ]);
+    expect(bodyDataLimitationActions(laneProduct('unassessed', 'resolved', 'resolved'))).toEqual([
+      { label: 'Add ingredients', destination: 'ingredients' },
+    ]);
+    expect(bodyDataLimitationActions(laneProduct('resolved', 'resolved', 'resolved'))).toEqual([]);
+    const card = fs.readFileSync(path.join(REPO, 'src/components/productLegal/ProductDataLimitationsCard.tsx'), 'utf8');
+    expect(card).toContain('bodyDataLimitationActions(product)');
+    expect(card).toContain("action.destination === 'nutrition'");
+    expect(card).toContain('onOpenNutrition?.()');
+    expect(card).toContain('onOpenIngredients?.()');
+    expect(card).toContain("routeKey === 'origins'");
+    expect(card).toContain("routeKey === 'packet_claims'");
+    expect(card).toContain("row.key === 'body' ? undefined : resolveAction");
   });
 
   it('does not let a non-scoring certification turn an unresolved packet invitation into Update', () => {

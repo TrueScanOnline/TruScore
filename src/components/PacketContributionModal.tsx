@@ -767,19 +767,12 @@ export default function PacketContributionModal({
                 ))}
               </View>
             ) : null}
-            {activeContext === 'origins' ? (
+            {activeContext === 'origins' && (offOriginContext || originContext.length > 0) ? (
               <View>
-                {offOriginContext ? (
-                  <Text style={{ color: colors.text }}>{`Already known: ${offOriginContext}`}</Text>
-                ) : null}
+                <Text style={[styles.header, { color: colors.text }]}>Product information</Text>
                 {originContext.map((row) => (
                   <View key={row.evidenceId || row.wording}>
-                    <Text style={{ color: colors.text }}>
-                      {ORIGIN_LABELS[row.claimType]}
-                      {row.ingredient ? ` · ${row.ingredient}` : ''}
-                      {row.place ? ` · ${row.place}` : ''}
-                      {row.wording ? ` · “${row.wording}”` : ''}
-                    </Text>
+                    <Text style={{ color: colors.text }}>{row.wording}</Text>
                     <TouchableOpacity
                       onPress={() =>
                         setOrigins((rows) => {
@@ -794,10 +787,11 @@ export default function PacketContributionModal({
                         })
                       }
                     >
-                      <Text style={{ color: colors.primary }}>Correct this statement</Text>
+                      <Text style={{ color: colors.primary }}>Correct</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
+                {offOriginContext ? <Text style={{ color: colors.text }}>{offOriginContext}</Text> : null}
               </View>
             ) : null}
             {activeContext === 'origins'

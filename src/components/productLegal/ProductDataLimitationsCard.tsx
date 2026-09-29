@@ -12,6 +12,7 @@ import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
 import { Product, ProductWithTrustScore } from '../../types/product';
 import { PACKET_INFORMATION_ADD } from '../../contribution/resultContributionActions';
+import { bodyDataLimitationActions } from '../../contribution/governedDisplayProjection';
 import type {
   ContributionOpportunity,
   CrossPillarPublicationSnapshot,
@@ -113,6 +114,7 @@ function S26PillarBlock({
   colors,
   onLiveAction,
   showLiveCta,
+  bodyActions,
 }: {
   title: string;
   pub: PillarPublicationResult;
@@ -120,6 +122,7 @@ function S26PillarBlock({
   onLiveAction?: () => void;
   /** Deduped: only the first identical live CTA in the modal renders. */
   showLiveCta: boolean;
+  bodyActions?: Array<{ label: string; onPress: () => void }>;
 }) {
   const s26: S26Explanation | null = pub.s26;
   if (!s26) return null;
@@ -166,6 +169,15 @@ function S26PillarBlock({
           primaryColor={colors.primary}
         />
       ) : null}
+      {(bodyActions || []).map((action) => (
+        <ManualEditActionRow
+          key={action.label}
+          onPress={action.onPress}
+          label={action.label}
+          accessibilityLabel={action.label}
+          primaryColor={colors.primary}
+        />
+      ))}
     </View>
   );
 }
@@ -262,7 +274,18 @@ export default function ProductDataLimitationsCard({
           const routeKey = pub.s26.contributionOpportunity?.routeKey;
           const prefill = pub.s26.contributionOpportunity?.prefill;
           const opp = pub.s26.contributionOpportunity;
-          const action = resolveAction(routeKey, prefill);
+          const bodyActions =
+            row.key === 'body'
+              ? bodyDataLimitationActions(product).map((action) => ({
+                  label: action.label,
+                  onPress: () => {
+                    close();
+                    if (action.destination === 'nutrition') onOpenNutrition?.();
+                    else onOpenIngredients?.();
+                  },
+                }))
+              : [];
+          const action = row.key === 'body' ? undefined : resolveAction(routeKey, prefill);
           const liveKey =
             opp?.material === true && opp.routeStatus === 'live' && opp.routeKey
               ? opp.routeKey
@@ -279,6 +302,7 @@ export default function ProductDataLimitationsCard({
               pub={pub}
               colors={colors}
               showLiveCta={showLiveCta}
+              bodyActions={bodyActions}
               onLiveAction={
                 showLiveCta && action
                   ? () => {
