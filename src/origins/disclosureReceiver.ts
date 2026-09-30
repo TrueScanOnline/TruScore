@@ -18,6 +18,7 @@ import {
 } from '../lib/truscoreEngine/pillars/openPillarOriginsV15';
 import { resolveOpenV15ScoringIngredients } from '../lib/truscoreEngine/pillars/openPillarIngredientsLanguage';
 import { ingredientComparisonKey } from '../contributions/originStructured';
+import type { GovernedOriginFact } from './governedFacts';
 import type { OpenV15AdjustmentId } from '../lib/truscoreEngine/pillars/openPillarV15Registry';
 
 export type OriginsDisclosureRequirement =
@@ -51,7 +52,8 @@ const DISCLOSURE_CLAIM_TYPES = new Set(['ingredient_origin', 'grown_in', 'produc
  * When the reviewed record already carries an explicit percentage and qualifier,
  * that pair is the ingredient-origin proposition. It is not parsed out of the sentence.
  */
-function explicitIngredientOriginFromMadeIn(fact: GovernedOriginFact): GovernedOriginFact | null {
+/** Ingredient-origin proposition already carried on a quantified made_in fact. Bare made_in returns null. */
+export function explicitIngredientOriginFromMadeIn(fact: GovernedOriginFact): GovernedOriginFact | null {
   if (fact.claimType !== 'made_in') return null;
   if (fact.percentage == null) return null;
   if (fact.percentageQualifier == null && fact.percentage !== 100) return null;
@@ -232,19 +234,6 @@ export function governedOriginsOpenAssessment(
   );
   if (!resolution.resolved) return null;
   if (resolution.requirement === 'evidently_complete') {
-    const facts = scoringOriginFacts(product.rveelGovernedOrigins);
-    const placeComplete = facts.some(
-      (fact) =>
-        (fact.claimType === 'grown_in' || fact.claimType === 'produced_in') && fact.percentage == null
-    );
-    const quantifiedComplete = facts.some(
-      (fact) =>
-        fact.percentage === 100 &&
-        (fact.percentageQualifier == null ||
-          fact.percentageQualifier === 'exactly' ||
-          fact.percentageQualifier === 'at_least')
-    );
-    if (!placeComplete && !quantifiedComplete) return null;
     return {
       id: 'open-v15-origins-evidently-complete',
       detail: 'Prevailing origins disclosure is evidently complete',

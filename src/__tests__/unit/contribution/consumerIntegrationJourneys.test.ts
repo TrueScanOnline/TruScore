@@ -661,6 +661,154 @@ describe('consumer integration journeys', () => {
     expect(shown.rveelGovernedOrigins?.[0]?.percentageQualifier).toBe('at_least');
   });
 
+  it('maps an unquantified sole-ingredient origin to evidently complete for any country', async () => {
+    const cases = [
+      { subject: 'Honey', country: 'Canada', wording: 'Honey from Canada' },
+      { subject: 'Cocoa', country: 'Ghana', wording: 'Cocoa from Ghana' },
+    ];
+    for (const item of cases) {
+      const admitted = admitAt(
+        await submitGovernedEvidence({
+          barcode: BARCODE,
+          domain: 'origins',
+          claimValue: item.country,
+          exactWording: item.wording,
+          asProductionEpoch: true,
+          persistRemote: false,
+          originStructured: {
+            claimType: 'ingredient_origin',
+            primaryCountry: item.country,
+            ingredientSubject: item.subject,
+          },
+        })
+      );
+      const shown = await calculateTrustScore(
+        honeyProduct({
+          product_name: item.subject,
+          ingredients_text: item.subject.toLowerCase(),
+          ingredients_text_en: item.subject.toLowerCase(),
+        }),
+        { authoritativeSnapshot: snapshotOf([admitted]) }
+      );
+      const open = calculateOpenPillar(shown);
+      expect(shown._publication?.transparency.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
+      expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+      expect(open.details.originsAdjustment).toBe(8);
+      expect(open.details.originsProvenance).toBe('governed_packet');
+    }
+  });
+
+  it('replaces conflicting OFF France with a prevailing unquantified ingredient origin', async () => {
+    const admitted = admitAt(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'Canada',
+        exactWording: 'Honey from Canada',
+        asProductionEpoch: true,
+        persistRemote: false,
+        originStructured: {
+          claimType: 'ingredient_origin',
+          primaryCountry: 'Canada',
+          ingredientSubject: 'Honey',
+        },
+      })
+    );
+    const shown = await calculateTrustScore(honeyProduct({ origins_tags: ['en:france'] }), {
+      authoritativeSnapshot: snapshotOf([admitted]),
+    });
+    const open = calculateOpenPillar(shown);
+    expect(shown._publication?.transparency.assessmentLanes.origins).toBe('resolved');
+    expect(shown._publication?.transparency.diagnostic.originsDisclosureSource).toBe('primary_contribution');
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(open.details.originsAdjustment).toBe(8);
+    expect(open.details.originsProvenance).toBe('governed_packet');
+    expect(open.adjustments.filter((row) => row.family === 'origins')).toHaveLength(1);
+  });
+
+  it('lets a hybrid made-in ingredient origin replace conflicting OFF France', async () => {
+    const admitted = admitAt(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'Canada',
+        exactWording: 'Made in Canada from at least 92% Canadian ingredients',
+        asProductionEpoch: true,
+        persistRemote: false,
+        originStructured: {
+          claimType: 'made_in',
+          primaryCountry: 'Canada',
+          ingredientOriginPercentage: 92,
+          percentageQualifier: 'at_least',
+        },
+      })
+    );
+    const shown = await calculateTrustScore(honeyProduct({ origins_tags: ['en:france'] }), {
+      authoritativeSnapshot: snapshotOf([admitted]),
+    });
+    const open = calculateOpenPillar(shown);
+    expect(shown.rveelGovernedOrigins?.[0]?.claimType).toBe('made_in');
+    expect(shown.rveelGovernedOrigins?.[0]?.percentage).toBe(92);
+    expect(shown.rveelGovernedOrigins?.[0]?.percentageQualifier).toBe('at_least');
+    expect(shown._publication?.transparency.diagnostic.originsDisclosureRequirement).toBe('stated_percentage_band');
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-pct-76-94');
+    expect(open.details.originsAdjustment).toBe(-1);
+    expect(open.details.originsProvenance).toBe('governed_packet');
+    expect(open.adjustments.filter((row) => row.family === 'origins')).toHaveLength(1);
+  });
+
+  it('does not let a bare made-in statement displace scoring-eligible OFF origins', async () => {
+    const offOnly = calculateOpenPillar(honeyProduct({ origins_tags: ['en:france'] }));
+    const admitted = admitAt(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'Canada',
+        exactWording: 'Made in Canada',
+        asProductionEpoch: true,
+        persistRemote: false,
+        originStructured: { claimType: 'made_in', primaryCountry: 'Canada' },
+      })
+    );
+    const shown = await calculateTrustScore(honeyProduct({ origins_tags: ['en:france'] }), {
+      authoritativeSnapshot: snapshotOf([admitted]),
+    });
+    const open = calculateOpenPillar(shown);
+    expect(shown.rveelGovernedOrigins?.[0]?.claimType).toBe('made_in');
+    expect(shown.rveelGovernedOrigins?.[0]?.percentage).toBeUndefined();
+    expect(open.details.originsAdjustmentId).toBe(offOnly.details.originsAdjustmentId);
+    expect(open.details.originsAdjustment).toBe(8);
+    expect(open.details.originsProvenance).toBe('off_raw_origins');
+    expect(open.adjustments.filter((row) => row.family === 'origins')).toHaveLength(1);
+  });
+
+  it('leaves packed-in outside Origins scoring', async () => {
+    const admitted = admitAt(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'Italy',
+        exactWording: 'Packed in Italy',
+        asProductionEpoch: true,
+        persistRemote: false,
+        originStructured: { claimType: 'packed_in', primaryCountry: 'Italy' },
+      })
+    );
+    const shown = await calculateTrustScore(honeyProduct(), { authoritativeSnapshot: snapshotOf([admitted]) });
+    const open = calculateOpenPillar(shown);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(open.details.originsAdjustment).toBe(0);
+    expect(shown._publication?.transparency.assessmentLanes.origins).toBe('unassessed');
+
+    const besideOff = await calculateTrustScore(honeyProduct({ origins_tags: ['en:france'] }), {
+      authoritativeSnapshot: snapshotOf([admitted]),
+    });
+    const besideOpen = calculateOpenPillar(besideOff);
+    expect(besideOpen.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(besideOpen.details.originsAdjustment).toBe(8);
+    expect(besideOpen.details.originsProvenance).toBe('off_raw_origins');
+  });
+
   it('keeps the source nutrition basis through projection, cache, and withdrawal', async () => {
     for (const basis of ['serving', '100ml', '100g'] as const) {
       const source = sourceProduct({ nutrition_data_per: basis });

@@ -304,7 +304,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     return fact;
   }
 
-  it('resolves the existing origins lane from a single-ingredient origin without changing Open scoring', async () => {
+  it('maps an evidently complete sole-ingredient origin to the existing Open adjustment', async () => {
     const fact = await ingredientFact({
       subject: 'Honey',
       country: 'New Zealand',
@@ -312,8 +312,10 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     });
     const bare = calculateOpenPillar(honeyProduct());
     const open = calculateOpenPillar(honeyProduct([fact]));
-    expect(open.score).toBe(bare.score);
-    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(open.score).toBe(bare.score + 8);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(open.details.originsAdjustment).toBe(8);
+    expect(open.details.originsProvenance).toBe('governed_packet');
     expect(honeyProduct([fact]).origins_tags).toBeUndefined();
     const published = publishTransparencyPillar({
       product: honeyProduct([fact]),
@@ -596,7 +598,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(produced.ingredientSubject).toBe('Honey');
   });
 
-  it('does not let made_in or packed_in resolve the Transparency origins lane', async () => {
+  it('lets a quantified made_in ingredient-origin proposition prevail over conflicting OFF origins', async () => {
     const made = await placeFact({
       claimType: 'made_in',
       country: 'New Zealand',
@@ -613,10 +615,14 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     product.origins_tags = ['en:australia'];
     const open = calculateOpenPillar(product);
     const published = publishTransparencyPillar({ product, open });
-    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-pct-76-94');
+    expect(open.details.originsAdjustment).toBe(-1);
+    expect(open.details.originsProvenance).toBe('governed_packet');
+    expect(open.adjustments.filter((row) => row.family === 'origins')).toHaveLength(1);
     expect(published.assessmentLanes.origins).toBe('resolved');
-    expect(published.diagnostic.originsDisclosureSource).toBe('off');
-    expect(published.confidence).toBe('moderate');
+    expect(published.diagnostic.originsDisclosureSource).toBe('primary_contribution');
+    expect(published.diagnostic.originsDisclosureRequirement).toBe('stated_percentage_band');
+    expect(published.confidence).toBe('limited');
     expect(product.origins_tags).toEqual(['en:australia']);
     expect(product.rveelGovernedOrigins?.map((fact) => fact.claimType).sort()).toEqual(['made_in', 'packed_in']);
   });

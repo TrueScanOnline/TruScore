@@ -14,6 +14,7 @@ import {
 import { resolveOpenV15ScoringIngredients } from '../lib/truscoreEngine/pillars/openPillarIngredientsLanguage';
 import { ingredientComparisonKey } from '../contributions/originStructured';
 import type { GovernedOriginFact } from './governedFacts';
+import { explicitIngredientOriginFromMadeIn } from './disclosureReceiver';
 
 function recognizedKeys(countries: string[]): string[] {
   return [...new Set(countries.filter((country) => isRecognizedOriginCountry(country)).map((country) => originCountryKey(country)))];
@@ -47,17 +48,26 @@ export function ingredientOriginsForOffSubject(
 ): GovernedOriginFact[] {
   const subject = singleIngredientKey(product);
   if (!subject) return [];
-  return (facts || []).filter(
+  const direct = (facts || []).filter(
     (fact) =>
       fact.claimType === 'ingredient_origin' &&
       ingredientComparisonKey(fact.ingredientSubject) === subject
   );
+  const derived = (facts || [])
+    .map(explicitIngredientOriginFromMadeIn)
+    .filter((fact): fact is GovernedOriginFact => fact != null)
+    .filter((fact) => {
+      const named = ingredientComparisonKey(fact.ingredientSubject);
+      return named.length === 0 || named === subject;
+    });
+  return [...direct, ...derived];
 }
 
 /**
  * True when admitted disclosure evidence for the single ingredient names a different
- * country from OFF origins_tags or free-text origins. made_in and packed_in are not
- * scoring subjects.
+ * country from OFF origins_tags or free-text origins. A bare made_in or packed_in
+ * fact is not a scoring subject. An ingredient-origin proposition already derived
+ * from quantified made_in evidence is compared as that ingredient-origin fact.
  */
 export function admittedScoringOriginConflictsWithOff(
   product: Product,
