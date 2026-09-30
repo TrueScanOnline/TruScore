@@ -14,6 +14,39 @@ import type { ProductNutriments } from '../types/product';
 import type { GovernedOriginFact, ProductOriginsClaimType } from '../origins/governedFacts';
 import { PRODUCT_ORIGINS_CLAIM_TYPES } from '../origins/governedFacts';
 
+export const NUTRITION_CONTRIBUTION_BASES: { basis: NutritionBasis; label: string }[] = [
+  { basis: 'per_100g', label: 'Per 100 g' },
+];
+
+const PROJECTION_FIELDS = [
+  'rveelGovernedIngredientsText',
+  'rveelGovernedNutrimentKeys',
+  'rveelGovernedOrigins',
+  'rveelGovernedCertifications',
+  'rveelGovernedPacketClaims',
+  'rveelPacketAbsenceEstablished',
+  'rveelPacketNutritionStatus',
+  'rveelSourceNutriments',
+  'rveelSourceIngredientsText',
+  'rveelProjectionBound',
+] as const;
+
+/**
+ * Source product state. A previously calculated Result drops its governed overlay
+ * and returns the nutriments and ingredients that came from the product source.
+ */
+export function sourceProductState<T extends Product>(product: T): T {
+  const next = { ...product };
+  if (product.rveelProjectionBound) {
+    next.nutriments = product.rveelSourceNutriments;
+    next.ingredients_text = product.rveelSourceIngredientsText;
+  }
+  for (const key of PROJECTION_FIELDS) {
+    delete next[key];
+  }
+  return next;
+}
+
 export function projectAdmittedIngredientsDisplay(
   sourceText: string | undefined,
   admittedText: string | undefined
@@ -53,42 +86,42 @@ export type NutritionSourcePrefill = {
   sodiumUnit: 'mg' | 'g';
 };
 
-function nutritionBasisFromPer(nutritionDataPer: string | undefined): NutritionBasis {
-  const per = (nutritionDataPer || '100g').toLowerCase();
-  if (per.includes('serving')) return 'per_serving';
-  if (per.includes('ml')) return 'per_100ml';
-  return 'per_100g';
-}
-
-function nutritionSuffix(basis: NutritionBasis): '100g' | '100ml' | 'serving' {
-  if (basis === 'per_serving') return 'serving';
-  if (basis === 'per_100ml') return '100ml';
-  return '100g';
-}
-
 /**
- * Prefill from the source basis. Per 100 g reads `_100g` values.
- * OFF sodium is grams, so the prefilled unit is g.
+ * Contribution prefill is Per 100 g. Source Per serving values are left on the product
+ * and are not converted into this form.
  */
 export function nutritionPrefillFromSource(
   nutriments: Record<string, unknown> | undefined,
-  nutritionDataPer?: string
+  _nutritionDataPer?: string
 ): NutritionSourcePrefill {
-  const basis = nutritionBasisFromPer(nutritionDataPer);
-  const suffix = nutritionSuffix(basis);
   const amounts: Partial<Record<NutritionAttribute, string>> = {};
   if (nutriments) {
     for (const field of NUTRITION_FIELDS) {
-      const raw = nutriments[`${field.offNutrient}_${suffix}`];
+      const raw = nutriments[`${field.offNutrient}_100g`];
       if (typeof raw !== 'number' || !Number.isFinite(raw)) continue;
-      amounts[field.attribute] = String(raw);
+      amounts[field.attribute] = formatGovernedNutrientInput(raw);
     }
   }
   return {
-    basis,
+    basis: 'per_100g',
     amounts,
     sodiumUnit: amounts.sodium != null ? 'g' : 'mg',
   };
+}
+
+/** Stable consumer text for a nutrient input and its unchanged-value baseline. */
+export function formatGovernedNutrientInput(value: number): string {
+  const stable = stableNutrientNumber(value);
+  if (!Number.isFinite(stable)) return '';
+  return String(stable);
+}
+
+function sameStableNutrient(current: string | undefined, baseline: string | undefined): boolean {
+  if ((current || '').trim() === (baseline || '').trim()) return true;
+  const next = Number((current || '').trim());
+  const previous = Number((baseline || '').trim());
+  if (!Number.isFinite(next) || !Number.isFinite(previous)) return false;
+  return stableNutrientNumber(next) === stableNutrientNumber(previous);
 }
 
 function sodiumGrams(value: string | undefined, unit: 'mg' | 'g'): number | null {
@@ -117,8 +150,8 @@ export function nutritionAmountsToSubmit(
       if (field.attribute === 'sodium') {
         const next = sodiumGrams(raw, current.sodiumUnit);
         const previous = sodiumGrams(baseline.amounts.sodium, baseline.sodiumUnit);
-        if (next != null && previous != null && next === previous) continue;
-      } else if (raw === (baseline.amounts[field.attribute] || '').trim()) {
+        if (next != null && previous != null && stableNutrientNumber(next) === stableNutrientNumber(previous)) continue;
+      } else if (sameStableNutrient(raw, baseline.amounts[field.attribute])) {
         continue;
       }
     }

@@ -11,6 +11,7 @@ import { createDatabaseIndexes } from '../utils/databaseIndexes';
 import { initializeDatabaseConnection, executeWithRetry } from './databaseConnectionManager';
 import type { CacheProductOptions } from './cacheService';
 import { getOffRevalidationTimestamp } from './offRevalidationPolicy';
+import { sourceProductState } from '../contribution/governedDisplayProjection';
 
 const DB_NAME = 'truescan_products.db';
 let db: SQLite.SQLiteDatabase | null = null;
@@ -284,7 +285,7 @@ export async function lookupProductInSQLite(barcode: string, countryCode?: strin
  * Insert or update product in SQLite database
  */
 export async function saveProductToSQLite(
-  product: Product,
+  incoming: Product,
   countryCode?: string,
   options?: CacheProductOptions
 ): Promise<boolean> {
@@ -296,6 +297,7 @@ export async function saveProductToSQLite(
       return false;
     }
 
+    const product = sourceProductState(incoming);
     let lastUpdated: number;
     if (options?.offRevalidatedAt !== undefined) {
       lastUpdated = options.offRevalidatedAt;

@@ -4,6 +4,7 @@ import * as FileSystem from 'expo-file-system';
 import { Product } from '../types/product';
 import { logger } from '../utils/logger';
 import { getOffRevalidationTimestamp } from './offRevalidationPolicy';
+import { sourceProductState } from '../contribution/governedDisplayProjection';
 
 export interface CacheProductOptions {
   /** Set only after a successful World OFF retrieval or ≥24h revalidation. */
@@ -139,7 +140,8 @@ export async function cacheProduct(
 
     const existingEntry = cache[product.barcode];
     const offCachedAt = resolveStoredOffCachedAt(product, existingEntry?.product, options);
-    const { _cachedAt: _ignored, ...productWithoutCachedAt } = product as Product & {
+    const stored = sourceProductState(product);
+    const { _cachedAt: _ignored, ...productWithoutCachedAt } = stored as Product & {
       _cachedAt?: number;
     };
     const productToStore =

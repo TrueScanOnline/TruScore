@@ -304,7 +304,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     return fact;
   }
 
-  it('resolves the existing origins lane from a single-ingredient origin without changing Open scoring', async () => {
+  it('resolves an unquantified single-ingredient origin as qualified partial', async () => {
     const fact = await ingredientFact({
       subject: 'Honey',
       country: 'New Zealand',
@@ -312,8 +312,9 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     });
     const bare = calculateOpenPillar(honeyProduct());
     const open = calculateOpenPillar(honeyProduct([fact]));
-    expect(open.score).toBe(bare.score);
-    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(open.score).toBe(bare.score - 4);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-qualified-partial');
+    expect(open.details.originsAdjustment).toBe(-4);
     expect(honeyProduct([fact]).origins_tags).toBeUndefined();
     const published = publishTransparencyPillar({
       product: honeyProduct([fact]),
@@ -323,7 +324,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(published.assessmentLanes.origins).toBe('resolved');
     expect(published.confidence).toBe('limited');
     expect(published.s26?.code).toBe('TRANSPARENCY_LIMITED_PRIMARY_CONTRIBUTION');
-    expect(published.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
+    expect(published.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
   });
 
   it('does not resolve the lane from manufacture evidence or from a percentage without a qualifier', async () => {
@@ -372,7 +373,8 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
       product: honeyProduct([exact]),
       open: exactOpen,
     });
-    expect(exactOpen.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(exactOpen.details.originsAdjustmentId).toBe('open-v15-origins-pct-76-94');
+    expect(exactOpen.details.originsAdjustment).toBe(-1);
     expect(exactPublished.assessmentLanes.origins).toBe('resolved');
     expect(exactPublished.diagnostic.originsDisclosureRequirement).toBe('stated_percentage_band');
     expect(exactPublished.confidence).toBe('limited');
@@ -388,7 +390,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
       product: honeyProduct([qualified]),
       open: calculateOpenPillar(honeyProduct([qualified])),
     });
-    expect(qualifiedPublished.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
+    expect(qualifiedPublished.diagnostic.originsDisclosureRequirement).toBe('stated_percentage_band');
     expect(qualifiedPublished.assessmentLanes.origins).toBe('resolved');
   });
 
@@ -430,7 +432,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(published.confidence).toBe('limited');
     expect(published.diagnostic.originsDisclosureSource).toBe('primary_contribution');
     expect(published.diagnostic.admittedUserPrevailsOverOff).toBe(true);
-    expect(published.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
+    expect(published.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
     expect(admittedUserOriginPrevailsForDisplay(product, [fact])).toBe(true);
 
     const agreed = honeyProduct([fact]);
@@ -554,9 +556,10 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     const bareProduct = honeyProduct([bareGrown]);
     const bareOpen = calculateOpenPillar(bareProduct);
     const barePublished = publishTransparencyPillar({ product: bareProduct, open: bareOpen });
-    expect(bareOpen.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(bareOpen.details.originsAdjustmentId).toBe('open-v15-origins-qualified-partial');
+    expect(bareOpen.details.originsAdjustment).toBe(-4);
     expect(barePublished.assessmentLanes.origins).toBe('resolved');
-    expect(barePublished.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
+    expect(barePublished.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
     expect(bareGrown.claimType).toBe('grown_in');
 
     const qualifiedGrown = await placeFact({
@@ -569,9 +572,10 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     const qualifiedProduct = honeyProduct([qualifiedGrown]);
     const qualifiedOpen = calculateOpenPillar(qualifiedProduct);
     const qualifiedPublished = publishTransparencyPillar({ product: qualifiedProduct, open: qualifiedOpen });
-    expect(qualifiedOpen.score).toBe(bareOpen.score);
+    expect(qualifiedOpen.details.originsAdjustmentId).toBe('open-v15-origins-pct-76-94');
+    expect(qualifiedOpen.details.originsAdjustment).toBe(-1);
     expect(qualifiedPublished.assessmentLanes.origins).toBe('resolved');
-    expect(qualifiedPublished.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
+    expect(qualifiedPublished.diagnostic.originsDisclosureRequirement).toBe('stated_percentage_band');
     expect(qualifiedPublished.confidence).toBe('limited');
 
     const produced = await placeFact({
@@ -585,7 +589,8 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     const producedProduct = honeyProduct([produced]);
     const producedOpen = calculateOpenPillar(producedProduct);
     const producedPublished = publishTransparencyPillar({ product: producedProduct, open: producedOpen });
-    expect(producedOpen.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(producedOpen.details.originsAdjustmentId).toBe('open-v15-origins-pct-76-94');
+    expect(producedOpen.details.originsAdjustment).toBe(-1);
     expect(producedPublished.assessmentLanes.origins).toBe('resolved');
     expect(producedPublished.diagnostic.originsDisclosureRequirement).toBe('stated_percentage_band');
     expect(produced.ingredientSubject).toBe('Honey');
@@ -639,7 +644,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(published.confidence).toBe('limited');
     expect(published.diagnostic.originsDisclosureSource).toBe('primary_contribution');
     expect(published.diagnostic.admittedUserPrevailsOverOff).toBe(true);
-    expect(published.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
+    expect(published.diagnostic.originsDisclosureRequirement).toBe('stated_percentage_band');
 
     const insufficient = await placeFact({
       claimType: 'produced_in',
@@ -653,7 +658,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(blocked.origins_tags).toEqual(['en:australia']);
     expect(blockedOpen.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
     expect(blockedPublished.assessmentLanes.origins).toBe('resolved');
-    expect(blockedPublished.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
+    expect(blockedPublished.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
     expect(blockedPublished.diagnostic.originsDisclosureSource).toBe('primary_contribution');
     expect(blockedPublished.diagnostic.admittedUserPrevailsOverOff).toBe(true);
   });

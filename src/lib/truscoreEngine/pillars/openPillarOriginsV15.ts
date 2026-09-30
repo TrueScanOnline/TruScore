@@ -28,7 +28,7 @@ const PLACEHOLDER_ORIGIN_VALUES = new Set([
 export interface OpenOriginsV15Assessment {
   id: OpenV15AdjustmentId;
   value: number;
-  provenance: 'off_raw_origins' | 'off_insufficient' | 'off_conflict' | 'none';
+  provenance: 'off_raw_origins' | 'off_insufficient' | 'off_conflict' | 'governed_packet' | 'none';
   detail: string;
   /**
    * Non-scoring diagnostic truth (S28 / Rateability contribution prefill).

@@ -135,7 +135,7 @@ describe('functional-to-consumer integration closure', () => {
       open,
       [fact]
     );
-    expect(single).toEqual({ resolved: true, requirement: 'evidently_complete' });
+    expect(single).toEqual({ resolved: true, requirement: 'qualified_partial' });
     const ambiguous = resolveGovernedOriginsDisclosure(
       { barcode: '1', ingredients_text_en: 'raspberries, sugar' } as Product,
       open,

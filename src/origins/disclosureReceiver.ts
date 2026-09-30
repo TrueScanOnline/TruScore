@@ -1,10 +1,9 @@
 /**
  * Transparency Origins Disclosure receiver.
- * Open scoring and origins_tags stay unchanged.
  * ingredient_origin, grown_in, and produced_in may enter the existing v15
- * completeness rules. A bare made_in or packed_in fact does not. A made_in fact that
- * already carries an explicit percentage and qualifier contributes that
- * ingredient-origin proposition only. A Grown in or Produced in
+ * completeness rules. A quantified ingredient-origin proposition, including one
+ * carried on a made_in fact, maps into the existing Open v15 completeness states.
+ * A bare made_in or packed_in fact does not. A Grown in or Produced in
  * statement uses the existing completeness check. When that statement names no
  * ingredient and the product has one governed ingredient, that identity is used.
  * Ambiguous ingredient identity fails closed.
@@ -19,7 +18,7 @@ import {
 } from '../lib/truscoreEngine/pillars/openPillarOriginsV15';
 import { resolveOpenV15ScoringIngredients } from '../lib/truscoreEngine/pillars/openPillarIngredientsLanguage';
 import { ingredientComparisonKey } from '../contributions/originStructured';
-import type { GovernedOriginFact } from './governedFacts';
+import type { OpenV15AdjustmentId } from '../lib/truscoreEngine/pillars/openPillarV15Registry';
 
 export type OriginsDisclosureRequirement =
   | 'evidently_complete'
@@ -107,16 +106,17 @@ export function resolveGovernedOriginsDisclosure(
   open: OpenPillarResult,
   facts: GovernedOriginFact[] | undefined
 ): OriginsDisclosureResolution {
-  const scoringFacts = [
-    ...(facts || []).filter((fact) => DISCLOSURE_CLAIM_TYPES.has(fact.claimType)),
-    ...(facts || []).map(explicitIngredientOriginFromMadeIn).filter((fact): fact is GovernedOriginFact => !!fact),
-  ];
+  const scoringFacts = scoringOriginFacts(facts);
   if (scoringFacts.length === 0) return { resolved: false };
 
   const countries = [...new Set(scoringFacts.flatMap(recognizedCountries))];
   if (countries.length !== 1) return { resolved: false };
 
-  if (scoringFacts.some((fact) => fact.percentage != null && fact.percentageQualifier == null)) {
+  if (
+    scoringFacts.some(
+      (fact) => fact.percentage != null && fact.percentageQualifier == null && fact.percentage !== 100
+    )
+  ) {
     return { resolved: false };
   }
 
@@ -125,6 +125,20 @@ export function resolveGovernedOriginsDisclosure(
   const single = ingredients.usable
     ? singleIngredientEvidentlyCompleteEligible(ingredients.scoringText, open.details.governedFlagCount)
     : { eligible: false };
+
+  const pinned = scoringFacts.filter(
+    (fact) =>
+      fact.percentage != null &&
+      (fact.percentageQualifier === 'exactly' ||
+        fact.percentageQualifier === 'at_least' ||
+        (fact.percentage === 100 && fact.percentageQualifier == null))
+  );
+  if (pinned.length === 1 && pinned[0].percentage != null) {
+    if (pinned[0].percentage === 100) return { resolved: true, requirement: 'evidently_complete' };
+    if (exactPercentageInExistingBand(pinned[0].percentage)) {
+      return { resolved: true, requirement: 'stated_percentage_band' };
+    }
+  }
 
   const ingredientOrigins = scoringFacts.filter((fact) => fact.claimType === 'ingredient_origin');
   const placeOrigins = scoringFacts.filter(
@@ -139,8 +153,10 @@ export function resolveGovernedOriginsDisclosure(
   if (
     ingredientMatch &&
     ingredientFact &&
-    (ingredientFact.percentage == null ||
-      (ingredientFact.percentageQualifier === 'exactly' && ingredientFact.percentage === 100))
+    ingredientFact.percentage === 100 &&
+    (ingredientFact.percentageQualifier == null ||
+      ingredientFact.percentageQualifier === 'exactly' ||
+      ingredientFact.percentageQualifier === 'at_least')
   ) {
     return { resolved: true, requirement: 'evidently_complete' };
   }
@@ -149,8 +165,10 @@ export function resolveGovernedOriginsDisclosure(
     placeMatch &&
     placeFact &&
     placeOrigins.length === scoringFacts.length &&
-    (placeFact.percentage == null ||
-      (placeFact.percentageQualifier === 'exactly' && placeFact.percentage === 100))
+    placeFact.percentage === 100 &&
+    (placeFact.percentageQualifier == null ||
+      placeFact.percentageQualifier === 'exactly' ||
+      placeFact.percentageQualifier === 'at_least')
   ) {
     return { resolved: true, requirement: 'evidently_complete' };
   }
@@ -180,15 +198,78 @@ export function resolveGovernedOriginsDisclosure(
   const ingredientUnquantified =
     ingredientOrigins.length > 0 && ingredientOrigins.every((row) => row.percentage == null);
   const ingredientStatement = ingredientOrigins.some((row) => !!row.exactWording?.trim());
-  if (ingredientStatement && (ingredientQualified || (ingredientUnquantified && !single.eligible))) {
+  if (
+    ingredientStatement &&
+    (ingredientQualified ||
+      (ingredientUnquantified && ingredientMatch) ||
+      (ingredientUnquantified && !single.eligible))
+  ) {
     return { resolved: true, requirement: 'qualified_partial' };
   }
 
   const placeQualified = placeOrigins.some(isQualifiedQualifier);
+  const placeUnquantified = placeOrigins.length > 0 && placeOrigins.every((row) => row.percentage == null);
   const placeStatement = placeOrigins.some((row) => !!row.exactWording?.trim());
-  if (placeStatement && placeQualified) {
+  if (placeStatement && (placeQualified || (placeUnquantified && placeMatch))) {
     return { resolved: true, requirement: 'qualified_partial' };
   }
 
   return { resolved: false };
+}
+
+/**
+ * Maps prevailing governed packet origins into an existing Open v15 adjustment.
+ * Bare manufacturing and packing statements are not inputs. Points stay on the registry.
+ */
+export function governedOriginsOpenAssessment(
+  product: Product,
+  governedFlagCount: number
+): { id: OpenV15AdjustmentId; detail: string } | null {
+  const resolution = resolveGovernedOriginsDisclosure(
+    product,
+    { details: { governedFlagCount } } as OpenPillarResult,
+    product.rveelGovernedOrigins
+  );
+  if (!resolution.resolved) return null;
+  if (resolution.requirement === 'evidently_complete') {
+    return {
+      id: 'open-v15-origins-evidently-complete',
+      detail: 'Governed packet disclosure accounts for the ingredient origin',
+    };
+  }
+  if (resolution.requirement === 'qualified_partial') {
+    return {
+      id: 'open-v15-origins-qualified-partial',
+      detail: 'Governed packet disclosure has provenance without a quantitative percentage',
+    };
+  }
+  const percentage = scoringOriginFacts(product.rveelGovernedOrigins).find(
+    (fact) =>
+      fact.percentage != null &&
+      (fact.percentageQualifier === 'exactly' || fact.percentageQualifier === 'at_least')
+  )?.percentage;
+  if (percentage == null) return null;
+  if (percentage >= 95 && percentage <= 99) {
+    return { id: 'open-v15-origins-pct-95-99', detail: `Governed packet disclosure accounts for ${percentage}%` };
+  }
+  if (percentage >= 76 && percentage <= 94) {
+    return { id: 'open-v15-origins-pct-76-94', detail: `Governed packet disclosure accounts for ${percentage}%` };
+  }
+  if (percentage >= 50 && percentage <= 75) {
+    return { id: 'open-v15-origins-pct-50-75', detail: `Governed packet disclosure accounts for ${percentage}%` };
+  }
+  if (percentage >= 25 && percentage <= 49) {
+    return { id: 'open-v15-origins-pct-25-49', detail: `Governed packet disclosure accounts for ${percentage}%` };
+  }
+  if (percentage >= 1 && percentage <= 24) {
+    return { id: 'open-v15-origins-pct-1-24', detail: `Governed packet disclosure accounts for ${percentage}%` };
+  }
+  return null;
+}
+
+function scoringOriginFacts(facts: GovernedOriginFact[] | undefined): GovernedOriginFact[] {
+  return [
+    ...(facts || []).filter((fact) => DISCLOSURE_CLAIM_TYPES.has(fact.claimType)),
+    ...(facts || []).map(explicitIngredientOriginFromMadeIn).filter((fact): fact is GovernedOriginFact => !!fact),
+  ];
 }

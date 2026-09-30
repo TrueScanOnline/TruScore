@@ -30,6 +30,7 @@ function ingredientLaneResolved(open: OpenPillarResult): boolean {
 }
 
 function offOriginsDisclosureResolved(open: OpenPillarResult): boolean {
+  if (open.details.originsProvenance === 'governed_packet') return false;
   // Registry conflict ID retained for possible future wiring; free-text contradiction
   // is intentionally insufficient/unresolved (correction 2) — do not map to conflict lane.
   if (open.details.originsAdjustmentId === 'open-v15-origins-evidently-complete') {

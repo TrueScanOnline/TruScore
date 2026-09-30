@@ -181,15 +181,24 @@ export interface Product {
    * Not written back onto source ingredients_text.
    */
   rveelGovernedIngredientsText?: string;
-  /** Keys on the consumer nutriment panel that come from prevailing Rveel nutrition evidence. */
+/** Keys on the consumer nutriment panel that come from prevailing Rveel nutrition evidence. */
   rveelGovernedNutrimentKeys?: string[];
+  /**
+   * Source nutriments captured before a governed overlay. Recalculation and cache
+   * restore these. They are not a second evidence store.
+   */
+  rveelSourceNutriments?: ProductNutriments;
+  /** Source ingredients list captured before a governed ingredients projection. */
+  rveelSourceIngredientsText?: string;
+  /** True when this object was produced by applying a governed projection to source data. */
+  rveelProjectionBound?: boolean;
   /** Short consumer status for a saved packet ingredients or nutrition contribution. */
   rveelPacketNutritionStatus?: string;
   /** Prevailing admitted certification wording. Not copied onto labels_tags. */
   rveelGovernedCertifications?: string[];
   /** Established packet-claim absence. Consumer copy only; not a scoring event. */
   rveelPacketAbsenceEstablished?: boolean;
-  /** Admitted Product Origins facts for the existing origins card. Not an Open score input. */
+  /** Admitted Product Origins facts. Assessed by the existing Open v15 origins states. Not copied onto origins_tags. */
   rveelGovernedOrigins?: import('../origins/governedFacts').GovernedOriginFact[];
   /** Admitted packet wording shown on the Packet Claims card. Not a set label. */
   rveelGovernedPacketClaims?: import('../claims/packetClaimReceiver').GovernedPacketClaimFact[];

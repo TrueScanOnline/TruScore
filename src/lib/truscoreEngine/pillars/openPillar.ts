@@ -15,6 +15,7 @@ import { logger } from '../../../utils/logger';
 import { powershellLogger } from '../../../utils/powershellLogger';
 import { assessOpenPillarHiddenTerms } from './openPillarHiddenTerms';
 import { assessOpenOriginsV15 } from './openPillarOriginsV15';
+import { governedOriginsOpenAssessment } from '../../../origins/disclosureReceiver';
 import {
   buildOpenClarityCommentaryMetadata,
   buildOpenOriginsCommentaryMetadata,
@@ -135,12 +136,24 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   const clarityAdj = pushAdjustment(adjustments, clarityId, clarityMetadata);
   score += clarityAdj.value;
 
-  const originsAssessment = assessOpenOriginsV15(
+  const offOriginsAssessment = assessOpenOriginsV15(
     product,
     ingredientsText,
     usable,
     governedFlagCount
   );
+  const governedOrigins =
+    offOriginsAssessment.id === 'open-v15-origins-insufficient'
+      ? governedOriginsOpenAssessment(product, governedFlagCount)
+      : null;
+  const originsAssessment = governedOrigins
+    ? {
+        ...offOriginsAssessment,
+        id: governedOrigins.id,
+        detail: governedOrigins.detail,
+        provenance: 'governed_packet' as const,
+      }
+    : offOriginsAssessment;
   const originsMetadata = buildOpenOriginsCommentaryMetadata(
     product,
     ingredientsText,

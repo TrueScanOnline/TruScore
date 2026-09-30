@@ -23,6 +23,7 @@ import {
   projectGovernedCertificationNames,
   projectGovernedNutriments,
   selectPrevailingGovernedIngredientsText,
+  sourceProductState,
 } from '../contribution/governedDisplayProjection';
 import type { SharedEvidenceSnapshot } from '../evidenceAuthority/types';
 
@@ -104,15 +105,19 @@ export async function calculateTrustScore(
   );
   const governedOrigins = selectPrevailingOriginFacts(storedEvidence);
   const governedPacketClaims = selectPrevailingPacketClaims(storedEvidence);
+  const source = sourceProductState(product);
   const governedIngredientsText = selectPrevailingGovernedIngredientsText(storedEvidence);
-  const nutritionProjection = projectGovernedNutriments(product.nutriments, storedEvidence);
+  const nutritionProjection = projectGovernedNutriments(source.nutriments, storedEvidence);
   const ingredientsProjection = projectAdmittedIngredientsDisplay(
-    product.ingredients_text,
+    source.ingredients_text,
     governedIngredientsText
   );
   const effectiveProduct: Product = {
-    ...product,
+    ...source,
     ...ingredientsProjection,
+    rveelProjectionBound: true,
+    rveelSourceNutriments: source.nutriments,
+    rveelSourceIngredientsText: source.ingredients_text,
     ...(nutritionProjection.governedKeys.length > 0
       ? {
           nutriments: nutritionProjection.nutriments,

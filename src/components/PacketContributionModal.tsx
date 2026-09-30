@@ -43,6 +43,7 @@ import {
   type ContributionEntryContext,
 } from '../contribution/resultContributionActions';
 import {
+  NUTRITION_CONTRIBUTION_BASES,
   nutritionAmountsToSubmit,
   originDraftSignature,
   originRowsToSubmit,
@@ -91,12 +92,6 @@ const ORIGIN_LABELS: Record<ProductOriginsClaimType, string> = {
   packed_in: 'Packed in',
   ingredient_origin: 'Ingredient origin',
 };
-
-const BASIS_LABELS: { basis: NutritionBasis; label: string }[] = [
-  { basis: 'per_100g', label: 'Per 100 g' },
-  { basis: 'per_100ml', label: 'Per 100 mL' },
-  { basis: 'per_serving', label: 'Per serving' },
-];
 
 const JOURNEY: Record<
   ContributionEntryContext,
@@ -242,10 +237,15 @@ export default function PacketContributionModal({
     setIncludedContexts(packetInformationContext(entryContext) ? ['packetClaims', 'certifications'] : [entryContext]);
     setIngredientsText(initialIngredientsRef.current || '');
     const nutrition = initialNutritionRef.current;
-    nutritionBaselineRef.current = nutrition || { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' };
-    setBasis(nutrition?.basis ?? null);
-    setAmounts(nutrition?.amounts ?? {});
-    setSodiumUnit(nutrition?.sodiumUnit ?? 'mg');
+    const mvpNutrition: NutritionSourcePrefill = {
+      basis: 'per_100g',
+      amounts: nutrition?.amounts ?? {},
+      sodiumUnit: nutrition?.sodiumUnit ?? 'mg',
+    };
+    nutritionBaselineRef.current = mvpNutrition;
+    setBasis('per_100g');
+    setAmounts(mvpNutrition.amounts);
+    setSodiumUnit(mvpNutrition.sodiumUnit);
     setNutritionEdited([]);
     setOriginContext(initialOriginContextRef.current || []);
     setOffOriginContext(knownOffOriginRef.current || null);
@@ -707,14 +707,7 @@ export default function PacketContributionModal({
             ) : null}
             {activeContext === 'nutrition' ? (
               <View>
-                <Text style={{ color: colors.text }}>Values are shown</Text>
-                <View style={styles.row}>
-                  {BASIS_LABELS.map((item) => (
-                    <TouchableOpacity key={item.basis} onPress={() => setBasis(item.basis)}>
-                      <Text style={{ color: basis === item.basis ? colors.primary : colors.text }}>{item.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <Text style={{ color: colors.text }}>{NUTRITION_CONTRIBUTION_BASES[0].label}</Text>
                 {NUTRITION_FIELDS.map((field) => (
                   <View key={field.attribute}>
                     <Text style={{ color: colors.text }}>{field.packetConcept}</Text>

@@ -30,6 +30,12 @@ import { consumerClaimsScore } from '../../../lib/rateability/claimsPublication'
 import { assessGovernedNutrientsFromProduct } from '../../../nutrition/governedNutrientAssessment';
 import type { Product } from '../../../types/product';
 import { calculateTrustScore } from '../../../utils/trustScore';
+import { cacheProduct, getCachedProduct } from '../../../services/cacheService';
+import {
+  NUTRITION_CONTRIBUTION_BASES,
+  nutritionAmountsToSubmit,
+  nutritionPrefillFromSource,
+} from '../../../contribution/governedDisplayProjection';
 
 const BARCODE = '9300673555555';
 const memory = new Map<string, string>();
@@ -263,8 +269,11 @@ describe('consumer integration journeys', () => {
     expect(fact?.percentageQualifier).toBe('at_least');
     expect(before._publication?.transparency.assessmentLanes.origins).toBe('unassessed');
     expect(shown._publication?.transparency.assessmentLanes.origins).toBe('resolved');
-    expect(shown._publication?.transparency.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
-    expect(calculateOpenPillar(shown).details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+    expect(shown._publication?.transparency.diagnostic.originsDisclosureRequirement).toBe('stated_percentage_band');
+    const originsAdjustment = calculateOpenPillar(shown).adjustments.find(
+      (row) => row.id === 'open-v15-origins-pct-76-94'
+    );
+    expect(originsAdjustment?.value).toBe(-1);
     expect(resultContributionActions(shown).originsAction).toBe('update');
   });
 
@@ -320,5 +329,178 @@ describe('consumer integration journeys', () => {
     const reprojected = await calculateTrustScore(staleSource, { authoritativeSnapshot: snapshot });
     expect(reprojected.nutriments?.sugars_100g).toBe(2);
     expect(staleSource.nutriments?.sugars_100g).toBe(10);
+  });
+
+  it('keeps governed nutrition and ingredients as projections through recalculation, withdrawal, and cache', async () => {
+    const source = sourceProduct();
+    const nutrition = await admitIngredientsNutritionEvidence(
+      (
+        await submitIngredientsNutritionEvidence({
+          barcode: BARCODE,
+          nutritionBasis: 'per_100g',
+          amounts: [{ attribute: 'sugars', value: 2, unit: 'g' }],
+          ingredientsText: 'Raspberries',
+          persistRemote: false,
+        })
+      ).evidenceId
+    );
+    const snapshot = snapshotOf([nutrition], 4000);
+    const shown = await calculateTrustScore(source, { authoritativeSnapshot: snapshot });
+    expect(shown.nutriments?.sugars_100g).toBe(2);
+    expect(shown.rveelGovernedIngredientsText).toBe('Raspberries');
+    expect(shown.rveelSourceNutriments?.sugars_100g).toBe(10);
+    expect(shown.ingredients_text).toBeUndefined();
+    expect(source.nutriments?.sugars_100g).toBe(10);
+
+    const again = await calculateTrustScore(shown, { authoritativeSnapshot: snapshot });
+    expect(again.nutriments?.sugars_100g).toBe(2);
+    expect(again.rveelSourceNutriments?.sugars_100g).toBe(10);
+    expect(again.rveelGovernedIngredientsText).toBe('Raspberries');
+    expect(source.nutriments?.sugars_100g).toBe(10);
+
+    const withdrawn = await calculateTrustScore(again, { authoritativeSnapshot: snapshotOf([], 5000) });
+    expect(withdrawn.nutriments?.sugars_100g).toBe(10);
+    expect(withdrawn.rveelGovernedNutrimentKeys).toBeUndefined();
+    expect(withdrawn.rveelGovernedIngredientsText).toBeUndefined();
+    expect(withdrawn.rveelSourceNutriments?.sugars_100g).toBe(10);
+    expect(assessGovernedNutrientsFromProduct(withdrawn).nutrients.totalSugars.rawPer100).toBe(10);
+
+    await cacheProduct(shown, false);
+    const loaded = await getCachedProduct(BARCODE, false);
+    expect(loaded?.nutriments?.sugars_100g).toBe(10);
+    expect(loaded?.ingredients_text).toBeUndefined();
+    expect(loaded?.rveelGovernedNutrimentKeys).toBeUndefined();
+    expect(loaded?.rveelGovernedIngredientsText).toBeUndefined();
+    const fromCache = await calculateTrustScore(loaded!, { authoritativeSnapshot: snapshot });
+    expect(fromCache.nutriments?.sugars_100g).toBe(2);
+    expect(fromCache.rveelGovernedIngredientsText).toBe('Raspberries');
+    expect(fromCache.rveelSourceNutriments?.sugars_100g).toBe(10);
+  });
+
+  it('prefills, edits, and publishes Nutrition on the Per 100 g basis', async () => {
+    expect(NUTRITION_CONTRIBUTION_BASES.map((item) => item.basis)).toEqual(['per_100g']);
+    const source = sourceProduct({
+      nutriments: { sugars_100g: 10, fat_serving: 4 },
+      nutrition_data_per: 'serving',
+    });
+    const prefill = nutritionPrefillFromSource(
+      source.nutriments as Record<string, unknown>,
+      source.nutrition_data_per
+    );
+    expect(prefill.basis).toBe('per_100g');
+    expect(prefill.amounts.sugars).toBe('10');
+    expect(prefill.amounts.fat).toBeUndefined();
+    const edited = { ...prefill, amounts: { ...prefill.amounts, sugars: '2' } };
+    expect(nutritionAmountsToSubmit(edited, prefill, ['sugars'])).toEqual([
+      { attribute: 'sugars', value: 2, unit: 'g' },
+    ]);
+    const submitted = await submitIngredientsNutritionEvidence({
+      barcode: BARCODE,
+      nutritionBasis: 'per_100g',
+      amounts: [{ attribute: 'sugars', value: 2, unit: 'g' }],
+      persistRemote: false,
+    });
+    const admitted = await admitIngredientsNutritionEvidence(submitted.evidenceId);
+    const shown = await resultFrom([admitted], source);
+    expect(shown.nutriments?.sugars_100g).toBe(2);
+    expect(shown.nutriments?.fat_serving).toBe(4);
+    expect(assessGovernedNutrientsFromProduct(shown).nutrients.totalSugars.rawPer100).toBe(2);
+    const reloaded = await calculateTrustScore(shown, { authoritativeSnapshot: snapshotOf([admitted]) });
+    expect(reloaded.nutriments?.sugars_100g).toBe(2);
+    expect(reloaded.rveelSourceNutriments?.sugars_100g).toBe(10);
+  });
+
+  it('does not submit a nutrient whose only change is floating-point formatting', () => {
+    const prefill = nutritionPrefillFromSource(
+      { fat_100g: 4.98749983310699, sugars_100g: 13.474999666214012 },
+      '100g'
+    );
+    expect(prefill.amounts.fat).toBe('4.9875');
+    expect(prefill.amounts.sugars).toBe('13.475');
+    expect(prefill.amounts.fat).not.toContain('83310699');
+    expect(prefill.amounts.sugars).not.toContain('666214');
+    expect(nutritionAmountsToSubmit(prefill, prefill, ['fat', 'sugars'])).toEqual([]);
+  });
+
+  it('scores a reviewed 100% ingredient-origin statement as evidently complete', async () => {
+    const wording = 'Made in Australia from 100% Australian ingredients';
+    const submitted = await submitGovernedEvidence({
+      barcode: BARCODE,
+      domain: 'origins',
+      claimValue: 'Australia',
+      exactWording: wording,
+      asProductionEpoch: true,
+      persistRemote: false,
+      originStructured: {
+        claimType: 'made_in',
+        primaryCountry: 'Australia',
+        ingredientOriginPercentage: 100,
+        percentageQualifier: 'exactly',
+      },
+    });
+    const before = await resultFrom([]);
+    const shown = await resultFrom([admitAt(submitted)]);
+    const open = calculateOpenPillar(shown);
+    expect(shown.rveelGovernedOrigins?.[0]?.claimType).toBe('made_in');
+    expect(shown.rveelGovernedOrigins?.[0]?.percentage).toBe(100);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(open.details.originsAdjustment).toBe(8);
+    expect(open.score).toBeGreaterThan(calculateOpenPillar(before).score);
+    expect(shown._publication?.transparency.assessmentLanes.origins).toBe('resolved');
+    expect(resultContributionActions(shown).originsAction).toBe('update');
+  });
+
+  it('publishes overall TruScore only after Packet assessment makes every pillar rateable', () => {
+    const product = sourceProduct({
+      nutriscore_grade: 'a',
+      nova_group: 2,
+      ecoscore_grade: 'b',
+      ingredients_text: 'Raspberries',
+      ingredients_text_en: 'Raspberries',
+      lang: 'en',
+      ingredients_lc: 'en',
+    });
+    const withBenchmark = (ethics: ReturnType<typeof calculateEthicsPillar>) => ({
+      ...ethics,
+      details: {
+        ...ethics.details,
+        claimsAssessment: {
+          ...ethics.details.claimsAssessment!,
+          benchmark_checks: [
+            { source: 'ktc' as const, status: 'no_finding' as const },
+            { source: 'bbfaw' as const, status: 'no_finding' as const },
+          ],
+        },
+      },
+    });
+    const benchmarkOnly = settleCrossPillarPublication({
+      product,
+      body: calculateBodyPillar(product),
+      planet: calculatePlanetPillar(product),
+      ethics: withBenchmark(calculateEthicsPillar(product)),
+      open: calculateOpenPillar(product),
+      overallInternalScore: 60,
+      settled: true,
+    });
+    expect(benchmarkOnly.claims.publicationStatus).toBe('nr');
+    expect(benchmarkOnly.overall.publicationStatus).toBe('nr');
+    expect(benchmarkOnly.overall.publishedScore).toBeNull();
+
+    const packetAssessed = settleCrossPillarPublication({
+      product,
+      body: calculateBodyPillar(product),
+      planet: calculatePlanetPillar(product),
+      ethics: withBenchmark(calculateEthicsPillar(product, { admittedPacketAbsence: true })),
+      open: calculateOpenPillar(product),
+      overallInternalScore: 60,
+      settled: true,
+    });
+    expect(packetAssessed.claims.publicationStatus).toBe('rated');
+    expect(packetAssessed.claims.publishedScore).toBe(15);
+    expect(packetAssessed.body.publicationStatus).toBe('rated');
+    expect(packetAssessed.planet.publicationStatus).toBe('rated');
+    expect(packetAssessed.transparency.publicationStatus).toBe('rated');
+    expect(packetAssessed.overall.publicationStatus).toBe('rated');
+    expect(packetAssessed.overall.publishedScore).not.toBeNull();
   });
 });
