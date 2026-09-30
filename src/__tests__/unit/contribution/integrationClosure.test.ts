@@ -55,7 +55,8 @@ describe('functional-to-consumer integration closure', () => {
     const again = projectAdmittedIngredientsDisplay(first.ingredients_text, source);
     expect(again).toEqual({ rveelGovernedIngredientsText: source });
     const withSource = projectAdmittedIngredientsDisplay('oats', source);
-    expect(withSource).toEqual({ ingredients_text: 'oats' });
+    expect(withSource.ingredients_text).toBe('oats');
+    expect(withSource.rveelGovernedIngredientsText).toBe(source);
   });
 
   it('recognises a characterising percentage for comparison and keeps the evidence subject distinct', () => {

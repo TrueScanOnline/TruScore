@@ -6,10 +6,11 @@
 import type { Product } from '../types/product';
 import { resultContributionActions } from './resultContributionActions';
 import type { ContributionEvidence } from '../contributions/types';
-import { evidenceKeyOf, selectPrevailingAdmittedEvidence } from '../contributions/admissionContract';
+import { evidenceKeyOf, selectPrevailingAdmittedEvidence, canApplyToProductionReceiver } from '../contributions/admissionContract';
 import type { OriginPercentageQualifier } from '../config/contributionPolicy';
 import type { OriginQualification } from '../contributions/originStructured';
-import { NUTRITION_FIELDS, type NutritionAttribute, type NutritionBasis, type StatedNutritionAmount } from '../ingredientsNutrition/nutritionSchema';
+import { NUTRITION_FIELDS, nutritionField, offNutrientValue, type NutritionAttribute, type NutritionBasis, type StatedNutritionAmount } from '../ingredientsNutrition/nutritionSchema';
+import type { ProductNutriments } from '../types/product';
 import type { GovernedOriginFact, ProductOriginsClaimType } from '../origins/governedFacts';
 import { PRODUCT_ORIGINS_CLAIM_TYPES } from '../origins/governedFacts';
 
@@ -18,10 +19,12 @@ export function projectAdmittedIngredientsDisplay(
   admittedText: string | undefined
 ): { ingredients_text?: string; rveelGovernedIngredientsText?: string } {
   const source = sourceText?.trim();
-  if (source) return { ingredients_text: sourceText };
   const admitted = admittedText?.trim();
   if (!admitted) return { ingredients_text: sourceText };
-  return { rveelGovernedIngredientsText: admitted };
+  return {
+    ...(source ? { ingredients_text: sourceText } : {}),
+    rveelGovernedIngredientsText: admitted,
+  };
 }
 
 export function projectGovernedCertificationNames(records: ContributionEvidence[]): string[] {
@@ -213,4 +216,97 @@ export function bodyDataLimitationActions(product: Product): Array<{
   if (actions.addNutrition) rows.push({ label: 'Add nutrition', destination: 'nutrition' });
   if (actions.addIngredients) rows.push({ label: 'Add ingredients', destination: 'ingredients' });
   return rows;
+}
+
+/** Removes binary float noise such as 5.69999980926514 without a new conversion rule. */
+export function stableNutrientNumber(value: number): number {
+  if (!Number.isFinite(value)) return value;
+  return Math.round(value * 1e6) / 1e6;
+}
+
+function nutritionKeySuffix(basis: NutritionBasis): '100g' | '100ml' | 'serving' {
+  if (basis === 'per_serving') return 'serving';
+  if (basis === 'per_100ml') return '100ml';
+  return '100g';
+}
+
+export function selectPrevailingGovernedIngredientsText(
+  evidence: ContributionEvidence[]
+): string | undefined {
+  let chosen: ContributionEvidence | null = null;
+  const seen = new Set<string>();
+  for (const candidate of evidence) {
+    if (candidate.domain !== 'ingredients_nutrition') continue;
+    const key = evidenceKeyOf(candidate);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const prevailing = selectPrevailingAdmittedEvidence(evidence, {
+      barcode: candidate.barcode,
+      domain: 'ingredients_nutrition',
+      claimKey: candidate.claimKey,
+      variantKey: candidate.variantKey,
+    });
+    if (!prevailing || !canApplyToProductionReceiver(prevailing, 'body_ingredients_nutrition')) continue;
+    const text = prevailing.ingredientsNutrition?.ingredientsText?.trim();
+    if (!text) continue;
+    if (!chosen || prevailing.evidenceVersion > chosen.evidenceVersion) chosen = prevailing;
+  }
+  return chosen?.ingredientsNutrition?.ingredientsText?.trim() || undefined;
+}
+
+/**
+ * Overlay prevailing admitted nutrients onto a copy of the source panel.
+ * Source nutriments are not mutated. Keys listed in governedKeys are Rveel values.
+ */
+export function projectGovernedNutriments(
+  source: ProductNutriments | undefined,
+  evidence: ContributionEvidence[]
+): { nutriments: ProductNutriments | undefined; nutritionDataPer?: string; governedKeys: string[] } {
+  const seen = new Set<string>();
+  const amounts: Array<StatedNutritionAmount & { basis: NutritionBasis }> = [];
+  for (const candidate of evidence) {
+    if (candidate.domain !== 'ingredients_nutrition') continue;
+    const key = evidenceKeyOf(candidate);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const prevailing = selectPrevailingAdmittedEvidence(evidence, {
+      barcode: candidate.barcode,
+      domain: 'ingredients_nutrition',
+      claimKey: candidate.claimKey,
+      variantKey: candidate.variantKey,
+    });
+    if (!prevailing || !canApplyToProductionReceiver(prevailing, 'body_ingredients_nutrition')) continue;
+    const basis = prevailing.ingredientsNutrition?.nutritionBasis;
+    if (basis !== 'per_100g' && basis !== 'per_100ml' && basis !== 'per_serving') continue;
+    for (const amount of prevailing.ingredientsNutrition?.nutriments || []) {
+      amounts.push({ ...amount, basis });
+    }
+  }
+  if (amounts.length === 0) {
+    return { nutriments: source, nutritionDataPer: undefined, governedKeys: [] };
+  }
+  const nutriments: ProductNutriments = { ...(source || {}) };
+  const governedKeys: string[] = [];
+  const bases = new Set<NutritionBasis>();
+  for (const amount of amounts) {
+    const written = offNutrientValue(amount);
+    if (written === undefined) continue;
+    const numeric = stableNutrientNumber(Number(written));
+    if (!Number.isFinite(numeric)) continue;
+    const suffix = nutritionKeySuffix(amount.basis);
+    const field = nutritionField(amount.attribute);
+    const key = `${field.offNutrient}_${suffix}`;
+    nutriments[key] = numeric;
+    governedKeys.push(key);
+    bases.add(amount.basis);
+  }
+  const nutritionDataPer =
+    bases.size === 1 && bases.has('per_100g')
+      ? '100g'
+      : bases.size === 1 && bases.has('per_100ml')
+        ? '100ml'
+        : bases.size === 1 && bases.has('per_serving')
+          ? 'serving'
+          : undefined;
+  return { nutriments, nutritionDataPer, governedKeys };
 }

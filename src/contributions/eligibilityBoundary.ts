@@ -19,11 +19,11 @@ import type { ContributionEvidence, RveelPendingContributionFields } from './typ
 import { RVEEL_PENDING_FIELD_MARK } from './types';
 import { canPromoteToCanonicalProduct } from './lifecycle';
 import { carriesCurrentProductionEpoch } from './productionEpoch';
+import { registerIngredientsNutritionBodyReceiver } from '../ingredientsNutrition/bodyReceiver';
 import { scoreBodyMvpAdditives } from '../lib/truscoreEngine/pillars/bodyAdditiveScoring';
 import { evaluateWholeProduceEligibility } from '../lib/truscoreEngine/wholeProduceEligibility';
-import { assignNOVA1IfHighConfidence } from '../utils/novaAssessment';
-import { registerIngredientsNutritionBodyReceiver } from '../ingredientsNutrition/bodyReceiver';
 import { evaluateEthicsCertifications } from '../services/ethicsCertificationsService';
+import { assignNOVA1IfHighConfidence } from '../utils/novaAssessment';
 
 export type ProductWithContributionMark = Product & {
   [RVEEL_PENDING_FIELD_MARK]?: RveelPendingContributionFields;
@@ -285,12 +285,17 @@ function applyAdmittedIngredientsNutrition(
   }
   const ingredientsText = chosen?.ingredientsNutrition?.ingredientsText?.trim();
   if (!chosen || !ingredientsText) return;
+  if (!next.rveelGovernedIngredientsText?.trim()) {
+    next.rveelGovernedIngredientsText = ingredientsText;
+  }
+  // Existing source ingredients stay the Body input. A governed list fills that
+  // input only when the source list is absent, and it is never written onto ingredients_text.
   if (next.ingredients_text?.trim()) return;
 
-  const beforeAdditives = scoreBodyMvpAdditives(next);
-  const beforeWholeProduce = evaluateWholeProduceEligibility(next).eligible;
+  const withoutGoverned = { ...next, rveelGovernedIngredientsText: undefined };
+  const beforeAdditives = scoreBodyMvpAdditives(withoutGoverned);
+  const beforeWholeProduce = evaluateWholeProduceEligibility(withoutGoverned).eligible;
   const beforeNova = next.nova_group;
-  next.ingredients_text = ingredientsText;
   if (beforeNova == null) {
     assignNOVA1IfHighConfidence(next);
   }

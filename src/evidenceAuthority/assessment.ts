@@ -91,6 +91,27 @@ export async function rememberSnapshot(snapshot: SharedEvidenceSnapshot, now = D
   await writeCache(snapshot, now);
 }
 
+/** Latest remembered snapshot for this barcode and authority backend. Not a second evidence store. */
+export async function rememberedAuthoritativeSnapshot(
+  barcode: string | undefined,
+  now = Date.now()
+): Promise<SharedEvidenceSnapshot | null> {
+  if (!barcode) return null;
+  return readCache(barcode, now, SNAPSHOT_CACHE_MAX_AGE_MS);
+}
+
+/**
+ * A late source/product load may replace Result state only when its authoritative
+ * snapshot is at least as new as the one already applied. No snapshot loses to one already applied.
+ */
+export function authoritativeStateSupersedes(
+  appliedGeneratedAt: number,
+  incomingGeneratedAt: number
+): boolean {
+  if (appliedGeneratedAt <= 0) return true;
+  return incomingGeneratedAt >= appliedGeneratedAt;
+}
+
 /**
  * Authoritative snapshot from the configured backend, then a bounded read cache.
  * A miss of both yields no contribution evidence. Local unsent rows are not read.
@@ -118,7 +139,15 @@ export async function loadAuthoritativeAssessment(
         source: 'remote',
       };
     }
-    return { evidence: [], offDispatchStatus: null, source: 'remote' };
+    const remembered = await readCache(barcode, now(), maxAgeMs);
+    if (remembered) {
+      return {
+        evidence: projectSnapshotForAssessment(remembered),
+        offDispatchStatus: remembered.offDispatch[0]?.status ?? null,
+        source: 'cache',
+      };
+    }
+    return { evidence: [], offDispatchStatus: null, source: 'none' };
   } catch {
     const cached = await readCache(barcode, now(), maxAgeMs);
     if (cached) {

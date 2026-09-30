@@ -10,7 +10,6 @@ import { logger } from './logger';
 import { powershellLogger } from './powershellLogger';
 import { hasCoreTruthAuthority } from '../config/coreTruthProductCacheAuthority';
 import type { ContributionEvidence } from '../contributions/types';
-import { toScoringProduct } from '../contributions/eligibilityBoundary';
 import { offDispatchConsumerCopy } from '../ingredientsNutrition/offDispatch';
 import { loadAuthoritativeAssessment, projectSnapshotForAssessment } from '../evidenceAuthority/assessment';
 import { selectPrevailingOriginFacts } from '../origins/governedFacts';
@@ -22,6 +21,8 @@ import {
 import {
   projectAdmittedIngredientsDisplay,
   projectGovernedCertificationNames,
+  projectGovernedNutriments,
+  selectPrevailingGovernedIngredientsText,
 } from '../contribution/governedDisplayProjection';
 import type { SharedEvidenceSnapshot } from '../evidenceAuthority/types';
 
@@ -103,6 +104,26 @@ export async function calculateTrustScore(
   );
   const governedOrigins = selectPrevailingOriginFacts(storedEvidence);
   const governedPacketClaims = selectPrevailingPacketClaims(storedEvidence);
+  const governedIngredientsText = selectPrevailingGovernedIngredientsText(storedEvidence);
+  const nutritionProjection = projectGovernedNutriments(product.nutriments, storedEvidence);
+  const ingredientsProjection = projectAdmittedIngredientsDisplay(
+    product.ingredients_text,
+    governedIngredientsText
+  );
+  const effectiveProduct: Product = {
+    ...product,
+    ...ingredientsProjection,
+    ...(nutritionProjection.governedKeys.length > 0
+      ? {
+          nutriments: nutritionProjection.nutriments,
+          ...(nutritionProjection.nutritionDataPer
+            ? { nutrition_data_per: nutritionProjection.nutritionDataPer }
+            : {}),
+          rveelGovernedNutrimentKeys: nutritionProjection.governedKeys,
+        }
+      : {}),
+    ...(governedOrigins.length > 0 ? { rveelGovernedOrigins: governedOrigins } : {}),
+  };
   const scoringContext = {
     ...getPlanetScoringContext(),
     promotedContributionEvidence: localEvidence,
@@ -112,14 +133,7 @@ export async function calculateTrustScore(
       ? { publicationSettled: options.publicationSettled }
       : {}),
   };
-  const productForPublication =
-    governedOrigins.length > 0 ? { ...product, rveelGovernedOrigins: governedOrigins } : product;
-  const truScoreResult = calculateTruScore(productForPublication, undefined, scoringContext);
-  const overlay = toScoringProduct(product, localEvidence);
-  const ingredientsProjection = projectAdmittedIngredientsDisplay(
-    product.ingredients_text,
-    overlay?.ingredients_text
-  );
+  const truScoreResult = calculateTruScore(effectiveProduct, undefined, scoringContext);
   const nutritionStatus = await packetNutritionStatus(localEvidence, offDispatchStatus);
   const governedCertifications = projectGovernedCertificationNames(storedEvidence);
   const packetAbsenceEstablished = selectAdmittedPacketAbsence(storedEvidence);
@@ -127,7 +141,7 @@ export async function calculateTrustScore(
   // Technical scoring failure → unavailable/non-assessment (never Overall 0 / all-zero pillars)
   if (truScoreResult.scoringUnavailable || truScoreResult.truscore == null) {
     return {
-      ...product,
+      ...effectiveProduct,
       trust_score: null,
       trust_score_breakdown: null,
       _truscore_metadata: {
@@ -161,7 +175,7 @@ export async function calculateTrustScore(
     // Legacy fields (for backward compatibility and display)
     sustainability: (planet / 25) * 100, // Convert to 0-100 for compatibility
     bodySafety: (body / 25) * 100,
-    processing: calculateProcessingScore(overlay ?? product), // Still calculated for educational display
+    processing: calculateProcessingScore(effectiveProduct), // Still calculated for educational display
     transparency: (open / 25) * 100,
     reasons: [],
   };
@@ -173,7 +187,7 @@ export async function calculateTrustScore(
   // Generate reasons (use v1.3 metadata)
   breakdown.reasons = generateTrustReasons(
     breakdown,
-    product,
+    effectiveProduct,
     {
       hasNutriScore: truScoreResult.hasNutriScore,
       hasEcoScore: truScoreResult.hasEcoScore,
@@ -184,7 +198,7 @@ export async function calculateTrustScore(
   // Always build analysis from current product when we have pillar details, so fetch trace
   // reflects this product (e.g. post-merge OFF+Spoonacular), not a cached analysis from
   // an earlier product (e.g. progressive OFF+OBF).
-  const analysisSource = overlay ?? product;
+  const analysisSource = effectiveProduct;
   const analysis =
     truScoreResult.pillarDetails
       ? buildTruScoreAnalysis(analysisSource, truScoreResult)
@@ -194,8 +208,7 @@ export async function calculateTrustScore(
   }
 
   return {
-    ...product,
-    ...ingredientsProjection,
+    ...effectiveProduct,
     rveelPacketNutritionStatus: nutritionStatus,
     rveelGovernedCertifications: governedCertifications.length > 0 ? governedCertifications : undefined,
     rveelPacketAbsenceEstablished: packetAbsenceEstablished || undefined,

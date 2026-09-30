@@ -363,8 +363,9 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
         settled: true,
       });
       expect(snap.claims.assessmentLanes.benchmark).toBe('assessed');
-      expect(snap.claims.publicationStatus).toBe('rated');
-      expect(snap.claims.confidence).toBe('limited');
+      expect(snap.claims.publicationStatus).toBe('nr');
+      expect(snap.claims.publishedScore).toBeNull();
+      expect(snap.claims.confidence).toBeNull();
     });
 
     it('benchmark: not_applicable + skipped_or_unavailable does not count', () => {
@@ -469,7 +470,7 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
       expect(snap.claims.s26?.code).toBe('CLAIMS_LIMITED_PACKET_ONLY');
     });
 
-    it('C-03: benchmark success no hit; packet unassessed → Limited', () => {
+    it('C-03: benchmark success no hit; packet unassessed → Claims NR', () => {
       const product = baseProduct();
       const ethics = withClaimsAssessment(calculateEthicsPillar(product), {
         assessment_state: 'unassessed',
@@ -490,9 +491,13 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
         overallInternalScore: 60,
         settled: true,
       });
-      expect(snap.claims.publicationStatus).toBe('rated');
-      expect(snap.claims.confidence).toBe('limited');
-      expect(snap.claims.s26?.code).toBe('CLAIMS_LIMITED_BENCHMARK_ONLY');
+      expect(snap.claims.publicationStatus).toBe('nr');
+      expect(snap.claims.publishedScore).toBeNull();
+      expect(snap.claims.confidence).toBeNull();
+      expect(snap.claims.s26?.code).toBe('CLAIMS_NR');
+      expect(snap.claims.assessmentLanes.packet).toBe('unassessed_or_incomplete');
+      expect(snap.claims.assessmentLanes.benchmark).toBe('assessed');
+      expect(snap.overall.publicationStatus).toBe('nr');
     });
 
     it('C-04: packet + both benchmarks success → Moderate', () => {
@@ -954,7 +959,7 @@ describe('Wave 3 Rateability / Confidence / NR — §16 fixtures', () => {
       expect(assessment).toBeDefined();
       expect(assessment!.admitted_claims.length).toBeGreaterThan(0);
       expect(assessment!.packet_context_points).toBe(0);
-      expect(assessment!.packet_coverage_state).toBe('incomplete');
+      expect(assessment!.packet_coverage_state).toBe('complete');
       expect(assessment!.publication_packet_lane).toBe('assessed');
       ethics.details.certificationsAdjustment = 0;
       ethics.details.certificationsWinningScheme = null;

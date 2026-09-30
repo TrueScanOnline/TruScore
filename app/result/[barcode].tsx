@@ -124,6 +124,10 @@ import {
   originDraftsFromGovernedFacts,
 } from '../../src/contribution/governedDisplayProjection';
 import { subscribeEvidenceAdmission } from '../../src/evidenceAuthority/device';
+import {
+  authoritativeStateSupersedes,
+  rememberedAuthoritativeSnapshot,
+} from '../../src/evidenceAuthority/assessment';
 import { calculateTrustScore } from '../../src/utils/trustScore';
 import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
 import { ManualProductData } from '../../src/types/manualProduct';
@@ -483,6 +487,7 @@ function ResultScreenContent() {
     producerLogs: string[];
   }>(null);
   const productResultReadyLoggedRef = useRef<string | null>(null);
+  const appliedSnapshotAtRef = useRef(0);
   const [isUserContributed, setIsUserContributed] = useState(false);
   const [insightsExpanded, setInsightsExpanded] = useState(true);
 
@@ -503,6 +508,7 @@ function ResultScreenContent() {
     // New barcode — drop prior publication latch so Checking can run for this scan.
     settledForBarcodeRef.current = null;
     publicationSettledRef.current = false;
+    appliedSnapshotAtRef.current = 0;
     setPublicationSettled(false);
   }, [barcode]);
 
@@ -511,7 +517,10 @@ function ResultScreenContent() {
       const current = productRef.current;
       if (!current || getPrimaryBarcode(admittedBarcode) !== getPrimaryBarcode(barcode)) return;
       void calculateTrustScore(current, { authoritativeSnapshot: snapshot }).then((next) => {
-        if (getPrimaryBarcode(next.barcode) === getPrimaryBarcode(barcode)) setProduct(next);
+        if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, snapshot.generatedAt)) return;
+        if (getPrimaryBarcode(next.barcode) !== getPrimaryBarcode(barcode)) return;
+        appliedSnapshotAtRef.current = snapshot.generatedAt;
+        setProduct(next);
       });
     });
   }, [barcode]);
@@ -1004,18 +1013,41 @@ function ResultScreenContent() {
       setPublicationSettled(false);
     }
 
-    const acceptProductUpdate = (next: ProductWithTrustScore): boolean => {
-      // Once settled, ignore same-cycle payloads that would unsettle publication / flip Checking.
-      if (publicationSettledRef.current && next._assessmentCycleSettled === false) {
+    const acceptProductUpdate = async (next: ProductWithTrustScore): Promise<boolean> => {
+      const remembered = await rememberedAuthoritativeSnapshot(barcode);
+      const incomingAt = remembered?.generatedAt ?? 0;
+      if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, incomingAt)) {
         return false;
       }
-      if (next._assessmentCycleSettled === true) {
+      const projected = remembered
+        ? await calculateTrustScore(next, { authoritativeSnapshot: remembered })
+        : next;
+      const latest = await rememberedAuthoritativeSnapshot(barcode);
+      if (latest && latest.generatedAt !== remembered?.generatedAt) {
+        if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, latest.generatedAt)) return false;
+        const refreshed = await calculateTrustScore(next, { authoritativeSnapshot: latest });
+        appliedSnapshotAtRef.current = latest.generatedAt;
+        if (publicationSettledRef.current && refreshed._assessmentCycleSettled === false) return false;
+        if (refreshed._assessmentCycleSettled === true) {
+          publicationSettledRef.current = true;
+          setPublicationSettled(true);
+          settledForBarcodeRef.current = barcode;
+        }
+        setProgressiveProduct(refreshed);
+        setProduct(refreshed);
+        return true;
+      }
+      if (remembered) appliedSnapshotAtRef.current = remembered.generatedAt;
+      if (publicationSettledRef.current && projected._assessmentCycleSettled === false) {
+        return false;
+      }
+      if (projected._assessmentCycleSettled === true) {
         publicationSettledRef.current = true;
         setPublicationSettled(true);
         settledForBarcodeRef.current = barcode;
       }
-      setProgressiveProduct(next);
-      setProduct(next);
+      setProgressiveProduct(projected);
+      setProduct(projected);
       return true;
     };
     
@@ -1094,30 +1126,27 @@ function ResultScreenContent() {
             return;
           }
           
-          // CRITICAL: Update product IMMEDIATELY - don't wait for anything
-          // This enables instant display (< 100ms) instead of waiting for TruScore
-          if (!acceptProductUpdate(productWithScore)) {
-            return;
-          }
-          setLoading(false); // Stop loading spinner - show product immediately
-          
-          console.log(`[ResultScreen] ⚡ INSTANT display: ${progress.phase}`, productWithScore.product_name, 
-            `TruScore: ${productWithScore.trust_score || 'calculating...'}`,
-            `settled=${productWithScore._assessmentCycleSettled === true}`);
-          
-          // Background merge complete: product now has extended _fetchTrace (all DBs that contributed)
-          if (progress.phase === 'product_enhanced') {
-            const traceLen = productWithScore._truscore_analysis?.fetchTrace?.length ?? 0;
-            console.log(`[ResultScreen] ✅ Product enhanced (merge complete): TruScore ${productWithScore.trust_score}, fetch trace: ${traceLen} source(s) – Score breakdown reflects all DBs used`);
-          }
-          if (progress.phase === 'product_refined') {
-            console.log(
-              `[ResultScreen] ✅ Assessment cycle settled: ${productWithScore._assessmentCycleSettleReason ?? 'unknown'}`
-            );
-          }
-          if (progress.phase === 'complete') {
-            console.log(`[ResultScreen] ✅ Product complete with TruScore: ${productWithScore.trust_score}`);
-          }
+          void (async () => {
+            if (!(await acceptProductUpdate(productWithScore))) {
+              return;
+            }
+            setLoading(false);
+            console.log(`[ResultScreen] ⚡ INSTANT display: ${progress.phase}`, productWithScore.product_name,
+              `TruScore: ${productWithScore.trust_score || 'calculating...'}`,
+              `settled=${productWithScore._assessmentCycleSettled === true}`);
+            if (progress.phase === 'product_enhanced') {
+              const traceLen = productWithScore._truscore_analysis?.fetchTrace?.length ?? 0;
+              console.log(`[ResultScreen] ✅ Product enhanced (merge complete): TruScore ${productWithScore.trust_score}, fetch trace: ${traceLen} source(s) – Score breakdown reflects all DBs used`);
+            }
+            if (progress.phase === 'product_refined') {
+              console.log(
+                `[ResultScreen] ✅ Assessment cycle settled: ${productWithScore._assessmentCycleSettleReason ?? 'unknown'}`
+              );
+            }
+            if (progress.phase === 'complete') {
+              console.log(`[ResultScreen] ✅ Product complete with TruScore: ${productWithScore.trust_score}`);
+            }
+          })();
         }
       };
       
@@ -1181,7 +1210,7 @@ function ResultScreenContent() {
           });
         }
         // Prefer acceptProductUpdate so a late unsettled return cannot overwrite a settled refine.
-        acceptProductUpdate(productData);
+        await acceptProductUpdate(productData);
         setLoadingPhase('complete');
         // Update scan history with product name
         try {

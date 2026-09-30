@@ -13,6 +13,7 @@
 import type { Product } from '../../../types/product';
 
 export type OpenV15IngredientsScoringSource =
+  | 'rveel_governed_ingredients'
   | 'ingredients_text_en'
   | 'ingredients_text'
   | 'none';
@@ -67,6 +68,14 @@ export function isAffirmativelyEnglishIngredientSource(product: Product): boolea
 }
 
 export function resolveOpenV15ScoringIngredients(product: Product): OpenV15IngredientsResolution {
+  const governed =
+    typeof product.rveelGovernedIngredientsText === 'string'
+      ? product.rveelGovernedIngredientsText.trim()
+      : '';
+  if (isUsableIngredientsBody(governed)) {
+    return { scoringText: governed, usable: true, source: 'rveel_governed_ingredients' };
+  }
+
   const en =
     typeof product.ingredients_text_en === 'string' ? product.ingredients_text_en.trim() : '';
   if (isUsableIngredientsBody(en)) {

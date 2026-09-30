@@ -134,7 +134,7 @@ export function publishClaimsPillar(args: {
     };
   }
 
-  if (!packetAssessed && !benchmarkAssessed) {
+  if (!packetAssessed) {
     const opp = claimsContributionOpportunity(packet);
     return {
       publicationStatus: 'nr',

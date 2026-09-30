@@ -119,8 +119,12 @@ function isWater(part: string): boolean {
   return stripLeadingQualifiers(part) === 'water';
 }
 
+function novaIngredientList(product: Product): string {
+  return product.ingredients_text?.trim() || product.rveelGovernedIngredientsText?.trim() || '';
+}
+
 function passesNova1Whitelist(product: Product): { ok: boolean; reason: string } {
-  const text = product.ingredients_text || '';
+  const text = novaIngredientList(product);
   if (GROUP2_RE.test(text)) {
     return { ok: false, reason: 'Group 2 culinary ingredient detected' };
   }
@@ -177,7 +181,7 @@ export function assessNOVAGroup1(product: Product): NOVA1Assessment {
     };
   }
 
-  if (!product.ingredients_text || product.ingredients_text.trim().length === 0) {
+  if (!novaIngredientList(product)) {
     return { likelyNOVA1: false, confidence: 'low', reason: 'No ingredients text' };
   }
 

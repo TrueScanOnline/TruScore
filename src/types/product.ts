@@ -177,10 +177,12 @@ export interface Product {
   // Ingredients
   ingredients_text?: string;
   /**
-   * Contributed ingredients shown when the source product has none.
-   * Not a scoring-source field. Scoring reads authoritative evidence on a clone.
+   * Contributed ingredients shown to the consumer and assessed for Ingredient Clarity.
+   * Not written back onto source ingredients_text.
    */
   rveelGovernedIngredientsText?: string;
+  /** Keys on the consumer nutriment panel that come from prevailing Rveel nutrition evidence. */
+  rveelGovernedNutrimentKeys?: string[];
   /** Short consumer status for a saved packet ingredients or nutrition contribution. */
   rveelPacketNutritionStatus?: string;
   /** Prevailing admitted certification wording. Not copied onto labels_tags. */

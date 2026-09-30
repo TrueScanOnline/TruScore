@@ -2,7 +2,9 @@
  * Transparency Origins Disclosure receiver.
  * Open scoring and origins_tags stay unchanged.
  * ingredient_origin, grown_in, and produced_in may enter the existing v15
- * completeness rules. made_in and packed_in do not. A Grown in or Produced in
+ * completeness rules. A bare made_in or packed_in fact does not. A made_in fact that
+ * already carries an explicit percentage and qualifier contributes that
+ * ingredient-origin proposition only. A Grown in or Produced in
  * statement uses the existing completeness check. When that statement names no
  * ingredient and the product has one governed ingredient, that identity is used.
  * Ambiguous ingredient identity fails closed.
@@ -44,6 +46,22 @@ function exactPercentageInExistingBand(percentage: number): boolean {
 }
 
 const DISCLOSURE_CLAIM_TYPES = new Set(['ingredient_origin', 'grown_in', 'produced_in']);
+
+/**
+ * A made_in fact is manufacturing origin only.
+ * When the reviewed record already carries an explicit percentage and qualifier,
+ * that pair is the ingredient-origin proposition. It is not parsed out of the sentence.
+ */
+function explicitIngredientOriginFromMadeIn(fact: GovernedOriginFact): GovernedOriginFact | null {
+  if (fact.claimType !== 'made_in') return null;
+  if (fact.percentage == null || fact.percentageQualifier == null) return null;
+  if (fact.countries.length === 0) return null;
+  return {
+    ...fact,
+    claimType: 'ingredient_origin',
+    subjectKey: `ingredient_origin:${fact.subjectKey}`,
+  };
+}
 
 function isQualifiedQualifier(fact: GovernedOriginFact): boolean {
   return (
@@ -89,7 +107,10 @@ export function resolveGovernedOriginsDisclosure(
   open: OpenPillarResult,
   facts: GovernedOriginFact[] | undefined
 ): OriginsDisclosureResolution {
-  const scoringFacts = (facts || []).filter((fact) => DISCLOSURE_CLAIM_TYPES.has(fact.claimType));
+  const scoringFacts = [
+    ...(facts || []).filter((fact) => DISCLOSURE_CLAIM_TYPES.has(fact.claimType)),
+    ...(facts || []).map(explicitIngredientOriginFromMadeIn).filter((fact): fact is GovernedOriginFact => !!fact),
+  ];
   if (scoringFacts.length === 0) return { resolved: false };
 
   const countries = [...new Set(scoringFacts.flatMap(recognizedCountries))];

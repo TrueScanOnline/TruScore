@@ -103,7 +103,9 @@ export function evaluateWholeProduceEligibility(product: Product): WholeProduceE
     return { eligible: false, reason: 'no_eligible_category_evidence' };
   }
 
-  if (!ingredientsAreWholeProduceOnly(product.ingredients_text)) {
+  const ingredientList =
+    product.ingredients_text?.trim() || product.rveelGovernedIngredientsText?.trim();
+  if (!ingredientsAreWholeProduceOnly(ingredientList)) {
     return { eligible: false, reason: 'ingredients_not_whole_produce_only' };
   }
 

@@ -171,7 +171,7 @@ describe('Wave 4A.4 Claims publication closure', () => {
     );
   });
 
-  it('publishes benchmark-only and both-lane neutral results from the lane flags', () => {
+  it('keeps benchmark-only Claims unpublished and rates both-lane neutral results from the lane flags', () => {
     const ethics = calculateEthicsPillar(food());
     const assessment = ethics.details.claimsAssessment!;
     const benchmarkOnly = publishClaimsPillar({
@@ -190,13 +190,13 @@ describe('Wave 4A.4 Claims publication closure', () => {
         },
       },
     });
-    expect(benchmarkOnly.publicationStatus).toBe('rated');
-    expect(benchmarkOnly.publishedScore).toBe(15);
-    expect(benchmarkOnly.confidence).toBe('limited');
-    expect(benchmarkOnly.s26?.code).toBe('CLAIMS_LIMITED_BENCHMARK_ONLY');
+    expect(benchmarkOnly.publicationStatus).toBe('nr');
+    expect(benchmarkOnly.publishedScore).toBeNull();
+    expect(benchmarkOnly.confidence).toBeNull();
+    expect(benchmarkOnly.s26?.code).toBe('CLAIMS_NR');
     expect(benchmarkOnly.assessmentLanes.packet).toBe('unassessed_or_incomplete');
-    expect(benchmarkOnly.publishedScore).toBe(15);
-    expect(`${benchmarkOnly.publishedScore}/25`).toBe('15/25');
+    expect(benchmarkOnly.assessmentLanes.benchmark).toBe('assessed');
+    expect(benchmarkOnly.s26?.contributionOpportunity?.routeKey).toBe('packet_claims');
     expect(ethics.adjustments.filter((row) => row.highlightEligible && row.id.startsWith('claims.'))).toHaveLength(0);
 
     const both = calculateEthicsPillar(food(), { admittedPacketAbsence: true });

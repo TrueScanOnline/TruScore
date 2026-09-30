@@ -139,7 +139,7 @@ export interface BodyMvpAdditiveScoreResult {
  */
 export function scoreBodyMvpAdditives(product: Product): BodyMvpAdditiveScoreResult {
   const tags = product.additives_tags;
-  const text = product.ingredients_text || '';
+  const text = product.ingredients_text?.trim() || product.rveelGovernedIngredientsText?.trim() || '';
 
   const tagIds = getNormalizedTagIds(tags);
   const tagMvp: string[] = [];
