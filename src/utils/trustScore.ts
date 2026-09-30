@@ -118,12 +118,10 @@ export async function calculateTrustScore(
     rveelProjectionBound: true,
     rveelSourceNutriments: source.nutriments,
     rveelSourceIngredientsText: source.ingredients_text,
+    rveelSourceNutritionDataPer: source.nutrition_data_per,
     ...(nutritionProjection.governedKeys.length > 0
       ? {
           nutriments: nutritionProjection.nutriments,
-          ...(nutritionProjection.nutritionDataPer
-            ? { nutrition_data_per: nutritionProjection.nutritionDataPer }
-            : {}),
           rveelGovernedNutrimentKeys: nutritionProjection.governedKeys,
         }
       : {}),

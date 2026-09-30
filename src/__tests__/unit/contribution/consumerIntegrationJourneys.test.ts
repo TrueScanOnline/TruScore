@@ -76,6 +76,18 @@ function sourceProduct(overrides: Partial<Product> = {}): Product {
   } as Product);
 }
 
+function honeyProduct(overrides: Partial<Product> = {}): Product {
+  return sourceProduct({
+    product_name: 'Honey',
+    ingredients_text: 'honey',
+    ingredients_text_en: 'honey',
+    lang: 'en',
+    ingredients_lc: 'en',
+    additives_tags: [],
+    ...overrides,
+  });
+}
+
 async function resultFrom(evidence: ContributionEvidence[], product = sourceProduct()) {
   process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
   return calculateTrustScore(product, { authoritativeSnapshot: snapshotOf(evidence) });
@@ -502,5 +514,180 @@ describe('consumer integration journeys', () => {
     expect(packetAssessed.transparency.publicationStatus).toBe('rated');
     expect(packetAssessed.overall.publicationStatus).toBe('rated');
     expect(packetAssessed.overall.publishedScore).not.toBeNull();
+  });
+
+  it('scores grown_in and produced_in as evidently complete for Australia and New Zealand', async () => {
+    const cases = [
+      { claimType: 'grown_in' as const, country: 'Australia', wording: 'Grown in Australia' },
+      { claimType: 'grown_in' as const, country: 'New Zealand', wording: 'Grown in New Zealand' },
+      { claimType: 'produced_in' as const, country: 'Australia', wording: 'Produced in Australia' },
+      { claimType: 'produced_in' as const, country: 'New Zealand', wording: 'Produced in New Zealand' },
+    ];
+    for (const item of cases) {
+      const admitted = admitAt(
+        await submitGovernedEvidence({
+          barcode: BARCODE,
+          domain: 'origins',
+          claimValue: item.country,
+          exactWording: item.wording,
+          asProductionEpoch: true,
+          persistRemote: false,
+          originStructured: { claimType: item.claimType, primaryCountry: item.country },
+        })
+      );
+      const shown = await calculateTrustScore(honeyProduct(), { authoritativeSnapshot: snapshotOf([admitted]) });
+      const open = calculateOpenPillar(shown);
+      expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+      expect(open.details.originsAdjustment).toBe(8);
+      expect(open.adjustments.filter((row) => row.id === 'open-v15-origins-evidently-complete')).toHaveLength(1);
+      expect(shown._publication?.transparency.assessmentLanes.origins).toBe('resolved');
+    }
+  });
+
+  it('leaves bare made_in and packed_in without an Origins disclosure adjustment', async () => {
+    for (const item of [
+      { claimType: 'made_in' as const, country: 'Australia', wording: 'Made in Australia' },
+      { claimType: 'made_in' as const, country: 'New Zealand', wording: 'Made in New Zealand' },
+      { claimType: 'packed_in' as const, country: 'Australia', wording: 'Packed in Australia' },
+    ]) {
+      const admitted = admitAt(
+        await submitGovernedEvidence({
+          barcode: BARCODE,
+          domain: 'origins',
+          claimValue: item.country,
+          exactWording: item.wording,
+          asProductionEpoch: true,
+          persistRemote: false,
+          originStructured: { claimType: item.claimType, primaryCountry: item.country },
+        })
+      );
+      const shown = await calculateTrustScore(honeyProduct(), { authoritativeSnapshot: snapshotOf([admitted]) });
+      const open = calculateOpenPillar(shown);
+      expect(open.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
+      expect(open.details.originsAdjustment).toBe(0);
+      expect(shown._publication?.transparency.assessmentLanes.origins).toBe('unassessed');
+    }
+  });
+
+  it('scores a 100% made-in ingredient proposition without a qualifier as evidently complete', async () => {
+    const admitted = admitAt(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'Australia',
+        exactWording: 'Made in Australia from 100% Australian ingredients',
+        asProductionEpoch: true,
+        persistRemote: false,
+        originStructured: {
+          claimType: 'made_in',
+          primaryCountry: 'Australia',
+          ingredientOriginPercentage: 100,
+        },
+      })
+    );
+    const shown = await calculateTrustScore(honeyProduct(), { authoritativeSnapshot: snapshotOf([admitted]) });
+    const open = calculateOpenPillar(shown);
+    expect(shown.rveelGovernedOrigins?.[0]?.claimType).toBe('made_in');
+    expect(shown.rveelGovernedOrigins?.[0]?.percentage).toBe(100);
+    expect(shown.rveelGovernedOrigins?.[0]?.percentageQualifier).toBeUndefined();
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(open.details.originsAdjustment).toBe(8);
+  });
+
+  it('replaces a conflicting OFF origin adjustment with the prevailing governed proposition', async () => {
+    const offAustralia = honeyProduct({ origins_tags: ['en:australia'] });
+    const before = calculateOpenPillar(offAustralia);
+    expect(before.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(before.details.originsAdjustment).toBe(8);
+
+    const admitted = admitAt(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'New Zealand',
+        exactWording: 'Grown in New Zealand',
+        asProductionEpoch: true,
+        persistRemote: false,
+        originStructured: { claimType: 'grown_in', primaryCountry: 'New Zealand' },
+      })
+    );
+    const snapshot = snapshotOf([admitted], 7000);
+    const shown = await calculateTrustScore(offAustralia, { authoritativeSnapshot: snapshot });
+    const open = calculateOpenPillar(shown);
+    expect(shown.rveelGovernedOrigins?.[0]?.countries).toEqual(['New Zealand']);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(open.details.originsAdjustment).toBe(8);
+    expect(open.details.originsProvenance).toBe('governed_packet');
+    expect(open.adjustments.filter((row) => row.family === 'origins')).toHaveLength(1);
+    expect(shown._publication?.transparency.assessmentLanes.origins).toBe('resolved');
+    expect(shown._publication?.transparency.diagnostic.originsDisclosureSource).toBe('primary_contribution');
+
+    const withdrawn = await calculateTrustScore(shown, { authoritativeSnapshot: snapshotOf([], 8000) });
+    const restored = calculateOpenPillar(withdrawn);
+    expect(withdrawn.rveelGovernedOrigins).toBeUndefined();
+    expect(withdrawn.origins_tags).toEqual(['en:australia']);
+    expect(restored.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(restored.details.originsAdjustment).toBe(8);
+    expect(restored.details.originsProvenance).toBe('off_raw_origins');
+  });
+
+  it('replaces a conflicting OFF origin adjustment with the prevailing percentage band', async () => {
+    const admitted = admitAt(
+      await submitGovernedEvidence({
+        barcode: BARCODE,
+        domain: 'origins',
+        claimValue: 'New Zealand',
+        exactWording: 'Honey from at least 92% New Zealand',
+        asProductionEpoch: true,
+        persistRemote: false,
+        originStructured: {
+          claimType: 'ingredient_origin',
+          primaryCountry: 'New Zealand',
+          ingredientSubject: 'Honey',
+          ingredientOriginPercentage: 92,
+          percentageQualifier: 'at_least',
+        },
+      })
+    );
+    const shown = await calculateTrustScore(honeyProduct({ origins_tags: ['en:australia'] }), {
+      authoritativeSnapshot: snapshotOf([admitted]),
+    });
+    const open = calculateOpenPillar(shown);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-pct-76-94');
+    expect(open.details.originsAdjustment).toBe(-1);
+    expect(open.details.originsProvenance).toBe('governed_packet');
+    expect(open.adjustments.filter((row) => row.family === 'origins')).toHaveLength(1);
+    expect(shown.rveelGovernedOrigins?.[0]?.percentage).toBe(92);
+    expect(shown.rveelGovernedOrigins?.[0]?.percentageQualifier).toBe('at_least');
+  });
+
+  it('keeps the source nutrition basis through projection, cache, and withdrawal', async () => {
+    for (const basis of ['serving', '100ml', '100g'] as const) {
+      const source = sourceProduct({ nutrition_data_per: basis });
+      const admitted = await admitIngredientsNutritionEvidence(
+        (
+          await submitIngredientsNutritionEvidence({
+            barcode: BARCODE,
+            nutritionBasis: 'per_100g',
+            amounts: [{ attribute: 'sugars', value: 2, unit: 'g' }],
+            persistRemote: false,
+          })
+        ).evidenceId
+      );
+      const snapshot = snapshotOf([admitted], 9000);
+      const shown = await calculateTrustScore(source, { authoritativeSnapshot: snapshot });
+      const again = await calculateTrustScore(shown, { authoritativeSnapshot: snapshot });
+      expect(shown.nutrition_data_per).toBe(basis);
+      expect(again.nutrition_data_per).toBe(basis);
+      expect(again.rveelSourceNutritionDataPer).toBe(basis);
+      expect(again.nutriments?.sugars_100g).toBe(2);
+      await cacheProduct(again, false);
+      const loaded = await getCachedProduct(BARCODE, false);
+      expect(loaded?.nutrition_data_per).toBe(basis);
+      expect(loaded?.nutriments?.sugars_100g).toBe(10);
+      const withdrawn = await calculateTrustScore(loaded!, { authoritativeSnapshot: snapshotOf([], 9100) });
+      expect(withdrawn.nutrition_data_per).toBe(basis);
+      expect(withdrawn.nutriments?.sugars_100g).toBe(10);
+    }
   });
 });

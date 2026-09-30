@@ -28,6 +28,7 @@ const PROJECTION_FIELDS = [
   'rveelPacketNutritionStatus',
   'rveelSourceNutriments',
   'rveelSourceIngredientsText',
+  'rveelSourceNutritionDataPer',
   'rveelProjectionBound',
 ] as const;
 
@@ -40,6 +41,7 @@ export function sourceProductState<T extends Product>(product: T): T {
   if (product.rveelProjectionBound) {
     next.nutriments = product.rveelSourceNutriments;
     next.ingredients_text = product.rveelSourceIngredientsText;
+    next.nutrition_data_per = product.rveelSourceNutritionDataPer;
   }
   for (const key of PROJECTION_FIELDS) {
     delete next[key];

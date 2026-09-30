@@ -16,6 +16,7 @@ import { powershellLogger } from '../../../utils/powershellLogger';
 import { assessOpenPillarHiddenTerms } from './openPillarHiddenTerms';
 import { assessOpenOriginsV15 } from './openPillarOriginsV15';
 import { governedOriginsOpenAssessment } from '../../../origins/disclosureReceiver';
+import { admittedScoringOriginConflictsWithOff } from '../../../origins/offUserPrecedence';
 import {
   buildOpenClarityCommentaryMetadata,
   buildOpenOriginsCommentaryMetadata,
@@ -142,18 +143,20 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
     usable,
     governedFlagCount
   );
-  const governedOrigins =
-    offOriginsAssessment.id === 'open-v15-origins-insufficient'
-      ? governedOriginsOpenAssessment(product, governedFlagCount)
-      : null;
-  const originsAssessment = governedOrigins
-    ? {
-        ...offOriginsAssessment,
-        id: governedOrigins.id,
-        detail: governedOrigins.detail,
-        provenance: 'governed_packet' as const,
-      }
-    : offOriginsAssessment;
+  const governedOrigins = governedOriginsOpenAssessment(product, governedFlagCount);
+  const governedSupersedesOff =
+    governedOrigins != null &&
+    admittedScoringOriginConflictsWithOff(product, product.rveelGovernedOrigins);
+  const originsAssessment =
+    governedOrigins != null &&
+    (governedSupersedesOff || offOriginsAssessment.id === 'open-v15-origins-insufficient')
+      ? {
+          ...offOriginsAssessment,
+          id: governedOrigins.id,
+          detail: governedOrigins.detail,
+          provenance: 'governed_packet' as const,
+        }
+      : offOriginsAssessment;
   const originsMetadata = buildOpenOriginsCommentaryMetadata(
     product,
     ingredientsText,

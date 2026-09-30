@@ -53,7 +53,8 @@ const DISCLOSURE_CLAIM_TYPES = new Set(['ingredient_origin', 'grown_in', 'produc
  */
 function explicitIngredientOriginFromMadeIn(fact: GovernedOriginFact): GovernedOriginFact | null {
   if (fact.claimType !== 'made_in') return null;
-  if (fact.percentage == null || fact.percentageQualifier == null) return null;
+  if (fact.percentage == null) return null;
+  if (fact.percentageQualifier == null && fact.percentage !== 100) return null;
   if (fact.countries.length === 0) return null;
   return {
     ...fact,
@@ -153,10 +154,11 @@ export function resolveGovernedOriginsDisclosure(
   if (
     ingredientMatch &&
     ingredientFact &&
-    ingredientFact.percentage === 100 &&
-    (ingredientFact.percentageQualifier == null ||
-      ingredientFact.percentageQualifier === 'exactly' ||
-      ingredientFact.percentageQualifier === 'at_least')
+    (ingredientFact.percentage == null ||
+      (ingredientFact.percentage === 100 &&
+        (ingredientFact.percentageQualifier == null ||
+          ingredientFact.percentageQualifier === 'exactly' ||
+          ingredientFact.percentageQualifier === 'at_least')))
   ) {
     return { resolved: true, requirement: 'evidently_complete' };
   }
@@ -165,10 +167,11 @@ export function resolveGovernedOriginsDisclosure(
     placeMatch &&
     placeFact &&
     placeOrigins.length === scoringFacts.length &&
-    placeFact.percentage === 100 &&
-    (placeFact.percentageQualifier == null ||
-      placeFact.percentageQualifier === 'exactly' ||
-      placeFact.percentageQualifier === 'at_least')
+    (placeFact.percentage == null ||
+      (placeFact.percentage === 100 &&
+        (placeFact.percentageQualifier == null ||
+          placeFact.percentageQualifier === 'exactly' ||
+          placeFact.percentageQualifier === 'at_least')))
   ) {
     return { resolved: true, requirement: 'evidently_complete' };
   }
@@ -200,17 +203,14 @@ export function resolveGovernedOriginsDisclosure(
   const ingredientStatement = ingredientOrigins.some((row) => !!row.exactWording?.trim());
   if (
     ingredientStatement &&
-    (ingredientQualified ||
-      (ingredientUnquantified && ingredientMatch) ||
-      (ingredientUnquantified && !single.eligible))
+    (ingredientQualified || (ingredientUnquantified && !single.eligible))
   ) {
     return { resolved: true, requirement: 'qualified_partial' };
   }
 
   const placeQualified = placeOrigins.some(isQualifiedQualifier);
-  const placeUnquantified = placeOrigins.length > 0 && placeOrigins.every((row) => row.percentage == null);
   const placeStatement = placeOrigins.some((row) => !!row.exactWording?.trim());
-  if (placeStatement && (placeQualified || (placeUnquantified && placeMatch))) {
+  if (placeStatement && placeQualified) {
     return { resolved: true, requirement: 'qualified_partial' };
   }
 
@@ -232,9 +232,22 @@ export function governedOriginsOpenAssessment(
   );
   if (!resolution.resolved) return null;
   if (resolution.requirement === 'evidently_complete') {
+    const facts = scoringOriginFacts(product.rveelGovernedOrigins);
+    const placeComplete = facts.some(
+      (fact) =>
+        (fact.claimType === 'grown_in' || fact.claimType === 'produced_in') && fact.percentage == null
+    );
+    const quantifiedComplete = facts.some(
+      (fact) =>
+        fact.percentage === 100 &&
+        (fact.percentageQualifier == null ||
+          fact.percentageQualifier === 'exactly' ||
+          fact.percentageQualifier === 'at_least')
+    );
+    if (!placeComplete && !quantifiedComplete) return null;
     return {
       id: 'open-v15-origins-evidently-complete',
-      detail: 'Governed packet disclosure accounts for the ingredient origin',
+      detail: 'Prevailing origins disclosure is evidently complete',
     };
   }
   if (resolution.requirement === 'qualified_partial') {

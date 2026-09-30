@@ -190,6 +190,8 @@ export interface Product {
   rveelSourceNutriments?: ProductNutriments;
   /** Source ingredients list captured before a governed ingredients projection. */
   rveelSourceIngredientsText?: string;
+  /** Source nutrition basis captured before a governed nutrition projection. */
+  rveelSourceNutritionDataPer?: string;
   /** True when this object was produced by applying a governed projection to source data. */
   rveelProjectionBound?: boolean;
   /** Short consumer status for a saved packet ingredients or nutrition contribution. */

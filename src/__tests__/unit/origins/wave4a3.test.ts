@@ -304,7 +304,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     return fact;
   }
 
-  it('resolves an unquantified single-ingredient origin as qualified partial', async () => {
+  it('resolves the existing origins lane from a single-ingredient origin without changing Open scoring', async () => {
     const fact = await ingredientFact({
       subject: 'Honey',
       country: 'New Zealand',
@@ -312,9 +312,8 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     });
     const bare = calculateOpenPillar(honeyProduct());
     const open = calculateOpenPillar(honeyProduct([fact]));
-    expect(open.score).toBe(bare.score - 4);
-    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-qualified-partial');
-    expect(open.details.originsAdjustment).toBe(-4);
+    expect(open.score).toBe(bare.score);
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-insufficient');
     expect(honeyProduct([fact]).origins_tags).toBeUndefined();
     const published = publishTransparencyPillar({
       product: honeyProduct([fact]),
@@ -324,7 +323,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(published.assessmentLanes.origins).toBe('resolved');
     expect(published.confidence).toBe('limited');
     expect(published.s26?.code).toBe('TRANSPARENCY_LIMITED_PRIMARY_CONTRIBUTION');
-    expect(published.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
+    expect(published.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
   });
 
   it('does not resolve the lane from manufacture evidence or from a percentage without a qualifier', async () => {
@@ -432,7 +431,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(published.confidence).toBe('limited');
     expect(published.diagnostic.originsDisclosureSource).toBe('primary_contribution');
     expect(published.diagnostic.admittedUserPrevailsOverOff).toBe(true);
-    expect(published.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
+    expect(published.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
     expect(admittedUserOriginPrevailsForDisplay(product, [fact])).toBe(true);
 
     const agreed = honeyProduct([fact]);
@@ -556,10 +555,11 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     const bareProduct = honeyProduct([bareGrown]);
     const bareOpen = calculateOpenPillar(bareProduct);
     const barePublished = publishTransparencyPillar({ product: bareProduct, open: bareOpen });
-    expect(bareOpen.details.originsAdjustmentId).toBe('open-v15-origins-qualified-partial');
-    expect(bareOpen.details.originsAdjustment).toBe(-4);
+    expect(bareOpen.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(bareOpen.details.originsAdjustment).toBe(8);
+    expect(bareOpen.details.originsProvenance).toBe('governed_packet');
     expect(barePublished.assessmentLanes.origins).toBe('resolved');
-    expect(barePublished.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
+    expect(barePublished.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
     expect(bareGrown.claimType).toBe('grown_in');
 
     const qualifiedGrown = await placeFact({
@@ -638,7 +638,10 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
       open,
       authoritative: { transparencyIngredient: true, transparencyOrigins: true },
     });
-    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(open.details.originsAdjustmentId).toBe('open-v15-origins-pct-76-94');
+    expect(open.details.originsAdjustment).toBe(-1);
+    expect(open.details.originsProvenance).toBe('governed_packet');
+    expect(open.adjustments.filter((row) => row.family === 'origins')).toHaveLength(1);
     expect(product.origins_tags).toEqual(['en:australia']);
     expect(published.assessmentLanes.origins).toBe('resolved');
     expect(published.confidence).toBe('limited');
@@ -658,7 +661,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(blocked.origins_tags).toEqual(['en:australia']);
     expect(blockedOpen.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
     expect(blockedPublished.assessmentLanes.origins).toBe('resolved');
-    expect(blockedPublished.diagnostic.originsDisclosureRequirement).toBe('qualified_partial');
+    expect(blockedPublished.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
     expect(blockedPublished.diagnostic.originsDisclosureSource).toBe('primary_contribution');
     expect(blockedPublished.diagnostic.admittedUserPrevailsOverOff).toBe(true);
   });
