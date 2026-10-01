@@ -14,7 +14,7 @@ import {
 import { resolveOpenV15ScoringIngredients } from '../lib/truscoreEngine/pillars/openPillarIngredientsLanguage';
 import { ingredientComparisonKey } from '../contributions/originStructured';
 import type { GovernedOriginFact } from './governedFacts';
-import { explicitIngredientOriginFromMadeIn } from './disclosureReceiver';
+import { explicitIngredientOriginFromMadeIn, governedOriginsOpenAssessment } from './disclosureReceiver';
 
 function recognizedKeys(countries: string[]): string[] {
   return [...new Set(countries.filter((country) => isRecognizedOriginCountry(country)).map((country) => originCountryKey(country)))];
@@ -63,43 +63,64 @@ export function ingredientOriginsForOffSubject(
   return [...direct, ...derived];
 }
 
-/**
- * True when admitted disclosure evidence for the single ingredient names a different
- * country from OFF origins_tags or free-text origins. A bare made_in or packed_in
- * fact is not a scoring subject. An ingredient-origin proposition already derived
- * from quantified made_in evidence is compared as that ingredient-origin fact.
- */
-export function admittedScoringOriginConflictsWithOff(
+function placeFactsForOffSubject(
   product: Product,
   facts: GovernedOriginFact[] | undefined
-): boolean {
-  if (admittedIngredientOriginConflictsWithOff(product, facts)) return true;
+): GovernedOriginFact[] {
   const subject = singleIngredientKey(product);
-  const offKeys = offIngredientOriginKeys(product);
-  if (!subject || offKeys.length === 0) return false;
-  const placeFacts = (facts || []).filter(
-    (fact) => fact.claimType === 'grown_in' || fact.claimType === 'produced_in'
-  );
-  const admittedKeys = [...new Set(placeFacts.flatMap((fact) => recognizedKeys(fact.countries)))];
-  if (admittedKeys.length === 0) return false;
-  return admittedKeys.length !== offKeys.length || admittedKeys.some((key) => !offKeys.includes(key));
+  if (!subject) return [];
+  return (facts || []).filter((fact) => {
+    if (fact.claimType !== 'grown_in' && fact.claimType !== 'produced_in') return false;
+    const named = ingredientComparisonKey(fact.ingredientSubject);
+    return named.length === 0 || named === subject;
+  });
 }
 
 /**
- * True when an admitted ingredient-origin fact names a different country from OFF
- * origins_tags or free-text origins for that ingredient.
+ * True when a later admitted scoring proposition applies to the same sole-ingredient
+ * subject as OFF origins. Country agreement is not required. A bare made_in,
+ * packed_in, mismatched subject, or proposition the resolver does not score does not prevail.
+ */
+function admittedScoringPropositionSupersedesOff(
+  product: Product,
+  facts: GovernedOriginFact[] | undefined,
+  governedFlagCount: number
+): boolean {
+  if (offIngredientOriginKeys(product).length === 0 || !singleIngredientKey(product)) return false;
+  const owned = [
+    ...ingredientOriginsForOffSubject(product, facts),
+    ...placeFactsForOffSubject(product, facts),
+  ];
+  if (owned.length === 0) return false;
+  return (
+    governedOriginsOpenAssessment({ ...product, rveelGovernedOrigins: facts }, governedFlagCount) != null
+  );
+}
+
+/**
+ * Same-subject Origins precedence. An applicable admitted scoring proposition
+ * supersedes OFF origins for that subject whether or not the country values differ.
+ */
+export function admittedScoringOriginConflictsWithOff(
+  product: Product,
+  facts: GovernedOriginFact[] | undefined,
+  governedFlagCount = 0
+): boolean {
+  return admittedScoringPropositionSupersedesOff(product, facts, governedFlagCount);
+}
+
+/**
+ * True when an admitted ingredient-origin proposition for the sole ingredient
+ * is the prevailing scoring evidence. Country disagreement is not required.
  */
 export function admittedIngredientOriginConflictsWithOff(
   product: Product,
-  facts: GovernedOriginFact[] | undefined
+  facts: GovernedOriginFact[] | undefined,
+  governedFlagCount = 0
 ): boolean {
-  const offKeys = offIngredientOriginKeys(product);
-  if (offKeys.length === 0) return false;
-  const admitted = ingredientOriginsForOffSubject(product, facts);
-  if (admitted.length === 0) return false;
-  const admittedKeys = [...new Set(admitted.flatMap((fact) => recognizedKeys(fact.countries)))];
-  if (admittedKeys.length === 0) return false;
-  return admittedKeys.length !== offKeys.length || admittedKeys.some((key) => !offKeys.includes(key));
+  if (offIngredientOriginKeys(product).length === 0) return false;
+  if (ingredientOriginsForOffSubject(product, facts).length === 0) return false;
+  return admittedScoringPropositionSupersedesOff(product, facts, governedFlagCount);
 }
 
 type DisplayedOffOrigin =

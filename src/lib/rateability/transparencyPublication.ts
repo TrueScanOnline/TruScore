@@ -142,7 +142,8 @@ export function publishTransparencyPillar(args: {
   const offOriginsResolved = offOriginsDisclosureResolved(open);
   const admittedConflictsWithOff = admittedScoringOriginConflictsWithOff(
     product,
-    product.rveelGovernedOrigins
+    product.rveelGovernedOrigins,
+    open.details.governedFlagCount
   );
   const contributionDisclosure =
     offOriginsResolved && !admittedConflictsWithOff

@@ -146,7 +146,7 @@ export function calculateOpenPillar(product: Product): OpenPillarResult {
   const governedOrigins = governedOriginsOpenAssessment(product, governedFlagCount);
   const governedSupersedesOff =
     governedOrigins != null &&
-    admittedScoringOriginConflictsWithOff(product, product.rveelGovernedOrigins);
+    admittedScoringOriginConflictsWithOff(product, product.rveelGovernedOrigins, governedFlagCount);
   const originsAssessment =
     governedOrigins != null &&
     (governedSupersedesOff || offOriginsAssessment.id === 'open-v15-origins-insufficient')

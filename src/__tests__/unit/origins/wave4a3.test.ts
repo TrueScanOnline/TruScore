@@ -395,7 +395,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(qualifiedPublished.assessmentLanes.origins).toBe('resolved');
   });
 
-  it('keeps an existing Open origins resolution at its own confidence', async () => {
+  it('lets a same-country governed origin prevail over the older OFF adjustment', async () => {
     const fact = await ingredientFact({
       subject: 'Honey',
       country: 'New Zealand',
@@ -405,10 +405,14 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     product.origins_tags = ['en:new-zealand'];
     const open = calculateOpenPillar(product);
     expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(open.details.originsAdjustment).toBe(8);
+    expect(open.details.originsProvenance).toBe('governed_packet');
+    expect(open.adjustments.filter((row) => row.family === 'origins')).toHaveLength(1);
     const published = publishTransparencyPillar({ product, open });
     expect(published.assessmentLanes.origins).toBe('resolved');
-    expect(published.confidence).toBe('moderate');
-    expect(published.diagnostic.originsDisclosureSource).toBe('off');
+    expect(published.confidence).toBe('limited');
+    expect(published.diagnostic.originsDisclosureSource).toBe('primary_contribution');
+    expect(published.diagnostic.originsDisclosureRequirement).toBe('evidently_complete');
   });
 
   it('lets an admitted ingredient origin prevail over conflicting OFF origin data', async () => {
@@ -440,9 +444,11 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     agreed.origins_tags = ['en:new-zealand'];
     const agreedOpen = calculateOpenPillar(agreed);
     const agreedPublished = publishTransparencyPillar({ product: agreed, open: agreedOpen });
-    expect(agreedPublished.confidence).toBe('moderate');
-    expect(agreedPublished.diagnostic.originsDisclosureSource).toBe('off');
-    expect(admittedUserOriginPrevailsForDisplay(agreed, [fact])).toBe(false);
+    expect(agreedOpen.details.originsProvenance).toBe('governed_packet');
+    expect(agreedOpen.adjustments.filter((row) => row.family === 'origins')).toHaveLength(1);
+    expect(agreedPublished.confidence).toBe('limited');
+    expect(agreedPublished.diagnostic.originsDisclosureSource).toBe('primary_contribution');
+    expect(admittedUserOriginPrevailsForDisplay(agreed, [fact])).toBe(true);
 
     const madeIn: GovernedOriginFact = {
       evidenceId: 'made-nz',
@@ -462,7 +468,7 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     expect(manufacturePublished.assessmentLanes.origins).toBe('unassessed');
   });
 
-  it('does not let conflicting OFF origin data fill a lane the admitted fact does not establish', async () => {
+  it('does not let an incomplete percentage displace applicable OFF origins evidence', async () => {
     const fact = await ingredientFact({
       subject: 'Honey',
       country: 'New Zealand',
@@ -472,12 +478,16 @@ describe('Wave 4A.3 Transparency origins disclosure', () => {
     const product = honeyProduct([fact]);
     product.origins_tags = ['en:australia'];
     const open = calculateOpenPillar(product);
+    const offOnly = calculateOpenPillar({ ...product, rveelGovernedOrigins: undefined });
     expect(open.details.originsAdjustmentId).toBe('open-v15-origins-evidently-complete');
+    expect(open.details.originsAdjustment).toBe(8);
+    expect(open.details.originsProvenance).toBe('off_raw_origins');
+    expect(open.score).toBe(offOnly.score);
     const published = publishTransparencyPillar({ product, open });
     expect(product.origins_tags).toEqual(['en:australia']);
-    expect(published.assessmentLanes.origins).toBe('unassessed');
-    expect(published.diagnostic.admittedUserPrevailsOverOff).toBe(true);
-    expect(open.score).toBe(calculateOpenPillar({ ...product, rveelGovernedOrigins: undefined }).score);
+    expect(published.assessmentLanes.origins).toBe('resolved');
+    expect(published.diagnostic.originsDisclosureSource).toBe('off');
+    expect(published.diagnostic.admittedUserPrevailsOverOff).toBeUndefined();
   });
 
   it('leaves two ingredient countries unresolved', async () => {
