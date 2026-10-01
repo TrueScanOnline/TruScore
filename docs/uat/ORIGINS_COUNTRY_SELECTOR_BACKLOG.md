@@ -1,7 +1,7 @@
-# Technical backlog — governed Origins country selector
+# Governed Origins country selector
 
-Recorded with the Wave 4A Product Origins surface check. Not implemented.
+The Origins contribution journey uses the existing manual product-entry `CountryPicker` (`src/components/CountryPicker.tsx`).
 
-The Origins contribution country field is unrestricted free text (`Country or place stated on the pack` in the packet contribution form). Multi-country rows are the same field, split on commas.
+Each country on an origin statement is one selector: dropdown list plus type-to-search over the full global country set. The submitted value is the canonical country name already recognised by the Origins evidence model (`originCountry` / `originCountries`). The reviewed packet wording stays in its own field and is not rewritten when a country is selected.
 
-Replace that manual entry with a governed global country selector: drop-down selection and type-to-search/filter, using the canonical country values and codes the evidence model already supports. Apply it to each country field, including multi-country rows. Do not limit the list to Australia and New Zealand.
+Multi-country evidence uses one selector per country, including an additional blank selector, and still serialises into the existing comma-joined place field.

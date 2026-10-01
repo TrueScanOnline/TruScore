@@ -14,6 +14,8 @@ import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../theme';
+import CountryPicker from './CountryPicker';
+import { originCountrySlots, placeFromCountrySlots, governedOriginCountryNames } from '../contribution/originCountrySelection';
 import {
   activateDevicePrivateByteStore,
   addManualEvidenceUnit,
@@ -152,10 +154,6 @@ async function readUriBytes(uri: string): Promise<Uint8Array> {
   return bytes;
 }
 
-function placesFromPack(place: string): string[] {
-  return [...new Set(place.split(',').map((part) => part.trim()).filter((part) => part.length > 0))];
-}
-
 function packetInformationContext(context: ContributionEntryContext): boolean {
   return context === 'packetClaims' || context === 'certifications';
 }
@@ -208,6 +206,7 @@ export default function PacketContributionModal({
   const [amounts, setAmounts] = useState<Partial<Record<NutritionAttribute, string>>>({});
   const [sodiumUnit, setSodiumUnit] = useState<'mg' | 'g'>('mg');
   const [origins, setOrigins] = useState<OriginDraft[]>([EMPTY_ORIGIN]);
+  const [countryBlanks, setCountryBlanks] = useState<number[]>([0]);
   const [originContext, setOriginContext] = useState<OriginContributionDraft[]>([]);
   const [offOriginContext, setOffOriginContext] = useState<string | null>(null);
   const [claims, setClaims] = useState<string[]>(['']);
@@ -250,6 +249,7 @@ export default function PacketContributionModal({
     setOriginContext(initialOriginContextRef.current || []);
     setOffOriginContext(knownOffOriginRef.current || null);
     setOrigins([EMPTY_ORIGIN]);
+    setCountryBlanks([0]);
     setClaims(['']);
     setCerts(['']);
     setAbsence(false);
@@ -463,7 +463,7 @@ export default function PacketContributionModal({
         const originRows = originRowsToSubmit(origins);
         for (let index = 0; index < originRows.length; index += 1) {
           const row = originRows[index];
-          const places = placesFromPack(row.place);
+          const places = governedOriginCountryNames(row.place);
           const wording = row.wording.trim();
           if (!wording || places.length === 0) continue;
           const percentage = Number(row.percentage);
@@ -597,7 +597,9 @@ export default function PacketContributionModal({
       if (admittedOrigins.size > 0) {
         setOrigins((rows) => {
           const remaining = originRowsToSubmit(rows).filter((_, index) => !admittedOrigins.has(index));
-          return remaining.length > 0 ? remaining : [EMPTY_ORIGIN];
+          const next = remaining.length > 0 ? remaining : [EMPTY_ORIGIN];
+          setCountryBlanks(next.map(() => 0));
+          return next;
         });
       }
       setPartialNotice(
@@ -827,15 +829,70 @@ export default function PacketContributionModal({
                         />
                       </View>
                     ) : null}
-                    <Text style={{ color: colors.text }}>Country or place stated on the pack</Text>
-                    <TextInput
-                      value={row.place}
-                      onChangeText={(value) =>
-                        setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, place: value } : item)))
+                    <Text style={{ color: colors.text }}>Country</Text>
+                    {originCountrySlots(row.place, countryBlanks[index] ?? 0).map((slot, slotIndex, slots) => (
+                      <View key={`${index}-country-${slotIndex}`}>
+                        <CountryPicker
+                          selectedCountry={slot}
+                          onSelect={(country) => {
+                            const blanks = countryBlanks[index] ?? 0;
+                            const current = originCountrySlots(row.place, blanks);
+                            const fillingBlank = current[slotIndex] == null;
+                            const next = current.map((item, itemIndex) => (itemIndex === slotIndex ? country : item));
+                            setOrigins((rows) =>
+                              rows.map((item, itemIndex) =>
+                                itemIndex === index ? { ...item, place: placeFromCountrySlots(next) } : item
+                              )
+                            );
+                            if (fillingBlank && governedOriginCountryNames(row.place).length > 0 && blanks > 0) {
+                              setCountryBlanks((counts) =>
+                                counts.map((count, itemIndex) =>
+                                  itemIndex === index ? Math.max(0, count - 1) : count
+                                )
+                              );
+                            }
+                          }}
+                          placeholder="Select country"
+                        />
+                        {slots.length > 1 ? (
+                          <TouchableOpacity
+                            onPress={() => {
+                              const blanks = countryBlanks[index] ?? 0;
+                              const current = originCountrySlots(row.place, blanks);
+                              if (current.length <= 1) return;
+                              const removed = current[slotIndex];
+                              const next = current.filter((_, itemIndex) => itemIndex !== slotIndex);
+                              setOrigins((rows) =>
+                                rows.map((item, itemIndex) =>
+                                  itemIndex === index ? { ...item, place: placeFromCountrySlots(next) } : item
+                                )
+                              );
+                              if (removed == null) {
+                                setCountryBlanks((counts) =>
+                                  counts.map((count, itemIndex) =>
+                                    itemIndex === index ? Math.max(0, count - 1) : count
+                                  )
+                                );
+                              }
+                            }}
+                          >
+                            <Text style={{ color: colors.primary }}>Remove country</Text>
+                          </TouchableOpacity>
+                        ) : null}
+                      </View>
+                    ))}
+                    <TouchableOpacity
+                      onPress={() =>
+                        setCountryBlanks((counts) => {
+                          const next = counts.slice();
+                          while (next.length <= index) next.push(0);
+                          next[index] = (next[index] ?? 0) + 1;
+                          return next;
+                        })
                       }
-                      placeholder="Country or place stated on the pack"
-                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                    />
+                    >
+                      <Text style={{ color: colors.primary }}>Add another country</Text>
+                    </TouchableOpacity>
                     <Text style={{ color: colors.text }}>Percentage stated on the pack</Text>
                     <TextInput
                       value={row.percentage}
@@ -878,14 +935,30 @@ export default function PacketContributionModal({
                         </TouchableOpacity>
                       ))}
                     </View>
-                    <TouchableOpacity onPress={() => setOrigins((rows) => rows.filter((_, itemIndex) => itemIndex !== index))}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setOrigins((rows) => {
+                          const remaining = rows.filter((_, itemIndex) => itemIndex !== index);
+                          return remaining.length > 0 ? remaining : [EMPTY_ORIGIN];
+                        });
+                        setCountryBlanks((counts) => {
+                          const remaining = counts.filter((_, itemIndex) => itemIndex !== index);
+                          return remaining.length > 0 ? remaining : [0];
+                        });
+                      }}
+                    >
                       <Text style={{ color: colors.primary }}>Remove</Text>
                     </TouchableOpacity>
                   </View>
                 ))
               : null}
             {activeContext === 'origins' && journey.another ? (
-              <TouchableOpacity onPress={() => setOrigins((rows) => [...rows, EMPTY_ORIGIN])}>
+              <TouchableOpacity
+                onPress={() => {
+                  setOrigins((rows) => [...rows, EMPTY_ORIGIN]);
+                  setCountryBlanks((counts) => [...counts, 0]);
+                }}
+              >
                 <Text style={{ color: colors.primary }}>{journey.another}</Text>
               </TouchableOpacity>
             ) : null}

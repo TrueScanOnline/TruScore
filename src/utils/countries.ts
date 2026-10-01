@@ -277,3 +277,23 @@ export function getCountryName(code: string): string | undefined {
   const country = COUNTRIES.find(c => c.code === code);
   return country?.name;
 }
+
+/** Exact country name or code from the existing global list. Free text is not a country. */
+export function canonicalOriginCountryName(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const byCode = COUNTRIES.find((country) => country.code.toLowerCase() === trimmed.toLowerCase());
+  if (byCode) return byCode.name;
+  const byName = COUNTRIES.find((country) => country.name.toLowerCase() === trimmed.toLowerCase());
+  return byName?.name ?? null;
+}
+
+/** One governed country per entry. Unrecognised text is dropped. */
+export function canonicalOriginCountryNames(place: string): string[] {
+  const names: string[] = [];
+  for (const part of place.split(',')) {
+    const name = canonicalOriginCountryName(part);
+    if (name && !names.includes(name)) names.push(name);
+  }
+  return names;
+}
