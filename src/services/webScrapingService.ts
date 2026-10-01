@@ -4,6 +4,7 @@
 
 import { Product, ProductNutriments } from '../types/product';
 import { logger } from '../utils/logger';
+import { offProductApiUrl, offProductReadHost } from './offReadTarget';
 
 // Free CORS proxies (public, rate-limited but usable)
 const CORS_PROXIES = [
@@ -338,7 +339,8 @@ function generateProductUrls(barcode: string, productName?: string): string[] {
   
   // Open Food Facts (if product name suggests food)
   if (productName || barcode.length >= 8) {
-    urls.push(`https://world.openfoodfacts.org/product/${barcode}`);
+    const host = offProductReadHost(process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV);
+    urls.push(`https://${host}/product/${barcode}`);
   }
   
   return urls;
@@ -365,7 +367,7 @@ export async function scrapeProductInfo(barcode: string, productName?: string): 
 
   // Strategy 1: Try Open Food Facts directly (structured, reliable)
   try {
-    const offUrl = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
+    const offUrl = offProductApiUrl(barcode, process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV, 'v0');
     const response = await fetch(offUrl, {
       headers: { 'Accept': 'application/json', 'User-Agent': 'Rveel/1.0.0' },
     });

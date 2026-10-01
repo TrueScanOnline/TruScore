@@ -8,6 +8,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { EvidenceAuthority, OFF_STAGING_HOSTNAME, officialOffStagingTarget } from '../../../src/evidenceAuthority/authority';
+import { summarizeOffWriteResponse } from '../../../src/evidenceAuthority/offWriteResponse';
 import type { EvidenceFactInput } from '../../../src/evidenceAuthority/types';
 import type { ManualTextDomain } from '../../../src/evidenceAuthority/manualTextAsset';
 import { PostgresAuthorityStore } from '../lib/evidenceAuthorityPg';
@@ -71,7 +72,17 @@ async function authority(): Promise<EvidenceAuthority> {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: form,
           });
-          return { ok: response.ok, status: response.status };
+          const body = await response.text();
+          const note = summarizeOffWriteResponse(response.status, body);
+          console.log(
+            '[off-staging-write]',
+            JSON.stringify({
+              barcode: fields.code || null,
+              status: response.status,
+              note,
+            })
+          );
+          return { ok: response.ok, status: response.status, note };
         },
       });
     })();

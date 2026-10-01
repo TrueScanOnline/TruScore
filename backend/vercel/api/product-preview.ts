@@ -3,6 +3,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 import { offJsonProductToTruescan } from '../lib/offToTruescanProduct';
+import { offProductApiUrl } from '../../../src/services/offReadTarget';
 /** Resolved via `truescan-src/` (synced from repo root `src/` before deploy — see syncTruescanSrc.cjs). */
 import { calculateBodyPillar } from '../truescan-src/lib/truscoreEngine/pillars/bodyPillar';
 import { calculatePlanetPillar } from '../truescan-src/lib/truscoreEngine/pillars/planetPillar';
@@ -81,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const offUrl = `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`;
+    const offUrl = offProductApiUrl(barcode, process.env.RVEEL_EVIDENCE_AUTHORITY_ENV, 'v2');
     const offResponse = await fetch(offUrl, {
       headers: {
         'User-Agent': 'Rveel/1.0.0',

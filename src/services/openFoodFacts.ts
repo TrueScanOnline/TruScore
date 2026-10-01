@@ -20,12 +20,12 @@ import {
   type OffRetrievalFailureReason,
   type OffVariantAttemptOutcome,
 } from './offRetrievalOutcome';
+import { offProductReadHost } from './offReadTarget';
 
 export type { OffFetchResult, OffRetrievalFailureReason } from './offRetrievalOutcome';
 
 export { ORGANIC_LABEL_TEXT_CLAIM_TAG, ORGANIC_PRODUCT_NAME_CLAIM_TAG };
 
-const OFF_API_BASE = 'https://world.openfoodfacts.org/api/v2/product';
 const USER_AGENT = 'Rveel/1.0.0';
 
 export interface OFFResponse {
@@ -110,9 +110,10 @@ async function fetchProductFromOFFInstanceOnce(
 }
 
 /**
- * Fetch product data from Open Food Facts canonical World API by exact GTIN.
- * Wave 2: Country/regional hosts are not alternative factual product sources —
- * world.openfoodfacts.org is the sole governed OFF retrieval endpoint.
+ * Fetch product data from the allowlisted Open Food Facts host for this build.
+ * Production and any unset environment read world.openfoodfacts.org.
+ * UAT (EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV=uat) reads world.openfoodfacts.net.
+ * Country or regional hosts are not alternative factual product sources.
  *
  * Transient failures retry up to OFF_MAX_TRANSIENT_ATTEMPTS total (including initial).
  * Authoritative 404 on a variant proceeds to the next variant without consuming retry budget.
@@ -120,9 +121,10 @@ async function fetchProductFromOFFInstanceOnce(
 export async function fetchProductFromOFF(barcode: string): Promise<OffFetchResult> {
   const barcodeVariants = normalizeBarcode(barcode);
   const uniqueVariants = Array.from(new Set(barcodeVariants));
+  const host = offProductReadHost(process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV);
 
   logger.debug(
-    `Trying ${uniqueVariants.length} barcode variants for OFF World query: ${uniqueVariants.join(', ')}`
+    `Trying ${uniqueVariants.length} barcode variants for OFF query on ${host}: ${uniqueVariants.join(', ')}`
   );
 
   let transientAttempts = 0;
@@ -131,11 +133,11 @@ export async function fetchProductFromOFF(barcode: string): Promise<OffFetchResu
 
   while (variantIndex < uniqueVariants.length) {
     const variant = uniqueVariants[variantIndex];
-    const outcome = await fetchProductFromOFFInstanceOnce(variant, 'world.openfoodfacts.org');
+    const outcome = await fetchProductFromOFFInstanceOnce(variant, host);
 
     if (outcome.kind === 'hit') {
       logger.debug(
-        `Found product in OFF (world.openfoodfacts.org) with variant ${variant}: ${barcode}`
+        `Found product in OFF (${host}) with variant ${variant}: ${barcode}`
       );
       return { kind: 'hit', product: outcome.product };
     }

@@ -165,7 +165,7 @@ export type DispatchRecord = {
   target: string | null;
   fields: Record<string, string>;
   lineage: OffFieldLineage[];
-  readBackStatus: 'not_run' | 'read';
+  readBackStatus: string;
   createdAt: number;
 };
 

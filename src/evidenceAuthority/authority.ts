@@ -76,7 +76,7 @@ function withinChunkBounds(chunkCount: number, totalBytes: number): boolean {
 export type OffTransport = (input: {
   target: string;
   fields: Record<string, string>;
-}) => Promise<{ ok: boolean; status: number }>;
+}) => Promise<{ ok: boolean; status: number; note?: string }>;
 
 export type AuthorityRuntimeConfig = {
   authorityEnv: AuthorityEnv;
@@ -633,7 +633,7 @@ export class EvidenceAuthority {
       await this.store.transaction(async (tx) => {
         await tx.updateDispatch(row.dispatchId, {
           status: result.ok ? 'sent' : 'failed_retryable',
-          readBackStatus: 'not_run',
+          readBackStatus: result.note || 'not_run',
         });
       });
     }

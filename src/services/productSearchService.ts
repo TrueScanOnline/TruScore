@@ -1,8 +1,7 @@
 // Product search service - searches across all databases
 import { Product } from '../types/product';
 import { searchUSDAFoodData } from './usdaFoodData';
-
-const OFF_SEARCH_API = 'https://world.openfoodfacts.org/cgi/search.pl';
+import { offProductReadHost } from './offReadTarget';
 const OBF_SEARCH_API = 'https://world.openbeautyfacts.org/cgi/search.pl';
 const OPF_SEARCH_API = 'https://world.openproductsfacts.org/cgi/search.pl';
 const OPFF_SEARCH_API = 'https://world.openpetfoodfacts.org/cgi/search.pl';
@@ -55,7 +54,8 @@ async function searchOpenFoodFacts(query: string, limit = 20): Promise<SearchRes
       fields: 'code,product_name,product_name_en,brands,categories_tags,image_url,image_front_url,ecoscore_grade,ecoscore_score,nutriscore_grade,nutriscore_score,nova_group,labels_tags',
     });
 
-    const response = await fetch(`${OFF_SEARCH_API}?${params.toString()}`, {
+    const offHost = offProductReadHost(process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV);
+    const response = await fetch(`https://${offHost}/cgi/search.pl?${params.toString()}`, {
       headers: { 'User-Agent': 'Rveel/1.0.0' },
     });
 
