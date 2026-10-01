@@ -764,12 +764,14 @@ describe('Wave 4A shared evidence authority', () => {
     expect(dispatches).toHaveLength(2);
     const per100 = dispatches.find((row) => row.fields.nutrition_data_per === '100g');
     const perServing = dispatches.find((row) => row.fields.nutrition_data_per === 'serving');
-    expect(per100?.fields.nutriment_sugars_100g).toBe('4');
+    expect(per100?.fields.nutriment_sugars).toBe('4');
+    expect(per100?.fields.nutriment_sugars_unit).toBe('g');
+    expect(per100?.fields.nutriment_sugars_100g).toBeUndefined();
     expect(per100?.fields.nutriment_sugars_serving).toBeUndefined();
     expect(perServing?.fields.nutriment_sugars_serving).toBe('9');
-    expect(perServing?.fields.nutriment_sugars_100g).toBeUndefined();
+    expect(perServing?.fields.nutriment_sugars).toBeUndefined();
     expect(per100?.lineage).toEqual([
-      expect.objectContaining({ offField: 'nutriment_sugars_100g', basis: 'per_100g' }),
+      expect.objectContaining({ offField: 'nutriment_sugars', basis: 'per_100g' }),
     ]);
     expect(perServing?.lineage).toEqual([
       expect.objectContaining({ offField: 'nutriment_sugars_serving', basis: 'per_serving' }),

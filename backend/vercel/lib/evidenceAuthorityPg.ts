@@ -1,5 +1,5 @@
-import { assertEvidenceAuthoritySchemaReady } from '../../../src/evidenceAuthority/schemaReady';
-import type { AuthorityStore, AuthorityTx, SubjectRow } from '../../../src/evidenceAuthority/store';
+import { assertEvidenceAuthoritySchemaReady } from '../truescan-src/evidenceAuthority/schemaReady';
+import type { AuthorityStore, AuthorityTx, SubjectRow } from '../truescan-src/evidenceAuthority/store';
 import type {
   AssetChunkRecord,
   ContributorRecord,
@@ -10,7 +10,7 @@ import type {
   ResponseRecord,
   SubmissionOutcome,
   VersionRecord,
-} from '../../../src/evidenceAuthority/types';
+} from '../truescan-src/evidenceAuthority/types';
 
 type Queryable = {
   query: (text: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }>;

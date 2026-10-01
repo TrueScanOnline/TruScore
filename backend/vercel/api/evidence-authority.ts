@@ -7,10 +7,10 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { EvidenceAuthority, OFF_STAGING_HOSTNAME, officialOffStagingTarget } from '../../../src/evidenceAuthority/authority';
-import { summarizeOffWriteResponse } from '../../../src/evidenceAuthority/offWriteResponse';
-import type { EvidenceFactInput } from '../../../src/evidenceAuthority/types';
-import type { ManualTextDomain } from '../../../src/evidenceAuthority/manualTextAsset';
+import { EvidenceAuthority, OFF_STAGING_HOSTNAME, officialOffStagingTarget } from '../truescan-src/evidenceAuthority/authority';
+import { summarizeOffWriteResponse } from '../truescan-src/evidenceAuthority/offWriteResponse';
+import type { EvidenceFactInput } from '../truescan-src/evidenceAuthority/types';
+import type { ManualTextDomain } from '../truescan-src/evidenceAuthority/manualTextAsset';
 import { PostgresAuthorityStore } from '../lib/evidenceAuthorityPg';
 
 function handleCORS(res: VercelResponse) {

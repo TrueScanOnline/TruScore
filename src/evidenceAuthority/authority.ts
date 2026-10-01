@@ -12,7 +12,7 @@ import { CURRENT_PRODUCTION_CONTRIBUTION_EPOCH } from '../contributions/producti
 import type { ContributionDisputeReason } from '../config/contributionPolicy';
 import { registerIngredientsNutritionBodyReceiver } from '../ingredientsNutrition/bodyReceiver';
 import {
-  nutritionField,
+  offNutrientWriteKey,
   projectOffWriteFields,
   type NutritionBasis,
 } from '../ingredientsNutrition/nutritionSchema';
@@ -600,9 +600,9 @@ export class EvidenceAuthority {
           });
         }
         for (const amount of nutrition?.nutriments || []) {
-          const suffix = nutrition?.nutritionBasis === 'per_serving' ? 'serving' : '100g';
+          const basis = (nutrition?.nutritionBasis || 'per_100g') as NutritionBasis;
           lineage.push({
-            offField: `nutriment_${nutritionField(amount.attribute as NutritionAttribute).offNutrient}_${suffix}`,
+            offField: offNutrientWriteKey(amount.attribute as NutritionAttribute, basis),
             versionId: row.versionId,
             subjectKey: row.subjectKey,
             basis: nutrition?.nutritionBasis || key,

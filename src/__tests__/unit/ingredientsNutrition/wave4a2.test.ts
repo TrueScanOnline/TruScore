@@ -360,8 +360,10 @@ describe('Wave 4A.2 ingredients and nutrition', () => {
     expect(sent.fields).toMatchObject({
       ingredients_text: 'peas',
       nutrition_data_per: '100g',
-      nutriment_sugars_100g: '2',
+      nutriment_sugars: '2',
+      nutriment_sugars_unit: 'g',
     });
+    expect(sent.fields.nutriment_sugars_100g).toBeUndefined();
     expect(sent.fields.nutriscore_grade).toBeUndefined();
     expect(sent.fields.nova_group).toBeUndefined();
     expect(sent.fields.password).toBeUndefined();

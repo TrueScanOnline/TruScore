@@ -3,7 +3,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 import { offJsonProductToTruescan } from '../lib/offToTruescanProduct';
-import { offProductApiUrl } from '../../../src/services/offReadTarget';
+import { offProductApiUrl } from '../truescan-src/services/offReadTarget';
 /** Resolved via `truescan-src/` (synced from repo root `src/` before deploy — see syncTruescanSrc.cjs). */
 import { calculateBodyPillar } from '../truescan-src/lib/truscoreEngine/pillars/bodyPillar';
 import { calculatePlanetPillar } from '../truescan-src/lib/truscoreEngine/pillars/planetPillar';

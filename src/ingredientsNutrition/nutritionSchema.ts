@@ -124,6 +124,18 @@ function offBasis(basis: NutritionBasis): { nutritionDataPer: string; suffix: '1
   return { nutritionDataPer: '100g', suffix: '100g' };
 }
 
+/**
+ * product_jqm2.pl stores nutriment_<taxonomy id> plus nutriment_<id>_unit.
+ * nutrition_data_per says whether that value is per 100 g or per serving.
+ * The _100g suffix is the read API, not the write parameter.
+ * per_100ml and per_serving keep their existing keys until those paths are enabled.
+ */
+export function offNutrientWriteKey(attribute: NutritionAttribute, basis: NutritionBasis): string {
+  const nutrient = nutritionField(attribute).offNutrient;
+  if (basis === 'per_100g') return `nutriment_${nutrient}`;
+  return `nutriment_${nutrient}_${offBasis(basis).suffix}`;
+}
+
 /** OFF sodium is grams. Milligrams convert only when the stated unit is mg. */
 export function offNutrientValue(amount: StatedNutritionAmount): string | undefined {
   const field = nutritionField(amount.attribute);
@@ -148,7 +160,13 @@ export function projectOffWriteFields(input: {
     for (const amount of input.nutrition.amounts) {
       const written = offNutrientValue(amount);
       if (written === undefined) continue;
-      nutrientFields[`nutriment_${nutritionField(amount.attribute).offNutrient}_${basis.suffix}`] = written;
+      const field = nutritionField(amount.attribute);
+      if (input.nutrition.basis === 'per_100g') {
+        nutrientFields[`nutriment_${field.offNutrient}`] = written;
+        nutrientFields[`nutriment_${field.offNutrient}_unit`] = field.offUnit;
+      } else {
+        nutrientFields[`nutriment_${field.offNutrient}_${basis.suffix}`] = written;
+      }
     }
     if (Object.keys(nutrientFields).length > 0) {
       fields.nutrition_data_per = basis.nutritionDataPer;

@@ -12,7 +12,7 @@ import {
   saveManufacturingCountrySubmission,
   getManufacturingCountrySubmissions,
 } from '../lib/database';
-import { getCommunityVerificationThresholds } from '../../../src/config/contributionPolicy';
+import { getCommunityVerificationThresholds } from '../truescan-src/config/contributionPolicy';
 
 interface ManufacturingCountrySubmission {
   barcode: string;
