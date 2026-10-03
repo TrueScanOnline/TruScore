@@ -6,8 +6,10 @@
  * mergeProducts / FSANZ / FoodAtlas / OBF fan-out is intentionally not reintroduced here.
  */
 
+import { SNAPSHOT_FETCH_TIMEOUT_MS } from '../evidenceAuthority/assessment';
 import { ProductWithTrustScore } from '../types/product';
 import { fetchProductOptimized } from './productServiceOptimized';
+import { USER_CONTRIBUTED_MERGE_RACE_MS } from './userContributedProductsService';
 
 /**
  * Progress callback type for progressive product display
@@ -37,10 +39,43 @@ export async function fetchProduct(
   return fetchProductOptimized(barcode, useCache, isPremium, isOffline, onProgress);
 }
 
+/** Ceiling for the settled assessment cycle after first paint has already returned. */
+export const SETTLED_REFRESH_WAIT_MS = USER_CONTRIBUTED_MERGE_RACE_MS + SNAPSHOT_FETCH_TIMEOUT_MS + 1000;
+
+/**
+ * Wait for the existing assessment cycle's settled product.
+ * A first-paint checking product is not a refresh result.
+ */
+export async function awaitSettledRefresh(
+  load: (onProgress: ProductProgressCallback) => Promise<ProductWithTrustScore | null>
+): Promise<ProductWithTrustScore | null> {
+  let settled: ProductWithTrustScore | null = null;
+  let resolveSettled: (product: ProductWithTrustScore) => void = () => undefined;
+  const settledPromise = new Promise<ProductWithTrustScore>((resolve) => {
+    resolveSettled = resolve;
+  });
+  const returned = await load((progress) => {
+    if (progress.product?._assessmentCycleSettled === true) {
+      settled = progress.product;
+      resolveSettled(progress.product);
+    }
+  });
+  if (!returned) return null;
+  if (returned._assessmentCycleSettled === true) return returned;
+  if (settled) return settled;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const ceiling = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), SETTLED_REFRESH_WAIT_MS);
+  });
+  const winner = await Promise.race([settledPromise, ceiling]);
+  if (timer) clearTimeout(timer);
+  return winner;
+}
+
 /**
  * Force a fresh query bypassing AsyncStorage cache (SQLite may still hit).
- * Delegates to the same OFF-only path as fetchProduct.
+ * Returns only the settled assessment cycle, never the transient checking paint.
  */
 export async function refreshProduct(barcode: string): Promise<ProductWithTrustScore | null> {
-  return fetchProduct(barcode, false);
+  return awaitSettledRefresh((onProgress) => fetchProduct(barcode, false, false, false, onProgress));
 }

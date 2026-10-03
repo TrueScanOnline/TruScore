@@ -16,6 +16,7 @@ import {
 import { summarizeOffWriteResponse } from '../truescan-src/evidenceAuthority/offWriteResponse';
 import type { EvidenceFactInput } from '../truescan-src/evidenceAuthority/types';
 import type { ManualTextDomain } from '../truescan-src/evidenceAuthority/manualTextAsset';
+import { continueAfterResponse } from '../lib/continueAfterResponse';
 import { PostgresAuthorityStore } from '../lib/evidenceAuthorityPg';
 
 function handleCORS(res: VercelResponse) {
@@ -111,7 +112,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const barcode = typeof req.query.barcode === 'string' ? req.query.barcode.trim() : '';
       if (!barcode) return res.status(200).json({ success: true, authorityEnv: service.authorityEnv });
       if (!/^\d{8,14}$/.test(barcode)) return res.status(400).json({ success: false, error: 'Valid barcode required' });
-      return res.status(200).json({ success: true, snapshot: await service.snapshot(barcode) });
+      const snapshot = await service.snapshot(barcode);
+      scheduleOffDispatch(service, snapshot.barcode, snapshot.offDispatch, false);
+      return res.status(200).json({ success: true, snapshot });
     }
     if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
     const body = (req.body && typeof req.body === 'object' ? req.body : {}) as Record<string, unknown>;
@@ -235,6 +238,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       contentType: typeof body.contentType === 'string' ? body.contentType : undefined,
       facts,
     });
+    if (outcome.snapshot) scheduleOffDispatch(service, outcome.snapshot.barcode, outcome.snapshot.offDispatch, true);
     return res.status(200).json({ success: outcome.status === 'admitted', outcome });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'evidence_authority_failed';
@@ -245,4 +249,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         : 500;
     return res.status(status).json({ success: false, error: message });
   }
+}
+
+function scheduleOffDispatch(
+  service: EvidenceAuthority,
+  barcode: string,
+  rows: Array<{ status: string }>,
+  includeFailed: boolean
+): void {
+  const ready = rows.some(
+    (row) => row.status === 'pending' || (includeFailed && row.status === 'failed_retryable')
+  );
+  if (!ready) return;
+  continueAfterResponse(
+    service.dispatchPendingOff(barcode).catch(() => {
+      console.log(
+        '[off-live-write]',
+        JSON.stringify({ barcode, status: 0, note: 'dispatch_continuation_failed' })
+      );
+    })
+  );
 }

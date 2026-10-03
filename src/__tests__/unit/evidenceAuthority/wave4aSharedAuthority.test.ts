@@ -401,6 +401,9 @@ describe('Wave 4A shared evidence authority', () => {
     const writer = await live.issueCredential();
     const sent = await send(live, writer.contributorId, [{ domain: 'ingredients_nutrition', ingredientsText: 'rye' }], 'off-send');
     expect(liveOffNetworkWriteAllowed()).toBe(false);
+    expect(sent.snapshot?.offDispatch[0].status).toBe('pending');
+    expect(transport).not.toHaveBeenCalled();
+    await live.dispatchPendingOff(BARCODE);
     expect(transport).toHaveBeenCalledWith(
       expect.objectContaining({
         target: 'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
@@ -408,7 +411,11 @@ describe('Wave 4A shared evidence authority', () => {
       })
     );
     expect(String(transport.mock.calls[0][0].target)).not.toContain('world.openfoodfacts.net');
-    expect(sent.snapshot?.offDispatch[0].status).toBe('sent');
+    const dispatched = await live.snapshot(BARCODE);
+    expect(dispatched.offDispatch[0].status).toBe('sent');
+    expect(dispatched.prevailing.map((row) => row.versionId)).toEqual(
+      sent.snapshot?.prevailing.map((row) => row.versionId)
+    );
   });
 
   it('caps Confidence at Limited when a published pillar uses primary contribution evidence', async () => {
@@ -778,6 +785,8 @@ describe('Wave 4A shared evidence authority', () => {
     expect(perServing?.lineage).toEqual([
       expect.objectContaining({ offField: 'nutriment_sugars_serving', basis: 'per_serving' }),
     ]);
+    expect(transport).not.toHaveBeenCalled();
+    await authority.dispatchPendingOff(BARCODE);
     expect(transport.mock.calls.map((call) => call[0].target)).toEqual([
       'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
       'https://world.openfoodfacts.org/cgi/product_jqm2.pl',

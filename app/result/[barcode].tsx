@@ -999,6 +999,46 @@ function ResultScreenContent() {
     });
   }, [heroImageUrl]);
 
+  const acceptProductUpdate = async (next: ProductWithTrustScore): Promise<boolean> => {
+    const remembered = await rememberedAuthoritativeSnapshot(barcode);
+    const incomingAt = remembered?.generatedAt ?? 0;
+    if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, incomingAt)) {
+      return false;
+    }
+    const projected = remembered
+      ? await calculateTrustScore(next, { authoritativeSnapshot: remembered })
+      : next;
+    const latest = await rememberedAuthoritativeSnapshot(barcode);
+    if (latest && latest.generatedAt !== remembered?.generatedAt) {
+      if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, latest.generatedAt)) return false;
+      const refreshed = await calculateTrustScore(next, { authoritativeSnapshot: latest });
+      if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, latest.generatedAt)) return false;
+      appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, latest.generatedAt);
+      if (publicationSettledRef.current && refreshed._assessmentCycleSettled === false) return false;
+      if (refreshed._assessmentCycleSettled === true) {
+        publicationSettledRef.current = true;
+        setPublicationSettled(true);
+        settledForBarcodeRef.current = barcode;
+      }
+      setProgressiveProduct(refreshed);
+      setProduct(refreshed);
+      return true;
+    }
+    if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, incomingAt)) return false;
+    if (remembered) appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, remembered.generatedAt);
+    if (publicationSettledRef.current && projected._assessmentCycleSettled === false) {
+      return false;
+    }
+    if (projected._assessmentCycleSettled === true) {
+      publicationSettledRef.current = true;
+      setPublicationSettled(true);
+      settledForBarcodeRef.current = barcode;
+    }
+    setProgressiveProduct(projected);
+    setProduct(projected);
+    return true;
+  };
+
   const loadProduct = async () => {
     const preserveSettledPublication = shouldPreserveSettledResultOnLoadMiss({
       publicationSettled: publicationSettledRef.current,
@@ -1014,46 +1054,6 @@ function ResultScreenContent() {
       setPublicationSettled(false);
     }
 
-    const acceptProductUpdate = async (next: ProductWithTrustScore): Promise<boolean> => {
-      const remembered = await rememberedAuthoritativeSnapshot(barcode);
-      const incomingAt = remembered?.generatedAt ?? 0;
-      if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, incomingAt)) {
-        return false;
-      }
-      const projected = remembered
-        ? await calculateTrustScore(next, { authoritativeSnapshot: remembered })
-        : next;
-      const latest = await rememberedAuthoritativeSnapshot(barcode);
-      if (latest && latest.generatedAt !== remembered?.generatedAt) {
-        if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, latest.generatedAt)) return false;
-        const refreshed = await calculateTrustScore(next, { authoritativeSnapshot: latest });
-        if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, latest.generatedAt)) return false;
-        appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, latest.generatedAt);
-        if (publicationSettledRef.current && refreshed._assessmentCycleSettled === false) return false;
-        if (refreshed._assessmentCycleSettled === true) {
-          publicationSettledRef.current = true;
-          setPublicationSettled(true);
-          settledForBarcodeRef.current = barcode;
-        }
-        setProgressiveProduct(refreshed);
-        setProduct(refreshed);
-        return true;
-      }
-      if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, incomingAt)) return false;
-      if (remembered) appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, remembered.generatedAt);
-      if (publicationSettledRef.current && projected._assessmentCycleSettled === false) {
-        return false;
-      }
-      if (projected._assessmentCycleSettled === true) {
-        publicationSettledRef.current = true;
-        setPublicationSettled(true);
-        settledForBarcodeRef.current = barcode;
-      }
-      setProgressiveProduct(projected);
-      setProduct(projected);
-      return true;
-    };
-    
     try {
       console.log('[ResultScreen] Loading product for barcode:', barcode, 'Platform:', Platform.OS);
       
@@ -1291,10 +1291,9 @@ function ResultScreenContent() {
     setRefreshing(true);
     try {
       const productData = await refreshProduct(barcode);
-      if (productData) {
-        setProduct(productData);
-        setLoadingPhase('complete');
-      }
+      if (!productData || productData._assessmentCycleSettled !== true) return;
+      const accepted = await acceptProductUpdate(productData);
+      if (accepted) setLoadingPhase('complete');
     } catch (err) {
       console.error('Error refreshing product:', err);
     } finally {

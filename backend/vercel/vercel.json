@@ -33,6 +33,9 @@
       "maxDuration": 60,
       "memory": 2048
     },
+    "api/evidence-authority.ts": {
+      "maxDuration": 60
+    },
     "api/product-preview.ts": {
       "maxDuration": 60,
       "memory": 1024

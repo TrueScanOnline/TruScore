@@ -397,11 +397,44 @@ export class EvidenceAuthority {
       await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
       return outcome;
     });
-    await this.flushOff(outcome);
-    if (outcome.snapshot && outcome.snapshot.offDispatch.some((row) => row.status === 'pending')) {
-      return { ...outcome, snapshot: await this.snapshot(outcome.snapshot.barcode) };
-    }
+    // The admitted snapshot is the consumer acknowledgement. OFF dispatch is durable
+    // follow-up work and must not delay this return.
     return outcome;
+  }
+
+  /**
+   * Send eligible pending or failed OFF dispatches for a barcode.
+   * Admission rows are not revised. A failed write stays failed_retryable.
+   */
+  async dispatchPendingOff(barcode: string): Promise<{ sent: number; failed: number }> {
+    if (!this.config.offTransport || this.config.offExecute !== true) return { sent: 0, failed: 0 };
+    const ready = (await this.snapshot(barcode)).offDispatch.filter(
+      (row) => (row.status === 'pending' || row.status === 'failed_retryable') && row.target
+    );
+    let sent = 0;
+    let failed = 0;
+    for (const row of ready) {
+      let result: { ok: boolean; status: number; note?: string };
+      try {
+        result = await this.config.offTransport({ target: row.target as string, fields: row.fields });
+      } catch {
+        result = { ok: false, status: 0, note: 'dispatch_continuation_failed' };
+      }
+      let applied = false;
+      await this.store.transaction(async (tx) => {
+        const current = (await tx.dispatchesForBarcode(barcode)).find((item) => item.dispatchId === row.dispatchId);
+        if (!current || (current.status !== 'pending' && current.status !== 'failed_retryable')) return;
+        await tx.updateDispatch(row.dispatchId, {
+          status: result.ok ? 'sent' : 'failed_retryable',
+          readBackStatus: result.note || 'not_run',
+        });
+        applied = true;
+      });
+      if (!applied) continue;
+      if (result.ok) sent += 1;
+      else failed += 1;
+    }
+    return { sent, failed };
   }
 
   async confirm(contributorId: string, versionId: string): Promise<{ ok: boolean; reason?: string }> {
@@ -635,20 +668,6 @@ export class EvidenceAuthority {
         createdAt: this.now(),
       };
       await tx.putDispatch(row);
-    }
-  }
-
-  private async flushOff(outcome: SubmissionOutcome): Promise<void> {
-    const ready = (outcome.snapshot?.offDispatch || []).filter((row) => row.status === 'pending' && row.target);
-    if (!this.config.offTransport || ready.length === 0) return;
-    for (const row of ready) {
-      const result = await this.config.offTransport({ target: row.target as string, fields: row.fields });
-      await this.store.transaction(async (tx) => {
-        await tx.updateDispatch(row.dispatchId, {
-          status: result.ok ? 'sent' : 'failed_retryable',
-          readBackStatus: result.note || 'not_run',
-        });
-      });
     }
   }
 
