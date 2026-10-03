@@ -1,4 +1,4 @@
-import { productOriginsCardPresentation } from '../../../origins/productOriginsCard';
+import { formatGovernedOriginFactLine, productOriginsCardPresentation } from '../../../origins/productOriginsCard';
 import type { GovernedOriginFact } from '../../../origins/governedFacts';
 import type { Product } from '../../../types/product';
 import * as fs from 'fs';
@@ -53,6 +53,23 @@ describe('Product Origins Result presentation', () => {
     expect(card.offCountry).toBeNull();
     expect(card.facts.map((fact) => fact.countries)).toEqual([['Australia']]);
     expect(card.limitedConfidence).toBe(true);
+  });
+
+  test('a made_in contribution is the current manufacturing subject, including the same country', () => {
+    const same = productOriginsCardPresentation(
+      product({
+        manufacturing_places: 'Australia',
+        rveelGovernedOrigins: [madeIn('Australia')],
+      })
+    );
+    expect(same.offCountry).toBeNull();
+    expect(formatGovernedOriginFactLine({
+      ...same.facts[0],
+      percentage: 99,
+      percentageQualifier: 'at_least',
+      exactWording: 'Made in Australia from at least 99% Australian ingredients',
+    })).toBe('Made in · Australia · at least 99%');
+    expect(same.facts[0]?.exactWording).toBe('Made in Australia');
   });
 
   test('drops conflicting OFF manufacturing country and keeps a compatible distinct fact', () => {

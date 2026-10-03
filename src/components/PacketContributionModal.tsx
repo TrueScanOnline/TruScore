@@ -66,7 +66,7 @@ type Preview = {
 type OriginDraft = OriginContributionDraft & { intent: 'new' | 'edited' };
 
 const EMPTY_ORIGIN: OriginDraft = {
-  claimType: 'grown_in',
+  claimType: null,
   wording: '',
   place: '',
   ingredient: '',
@@ -88,11 +88,11 @@ const QUALIFICATION_LABELS: { value: OriginQualification; label: string }[] = [
 ];
 
 const ORIGIN_LABELS: Record<ProductOriginsClaimType, string> = {
+  produced_in: 'Product of',
   grown_in: 'Grown in',
-  produced_in: 'Produced in',
   made_in: 'Made in',
   packed_in: 'Packed in',
-  ingredient_origin: 'Ingredient origin',
+  ingredient_origin: 'Ingredient from',
 };
 
 const JOURNEY: Record<
@@ -131,7 +131,7 @@ const JOURNEY: Record<
   packetClaims: {
     header: 'Packet claims and certifications',
     instruction: 'Photograph the claim or certification on the pack, or choose a photo you already took.',
-    manual: 'Type what the pack says instead',
+    manual: 'Type what the pack says',
     review: 'Check packet claims and certifications',
     submit: 'Submit packet claims and certifications',
     another: 'Add another claim',
@@ -139,7 +139,7 @@ const JOURNEY: Record<
   certifications: {
     header: 'Packet claims and certifications',
     instruction: 'Photograph the claim or certification on the pack, or choose a photo you already took.',
-    manual: 'Type what the pack says instead',
+    manual: 'Type what the pack says',
     review: 'Check packet claims and certifications',
     submit: 'Submit packet claims and certifications',
     another: 'Add another certification',
@@ -659,17 +659,26 @@ export default function PacketContributionModal({
                 ))}
               </View>
             ) : null}
-            <TouchableOpacity onPress={() => setPhase('entry')} style={styles.button}>
+            <TouchableOpacity
+              onPress={() =>
+                setPhase(packetInformationContext(activeContext) && previews.length > 0 ? 'review' : 'entry')
+              }
+              style={styles.button}
+            >
               <Text style={styles.buttonText}>{journey.manual}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setPhase('review')} style={styles.button}>
-              <Text style={styles.buttonText}>{journey.review}</Text>
-            </TouchableOpacity>
+            {packetInformationContext(activeContext) ? null : (
+              <TouchableOpacity onPress={() => setPhase('review')} style={styles.button}>
+                <Text style={styles.buttonText}>{journey.review}</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : null}
         {phase === 'entry' || phase === 'review' ? (
           <View>
-            <Text style={[styles.header, { color: colors.text }]}>{journey.review}</Text>
+            <Text style={[styles.header, { color: colors.text }]}>
+              {packetInformationContext(activeContext) ? journey.header : journey.review}
+            </Text>
             {phase === 'review'
               ? previews.map((preview) => (
                   <View key={preview.tempKey} style={styles.previewRow}>
@@ -791,7 +800,7 @@ export default function PacketContributionModal({
             ) : null}
             {activeContext === 'origins'
               ? origins.map((row, index) => (
-                  <View key={`${row.claimType}-${index}`}>
+                  <View key={`${row.claimType ?? 'unselected'}-${index}`}>
                     <Text style={{ color: colors.text }}>What does the pack say?</Text>
                     <TextInput
                       value={row.wording}

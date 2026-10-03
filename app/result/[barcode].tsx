@@ -103,7 +103,7 @@ import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
 import { PalmOilCard } from '../../src/features/product/cards/PalmOilCard';
-import { productOriginsCardPresentation, originFactLabel } from '../../src/origins/productOriginsCard';
+import { formatGovernedOriginFactLine, productOriginsCardPresentation } from '../../src/origins/productOriginsCard';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
 import { sanitizeText } from '../../src/utils/validation';
 import { sanitizeCountryForDisplay } from '../../src/utils/countryDisplayName';
@@ -516,10 +516,11 @@ function ResultScreenContent() {
     return subscribeEvidenceAdmission((admittedBarcode, snapshot) => {
       const current = productRef.current;
       if (!current || getPrimaryBarcode(admittedBarcode) !== getPrimaryBarcode(barcode)) return;
+      appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
       void calculateTrustScore(current, { authoritativeSnapshot: snapshot }).then((next) => {
         if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, snapshot.generatedAt)) return;
         if (getPrimaryBarcode(next.barcode) !== getPrimaryBarcode(barcode)) return;
-        appliedSnapshotAtRef.current = snapshot.generatedAt;
+        appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
         setProduct(next);
       });
     });
@@ -1026,7 +1027,8 @@ function ResultScreenContent() {
       if (latest && latest.generatedAt !== remembered?.generatedAt) {
         if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, latest.generatedAt)) return false;
         const refreshed = await calculateTrustScore(next, { authoritativeSnapshot: latest });
-        appliedSnapshotAtRef.current = latest.generatedAt;
+        if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, latest.generatedAt)) return false;
+        appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, latest.generatedAt);
         if (publicationSettledRef.current && refreshed._assessmentCycleSettled === false) return false;
         if (refreshed._assessmentCycleSettled === true) {
           publicationSettledRef.current = true;
@@ -1037,7 +1039,8 @@ function ResultScreenContent() {
         setProduct(refreshed);
         return true;
       }
-      if (remembered) appliedSnapshotAtRef.current = remembered.generatedAt;
+      if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, incomingAt)) return false;
+      if (remembered) appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, remembered.generatedAt);
       if (publicationSettledRef.current && projected._assessmentCycleSettled === false) {
         return false;
       }
@@ -2063,16 +2066,7 @@ function ResultScreenContent() {
           ) : null}
           {originsCard.facts.map((fact) => (
             <View key={fact.evidenceId}>
-              <Text style={{ color: colors.text }}>
-                {originFactLabel(fact.claimType)}
-                {fact.ingredientSubject ? ` · ${fact.ingredientSubject}` : ''}
-                {fact.countries.length > 0 ? ` · ${fact.countries.join(', ')}` : ''}
-                {fact.percentage != null
-                  ? ` · ${fact.percentageQualifier ? `${fact.percentageQualifier.replace(/_/g, ' ')} ` : ''}${fact.percentage}%`
-                  : ''}
-                {fact.originQualification ? ` · ${fact.originQualification}` : ''}
-                {fact.exactWording ? ` · “${fact.exactWording}”` : ''}
-              </Text>
+              <Text style={{ color: colors.text }}>{formatGovernedOriginFactLine(fact)}</Text>
               {fact.countries.map((country) => (
                 <View key={`${fact.evidenceId}-${country}`} style={styles.originContainer}>
                   <CountryFlag country={country} />
@@ -2450,7 +2444,16 @@ function ResultScreenContent() {
         onClose={() => setPacketContributionVisible(false)}
         onSharedEvidenceAdmitted={async (snapshot, complete) => {
           if (!product) return;
-          setProduct(await calculateTrustScore(product, { authoritativeSnapshot: snapshot }));
+          appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
+          const next = await calculateTrustScore(product, { authoritativeSnapshot: snapshot });
+          if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, snapshot.generatedAt)) return;
+          appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
+          if (next._assessmentCycleSettled === true) {
+            publicationSettledRef.current = true;
+            setPublicationSettled(true);
+            settledForBarcodeRef.current = barcode;
+          }
+          setProduct(next);
           if (complete) showContributionNotice(CONTRIBUTION_NOTICE_ADDED);
         }}
         onSharedEvidenceFailed={() => showContributionNotice(CONTRIBUTION_NOTICE_SAVED)}

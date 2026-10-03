@@ -12,7 +12,10 @@ import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
 import { Product, ProductWithTrustScore } from '../../types/product';
 import { PACKET_INFORMATION_ADD } from '../../contribution/resultContributionActions';
-import { bodyDataLimitationActions } from '../../contribution/governedDisplayProjection';
+import {
+  bodyDataLimitationActions,
+  transparencyShowsSeparateAddIngredients,
+} from '../../contribution/governedDisplayProjection';
 import type {
   ContributionOpportunity,
   CrossPillarPublicationSnapshot,
@@ -115,6 +118,7 @@ function S26PillarBlock({
   onLiveAction,
   showLiveCta,
   bodyActions,
+  ingredientAction,
 }: {
   title: string;
   pub: PillarPublicationResult;
@@ -123,6 +127,8 @@ function S26PillarBlock({
   /** Deduped: only the first identical live CTA in the modal renders. */
   showLiveCta: boolean;
   bodyActions?: Array<{ label: string; onPress: () => void }>;
+  /** Ingredient Clarity invitation. Shown once, including while Origins is also unresolved. */
+  ingredientAction?: { onPress: () => void };
 }) {
   const s26: S26Explanation | null = pub.s26;
   if (!s26) return null;
@@ -166,6 +172,14 @@ function S26PillarBlock({
                 ? PACKET_INFORMATION_ADD
                 : 'Add ingredients'
           }
+          primaryColor={colors.primary}
+        />
+      ) : null}
+      {ingredientAction ? (
+        <ManualEditActionRow
+          onPress={ingredientAction.onPress}
+          label="Add ingredients"
+          accessibilityLabel="Add ingredients"
           primaryColor={colors.primary}
         />
       ) : null}
@@ -276,14 +290,15 @@ export default function ProductDataLimitationsCard({
           const opp = pub.s26.contributionOpportunity;
           const bodyActions =
             row.key === 'body'
-              ? bodyDataLimitationActions(product).map((action) => ({
-                  label: action.label,
-                  onPress: () => {
-                    close();
-                    if (action.destination === 'nutrition') onOpenNutrition?.();
-                    else onOpenIngredients?.();
-                  },
-                }))
+              ? bodyDataLimitationActions(product)
+                  .filter((action) => action.destination !== 'ingredients')
+                  .map((action) => ({
+                    label: action.label,
+                    onPress: () => {
+                      close();
+                      if (action.destination === 'nutrition') onOpenNutrition?.();
+                    },
+                  }))
               : [];
           const action = row.key === 'body' ? undefined : resolveAction(routeKey, prefill);
           const liveKey =
@@ -295,6 +310,17 @@ export default function ProductDataLimitationsCard({
             seenLiveRoutes.add(liveKey);
             showLiveCta = true;
           }
+          const ingredientAction =
+            row.key === 'transparency' &&
+            transparencyShowsSeparateAddIngredients(product) &&
+            onOpenIngredients
+              ? {
+                  onPress: () => {
+                    close();
+                    onOpenIngredients();
+                  },
+                }
+              : undefined;
           return (
             <S26PillarBlock
               key={row.key}
@@ -303,6 +329,7 @@ export default function ProductDataLimitationsCard({
               colors={colors}
               showLiveCta={showLiveCta}
               bodyActions={bodyActions}
+              ingredientAction={ingredientAction}
               onLiveAction={
                 showLiveCta && action
                   ? () => {

@@ -164,7 +164,8 @@ export function nutritionAmountsToSubmit(
 
 export type OriginContributionDraft = {
   evidenceId?: string;
-  claimType: ProductOriginsClaimType;
+  /** Null until the consumer chooses a governed type. A new row does not preselect one. */
+  claimType: ProductOriginsClaimType | null;
   wording: string;
   place: string;
   ingredient: string;
@@ -209,9 +210,12 @@ export function originDraftsFromGovernedFacts(
     });
 }
 
-/** New rows, and existing rows only after the consumer changes them. */
-export function originRowsToSubmit(rows: OriginContributionDraft[]): OriginContributionDraft[] {
-  return rows.filter((row) => {
+/** New rows, and existing rows only after the consumer changes them. An unselected claim type cannot submit. */
+export function originRowsToSubmit(
+  rows: OriginContributionDraft[]
+): Array<OriginContributionDraft & { claimType: ProductOriginsClaimType }> {
+  return rows.filter((row): row is OriginContributionDraft & { claimType: ProductOriginsClaimType } => {
+    if (!row.claimType || !CONSUMER_ORIGIN_TYPES.has(row.claimType)) return false;
     const wording = row.wording.trim();
     const place = row.place.trim();
     if (!wording || !place) return false;
@@ -236,6 +240,21 @@ export function retainedAfterPartialAdmission<T extends SubmittedObservation>(
     admitted,
     refused,
   };
+}
+
+/**
+ * True when Ingredient Clarity still needs its own Data Limitations action
+ * beside another Transparency route, such as unresolved Origins.
+ * A Transparency route that is already the ingredients journey does not need a second row.
+ */
+export function transparencyShowsSeparateAddIngredients(product: Product): boolean {
+  if (!resultContributionActions(product).addIngredients) return false;
+  const opportunity = product._publication?.transparency.s26?.contributionOpportunity;
+  const alreadyTheIngredientsRoute =
+    opportunity?.material === true &&
+    opportunity.routeStatus === 'live' &&
+    opportunity.routeKey === 'ingredients_nutrition';
+  return !alreadyTheIngredientsRoute;
 }
 
 /** Body Data Limitations buttons. Reads the Result contribution actions and adds no assessment rule. */

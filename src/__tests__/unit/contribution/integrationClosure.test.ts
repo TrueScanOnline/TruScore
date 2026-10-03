@@ -241,7 +241,9 @@ describe('functional-to-consumer integration closure', () => {
     expect(card).toContain('bodyDataLimitationActions(product)');
     expect(card).toContain("action.destination === 'nutrition'");
     expect(card).toContain('onOpenNutrition?.()');
-    expect(card).toContain('onOpenIngredients?.()');
+    expect(card).toContain('onOpenIngredients()');
+    expect(card).toContain("action.destination !== 'ingredients'");
+    expect(card).toContain('transparencyShowsSeparateAddIngredients');
     expect(card).toContain("routeKey === 'origins'");
     expect(card).toContain("routeKey === 'packet_claims'");
     expect(card).toContain("row.key === 'body' ? undefined : resolveAction");

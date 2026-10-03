@@ -46,6 +46,18 @@ export function isClaimsPacketLaneAssessed(assessment: ClaimsAssessmentResult | 
   return assessment?.publication_packet_lane === 'assessed';
 }
 
+/**
+ * A Benchmark check that moved the Claims score.
+ * no_finding completes the lane without a scoring consequence.
+ */
+export function benchmarkHasSubstantiveScoringFinding(
+  assessment: ClaimsAssessmentResult | undefined
+): boolean {
+  return (assessment?.benchmark_checks || []).some(
+    (check) => check.status === 'positive' || check.status === 'adverse'
+  );
+}
+
 /** Consumer Claims score. Internal base 15 stays on internalScore and is not this value. */
 export function consumerClaimsScore(
   claims: { publicationStatus: string; publishedScore: number | null } | null | undefined
@@ -107,6 +119,8 @@ export function publishClaimsPillar(args: {
 
   const packetAssessed = isClaimsPacketLaneAssessed(assessment);
   const benchmarkAssessed = isClaimsBenchmarkLaneAssessed(assessment);
+  const substantiveBenchmark = benchmarkHasSubstantiveScoringFinding(assessment);
+  const claimsRateable = packetAssessed || substantiveBenchmark;
 
   const packet: ClaimsLaneState = packetAssessed ? 'assessed' : 'unassessed_or_incomplete';
   const benchmark: ClaimsLaneState = benchmarkAssessed
@@ -134,7 +148,7 @@ export function publishClaimsPillar(args: {
     };
   }
 
-  if (!packetAssessed) {
+  if (!claimsRateable) {
     const opp = claimsContributionOpportunity(packet);
     return {
       publicationStatus: 'nr',
@@ -183,7 +197,9 @@ export function publishClaimsPillar(args: {
   const code =
     primaryContributionDependent && packetAssessed && benchmarkAssessed
       ? 'CLAIMS_LIMITED_PRIMARY_CONTRIBUTION'
-      : resolveClaimsS26(packet, benchmark, confidence, true);
+      : !packetAssessed && substantiveBenchmark
+        ? 'CLAIMS_LIMITED_BENCHMARK_ONLY'
+        : resolveClaimsS26(packet, benchmark, confidence, true);
   const opp = claimsContributionOpportunity(packet);
 
   return {
