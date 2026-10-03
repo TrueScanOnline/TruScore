@@ -111,8 +111,7 @@ async function fetchProductFromOFFInstanceOnce(
 
 /**
  * Fetch product data from the allowlisted Open Food Facts host for this build.
- * Production and any unset environment read world.openfoodfacts.org.
- * UAT (EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV=uat) reads world.openfoodfacts.net.
+ * Every environment, including UAT, reads world.openfoodfacts.org.
  * Country or regional hosts are not alternative factual product sources.
  *
  * Transient failures retry up to OFF_MAX_TRANSIENT_ATTEMPTS total (including initial).

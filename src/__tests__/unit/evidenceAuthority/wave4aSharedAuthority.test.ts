@@ -18,6 +18,7 @@ import {
   EvidenceAuthority,
   MAX_EVIDENCE_CHUNK_COUNT,
   MAX_EVIDENCE_ORIGINAL_BYTES,
+  liveOffNetworkWriteAllowed,
 } from '../../../evidenceAuthority/authority';
 import {
   SNAPSHOT_CACHE_MAX_AGE_MS,
@@ -359,7 +360,7 @@ describe('Wave 4A shared evidence authority', () => {
     );
     expect(idleOutcome.snapshot?.offDispatch[0]).toMatchObject({
       status: 'pending_unconfigured',
-      target: 'https://world.openfoodfacts.net/cgi/product_jqm2.pl',
+      target: 'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
       readBackStatus: 'not_run',
     });
     expect(idleOutcome.snapshot?.offDispatch[0].fields.ingredients_text).toBe('oats, water');
@@ -369,7 +370,7 @@ describe('Wave 4A shared evidence authority', () => {
     expect(transport).not.toHaveBeenCalled();
 
     const blocked = service('uat', {
-      offTarget: 'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
+      offTarget: 'https://world.openfoodfacts.net/cgi/product_jqm2.pl',
       offCredentialsConfigured: true,
       offExecute: true,
       offTransport: transport,
@@ -392,20 +393,21 @@ describe('Wave 4A shared evidence authority', () => {
     expect(transport).not.toHaveBeenCalled();
 
     const live = service('uat', {
-      offTarget: 'https://world.openfoodfacts.net/cgi/product_jqm2.pl',
+      offTarget: 'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
       offCredentialsConfigured: true,
       offExecute: true,
       offTransport: transport,
     });
     const writer = await live.issueCredential();
     const sent = await send(live, writer.contributorId, [{ domain: 'ingredients_nutrition', ingredientsText: 'rye' }], 'off-send');
+    expect(liveOffNetworkWriteAllowed()).toBe(false);
     expect(transport).toHaveBeenCalledWith(
       expect.objectContaining({
-        target: 'https://world.openfoodfacts.net/cgi/product_jqm2.pl',
+        target: 'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
         fields: expect.objectContaining({ ingredients_text: 'rye' }),
       })
     );
-    expect(String(transport.mock.calls[0][0].target)).not.toContain('world.openfoodfacts.org');
+    expect(String(transport.mock.calls[0][0].target)).not.toContain('world.openfoodfacts.net');
     expect(sent.snapshot?.offDispatch[0].status).toBe('sent');
   });
 
@@ -737,7 +739,7 @@ describe('Wave 4A shared evidence authority', () => {
   it('dispatches each nutrition basis separately and never falls through to the live OFF host', async () => {
     const transport = jest.fn(async () => ({ ok: true, status: 200 }));
     const authority = service('uat', {
-      offTarget: 'https://world.openfoodfacts.net/cgi/product_jqm2.pl',
+      offTarget: 'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
       offCredentialsConfigured: true,
       offExecute: true,
       offTransport: transport,
@@ -777,10 +779,11 @@ describe('Wave 4A shared evidence authority', () => {
       expect.objectContaining({ offField: 'nutriment_sugars_serving', basis: 'per_serving' }),
     ]);
     expect(transport.mock.calls.map((call) => call[0].target)).toEqual([
-      'https://world.openfoodfacts.net/cgi/product_jqm2.pl',
-      'https://world.openfoodfacts.net/cgi/product_jqm2.pl',
+      'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
+      'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
     ]);
-    expect(JSON.stringify(transport.mock.calls)).not.toContain('world.openfoodfacts.org');
+    expect(JSON.stringify(transport.mock.calls)).not.toContain('world.openfoodfacts.net');
+    expect(liveOffNetworkWriteAllowed()).toBe(false);
   });
 
   it('drops a snapshot older than the cache bound and aborts a slow authority', async () => {
@@ -1010,13 +1013,14 @@ describe('Wave 4A shared evidence authority', () => {
     expect((await authority.history(BARCODE)).every((row) => row.sourceAssetId === finalized.assetId)).toBe(true);
   });
 
-  it('accepts only the exact OFF staging hostname and stays off by default', async () => {
+  it('accepts only the live OFF write hostname and stays off by default', async () => {
     const transport = jest.fn(async () => ({ ok: true, status: 200 }));
     const rejected = [
+      'https://world.openfoodfacts.net/cgi/product_jqm2.pl',
       'https://world.openfoodfacts.net.evil.example/cgi/product_jqm2.pl',
-      'https://preview.world.openfoodfacts.net/cgi/product_jqm2.pl',
-      'https://evil.example/world.openfoodfacts.net',
-      'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
+      'https://preview.world.openfoodfacts.org/cgi/product_jqm2.pl',
+      'https://evil.example/world.openfoodfacts.org',
+      'http://world.openfoodfacts.org/cgi/product_jqm2.pl',
       'not a url',
     ];
     for (const offTarget of rejected) {
@@ -1047,9 +1051,10 @@ describe('Wave 4A shared evidence authority', () => {
     );
     expect(idleOutcome.snapshot?.offDispatch[0]).toMatchObject({
       status: 'pending_unconfigured',
-      target: 'https://world.openfoodfacts.net/cgi/product_jqm2.pl',
+      target: 'https://world.openfoodfacts.org/cgi/product_jqm2.pl',
     });
     expect(transport).not.toHaveBeenCalled();
+    expect(liveOffNetworkWriteAllowed()).toBe(false);
   });
 
   it('rejects chunk manifests outside the byte and count bounds before reconstruction', async () => {

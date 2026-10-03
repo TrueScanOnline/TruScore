@@ -7,7 +7,12 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { EvidenceAuthority, OFF_STAGING_HOSTNAME, officialOffStagingTarget } from '../truescan-src/evidenceAuthority/authority';
+import {
+  EvidenceAuthority,
+  OFF_LIVE_WRITE_HOSTNAME,
+  liveOffNetworkWriteAllowed,
+  officialOffWriteTarget,
+} from '../truescan-src/evidenceAuthority/authority';
 import { summarizeOffWriteResponse } from '../truescan-src/evidenceAuthority/offWriteResponse';
 import type { EvidenceFactInput } from '../truescan-src/evidenceAuthority/types';
 import type { ManualTextDomain } from '../truescan-src/evidenceAuthority/manualTextAsset';
@@ -43,30 +48,37 @@ async function authority(): Promise<EvidenceAuthority> {
         max: 5,
       });
       const env = process.env.RVEEL_EVIDENCE_AUTHORITY_ENV === 'production' ? 'production' : 'uat';
-      const configuredTarget = process.env.OFF_STAGING_WRITE_TARGET?.trim() || '';
-      const stagingTarget = officialOffStagingTarget(configuredTarget || undefined);
-      const stagingUser = process.env.OFF_STAGING_WRITE_USER_ID?.trim() || '';
-      const stagingPassword = process.env.OFF_STAGING_WRITE_PASSWORD?.trim() || '';
-      const stagingCredentials = stagingUser.length > 0 && stagingPassword.length > 0;
+      const configuredTarget = process.env.OFF_LIVE_WRITE_TARGET?.trim() || '';
+      const liveTarget = officialOffWriteTarget(configuredTarget || undefined);
+      const liveUser = process.env.OFF_LIVE_WRITE_USER_ID?.trim() || '';
+      const livePassword = process.env.OFF_LIVE_WRITE_PASSWORD?.trim() || '';
+      const liveCredentials = liveUser.length > 0 && livePassword.length > 0;
       const execute =
         env === 'uat' &&
-        process.env.OFF_STAGING_WRITE_EXECUTE === '1' &&
-        stagingCredentials &&
-        stagingTarget !== null;
+        process.env.OFF_LIVE_WRITE_EXECUTE === '1' &&
+        liveCredentials &&
+        liveTarget !== null &&
+        liveOffNetworkWriteAllowed();
       return new EvidenceAuthority(new PostgresAuthorityStore(pool), {
         authorityEnv: env,
         founderAdminToken: process.env.RVEEL_FOUNDER_ADMIN_TOKEN,
         offTarget: env === 'uat' ? configuredTarget : '',
-        offCredentialsConfigured: env === 'uat' && stagingCredentials,
+        offCredentialsConfigured: env === 'uat' && liveCredentials,
         offExecute: execute,
         offTransport: async ({ target: offTarget, fields }) => {
-          const accepted = officialOffStagingTarget(offTarget);
-          if (!execute || !stagingCredentials || !accepted || new URL(accepted).hostname !== OFF_STAGING_HOSTNAME) {
+          const accepted = officialOffWriteTarget(offTarget);
+          if (
+            !execute ||
+            !liveCredentials ||
+            !accepted ||
+            new URL(accepted).hostname !== OFF_LIVE_WRITE_HOSTNAME ||
+            !liveOffNetworkWriteAllowed()
+          ) {
             return { ok: false, status: 0 };
           }
           const form = new URLSearchParams(fields);
-          form.set('user_id', stagingUser);
-          form.set('password', stagingPassword);
+          form.set('user_id', liveUser);
+          form.set('password', livePassword);
           const response = await fetch(accepted, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -75,7 +87,7 @@ async function authority(): Promise<EvidenceAuthority> {
           const body = await response.text();
           const note = summarizeOffWriteResponse(response.status, body);
           console.log(
-            '[off-staging-write]',
+            '[off-live-write]',
             JSON.stringify({
               barcode: fields.code || null,
               status: response.status,

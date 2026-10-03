@@ -43,23 +43,36 @@ import type {
 } from './types';
 
 const ADMITTED_BY = 'wave4a-evidence-authority';
-const OFF_STAGING_TARGET = 'https://world.openfoodfacts.net/cgi/product_jqm2.pl';
-export const OFF_STAGING_HOSTNAME = 'world.openfoodfacts.net';
+/** Live write endpoint. Staging world.openfoodfacts.net is not a dispatch target. */
+export const OFF_LIVE_WRITE_TARGET = 'https://world.openfoodfacts.org/cgi/product_jqm2.pl';
+export const OFF_LIVE_WRITE_HOSTNAME = 'world.openfoodfacts.org';
 /** Full-quality phone originals stay bounded without recompression. */
 export const MAX_EVIDENCE_ORIGINAL_BYTES = 32 * 1024 * 1024;
 export const MAX_EVIDENCE_CHUNK_COUNT = 256;
 
-/** Unset uses the official staging URL. Any other hostname is rejected. */
-export function officialOffStagingTarget(raw?: string | null): string | null {
+/**
+ * Unset uses the live .org write endpoint. Any other hostname, including
+ * world.openfoodfacts.net, is rejected. Payload fields are unchanged.
+ */
+export function officialOffWriteTarget(raw?: string | null): string | null {
   const value = (raw ?? '').trim();
-  if (!value) return OFF_STAGING_TARGET;
+  if (!value) return OFF_LIVE_WRITE_TARGET;
   try {
     const url = new URL(value);
-    if (url.hostname !== OFF_STAGING_HOSTNAME) return null;
+    if (url.protocol !== 'https:') return null;
+    if (url.username || url.password) return null;
+    if (url.hostname !== OFF_LIVE_WRITE_HOSTNAME) return null;
     return url.href;
   } catch {
     return null;
   }
+}
+
+/** Automated test runners must not open a network write to live OFF. */
+export function liveOffNetworkWriteAllowed(): boolean {
+  if (process.env.JEST_WORKER_ID) return false;
+  if (process.env.NODE_ENV === 'test') return false;
+  return true;
 }
 
 function withinChunkBounds(chunkCount: number, totalBytes: number): boolean {
@@ -548,7 +561,7 @@ export class EvidenceAuthority {
 
   private offPlan(): { target: string | null; execute: boolean } {
     if (this.config.authorityEnv !== 'uat') return { target: null, execute: false };
-    const requested = officialOffStagingTarget(this.config.offTarget);
+    const requested = officialOffWriteTarget(this.config.offTarget);
     if (!requested) return { target: null, execute: false };
     const execute = this.config.offExecute === true && this.config.offCredentialsConfigured === true;
     return { target: requested, execute };

@@ -90,14 +90,17 @@ It is a **secret key** Vercel gives you when you attach **Blob** storage to your
 
 ## SERVER-ONLY — Open Food Facts packet write
 
-`/api/off-product-write` reads these names. Do not prefix them with `EXPO_PUBLIC_`. They must not be placed in the app env or `app.config.js`.
+`/api/off-product-write` is retired and does not call Open Food Facts. Do not put any OFF password in the app env or `app.config.js`.
+
+UAT evidence-authority dispatch uses a dedicated live account on the UAT server only. Set these on `truscoreapi-uat`, not in source, and not on the production project:
 
 ```
-OFF_WRITE_USER_ID=open_food_facts_username
-OFF_WRITE_PASSWORD=open_food_facts_password
+OFF_LIVE_WRITE_USER_ID=dedicated_rveel_off_username
+OFF_LIVE_WRITE_PASSWORD=dedicated_rveel_off_password
+OFF_LIVE_WRITE_EXECUTE=1
 ```
 
-A successful response is `sent`. It does not mean the edit is visible on Open Food Facts, and it does not create a Nutri-Score or NOVA group.
+`OFF_LIVE_WRITE_TARGET` is optional. When unset, dispatch uses `https://world.openfoodfacts.org/cgi/product_jqm2.pl`. Any other hostname is rejected. `OFF_STAGING_WRITE_*` does not authorize a write. Leave `OFF_LIVE_WRITE_EXECUTE` unset until that dedicated account exists. Production authority ignores these variables.
 
 ---
 

@@ -19,11 +19,12 @@ describe('OFF read host allowlist', () => {
     );
   });
 
-  it('sends UAT product reads to world.openfoodfacts.net', () => {
-    expect(offProductReadHost('uat')).toBe('world.openfoodfacts.net');
+  it('sends UAT product reads to world.openfoodfacts.org', () => {
+    expect(offProductReadHost('uat')).toBe('world.openfoodfacts.org');
     expect(offProductApiUrl('12345670', 'uat', 'v0')).toBe(
-      'https://world.openfoodfacts.net/api/v0/product/12345670.json'
+      'https://world.openfoodfacts.org/api/v0/product/12345670.json'
     );
+    expect(offProductApiUrl('12345670', 'uat')).not.toContain('openfoodfacts.net');
   });
 });
 
@@ -35,16 +36,17 @@ describe('fetchProductFromOFF host', () => {
     else process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = previous;
   });
 
-  it('requests the UAT staging host when the authority environment is uat', async () => {
+  it('requests the live catalogue host when the authority environment is uat', async () => {
     process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
     mockedFetch.mockResolvedValueOnce({
       ok: true,
       status: 200,
-      json: async () => ({ status: 1, product: { code: '12345670', product_name: 'Staging' } }),
+      json: async () => ({ status: 1, product: { code: '12345670', product_name: 'Live' } }),
     } as Response);
     const result = await fetchProductFromOFF('12345670');
     expect(result.kind).toBe('hit');
-    expect(String(mockedFetch.mock.calls[0][0])).toContain('https://world.openfoodfacts.net/api/v2/product/');
+    expect(String(mockedFetch.mock.calls[0][0])).toContain('https://world.openfoodfacts.org/api/v2/product/');
+    expect(String(mockedFetch.mock.calls[0][0])).not.toContain('openfoodfacts.net');
   });
 
   it('requests the production host when the authority environment is unset', async () => {
