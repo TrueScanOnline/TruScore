@@ -1,3 +1,4 @@
+import { serverTraceMark, serverTraceTransaction } from './contributionTrace';
 import { assertEvidenceAuthoritySchemaReady } from '../truescan-src/evidenceAuthority/schemaReady';
 import type { AuthorityStore, AuthorityTx, SubjectRow } from '../truescan-src/evidenceAuthority/store';
 import type {
@@ -67,14 +68,19 @@ export class PostgresAuthorityStore implements AuthorityStore {
   }
 
   async transaction<T>(fn: (tx: AuthorityTx) => Promise<T>): Promise<T> {
+    serverTraceMark('db_connect_begin');
     await this.assertSchemaReady();
     const client = await this.pool.connect();
+    serverTraceMark('db_connected');
     try {
       await client.query('BEGIN');
+      serverTraceTransaction('begin');
       const result = await fn(this.tx(client));
       await client.query('COMMIT');
+      serverTraceTransaction('commit');
       return result;
     } catch (error) {
+      serverTraceTransaction('rollback');
       await client.query('ROLLBACK');
       throw error;
     } finally {

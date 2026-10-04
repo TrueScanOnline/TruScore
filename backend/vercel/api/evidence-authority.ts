@@ -17,6 +17,14 @@ import { summarizeOffWriteResponse } from '../truescan-src/evidenceAuthority/off
 import type { EvidenceFactInput } from '../truescan-src/evidenceAuthority/types';
 import type { ManualTextDomain } from '../truescan-src/evidenceAuthority/manualTextAsset';
 import { continueAfterResponse } from '../lib/continueAfterResponse';
+import {
+  bindServerTrace,
+  logClientTimeline,
+  openServerTrace,
+  serverTraceAction,
+  serverTraceMark,
+  serverTraceNote,
+} from '../lib/contributionTrace';
 import { PostgresAuthorityStore } from '../lib/evidenceAuthorityPg';
 
 function handleCORS(res: VercelResponse) {
@@ -103,12 +111,18 @@ async function authority(): Promise<EvidenceAuthority> {
   return authorityPromise;
 }
 
+const TRACE_DOMAINS = new Set(['ingredients_nutrition', 'origins', 'packet_claims', 'certifications']);
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   handleCORS(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
+  const receivedAt = Date.now();
+  const trace = openServerTrace(req, receivedAt);
+  if (trace) bindServerTrace(res, trace, receivedAt);
   try {
     const service = await authority();
     if (req.method === 'GET') {
+      serverTraceAction('authority_env');
       const barcode = typeof req.query.barcode === 'string' ? req.query.barcode.trim() : '';
       if (!barcode) return res.status(200).json({ success: true, authorityEnv: service.authorityEnv });
       if (!/^\d{8,14}$/.test(barcode)) return res.status(400).json({ success: false, error: 'Valid barcode required' });
@@ -119,7 +133,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
     const body = (req.body && typeof req.body === 'object' ? req.body : {}) as Record<string, unknown>;
     const action = typeof body.action === 'string' ? body.action : '';
+    if (action === 'contribution-trace') {
+      serverTraceAction('contribution_trace');
+      logClientTimeline(body);
+      return res.status(200).json({ success: true });
+    }
     if (action === 'issue-credential') {
+      serverTraceAction('issue_credential');
+      serverTraceMark('server_credential_received');
       return res.status(201).json({ success: true, ...(await service.issueCredential()) });
     }
     if (action === 'withdraw' || action === 'suppress') {
@@ -129,7 +150,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const result = await service.govern(token, versionId, action);
       return res.status(result.ok ? 200 : 403).json(result);
     }
+    serverTraceMark('authenticate_begin');
     const contributorId = await service.authenticate(bearer(req));
+    serverTraceMark('authenticate_end');
     if (!contributorId) return res.status(401).json({ success: false, error: 'contributor_credential_required' });
     if (action === 'confirm' || action === 'dispute') {
       const versionId = typeof body.versionId === 'string' ? body.versionId : '';
@@ -140,6 +163,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(result.ok ? 200 : 409).json(result);
     }
     if (action === 'upload-asset-chunk') {
+      serverTraceAction('upload_asset_chunk');
       const chunkBase64 = typeof body.chunkBase64 === 'string' ? body.chunkBase64 : '';
       const uploadId = typeof body.uploadId === 'string' ? body.uploadId.trim() : '';
       const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
@@ -160,6 +184,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(result.ok ? 200 : 409).json(result);
     }
     if (action === 'finalize-manual-text') {
+      serverTraceAction('finalize_manual_text');
+      serverTraceMark('server_finalise_received');
       const barcode = typeof body.barcode === 'string' ? body.barcode.trim() : '';
       const sessionId = typeof body.sessionId === 'string' ? body.sessionId.trim() : '';
       const unitId = typeof body.unitId === 'string' ? body.unitId.trim() : '';
@@ -200,6 +226,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(result.ok ? 200 : 409).json(result);
     }
     if (action === 'finalize-asset') {
+      serverTraceAction('finalize_asset');
       const uploadId = typeof body.uploadId === 'string' ? body.uploadId.trim() : '';
       const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
       const barcode = typeof body.barcode === 'string' ? body.barcode.trim() : '';
@@ -216,6 +243,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(result.ok ? 200 : 409).json(result);
     }
     if (action !== 'submit') return res.status(400).json({ success: false, error: 'Invalid action' });
+    serverTraceAction('submit');
+    serverTraceMark('server_submit_received');
     const barcode = typeof body.barcode === 'string' ? body.barcode.trim() : '';
     const idempotencyKey = typeof body.idempotencyKey === 'string' ? body.idempotencyKey.trim() : '';
     const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
@@ -237,6 +266,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       sourceBytes: sourceBase64 ? bytesFromBase64(sourceBase64) : undefined,
       contentType: typeof body.contentType === 'string' ? body.contentType : undefined,
       facts,
+    });
+    serverTraceMark('snapshot_returned');
+    const offStatuses = (outcome.snapshot?.offDispatch ?? []).map((row) => row.status);
+    const domains = [
+      ...new Set(
+        facts
+          .map((fact) => (typeof fact?.domain === 'string' ? fact.domain : ''))
+          .filter((domain) => TRACE_DOMAINS.has(domain))
+      ),
+    ];
+    serverTraceNote({
+      outcome: outcome.status,
+      factCount: facts.length,
+      domains,
+      offStatuses,
+      offScheduled: offStatuses.some((status) => status === 'pending' || status === 'failed_retryable'),
     });
     if (outcome.snapshot) scheduleOffDispatch(service, outcome.snapshot.barcode, outcome.snapshot.offDispatch, true);
     return res.status(200).json({ success: outcome.status === 'admitted', outcome });

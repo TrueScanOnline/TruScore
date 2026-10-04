@@ -6,6 +6,14 @@ import { getSession } from '../packetContribution/sessionStore';
 import type { PacketContributionSession, PacketEvidenceUnit } from '../packetContribution/types';
 import { governedCertificationLabels } from '../contributions/certificationLane';
 import { expectedAuthorityEnv, rememberSnapshot } from './assessment';
+import {
+  beginRetryTrace,
+  noteTransmitEnter,
+  noteTransmitLeave,
+  type ContributionTrace,
+  type TraceRequestKind,
+  type TraceRequestOutcome,
+} from './contributionTrace';
 import type { ManualTextDraft } from './manualTextAsset';
 import type { EvidenceFactInput, SharedEvidenceSnapshot, SubmissionOutcome } from './types';
 
@@ -30,13 +38,39 @@ function notifyEvidenceAdmission(barcode: string, snapshot: SharedEvidenceSnapsh
   for (const listener of admissionListeners) listener(barcode, snapshot);
 }
 
-function authoritySignal(): AbortSignal {
+async function timedAuthorityFetch(
+  trace: ContributionTrace | null,
+  kind: TraceRequestKind,
+  run: (signal: AbortSignal) => Promise<Response>
+): Promise<{ response: Response | null; outcome: TraceRequestOutcome; status: number | null }> {
+  const started = Date.now();
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), AUTHORITY_REQUEST_TIMEOUT_MS);
-  if (typeof timer === 'object' && timer && 'unref' in timer && typeof timer.unref === 'function') {
-    timer.unref();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, AUTHORITY_REQUEST_TIMEOUT_MS);
+  let outcome: TraceRequestOutcome = 'network_error';
+  let status: number | null = null;
+  let response: Response | null = null;
+  try {
+    response = await run(controller.signal);
+    status = response.status;
+    outcome = response.ok ? 'ok' : 'http_error';
+  } catch (error) {
+    const name = error instanceof Error ? error.name : '';
+    outcome = timedOut ? 'timeout' : name === 'AbortError' ? 'abort' : 'network_error';
+  } finally {
+    clearTimeout(timer);
+    trace?.request({
+      kind,
+      durationMs: Date.now() - started,
+      outcome,
+      status,
+      timeoutMs: AUTHORITY_REQUEST_TIMEOUT_MS,
+    });
   }
-  return controller.signal;
+  return { response, outcome, status };
 }
 
 type UnitRef = { unitId: string; revision: string };
@@ -237,48 +271,91 @@ function authorityUrl(): string {
 }
 
 /** Acceptance guard only. The server still stamps environment and epoch. */
-async function targetAuthorityAccepted(): Promise<boolean> {
+async function targetAuthorityAccepted(trace: ContributionTrace | null): Promise<boolean> {
   const expected = expectedAuthorityEnv();
-  if (!expected) return false;
+  if (!expected) {
+    trace?.mark('authority_check_end', 'failed');
+    return false;
+  }
+  trace?.mark('authority_check_begin');
+  const result = await timedAuthorityFetch(trace, 'authority_env', (signal) =>
+    fetch(authorityUrl(), { method: 'GET', signal, headers: trace?.headers() })
+  );
+  trace?.flush('authority_check');
+  if (!result.response || result.outcome !== 'ok') {
+    trace?.mark('authority_check_end', result.outcome === 'ok' ? 'failed' : result.outcome);
+    return false;
+  }
   try {
-    const response = await fetch(authorityUrl(), { method: 'GET', signal: authoritySignal() });
-    if (!response.ok) return false;
-    const body = (await response.json()) as { authorityEnv?: string };
-    return body.authorityEnv === expected;
+    const body = (await result.response.json()) as { authorityEnv?: string };
+    const accepted = body.authorityEnv === expected;
+    trace?.mark('authority_check_end', accepted ? 'ok' : 'failed');
+    return accepted;
   } catch {
+    trace?.mark('authority_check_end', 'failed');
     return false;
   }
 }
 
-async function credentialToken(): Promise<string> {
+async function credentialToken(trace: ContributionTrace | null): Promise<string> {
+  trace?.mark('credential_begin');
   const existing = await AsyncStorage.getItem(CREDENTIAL_KEY);
-  if (existing) return existing;
-  const response = await fetch(authorityUrl(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'issue-credential' }),
-    signal: authoritySignal(),
-  });
-  if (!response.ok) throw new Error('contributor_credential_unavailable');
-  const body = (await response.json()) as { token?: string };
-  if (!body.token) throw new Error('contributor_credential_unavailable');
+  if (existing) {
+    trace?.mark('credential_end', 'cache_hit');
+    return existing;
+  }
+  const result = await timedAuthorityFetch(trace, 'issue_credential', (signal) =>
+    fetch(authorityUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(trace?.headers() ?? {}) },
+      body: JSON.stringify({ action: 'issue-credential' }),
+      signal,
+    })
+  );
+  trace?.flush('credential');
+  if (!result.response || result.outcome !== 'ok') {
+    trace?.mark('credential_end', result.outcome === 'ok' ? 'failed' : result.outcome);
+    throw new Error('contributor_credential_unavailable');
+  }
+  const body = (await result.response.json()) as { token?: string };
+  if (!body.token) {
+    trace?.mark('credential_end', 'failed');
+    throw new Error('contributor_credential_unavailable');
+  }
   await AsyncStorage.setItem(CREDENTIAL_KEY, body.token);
+  trace?.mark('credential_end', 'cache_miss');
   return body.token;
 }
 
-async function postAuthority(token: string, body: Record<string, unknown>): Promise<Response> {
-  return fetch(authorityUrl(), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-    signal: authoritySignal(),
-  });
+async function postAuthority(
+  token: string,
+  body: Record<string, unknown>,
+  trace: ContributionTrace | null,
+  kind: TraceRequestKind
+): Promise<Response> {
+  const result = await timedAuthorityFetch(trace, kind, (signal) =>
+    fetch(authorityUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...(trace?.headers() ?? {}),
+      },
+      body: JSON.stringify(body),
+      signal,
+    })
+  );
+  trace?.flush(kind);
+  if (!result.response) throw new Error(result.outcome);
+  return result.response;
 }
 
-async function finalizeManualTextAsset(token: string, session: PacketContributionSession, unit: PacketEvidenceUnit): Promise<string> {
+async function finalizeManualTextAsset(
+  token: string,
+  session: PacketContributionSession,
+  unit: PacketEvidenceUnit,
+  trace: ContributionTrace | null
+): Promise<string> {
   const labels = unit.domain === 'certifications' ? governedCertificationLabels(unit.statement) : undefined;
   const draft: ManualTextDraft = {
     barcode: session.barcode,
@@ -320,7 +397,7 @@ async function finalizeManualTextAsset(token: string, session: PacketContributio
     ingredientSubject: draft.ingredientSubject,
     labelsTags: draft.labelsTags,
     packetAbsence: draft.packetAbsence,
-  });
+  }, trace, 'finalize_manual_text');
   if (!response.ok) throw new Error('manual_text_not_finalized');
   const body = (await response.json()) as { assetId?: string };
   if (!body.assetId) throw new Error('manual_text_not_finalized');
@@ -331,7 +408,8 @@ async function uploadFinalizedAsset(
   token: string,
   bytes: Uint8Array,
   declaredSha256: string,
-  barcode: string
+  barcode: string,
+  trace: ContributionTrace | null
 ): Promise<string> {
   const uploadId = randomKey();
   const parts = splitAssetChunks(bytes);
@@ -344,7 +422,7 @@ async function uploadFinalizedAsset(
       totalBytes: bytes.length,
       declaredSha256,
       chunkBase64: bytesToBase64(parts[index]),
-    });
+    }, trace, 'upload_asset_chunk');
     if (!response.ok) throw new Error('asset_chunk_failed');
   }
   const finalized = await postAuthority(token, {
@@ -353,15 +431,33 @@ async function uploadFinalizedAsset(
     declaredSha256,
     barcode,
     contentType: 'application/octet-stream',
-  });
+  }, trace, 'finalize_asset');
   if (!finalized.ok) throw new Error('asset_not_finalized');
   const body = (await finalized.json()) as { assetId?: string };
   if (!body.assetId) throw new Error('asset_not_finalized');
   return body.assetId;
 }
 
-export async function transmitSessionToAuthority(sessionId: string): Promise<AuthorityTransmitResult> {
+export async function transmitSessionToAuthority(
+  sessionId: string,
+  trace?: ContributionTrace
+): Promise<AuthorityTransmitResult> {
   const none: AuthorityTransmitResult = { admitted: false, admittedUnitIds: [], pendingOutbox: false, snapshot: null };
+  const active = trace ?? beginRetryTrace();
+  noteTransmitEnter(active);
+  try {
+    return await transmitSession(sessionId, active, none);
+  } finally {
+    noteTransmitLeave(active);
+    active.flush('transmit_leave');
+  }
+}
+
+async function transmitSession(
+  sessionId: string,
+  trace: ContributionTrace,
+  none: AuthorityTransmitResult
+): Promise<AuthorityTransmitResult> {
   const session = await getSession(sessionId);
   if (!session) return none;
   const items = await readOutbox();
@@ -375,7 +471,8 @@ export async function transmitSessionToAuthority(sessionId: string): Promise<Aut
     (unit) => unit.status === 'reviewed' && !acknowledged.has(`${unit.unitId}:${unitRevision(unit)}`)
   );
   if (pendingUnits.length === 0) return none;
-  if (!(await targetAuthorityAccepted())) return none;
+  trace.setDomains(pendingUnits.map((unit) => unit.domain));
+  if (!(await targetAuthorityAccepted(trace))) return none;
   const unitRefs = pendingUnits.map((unit) => ({ unitId: unit.unitId, revision: unitRevision(unit) }));
   let item = items.find((row) => row.sessionId === sessionId && row.status === 'unsent' && sameRefs(row.unitRefs || [], unitRefs));
   if (!item) {
@@ -397,12 +494,13 @@ export async function transmitSessionToAuthority(sessionId: string): Promise<Aut
   ];
   const finalized = new Map<string, string>();
   try {
-    const token = await credentialToken();
+    const token = await credentialToken(trace);
+    trace.mark('finalisation_begin');
     for (const sourceId of sourceIds) {
       const source = session.sourceAssets.find((asset) => asset.assetId === sourceId);
       const bytes = source ? await getPrivateByteStore().get(source.privateKey) : null;
       if (source && bytes?.length) {
-        finalized.set(sourceId, await uploadFinalizedAsset(token, bytes, source.contentSha256, session.barcode));
+        finalized.set(sourceId, await uploadFinalizedAsset(token, bytes, source.contentSha256, session.barcode, trace));
         continue;
       }
       const related = pendingUnits.filter((unit) => unit.support.sourceAssetId === sourceId);
@@ -411,24 +509,33 @@ export async function transmitSessionToAuthority(sessionId: string): Promise<Aut
         related[0].origin === 'manual' &&
         related[0].packetAbsenceAffirmation !== true &&
         related[0].support.sourceAssetId.startsWith('manual-text:');
-      if (!manualOnly) return { ...none, pendingOutbox: true };
-      finalized.set(sourceId, await finalizeManualTextAsset(token, session, related[0]));
+      if (!manualOnly) {
+        trace.mark('finalisation_end', 'failed');
+        return { ...none, pendingOutbox: true };
+      }
+      finalized.set(sourceId, await finalizeManualTextAsset(token, session, related[0], trace));
     }
+    trace.mark('finalisation_end', 'ok');
     const facts = evidenceFactsForUnits(session, pendingUnits, finalized);
     if (facts.length === 0 || facts.some((fact) => !fact.finalizedAssetId)) {
       return { ...none, pendingOutbox: true };
     }
+    trace.mark('submit_request_begin');
     const response = await postAuthority(token, {
       action: 'submit',
       idempotencyKey: item.idempotencyKey,
       barcode: session.barcode,
       facts,
-    });
-    if (!response.ok) return { ...none, pendingOutbox: true };
+    }, trace, 'submit');
+    if (!response.ok) {
+      trace.mark('snapshot_received', 'http_error');
+      return { ...none, pendingOutbox: true };
+    }
     const body = (await response.json()) as { outcome?: SubmissionOutcome };
     const snapshot = body.outcome?.snapshot ?? null;
     const admittedUnitIds = body.outcome?.admittedUnitIds || [];
     if (body.outcome?.status === 'admitted' && admittedUnitIds.length > 0 && snapshot) {
+      trace.mark('snapshot_received', 'admitted');
       await rememberSnapshot(snapshot);
       item.status = 'acknowledged';
       item.unitRefs = unitRefs.filter((ref) => admittedUnitIds.includes(ref.unitId));
@@ -451,8 +558,10 @@ export async function transmitSessionToAuthority(sessionId: string): Promise<Aut
       item.status = 'refused';
       await writeOutbox(items);
     }
+    trace.mark('snapshot_received', 'refused');
     return { admitted: false, admittedUnitIds: [], pendingOutbox: item.status === 'unsent', snapshot };
   } catch {
+    trace.mark('submit_failed', 'failed');
     return { ...none, pendingOutbox: true };
   }
 }

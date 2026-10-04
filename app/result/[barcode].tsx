@@ -124,6 +124,7 @@ import {
   originDraftsFromGovernedFacts,
 } from '../../src/contribution/governedDisplayProjection';
 import { subscribeEvidenceAdmission } from '../../src/evidenceAuthority/device';
+import { currentModalTrace } from '../../src/evidenceAuthority/contributionTrace';
 import {
   authoritativeStateSupersedes,
   rememberedAuthoritativeSnapshot,
@@ -517,11 +518,19 @@ function ResultScreenContent() {
       const current = productRef.current;
       if (!current || getPrimaryBarcode(admittedBarcode) !== getPrimaryBarcode(barcode)) return;
       appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
+      currentModalTrace()?.mark('reassessment_listener_begin');
       void calculateTrustScore(current, { authoritativeSnapshot: snapshot }).then((next) => {
-        if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, snapshot.generatedAt)) return;
-        if (getPrimaryBarcode(next.barcode) !== getPrimaryBarcode(barcode)) return;
+        if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, snapshot.generatedAt)) {
+          currentModalTrace()?.mark('reassessment_listener_end', 'stale');
+          return;
+        }
+        if (getPrimaryBarcode(next.barcode) !== getPrimaryBarcode(barcode)) {
+          currentModalTrace()?.mark('reassessment_listener_end', 'stale');
+          return;
+        }
         appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
         setProduct(next);
+        currentModalTrace()?.mark('reassessment_listener_end', 'ok');
       });
     });
   }, [barcode]);
@@ -1341,7 +1350,7 @@ function ResultScreenContent() {
 
   const showContributionNotice = (message: string) => {
     setContributionNotice(message);
-    setTimeout(() => setContributionNotice(null), 4000);
+    setTimeout(() => setContributionNotice(null), message.includes('ctr_') ? 30000 : 4000);
   };
 
   const handleContribute = () => {
@@ -2442,10 +2451,20 @@ function ResultScreenContent() {
         knownOffOrigin={originsCard.offCountry}
         onClose={() => setPacketContributionVisible(false)}
         onSharedEvidenceAdmitted={async (snapshot, complete) => {
-          if (!product) return;
+          const trace = currentModalTrace();
+          const traceId = trace?.traceId;
+          if (!product) {
+            trace?.mark('result_applied', 'none');
+            return;
+          }
+          trace?.mark('reassessment_begin');
           appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
           const next = await calculateTrustScore(product, { authoritativeSnapshot: snapshot });
-          if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, snapshot.generatedAt)) return;
+          trace?.mark('reassessment_end', 'ok');
+          if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, snapshot.generatedAt)) {
+            trace?.mark('result_applied', 'stale');
+            return;
+          }
           appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
           if (next._assessmentCycleSettled === true) {
             publicationSettledRef.current = true;
@@ -2453,9 +2472,13 @@ function ResultScreenContent() {
             settledForBarcodeRef.current = barcode;
           }
           setProduct(next);
-          if (complete) showContributionNotice(CONTRIBUTION_NOTICE_ADDED);
+          trace?.mark('result_applied', 'ok');
+          if (complete) showContributionNotice(traceId ? `${CONTRIBUTION_NOTICE_ADDED} ${traceId}` : CONTRIBUTION_NOTICE_ADDED);
         }}
-        onSharedEvidenceFailed={() => showContributionNotice(CONTRIBUTION_NOTICE_SAVED)}
+        onSharedEvidenceFailed={() => {
+          const traceId = currentModalTrace()?.traceId;
+          showContributionNotice(traceId ? `${CONTRIBUTION_NOTICE_SAVED} ${traceId}` : CONTRIBUTION_NOTICE_SAVED);
+        }}
       />
 
       {/* Camera Capture Modal */}

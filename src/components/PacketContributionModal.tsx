@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -31,6 +32,7 @@ import {
   type PacketContributionSession,
 } from '../packetContribution';
 import { transmitSessionToAuthority } from '../evidenceAuthority/device';
+import { beginModalTrace, finishModalTrace } from '../evidenceAuthority/contributionTrace';
 import {
   NUTRITION_FIELDS,
   type NutritionAttribute,
@@ -200,6 +202,7 @@ export default function PacketContributionModal({
   const [session, setSession] = useState<PacketContributionSession | null>(null);
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [busy, setBusy] = useState(false);
+  const [traceLabel, setTraceLabel] = useState<string | null>(null);
   const [phase, setPhase] = useState<'capture' | 'entry' | 'review'>('capture');
   const [ingredientsText, setIngredientsText] = useState(initialIngredients || '');
   const [basis, setBasis] = useState<NutritionBasis | null>(null);
@@ -415,8 +418,12 @@ export default function PacketContributionModal({
 
   const submit = async () => {
     if (!session) return;
+    const trace = beginModalTrace(Platform.OS);
+    trace.mark('submit_tap');
+    setTraceLabel(trace.traceId);
     setBusy(true);
     try {
+      trace.mark('local_handoff_begin');
       const created: string[] = [];
       const observations: { unitId: string; label: string; kind: 'ingredients' | 'nutrition' | 'origin' | 'claim' | 'cert' | 'absence'; index: number }[] = [];
       const contexts = includedContexts;
@@ -526,7 +533,10 @@ export default function PacketContributionModal({
           }
         }
       }
-      if (created.length === 0) return;
+      if (created.length === 0) {
+        trace.mark('local_handoff_end', 'none');
+        return;
+      }
       const latest = await getSession(session.sessionId);
       if (latest) {
         const companions = targeted.slice(1).map((asset) => asset.assetId);
@@ -558,11 +568,12 @@ export default function PacketContributionModal({
         persistRemote: false,
       });
       const submitted = handed.filter((item) => item.outcome === 'submitted');
+      trace.mark('local_handoff_end', submitted.length > 0 ? 'ok' : 'none');
       if (submitted.length === 0) {
         onSharedEvidenceFailed?.();
         return;
       }
-      const transmitted = await transmitSessionToAuthority(session.sessionId);
+      const transmitted = await transmitSessionToAuthority(session.sessionId, trace);
       if (!transmitted.admitted) {
         onSharedEvidenceFailed?.();
         return;
@@ -570,6 +581,7 @@ export default function PacketContributionModal({
       const retained = retainedAfterPartialAdmission(observations, transmitted.admittedUnitIds);
       await onSharedEvidenceAdmitted?.(transmitted.snapshot, retained.complete);
       if (retained.complete) {
+        trace.mark('modal_close');
         onClose();
         return;
       }
@@ -607,8 +619,12 @@ export default function PacketContributionModal({
       );
       setPhase('review');
     } catch {
+      trace.mark('submit_failed', 'failed');
       onSharedEvidenceFailed?.();
     } finally {
+      trace.flush('modal_finally');
+      finishModalTrace();
+      setTraceLabel(null);
       setBusy(false);
     }
   };
@@ -1032,7 +1048,12 @@ export default function PacketContributionModal({
           </View>
         ) : null}
         {partialNotice ? <Text style={{ color: colors.text }}>{partialNotice}</Text> : null}
-        {busy ? <ActivityIndicator /> : null}
+        {busy ? (
+          <View>
+            <ActivityIndicator />
+            {traceLabel ? <Text selectable style={{ color: colors.text }}>{traceLabel}</Text> : null}
+          </View>
+        ) : null}
         <TouchableOpacity onPress={onClose}>
           <Text style={{ color: colors.primary }}>Close</Text>
         </TouchableOpacity>
