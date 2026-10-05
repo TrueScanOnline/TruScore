@@ -50,6 +50,8 @@ export type PacketSourceAsset = {
   byteRequestCount?: number;
   traceId?: string;
   lastPutStatus?: number | null;
+  /** Short note when launch recovery parked this photo. Not shown as a score. */
+  preparationError?: string;
 };
 
 export type DerivedTransform =

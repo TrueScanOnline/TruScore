@@ -170,30 +170,46 @@ async function readProfile(trace: ContributionTrace, token: string): Promise<Evi
   return body.profile?.maxBytes ? body.profile : evidenceImageProfile();
 }
 
+/** Metro dynamic import() enumerates every react-native export. Keep preparation on expo-image-manipulator. */
+export function resumeFailureNote(error: unknown): string {
+  const fromError = error instanceof Error ? error.message : '';
+  const fromObject =
+    !fromError && error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+      ? error.message
+      : '';
+  const message = fromError || fromObject || (typeof error === 'string' ? error : '') || 'resume_failed';
+  return message.replace(/\s+/g, ' ').slice(0, 180);
+}
+
 async function prepareAsset(asset: PacketSourceAsset, profile: EvidenceImageProfile, trace: ContributionTrace): Promise<PacketSourceAsset | null> {
   const fs = await fileSystem();
+  // Dimensions come from expo-image-manipulator, which autolinking compiles for iOS.
+  // Do not load the react-native barrel here. Metro enumerates every export, including
+  // PushNotificationIOS, and that constructs NativeEventEmitter with a null iOS module.
   const ImageManipulator = await import('expo-image-manipulator');
-  const { Image } = await import('react-native');
   const sourceUri = objectPath(fs, asset.preparedPrivateKey || asset.privateKey);
-  const sizeOf = (uri: string) =>
-    new Promise<{ width: number; height: number }>((resolve, reject) => {
-      Image.getSize(uri, (width, height) => resolve({ width, height }), reject);
-    });
   let currentUri = sourceUri;
-  let current = await sizeOf(currentUri);
+  let current = {
+    width: asset.lineageWidth && asset.lineageWidth > 0 ? asset.lineageWidth : 0,
+    height: asset.lineageHeight && asset.lineageHeight > 0 ? asset.lineageHeight : 0,
+  };
   let quality = profile.jpegQuality;
   let edge = profile.maxLongEdgePx;
   let prepared: { uri: string; width: number; height: number; byteLength: number } | null = null;
   for (let attempt = 0; attempt < 7; attempt += 1) {
-    const fitted = fittedLongEdge(current.width, current.height, edge);
-    const actions = fitted.width === current.width && fitted.height === current.height ? [] : [{ resize: { width: fitted.width } }];
+    const knownSize = current.width > 0 && current.height > 0;
+    const fitted = knownSize ? fittedLongEdge(current.width, current.height, edge) : null;
+    const actions =
+      fitted && (fitted.width !== current.width || fitted.height !== current.height)
+        ? [{ resize: { width: fitted.width } }]
+        : [];
     const saved = await ImageManipulator.manipulateAsync(currentUri, actions, {
       compress: quality,
       format: ImageManipulator.SaveFormat.JPEG,
     });
     const info = await fs.getInfoAsync(saved.uri);
     const byteLength = info.exists && 'size' in info && typeof info.size === 'number' ? info.size : Number.MAX_SAFE_INTEGER;
-    const sized = await sizeOf(saved.uri);
+    const sized = { width: saved.width, height: saved.height };
     prepared = { uri: saved.uri, width: sized.width, height: sized.height, byteLength };
     if (byteLength <= profile.maxBytes) break;
     currentUri = saved.uri;
@@ -408,8 +424,11 @@ export async function resumeEvidenceImages(): Promise<void> {
           try {
             const ready = await advanceAsset(asset, asset.imagePhase === 'failed_retryable' || asset.imagePhase === 'uploading');
             becameAvailable = becameAvailable || ready;
-          } catch {
-            await patchAsset(session.sessionId, asset.assetId, { imagePhase: 'failed_retryable' });
+          } catch (error) {
+            await patchAsset(session.sessionId, asset.assetId, {
+              imagePhase: 'failed_retryable',
+              preparationError: resumeFailureNote(error),
+            }).catch(() => undefined);
           }
         }
       }
