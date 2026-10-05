@@ -16,7 +16,6 @@ import {
 import { stampCoreTruthAuthority } from '../../../config/coreTruthProductCacheAuthority';
 import {
   EvidenceAuthority,
-  MAX_EVIDENCE_CHUNK_COUNT,
   MAX_EVIDENCE_ORIGINAL_BYTES,
   liveOffNetworkWriteAllowed,
 } from '../../../evidenceAuthority/authority';
@@ -29,7 +28,6 @@ import {
 import {
   evidenceFactsForUnits,
   retryUnsentEvidenceSubmissions,
-  splitAssetChunks,
   transmitSessionToAuthority,
   unitRevision,
 } from '../../../evidenceAuthority/device';
@@ -640,41 +638,19 @@ describe('Wave 4A shared evidence authority', () => {
     expect(isAssessmentEligibleForReceiver(row!.evidence, 'ethics_certifications')).toBe(false);
   });
 
-  it('finalizes chunked originals only when every chunk matches the hash', async () => {
+  it('registers one private image asset for a repeated prepared hash and stores no image bytes', async () => {
     const authority = service('uat');
     const contributor = await authority.issueCredential();
     const original = new Uint8Array([9, 8, 7, 6, 5, 4, 3, 2]);
-    const parts = splitAssetChunks(original, 3);
-    expect(parts.length).toBeGreaterThan(1);
     const declared = sha256Hex(original);
-    const uploadId = 'upload-original';
-    const first = await authority.putAssetChunk({
-      uploadId,
-      chunkIndex: 0,
-      chunkCount: parts.length,
-      totalBytes: original.length,
-      declaredSha256: declared,
-      bytes: parts[0],
-    });
-    expect(first).toEqual({ ok: true, stored: 'stored' });
     expect(await authority.putAssetChunk({
-      uploadId,
+      uploadId: 'upload-original',
       chunkIndex: 0,
-      chunkCount: parts.length,
+      chunkCount: 1,
       totalBytes: original.length,
       declaredSha256: declared,
-      bytes: parts[0],
-    })).toEqual({ ok: true, stored: 'duplicate' });
-    expect(
-      (
-        await authority.finalizeAssetUpload({
-          uploadId,
-          declaredSha256: declared,
-          contributorId: contributor.contributorId,
-          barcode: BARCODE,
-        })
-      ).ok
-    ).toBe(false);
+      bytes: original,
+    })).toEqual({ ok: false, reason: 'chunk_transport_retired' });
     const missing = await send(
       authority,
       contributor.contributorId,
@@ -683,31 +659,26 @@ describe('Wave 4A shared evidence authority', () => {
       { sourceBytes: new Uint8Array() }
     );
     expect(missing.status).toBe('source_not_finalized');
-    for (let index = 1; index < parts.length; index += 1) {
-      await authority.putAssetChunk({
-        uploadId,
-        chunkIndex: index,
-        chunkCount: parts.length,
-        totalBytes: original.length,
-        declaredSha256: declared,
-        bytes: parts[index],
-      });
-    }
-    const finalized = await authority.finalizeAssetUpload({
-      uploadId,
-      declaredSha256: declared,
+    const image = {
       contributorId: contributor.contributorId,
       barcode: BARCODE,
-    });
+      sha256: declared,
+      byteLength: original.length,
+      width: 32,
+      height: 16,
+      profileId: 'evidence-image-v1',
+      profileVersion: 1,
+      lineageSha256: sha256Hex(new Uint8Array([1, 1, 1, 1])),
+      lineageByteLength: 400,
+      lineageWidth: 4000,
+      lineageHeight: 3000,
+      blobPathname: `evidence-images/${contributor.contributorId}/${BARCODE}/${declared}.jpg`,
+    };
+    const finalized = await authority.registerPrivateEvidenceImage(image);
     expect(finalized.ok).toBe(true);
     if (!finalized.ok) return;
-    const repeated = await authority.finalizeAssetUpload({
-      uploadId,
-      declaredSha256: declared,
-      contributorId: contributor.contributorId,
-      barcode: BARCODE,
-    });
-    expect(repeated).toMatchObject({ ok: true, assetId: finalized.assetId, sha256: declared });
+    const repeated = await authority.registerPrivateEvidenceImage(image);
+    expect(repeated).toMatchObject({ ok: true, assetId: finalized.assetId, sha256: declared, duplicate: true });
     const region = { x: 1, y: 2, width: 3, height: 4 };
     const admitted = await send(
       authority,
@@ -864,6 +835,8 @@ describe('Wave 4A shared evidence authority', () => {
           framing: 'unspecified',
           locationMetadata: 'absent',
           capturedAt: 1,
+          imagePhase: 'available',
+          remoteAssetId: 'server-a',
         },
         {
           assetId: 'local-b',
@@ -875,6 +848,8 @@ describe('Wave 4A shared evidence authority', () => {
           framing: 'unspecified',
           locationMetadata: 'absent',
           capturedAt: 2,
+          imagePhase: 'available',
+          remoteAssetId: 'server-b',
         },
       ],
       derivedAssets: [
@@ -978,21 +953,21 @@ describe('Wave 4A shared evidence authority', () => {
     const authority = service('uat');
     const owner = await authority.issueCredential();
     const other = await authority.issueCredential();
-    const original = new Uint8Array([1, 2, 3, 4]);
-    const declared = sha256Hex(original);
-    await authority.putAssetChunk({
-      uploadId: 'owned-upload',
-      chunkIndex: 0,
-      chunkCount: 1,
-      totalBytes: original.length,
-      declaredSha256: declared,
-      bytes: original,
-    });
-    const finalized = await authority.finalizeAssetUpload({
-      uploadId: 'owned-upload',
-      declaredSha256: declared,
+    const declared = sha256Hex(new Uint8Array([1, 2, 3, 4]));
+    const finalized = await authority.registerPrivateEvidenceImage({
       contributorId: owner.contributorId,
       barcode: BARCODE,
+      sha256: declared,
+      byteLength: 4,
+      width: 8,
+      height: 8,
+      profileId: 'evidence-image-v1',
+      profileVersion: 1,
+      lineageSha256: sha256Hex(new Uint8Array([9, 9, 9, 9])),
+      lineageByteLength: 9,
+      lineageWidth: 4000,
+      lineageHeight: 3000,
+      blobPathname: `evidence-images/${owner.contributorId}/${BARCODE}/${declared}.jpg`,
     });
     expect(finalized.ok).toBe(true);
     if (!finalized.ok) return;
@@ -1066,7 +1041,7 @@ describe('Wave 4A shared evidence authority', () => {
     expect(liveOffNetworkWriteAllowed()).toBe(false);
   });
 
-  it('rejects chunk manifests outside the byte and count bounds before reconstruction', async () => {
+  it('refuses the retired chunk transport and still rejects an unknown asset', async () => {
     const authority = service('uat');
     const contributor = await authority.issueCredential();
     expect(
@@ -1078,33 +1053,14 @@ describe('Wave 4A shared evidence authority', () => {
         declaredSha256: 'aa',
         bytes: new Uint8Array([1]),
       })
-    ).toEqual({ ok: false, reason: 'chunk_bounds' });
-    expect(
-      await authority.putAssetChunk({
-        uploadId: 'too-many',
-        chunkIndex: 0,
-        chunkCount: MAX_EVIDENCE_CHUNK_COUNT + 1,
-        totalBytes: 2,
-        declaredSha256: 'aa',
-        bytes: new Uint8Array([1]),
-      })
-    ).toEqual({ ok: false, reason: 'chunk_bounds' });
-    const uploadId = 'short-sum';
-    await authority.putAssetChunk({
-      uploadId,
-      chunkIndex: 0,
-      chunkCount: 1,
-      totalBytes: 8,
-      declaredSha256: sha256Hex(new Uint8Array(8)),
-      bytes: new Uint8Array([1, 2]),
-    });
+    ).toEqual({ ok: false, reason: 'chunk_transport_retired' });
     const finalized = await authority.finalizeAssetUpload({
-      uploadId,
+      uploadId: 'short-sum',
       declaredSha256: sha256Hex(new Uint8Array(8)),
       contributorId: contributor.contributorId,
       barcode: BARCODE,
     });
-    expect(finalized).toEqual({ ok: false, reason: 'chunk_bounds' });
+    expect(finalized).toEqual({ ok: false, reason: 'chunk_transport_retired' });
     const cited = await send(
       authority,
       contributor.contributorId,

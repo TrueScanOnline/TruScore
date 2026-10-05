@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getBackendUrl } from '../config/backendConfig';
-import { getPrivateByteStore } from '../packetContribution/sourceAssets';
 import { sha256Hex } from '../packetContribution/sha256';
 import { getSession } from '../packetContribution/sessionStore';
 import type { PacketContributionSession, PacketEvidenceUnit } from '../packetContribution/types';
@@ -88,6 +87,8 @@ export type AuthorityTransmitResult = {
   admitted: boolean;
   admittedUnitIds: string[];
   pendingOutbox: boolean;
+  /** Reviewed facts are held until the private image is verified. This is not admission. */
+  pendingImage?: boolean;
   snapshot: SharedEvidenceSnapshot | null;
 };
 
@@ -97,15 +98,6 @@ function randomKey(): string {
   if (cryptoRef?.getRandomValues) cryptoRef.getRandomValues(bytes);
   else for (let index = 0; index < bytes.length; index += 1) bytes[index] = Math.floor(Math.random() * 256);
   return Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('');
-}
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  const chunk = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + chunk));
-  }
-  return globalThis.btoa(binary);
 }
 
 export function splitAssetChunks(bytes: Uint8Array, chunkBytes = EVIDENCE_ASSET_CHUNK_BYTES): Uint8Array[] {
@@ -297,6 +289,19 @@ async function targetAuthorityAccepted(trace: ContributionTrace | null): Promise
   }
 }
 
+export async function contributorCredential(trace: ContributionTrace | null): Promise<string> {
+  return credentialToken(trace);
+}
+
+export async function postContributorAction(
+  token: string,
+  body: Record<string, unknown>,
+  trace: ContributionTrace | null,
+  kind: TraceRequestKind
+): Promise<Response> {
+  return postAuthority(token, body, trace, kind);
+}
+
 async function credentialToken(trace: ContributionTrace | null): Promise<string> {
   trace?.mark('credential_begin');
   const existing = await AsyncStorage.getItem(CREDENTIAL_KEY);
@@ -404,40 +409,6 @@ async function finalizeManualTextAsset(
   return body.assetId;
 }
 
-async function uploadFinalizedAsset(
-  token: string,
-  bytes: Uint8Array,
-  declaredSha256: string,
-  barcode: string,
-  trace: ContributionTrace | null
-): Promise<string> {
-  const uploadId = randomKey();
-  const parts = splitAssetChunks(bytes);
-  for (let index = 0; index < parts.length; index += 1) {
-    const response = await postAuthority(token, {
-      action: 'upload-asset-chunk',
-      uploadId,
-      chunkIndex: index,
-      chunkCount: parts.length,
-      totalBytes: bytes.length,
-      declaredSha256,
-      chunkBase64: bytesToBase64(parts[index]),
-    }, trace, 'upload_asset_chunk');
-    if (!response.ok) throw new Error('asset_chunk_failed');
-  }
-  const finalized = await postAuthority(token, {
-    action: 'finalize-asset',
-    uploadId,
-    declaredSha256,
-    barcode,
-    contentType: 'application/octet-stream',
-  }, trace, 'finalize_asset');
-  if (!finalized.ok) throw new Error('asset_not_finalized');
-  const body = (await finalized.json()) as { assetId?: string };
-  if (!body.assetId) throw new Error('asset_not_finalized');
-  return body.assetId;
-}
-
 export async function transmitSessionToAuthority(
   sessionId: string,
   trace?: ContributionTrace
@@ -498,10 +469,13 @@ async function transmitSession(
     trace.mark('finalisation_begin');
     for (const sourceId of sourceIds) {
       const source = session.sourceAssets.find((asset) => asset.assetId === sourceId);
-      const bytes = source ? await getPrivateByteStore().get(source.privateKey) : null;
-      if (source && bytes?.length) {
-        finalized.set(sourceId, await uploadFinalizedAsset(token, bytes, source.contentSha256, session.barcode, trace));
+      if (source?.imagePhase === 'available' && source.remoteAssetId) {
+        finalized.set(sourceId, source.remoteAssetId);
         continue;
+      }
+      if (source && (source.imagePhase || source.privateKey.startsWith('packet/'))) {
+        trace.mark('finalisation_end', 'pending_source');
+        return { ...none, pendingOutbox: true, pendingImage: true };
       }
       const related = pendingUnits.filter((unit) => unit.support.sourceAssetId === sourceId);
       const manualOnly =

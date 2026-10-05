@@ -26,6 +26,13 @@ import {
   serverTraceNote,
 } from '../lib/contributionTrace';
 import { PostgresAuthorityStore } from '../lib/evidenceAuthorityPg';
+import {
+  authorizePrivateEvidenceUpload,
+  deletePendingEvidenceImage,
+  pendingEvidenceImage,
+  readPrivateBlob,
+} from '../lib/evidenceImageBlob';
+import { evidenceImageProfile } from '../truescan-src/evidenceImage/profile';
 
 function handleCORS(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -162,26 +169,83 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           : await service.dispute(contributorId, versionId, 'other');
       return res.status(result.ok ? 200 : 409).json(result);
     }
-    if (action === 'upload-asset-chunk') {
-      serverTraceAction('upload_asset_chunk');
-      const chunkBase64 = typeof body.chunkBase64 === 'string' ? body.chunkBase64 : '';
-      const uploadId = typeof body.uploadId === 'string' ? body.uploadId.trim() : '';
-      const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
-      const chunkIndex = Number(body.chunkIndex);
-      const chunkCount = Number(body.chunkCount);
-      const totalBytes = Number(body.totalBytes);
-      if (!uploadId || !declaredSha256 || !chunkBase64 || !Number.isInteger(chunkIndex) || !Number.isInteger(chunkCount)) {
-        return res.status(400).json({ success: false, error: 'chunk_incomplete' });
+    if (action === 'upload-asset-chunk' || action === 'finalize-asset') {
+      serverTraceAction('chunk_transport_retired');
+      return res.status(409).json({ ok: false, reason: 'chunk_transport_retired' });
+    }
+    if (action === 'evidence-image-profile') {
+      serverTraceAction('evidence_image_profile');
+      return res.status(200).json({ success: true, profile: evidenceImageProfile(process.env) });
+    }
+    if (action === 'authorize-evidence-image') {
+      serverTraceAction('authorize_evidence_image');
+      const barcode = typeof body.barcode === 'string' ? body.barcode.trim() : '';
+      const preparedSha256 = typeof body.preparedSha256 === 'string' ? body.preparedSha256.trim() : '';
+      const lineageSha256 = typeof body.lineageSha256 === 'string' ? body.lineageSha256.trim() : '';
+      const profileId = typeof body.profileId === 'string' ? body.profileId.trim() : '';
+      if (!/^\d{8,14}$/.test(barcode) || !/^[a-f0-9]{64}$/.test(preparedSha256) || !/^[a-f0-9]{64}$/.test(lineageSha256)) {
+        return res.status(400).json({ success: false, error: 'evidence_image_incomplete' });
       }
-      const result = await service.putAssetChunk({
-        uploadId,
-        chunkIndex,
-        chunkCount,
-        totalBytes,
-        declaredSha256,
-        bytes: bytesFromBase64(chunkBase64),
+      const result = await authorizePrivateEvidenceUpload({
+        contributorId,
+        barcode,
+        preparedSha256,
+        preparedByteLength: Number(body.preparedByteLength),
+        width: Number(body.width),
+        height: Number(body.height),
+        profileId,
+        profileVersion: Number(body.profileVersion),
+        lineageSha256,
+        lineageByteLength: Number(body.lineageByteLength),
+        lineageWidth: Number(body.lineageWidth),
+        lineageHeight: Number(body.lineageHeight),
       });
-      return res.status(result.ok ? 200 : 409).json(result);
+      return res.status(result.status === 'rejected' ? 409 : 200).json(result);
+    }
+    if (action === 'finalize-evidence-image') {
+      serverTraceAction('finalize_evidence_image');
+      const pathname = typeof body.pathname === 'string' ? body.pathname.trim() : '';
+      const preparedSha256 = typeof body.preparedSha256 === 'string' ? body.preparedSha256.trim() : '';
+      if (!pathname.startsWith('evidence-images/') || !/^[a-f0-9]{64}$/.test(preparedSha256)) {
+        return res.status(400).json({ success: false, error: 'evidence_image_incomplete' });
+      }
+      const pending = await pendingEvidenceImage(pathname);
+      if (!pending || String(pending.contributor_id) !== contributorId || String(pending.prepared_sha256) !== preparedSha256) {
+        return res.status(409).json({ ok: false, reason: 'source_not_owned' });
+      }
+      const object = await readPrivateBlob(pathname);
+      if (!object || object.sha256 !== preparedSha256 || object.byteLength !== Number(pending.prepared_byte_length)) {
+        return res.status(409).json({ ok: false, reason: 'source_hash_mismatch' });
+      }
+      const registered = await service.registerPrivateEvidenceImage({
+        contributorId,
+        barcode: String(pending.barcode),
+        sha256: preparedSha256,
+        byteLength: object.byteLength,
+        width: Number(pending.width),
+        height: Number(pending.height),
+        profileId: String(pending.profile_id),
+        profileVersion: Number(pending.profile_version),
+        lineageSha256: String(pending.lineage_sha256),
+        lineageByteLength: Number(pending.lineage_byte_length),
+        lineageWidth: Number(pending.lineage_width),
+        lineageHeight: Number(pending.lineage_height),
+        blobPathname: pathname,
+      });
+      if (!registered.ok) return res.status(409).json(registered);
+      await deletePendingEvidenceImage(pathname);
+      return res.status(200).json({
+        ok: true,
+        assetId: registered.assetId,
+        sha256: registered.sha256,
+        duplicate: registered.duplicate,
+        ref: {
+          assetId: registered.assetId,
+          contentType: 'image/jpeg',
+          sha256: registered.sha256,
+          byteLength: object.byteLength,
+        },
+      });
     }
     if (action === 'finalize-manual-text') {
       serverTraceAction('finalize_manual_text');
@@ -222,23 +286,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ingredientSubject: typeof body.ingredientSubject === 'string' ? body.ingredientSubject : undefined,
         labelsTags: Array.isArray(body.labelsTags) ? body.labelsTags.filter((tag) => typeof tag === 'string') : undefined,
         packetAbsence: false,
-      });
-      return res.status(result.ok ? 200 : 409).json(result);
-    }
-    if (action === 'finalize-asset') {
-      serverTraceAction('finalize_asset');
-      const uploadId = typeof body.uploadId === 'string' ? body.uploadId.trim() : '';
-      const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
-      const barcode = typeof body.barcode === 'string' ? body.barcode.trim() : '';
-      if (!uploadId || !declaredSha256 || !/^\d{8,14}$/.test(barcode)) {
-        return res.status(400).json({ success: false, error: 'finalize_incomplete' });
-      }
-      const result = await service.finalizeAssetUpload({
-        uploadId,
-        declaredSha256,
-        contentType: typeof body.contentType === 'string' ? body.contentType : undefined,
-        contributorId,
-        barcode,
       });
       return res.status(result.ok ? 200 : 409).json(result);
     }

@@ -17,9 +17,12 @@ type MemoryState = {
     assetId: string;
     sha256: string;
     bytes: Uint8Array;
+    byteLength?: number;
     contentType: string | null;
     contributorId: string;
     barcode: string;
+    storageKind?: 'postgres_bytes' | 'private_blob';
+    blobPathname?: string | null;
   }>;
   chunks: AssetChunkRecord[];
   finalizedUploads: Array<{ uploadId: string; assetId: string; sha256: string }>;
@@ -104,7 +107,8 @@ export class MemoryAuthorityStore implements AuthorityStore {
         state.submissions.push(clone(record));
       },
       async putAsset(asset) {
-        state.assets.push({ ...asset, bytes: asset.bytes.slice() });
+        const bytes = asset.bytes ? asset.bytes.slice() : new Uint8Array();
+        state.assets.push({ ...asset, bytes, byteLength: asset.byteLength ?? bytes.byteLength });
       },
       async getAsset(assetId) {
         const found = state.assets.find((item) => item.assetId === assetId);

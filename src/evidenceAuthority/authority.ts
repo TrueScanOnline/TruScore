@@ -75,17 +75,6 @@ export function liveOffNetworkWriteAllowed(): boolean {
   return true;
 }
 
-function withinChunkBounds(chunkCount: number, totalBytes: number): boolean {
-  return (
-    Number.isSafeInteger(chunkCount) &&
-    Number.isSafeInteger(totalBytes) &&
-    chunkCount >= 1 &&
-    chunkCount <= MAX_EVIDENCE_CHUNK_COUNT &&
-    totalBytes >= 1 &&
-    totalBytes <= MAX_EVIDENCE_ORIGINAL_BYTES
-  );
-}
-
 export type OffTransport = (input: {
   target: string;
   fields: Record<string, string>;
@@ -714,26 +703,9 @@ export class EvidenceAuthority {
   }
 
   async putAssetChunk(
-    chunk: AssetChunkRecord
+    _chunk: AssetChunkRecord
   ): Promise<{ ok: true; stored: 'stored' | 'duplicate' } | { ok: false; reason: string }> {
-    if (chunk.chunkIndex < 0 || chunk.chunkCount < 1 || chunk.chunkIndex >= chunk.chunkCount) {
-      return { ok: false, reason: 'chunk_index' };
-    }
-    if (!withinChunkBounds(chunk.chunkCount, chunk.totalBytes) || chunk.bytes.byteLength > MAX_EVIDENCE_ORIGINAL_BYTES) {
-      return { ok: false, reason: 'chunk_bounds' };
-    }
-    if (!chunk.bytes.length || !chunk.declaredSha256 || !chunk.uploadId) {
-      return { ok: false, reason: 'chunk_incomplete' };
-    }
-    return this.store.transaction(async (tx) => {
-      const finalized = await tx.finalizedUpload(chunk.uploadId);
-      if (finalized && finalized.sha256 !== chunk.declaredSha256) {
-        return { ok: false, reason: 'upload_finalized_hash_conflict' };
-      }
-      const stored = await tx.putChunk(chunk);
-      if (stored === 'conflict') return { ok: false, reason: 'chunk_conflict' };
-      return { ok: true, stored: stored === 'duplicate' ? 'duplicate' : 'stored' };
-    });
+    return { ok: false, reason: 'chunk_transport_retired' };
   }
 
   async finalizeAssetUpload(input: {
@@ -747,60 +719,58 @@ export class EvidenceAuthority {
     if (input.contentType === MANUAL_TEXT_CONTENT_TYPE) {
       return { ok: false, reason: 'manual_text_not_an_image' };
     }
+    return { ok: false, reason: 'chunk_transport_retired' };
+  }
+
+  async registerPrivateEvidenceImage(input: {
+    contributorId: string;
+    barcode: string;
+    sha256: string;
+    byteLength: number;
+    width: number;
+    height: number;
+    profileId: string;
+    profileVersion: number;
+    lineageSha256: string;
+    lineageByteLength: number;
+    lineageWidth: number;
+    lineageHeight: number;
+    blobPathname: string;
+  }): Promise<{ ok: true; assetId: string; sha256: string; duplicate: boolean } | { ok: false; reason: string }> {
+    if (!input.contributorId || !input.barcode?.trim() || !input.sha256 || !input.blobPathname) {
+      return { ok: false, reason: 'source_not_owned' };
+    }
+    if (input.byteLength < 1) return { ok: false, reason: 'source_hash_mismatch' };
+    const barcode = input.barcode.trim();
     return this.store.transaction(async (tx) => {
-      const already = await tx.finalizedUpload(input.uploadId);
-      if (already) {
-        const owned = await tx.getAsset(already.assetId);
-        if (!owned || owned.contributorId !== input.contributorId || owned.barcode !== input.barcode) {
-          return { ok: false, reason: 'source_not_owned' };
-        }
-        if (already.sha256 !== input.declaredSha256) return { ok: false, reason: 'source_hash_mismatch' };
-        return { ok: true, assetId: already.assetId, sha256: already.sha256 };
-      }
-      const chunks = await tx.listChunks(input.uploadId);
-      if (chunks.length === 0) return { ok: false, reason: 'incomplete_asset' };
-      const count = chunks[0].chunkCount;
-      const total = chunks[0].totalBytes;
-      const declared = chunks[0].declaredSha256;
-      if (
-        chunks.some(
-          (chunk) => chunk.chunkCount !== count || chunk.totalBytes !== total || chunk.declaredSha256 !== declared
-        )
-      ) {
-        return { ok: false, reason: 'chunk_manifest_mismatch' };
-      }
-      if (declared !== input.declaredSha256) return { ok: false, reason: 'source_hash_mismatch' };
-      const ordered = [...chunks].sort((left, right) => left.chunkIndex - right.chunkIndex);
-      if (ordered.length !== count || ordered.some((chunk, index) => chunk.chunkIndex !== index)) {
-        return { ok: false, reason: 'incomplete_asset' };
-      }
-      if (!withinChunkBounds(count, total)) return { ok: false, reason: 'chunk_bounds' };
-      let sum = 0;
-      for (const chunk of ordered) {
-        sum += chunk.bytes.byteLength;
-        if (sum > MAX_EVIDENCE_ORIGINAL_BYTES) return { ok: false, reason: 'chunk_bounds' };
-      }
-      if (sum !== total) return { ok: false, reason: 'chunk_bounds' };
-      const bytes = new Uint8Array(sum);
-      let offset = 0;
-      for (const chunk of ordered) {
-        bytes.set(chunk.bytes, offset);
-        offset += chunk.bytes.byteLength;
-      }
-      if (offset !== total) return { ok: false, reason: 'incomplete_asset' };
-      const hash = sha256Hex(bytes);
-      if (hash !== declared) return { ok: false, reason: 'source_hash_mismatch' };
+      const existing = await tx.findVerifiedAssetByBinding({
+        sha256: input.sha256,
+        contributorId: input.contributorId,
+        barcode,
+        contentType: 'image/jpeg',
+      });
+      if (existing) return { ok: true, assetId: existing.assetId, sha256: existing.sha256, duplicate: true };
       const assetId = `asset_${randomBytes(6).toString('hex')}`;
       await tx.putAsset({
         assetId,
-        sha256: hash,
-        bytes,
-        contentType: input.contentType ?? null,
+        sha256: input.sha256,
+        bytes: null,
+        byteLength: input.byteLength,
+        contentType: 'image/jpeg',
         contributorId: input.contributorId,
-        barcode: input.barcode,
+        barcode,
+        storageKind: 'private_blob',
+        blobPathname: input.blobPathname,
+        imageWidth: input.width,
+        imageHeight: input.height,
+        profileId: input.profileId,
+        profileVersion: input.profileVersion,
+        lineageSha256: input.lineageSha256,
+        lineageByteLength: input.lineageByteLength,
+        lineageWidth: input.lineageWidth,
+        lineageHeight: input.lineageHeight,
       });
-      await tx.rememberFinalizedUpload(input.uploadId, assetId, hash);
-      return { ok: true, assetId, sha256: hash };
+      return { ok: true, assetId, sha256: input.sha256, duplicate: false };
     });
   }
 

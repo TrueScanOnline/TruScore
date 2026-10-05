@@ -23,10 +23,21 @@ export type AuthorityTx = {
   putAsset(asset: {
     assetId: string;
     sha256: string;
-    bytes: Uint8Array;
+    bytes: Uint8Array | null;
+    byteLength?: number;
     contentType: string | null;
     contributorId: string;
     barcode: string;
+    storageKind?: 'postgres_bytes' | 'private_blob';
+    blobPathname?: string | null;
+    imageWidth?: number | null;
+    imageHeight?: number | null;
+    profileId?: string | null;
+    profileVersion?: number | null;
+    lineageSha256?: string | null;
+    lineageByteLength?: number | null;
+    lineageWidth?: number | null;
+    lineageHeight?: number | null;
   }): Promise<void>;
   getAsset(assetId: string): Promise<{
     assetId: string;

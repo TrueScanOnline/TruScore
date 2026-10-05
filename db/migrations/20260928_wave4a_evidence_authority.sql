@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS evidence_source_assets (
   sha256 TEXT NOT NULL,
   byte_length INTEGER NOT NULL,
   content_type TEXT,
-  bytes BYTEA NOT NULL,
+  bytes BYTEA,
   verified BOOLEAN NOT NULL,
   contributor_id TEXT NOT NULL,
   barcode TEXT NOT NULL,
@@ -37,15 +37,42 @@ CREATE TABLE IF NOT EXISTS evidence_source_assets (
 ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS contributor_id TEXT;
 ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS barcode TEXT;
 
-CREATE TABLE IF NOT EXISTS evidence_asset_chunks (
-  upload_id TEXT NOT NULL,
-  chunk_index INTEGER NOT NULL,
-  chunk_count INTEGER NOT NULL,
-  total_bytes INTEGER NOT NULL,
-  declared_sha256 TEXT NOT NULL,
-  chunk_bytes BYTEA NOT NULL,
-  PRIMARY KEY (upload_id, chunk_index)
+ALTER TABLE evidence_source_assets ALTER COLUMN bytes DROP NOT NULL;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS storage_kind TEXT;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS blob_pathname TEXT;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS image_width INTEGER;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS image_height INTEGER;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS profile_id TEXT;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS profile_version INTEGER;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS lineage_sha256 TEXT;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS lineage_byte_length INTEGER;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS lineage_width INTEGER;
+ALTER TABLE evidence_source_assets ADD COLUMN IF NOT EXISTS lineage_height INTEGER;
+UPDATE evidence_source_assets SET storage_kind = 'postgres_bytes' WHERE storage_kind IS NULL;
+
+CREATE TABLE IF NOT EXISTS evidence_image_pending (
+  pathname TEXT PRIMARY KEY,
+  contributor_id TEXT NOT NULL,
+  barcode TEXT NOT NULL,
+  prepared_sha256 TEXT NOT NULL,
+  prepared_byte_length INTEGER NOT NULL,
+  width INTEGER NOT NULL,
+  height INTEGER NOT NULL,
+  profile_id TEXT NOT NULL,
+  profile_version INTEGER NOT NULL,
+  lineage_sha256 TEXT NOT NULL,
+  lineage_byte_length INTEGER NOT NULL,
+  lineage_width INTEGER NOT NULL,
+  lineage_height INTEGER NOT NULL,
+  created_at BIGINT NOT NULL,
+  expires_at BIGINT NOT NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS evidence_private_image_binding_uidx
+  ON evidence_source_assets (sha256, contributor_id, barcode, content_type)
+  WHERE storage_kind = 'private_blob';
+
+DROP TABLE IF EXISTS evidence_asset_chunks;
 
 CREATE TABLE IF NOT EXISTS evidence_asset_uploads (
   upload_id TEXT PRIMARY KEY,

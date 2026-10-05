@@ -11,7 +11,11 @@ export type TraceRequestKind =
   | 'finalize_manual_text'
   | 'upload_asset_chunk'
   | 'finalize_asset'
-  | 'submit';
+  | 'submit'
+  | 'evidence_image_profile'
+  | 'authorize_evidence_image'
+  | 'evidence_image_put'
+  | 'finalize_evidence_image';
 
 export type TraceRequestOutcome = 'ok' | 'http_error' | 'timeout' | 'abort' | 'network_error';
 
@@ -29,7 +33,8 @@ export type ContributionTracePayload = {
   action: 'contribution-trace';
   traceId: string;
   platform: 'ios' | 'android' | 'unknown';
-  entry: 'modal' | 'retry';
+  entry: 'modal' | 'retry' | 'capture';
+  byteRequests?: number;
   domains: string[];
   reason: string;
   t0: number;
@@ -69,7 +74,7 @@ export function readClientPlatform(): 'ios' | 'android' | 'unknown' {
 
 export class ContributionTrace {
   readonly traceId: string;
-  readonly entry: 'modal' | 'retry';
+  readonly entry: 'modal' | 'retry' | 'capture';
   readonly platform: 'ios' | 'android' | 'unknown';
   readonly t0: number;
   domains: string[] = [];
@@ -77,11 +82,17 @@ export class ContributionTrace {
   private marks: TraceMark[] = [];
   private requests: TraceRequest[] = [];
 
-  constructor(entry: 'modal' | 'retry', platform: string) {
-    this.traceId = randomTraceId();
+  byteRequests = 0;
+
+  constructor(
+    entry: 'modal' | 'retry' | 'capture',
+    platform: string,
+    restored?: { traceId: string; t0: number }
+  ) {
+    this.traceId = restored?.traceId && TRACE_ID_RE.test(restored.traceId) ? restored.traceId : randomTraceId();
     this.entry = entry;
     this.platform = platform === 'ios' || platform === 'android' ? platform : 'unknown';
-    this.t0 = Date.now();
+    this.t0 = restored?.t0 && Number.isFinite(restored.t0) ? restored.t0 : Date.now();
   }
 
   mark(name: string, outcome?: string): void {
@@ -140,6 +151,7 @@ export class ContributionTrace {
       t0: this.t0,
       elapsedMs: Date.now() - this.t0,
       openTransmits: this.openTransmits,
+      byteRequests: this.byteRequests,
       marks: this.marks.map((mark) => ({ ...mark })),
       requests: this.requests.map((request) => ({ ...request })),
     };

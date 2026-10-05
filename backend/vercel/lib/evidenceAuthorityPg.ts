@@ -135,19 +135,33 @@ export class PostgresAuthorityStore implements AuthorityStore {
         );
       },
       async putAsset(asset) {
+        const bytes = asset.bytes ? Buffer.from(asset.bytes) : null;
+        const byteLength = asset.byteLength ?? bytes?.byteLength ?? 0;
         await client.query(
           `INSERT INTO evidence_source_assets (
-             asset_id, sha256, byte_length, content_type, bytes, verified, contributor_id, barcode, created_at
-           ) VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7, $8)`,
+             asset_id, sha256, byte_length, content_type, bytes, verified, contributor_id, barcode, created_at,
+             storage_kind, blob_pathname, image_width, image_height, profile_id, profile_version,
+             lineage_sha256, lineage_byte_length, lineage_width, lineage_height
+           ) VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
           [
             asset.assetId,
             asset.sha256,
-            asset.bytes.byteLength,
+            byteLength,
             asset.contentType,
-            Buffer.from(asset.bytes),
+            bytes,
             asset.contributorId,
             asset.barcode,
             Date.now(),
+            asset.storageKind ?? 'postgres_bytes',
+            asset.blobPathname ?? null,
+            asset.imageWidth ?? null,
+            asset.imageHeight ?? null,
+            asset.profileId ?? null,
+            asset.profileVersion ?? null,
+            asset.lineageSha256 ?? null,
+            asset.lineageByteLength ?? null,
+            asset.lineageWidth ?? null,
+            asset.lineageHeight ?? null,
           ]
         );
       },

@@ -824,24 +824,22 @@ describe('kept photographs', () => {
     const { contributorId } = await authority.issueCredential();
     const firstBytes = new TextEncoder().encode('photo-a');
     const secondBytes = new TextEncoder().encode('photo-b');
-    const upload = async (uploadId: string, bytes: Uint8Array) => {
+    const upload = async (_uploadId: string, bytes: Uint8Array) => {
       const declaredSha256 = sha256Hex(bytes);
-      expect(
-        await authority.putAssetChunk({
-          uploadId,
-          chunkIndex: 0,
-          chunkCount: 1,
-          totalBytes: bytes.length,
-          declaredSha256,
-          bytes,
-        })
-      ).toEqual({ ok: true, stored: 'stored' });
-      const finalized = await authority.finalizeAssetUpload({
-        uploadId,
-        declaredSha256,
-        contentType: 'image/jpeg',
+      const finalized = await authority.registerPrivateEvidenceImage({
         contributorId,
         barcode: BARCODE,
+        sha256: declaredSha256,
+        byteLength: bytes.length,
+        width: 12,
+        height: 10,
+        profileId: 'evidence-image-v1',
+        profileVersion: 1,
+        lineageSha256: declaredSha256,
+        lineageByteLength: bytes.length,
+        lineageWidth: 12,
+        lineageHeight: 10,
+        blobPathname: `evidence-images/${contributorId}/${BARCODE}/${declaredSha256}.jpg`,
       });
       expect(finalized.ok).toBe(true);
       if (!finalized.ok) throw new Error(finalized.reason);

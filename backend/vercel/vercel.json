@@ -36,6 +36,9 @@
     "api/evidence-authority.ts": {
       "maxDuration": 60
     },
+    "api/evidence-image-lifecycle.ts": {
+      "maxDuration": 60
+    },
     "api/product-preview.ts": {
       "maxDuration": 60,
       "memory": 1024
@@ -223,6 +226,12 @@
           "value": "Content-Type"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/evidence-image-lifecycle",
+      "schedule": "0 16 * * *"
     }
   ]
 }

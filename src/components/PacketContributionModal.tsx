@@ -11,8 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import * as FileSystem from 'expo-file-system';
-import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../theme';
 import CountryPicker from './CountryPicker';
@@ -20,18 +18,17 @@ import { originCountrySlots, placeFromCountrySlots, governedOriginCountryNames }
 import {
   activateDevicePrivateByteStore,
   addManualEvidenceUnit,
-  commitStagedCapture,
   getSession,
   handoffReviewedUnits,
   openSessionForProduct,
   runExtraction,
-  setSourceFraming,
   upsertSession,
   abstainingExtractionProducer,
   type ExtractionProducer,
   type PacketContributionSession,
 } from '../packetContribution';
 import { transmitSessionToAuthority } from '../evidenceAuthority/device';
+import { acceptLocalCapture, evidenceImageStatus, resumeEvidenceImages } from '../evidenceImage/pipeline';
 import { beginModalTrace, finishModalTrace } from '../evidenceAuthority/contributionTrace';
 import {
   NUTRITION_FIELDS,
@@ -148,14 +145,6 @@ const JOURNEY: Record<
   },
 };
 
-async function readUriBytes(uri: string): Promise<Uint8Array> {
-  const encoded = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-  const binary = globalThis.atob(encoded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-
 function packetInformationContext(context: ContributionEntryContext): boolean {
   return context === 'packetClaims' || context === 'certifications';
 }
@@ -271,6 +260,17 @@ export default function PacketContributionModal({
     };
   }, [visible, barcode, variantKey, entryContext]);
 
+  useEffect(() => {
+    if (!visible || !session || busy) return undefined;
+    void resumeEvidenceImages();
+    const timer = setInterval(() => {
+      void getSession(session.sessionId).then((next) => {
+        if (next) setSession(next);
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [visible, session?.sessionId, busy]);
+
   const targeted = useMemo(
     () => (session?.sourceAssets || []).filter((asset) => asset.framing === 'targeted'),
     [session]
@@ -293,31 +293,33 @@ export default function PacketContributionModal({
     );
   }, [producer.kind, session, includedContexts, skippedProposals]);
 
-  const stage = async (uri: string, source: 'camera' | 'gallery') => {
-    const bytes = await readUriBytes(uri);
-    const staged = await commitStagedCapture({
+  const acceptPhoto = async (uri: string, source: 'camera' | 'gallery', width: number, height: number) => {
+    const accepted = await acceptLocalCapture({
       sessionId: session!.sessionId,
-      bytes,
+      uri,
       source,
-      now: Date.now(),
+      width,
+      height,
     });
-    const framed = await setSourceFraming(staged.session.sessionId, staged.asset.assetId, 'targeted');
-    setSession(framed);
+    const latest = await getSession(session!.sessionId);
+    if (latest) setSession(latest);
     setPreviews((current) => [
       ...current,
-      { tempKey: staged.asset.assetId, uri, source, bytes },
+      { tempKey: accepted.assetId, uri: accepted.fileUri, source, bytes: new Uint8Array() },
     ]);
+    setTraceLabel(accepted.traceId);
   };
 
   const captureCamera = async () => {
     if (!session) return;
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) return;
-    const shot = await ImagePicker.launchCameraAsync({ quality: 1 });
+    const shot = await ImagePicker.launchCameraAsync({ quality: 1, exif: false });
     if (shot.canceled || !shot.assets[0]) return;
+    const asset = shot.assets[0];
     setBusy(true);
     try {
-      await stage(shot.assets[0].uri, 'camera');
+      await acceptPhoto(asset.uri, 'camera', asset.width || 0, asset.height || 0);
     } finally {
       setBusy(false);
     }
@@ -330,16 +332,13 @@ export default function PacketContributionModal({
     const picked = await ImagePicker.launchImageLibraryAsync({
       quality: 1,
       allowsMultipleSelection: true,
+      exif: false,
     });
     if (picked.canceled || picked.assets.length === 0) return;
     setBusy(true);
     try {
       for (const asset of picked.assets) {
-        const manipulated = await ImageManipulator.manipulateAsync(asset.uri, [], {
-          compress: 1,
-          format: ImageManipulator.SaveFormat.JPEG,
-        });
-        await stage(manipulated.uri, 'gallery');
+        await acceptPhoto(asset.uri, 'gallery', asset.width || 0, asset.height || 0);
       }
     } finally {
       setBusy(false);
@@ -574,6 +573,10 @@ export default function PacketContributionModal({
         return;
       }
       const transmitted = await transmitSessionToAuthority(session.sessionId, trace);
+      if (transmitted.pendingImage) {
+        setPartialNotice('Photo saved on this phone. Your notes are kept and will be sent when the photo is ready. Nothing has been admitted yet.');
+        return;
+      }
       if (!transmitted.admitted) {
         onSharedEvidenceFailed?.();
         return;
@@ -646,6 +649,12 @@ export default function PacketContributionModal({
                 <Text style={styles.buttonText}>Gallery</Text>
               </TouchableOpacity>
             </View>
+            {targeted.map((asset) => (
+              <Text key={asset.assetId} selectable style={{ color: colors.text }}>
+                {evidenceImageStatus(asset)}
+                {asset.traceId ? `\n${asset.traceId}` : ''}
+              </Text>
+            ))}
             {previews.map((preview) => (
               <View key={preview.tempKey} style={styles.previewRow}>
                 <Image source={{ uri: preview.uri }} style={styles.thumb} />

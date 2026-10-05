@@ -12,6 +12,10 @@ const REQUEST_KINDS = new Set([
   'upload_asset_chunk',
   'finalize_asset',
   'submit',
+  'evidence_image_profile',
+  'authorize_evidence_image',
+  'evidence_image_put',
+  'finalize_evidence_image',
 ]);
 
 type ServerMark = { name: string; ms: number };
@@ -113,7 +117,7 @@ function sanitizedClientTimeline(body: Record<string, unknown>): Record<string, 
   const traceId = typeof body.traceId === 'string' ? body.traceId : '';
   if (!TRACE_ID_RE.test(traceId)) return null;
   const platform = body.platform === 'ios' || body.platform === 'android' ? body.platform : 'unknown';
-  const entry = body.entry === 'modal' || body.entry === 'retry' ? body.entry : 'unknown';
+  const entry = body.entry === 'modal' || body.entry === 'retry' || body.entry === 'capture' ? body.entry : 'unknown';
   const domains = Array.isArray(body.domains)
     ? body.domains.filter((domain): domain is string => typeof domain === 'string' && DOMAINS.has(domain)).slice(0, 4)
     : [];
@@ -164,6 +168,7 @@ function sanitizedClientTimeline(body: Record<string, unknown>): Record<string, 
     t0: typeof body.t0 === 'number' && Number.isFinite(body.t0) ? Math.floor(body.t0) : null,
     elapsedMs: typeof body.elapsedMs === 'number' && Number.isFinite(body.elapsedMs) ? body.elapsedMs : null,
     openTransmits: typeof body.openTransmits === 'number' && Number.isFinite(body.openTransmits) ? body.openTransmits : null,
+    byteRequests: typeof body.byteRequests === 'number' && Number.isFinite(body.byteRequests) ? body.byteRequests : 0,
     marks,
     requests,
   };

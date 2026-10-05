@@ -29,6 +29,7 @@ import { useScanStore } from '../src/store/useScanStore';
 import { useSettingsStore } from '../src/store/useSettingsStore';
 import { assertScoreDiagnosticsReleaseSafe } from '../src/config/scoreDiagnostics';
 import { retryUnsentEvidenceSubmissions } from '../src/evidenceAuthority/device';
+import { resumeEvidenceImages } from '../src/evidenceImage/pipeline';
 import { useFavoritesStore } from '../src/store/useFavoritesStore';
 import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
 
@@ -235,9 +236,11 @@ function RootLayout() {
     });
 
     // Refresh subscription status when app comes to foreground (parked for MVP — no Qonversion)
+    void resumeEvidenceImages().catch(() => undefined);
     void retryUnsentEvidenceSubmissions().catch(() => undefined);
     const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState !== 'active') return;
+      void resumeEvidenceImages().catch(() => undefined);
       void retryUnsentEvidenceSubmissions().catch(() => undefined);
       if (!isMvpSubscriptionAndPaywallEnabled()) return;
       const { checkSubscriptionStatus } = useSubscriptionStore.getState();

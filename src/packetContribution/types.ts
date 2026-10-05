@@ -12,6 +12,15 @@ export type SourceFraming = 'unspecified' | 'targeted' | 'broad';
 
 export type LocationMetadataDisposition = 'stripped' | 'absent';
 
+/** Local image lifecycle. This is not governed admission. */
+export type EvidenceImagePhase =
+  | 'local_accepted'
+  | 'preparing'
+  | 'prepared'
+  | 'uploading'
+  | 'available'
+  | 'failed_retryable';
+
 export type PacketSourceAsset = {
   assetId: string;
   sessionId: string;
@@ -24,6 +33,23 @@ export type PacketSourceAsset = {
   locationMetadata: LocationMetadataDisposition;
   capturedAt: number;
   variantKey?: string;
+  imagePhase?: EvidenceImagePhase;
+  /** Original capture dimensions. The original file is not uploaded. */
+  lineageWidth?: number;
+  lineageHeight?: number;
+  preparedPrivateKey?: string;
+  preparedSha256?: string;
+  preparedByteLength?: number;
+  preparedWidth?: number;
+  preparedHeight?: number;
+  profileId?: string;
+  profileVersion?: number;
+  /** Server asset id once the private object is verified. Not an admission. */
+  remoteAssetId?: string;
+  remotePathname?: string;
+  byteRequestCount?: number;
+  traceId?: string;
+  lastPutStatus?: number | null;
 };
 
 export type DerivedTransform =
