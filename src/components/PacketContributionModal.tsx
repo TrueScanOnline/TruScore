@@ -27,8 +27,8 @@ import {
   type ExtractionProducer,
   type PacketContributionSession,
 } from '../packetContribution';
-import { transmitSessionToAuthority } from '../evidenceAuthority/device';
-import { acceptLocalCapture, evidenceImageStatus, resumeEvidenceImages } from '../evidenceImage/pipeline';
+import { listSubmissionResumeAttention, retryParkedEvidenceSubmission, transmitSessionToAuthority } from '../evidenceAuthority/device';
+import { acceptLocalCapture, evidenceImageStatus, resumeEvidenceImages, retryParkedEvidenceImage } from '../evidenceImage/pipeline';
 import { visibleEvidenceImages } from '../evidenceImage/projection';
 import { beginModalTrace, finishModalTrace } from '../evidenceAuthority/contributionTrace';
 import {
@@ -218,6 +218,7 @@ export default function PacketContributionModal({
   const [activeContext, setActiveContext] = useState<ContributionEntryContext>(entryContext);
   const [nutritionEdited, setNutritionEdited] = useState<NutritionAttribute[]>([]);
   const [partialNotice, setPartialNotice] = useState<string | null>(null);
+  const [submissionAttention, setSubmissionAttention] = useState<{ idempotencyKey: string; interruptedAt: number }[]>([]);
   const initialIngredientsRef = useRef(initialIngredients);
   const initialNutritionRef = useRef(initialNutrition);
   const initialOriginContextRef = useRef(initialOriginContext);
@@ -277,10 +278,17 @@ export default function PacketContributionModal({
   useEffect(() => {
     if (!visible || !session || busy) return undefined;
     void resumeEvidenceImages();
+    const refreshAttention = () => {
+      void listSubmissionResumeAttention().then((rows) => {
+        setSubmissionAttention(rows.filter((row) => row.sessionId === session.sessionId));
+      });
+    };
+    refreshAttention();
     const timer = setInterval(() => {
       void getSession(session.sessionId).then((next) => {
         if (next) setSession(next);
       });
+      refreshAttention();
     }, 1000);
     return () => clearInterval(timer);
   }, [visible, session?.sessionId, busy]);
@@ -666,6 +674,33 @@ export default function PacketContributionModal({
     }
   };
 
+  const needsAttention = (session?.sourceAssets || []).filter((asset) => asset.imagePhase === 'parked_after_interrupted_resume');
+
+  const retryPhoto = async (assetId: string) => {
+    if (!session) return;
+    setBusy(true);
+    try {
+      await retryParkedEvidenceImage(session.sessionId, assetId);
+      const latest = await getSession(session.sessionId);
+      if (latest) setSession(latest);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const retrySubmission = async (idempotencyKey: string) => {
+    setBusy(true);
+    try {
+      await retryParkedEvidenceSubmission(idempotencyKey);
+      if (session) {
+        const rows = await listSubmissionResumeAttention();
+        setSubmissionAttention(rows.filter((row) => row.sessionId === session.sessionId));
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const journey = JOURNEY[activeContext];
 
   return (
@@ -683,11 +718,32 @@ export default function PacketContributionModal({
                 <Text style={styles.buttonText}>Gallery</Text>
               </TouchableOpacity>
             </View>
-            {targeted.map((asset) => (
+            {targeted.filter((asset) => asset.imagePhase !== 'parked_after_interrupted_resume').map((asset) => (
               <Text key={asset.assetId} selectable style={{ color: colors.text }}>
                 {evidenceImageStatus(asset)}
                 {asset.traceId ? `\n${asset.traceId}` : ''}
               </Text>
+            ))}
+            {needsAttention.map((asset) => (
+              <View key={`attention-${asset.assetId}`}>
+                <Text selectable style={{ color: colors.text }}>
+                  {evidenceImageStatus(asset)}
+                  {asset.interruptedResume ? `\nStopped during ${asset.interruptedResume.step}.` : ''}
+                </Text>
+                <TouchableOpacity onPress={() => void retryPhoto(asset.assetId)} style={styles.button} accessibilityRole="button">
+                  <Text style={styles.buttonText}>Retry photo</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            {submissionAttention.map((item) => (
+              <View key={item.idempotencyKey}>
+                <Text selectable style={{ color: colors.text }}>
+                  A saved contribution needs attention before it can be sent. Nothing has been admitted.
+                </Text>
+                <TouchableOpacity onPress={() => void retrySubmission(item.idempotencyKey)} style={styles.button} accessibilityRole="button">
+                  <Text style={styles.buttonText}>Retry send</Text>
+                </TouchableOpacity>
+              </View>
             ))}
             {displayedPreviews.map((preview) => (
               <View key={preview.tempKey} style={styles.previewRow}>

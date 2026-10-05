@@ -15,6 +15,8 @@ import {
 } from './contributionTrace';
 import type { ManualTextDraft } from './manualTextAsset';
 import type { EvidenceFactInput, SharedEvidenceSnapshot, SubmissionOutcome } from './types';
+import { classifyInterruptedResume, resumeMarkerFor } from '../evidenceImage/resumeGuard';
+import type { EvidenceResumeMarker, InterruptedResumeRecord } from '../packetContribution/types';
 
 const OUTBOX_KEY = '@rveel_evidence_outbox_v1';
 const CREDENTIAL_KEY = '@rveel_evidence_contributor_credential_v1';
@@ -81,6 +83,15 @@ type OutboxItem = {
   unitRefs: UnitRef[];
   status: 'unsent' | 'acknowledged' | 'refused';
   createdAt: number;
+  resumeInProgress?: EvidenceResumeMarker;
+  interruptedResume?: InterruptedResumeRecord;
+};
+
+export type SubmissionResumeAttention = {
+  idempotencyKey: string;
+  sessionId: string;
+  interruptedAt: number;
+  attempt: number;
 };
 
 export type AuthorityTransmitResult = {
@@ -154,6 +165,28 @@ async function readOutbox(): Promise<OutboxItem[]> {
 
 async function writeOutbox(items: OutboxItem[]): Promise<void> {
   await AsyncStorage.setItem(OUTBOX_KEY, JSON.stringify(items));
+}
+
+async function patchOutbox(
+  idempotencyKey: string,
+  patch: { resumeInProgress?: OutboxItem['resumeInProgress'] | null; interruptedResume?: InterruptedResumeRecord | null }
+): Promise<void> {
+  const items = await readOutbox();
+  await writeOutbox(
+    items.map((item) => {
+      if (item.idempotencyKey !== idempotencyKey) return item;
+      const next: OutboxItem = { ...item };
+      if ('resumeInProgress' in patch) {
+        if (patch.resumeInProgress) next.resumeInProgress = patch.resumeInProgress;
+        else delete next.resumeInProgress;
+      }
+      if ('interruptedResume' in patch) {
+        if (patch.interruptedResume) next.interruptedResume = patch.interruptedResume;
+        else delete next.interruptedResume;
+      }
+      return next;
+    })
+  );
 }
 
 export async function listUnsentSubmissions(): Promise<OutboxItem[]> {
@@ -540,11 +573,60 @@ async function transmitSession(
   }
 }
 
+export async function listSubmissionResumeAttention(): Promise<SubmissionResumeAttention[]> {
+  return (await readOutbox())
+    .filter((item) => item.status === 'unsent' && item.interruptedResume?.step === 'submission')
+    .map((item) => ({
+      idempotencyKey: item.idempotencyKey,
+      sessionId: item.sessionId,
+      interruptedAt: item.interruptedResume?.interruptedAt || item.createdAt,
+      attempt: item.interruptedResume?.attempt || 0,
+    }));
+}
+
+/** One manual send after automatic resume has parked the batch. The outbox row and its refs stay. */
+export async function retryParkedEvidenceSubmission(idempotencyKey: string): Promise<void> {
+  const item = (await readOutbox()).find((row) => row.idempotencyKey === idempotencyKey && row.interruptedResume);
+  if (!item) return;
+  await patchOutbox(idempotencyKey, {
+    interruptedResume: null,
+    resumeInProgress: resumeMarkerFor('submission', 1, Date.now()),
+  });
+  try {
+    await transmitSessionToAuthority(item.sessionId);
+  } finally {
+    await patchOutbox(idempotencyKey, { resumeInProgress: null });
+  }
+}
+
 /** Retry completed unsent batches. Does not require the contribution modal. */
 export async function retryUnsentEvidenceSubmissions(): Promise<void> {
   const unsent = await listUnsentSubmissions();
-  const sessionIds = [...new Set(unsent.map((item) => item.sessionId))];
-  for (const sessionId of sessionIds) {
-    await transmitSessionToAuthority(sessionId);
+  const runnable: OutboxItem[] = [];
+  for (const item of unsent) {
+    if (item.interruptedResume) continue;
+    let attempt = 1;
+    if (item.resumeInProgress) {
+      const decision = classifyInterruptedResume(item.resumeInProgress, Date.now());
+      if (!decision.resume) {
+        await patchOutbox(item.idempotencyKey, { resumeInProgress: null, interruptedResume: decision.park });
+        continue;
+      }
+      attempt = decision.marker.attempt;
+    }
+    await patchOutbox(item.idempotencyKey, {
+      resumeInProgress: resumeMarkerFor('submission', attempt, Date.now()),
+    });
+    runnable.push(item);
+  }
+  const sessionIds = [...new Set(runnable.map((item) => item.sessionId))];
+  try {
+    for (const sessionId of sessionIds) {
+      await transmitSessionToAuthority(sessionId);
+    }
+  } finally {
+    for (const item of runnable) {
+      await patchOutbox(item.idempotencyKey, { resumeInProgress: null });
+    }
   }
 }

@@ -19,7 +19,23 @@ export type EvidenceImagePhase =
   | 'prepared'
   | 'uploading'
   | 'available'
-  | 'failed_retryable';
+  | 'failed_retryable'
+  | 'parked_after_interrupted_resume';
+
+/** Local resume steps. This is not an authority request field. */
+export type EvidenceResumeStep = 'prepare' | 'upload' | 'submission';
+
+export type EvidenceResumeMarker = {
+  step: EvidenceResumeStep;
+  attempt: number;
+  startedAt: number;
+};
+
+export type InterruptedResumeRecord = {
+  step: EvidenceResumeStep;
+  attempt: number;
+  interruptedAt: number;
+};
 
 export type PacketSourceAsset = {
   assetId: string;
@@ -52,6 +68,10 @@ export type PacketSourceAsset = {
   lastPutStatus?: number | null;
   /** Short note when launch recovery parked this photo. Not shown as a score. */
   preparationError?: string;
+  /** Set before an automatic resume step. Still present after a crash or kill. */
+  resumeInProgress?: EvidenceResumeMarker;
+  /** Set when automatic resume stops after an interrupted launch. Files stay on the phone. */
+  interruptedResume?: InterruptedResumeRecord;
 };
 
 export type DerivedTransform =

@@ -20,6 +20,7 @@ module.exports = {
     // Mock Expo modules that use ES modules
     '^expo-localization$': '<rootDir>/src/__tests__/__mocks__/expo-localization.ts',
     '^expo-file-system$': '<rootDir>/src/__tests__/__mocks__/expo-file-system.ts',
+    '^expo-image-manipulator$': '<rootDir>/src/__tests__/__mocks__/expo-image-manipulator.ts',
     '^expo-image-picker$': '<rootDir>/src/__tests__/__mocks__/expo-image-picker.ts',
     '^expo-sqlite$': '<rootDir>/src/__tests__/__mocks__/expo-sqlite.ts',
     '^expo-sqlite/build/index$': '<rootDir>/src/__tests__/__mocks__/expo-sqlite.ts',

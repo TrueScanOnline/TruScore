@@ -3,9 +3,13 @@ import { ContributionTrace, readClientPlatform } from '../evidenceAuthority/cont
 import { getSession, loadSessions, upsertSession } from '../packetContribution/sessionStore';
 import { sha256Hex } from '../packetContribution/sha256';
 import type { CaptureSource, EvidenceImagePhase, PacketSourceAsset } from '../packetContribution/types';
+import * as FileSystem from 'expo-file-system';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { fittedLongEdge, jpegContainsExif } from './jpeg';
 import { evidenceImageProfile, sameEvidenceImageProfile, type EvidenceImageProfile } from './profile';
 import { localEvidenceAbandoned } from './retention';
+import { classifyInterruptedResume, resumeMarkerFor } from './resumeGuard';
+import type { EvidenceResumeStep } from '../packetContribution/types';
 
 type FileSystemModule = typeof import('expo-file-system');
 
@@ -29,7 +33,7 @@ function base64ToBytes(value: string): Uint8Array {
 }
 
 async function fileSystem(): Promise<FileSystemModule> {
-  return import('expo-file-system');
+  return FileSystem as FileSystemModule;
 }
 
 function objectPath(fs: FileSystemModule, key: string): string {
@@ -86,6 +90,9 @@ export function evidenceImageStatus(asset: {
   if (phase === 'failed_retryable') {
     const status = asset.lastPutStatus ? ` The direct upload returned ${asset.lastPutStatus}.` : '';
     return `Photo saved on this phone. Saving will retry.${status} Nothing has been admitted.`;
+  }
+  if (phase === 'parked_after_interrupted_resume') {
+    return 'This photo needs attention. It is still saved on this phone. Nothing has been admitted.';
   }
   return '';
 }
@@ -183,10 +190,9 @@ export function resumeFailureNote(error: unknown): string {
 
 async function prepareAsset(asset: PacketSourceAsset, profile: EvidenceImageProfile, trace: ContributionTrace): Promise<PacketSourceAsset | null> {
   const fs = await fileSystem();
-  // Dimensions come from expo-image-manipulator, which autolinking compiles for iOS.
-  // Do not load the react-native barrel here. Metro enumerates every export, including
-  // PushNotificationIOS, and that constructs NativeEventEmitter with a null iOS module.
-  const ImageManipulator = await import('expo-image-manipulator');
+  // Named import of the linked manipulator. Do not import the react-native barrel:
+  // Metro enumerates every export, including PushNotificationIOS, and that constructs
+  // NativeEventEmitter with a null iOS module.
   const sourceUri = objectPath(fs, asset.preparedPrivateKey || asset.privateKey);
   let currentUri = sourceUri;
   let current = {
@@ -203,9 +209,9 @@ async function prepareAsset(asset: PacketSourceAsset, profile: EvidenceImageProf
       fitted && (fitted.width !== current.width || fitted.height !== current.height)
         ? [{ resize: { width: fitted.width } }]
         : [];
-    const saved = await ImageManipulator.manipulateAsync(currentUri, actions, {
+    const saved = await manipulateAsync(currentUri, actions, {
       compress: quality,
-      format: ImageManipulator.SaveFormat.JPEG,
+      format: SaveFormat.JPEG,
     });
     const info = await fs.getInfoAsync(saved.uri);
     const byteLength = info.exists && 'size' in info && typeof info.size === 'number' ? info.size : Number.MAX_SAFE_INTEGER;
@@ -361,6 +367,7 @@ async function uploadPrepared(asset: PacketSourceAsset, trace: ContributionTrace
 
 async function advanceAsset(asset: PacketSourceAsset, recovering: boolean): Promise<boolean> {
   if (asset.imagePhase === 'available' && asset.remoteAssetId) return false;
+  if (asset.imagePhase === 'parked_after_interrupted_resume') return false;
   const trace = traceFor(asset, recovering || asset.imagePhase === 'failed_retryable' || asset.imagePhase === 'uploading');
   let current = asset.contentSha256 ? asset : await hashOriginal(asset);
   if (!current) return false;
@@ -380,15 +387,53 @@ async function advanceAsset(asset: PacketSourceAsset, recovering: boolean): Prom
       stripLocation: true,
     });
   if (!current.preparedSha256 || current.imagePhase === 'local_accepted' || current.imagePhase === 'preparing' || stale) {
+    current = (await beginResumeStep(current, 'prepare')) || current;
     current = (await prepareAsset(current, profile, trace)) || current;
+    current = (await clearResumeStep(current)) || current;
   }
   // A failed direct PUT stays failed_retryable with the prepared file intact.
   // Resume retries that one binary upload. It does not prepare a second image.
   if (!current.preparedSha256) return false;
   const before = current.remoteAssetId;
+  current = (await beginResumeStep(current, 'upload')) || current;
   await uploadPrepared(current, trace, token);
+  await clearResumeStep(current);
   const after = (await getSession(current.sessionId))?.sourceAssets.find((item) => item.assetId === current.assetId);
   return !!after?.remoteAssetId && after.remoteAssetId !== before;
+}
+
+function photoHeldOnDevice(asset: PacketSourceAsset): boolean {
+  return asset.imagePhase === 'parked_after_interrupted_resume' || !!asset.resumeInProgress || !!asset.interruptedResume;
+}
+
+async function beginResumeStep(asset: PacketSourceAsset, step: EvidenceResumeStep): Promise<PacketSourceAsset | null> {
+  const attempt = asset.resumeInProgress?.attempt && asset.resumeInProgress.attempt > 0 ? asset.resumeInProgress.attempt : 1;
+  return patchAsset(asset.sessionId, asset.assetId, {
+    resumeInProgress: resumeMarkerFor(step, attempt, Date.now()),
+  });
+}
+
+async function clearResumeStep(asset: PacketSourceAsset): Promise<PacketSourceAsset | null> {
+  return patchAsset(asset.sessionId, asset.assetId, { resumeInProgress: undefined });
+}
+
+async function settleInterruptedAssets(now: number): Promise<void> {
+  const sessions = await loadSessions();
+  for (const session of sessions) {
+    for (const asset of session.sourceAssets) {
+      if (!asset.resumeInProgress || asset.imagePhase === 'parked_after_interrupted_resume') continue;
+      const decision = classifyInterruptedResume(asset.resumeInProgress, now);
+      if (!decision.resume) {
+        await patchAsset(session.sessionId, asset.assetId, {
+          imagePhase: 'parked_after_interrupted_resume',
+          interruptedResume: decision.park,
+          resumeInProgress: undefined,
+        });
+        continue;
+      }
+      await patchAsset(session.sessionId, asset.assetId, { resumeInProgress: decision.marker });
+    }
+  }
 }
 
 async function sweepAbandonedLocalFiles(now: number): Promise<void> {
@@ -399,6 +444,7 @@ async function sweepAbandonedLocalFiles(now: number): Promise<void> {
     if (!localEvidenceAbandoned(session.updatedAt, now, unsent.has(session.sessionId))) continue;
     if (!fs) continue;
     for (const asset of session.sourceAssets) {
+      if (photoHeldOnDevice(asset)) continue;
       if (asset.privateKey) await fs.deleteAsync(objectPath(fs, asset.privateKey), { idempotent: true });
       if (asset.preparedPrivateKey) await fs.deleteAsync(objectPath(fs, asset.preparedPrivateKey), { idempotent: true });
     }
@@ -415,12 +461,14 @@ export async function resumeEvidenceImages(): Promise<void> {
   try {
     do {
       advanceAgain = false;
-      await sweepAbandonedLocalFiles(Date.now());
+      const now = Date.now();
+      await settleInterruptedAssets(now);
+      await sweepAbandonedLocalFiles(now);
       const sessions = await loadSessions();
       let becameAvailable = false;
       for (const session of sessions) {
         for (const asset of session.sourceAssets) {
-          if (!asset.imagePhase || asset.imagePhase === 'available') continue;
+          if (!asset.imagePhase || asset.imagePhase === 'available' || asset.imagePhase === 'parked_after_interrupted_resume') continue;
           try {
             const ready = await advanceAsset(asset, asset.imagePhase === 'failed_retryable' || asset.imagePhase === 'uploading');
             becameAvailable = becameAvailable || ready;
@@ -428,6 +476,7 @@ export async function resumeEvidenceImages(): Promise<void> {
             await patchAsset(session.sessionId, asset.assetId, {
               imagePhase: 'failed_retryable',
               preparationError: resumeFailureNote(error),
+              resumeInProgress: undefined,
             }).catch(() => undefined);
           }
         }
@@ -437,4 +486,24 @@ export async function resumeEvidenceImages(): Promise<void> {
   } finally {
     advancing = false;
   }
+}
+
+/** Manual retry clears the interrupted park and runs one guarded resume. Files stay on the phone. */
+export async function retryParkedEvidenceImage(sessionId: string, assetId: string): Promise<void> {
+  const session = await getSession(sessionId);
+  const asset = session?.sourceAssets.find((item) => item.assetId === assetId);
+  if (!asset || asset.imagePhase !== 'parked_after_interrupted_resume') return;
+  const restore =
+    asset.interruptedResume?.step === 'upload' && asset.preparedSha256
+      ? 'prepared'
+      : asset.contentSha256
+        ? 'preparing'
+        : 'local_accepted';
+  await patchAsset(sessionId, assetId, {
+    imagePhase: restore,
+    interruptedResume: undefined,
+    resumeInProgress: undefined,
+    preparationError: undefined,
+  });
+  await resumeEvidenceImages();
 }

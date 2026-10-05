@@ -13,6 +13,8 @@ export const writeAsStringAsync = jest.fn(() => Promise.resolve());
 
 export const deleteAsync = jest.fn(() => Promise.resolve());
 
+export const copyAsync = jest.fn(() => Promise.resolve());
+
 export const makeDirectoryAsync = jest.fn(() => Promise.resolve());
 
 export const getInfoAsync = jest.fn(() => Promise.resolve({ exists: true, isDirectory: false }));
@@ -26,6 +28,7 @@ export default {
   readAsStringAsync,
   writeAsStringAsync,
   deleteAsync,
+  copyAsync,
   makeDirectoryAsync,
   getInfoAsync,
   documentDirectory,
