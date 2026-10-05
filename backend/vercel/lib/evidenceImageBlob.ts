@@ -28,8 +28,11 @@ async function pool(): Promise<Queryable> {
   return poolPromise;
 }
 
-export function evidenceImageBlobToken(): string | null {
-  const token = process.env.EVIDENCE_IMAGE_BLOB_READ_WRITE_TOKEN?.trim();
+export function evidenceImageBlobToken(env: NodeJS.ProcessEnv = process.env): string | null {
+  // The private store is connected with prefix EVIDENCE_IMAGE, which injects
+  // EVIDENCE_IMAGE_READ_WRITE_TOKEN. The explicit BLOB-named override remains
+  // accepted. The public hero token BLOB_READ_WRITE_TOKEN is never read.
+  const token = (env.EVIDENCE_IMAGE_BLOB_READ_WRITE_TOKEN || env.EVIDENCE_IMAGE_READ_WRITE_TOKEN || '').trim();
   return token || null;
 }
 

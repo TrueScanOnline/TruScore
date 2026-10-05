@@ -366,7 +366,9 @@ async function advanceAsset(asset: PacketSourceAsset, recovering: boolean): Prom
   if (!current.preparedSha256 || current.imagePhase === 'local_accepted' || current.imagePhase === 'preparing' || stale) {
     current = (await prepareAsset(current, profile, trace)) || current;
   }
-  if (!current.preparedSha256 || current.imagePhase === 'failed_retryable') return false;
+  // A failed direct PUT stays failed_retryable with the prepared file intact.
+  // Resume retries that one binary upload. It does not prepare a second image.
+  if (!current.preparedSha256) return false;
   const before = current.remoteAssetId;
   await uploadPrepared(current, trace, token);
   const after = (await getSession(current.sessionId))?.sourceAssets.find((item) => item.assetId === current.assetId);
