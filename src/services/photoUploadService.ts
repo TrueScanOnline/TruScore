@@ -1,6 +1,7 @@
 // Photo Upload Service
-// Hero (front) and country_label images are proprietary: Vercel only (not OFF).
-// Ingredients / nutrition / packaging may upload to Open Food Facts + Vercel.
+// Front hero images are eligible for Open Food Facts and are dispatched without blocking the caller.
+// Authentication is attached on the server. Country-label images stay Vercel-only.
+// Ingredients / nutrition / packaging may upload to both.
 
 import { logger } from '../utils/logger';
 import * as FileSystem from 'expo-file-system';
@@ -21,7 +22,7 @@ export interface PhotoUploadResult {
   message: string;
 }
 
-/** When true, skip Open Food Facts (Vercel only). When false, attempt OFF when applicable. When omitted, front/country_label default to proprietary-only. */
+/** When true, skip Open Food Facts (Vercel only). When false, attempt OFF. When omitted, country_label stays Vercel-only and front is eligible. */
 export interface UploadProductPhotoOptions {
   proprietaryOnly?: boolean;
 }
@@ -32,12 +33,40 @@ function shouldSkipOpenFoodFacts(
 ): boolean {
   if (options?.proprietaryOnly === true) return true;
   if (options?.proprietaryOnly === false) return false;
-  return imageType === 'front' || imageType === 'country_label';
+  return imageType === 'country_label';
+}
+
+function dispatchFrontImageToOpenFoodFacts(barcode: string, imagePath: string): void {
+  powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Dispatching front image to Open Food Facts`, {
+    barcode,
+    imageType: 'front',
+  });
+  void uploadPhotoToOpenFoodFacts(barcode, imagePath, 'front')
+    .then((offUrl) => {
+      if (offUrl) {
+        powershellLogger.log('SUCCESS', 'USER_CONTRIBUTION', `Front image dispatched to Open Food Facts`, {
+          barcode,
+          url: offUrl,
+        });
+        logger.info(`[PhotoUpload] Front image dispatched to Open Food Facts: ${offUrl}`);
+        return;
+      }
+      powershellLogger.log('WARN', 'USER_CONTRIBUTION', `Open Food Facts front dispatch returned no URL`, {
+        barcode,
+      });
+    })
+    .catch((offError) => {
+      powershellLogger.log('ERROR', 'USER_CONTRIBUTION', `Open Food Facts front dispatch failed`, {
+        barcode,
+        error: offError instanceof Error ? offError.message : String(offError),
+      });
+      logger.warn('[PhotoUpload] Open Food Facts front dispatch failed (non-critical):', offError);
+    });
 }
 
 /**
- * Upload product image: Vercel always for storage; Open Food Facts for non-proprietary types unless disabled.
- * @param imageType - front and country_label are proprietary (Vercel-only) by default.
+ * Upload product image. Vercel storage stays on this call. Front Open Food Facts dispatch is not awaited.
+ * @param imageType - country_label stays proprietary. front is eligible for asynchronous OFF dispatch.
  */
 export async function uploadProductPhoto(
   barcode: string,
@@ -83,7 +112,9 @@ export async function uploadProductPhoto(
   }
   
   try {
-    if (!proprietaryOnly) {
+    if (imageType === 'front' && !proprietaryOnly) {
+      dispatchFrontImageToOpenFoodFacts(barcode, imagePath);
+    } else if (!proprietaryOnly) {
       try {
         powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Uploading to Open Food Facts`, {
           barcode,

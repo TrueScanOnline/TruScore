@@ -42,6 +42,7 @@ export interface ProductHeroSectionProps {
   loadErrorLabel: string;
   retryLabel: string;
   closeLightboxLabel: string;
+  onDisplayed?: () => void;
 }
 
 function ProductImageLightbox({
@@ -138,6 +139,7 @@ export default function ProductHeroSection({
   loadErrorLabel,
   retryLabel,
   closeLightboxLabel,
+  onDisplayed,
 }: ProductHeroSectionProps) {
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'loaded' | 'error'>(() =>
     imageUrl?.trim() ? 'loading' : 'idle'
@@ -272,7 +274,10 @@ export default function ProductHeroSection({
               contentFit="contain"
               transition={280}
               cachePolicy="memory-disk"
-              onLoad={() => setLoadState('loaded')}
+              onLoad={() => {
+                setLoadState('loaded');
+                onDisplayed?.();
+              }}
               onError={() => setLoadState('error')}
             />
             {loadState === 'loaded' && (

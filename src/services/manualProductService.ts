@@ -230,10 +230,10 @@ export async function saveManualProduct(data: ManualProductData): Promise<boolea
       // Upload photo first if available
       if (data.image_url) {
         try {
-          powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Uploading hero photo (Vercel proprietary)`, {
+          powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Uploading hero photo`, {
             barcode: data.barcode,
             photoPath: data.image_url,
-            targetServers: ['Vercel Backend (proprietary)'],
+            targetServers: ['Open Food Facts', 'Vercel Backend'],
           });
 
           const photoResult = await uploadProductPhoto(data.barcode, data.image_url, 'front');

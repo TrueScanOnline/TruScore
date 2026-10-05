@@ -424,9 +424,18 @@ describe('User Contribution System - Complete E2E Tests', () => {
       });
 
       const result = await uploadProductPhoto(TEST_BARCODE, mockImagePath, 'front');
+      await Promise.resolve();
       expect(result.success).toBe(true);
       expect(result.vercelUrl).toBeDefined();
       expect(result.openFoodFactsUrl).toBeUndefined();
+      const dispatch = (global.fetch as jest.Mock).mock.calls.find((call) =>
+        String(call[0]).includes('/api/off-image-dispatch')
+      );
+      expect(dispatch).toBeTruthy();
+      const body = JSON.parse(String(dispatch[1]?.body));
+      expect(body.password).toBeUndefined();
+      expect(body.user_id).toBeUndefined();
+      expect(body.imageField).toBe('front');
     });
 
     test('should upload ingredients photo and retrieve globally', async () => {

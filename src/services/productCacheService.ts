@@ -111,11 +111,16 @@ export async function mergeUserContributedData(product: Product, barcode: string
 
     // Merge community photo from Vercel photos table (when present)
     if (userContributedProduct.image_url && userContributedProduct.image_url.trim().length > 0) {
-      // Only update if the user-contributed URL is a valid public URL (not a local file path)
+      // Fill an empty catalogue slot only. An existing OFF/manufacturer image stays in front.
       const isPublicUrl = userContributedProduct.image_url.startsWith('http://') || 
                          userContributedProduct.image_url.startsWith('https://');
+      const catalogueAlreadyPresent = !!(
+        (product.image_front_small_url && /^https?:\/\//i.test(product.image_front_small_url)) ||
+        (product.image_front_url && /^https?:\/\//i.test(product.image_front_url)) ||
+        (product.image_url && /^https?:\/\//i.test(product.image_url))
+      );
       
-      if (isPublicUrl) {
+      if (isPublicUrl && !catalogueAlreadyPresent) {
         const oldPhotoUrl = product.image_url || 'NONE';
         product.image_url = userContributedProduct.image_url;
         product.image_front_url = userContributedProduct.image_url;
@@ -130,13 +135,10 @@ export async function mergeUserContributedData(product: Product, barcode: string
         
         logger.info(`[ProductCacheService] ✅ User-contributed photo merged: ${userContributedProduct.image_url}`);
       } else {
-        powershellLogger.log('WARN', 'USER_CONTRIBUTION', `Skipping local file path (not public URL)`, {
+        powershellLogger.log('INFO', 'USER_CONTRIBUTION', `Kept the existing catalogue image`, {
           barcode,
-          photoUrl: userContributedProduct.image_url,
-          reason: 'NOT_PUBLIC_URL',
+          reason: catalogueAlreadyPresent ? 'CATALOGUE_PRESENT' : 'NOT_PUBLIC_URL',
         });
-        
-        logger.debug(`[ProductCacheService] Skipping local file path (not a public URL): ${userContributedProduct.image_url}`);
       }
     } else {
       powershellLogger.log('INFO', 'USER_CONTRIBUTION', `No photo in user-contributed data`, {

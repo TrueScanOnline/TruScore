@@ -102,6 +102,8 @@ OFF_LIVE_WRITE_EXECUTE=1
 
 `OFF_LIVE_WRITE_TARGET` is optional. When unset, dispatch uses `https://world.openfoodfacts.org/cgi/product_jqm2.pl`. Any other hostname is rejected. `OFF_STAGING_WRITE_*` does not authorize a write. Leave `OFF_LIVE_WRITE_EXECUTE` unset until that dedicated account exists. Production authority ignores these variables.
 
+Photo uploads that are meant for Open Food Facts (`front`, `ingredients`, `nutrition`, `packaging`) use the same `OFF_LIVE_WRITE_USER_ID` and `OFF_LIVE_WRITE_PASSWORD` on `/api/off-image-dispatch`. The app sends the image bytes only. It does not send the account. Country-label photos are not dispatched.
+
 ---
 
 ## AFTER ADDING VARIABLES

@@ -5,10 +5,11 @@
 import { logger } from '../utils/logger';
 import { ManualProductData } from '../types/manualProduct';
 import * as FileSystem from 'expo-file-system';
+import { getBackendUrl } from '../config/backendConfig';
+import { offImageFieldAllowed } from '../evidenceAuthority/offImageDispatchGate';
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org';
 const OFF_EDIT_API = `${OFF_API_BASE}/cgi/product_jqm2.pl`;
-const OFF_IMAGE_UPLOAD_API = `${OFF_API_BASE}/cgi/product_image_upload.pl`;
 const USER_AGENT = 'Rveel/1.0.0 (truescan@example.com)'; // TODO: Update with actual contact email
 
 /** Client builds do not carry an Open Food Facts password. Authenticated writes go through the server. */
@@ -29,68 +30,30 @@ export async function uploadPhotoToOpenFoodFacts(
   imageField: 'front' | 'ingredients' | 'nutrition' | 'packaging' | 'other' = 'front'
 ): Promise<string | null> {
   try {
-    const credentials = getOFFCredentials();
-    
-    // Map imageField to OFF field names
-    const offFieldMap: Record<string, string> = {
-      front: 'front',
-      ingredients: 'ingredients',
-      nutrition: 'nutrition',
-      packaging: 'packaging',
-      other: 'other',
-    };
-    const offField = offFieldMap[imageField] || 'front';
-    
-    // For React Native FormData, we need to append the file with proper format
-    // React Native FormData expects: { uri, type, name } for file uploads
-    const formData = new FormData();
-    formData.append('code', barcode);
-    formData.append('imagefield', offField);
-    
-    // Add credentials if available
-    if (credentials.userId && credentials.password) {
-      formData.append('user_id', credentials.userId);
-      formData.append('password', credentials.password);
-    }
-    
-    // Append image file - React Native FormData format
-    // The imagePath should be a local file URI (file://)
-    formData.append(`imgupload_${offField}`, {
-      uri: imagePath,
-      type: 'image/jpeg',
-      name: `${barcode}_${offField}.jpg`,
-    } as any);
-    
-    // Open Food Facts expects multipart/form-data
-    const response = await fetch(OFF_IMAGE_UPLOAD_API, {
-      method: 'POST',
-      headers: {
-        'User-Agent': USER_AGENT,
-        // Don't set Content-Type - let fetch set it with boundary for FormData
-      },
-      body: formData,
+    if (!offImageFieldAllowed(imageField)) return null;
+    const imageBase64 = await FileSystem.readAsStringAsync(imagePath, {
+      encoding: FileSystem.EncodingType.Base64,
     });
-    
-    if (!response.ok) {
-      logger.warn(`[OFF Submission] Photo upload failed: ${response.status} ${response.statusText}`);
+    const endpoint = `${getBackendUrl().replace(/\/$/, '')}/api/off-image-dispatch`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        barcode,
+        imageField,
+        imageBase64,
+        mimeType: 'image/jpeg',
+      }),
+    });
+    const payload = (await response.json().catch(() => null)) as { ok?: boolean; imageUrl?: string } | null;
+    if (!response.ok || payload?.ok !== true || typeof payload.imageUrl !== 'string') {
+      logger.warn(`[OFF Submission] Photo dispatch failed: ${response.status}`);
       return null;
     }
-    
-    const responseText = await response.text();
-    
-    // Parse response to get image URL
-    // OFF returns HTML or JSON depending on success
-    if (responseText.includes('status="ok"') || responseText.includes('"status":1')) {
-      // Construct public image URL
-      const imageUrl = `https://images.openfoodfacts.org/images/products/${barcode.substring(0, 3)}/${barcode.substring(3, 6)}/${barcode.substring(6, 9)}/${barcode}/${offField}.jpg`;
-      logger.info(`[OFF Submission] Photo uploaded successfully: ${imageUrl}`);
-      return imageUrl;
-    }
-    
-    logger.warn(`[OFF Submission] Photo upload response indicates failure: ${responseText.substring(0, 200)}`);
-    return null;
+    logger.info(`[OFF Submission] Photo dispatched: ${payload.imageUrl}`);
+    return payload.imageUrl;
   } catch (error) {
-    logger.error('[OFF Submission] Error uploading photo:', error);
+    logger.error('[OFF Submission] Error dispatching photo:', error);
     return null;
   }
 }
@@ -181,8 +144,7 @@ export async function submitProductToOpenFoodFacts(
       const productUrl = `https://world.openfoodfacts.org/product/${data.barcode}`;
       logger.info(`[OFF Submission] Product submitted successfully: ${productUrl}`);
       
-      // Intentionally do NOT upload hero photo to OFF from manual submissions.
-      // Hero/front image is proprietary and stored on Vercel only.
+      // The front image is dispatched by uploadProductPhoto. This product-field submit does not send it again.
       
       return {
         success: true,

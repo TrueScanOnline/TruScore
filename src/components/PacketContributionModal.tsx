@@ -29,6 +29,7 @@ import {
 } from '../packetContribution';
 import { transmitSessionToAuthority } from '../evidenceAuthority/device';
 import { acceptLocalCapture, evidenceImageStatus, resumeEvidenceImages } from '../evidenceImage/pipeline';
+import { visibleEvidenceImages } from '../evidenceImage/projection';
 import { beginModalTrace, finishModalTrace } from '../evidenceAuthority/contributionTrace';
 import {
   NUTRITION_FIELDS,
@@ -60,6 +61,8 @@ type Preview = {
   uri: string;
   source: 'camera' | 'gallery';
   bytes: Uint8Array;
+  journeyId: string;
+  entryContext: string;
 };
 
 type OriginDraft = OriginContributionDraft & { intent: 'new' | 'edited' };
@@ -149,6 +152,10 @@ function packetInformationContext(context: ContributionEntryContext): boolean {
   return context === 'packetClaims' || context === 'certifications';
 }
 
+function contributionSurface(context: ContributionEntryContext): string {
+  return packetInformationContext(context) ? 'packetInformation' : context;
+}
+
 function contextForProposal(
   domain: string | undefined,
   section: 'ingredients' | 'nutrition' | undefined
@@ -190,6 +197,7 @@ export default function PacketContributionModal({
   const { colors } = useTheme();
   const [session, setSession] = useState<PacketContributionSession | null>(null);
   const [previews, setPreviews] = useState<Preview[]>([]);
+  const [surfaceJourneyId, setSurfaceJourneyId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [traceLabel, setTraceLabel] = useState<string | null>(null);
   const [phase, setPhase] = useState<'capture' | 'entry' | 'review'>('capture');
@@ -221,8 +229,14 @@ export default function PacketContributionModal({
   knownOffOriginRef.current = knownOffOrigin;
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) {
+      setPreviews([]);
+      setSurfaceJourneyId(null);
+      return;
+    }
     let cancelled = false;
+    setPreviews([]);
+    setSurfaceJourneyId(`journey_${barcode}_${entryContext}_${Date.now()}`);
     setPhase('capture');
     setActiveContext(entryContext);
     setIncludedContexts(packetInformationContext(entryContext) ? ['packetClaims', 'certifications'] : [entryContext]);
@@ -271,9 +285,20 @@ export default function PacketContributionModal({
     return () => clearInterval(timer);
   }, [visible, session?.sessionId, busy]);
 
+  const displayedPreviews = useMemo(
+    () =>
+      visibleEvidenceImages(
+        previews,
+        surfaceJourneyId ? { journeyId: surfaceJourneyId, entryContext: contributionSurface(activeContext) } : null
+      ),
+    [previews, surfaceJourneyId, activeContext]
+  );
   const targeted = useMemo(
-    () => (session?.sourceAssets || []).filter((asset) => asset.framing === 'targeted'),
-    [session]
+    () =>
+      (session?.sourceAssets || []).filter((asset) =>
+        displayedPreviews.some((preview) => preview.tempKey === asset.assetId)
+      ),
+    [session, displayedPreviews]
   );
   const showReadPhotos = producer.kind !== 'abstaining' && targeted.length > 0;
   const proposals = useMemo(() => {
@@ -294,6 +319,7 @@ export default function PacketContributionModal({
   }, [producer.kind, session, includedContexts, skippedProposals]);
 
   const acceptPhoto = async (uri: string, source: 'camera' | 'gallery', width: number, height: number) => {
+    if (!surfaceJourneyId) return;
     const accepted = await acceptLocalCapture({
       sessionId: session!.sessionId,
       uri,
@@ -305,7 +331,14 @@ export default function PacketContributionModal({
     if (latest) setSession(latest);
     setPreviews((current) => [
       ...current,
-      { tempKey: accepted.assetId, uri: accepted.fileUri, source, bytes: new Uint8Array() },
+      {
+        tempKey: accepted.assetId,
+        uri: accepted.fileUri,
+        source,
+        bytes: new Uint8Array(),
+        journeyId: surfaceJourneyId,
+        entryContext: contributionSurface(activeContext),
+      },
     ]);
     setTraceLabel(accepted.traceId);
   };
@@ -581,6 +614,7 @@ export default function PacketContributionModal({
         onSharedEvidenceFailed?.();
         return;
       }
+      setPreviews([]);
       const retained = retainedAfterPartialAdmission(observations, transmitted.admittedUnitIds);
       await onSharedEvidenceAdmitted?.(transmitted.snapshot, retained.complete);
       if (retained.complete) {
@@ -655,7 +689,7 @@ export default function PacketContributionModal({
                 {asset.traceId ? `\n${asset.traceId}` : ''}
               </Text>
             ))}
-            {previews.map((preview) => (
+            {displayedPreviews.map((preview) => (
               <View key={preview.tempKey} style={styles.previewRow}>
                 <Image source={{ uri: preview.uri }} style={styles.thumb} />
                 <TouchableOpacity onPress={() => retake(preview)}>
@@ -686,7 +720,7 @@ export default function PacketContributionModal({
             ) : null}
             <TouchableOpacity
               onPress={() =>
-                setPhase(packetInformationContext(activeContext) && previews.length > 0 ? 'review' : 'entry')
+                setPhase(packetInformationContext(activeContext) && displayedPreviews.length > 0 ? 'review' : 'entry')
               }
               style={styles.button}
             >
@@ -705,7 +739,7 @@ export default function PacketContributionModal({
               {packetInformationContext(activeContext) ? journey.header : journey.review}
             </Text>
             {phase === 'review'
-              ? previews.map((preview) => (
+              ? displayedPreviews.map((preview) => (
                   <View key={preview.tempKey} style={styles.previewRow}>
                     <Image source={{ uri: preview.uri }} style={styles.thumb} />
                     <TouchableOpacity onPress={() => retake(preview)}>

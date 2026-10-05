@@ -102,6 +102,8 @@ import { useTheme } from '../../src/theme';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
+import { catalogueHeroUrl, heroTimingRecord, resolveDisplayedHero } from '../../src/services/heroImage';
+import { readContributedHeroUrl, readInterimHero, rememberContributedHeroUrl, rememberInterimHero } from '../../src/services/interimHero';
 import { PalmOilCard } from '../../src/features/product/cards/PalmOilCard';
 import { formatGovernedOriginFactLine, productOriginsCardPresentation } from '../../src/origins/productOriginsCard';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
@@ -132,7 +134,6 @@ import {
 import { calculateTrustScore } from '../../src/utils/trustScore';
 import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
 import { ManualProductData } from '../../src/types/manualProduct';
-import { cacheProduct } from '../../src/services/cacheService';
 import { getProductPageAlertsInsights } from '../../src/utils/productInfoCardVisibility';
 import { crashReporter } from '../../src/utils/crashReporter';
 import { getPrimaryBarcode } from '../../src/utils/barcodeNormalization';
@@ -449,6 +450,9 @@ function ResultScreenContent() {
   const [allergensAdditivesModalVisible, setAllergensAdditivesModalVisible] = useState(false);
   const [processingLevelModalVisible, setProcessingLevelModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
+  const [interimHeroUri, setInterimHeroUri] = useState<string | null>(null);
+  const [contributedHeroUrl, setContributedHeroUrl] = useState<string | null>(null);
+  const heroDisplayStartedRef = useRef<number | null>(null);
   const [productOriginsExplainerVisible, setProductOriginsExplainerVisible] = useState(false);
   const [packetClaimsExplainerVisible, setPacketClaimsExplainerVisible] = useState(false);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
@@ -998,15 +1002,49 @@ function ResultScreenContent() {
   }, [product?.trust_score, product?.barcode, barcode, product, scanResult?.terminal_state]);
 
   // Must stay above loading/error early returns — otherwise product-ready renders call one more hook.
-  const heroImageUrl =
-    product?.image_front_small_url || product?.image_front_url || product?.image_url || null;
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all([readInterimHero(barcode), readContributedHeroUrl(barcode)])
+      .then(([file, url]) => {
+        if (cancelled) return;
+        setInterimHeroUri(file);
+        setContributedHeroUrl(url);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [barcode]);
+
+  const catalogueUrl = catalogueHeroUrl(product, contributedHeroUrl);
+  const heroImageUrl = resolveDisplayedHero({
+    catalogueUrl,
+    interimUri: interimHeroUri,
+    contributedUrl: contributedHeroUrl,
+  });
   useEffect(() => {
     const url = heroImageUrl?.trim();
     if (!url) return;
-    ExpoImage.prefetch(url).catch(() => {
-      // Prefetch is best-effort; hero still loads on mount with existing fallbacks.
+    const selectedAt = Date.now();
+    heroDisplayStartedRef.current = selectedAt;
+    heroTimingRecord({
+      barcode: getPrimaryBarcode(barcode),
+      phase: 'source_resolved',
+      ms: 0,
+      outcome: catalogueUrl ? 'catalogue' : interimHeroUri ? 'interim' : 'contributed',
     });
-  }, [heroImageUrl]);
+    if (!/^https?:\/\//i.test(url)) return;
+    ExpoImage.prefetch(url)
+      .then(() => {
+        heroTimingRecord({
+          barcode: getPrimaryBarcode(barcode),
+          phase: 'retrieval',
+          ms: Date.now() - selectedAt,
+          outcome: 'prefetch',
+        });
+      })
+      .catch(() => undefined);
+  }, [heroImageUrl, barcode, catalogueUrl, interimHeroUri]);
 
   const acceptProductUpdate = async (next: ProductWithTrustScore): Promise<boolean> => {
     const remembered = await rememberedAuthoritativeSnapshot(barcode);
@@ -1597,9 +1635,7 @@ function ResultScreenContent() {
   }
 
   const originsCard = productOriginsCardPresentation(product);
-  // UAT interim mitigation (F): prefer small front image for hero; fall back to full.
-  const imageUrl =
-    product.image_front_small_url || product.image_front_url || product.image_url || null;
+  const imageUrl = heroImageUrl;
   const isWebSearchProduct = isWebSearchFallback(product);
 
   const contributionActions = resultContributionActions(product);
@@ -1616,90 +1652,94 @@ function ResultScreenContent() {
   const handleCaptureImage = async (imageUri: string) => {
     if (!product) return;
 
-    try {
-      console.log('[ResultScreen] handleCaptureImage — upload + Vercel share');
+    const contributionBarcode = getPrimaryBarcode(barcode);
+    setInterimHeroUri(imageUri);
 
-      const contributionBarcode = getPrimaryBarcode(barcode);
-      const photoResult = await uploadProductPhoto(contributionBarcode, imageUri, 'front');
-      const publicUrl =
-        photoResult.vercelUrl ||
-        photoResult.openFoodFactsUrl ||
-        null;
+    void (async () => {
+      const stored = await rememberInterimHero(contributionBarcode, imageUri).catch(() => null);
+      if (stored) setInterimHeroUri(stored);
+    })();
 
-      if (!publicUrl || !photoResult.success) {
-        console.warn('[ResultScreen] Photo upload did not return a public URL', photoResult);
-        Toast.show({
-          type: 'error',
-          text1: t('result.photoError') || 'Upload failed',
-          text2:
-            t('result.photoUploadNeedNetwork') ||
-            'Could not save your photo. Check your connection and try again.',
-          position: 'bottom',
-        });
-        return;
-      }
-
-      const updatedProduct = {
-        ...product,
-        image_url: publicUrl,
-        image_front_url: publicUrl,
-      };
-      setProduct(updatedProduct);
-
+    void (async () => {
+      const retrievalAt = Date.now();
       try {
-        await cacheProduct(updatedProduct as Product, isPremium);
-      } catch (cacheErr) {
-        console.error('[ResultScreen] cache after photo:', cacheErr);
-      }
-
-      const productData: ManualProductData = {
-        barcode: contributionBarcode,
-        product_name: product.product_name || product.product_name_en || 'Unknown Product',
-        brands: product.brands,
-        ingredients_text: product.ingredients_text,
-        image_url: publicUrl,
-        nutriments: product.nutriments,
-        serving_size: product.serving_size,
-        quantity: product.quantity,
-        manufacturing_places: product.manufacturing_places,
-        countries: product.countries,
-        categories: product.categories,
-        allergens_tags: product.allergens_tags,
-        additives_tags: product.additives_tags,
-        packaging_data: product.packaging_data,
-        timestamp: Date.now(),
-      };
-
-      const saveResult = await saveManualProduct(productData);
-
-      if (saveResult) {
-        Toast.show({
-          type: 'success',
-          text1: t('result.photoSubmitted') || 'Photo submitted',
-          text2:
-            t('result.photoSubmittedMessage') ||
-            'Your photo is stored and will appear for other users who scan this product.',
-          position: 'bottom',
+        const photoResult = await uploadProductPhoto(contributionBarcode, imageUri, 'front');
+        const publicUrl = photoResult.vercelUrl && /^https?:\/\//i.test(photoResult.vercelUrl) ? photoResult.vercelUrl : null;
+        heroTimingRecord({
+          barcode: contributionBarcode,
+          phase: 'retrieval',
+          ms: Date.now() - retrievalAt,
+          outcome: publicUrl ? 'hosted' : photoResult.openFoodFactsUrl ? 'off' : 'local_only',
         });
-      } else {
+        if (publicUrl) {
+          await rememberContributedHeroUrl(contributionBarcode, publicUrl);
+          setContributedHeroUrl(publicUrl);
+        }
+        if (!publicUrl || !photoResult.success) {
+          Toast.show({
+            type: 'info',
+            text1: t('result.photoSaved') || 'Photo on device',
+            text2: 'Your photo stays on this Result until a catalogue image is available.',
+            position: 'bottom',
+          });
+          return;
+        }
+
+        const productData: ManualProductData = {
+          barcode: contributionBarcode,
+          product_name: product.product_name || product.product_name_en || 'Unknown Product',
+          brands: product.brands,
+          ingredients_text: product.ingredients_text,
+          image_url: publicUrl,
+          nutriments: product.nutriments,
+          serving_size: product.serving_size,
+          quantity: product.quantity,
+          manufacturing_places: product.manufacturing_places,
+          countries: product.countries,
+          categories: product.categories,
+          allergens_tags: product.allergens_tags,
+          additives_tags: product.additives_tags,
+          packaging_data: product.packaging_data,
+          timestamp: Date.now(),
+        };
+
+        const saveResult = await saveManualProduct(productData);
+
+        if (saveResult) {
+          Toast.show({
+            type: 'success',
+            text1: t('result.photoSubmitted') || 'Photo submitted',
+            text2:
+              t('result.photoSubmittedMessage') ||
+              'Your photo is stored and will appear for other users who scan this product.',
+            position: 'bottom',
+          });
+        } else {
+          Toast.show({
+            type: 'info',
+            text1: t('result.photoSaved') || 'Photo on device',
+            text2:
+              t('result.photoSavedNotSynced') ||
+              'Image uploaded but product record may not have synced. Pull to refresh later.',
+            position: 'bottom',
+          });
+        }
+      } catch (error) {
+        heroTimingRecord({
+          barcode: contributionBarcode,
+          phase: 'retrieval',
+          ms: Date.now() - retrievalAt,
+          outcome: 'failed',
+        });
+        console.error('[ResultScreen] Error submitting photo:', error);
         Toast.show({
           type: 'info',
           text1: t('result.photoSaved') || 'Photo on device',
-          text2:
-            t('result.photoSavedNotSynced') ||
-            'Image uploaded but product record may not have synced. Pull to refresh later.',
+          text2: 'Your photo stays on this Result until a catalogue image is available.',
           position: 'bottom',
         });
       }
-    } catch (error) {
-      console.error('[ResultScreen] Error submitting photo:', error);
-      Toast.show({
-        type: 'error',
-        text1: t('result.photoError') || 'Error',
-        text2: t('result.photoErrorMessage') || 'Failed to submit photo. Please try again.',
-        position: 'bottom',
-      });
-    }
+    })();
   };
 
   return (
@@ -1734,6 +1774,17 @@ function ResultScreenContent() {
           loadErrorLabel={t('result.heroImageLoadError')}
           retryLabel={t('result.heroImageRetry')}
           closeLightboxLabel={t('result.heroImageCloseLightbox')}
+          onDisplayed={() => {
+            const started = heroDisplayStartedRef.current;
+            if (started == null) return;
+            heroTimingRecord({
+              barcode: getPrimaryBarcode(barcode),
+              phase: 'displayed',
+              ms: Date.now() - started,
+              outcome: 'visible',
+            });
+            heroDisplayStartedRef.current = null;
+          }}
         />
 
         {/* Banner Alerts Card - Above TruScore */}

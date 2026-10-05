@@ -185,9 +185,8 @@ describe('Wave 3 UAT corrective — S25 / Open / Nutrition / Claims presentation
 
   it('Result hero prefers image_front_small_url and prefetches', () => {
     const src = fs.readFileSync(path.join(ROOT, 'app/result/[barcode].tsx'), 'utf8');
-    expect(src).toMatch(
-      /image_front_small_url\s*\|\|\s*product\.image_front_url\s*\|\|\s*product\.image_url/
-    );
+    expect(src).toMatch(/catalogueHeroUrl/);
+    expect(src).toMatch(/resolveDisplayedHero/);
     expect(src).toMatch(/ExpoImage\.prefetch/);
   });
 
