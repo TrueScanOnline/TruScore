@@ -3,6 +3,7 @@
  * These fields are not written back as source product data.
  */
 
+import { consumerCertificationLine } from '../certifications/resolveCertification';
 import type { Product } from '../types/product';
 import { resultContributionActions } from './resultContributionActions';
 import type { ContributionEvidence } from '../contributions/types';
@@ -76,7 +77,14 @@ export function projectGovernedCertificationNames(records: ContributionEvidence[
       claimKey: candidate.claimKey,
       variantKey: candidate.variantKey,
     });
-    const name = prevailing?.exactWording?.trim() || prevailing?.claimValue?.trim();
+    if (!prevailing) continue;
+    const name = consumerCertificationLine({
+      certificationId: prevailing.certificationId,
+      exactWording: prevailing.exactWording,
+      claimValue: prevailing.claimValue,
+      certificationScope: prevailing.certificationScope,
+      certificationScopeSubject: prevailing.certificationScopeSubject,
+    });
     if (name) names.push(name);
   }
   return names;
@@ -146,17 +154,18 @@ function sodiumGrams(value: string | undefined, unit: 'mg' | 'g'): number | null
   return unit === 'mg' ? parsed / 1000 : parsed;
 }
 
-/** Changed nutrients only. Unedited source prefill does not become contribution evidence. */
+/**
+ * Visible nutrient values that differ from the current contribution.
+ * An unchanged prefill is not evidence. Typing the value is enough; no separate edited-flag is required.
+ */
 export function nutritionAmountsToSubmit(
   current: NutritionSourcePrefill,
   baseline: NutritionSourcePrefill,
-  edited: NutritionAttribute[]
+  _edited?: NutritionAttribute[]
 ): StatedNutritionAmount[] {
   if (!current.basis) return [];
-  const editedSet = new Set(edited);
   const stated: StatedNutritionAmount[] = [];
   for (const field of NUTRITION_FIELDS) {
-    if (!editedSet.has(field.attribute)) continue;
     const raw = (current.amounts[field.attribute] || '').trim();
     if (!raw) continue;
     const value = Number(raw);
@@ -236,19 +245,57 @@ export function originDraftsFromGovernedFacts(
     });
 }
 
-/** New rows, and existing rows only after the consumer changes them. An unselected claim type cannot submit. */
+/**
+ * New rows, and existing rows only after the consumer changes them.
+ * A governed type plus country is enough. Pack wording stays observed text when the consumer entered it.
+ * An unselected claim type cannot submit.
+ */
 export function originRowsToSubmit(
   rows: OriginContributionDraft[]
 ): Array<OriginContributionDraft & { claimType: ProductOriginsClaimType }> {
   return rows.filter((row): row is OriginContributionDraft & { claimType: ProductOriginsClaimType } => {
     if (!row.claimType || !CONSUMER_ORIGIN_TYPES.has(row.claimType)) return false;
-    const wording = row.wording.trim();
     const place = row.place.trim();
-    if (!wording || !place) return false;
+    if (!place) return false;
     if (row.claimType === 'ingredient_origin' && !row.ingredient.trim()) return false;
     if (row.intent === 'edited') return originDraftSignature(row) !== row.baseline;
     return row.intent !== undefined ? row.intent === 'new' : !row.evidenceId;
   });
+}
+
+function filledWordings(rows: string[]): string[] {
+  return rows.map((row) => row.trim()).filter((row) => row.length > 0);
+}
+
+/**
+ * Submit sends the wording still sitting in the packet field.
+ * An exact catalogue name is the certification that tapping that row would add.
+ * Any other typed wording is the packet claim. Wording already on the form is not duplicated.
+ */
+export function packetListsForSubmit(input: {
+  claims: string[];
+  certifications: string[];
+  pendingWording: string;
+  catalogueName?: string;
+}): { claims: string[]; certifications: string[] } {
+  const claims = filledWordings(input.claims);
+  const certifications = filledWordings(input.certifications);
+  const pending = input.pendingWording.trim();
+  const same = (left: string, right: string) => left.toLowerCase() === right.toLowerCase();
+  const catalogue = input.catalogueName?.trim();
+  if (pending && catalogue && same(catalogue, pending)) {
+    if (!certifications.some((row) => same(row, catalogue))) certifications.push(catalogue);
+  } else if (
+    pending &&
+    !claims.some((row) => same(row, pending)) &&
+    !certifications.some((row) => same(row, pending))
+  ) {
+    claims.push(pending);
+  }
+  return {
+    claims: claims.length > 0 ? claims : [''],
+    certifications: certifications.length > 0 ? certifications : [''],
+  };
 }
 
 export type SubmittedObservation = { unitId: string; label: string };

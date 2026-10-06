@@ -2,16 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Certification } from '../types/product';
+import { consumerEmblemPermittedForTag, displayCertificationName } from '../certifications/resolveCertification';
 import { CERT_BADGE_ICONS } from '../constants/certDisplay';
-import { formatCertificationTagForPicker } from '../services/ethicsCertificationsService';
 
-function displayCertificationName(cert: Certification): string {
-  const name = (cert.name || '').trim();
-  if (name && !/^[a-z]{2}:/i.test(name)) {
-    return cert.name!;
-  }
-  return formatCertificationTagForPicker(cert.tag || cert.id || name);
-}
+export { displayCertificationName };
 
 interface CertBadgeProps {
   certification: Certification;
@@ -22,6 +16,7 @@ export { CERT_BADGE_ICONS } from '../constants/certDisplay';
 
 export default function CertBadge({ certification, onPress }: CertBadgeProps) {
   const icon = CERT_BADGE_ICONS[certification.tag] || 'star-outline';
+  const showEmblem = consumerEmblemPermittedForTag(certification.tag || '');
   const Component = onPress ? TouchableOpacity : View;
 
   return (
@@ -30,7 +25,7 @@ export default function CertBadge({ certification, onPress }: CertBadgeProps) {
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
     >
-      <Ionicons name={icon as any} size={20} color="#16a085" />
+      {showEmblem ? <Ionicons name={icon as any} size={20} color="#16a085" /> : null}
       <Text style={styles.name} numberOfLines={2}>
         {displayCertificationName(certification)}
       </Text>

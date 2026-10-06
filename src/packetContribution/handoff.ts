@@ -186,11 +186,12 @@ export async function handoffReviewedUnits(params: {
         results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'origin_statement_absent' });
         continue;
       }
+      const observedWording = unit.statement.trim();
       const evidence = await submit({
         barcode: session.barcode,
         domain: 'origins',
-        claimValue: primaryCountry || ingredientSubject || unit.statement,
-        exactWording: unit.statement,
+        claimValue: primaryCountry || ingredientSubject || observedWording,
+        exactWording: observedWording ? observedWording : null,
         imageUrl: source ? `private://${source.privateKey}` : undefined,
         variantKey: session.variantKey,
         asProductionEpoch: true,

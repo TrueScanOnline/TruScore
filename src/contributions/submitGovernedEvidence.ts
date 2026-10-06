@@ -42,7 +42,8 @@ export async function submitGovernedEvidence(params: {
   claimValue: string;
   labelsTags?: string[];
   imageUrl?: string;
-  exactWording?: string;
+  /** Null means the consumer did not enter pack wording. The structured origin stays separate from observed text. */
+  exactWording?: string | null;
   /** Reviewed affirmation that no governed packet claim or certification is present. */
   packetAbsence?: boolean;
   originStructured?: OriginStructuredEvidence;
@@ -79,8 +80,10 @@ export async function submitGovernedEvidence(params: {
   );
   const exactWording = packetAbsence
     ? ''
-    : params.exactWording ||
-      (structured ? buildExactWordingFromStructured(structured) : params.claimValue.trim());
+    : params.exactWording === null
+      ? ''
+      : params.exactWording ||
+        (structured ? buildExactWordingFromStructured(structured) : params.claimValue.trim());
 
   // Canonicalise once at the submission boundary for versioning/identity consistency.
   const variantKey = canonicalizeVariantKey(params.variantKey);

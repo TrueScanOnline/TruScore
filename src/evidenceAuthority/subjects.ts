@@ -1,3 +1,4 @@
+import { resolvePacketObservation } from '../certifications/resolveCertification';
 import { GOVERNED_PACKET_ABSENCE_CLAIM } from '../contributions/admissionTypes';
 import { governedCertificationLabels } from '../contributions/certificationLane';
 import { normalizeClaimKey } from '../contributions/evidenceVersion';
@@ -19,7 +20,7 @@ export const SCHEMA_IDENTITY_GAPS = [
   'Ingredients language is not a field on the frozen ingredients payload. Ingredients text is one subject. A supplied language does not create another subject.',
   'Nutrition preparation or scope is not on the frozen stated-amount schema. A nutrient subject is the governed attribute plus the declared basis only.',
   'Serving size and servings per pack are not frozen schema fields. They are not allocated a subject.',
-  'Certification scope is not a frozen field. The subject is the certification scheme tag only.',
+  'Certification scope is version content on the certification identity. It does not create another subject. Unresolved scope is not treated as whole-product.',
   'Packet-absence has no checked-scope field. The frozen affirmation is one whole-packet absence subject, separate from positive claim subjects.',
   'Frozen origin identity is originSubjectKey: ingredient_origin includes the ingredient subject; grown_in, produced_in, made_in, packed_in, and processed_in are claim-type subjects. Country stays version content. A per-ingredient subject is not invented for the claim-type rows.',
   'ContributionRecordClass has no uat member. UAT versus production class is stored on the authority row.',
@@ -37,6 +38,28 @@ function gapFor(input: EvidenceFactInput, gaps: string[]): void {
   if (input.certificationScope) gaps.push(SCHEMA_IDENTITY_GAPS[3]);
   if (input.packetAbsence) gaps.push(SCHEMA_IDENTITY_GAPS[4]);
   if (input.domain === 'origins') gaps.push(SCHEMA_IDENTITY_GAPS[5]);
+}
+
+function certificationVersion(input: EvidenceFactInput, wording: string): Pick<
+  DerivedFact,
+  'certificationId' | 'certificationScope' | 'certificationScopeSubject'
+> {
+  const resolved = resolvePacketObservation({
+    observedWording: wording,
+    selectedCertificationId: input.certificationId,
+    scopeClass: input.certificationScope,
+    scopeSubject: input.certificationScopeSubject,
+  });
+  const certificationId =
+    resolved.kind === 'certification' ? resolved.certificationId : input.certificationId;
+  const scope =
+    input.certificationScope && input.certificationScope !== 'unresolved' ? input.certificationScope : undefined;
+  const subject = scope && input.certificationScopeSubject?.trim() ? input.certificationScopeSubject.trim() : undefined;
+  return {
+    ...(certificationId ? { certificationId } : {}),
+    ...(scope ? { certificationScope: scope } : {}),
+    ...(subject ? { certificationScopeSubject: subject } : {}),
+  };
 }
 
 function packetSubject(wording: string): { subjectKey: string; claimKey: string } {
@@ -137,6 +160,7 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
       const wording = (input.exactWording || input.claimValue || '').trim();
       if (!wording) continue;
       const governed = governedCertificationLabels(wording) || [];
+      const version = certificationVersion(input, wording);
       if (governed.length > 0) {
         for (const tag of governed) {
           const scheme = normalizeClaimKey(tag);
@@ -148,6 +172,7 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
             exactWording: wording,
             variantKey: input.variantKey,
             labelsTags: [tag],
+            ...version,
             machineRunId: input.machineRunId,
             region: input.region,
             finalizedAssetId: input.finalizedAssetId,
@@ -155,6 +180,24 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
             unitId: input.unitId,
           });
         }
+        continue;
+      }
+      if (version.certificationId) {
+        const scheme = normalizeClaimKey(version.certificationId);
+        pushUnique(facts, {
+          domain: 'certifications',
+          subjectKey: `certifications|scheme:${scheme}`,
+          claimKey: scheme,
+          claimValue: wording,
+          exactWording: wording,
+          variantKey: input.variantKey,
+          ...version,
+          machineRunId: input.machineRunId,
+          region: input.region,
+          finalizedAssetId: input.finalizedAssetId,
+          derivedAssetId: input.derivedAssetId,
+          unitId: input.unitId,
+        });
         continue;
       }
       const scheme = normalizeClaimKey(wording);

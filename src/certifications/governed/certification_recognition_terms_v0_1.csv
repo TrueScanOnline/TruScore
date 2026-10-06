@@ -1,0 +1,21 @@
+certification_id,term,term_role,term_type,may_establish_identity
+cert.fairtrade,Fairtrade,identity_establishing,name,True
+cert.fairtrade,fair trade,discovery_only,search_term,False
+cert.rainforest_alliance,Rainforest Alliance,identity_establishing,name,True
+cert.utz,UTZ,identity_establishing,name,True
+cert.utz,UTZ Certified,identity_establishing,name,True
+cert.msc,MSC,identity_establishing,acronym,True
+cert.msc,Marine Stewardship Council,identity_establishing,name,True
+cert.asc,ASC,identity_establishing,acronym,True
+cert.asc,Aquaculture Stewardship Council,identity_establishing,name,True
+cert.aco_organic,ACO Certified Organic,identity_establishing,name,True
+cert.aco_organic,Australian Certified Organic,identity_establishing,name,True
+cert.aco_organic,organic,discovery_only,search_term,False
+cert.coeliac_australia,Coeliac Australia,identity_establishing,name,True
+cert.coeliac_australia,gluten free,discovery_only,search_term,False
+cert.fodmap_friendly,FODMAP Friendly,identity_establishing,name,True
+cert.fodmap_friendly,low FODMAP,discovery_only,search_term,False
+cert.monash_low_fodmap,Monash University Low FODMAP Certified,identity_establishing,name,True
+cert.monash_low_fodmap,low FODMAP,discovery_only,search_term,False
+cert.fsc_mix,FSC Mix,identity_establishing,name,True
+cert.fsc_mix,FSC,discovery_only,search_term,False

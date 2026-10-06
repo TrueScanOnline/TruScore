@@ -1,0 +1,11 @@
+certification_id,display_name,family_name,lifecycle,identity_class,supported_scopes,scope_rule,mvp_score_eligible,mvp_points,mvp_receiver,succeeded_by,logo_consumer_display,notes
+cert.fairtrade,Fairtrade,Fairtrade,active,certification,whole_product|ingredient_component,explicit_only,True,6,claims_ethics,none,display_if_permissioned,
+cert.rainforest_alliance,Rainforest Alliance,Rainforest Alliance,active,certification,whole_product|ingredient_component,explicit_only,True,6,claims_ethics,none,display_if_permissioned,
+cert.utz,UTZ Certified,UTZ,legacy,certification,whole_product|ingredient_component,explicit_only,True,6,claims_ethics,cert.rainforest_alliance,display_if_permissioned,Recognise legacy packet evidence; do not rewrite as Rainforest Alliance.
+cert.msc,MSC,Marine Stewardship Council,active,certification,whole_product|ingredient_component,explicit_only,True,4,claims_ethics,none,display_if_permissioned,Current MVP scoring mapping preserved; no Planet consequence.
+cert.asc,ASC,Aquaculture Stewardship Council,active,certification,whole_product|ingredient_component,explicit_only,True,4,claims_ethics,none,display_if_permissioned,Current MVP scoring mapping preserved; no Planet consequence.
+cert.aco_organic,ACO Certified Organic,Australian Certified Organic,active,certification,whole_product|ingredient_component,explicit_only,True,2,claims_ethics,none,display_if_permissioned,Qualifying Organic certification suppresses generic Organic +1 while current.
+cert.coeliac_australia,Coeliac Australia Endorsement,Coeliac Australia,active,certification,whole_product,explicit_only,False,0,none,none,display_if_permissioned,Capture as structured evidence; no MVP TruScore consequence.
+cert.fodmap_friendly,FODMAP Friendly,FODMAP Friendly,active,certification,whole_product,explicit_only,False,0,none,none,display_if_permissioned,Do not conflate with Monash or generic low-FODMAP wording.
+cert.monash_low_fodmap,Monash University Low FODMAP Certified,Monash University,active,certification,whole_product,explicit_only,False,0,none,none,display_if_permissioned,Distinct from FODMAP Friendly; no MVP TruScore consequence.
+cert.fsc_mix,FSC Mix,Forest Stewardship Council,active,certification,packaging,explicit_only,False,0,none,none,display_if_permissioned,Capture packaging certification; no MVP Planet scoring/rateability consequence.

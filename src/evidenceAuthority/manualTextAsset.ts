@@ -110,7 +110,9 @@ export function buildManualTextDocument(draft: ManualTextDraft): ManualTextDocum
   let statement = draft.statement?.trim() || '';
   if (ingredientsText) statement = ingredientsText;
   else if (nutrition) statement = nutrition.amounts;
-  if (!statement) return null;
+  const structuredOrigin =
+    draft.domain === 'origins' && !!originClaimType && (!!originCountry || !!ingredientSubject);
+  if (!statement && !structuredOrigin) return null;
   if (draft.domain === 'packet_claims' && statement === GOVERNED_PACKET_ABSENCE_CLAIM) return null;
   if (draft.domain === 'ingredients_nutrition' && !ingredientsText && !nutrition) return null;
   if (draft.domain === 'origins' && !originClaimType) return null;
@@ -165,8 +167,10 @@ export function parseManualTextDocument(bytes: Uint8Array): ManualTextDocument |
   try {
     const parsed = JSON.parse(new TextDecoder().decode(bytes)) as Partial<ManualTextDocument>;
     if (parsed.sourceKind !== 'manual_text') return null;
-    if (!parsed.barcode || !parsed.sessionId || !parsed.unitId || !parsed.domain || !parsed.statement) return null;
+    if (!parsed.barcode || !parsed.sessionId || !parsed.unitId || !parsed.domain) return null;
+    if (typeof parsed.statement !== 'string') return null;
     if (!parsed.structured || typeof parsed.structured !== 'object') return null;
+    if (!parsed.statement && (parsed.domain !== 'origins' || !parsed.structured.originClaimType)) return null;
     return {
       sourceKind: 'manual_text',
       barcode: parsed.barcode,
@@ -279,10 +283,11 @@ function inputFromDocument(document: ManualTextDocument): EvidenceFactInput {
     if (!canonical) {
       return { ...shared, domain: 'origins' };
     }
+    const observed = canonical.exactWording.trim();
     return {
       ...shared,
       domain: 'origins',
-      exactWording: canonical.exactWording,
+      ...(observed ? { exactWording: observed } : {}),
       claimValue: canonical.claimValue,
       originStructured: canonical.originStructured,
     };

@@ -96,9 +96,16 @@ export type ExtractionStatus = 'observations' | 'abstained' | 'failed';
 export type MachineObservation = {
   observationId: string;
   text: string;
-  /** Optional. Absence is not a zero fact. */
+  /** Optional. Absence is not a zero fact. Diagnostic only. Never published Confidence. */
   confidence?: number;
   alternatives?: string[];
+  /** Proposal metadata. The resolver decides identity. A proposed id cannot create one. */
+  visualMark?: boolean;
+  ambiguity?: 'insufficient' | 'family_variants' | 'none';
+  proposedCertificationId?: string;
+  proposedFamilyName?: string;
+  scopeClass?: string;
+  scopeSubject?: string;
   support: SupportCoverage;
   /** Set only by an extraction producer. Consumers are not asked to classify a photo. */
   proposedDomain?: EvidenceUnitDomain;
@@ -178,6 +185,9 @@ export type PacketEvidenceUnit = {
   originQualification?: import('../contributions/originStructured').OriginQualification;
   originQualifications?: import('../contributions/originStructured').OriginLocalImported[];
   percentageNotStated?: boolean;
+  /** Established scope copied onto the governed fact. Unresolved scope is omitted. */
+  certificationScope?: string;
+  certificationScopeSubject?: string;
   /** Set only after a governed submit (not admission). */
   governedEvidenceId?: string;
   submittedAt?: number;

@@ -314,8 +314,10 @@ describe('contribution correction closure', () => {
     const modal = fs.readFileSync(path.join(REPO, 'src/components/PacketContributionModal.tsx'), 'utf8');
     expect(result).not.toContain('Update ingredients');
     expect(result).not.toContain('Update product origins');
-    expect(result).toContain('Correct ingredients');
-    expect(result).toContain('Correct product origins');
+    expect(result).toContain('Change ingredients');
+    expect(result).toContain('Change product origins');
+    expect(result).not.toContain('Correct ingredients');
+    expect(result).not.toContain('Correct product origins');
     expect(result).toContain('projectOriginConsumerLines');
     expect(result).not.toContain('formatGovernedOriginFactLine');
     expect(modal).toContain("header: 'Product Origins'");
@@ -330,7 +332,7 @@ describe('contribution correction closure', () => {
     expect(result).not.toContain('Complete product origins');
     expect(result).not.toContain('Update product origins');
     expect(result).toContain('CONTRIBUTION_NOTICE_ADDED');
-    expect(modal).toContain('CONTRIBUTION_NOTICE_SAVED');
+    expect(modal).toContain('contributionTransportFailureNotice');
     expect(result).toContain('add-circle-outline');
   });
 

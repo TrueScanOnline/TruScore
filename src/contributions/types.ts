@@ -41,6 +41,11 @@ export type ContributionEvidence = {
   variantKey?: string;
   /** Certifications only — OFF-style tags for later promotion. */
   labelsTags?: string[];
+  /** Canonical catalogue identity. Not shown on the ordinary Result. */
+  certificationId?: string;
+  /** Established packet scope. Omitted when the packet does not establish scope. */
+  certificationScope?: string;
+  certificationScopeSubject?: string;
   /** Lane A scores via Ethics; Lane B may be governed but not scoring-eligible. */
   certificationLane?: CertificationLane;
   /** Structured Origins interpretation (packet image remains source evidence). */

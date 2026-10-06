@@ -6,6 +6,7 @@ import {
   nutritionPrefillFromSource,
   originDraftsFromGovernedFacts,
   originRowsToSubmit,
+  packetListsForSubmit,
   projectAdmittedIngredientsDisplay,
   retainedAfterPartialAdmission,
 } from '../../../contribution/governedDisplayProjection';
@@ -21,6 +22,11 @@ import type { OpenPillarResult } from '../../../lib/truscoreEngine/pillars/openP
 import type { Product } from '../../../types/product';
 import type { CrossPillarPublicationSnapshot } from '../../../lib/rateability/types';
 import { unitRevision } from '../../../evidenceAuthority/device';
+import {
+  PACKET_MANUAL_ENTRY,
+  PACKET_REVIEW_PROMPT,
+  PACKET_UNMATCHED_ENTRY,
+} from '../../../certifications/resolveCertification';
 import type { PacketEvidenceUnit } from '../../../packetContribution/types';
 import { assessNOVAGroup1 } from '../../../utils/novaAssessment';
 
@@ -154,6 +160,9 @@ describe('functional-to-consumer integration closure', () => {
     expect(nutritionAmountsToSubmit({ ...prefill, amounts: { ...prefill.amounts, fat: '3' } }, prefill, ['fat'])).toEqual([
       { attribute: 'fat', value: 3, unit: 'g' },
     ]);
+    expect(nutritionAmountsToSubmit({ ...prefill, amounts: { ...prefill.amounts, fat: '3' } }, prefill, [])).toEqual([
+      { attribute: 'fat', value: 3, unit: 'g' },
+    ]);
   });
 
   it('keeps another contributor’s unchanged origin fact out of a new submission', () => {
@@ -192,6 +201,45 @@ describe('functional-to-consumer integration closure', () => {
       'Made in Australia from at least 75% Australian ingredients',
     ]);
     expect(corrected[0]?.evidenceId).toBe('contributor-a');
+    const chosenWithoutWording = originRowsToSubmit([
+      {
+        intent: 'new',
+        claimType: 'produced_in',
+        wording: '',
+        place: 'Chile',
+        ingredient: '',
+        percentage: '',
+      },
+    ]);
+    expect(chosenWithoutWording.map((row) => row.claimType)).toEqual(['produced_in']);
+    expect(chosenWithoutWording.map((row) => row.wording)).toEqual(['']);
+    expect(
+      originRowsToSubmit([
+        {
+          intent: 'new',
+          claimType: null,
+          wording: 'Made in Australia',
+          place: 'Australia',
+          ingredient: '',
+          percentage: '',
+        },
+      ])
+    ).toEqual([]);
+    expect(
+      packetListsForSubmit({
+        claims: [''],
+        certifications: [''],
+        pendingWording: 'High in protein',
+      }).claims
+    ).toEqual(['High in protein']);
+    expect(
+      packetListsForSubmit({
+        claims: [''],
+        certifications: [''],
+        pendingWording: 'Fairtrade',
+        catalogueName: 'Fairtrade',
+      }).certifications
+    ).toEqual(['Fairtrade']);
   });
 
   it('retains refused observations and does not treat admitted units as still to send', () => {
@@ -211,12 +259,20 @@ describe('functional-to-consumer integration closure', () => {
     const result = fs.readFileSync(path.join(REPO, 'app/result/[barcode].tsx'), 'utf8');
     const modal = fs.readFileSync(path.join(REPO, 'src/components/PacketContributionModal.tsx'), 'utf8');
     expect(result).toContain('PACKET_INFORMATION_ADD');
-    expect(result).toContain('Correct packet claims or certifications');
+    expect(result).toContain('Change packet information');
+    expect(result).toContain('Add packet information');
+    expect(result).not.toContain('Correct packet claims or certifications');
     expect(result).not.toContain('Add certifications');
     expect(result).not.toContain('Lane A');
     expect(result).not.toContain('Lane B');
-    expect(modal).toContain('Claim on the pack');
-    expect(modal).toContain('Certification shown on the pack');
+    expect(PACKET_REVIEW_PROMPT).toBe('Is this on the pack?');
+    expect(PACKET_MANUAL_ENTRY).toBe('Enter what\u2019s on the pack');
+    expect(PACKET_UNMATCHED_ENTRY).toBe('Can\u2019t find it? Add what\u2019s on the pack');
+    expect(modal).toContain('PACKET_REVIEW_PROMPT');
+    expect(modal).toContain('PACKET_MANUAL_ENTRY');
+    expect(modal).toContain('PACKET_UNMATCHED_ENTRY');
+    expect(modal).not.toContain('Claim on the pack');
+    expect(modal).not.toContain('Certification shown on the pack');
     expect(modal).toContain('retainedAfterPartialAdmission');
     expect(modal).toContain('Origin statement');
     expect(modal).toContain('Not stated');

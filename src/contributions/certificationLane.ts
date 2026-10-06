@@ -5,6 +5,10 @@
  * Reuses the existing Ethics evaluator — no alternate scoring table.
  */
 
+import {
+  resolvePacketObservation,
+  scoringLabelForCertification,
+} from '../certifications/resolveCertification';
 import type { Product } from '../types/product';
 import {
   ETHICS_CERTIFICATION_WEIGHTS,
@@ -23,7 +27,7 @@ export function resolveCertificationLane(params: {
   const product = {
     barcode: 'lane-check',
     labels_tags: params.labelsTags || [],
-    product_name: params.claimValue || '',
+    product_name: '',
   } as Product;
   const evaluation = evaluateEthicsCertifications(product);
   const hasScoringScheme = evaluation.eligibleSchemes.some(
@@ -32,31 +36,17 @@ export function resolveCertificationLane(params: {
   return hasScoringScheme ? 'A' : 'B';
 }
 
-const GOVERNED_SCHEME_TAGS: Record<string, string> = {
-  fairtrade: 'en:fair-trade',
-  rainforest_alliance: 'en:rainforest-alliance',
-  asc: 'en:asc',
-  msc: 'en:marine-stewardship-council',
-  organic: 'en:organic',
-};
-
 /**
- * Existing Ethics schemes only. Unmapped wording stays reviewed evidence without a scoring tag.
+ * Catalogue identity only. Discovery terms and generic wording do not mint a scoring tag.
+ * Unmapped wording stays reviewed evidence without a scoring tag.
  */
 export function governedCertificationLabels(statement: string): string[] | undefined {
   const trimmed = statement.trim();
   if (!trimmed) return undefined;
-  const evaluation = evaluateEthicsCertifications({
-    barcode: 'cert-map',
-    product_name: trimmed,
-    labels_tags: [],
-  } as Product);
-  const tags = evaluation.eligibleSchemes
-    .map((scheme) => GOVERNED_SCHEME_TAGS[scheme])
-    .filter((tag): tag is string => typeof tag === 'string' && tag.length > 0);
-  const organicTag = recognisedOrganicCertificationTag(trimmed);
-  if (organicTag && !tags.includes(organicTag)) tags.push(organicTag);
-  return tags.length > 0 ? tags : undefined;
+  const resolved = resolvePacketObservation({ observedWording: trimmed });
+  if (resolved.kind !== 'certification') return undefined;
+  const tag = resolved.scoringLabel || scoringLabelForCertification(resolved.certificationId);
+  return tag ? [tag] : undefined;
 }
 
 /** Whole-product Organic claim. Ingredient or partial organic wording stays visible. */

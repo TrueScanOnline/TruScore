@@ -113,6 +113,10 @@ import { logger } from '../../src/utils/logger';
 import ManualProductEntryModal from '../../src/components/ManualProductEntryModal';
 import PacketContributionModal from '../../src/components/PacketContributionModal';
 import {
+  displayCertificationName,
+  ordinaryLinesBesideRecognisedCertifications,
+} from '../../src/certifications/resolveCertification';
+import {
   CONTRIBUTION_NOTICE_ADDED,
   CONTRIBUTION_NOTICE_SAVED,
   PACKET_ABSENCE_PRODUCT_STATE,
@@ -431,7 +435,9 @@ function ResultScreenContent() {
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [packetContributionVisible, setPacketContributionVisible] = useState(false);
   const [contributionEntry, setContributionEntry] = useState<ContributionEntryContext>('ingredients');
-  const [ingredientNutritionSheetVisible, setIngredientNutritionSheetVisible] = useState(false);
+  const [contributionJourney, setContributionJourney] = useState<'add' | 'change'>('add');
+  const [contributionFormFirst, setContributionFormFirst] = useState(false);
+  const [contributionChoice, setContributionChoice] = useState<null | 'nutrition' | 'packet' | 'origins'>(null);
   const [contributionNotice, setContributionNotice] = useState<string | null>(null);
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
   const [editMode, setEditMode] = useState(false);
@@ -1353,9 +1359,11 @@ function ResultScreenContent() {
     setShareModalVisible(true);
   };
 
-  const openContribution = (entry: ContributionEntryContext) => {
+  const openContribution = (entry: ContributionEntryContext, journey: 'add' | 'change', formFirst = false) => {
     setContributionEntry(entry);
-    setIngredientNutritionSheetVisible(false);
+    setContributionJourney(journey);
+    setContributionFormFirst(formFirst);
+    setContributionChoice(null);
     setPacketContributionVisible(true);
   };
 
@@ -2008,7 +2016,7 @@ function ResultScreenContent() {
             onShare={() => handleShare('nutrition')}
             onEdit={
               contributionActions.updateNutrition || contributionActions.updateIngredients
-                ? () => setIngredientNutritionSheetVisible(true)
+                ? () => setContributionChoice('nutrition')
                 : undefined
             }
             shareContext={{
@@ -2037,14 +2045,14 @@ function ResultScreenContent() {
                   ingredientsText={product.rveelGovernedIngredientsText || product.ingredients_text}
                   novaGroup={product.nova_group}
                   showAddIngredients={contributionActions.addIngredients}
-                  onAddIngredients={() => openContribution('ingredients')}
+                  onAddIngredients={() => openContribution('ingredients', 'add')}
                   onShareIngredients={() => handleShare('ingredients')}
                   onShareProcessing={() => handleShare('processing')}
                   onOpenProcessingLevel={() => setProcessingLevelModalVisible(true)}
                 />
                 {contributionActions.addNutrition ? (
                   <TouchableOpacity
-                    onPress={() => openContribution('nutrition')}
+                    onPress={() => openContribution('nutrition', 'add')}
                     style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
                     accessibilityRole="button"
                     accessibilityLabel="Add nutrition"
@@ -2079,9 +2087,9 @@ function ResultScreenContent() {
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {contributionActions.originsAction === 'update' || originsCard.facts.length > 0 || originsCard.offCountry ? (
                 <TouchableOpacity
-                  onPress={() => openContribution('origins')}
+                  onPress={() => setContributionChoice('origins')}
                   accessibilityRole="button"
-                  accessibilityLabel="Correct product origins"
+                  accessibilityLabel="Change or add product origins"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Ionicons name="create-outline" size={20} color={colors.primary} />
@@ -2129,7 +2137,7 @@ function ResultScreenContent() {
           ) : null}
           {contributionActions.originsAction === 'add' || contributionActions.originsAction === 'complete' ? (
             <TouchableOpacity
-              onPress={() => openContribution('origins')}
+              onPress={() => openContribution('origins', 'add')}
               activeOpacity={0.7}
               style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
               accessibilityRole="button"
@@ -2169,9 +2177,9 @@ function ResultScreenContent() {
             (product.rveelGovernedCertifications || []).length > 0 ||
             (product.certifications || []).length > 0 ? (
               <TouchableOpacity
-                onPress={() => openContribution('packetClaims')}
+                onPress={() => setContributionChoice('packet')}
                 accessibilityRole="button"
-                accessibilityLabel="Correct packet claims or certifications"
+                accessibilityLabel="Change or add packet information"
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons name="create-outline" size={20} color="#16a085" />
@@ -2181,32 +2189,50 @@ function ResultScreenContent() {
           <TouchableOpacity onPress={() => setPacketClaimsExplainerVisible(true)}>
             <Text style={{ color: colors.primary }}>L1 / L2 / L3</Text>
           </TouchableOpacity>
-          {(product.rveelGovernedPacketClaims || []).map((claim) => (
-            <Text key={claim.evidenceId} style={{ color: colors.text }}>
-              {claim.exactWording}
-            </Text>
-          ))}
-          {(product._publication?.claims.confidenceReasonCode === 'claims_primary_contribution_limited') ? (
-            <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
-          ) : null}
-          {product.certifications && product.certifications.length > 0 ? (
-            <View style={styles.certificationsContainer}>
-              {product.certifications.map((cert) => (
-                <CertBadge key={cert.id} certification={cert} />
-              ))}
-            </View>
-          ) : null}
-          {(product.rveelGovernedCertifications || []).map((name) => (
-            <Text key={name} style={{ color: colors.text }}>
-              {name}
-            </Text>
-          ))}
+          {(() => {
+            const recognisedCertificationNames = (product.certifications || []).map((cert) =>
+              displayCertificationName(cert)
+            );
+            const visibleClaims = (product.rveelGovernedPacketClaims || []).filter(
+              (claim) =>
+                ordinaryLinesBesideRecognisedCertifications([claim.exactWording], recognisedCertificationNames)
+                  .length > 0
+            );
+            const visibleCertifications = ordinaryLinesBesideRecognisedCertifications(
+              product.rveelGovernedCertifications || [],
+              recognisedCertificationNames
+            );
+            return (
+              <>
+                {visibleClaims.map((claim) => (
+                  <Text key={claim.evidenceId} style={{ color: colors.text }}>
+                    {claim.exactWording}
+                  </Text>
+                ))}
+                {product._publication?.claims.confidenceReasonCode === 'claims_primary_contribution_limited' ? (
+                  <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
+                ) : null}
+                {product.certifications && product.certifications.length > 0 ? (
+                  <View style={styles.certificationsContainer}>
+                    {product.certifications.map((cert) => (
+                      <CertBadge key={cert.id} certification={cert} />
+                    ))}
+                  </View>
+                ) : null}
+                {visibleCertifications.map((name) => (
+                  <Text key={name} style={{ color: colors.text }}>
+                    {name}
+                  </Text>
+                ))}
+              </>
+            );
+          })()}
           {product.rveelPacketAbsenceEstablished ? (
             <Text style={{ color: colors.text }}>{PACKET_ABSENCE_PRODUCT_STATE}</Text>
           ) : null}
           {contributionActions.packetInformationAction === 'add' ? (
           <TouchableOpacity
-            onPress={() => openContribution('packetClaims')}
+            onPress={() => openContribution('packetClaims', 'add')}
             activeOpacity={0.7}
             style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
             accessibilityRole="button"
@@ -2337,10 +2363,10 @@ function ResultScreenContent() {
 
         <ProductDataLimitationsCard
           product={product}
-          onOpenIngredients={() => openContribution('ingredients')}
-          onOpenNutrition={() => openContribution('nutrition')}
-          onOpenOrigins={() => openContribution('origins')}
-          onOpenPacketClaims={() => openContribution('packetClaims')}
+          onOpenIngredients={() => openContribution('ingredients', 'add')}
+          onOpenNutrition={() => openContribution('nutrition', 'add')}
+          onOpenOrigins={() => openContribution('origins', 'add')}
+          onOpenPacketClaims={() => openContribution('packetClaims', 'add')}
           publicationSettled={publicationSettled}
           openRequestKey={s26OpenRequestKey}
         />
@@ -2444,26 +2470,46 @@ function ResultScreenContent() {
       />
 
       <Modal
-        visible={ingredientNutritionSheetVisible}
+        visible={contributionChoice != null}
         transparent
         animationType="fade"
-        onRequestClose={() => setIngredientNutritionSheetVisible(false)}
+        onRequestClose={() => setContributionChoice(null)}
       >
         <TouchableOpacity
           style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' }}
           activeOpacity={1}
-          onPress={() => setIngredientNutritionSheetVisible(false)}
+          onPress={() => setContributionChoice(null)}
         >
           <View style={{ backgroundColor: colors.card, padding: 20, gap: 16 }}>
-            {contributionActions.updateNutrition ? (
-              <TouchableOpacity onPress={() => openContribution('nutrition')} accessibilityRole="button">
-                <Text style={{ color: colors.text, fontSize: 18 }}>Correct nutrition</Text>
+            {contributionChoice === 'nutrition' && contributionActions.updateNutrition ? (
+              <TouchableOpacity onPress={() => openContribution('nutrition', 'change', true)} accessibilityRole="button">
+                <Text style={{ color: colors.text, fontSize: 18 }}>Change nutrition</Text>
               </TouchableOpacity>
             ) : null}
-            {contributionActions.updateIngredients ? (
-              <TouchableOpacity onPress={() => openContribution('ingredients')} accessibilityRole="button">
-                <Text style={{ color: colors.text, fontSize: 18 }}>Correct ingredients</Text>
+            {contributionChoice === 'nutrition' && contributionActions.updateIngredients ? (
+              <TouchableOpacity onPress={() => openContribution('ingredients', 'change', true)} accessibilityRole="button">
+                <Text style={{ color: colors.text, fontSize: 18 }}>Change ingredients</Text>
               </TouchableOpacity>
+            ) : null}
+            {contributionChoice === 'packet' ? (
+              <>
+                <TouchableOpacity onPress={() => openContribution('packetClaims', 'change', true)} accessibilityRole="button">
+                  <Text style={{ color: colors.text, fontSize: 18 }}>Change packet information</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => openContribution('packetClaims', 'add', true)} accessibilityRole="button">
+                  <Text style={{ color: colors.text, fontSize: 18 }}>Add packet information</Text>
+                </TouchableOpacity>
+              </>
+            ) : null}
+            {contributionChoice === 'origins' ? (
+              <>
+                <TouchableOpacity onPress={() => openContribution('origins', 'change', true)} accessibilityRole="button">
+                  <Text style={{ color: colors.text, fontSize: 18 }}>Change product origins</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => openContribution('origins', 'add', true)} accessibilityRole="button">
+                  <Text style={{ color: colors.text, fontSize: 18 }}>Add product origins</Text>
+                </TouchableOpacity>
+              </>
             ) : null}
           </View>
         </TouchableOpacity>
@@ -2473,6 +2519,7 @@ function ResultScreenContent() {
         visible={packetContributionVisible}
         barcode={barcode}
         entryContext={contributionEntry}
+        surfaceMode={contributionJourney}
         initialIngredients={product?.rveelGovernedIngredientsText || product?.ingredients_text || ''}
         initialNutrition={nutritionPrefillFromSource(
           product?.nutriments as Record<string, unknown> | undefined,
@@ -2488,17 +2535,19 @@ function ResultScreenContent() {
           (product?.certifications || []).length === 0
         }
         openOnForm={
-          contributionEntry === 'nutrition'
-            ? contributionActions.updateNutrition
-            : contributionEntry === 'ingredients'
-              ? contributionActions.updateIngredients
-              : contributionEntry === 'origins'
-                ? contributionActions.originsAction === 'update' ||
-                  (product?.rveelGovernedOrigins || []).length > 0 ||
-                  !!originsCard.offCountry
-                : contributionActions.packetInformationAction === 'update' ||
-                  (product?.rveelGovernedPacketClaims || []).length > 0 ||
-                  (product?.rveelGovernedCertifications || []).length > 0
+          contributionFormFirst ||
+          (contributionJourney === 'change' &&
+            (contributionEntry === 'nutrition'
+              ? contributionActions.updateNutrition
+              : contributionEntry === 'ingredients'
+                ? contributionActions.updateIngredients
+                : contributionEntry === 'origins'
+                  ? contributionActions.originsAction === 'update' ||
+                    (product?.rveelGovernedOrigins || []).length > 0 ||
+                    !!originsCard.offCountry
+                  : contributionActions.packetInformationAction === 'update' ||
+                    (product?.rveelGovernedPacketClaims || []).length > 0 ||
+                    (product?.rveelGovernedCertifications || []).length > 0))
         }
         onClose={() => setPacketContributionVisible(false)}
         onSharedEvidenceAdmitted={async (snapshot, complete) => {

@@ -50,19 +50,28 @@ export async function addManualEvidenceUnit(params: {
   originQualifications?: import('../contributions/originStructured').OriginLocalImported[];
   percentageNotStated?: boolean;
   packetAbsenceAffirmation?: boolean;
+  certificationScope?: string;
+  certificationScopeSubject?: string;
 }): Promise<PacketEvidenceUnit> {
   const session = await getSession(params.sessionId);
   if (!session) throw new Error('packet_session_missing');
   const statement = params.statement.trim();
-  if (!statement && !params.nutritionAmounts?.length && params.packetAbsenceAffirmation !== true) {
+  const structuredOrigin =
+    params.domain === 'origins' &&
+    !!params.originClaimType &&
+    params.originClaimType !== 'other' &&
+    !!(params.originCountry?.trim() || params.ingredientSubject?.trim());
+  if (!statement && !params.nutritionAmounts?.length && params.packetAbsenceAffirmation !== true && !structuredOrigin) {
     throw new Error('manual_statement_required');
   }
   const unit: PacketEvidenceUnit = {
     unitId: `eu_manual_${session.sessionId}_${session.units.length + 1}`,
     sessionId: session.sessionId,
     domain: params.domain,
-    statement: statement || (params.packetAbsenceAffirmation ? '' : 'Nutrition facts'),
+    statement: statement || (params.packetAbsenceAffirmation || structuredOrigin ? '' : 'Nutrition facts'),
     packetAbsenceAffirmation: params.packetAbsenceAffirmation === true,
+    ...(params.certificationScope ? { certificationScope: params.certificationScope } : {}),
+    ...(params.certificationScopeSubject ? { certificationScopeSubject: params.certificationScopeSubject } : {}),
     support: params.support,
     origin: 'manual',
     extractionRunId: null,

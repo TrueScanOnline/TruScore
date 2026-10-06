@@ -40,16 +40,26 @@ import {
 import { PRODUCT_ORIGINS_CLAIM_TYPES, type ProductOriginsClaimType } from '../origins/governedFacts';
 import type { OriginPercentageQualifier } from '../config/contributionPolicy';
 import { capturedOriginQualifications } from '../contributions/originStructured';
-import { ceasedPrevailingSubjectKeys, correctionClosureFacts } from '../contribution/correctionClosure';
+import {
+  contributionTransportFailureNotice,
+  prepareVisibleContribution,
+} from '../contribution/visibleContribution';
+import {
+  ceasedOriginsRemovedFromForm,
+  originRemovalClosesWithoutReplacement,
+  originChangeLine,
+  originRowsForJourney,
+  packetRowVisible,
+  type ContributionSurfaceMode,
+} from '../contribution/consumerSurface';
+import { countryFlagEmoji } from '../utils/countryFlagEmoji';
 import {
   PACKET_ABSENCE_CONSUMER_COPY,
   CONTRIBUTION_NOTICE_PARTIAL,
-  CONTRIBUTION_NOTICE_SAVED,
   type ContributionEntryContext,
 } from '../contribution/resultContributionActions';
 import {
   NUTRITION_CONTRIBUTION_BASES,
-  nutritionAmountsToSubmit,
   originDraftSignature,
   originRowsToSubmit,
   retainedAfterPartialAdmission,
@@ -58,6 +68,23 @@ import {
 } from '../contribution/governedDisplayProjection';
 import type { SupportCoverage } from '../packetContribution/types';
 import type { SharedEvidenceSnapshot } from '../evidenceAuthority/types';
+import {
+  CLOSER_PHOTO_ACTION,
+  CLOSER_PHOTO_BODY,
+  CLOSER_PHOTO_TITLE,
+  isSameCurrentProposition,
+  PACKET_MANUAL_ENTRY,
+  PACKET_REVIEW_CHANGE,
+  PACKET_REVIEW_PROMPT,
+  PACKET_REVIEW_REMOVE,
+  PACKET_REVIEW_YES,
+  PACKET_UNMATCHED_ENTRY,
+  resolvePacketObservation,
+  searchPacketInformation,
+  type PacketResolution,
+  type PacketSearchHit,
+} from '../certifications/resolveCertification';
+import { recordUnresolvedObservation } from '../certifications/unresolvedMarkCandidates';
 
 type Preview = {
   tempKey: string;
@@ -129,19 +156,17 @@ const JOURNEY: Record<
   },
   packetClaims: {
     header: 'Packet information',
-    instruction: 'Photograph the claim or certification on the pack, or choose a photo you already took.',
-    manual: 'Type what the pack says',
+    instruction: 'Photograph what\u2019s on the pack, or choose a photo you already took.',
+    manual: PACKET_MANUAL_ENTRY,
     review: 'Packet information',
     submit: 'Submit packet information',
-    another: 'Add another claim',
   },
   certifications: {
     header: 'Packet information',
-    instruction: 'Photograph the claim or certification on the pack, or choose a photo you already took.',
-    manual: 'Type what the pack says',
+    instruction: 'Photograph what\u2019s on the pack, or choose a photo you already took.',
+    manual: PACKET_MANUAL_ENTRY,
     review: 'Packet information',
     submit: 'Submit packet information',
-    another: 'Add another certification',
   },
 };
 
@@ -169,6 +194,7 @@ export default function PacketContributionModal({
   barcode,
   variantKey,
   entryContext,
+  surfaceMode = 'change',
   initialIngredients,
   initialNutrition,
   initialOriginContext,
@@ -186,6 +212,7 @@ export default function PacketContributionModal({
   barcode: string;
   variantKey?: string;
   entryContext: ContributionEntryContext;
+  surfaceMode?: ContributionSurfaceMode;
   initialIngredients?: string;
   initialNutrition?: NutritionSourcePrefill;
   initialOriginContext?: OriginContributionDraft[];
@@ -213,12 +240,17 @@ export default function PacketContributionModal({
   const [countryBlanks, setCountryBlanks] = useState<number[]>([0]);
   const [claims, setClaims] = useState<string[]>(['']);
   const [certs, setCerts] = useState<string[]>(['']);
+  const [packetQuery, setPacketQuery] = useState('');
+  const [acceptedProposals, setAcceptedProposals] = useState<string[]>([]);
+  const [editingClaim, setEditingClaim] = useState<number | null>(null);
+  const [editingCert, setEditingCert] = useState<number | null>(null);
+  const [editingOrigin, setEditingOrigin] = useState<number | null>(null);
+  const [certScopes, setCertScopes] = useState<Record<string, { certificationScope?: string; certificationScopeSubject?: string }>>({});
   const [absence, setAbsence] = useState(false);
   const [skippedProposals, setSkippedProposals] = useState<string[]>([]);
   const [includedContexts, setIncludedContexts] = useState<ContributionEntryContext[]>([entryContext]);
   const [proposalSupport, setProposalSupport] = useState<Partial<Record<ContributionEntryContext, SupportCoverage>>>({});
   const [activeContext, setActiveContext] = useState<ContributionEntryContext>(entryContext);
-  const [nutritionEdited, setNutritionEdited] = useState<NutritionAttribute[]>([]);
   const [partialNotice, setPartialNotice] = useState<string | null>(null);
   const [submissionAttention, setSubmissionAttention] = useState<{ idempotencyKey: string; interruptedAt: number }[]>([]);
   const initialIngredientsRef = useRef(initialIngredients);
@@ -228,6 +260,8 @@ export default function PacketContributionModal({
   const initialClaimsRef = useRef(initialClaims);
   const initialCertificationsRef = useRef(initialCertifications);
   const openOnFormRef = useRef(openOnForm);
+  const surfaceModeRef = useRef(surfaceMode);
+  const openedOriginsRef = useRef<OriginDraft[]>([]);
   const nutritionBaselineRef = useRef<NutritionSourcePrefill>({ basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' });
   initialIngredientsRef.current = initialIngredients;
   initialNutritionRef.current = initialNutrition;
@@ -236,6 +270,7 @@ export default function PacketContributionModal({
   initialClaimsRef.current = initialClaims;
   initialCertificationsRef.current = initialCertifications;
   openOnFormRef.current = openOnForm;
+  surfaceModeRef.current = surfaceMode;
 
   useEffect(() => {
     if (!visible) {
@@ -260,36 +295,32 @@ export default function PacketContributionModal({
     setBasis('per_100g');
     setAmounts(mvpNutrition.amounts);
     setSodiumUnit(mvpNutrition.sodiumUnit);
-    setNutritionEdited([]);
     const governedOrigins = (initialOriginContextRef.current || []).map((row) => ({
       ...row,
       intent: 'edited' as const,
       percentageNotStated: row.percentage.trim().length === 0,
     }));
     const offPlace = knownOffOriginRef.current || '';
-    const originRows: OriginDraft[] =
-      governedOrigins.length > 0
-        ? governedOrigins
-        : offPlace
-          ? [
-              {
-                ...EMPTY_ORIGIN,
-                place: offPlace,
-                wording: offPlace,
-                intent: 'edited',
-                percentageNotStated: true,
-              },
-            ]
-          : [EMPTY_ORIGIN];
+    const originRows: OriginDraft[] = originRowsForJourney(surfaceModeRef.current, governedOrigins, offPlace).map(
+      (row) => ({ ...row, intent: row.intent === 'edited' ? 'edited' : 'new' })
+    );
     if (originRows[0]?.intent === 'edited' && !originRows[0].baseline) {
       originRows[0] = { ...originRows[0], baseline: originDraftSignature(originRows[0]) };
     }
+    openedOriginsRef.current =
+      surfaceModeRef.current === 'change' ? originRows.filter((row) => row.claimType && row.place.trim()) : [];
     setOrigins(originRows);
     setCountryBlanks(originRows.map(() => 0));
     const claimRows = (initialClaimsRef.current || []).map((row) => row.trim()).filter((row) => row.length > 0);
     const certRows = (initialCertificationsRef.current || []).map((row) => row.trim()).filter((row) => row.length > 0);
     setClaims(claimRows.length > 0 ? claimRows : ['']);
     setCerts(certRows.length > 0 ? certRows : ['']);
+    setPacketQuery('');
+    setAcceptedProposals([]);
+    setEditingClaim(null);
+    setEditingCert(null);
+    setEditingOrigin(null);
+    setCertScopes({});
     setAbsence(false);
     setSkippedProposals([]);
     setProposalSupport({});
@@ -304,7 +335,7 @@ export default function PacketContributionModal({
     return () => {
       cancelled = true;
     };
-  }, [visible, barcode, variantKey, entryContext]);
+  }, [visible, barcode, variantKey, entryContext, surfaceMode]);
 
   useEffect(() => {
     if (!visible || !session || busy) return undefined;
@@ -340,22 +371,63 @@ export default function PacketContributionModal({
     [session, displayedPreviews]
   );
   const showReadPhotos = producer.kind !== 'abstaining' && targeted.length > 0;
+  const packetHits = useMemo(() => searchPacketInformation(packetQuery), [packetQuery]);
   const proposals = useMemo(() => {
     if (producer.kind === 'abstaining' || !session) return [];
+    const currentWordings = [...(initialClaimsRef.current || []), ...(initialCertificationsRef.current || [])];
     return session.extractionRuns.flatMap((run) =>
-      run.observations
-        .map((observation) => ({
-          id: observation.observationId,
-          text: observation.text,
-          support: observation.support,
-          context: contextForProposal(observation.proposedDomain, observation.proposedSection),
-        }))
-        .filter(
-          (item): item is { id: string; text: string; support: SupportCoverage; context: ContributionEntryContext } =>
-            item.context !== null && !includedContexts.includes(item.context) && !skippedProposals.includes(item.id)
-        )
+      run.observations.flatMap((observation) => {
+        if (skippedProposals.includes(observation.observationId) || acceptedProposals.includes(observation.observationId)) {
+          return [];
+        }
+        const context = contextForProposal(observation.proposedDomain, observation.proposedSection);
+        const packetObservation =
+          packetInformationContext(entryContext) &&
+          (context == null || context === 'packetClaims' || context === 'certifications');
+        if (packetObservation) {
+          const resolution = resolvePacketObservation({
+            observedWording: observation.text,
+            visualMark: observation.visualMark,
+            ambiguity: observation.ambiguity,
+            proposedCertificationId: observation.proposedCertificationId,
+            proposedFamilyName: observation.proposedFamilyName,
+            scopeClass: observation.scopeClass,
+            scopeSubject: observation.scopeSubject,
+          });
+          if (resolution.kind === 'wording' && !resolution.observedWording.trim()) return [];
+          if (
+            (resolution.kind === 'certification' || resolution.kind === 'wording') &&
+            isSameCurrentProposition(resolution, currentWordings)
+          ) {
+            return [];
+          }
+          return [
+            {
+              id: observation.observationId,
+              text: observation.text,
+              support: observation.support,
+              context: (context || 'packetClaims') as ContributionEntryContext,
+              resolution,
+              scopeClass: observation.scopeClass,
+              scopeSubject: observation.scopeSubject,
+            },
+          ];
+        }
+        if (context == null || includedContexts.includes(context)) return [];
+        return [
+          {
+            id: observation.observationId,
+            text: observation.text,
+            support: observation.support,
+            context,
+            resolution: undefined as PacketResolution | undefined,
+            scopeClass: undefined as string | undefined,
+            scopeSubject: undefined as string | undefined,
+          },
+        ];
+      })
     );
-  }, [producer.kind, session, includedContexts, skippedProposals]);
+  }, [producer.kind, session, includedContexts, skippedProposals, acceptedProposals, entryContext]);
 
   const acceptPhoto = async (uri: string, source: 'camera' | 'gallery', width: number, height: number) => {
     if (!surfaceJourneyId) return;
@@ -468,6 +540,58 @@ export default function PacketContributionModal({
     setPhase('review');
   };
 
+  const rememberCertificationScope = (
+    statement: string,
+    scope: { certificationScope?: string; certificationScopeSubject?: string } | undefined
+  ) => {
+    if (!scope?.certificationScope || scope.certificationScope === 'unresolved') return;
+    setCertScopes((current) => ({ ...current, [statement]: scope }));
+  };
+
+  const acceptPacketResolution = (proposalId: string, resolution: PacketResolution, support: SupportCoverage) => {
+    if (resolution.kind === 'closer_photo' || resolution.kind === 'shortlist') return;
+    setAcceptedProposals((rows) => (rows.includes(proposalId) ? rows : [...rows, proposalId]));
+    setProposalSupport((current) => ({ ...current, packetClaims: support, certifications: support }));
+    setIncludedContexts((rows) => [...new Set([...rows, 'packetClaims' as const, 'certifications' as const])]);
+    setAbsence(false);
+    if (resolution.kind === 'certification') {
+      const statement = resolution.observedWording.trim() || resolution.displayName;
+      setCerts((rows) => {
+        const filled = rows.map((row) => row.trim()).filter((row) => row.length > 0);
+        return filled.includes(statement) ? filled : [...filled, statement];
+      });
+      rememberCertificationScope(statement, {
+        certificationScope: resolution.scopeClass,
+        certificationScopeSubject: resolution.scopeSubject,
+      });
+      return;
+    }
+    setClaims((rows) => {
+      const filled = rows.map((row) => row.trim()).filter((row) => row.length > 0);
+      return filled.includes(resolution.observedWording) ? filled : [...filled, resolution.observedWording];
+    });
+  };
+
+  const addCatalogueSelection = (hit: PacketSearchHit) => {
+    setAbsence(false);
+    setCerts((rows) => {
+      const filled = rows.map((row) => row.trim()).filter((row) => row.length > 0);
+      return filled.includes(hit.displayName) ? filled : [...filled, hit.displayName];
+    });
+    setPacketQuery('');
+  };
+
+  const addUnmatchedWording = (text: string) => {
+    const wording = text.trim();
+    if (!wording) return;
+    setAbsence(false);
+    setClaims((rows) => {
+      const filled = rows.map((row) => row.trim()).filter((row) => row.length > 0);
+      return filled.includes(wording) ? filled : [...filled, wording];
+    });
+    setPacketQuery('');
+  };
+
   const supportFor = (context?: ContributionEntryContext) => {
     if (context && proposalSupport[context]) return proposalSupport[context];
     const asset = targeted[0];
@@ -487,7 +611,10 @@ export default function PacketContributionModal({
   };
 
   const submit = async () => {
-    if (!session) return;
+    if (!session) {
+      setPartialNotice('This form is still opening. Submit again in a moment.');
+      return;
+    }
     const trace = beginModalTrace(Platform.OS);
     trace.mark('submit_tap');
     setBusy(true);
@@ -496,183 +623,159 @@ export default function PacketContributionModal({
       const created: string[] = [];
       const observations: { unitId: string; label: string; kind: 'ingredients' | 'nutrition' | 'origin' | 'claim' | 'cert' | 'absence'; index: number }[] = [];
       const contexts = includedContexts;
-      const closure = correctionClosureFacts({
-        ...(contexts.includes('ingredients')
-          ? { initialIngredients: initialIngredientsRef.current, ingredientsText }
-          : {}),
-        ...(contexts.includes('nutrition')
-          ? {
-              initialNutrition: nutritionBaselineRef.current,
-              nutrition: { basis: basis || nutritionBaselineRef.current.basis, amounts, sodiumUnit },
-            }
-          : {}),
-        ...(contexts.includes('origins')
-          ? { initialOrigins: initialOriginContextRef.current, origins }
-          : {}),
-        ...(contexts.includes('packetClaims') || contexts.includes('certifications')
-          ? {
-              initialClaims: initialClaimsRef.current,
-              claims,
-              initialCertifications: initialCertificationsRef.current,
-              certifications: certs,
-            }
-          : {}),
+      const exactCatalogue = packetHits.find(
+        (hit) => hit.displayName.trim().toLowerCase() === packetQuery.trim().toLowerCase()
+      );
+      const removedOriginKeys = ceasedOriginsRemovedFromForm(openedOriginsRef.current, origins);
+      const decision = prepareVisibleContribution({
+        contexts,
+        ingredientsText,
+        initialIngredients: initialIngredientsRef.current,
+        nutrition: { basis: basis || nutritionBaselineRef.current.basis, amounts, sodiumUnit },
+        nutritionBaseline: nutritionBaselineRef.current,
+        origins,
+        claims,
+        initialClaims: initialClaimsRef.current,
+        certifications: certs,
+        initialCertifications: initialCertificationsRef.current,
+        pendingPacketWording: packetQuery,
+        catalogueName: exactCatalogue?.displayName,
+        absence,
+        hasPhotoForAbsence: targeted.length > 0,
       });
-      const ceased = ceasedPrevailingSubjectKeys(closure.baseline, closure.represented);
-      const freshWordings = (current: string[], initial: string[] | undefined) => {
-        const remaining = new Map<string, number>();
-        for (const row of initial || []) {
-          const text = row.trim();
-          if (!text) continue;
-          remaining.set(text, (remaining.get(text) || 0) + 1);
-        }
-        const fresh: string[] = [];
-        for (const row of current) {
-          const text = row.trim();
-          if (!text) continue;
-          const count = remaining.get(text) || 0;
-          if (count > 0) remaining.set(text, count - 1);
-          else fresh.push(text);
-        }
-        return fresh;
-      };
-      if (contexts.includes('ingredients')) {
-        const text = ingredientsText.trim();
-        const initialText = (initialIngredientsRef.current || '').trim();
-        if (text && text !== initialText) {
-          const unit = await addManualEvidenceUnit({
-            sessionId: session.sessionId,
-            domain: 'ingredients_nutrition',
-            section: 'ingredients',
-            statement: text,
-            support: supportFor('ingredients'),
-          });
-          created.push(unit.unitId);
-          observations.push({ unitId: unit.unitId, label: text, kind: 'ingredients', index: 0 });
-        }
-      }
-      if (contexts.includes('nutrition') && basis) {
-        const stated = nutritionAmountsToSubmit(
-          { basis, amounts, sodiumUnit },
-          nutritionBaselineRef.current,
-          nutritionEdited
-        );
-        if (stated.length > 0) {
-          const unit = await addManualEvidenceUnit({
-            sessionId: session.sessionId,
-            domain: 'ingredients_nutrition',
-            section: 'nutrition',
-            statement: 'Nutrition facts',
-            nutritionBasis: basis,
-            nutritionAmounts: stated,
-            support: supportFor('nutrition'),
-          });
-          created.push(unit.unitId);
-          observations.push({
-            unitId: unit.unitId,
-            label: stated.map((amount) => `${amount.attribute} ${amount.value} ${amount.unit}`).join(', '),
-            kind: 'nutrition',
-            index: 0,
-          });
-        }
-      }
-      if (contexts.includes('origins')) {
-        const originRows = originRowsToSubmit(origins);
-        for (let index = 0; index < originRows.length; index += 1) {
-          const row = originRows[index];
-          const places = governedOriginCountryNames(row.place);
-          const wording = row.wording.trim();
-          if (!wording || places.length === 0) continue;
-          const percentage = Number(row.percentage);
-          const statedPercentage = !row.percentageNotStated && Number.isFinite(percentage) && row.percentage.trim();
-          const qualifications = capturedOriginQualifications({
-            local: row.local === true,
-            imported: row.imported === true,
-            multiple: false,
-          });
-          const unit = await addManualEvidenceUnit({
-            sessionId: session.sessionId,
-            domain: 'origins',
-            statement: wording,
-            originClaimType: row.claimType,
-            originCountry: places[0],
-            originCountries: places.length > 1 ? places : undefined,
-            ingredientSubject: row.claimType === 'ingredient_origin' ? row.ingredient.trim() : undefined,
-            originPercentage: statedPercentage ? percentage : undefined,
-            originPercentageQualifier: statedPercentage ? row.qualifier : undefined,
-            originQualification: qualifications.originQualification,
-            originQualifications: qualifications.originQualifications,
-            percentageNotStated: row.percentageNotStated === true && !statedPercentage,
-            support: supportFor('origins'),
-          });
-          created.push(unit.unitId);
-          observations.push({ unitId: unit.unitId, label: wording, kind: 'origin', index });
-        }
-      }
-      if (contexts.includes('packetClaims') || contexts.includes('certifications')) {
-        const positiveClaims = claims.map((claim) => claim.trim()).filter((claim) => claim.length > 0);
-        const positiveCerts = certs.map((cert) => cert.trim()).filter((cert) => cert.length > 0);
-        const absenceOnly = absence && positiveClaims.length === 0 && positiveCerts.length === 0;
-        if (absenceOnly && targeted.length > 0) {
-          const unit = await addManualEvidenceUnit({
-            sessionId: session.sessionId,
-            domain: 'packet_claims',
-            statement: '',
-            packetAbsenceAffirmation: true,
-            support: { coverage: 'whole_image', sourceAssetId: targeted[0].assetId },
-          });
-          created.push(unit.unitId);
-          observations.push({ unitId: unit.unitId, label: PACKET_ABSENCE_CONSUMER_COPY, kind: 'absence', index: 0 });
-        }
-        if (!absenceOnly) {
-          const freshClaims = freshWordings(claims, initialClaimsRef.current);
-          const freshCerts = freshWordings(certs, initialCertificationsRef.current);
-          const claimIndexes = new Map<string, number[]>();
-          claims.forEach((claim, index) => {
-            const text = claim.trim();
-            if (!text) return;
-            const rows = claimIndexes.get(text) || [];
-            rows.push(index);
-            claimIndexes.set(text, rows);
-          });
-          const certIndexes = new Map<string, number[]>();
-          certs.forEach((cert, index) => {
-            const text = cert.trim();
-            if (!text) return;
-            const rows = certIndexes.get(text) || [];
-            rows.push(index);
-            certIndexes.set(text, rows);
-          });
-          for (const text of freshClaims) {
-            const index = claimIndexes.get(text)?.shift() ?? 0;
-            const unit = await addManualEvidenceUnit({
-              sessionId: session.sessionId,
-              domain: 'packet_claims',
-              statement: text,
-              support: supportFor('packetClaims'),
-            });
-            created.push(unit.unitId);
-            observations.push({ unitId: unit.unitId, label: text, kind: 'claim', index });
+      if (decision.status !== 'ready') {
+        if (
+          decision.status === 'incomplete' &&
+          originRemovalClosesWithoutReplacement(decision.messages, removedOriginKeys, contexts)
+        ) {
+          const closed = await transmitPrevailingClosure(barcode, removedOriginKeys, trace);
+          trace.mark('local_handoff_end', closed.admitted ? 'ok' : 'none');
+          if (!closed.admitted) {
+            setPartialNotice(contributionTransportFailureNotice());
+            onSharedEvidenceFailed?.();
+            return;
           }
-          for (const text of freshCerts) {
-            const index = certIndexes.get(text)?.shift() ?? 0;
-            const unit = await addManualEvidenceUnit({
-              sessionId: session.sessionId,
-              domain: 'certifications',
-              statement: text,
-              support: supportFor('certifications'),
-            });
-            created.push(unit.unitId);
-            observations.push({ unitId: unit.unitId, label: text, kind: 'cert', index });
-          }
+          await onSharedEvidenceAdmitted?.(closed.snapshot, true);
+          trace.mark('modal_close');
+          onClose();
+          return;
         }
+        trace.mark('local_handoff_end', 'none');
+        setPartialNotice(decision.status === 'incomplete' ? decision.messages.join('\n') : decision.message);
+        return;
+      }
+      const ceased = [...new Set([...decision.ceasedSubjectKeys, ...removedOriginKeys])];
+      if (decision.ingredientsText) {
+        const text = decision.ingredientsText;
+        const unit = await addManualEvidenceUnit({
+          sessionId: session.sessionId,
+          domain: 'ingredients_nutrition',
+          section: 'ingredients',
+          statement: text,
+          support: supportFor('ingredients'),
+        });
+        created.push(unit.unitId);
+        observations.push({ unitId: unit.unitId, label: text, kind: 'ingredients', index: 0 });
+      }
+      if (decision.nutritionAmounts.length > 0 && decision.nutritionBasis) {
+        const stated = decision.nutritionAmounts;
+        const unit = await addManualEvidenceUnit({
+          sessionId: session.sessionId,
+          domain: 'ingredients_nutrition',
+          section: 'nutrition',
+          statement: 'Nutrition facts',
+          nutritionBasis: decision.nutritionBasis,
+          nutritionAmounts: stated,
+          support: supportFor('nutrition'),
+        });
+        created.push(unit.unitId);
+        observations.push({
+          unitId: unit.unitId,
+          label: stated.map((amount) => `${amount.attribute} ${amount.value} ${amount.unit}`).join(', '),
+          kind: 'nutrition',
+          index: 0,
+        });
+      }
+      for (let index = 0; index < decision.origins.length; index += 1) {
+        const row = decision.origins[index];
+        const places = governedOriginCountryNames(row.place);
+        const wording = row.wording.trim();
+        if (places.length === 0) continue;
+        const percentage = Number(row.percentage);
+        const statedPercentage = !row.percentageNotStated && Number.isFinite(percentage) && row.percentage.trim();
+        const qualifications = capturedOriginQualifications({
+          local: row.local === true,
+          imported: row.imported === true,
+          multiple: false,
+        });
+        const unit = await addManualEvidenceUnit({
+          sessionId: session.sessionId,
+          domain: 'origins',
+          statement: wording,
+          originClaimType: row.claimType,
+          originCountry: places[0],
+          originCountries: places.length > 1 ? places : undefined,
+          ingredientSubject: row.claimType === 'ingredient_origin' ? row.ingredient.trim() : undefined,
+          originPercentage: statedPercentage ? percentage : undefined,
+          originPercentageQualifier: statedPercentage ? row.qualifier : undefined,
+          originQualification: qualifications.originQualification,
+          originQualifications: qualifications.originQualifications,
+          percentageNotStated: row.percentageNotStated === true && !statedPercentage,
+          support: supportFor('origins'),
+        });
+        created.push(unit.unitId);
+        observations.push({
+          unitId: unit.unitId,
+          label: wording || `${ORIGIN_LABELS[row.claimType]} ${places[0]}`,
+          kind: 'origin',
+          index,
+        });
+      }
+      if (decision.absence && targeted[0]) {
+        const unit = await addManualEvidenceUnit({
+          sessionId: session.sessionId,
+          domain: 'packet_claims',
+          statement: '',
+          packetAbsenceAffirmation: true,
+          support: { coverage: 'whole_image', sourceAssetId: targeted[0].assetId },
+        });
+        created.push(unit.unitId);
+        observations.push({ unitId: unit.unitId, label: PACKET_ABSENCE_CONSUMER_COPY, kind: 'absence', index: 0 });
+      }
+      for (const text of decision.claims) {
+        recordUnresolvedObservation(text);
+        const unit = await addManualEvidenceUnit({
+          sessionId: session.sessionId,
+          domain: 'packet_claims',
+          statement: text,
+          support: supportFor('packetClaims'),
+        });
+        created.push(unit.unitId);
+        observations.push({ unitId: unit.unitId, label: text, kind: 'claim', index: 0 });
+      }
+      for (const text of decision.certifications) {
+        const scope = certScopes[text];
+        const unit = await addManualEvidenceUnit({
+          sessionId: session.sessionId,
+          domain: 'certifications',
+          statement: text,
+          support: supportFor('certifications'),
+          ...(scope?.certificationScope ? { certificationScope: scope.certificationScope } : {}),
+          ...(scope?.certificationScopeSubject ? { certificationScopeSubject: scope.certificationScopeSubject } : {}),
+        });
+        created.push(unit.unitId);
+        observations.push({ unitId: unit.unitId, label: text, kind: 'cert', index: 0 });
       }
       if (created.length === 0) {
         trace.mark('local_handoff_end', 'none');
-        if (ceased.length === 0) return;
+        if (ceased.length === 0) {
+          setPartialNotice(contributionTransportFailureNotice());
+          onSharedEvidenceFailed?.();
+          return;
+        }
         const closed = await transmitPrevailingClosure(barcode, ceased, trace);
         if (!closed.admitted) {
-          setPartialNotice(CONTRIBUTION_NOTICE_SAVED);
+          setPartialNotice(contributionTransportFailureNotice());
           onSharedEvidenceFailed?.();
           return;
         }
@@ -714,7 +817,7 @@ export default function PacketContributionModal({
       const submitted = handed.filter((item) => item.outcome === 'submitted');
       trace.mark('local_handoff_end', submitted.length > 0 ? 'ok' : 'none');
       if (submitted.length === 0) {
-        setPartialNotice(CONTRIBUTION_NOTICE_SAVED);
+        setPartialNotice(contributionTransportFailureNotice());
         onSharedEvidenceFailed?.();
         return;
       }
@@ -726,7 +829,7 @@ export default function PacketContributionModal({
         return;
       }
       if (!transmitted.admitted) {
-        setPartialNotice(CONTRIBUTION_NOTICE_SAVED);
+        setPartialNotice(contributionTransportFailureNotice());
         onSharedEvidenceFailed?.();
         return;
       }
@@ -751,7 +854,6 @@ export default function PacketContributionModal({
       if (admittedKinds.has('nutrition')) {
         setAmounts({});
         setBasis(null);
-        setNutritionEdited([]);
       }
       if (admittedKinds.has('absence')) setAbsence(false);
       const admittedClaims = new Set(retained.admitted.filter((row) => row.kind === 'claim').map((row) => row.index));
@@ -776,6 +878,7 @@ export default function PacketContributionModal({
       setPhase('review');
     } catch {
       trace.mark('submit_failed', 'failed');
+      setPartialNotice(contributionTransportFailureNotice());
       onSharedEvidenceFailed?.();
     } finally {
       trace.flush('modal_finally');
@@ -876,18 +979,78 @@ export default function PacketContributionModal({
             ) : null}
             {proposals.length > 0 ? (
               <View>
-                <Text style={[styles.body, { color: colors.text }]}>Also found on this photo</Text>
-                {proposals.map((proposal) => (
-                  <View key={proposal.id} style={styles.row}>
-                    <Text style={{ color: colors.text }}>{proposal.text}</Text>
-                    <TouchableOpacity onPress={() => acceptProposal(proposal)}>
-                      <Text style={{ color: colors.primary }}>Review</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setSkippedProposals((rows) => [...rows, proposal.id])}>
-                      <Text style={{ color: colors.primary }}>Skip</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
+                {proposals.some((proposal) => !proposal.resolution) ? (
+                  <Text style={[styles.body, { color: colors.text }]}>Also found on this photo</Text>
+                ) : null}
+                {proposals.map((proposal) =>
+                  proposal.resolution?.kind === 'closer_photo' ? (
+                    <View key={proposal.id}>
+                      <Text style={{ color: colors.text }}>{CLOSER_PHOTO_TITLE}</Text>
+                      <Text style={{ color: colors.text }}>{CLOSER_PHOTO_BODY}</Text>
+                      <TouchableOpacity onPress={captureCamera} accessibilityRole="button">
+                        <Text style={{ color: colors.primary }}>{CLOSER_PHOTO_ACTION}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : proposal.resolution?.kind === 'shortlist' ? (
+                    <View key={proposal.id}>
+                      <Text style={{ color: colors.text }}>{PACKET_REVIEW_PROMPT}</Text>
+                      {proposal.resolution.options.map((option) => (
+                        <TouchableOpacity
+                          key={option.displayName}
+                          onPress={() =>
+                            acceptPacketResolution(
+                              proposal.id,
+                              resolvePacketObservation({
+                                observedWording: option.displayName,
+                                selectedCertificationId: option.certificationId,
+                                scopeClass: proposal.scopeClass,
+                                scopeSubject: proposal.scopeSubject,
+                              }),
+                              proposal.support
+                            )
+                          }
+                        >
+                          <Text style={{ color: colors.primary }}>{option.displayName}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  ) : proposal.resolution ? (
+                    <View key={proposal.id}>
+                      <Text style={{ color: colors.text }}>
+                        {proposal.resolution.kind === 'certification' ? proposal.resolution.displayName : proposal.text}
+                      </Text>
+                      <Text style={{ color: colors.text }}>{PACKET_REVIEW_PROMPT}</Text>
+                      <View style={styles.row}>
+                        <TouchableOpacity
+                          onPress={() => acceptPacketResolution(proposal.id, proposal.resolution as PacketResolution, proposal.support)}
+                          accessibilityRole="button"
+                        >
+                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_YES}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setAcceptedProposals((rows) => (rows.includes(proposal.id) ? rows : [...rows, proposal.id]));
+                            setPacketQuery(proposal.text);
+                            setPhase('entry');
+                          }}
+                          accessibilityRole="button"
+                        >
+                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_CHANGE}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <View key={proposal.id} style={styles.row}>
+                      <Text style={{ color: colors.text }}>{proposal.text}</Text>
+                      <TouchableOpacity onPress={() => acceptProposal(proposal)}>
+                        <Text style={{ color: colors.primary }}>Review</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => setSkippedProposals((rows) => [...rows, proposal.id])}>
+                        <Text style={{ color: colors.primary }}>Skip</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )
+                )}
               </View>
             ) : null}
             <TouchableOpacity
@@ -945,9 +1108,6 @@ export default function PacketContributionModal({
                     <TextInput
                       value={amounts[field.attribute] || ''}
                       onChangeText={(value) => {
-                        setNutritionEdited((current) =>
-                          current.includes(field.attribute) ? current : [...current, field.attribute]
-                        );
                         setAmounts((current) => ({ ...current, [field.attribute]: value }));
                       }}
                       keyboardType="decimal-pad"
@@ -958,7 +1118,6 @@ export default function PacketContributionModal({
                         <TouchableOpacity
                           onPress={() => {
                             setSodiumUnit('mg');
-                            setNutritionEdited((current) => (current.includes('sodium') ? current : [...current, 'sodium']));
                             setAmounts((current) => {
                               if (sodiumUnit !== 'g') return current;
                               const grams = Number(current.sodium);
@@ -972,7 +1131,6 @@ export default function PacketContributionModal({
                         <TouchableOpacity
                           onPress={() => {
                             setSodiumUnit('g');
-                            setNutritionEdited((current) => (current.includes('sodium') ? current : [...current, 'sodium']));
                             setAmounts((current) => {
                               if (sodiumUnit !== 'mg') return current;
                               const milligrams = Number(current.sodium);
@@ -992,7 +1150,39 @@ export default function PacketContributionModal({
               </View>
             ) : null}
             {activeContext === 'origins'
-              ? origins.map((row, index) => (
+              ? origins.map((row, index) => {
+                  const country = governedOriginCountryNames(row.place)[0] || row.place.trim();
+                  const currentProposition =
+                    surfaceMode === 'change' && row.intent === 'edited' && Boolean(row.claimType) && country.length > 0;
+                  const removeThisOrigin = () => {
+                    setEditingOrigin(null);
+                    setOrigins((rows) => {
+                      const remaining = rows.filter((_, itemIndex) => itemIndex !== index);
+                      return remaining.length > 0 ? remaining : [EMPTY_ORIGIN];
+                    });
+                    setCountryBlanks((counts) => {
+                      const remaining = counts.filter((_, itemIndex) => itemIndex !== index);
+                      return remaining.length > 0 ? remaining : [0];
+                    });
+                  };
+                  if (currentProposition && editingOrigin !== index) {
+                    return (
+                      <View key={`${row.evidenceId || row.claimType || 'origin'}-${index}`}>
+                        <Text style={{ color: colors.text }}>
+                          {`${countryFlagEmoji(country)} ${originChangeLine(row.claimType!, country)}`}
+                        </Text>
+                        <View style={styles.row}>
+                          <TouchableOpacity onPress={() => setEditingOrigin(index)} accessibilityRole="button">
+                            <Text style={{ color: colors.primary }}>{PACKET_REVIEW_CHANGE}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={removeThisOrigin} accessibilityRole="button">
+                            <Text style={{ color: colors.primary }}>{PACKET_REVIEW_REMOVE}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  }
+                  return (
                   <View key={`${row.evidenceId || row.claimType || 'origin'}-${index}`}>
                     <Text style={[styles.header, { color: colors.text, fontSize: 18 }]}>
                       {origins.length > 1 ? `Origin statement ${index + 1}` : 'Origin statement'}
@@ -1169,22 +1359,21 @@ export default function PacketContributionModal({
                         <Text style={{ color: row.imported ? colors.primary : colors.text }}>Imported</Text>
                       </TouchableOpacity>
                     </View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setOrigins((rows) => {
-                          const remaining = rows.filter((_, itemIndex) => itemIndex !== index);
-                          return remaining.length > 0 ? remaining : [EMPTY_ORIGIN];
-                        });
-                        setCountryBlanks((counts) => {
-                          const remaining = counts.filter((_, itemIndex) => itemIndex !== index);
-                          return remaining.length > 0 ? remaining : [0];
-                        });
-                      }}
-                    >
-                      <Text style={{ color: colors.primary }}>Remove</Text>
-                    </TouchableOpacity>
+                    {row.claimType && row.place.trim() ? (
+                    <View style={styles.row}>
+                      {surfaceMode === 'change' && row.intent === 'edited' ? (
+                        <TouchableOpacity onPress={() => setEditingOrigin(index)} accessibilityRole="button">
+                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_CHANGE}</Text>
+                        </TouchableOpacity>
+                      ) : null}
+                      <TouchableOpacity onPress={removeThisOrigin} accessibilityRole="button">
+                        <Text style={{ color: colors.primary }}>{PACKET_REVIEW_REMOVE}</Text>
+                      </TouchableOpacity>
+                    </View>
+                    ) : null}
                   </View>
-                ))
+                  );
+                })
               : null}
             {activeContext === 'origins' && journey.another ? (
               <TouchableOpacity
@@ -1198,46 +1387,89 @@ export default function PacketContributionModal({
             ) : null}
             {packetInformationContext(activeContext) ? (
               <View>
-                {claims.map((claim, index) => (
-                  <View key={`claim-${index}`}>
-                    <Text style={{ color: colors.text }}>Claim on the pack</Text>
-                    <TextInput
-                      value={claim}
-                      onChangeText={(value) => {
-                        if (value.trim()) setAbsence(false);
-                        setClaims((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)));
-                      }}
-                      placeholder="Claim on the pack"
-                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                    />
-                    <TouchableOpacity onPress={() => setClaims((rows) => rows.filter((_, itemIndex) => itemIndex !== index))}>
-                      <Text style={{ color: colors.primary }}>Remove</Text>
-                    </TouchableOpacity>
-                  </View>
+                {claims.map((claim, index) =>
+                  packetRowVisible(surfaceMode, claim, initialClaimsRef.current || []) ? (
+                    <View key={`claim-${index}`}>
+                      {editingClaim === index ? (
+                        <TextInput
+                          value={claim}
+                          onChangeText={(value) => {
+                            if (value.trim()) setAbsence(false);
+                            setClaims((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)));
+                          }}
+                          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                        />
+                      ) : (
+                        <Text style={{ color: colors.text }}>{claim}</Text>
+                      )}
+                      <View style={styles.row}>
+                        <TouchableOpacity onPress={() => setEditingClaim(index)} accessibilityRole="button">
+                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_CHANGE}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => setClaims((rows) => {
+                            const remaining = rows.filter((_, itemIndex) => itemIndex !== index);
+                            return remaining.length > 0 ? remaining : [''];
+                          })}
+                          accessibilityRole="button"
+                        >
+                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_REMOVE}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : null
+                )}
+                {certs.map((cert, index) =>
+                  packetRowVisible(surfaceMode, cert, initialCertificationsRef.current || []) ? (
+                    <View key={`cert-${index}`}>
+                      {editingCert === index ? (
+                        <TextInput
+                          value={cert}
+                          onChangeText={(value) => {
+                            if (value.trim()) setAbsence(false);
+                            setCerts((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)));
+                          }}
+                          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                        />
+                      ) : (
+                        <Text style={{ color: colors.text }}>{cert}</Text>
+                      )}
+                      <View style={styles.row}>
+                        <TouchableOpacity onPress={() => setEditingCert(index)} accessibilityRole="button">
+                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_CHANGE}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => setCerts((rows) => {
+                            const remaining = rows.filter((_, itemIndex) => itemIndex !== index);
+                            return remaining.length > 0 ? remaining : [''];
+                          })}
+                          accessibilityRole="button"
+                        >
+                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_REMOVE}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : null
+                )}
+                <TextInput
+                  value={packetQuery}
+                  onChangeText={(value) => {
+                    if (value.trim()) setAbsence(false);
+                    setPacketQuery(value);
+                  }}
+                  placeholder={PACKET_MANUAL_ENTRY}
+                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                />
+                {packetHits.map((hit) => (
+                  <TouchableOpacity key={hit.displayName} onPress={() => addCatalogueSelection(hit)} accessibilityRole="button">
+                    <Text style={{ color: colors.primary }}>{hit.displayName}</Text>
+                  </TouchableOpacity>
                 ))}
-                <TouchableOpacity onPress={() => setClaims((rows) => [...rows, ''])}>
-                  <Text style={{ color: colors.primary }}>Add another claim</Text>
-                </TouchableOpacity>
-                {certs.map((cert, index) => (
-                  <View key={`cert-${index}`}>
-                    <Text style={{ color: colors.text }}>Certification shown on the pack</Text>
-                    <TextInput
-                      value={cert}
-                      onChangeText={(value) => {
-                        if (value.trim()) setAbsence(false);
-                        setCerts((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)));
-                      }}
-                      placeholder="Certification shown on the pack"
-                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                    />
-                    <TouchableOpacity onPress={() => setCerts((rows) => rows.filter((_, itemIndex) => itemIndex !== index))}>
-                      <Text style={{ color: colors.primary }}>Remove</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-                <TouchableOpacity onPress={() => setCerts((rows) => [...rows, ''])}>
-                  <Text style={{ color: colors.primary }}>Add another certification</Text>
-                </TouchableOpacity>
+                {packetQuery.trim() && packetHits.length === 0 ? (
+                  <TouchableOpacity onPress={() => addUnmatchedWording(packetQuery)} accessibilityRole="button">
+                    <Text style={{ color: colors.primary }}>{PACKET_UNMATCHED_ENTRY}</Text>
+                  </TouchableOpacity>
+                ) : null}
                 {packetAbsenceAvailable && targeted.length > 0 && claims.every((claim) => !claim.trim()) && certs.every((cert) => !cert.trim()) ? (
                   <TouchableOpacity
                     onPress={() => {
@@ -1251,12 +1483,12 @@ export default function PacketContributionModal({
                 ) : null}
               </View>
             ) : null}
+            {partialNotice ? <Text style={{ color: colors.text }}>{partialNotice}</Text> : null}
             <TouchableOpacity onPress={submit} style={styles.button} accessibilityRole="button">
               <Text style={styles.buttonText}>{journey.submit}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
-        {partialNotice ? <Text style={{ color: colors.text }}>{partialNotice}</Text> : null}
         {busy ? <ActivityIndicator /> : null}
         <TouchableOpacity onPress={onClose}>
           <Text style={{ color: colors.primary }}>Close</Text>

@@ -31,7 +31,9 @@ export type EvidenceFactInput = {
   servingSize?: string;
   servingsPerPack?: string;
   preparation?: string;
+  certificationId?: string;
   certificationScope?: string;
+  certificationScopeSubject?: string;
   machineRunId?: string;
   region?: { x: number; y: number; width: number; height: number };
   /** Server asset id from a finalized chunked upload. */
@@ -107,6 +109,9 @@ export type DerivedFact = {
   exactWording?: string;
   variantKey?: string;
   labelsTags?: string[];
+  certificationId?: string;
+  certificationScope?: string;
+  certificationScopeSubject?: string;
   originStructured?: OriginStructuredEvidence;
   ingredientsNutrition?: ContributionEvidence['ingredientsNutrition'];
   machineRunId?: string;

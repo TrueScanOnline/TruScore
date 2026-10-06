@@ -261,7 +261,7 @@ function factsFromUnit(
       {
         ...provenance,
         domain: 'origins',
-        exactWording: unit.statement,
+        ...(unit.statement.trim() ? { exactWording: unit.statement.trim() } : {}),
         claimValue: unit.originCountry || unit.ingredientSubject || unit.statement,
         variantKey: session.variantKey,
         originStructured: {
@@ -287,6 +287,8 @@ function factsFromUnit(
         claimValue: unit.statement,
         exactWording: unit.statement,
         ...(labelsTags ? { labelsTags } : {}),
+        ...(unit.certificationScope ? { certificationScope: unit.certificationScope } : {}),
+        ...(unit.certificationScopeSubject ? { certificationScopeSubject: unit.certificationScopeSubject } : {}),
         variantKey: session.variantKey,
       },
     ];

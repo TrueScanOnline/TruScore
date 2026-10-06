@@ -22,7 +22,7 @@ function originFact(row: OriginContributionDraft): EvidenceFactInput | null {
   if (!row.claimType) return null;
   const wording = row.wording.trim();
   const place = row.place.trim();
-  if (!wording || !place) return null;
+  if (!place) return null;
   if (row.claimType === 'ingredient_origin' && !row.ingredient.trim()) return null;
   const places = place
     .split(',')
@@ -52,7 +52,7 @@ function originFact(row: OriginContributionDraft): EvidenceFactInput | null {
   };
   return {
     domain: 'origins',
-    exactWording: wording,
+    ...(wording ? { exactWording: wording } : {}),
     claimValue: places[0],
     originStructured,
   };
