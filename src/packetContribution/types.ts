@@ -29,6 +29,8 @@ export type EvidenceResumeMarker = {
   step: EvidenceResumeStep;
   attempt: number;
   startedAt: number;
+  /** Set when the marker is written. A different id means a previous launch was interrupted. */
+  launchId?: string;
 };
 
 export type InterruptedResumeRecord = {

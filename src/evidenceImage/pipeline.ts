@@ -217,13 +217,15 @@ async function prepareAsset(asset: PacketSourceAsset, profile: EvidenceImageProf
     const byteLength = info.exists && 'size' in info && typeof info.size === 'number' ? info.size : Number.MAX_SAFE_INTEGER;
     const sized = { width: saved.width, height: saved.height };
     prepared = { uri: saved.uri, width: sized.width, height: sized.height, byteLength };
-    if (byteLength <= profile.maxBytes) break;
+    const longEdge = Math.max(sized.width, sized.height);
+    if (longEdge > 0 && longEdge <= profile.maxLongEdgePx && byteLength <= profile.maxBytes) break;
     currentUri = saved.uri;
     current = sized;
     if (quality > 0.55) quality = Math.round((quality - 0.1) * 100) / 100;
     else edge = Math.max(640, Math.round(edge * 0.85));
   }
-  if (!prepared || prepared.byteLength > profile.maxBytes) {
+  const preparedLongEdge = prepared ? Math.max(prepared.width, prepared.height) : 0;
+  if (!prepared || preparedLongEdge <= 0 || preparedLongEdge > profile.maxLongEdgePx || prepared.byteLength > profile.maxBytes) {
     trace.mark('prepared', 'failed');
     trace.flush('prepared');
     return patchAsset(asset.sessionId, asset.assetId, { imagePhase: 'failed_retryable' });

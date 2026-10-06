@@ -599,8 +599,10 @@ export async function retryParkedEvidenceSubmission(idempotencyKey: string): Pro
   }
 }
 
-/** Retry completed unsent batches. Does not require the contribution modal. */
-export async function retryUnsentEvidenceSubmissions(): Promise<void> {
+let submissionRetrying = false;
+let submissionRetryAgain = false;
+
+async function retryUnsentEvidenceSubmissionsOnce(): Promise<void> {
   const unsent = await listUnsentSubmissions();
   const runnable: OutboxItem[] = [];
   for (const item of unsent) {
@@ -628,5 +630,22 @@ export async function retryUnsentEvidenceSubmissions(): Promise<void> {
     for (const item of runnable) {
       await patchOutbox(item.idempotencyKey, { resumeInProgress: null });
     }
+  }
+}
+
+/** Retry completed unsent batches. Does not require the contribution modal. */
+export async function retryUnsentEvidenceSubmissions(): Promise<void> {
+  if (submissionRetrying) {
+    submissionRetryAgain = true;
+    return;
+  }
+  submissionRetrying = true;
+  try {
+    do {
+      submissionRetryAgain = false;
+      await retryUnsentEvidenceSubmissionsOnce();
+    } while (submissionRetryAgain);
+  } finally {
+    submissionRetrying = false;
   }
 }

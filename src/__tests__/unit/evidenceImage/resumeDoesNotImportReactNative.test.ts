@@ -132,13 +132,31 @@ describe('packet photo launch recovery', () => {
     expect(asset.lineageHeight).toBe(2000);
   });
 
+  test('the first interrupted launch resumes the photo automatically', async () => {
+    mockSessions.splice(
+      0,
+      mockSessions.length,
+      sessionWith(
+        photo({
+          resumeInProgress: { step: 'prepare', attempt: 1, startedAt: 1, launchId: 'ln_previous' },
+        })
+      )
+    );
+    await resumeEvidenceImages();
+    const asset = mockSessions[0].sourceAssets[0];
+    expect(asset.imagePhase).not.toBe('parked_after_interrupted_resume');
+    expect(asset.interruptedResume).toBeUndefined();
+    expect(manipulateAsync).toHaveBeenCalled();
+    expect(deleteAsync).not.toHaveBeenCalled();
+  });
+
   test('a second interrupted launch parks the photo and does not auto-resume it', async () => {
     mockSessions.splice(
       0,
       mockSessions.length,
       sessionWith(
         photo({
-          resumeInProgress: { step: 'prepare', attempt: 1, startedAt: 1 },
+          resumeInProgress: { step: 'prepare', attempt: 2, startedAt: 1, launchId: 'ln_previous' },
         }),
         0
       )
@@ -188,5 +206,41 @@ describe('packet photo launch recovery', () => {
     expect(asset.lineageHeight).toBe(2000);
     expect(asset.preparedWidth).toBe(640);
     expect(asset.preparedHeight).toBe(480);
+  });
+
+  test('rejects a prepared image whose long edge is still over the envelope', async () => {
+    (manipulateAsync as jest.Mock).mockResolvedValue({ uri: 'file:///huge.jpg', width: 4000, height: 3000 });
+    (getInfoAsync as jest.Mock).mockResolvedValue({ exists: true, size: 100 });
+    mockSessions.splice(0, mockSessions.length, sessionWith(photo()));
+    await resumeEvidenceImages();
+    const asset = mockSessions[0].sourceAssets[0];
+    expect(asset.imagePhase).toBe('failed_retryable');
+    expect(asset.preparedWidth).toBeUndefined();
+    expect(asset.lineageWidth).toBe(3000);
+    expect(asset.lineageHeight).toBe(2000);
+  });
+
+  test('sizes an unknown original from the first manipulator output', async () => {
+    (manipulateAsync as jest.Mock).mockImplementation(async (_uri: string, actions: { resize?: { width?: number } }[]) => {
+      const resize = actions[0]?.resize?.width;
+      if (!resize) return { uri: 'file:///measured.jpg', width: 4000, height: 3000 };
+      return { uri: 'file:///fitted.jpg', width: resize, height: Math.round((3000 * resize) / 4000) };
+    });
+    (getInfoAsync as jest.Mock).mockResolvedValue({ exists: true, size: 500 });
+    (readAsStringAsync as jest.Mock).mockResolvedValue('/9j/2Q==');
+    mockSessions.splice(
+      0,
+      mockSessions.length,
+      sessionWith(photo({ lineageWidth: 0, lineageHeight: 0 }))
+    );
+    await resumeEvidenceImages();
+    const asset = mockSessions[0].sourceAssets[0];
+    expect(manipulateAsync).toHaveBeenCalledTimes(2);
+    const secondActions = (manipulateAsync as jest.Mock).mock.calls[1][1];
+    expect(secondActions[0].resize.width).toBe(2560);
+    expect(asset.lineageWidth).toBe(0);
+    expect(asset.lineageHeight).toBe(0);
+    expect(asset.preparedWidth).toBe(2560);
+    expect(asset.preparedHeight).toBe(1920);
   });
 });
