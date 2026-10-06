@@ -105,7 +105,7 @@
         "EXPO_PUBLIC_STORE_RELEASE": "0",
         "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat",
         "EXPO_PUBLIC_BACKEND_URL": "https://truscoreapi-uat.vercel.app",
-        "RVEEL_IOS_BUILD_NUMBER": "58"
+        "RVEEL_IOS_BUILD_NUMBER": "59"
       },
       "ios": {
         "simulator": false,
@@ -125,7 +125,7 @@
         "EXPO_PUBLIC_STORE_RELEASE": "0",
         "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat",
         "EXPO_PUBLIC_BACKEND_URL": "https://truscoreapi-uat.vercel.app",
-        "RVEEL_ANDROID_VERSION_CODE": "32"
+        "RVEEL_ANDROID_VERSION_CODE": "33"
       },
       "android": {
         "buildType": "apk"
