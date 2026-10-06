@@ -224,7 +224,8 @@ const NutritionTable = React.memo(function NutritionTable({
       return formatWeight(numericValue, units);
     }
     if (unit === 'mg') {
-      const n = Number.isInteger(numericValue) ? String(Math.round(numericValue)) : numericValue.toFixed(1);
+      const nearest = Math.round(numericValue);
+      const n = Math.abs(numericValue - nearest) < 0.05 ? String(nearest) : numericValue.toFixed(1);
       return `${n}\u00A0mg`;
     }
     if (unit === 'ml' || unit === 'L') {
@@ -232,7 +233,8 @@ const NutritionTable = React.memo(function NutritionTable({
       return formatVolume(mlValue, units);
     }
     if (unit === 'kcal') {
-      const n = Number.isInteger(numericValue) ? String(Math.round(numericValue)) : numericValue.toFixed(1);
+      const nearest = Math.round(numericValue);
+      const n = Math.abs(numericValue - nearest) < 0.05 ? String(nearest) : numericValue.toFixed(1);
       return `${n}\u00A0kcal`;
     }
     return `${numericValue.toFixed(1)} ${unit}`;

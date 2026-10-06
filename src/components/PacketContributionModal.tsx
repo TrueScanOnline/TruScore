@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   ScrollView,
@@ -38,7 +39,8 @@ import {
 } from '../ingredientsNutrition/nutritionSchema';
 import { PRODUCT_ORIGINS_CLAIM_TYPES, type ProductOriginsClaimType } from '../origins/governedFacts';
 import type { OriginPercentageQualifier } from '../config/contributionPolicy';
-import type { OriginQualification } from '../contributions/originStructured';
+import { capturedOriginQualifications } from '../contributions/originStructured';
+import { reviewedUnitSupport } from '../contribution/submissionReadiness';
 import {
   PACKET_ABSENCE_CONSUMER_COPY,
   CONTRIBUTION_NOTICE_PARTIAL,
@@ -83,12 +85,6 @@ const QUALIFIER_LABELS: { value: OriginPercentageQualifier; label: string }[] = 
   { value: 'less_than', label: 'Less than' },
 ];
 
-const QUALIFICATION_LABELS: { value: OriginQualification; label: string }[] = [
-  { value: 'local', label: 'Local' },
-  { value: 'imported', label: 'Imported' },
-  { value: 'multiple', label: 'More than one origin' },
-];
-
 const ORIGIN_LABELS: Record<ProductOriginsClaimType, string> = {
   produced_in: 'Product of',
   grown_in: 'Grown in',
@@ -111,22 +107,22 @@ const JOURNEY: Record<
   ingredients: {
     header: 'Ingredients',
     instruction: 'Photograph the ingredients list, or choose a photo you already took.',
-    manual: 'Type ingredients instead',
-    review: 'Check ingredients',
+    manual: 'Enter ingredients',
+    review: 'Ingredients',
     submit: 'Submit ingredients',
   },
   nutrition: {
     header: 'Nutrition',
     instruction: 'Photograph the nutrition information panel, or choose a photo you already took.',
-    manual: 'Enter nutrition instead',
-    review: 'Check nutrition',
+    manual: 'Enter nutrition',
+    review: 'Nutrition',
     submit: 'Submit nutrition',
   },
   origins: {
     header: 'Product origins',
     instruction: 'Photograph the origin statement on the pack, or choose a photo you already took.',
-    manual: 'Enter origin statement instead',
-    review: 'Check product origins',
+    manual: 'Enter origin statement',
+    review: 'Product origins',
     submit: 'Submit product origins',
     another: 'Add another origin statement',
   },
@@ -176,6 +172,10 @@ export default function PacketContributionModal({
   initialNutrition,
   initialOriginContext,
   knownOffOrigin,
+  initialClaims,
+  initialCertifications,
+  packetAbsenceAvailable = true,
+  openOnForm = false,
   producer = abstainingExtractionProducer,
   onClose,
   onSharedEvidenceAdmitted,
@@ -189,6 +189,10 @@ export default function PacketContributionModal({
   initialNutrition?: NutritionSourcePrefill;
   initialOriginContext?: OriginContributionDraft[];
   knownOffOrigin?: string | null;
+  initialClaims?: string[];
+  initialCertifications?: string[];
+  packetAbsenceAvailable?: boolean;
+  openOnForm?: boolean;
   producer?: ExtractionProducer;
   onClose: () => void;
   onSharedEvidenceAdmitted?: (snapshot: SharedEvidenceSnapshot | null, complete: boolean) => void | Promise<void>;
@@ -199,7 +203,6 @@ export default function PacketContributionModal({
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [surfaceJourneyId, setSurfaceJourneyId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [traceLabel, setTraceLabel] = useState<string | null>(null);
   const [phase, setPhase] = useState<'capture' | 'entry' | 'review'>('capture');
   const [ingredientsText, setIngredientsText] = useState(initialIngredients || '');
   const [basis, setBasis] = useState<NutritionBasis | null>(null);
@@ -207,8 +210,6 @@ export default function PacketContributionModal({
   const [sodiumUnit, setSodiumUnit] = useState<'mg' | 'g'>('mg');
   const [origins, setOrigins] = useState<OriginDraft[]>([EMPTY_ORIGIN]);
   const [countryBlanks, setCountryBlanks] = useState<number[]>([0]);
-  const [originContext, setOriginContext] = useState<OriginContributionDraft[]>([]);
-  const [offOriginContext, setOffOriginContext] = useState<string | null>(null);
   const [claims, setClaims] = useState<string[]>(['']);
   const [certs, setCerts] = useState<string[]>(['']);
   const [absence, setAbsence] = useState(false);
@@ -223,11 +224,17 @@ export default function PacketContributionModal({
   const initialNutritionRef = useRef(initialNutrition);
   const initialOriginContextRef = useRef(initialOriginContext);
   const knownOffOriginRef = useRef(knownOffOrigin);
+  const initialClaimsRef = useRef(initialClaims);
+  const initialCertificationsRef = useRef(initialCertifications);
+  const openOnFormRef = useRef(openOnForm);
   const nutritionBaselineRef = useRef<NutritionSourcePrefill>({ basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' });
   initialIngredientsRef.current = initialIngredients;
   initialNutritionRef.current = initialNutrition;
   initialOriginContextRef.current = initialOriginContext;
   knownOffOriginRef.current = knownOffOrigin;
+  initialClaimsRef.current = initialClaims;
+  initialCertificationsRef.current = initialCertifications;
+  openOnFormRef.current = openOnForm;
 
   useEffect(() => {
     if (!visible) {
@@ -238,7 +245,7 @@ export default function PacketContributionModal({
     let cancelled = false;
     setPreviews([]);
     setSurfaceJourneyId(`journey_${barcode}_${entryContext}_${Date.now()}`);
-    setPhase('capture');
+    setPhase(openOnFormRef.current ? 'entry' : 'capture');
     setActiveContext(entryContext);
     setIncludedContexts(packetInformationContext(entryContext) ? ['packetClaims', 'certifications'] : [entryContext]);
     setIngredientsText(initialIngredientsRef.current || '');
@@ -253,12 +260,35 @@ export default function PacketContributionModal({
     setAmounts(mvpNutrition.amounts);
     setSodiumUnit(mvpNutrition.sodiumUnit);
     setNutritionEdited([]);
-    setOriginContext(initialOriginContextRef.current || []);
-    setOffOriginContext(knownOffOriginRef.current || null);
-    setOrigins([EMPTY_ORIGIN]);
-    setCountryBlanks([0]);
-    setClaims(['']);
-    setCerts(['']);
+    const governedOrigins = (initialOriginContextRef.current || []).map((row) => ({
+      ...row,
+      intent: 'edited' as const,
+      percentageNotStated: row.percentage.trim().length === 0,
+    }));
+    const offPlace = knownOffOriginRef.current || '';
+    const originRows: OriginDraft[] =
+      governedOrigins.length > 0
+        ? governedOrigins
+        : offPlace
+          ? [
+              {
+                ...EMPTY_ORIGIN,
+                place: offPlace,
+                wording: offPlace,
+                intent: 'edited',
+                percentageNotStated: true,
+              },
+            ]
+          : [EMPTY_ORIGIN];
+    if (originRows[0]?.intent === 'edited' && !originRows[0].baseline) {
+      originRows[0] = { ...originRows[0], baseline: originDraftSignature(originRows[0]) };
+    }
+    setOrigins(originRows);
+    setCountryBlanks(originRows.map(() => 0));
+    const claimRows = (initialClaimsRef.current || []).map((row) => row.trim()).filter((row) => row.length > 0);
+    const certRows = (initialCertificationsRef.current || []).map((row) => row.trim()).filter((row) => row.length > 0);
+    setClaims(claimRows.length > 0 ? claimRows : ['']);
+    setCerts(certRows.length > 0 ? certRows : ['']);
     setAbsence(false);
     setSkippedProposals([]);
     setProposalSupport({});
@@ -348,7 +378,6 @@ export default function PacketContributionModal({
         entryContext: contributionSurface(activeContext),
       },
     ]);
-    setTraceLabel(accepted.traceId);
   };
 
   const captureCamera = async () => {
@@ -460,7 +489,6 @@ export default function PacketContributionModal({
     if (!session) return;
     const trace = beginModalTrace(Platform.OS);
     trace.mark('submit_tap');
-    setTraceLabel(trace.traceId);
     setBusy(true);
     try {
       trace.mark('local_handoff_begin');
@@ -514,6 +542,12 @@ export default function PacketContributionModal({
           const wording = row.wording.trim();
           if (!wording || places.length === 0) continue;
           const percentage = Number(row.percentage);
+          const statedPercentage = !row.percentageNotStated && Number.isFinite(percentage) && row.percentage.trim();
+          const qualifications = capturedOriginQualifications({
+            local: row.local === true,
+            imported: row.imported === true,
+            multiple: row.multiple === true || row.qualification === 'multiple',
+          });
           const unit = await addManualEvidenceUnit({
             sessionId: session.sessionId,
             domain: 'origins',
@@ -522,9 +556,11 @@ export default function PacketContributionModal({
             originCountry: places[0],
             originCountries: places.length > 1 ? places : undefined,
             ingredientSubject: row.claimType === 'ingredient_origin' ? row.ingredient.trim() : undefined,
-            originPercentage: Number.isFinite(percentage) && row.percentage.trim() ? percentage : undefined,
-            originPercentageQualifier: row.qualifier,
-            originQualification: row.qualification,
+            originPercentage: statedPercentage ? percentage : undefined,
+            originPercentageQualifier: statedPercentage ? row.qualifier : undefined,
+            originQualification: qualifications.originQualification,
+            originQualifications: qualifications.originQualifications,
+            percentageNotStated: row.percentageNotStated === true && !statedPercentage,
             support: supportFor('origins'),
           });
           created.push(unit.unitId);
@@ -579,25 +615,25 @@ export default function PacketContributionModal({
       }
       const latest = await getSession(session.sessionId);
       if (latest) {
-        const companions = targeted.slice(1).map((asset) => asset.assetId);
         await upsertSession({
           ...latest,
           units: latest.units.map((unit) => {
             if (!created.includes(unit.unitId)) return unit;
-            const photoSupport =
-              targeted.length > 0 && unit.packetAbsenceAffirmation === true
-                ? { coverage: 'whole_image' as const, sourceAssetId: targeted[0].assetId }
-                : unit.support;
-            if (targeted.length === 0 && unit.packetAbsenceAffirmation !== true) {
-              return {
-                ...unit,
-                support: { coverage: 'whole_image' as const, sourceAssetId: `manual-text:${unit.unitId}` },
-              };
-            }
+            const support = reviewedUnitSupport({
+              unitId: unit.unitId,
+              packetAbsence: unit.packetAbsenceAffirmation === true,
+              photos: targeted.map((asset) => ({
+                assetId: asset.assetId,
+                imagePhase: asset.imagePhase,
+                remoteAssetId: asset.remoteAssetId,
+              })),
+            });
             return {
               ...unit,
-              support: photoSupport,
-              ...(companions.length > 0 ? { companionSourceAssetIds: companions } : {}),
+              support: { coverage: 'whole_image' as const, sourceAssetId: support.sourceAssetId },
+              ...(support.companionSourceAssetIds
+                ? { companionSourceAssetIds: support.companionSourceAssetIds }
+                : { companionSourceAssetIds: undefined }),
             };
           }),
         });
@@ -615,7 +651,9 @@ export default function PacketContributionModal({
       }
       const transmitted = await transmitSessionToAuthority(session.sessionId, trace);
       if (transmitted.pendingImage) {
-        setPartialNotice('Photo saved on this phone. Your notes are kept and will be sent when the photo is ready. Nothing has been admitted yet.');
+        const parked = targeted.some((asset) => asset.imagePhase === 'parked_after_interrupted_resume');
+        setPartialNotice(parked ? 'This photo needs attention.' : 'Preparing photo…');
+        if (parked) setPhase('capture');
         return;
       }
       if (!transmitted.admitted) {
@@ -654,7 +692,10 @@ export default function PacketContributionModal({
       if (admittedOrigins.size > 0) {
         setOrigins((rows) => {
           const remaining = originRowsToSubmit(rows).filter((_, index) => !admittedOrigins.has(index));
-          const next = remaining.length > 0 ? remaining : [EMPTY_ORIGIN];
+          const next =
+            remaining.length > 0
+              ? remaining.map((row) => ({ ...row, intent: row.intent || 'edited' }))
+              : [EMPTY_ORIGIN];
           setCountryBlanks(next.map(() => 0));
           return next;
         });
@@ -669,7 +710,6 @@ export default function PacketContributionModal({
     } finally {
       trace.flush('modal_finally');
       finishModalTrace();
-      setTraceLabel(null);
       setBusy(false);
     }
   };
@@ -705,7 +745,17 @@ export default function PacketContributionModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <ScrollView style={[styles.page, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: colors.background }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+      <ScrollView
+        style={[styles.page, { backgroundColor: colors.background }]}
+        contentContainerStyle={[styles.content, { paddingBottom: 48 }]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets
+      >
         <Text style={[styles.header, { color: colors.text }]}>{journey.header}</Text>
         {phase === 'capture' ? (
           <View>
@@ -718,17 +768,15 @@ export default function PacketContributionModal({
                 <Text style={styles.buttonText}>Gallery</Text>
               </TouchableOpacity>
             </View>
-            {targeted.filter((asset) => asset.imagePhase !== 'parked_after_interrupted_resume').map((asset) => (
-              <Text key={asset.assetId} selectable style={{ color: colors.text }}>
+            {targeted.filter((asset) => asset.imagePhase !== 'parked_after_interrupted_resume' && evidenceImageStatus(asset)).map((asset) => (
+              <Text key={asset.assetId} style={{ color: colors.text }}>
                 {evidenceImageStatus(asset)}
-                {asset.traceId ? `\n${asset.traceId}` : ''}
               </Text>
             ))}
             {needsAttention.map((asset) => (
               <View key={`attention-${asset.assetId}`}>
-                <Text selectable style={{ color: colors.text }}>
+                <Text style={{ color: colors.text }}>
                   {evidenceImageStatus(asset)}
-                  {asset.interruptedResume ? `\nStopped during ${asset.interruptedResume.step}.` : ''}
                 </Text>
                 <TouchableOpacity onPress={() => void retryPhoto(asset.assetId)} style={styles.button} accessibilityRole="button">
                   <Text style={styles.buttonText}>Retry photo</Text>
@@ -737,9 +785,7 @@ export default function PacketContributionModal({
             ))}
             {submissionAttention.map((item) => (
               <View key={item.idempotencyKey}>
-                <Text selectable style={{ color: colors.text }}>
-                  A saved contribution needs attention before it can be sent. Nothing has been admitted.
-                </Text>
+                <Text style={{ color: colors.text }}>This send needs attention.</Text>
                 <TouchableOpacity onPress={() => void retrySubmission(item.idempotencyKey)} style={styles.button} accessibilityRole="button">
                   <Text style={styles.buttonText}>Retry send</Text>
                 </TouchableOpacity>
@@ -775,25 +821,16 @@ export default function PacketContributionModal({
               </View>
             ) : null}
             <TouchableOpacity
-              onPress={() =>
-                setPhase(packetInformationContext(activeContext) && displayedPreviews.length > 0 ? 'review' : 'entry')
-              }
+              onPress={() => setPhase('entry')}
               style={styles.button}
             >
               <Text style={styles.buttonText}>{journey.manual}</Text>
             </TouchableOpacity>
-            {packetInformationContext(activeContext) ? null : (
-              <TouchableOpacity onPress={() => setPhase('review')} style={styles.button}>
-                <Text style={styles.buttonText}>{journey.review}</Text>
-              </TouchableOpacity>
-            )}
           </View>
         ) : null}
         {phase === 'entry' || phase === 'review' ? (
           <View>
-            <Text style={[styles.header, { color: colors.text }]}>
-              {packetInformationContext(activeContext) ? journey.header : journey.review}
-            </Text>
+            <Text style={[styles.header, { color: colors.text }]}>{journey.header}</Text>
             {phase === 'review'
               ? displayedPreviews.map((preview) => (
                   <View key={preview.tempKey} style={styles.previewRow}>
@@ -886,36 +923,12 @@ export default function PacketContributionModal({
                 ))}
               </View>
             ) : null}
-            {activeContext === 'origins' && (offOriginContext || originContext.length > 0) ? (
-              <View>
-                <Text style={[styles.header, { color: colors.text }]}>Product information</Text>
-                {originContext.map((row) => (
-                  <View key={row.evidenceId || row.wording}>
-                    <Text style={{ color: colors.text }}>{row.wording}</Text>
-                    <TouchableOpacity
-                      onPress={() =>
-                        setOrigins((rows) => {
-                          if (row.evidenceId && rows.some((item) => item.evidenceId === row.evidenceId)) return rows;
-                          const edited: OriginDraft = {
-                            ...row,
-                            intent: 'edited',
-                            baseline: row.baseline || originDraftSignature(row),
-                          };
-                          const blankOnly = rows.length === 1 && !rows[0].wording.trim() && !rows[0].place.trim();
-                          return blankOnly ? [edited] : [...rows, edited];
-                        })
-                      }
-                    >
-                      <Text style={{ color: colors.primary }}>Correct</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-                {offOriginContext ? <Text style={{ color: colors.text }}>{offOriginContext}</Text> : null}
-              </View>
-            ) : null}
             {activeContext === 'origins'
               ? origins.map((row, index) => (
-                  <View key={`${row.claimType ?? 'unselected'}-${index}`}>
+                  <View key={`${row.evidenceId || row.claimType || 'origin'}-${index}`}>
+                    <Text style={[styles.header, { color: colors.text, fontSize: 18 }]}>
+                      {origins.length > 1 ? `Origin statement ${index + 1}` : 'Origin statement'}
+                    </Text>
                     <Text style={{ color: colors.text }}>What does the pack say?</Text>
                     <TextInput
                       value={row.wording}
@@ -1017,16 +1030,36 @@ export default function PacketContributionModal({
                     >
                       <Text style={{ color: colors.primary }}>Add another country</Text>
                     </TouchableOpacity>
-                    <Text style={{ color: colors.text }}>Percentage stated on the pack</Text>
+                    <Text style={{ color: colors.text }}>Percentage</Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setOrigins((rows) =>
+                          rows.map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, percentageNotStated: true, percentage: '', qualifier: undefined }
+                              : item
+                          )
+                        )
+                      }
+                    >
+                      <Text style={{ color: row.percentageNotStated ? colors.primary : colors.text }}>Not stated</Text>
+                    </TouchableOpacity>
+                    {row.percentageNotStated ? null : (
                     <TextInput
                       value={row.percentage}
                       onChangeText={(value) =>
-                        setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, percentage: value } : item)))
+                        setOrigins((rows) =>
+                          rows.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, percentage: value, percentageNotStated: false } : item
+                          )
+                        )
                       }
                       keyboardType="decimal-pad"
-                      placeholder="Percentage stated on the pack"
+                      placeholder="Percentage on the pack"
                       style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                     />
+                    )}
+                    {row.percentageNotStated ? null : (
                     <View style={styles.row}>
                       {QUALIFIER_LABELS.map((item) => (
                         <TouchableOpacity
@@ -1043,21 +1076,41 @@ export default function PacketContributionModal({
                         </TouchableOpacity>
                       ))}
                     </View>
+                    )}
                     <View style={styles.row}>
-                      {QUALIFICATION_LABELS.map((item) => (
-                        <TouchableOpacity
-                          key={item.value}
-                          onPress={() =>
-                            setOrigins((rows) =>
-                              rows.map((entry, itemIndex) =>
-                                itemIndex === index ? { ...entry, qualification: item.value } : entry
-                              )
+                      <TouchableOpacity
+                        onPress={() =>
+                          setOrigins((rows) =>
+                            rows.map((entry, itemIndex) =>
+                              itemIndex === index ? { ...entry, local: !entry.local } : entry
                             )
-                          }
-                        >
-                          <Text style={{ color: row.qualification === item.value ? colors.primary : colors.text }}>{item.label}</Text>
-                        </TouchableOpacity>
-                      ))}
+                          )
+                        }
+                      >
+                        <Text style={{ color: row.local ? colors.primary : colors.text }}>Local</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() =>
+                          setOrigins((rows) =>
+                            rows.map((entry, itemIndex) =>
+                              itemIndex === index ? { ...entry, imported: !entry.imported } : entry
+                            )
+                          )
+                        }
+                      >
+                        <Text style={{ color: row.imported ? colors.primary : colors.text }}>Imported</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() =>
+                          setOrigins((rows) =>
+                            rows.map((entry, itemIndex) =>
+                              itemIndex === index ? { ...entry, multiple: !entry.multiple, qualification: undefined } : entry
+                            )
+                          )
+                        }
+                      >
+                        <Text style={{ color: row.multiple ? colors.primary : colors.text }}>More than one origin</Text>
+                      </TouchableOpacity>
                     </View>
                     <TouchableOpacity
                       onPress={() => {
@@ -1128,7 +1181,7 @@ export default function PacketContributionModal({
                 <TouchableOpacity onPress={() => setCerts((rows) => [...rows, ''])}>
                   <Text style={{ color: colors.primary }}>Add another certification</Text>
                 </TouchableOpacity>
-                {targeted.length > 0 ? (
+                {packetAbsenceAvailable && targeted.length > 0 && claims.every((claim) => !claim.trim()) && certs.every((cert) => !cert.trim()) ? (
                   <TouchableOpacity
                     onPress={() => {
                       setAbsence(true);
@@ -1147,16 +1200,12 @@ export default function PacketContributionModal({
           </View>
         ) : null}
         {partialNotice ? <Text style={{ color: colors.text }}>{partialNotice}</Text> : null}
-        {busy ? (
-          <View>
-            <ActivityIndicator />
-            {traceLabel ? <Text selectable style={{ color: colors.text }}>{traceLabel}</Text> : null}
-          </View>
-        ) : null}
+        {busy ? <ActivityIndicator /> : null}
         <TouchableOpacity onPress={onClose}>
           <Text style={{ color: colors.primary }}>Close</Text>
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

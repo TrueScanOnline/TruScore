@@ -176,6 +176,8 @@ export type PacketEvidenceUnit = {
   originPercentage?: number;
   originPercentageQualifier?: import('../config/contributionPolicy').OriginPercentageQualifier;
   originQualification?: import('../contributions/originStructured').OriginQualification;
+  originQualifications?: import('../contributions/originStructured').OriginLocalImported[];
+  percentageNotStated?: boolean;
   /** Set only after a governed submit (not admission). */
   governedEvidenceId?: string;
   submittedAt?: number;

@@ -148,8 +148,8 @@ describe('functional-to-consumer integration closure', () => {
     const prefill = nutritionPrefillFromSource({ fat_100g: 2, sodium_100g: 0.4 }, '100g');
     expect(prefill.basis).toBe('per_100g');
     expect(prefill.amounts.fat).toBe('2');
-    expect(prefill.amounts.sodium).toBe('0.4');
-    expect(prefill.sodiumUnit).toBe('g');
+    expect(prefill.amounts.sodium).toBe('400');
+    expect(prefill.sodiumUnit).toBe('mg');
     expect(nutritionAmountsToSubmit(prefill, prefill, [])).toEqual([]);
     expect(nutritionAmountsToSubmit({ ...prefill, amounts: { ...prefill.amounts, fat: '3' } }, prefill, ['fat'])).toEqual([
       { attribute: 'fat', value: 3, unit: 'g' },
@@ -211,15 +211,19 @@ describe('functional-to-consumer integration closure', () => {
     const result = fs.readFileSync(path.join(REPO, 'app/result/[barcode].tsx'), 'utf8');
     const modal = fs.readFileSync(path.join(REPO, 'src/components/PacketContributionModal.tsx'), 'utf8');
     expect(result).toContain('PACKET_INFORMATION_ADD');
-    expect(result).toContain('PACKET_INFORMATION_UPDATE');
+    expect(result).toContain('Correct packet claims or certifications');
     expect(result).not.toContain('Add certifications');
     expect(result).not.toContain('Lane A');
     expect(result).not.toContain('Lane B');
     expect(modal).toContain('Claim on the pack');
     expect(modal).toContain('Certification shown on the pack');
     expect(modal).toContain('retainedAfterPartialAdmission');
-    expect(modal).toContain('Product information');
-    expect(modal).toContain('Correct');
+    expect(modal).toContain('Origin statement');
+    expect(modal).toContain('Not stated');
+    expect(modal).toContain('Enter nutrition');
+    expect(modal).not.toContain('Check nutrition');
+    expect(modal).not.toContain('Check product origins');
+    expect(modal).not.toContain('Check ingredients');
     expect(modal).not.toContain('Already known');
     expect(modal).toContain("intent: 'edited'");
     expect(modal).not.toContain('Lane A');

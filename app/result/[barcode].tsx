@@ -117,7 +117,6 @@ import {
   CONTRIBUTION_NOTICE_SAVED,
   PACKET_ABSENCE_PRODUCT_STATE,
   PACKET_INFORMATION_ADD,
-  PACKET_INFORMATION_UPDATE,
   resultContributionActions,
   type ContributionEntryContext,
 } from '../../src/contribution/resultContributionActions';
@@ -1388,7 +1387,7 @@ function ResultScreenContent() {
 
   const showContributionNotice = (message: string) => {
     setContributionNotice(message);
-    setTimeout(() => setContributionNotice(null), message.includes('ctr_') ? 30000 : 4000);
+    setTimeout(() => setContributionNotice(null), 4000);
   };
 
   const handleContribute = () => {
@@ -2160,6 +2159,15 @@ function ResultScreenContent() {
               <Text style={{ color: colors.primary }}>Complete product origins</Text>
             </TouchableOpacity>
           ) : null}
+          {contributionActions.originsAction === 'update' || originsCard.facts.length > 0 || originsCard.offCountry ? (
+            <TouchableOpacity
+              onPress={() => openContribution('origins')}
+              accessibilityRole="button"
+              accessibilityLabel="Correct product origins"
+            >
+              <Ionicons name="create-outline" size={18} color={colors.primary} />
+            </TouchableOpacity>
+          ) : null}
           {contributionActions.originsAction === 'update' ? (
             <TouchableOpacity
               onPress={() => openContribution('origins')}
@@ -2218,23 +2226,26 @@ function ResultScreenContent() {
           {product.rveelPacketAbsenceEstablished ? (
             <Text style={{ color: colors.text }}>{PACKET_ABSENCE_PRODUCT_STATE}</Text>
           ) : null}
-          {contributionActions.packetInformationAction ? (
+          {contributionActions.packetInformationAction === 'update' ? (
+            <TouchableOpacity
+              onPress={() => openContribution('packetClaims')}
+              accessibilityRole="button"
+              accessibilityLabel="Correct packet claims or certifications"
+            >
+              <Ionicons name="create-outline" size={18} color="#16a085" />
+            </TouchableOpacity>
+          ) : null}
+          {contributionActions.packetInformationAction === 'add' ? (
           <TouchableOpacity
             onPress={() => openContribution('packetClaims')}
             activeOpacity={0.7}
             style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
             accessibilityRole="button"
-            accessibilityLabel={
-              contributionActions.packetInformationAction === 'update'
-                ? PACKET_INFORMATION_UPDATE
-                : PACKET_INFORMATION_ADD
-            }
+            accessibilityLabel={PACKET_INFORMATION_ADD}
           >
             <Ionicons name="add-circle-outline" size={20} color="#16a085" />
             <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
-              {contributionActions.packetInformationAction === 'update'
-                ? PACKET_INFORMATION_UPDATE
-                : PACKET_INFORMATION_ADD}
+              {PACKET_INFORMATION_ADD}
             </Text>
           </TouchableOpacity>
           ) : null}
@@ -2500,10 +2511,29 @@ function ResultScreenContent() {
         )}
         initialOriginContext={originDraftsFromGovernedFacts(product?.rveelGovernedOrigins)}
         knownOffOrigin={originsCard.offCountry}
+        initialClaims={(product?.rveelGovernedPacketClaims || []).map((claim) => claim.exactWording)}
+        initialCertifications={product?.rveelGovernedCertifications || []}
+        packetAbsenceAvailable={
+          (product?.rveelGovernedPacketClaims || []).length === 0 &&
+          (product?.rveelGovernedCertifications || []).length === 0 &&
+          (product?.certifications || []).length === 0
+        }
+        openOnForm={
+          contributionEntry === 'nutrition'
+            ? contributionActions.updateNutrition
+            : contributionEntry === 'ingredients'
+              ? contributionActions.updateIngredients
+              : contributionEntry === 'origins'
+                ? contributionActions.originsAction === 'update' ||
+                  (product?.rveelGovernedOrigins || []).length > 0 ||
+                  !!originsCard.offCountry
+                : contributionActions.packetInformationAction === 'update' ||
+                  (product?.rveelGovernedPacketClaims || []).length > 0 ||
+                  (product?.rveelGovernedCertifications || []).length > 0
+        }
         onClose={() => setPacketContributionVisible(false)}
         onSharedEvidenceAdmitted={async (snapshot, complete) => {
           const trace = currentModalTrace();
-          const traceId = trace?.traceId;
           if (!product) {
             trace?.mark('result_applied', 'none');
             return;
@@ -2524,11 +2554,10 @@ function ResultScreenContent() {
           }
           setProduct(next);
           trace?.mark('result_applied', 'ok');
-          if (complete) showContributionNotice(traceId ? `${CONTRIBUTION_NOTICE_ADDED} ${traceId}` : CONTRIBUTION_NOTICE_ADDED);
+          if (complete) showContributionNotice(CONTRIBUTION_NOTICE_ADDED);
         }}
         onSharedEvidenceFailed={() => {
-          const traceId = currentModalTrace()?.traceId;
-          showContributionNotice(traceId ? `${CONTRIBUTION_NOTICE_SAVED} ${traceId}` : CONTRIBUTION_NOTICE_SAVED);
+          showContributionNotice(CONTRIBUTION_NOTICE_SAVED);
         }}
       />
 

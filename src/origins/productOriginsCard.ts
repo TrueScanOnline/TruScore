@@ -23,6 +23,17 @@ export function originFactLabel(claimType: GovernedOriginFact['claimType']): str
   return ORIGIN_FACT_LABELS[claimType];
 }
 
+function originQualificationLabel(fact: GovernedOriginFact): string {
+  const pair = fact.originQualifications || [];
+  if (pair.length > 0) {
+    return pair.map((item) => (item === 'local' ? 'Local' : 'Imported')).join(', ');
+  }
+  if (fact.originQualification === 'local') return 'Local';
+  if (fact.originQualification === 'imported') return 'Imported';
+  if (fact.originQualification === 'multiple') return 'More than one origin';
+  return '';
+}
+
 /** Structured consumer line. Exact packet wording stays on the fact and is not repeated here. */
 export function formatGovernedOriginFactLine(fact: GovernedOriginFact): string {
   return [
@@ -31,8 +42,10 @@ export function formatGovernedOriginFactLine(fact: GovernedOriginFact): string {
     fact.countries.length > 0 ? fact.countries.join(', ') : '',
     fact.percentage != null
       ? `${fact.percentageQualifier ? `${fact.percentageQualifier.replace(/_/g, ' ')} ` : ''}${fact.percentage}%`
-      : '',
-    fact.originQualification || '',
+      : fact.percentageNotStated
+        ? 'Not stated'
+        : '',
+    originQualificationLabel(fact),
   ]
     .filter((part) => part.length > 0)
     .join(' · ');

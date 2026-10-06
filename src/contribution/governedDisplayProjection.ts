@@ -101,21 +101,35 @@ export function nutritionPrefillFromSource(
     for (const field of NUTRITION_FIELDS) {
       const raw = nutriments[`${field.offNutrient}_100g`];
       if (typeof raw !== 'number' || !Number.isFinite(raw)) continue;
-      amounts[field.attribute] = formatGovernedNutrientInput(raw);
+      if (field.attribute === 'sodium') {
+        amounts.sodium = formatGovernedNutrientInput(raw * 1000, 'mg');
+        continue;
+      }
+      const unit = field.attribute === 'energy-kcal' || field.attribute === 'energy-kj' ? 'kcal' : 'g';
+      amounts[field.attribute] = formatGovernedNutrientInput(raw, unit);
     }
   }
   return {
     basis: 'per_100g',
     amounts,
-    sodiumUnit: amounts.sodium != null ? 'g' : 'mg',
+    sodiumUnit: 'mg',
   };
 }
 
+/** Consumer-readable nutrient text. Assessment continues to use the stored governed number. */
+export function formatConsumerNutrient(value: number, unit: 'g' | 'mg' | 'kcal'): string {
+  if (!Number.isFinite(value)) return '';
+  if (unit === 'mg' || unit === 'kcal') {
+    const nearest = Math.round(value);
+    if (Math.abs(value - nearest) < 0.05) return String(nearest);
+    return String(Math.round(value * 10) / 10);
+  }
+  return String(Math.round(value * 100) / 100);
+}
+
 /** Stable consumer text for a nutrient input and its unchanged-value baseline. */
-export function formatGovernedNutrientInput(value: number): string {
-  const stable = stableNutrientNumber(value);
-  if (!Number.isFinite(stable)) return '';
-  return String(stable);
+export function formatGovernedNutrientInput(value: number, unit: 'g' | 'mg' | 'kcal' = 'g'): string {
+  return formatConsumerNutrient(value, unit);
 }
 
 function sameStableNutrient(current: string | undefined, baseline: string | undefined): boolean {
@@ -172,6 +186,10 @@ export type OriginContributionDraft = {
   percentage: string;
   qualifier?: OriginPercentageQualifier;
   qualification?: OriginQualification;
+  local?: boolean;
+  imported?: boolean;
+  multiple?: boolean;
+  percentageNotStated?: boolean;
   intent?: 'new' | 'edited';
   baseline?: string;
 };
@@ -187,6 +205,10 @@ export function originDraftSignature(row: OriginContributionDraft): string {
     percentage: row.percentage.trim(),
     qualifier: row.qualifier || '',
     qualification: row.qualification || '',
+    local: row.local === true,
+    imported: row.imported === true,
+    multiple: row.multiple === true,
+    percentageNotStated: row.percentageNotStated === true,
   });
 }
 
@@ -205,6 +227,10 @@ export function originDraftsFromGovernedFacts(
         percentage: fact.percentage != null ? String(fact.percentage) : '',
         qualifier: fact.percentageQualifier,
         qualification: fact.originQualification,
+        local: fact.originQualification === 'local' || fact.originQualifications?.includes('local') === true,
+        imported: fact.originQualification === 'imported' || fact.originQualifications?.includes('imported') === true,
+        multiple: fact.originQualification === 'multiple',
+        percentageNotStated: fact.percentage == null,
       };
       return { ...row, baseline: originDraftSignature(row) };
     });

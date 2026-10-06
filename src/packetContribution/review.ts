@@ -47,6 +47,8 @@ export async function addManualEvidenceUnit(params: {
   originPercentage?: number;
   originPercentageQualifier?: import('../config/contributionPolicy').OriginPercentageQualifier;
   originQualification?: import('../contributions/originStructured').OriginQualification;
+  originQualifications?: import('../contributions/originStructured').OriginLocalImported[];
+  percentageNotStated?: boolean;
   packetAbsenceAffirmation?: boolean;
 }): Promise<PacketEvidenceUnit> {
   const session = await getSession(params.sessionId);
@@ -77,6 +79,8 @@ export async function addManualEvidenceUnit(params: {
     originPercentage: params.originPercentage,
     originPercentageQualifier: params.originPercentageQualifier,
     originQualification: params.originQualification,
+    originQualifications: params.originQualifications,
+    percentageNotStated: params.percentageNotStated === true,
   };
   await upsertSession({ ...session, units: [...session.units, unit] });
   return unit;

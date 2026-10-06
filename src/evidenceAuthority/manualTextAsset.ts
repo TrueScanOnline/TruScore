@@ -31,6 +31,8 @@ export type ManualTextDraft = {
   originPercentage?: number;
   originPercentageQualifier?: string;
   originQualification?: string;
+  originQualifications?: string[];
+  percentageNotStated?: boolean;
   ingredientSubject?: string;
   labelsTags?: string[];
   packetAbsence?: boolean;
@@ -102,6 +104,9 @@ export function buildManualTextDocument(draft: ManualTextDraft): ManualTextDocum
     draft.originQualification === 'multiple'
       ? draft.originQualification
       : '';
+  const originQualifications = (draft.originQualifications || [])
+    .filter((item) => item === 'local' || item === 'imported')
+    .filter((item, index, all) => all.indexOf(item) === index);
   let statement = draft.statement?.trim() || '';
   if (ingredientsText) statement = ingredientsText;
   else if (nutrition) statement = nutrition.amounts;
@@ -125,7 +130,9 @@ export function buildManualTextDocument(draft: ManualTextDraft): ManualTextDocum
     ...(originCountries.length > 1 ? { originCountries: originCountries.join('|') } : {}),
     ...(originPercentage ? { originPercentage } : {}),
     ...(originPercentage && originPercentageQualifier ? { originPercentageQualifier } : {}),
+    ...(draft.percentageNotStated === true && !originPercentage ? { originPercentageNotStated: '1' } : {}),
     ...(originQualification ? { originQualification } : {}),
+    ...(originQualifications.length > 0 ? { originQualifications: originQualifications.join('|') } : {}),
     ...(ingredientSubject ? { ingredientSubject } : {}),
     ...(labels.length > 0 ? { labelsTags: labels.join('|') } : {}),
   });
@@ -227,6 +234,10 @@ export function canonicalManualOriginContent(document: ManualTextDocument): {
     qualification === 'local' || qualification === 'imported' || qualification === 'multiple'
       ? qualification
       : undefined;
+  const originQualifications = (document.structured.originQualifications || '')
+    .split('|')
+    .filter((item): item is 'local' | 'imported' => item === 'local' || item === 'imported');
+  const percentageNotStated = document.structured.originPercentageNotStated === '1' && !Number.isFinite(percentage);
   return {
     exactWording: document.statement,
     claimValue: primaryCountry || ingredientSubject || document.statement,
@@ -240,6 +251,8 @@ export function canonicalManualOriginContent(document: ManualTextDocument): {
         : {}),
       ...(Number.isFinite(percentage) && qualifier ? { percentageQualifier: qualifier } : {}),
       ...(originQualification ? { originQualification } : {}),
+      ...(originQualifications.length > 0 ? { originQualifications } : {}),
+      ...(percentageNotStated ? { percentageNotStated: true } : {}),
     },
   };
 }

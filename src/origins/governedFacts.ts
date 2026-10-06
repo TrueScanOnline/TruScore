@@ -31,8 +31,10 @@ export type GovernedOriginFact = {
   exactWording?: string;
   ingredientSubject?: string;
   percentage?: number;
+  percentageNotStated?: boolean;
   percentageQualifier?: OriginStructuredEvidence['percentageQualifier'];
   originQualification?: OriginStructuredEvidence['originQualification'];
+  originQualifications?: OriginStructuredEvidence['originQualifications'];
   additionalOriginStatement?: string;
   /** Admitted primary-user facts publish at Limited confidence. */
   confidence: 'limited';
@@ -112,9 +114,11 @@ function toFact(evidence: ContributionEvidence): GovernedOriginFact | null {
         ? normalizeIngredientSubject(structured.ingredientSubject) || undefined
         : undefined,
     percentage,
+    percentageNotStated: structured.percentageNotStated === true && percentage == null,
     percentageQualifier:
       percentage != null ? supportedPercentageQualifier(structured.percentageQualifier) : undefined,
     originQualification: structured.originQualification,
+    originQualifications: structured.originQualifications,
     additionalOriginStatement: structured.additionalOriginStatement?.trim() || undefined,
     confidence: 'limited',
   };

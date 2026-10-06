@@ -80,20 +80,10 @@ export function evidenceImageStatus(asset: {
   lastPutStatus?: number | null;
 }): string {
   const phase = asset.imagePhase;
-  if (phase === 'local_accepted' || phase === 'preparing') {
-    return 'Photo saved on this phone. Preparing it does not submit a contribution.';
+  if (phase === 'local_accepted' || phase === 'preparing' || phase === 'prepared' || phase === 'uploading' || phase === 'failed_retryable') {
+    return 'Preparing photo…';
   }
-  if (phase === 'prepared' || phase === 'uploading') {
-    return 'Saving the photo securely. This is not an admitted contribution.';
-  }
-  if (phase === 'available') return 'Photo ready to review. It is not admitted until you submit.';
-  if (phase === 'failed_retryable') {
-    const status = asset.lastPutStatus ? ` The direct upload returned ${asset.lastPutStatus}.` : '';
-    return `Photo saved on this phone. Saving will retry.${status} Nothing has been admitted.`;
-  }
-  if (phase === 'parked_after_interrupted_resume') {
-    return 'This photo needs attention. It is still saved on this phone. Nothing has been admitted.';
-  }
+  if (phase === 'parked_after_interrupted_resume') return 'This photo needs attention.';
   return '';
 }
 

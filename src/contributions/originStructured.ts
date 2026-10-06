@@ -5,6 +5,7 @@ import type {
 import { ORIGIN_CLAIM_TYPES, ORIGIN_PERCENTAGE_QUALIFIERS } from '../config/contributionPolicy';
 
 export type OriginQualification = 'local' | 'imported' | 'multiple';
+export type OriginLocalImported = 'local' | 'imported';
 
 export type OriginStructuredEvidence = {
   claimType: OriginClaimType;
@@ -21,7 +22,30 @@ export type OriginStructuredEvidence = {
   additionalOriginStatement?: string;
   /** Set only when the packet explicitly says local, imported, or more than one origin. */
   originQualification?: OriginQualification;
+  /** Local and imported may both be stated. Scoring still reads the single qualification when only one applies. */
+  originQualifications?: OriginLocalImported[];
+  /** The packet states no percentage. No percentage is inferred. */
+  percentageNotStated?: boolean;
 };
+
+export function capturedOriginQualifications(input: {
+  local: boolean;
+  imported: boolean;
+  multiple: boolean;
+}): { originQualification?: OriginQualification; originQualifications?: OriginLocalImported[] } {
+  const pair: OriginLocalImported[] = [
+    ...(input.local ? (['local'] as const) : []),
+    ...(input.imported ? (['imported'] as const) : []),
+  ];
+  if (pair.length > 0) {
+    return {
+      originQualifications: pair,
+      ...(pair.length === 1 ? { originQualification: pair[0] } : {}),
+    };
+  }
+  if (input.multiple) return { originQualification: 'multiple' };
+  return {};
+}
 
 const CLAIM_TYPE_LABEL: Record<OriginClaimType, string> = {
   made_in: 'Made in',

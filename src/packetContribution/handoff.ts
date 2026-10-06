@@ -202,6 +202,8 @@ export async function handoffReviewedUnits(params: {
           ingredientOriginPercentage: unit.originPercentage,
           percentageQualifier: unit.originPercentageQualifier,
           originQualification: unit.originQualification,
+          originQualifications: unit.originQualifications,
+          percentageNotStated: unit.percentageNotStated === true,
         },
       });
       if (evidence.admissionStatus === 'admitted') {
