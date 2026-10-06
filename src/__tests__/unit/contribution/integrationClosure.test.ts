@@ -237,7 +237,8 @@ describe('functional-to-consumer integration closure', () => {
     expect(bodyDataLimitationActions(laneProduct('resolved', 'resolved', 'unassessed'))).toEqual([
       { label: 'Add nutrition', destination: 'nutrition' },
     ]);
-    expect(bodyDataLimitationActions(laneProduct('unassessed', 'resolved', 'resolved'))).toEqual([
+    expect(bodyDataLimitationActions(laneProduct('unassessed', 'resolved', 'resolved'))).toEqual([]);
+    expect(bodyDataLimitationActions(laneProduct('unassessed', 'unassessed', 'resolved'))).toEqual([
       { label: 'Add ingredients', destination: 'ingredients' },
     ]);
     expect(bodyDataLimitationActions(laneProduct('resolved', 'resolved', 'resolved'))).toEqual([]);
@@ -246,7 +247,9 @@ describe('functional-to-consumer integration closure', () => {
     expect(card).toContain("action.destination === 'nutrition'");
     expect(card).toContain('onOpenNutrition?.()');
     expect(card).toContain('onOpenIngredients()');
-    expect(card).toContain("action.destination !== 'ingredients'");
+    expect(card).toContain("action.destination === 'ingredients'");
+    expect(card).toContain('add-circle-outline');
+    expect(card).not.toContain("action.destination !== 'ingredients'");
     expect(card).toContain('transparencyShowsSeparateAddIngredients');
     expect(card).toContain("routeKey === 'origins'");
     expect(card).toContain("routeKey === 'packet_claims'");

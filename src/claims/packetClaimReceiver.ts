@@ -4,6 +4,10 @@
  */
 
 import { canApplyToProductionReceiver, evidenceKeyOf, selectPrevailingAdmittedEvidence } from '../contributions/admissionContract';
+import {
+  isWholeProductOrganicClaim,
+  qualifyingOrganicCertificationGoverns,
+} from '../contributions/certificationLane';
 import { GOVERNED_PACKET_ABSENCE_CLAIM } from '../contributions/admissionTypes';
 import { canonicalizeVariantKey } from '../contributions/evidenceVersion';
 import type { ContributionEvidence } from '../contributions/types';
@@ -118,7 +122,9 @@ function selectCurrentPacketControl(evidence: ContributionEvidence[]): CurrentPa
 
 /** Later admitted row for the same wording prevails. A later absence on the same packet does not. */
 export function selectPrevailingPacketClaims(evidence: ContributionEvidence[]): GovernedPacketClaimFact[] {
-  return selectCurrentPacketControl(evidence).facts;
+  const facts = selectCurrentPacketControl(evidence).facts;
+  if (!qualifyingOrganicCertificationGoverns(evidence)) return facts;
+  return facts.filter((fact) => !isWholeProductOrganicClaim(fact.exactWording));
 }
 
 /** True when the later admitted row for a packet subject is an absence affirmation. */

@@ -684,7 +684,7 @@ const ETHICS_CERTIFICATIONS: LiteralCopyContractEntry[] = [
     variant: 'Certified variant',
     authority: `${ETHICS_DOC}, §6`,
     fired: [
-      { id: 'ethics-v37-cert-organic', value: 3, metadata: { organicEvidenceClass: 'certified' } },
+      { id: 'ethics-v37-cert-organic', value: 2, metadata: { organicEvidenceClass: 'certified' } },
     ],
     l1Template: `Organic certified`,
     l2Template: `An organic certification mark appears on this packet, indicating certification against that scheme’s organic standard.`,
@@ -707,7 +707,7 @@ const ETHICS_CERTIFICATIONS: LiteralCopyContractEntry[] = [
     l1: `Organic claim identified`,
     l2: `The product is presented as Organic, but we have not established a specific organic certification.`,
     provenance: 'doc_literal',
-    note: 'Claim-only Organic is claims.organic.claim_only.v1 (+1); Certified Organic remains ethics-v37-cert-organic (+3).',
+    note: 'Claim-only Organic is claims.organic.claim_only.v1 (+1); Certified Organic remains ethics-v37-cert-organic (+2).',
   },
   {
     contractKey: 'Ethics:claims.packet_context.positive.v1',

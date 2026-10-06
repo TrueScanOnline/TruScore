@@ -199,6 +199,14 @@ export class MemoryAuthorityStore implements AuthorityStore {
         const row = state.versions.find((item) => item.versionId === versionId);
         if (!row) throw new Error('version_missing');
         row.governance = governance;
+        if (governance === 'withdrawn' || governance === 'suppressed') {
+          row.content = {
+            ...row.content,
+            state: 'withdrawn',
+            scoringEligible: false,
+            canonicalPromoted: false,
+          };
+        }
       },
       async appendEvent(event) {
         state.events.push(clone(event));

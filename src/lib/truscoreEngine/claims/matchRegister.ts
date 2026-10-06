@@ -280,7 +280,7 @@ function candidateVetoedByExclusion(
     diagnostics.push({
       code: 'x024_founder_dispositioned_mvp',
       detail:
-        'X-024 brand-token Organic edge is founder-dispositioned / not runtime-enforced for MVP; product-name Organic claim-only +1 may fire; Certified Organic +3 requires separate certification evidence',
+        'X-024 brand-token Organic edge is founder-dispositioned / not runtime-enforced for MVP; product-name Organic claim-only +1 may fire; Certified Organic +2 requires separate certification evidence',
     });
     return false;
   }
@@ -388,7 +388,7 @@ function applyProseExclusionPredicates(
     diagnostics.push({
       code: 'x024_founder_dispositioned_mvp',
       detail:
-        'X-024 brand-token Organic edge is founder-dispositioned / not runtime-enforced for MVP; product-name Organic claim-only +1 may fire; Certified Organic +3 requires separate certification evidence',
+        'X-024 brand-token Organic edge is founder-dispositioned / not runtime-enforced for MVP; product-name Organic claim-only +1 may fire; Certified Organic +2 requires separate certification evidence',
     });
   }
 

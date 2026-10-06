@@ -94,7 +94,7 @@ function ManualEditActionRow({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
-      <Ionicons name="create-outline" size={22} color={primaryColor} />
+      <Ionicons name="add-circle-outline" size={22} color={primaryColor} />
       <Text style={[styles.editLinkText, { color: primaryColor }]}>{label}</Text>
       <Ionicons name="chevron-forward" size={20} color={primaryColor} />
     </TouchableOpacity>
@@ -290,13 +290,12 @@ export default function ProductDataLimitationsCard({
           const opp = pub.s26.contributionOpportunity;
           const bodyActions =
             row.key === 'body'
-              ? bodyDataLimitationActions(product)
-                  .filter((action) => action.destination !== 'ingredients')
-                  .map((action) => ({
+              ? bodyDataLimitationActions(product).map((action) => ({
                     label: action.label,
                     onPress: () => {
                       close();
                       if (action.destination === 'nutrition') onOpenNutrition?.();
+                      if (action.destination === 'ingredients') onOpenIngredients?.();
                     },
                   }))
               : [];

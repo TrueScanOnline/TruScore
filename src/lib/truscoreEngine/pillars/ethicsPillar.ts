@@ -15,7 +15,7 @@
  *
  * BBFAW: Tier 1=+6, 2=+4, 3=+2, 4=+1, 5=-4, 6=-6; Impact A/B=+3, C/D=+1, E/F=-3.
  * KTC Total Benchmark Score: 0–10=-10, 11–20=-8, 21–30=-6, 31–50=-3, 51–70=+3, 71–80=+6, 81–90=+8, 91–100=+10.
- * Certifications: Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Certified Organic +3.
+ * Certifications: Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Certified Organic +2.
  * Packet Claim Context: at most one of +1 / −3 (Wave 3 Claims Rescue v0.2).
  * Whole-product Organic claim-only: +1 via claims.organic.claim_only.v1 (suppressed when Certified Organic fires).
  * RSPO does not contribute Ethics/Claims points (Currency Note / founder disposition 2026-08-04).
@@ -337,7 +337,7 @@ export function calculateEthicsPillar(
     logger.debug('[EthicsPillar] KTC not found - nil return (no adjustment)');
   }
 
-  // Certifications (max single scheme for MVP) — Certified Organic is +3 when OFF tags admit it
+  // Certifications (max single scheme for MVP) — Certified Organic is +2 when a recognised certification admits it
   const certEval = evaluateEthicsCertifications(product);
   let certificationsAdjustment = 0;
   const certId = ethicsV37CertificationAdjustmentId(certEval.winningScheme);

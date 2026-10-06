@@ -19,6 +19,10 @@ import {
   selectPrevailingPacketClaims,
 } from '../claims/packetClaimReceiver';
 import {
+  organicCertificationTags,
+  qualifyingOrganicCertificationGoverns,
+} from '../contributions/certificationLane';
+import {
   projectAdmittedIngredientsDisplay,
   projectGovernedCertificationNames,
   projectGovernedNutriments,
@@ -127,6 +131,11 @@ export async function calculateTrustScore(
       : {}),
     ...(governedOrigins.length > 0 ? { rveelGovernedOrigins: governedOrigins } : {}),
   };
+  if (qualifyingOrganicCertificationGoverns(storedEvidence)) {
+    const organicTags = organicCertificationTags(storedEvidence);
+    effectiveProduct.labels_tags = [...new Set([...(effectiveProduct.labels_tags || []), ...organicTags])];
+    effectiveProduct.certifications = formatCertifications(effectiveProduct);
+  }
   const scoringContext = {
     ...getPlanetScoringContext(),
     promotedContributionEvidence: localEvidence,

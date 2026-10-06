@@ -427,8 +427,8 @@ describe('consumer integration journeys', () => {
       { fat_100g: 4.98749983310699, sugars_100g: 13.474999666214012 },
       '100g'
     );
-    expect(prefill.amounts.fat).toBe('4.9875');
-    expect(prefill.amounts.sugars).toBe('13.475');
+    expect(prefill.amounts.fat).toBe('4.99');
+    expect(prefill.amounts.sugars).toBe('13.47');
     expect(prefill.amounts.fat).not.toContain('83310699');
     expect(prefill.amounts.sugars).not.toContain('666214');
     expect(nutritionAmountsToSubmit(prefill, prefill, ['fat', 'sugars'])).toEqual([]);

@@ -52,6 +52,11 @@ export type EvidenceSubmissionInput = {
   contentType?: string;
   facts: EvidenceFactInput[];
   /**
+   * Prevailing subjects the consumer removed or replaced with a different subject.
+   * The server withdraws those subjects. It does not invent a new subject from this list.
+   */
+  ceasedSubjectKeys?: string[];
+  /**
    * Present only so tests can prove the server ignores it.
    * admission state, eligibility, epoch, and record class here do nothing.
    */

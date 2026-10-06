@@ -22,7 +22,7 @@ import {
   benchmarkHasSubstantiveScoringFinding,
   publishClaimsPillar,
 } from '../../../lib/rateability/claimsPublication';
-import { formatGovernedOriginFactLine, productOriginsCardPresentation } from '../../../origins/productOriginsCard';
+import { productOriginsCardPresentation, projectOriginConsumerLines } from '../../../origins/productOriginsCard';
 import { sha256Hex } from '../../../packetContribution/sha256';
 import type { Product } from '../../../types/product';
 import { calculateTrustScore } from '../../../utils/trustScore';
@@ -131,16 +131,17 @@ describe('founder UAT contribution corrections', () => {
     expect(card.offCountry).toBeNull();
     expect(card.facts).toHaveLength(1);
     expect(card.facts[0].exactWording).toBe(wording);
-    expect(formatGovernedOriginFactLine(card.facts[0])).toBe('Made in · Australia · at least 99%');
-    expect(formatGovernedOriginFactLine(card.facts[0])).not.toContain(wording);
+    expect(projectOriginConsumerLines(card.facts)[0]?.primary).toBe('🇦🇺 Made in Australia');
+    expect(projectOriginConsumerLines(card.facts)[0]?.supporting).toContain('at least 99%');
+    expect(projectOriginConsumerLines(card.facts)[0]?.primary).not.toContain(wording);
     expect(shown._publication?.transparency.assessmentLanes.origins).toBe('resolved');
 
     const reloaded = await calculateTrustScore(
       food({ manufacturing_places: 'Australia' }),
       { authoritativeSnapshot: snapshot }
     );
-    expect(formatGovernedOriginFactLine(productOriginsCardPresentation(reloaded).facts[0])).toBe(
-      'Made in · Australia · at least 99%'
+    expect(projectOriginConsumerLines(productOriginsCardPresentation(reloaded).facts)[0]?.primary).toBe(
+      '🇦🇺 Made in Australia'
     );
     expect(authoritativeStateSupersedes(snapshot.generatedAt, snapshot.generatedAt - 1)).toBe(false);
   });

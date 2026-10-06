@@ -340,10 +340,27 @@ export class PostgresAuthorityStore implements AuthorityStore {
         return found.rows.map(versionFrom);
       },
       async updateGovernance(versionId, governance) {
-        await client.query(`UPDATE evidence_versions SET governance_state = $2 WHERE version_id = $1`, [
-          versionId,
-          governance,
-        ]);
+        await client.query(
+          `UPDATE evidence_versions
+           SET governance_state = $2,
+               content_json = CASE
+                 WHEN $2 IN ('withdrawn', 'suppressed') THEN
+                   jsonb_set(
+                     jsonb_set(
+                       jsonb_set(content_json, '{state}', '"withdrawn"'::jsonb, true),
+                       '{scoringEligible}',
+                       'false'::jsonb,
+                       true
+                     ),
+                     '{canonicalPromoted}',
+                     'false'::jsonb,
+                     true
+                   )
+                 ELSE content_json
+               END
+           WHERE version_id = $1`,
+          [versionId, governance]
+        );
       },
       async appendEvent(event: EventRecord) {
         await client.query(

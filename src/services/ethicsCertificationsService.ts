@@ -7,13 +7,13 @@
  *
  * - MVP: single highest eligible certification only (no stacking).
  * - Weights (Currency Note / founder disposition 2026-08-04; Wave 3 Claims Rescue v0.2):
- *   Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Certified Organic +3.
+ *   Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Certified Organic +2.
  *   Whole-product Organic claim-only +1 is scored via Claims Set O (not this certifications element).
  * - RSPO does not contribute Ethics points (not an eligible scoring scheme).
  * - MSC: API validation rules unchanged (see ethics_msc_api_validated).
  *
- * Certified Organic (+3): OFF recognised certifier/mark or generic en:organic tag (off_tags_or_hierarchy only).
- * Label/product-name organic wording is claim-only and must not receive the certification +3.
+ * Certified Organic (+2): OFF recognised certifier/mark or generic en:organic tag (off_tags_or_hierarchy only).
+ * Label/product-name organic wording is claim-only and must not receive the certification +2.
  */
 
 import type { Product } from '../types/product';
@@ -42,7 +42,7 @@ export const ETHICS_CERTIFICATION_WEIGHTS: Record<EthicsCertificationScheme, num
   asc: 4,
   msc: 4,
   rspo: 0,
-  organic: 3,
+  organic: 2,
 };
 
 const REF_OFF_PRODUCT = 'https://world.openfoodfacts.org/';
@@ -143,6 +143,55 @@ const ORGANIC_LABEL_PHRASES_MULTI: string[] = [
   'bioland',
   'biokreis',
 ];
+
+/** Recognised certification phrases only. Bare “organic” stays claim-only. */
+const ORGANIC_CERTIFICATION_PHRASE_TAGS: ReadonlyArray<{ phrase: string; tag: string }> = [
+  { phrase: 'inspection and certification organization of organic products', tag: 'en:organic' },
+  { phrase: 'catalan council of organic production', tag: 'en:organic' },
+  { phrase: 'luomu controlled organic production', tag: 'en:luomu-controlled-organic-production' },
+  { phrase: 'farm verified organic', tag: 'en:organic' },
+  { phrase: 'danish state controlled organic', tag: 'en:danish-state-controlled-organic' },
+  { phrase: 'ccof certified organic', tag: 'en:ccof-certified-organic' },
+  { phrase: 'finnish organic association', tag: 'en:finnish-organic-association' },
+  { phrase: 'southern cross certified', tag: 'en:southern-cross-certified' },
+  { phrase: 'australian certified organic', tag: 'en:australian-certified-organic' },
+  { phrase: 'tun certified organic', tag: 'en:tun-certified-organic' },
+  { phrase: 'soil association organic', tag: 'en:soil-association-organic' },
+  { phrase: 'aco certified organic', tag: 'en:aco-certified-organic' },
+  { phrase: 'canada organic', tag: 'en:canada-organic' },
+  { phrase: 'india organic', tag: 'en:organic' },
+  { phrase: 'organic food chain', tag: 'en:organic-food-chain' },
+  { phrase: 'debio organic', tag: 'en:debio-organic' },
+  { phrase: 'soil association', tag: 'en:soil-association-organic' },
+  { phrase: 'eu organic', tag: 'en:eu-organic' },
+  { phrase: 'usda organic', tag: 'en:usda-organic' },
+  { phrase: 'biodynamic agriculture', tag: 'en:biodynamic-agriculture' },
+  { phrase: 'biodynamic', tag: 'en:biodynamic' },
+  { phrase: 'naturland', tag: 'en:naturland' },
+  { phrase: 'demeter', tag: 'en:demeter' },
+  { phrase: 'bioland', tag: 'en:bioland' },
+  { phrase: 'biokreis', tag: 'en:biokreis' },
+];
+
+/**
+ * Maps a contributed certification statement onto the existing Organic certification tag.
+ * Product-name and bare “Organic” claims do not qualify.
+ */
+export function recognisedOrganicCertificationTag(statement: string): string | undefined {
+  const raw = normalizeTag(statement);
+  if (!raw) return undefined;
+  if (ETHICS_ORGANIC_TAG_ALLOWLIST.has(raw)) return raw;
+  const prefixed = raw.includes(':') ? raw : `en:${raw.replace(/\s+/g, '-')}`;
+  if (ETHICS_ORGANIC_TAG_ALLOWLIST.has(prefixed)) return prefixed;
+  const normalized = normalizeEthicsOrganicText(statement);
+  if (!normalized || normalized === 'organic' || normalized === '100 organic') return undefined;
+  const rows = [...ORGANIC_CERTIFICATION_PHRASE_TAGS].sort((a, b) => b.phrase.length - a.phrase.length);
+  for (const row of rows) {
+    const phrase = normalizeEthicsOrganicText(row.phrase);
+    if (phrase.length > 0 && normalized.includes(phrase)) return row.tag;
+  }
+  return undefined;
+}
 
 function normalizeTag(tag: string): string {
   return String(tag || '')

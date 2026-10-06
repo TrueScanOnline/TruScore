@@ -115,7 +115,7 @@ describe('Wave 4A.4 packet claims receiver', () => {
     const certified = calculateEthicsPillar(food({ labels_tags: ['en:organic'] }), {
       admittedPacketObservations: packetClaimsToObservations([organic]),
     });
-    expect(certified.details.certificationsAdjustment).toBe(3);
+    expect(certified.details.certificationsAdjustment).toBe(2);
     expect(certified.details.claimsAssessment?.organic_claim_only_points).toBe(0);
     expect(certified.details.claimsAssessment?.suppressed_candidates[0]?.reason_code).toBe(
       'suppressed_by_certified_organic'
@@ -244,7 +244,7 @@ describe('Wave 4A.4 packet claims receiver', () => {
       true
     );
     const ethics = calculateEthicsPillar(scoring as Product);
-    expect(ethics.details.certificationsAdjustment).toBe(3);
+    expect(ethics.details.certificationsAdjustment).toBe(2);
     const published = publishClaimsPillar({
       product: scoring as Product,
       ethics,

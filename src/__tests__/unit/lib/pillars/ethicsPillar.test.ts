@@ -220,13 +220,13 @@ describe('Ethics Pillar Calculation (BBFAW + KTC + certifications)', () => {
       expectPillarLedgerReconciles(result);
     });
 
-    test('organic certified OFF tags score +3 with certified evidence class', () => {
+    test('organic certified OFF tags score +2 with certified evidence class', () => {
       const certified = calculateEthicsPillar({
         ...baseProduct,
         labels_tags: ['en:organic'],
       });
       const row = idOf(certified, 'ethics-v37-cert-organic');
-      expect(row?.value).toBe(3);
+      expect(row?.value).toBe(2);
       expect(row?.metadata?.organicEvidenceClass).toBe('certified');
     });
 

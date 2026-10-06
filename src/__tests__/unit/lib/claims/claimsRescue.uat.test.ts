@@ -574,7 +574,7 @@ describe('Claims Rescue Section 15 UAT', () => {
     expect(a.packet_context_points).toBe(1);
   });
 
-  test('Certified Organic +3 on live ethics pillar; claim-only name → Set O +1', () => {
+  test('Certified Organic +2 on live ethics pillar; claim-only name → Set O +1', () => {
     const certified = calculateEthicsPillar({
       barcode: '1',
       product_name: 'Oats',
@@ -582,8 +582,8 @@ describe('Claims Rescue Section 15 UAT', () => {
       nutriments: { sugars_100g: 1, 'saturated-fat_100g': 0.5, sodium_100g: 0.05 },
       categories_tags: ['en:breakfast-cereals'],
     } as Product);
-    expect(certified.details.certificationsAdjustment).toBe(3);
-    expect(certified.adjustments.some((a) => a.id === 'ethics-v37-cert-organic' && a.value === 3)).toBe(true);
+    expect(certified.details.certificationsAdjustment).toBe(2);
+    expect(certified.adjustments.some((a) => a.id === 'ethics-v37-cert-organic' && a.value === 2)).toBe(true);
 
     const claimOnly = calculateEthicsPillar({
       barcode: '2',

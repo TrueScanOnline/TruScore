@@ -156,6 +156,9 @@ export class EvidenceAuthority {
       if (existing) return existing;
       const derived = deriveEvidenceFacts(input.facts);
       const gaps = derived.gaps;
+      const ceasedRequested = [
+        ...new Set((input.ceasedSubjectKeys || []).map((key) => key.trim()).filter((key) => key.length > 0)),
+      ];
       const empty = (status: SubmissionOutcome['status']): SubmissionOutcome => ({
         idempotencyKey: input.idempotencyKey,
         status,
@@ -165,8 +168,42 @@ export class EvidenceAuthority {
         gaps,
         snapshot: null,
       });
+      const ceasePrevailing = async (keys: string[]) => {
+        if (keys.length === 0) return;
+        const wanted = new Set(keys);
+        const versions = await tx.versionsForBarcode(input.barcode);
+        for (const version of versions) {
+          if (!wanted.has(version.subjectKey)) continue;
+          if (version.admissionStatus !== 'admitted' || version.admissionSeq == null) continue;
+          if (version.governance === 'withdrawn' || version.governance === 'suppressed') continue;
+          applyFounderAdminAction(version.content, 'withdraw', this.now());
+          await tx.updateGovernance(version.versionId, 'withdrawn');
+          await tx.appendEvent({
+            eventId: `evt_${randomBytes(4).toString('hex')}`,
+            versionId: version.versionId,
+            kind: 'withdrawn',
+            actorId: ADMITTED_BY,
+            detail: { reason: 'correction_ceased_prevailing' },
+            createdAt: this.now(),
+          });
+        }
+      };
       if (derived.facts.length === 0) {
-        const outcome = empty('no_facts');
+        if (ceasedRequested.length === 0) {
+          const outcome = empty('no_facts');
+          await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+          return outcome;
+        }
+        await ceasePrevailing(ceasedRequested);
+        const outcome: SubmissionOutcome = {
+          idempotencyKey: input.idempotencyKey,
+          status: 'admitted',
+          versionIds: [],
+          admissionSeqs: [],
+          admittedUnitIds: [],
+          gaps,
+          snapshot: await this.snapshotFrom(tx, input.barcode),
+        };
         await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
         return outcome;
       }
@@ -276,6 +313,7 @@ export class EvidenceAuthority {
       const versionIds: string[] = [];
       const admissionSeqs: number[] = [];
       const admittedForOff: VersionRecord[] = [];
+      const admittedSubjectKeys = new Set<string>();
       const unitAdmission = new Map<string, boolean>();
       for (const { fact, assetId, manualText } of resolved) {
         const subject = await tx.ensureSubject({
@@ -371,7 +409,12 @@ export class EvidenceAuthority {
         if (fact.unitId) {
           unitAdmission.set(fact.unitId, (unitAdmission.get(fact.unitId) ?? true) && serverAdmitted);
         }
+        if (serverAdmitted) admittedSubjectKeys.add(fact.subjectKey);
         if (serverAdmitted && scoringEligible && fact.domain === 'ingredients_nutrition') admittedForOff.push(row);
+      }
+      if (admissionSeqs.length === derived.facts.length) {
+        const submittedKeys = new Set(derived.facts.map((fact) => fact.subjectKey));
+        await ceasePrevailing(ceasedRequested.filter((key) => !submittedKeys.has(key) && !admittedSubjectKeys.has(key)));
       }
       await this.queueOffDispatch(tx, input.barcode, input.idempotencyKey, admittedForOff);
       const outcome: SubmissionOutcome = {

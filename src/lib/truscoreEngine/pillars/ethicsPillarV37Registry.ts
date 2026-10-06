@@ -337,9 +337,9 @@ export const ETHICS_V37_ADJUSTMENT_REGISTRY: Record<EthicsV37AdjustmentId, Ethic
   'ethics-v37-cert-organic': {
     id: 'ethics-v37-cert-organic',
     family: 'certifications',
-    points: 3,
+    points: 2,
     highlightEligible: true,
-    description: 'Claims certifications — Certified Organic +3 (highest eligible scheme; MVP no stacking)',
+    description: 'Claims certifications — Certified Organic +2 (highest eligible scheme; MVP no stacking)',
     highlightTitle: 'Organic certified',
     highlightExplainer:
       'An organic certification mark appears on this packet, indicating certification against that scheme’s organic standard.',

@@ -148,7 +148,7 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
   const suppressed: ClaimsSuppressedCandidate[] = [];
   const commentaryByEvent: Record<string, ClaimsCommentaryPayload> = {};
 
-  // Organic claim-only +1, suppressed by Certified Organic +3
+  // Organic claim-only +1, suppressed by Certified Organic +2
   let organicClaimOnlyPoints: 0 | 1 = 0;
   if (setO.length > 0) {
     if (input.certifiedOrganicFired) {
@@ -156,7 +156,7 @@ export function assessClaimsPacketAndOrganic(input: AssessClaimsInput): ClaimsAs
         candidate_id: 'claims.organic.claim_only.v1',
         points_would_have_been: 1,
         reason_code: 'suppressed_by_certified_organic',
-        reason_detail: 'ORG-02/ORG-03: Certified Organic +3 suppresses claim-only Organic +1',
+        reason_detail: 'ORG-02/ORG-03: Certified Organic +2 suppresses claim-only Organic +1',
       });
       diagnostics.push({
         code: 'organic_claim_only_suppressed',

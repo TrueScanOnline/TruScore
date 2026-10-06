@@ -59,7 +59,7 @@ const ETHICS_PRIORITY: Record<string, number> = {
   'ethics-v37-bbfaw-impact-ab': 10, // +3
   'ethics-v37-ktc-51-70': 11, // +3
   'ethics-v37-bbfaw-tier-3': 12, // +2
-  'ethics-v37-cert-organic': 13, // +3 Certified Organic
+  'ethics-v37-cert-organic': 13, // +2 Certified Organic
   'claims.organic.claim_only.v1': 16, // +1 claim-only Organic
   'claims.packet_context.positive.v1': 17, // +1 Packet Claim Context
   'ethics-v37-bbfaw-impact-cd': 14, // +1

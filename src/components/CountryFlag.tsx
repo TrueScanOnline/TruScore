@@ -2,63 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { sanitizeCountryForDisplay } from '../utils/countryDisplayName';
+import { countryFlagEmoji } from '../utils/countryFlagEmoji';
 
 interface CountryFlagProps {
   country: string;
   showFlag?: boolean;
-}
-
-// Simple country code to flag emoji mapping (common countries)
-const countryFlags: Record<string, string> = {
-  'USA': '🇺🇸',
-  'UNITED STATES': '🇺🇸',
-  'CANADA': '🇨🇦',
-  'MEXICO': '🇲🇽',
-  'UK': '🇬🇧',
-  'UNITED KINGDOM': '🇬🇧',
-  'FRANCE': '🇫🇷',
-  'GERMANY': '🇩🇪',
-  'ITALY': '🇮🇹',
-  'SPAIN': '🇪🇸',
-  'NETHERLANDS': '🇳🇱',
-  'BELGIUM': '🇧🇪',
-  'SWITZERLAND': '🇨🇭',
-  'AUSTRIA': '🇦🇹',
-  'DENMARK': '🇩🇰',
-  'SWEDEN': '🇸🇪',
-  'NORWAY': '🇳🇴',
-  'FINLAND': '🇫🇮',
-  'POLAND': '🇵🇱',
-  'PORTUGAL': '🇵🇹',
-  'GREECE': '🇬🇷',
-  'TURKEY': '🇹🇷',
-  'RUSSIA': '🇷🇺',
-  'CHINA': '🇨🇳',
-  'JAPAN': '🇯🇵',
-  'SOUTH KOREA': '🇰🇷',
-  'KOREA': '🇰🇷',
-  'INDIA': '🇮🇳',
-  'THAILAND': '🇹🇭',
-  'VIETNAM': '🇻🇳',
-  'INDONESIA': '🇮🇩',
-  'PHILIPPINES': '🇵🇭',
-  'MALAYSIA': '🇲🇾',
-  'SINGAPORE': '🇸🇬',
-  'AUSTRALIA': '🇦🇺',
-  'NEW ZEALAND': '🇳🇿',
-  'BRAZIL': '🇧🇷',
-  'ARGENTINA': '🇦🇷',
-  'CHILE': '🇨🇱',
-  'SOUTH AFRICA': '🇿🇦',
-  'EGYPT': '🇪🇬',
-  'ISRAEL': '🇮🇱',
-  'MOROCCO': '🇲🇦',
-  'TUNISIA': '🇹🇳',
-};
-
-function getCountryFlag(country: string): string {
-  const upperCountry = country.toUpperCase();
-  return countryFlags[upperCountry] || '🌍';
 }
 
 function formatCountryName(country: string): string {
@@ -84,7 +32,7 @@ export default function CountryFlag({ country, showFlag = true }: CountryFlagPro
     );
   }
 
-  const flag = getCountryFlag(displayCountry);
+  const flag = countryFlagEmoji(displayCountry);
   const formattedName = formatCountryName(displayCountry);
 
   return (

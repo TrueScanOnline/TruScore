@@ -6,6 +6,7 @@
  */
 
 import type { Product } from '../types/product';
+import { countryFlagEmoji } from '../utils/countryFlagEmoji';
 import { COUNTRIES } from '../utils/countries';
 import { isRecognizedOriginCountry, originCountryKey } from '../lib/truscoreEngine/pillars/openPillarOriginsV15';
 import type { GovernedOriginFact, ProductOriginsClaimType } from './governedFacts';
@@ -23,32 +24,73 @@ export function originFactLabel(claimType: GovernedOriginFact['claimType']): str
   return ORIGIN_FACT_LABELS[claimType];
 }
 
-function originQualificationLabel(fact: GovernedOriginFact): string {
-  const pair = fact.originQualifications || [];
-  if (pair.length > 0) {
-    return pair.map((item) => (item === 'local' ? 'Local' : 'Imported')).join(', ');
-  }
-  if (fact.originQualification === 'local') return 'Local';
-  if (fact.originQualification === 'imported') return 'Imported';
-  if (fact.originQualification === 'multiple') return 'More than one origin';
-  return '';
+export type OriginConsumerLine = {
+  key: string;
+  primary: string;
+  supporting: string[];
+};
+
+function factIsLocal(fact: GovernedOriginFact): boolean {
+  return fact.originQualification === 'local' || fact.originQualifications?.includes('local') === true;
 }
 
-/** Structured consumer line. Exact packet wording stays on the fact and is not repeated here. */
-export function formatGovernedOriginFactLine(fact: GovernedOriginFact): string {
-  return [
-    originFactLabel(fact.claimType),
-    fact.ingredientSubject || '',
-    fact.countries.length > 0 ? fact.countries.join(', ') : '',
-    fact.percentage != null
-      ? `${fact.percentageQualifier ? `${fact.percentageQualifier.replace(/_/g, ' ')} ` : ''}${fact.percentage}%`
-      : fact.percentageNotStated
-        ? 'Not stated'
-        : '',
-    originQualificationLabel(fact),
-  ]
-    .filter((part) => part.length > 0)
-    .join(' · ');
+function factIsImported(fact: GovernedOriginFact): boolean {
+  return fact.originQualification === 'imported' || fact.originQualifications?.includes('imported') === true;
+}
+
+function percentagePhrase(fact: GovernedOriginFact): string | null {
+  if (fact.percentage == null) return null;
+  const qualifier =
+    fact.percentageQualifier === 'at_least'
+      ? 'at least '
+      : fact.percentageQualifier === 'more_than'
+        ? 'more than '
+        : fact.percentageQualifier === 'less_than'
+          ? 'less than '
+          : '';
+  return `${qualifier}${fact.percentage}%`;
+}
+
+function provenanceSupport(facts: GovernedOriginFact[]): string[] {
+  const local = facts.some(factIsLocal);
+  const imported = facts.some(factIsImported);
+  const lines: string[] = [];
+  if (local && imported) lines.push('Local & Imported ingredients');
+  else if (local) lines.push('Local ingredients');
+  else if (imported) lines.push('Imported ingredients');
+  const ingredientCountryNamed = facts.some(
+    (fact) => fact.claimType === 'ingredient_origin' && fact.countries.length > 0
+  );
+  if (imported && !ingredientCountryNamed) lines.push('Imported ingredient origins not specified');
+  return lines;
+}
+
+/**
+ * Consumer Result lines for governed origins.
+ * Each country proposition stands on its own. Internal qualifiers stay off the card
+ * unless they have a consumer sentence, and an unstated percentage is withheld.
+ */
+export function projectOriginConsumerLines(facts: GovernedOriginFact[]): OriginConsumerLine[] {
+  const shared = provenanceSupport(facts);
+  let sharedPlaced = false;
+  const lines: OriginConsumerLine[] = [];
+  for (const fact of facts) {
+    const percentage = percentagePhrase(fact);
+    fact.countries.forEach((country, countryIndex) => {
+      const supporting: string[] = [];
+      if (countryIndex === 0 && percentage) supporting.push(percentage);
+      if (!sharedPlaced) {
+        supporting.push(...shared);
+        sharedPlaced = true;
+      }
+      lines.push({
+        key: `${fact.evidenceId}:${fact.claimType}:${country}`,
+        primary: `${countryFlagEmoji(country)} ${originFactLabel(fact.claimType)} ${country}`,
+        supporting,
+      });
+    });
+  }
+  return lines;
 }
 
 type SourceOrigin = { subjectKey: string; country: string };

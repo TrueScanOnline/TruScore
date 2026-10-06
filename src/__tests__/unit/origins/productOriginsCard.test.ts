@@ -1,4 +1,4 @@
-import { formatGovernedOriginFactLine, productOriginsCardPresentation } from '../../../origins/productOriginsCard';
+import { productOriginsCardPresentation, projectOriginConsumerLines } from '../../../origins/productOriginsCard';
 import type { GovernedOriginFact } from '../../../origins/governedFacts';
 import type { Product } from '../../../types/product';
 import * as fs from 'fs';
@@ -63,12 +63,18 @@ describe('Product Origins Result presentation', () => {
       })
     );
     expect(same.offCountry).toBeNull();
-    expect(formatGovernedOriginFactLine({
+    expect(projectOriginConsumerLines([{
       ...same.facts[0],
       percentage: 99,
       percentageQualifier: 'at_least',
       exactWording: 'Made in Australia from at least 99% Australian ingredients',
-    })).toBe('Made in · Australia · at least 99%');
+    }])).toEqual([
+      {
+        key: 'made-Australia:made_in:Australia',
+        primary: '🇦🇺 Made in Australia',
+        supporting: ['at least 99%'],
+      },
+    ]);
     expect(same.facts[0]?.exactWording).toBe('Made in Australia');
   });
 

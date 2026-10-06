@@ -301,10 +301,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const declaredSha256 = typeof body.declaredSha256 === 'string' ? body.declaredSha256.trim() : '';
     const sourceBase64 = typeof body.sourceBase64 === 'string' ? body.sourceBase64 : '';
     const facts = Array.isArray(body.facts) ? (body.facts as EvidenceFactInput[]) : [];
+    const ceasedSubjectKeys = Array.isArray(body.ceasedSubjectKeys)
+      ? body.ceasedSubjectKeys.filter((key): key is string => typeof key === 'string' && key.trim().length > 0)
+      : [];
     const referencesFinalizedAsset = facts.some(
       (fact) => typeof fact?.finalizedAssetId === 'string' && fact.finalizedAssetId.length > 0
     );
-    if (!/^\d{8,14}$/.test(barcode) || !idempotencyKey || (!sourceBase64 && !referencesFinalizedAsset)) {
+    const closureOnly = facts.length === 0 && ceasedSubjectKeys.length > 0;
+    if (!/^\d{8,14}$/.test(barcode) || !idempotencyKey || (!sourceBase64 && !referencesFinalizedAsset && !closureOnly)) {
       return res.status(400).json({ success: false, error: 'submission_incomplete' });
     }
     if (sourceBase64 && !declaredSha256) {
@@ -317,6 +321,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       sourceBytes: sourceBase64 ? bytesFromBase64(sourceBase64) : undefined,
       contentType: typeof body.contentType === 'string' ? body.contentType : undefined,
       facts,
+      ...(ceasedSubjectKeys.length > 0 ? { ceasedSubjectKeys } : {}),
     });
     serverTraceMark('snapshot_returned');
     const offStatuses = (outcome.snapshot?.offDispatch ?? []).map((row) => row.status);

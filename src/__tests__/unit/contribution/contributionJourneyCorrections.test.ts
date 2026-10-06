@@ -3,7 +3,7 @@ import { offNutrientValue } from '../../../ingredientsNutrition/nutritionSchema'
 import { sodiumMgFromNutriments } from '../../../nutrition/governedNutrientAssessment';
 import { reviewedUnitSupport } from '../../../contribution/submissionReadiness';
 import { capturedOriginQualifications } from '../../../contributions/originStructured';
-import { formatGovernedOriginFactLine } from '../../../origins/productOriginsCard';
+import { projectOriginConsumerLines } from '../../../origins/productOriginsCard';
 import { buildManualTextDocument, canonicalManualOriginContent } from '../../../evidenceAuthority/manualTextAsset';
 import { assessNOVAGroup1 } from '../../../utils/novaAssessment';
 import { evidenceImageStatus } from '../../../evidenceImage/pipeline';
@@ -81,7 +81,13 @@ describe('contribution journey corrections', () => {
       percentageNotStated: true,
       confidence: 'limited',
     };
-    expect(formatGovernedOriginFactLine(fact)).toBe('Packed in · Serbia · Not stated · Local, Imported');
+    const lines = projectOriginConsumerLines([fact]);
+    expect(lines[0]?.primary).toBe('🇷🇸 Packed in Serbia');
+    expect(lines[0]?.supporting).toEqual([
+      'Local & Imported ingredients',
+      'Imported ingredient origins not specified',
+    ]);
+    expect(JSON.stringify(lines)).not.toContain('Not stated');
   });
 
   test('consumer photo status does not expose recovery or admission terminology', () => {

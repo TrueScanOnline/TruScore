@@ -18,6 +18,8 @@ import type {
 
 function nutritionLaneResolved(product: Product, body: BodyPillarResult): boolean {
   if (body.details.wholeProduceAdjustmentApplied) return true;
+  const governedNutrition = product.rveelGovernedNutrimentKeys;
+  if (Array.isArray(governedNutrition) && governedNutrition.length > 0) return true;
   if (!body.details.hasNutriScore) return false;
   const g = (body.details.nutriscoreGrade || product.nutriscore_grade || '').toLowerCase();
   return g === 'a' || g === 'b' || g === 'c' || g === 'd' || g === 'e';

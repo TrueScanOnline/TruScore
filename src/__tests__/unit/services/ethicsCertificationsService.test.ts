@@ -71,19 +71,19 @@ describe('ethicsCertificationsService', () => {
     expect(e.adjustment).toBe(6);
   });
 
-  test('en:organic → +3', () => {
+  test('en:organic → +2', () => {
     const p = { ...minimalProduct(), labels_tags: ['en:organic'] };
     const e = evaluateEthicsCertifications(p);
     expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(3);
+    expect(e.adjustment).toBe(2);
     expect(e.organicMatchSource).toBe('off_tags_or_hierarchy');
   });
 
-  test('en:aco-certified-organic → Organic +3', () => {
+  test('en:aco-certified-organic → Organic +2', () => {
     const p = { ...minimalProduct(), labels_tags: ['en:aco-certified-organic'] };
     const e = evaluateEthicsCertifications(p);
     expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(3);
+    expect(e.adjustment).toBe(2);
     expect(e.organicMatchSource).toBe('off_tags_or_hierarchy');
   });
 
@@ -99,7 +99,7 @@ describe('ethicsCertificationsService', () => {
     expect(e.organicMatchSource).toBe('label_or_cert_text');
   });
 
-  test('labels_hierarchy en:organic only (no labels_tags) → Organic +3', () => {
+  test('labels_hierarchy en:organic only (no labels_tags) → Organic +2', () => {
     const p = {
       ...minimalProduct(),
       labels_tags: [],
@@ -107,7 +107,7 @@ describe('ethicsCertificationsService', () => {
     };
     const e = evaluateEthicsCertifications(p);
     expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(3);
+    expect(e.adjustment).toBe(2);
     expect(e.organicMatchSource).toBe('off_tags_or_hierarchy');
   });
 
@@ -186,11 +186,11 @@ describe('ethicsCertificationsService', () => {
     expect(e.eligibleSchemes).toContain('organic');
   });
 
-  test('EU organic tag → +3', () => {
+  test('EU organic tag → +2', () => {
     const p = { ...minimalProduct(), labels_tags: ['en:eu-organic'] };
     const e = evaluateEthicsCertifications(p);
     expect(e.winningScheme).toBe('organic');
-    expect(e.adjustment).toBe(3);
+    expect(e.adjustment).toBe(2);
   });
 
   test('MSC OFF tag without API validation → no MSC credit', () => {

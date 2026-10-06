@@ -28,7 +28,7 @@ import {
   type ExtractionProducer,
   type PacketContributionSession,
 } from '../packetContribution';
-import { listSubmissionResumeAttention, retryParkedEvidenceSubmission, transmitSessionToAuthority } from '../evidenceAuthority/device';
+import { listSubmissionResumeAttention, retryParkedEvidenceSubmission, transmitPrevailingClosure, transmitSessionToAuthority } from '../evidenceAuthority/device';
 import { acceptLocalCapture, evidenceImageStatus, resumeEvidenceImages, retryParkedEvidenceImage } from '../evidenceImage/pipeline';
 import { visibleEvidenceImages } from '../evidenceImage/projection';
 import { beginModalTrace, finishModalTrace } from '../evidenceAuthority/contributionTrace';
@@ -40,10 +40,11 @@ import {
 import { PRODUCT_ORIGINS_CLAIM_TYPES, type ProductOriginsClaimType } from '../origins/governedFacts';
 import type { OriginPercentageQualifier } from '../config/contributionPolicy';
 import { capturedOriginQualifications } from '../contributions/originStructured';
-import { reviewedUnitSupport } from '../contribution/submissionReadiness';
+import { ceasedPrevailingSubjectKeys, correctionClosureFacts } from '../contribution/correctionClosure';
 import {
   PACKET_ABSENCE_CONSUMER_COPY,
   CONTRIBUTION_NOTICE_PARTIAL,
+  CONTRIBUTION_NOTICE_SAVED,
   type ContributionEntryContext,
 } from '../contribution/resultContributionActions';
 import {
@@ -119,27 +120,27 @@ const JOURNEY: Record<
     submit: 'Submit nutrition',
   },
   origins: {
-    header: 'Product origins',
+    header: 'Product Origins',
     instruction: 'Photograph the origin statement on the pack, or choose a photo you already took.',
     manual: 'Enter origin statement',
-    review: 'Product origins',
+    review: 'Product Origins',
     submit: 'Submit product origins',
     another: 'Add another origin statement',
   },
   packetClaims: {
-    header: 'Packet claims and certifications',
+    header: 'Packet information',
     instruction: 'Photograph the claim or certification on the pack, or choose a photo you already took.',
     manual: 'Type what the pack says',
-    review: 'Check packet claims and certifications',
-    submit: 'Submit packet claims and certifications',
+    review: 'Packet information',
+    submit: 'Submit packet information',
     another: 'Add another claim',
   },
   certifications: {
-    header: 'Packet claims and certifications',
+    header: 'Packet information',
     instruction: 'Photograph the claim or certification on the pack, or choose a photo you already took.',
     manual: 'Type what the pack says',
-    review: 'Check packet claims and certifications',
-    submit: 'Submit packet claims and certifications',
+    review: 'Packet information',
+    submit: 'Submit packet information',
     another: 'Add another certification',
   },
 };
@@ -495,9 +496,50 @@ export default function PacketContributionModal({
       const created: string[] = [];
       const observations: { unitId: string; label: string; kind: 'ingredients' | 'nutrition' | 'origin' | 'claim' | 'cert' | 'absence'; index: number }[] = [];
       const contexts = includedContexts;
+      const closure = correctionClosureFacts({
+        ...(contexts.includes('ingredients')
+          ? { initialIngredients: initialIngredientsRef.current, ingredientsText }
+          : {}),
+        ...(contexts.includes('nutrition')
+          ? {
+              initialNutrition: nutritionBaselineRef.current,
+              nutrition: { basis: basis || nutritionBaselineRef.current.basis, amounts, sodiumUnit },
+            }
+          : {}),
+        ...(contexts.includes('origins')
+          ? { initialOrigins: initialOriginContextRef.current, origins }
+          : {}),
+        ...(contexts.includes('packetClaims') || contexts.includes('certifications')
+          ? {
+              initialClaims: initialClaimsRef.current,
+              claims,
+              initialCertifications: initialCertificationsRef.current,
+              certifications: certs,
+            }
+          : {}),
+      });
+      const ceased = ceasedPrevailingSubjectKeys(closure.baseline, closure.represented);
+      const freshWordings = (current: string[], initial: string[] | undefined) => {
+        const remaining = new Map<string, number>();
+        for (const row of initial || []) {
+          const text = row.trim();
+          if (!text) continue;
+          remaining.set(text, (remaining.get(text) || 0) + 1);
+        }
+        const fresh: string[] = [];
+        for (const row of current) {
+          const text = row.trim();
+          if (!text) continue;
+          const count = remaining.get(text) || 0;
+          if (count > 0) remaining.set(text, count - 1);
+          else fresh.push(text);
+        }
+        return fresh;
+      };
       if (contexts.includes('ingredients')) {
         const text = ingredientsText.trim();
-        if (text) {
+        const initialText = (initialIngredientsRef.current || '').trim();
+        if (text && text !== initialText) {
           const unit = await addManualEvidenceUnit({
             sessionId: session.sessionId,
             domain: 'ingredients_nutrition',
@@ -546,7 +588,7 @@ export default function PacketContributionModal({
           const qualifications = capturedOriginQualifications({
             local: row.local === true,
             imported: row.imported === true,
-            multiple: row.multiple === true || row.qualification === 'multiple',
+            multiple: false,
           });
           const unit = await addManualEvidenceUnit({
             sessionId: session.sessionId,
@@ -583,9 +625,26 @@ export default function PacketContributionModal({
           observations.push({ unitId: unit.unitId, label: PACKET_ABSENCE_CONSUMER_COPY, kind: 'absence', index: 0 });
         }
         if (!absenceOnly) {
-          for (let index = 0; index < claims.length; index += 1) {
-            const text = claims[index].trim();
-            if (!text) continue;
+          const freshClaims = freshWordings(claims, initialClaimsRef.current);
+          const freshCerts = freshWordings(certs, initialCertificationsRef.current);
+          const claimIndexes = new Map<string, number[]>();
+          claims.forEach((claim, index) => {
+            const text = claim.trim();
+            if (!text) return;
+            const rows = claimIndexes.get(text) || [];
+            rows.push(index);
+            claimIndexes.set(text, rows);
+          });
+          const certIndexes = new Map<string, number[]>();
+          certs.forEach((cert, index) => {
+            const text = cert.trim();
+            if (!text) return;
+            const rows = certIndexes.get(text) || [];
+            rows.push(index);
+            certIndexes.set(text, rows);
+          });
+          for (const text of freshClaims) {
+            const index = claimIndexes.get(text)?.shift() ?? 0;
             const unit = await addManualEvidenceUnit({
               sessionId: session.sessionId,
               domain: 'packet_claims',
@@ -595,9 +654,8 @@ export default function PacketContributionModal({
             created.push(unit.unitId);
             observations.push({ unitId: unit.unitId, label: text, kind: 'claim', index });
           }
-          for (let index = 0; index < certs.length; index += 1) {
-            const text = certs[index].trim();
-            if (!text) continue;
+          for (const text of freshCerts) {
+            const index = certIndexes.get(text)?.shift() ?? 0;
             const unit = await addManualEvidenceUnit({
               sessionId: session.sessionId,
               domain: 'certifications',
@@ -611,6 +669,16 @@ export default function PacketContributionModal({
       }
       if (created.length === 0) {
         trace.mark('local_handoff_end', 'none');
+        if (ceased.length === 0) return;
+        const closed = await transmitPrevailingClosure(barcode, ceased, trace);
+        if (!closed.admitted) {
+          setPartialNotice(CONTRIBUTION_NOTICE_SAVED);
+          onSharedEvidenceFailed?.();
+          return;
+        }
+        await onSharedEvidenceAdmitted?.(closed.snapshot, true);
+        trace.mark('modal_close');
+        onClose();
         return;
       }
       const latest = await getSession(session.sessionId);
@@ -646,10 +714,11 @@ export default function PacketContributionModal({
       const submitted = handed.filter((item) => item.outcome === 'submitted');
       trace.mark('local_handoff_end', submitted.length > 0 ? 'ok' : 'none');
       if (submitted.length === 0) {
+        setPartialNotice(CONTRIBUTION_NOTICE_SAVED);
         onSharedEvidenceFailed?.();
         return;
       }
-      const transmitted = await transmitSessionToAuthority(session.sessionId, trace);
+      const transmitted = await transmitSessionToAuthority(session.sessionId, trace, ceased);
       if (transmitted.pendingImage) {
         const parked = targeted.some((asset) => asset.imagePhase === 'parked_after_interrupted_resume');
         setPartialNotice(parked ? 'This photo needs attention.' : 'Preparing photo…');
@@ -657,6 +726,7 @@ export default function PacketContributionModal({
         return;
       }
       if (!transmitted.admitted) {
+        setPartialNotice(CONTRIBUTION_NOTICE_SAVED);
         onSharedEvidenceFailed?.();
         return;
       }
@@ -830,7 +900,6 @@ export default function PacketContributionModal({
         ) : null}
         {phase === 'entry' || phase === 'review' ? (
           <View>
-            <Text style={[styles.header, { color: colors.text }]}>{journey.header}</Text>
             {phase === 'review'
               ? displayedPreviews.map((preview) => (
                   <View key={preview.tempKey} style={styles.previewRow}>
@@ -855,7 +924,6 @@ export default function PacketContributionModal({
             </TouchableOpacity>
             {activeContext === 'ingredients' ? (
               <View>
-                <Text style={{ color: colors.text }}>Ingredients</Text>
                 <TextInput
                   value={ingredientsText}
                   onChangeText={setIngredientsText}
@@ -1099,17 +1167,6 @@ export default function PacketContributionModal({
                         }
                       >
                         <Text style={{ color: row.imported ? colors.primary : colors.text }}>Imported</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() =>
-                          setOrigins((rows) =>
-                            rows.map((entry, itemIndex) =>
-                              itemIndex === index ? { ...entry, multiple: !entry.multiple, qualification: undefined } : entry
-                            )
-                          )
-                        }
-                      >
-                        <Text style={{ color: row.multiple ? colors.primary : colors.text }}>More than one origin</Text>
                       </TouchableOpacity>
                     </View>
                     <TouchableOpacity

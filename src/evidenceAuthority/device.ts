@@ -83,6 +83,7 @@ type OutboxItem = {
   unitRefs: UnitRef[];
   status: 'unsent' | 'acknowledged' | 'refused';
   createdAt: number;
+  ceasedSubjectKeys?: string[];
   resumeInProgress?: EvidenceResumeMarker;
   interruptedResume?: InterruptedResumeRecord;
 };
@@ -450,23 +451,66 @@ async function finalizeManualTextAsset(
 
 export async function transmitSessionToAuthority(
   sessionId: string,
-  trace?: ContributionTrace
+  trace?: ContributionTrace,
+  ceasedSubjectKeys?: string[]
 ): Promise<AuthorityTransmitResult> {
   const none: AuthorityTransmitResult = { admitted: false, admittedUnitIds: [], pendingOutbox: false, snapshot: null };
   const active = trace ?? beginRetryTrace();
   noteTransmitEnter(active);
   try {
-    return await transmitSession(sessionId, active, none);
+    return await transmitSession(sessionId, active, none, ceasedSubjectKeys);
   } finally {
     noteTransmitLeave(active);
     active.flush('transmit_leave');
   }
 }
 
+/** Removal of the last prevailing subject has no new fact. The closure still withdraws it. */
+export async function transmitPrevailingClosure(
+  barcode: string,
+  ceasedSubjectKeys: string[],
+  trace?: ContributionTrace
+): Promise<AuthorityTransmitResult> {
+  const none: AuthorityTransmitResult = { admitted: false, admittedUnitIds: [], pendingOutbox: false, snapshot: null };
+  const keys = [...new Set(ceasedSubjectKeys.map((key) => key.trim()).filter((key) => key.length > 0))];
+  if (!barcode || keys.length === 0) return none;
+  const active = trace ?? beginRetryTrace();
+  try {
+    if (!(await targetAuthorityAccepted(active))) return none;
+    const token = await credentialToken(active);
+    const response = await postAuthority(
+      token,
+      {
+        action: 'submit',
+        idempotencyKey: randomKey(),
+        barcode,
+        facts: [],
+        ceasedSubjectKeys: keys,
+      },
+      active,
+      'submit'
+    );
+    if (!response.ok) return { ...none, pendingOutbox: true };
+    const body = (await response.json()) as { outcome?: SubmissionOutcome };
+    const snapshot = body.outcome?.snapshot ?? null;
+    if (body.outcome?.status === 'admitted' && snapshot) {
+      await rememberSnapshot(snapshot);
+      notifyEvidenceAdmission(barcode, snapshot);
+      return { admitted: true, admittedUnitIds: [], pendingOutbox: false, snapshot };
+    }
+    return { ...none, snapshot };
+  } catch {
+    return { ...none, pendingOutbox: true };
+  } finally {
+    active.flush('closure_leave');
+  }
+}
+
 async function transmitSession(
   sessionId: string,
   trace: ContributionTrace,
-  none: AuthorityTransmitResult
+  none: AuthorityTransmitResult,
+  ceasedSubjectKeys?: string[]
 ): Promise<AuthorityTransmitResult> {
   const session = await getSession(sessionId);
   if (!session) return none;
@@ -491,10 +535,15 @@ async function transmitSession(
       sessionId,
       barcode: session.barcode,
       unitRefs,
+      ceasedSubjectKeys: ceasedSubjectKeys && ceasedSubjectKeys.length > 0 ? ceasedSubjectKeys : undefined,
       status: 'unsent',
       createdAt: Date.now(),
     };
     items.push(item);
+    await writeOutbox(items);
+  }
+  if (ceasedSubjectKeys && ceasedSubjectKeys.length > 0) {
+    item.ceasedSubjectKeys = ceasedSubjectKeys;
     await writeOutbox(items);
   }
   const sourceIds = [
@@ -539,6 +588,9 @@ async function transmitSession(
       idempotencyKey: item.idempotencyKey,
       barcode: session.barcode,
       facts,
+      ...(item.ceasedSubjectKeys && item.ceasedSubjectKeys.length > 0
+        ? { ceasedSubjectKeys: item.ceasedSubjectKeys }
+        : {}),
     }, trace, 'submit');
     if (!response.ok) {
       trace.mark('snapshot_received', 'http_error');

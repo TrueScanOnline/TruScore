@@ -230,7 +230,7 @@ export function originDraftsFromGovernedFacts(
         local: fact.originQualification === 'local' || fact.originQualifications?.includes('local') === true,
         imported: fact.originQualification === 'imported' || fact.originQualifications?.includes('imported') === true,
         multiple: fact.originQualification === 'multiple',
-        percentageNotStated: fact.percentage == null,
+        percentageNotStated: fact.percentageNotStated === true,
       };
       return { ...row, baseline: originDraftSignature(row) };
     });
@@ -293,8 +293,11 @@ export function bodyDataLimitationActions(product: Product): Array<{
     label: 'Add nutrition' | 'Add ingredients';
     destination: 'nutrition' | 'ingredients';
   }> = [];
+  const processingUnresolved = product._publication?.body.assessmentLanes.processing !== 'resolved';
   if (actions.addNutrition) rows.push({ label: 'Add nutrition', destination: 'nutrition' });
-  if (actions.addIngredients) rows.push({ label: 'Add ingredients', destination: 'ingredients' });
+  if (actions.addIngredients && processingUnresolved) {
+    rows.push({ label: 'Add ingredients', destination: 'ingredients' });
+  }
   return rows;
 }
 
