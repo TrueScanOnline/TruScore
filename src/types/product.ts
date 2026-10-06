@@ -240,10 +240,8 @@ export interface Product {
   certifications?: Certification[];
 
   /**
-   * ETHICS pillar — MSC Data Validation API result (optional).
-   * true: API confirmed MSC for this barcode → MSC may contribute to certification element.
-   * false: API rejected → OFF MSC labels must not grant MSC credit.
-   * undefined: no API result; MSC credit only if EXPO_PUBLIC_ETHICS_MSC_OFF_FALLBACK is set.
+   * Optional MSC validation result. A recognised MSC label or an admitted MSC
+   * certification scores +4 without this flag. A true result still counts.
    */
   ethics_msc_api_validated?: boolean | null;
   

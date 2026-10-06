@@ -145,7 +145,7 @@ console.log('\n=== ETHICS PILLAR — integration (calculateEthicsPillar) ===\n')
       ethics_msc_api_validated: false,
     })
   );
-  ok('MSC label without API validation: no MSC credit', mscOnly.details.certificationsAdjustment === 0);
+  ok('MSC label without API validation: +4', mscOnly.details.certificationsAdjustment === 4);
 
   const mscOk = calculateEthicsPillar(
     baseProduct({

@@ -27,7 +27,7 @@ export function resolveCertificationLane(params: {
   const product = {
     barcode: 'lane-check',
     labels_tags: params.labelsTags || [],
-    product_name: '',
+    product_name: params.claimValue || '',
   } as Product;
   const evaluation = evaluateEthicsCertifications(product);
   const hasScoringScheme = evaluation.eligibleSchemes.some(

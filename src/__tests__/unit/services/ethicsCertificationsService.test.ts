@@ -193,15 +193,15 @@ describe('ethicsCertificationsService', () => {
     expect(e.adjustment).toBe(2);
   });
 
-  test('MSC OFF tag without API validation → no MSC credit', () => {
+  test('MSC OFF tag without API validation → +4', () => {
     const p = {
       ...minimalProduct(),
       labels_tags: ['en:marine-stewardship-council'],
       ethics_msc_api_validated: undefined,
     };
     const e = evaluateEthicsCertifications(p);
-    expect(e.eligibleSchemes).not.toContain('msc');
-    expect(e.adjustment).toBe(0);
+    expect(e.winningScheme).toBe('msc');
+    expect(e.adjustment).toBe(4);
   });
 
   test('MSC with API validated true → +4', () => {
@@ -215,13 +215,15 @@ describe('ethicsCertificationsService', () => {
     expect(e.adjustment).toBe(4);
   });
 
-  test('MSC API false → no credit even with OFF label', () => {
+  test('MSC API false does not block a recognised MSC label', () => {
     const p = {
       ...minimalProduct(),
       labels_tags: ['en:marine-stewardship-council'],
       ethics_msc_api_validated: false,
     };
-    expect(evaluateEthicsCertifications(p).adjustment).toBe(0);
+    const e = evaluateEthicsCertifications(p);
+    expect(e.winningScheme).toBe('msc');
+    expect(e.adjustment).toBe(4);
   });
 });
 

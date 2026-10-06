@@ -30,6 +30,7 @@ import {
   setCandidateDisposition,
 } from '../../../certifications/unresolvedMarkCandidates';
 import { governedCertificationLabels } from '../../../contributions/certificationLane';
+import { evaluateEthicsCertifications } from '../../../services/ethicsCertificationsService';
 import { EvidenceAuthority } from '../../../evidenceAuthority/authority';
 import { projectSnapshotForAssessment } from '../../../evidenceAuthority/assessment';
 import { MemoryAuthorityStore } from '../../../evidenceAuthority/memoryStore';
@@ -49,6 +50,7 @@ const ASSET_DIR = path.join(__dirname, '../../../certifications/governed');
 function authority() {
   return new EvidenceAuthority(new MemoryAuthorityStore(), {
     authorityEnv: 'uat',
+    founderAdminToken: 'founder-uat',
     now: () => 12_000,
   });
 }
@@ -416,5 +418,106 @@ describe('Packet information journeys J1-J12', () => {
     expect(again.disposition).toBe('Not a certification');
     expect(again.escalated).toBe(false);
     expect(again.count).toBe(1);
+  });
+});
+
+describe('founder adjudication', () => {
+  it('keeps OFF Fairtrade scoring and does not treat generic contribution wording as Fairtrade', () => {
+    const fromName = evaluateEthicsCertifications({
+      barcode: 'off-ft',
+      product_name: 'Fair Trade Chocolate',
+      labels_tags: [],
+    } as Product);
+    expect(fromName.winningScheme).toBe('fairtrade');
+    expect(fromName.adjustment).toBe(6);
+    const fromTag = evaluateEthicsCertifications({
+      barcode: 'off-ft-tag',
+      product_name: 'Chocolate',
+      labels_tags: ['en:fair-trade'],
+    } as Product);
+    expect(fromTag.winningScheme).toBe('fairtrade');
+    expect(fromTag.adjustment).toBe(6);
+    expect(resolvePacketObservation({ observedWording: 'fair trade' }).kind).toBe('wording');
+    expect(governedCertificationLabels('fair trade')).toBeUndefined();
+    expect(governedCertificationLabels('Fairtrade')).toEqual(['en:fair-trade']);
+  });
+
+  it('scores governed Fairtrade +6 for whole-product, ingredient, and unresolved scope', async () => {
+    const cases = [
+      { key: 'whole', scopeClass: 'whole_product' as const, scopeSubject: undefined },
+      { key: 'cocoa', scopeClass: 'ingredient_component' as const, scopeSubject: 'cocoa' },
+      { key: 'open', scopeClass: undefined, scopeSubject: undefined },
+    ];
+    for (const item of cases) {
+      const resolution = resolvePacketObservation({
+        observedWording: 'Fairtrade',
+        ...(item.scopeClass ? { scopeClass: item.scopeClass, scopeSubject: item.scopeSubject } : {}),
+      });
+      expect(resolution.kind).toBe('certification');
+      const service = authority();
+      const contributor = await service.issueCredential();
+      const admitted = await send(service, contributor.contributorId, [factFor(resolution)], item.key);
+      const stored = projectSnapshotForAssessment(admitted.snapshot, 'uat').find((row) => row.domain === 'certifications');
+      if (item.scopeClass === 'whole_product') expect(stored?.certificationScope).toBe('whole_product');
+      if (item.scopeClass === 'ingredient_component') {
+        expect(stored?.certificationScope).toBe('ingredient_component');
+        expect(stored?.certificationScopeSubject).toBe('cocoa');
+      }
+      if (!item.scopeClass) expect(stored?.certificationScope).toBeUndefined();
+      const scored = await calculateTrustScore(food(), { authoritativeSnapshot: admitted.snapshot });
+      expect(ethicsAdjustments(scored).some((row) => row.adjustmentId === 'ethics-v37-cert-fairtrade' && row.value === 6)).toBe(true);
+    }
+  });
+
+  it('scores a contributed MSC certification +4 without the validation flag', async () => {
+    const resolution = resolvePacketObservation({ observedWording: 'MSC' });
+    expect(resolution.kind).toBe('certification');
+    const service = authority();
+    const contributor = await service.issueCredential();
+    const admitted = await send(service, contributor.contributorId, [factFor(resolution)], 'msc');
+    const scored = await calculateTrustScore(food({ ethics_msc_api_validated: false }), {
+      authoritativeSnapshot: admitted.snapshot,
+    });
+    expect(ethicsAdjustments(scored).some((row) => row.adjustmentId === 'ethics-v37-cert-msc' && row.value === 4)).toBe(true);
+    const rainforest = evaluateEthicsCertifications({ barcode: 'ra', labels_tags: ['en:rainforest-alliance'] } as Product);
+    const utz = evaluateEthicsCertifications({ barcode: 'utz', labels_tags: ['en:utz'] } as Product);
+    const asc = evaluateEthicsCertifications({ barcode: 'asc', labels_tags: ['en:asc'] } as Product);
+    expect(rainforest.adjustment).toBe(6);
+    expect(utz.adjustment).toBe(6);
+    expect(asc.adjustment).toBe(4);
+  });
+
+  it('does not resurrect an older version after consumer or founder withdrawal, including reload', async () => {
+    const service = authority();
+    const contributor = await service.issueCredential();
+    const first = factFor(resolvePacketObservation({ observedWording: 'Fairtrade' }));
+    const second = factFor(resolvePacketObservation({ observedWording: 'Fairtrade', scopeClass: 'ingredient_component', scopeSubject: 'cocoa' }));
+    const opened = await send(service, contributor.contributorId, [first], 'ft-1');
+    const replaced = await send(service, contributor.contributorId, [second], 'ft-2');
+    expect(replaced.snapshot?.prevailing).toHaveLength(1);
+    const subjectKey = replaced.snapshot?.prevailing[0].subjectKey || '';
+    const removed = await send(service, contributor.contributorId, [], 'ft-consumer-remove', [subjectKey]);
+    expect(removed.snapshot?.prevailing ?? []).toHaveLength(0);
+    expect((await service.snapshot(BARCODE)).prevailing).toHaveLength(0);
+    const history = await service.history(BARCODE);
+    expect(history.filter((row) => row.subjectKey === subjectKey).length).toBeGreaterThan(1);
+    expect(history.filter((row) => row.subjectKey === subjectKey).every((row) => row.governance === 'withdrawn')).toBe(true);
+
+    const founderService = authority();
+    const founderContributor = await founderService.issueCredential();
+    const older = await send(founderService, founderContributor.contributorId, [first], 'founder-1');
+    const newer = await send(founderService, founderContributor.contributorId, [second], 'founder-2');
+    expect(await founderService.govern('founder-uat', newer.versionIds[0], 'withdraw')).toEqual({ ok: true });
+    expect((await founderService.snapshot(BARCODE)).prevailing).toHaveLength(0);
+    const founderHistory = await founderService.history(BARCODE);
+    expect(founderHistory.find((row) => row.versionId === older.versionIds[0])?.governance).not.toBe('withdrawn');
+    expect(founderHistory.find((row) => row.versionId === newer.versionIds[0])?.governance).toBe('withdrawn');
+    const deliberate = await send(founderService, founderContributor.contributorId, [first], 'founder-3');
+    const reloaded = await founderService.snapshot(BARCODE);
+    expect(reloaded.prevailing).toHaveLength(1);
+    expect(reloaded.prevailing[0].versionId).toBe(deliberate.versionIds[0]);
+    expect(reloaded.prevailing[0].versionId).not.toBe(older.versionIds[0]);
+    const shown = await calculateTrustScore(food(), { authoritativeSnapshot: reloaded });
+    expect(shown.rveelGovernedCertifications).toEqual(['Fairtrade']);
   });
 });

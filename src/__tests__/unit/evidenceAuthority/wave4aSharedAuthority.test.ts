@@ -189,19 +189,25 @@ describe('Wave 4A shared evidence authority', () => {
     expect(() => store.dangerouslyRewriteContent()).toThrow('evidence_version_content_immutable');
   });
 
-  it('reinstates the previous admitted version after withdrawal', async () => {
+  it('does not reinstate the previous admitted version after founder withdrawal', async () => {
     const authority = service();
     const contributor = await authority.issueCredential();
     const first = await send(authority, contributor.contributorId, [packet('High protein')], 'old');
     const second = await send(authority, contributor.contributorId, [packet('Source of protein')], 'new');
     expect(await authority.govern('founder-uat', second.versionIds[0], 'withdraw')).toEqual({ ok: true });
     const snapshot = await authority.snapshot(BARCODE);
-    expect(snapshot.prevailing).toHaveLength(1);
-    expect(snapshot.prevailing[0].versionId).toBe(first.versionIds[0]);
-    expect(snapshot.prevailing[0].evidence.exactWording).toBe('High protein');
-    expect((await authority.history(BARCODE)).find((row) => row.versionId === second.versionIds[0])?.content.exactWording).toBe(
-      'Source of protein'
-    );
+    expect(snapshot.prevailing).toHaveLength(0);
+    const reloaded = await authority.snapshot(BARCODE);
+    expect(reloaded.prevailing).toHaveLength(0);
+    const history = await authority.history(BARCODE);
+    expect(history.find((row) => row.versionId === first.versionIds[0])?.content.exactWording).toBe('High protein');
+    expect(history.find((row) => row.versionId === second.versionIds[0])?.governance).toBe('withdrawn');
+    expect(history.find((row) => row.versionId === second.versionIds[0])?.content.exactWording).toBe('Source of protein');
+    const again = await send(authority, contributor.contributorId, [packet('High fibre')], 'reinstated');
+    const current = await authority.snapshot(BARCODE);
+    expect(current.prevailing).toHaveLength(1);
+    expect(current.prevailing[0].evidence.exactWording).toBe('High fibre');
+    expect(current.prevailing[0].versionId).not.toBe(first.versionIds[0]);
   });
 
   it('ignores forged client authority fields and admits without a confirmation', async () => {

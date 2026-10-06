@@ -10,14 +10,14 @@
  *   Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Certified Organic +2.
  *   Whole-product Organic claim-only +1 is scored via Claims Set O (not this certifications element).
  * - RSPO does not contribute Ethics points (not an eligible scoring scheme).
- * - MSC: API validation rules unchanged (see ethics_msc_api_validated).
+ * - MSC +4 when a recognised MSC label or governed MSC certification is established.
+ *   A positive ethics_msc_api_validated result still counts. It is not required.
  *
  * Certified Organic (+2): OFF recognised certifier/mark or generic en:organic tag (off_tags_or_hierarchy only).
  * Label/product-name organic wording is claim-only and must not receive the certification +2.
  */
 
 import type { Product } from '../types/product';
-import { logger } from '../utils/logger';
 
 export type EthicsCertificationScheme =
   | 'fairtrade'
@@ -226,15 +226,6 @@ export function normalizeEthicsOrganicText(input: string): string {
     .trim();
 }
 
-function getAllowMscOffFallback(): boolean {
-  try {
-    const v = process.env.EXPO_PUBLIC_ETHICS_MSC_OFF_FALLBACK;
-    return v === 'true' || v === '1';
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Union of OFF label signals used for certification tag matching:
  * labels_tags, labels_hierarchy, formatted certification tags on the product.
@@ -405,22 +396,8 @@ function offSuggestsMsc(tags: string[]): boolean {
 }
 
 function mscEligible(product: Product, tags: string[]): boolean {
-  const validated = product.ethics_msc_api_validated;
-  if (validated === true) return true;
-  if (validated === false) {
-    if (offSuggestsMsc(tags)) {
-      logger.debug('[EthicsCertifications] MSC OFF label present but API validation negative — no MSC credit');
-    }
-    return false;
-  }
-  if (getAllowMscOffFallback() && offSuggestsMsc(tags)) {
-    logger.debug('[EthicsCertifications] MSC credited via OFF fallback (EXPO_PUBLIC_ETHICS_MSC_OFF_FALLBACK)');
-    return true;
-  }
-  if (offSuggestsMsc(tags)) {
-    logger.debug('[EthicsCertifications] MSC label in OFF but no API validation — no MSC credit (spec)');
-  }
-  return false;
+  if (offSuggestsMsc(tags)) return true;
+  return product.ethics_msc_api_validated === true;
 }
 
 export interface EthicsCertificationsEvaluation {

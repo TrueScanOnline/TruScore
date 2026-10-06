@@ -376,6 +376,7 @@ export function admitEvidence(
  * Latest successfully admitted primary-user evidence for the same evidence key
  * prevails. Draft/raw/submitted never displaces an admitted record. Partial
  * key sets do not erase unrelated keys (caller applies per-key).
+ * A withdrawn latest version does not make an older version current.
  */
 export function selectPrevailingAdmittedEvidence(
   records: ContributionEvidence[],
@@ -383,22 +384,22 @@ export function selectPrevailingAdmittedEvidence(
 ): ContributionEvidence | null {
   const target = buildEvidenceKey(key);
   const admitted = records.filter(
-    (r) =>
-      evidenceKeyOf(r) === target &&
-      isGovernedAdmitted(r) &&
-      carriesCurrentProductionEpoch(r) &&
-      r.state !== 'superseded' &&
-      r.state !== 'withdrawn'
+    (r) => evidenceKeyOf(r) === target && isGovernedAdmitted(r) && carriesCurrentProductionEpoch(r)
   );
   if (admitted.length === 0) return null;
-  return admitted.reduce((best, cur) => {
+  const later = (best: ContributionEvidence, cur: ContributionEvidence) => {
     if (cur.evidenceVersion !== best.evidenceVersion) {
       return cur.evidenceVersion > best.evidenceVersion ? cur : best;
     }
     const curAdmittedAt = cur.admission?.admittedAt ?? cur.updatedAt;
     const bestAdmittedAt = best.admission?.admittedAt ?? best.updatedAt;
     return curAdmittedAt >= bestAdmittedAt ? cur : best;
-  });
+  };
+  const latest = admitted.reduce(later);
+  if (latest.state === 'withdrawn') return null;
+  const open = admitted.filter((r) => r.state !== 'superseded' && r.state !== 'withdrawn');
+  if (open.length === 0) return null;
+  return open.reduce(later);
 }
 
 /**

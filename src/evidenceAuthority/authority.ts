@@ -711,13 +711,17 @@ export class EvidenceAuthority {
     barcode: string
   ): Promise<SharedEvidenceSnapshot> {
     const versions = await tx.versionsForBarcode(barcode);
-    const prevailing = new Map<string, VersionRecord>();
+    const latestAdmitted = new Map<string, VersionRecord>();
     for (const version of versions) {
-      if (version.admissionStatus !== 'admitted') continue;
+      if (version.admissionStatus !== 'admitted' || version.admissionSeq == null) continue;
+      const current = latestAdmitted.get(version.subjectKey);
+      if (!current || (current.admissionSeq ?? 0) < version.admissionSeq) latestAdmitted.set(version.subjectKey, version);
+    }
+    const prevailing = new Map<string, VersionRecord>();
+    for (const [subjectKey, version] of latestAdmitted) {
+      // Withdrawing or suppressing the latest version does not reinstate an older one.
       if (version.governance === 'withdrawn' || version.governance === 'suppressed') continue;
-      if (version.admissionSeq == null) continue;
-      const current = prevailing.get(version.subjectKey);
-      if (!current || (current.admissionSeq ?? 0) < version.admissionSeq) prevailing.set(version.subjectKey, version);
+      prevailing.set(subjectKey, version);
     }
     const dispatches = await tx.dispatchesForBarcode(barcode);
     return {
