@@ -3,6 +3,8 @@
  * and before any Evidence Authority request. This runs that same local sequence.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import fs from 'fs';
+import path from 'path';
 import { __setContributionCreationRecordClassForTests } from '../../../contributions/productionEpoch';
 import { ceasedOriginsRemovedFromForm } from '../../../contribution/consumerSurface';
 import { prepareVisibleContribution } from '../../../contribution/visibleContribution';
@@ -289,6 +291,18 @@ describe('device modal submit sequence', () => {
     expect(outbox.some((item) => item.status === 'unsent')).toBe(true);
     delete process.env.EXPO_PUBLIC_BACKEND_URL;
     delete process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
+  });
+
+  it('imports reviewedUnitSupport into the modal Submit executes', () => {
+    const modal = fs.readFileSync(path.join(__dirname, '../../../components/PacketContributionModal.tsx'), 'utf8');
+    expect(modal).toMatch(
+      /import\s*\{[^}]*\breviewedUnitSupport\b[^}]*\}\s*from\s*['"]\.\.\/contribution\/submissionReadiness['"]/
+    );
+    const submit = modal.slice(modal.indexOf('const submit = async'));
+    expect(submit).toContain('reviewedUnitSupport(');
+    expect(reviewedUnitSupport({ unitId: 'eu_manual_symbol', packetAbsence: false, photos: [] }).sourceAssetId).toBe(
+      'manual-text:eu_manual_symbol'
+    );
   });
 
   it('puts the bounded handoff exception on the client payload and the UAT trace log', () => {
