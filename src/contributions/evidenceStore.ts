@@ -10,7 +10,9 @@ async function readLocal(): Promise<ContributionEvidence[]> {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as ContributionEvidence[]) : [];
+    return Array.isArray(parsed)
+      ? (parsed as ContributionEvidence[]).filter((row) => row != null && typeof row === 'object')
+      : [];
   } catch {
     return [];
   }
@@ -21,11 +23,16 @@ async function writeLocal(rows: ContributionEvidence[]): Promise<void> {
 }
 
 export async function upsertLocalEvidence(evidence: ContributionEvidence): Promise<void> {
-  const rows = await readLocal();
-  const idx = rows.findIndex((r) => r.evidenceId === evidence.evidenceId);
-  if (idx >= 0) rows[idx] = evidence;
-  else rows.push(evidence);
-  await writeLocal(rows);
+  try {
+    const rows = await readLocal();
+    const idx = rows.findIndex((r) => r.evidenceId === evidence.evidenceId);
+    if (idx >= 0) rows[idx] = evidence;
+    else rows.push(evidence);
+    await writeLocal(rows);
+  } catch (error) {
+    // The Evidence Authority is the admission record. A full local cache must not block it.
+    logger.warn('[contributions] local evidence persist failed (non-blocking)', error);
+  }
 }
 
 export async function getLocalEvidenceForBarcode(barcode: string): Promise<ContributionEvidence[]> {

@@ -106,6 +106,20 @@ const EMPTY_ORIGIN: OriginDraft = {
   intent: 'new',
 };
 
+function textField(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function safeOrigin(row: OriginDraft | null | undefined): OriginDraft {
+  return {
+    ...(row || EMPTY_ORIGIN),
+    wording: textField(row?.wording),
+    place: textField(row?.place),
+    ingredient: textField(row?.ingredient),
+    percentage: textField(row?.percentage),
+  };
+}
+
 const QUALIFIER_LABELS: { value: OriginPercentageQualifier; label: string }[] = [
   { value: 'at_least', label: 'At least' },
   { value: 'exactly', label: 'Exactly' },
@@ -624,21 +638,34 @@ export default function PacketContributionModal({
       const observations: { unitId: string; label: string; kind: 'ingredients' | 'nutrition' | 'origin' | 'claim' | 'cert' | 'absence'; index: number }[] = [];
       const contexts = includedContexts;
       const exactCatalogue = packetHits.find(
-        (hit) => hit.displayName.trim().toLowerCase() === packetQuery.trim().toLowerCase()
+        (hit) => textField(hit.displayName).trim().toLowerCase() === textField(packetQuery).trim().toLowerCase()
       );
-      const removedOriginKeys = ceasedOriginsRemovedFromForm(openedOriginsRef.current, origins);
+      const originRowsNow = origins.map((row) => safeOrigin(row));
+      const openedOriginsNow = openedOriginsRef.current.map((row) => safeOrigin(row));
+      const removedOriginKeys = ceasedOriginsRemovedFromForm(openedOriginsNow, originRowsNow);
       const decision = prepareVisibleContribution({
         contexts,
-        ingredientsText,
-        initialIngredients: initialIngredientsRef.current,
-        nutrition: { basis: basis || nutritionBaselineRef.current.basis, amounts, sodiumUnit },
-        nutritionBaseline: nutritionBaselineRef.current,
-        origins,
-        claims,
-        initialClaims: initialClaimsRef.current,
-        certifications: certs,
-        initialCertifications: initialCertificationsRef.current,
-        pendingPacketWording: packetQuery,
+        ingredientsText: textField(ingredientsText),
+        initialIngredients: textField(initialIngredientsRef.current),
+        nutrition: {
+          basis: basis || nutritionBaselineRef.current.basis,
+          amounts: Object.fromEntries(
+            Object.entries(amounts).map(([key, value]) => [key, textField(value)])
+          ) as typeof amounts,
+          sodiumUnit,
+        },
+        nutritionBaseline: {
+          ...nutritionBaselineRef.current,
+          amounts: Object.fromEntries(
+            Object.entries(nutritionBaselineRef.current.amounts || {}).map(([key, value]) => [key, textField(value)])
+          ) as typeof amounts,
+        },
+        origins: originRowsNow,
+        claims: claims.map((row) => textField(row)),
+        initialClaims: (initialClaimsRef.current || []).map((row) => textField(row)),
+        certifications: certs.map((row) => textField(row)),
+        initialCertifications: (initialCertificationsRef.current || []).map((row) => textField(row)),
+        pendingPacketWording: textField(packetQuery),
         catalogueName: exactCatalogue?.displayName,
         absence,
         hasPhotoForAbsence: targeted.length > 0,
@@ -699,10 +726,11 @@ export default function PacketContributionModal({
       for (let index = 0; index < decision.origins.length; index += 1) {
         const row = decision.origins[index];
         const places = governedOriginCountryNames(row.place);
-        const wording = row.wording.trim();
+        const wording = textField(row.wording).trim();
         if (places.length === 0) continue;
-        const percentage = Number(row.percentage);
-        const statedPercentage = !row.percentageNotStated && Number.isFinite(percentage) && row.percentage.trim();
+        const percentageText = textField(row.percentage);
+        const percentage = Number(percentageText);
+        const statedPercentage = !row.percentageNotStated && Number.isFinite(percentage) && percentageText.trim();
         const qualifications = capturedOriginQualifications({
           local: row.local === true,
           imported: row.imported === true,
@@ -876,7 +904,8 @@ export default function PacketContributionModal({
         `${CONTRIBUTION_NOTICE_PARTIAL} Not added: ${retained.refused.map((row) => row.label).join('; ')}`
       );
       setPhase('review');
-    } catch {
+    } catch (error) {
+      trace.noteError(error);
       trace.mark('submit_failed', 'failed');
       setPartialNotice(contributionTransportFailureNotice());
       onSharedEvidenceFailed?.();

@@ -35,6 +35,7 @@ export type ContributionTracePayload = {
   platform: 'ios' | 'android' | 'unknown';
   entry: 'modal' | 'retry' | 'capture';
   byteRequests?: number;
+  error?: string;
   domains: string[];
   reason: string;
   t0: number;
@@ -84,6 +85,8 @@ export class ContributionTrace {
 
   byteRequests = 0;
 
+  private errorNote = '';
+
   constructor(
     entry: 'modal' | 'retry' | 'capture',
     platform: string,
@@ -124,6 +127,13 @@ export class ContributionTrace {
     this.domains = [...new Set(domains.filter((domain) => DOMAINS.has(domain)))];
   }
 
+  /** Bounded diagnostic. It is not shown to the consumer. */
+  noteError(error: unknown): void {
+    const name = error instanceof Error ? error.name : 'Error';
+    const message = error instanceof Error ? error.message : typeof error === 'string' ? error : 'unknown';
+    this.errorNote = `${name}: ${message}`.replace(/\s+/g, ' ').slice(0, 180);
+  }
+
   headers(): Record<string, string> {
     return {
       'X-Rveel-Trace-Id': this.traceId,
@@ -152,6 +162,7 @@ export class ContributionTrace {
       elapsedMs: Date.now() - this.t0,
       openTransmits: this.openTransmits,
       byteRequests: this.byteRequests,
+      ...(this.errorNote ? { error: this.errorNote } : {}),
       marks: this.marks.map((mark) => ({ ...mark })),
       requests: this.requests.map((request) => ({ ...request })),
     };

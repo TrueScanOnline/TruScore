@@ -22,12 +22,13 @@ export function actionsPermitted(disposition: ReviewDisposition): ReviewAction[]
 }
 
 export function supportIsBounded(session: PacketContributionSession, support: SupportCoverage): boolean {
-  const source = session.sourceAssets.find((asset) => asset.assetId === support.sourceAssetId);
+  if (!support?.sourceAssetId) return false;
+  const source = (session.sourceAssets || []).find((asset) => asset.assetId === support.sourceAssetId);
   if (!source) return false;
   if (support.coverage === 'whole_image') {
     return source.framing === 'targeted';
   }
-  const derived = session.derivedAssets.find((asset) => asset.derivedAssetId === support.derivedAssetId);
+  const derived = (session.derivedAssets || []).find((asset) => asset.derivedAssetId === support.derivedAssetId);
   return !!derived && derived.sourceAssetId === source.assetId && derived.transform.kind === 'region';
 }
 
@@ -55,6 +56,7 @@ export async function addManualEvidenceUnit(params: {
 }): Promise<PacketEvidenceUnit> {
   const session = await getSession(params.sessionId);
   if (!session) throw new Error('packet_session_missing');
+  const existingUnits = Array.isArray(session.units) ? session.units : [];
   const statement = params.statement.trim();
   const structuredOrigin =
     params.domain === 'origins' &&
@@ -65,7 +67,7 @@ export async function addManualEvidenceUnit(params: {
     throw new Error('manual_statement_required');
   }
   const unit: PacketEvidenceUnit = {
-    unitId: `eu_manual_${session.sessionId}_${session.units.length + 1}`,
+    unitId: `eu_manual_${session.sessionId}_${existingUnits.length + 1}`,
     sessionId: session.sessionId,
     domain: params.domain,
     statement: statement || (params.packetAbsenceAffirmation || structuredOrigin ? '' : 'Nutrition facts'),
@@ -91,7 +93,7 @@ export async function addManualEvidenceUnit(params: {
     originQualifications: params.originQualifications,
     percentageNotStated: params.percentageNotStated === true,
   };
-  await upsertSession({ ...session, units: [...session.units, unit] });
+  await upsertSession({ ...session, units: [...existingUnits, unit] });
   return unit;
 }
 

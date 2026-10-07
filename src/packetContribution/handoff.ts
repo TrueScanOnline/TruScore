@@ -43,7 +43,8 @@ export async function handoffReviewedUnits(params: {
     params.submit ||
     ((input) => submitGovernedEvidence({ ...input, persistRemote: params.persistRemote }));
   const results: HandoffResult[] = [];
-  const units = [...session.units];
+  const units = [...(Array.isArray(session.units) ? session.units : [])];
+  const sourceAssets = Array.isArray(session.sourceAssets) ? session.sourceAssets : [];
 
   for (let index = 0; index < units.length; index += 1) {
     const unit = units[index];
@@ -72,9 +73,9 @@ export async function handoffReviewedUnits(params: {
       results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'unbounded_support' });
       continue;
     }
-    const source = session.sourceAssets.find((asset) => asset.assetId === unit.support.sourceAssetId);
+    const source = sourceAssets.find((asset) => asset.assetId === unit.support?.sourceAssetId);
     if (unit.domain === 'ingredients_nutrition') {
-      const ingredientsText = unit.section === 'nutrition' ? undefined : unit.statement;
+      const ingredientsText = unit.section === 'nutrition' ? undefined : unit.statement || '';
       const amounts = unit.section === 'nutrition' ? unit.nutritionAmounts : undefined;
       const hasNutrition = !!amounts?.some((amount) => Number.isFinite(amount.value));
       if (!ingredientsText?.trim() && !hasNutrition) {
@@ -135,7 +136,7 @@ export async function handoffReviewedUnits(params: {
       continue;
     }
     if (unit.domain === 'packet_claims') {
-      const wording = unit.statement.trim();
+      const wording = (unit.statement || '').trim();
       if (!wording) {
         results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'packet_claim_wording_absent' });
         continue;
@@ -182,11 +183,11 @@ export async function handoffReviewedUnits(params: {
         results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'origin_claim_not_explicit' });
         continue;
       }
-      if (!primaryCountry && !ingredientSubject && !unit.statement.trim()) {
+      if (!primaryCountry && !ingredientSubject && !(unit.statement || '').trim()) {
         results.push({ unitId: unit.unitId, outcome: 'skipped', reason: 'origin_statement_absent' });
         continue;
       }
-      const observedWording = unit.statement.trim();
+      const observedWording = (unit.statement || '').trim();
       const evidence = await submit({
         barcode: session.barcode,
         domain: 'origins',
@@ -227,14 +228,14 @@ export async function handoffReviewedUnits(params: {
     const evidence = await submit({
       barcode: session.barcode,
       domain: unit.domain,
-      claimValue: unit.statement,
-      exactWording: unit.statement,
+      claimValue: unit.statement || '',
+      exactWording: unit.statement || '',
       imageUrl: source ? `private://${source.privateKey}` : undefined,
       variantKey: session.variantKey,
       asProductionEpoch: true,
       ...(unit.domain === 'certifications'
         ? (() => {
-            const labelsTags = governedCertificationLabels(unit.statement);
+            const labelsTags = governedCertificationLabels(unit.statement || '');
             return labelsTags ? { labelsTags } : {};
           })()
         : {}),

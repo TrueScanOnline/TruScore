@@ -8,15 +8,49 @@ export type SessionPersistence = {
   save(rows: PacketContributionSession[]): Promise<void>;
 };
 
+function asArray<T>(value: T[] | undefined | null): T[] {
+  return Array.isArray(value) ? value.filter((item) => item != null) : [];
+}
+
+/** Older installs can reopen a session that never stored these lists. */
+function normalizeSession(row: PacketContributionSession): PacketContributionSession {
+  return {
+    ...row,
+    sourceAssets: asArray(row.sourceAssets),
+    derivedAssets: asArray(row.derivedAssets),
+    extractionRuns: asArray(row.extractionRuns),
+    units: asArray(row.units),
+  };
+}
+
+function storageFull(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error || '');
+  return /quota|sqlite_full|disk is full|cursorwindow|row too big|out of memory|database or disk/i.test(message);
+}
+
 const asyncStoragePersistence: SessionPersistence = {
   async load() {
     const raw = await AsyncStorage.getItem(PACKET_SESSION_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as PacketContributionSession[];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.filter((row) => row != null).map(normalizeSession) : [];
   },
   async save(rows) {
-    await AsyncStorage.setItem(PACKET_SESSION_STORAGE_KEY, JSON.stringify(rows));
+    const payload = JSON.stringify(rows.map(normalizeSession));
+    try {
+      await AsyncStorage.setItem(PACKET_SESSION_STORAGE_KEY, payload);
+    } catch (error) {
+      if (!storageFull(error)) throw error;
+      await Promise.resolve(
+        AsyncStorage.multiRemove([
+          '@truescan_fsanz_cache_AU',
+          '@truescan_fsanz_cache_AU_metadata',
+          '@truescan_fsanz_cache_NZ',
+          '@truescan_fsanz_cache_NZ_metadata',
+        ])
+      ).catch(() => undefined);
+      await AsyncStorage.setItem(PACKET_SESSION_STORAGE_KEY, payload);
+    }
   },
 };
 

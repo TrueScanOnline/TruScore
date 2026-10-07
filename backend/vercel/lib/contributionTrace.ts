@@ -169,6 +169,9 @@ function sanitizedClientTimeline(body: Record<string, unknown>): Record<string, 
     elapsedMs: typeof body.elapsedMs === 'number' && Number.isFinite(body.elapsedMs) ? body.elapsedMs : null,
     openTransmits: typeof body.openTransmits === 'number' && Number.isFinite(body.openTransmits) ? body.openTransmits : null,
     byteRequests: typeof body.byteRequests === 'number' && Number.isFinite(body.byteRequests) ? body.byteRequests : 0,
+    ...(typeof body.error === 'string' && body.error.trim()
+      ? { error: body.error.replace(/\s+/g, ' ').slice(0, 180) }
+      : {}),
     marks,
     requests,
   };
