@@ -6,164 +6,130 @@
   <style>
     :root {
       --bg: #eef6f4;
-      --bg-deep: #e3f0ec;
       --card: #ffffff;
-      --layer: rgba(255, 255, 255, 0.78);
-      --layer-edge: rgba(255, 255, 255, 0.96);
       --ink: #1c2430;
       --muted: #5e6b78;
-      --line: #e4eeeb;
+      --line: #e3eeeb;
       --teal: #149a94;
       --teal-deep: #0e7c78;
-      --teal-soft: #e7f7f5;
       --coral-soft: #fff1f1;
       --green-soft: #eaf8f2;
       --violet-soft: #f3f0ff;
       --blue-soft: #eef4fc;
       --stone: #8a8a8a;
-      --stone-soft: #f1f3f4;
+      --stone-soft: #f3f5f6;
       --warm: #e8923a;
       --warm-soft: #fff6ec;
       --poor: #e36b6b;
       --track: #e7eeec;
-      --display: 40px;
+      --display: 34px;
       --title: 20px;
-      --finding: 17px;
       --body: 15px;
       --meta: 12px;
-      --radius: 22px;
-      --lift: 0 10px 24px rgba(28, 36, 48, 0.07);
-      --shadow: 0 12px 28px rgba(20, 60, 58, 0.08);
+      --radius: 18px;
+      --gap: 8px;
+      --shadow: 0 6px 16px rgba(28, 36, 48, 0.05);
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      color: var(--ink);
-      font-family: "Segoe UI", system-ui, sans-serif;
-      background: linear-gradient(180deg, #f7fbfa 0%, var(--bg-deep) 100%);
-    }
-    header.page { max-width: 980px; margin: 0 auto; padding: 28px 32px 8px; }
+    body { margin: 0; background: #e7f3f1; color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; }
+    header.page { max-width: 1100px; margin: 0 auto; padding: 24px 28px 4px; }
     header.page h1 { font-size: 22px; margin: 0 0 6px; }
-    header.page p, .roles { margin: 0 0 8px; color: var(--muted); font-size: var(--meta); max-width: 760px; }
-    .roles { color: var(--teal-deep); }
-    section.group { max-width: 980px; margin: 0 auto; padding: 8px 32px 28px; }
-    .pair { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
-    figure.board { width: 390px; margin: 0 0 18px; }
-    figcaption { margin: 0 0 10px; }
+    header.page p { margin: 0 0 8px; color: var(--muted); font-size: var(--meta); max-width: 760px; }
+    section.group { max-width: 1100px; margin: 0 auto; padding: 8px 28px 28px; }
+    .pair { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+    figure.board { width: 390px; margin: 0; }
+    figure.wide { width: 390px; }
+    figcaption { margin: 0 0 8px; }
     .concept { font-size: 14px; font-weight: 700; }
     .surface, .state, .note { font-size: 12px; line-height: 1.4; color: var(--teal-deep); }
     .note { color: var(--muted); margin-top: 4px; }
-    .phone {
-      width: 390px;
-      border-radius: 28px;
-      padding: 14px 14px 10px;
-      box-shadow: var(--shadow);
-      background: linear-gradient(180deg, #f7fbfa, var(--bg));
-    }
-    .status { display: flex; justify-content: space-between; font-size: 12px; font-weight: 650; margin-bottom: 8px; }
-    .disclaimer, .hero, .score { background: var(--card); border-radius: 16px; margin-bottom: 12px; }
-    .disclaimer {
-      display: flex; gap: 8px; align-items: center;
-      border: 2px solid #d32f2f; padding: 10px 12px; font-size: var(--meta); width: 100%; text-align: left; color: var(--ink);
-    }
-    .disclaimer strong { display: block; font-size: 14px; }
-    .disclaimer em { display: block; color: var(--muted); font-style: normal; }
-    .hero { display: flex; gap: 12px; padding: 12px; align-items: center; }
-    .hero img { width: 72px; height: 72px; object-fit: contain; border-radius: 12px; background: var(--stone-soft); }
+    .phone { width: 390px; background: var(--bg); border-radius: 28px; padding: 12px 12px 8px; box-shadow: var(--shadow); }
+    .status { font-size: 12px; font-weight: 650; margin-bottom: 6px; }
+    .hero, .score, .found, .info, .disclaimer { background: var(--card); border-radius: var(--radius); margin-bottom: var(--gap); box-shadow: var(--shadow); }
+    .hero { display: flex; gap: 10px; padding: 10px; align-items: center; }
+    .hero img { width: 64px; height: 64px; object-fit: contain; border-radius: 12px; background: var(--stone-soft); }
     .hero h3 { margin: 0; font-size: var(--title); line-height: 1.15; }
-    .hero p { margin: 4px 0 0; color: var(--muted); font-size: var(--meta); }
-    .score { padding: 14px 14px 16px; position: relative; z-index: 1; }
-    .tools { display: flex; justify-content: space-between; align-items: center; color: var(--teal); }
-    .tools span { display: flex; gap: 10px; }
-    .tools svg, .disclaimer svg, .confidence svg { width: 20px; height: 20px; }
-    .score h4 { margin: 4px 0 12px; font-size: 16px; }
-    .result-row { display: flex; gap: 14px; align-items: flex-start; }
-    .ring {
-      width: 108px; height: 108px; border-radius: 50%; flex: none; display: grid; place-items: center;
-      background: conic-gradient(from -90deg, var(--arc, var(--track)) var(--pct, 0%), var(--track) 0);
-    }
-    .ring.neutral { background: var(--stone-soft); box-shadow: inset 0 0 0 10px #d9e0de; }
-    .ring b {
-      width: 80px; height: 80px; border-radius: 50%; background: white;
-      display: grid; place-items: center; font-size: var(--display); line-height: 1;
-    }
-    .ring.rated b { color: var(--poor); }
-    .ring.neutral b { color: var(--stone); font-size: 34px; }
-    .band { font-size: 22px; font-weight: 700; }
-    .band.poor { color: var(--poor); }
-    .band.neutral { font-size: 20px; }
-    .explain { color: var(--ink); font-size: var(--body); line-height: 1.4; margin: 6px 0 0; }
-    .sub { color: var(--muted); font-size: var(--meta); margin-top: 2px; }
-    .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
-    .tile { border: 0; border-radius: 14px; padding: 8px 4px 10px; text-align: center; color: var(--ink); font: inherit; }
-    .tile svg { width: 20px; height: 20px; display: block; margin: 0 auto 4px; }
+    .hero p { margin: 2px 0 0; color: var(--muted); font-size: var(--meta); }
+    .score { padding: 10px 12px 12px; }
+    .tools { display: flex; justify-content: flex-end; gap: 12px; color: var(--teal); }
+    .tools svg { width: 20px; height: 20px; }
+    .result-row { display: flex; gap: 12px; align-items: center; margin-top: 4px; }
+    .ring { width: 96px; height: 96px; border-radius: 50%; flex: none; display: grid; place-items: center; background: conic-gradient(from -90deg, var(--poor) 23%, var(--track) 0); }
+    .ring b { width: 72px; height: 72px; border-radius: 50%; background: white; display: grid; place-items: center; font-size: var(--display); line-height: 1; color: var(--poor); }
+    .ring small { font-size: 13px; font-weight: 650; }
+    .ring.neutral { width: 64px; height: 64px; background: var(--stone-soft); box-shadow: inset 0 0 0 7px #d9e0de; }
+    .ring.neutral b { width: 46px; height: 46px; color: var(--stone); font-size: 22px; }
+    .band { font-size: 22px; font-weight: 700; color: var(--poor); }
+    .nr-block { margin-top: 8px; }
+    .nr-block h4 { margin: 0; font-size: 20px; font-weight: 700; }
+    .explain { margin: 6px 0 0; color: var(--ink); font-size: var(--body); line-height: 1.4; }
+    .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+    .tile { border: 0; border-radius: 14px; padding: 7px 2px 8px; text-align: center; color: var(--ink); font: inherit; }
+    .tile svg { width: 18px; height: 18px; display: block; margin: 0 auto 3px; }
     .tile .name { display: block; font-size: 11px; font-weight: 650; }
-    .tile .val { display: block; margin-top: 4px; font-size: 13px; font-weight: 700; }
-    .tile.body { background: var(--coral-soft); }
-    .tile.planet { background: var(--green-soft); }
-    .tile.claims { background: var(--violet-soft); }
-    .tile.open { background: var(--blue-soft); }
+    .tile .val { display: block; margin-top: 2px; font-size: 12px; font-weight: 700; }
+    .tile.body { background: var(--coral-soft); color: #c45c5c; }
+    .tile.planet { background: var(--green-soft); color: #1e8f68; }
+    .tile.claims { background: var(--violet-soft); color: var(--violet, #6e5bd6); }
+    .tile.open { background: var(--blue-soft); color: #3d7ed6; }
+    .tile .name, .tile .val { color: var(--ink); }
     .tile .val.dash { color: var(--stone); font-weight: 600; }
-    .confidence {
-      display: flex; gap: 8px; align-items: center; margin-top: 12px; padding: 10px 12px;
-      background: var(--warm-soft); border-radius: 14px; border: 0; width: 100%; text-align: left; font: inherit;
-    }
-    .confidence strong { color: #8a4e12; font-size: 14px; }
-    .found { position: relative; z-index: 2; margin: -8px 0 12px; }
-    .found h3 { margin: 0 0 8px; font-size: 16px; color: var(--ink); }
-    .story {
-      width: 100%; display: flex; justify-content: space-between; gap: 10px; align-items: center;
-      text-align: left; border: 1px solid var(--layer-edge); background: var(--layer);
-      box-shadow: var(--lift); backdrop-filter: blur(8px);
-      border-radius: 18px; padding: 14px; margin-top: 8px;
-      font: inherit; font-size: var(--finding); line-height: 1.35; color: var(--ink);
-    }
+    .confidence { display: flex; gap: 6px; align-items: center; margin-top: 8px; padding: 7px 10px; background: var(--warm-soft); border: 0; border-radius: 12px; width: 100%; text-align: left; font: inherit; color: #8a4e12; font-weight: 700; font-size: 13px; }
+    .confidence svg { width: 16px; height: 16px; }
+    .found { padding: 8px 8px 10px; }
+    .found h3 { margin: 2px 6px 6px; font-size: 16px; }
+    .story { width: 100%; display: flex; gap: 8px; align-items: center; text-align: left; border: 0; background: transparent; border-top: 1px solid var(--line); padding: 10px 6px; font: inherit; font-size: var(--body); color: var(--ink); }
+    .story:first-of-type { border-top: 0; }
+    .cue { width: 22px; height: 22px; flex: none; display: grid; place-items: center; }
+    .cue svg { width: 22px; height: 22px; display: block; }
+    .cue.body { color: #c45c5c; }
+    .cue.planet { color: #1e8f68; }
+    .cue.claims { color: #6e5bd6; }
+    .cue.open { color: #3d7ed6; }
+    .story > span:nth-child(2) { flex: 1; }
     .chev { color: var(--teal); font-weight: 700; flex: none; }
-    .actions {
-      display: flex; flex-wrap: wrap; gap: 8px; padding: 12px;
-      background: var(--layer); border: 1px solid var(--layer-edge); border-radius: 18px;
-      box-shadow: var(--lift); margin-bottom: 12px;
-    }
-    .chip {
-      border: 1px solid var(--teal); color: var(--teal-deep); background: white;
-      border-radius: 999px; padding: 10px 14px; font-size: var(--body); font-weight: 650;
-    }
-    .chip.warm { border-color: var(--warm); color: #8a4e12; background: #fffaf5; }
-    .tabs { display: grid; grid-template-columns: repeat(5, 1fr); text-align: center; font-size: 11px; color: var(--muted); }
-    .tabs b { display: block; height: 18px; }
-    .tabs svg { width: 18px; height: 18px; }
+    .info { padding: 10px 12px; }
+    .info h3 { margin: 0 0 6px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    .info h3 svg { width: 18px; height: 18px; color: var(--teal); }
+    .linkish { color: var(--teal); font-size: var(--meta); font-weight: 650; background: none; border: 0; padding: 0; font: inherit; }
+    .action { display: flex; align-items: center; gap: 6px; margin-top: 8px; border: 1px solid var(--teal); color: var(--teal-deep); background: white; border-radius: 999px; padding: 8px 12px; font-size: var(--meta); font-weight: 650; }
+    .action.warm { border-color: var(--warm); color: #8a4e12; }
+    .action svg { width: 16px; height: 16px; }
+    .disclaimer { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; border: 1px solid var(--line); padding: 8px 10px; color: var(--ink); box-shadow: none; background: var(--stone-soft); }
+    .disclaimer strong { font-size: 13px; }
+    .disclaimer em { display: block; color: var(--muted); font-style: normal; font-size: 12px; font-weight: 400; }
+    .disclaimer svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
+    .tabs { display: grid; grid-template-columns: repeat(5, 1fr); text-align: center; font-size: 11px; color: var(--muted); padding-top: 4px; }
+    .tabs b { display: block; height: 16px; }
+    .tabs svg { width: 16px; height: 16px; }
     .tabs .on { color: var(--teal-deep); font-weight: 700; }
-    .modal {
-      background: var(--layer); border: 1px solid var(--layer-edge); border-radius: 22px;
-      box-shadow: var(--lift); padding: 18px 16px; backdrop-filter: blur(8px);
-    }
-    .modal h3 { margin: 4px 0 8px; font-size: 22px; }
-    .modal p { margin: 0 0 14px; font-size: var(--body); line-height: 1.4; }
-    .btn {
-      display: inline-block; background: var(--teal); color: white; border-radius: 14px;
-      padding: 12px 16px; font-weight: 700; margin: 0 8px 8px 0; box-shadow: var(--lift);
-    }
-    .link { color: var(--teal-deep); font-weight: 700; background: none; border: 0; font: inherit; font-size: var(--body); padding: 0; }
+    .modal { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+    .modal h3 { margin: 0 0 8px; font-size: 22px; }
+    .modal p { margin: 0 0 12px; font-size: var(--body); line-height: 1.4; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; background: var(--teal); color: white; border-radius: 14px; padding: 12px 14px; font-weight: 700; margin: 0 8px 8px 0; }
+    .btn svg { width: 18px; height: 18px; }
+    .manual { display: block; width: 100%; text-align: center; border: 1px solid var(--teal); color: var(--teal-deep); background: white; border-radius: 14px; padding: 12px; font-weight: 700; font-size: var(--body); margin-top: 4px; }
+    .close { color: var(--teal-deep); font-weight: 700; background: none; border: 0; font: inherit; font-size: var(--body); padding: 12px 0 0; }
     body.shot header.page, body.shot figure.board { display: none; }
     body.shot figure.board.on { display: block; }
-    body.shot section.group { max-width: none; margin: 0; padding: 16px; }
+    body.shot section.group { max-width: none; margin: 0; padding: 12px; }
     body.shot .pair { display: block; }
   </style>
 </head>
 <body>
   <header class="page">
     <h1>Rveel Discovery</h1>
-    <p>Presentation concept refined from Rveel Signature. Product, score and the four pillars stay clear. Existing findings sit on a lifted layer. Depth is a soft surface only. Not mounted in Result.</p>
-    <p class="roles">Roles: page, card, lifted layer · ink and muted · display, title, finding, meta · rated ring and neutral ring · Body, Planet, Claims and Transparency tints · teal action and warm action · info, favourite, share, chevron.</p>
+    <p>Presentation concept for the production visual target. Product identity, the score, four pillars and existing findings lead. The Disclaimer keeps its wording and opens the same legal note, and it sits at the end of the scroll. Packet and origins actions stay on those cards. Scoring, publication, confidence, eligibility and Result orchestration are unchanged.</p>
+    <p>Roles: page, card, neutral note · ink and muted · display, title, body, meta · rated ring and smaller neutral ring · Body apple, Planet leaf, Claims speech, Transparency eye · favourite heart · teal and warm actions.</p>
   </header>
   <section class="group">
     <div class="pair">
       <figure class="board" id="rated">
         <figcaption>
           <div class="concept">Rveel Discovery</div>
-          <div class="surface">SCR-RESULT · ProductHeroSection · CARD-SCORE · ConfidenceBadge · CARD-HIGHLIGHTS</div>
-          <div class="state">Overall Rated · Cadbury Dairy Milk · 9300617064879</div>
-          <div class="note">Published 23, Poor. Claims 0 is a published zero. Findings stay in the current order, on the lifted layer.</div>
+          <div class="surface">SCR-RESULT · ProductHeroSection · CARD-SCORE · CARD-HIGHLIGHTS</div>
+          <div class="state">Overall Rated · first viewport · Cadbury Dairy Milk · 9300617064879</div>
+          <div class="note">Published 23/100, Poor. Claims 0/25 is a published zero. Findings stay in the current order.</div>
         </figcaption>
         <article class="phone" id="phone-rated"></article>
       </figure>
@@ -171,8 +137,8 @@
         <figcaption>
           <div class="concept">Rveel Discovery</div>
           <div class="surface">SCR-RESULT · ProductHeroSection · CARD-SCORE · CARD-HIGHLIGHTS</div>
-          <div class="state">Overall NR · Coca-Cola Classic · 9300675001113</div>
-          <div class="note">Unchanged or still NR: the ring stays stone and the title stays Overall unrevealed. Body, Transparency and the two findings remain. Add packet claims and Add product origins stay available. Nothing says the score will be published.</div>
+          <div class="state">Overall NR · first viewport · Coca-Cola Classic · 9300675001113</div>
+          <div class="note">After a contribution, Result refreshes from the authoritative result. If Overall stays unrevealed, pillar scores, findings and action eligibility still update. They are not held at the previous values.</div>
         </figcaption>
         <article class="phone" id="phone-nr"></article>
       </figure>
@@ -181,84 +147,112 @@
           <div class="concept">Rveel Discovery</div>
           <div class="surface">PacketContributionModal · phase capture · packetClaims</div>
           <div class="state">Eligible add · Add packet claims</div>
-          <div class="note">Unchanged or still NR: this is the existing packet entry. Sending it does not change the result ring. If Overall is still unrevealed afterwards, the neutral score, the known pillars and the current findings stay as they are.</div>
+          <div class="note">Camera, Gallery, and Enter what’s on the pack. Close. The result refreshes after submit. A still-NR overall does not freeze the pillars, findings or these actions.</div>
         </figcaption>
         <article class="phone" id="phone-entry"></article>
+      </figure>
+      <figure class="board" id="scrolled">
+        <figcaption>
+          <div class="concept">Rveel Discovery</div>
+          <div class="surface">SCR-RESULT · Product Origins · Packet Claims · ProductDisclaimerCard</div>
+          <div class="state">Scrolled to the end · Disclaimer above the tabs</div>
+          <div class="note">Add product origins and Add packet claims stay on their cards. Disclaimer wording is unchanged and still opens the legal note.</div>
+        </figcaption>
+        <article class="phone" id="phone-scrolled"></article>
+      </figure>
+      <figure class="board wide" id="overview">
+        <figcaption>
+          <div class="concept">Rveel Discovery</div>
+          <div class="surface">SCR-RESULT · full scroll</div>
+          <div class="state">Overall Rated · Cadbury Dairy Milk · overview</div>
+          <div class="note">Identity, score, pillars and findings, then the product-information cards, then the Disclaimer, then the tabs.</div>
+        </figcaption>
+        <article class="phone" id="phone-overview"></article>
       </figure>
     </div>
   </section>
   <script>
-    const svg = (body) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${body}</svg>`;
-    const icon = {
-      info: svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 8h.01"/>'),
-      heart: svg('<path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 4.6-7 9-7 9z"/>'),
-      share: svg('<circle cx="6" cy="12" r="2"/><circle cx="16" cy="7" r="2"/><circle cx="16" cy="17" r="2"/><path d="M8 11l6-3M8 13l6 3"/>'),
-      shield: svg('<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>'),
-      leaf: svg('<path d="M5 19C5 11 11 5 20 4c0 9-6 16-15 16 0-4 2-7 5-9"/>'),
-      chat: svg('<path d="M6 17l-2 4 5-2a8 8 0 1 0-3-2z"/>'),
-      eye: svg('<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/>'),
-      alert: svg('<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>')
-    };
+    try {
+    const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${d}</svg>`;
+    const apple = svg('<path d="M16 7c-.4-1.6-1.6-2.6-3-2.8.2 1.6 1.2 2.6 3 2.8z"/><path d="M12 8c-2.8 0-5 2.2-5 6.2C7 17.6 8.8 20 12 20s5-2.4 5-5.8C17 10.2 14.8 8 12 8z"/>');
+    const leaf = svg('<path d="M5 19C5 11 11 5 20 4c0 9-6 16-15 16 0-4 2-7 5-9"/>');
+    const chat = svg('<path d="M6 17l-2 4 5-2a8 8 0 1 0-3-2z"/>');
+    const eye = svg('<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/>');
+    const info = svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 8h.01"/>');
+    const heart = svg('<path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 4.6-7 9-7 9z"/>');
+    const share = svg('<circle cx="6" cy="12" r="2"/><circle cx="16" cy="7" r="2"/><circle cx="16" cy="17" r="2"/><path d="M8 11l6-3M8 13l6 3"/>');
+    const alert = svg('<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>');
+    const globe = svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/>');
+    const shield = svg('<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>');
+    const plus = svg('<circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/>');
+    const camera = svg('<path d="M4 8h3l2-2h6l2 2h3v10H4z"/><circle cx="12" cy="13" r="3"/>');
+    const gallery = svg('<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 15l2.5-3 2 2.5L16 10l4 5"/>');
     const tab = (body, label, on) => `<div class="${on ? 'on' : ''}"><b>${svg(body)}</b>${label}</div>`;
     const tabs = `<nav class="tabs">${tab('<path d="M4 8h4l2-3h4l2 3h4v11H4z"/>','Scan',true)}${tab('<circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/>','Search')}${tab('<circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/>','History')}${tab('<path d="M12 19s-6-3.6-6-8a3.5 3.5 0 0 1 6-2 3.5 3.5 0 0 1 6 2c0 4.4-6 8-6 8z"/>','Favs')}${tab('<circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>','Settings')}</nav>`;
     const tile = (cls, symbol, name, value) => `<button class="tile ${cls}" type="button">${symbol}<span class="name">${name}</span><span class="val${value === '—' ? ' dash' : ''}">${value}</span></button>`;
-    const story = (text) => `<button class="story" type="button"><span>${text}</span><span class="chev">›</span></button>`;
-    const chrome = `<div class="status"><span>9:41</span><span></span></div>
-      <button class="disclaimer" type="button">${icon.info}<span><strong>Disclaimer</strong><em>Tap here for further information about scoring, data, and information being displayed.</em></span><span class="chev">›</span></button>`;
-    const tools = `<div class="tools"><span>${icon.shield}${icon.info}</span><span>${icon.heart}${icon.share}</span></div>`;
-    const actions = `<div class="actions"><button class="chip warm" type="button">Add packet claims</button><button class="chip" type="button">Add product origins</button></div>`;
+    const story = (cls, symbol, text) => `<button class="story" type="button"><span class="cue ${cls}">${symbol}</span><span>${text}</span><span class="chev">›</span></button>`;
+    const tools = `<div class="tools">${info}${heart}${share}</div>`;
+    const disclaimer = `<button class="disclaimer" type="button">${info}<span><strong>Disclaimer</strong><em>Tap here for further information about scoring, data, and information being displayed.</em></span><span class="chev">›</span></button>`;
+    const tail = `<section class="info"><h3>Nutrition &amp; Ingredients</h3></section>
+      <section class="info"><h3>${globe} Product Origins</h3><button class="linkish" type="button">L1 / L2 / L3</button><button class="action" type="button">${plus} Add product origins</button></section>
+      <section class="info"><h3>${shield} Packet Claims</h3><button class="linkish" type="button">L1 / L2 / L3</button><button class="action warm" type="button">${plus} Add packet claims</button></section>
+      ${disclaimer}`;
 
-    document.getElementById('phone-rated').innerHTML = `${chrome}
-      <section class="hero"><img src="https://images.openfoodfacts.org/images/products/930/061/706/4879/front_en.50.200.jpg" alt=""><div><h3>Dairy Milk Milk Chocolate</h3><p>Cadbury</p></div></section>
-      <section class="score">${tools}<h4>Rveel Score</h4>
-        <div class="result-row"><div class="ring rated" style="--pct:23%;--arc:var(--poor)"><b>23</b></div><div><div class="band poor">Poor</div><div class="sub">Rveel Score</div></div></div>
-        <div class="tiles">
-          ${tile('body', icon.heart, 'Body', '2/25')}
-          ${tile('planet', icon.leaf, 'Planet', '8/25')}
-          ${tile('claims', icon.chat, 'Claims', '0/25')}
-          ${tile('open', icon.eye, 'Transparency', '13/25')}
-        </div>
-        <button class="confidence" type="button">${icon.alert}<strong>Limited confidence</strong></button>
-      </section>
-      <section class="found"><h3>What we found</h3>
-        ${story('E — lowest nutritional quality')}
-        ${story('E — very high environmental impact')}
-        ${story('Mondelēz International, Inc.: 30/100 in independent forced-labour safeguards benchmark')}
-      </section>
-      ${actions}${tabs}`;
-
-    document.getElementById('phone-nr').innerHTML = `${chrome}
-      <section class="hero"><img src="https://images.openfoodfacts.org/images/products/930/067/500/1113/front_en.27.200.jpg" alt=""><div><h3>Coca-Cola Classic</h3><p>Coca-Cola</p></div></section>
-      <section class="score">${tools}<h4>Rveel Score</h4>
-        <div class="result-row"><div class="ring neutral"><b>—</b></div><div><div class="band neutral">Overall unrevealed</div><p class="explain">(Awaiting founder approval) We cannot reveal the overall result until all four pillars can be rated. Check the unrevealed pillar result for what is still missing.</p></div></div>
-        <div class="tiles">
-          ${tile('body', icon.heart, 'Body', '2/25')}
-          ${tile('planet', icon.leaf, 'Planet', '—')}
-          ${tile('claims', icon.chat, 'Claims', '—')}
-          ${tile('open', icon.eye, 'Transparency', '11/25')}
-        </div>
-      </section>
-      <section class="found"><h3>What we found</h3>
-        ${story('E — lowest nutritional quality')}
-        ${story('Some ingredient wording needs explanation')}
-      </section>
-      ${actions}${tabs}`;
-
-    document.getElementById('phone-entry').innerHTML = `<div class="status"><span>9:41</span><span></span></div>
+    function pillars(kind) {
+      const rated = kind === 'rated';
+      return `<div class="tiles">
+        ${tile('body', apple, 'Body', '2/25')}
+        ${tile('planet', leaf, 'Planet', rated ? '8/25' : '—')}
+        ${tile('claims', chat, 'Claims', rated ? '0/25' : '—')}
+        ${tile('open', eye, 'Transparency', rated ? '13/25' : '11/25')}
+      </div>`;
+    }
+    function findings(kind) {
+      const rows = kind === 'rated'
+        ? [story('body', apple, 'E — lowest nutritional quality'), story('planet', leaf, 'E — very high environmental impact'), story('claims', chat, 'Mondelēz International, Inc.: 30/100 in independent forced-labour safeguards benchmark')]
+        : [story('body', apple, 'E — lowest nutritional quality'), story('open', eye, 'Some ingredient wording needs explanation')];
+      return `<section class="found"><h3>What we found</h3>${rows.join('')}</section>`;
+    }
+    function hero(kind) {
+      const nr = kind === 'nr';
+      const src = nr
+        ? 'https://images.openfoodfacts.org/images/products/930/067/500/1113/front_en.27.200.jpg'
+        : 'https://images.openfoodfacts.org/images/products/930/061/706/4879/front_en.50.200.jpg';
+      return `<section class="hero"><img src="${src}" alt=""><div><h3>${nr ? 'Coca-Cola Classic' : 'Dairy Milk Milk Chocolate'}</h3><p>${nr ? 'Coca-Cola' : 'Cadbury'}</p></div></section>`;
+    }
+    function score(kind) {
+      if (kind === 'nr') {
+        return `<section class="score">${tools}
+          <div class="result-row"><div class="ring neutral"><b>—</b></div></div>
+          <div class="nr-block"><h4>Overall unrevealed</h4><p class="explain">(Awaiting founder approval) We cannot reveal the overall result until all four pillars can be rated. Check the unrevealed pillar result for what is still missing.</p></div>
+          ${pillars('nr')}</section>`;
+      }
+      return `<section class="score">${tools}
+        <div class="result-row"><div class="ring"><b>23<small>/100</small></b></div><div class="band">Poor</div></div>
+        ${pillars('rated')}
+        <button class="confidence" type="button">${alert} Limited confidence</button>
+      </section>`;
+    }
+    const top = (kind) => `<div class="status">9:41</div>${hero(kind)}${score(kind)}${findings(kind)}`;
+    document.getElementById('phone-rated').innerHTML = top('rated') + tabs;
+    document.getElementById('phone-nr').innerHTML = top('nr') + tabs;
+    document.getElementById('phone-scrolled').innerHTML = `<div class="status">9:41</div>${tail}${tabs}`;
+    document.getElementById('phone-overview').innerHTML = top('rated') + tail + tabs;
+    document.getElementById('phone-entry').innerHTML = `<div class="status">9:41</div>
       <section class="modal">
         <h3>Packet information</h3>
         <p>Photograph what’s on the pack, or choose a photo you already took.</p>
-        <div><span class="btn">Camera</span><span class="btn">Gallery</span></div>
-        <p><button class="link" type="button">Enter what’s on the pack</button></p>
-        <p><button class="link" type="button">Close</button></p>
+        <div><span class="btn">${camera} Camera</span><span class="btn">${gallery} Gallery</span></div>
+        <button class="manual" type="button">Enter what’s on the pack</button>
+        <button class="close" type="button">Close</button>
       </section>`;
-
     const shot = (location.hash || '').replace(/^#/, '');
     if (shot) {
       document.body.classList.add('shot');
       const board = document.getElementById(shot);
       if (board) board.classList.add('on');
     }
+    } catch (e) { document.documentElement.dataset.err = e.message; }
   </script>
 </body>
 </html>
