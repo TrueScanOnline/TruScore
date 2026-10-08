@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SCR-RESULT concept boards — example data</title>
+  <style>
+    :root {
+      --bg: #f4fbfa;
+      --card: #ffffff;
+      --ink: #1c2430;
+      --muted: #5e6b78;
+      --line: #e3eeeb;
+      --teal: #149a94;
+      --teal-deep: #0e7c78;
+      --aqua: #d9f5f2;
+      --coral: #e36b6b;
+      --warm: #e8923a;
+      --violet: #6e5bd6;
+      --violet-soft: #f3f0ff;
+      --stone: #8a8a8a;
+      --fair: #e2b340;
+      --good: #3cba8d;
+      --display: 44px;
+      --title: 20px;
+      --body: 16px;
+      --meta: 13px;
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #e7f3f1;
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+    header.page {
+      padding: 28px 32px 8px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    header.page h1 { font-size: 22px; margin: 0 0 6px; }
+    header.page p { margin: 0 0 8px; color: var(--muted); font-size: var(--meta); max-width: 760px; }
+    header.page ul { margin: 0; padding-left: 18px; color: var(--teal-deep); font-size: var(--meta); }
+    section.alt { max-width: 980px; margin: 0 auto; padding: 18px 32px 28px; }
+    section.alt h2 { font-size: 18px; margin: 0 0 4px; }
+    section.alt .why { margin: 0 0 14px; color: var(--muted); font-size: var(--meta); }
+    .pair { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+    figure.board { width: 390px; margin: 0; }
+    figcaption { margin: 0 0 10px; }
+    .concept { font-size: 14px; font-weight: 700; }
+    .surface, .state, .governed { font-size: 12px; line-height: 1.35; color: var(--teal-deep); }
+    .governed { color: var(--muted); margin-top: 4px; }
+    .phone {
+      width: 390px;
+      background: var(--bg);
+      border-radius: 28px;
+      padding: 18px 16px 22px;
+      box-shadow: 0 10px 30px rgba(20, 60, 58, 0.08);
+    }
+    .product { font-size: var(--title); font-weight: 650; line-height: 1.2; }
+    .brand { color: var(--muted); font-size: var(--meta); margin-bottom: 12px; }
+    .score-card, .finding-lead, .stories, .actions {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .score-card.rated { border: 2px solid var(--coral); }
+    .score-card.nr { border: 2px solid var(--line); }
+    .kicker { font-size: var(--meta); color: var(--muted); }
+    .number { font-size: var(--display); font-weight: 650; line-height: 1; color: var(--coral); }
+    .band { font-size: var(--body); font-weight: 650; color: var(--coral); }
+    .nr-title { font-size: 22px; font-weight: 650; }
+    .explain { color: var(--muted); font-size: var(--meta); margin-top: 6px; }
+    .row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .pname { width: 108px; font-size: var(--body); }
+    .track { flex: 1; height: 8px; background: #eef4f3; border-radius: 99px; overflow: hidden; }
+    .fill { height: 100%; border-radius: 99px; }
+    .pval { width: 52px; text-align: right; font-size: var(--meta); font-weight: 650; }
+    .pval.neutral { color: var(--stone); font-weight: 600; }
+    .stories h3, .finding-lead .eyebrow { margin: 0 0 8px; font-size: var(--meta); }
+    .story {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #f7fbfa;
+      margin-top: 8px;
+      font-size: var(--body);
+    }
+    .finding-lead { background: var(--violet-soft); border: 1px solid #e4defa; }
+    .finding-lead strong { display: block; font-size: 18px; line-height: 1.3; }
+    .chev { color: var(--violet); font-weight: 700; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      border: 1px solid var(--teal);
+      color: var(--teal-deep);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: var(--meta);
+      background: white;
+    }
+    .chip.warm { border-color: var(--warm); color: #8a4e12; }
+    .iconrow { display: flex; justify-content: flex-end; gap: 10px; color: var(--teal); font-size: 14px; }
+    body.shot header.page,
+    body.shot section.alt > h2,
+    body.shot section.alt > .why,
+    body.shot figure.board { display: none; }
+    body.shot figure.board.on { display: block; }
+    body.shot section.alt { max-width: none; margin: 0; padding: 16px; }
+    body.shot .pair { display: block; }
+  </style>
+</head>
+<body>
+  <header class="page">
+    <h1>Score concept boards</h1>
+    <p>Presentation prototypes for SCR-RESULT. Example data from a local scoring run of the Open Food Facts records. Not mounted in Result. Production layout stays pending this comparison. Finding text and order are the existing promoted selection. Phone screenshots sit beside this file.</p>
+    <ul>
+      <li><a href="a-overall-led-rated.png">A · Overall-led · Overall Rated</a></li>
+      <li><a href="a-overall-led-mixed-nr.png">A · Overall-led · Overall NR</a></li>
+      <li><a href="b-finding-led-rated.png">B · Finding-led · Overall Rated</a></li>
+      <li><a href="b-finding-led-mixed-nr.png">B · Finding-led · Overall NR</a></li>
+    </ul>
+  </header>
+
+  <section class="alt" id="overall-led">
+    <h2>A · Overall-led</h2>
+    <p class="why">The published overall, or Overall unrevealed, is the first thing in the region. Findings stay underneath.</p>
+    <div class="pair">
+      <figure class="board" id="a-rated">
+        <figcaption>
+          <div class="concept">A · Overall-led</div>
+          <div class="surface">SCR-RESULT · CARD-SCORE then CARD-HIGHLIGHTS</div>
+          <div class="state">Overall Rated · Body Rated · Planet Rated · Claims Rated · Transparency Rated</div>
+          <div class="governed">Actions from resultContributionActions: Add packet claims (packetInformationAction add); Add product origins (originsAction complete). addNutrition and addIngredients are false. Planet does not solicit.</div>
+        </figcaption>
+        <article class="phone">
+          <div class="product">Dairy Milk Milk Chocolate</div>
+          <div class="brand">Cadbury · 9300617064879</div>
+          <div class="score-card rated">
+            <div class="iconrow">Info · Share</div>
+            <div class="kicker">Rveel Score</div>
+            <div class="number">23</div>
+            <div class="band">Poor</div>
+            <div class="row"><span class="pname">Body</span><span class="track"><span class="fill" style="width:8%;background:var(--coral)"></span></span><span class="pval">2/25</span></div>
+            <div class="row"><span class="pname">Planet</span><span class="track"><span class="fill" style="width:32%;background:var(--coral)"></span></span><span class="pval">8/25</span></div>
+            <div class="row"><span class="pname">Claims</span><span class="track"><span class="fill" style="width:0;background:var(--coral)"></span></span><span class="pval">0/25</span></div>
+            <div class="row"><span class="pname">Transparency</span><span class="track"><span class="fill" style="width:52%;background:var(--fair)"></span></span><span class="pval">13/25</span></div>
+          </div>
+          <div class="stories">
+            <h3>What we found</h3>
+            <div class="story"><span>E — lowest nutritional quality</span><span class="chev">›</span></div>
+            <div class="story"><span>E — very high environmental impact</span><span class="chev">›</span></div>
+            <div class="story"><span>Mondelēz International, Inc.: 30/100 in independent forced-labour safeguards benchmark</span><span class="chev">›</span></div>
+          </div>
+          <div class="actions">
+            <span class="chip warm">Add packet claims</span>
+            <span class="chip">Add product origins</span>
+          </div>
+        </article>
+      </figure>
+      <figure class="board" id="a-nr">
+        <figcaption>
+          <div class="concept">A · Overall-led</div>
+          <div class="surface">SCR-RESULT · CARD-SCORE then CARD-HIGHLIGHTS</div>
+          <div class="state">Overall NR · Body Rated · Planet NR · Claims NR · Transparency Rated</div>
+          <div class="governed">Actions from resultContributionActions: Add packet claims (packetInformationAction add); Add product origins (originsAction complete). addNutrition and addIngredients are false. Planet does not solicit.</div>
+        </figcaption>
+        <article class="phone">
+          <div class="product">Coca-Cola Classic</div>
+          <div class="brand">Coca-Cola · 9300675001113</div>
+          <div class="score-card nr">
+            <div class="iconrow">Info · Share</div>
+            <div class="kicker">Rveel Score</div>
+            <div class="nr-title">Overall unrevealed</div>
+            <div class="explain">(Awaiting founder approval) We cannot reveal the overall result until all four pillars can be rated. Check the unrevealed pillar result for what is still missing.</div>
+            <div class="row"><span class="pname">Body</span><span class="track"><span class="fill" style="width:8%;background:var(--coral)"></span></span><span class="pval">2/25</span></div>
+            <div class="row"><span class="pname">Planet</span><span class="track"></span><span class="pval neutral">—</span></div>
+            <div class="row"><span class="pname">Claims</span><span class="track"></span><span class="pval neutral">—</span></div>
+            <div class="row"><span class="pname">Transparency</span><span class="track"><span class="fill" style="width:44%;background:var(--coral)"></span></span><span class="pval">11/25</span></div>
+          </div>
+          <div class="stories">
+            <h3>What we found</h3>
+            <div class="story"><span>E — lowest nutritional quality</span><span class="chev">›</span></div>
+            <div class="story"><span>Some ingredient wording needs explanation</span><span class="chev">›</span></div>
+          </div>
+          <div class="actions">
+            <span class="chip warm">Add packet claims</span>
+            <span class="chip">Add product origins</span>
+          </div>
+        </article>
+      </figure>
+    </div>
+  </section>
+
+  <section class="alt" id="finding-led">
+    <h2>B · Finding-led</h2>
+    <p class="why">The first existing promoted finding leads. The score stays on the same screen. Selection is unchanged.</p>
+    <div class="pair">
+      <figure class="board" id="b-rated">
+        <figcaption>
+          <div class="concept">B · Finding-led</div>
+          <div class="surface">SCR-RESULT · CARD-HIGHLIGHTS then CARD-SCORE</div>
+          <div class="state">Overall Rated · Body Rated · Planet Rated · Claims Rated · Transparency Rated</div>
+          <div class="governed">Actions from resultContributionActions: Add packet claims (packetInformationAction add); Add product origins (originsAction complete). addNutrition and addIngredients are false. Planet does not solicit.</div>
+        </figcaption>
+        <article class="phone">
+          <div class="product">Dairy Milk Milk Chocolate</div>
+          <div class="brand">Cadbury · 9300617064879</div>
+          <div class="finding-lead">
+            <div class="eyebrow">What we found · Body</div>
+            <strong>E — lowest nutritional quality</strong>
+          </div>
+          <div class="score-card rated">
+            <div class="iconrow">Info · Share</div>
+            <div class="kicker">Rveel Score</div>
+            <div class="number">23</div>
+            <div class="band">Poor</div>
+            <div class="row"><span class="pname">Body</span><span class="track"><span class="fill" style="width:8%;background:var(--coral)"></span></span><span class="pval">2/25</span></div>
+            <div class="row"><span class="pname">Planet</span><span class="track"><span class="fill" style="width:32%;background:var(--coral)"></span></span><span class="pval">8/25</span></div>
+            <div class="row"><span class="pname">Claims</span><span class="track"><span class="fill" style="width:0;background:var(--coral)"></span></span><span class="pval">0/25</span></div>
+            <div class="row"><span class="pname">Transparency</span><span class="track"><span class="fill" style="width:52%;background:var(--fair)"></span></span><span class="pval">13/25</span></div>
+          </div>
+          <div class="stories">
+            <div class="story"><span>E — very high environmental impact</span><span class="chev">›</span></div>
+            <div class="story"><span>Mondelēz International, Inc.: 30/100 in independent forced-labour safeguards benchmark</span><span class="chev">›</span></div>
+          </div>
+          <div class="actions">
+            <span class="chip warm">Add packet claims</span>
+            <span class="chip">Add product origins</span>
+          </div>
+        </article>
+      </figure>
+      <figure class="board" id="b-nr">
+        <figcaption>
+          <div class="concept">B · Finding-led</div>
+          <div class="surface">SCR-RESULT · CARD-HIGHLIGHTS then CARD-SCORE</div>
+          <div class="state">Overall NR · Body Rated · Planet NR · Claims NR · Transparency Rated</div>
+          <div class="governed">Actions from resultContributionActions: Add packet claims (packetInformationAction add); Add product origins (originsAction complete). addNutrition and addIngredients are false. Planet does not solicit.</div>
+        </figcaption>
+        <article class="phone">
+          <div class="product">Coca-Cola Classic</div>
+          <div class="brand">Coca-Cola · 9300675001113</div>
+          <div class="finding-lead">
+            <div class="eyebrow">What we found · Body</div>
+            <strong>E — lowest nutritional quality</strong>
+          </div>
+          <div class="score-card nr">
+            <div class="iconrow">Info · Share</div>
+            <div class="kicker">Rveel Score</div>
+            <div class="nr-title">Overall unrevealed</div>
+            <div class="explain">(Awaiting founder approval) We cannot reveal the overall result until all four pillars can be rated. Check the unrevealed pillar result for what is still missing.</div>
+            <div class="row"><span class="pname">Body</span><span class="track"><span class="fill" style="width:8%;background:var(--coral)"></span></span><span class="pval">2/25</span></div>
+            <div class="row"><span class="pname">Planet</span><span class="track"></span><span class="pval neutral">—</span></div>
+            <div class="row"><span class="pname">Claims</span><span class="track"></span><span class="pval neutral">—</span></div>
+            <div class="row"><span class="pname">Transparency</span><span class="track"><span class="fill" style="width:44%;background:var(--coral)"></span></span><span class="pval">11/25</span></div>
+          </div>
+          <div class="stories">
+            <div class="story"><span>Some ingredient wording needs explanation</span><span class="chev">›</span></div>
+          </div>
+          <div class="actions">
+            <span class="chip warm">Add packet claims</span>
+            <span class="chip">Add product origins</span>
+          </div>
+        </article>
+      </figure>
+    </div>
+  </section>
+  <script>
+    const shot = (location.hash || '').replace(/^#/, '');
+    if (shot) {
+      document.body.classList.add('shot');
+      const board = document.getElementById(shot);
+      if (board) board.classList.add('on');
+    }
+  </script>
+</body>
+</html>
