@@ -1,0 +1,24 @@
+# Partial §10.4 gate, not the whole doctrine check. See the test file header.
+# Kept off the pillar workflow because that job's typecheck is already red
+# on pre-existing errors and must not hide this gate.
+name: Wave 5 consumption guards
+
+on:
+  push:
+    branches: ['wave5/**']
+  pull_request:
+    branches: ['wave5/**']
+  workflow_dispatch:
+
+jobs:
+  section-10-4:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx jest src/__tests__/unit/wave5/consumptionGuards.section10_4.test.ts --no-coverage
