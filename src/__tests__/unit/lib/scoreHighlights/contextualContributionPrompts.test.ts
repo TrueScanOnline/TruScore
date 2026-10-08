@@ -130,13 +130,13 @@ describe('selectContextualContributionPrompts — Body Nutri-Score', () => {
     expect(prompts).toEqual([]);
   });
 
-  it('does not render a nutrition prompt when the nutrition lane is resolved', () => {
+  it('does not explain a processing-only gap with the no-finding or nutrition sentence', () => {
     const prompts = selectContextualContributionPrompts(
       'Body',
       [row('Body', 'body-v12-nova-4', -5)],
       live({ nutrition: 'resolved', processing: 'unassessed' })
     );
-    expect(prompts.map((p) => p.kind)).toEqual(['base']);
+    expect(prompts).toEqual([]);
   });
 });
 

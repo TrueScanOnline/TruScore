@@ -194,11 +194,16 @@ export function selectContextualContributionPrompts(
   if (pillar === 'Body') {
     const nutritionUnassessed = lanes.nutrition === 'unassessed';
     const processingUnassessed = lanes.processing === 'unassessed';
-    if (!nutritionUnassessed && !processingUnassessed) return [];
-    if (nutritionUnassessed && !processingUnassessed) {
+    if (nutritionUnassessed && processingUnassessed) {
+      return [buildPrompt(pillar, 'base', BASE_PROMPT_COPY.Body, routeLive)];
+    }
+    if (nutritionUnassessed) {
       return [buildPrompt(pillar, 'body_nutri_unavailable', BODY_NUTRI_UNAVAILABLE_COPY, routeLive)];
     }
-    return [buildPrompt(pillar, 'base', BASE_PROMPT_COPY.Body, routeLive)];
+    // Processing-only: the base sentence says Body has no finding, and the nutrition
+    // sentence names the wrong lane. Neither may be shown. A processing sentence needs
+    // founder copy before this gap can be explained here.
+    return [];
   }
 
   if (pillar === 'Ethics') {

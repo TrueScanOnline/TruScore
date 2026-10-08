@@ -7,6 +7,7 @@ import { ShareContentBuilder } from './ShareContentBuilder';
 import { logger } from '../../../utils/logger';
 import { shareAnalytics } from '../../../utils/shareAnalytics';
 import { reportShareEventToBackend } from '../../../utils/reportShareEvent';
+import { resolveShareOverallScore } from '../../../utils/shareScoreSemantics';
 import { FacebookShare } from '../platforms/facebook';
 import { InstagramShare } from '../platforms/instagram';
 import { TwitterShare } from '../platforms/twitter';
@@ -75,14 +76,14 @@ export class ShareService {
 
       if (options.product) {
         const trackedPlatform = result.platform || platform;
+        const publishedShareScore = resolveShareOverallScore(options.truScore);
         shareAnalytics.trackShare({
           timestamp: Date.now(),
           platform: trackedPlatform,
           itemType: options.item || 'productInfo',
           productBarcode: options.product.barcode,
-          // NA-018: track only authorised session assessment — never raw product.trust_score.
-          truScore:
-            options.truScore != null ? options.truScore.truscore ?? undefined : undefined,
+          // Published score only. NR, Checking, and a missing publication record nothing.
+          truScore: publishedShareScore === null ? undefined : publishedShareScore,
           success: result.success,
         });
         void reportShareEventToBackend({

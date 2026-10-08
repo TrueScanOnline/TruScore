@@ -3,6 +3,8 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { buildShareUrl } from '../utils/shareUrl';
 import type { ShareableItem } from '../features/sharing/types';
+import type { ShareImageScoreState } from '../utils/shareScoreSemantics';
+import { RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR } from '../utils/truScorePresentation';
 
 const CARD_W = 360;
 const CARD_H = 520;
@@ -11,7 +13,7 @@ export interface ShareProductStoryCardProps {
   productName: string;
   imageUrl?: string | null;
   barcode: string;
-  truScore?: number | null;
+  scoreState: ShareImageScoreState;
   shareType: ShareableItem;
   brandColor: string;
   surfaceColor: string;
@@ -25,7 +27,7 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
       productName,
       imageUrl,
       barcode,
-      truScore,
+      scoreState,
       shareType,
       brandColor,
       surfaceColor,
@@ -42,8 +44,7 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
       utmCampaign: shareType,
     });
 
-    const scoreLabel =
-      truScore === null || truScore === undefined ? '—' : `${Math.round(truScore)}/100`;
+    const scoreChrome = scoreState.neutral ? RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR : brandColor;
 
     return (
       <View ref={ref} collapsable={false} style={[styles.root, { backgroundColor: surfaceColor }]}>
@@ -60,9 +61,11 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
         <Text style={[styles.title, { color: textColor }]} numberOfLines={3}>
           {productName}
         </Text>
-        <View style={[styles.scoreRow, { borderColor: brandColor }]}>
-          <Text style={[styles.scoreLabel, { color: textSecondary }]}>Rveel Score</Text>
-          <Text style={[styles.scoreValue, { color: brandColor }]}>{scoreLabel}</Text>
+        <View style={[styles.scoreRow, { borderColor: scoreChrome }]}>
+          <Text style={[styles.scoreLabel, { color: textSecondary }]}>{scoreState.caption}</Text>
+          {scoreState.valueText != null ? (
+            <Text style={[styles.scoreValue, { color: scoreChrome }]}>{scoreState.valueText}</Text>
+          ) : null}
         </View>
         <Text style={[styles.link, { color: textSecondary }]} numberOfLines={2}>
           {link}

@@ -84,38 +84,46 @@ function governanceForPillar(
 ): ContextualPromptGovernance | undefined {
   if (!publication) return undefined;
   if (pillar === 'Body') {
-    const opportunity = publication.body.s26?.contributionOpportunity;
+    const body = publication.body;
+    if (!body?.assessmentLanes) return undefined;
+    const opportunity = body.s26?.contributionOpportunity;
     return {
       material: opportunity?.material === true,
       routeStatus: opportunity?.routeStatus ?? 'none',
       lanes: {
-        nutrition: publication.body.assessmentLanes.nutrition,
-        processing: publication.body.assessmentLanes.processing,
+        nutrition: body.assessmentLanes.nutrition,
+        processing: body.assessmentLanes.processing,
       },
     };
   }
   if (pillar === 'Planet') {
-    const opportunity = publication.planet.s26?.contributionOpportunity;
+    const planet = publication.planet;
+    if (!planet) return undefined;
+    const opportunity = planet.s26?.contributionOpportunity;
     return {
       material: opportunity?.material === true,
       routeStatus: opportunity?.routeStatus ?? 'none',
     };
   }
   if (pillar === 'Ethics') {
-    const opportunity = publication.claims.s26?.contributionOpportunity;
+    const claims = publication.claims;
+    if (!claims?.assessmentLanes) return undefined;
+    const opportunity = claims.s26?.contributionOpportunity;
     return {
       material: opportunity?.material === true,
       routeStatus: opportunity?.routeStatus ?? 'none',
-      lanes: { packet: publication.claims.assessmentLanes.packet },
+      lanes: { packet: claims.assessmentLanes.packet },
     };
   }
-  const opportunity = publication.transparency.s26?.contributionOpportunity;
+  const transparency = publication.transparency;
+  if (!transparency?.assessmentLanes) return undefined;
+  const opportunity = transparency.s26?.contributionOpportunity;
   return {
     material: opportunity?.material === true,
     routeStatus: opportunity?.routeStatus ?? 'none',
     lanes: {
-      ingredient_clarity: publication.transparency.assessmentLanes.ingredient_clarity,
-      origins: publication.transparency.assessmentLanes.origins,
+      ingredient_clarity: transparency.assessmentLanes.ingredient_clarity,
+      origins: transparency.assessmentLanes.origins,
     },
   };
 }

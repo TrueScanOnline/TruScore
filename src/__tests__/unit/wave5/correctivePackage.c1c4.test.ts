@@ -10,6 +10,7 @@ import {
   resolveGenuinePillarBreakdown,
   resolveScoreCardShareType,
   resolveShareOverallScore,
+  shareImageScoreState,
   unpublishedShareCopy,
 } from '../../../utils/shareScoreSemantics';
 import {
@@ -204,6 +205,99 @@ describe('C-3 consumer fallbacks fail closed', () => {
   });
 });
 
+describe('C-1 image share keeps NR, Checking, and failure distinct', () => {
+  it('does not draw a number or a shared dash for unpublished states', () => {
+    const nr = shareImageScoreState(
+      result({
+        truscore: 22,
+        publication: snapshot({ overall: 'nr', overallPublished: null, overallInternal: 22 }),
+      })
+    );
+    const checking = shareImageScoreState(
+      result({
+        truscore: 22,
+        publication: snapshot({ overall: 'checking', overallPublished: null, overallInternal: 22 }),
+      })
+    );
+    const missing = shareImageScoreState(result({ truscore: 22 }));
+    const rated = shareImageScoreState(
+      result({
+        truscore: 90,
+        publication: snapshot({ overall: 'rated', overallPublished: 0, overallInternal: 90 }),
+      })
+    );
+
+    expect(nr).toMatchObject({ kind: 'nr', valueText: null, caption: 'Overall unrevealed', neutral: true });
+    expect(checking).toMatchObject({
+      kind: 'checking',
+      valueText: null,
+      caption: 'Seeing what we can find…',
+      neutral: true,
+    });
+    expect(missing).toMatchObject({
+      kind: 'unavailable',
+      valueText: null,
+      caption: RVEEL_SCORE_UNAVAILABLE_TITLE,
+      neutral: true,
+    });
+    expect(nr.caption).not.toBe(checking.caption);
+    expect(nr.caption).not.toBe(missing.caption);
+    expect(rated).toMatchObject({ kind: 'rated', valueText: '0/100', neutral: false });
+  });
+});
+
+describe('C-3 incomplete publication fails closed', () => {
+  it('does not publish a score when settled is missing or a Rated value is absent', () => {
+    const unsettledShape = result({
+      truscore: 64,
+      publication: {
+        ...snapshot({ overall: 'rated', overallPublished: 64, overallInternal: 64 }),
+        settled: undefined,
+      } as TruScoreResult['publication'],
+    });
+    const ratedWithoutValue = result({
+      truscore: 64,
+      publication: snapshot({ overall: 'rated', overallPublished: null, overallInternal: 64 }),
+    });
+    const nrWithStrayNumber = result({
+      truscore: 64,
+      publication: {
+        ...snapshot({ overall: 'nr', overallPublished: null, overallInternal: 64 }),
+        overall: {
+          ...snapshot({ overall: 'nr', overallPublished: null, overallInternal: 64 }).overall,
+          publishedScore: 64,
+        },
+      } as TruScoreResult['publication'],
+    });
+
+    expect(getTruScoreConsumerPresentation(unsettledShape).kind).toBe('unavailable');
+    expect(resolveShareOverallScore(unsettledShape)).toBeNull();
+    expect(shareImageScoreState(unsettledShape).valueText).toBeNull();
+    expect(resolveShareOverallScore(ratedWithoutValue)).toBeNull();
+    expect(resolveShareOverallScore(nrWithStrayNumber)).toBeNull();
+    expect(shareImageScoreState(nrWithStrayNumber).kind).toBe('nr');
+    expect(publishedHighlightPillarScores(unsettledShape).Body).toBeNull();
+  });
+
+  it('ignores a missing pillar entry instead of its internal score', () => {
+    const partial = result({
+      truscore: 48,
+      breakdown: { Body: 21, Planet: 16, Ethics: 20, Open: 18 },
+      publication: {
+        settled: true,
+        planet: snapshot({ overall: 'rated', overallPublished: 48, overallInternal: 48 }).planet,
+        claims: snapshot({ overall: 'rated', overallPublished: 48, overallInternal: 48 }).claims,
+        transparency: snapshot({ overall: 'rated', overallPublished: 48, overallInternal: 48 })
+          .transparency,
+        overall: snapshot({ overall: 'rated', overallPublished: 48, overallInternal: 48 }).overall,
+      } as TruScoreResult['publication'],
+    });
+    expect(publishedHighlightPillarScores(partial).Body).toBeNull();
+    expect(resolveGenuinePillarBreakdown(partial)).toBeNull();
+    expect(resolveShareOverallScore(partial)).toBe(48);
+  });
+});
+
 describe('C-4 contextual prompts follow lanes', () => {
   const ledger = [
     { pillar: 'Body' as const, id: 'body-v12-base', value: 0, highlightEligible: false },
@@ -218,6 +312,32 @@ describe('C-4 contextual prompts follow lanes', () => {
     expect(
       selectContextualContributionPrompts('Open', ledger, { userContributionRouteLive: true })
     ).toEqual([]);
+  });
+
+  it('a governed processing-only Body gap does not reuse the no-finding or nutrition sentence', () => {
+    const processingOnly = selectContextualContributionPrompts(
+      'Body',
+      [
+        { pillar: 'Body', id: 'body-v12-base', value: 0, highlightEligible: false },
+        { pillar: 'Body', id: 'body-v12-nutri-a', value: 4, highlightEligible: true },
+      ],
+      {
+        governance: {
+          material: true,
+          routeStatus: 'live',
+          lanes: { nutrition: 'resolved', processing: 'unassessed' },
+        },
+      }
+    );
+    expect(processingOnly).toEqual([]);
+    const bothMissing = selectContextualContributionPrompts('Body', [], {
+      governance: {
+        material: true,
+        routeStatus: 'live',
+        lanes: { nutrition: 'unassessed', processing: 'unassessed' },
+      },
+    });
+    expect(bothMissing.map((prompt) => prompt.l1)).toEqual(['We need more information for Body']);
   });
 
   it('explains a live unresolved lane and stays silent when that lane is resolved', () => {

@@ -83,10 +83,10 @@ export function getTruScoreConsumerPresentation(
   truScore: Pick<TruScoreResult, 'truscore' | 'publication'>,
   options?: { publicationSettled?: boolean }
 ): TruScoreConsumerPresentation {
-  const settled = options?.publicationSettled !== false;
+  const latchOpen = options?.publicationSettled !== false;
   const pub: CrossPillarPublicationSnapshot | undefined = truScore.publication;
 
-  if (!settled) {
+  if (!latchOpen) {
     return {
       kind: 'checking',
       title: 'Seeing what we can find…',
@@ -99,7 +99,24 @@ export function getTruScoreConsumerPresentation(
     };
   }
 
-  if (!pub?.overall) {
+  if (!pub?.overall || typeof pub.overall.publicationStatus !== 'string') {
+    return unavailablePresentation();
+  }
+
+  if (pub.settled === false) {
+    return {
+      kind: 'checking',
+      title: 'Seeing what we can find…',
+      explanation: 'Assessment still settling.',
+      showScoreCircle: false,
+      showScoreLabel: false,
+      showNumericScore: false,
+      showPillarBars: true,
+      overallDisplay: '—',
+    };
+  }
+
+  if (pub.settled !== true) {
     return unavailablePresentation();
   }
 
@@ -164,6 +181,9 @@ export function publishedHighlightPillarScores(
     return isGenuinePublishedScore(score) ? score : null;
   };
   const pub = truScore?.publication;
+  if (!pub || pub.settled !== true) {
+    return { Body: null, Planet: null, Ethics: null, Open: null };
+  }
   return {
     Body: pick(pub?.body),
     Planet: pick(pub?.planet),

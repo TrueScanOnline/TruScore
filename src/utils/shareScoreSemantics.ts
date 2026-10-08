@@ -7,6 +7,7 @@
  */
 
 import type { TruScoreResult } from '../lib/truscoreEngine';
+import { productIdentity } from '../config/productIdentity';
 import {
   getTruScoreConsumerPresentation,
   RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
@@ -32,9 +33,44 @@ export function resolveShareOverallScore(
   truScore: TruScoreResult | null | undefined
 ): number | null {
   if (truScore == null) return null;
-  const overall = truScore.publication?.overall;
-  if (!overall || overall.publicationStatus !== 'rated') return null;
+  const pub = truScore.publication;
+  const overall = pub?.overall;
+  if (!pub || pub.settled !== true || !overall || overall.publicationStatus !== 'rated') return null;
   return isGenuineNumber(overall.publishedScore) ? overall.publishedScore : null;
+}
+
+export type ShareImageScoreState = {
+  kind: 'rated' | 'nr' | 'checking' | 'unavailable';
+  /** Numeric text only when Rated, including a genuine zero. */
+  valueText: string | null;
+  /** "Rveel Score" only when Rated. Otherwise the existing state title. */
+  caption: string;
+  neutral: boolean;
+};
+
+/** Image-card state. NR, Checking, and technical failure stay distinct and carry no number. */
+export function shareImageScoreState(
+  truScore: TruScoreResult | null | undefined
+): ShareImageScoreState {
+  if (truScore == null) {
+    return { kind: 'unavailable', valueText: null, caption: RVEEL_SCORE_UNAVAILABLE_TITLE, neutral: true };
+  }
+  const presentation = getTruScoreConsumerPresentation(truScore, { publicationSettled: true });
+  if (presentation.kind === 'scored') {
+    return {
+      kind: 'rated',
+      valueText: `${presentation.score}/100`,
+      caption: productIdentity.publicScoreName,
+      neutral: false,
+    };
+  }
+  if (presentation.kind === 'nr') {
+    return { kind: 'nr', valueText: null, caption: presentation.title, neutral: true };
+  }
+  if (presentation.kind === 'checking') {
+    return { kind: 'checking', valueText: null, caption: presentation.title, neutral: true };
+  }
+  return { kind: 'unavailable', valueText: null, caption: presentation.title, neutral: true };
 }
 
 /** Card share control. A low band is chosen only from a published Rated score. */
