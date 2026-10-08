@@ -78,7 +78,6 @@ import ScoreHighlightsList from '../../src/components/ScoreHighlightsList';
 import { resultPillarBreakdown } from '../../src/utils/resultPillarBreakdown';
 import {
   publishedHighlightPillarScores,
-  publishedOverallVisualScore,
 } from '../../src/utils/truScorePresentation';
 import { resolveScoreCardShareType } from '../../src/utils/shareScoreSemantics';
 import ScoreHighlightsLookThroughModal, {
@@ -104,6 +103,7 @@ import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
 import { useTheme } from '../../src/theme';
+import { resultPresentation } from '../../src/theme/resultPresentation';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
@@ -370,15 +370,6 @@ function ResultScreenContent() {
     alertsPreferences.geopoliticalEnabled ||
     alertsPreferences.ethicalEnabled ||
     alertsPreferences.environmentalEnabled;
-
-  // Helper function to get TruScore color
-  const getTruScoreColor = (score: number | null) => {
-    if (score === null) return '#95a5a6'; // Gray for insufficient data
-    if (score >= 80) return '#16a085'; // Green (excellent)
-    if (score >= 60) return '#4dd09f'; // Light green (good)
-    if (score >= 40) return '#ffd93d'; // Yellow (fair)
-    return '#ff6b6b'; // Red (poor)
-  };
 
   // Helper function to get TruScore label
   const getTruScoreLabel = (score: number | null) => {
@@ -1733,7 +1724,7 @@ function ResultScreenContent() {
       <ScrollView
         ref={resultScrollRef}
         style={styles.scrollView}
-        contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + resultPresentation.space.scrollClearance }}
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
         refreshControl={
@@ -1744,7 +1735,6 @@ function ResultScreenContent() {
           />
         }
       >
-        <ProductDisclaimerCard />
         <ProductHeroSection
           colors={colors}
           darkMode={!!darkMode}
@@ -1801,20 +1791,13 @@ function ResultScreenContent() {
 
         {/* TruScore Card - v1.4. W3-S27 only via info glyph; Confidence badge opens W3-S26. */}
         {truScore ? (
-          <View
-            style={[styles.card, { 
-              backgroundColor: colors.card,
-              borderColor: getTruScoreColor(
-                publishedOverallVisualScore(truScore, { publicationSettled })
-              ),
-              borderWidth: 2,
-            }]}
-          >
-          <View style={styles.cardHeader}>
-            {/* Top line: Icons */}
-            <View style={styles.cardHeaderTop}>
-              <View style={styles.cardHeaderLeft}>
-                <Ionicons name="shield" size={24} color={colors.primary} />
+          <>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <View style={styles.scoreHeader}>
+            <Text style={[styles.scoreCardTitle, { color: colors.text, flex: 1 }]}>
+              {productIdentity.publicScoreName}
+            </Text>
+            <View style={styles.cardHeaderRight}>
                 <TouchableOpacity
                   onPress={() => {
                     setTruScoreModalVisible(true);
@@ -1824,10 +1807,8 @@ function ResultScreenContent() {
                   accessibilityRole="button"
                   accessibilityLabel="Understanding Rveel Score"
                 >
-                  <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+                  <Ionicons name="information-circle-outline" size={22} color={colors.primary} />
                 </TouchableOpacity>
-              </View>
-              <View style={styles.cardHeaderRight}>
                 <TouchableOpacity
                   onPress={handleToggleFavorite}
                   style={styles.favoriteButton}
@@ -1852,10 +1833,7 @@ function ResultScreenContent() {
                 >
                   <Ionicons name="share-outline" size={20} color={colors.primary} />
                 </TouchableOpacity>
-              </View>
             </View>
-            {/* Second line: Heading */}
-            <Text style={[styles.cardTitle, { color: colors.text }]}>{productIdentity.publicScoreName}</Text>
           </View>
           
           {/* TruScore Display - v1.4. Pillar rows open the W3-S12a look-through. */}
@@ -1891,17 +1869,18 @@ function ResultScreenContent() {
               />
             </View>
           )}
+        </View>
 
           {/* W3-S12 "What we found" — governed promoted stories from the fired ledger */}
           {scoreHighlights && scoreHighlights.promoted.length > 0 && (
-            <View style={[styles.reasonsContainer, { borderTopColor: colors.border }]}>
+            <View style={[styles.card, { backgroundColor: colors.card }]}>
               <ScoreHighlightsList
                 stories={scoreHighlights.promoted}
                 onSelectStory={openScoreHighlightStory}
               />
             </View>
           )}
-        </View>
+          </>
         ) : (
           /* Insufficient Data Card */
           <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -2392,7 +2371,9 @@ function ResultScreenContent() {
           </TouchableOpacity>
         </View>
 
-        {/* Bottom spacing */}
+        <ProductDisclaimerCard />
+
+        {/* Bottom spacing — keeps the Disclaimer fully above the tab bar */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
@@ -2882,7 +2863,7 @@ const styles = StyleSheet.create({
   },
   confidenceBadgeContainer: {
     marginTop: 8,
-    alignItems: 'center',
+    alignItems: 'stretch',
   },
   analysisButton: {
     flexDirection: 'row',
@@ -2910,6 +2891,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  scoreHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  scoreCardTitle: {
+    fontSize: resultPresentation.type.title,
+    fontWeight: '700',
   },
   cardHeader: {
     marginBottom: 16,

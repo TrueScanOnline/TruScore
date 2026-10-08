@@ -109,7 +109,7 @@ export default function ConfidenceBadge({
       style={[
         styles.badge,
         currentSize.container,
-        { backgroundColor: badgeColor + '20', borderColor: badgeColor },
+        { backgroundColor: badgeColor + '22', borderColor: 'transparent' },
       ]}
     >
       <Ionicons name={iconName} size={currentSize.icon} color={badgeColor} />
@@ -148,12 +148,13 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 20,
-    borderWidth: 1.5,
+    justifyContent: 'flex-start',
+    alignSelf: 'stretch',
+    borderRadius: 12,
+    borderWidth: 0,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    minWidth: 120,
+    paddingVertical: 10,
+    minHeight: 44,
   },
   smallContainer: {
     paddingHorizontal: 10,

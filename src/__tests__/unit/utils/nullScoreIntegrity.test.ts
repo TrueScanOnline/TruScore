@@ -10,6 +10,7 @@
 
 import {
   getTruScoreConsumerPresentation,
+  publishedPillarValueLabel,
   RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
   RVEEL_SCORE_UNAVAILABLE_TITLE,
 } from '../../../utils/truScorePresentation';
@@ -155,6 +156,8 @@ describe('null-score integrity — unavailable presentation', () => {
     expect(zero.kind).toBe('scored');
     if (zero.kind !== 'scored') return;
     expect(zero.score).toBe(0);
+    expect(publishedPillarValueLabel(0)).toBe('0/25');
+    expect(publishedPillarValueLabel(null)).toBe('—');
   });
 });
 

@@ -8,13 +8,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
-
-/** Product page disclaimer frame — high-visibility red (aligned with alert banner emphasis). */
-const DISCLAIMER_CARD_BORDER_RED = '#d32f2f';
+import { resultPresentation } from '../../theme/resultPresentation';
 
 export default function ProductDisclaimerCard() {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
 
   const open = useCallback(() => setModalVisible(true), []);
@@ -23,7 +21,13 @@ export default function ProductDisclaimerCard() {
   return (
     <>
       <TouchableOpacity
-        style={[styles.card, { backgroundColor: colors.card, borderColor: DISCLAIMER_CARD_BORDER_RED }]}
+        style={[
+          styles.card,
+          {
+            backgroundColor: darkMode ? resultPresentation.disclaimer.dark : resultPresentation.disclaimer.light,
+            borderColor: colors.border,
+          },
+        ]}
         onPress={open}
         activeOpacity={0.75}
         accessibilityRole="button"
@@ -82,12 +86,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 16,
+    marginTop: 4,
+    marginBottom: 8,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: 12,
-    borderWidth: 2,
+    borderRadius: resultPresentation.radius.chip,
+    borderWidth: 1,
+    minHeight: resultPresentation.tap.min,
     gap: 10,
   },
   cardIcon: {

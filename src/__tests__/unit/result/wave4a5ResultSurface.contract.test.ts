@@ -65,9 +65,8 @@ describe('Wave 4A.5 Result surface', () => {
   });
 
   it('places About these Additives, Product Origins, and Packet Claims after Nutrition & Ingredients', () => {
-    let cursor = result.indexOf('<ProductDisclaimerCard />');
+    let cursor = result.indexOf('<ProductHeroSection');
     const order = [
-      '<ProductHeroSection',
       "t('result.nutritionAndIngredients', 'Nutrition & Ingredients')",
       '<AboutTheseAdditivesCard',
       "t('result.productOrigins', 'Product Origins')",
@@ -77,6 +76,7 @@ describe('Wave 4A.5 Result surface', () => {
       'isMvpAllergensUiEnabled()',
       '<ProductDataLimitationsCard',
       'result.scanAnother',
+      '<ProductDisclaimerCard />',
     ];
     for (const marker of order) {
       cursor = indexAfter(result, marker, cursor);

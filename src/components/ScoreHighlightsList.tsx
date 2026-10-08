@@ -4,21 +4,18 @@
  * Shared by overall S12 on the Result screen and by the S12a pillar look-through so both
  * entry paths render identical L1 rows and resolve to identical L2 content.
  *
- * Locked presentation (v0.4 §4.0.1):
- *  - one continuous list, no positive/negative buckets and no counts
- *  - five-band muted materiality tint, no public legend and no points
- *  - subtle directional glyph only, treated as decorative so no scoring-direction narration
- *    reaches assistive technology
+ * Presentation: one surface, the existing finding text in selection order, a pillar cue,
+ * and a chevron for the existing row destination. Selection and wording are unchanged.
  */
 
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
+import { resultPresentation, type ResultPillarKey } from '../theme/resultPresentation';
 import {
   SCORE_HIGHLIGHTS_HEADING,
-  scoreHighlightBandStyle,
-  scoreHighlightDirectionGlyph,
+  consumerPillarLabel,
   type ScoreHighlightStory,
 } from '../lib/scoreHighlights';
 
@@ -34,7 +31,7 @@ export default function ScoreHighlightsList({
   onSelectStory,
   showHeading = true,
 }: ScoreHighlightsListProps) {
-  const { colors, darkMode } = useTheme();
+  const { colors } = useTheme();
 
   // Fail closed: with no eligible Highlight there is nothing governed to say, so the list renders
   // nothing at all rather than manufacturing generic commentary or an empty heading.
@@ -46,29 +43,29 @@ export default function ScoreHighlightsList({
         <Text style={[styles.heading, { color: colors.text }]}>{SCORE_HIGHLIGHTS_HEADING}</Text>
       )}
 
-      {stories.map((story) => {
-        const bandStyle = scoreHighlightBandStyle(story.band, darkMode);
+      {stories.map((story, index) => {
+        const role = resultPresentation.pillars[story.pillar as ResultPillarKey];
+        const pillar = consumerPillarLabel(story.pillar);
         return (
           <TouchableOpacity
             key={`${story.pillar}-${story.storyKey}`}
             onPress={() => onSelectStory(story)}
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel={story.l1}
+            accessibilityLabel={`${pillar}. ${story.l1}`}
             style={[
               styles.row,
-              { backgroundColor: bandStyle.background, borderLeftColor: bandStyle.accent },
+              index > 0 ? { borderTopColor: colors.border, borderTopWidth: StyleSheet.hairlineWidth } : null,
             ]}
           >
-            <Text style={[styles.rowTitle, { color: colors.text }]}>{story.l1}</Text>
-            <Ionicons
-              name={scoreHighlightDirectionGlyph(story.sign)}
-              size={16}
-              color={bandStyle.accent}
-              accessible={false}
-              importantForAccessibility="no"
-              style={styles.glyph}
-            />
+            <MaterialCommunityIcons name={role.glyph} size={22} color={role.icon} />
+            <Text
+              style={[styles.rowTitle, { color: colors.text }]}
+              {...(Platform.OS === 'android' ? { textBreakStrategy: 'highQuality' as const } : {})}
+            >
+              {story.l1}
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
           </TouchableOpacity>
         );
       })}
@@ -78,29 +75,27 @@ export default function ScoreHighlightsList({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 8,
+    gap: 0,
   },
   heading: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     marginBottom: 4,
+    marginHorizontal: 6,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    minHeight: resultPresentation.tap.min,
     paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderLeftWidth: 3,
+    paddingHorizontal: 6,
   },
   rowTitle: {
     flex: 1,
-    fontSize: 15,
+    flexShrink: 1,
+    fontSize: resultPresentation.type.body,
     lineHeight: 21,
     fontWeight: '500',
-  },
-  glyph: {
-    opacity: 0.75,
   },
 });

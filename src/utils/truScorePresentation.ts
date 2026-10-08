@@ -194,4 +194,10 @@ export function publishedHighlightPillarScores(
   };
 }
 
+/** Consumer pillar value. A published zero stays 0/25. Unpublished stays an em dash. */
+export function publishedPillarValueLabel(value: number | null): string {
+  if (value == null) return '—';
+  return `${value}/25`;
+}
+
 export { publishedScoreDisplay };
