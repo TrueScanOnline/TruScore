@@ -14,11 +14,8 @@ import { productIdentity } from '../config/productIdentity';
 import {
   resolveShareOverallScore,
   resolveShareBreakdownForOverall,
+  unpublishedShareCopy,
 } from '../utils/shareScoreSemantics';
-import {
-  RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
-  RVEEL_SCORE_UNAVAILABLE_TITLE,
-} from '../utils/truScorePresentation';
 import { consumerPillarLabel } from '../lib/scoreHighlights';
 
 export interface ShareCardOptions {
@@ -116,8 +113,9 @@ export function generateShareMessage(
   
   let message = `🔍 ${productName}\n\n`;
   if (score === null) {
-    message += `${RVEEL_SCORE_UNAVAILABLE_TITLE}\n`;
-    message += `${RVEEL_SCORE_UNAVAILABLE_EXPLANATION}\n\n`;
+    const unpublished = unpublishedShareCopy(truScore);
+    message += `${unpublished.title}\n`;
+    message += `${unpublished.explanation}\n\n`;
   } else {
     message += `${productIdentity.publicScoreName}: ${score}/100\n\n`;
   }

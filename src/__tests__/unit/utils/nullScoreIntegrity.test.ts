@@ -35,6 +35,39 @@ function unavailableResult(): TruScoreResult {
   };
 }
 
+function ratedPublication(
+  overall: number,
+  pillars: { Body: number; Planet: number; Ethics: number; Open: number }
+): NonNullable<TruScoreResult['publication']> {
+  const pillar = (score: number) => ({
+    publicationStatus: 'rated' as const,
+    internalScore: score,
+    publishedScore: score,
+    confidence: 'moderate' as const,
+    sourceQuality: 'community_or_user' as const,
+    s26: null,
+    confidenceReasonCode: 'rated',
+    assessmentLanes: {},
+    diagnostic: {},
+  });
+  return {
+    settled: true,
+    body: pillar(pillars.Body),
+    planet: pillar(pillars.Planet),
+    claims: pillar(pillars.Ethics),
+    transparency: pillar(pillars.Open),
+    overall: {
+      ...pillar(overall),
+      assessmentLanes: {
+        body: 'rated',
+        planet: 'rated',
+        claims: 'rated',
+        transparency: 'rated',
+      },
+    },
+  } as NonNullable<TruScoreResult['publication']>;
+}
+
 function scoredResult(overrides?: Partial<TruScoreResult>): TruScoreResult {
   return {
     truscore: 72,
@@ -95,13 +128,33 @@ describe('null-score integrity — unavailable presentation', () => {
     expect(p.explanation.toLowerCase()).not.toContain('confidence');
   });
 
-  test('ordinary scored products remain scored presentation', () => {
+  test('an internal score without publication fails closed', () => {
     const p = getTruScoreConsumerPresentation(scoredResult());
-    expect(p.kind).toBe('scored');
-    if (p.kind !== 'scored') return;
-    expect(p.score).toBe(72);
-    expect(p.showScoreCircle).toBe(true);
-    expect(p.showPillarBars).toBe(true);
+    expect(p.kind).toBe('unavailable');
+    if (p.kind !== 'unavailable') return;
+    expect(p.showNumericScore).toBe(false);
+    expect(p.showScoreLabel).toBe(false);
+  });
+
+  test('a rated publication remains scored, including a genuine zero', () => {
+    const rated = getTruScoreConsumerPresentation(
+      scoredResult({
+        publication: ratedPublication(72, { Body: 18, Planet: 16, Ethics: 20, Open: 18 }),
+      })
+    );
+    expect(rated.kind).toBe('scored');
+    if (rated.kind !== 'scored') return;
+    expect(rated.score).toBe(72);
+
+    const zero = getTruScoreConsumerPresentation(
+      scoredResult({
+        truscore: 0,
+        publication: ratedPublication(0, { Body: 0, Planet: 0, Ethics: 0, Open: 0 }),
+      })
+    );
+    expect(zero.kind).toBe('scored');
+    if (zero.kind !== 'scored') return;
+    expect(zero.score).toBe(0);
   });
 });
 
@@ -164,8 +217,10 @@ describe('null-score integrity — sharing semantics', () => {
     expect(resolveShareOverallScore(unavailableResult())).toBeNull();
   });
 
-  test('scored share content still carries the genuine score and breakdown', () => {
-    const tru = scoredResult();
+  test('scored share content still carries the genuine published score and breakdown', () => {
+    const tru = scoredResult({
+      publication: ratedPublication(72, { Body: 18, Planet: 16, Ethics: 20, Open: 18 }),
+    });
 
     const cardData = getShareCardData(baseProduct, tru);
     expect(cardData.truScore).toBe(72);

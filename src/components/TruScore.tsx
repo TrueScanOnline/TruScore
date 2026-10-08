@@ -30,7 +30,7 @@ const TruScore = React.memo(function TruScore({
 }: TruScoreProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { breakdown, publication } = truScore;
+  const { publication } = truScore;
   const presentation = getTruScoreConsumerPresentation(truScore, { publicationSettled });
 
   const getScoreColor = (s: number) => {
@@ -73,12 +73,9 @@ const TruScore = React.memo(function TruScore({
       Open: publication?.transparency,
     } as const;
     const pub = map[pillar];
-    if (pub) {
-      return pub.publicationStatus === 'rated' ? pub.publishedScore : null;
-    }
-    if (pillar === 'Ethics') return null;
-    const value = breakdown[pillar];
-    return typeof value === 'number' && !Number.isNaN(value) ? value : null;
+    if (!pub || pub.publicationStatus !== 'rated') return null;
+    const score = pub.publishedScore;
+    return typeof score === 'number' && !Number.isNaN(score) ? score : null;
   };
 
   if (presentation.kind === 'unavailable') {

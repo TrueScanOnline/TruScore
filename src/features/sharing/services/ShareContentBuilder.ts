@@ -11,11 +11,8 @@ import { productIdentity } from '../../../config/productIdentity';
 import {
   resolveShareOverallScore,
   resolveShareBreakdownForOverall,
+  unpublishedShareCopy,
 } from '../../../utils/shareScoreSemantics';
-import {
-  RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
-  RVEEL_SCORE_UNAVAILABLE_TITLE,
-} from '../../../utils/truScorePresentation';
 import { consumerPillarLabel } from '../../../lib/scoreHighlights';
 
 const scoreName = productIdentity.publicScoreName;
@@ -90,11 +87,12 @@ export class ShareContentBuilder {
     const breakdown = resolveShareBreakdownForOverall(score, truScore);
 
     if (score === null) {
-      const title = `${productName} - ${RVEEL_SCORE_UNAVAILABLE_TITLE}`;
+      const unpublished = unpublishedShareCopy(truScore);
+      const title = `${productName} - ${unpublished.title}`;
       const message =
         `${productName}\n\n` +
-        `${RVEEL_SCORE_UNAVAILABLE_TITLE}\n` +
-        `${RVEEL_SCORE_UNAVAILABLE_EXPLANATION}\n\n` +
+        `${unpublished.title}\n` +
+        `${unpublished.explanation}\n\n` +
         `🔍 Tap to open in ${appName}\n` +
         `📱 Free app - no sign-up needed\n\n` +
         `#RveelScore #ProductScan #${appName} #FoodTransparency #KnowWhatYouBuy`;
@@ -232,10 +230,11 @@ export class ShareContentBuilder {
     const score = resolveShareOverallScore(truScore);
 
     if (score === null) {
-      const title = `${productName}: ${RVEEL_SCORE_UNAVAILABLE_TITLE}`;
+      const unpublished = unpublishedShareCopy(truScore);
+      const title = `${productName}: ${unpublished.title}`;
       const message =
         `${title}\n\n` +
-        `${RVEEL_SCORE_UNAVAILABLE_EXPLANATION}\n\n` +
+        `${unpublished.explanation}\n\n` +
         `🔍 Tap to view details in ${appName}`;
       return {
         title,

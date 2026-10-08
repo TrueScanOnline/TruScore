@@ -30,6 +30,7 @@ import {
   SCORE_HIGHLIGHTS_HEADING,
   consumerPillarLabel,
   selectContextualContributionPrompts,
+  type ContextualPromptGovernance,
   type FiredAdjustment,
   type ScoreHighlightL3Route,
   type ScoreHighlightPillar,
@@ -37,6 +38,7 @@ import {
   type ScoreHighlightStory,
 } from '../lib/scoreHighlights';
 import { logger } from '../utils/logger';
+import type { CrossPillarPublicationSnapshot } from '../lib/rateability';
 
 /** Where the consumer entered the look-through from. */
 export type ScoreHighlightsLookThroughRequest =
@@ -52,11 +54,15 @@ interface ScoreHighlightsLookThroughModalProps {
   /** The entry point for this journey. Changing it starts a fresh stack. */
   request: ScoreHighlightsLookThroughRequest | null;
   selection: ScoreHighlightSelection | null;
-  /** Pillar score shown in the S12a header, when known. */
+  /** Pillar score shown in the S12a header, when known. Published scores only. */
   pillarScores?: Partial<Record<ScoreHighlightPillar, number | null>>;
   /**
-   * The fired scoring ledger for this scan. Used only to derive presentation-only contextual
-   * contribution prompts; it never enters the S12/S12a Highlight candidate set.
+   * Publication lanes decide whether a contextual prompt may explain a contribution need.
+   * The fired ledger must not create that need.
+   */
+  publication?: CrossPillarPublicationSnapshot | null;
+  /**
+   * Retained so existing callers can pass the ledger. Prompt selection does not read it.
    */
   firedAdjustments?: readonly FiredAdjustment[];
   /**
@@ -70,6 +76,48 @@ interface ScoreHighlightsLookThroughModalProps {
    * When omitted, in-app L3 affordances are not offered.
    */
   onOpenInAppL3?: (route: Extract<ScoreHighlightL3Route, { kind: 'in_app' }>, story: ScoreHighlightStory) => void;
+}
+
+function governanceForPillar(
+  pillar: ScoreHighlightPillar,
+  publication: CrossPillarPublicationSnapshot | null | undefined
+): ContextualPromptGovernance | undefined {
+  if (!publication) return undefined;
+  if (pillar === 'Body') {
+    const opportunity = publication.body.s26?.contributionOpportunity;
+    return {
+      material: opportunity?.material === true,
+      routeStatus: opportunity?.routeStatus ?? 'none',
+      lanes: {
+        nutrition: publication.body.assessmentLanes.nutrition,
+        processing: publication.body.assessmentLanes.processing,
+      },
+    };
+  }
+  if (pillar === 'Planet') {
+    const opportunity = publication.planet.s26?.contributionOpportunity;
+    return {
+      material: opportunity?.material === true,
+      routeStatus: opportunity?.routeStatus ?? 'none',
+    };
+  }
+  if (pillar === 'Ethics') {
+    const opportunity = publication.claims.s26?.contributionOpportunity;
+    return {
+      material: opportunity?.material === true,
+      routeStatus: opportunity?.routeStatus ?? 'none',
+      lanes: { packet: publication.claims.assessmentLanes.packet },
+    };
+  }
+  const opportunity = publication.transparency.s26?.contributionOpportunity;
+  return {
+    material: opportunity?.material === true,
+    routeStatus: opportunity?.routeStatus ?? 'none',
+    lanes: {
+      ingredient_clarity: publication.transparency.assessmentLanes.ingredient_clarity,
+      origins: publication.transparency.assessmentLanes.origins,
+    },
+  };
 }
 
 function frameFromRequest(request: ScoreHighlightsLookThroughRequest): Frame {
@@ -90,6 +138,7 @@ export default function ScoreHighlightsLookThroughModal({
   request,
   selection,
   pillarScores,
+  publication,
   firedAdjustments,
   userContributionRouteLive = false,
   onClose,
@@ -148,11 +197,12 @@ export default function ScoreHighlightsLookThroughModal({
 
   // Presentation-only pillar-state context. Separate from the Highlight list by contract.
   const contextualPrompts = useMemo(() => {
-    if (!current || current.kind !== 'pillar' || !firedAdjustments) return [];
-    return selectContextualContributionPrompts(current.pillar, firedAdjustments, {
+    if (!current || current.kind !== 'pillar') return [];
+    return selectContextualContributionPrompts(current.pillar, firedAdjustments ?? [], {
       userContributionRouteLive,
+      governance: governanceForPillar(current.pillar, publication),
     });
-  }, [current, firedAdjustments, userContributionRouteLive]);
+  }, [current, firedAdjustments, userContributionRouteLive, publication]);
 
   if (!visible || !current) return null;
 

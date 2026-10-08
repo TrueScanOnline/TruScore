@@ -76,6 +76,11 @@ import { useSettingsStore } from '../../src/store/useSettingsStore';
 import { shouldShowScoreDiagnosticsEntry } from '../../src/config/scoreDiagnostics';
 import ScoreHighlightsList from '../../src/components/ScoreHighlightsList';
 import { resultPillarBreakdown } from '../../src/utils/resultPillarBreakdown';
+import {
+  publishedHighlightPillarScores,
+  publishedOverallVisualScore,
+} from '../../src/utils/truScorePresentation';
+import { resolveScoreCardShareType } from '../../src/utils/shareScoreSemantics';
 import ScoreHighlightsLookThroughModal, {
   type ScoreHighlightsLookThroughRequest,
 } from '../../src/components/ScoreHighlightsLookThroughModal';
@@ -1799,7 +1804,9 @@ function ResultScreenContent() {
           <View
             style={[styles.card, { 
               backgroundColor: colors.card,
-              borderColor: getTruScoreColor(truScore.truscore),
+              borderColor: getTruScoreColor(
+                publishedOverallVisualScore(truScore, { publicationSettled })
+              ),
               borderWidth: 2,
             }]}
           >
@@ -1835,9 +1842,9 @@ function ResultScreenContent() {
                 <TouchableOpacity
                   onPress={() => {
                     // Determine share type for TruScore card
-                    const cardShareType = product.trust_score !== null && product.trust_score < 40 
-                      ? 'negativeTruScore' 
-                      : 'truScore';
+                    const cardShareType = resolveScoreCardShareType(truScore, {
+                      publicationSettled,
+                    });
                     handleShare(cardShareType);
                   }}
                   style={styles.shareButton}
@@ -2417,17 +2424,8 @@ function ResultScreenContent() {
         visible={scoreHighlightsRequest != null}
         request={scoreHighlightsRequest}
         selection={scoreHighlights}
-        pillarScores={
-          truScore
-            ? {
-                ...truScore.breakdown,
-                Ethics:
-                  truScore.publication?.claims.publicationStatus === 'rated'
-                    ? truScore.publication.claims.publishedScore
-                    : null,
-              }
-            : undefined
-        }
+        pillarScores={publishedHighlightPillarScores(truScore)}
+        publication={truScore?.publication}
         firedAdjustments={scoreHighlightsLedger ?? undefined}
         onClose={() => setScoreHighlightsRequest(null)}
         onOpenInAppL3={openInAppScoreHighlightL3}

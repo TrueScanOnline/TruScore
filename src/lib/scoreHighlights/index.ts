@@ -46,6 +46,7 @@ export {
   type ContextualContributionPrompt,
   type ContextualContributionPromptOptions,
   type ContextualPromptAction,
+  type ContextualPromptGovernance,
   type ContextualPromptKind,
 } from './contextualContributionPrompts';
 

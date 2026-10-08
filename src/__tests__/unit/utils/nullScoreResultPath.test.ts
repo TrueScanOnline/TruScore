@@ -66,6 +66,44 @@ function resultTruScore(overrides?: Partial<TruScoreResult>): TruScoreResult {
   };
 }
 
+function publishedOverall(overall: number): TruScoreResult {
+  const rated = (score: number) => ({
+    publicationStatus: 'rated' as const,
+    internalScore: score,
+    publishedScore: score,
+    confidence: 'moderate' as const,
+    sourceQuality: 'community_or_user' as const,
+    s26: null,
+    confidenceReasonCode: 'rated',
+    assessmentLanes: {},
+    diagnostic: {},
+  });
+  const unrated = {
+    publicationStatus: 'nr' as const,
+    internalScore: 15,
+    publishedScore: null,
+    confidence: null,
+    sourceQuality: 'community_or_user' as const,
+    s26: null,
+    confidenceReasonCode: 'nr',
+    assessmentLanes: {},
+    diagnostic: {},
+  };
+  return resultTruScore({
+    publication: {
+      settled: true,
+      body: rated(18),
+      planet: unrated,
+      claims: rated(15),
+      transparency: rated(15),
+      overall: {
+        ...rated(overall),
+        assessmentLanes: { body: 'rated', planet: 'nr', claims: 'rated', transparency: 'rated' },
+      },
+    } as TruScoreResult['publication'],
+  });
+}
+
 describe('Result path preserves null pillars end-to-end', () => {
   it('the Result screen no longer coerces persisted pillars and delegates to the shared mapping', () => {
     expect(RESULT_SCREEN_SOURCE).not.toMatch(/trust_score_breakdown\.(body|planet|ethics|open)\s*\?\?\s*0/);
@@ -112,7 +150,7 @@ describe('Result path preserves null pillars end-to-end', () => {
 describe('Result surfaces never show a null pillar as 0 or 0/25', () => {
   it('the pillar bars render an em dash rather than a coerced zero', () => {
     // TruScore.tsx is the Result pillar-bar surface; it must branch on the null before any maths.
-    const guardStart = TRUSCORE_COMPONENT_SOURCE.indexOf("if (typeof value !== 'number'");
+    const guardStart = TRUSCORE_COMPONENT_SOURCE.indexOf('if (value == null)');
     const numericStart = TRUSCORE_COMPONENT_SOURCE.indexOf('const rowContent');
     expect(guardStart).toBeGreaterThan(-1);
     expect(numericStart).toBeGreaterThan(guardStart);
@@ -144,15 +182,16 @@ describe('Result surfaces never show a null pillar as 0 or 0/25', () => {
   });
 
   it('a scored overall with a null pillar stays scored without fabricating the null pillar', () => {
-    const presentation = getTruScoreConsumerPresentation(resultTruScore());
+    const presentation = getTruScoreConsumerPresentation(publishedOverall(48));
     expect(presentation.kind).toBe('scored');
     if (presentation.kind !== 'scored') return;
     expect(presentation.score).toBe(48);
+    expect(getTruScoreConsumerPresentation(resultTruScore()).kind).toBe('unavailable');
   });
 });
 
 describe('Share of a Result with a null pillar omits the breakdown', () => {
-  const tru = resultTruScore();
+  const tru = publishedOverall(48);
 
   it('the live share semantics refuse an incomplete pillar set', () => {
     expect(resolveGenuinePillarBreakdown(tru)).toBeNull();
@@ -179,8 +218,31 @@ describe('Share of a Result with a null pillar omits the breakdown', () => {
   });
 
   it('a fully genuine breakdown, including a real 0, still shares', () => {
+    const rated = (score: number) => ({
+      publicationStatus: 'rated' as const,
+      internalScore: score,
+      publishedScore: score,
+      confidence: 'moderate' as const,
+      sourceQuality: 'community_or_user' as const,
+      s26: null,
+      confidenceReasonCode: 'rated',
+      assessmentLanes: {},
+      diagnostic: {},
+    });
     const genuine = resultTruScore({
+      truscore: 48,
       breakdown: resultPillarBreakdown({ body: 18, planet: 0, ethics: 15, open: 15 }),
+      publication: {
+        settled: true,
+        body: rated(18),
+        planet: rated(0),
+        claims: rated(15),
+        transparency: rated(15),
+        overall: {
+          ...rated(48),
+          assessmentLanes: { body: 'rated', planet: 'rated', claims: 'rated', transparency: 'rated' },
+        },
+      } as TruScoreResult['publication'],
     });
     const cardData = getShareCardData(product, genuine);
     expect(cardData.breakdown).toEqual({ Body: 18, Planet: 0, Ethics: 15, Open: 15 });

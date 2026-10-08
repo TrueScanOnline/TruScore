@@ -20,6 +20,17 @@ const PILLAR_TOKEN = /•\s*(Body|Planet|Claims|Transparency|Ethics|Open):\s*\d{
 const BREAKDOWN_HEADER = /Breakdown:/;
 
 function authorisedResult(): TruScoreResult {
+  const pillar = (score: number) => ({
+    publicationStatus: 'rated' as const,
+    internalScore: score,
+    publishedScore: score,
+    confidence: 'moderate' as const,
+    sourceQuality: 'community_or_user' as const,
+    s26: null,
+    confidenceReasonCode: 'rated',
+    assessmentLanes: {},
+    diagnostic: {},
+  });
   return {
     truscore: 72,
     breakdown: { Body: 18, Planet: 16, Ethics: 20, Open: 18 },
@@ -27,6 +38,17 @@ function authorisedResult(): TruScoreResult {
     hasNutriScore: true,
     hasEcoScore: true,
     hasOrigin: true,
+    publication: {
+      settled: true,
+      body: pillar(18),
+      planet: pillar(16),
+      claims: pillar(20),
+      transparency: pillar(18),
+      overall: {
+        ...pillar(72),
+        assessmentLanes: { body: 'rated', planet: 'rated', claims: 'rated', transparency: 'rated' },
+      },
+    } as TruScoreResult['publication'],
   };
 }
 

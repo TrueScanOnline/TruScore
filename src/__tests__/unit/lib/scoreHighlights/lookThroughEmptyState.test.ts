@@ -57,7 +57,14 @@ describe('look-through empty state renders nothing manufactured', () => {
 
   it('lets the contextual prompt stand alone, with no parallel empty text beside it', () => {
     const { byPillar } = selectScoreHighlights(BASE_ONLY_LEDGER);
-    const prompts = selectContextualContributionPrompts('Ethics', BASE_ONLY_LEDGER);
+    expect(selectContextualContributionPrompts('Ethics', BASE_ONLY_LEDGER)).toEqual([]);
+    const prompts = selectContextualContributionPrompts('Ethics', BASE_ONLY_LEDGER, {
+      governance: {
+        material: true,
+        routeStatus: 'live',
+        lanes: { packet: 'unassessed_or_incomplete' },
+      },
+    });
 
     expect(byPillar.Ethics).toEqual([]);
     expect(prompts).toHaveLength(1);

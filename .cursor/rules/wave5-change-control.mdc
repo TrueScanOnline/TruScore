@@ -1,0 +1,37 @@
+---
+description: Rveel Wave 5 change-control rule (Doctrine v0.3 §2). Classify every change before editing.
+alwaysApply: true
+---
+
+# Rveel Wave 5 change control
+
+B0 is `99102768b61bd6e518bb889e3ab6f01dfc3e1268` on `wave5/score-experience-20261008`. Do not move `preserve/pre-wave5-9910276-20261008`. File zones are Doctrine §6.2. C-1 to C-4 are already approved only within their required outcomes.
+
+```text
+RVEEL WAVE 5 — CHANGE-CONTROL RULE (Doctrine v0.3)
+
+Before modifying code, classify the proposed change GREEN, AMBER or RED against
+the Rveel Wave 5 Architectural Doctrine.
+
+- GREEN may proceed.
+- AMBER must be surfaced for architectural assessment before implementation:
+  state the proposed change, the invariant(s) it touches (INV-IDs), and why.
+- RED must not be implemented without explicit founder approval.
+
+If a visual requirement appears to require changing governed logic, STOP and
+flag the dependency rather than solving it inside the UI.
+
+Quick tests before every edit:
+1. Does this file sit in a RED or AMBER zone (Doctrine §6.2)? If yes, it is not GREEN.
+2. Does the UI read a score, state or label from anything other than the
+   consumption contract (Doctrine §5)? If yes, it is not GREEN.
+3. Would the governed outcome for the same evidence change (Doctrine §10)?
+   If it could, it is not GREEN.
+4. Am I deleting or weakening a test because the screen moved? Re-prove the
+   control first (Doctrine H-13). Never delete it to make the build pass.
+5. Am I importing or mounting something listed as dormant (Doctrine §8)?
+   Reactivation is RED.
+6. NR / Checking / missing publication: show no number, no score colour, no
+   score label, and nothing that implies Rated. Fail closed. Never fall back
+   to an internal score.
+```

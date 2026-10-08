@@ -51,42 +51,35 @@ export interface ContextualContributionPrompt {
   action?: ContextualPromptAction;
 }
 
+/**
+ * Governed reason a prompt may explain a contribution need.
+ * The fired ledger is not an input to this decision.
+ */
+export interface ContextualPromptGovernance {
+  material: boolean;
+  routeStatus: 'live' | 'future' | 'none';
+  lanes?: {
+    nutrition?: string;
+    processing?: string;
+    packet?: string;
+    ingredient_clarity?: string;
+    origins?: string;
+  };
+}
+
 export interface ContextualContributionPromptOptions {
   /**
    * True only when the governed User Contribution destination exists (Wave 4).
    * Defaults to false so no dead `[here]` anchor can render.
+   * Callers must not set this merely to surface a prompt.
    */
   userContributionRouteLive?: boolean;
+  /** Required. Without a live material lane opportunity, no prompt is returned. */
+  governance?: ContextualPromptGovernance;
 }
 
 const PILLAR_TOKEN = '[PILLAR]';
 const ANCHOR_LABEL = 'here';
-
-const PILLAR_BASE_IDS: Record<ScoreHighlightPillar, string> = {
-  Body: 'body-v12-base',
-  Planet: 'planet-v19-base',
-  Ethics: 'ethics-v37-base',
-  Open: 'open-v15-base',
-};
-
-/** Usable Nutri-Score scoring adjustments. Absence of all of them is the "no usable grade" state. */
-const BODY_USABLE_NUTRI_IDS = [
-  'body-v12-nutri-a',
-  'body-v12-nutri-b',
-  'body-v12-nutri-c',
-  'body-v12-nutri-d',
-  'body-v12-nutri-e',
-];
-
-/** Ingredient-clarity scoring adjustments (including the +1 zero-flag state). */
-const OPEN_CLARITY_SCORING_IDS = [
-  'open-v15-ing-clarity-zero',
-  'open-v15-ing-clarity-one',
-  'open-v15-ing-clarity-two',
-  'open-v15-ing-clarity-three-plus',
-];
-
-const OPEN_ORIGINS_INSUFFICIENT_ID = 'open-v15-origins-insufficient';
 
 interface PromptCopy {
   l1: string;
@@ -177,73 +170,88 @@ function buildPrompt(
   };
 }
 
-/** A fired row that actually moved this pillar's score and is not the pillar base row. */
-function isNonBaseScoreMoving(pillar: ScoreHighlightPillar, row: FiredAdjustment): boolean {
-  if (row.pillar !== pillar) return false;
-  if (!row.id) return false;
-  if (row.id === PILLAR_BASE_IDS[pillar]) return false;
-  return row.value !== 0;
+function liveMaterialNeed(governance: ContextualPromptGovernance | undefined): boolean {
+  return governance?.material === true && governance.routeStatus === 'live';
 }
 
 /**
- * Governed contextual prompts for one pillar, derived from the fired ledger only.
- * Returns an empty array when the pillar state warrants no prompt.
+ * Prompts explain a governed lane opportunity. The fired ledger cannot create or remove that need.
+ * Planet has no live contribution opportunity, so it never solicits from this path.
  */
 export function selectContextualContributionPrompts(
   pillar: ScoreHighlightPillar,
   fired: readonly FiredAdjustment[],
   options?: ContextualContributionPromptOptions
 ): ContextualContributionPrompt[] {
+  void fired;
+  if (pillar === 'Planet') return [];
+  const governance = options?.governance;
+  if (!liveMaterialNeed(governance)) return [];
   const routeLive = options?.userContributionRouteLive === true;
-  const pillarRows = fired.filter((row) => row.pillar === pillar);
-  const firedIds = new Set(
-    pillarRows.map((row) => row.id).filter((id): id is string => typeof id === 'string')
-  );
-
-  const hasNonBaseScoreMovement = pillarRows.some((row) => isNonBaseScoreMoving(pillar, row));
-
-  // Base owns the pillar state and always suppresses the specific missing-element prompts.
-  if (!hasNonBaseScoreMovement) {
-    return [buildPrompt(pillar, 'base', BASE_PROMPT_COPY[pillar], routeLive)];
-  }
-
-  const prompts: ContextualContributionPrompt[] = [];
+  const lanes = governance?.lanes;
+  if (!lanes) return [];
 
   if (pillar === 'Body') {
-    const hasUsableNutri = BODY_USABLE_NUTRI_IDS.some((id) => firedIds.has(id));
-    if (!hasUsableNutri) {
-      prompts.push(
-        buildPrompt(pillar, 'body_nutri_unavailable', BODY_NUTRI_UNAVAILABLE_COPY, routeLive)
-      );
+    const nutritionUnassessed = lanes.nutrition === 'unassessed';
+    const processingUnassessed = lanes.processing === 'unassessed';
+    if (!nutritionUnassessed && !processingUnassessed) return [];
+    if (nutritionUnassessed && !processingUnassessed) {
+      return [buildPrompt(pillar, 'body_nutri_unavailable', BODY_NUTRI_UNAVAILABLE_COPY, routeLive)];
     }
+    return [buildPrompt(pillar, 'base', BASE_PROMPT_COPY.Body, routeLive)];
+  }
+
+  if (pillar === 'Ethics') {
+    if (lanes.packet !== 'unassessed_or_incomplete') return [];
+    return [buildPrompt(pillar, 'base', BASE_PROMPT_COPY.Ethics, routeLive)];
   }
 
   if (pillar === 'Open') {
-    const hasClarityAdjustment = OPEN_CLARITY_SCORING_IDS.some((id) => firedIds.has(id));
-    if (!hasClarityAdjustment) {
-      prompts.push(
-        buildPrompt(pillar, 'open_ingredient_unavailable', OPEN_INGREDIENT_UNAVAILABLE_COPY, routeLive)
-      );
+    const ingredientUnassessed = lanes.ingredient_clarity === 'unassessed';
+    const originsUnresolved =
+      lanes.origins === 'unassessed' || lanes.origins === 'assessed_unresolved_conflict';
+    if (!ingredientUnassessed && !originsUnresolved) return [];
+    if (ingredientUnassessed && originsUnresolved) {
+      return [buildPrompt(pillar, 'base', BASE_PROMPT_COPY.Open, routeLive)];
     }
-    if (firedIds.has(OPEN_ORIGINS_INSUFFICIENT_ID)) {
-      prompts.push(
-        buildPrompt(pillar, 'open_origins_insufficient', OPEN_ORIGINS_INSUFFICIENT_COPY, routeLive)
-      );
+    if (ingredientUnassessed) {
+      return [
+        buildPrompt(pillar, 'open_ingredient_unavailable', OPEN_INGREDIENT_UNAVAILABLE_COPY, routeLive),
+      ];
     }
+    return [
+      buildPrompt(pillar, 'open_origins_insufficient', OPEN_ORIGINS_INSUFFICIENT_COPY, routeLive),
+    ];
   }
 
-  return prompts;
+  return [];
 }
 
 /** Governed contextual prompts for every pillar, keyed by internal pillar name. */
 export function contextualContributionPromptsByPillar(
   fired: readonly FiredAdjustment[],
-  options?: ContextualContributionPromptOptions
+  options?: ContextualContributionPromptOptions & {
+    governanceByPillar?: Partial<Record<ScoreHighlightPillar, ContextualPromptGovernance>>;
+  }
 ): Record<ScoreHighlightPillar, ContextualContributionPrompt[]> {
+  const shared = { userContributionRouteLive: options?.userContributionRouteLive };
+  const byPillar = options?.governanceByPillar;
   return {
-    Body: selectContextualContributionPrompts('Body', fired, options),
-    Planet: selectContextualContributionPrompts('Planet', fired, options),
-    Ethics: selectContextualContributionPrompts('Ethics', fired, options),
-    Open: selectContextualContributionPrompts('Open', fired, options),
+    Body: selectContextualContributionPrompts('Body', fired, {
+      ...shared,
+      governance: byPillar?.Body ?? options?.governance,
+    }),
+    Planet: selectContextualContributionPrompts('Planet', fired, {
+      ...shared,
+      governance: byPillar?.Planet ?? options?.governance,
+    }),
+    Ethics: selectContextualContributionPrompts('Ethics', fired, {
+      ...shared,
+      governance: byPillar?.Ethics ?? options?.governance,
+    }),
+    Open: selectContextualContributionPrompts('Open', fired, {
+      ...shared,
+      governance: byPillar?.Open ?? options?.governance,
+    }),
   };
 }

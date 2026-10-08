@@ -58,9 +58,26 @@ export type TruScoreConsumerPresentation =
       showPillarBars: true;
     };
 
+function isGenuinePublishedScore(value: unknown): value is number {
+  return typeof value === 'number' && !Number.isNaN(value);
+}
+
+function unavailablePresentation(): TruScoreConsumerPresentation {
+  return {
+    kind: 'unavailable',
+    title: RVEEL_SCORE_UNAVAILABLE_TITLE,
+    explanation: RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
+    showScoreCircle: false,
+    showScoreLabel: false,
+    showNumericScore: false,
+    showPillarBars: false,
+    forbiddenConsumerTokens: ['Poor', '0/25', '0/100', 'Confidence'],
+  };
+}
+
 /**
  * Pure presentation contract for Result TruScore surface.
- * Uses publication snapshot when present; falls back to legacy null=unavailable.
+ * Published state only. A missing publication fails closed and never reads the internal score.
  */
 export function getTruScoreConsumerPresentation(
   truScore: Pick<TruScoreResult, 'truscore' | 'publication'>,
@@ -69,20 +86,7 @@ export function getTruScoreConsumerPresentation(
   const settled = options?.publicationSettled !== false;
   const pub: CrossPillarPublicationSnapshot | undefined = truScore.publication;
 
-  if (isOverallTruScoreUnavailable(truScore.truscore) && !pub) {
-    return {
-      kind: 'unavailable',
-      title: RVEEL_SCORE_UNAVAILABLE_TITLE,
-      explanation: RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
-      showScoreCircle: false,
-      showScoreLabel: false,
-      showNumericScore: false,
-      showPillarBars: false,
-      forbiddenConsumerTokens: ['Poor', '0/25', '0/100', 'Confidence'],
-    };
-  }
-
-  if (!settled || pub?.overall.publicationStatus === 'checking') {
+  if (!settled) {
     return {
       kind: 'checking',
       title: 'Seeing what we can find…',
@@ -95,7 +99,24 @@ export function getTruScoreConsumerPresentation(
     };
   }
 
-  if (pub?.overall.publicationStatus === 'nr') {
+  if (!pub?.overall) {
+    return unavailablePresentation();
+  }
+
+  if (pub.overall.publicationStatus === 'checking') {
+    return {
+      kind: 'checking',
+      title: 'Seeing what we can find…',
+      explanation: 'Assessment still settling.',
+      showScoreCircle: false,
+      showScoreLabel: false,
+      showNumericScore: false,
+      showPillarBars: true,
+      overallDisplay: '—',
+    };
+  }
+
+  if (pub.overall.publicationStatus === 'nr') {
     return {
       kind: 'nr',
       title: 'Overall unrevealed',
@@ -108,29 +129,46 @@ export function getTruScoreConsumerPresentation(
     };
   }
 
-  const published =
-    pub?.overall.publishedScore ??
-    (typeof truScore.truscore === 'number' ? truScore.truscore : null);
-  if (published == null) {
-    return {
-      kind: 'unavailable',
-      title: RVEEL_SCORE_UNAVAILABLE_TITLE,
-      explanation: RVEEL_SCORE_UNAVAILABLE_EXPLANATION,
-      showScoreCircle: false,
-      showScoreLabel: false,
-      showNumericScore: false,
-      showPillarBars: false,
-      forbiddenConsumerTokens: ['Poor', '0/25', '0/100', 'Confidence'],
-    };
+  if (pub.overall.publicationStatus !== 'rated' || !isGenuinePublishedScore(pub.overall.publishedScore)) {
+    return unavailablePresentation();
   }
 
   return {
     kind: 'scored',
-    score: published,
+    score: pub.overall.publishedScore,
     showScoreCircle: true,
     showScoreLabel: true,
     showNumericScore: true,
     showPillarBars: true,
+  };
+}
+
+/** Score-band input for card chrome. Null means neutral: NR, Checking, or no publication. */
+export function publishedOverallVisualScore(
+  truScore: Pick<TruScoreResult, 'truscore' | 'publication'>,
+  options?: { publicationSettled?: boolean }
+): number | null {
+  const presentation = getTruScoreConsumerPresentation(truScore, options);
+  return presentation.kind === 'scored' ? presentation.score : null;
+}
+
+/** Highlights header scores. A non-Rated pillar is null, including when an internal score exists. */
+export function publishedHighlightPillarScores(
+  truScore: Pick<TruScoreResult, 'publication'> | null | undefined
+): { Body: number | null; Planet: number | null; Ethics: number | null; Open: number | null } {
+  const pick = (
+    pillar: { publicationStatus?: string; publishedScore?: number | null } | undefined
+  ): number | null => {
+    if (!pillar || pillar.publicationStatus !== 'rated') return null;
+    const score = pillar.publishedScore;
+    return isGenuinePublishedScore(score) ? score : null;
+  };
+  const pub = truScore?.publication;
+  return {
+    Body: pick(pub?.body),
+    Planet: pick(pub?.planet),
+    Ethics: pick(pub?.claims),
+    Open: pick(pub?.transparency),
   };
 }
 

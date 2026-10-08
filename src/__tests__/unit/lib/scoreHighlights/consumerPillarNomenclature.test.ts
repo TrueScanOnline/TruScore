@@ -96,6 +96,64 @@ const truScore: TruScoreResult = {
   truscore: 72,
   breakdown: { Body: 18, Planet: 17, Ethics: 20, Open: 17 },
   insights: [],
+  publication: {
+    settled: true,
+    body: {
+      publicationStatus: 'rated',
+      internalScore: 18,
+      publishedScore: 18,
+      confidence: 'moderate',
+      sourceQuality: 'community_or_user',
+      s26: null,
+      confidenceReasonCode: 'rated',
+      assessmentLanes: { nutrition: 'resolved', processing: 'resolved' },
+      diagnostic: {},
+    },
+    planet: {
+      publicationStatus: 'rated',
+      internalScore: 17,
+      publishedScore: 17,
+      confidence: 'moderate',
+      sourceQuality: 'community_or_user',
+      s26: null,
+      confidenceReasonCode: 'rated',
+      assessmentLanes: { broad_environment: 'resolved', packaging_fallback: 'unassessed' },
+      diagnostic: {},
+    },
+    claims: {
+      publicationStatus: 'rated',
+      internalScore: 20,
+      publishedScore: 20,
+      confidence: 'moderate',
+      sourceQuality: 'community_or_user',
+      s26: null,
+      confidenceReasonCode: 'rated',
+      assessmentLanes: { packet: 'assessed', benchmark: 'assessed' },
+      diagnostic: {},
+    },
+    transparency: {
+      publicationStatus: 'rated',
+      internalScore: 17,
+      publishedScore: 17,
+      confidence: 'moderate',
+      sourceQuality: 'community_or_user',
+      s26: null,
+      confidenceReasonCode: 'rated',
+      assessmentLanes: { ingredient_clarity: 'resolved', origins: 'resolved' },
+      diagnostic: {},
+    },
+    overall: {
+      publicationStatus: 'rated',
+      internalScore: 72,
+      publishedScore: 72,
+      confidence: 'moderate',
+      sourceQuality: 'community_or_user',
+      s26: null,
+      confidenceReasonCode: 'rated',
+      assessmentLanes: { body: 'rated', planet: 'rated', claims: 'rated', transparency: 'rated' },
+      diagnostic: {},
+    },
+  },
 };
 
 const SHARE_ITEMS = [
@@ -220,9 +278,24 @@ describe('live consumer surfaces cannot render Ethics or Open as pillar names', 
     }
 
     for (const pillar of ['Body', 'Planet', 'Ethics', 'Open'] as const) {
-      const prompts = selectContextualContributionPrompts(pillar, [
-        { pillar, id: `${pillar.toLowerCase()}-base`, value: 0, highlightEligible: false },
-      ]);
+      const prompts = selectContextualContributionPrompts(
+        pillar,
+        [{ pillar, id: `${pillar.toLowerCase()}-base`, value: 0, highlightEligible: false }],
+        {
+          governance: {
+            material: true,
+            routeStatus: 'live',
+            lanes:
+              pillar === 'Body'
+                ? { nutrition: 'unassessed', processing: 'unassessed' }
+                : pillar === 'Ethics'
+                  ? { packet: 'unassessed_or_incomplete' }
+                  : pillar === 'Open'
+                    ? { ingredient_clarity: 'unassessed', origins: 'unassessed' }
+                    : {},
+          },
+        }
+      );
       for (const prompt of prompts) {
         expect(pillarNameLeaks(prompt.l1)).toEqual([]);
         expect(pillarNameLeaks(prompt.l2)).toEqual([]);
