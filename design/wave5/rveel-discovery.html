@@ -37,13 +37,17 @@
     header.page p { margin: 0 0 8px; color: var(--muted); font-size: var(--meta); max-width: 760px; }
     section.group { max-width: 1100px; margin: 0 auto; padding: 8px 28px 28px; }
     .pair { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
-    figure.board { width: 390px; margin: 0; }
-    figure.wide { width: 390px; }
+    figure.board { width: 360px; margin: 0; }
+    figure.wide { width: 360px; }
     figcaption { margin: 0 0 8px; }
     .concept { font-size: 14px; font-weight: 700; }
     .surface, .state, .note { font-size: 12px; line-height: 1.4; color: var(--teal-deep); }
     .note { color: var(--muted); margin-top: 4px; }
-    .phone { width: 390px; background: var(--bg); border-radius: 28px; padding: 12px 12px 8px; box-shadow: var(--shadow); }
+    .phone { width: 360px; background: var(--bg); border-radius: 28px; padding: 12px 12px 8px; box-shadow: var(--shadow); }
+    #phone-rated, #phone-nr, #phone-scrolled { height: 800px; overflow: hidden; position: relative; }
+    #phone-rated .tabs, #phone-nr .tabs { position: absolute; left: 8px; right: 8px; bottom: 8px; background: var(--bg); padding-bottom: 4px; }
+    #phone-scrolled { display: flex; flex-direction: column; }
+    #phone-scrolled .endview { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
     .status { font-size: 12px; font-weight: 650; margin-bottom: 6px; }
     .hero, .score, .found, .info, .disclaimer { background: var(--card); border-radius: var(--radius); margin-bottom: var(--gap); box-shadow: var(--shadow); }
     .hero { display: flex; gap: 10px; padding: 10px; align-items: center; }
@@ -51,6 +55,8 @@
     .hero h3 { margin: 0; font-size: var(--title); line-height: 1.15; }
     .hero p { margin: 2px 0 0; color: var(--muted); font-size: var(--meta); }
     .score { padding: 10px 12px 12px; }
+    .score-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .score-head h3 { margin: 0; font-size: 18px; }
     .tools { display: flex; justify-content: flex-end; gap: 12px; color: var(--teal); }
     .tools svg { width: 20px; height: 20px; }
     .result-row { display: flex; gap: 12px; align-items: center; margin-top: 4px; }
@@ -89,13 +95,30 @@
     .story > span:nth-child(2) { flex: 1; }
     .chev { color: var(--teal); font-weight: 700; flex: none; }
     .info { padding: 10px 12px; }
-    .info h3 { margin: 0 0 6px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
-    .info h3 svg { width: 18px; height: 18px; color: var(--teal); }
-    .linkish { color: var(--teal); font-size: var(--meta); font-weight: 650; background: none; border: 0; padding: 0; font: inherit; }
-    .action { display: flex; align-items: center; gap: 6px; margin-top: 8px; border: 1px solid var(--teal); color: var(--teal-deep); background: white; border-radius: 999px; padding: 8px 12px; font-size: var(--meta); font-weight: 650; }
-    .action.warm { border-color: var(--warm); color: #8a4e12; }
+    .info.high { border: 2px solid #ff6b6b; }
+    .info.teal { border: 2px solid #16a085; }
+    .info h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    .info h3 svg, .cardhead svg { width: 18px; height: 18px; }
+    .cardhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #16a085; }
+    .serve { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+    table.nip { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+    table.nip th, table.nip td { padding: 4px 0; border-bottom: 1px solid var(--line); }
+    table.nip th { color: var(--muted); font-weight: 650; text-align: right; }
+    table.nip td:first-child, table.nip th:first-child { text-align: left; }
+    table.nip td:nth-child(2) { text-align: right; font-variant-numeric: tabular-nums; }
+    .lvl { font-size: 11px; font-weight: 700; }
+    .lvl.high { color: #ff6b6b; }
+    .lvl.low { color: #16a085; }
+    .burn { margin-top: 8px; background: var(--stone-soft); border-radius: 12px; padding: 8px; font-size: 12px; line-height: 1.35; }
+    .ing { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 8px; }
+    .ing p { margin: 6px 0 0; font-size: 13px; line-height: 1.35; }
+    .nova { margin-top: 8px; font-weight: 700; color: #ff6b6b; }
+    .additives { display: flex; align-items: center; justify-content: space-between; }
+    .additives .count { font-size: 28px; font-weight: 700; line-height: 1; }
+    .additives .unit { color: var(--muted); font-size: 13px; }
+    .action { display: flex; align-items: center; gap: 6px; margin-top: 8px; border: 1px solid #16a085; color: #0e7c78; background: white; border-radius: 999px; padding: 8px 12px; font-size: var(--meta); font-weight: 650; }
     .action svg { width: 16px; height: 16px; }
-    .disclaimer { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; border: 1px solid var(--line); padding: 8px 10px; color: var(--ink); box-shadow: none; background: var(--stone-soft); }
+    .disclaimer { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; border: 1px solid var(--line); padding: 8px 10px; color: var(--ink); box-shadow: none; background: var(--stone-soft); margin-bottom: 12px; }
     .disclaimer strong { font-size: 13px; }
     .disclaimer em { display: block; color: var(--muted); font-style: normal; font-size: 12px; font-weight: 400; }
     .disclaimer svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
@@ -119,7 +142,7 @@
 <body>
   <header class="page">
     <h1>Rveel Discovery</h1>
-    <p>Presentation concept for the production visual target. Product identity, the score, four pillars and existing findings lead. The Disclaimer keeps its wording and opens the same legal note, and it sits at the end of the scroll. Packet and origins actions stay on those cards. Scoring, publication, confidence, eligibility and Result orchestration are unchanged.</p>
+    <p>Presentation concept for the production visual target. CARD-SCORE keeps one Rveel Score heading. Nutrition, ingredients, origins and packet claims keep their existing content and controls. The Disclaimer stays last in the scroll, clear of the tabs. Scoring, publication, confidence, eligibility and Result orchestration are unchanged.</p>
     <p>Roles: page, card, neutral note · ink and muted · display, title, body, meta · rated ring and smaller neutral ring · Body apple, Planet leaf, Claims speech, Transparency eye · favourite heart · teal and warm actions.</p>
   </header>
   <section class="group">
@@ -128,8 +151,8 @@
         <figcaption>
           <div class="concept">Rveel Discovery</div>
           <div class="surface">SCR-RESULT · ProductHeroSection · CARD-SCORE · CARD-HIGHLIGHTS</div>
-          <div class="state">Overall Rated · first viewport · Cadbury Dairy Milk · 9300617064879</div>
-          <div class="note">Published 23/100, Poor. Claims 0/25 is a published zero. Findings stay in the current order.</div>
+          <div class="state">Overall Rated · first viewport · Android 360 × 800 CSS px · Cadbury Dairy Milk · 9300617064879</div>
+          <div class="note">Published 23/100, Poor. Claims 0/25 is a published zero. Limited confidence still opens its existing explanation. Findings stay in the current order.</div>
         </figcaption>
         <article class="phone" id="phone-rated"></article>
       </figure>
@@ -137,8 +160,8 @@
         <figcaption>
           <div class="concept">Rveel Discovery</div>
           <div class="surface">SCR-RESULT · ProductHeroSection · CARD-SCORE · CARD-HIGHLIGHTS</div>
-          <div class="state">Overall NR · first viewport · Coca-Cola Classic · 9300675001113</div>
-          <div class="note">After a contribution, Result refreshes from the authoritative result. If Overall stays unrevealed, pillar scores, findings and action eligibility still update. They are not held at the previous values.</div>
+          <div class="state">Overall NR · first viewport · Android 360 × 800 CSS px · Coca-Cola Classic · 9300675001113</div>
+          <div class="note">Overall unrevealed stays welcoming. A contribution does not promise that the overall score will be revealed. If it stays unrevealed, pillar scores, findings and action eligibility still refresh from the authoritative result.</div>
         </figcaption>
         <article class="phone" id="phone-nr"></article>
       </figure>
@@ -154,9 +177,9 @@
       <figure class="board" id="scrolled">
         <figcaption>
           <div class="concept">Rveel Discovery</div>
-          <div class="surface">SCR-RESULT · Product Origins · Packet Claims · ProductDisclaimerCard</div>
-          <div class="state">Scrolled to the end · Disclaimer above the tabs</div>
-          <div class="note">Add product origins and Add packet claims stay on their cards. Disclaimer wording is unchanged and still opens the legal note.</div>
+          <div class="surface">SCR-RESULT · NutritionTable · ResultIngredientsSection · About these Additives · Product Origins · Packet Claims · ProductDisclaimerCard</div>
+          <div class="state">Scrolled to the end · Android 360 × 800 CSS px · Disclaimer clear of the tabs</div>
+          <div class="note">Illustrative of on-file fields for 9300617064879. No manufacturing country and no recognised packet claims are on file, so those cards show their existing add controls.</div>
         </figcaption>
         <article class="phone" id="phone-scrolled"></article>
       </figure>
@@ -164,8 +187,8 @@
         <figcaption>
           <div class="concept">Rveel Discovery</div>
           <div class="surface">SCR-RESULT · full scroll</div>
-          <div class="state">Overall Rated · Cadbury Dairy Milk · overview</div>
-          <div class="note">Identity, score, pillars and findings, then the product-information cards, then the Disclaimer, then the tabs.</div>
+          <div class="state">Overall Rated · full scroll of the 360 × 800 Android viewport · Cadbury Dairy Milk · 9300617064879</div>
+          <div class="note">Illustrative data, outside the consumer UI: nutrient figures, ingredient text, NOVA 4 and additive tags are the Open Food Facts fields on file. Saturated fat, sugars and sodium levels follow the existing UK front-of-pack rules. About these Additives shows 2, the catalogue ids e322 and e476. e322i has no separate catalogue row. Product Origins has no country on file. Packet Claims has no recognised claim on file.</div>
         </figcaption>
         <article class="phone" id="phone-overview"></article>
       </figure>
@@ -185,6 +208,8 @@
     const globe = svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/>');
     const shield = svg('<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>');
     const plus = svg('<circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/>');
+    const pencil = svg('<path d="M4 20h4L18 10l-4-4L4 16v4z"/>');
+    const flask = svg('<path d="M9 3h6M10 3v6L5 19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2l-5-10V3"/>');
     const camera = svg('<path d="M4 8h3l2-2h6l2 2h3v10H4z"/><circle cx="12" cy="13" r="3"/>');
     const gallery = svg('<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 15l2.5-3 2 2.5L16 10l4 5"/>');
     const tab = (body, label, on) => `<div class="${on ? 'on' : ''}"><b>${svg(body)}</b>${label}</div>`;
@@ -193,10 +218,31 @@
     const story = (cls, symbol, text) => `<button class="story" type="button"><span class="cue ${cls}">${symbol}</span><span>${text}</span><span class="chev">›</span></button>`;
     const tools = `<div class="tools">${info}${heart}${share}</div>`;
     const disclaimer = `<button class="disclaimer" type="button">${info}<span><strong>Disclaimer</strong><em>Tap here for further information about scoring, data, and information being displayed.</em></span><span class="chev">›</span></button>`;
-    const tail = `<section class="info"><h3>Nutrition &amp; Ingredients</h3></section>
-      <section class="info"><h3>${globe} Product Origins</h3><button class="linkish" type="button">L1 / L2 / L3</button><button class="action" type="button">${plus} Add product origins</button></section>
-      <section class="info"><h3>${shield} Packet Claims</h3><button class="linkish" type="button">L1 / L2 / L3</button><button class="action warm" type="button">${plus} Add packet claims</button></section>
-      ${disclaimer}`;
+    const nipRow = (label, value, level) => `<tr><td>${label}</td><td>${value}</td><td>${level ? `<span class="lvl ${level.toLowerCase()}">${level}</span>` : ''}</td></tr>`;
+    const cadburyNutrition = `<section class="info high">
+      <div class="cardhead"><h3>Nutrition &amp; Ingredients</h3><span class="tools">${pencil}${share}</span></div>
+      <p class="serve">Serving size: 4 square (25 g)</p>
+      <table class="nip"><thead><tr><th></th><th>Per 100g</th><th>Level</th></tr></thead><tbody>
+        ${nipRow('Energy', '345.1 kcal', '')}
+        ${nipRow('Fat', '30.40 g', '')}
+        ${nipRow('Saturated Fat', '18.00 g', 'High')}
+        ${nipRow('Carbohydrates', '57.20 g', '')}
+        ${nipRow('Sugars', '56.00 g', 'High')}
+        ${nipRow('Fiber', '-', '')}
+        ${nipRow('Protein', '7.20 g', '')}
+        ${nipRow('Sodium', '80 mg', 'Low')}
+      </tbody></table>
+      <div class="burn"><strong>Feel the burn</strong><br>Per 100g of this product consumed, a rough exercise equivalent is estimated below. (Note: this does not constitute medical advice. This information is shown for approximate comparison only.)<br>≈ 80 min walking · ≈ 38 min jogging · ≈ 40 min cycling</div>
+      <div class="ing">
+        <div class="cardhead"><h3>${flask} Ingredients</h3>${share}</div>
+        <p>FULL CREAM MILK, SUGAR, COCOA BUTTER, COCOA MASS, MILK SOLIDS, EMULSIFIERS (SOY LECITHIN, 476), FLAVOURS. MILK CHOCOLATE CONTAINS COCOA SOLIDS 27%, MILK SOLIDS MINIMUM 24%. ALLERGEN STATEMENT: CONTAINS MILK AND SOY. MAY CONTAIN TRACES OF WHEAT, PEANUTS AND TREE NUTS.</p>
+        <div class="cardhead" style="margin-top:8px"><span class="nova">Processing Level: NOVA 4 (Ultra-Processed)</span>${share}</div>
+      </div>
+    </section>
+    <section class="info additives"><div><h3>About these Additives</h3><div><span class="count">2</span> <span class="unit">additives identified</span></div></div><span class="chev">›</span></section>
+    <section class="info teal"><div class="cardhead"><h3>${globe} Product Origins</h3></div><button class="action" type="button">${plus} Add product origins</button></section>
+    <section class="info teal"><div class="cardhead"><h3>${shield} Packet Claims</h3></div><button class="action" type="button">${plus} Add packet claims</button></section>
+    ${disclaimer}`;
 
     function pillars(kind) {
       const rated = kind === 'rated';
@@ -222,12 +268,12 @@
     }
     function score(kind) {
       if (kind === 'nr') {
-        return `<section class="score">${tools}
+        return `<section class="score"><div class="score-head"><h3>Rveel Score</h3>${tools}</div>
           <div class="result-row"><div class="ring neutral"><b>—</b></div></div>
           <div class="nr-block"><h4>Overall unrevealed</h4><p class="explain">(Awaiting founder approval) We cannot reveal the overall result until all four pillars can be rated. Check the unrevealed pillar result for what is still missing.</p></div>
           ${pillars('nr')}</section>`;
       }
-      return `<section class="score">${tools}
+      return `<section class="score"><div class="score-head"><h3>Rveel Score</h3>${tools}</div>
         <div class="result-row"><div class="ring"><b>23<small>/100</small></b></div><div class="band">Poor</div></div>
         ${pillars('rated')}
         <button class="confidence" type="button">${alert} Limited confidence</button>
@@ -236,8 +282,8 @@
     const top = (kind) => `<div class="status">9:41</div>${hero(kind)}${score(kind)}${findings(kind)}`;
     document.getElementById('phone-rated').innerHTML = top('rated') + tabs;
     document.getElementById('phone-nr').innerHTML = top('nr') + tabs;
-    document.getElementById('phone-scrolled').innerHTML = `<div class="status">9:41</div>${tail}${tabs}`;
-    document.getElementById('phone-overview').innerHTML = top('rated') + tail + tabs;
+    document.getElementById('phone-scrolled').innerHTML = `<div class="status">9:41</div><div class="endview">${cadburyNutrition}</div>${tabs}`;
+    document.getElementById('phone-overview').innerHTML = top('rated') + cadburyNutrition + tabs;
     document.getElementById('phone-entry').innerHTML = `<div class="status">9:41</div>
       <section class="modal">
         <h3>Packet information</h3>
