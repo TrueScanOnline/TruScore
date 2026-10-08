@@ -36,9 +36,11 @@ export class ShareContentBuilder {
     });
     const productName = product.product_name || product.product_name_en || 'this product';
 
+    const gate = { publicationSettled: options.publicationSettled };
+
     switch (item) {
       case 'truScore':
-        return this.buildTruScoreContent(product, truScore, universalLink, productName, platform);
+        return this.buildTruScoreContent(product, truScore, universalLink, productName, platform, gate);
       
       case 'recall':
         return this.buildRecallContent(product, universalLink, productName, platform);
@@ -47,7 +49,14 @@ export class ShareContentBuilder {
         return this.buildCountryContent(product, universalLink, productName, platform, options);
       
       case 'negativeTruScore':
-        return this.buildNegativeTruScoreContent(product, truScore, universalLink, productName, platform);
+        return this.buildNegativeTruScoreContent(
+          product,
+          truScore,
+          universalLink,
+          productName,
+          platform,
+          gate
+        );
       
       case 'insights':
         return this.buildInsightsContent(product, truScore, universalLink, productName, platform);
@@ -72,7 +81,7 @@ export class ShareContentBuilder {
       
       case 'productInfo':
       default:
-        return this.buildProductInfoContent(product, truScore, universalLink, productName, platform);
+        return this.buildProductInfoContent(product, truScore, universalLink, productName, platform, gate);
     }
   }
 
@@ -81,13 +90,14 @@ export class ShareContentBuilder {
     truScore: ShareOptions['truScore'],
     universalLink: string,
     productName: string,
-    platform: ShareOptions['platform']
+    platform: ShareOptions['platform'],
+    gate?: { publicationSettled?: boolean }
   ): ShareContent {
-    const score = resolveShareOverallScore(truScore);
-    const breakdown = resolveShareBreakdownForOverall(score, truScore);
+    const score = resolveShareOverallScore(truScore, gate);
+    const breakdown = resolveShareBreakdownForOverall(score, truScore, gate);
 
     if (score === null) {
-      const unpublished = unpublishedShareCopy(truScore);
+      const unpublished = unpublishedShareCopy(truScore, gate);
       const title = `${productName} - ${unpublished.title}`;
       const message =
         `${productName}\n\n` +
@@ -225,12 +235,13 @@ export class ShareContentBuilder {
     truScore: ShareOptions['truScore'],
     universalLink: string,
     productName: string,
-    platform: ShareOptions['platform']
+    platform: ShareOptions['platform'],
+    gate?: { publicationSettled?: boolean }
   ): ShareContent {
-    const score = resolveShareOverallScore(truScore);
+    const score = resolveShareOverallScore(truScore, gate);
 
     if (score === null) {
-      const unpublished = unpublishedShareCopy(truScore);
+      const unpublished = unpublishedShareCopy(truScore, gate);
       const title = `${productName}: ${unpublished.title}`;
       const message =
         `${title}\n\n` +
@@ -263,10 +274,11 @@ export class ShareContentBuilder {
     truScore: ShareOptions['truScore'],
     universalLink: string,
     productName: string,
-    platform: ShareOptions['platform']
+    platform: ShareOptions['platform'],
+    gate?: { publicationSettled?: boolean }
   ): ShareContent {
     // NA-018: product-info may share without an authorised assessment; omit score/pillars then.
-    const score = resolveShareOverallScore(truScore);
+    const score = resolveShareOverallScore(truScore, gate);
 
     // Preserve existing product-info share shape; omit numeric score when unavailable
     // (do not invent a separate product-only unavailable share experience).

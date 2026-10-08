@@ -171,8 +171,10 @@ export function publishedOverallVisualScore(
 
 /** Highlights header scores. A non-Rated pillar is null, including when an internal score exists. */
 export function publishedHighlightPillarScores(
-  truScore: Pick<TruScoreResult, 'publication'> | null | undefined
+  truScore: Pick<TruScoreResult, 'publication'> | null | undefined,
+  options?: { publicationSettled?: boolean }
 ): { Body: number | null; Planet: number | null; Ethics: number | null; Open: number | null } {
+  const hidden = { Body: null, Planet: null, Ethics: null, Open: null };
   const pick = (
     pillar: { publicationStatus?: string; publishedScore?: number | null } | undefined
   ): number | null => {
@@ -181,8 +183,8 @@ export function publishedHighlightPillarScores(
     return isGenuinePublishedScore(score) ? score : null;
   };
   const pub = truScore?.publication;
-  if (!pub || pub.settled !== true) {
-    return { Body: null, Planet: null, Ethics: null, Open: null };
+  if (options?.publicationSettled === false || !pub || pub.settled !== true) {
+    return hidden;
   }
   return {
     Body: pick(pub?.body),

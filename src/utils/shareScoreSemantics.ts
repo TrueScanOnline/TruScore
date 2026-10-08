@@ -30,13 +30,23 @@ function isGenuineNumber(v: unknown): v is number {
  * Missing publication, Checking, and NR fail closed. A genuine published 0 is kept.
  */
 export function resolveShareOverallScore(
-  truScore: TruScoreResult | null | undefined
+  truScore: TruScoreResult | null | undefined,
+  options?: { publicationSettled?: boolean }
 ): number | null {
-  if (truScore == null) return null;
+  if (truScore == null || options?.publicationSettled === false) return null;
   const pub = truScore.publication;
   const overall = pub?.overall;
   if (!pub || pub.settled !== true || !overall || overall.publicationStatus !== 'rated') return null;
   return isGenuineNumber(overall.publishedScore) ? overall.publishedScore : null;
+}
+
+/** Analytics record. Unpublished states store nothing. A genuine published 0 is kept. */
+export function publishedShareAnalyticsScore(
+  truScore: TruScoreResult | null | undefined,
+  options?: { publicationSettled?: boolean }
+): number | undefined {
+  const published = resolveShareOverallScore(truScore, options);
+  return published === null ? undefined : published;
 }
 
 export type ShareImageScoreState = {
@@ -50,12 +60,13 @@ export type ShareImageScoreState = {
 
 /** Image-card state. NR, Checking, and technical failure stay distinct and carry no number. */
 export function shareImageScoreState(
-  truScore: TruScoreResult | null | undefined
+  truScore: TruScoreResult | null | undefined,
+  options?: { publicationSettled?: boolean }
 ): ShareImageScoreState {
   if (truScore == null) {
     return { kind: 'unavailable', valueText: null, caption: RVEEL_SCORE_UNAVAILABLE_TITLE, neutral: true };
   }
-  const presentation = getTruScoreConsumerPresentation(truScore, { publicationSettled: true });
+  const presentation = getTruScoreConsumerPresentation(truScore, options);
   if (presentation.kind === 'scored') {
     return {
       kind: 'rated',
@@ -86,7 +97,8 @@ export function resolveScoreCardShareType(
 
 /** Copy for a share that has no published number. NR and Checking stay distinct from technical failure. */
 export function unpublishedShareCopy(
-  truScore: TruScoreResult | null | undefined
+  truScore: TruScoreResult | null | undefined,
+  options?: { publicationSettled?: boolean }
 ): { title: string; explanation: string } {
   if (truScore == null) {
     return {
@@ -95,7 +107,12 @@ export function unpublishedShareCopy(
     };
   }
   const presentation = getTruScoreConsumerPresentation(truScore, {
-    publicationSettled: truScore.publication ? truScore.publication.settled : true,
+    publicationSettled:
+      options?.publicationSettled === false
+        ? false
+        : truScore.publication
+          ? truScore.publication.settled
+          : true,
   });
   if (
     presentation.kind === 'nr' ||
@@ -115,11 +132,13 @@ export function unpublishedShareCopy(
  * Missing publication, a missing pillar, or any non-Rated pillar → null.
  */
 export function resolveGenuinePillarBreakdown(
-  truScore: TruScoreResult | null | undefined
+  truScore: TruScoreResult | null | undefined,
+  options?: { publicationSettled?: boolean }
 ): GenuinePillarBreakdown | null {
-  if (truScore == null) return null;
+  if (truScore == null || options?.publicationSettled === false) return null;
   const pub = truScore.publication;
-  if (!pub?.body || !pub.planet || !pub.claims || !pub.transparency) return null;
+  if (!pub || pub.settled !== true) return null;
+  if (!pub.body || !pub.planet || !pub.claims || !pub.transparency) return null;
   const body = pub.body;
   const planet = pub.planet;
   const claims = pub.claims;
@@ -151,8 +170,9 @@ export function resolveGenuinePillarBreakdown(
 /** Breakdown for share only when overall is a scored number and pillars are all rated. */
 export function resolveShareBreakdownForOverall(
   overall: number | null,
-  truScore: TruScoreResult | null | undefined
+  truScore: TruScoreResult | null | undefined,
+  options?: { publicationSettled?: boolean }
 ): GenuinePillarBreakdown | null {
   if (overall === null) return null;
-  return resolveGenuinePillarBreakdown(truScore);
+  return resolveGenuinePillarBreakdown(truScore, options);
 }

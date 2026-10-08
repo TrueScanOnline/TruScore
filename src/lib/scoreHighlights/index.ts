@@ -42,6 +42,7 @@ export {
 
 export {
   contextualContributionPromptsByPillar,
+  governanceFromPublication,
   selectContextualContributionPrompts,
   type ContextualContributionPrompt,
   type ContextualContributionPromptOptions,

@@ -4,11 +4,16 @@
  */
 
 import { ShareContentBuilder } from '../../../features/sharing/services/ShareContentBuilder';
-import { selectContextualContributionPrompts } from '../../../lib/scoreHighlights/contextualContributionPrompts';
+import {
+  governanceFromPublication,
+  selectContextualContributionPrompts,
+} from '../../../lib/scoreHighlights/contextualContributionPrompts';
 import type { TruScoreResult } from '../../../lib/truscoreEngine';
 import {
+  publishedShareAnalyticsScore,
   resolveGenuinePillarBreakdown,
   resolveScoreCardShareType,
+  resolveShareBreakdownForOverall,
   resolveShareOverallScore,
   shareImageScoreState,
   unpublishedShareCopy,
@@ -357,5 +362,92 @@ describe('C-4 contextual prompts follow lanes', () => {
         governance: { material: true, routeStatus: 'live' },
       })
     ).toEqual([]);
+  });
+});
+
+describe('C-2 missing pillar and lane data through Highlights', () => {
+  it('gives no score and no prompt when Body or its lanes are absent', () => {
+    const missingBody = result({
+      truscore: 48,
+      publication: {
+        ...snapshot({ overall: 'rated', overallPublished: 48, overallInternal: 48 }),
+        body: undefined,
+      } as TruScoreResult['publication'],
+    });
+    expect(publishedHighlightPillarScores(missingBody).Body).toBeNull();
+    expect(governanceFromPublication('Body', missingBody.publication)).toBeUndefined();
+    expect(
+      selectContextualContributionPrompts('Body', [], {
+        governance: governanceFromPublication('Body', missingBody.publication),
+      })
+    ).toEqual([]);
+
+    const noLanes = result({
+      truscore: 48,
+      publication: snapshot({ overall: 'rated', overallPublished: 48, overallInternal: 48 }),
+    });
+    const body = { ...noLanes.publication!.body, assessmentLanes: undefined };
+    const publication = { ...noLanes.publication!, body } as TruScoreResult['publication'];
+    expect(governanceFromPublication('Body', publication)).toBeUndefined();
+    expect(governanceFromPublication('Body', undefined)).toBeUndefined();
+    expect(governanceFromPublication('Ethics', { ...publication!, claims: undefined })).toBeUndefined();
+  });
+});
+
+describe('C-3 pillar breakdown and the Result latch', () => {
+  it('does not share pillar numbers from a rated shape whose snapshot is not settled', () => {
+    const ratedUnsettled = result({
+      truscore: 64,
+      breakdown: { Body: 21, Planet: 16, Ethics: 20, Open: 18 },
+      publication: {
+        ...snapshot({ overall: 'rated', overallPublished: 64, overallInternal: 64 }),
+        settled: false,
+      } as TruScoreResult['publication'],
+    });
+    expect(resolveShareOverallScore(ratedUnsettled)).toBeNull();
+    expect(resolveGenuinePillarBreakdown(ratedUnsettled)).toBeNull();
+    expect(resolveShareBreakdownForOverall(64, ratedUnsettled)).toBeNull();
+    expect(publishedHighlightPillarScores(ratedUnsettled)).toEqual({
+      Body: null,
+      Planet: null,
+      Ethics: null,
+      Open: null,
+    });
+    const content = ShareContentBuilder.buildContent({
+      product,
+      truScore: ratedUnsettled,
+      item: 'truScore',
+    });
+    expect(content.message).not.toMatch(/64\/100/);
+    expect(content.message).not.toMatch(/21\/25/);
+    expect(content.message).toContain('Seeing what we can find…');
+  });
+
+  it('withholds a settled Rated snapshot, including zero, while the Result latch is closed', () => {
+    const ratedZero = result({
+      truscore: 90,
+      publication: snapshot({ overall: 'rated', overallPublished: 0, overallInternal: 90 }),
+    });
+    const gate = { publicationSettled: false as const };
+    expect(resolveShareOverallScore(ratedZero, gate)).toBeNull();
+    expect(resolveGenuinePillarBreakdown(ratedZero, gate)).toBeNull();
+    expect(shareImageScoreState(ratedZero, gate)).toMatchObject({
+      kind: 'checking',
+      valueText: null,
+      caption: 'Seeing what we can find…',
+      neutral: true,
+    });
+    expect(publishedHighlightPillarScores(ratedZero, gate).Body).toBeNull();
+    expect(publishedShareAnalyticsScore(ratedZero, gate)).toBeUndefined();
+    expect(publishedShareAnalyticsScore(ratedZero)).toBe(0);
+    expect(unpublishedShareCopy(ratedZero, gate).title).toBe('Seeing what we can find…');
+    const content = ShareContentBuilder.buildContent({
+      product,
+      truScore: ratedZero,
+      item: 'truScore',
+      publicationSettled: false,
+    });
+    expect(content.message).not.toMatch(/0\/100/);
+    expect(content.message).toContain('Seeing what we can find…');
   });
 });

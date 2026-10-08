@@ -8,6 +8,7 @@ import { consumerPillarLabel } from '../lib/scoreHighlights';
 import { useTheme } from '../theme';
 import {
   getTruScoreConsumerPresentation,
+  publishedHighlightPillarScores,
 } from '../utils/truScorePresentation';
 import { publishedScoreDisplay } from '../lib/rateability';
 
@@ -30,7 +31,6 @@ const TruScore = React.memo(function TruScore({
 }: TruScoreProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { publication } = truScore;
   const presentation = getTruScoreConsumerPresentation(truScore, { publicationSettled });
 
   const getScoreColor = (s: number) => {
@@ -62,21 +62,8 @@ const TruScore = React.memo(function TruScore({
 
   const currentStyles = sizeStyles[size];
 
-  const pillarPublished = (pillar: TruScorePillar): number | null => {
-    if (!publicationSettled || publication?.overall.publicationStatus === 'checking') {
-      return null;
-    }
-    const map = {
-      Body: publication?.body,
-      Planet: publication?.planet,
-      Ethics: publication?.claims,
-      Open: publication?.transparency,
-    } as const;
-    const pub = map[pillar];
-    if (!pub || pub.publicationStatus !== 'rated') return null;
-    const score = pub.publishedScore;
-    return typeof score === 'number' && !Number.isNaN(score) ? score : null;
-  };
+  const publishedPillars = publishedHighlightPillarScores(truScore, { publicationSettled });
+  const pillarPublished = (pillar: TruScorePillar): number | null => publishedPillars[pillar];
 
   if (presentation.kind === 'unavailable') {
     return (

@@ -42,6 +42,8 @@ interface ShareModalProps {
   shareType?: 'truScore' | 'recall' | 'countryOfManufacture' | 'negativeTruScore' | 'productInfo' | 'insights' | 'palmOil' | 'nutrition' | 'ingredients' | 'processing' | 'allergens' | 'ecoscore';
   country?: string;
   initialCustomMessage?: string;
+  /** Result checking latch. False keeps the image and the text share unpublished. */
+  publicationSettled?: boolean;
 }
 
 const PLATFORM_DEFS: {
@@ -70,6 +72,7 @@ export default function ShareModal({
   shareType = 'truScore',
   country,
   initialCustomMessage,
+  publicationSettled,
 }: ShareModalProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -192,6 +195,7 @@ export default function ShareModal({
         platform,
         customMessage: customMessage.trim() || undefined,
         country: country || undefined,
+        publicationSettled,
       };
 
       const result = await ShareService.share(shareOptions);
@@ -409,7 +413,7 @@ export default function ShareModal({
             productName={productDisplayName}
             imageUrl={product.image_url}
             barcode={product.barcode}
-            scoreState={shareImageScoreState(truScore)}
+            scoreState={shareImageScoreState(truScore, { publicationSettled })}
             shareType={shareType}
             brandColor={colors.primary}
             surfaceColor={colors.card}

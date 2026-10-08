@@ -7,7 +7,7 @@ import { ShareContentBuilder } from './ShareContentBuilder';
 import { logger } from '../../../utils/logger';
 import { shareAnalytics } from '../../../utils/shareAnalytics';
 import { reportShareEventToBackend } from '../../../utils/reportShareEvent';
-import { resolveShareOverallScore } from '../../../utils/shareScoreSemantics';
+import { publishedShareAnalyticsScore } from '../../../utils/shareScoreSemantics';
 import { FacebookShare } from '../platforms/facebook';
 import { InstagramShare } from '../platforms/instagram';
 import { TwitterShare } from '../platforms/twitter';
@@ -76,14 +76,15 @@ export class ShareService {
 
       if (options.product) {
         const trackedPlatform = result.platform || platform;
-        const publishedShareScore = resolveShareOverallScore(options.truScore);
         shareAnalytics.trackShare({
           timestamp: Date.now(),
           platform: trackedPlatform,
           itemType: options.item || 'productInfo',
           productBarcode: options.product.barcode,
           // Published score only. NR, Checking, and a missing publication record nothing.
-          truScore: publishedShareScore === null ? undefined : publishedShareScore,
+          truScore: publishedShareAnalyticsScore(options.truScore, {
+            publicationSettled: options.publicationSettled,
+          }),
           success: result.success,
         });
         void reportShareEventToBackend({

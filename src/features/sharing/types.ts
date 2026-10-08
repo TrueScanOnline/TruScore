@@ -43,6 +43,8 @@ export interface ShareOptions {
   platform?: SharePlatform;
   customMessage?: string; // User's free text input
   country?: string; // Optional country data for countryOfManufacture sharing
+  /** Result checking latch. False withholds every published number on this share. */
+  publicationSettled?: boolean;
 }
 
 export interface ShareResult {

@@ -20,6 +20,7 @@
  * anchor token and never renders literally, so the resolved `l2` never contains it.
  */
 
+import type { CrossPillarPublicationSnapshot } from '../rateability';
 import { consumerPillarLabel } from './consumerPillarLabels';
 import type { FiredAdjustment, ScoreHighlightPillar } from './types';
 
@@ -172,6 +173,60 @@ function buildPrompt(
 
 function liveMaterialNeed(governance: ContextualPromptGovernance | undefined): boolean {
   return governance?.material === true && governance.routeStatus === 'live';
+}
+
+/**
+ * Lane opportunity for one Highlights pillar. A missing pillar or missing lanes yield no governance,
+ * so the look-through cannot invent a prompt or throw.
+ */
+export function governanceFromPublication(
+  pillar: ScoreHighlightPillar,
+  publication: CrossPillarPublicationSnapshot | null | undefined
+): ContextualPromptGovernance | undefined {
+  if (!publication) return undefined;
+  if (pillar === 'Body') {
+    const body = publication.body;
+    if (!body?.assessmentLanes) return undefined;
+    const opportunity = body.s26?.contributionOpportunity;
+    return {
+      material: opportunity?.material === true,
+      routeStatus: opportunity?.routeStatus ?? 'none',
+      lanes: {
+        nutrition: body.assessmentLanes.nutrition,
+        processing: body.assessmentLanes.processing,
+      },
+    };
+  }
+  if (pillar === 'Planet') {
+    const planet = publication.planet;
+    if (!planet) return undefined;
+    const opportunity = planet.s26?.contributionOpportunity;
+    return {
+      material: opportunity?.material === true,
+      routeStatus: opportunity?.routeStatus ?? 'none',
+    };
+  }
+  if (pillar === 'Ethics') {
+    const claims = publication.claims;
+    if (!claims?.assessmentLanes) return undefined;
+    const opportunity = claims.s26?.contributionOpportunity;
+    return {
+      material: opportunity?.material === true,
+      routeStatus: opportunity?.routeStatus ?? 'none',
+      lanes: { packet: claims.assessmentLanes.packet },
+    };
+  }
+  const transparency = publication.transparency;
+  if (!transparency?.assessmentLanes) return undefined;
+  const opportunity = transparency.s26?.contributionOpportunity;
+  return {
+    material: opportunity?.material === true,
+    routeStatus: opportunity?.routeStatus ?? 'none',
+    lanes: {
+      ingredient_clarity: transparency.assessmentLanes.ingredient_clarity,
+      origins: transparency.assessmentLanes.origins,
+    },
+  };
 }
 
 /**

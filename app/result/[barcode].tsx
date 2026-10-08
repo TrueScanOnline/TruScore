@@ -2424,7 +2424,7 @@ function ResultScreenContent() {
         visible={scoreHighlightsRequest != null}
         request={scoreHighlightsRequest}
         selection={scoreHighlights}
-        pillarScores={publishedHighlightPillarScores(truScore)}
+        pillarScores={publishedHighlightPillarScores(truScore, { publicationSettled })}
         publication={truScore?.publication}
         firedAdjustments={scoreHighlightsLedger ?? undefined}
         onClose={() => setScoreHighlightsRequest(null)}
@@ -2650,6 +2650,7 @@ function ResultScreenContent() {
           }}
           product={product}
           truScore={truScore || undefined}
+          publicationSettled={publicationSettled}
           shareType={shareType}
           country={shareType === 'countryOfManufacture' ? shareManufacturingCountryLabel : undefined}
           initialCustomMessage={shareInitialMessage}
