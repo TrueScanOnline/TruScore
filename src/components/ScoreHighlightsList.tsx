@@ -12,7 +12,7 @@ import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
-import { resultPresentation, type ResultPillarKey } from '../theme/resultPresentation';
+import { resultPillarSurface, resultPresentation, type ResultPillarKey } from '../theme/resultPresentation';
 import {
   SCORE_HIGHLIGHTS_HEADING,
   consumerPillarLabel,
@@ -31,7 +31,7 @@ export default function ScoreHighlightsList({
   onSelectStory,
   showHeading = true,
 }: ScoreHighlightsListProps) {
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
 
   // Fail closed: with no eligible Highlight there is nothing governed to say, so the list renders
   // nothing at all rather than manufacturing generic commentary or an empty heading.
@@ -44,7 +44,7 @@ export default function ScoreHighlightsList({
       )}
 
       {stories.map((story, index) => {
-        const role = resultPresentation.pillars[story.pillar as ResultPillarKey];
+        const role = resultPillarSurface(story.pillar as ResultPillarKey, !!darkMode);
         const pillar = consumerPillarLabel(story.pillar);
         return (
           <TouchableOpacity

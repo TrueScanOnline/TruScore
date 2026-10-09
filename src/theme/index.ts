@@ -1,7 +1,7 @@
 // Theme configuration
 import { useSettingsStore } from '../store/useSettingsStore';
 import { lightColors, darkColors, Colors } from './colors';
-import { resultPresentation } from './resultPresentation';
+import { resultPresentation, resultTone, resultSurfaceShadow } from './resultPresentation';
 
 export function useTheme() {
   const { darkMode } = useSettingsStore();
@@ -53,6 +53,6 @@ export function useTheme() {
 }
 
 export { lightColors, darkColors };
-export { resultPresentation };
+export { resultPresentation, resultTone, resultSurfaceShadow };
 export type { Colors };
 

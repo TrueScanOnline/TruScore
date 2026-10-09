@@ -74,7 +74,6 @@ describe('Wave 4A.5 Result surface', () => {
       '<PalmOilCard',
       'isMvpPricingUiEnabled()',
       'isMvpAllergensUiEnabled()',
-      '<ProductDataLimitationsCard',
       'result.scanAnother',
       '<ProductDisclaimerCard />',
     ];
@@ -120,12 +119,22 @@ describe('Wave 4A.5 Result surface', () => {
   it('retains the surrounding Result surfaces and drops the obsolete pending banner', () => {
     expect(result).toContain('<ProductDisclaimerCard />');
     expect(result).toContain('<ProductHeroSection');
+    const hero = read('src/components/product/ProductHeroSection.tsx');
+    expect(hero).toContain('onTakePhoto');
+    expect(hero).toContain('handleRetry');
+    expect(hero).toContain('setLightboxVisible');
+    expect(hero).toContain('accessibilityHint={expandHint}');
     expect(result).toContain('<BannerAlertsCard');
     expect(result).toContain('<TruScore');
     expect(result).toContain('<ConfidenceBadge');
     expect(result).toContain('What we found');
     expect(result).toContain('Insufficient Data Card');
     expect(result).toContain('<ProductDataLimitationsCard');
+    const scoreAt = result.indexOf('<TruScore');
+    const limitationsAt = result.indexOf('<ProductDataLimitationsCard');
+    const foundAt = result.indexOf('What we found');
+    expect(limitationsAt).toBeGreaterThan(scoreAt);
+    expect(foundAt).toBeGreaterThan(limitationsAt);
     expect(result).toContain('result.scanAnother');
     expect(result).toContain('<ManualProductEntryModal');
     expect(result).not.toContain('PendingContributionsBanner');

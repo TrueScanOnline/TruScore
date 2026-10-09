@@ -103,7 +103,7 @@ import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
 import { useTheme } from '../../src/theme';
-import { resultPresentation } from '../../src/theme/resultPresentation';
+import { resultPresentation, resultTone } from '../../src/theme/resultPresentation';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
@@ -344,6 +344,7 @@ function ResultScreenContent() {
   const navigation = useNavigation<ResultScreenNavigationProp>();
   const { t } = useTranslation();
   const { colors, darkMode } = useTheme();
+  const tone = resultTone(!!darkMode);
   const { barcode } = route.params;
   const { addScan, removeLegacyProvisionalScan } = useScanStore();
   const { addFavorite, removeFavorite, isFavorite } = useFavoritesStore();
@@ -1720,11 +1721,14 @@ function ResultScreenContent() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: tone.canvas }]} edges={['top', 'bottom']}>
       <ScrollView
         ref={resultScrollRef}
-        style={styles.scrollView}
-        contentContainerStyle={{ paddingBottom: tabBarHeight + resultPresentation.space.scrollClearance }}
+        style={[styles.scrollView, { backgroundColor: tone.canvas }]}
+        contentContainerStyle={{
+          paddingTop: resultPresentation.space.card,
+          paddingBottom: tabBarHeight + resultPresentation.space.scrollClearance,
+        }}
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
         refreshControl={
@@ -1871,6 +1875,16 @@ function ResultScreenContent() {
           )}
         </View>
 
+          <ProductDataLimitationsCard
+            product={product}
+            onOpenIngredients={() => openContribution('ingredients', 'add')}
+            onOpenNutrition={() => openContribution('nutrition', 'add')}
+            onOpenOrigins={() => openContribution('origins', 'add')}
+            onOpenPacketClaims={() => openContribution('packetClaims', 'add')}
+            publicationSettled={publicationSettled}
+            openRequestKey={s26OpenRequestKey}
+          />
+
           {/* W3-S12 "What we found" — governed promoted stories from the fired ledger */}
           {scoreHighlights && scoreHighlights.promoted.length > 0 && (
             <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -1882,7 +1896,8 @@ function ResultScreenContent() {
           )}
           </>
         ) : (
-          /* Insufficient Data Card */
+          <>
+          {/* Insufficient Data Card */}
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <View style={styles.cardHeader}>
               {/* Top line: Icons */}
@@ -1922,6 +1937,16 @@ function ResultScreenContent() {
               {t('result.insufficientDataMessage')}
             </Text>
           </View>
+          <ProductDataLimitationsCard
+            product={product}
+            onOpenIngredients={() => openContribution('ingredients', 'add')}
+            onOpenNutrition={() => openContribution('nutrition', 'add')}
+            onOpenOrigins={() => openContribution('origins', 'add')}
+            onOpenPacketClaims={() => openContribution('packetClaims', 'add')}
+            publicationSettled={publicationSettled}
+            openRequestKey={s26OpenRequestKey}
+          />
+          </>
         )}
 
         {/* User alerts — only when user enabled alert categories and there is insight content */}
@@ -2065,7 +2090,7 @@ function ResultScreenContent() {
         <View style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#16a085' }]}>
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
-              <Ionicons name="globe-outline" size={24} color={colors.text} />
+              <Ionicons name="earth" size={24} color={colors.text} />
               <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
                 {t('result.productOrigins', 'Product Origins')}
               </Text>
@@ -2346,16 +2371,6 @@ function ResultScreenContent() {
           </PremiumGate>
         )}
 
-
-        <ProductDataLimitationsCard
-          product={product}
-          onOpenIngredients={() => openContribution('ingredients', 'add')}
-          onOpenNutrition={() => openContribution('nutrition', 'add')}
-          onOpenOrigins={() => openContribution('origins', 'add')}
-          onOpenPacketClaims={() => openContribution('packetClaims', 'add')}
-          publicationSettled={publicationSettled}
-          openRequestKey={s26OpenRequestKey}
-        />
 
         {/* Scan Another Product — bottom of page */}
         <View style={styles.scanAnotherFooter}>

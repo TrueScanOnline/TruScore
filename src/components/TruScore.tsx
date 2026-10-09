@@ -1,13 +1,13 @@
 // src/components/TruScore.tsx – Rveel Score display. Values come from the consumption contract.
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, PixelRatio } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { TruScoreResult } from '../lib/truscoreEngine';
 import { consumerPillarLabel } from '../lib/scoreHighlights';
 import { useTheme } from '../theme';
-import { resultPresentation, type ResultPillarKey } from '../theme/resultPresentation';
+import { resultPillarSurface, resultPresentation, type ResultPillarKey } from '../theme/resultPresentation';
 import {
   getTruScoreConsumerPresentation,
   publishedHighlightPillarScores,
@@ -105,7 +105,9 @@ const TruScore = React.memo(function TruScore({
   publicationSettled = true,
 }: TruScoreProps) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const fontScale = PixelRatio.getFontScale();
+  const reflowPillars = fontScale >= 1.3;
   const presentation = getTruScoreConsumerPresentation(truScore, { publicationSettled });
 
   const getScoreLabel = (s: number) => {
@@ -155,20 +157,23 @@ const TruScore = React.memo(function TruScore({
       ) : null}
 
       {presentation.showPillarBars ? (
-        <View style={styles.tiles}>
+        <View style={[styles.tiles, reflowPillars ? styles.tilesReflow : null]}>
           {(['Body', 'Planet', 'Ethics', 'Open'] as const).map((pillar) => {
             const label = consumerPillarLabel(pillar);
             const value = publishedPillars[pillar];
             const shown = publishedPillarValueLabel(value);
-            const role = resultPresentation.pillars[pillar as ResultPillarKey];
+            const role = resultPillarSurface(pillar as ResultPillarKey, !!darkMode);
             const tile = (
               <>
                 <MaterialCommunityIcons name={role.glyph} size={18} color={role.icon} />
-                <Text style={[styles.tileName, { color: colors.text }]} maxFontSizeMultiplier={1.6}>
+                <Text
+                  style={[styles.tileName, { color: role.text }]}
+                  maxFontSizeMultiplier={1.6}
+                >
                   {label}
                 </Text>
                 <Text
-                  style={[styles.tileValue, { color: value == null ? resultPresentation.neutral : colors.text }]}
+                  style={[styles.tileValue, { color: value == null ? resultPresentation.neutral : role.text }]}
                   maxFontSizeMultiplier={1.4}
                 >
                   {shown}
@@ -179,7 +184,7 @@ const TruScore = React.memo(function TruScore({
             return onPillarPress ? (
               <TouchableOpacity
                 key={pillar}
-                style={[styles.tile, { backgroundColor: role.tint }]}
+                style={[styles.tile, reflowPillars ? styles.tileReflow : null, { backgroundColor: role.tint }]}
                 onPress={() => onPillarPress(pillar)}
                 activeOpacity={0.7}
                 accessibilityRole="button"
@@ -188,7 +193,7 @@ const TruScore = React.memo(function TruScore({
                 {tile}
               </TouchableOpacity>
             ) : (
-              <View key={pillar} style={[styles.tile, { backgroundColor: role.tint }]} accessibilityLabel={a11y}>
+              <View key={pillar} style={[styles.tile, reflowPillars ? styles.tileReflow : null, { backgroundColor: role.tint }]} accessibilityLabel={a11y}>
                 {tile}
               </View>
             );
@@ -244,6 +249,9 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 10,
   },
+  tilesReflow: {
+    flexWrap: 'wrap',
+  },
   tile: {
     flex: 1,
     minWidth: 0,
@@ -253,6 +261,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 2,
+  },
+  tileReflow: {
+    flexGrow: 1,
+    flexBasis: '47%',
+    flexShrink: 0,
   },
   tileName: {
     marginTop: 3,

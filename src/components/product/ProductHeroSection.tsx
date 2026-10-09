@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,23 +8,18 @@ import {
   Modal,
   ActivityIndicator,
   Dimensions,
-  Platform,
   StatusBar,
 } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Colors } from '../../theme/colors';
+import { resultPresentation, resultSurfaceShadow, resultTone } from '../../theme/resultPresentation';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-/** ~84% of screen width — within the 72–88% “retail hero” band */
-const STAGE_WIDTH = Math.min(Math.round(SCREEN_WIDTH * 0.84), SCREEN_WIDTH - 24);
-const STAGE_MIN_HEIGHT = Math.round(Math.max(260, SCREEN_WIDTH * 0.58));
-const STAGE_RADIUS = 22;
+const PHOTO = resultPresentation.photo.size;
 
 export interface ProductHeroSectionProps {
   colors: Colors;
@@ -105,7 +100,7 @@ function ProductImageLightbox({
             accessibilityLabel={closeLabel}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Ionicons name="close" size={28} color="#ffffff" />
+            <Ionicons name={resultPresentation.icons.close} size={28} color="#ffffff" />
           </TouchableOpacity>
         </View>
         <GestureDetector gesture={composed}>
@@ -157,15 +152,7 @@ export default function ProductHeroSection({
     }
   }, [hasUrl, imageUrl, retryNonce]);
 
-  const gradientColors = useMemo((): [string, string, string] => {
-    return darkMode
-      ? ['#383838', '#2c2c2c', '#242424']
-      : ['#fafcfd', '#f1f3f6', '#e9ecf1'];
-  }, [darkMode]);
-
-  const heroStripBg = darkMode ? '#181818' : '#f2f3f5';
-
-  const stageBorder = darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)';
+  const tone = resultTone(darkMode);
 
   const openLightbox = useCallback(() => {
     if (hasUrl && loadState === 'loaded') {
@@ -178,116 +165,129 @@ export default function ProductHeroSection({
     setLoadState('loading');
   }, []);
 
-  const shadowStyle = Platform.select({
-    ios: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: darkMode ? 0.35 : 0.08,
-      shadowRadius: 8,
-    },
-    android: { elevation: 2 },
-    default: {},
-  });
+  const photo = (
+    <View style={[styles.photo, { backgroundColor: tone.stone }]}>
+      {!hasUrl ? (
+        <TouchableOpacity
+          style={styles.photoFill}
+          onPress={onTakePhoto}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={takePhotoLabel}
+        >
+          <Ionicons name={resultPresentation.icons.capture} size={28} color={tone.muted} />
+        </TouchableOpacity>
+      ) : loadState === 'error' ? (
+        <View style={styles.photoFill} accessibilityLabel={loadErrorLabel}>
+          <Ionicons name={resultPresentation.icons.imageError} size={26} color={tone.muted} />
+        </View>
+      ) : (
+        <Pressable
+          onPress={openLightbox}
+          disabled={loadState !== 'loaded'}
+          style={styles.photoFill}
+          accessibilityRole="imagebutton"
+          accessibilityLabel={heroImageA11y}
+          accessibilityHint={expandHint}
+        >
+          {loadState === 'loading' && (
+            <View style={[styles.skeletonOverlay, { backgroundColor: tone.stone }]}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          )}
+          <ExpoImage
+            key={`${imageUrl}-${retryNonce}`}
+            source={{ uri: imageUrl! }}
+            style={[styles.heroImage, { opacity: loadState === 'loaded' ? 1 : 0 }]}
+            contentFit="contain"
+            transition={280}
+            cachePolicy="memory-disk"
+            onLoad={() => {
+              setLoadState('loaded');
+              onDisplayed?.();
+            }}
+            onError={() => setLoadState('error')}
+          />
+        </Pressable>
+      )}
+    </View>
+  );
 
   return (
-    <View
-      style={[
-        styles.heroStrip,
-        {
-          backgroundColor: heroStripBg,
-          borderBottomColor: colors.border,
-        },
-      ]}
-    >
+    <View style={styles.heroStrip}>
       <View
         style={[
-          styles.stageOuter,
+          styles.identityCard,
           {
-            width: STAGE_WIDTH,
-            minHeight: STAGE_MIN_HEIGHT,
-            borderRadius: STAGE_RADIUS,
-            borderColor: stageBorder,
-            ...shadowStyle,
+            backgroundColor: tone.card,
+            borderColor: tone.line,
           },
+          resultSurfaceShadow(darkMode),
         ]}
       >
-        <LinearGradient
-          colors={gradientColors}
-          locations={[0, 0.45, 1]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={[StyleSheet.absoluteFillObject, { borderRadius: STAGE_RADIUS }]}
-        />
-
-        {!hasUrl ? (
-          <TouchableOpacity
-            style={styles.stageInnerCenter}
-            onPress={onTakePhoto}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={takePhotoLabel}
+        {photo}
+        <View style={styles.identityCopy}>
+          <Text
+            style={[styles.productName, { color: tone.ink }]}
+            numberOfLines={3}
+            ellipsizeMode="tail"
+            maxFontSizeMultiplier={1.6}
           >
-            <Ionicons name="camera-outline" size={56} color={colors.textTertiary} />
-            <Text style={[styles.captureImageText, { color: colors.textSecondary }]}>{takePhotoLabel}</Text>
-          </TouchableOpacity>
-        ) : loadState === 'error' ? (
-          <View style={styles.stageInnerCenter}>
-            <Ionicons name="image-outline" size={48} color={colors.textTertiary} />
-            <Text style={[styles.errorText, { color: colors.textSecondary }]}>{loadErrorLabel}</Text>
-            <View style={styles.errorActions}>
-              <TouchableOpacity
-                onPress={handleRetry}
-                style={[styles.retryBtn, { borderColor: colors.primary }]}
-                accessibilityRole="button"
-                accessibilityLabel={retryLabel}
-              >
-                <Text style={[styles.retryBtnText, { color: colors.primary }]}>{retryLabel}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={onTakePhoto}
-                style={[styles.retryBtn, { borderColor: colors.border }]}
-                accessibilityRole="button"
-                accessibilityLabel={takePhotoLabel}
-              >
-                <Text style={[styles.retryBtnText, { color: colors.text }]}>{takePhotoLabel}</Text>
-              </TouchableOpacity>
+            {productName}
+          </Text>
+          {brandText ? (
+            <Text
+              style={[styles.brand, { color: tone.muted }]}
+              maxFontSizeMultiplier={1.4}
+            >
+              {brandText}
+            </Text>
+          ) : null}
+          {!hasUrl ? (
+            <TouchableOpacity
+              onPress={onTakePhoto}
+              accessibilityRole="button"
+              accessibilityLabel={takePhotoLabel}
+              style={styles.captureLabelHit}
+            >
+              <Text style={[styles.captureImageText, { color: colors.primary }]}>{takePhotoLabel}</Text>
+            </TouchableOpacity>
+          ) : null}
+          {isUserContributed && (
+            <View
+              style={[
+                styles.userContributedBadge,
+                { backgroundColor: colors.primary + '20', borderColor: colors.primary },
+              ]}
+            >
+              <Ionicons name={resultPresentation.icons.contributed} size={14} color={colors.primary} />
+              <Text style={[styles.userContributedText, { color: colors.primary }]}>{userContributedLabel}</Text>
             </View>
-          </View>
-        ) : (
-          <Pressable
-            onPress={openLightbox}
-            disabled={loadState !== 'loaded'}
-            style={styles.stageInnerCenter}
-            accessibilityRole="imagebutton"
-            accessibilityLabel={heroImageA11y}
-            accessibilityHint={expandHint}
-          >
-            {loadState === 'loading' && (
-              <View style={[styles.skeletonOverlay, { backgroundColor: darkMode ? '#2a2a2a' : '#e8eaed' }]}>
-                <ActivityIndicator size="large" color={colors.primary} />
+          )}
+          {hasUrl && loadState === 'error' ? (
+            <View>
+              <Text style={[styles.errorText, { color: tone.muted }]}>{loadErrorLabel}</Text>
+              <View style={styles.errorActions}>
+                <TouchableOpacity
+                  onPress={handleRetry}
+                  style={[styles.retryBtn, { borderColor: colors.primary }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={retryLabel}
+                >
+                  <Text style={[styles.retryBtnText, { color: colors.primary }]}>{retryLabel}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={onTakePhoto}
+                  style={[styles.retryBtn, { borderColor: tone.line }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={takePhotoLabel}
+                >
+                  <Text style={[styles.retryBtnText, { color: tone.ink }]}>{takePhotoLabel}</Text>
+                </TouchableOpacity>
               </View>
-            )}
-            <ExpoImage
-              key={`${imageUrl}-${retryNonce}`}
-              source={{ uri: imageUrl! }}
-              style={[styles.heroImage, { opacity: loadState === 'loaded' ? 1 : 0 }]}
-              contentFit="contain"
-              transition={280}
-              cachePolicy="memory-disk"
-              onLoad={() => {
-                setLoadState('loaded');
-                onDisplayed?.();
-              }}
-              onError={() => setLoadState('error')}
-            />
-            {loadState === 'loaded' && (
-              <View style={styles.expandHint} pointerEvents="none">
-                <Ionicons name="expand-outline" size={14} color={darkMode ? '#e0e0e0' : '#555'} />
-                <Text style={[styles.expandHintText, { color: darkMode ? '#ccc' : '#555' }]}>{expandHint}</Text>
-              </View>
-            )}
-          </Pressable>
-        )}
+            </View>
+          ) : null}
+        </View>
       </View>
 
       {hasUrl && imageUrl ? (
@@ -298,138 +298,103 @@ export default function ProductHeroSection({
           closeLabel={closeLightboxLabel}
         />
       ) : null}
-
-      <View style={styles.productNameContainer}>
-        <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2} ellipsizeMode="tail">
-          {productName}
-        </Text>
-        {isUserContributed && (
-          <View
-            style={[
-              styles.userContributedBadge,
-              { backgroundColor: colors.primary + '20', borderColor: colors.primary },
-            ]}
-          >
-            <Ionicons name="person-circle-outline" size={14} color={colors.primary} />
-            <Text style={[styles.userContributedText, { color: colors.primary }]}>{userContributedLabel}</Text>
-          </View>
-        )}
-      </View>
-      {brandText ? (
-        <Text style={[styles.brand, { color: colors.textSecondary }]}>{brandText}</Text>
-      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   heroStrip: {
-    alignItems: 'center',
-    paddingTop: 20,
-    paddingBottom: 18,
-    paddingHorizontal: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: 16,
+    marginHorizontal: resultPresentation.space.page,
+    marginBottom: resultPresentation.space.page,
   },
-  stageOuter: {
-    overflow: 'hidden',
+  identityCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 10,
+    borderRadius: resultPresentation.radius.card,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  stageInnerCenter: {
+  identityCopy: {
     flex: 1,
-    width: '100%',
-    minHeight: STAGE_MIN_HEIGHT - 2,
+    minWidth: 0,
     justifyContent: 'center',
+  },
+  photo: {
+    width: PHOTO,
+    height: PHOTO,
+    borderRadius: resultPresentation.radius.photo,
+    overflow: 'hidden',
+  },
+  photoFill: {
+    width: PHOTO,
+    height: PHOTO,
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 12,
+    justifyContent: 'center',
   },
   skeletonOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: STAGE_RADIUS,
   },
   heroImage: {
-    width: STAGE_WIDTH - 24,
-    height: STAGE_MIN_HEIGHT - 32,
+    width: PHOTO,
+    height: PHOTO,
+  },
+  captureLabelHit: {
+    alignSelf: 'flex-start',
+    minHeight: resultPresentation.tap.min,
+    justifyContent: 'center',
   },
   captureImageText: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 8,
-    paddingHorizontal: 16,
-  },
-  expandHint: {
-    position: 'absolute',
-    bottom: 10,
-    right: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-  },
-  expandHintText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: resultPresentation.type.meta,
+    fontWeight: '700',
   },
   errorText: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 10,
-    paddingHorizontal: 20,
+    fontSize: resultPresentation.type.meta,
+    marginTop: 4,
   },
   errorActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 10,
-    marginTop: 16,
+    gap: 8,
+    marginTop: 8,
   },
   retryBtn: {
+    minHeight: resultPresentation.tap.min,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: resultPresentation.radius.chip,
     borderWidth: 1,
+    justifyContent: 'center',
   },
   retryBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  productNameContainer: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 6,
-    paddingHorizontal: 8,
+    fontSize: resultPresentation.type.meta,
+    fontWeight: '700',
   },
   productName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    lineHeight: 30,
+    fontSize: resultPresentation.type.title,
+    fontWeight: '700',
+    lineHeight: 24,
   },
   userContributedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: resultPresentation.radius.chip,
     borderWidth: 1,
     gap: 4,
     marginTop: 6,
   },
   userContributedText: {
-    fontSize: 11,
+    fontSize: resultPresentation.type.meta,
     fontWeight: '600',
   },
   brand: {
-    fontSize: 16,
-    textAlign: 'center',
-    paddingHorizontal: 16,
+    fontSize: resultPresentation.type.meta,
+    marginTop: 2,
   },
   lightboxRoot: {
     flex: 1,
