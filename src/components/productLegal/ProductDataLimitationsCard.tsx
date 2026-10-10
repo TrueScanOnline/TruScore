@@ -6,10 +6,13 @@
  */
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path, Rect } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
+import { resultEmeraldTone, resultPresentation } from '../../theme/resultPresentation';
 import { Product, ProductWithTrustScore } from '../../types/product';
 import { PACKET_INFORMATION_ADD } from '../../contribution/resultContributionActions';
 import {
@@ -23,8 +26,6 @@ import type {
   S26Explanation,
 } from '../../lib/rateability';
 import { consumerPillarLabel } from '../../lib/scoreHighlights';
-
-const INCOMPLETE_DATA_CARD_BORDER_RED = '#d32f2f';
 
 type Props = {
   product: Product | ProductWithTrustScore | null | undefined;
@@ -207,7 +208,8 @@ export default function ProductDataLimitationsCard({
   openRequestKey = 0,
 }: Props) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const tone = resultEmeraldTone(!!darkMode);
   const [modalVisible, setModalVisible] = useState(false);
 
   const open = useCallback(() => setModalVisible(true), []);
@@ -249,30 +251,39 @@ export default function ProductDataLimitationsCard({
   return (
     <>
       <TouchableOpacity
-        style={[
-          styles.card,
-          { backgroundColor: colors.surface, borderColor: INCOMPLETE_DATA_CARD_BORDER_RED },
-        ]}
         onPress={open}
         activeOpacity={0.75}
         accessibilityRole="button"
         accessibilityLabel={t('result.legalDataLimitationsTeaserA11y')}
+        style={styles.cardHit}
       >
-        <Ionicons
-          name="warning-outline"
-          size={20}
-          color={colors.warning || '#ff9800'}
-          style={styles.cardIcon}
-        />
-        <View style={styles.cardTextWrap}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>
-            {t('result.legalDataLimitationsTeaserTitle')}
-          </Text>
-          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-            {t('result.legalDataLimitationsTeaserBody')}
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+        <LinearGradient
+          colors={darkMode ? [tone.card, tone.card] : [...resultPresentation.emerald.teaser]}
+          style={[styles.card, { borderColor: tone.teaserBorder }]}
+        >
+          <View style={[styles.iconPlate, { backgroundColor: resultPresentation.emerald.chevronCircle.light }]}>
+            <Svg width={28} height={28} viewBox="0 0 28 28" accessible={false}>
+              <Rect x={8} y={1} width={17} height={20} rx={3.5} fill="#FFFFFF" />
+              <Rect x={8} y={1} width={17} height={20} rx={3.5} fill={tone.action} opacity={0.55} />
+              <Rect x={2} y={6} width={18} height={21} rx={3.5} fill={tone.action} />
+              <Path d="M14 6H20V12L14 6Z" fill="#FFFFFF" opacity={0.85} />
+              <Rect x={5} y={12} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
+              <Rect x={5} y={16} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
+              <Rect x={5} y={20} width={8} height={1.8} rx={0.9} fill="#FFFFFF" />
+            </Svg>
+          </View>
+          <View style={styles.cardTextWrap}>
+            <Text style={[styles.cardTitle, { color: darkMode ? tone.ink : resultPresentation.emerald.ink.light }]}>
+              {t('result.legalDataLimitationsTeaserTitle')}
+            </Text>
+            <Text style={[styles.cardSubtitle, { color: darkMode ? tone.muted : resultPresentation.emerald.muted.light }]}>
+              {t('result.legalDataLimitationsTeaserBody')}
+            </Text>
+          </View>
+          <View style={[styles.chevronCircle, { backgroundColor: tone.chevronCircle }]}>
+            <Ionicons name="chevron-forward" size={18} color={tone.action} />
+          </View>
+        </LinearGradient>
       </TouchableOpacity>
 
       <InfoModal
@@ -352,18 +363,35 @@ export default function ProductDataLimitationsCard({
 }
 
 const styles = StyleSheet.create({
+  cardHit: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderRadius: 12,
-    padding: 14,
-    marginHorizontal: 16,
-    marginVertical: 8,
+    borderWidth: 1,
+    borderRadius: resultPresentation.emerald.radius.teaser,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 10,
   },
-  cardIcon: { marginRight: 10 },
+  iconPlate: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chevronCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cardTextWrap: { flex: 1 },
-  cardTitle: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  cardTitle: { fontSize: 15, lineHeight: 20, fontWeight: '700', marginBottom: 2 },
   cardSubtitle: { fontSize: 13, lineHeight: 18 },
   pillarBlock: { marginBottom: 16 },
   pillarTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },

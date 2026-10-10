@@ -13,6 +13,7 @@ import {
   Dimensions,
   Platform,
   Modal,
+  StatusBar,
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -103,7 +104,9 @@ import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
 import { useTheme } from '../../src/theme';
-import { resultPresentation, resultTone } from '../../src/theme/resultPresentation';
+import { resultEmeraldTone, resultPresentation } from '../../src/theme/resultPresentation';
+import EmeraldWallpaper from '../../src/components/result/EmeraldWallpaper';
+import EmeraldScoreFrame from '../../src/components/product/emerald/EmeraldScoreFrame';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
@@ -344,7 +347,7 @@ function ResultScreenContent() {
   const navigation = useNavigation<ResultScreenNavigationProp>();
   const { t } = useTranslation();
   const { colors, darkMode } = useTheme();
-  const tone = resultTone(!!darkMode);
+  const emerald = resultEmeraldTone(!!darkMode);
   const { barcode } = route.params;
   const { addScan, removeLegacyProvisionalScan } = useScanStore();
   const { addFavorite, removeFavorite, isFavorite } = useFavoritesStore();
@@ -1720,13 +1723,46 @@ function ResultScreenContent() {
     })();
   };
 
+  const identityActions = (
+    <View style={styles.identityActions}>
+      <TouchableOpacity
+        onPress={handleToggleFavorite}
+        style={styles.identityAction}
+        accessibilityRole="button"
+        accessibilityLabel={isFavorite(barcode) ? 'Remove favourite' : 'Add favourite'}
+      >
+        <Ionicons
+          name={isFavorite(barcode) ? 'heart' : 'heart-outline'}
+          size={22}
+          color={isFavorite(barcode) ? '#ff6b6b' : emerald.action}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          if (truScore) {
+            handleShare(resolveScoreCardShareType(truScore, { publicationSettled }));
+          } else {
+            handleShare('productInfo');
+          }
+        }}
+        style={styles.identityAction}
+        accessibilityRole="button"
+        accessibilityLabel="Share"
+      >
+        <Ionicons name="share-outline" size={22} color={emerald.action} />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: tone.canvas }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: resultPresentation.emerald.wallpaperBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle="dark-content" backgroundColor={resultPresentation.emerald.wallpaper.light} />
+      <EmeraldWallpaper />
       <ScrollView
         ref={resultScrollRef}
-        style={[styles.scrollView, { backgroundColor: tone.canvas }]}
+        style={[styles.scrollView, { backgroundColor: 'transparent' }]}
         contentContainerStyle={{
-          paddingTop: resultPresentation.space.card,
+          paddingTop: resultPresentation.emerald.space.scrollTop,
           paddingBottom: tabBarHeight + resultPresentation.space.scrollClearance,
         }}
         nestedScrollEnabled
@@ -1754,6 +1790,7 @@ function ResultScreenContent() {
           loadErrorLabel={t('result.heroImageLoadError')}
           retryLabel={t('result.heroImageRetry')}
           closeLightboxLabel={t('result.heroImageCloseLightbox')}
+          actions={identityActions}
           onDisplayed={() => {
             const started = heroDisplayStartedRef.current;
             if (started == null) return;
@@ -1796,54 +1833,39 @@ function ResultScreenContent() {
         {/* TruScore Card - v1.4. W3-S27 only via info glyph; Confidence badge opens W3-S26. */}
         {truScore ? (
           <>
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <View style={styles.scoreHeader}>
-            <Text style={[styles.scoreCardTitle, { color: colors.text, flex: 1 }]}>
-              {productIdentity.publicScoreName}
-            </Text>
-            <View style={styles.cardHeaderRight}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setTruScoreModalVisible(true);
-                  }}
-                  style={styles.infoButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Understanding Rveel Score"
-                >
-                  <Ionicons name="information-circle-outline" size={22} color={colors.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleToggleFavorite}
-                  style={styles.favoriteButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons
-                    name={isFavorite(barcode) ? 'heart' : 'heart-outline'}
-                    size={20}
-                    color={isFavorite(barcode) ? '#ff6b6b' : colors.primary}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    // Determine share type for TruScore card
-                    const cardShareType = resolveScoreCardShareType(truScore, {
-                      publicationSettled,
-                    });
-                    handleShare(cardShareType);
-                  }}
-                  style={styles.shareButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="share-outline" size={20} color={colors.primary} />
-                </TouchableOpacity>
-            </View>
-          </View>
-          
+          <EmeraldScoreFrame
+            heading={productIdentity.publicScoreName}
+            dark={!!darkMode}
+            infoControl={
+              <TouchableOpacity
+                onPress={() => {
+                  setTruScoreModalVisible(true);
+                }}
+                style={styles.infoButton}
+                hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                accessibilityRole="button"
+                accessibilityLabel="Understanding Rveel Score"
+              >
+                <Ionicons name="information-circle-outline" size={22} color={emerald.action} />
+              </TouchableOpacity>
+            }
+            confidence={
+              product && product._publication ? (
+                <ConfidenceBadge
+                  product={product}
+                  size="small"
+                  appearance="emerald"
+                  publicationSettled={publicationSettled}
+                  onPress={() => setS26OpenRequestKey((k) => k + 1)}
+                />
+              ) : null
+            }
+          >
           {/* TruScore Display - v1.4. Pillar rows open the W3-S12a look-through. */}
           <TruScore
             truScore={truScore}
             size="medium"
+            layout="emerald"
             onPillarPress={scoreHighlights ? openScoreHighlightsPillar : undefined}
             publicationSettled={publicationSettled}
           />
@@ -1861,19 +1883,7 @@ function ResultScreenContent() {
               </Text>
             </TouchableOpacity>
           )}
-          
-          {/* W3-S11 Confidence — opens Overall W3-S26 (not W3-S27) */}
-          {product && product._publication && (
-            <View style={styles.confidenceBadgeContainer}>
-              <ConfidenceBadge
-                product={product}
-                size="small"
-                publicationSettled={publicationSettled}
-                onPress={() => setS26OpenRequestKey((k) => k + 1)}
-              />
-            </View>
-          )}
-        </View>
+          </EmeraldScoreFrame>
 
           <ProductDataLimitationsCard
             product={product}
@@ -1887,10 +1897,11 @@ function ResultScreenContent() {
 
           {/* W3-S12 "What we found" — governed promoted stories from the fired ledger */}
           {scoreHighlights && scoreHighlights.promoted.length > 0 && (
-            <View style={[styles.card, { backgroundColor: colors.card }]}>
+            <View style={[styles.card, styles.emeraldFindings, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
               <ScoreHighlightsList
                 stories={scoreHighlights.promoted}
                 onSelectStory={openScoreHighlightStory}
+                appearance="emerald"
               />
             </View>
           )}
@@ -1905,28 +1916,7 @@ function ResultScreenContent() {
                 <View style={styles.cardHeaderLeft}>
                   <Ionicons name="information-circle-outline" size={24} color={colors.warning || '#ff9800'} />
                 </View>
-                <View style={styles.cardHeaderRight}>
-                  <TouchableOpacity
-                    onPress={handleToggleFavorite}
-                    style={styles.favoriteButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons
-                      name={isFavorite(barcode) ? 'heart' : 'heart-outline'}
-                      size={20}
-                      color={isFavorite(barcode) ? '#ff6b6b' : colors.primary}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      handleShare('productInfo');
-                    }}
-                    style={styles.shareButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="share-outline" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
+                <View style={styles.cardHeaderRight} />
               </View>
               {/* Second line: Heading */}
               <Text style={[styles.cardTitle, { color: colors.text }]}>
@@ -2908,14 +2898,48 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   scoreHeader: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    justifyContent: 'center',
+    gap: 4,
+    marginBottom: 4,
   },
   scoreCardTitle: {
-    fontSize: resultPresentation.type.title,
+    fontSize: resultPresentation.emerald.score.title,
+    lineHeight: resultPresentation.emerald.score.titleLine,
     fontWeight: '700',
+    textAlign: 'center',
+  },
+  emeraldScoreHost: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+  },
+  emeraldScoreCard: {
+    marginTop: 12,
+    borderRadius: resultPresentation.emerald.radius.card,
+    padding: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  emeraldFindings: {
+    borderRadius: resultPresentation.emerald.radius.card,
+    paddingTop: 8,
+    paddingBottom: 12,
+    paddingHorizontal: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 12,
+  },
+  identityActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  identityAction: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardHeader: {
     marginBottom: 16,
@@ -2937,7 +2961,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   infoButton: {
-    padding: 4,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardHeaderRight: {
     flexDirection: 'row',

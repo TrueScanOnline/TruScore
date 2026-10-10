@@ -7,7 +7,13 @@ import { useTranslation } from 'react-i18next';
 import { TruScoreResult } from '../lib/truscoreEngine';
 import { consumerPillarLabel } from '../lib/scoreHighlights';
 import { useTheme } from '../theme';
-import { resultPillarSurface, resultPresentation, type ResultPillarKey } from '../theme/resultPresentation';
+import EmeraldScoreComposition from './product/emerald/EmeraldScoreComposition';
+import {
+  resultEmeraldTone,
+  resultPillarSurface,
+  resultPresentation,
+  type ResultPillarKey,
+} from '../theme/resultPresentation';
 import {
   getTruScoreConsumerPresentation,
   publishedHighlightPillarScores,
@@ -24,6 +30,8 @@ interface TruScoreProps {
   onPillarPress?: (pillar: TruScorePillar) => void;
   /** First-paint barrier: until settled, all scores remain unrevealed (§12). */
   publicationSettled?: boolean;
+  /** Result-only composition. Other hosts keep the previous row. */
+  layout?: 'emerald' | 'legacy';
 }
 
 function scoreBandColor(score: number, trust: { excellent: string; good: string; fair: string; poor: string }) {
@@ -98,17 +106,87 @@ function ScoreRing({
   );
 }
 
+function EmeraldLayout({
+  truScore,
+  onPillarPress,
+  publicationSettled,
+}: {
+  truScore: TruScoreResult;
+  onPillarPress?: (pillar: TruScorePillar) => void;
+  publicationSettled: boolean;
+}) {
+  const { t } = useTranslation();
+  const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const presentation = getTruScoreConsumerPresentation(truScore, { publicationSettled });
+  const publishedPillars = publishedHighlightPillarScores(truScore, { publicationSettled });
+
+  if (presentation.kind === 'unavailable') {
+    return (
+      <View style={styles.container}>
+        <Text style={[styles.unrevealedTitle, { color: emerald.ink }]}>{presentation.title}</Text>
+        <Text style={[styles.explanation, { color: emerald.ink }]}>{presentation.explanation}</Text>
+      </View>
+    );
+  }
+
+  const scored = presentation.kind === 'scored';
+  const scoreLabel = scored
+    ? presentation.score >= 80
+      ? t('trust.excellent') || 'Excellent'
+      : presentation.score >= 60
+        ? t('trust.good') || 'Good'
+        : presentation.score >= 40
+          ? t('trust.fair') || 'Fair'
+          : t('trust.poor') || 'Poor'
+    : undefined;
+
+  return (
+    <EmeraldScoreComposition
+      kind={presentation.kind}
+      publishedScore={scored ? presentation.score : undefined}
+      scoreColour={scored ? scoreBandColor(presentation.score, colors.trust) : emerald.question}
+      scoreLabel={scoreLabel}
+      title={scored ? undefined : presentation.title}
+      explanation={scored ? undefined : presentation.explanation}
+      dark={!!darkMode}
+      pillars={(['Body', 'Planet', 'Ethics', 'Open'] as const).map((key) => {
+        const label = consumerPillarLabel(key);
+        const valueText = publishedPillarValueLabel(publishedPillars[key]);
+        return {
+          key,
+          label,
+          valueText,
+          accessibilityLabel: `${label} ${valueText}`,
+          onPress: onPillarPress ? () => onPillarPress(key) : undefined,
+        };
+      })}
+    />
+  );
+}
+
 const TruScore = React.memo(function TruScore({
   truScore,
   size = 'medium',
   onPillarPress,
   publicationSettled = true,
+  layout = 'legacy',
 }: TruScoreProps) {
   const { t } = useTranslation();
   const { colors, darkMode } = useTheme();
   const fontScale = PixelRatio.getFontScale();
   const reflowPillars = fontScale >= 1.3;
   const presentation = getTruScoreConsumerPresentation(truScore, { publicationSettled });
+
+  if (layout === 'emerald') {
+    return (
+      <EmeraldLayout
+        truScore={truScore}
+        onPillarPress={onPillarPress}
+        publicationSettled={publicationSettled}
+      />
+    );
+  }
 
   const getScoreLabel = (s: number) => {
     if (s >= 80) return t('trust.excellent') || 'Excellent';
@@ -166,10 +244,7 @@ const TruScore = React.memo(function TruScore({
             const tile = (
               <>
                 <MaterialCommunityIcons name={role.glyph} size={18} color={role.icon} />
-                <Text
-                  style={[styles.tileName, { color: role.text }]}
-                  maxFontSizeMultiplier={1.6}
-                >
+                <Text style={[styles.tileName, { color: role.text }]} maxFontSizeMultiplier={1.6}>
                   {label}
                 </Text>
                 <Text
@@ -238,6 +313,7 @@ const styles = StyleSheet.create({
   unrevealedTitle: {
     fontSize: resultPresentation.type.title,
     fontWeight: '700',
+    lineHeight: 26,
   },
   explanation: {
     marginTop: 6,

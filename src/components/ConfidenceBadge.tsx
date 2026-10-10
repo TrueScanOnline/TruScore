@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Product, ProductWithTrustScore } from '../types/product';
 import { overallConfidenceLabel } from '../lib/rateability';
 import { useTheme } from '../theme';
+import { resultPresentation } from '../theme/resultPresentation';
 
 interface ConfidenceBadgeProps {
   product: Product | ProductWithTrustScore;
@@ -21,6 +22,8 @@ interface ConfidenceBadgeProps {
    * an internal publication snapshot exists — first-paint contract (§12).
    */
   publicationSettled?: boolean;
+  /** Result-only hit target. Other hosts keep the existing badge metrics. */
+  appearance?: 'emerald' | 'default';
 }
 
 export default function ConfidenceBadge({
@@ -30,6 +33,7 @@ export default function ConfidenceBadge({
   showDescription = false,
   onPress,
   publicationSettled = true,
+  appearance = 'default',
 }: ConfidenceBadgeProps) {
   const { colors } = useTheme();
   const publication = (product as ProductWithTrustScore)._publication;
@@ -109,19 +113,32 @@ export default function ConfidenceBadge({
       style={[
         styles.badge,
         currentSize.container,
+        appearance === 'emerald' ? styles.emeraldBadge : null,
         { backgroundColor: badgeColor + '22', borderColor: 'transparent' },
       ]}
     >
       <Ionicons name={iconName} size={currentSize.icon} color={badgeColor} />
       {showLabel && (
-        <Text style={[currentSize.text, { color: badgeColor }]}>{label}</Text>
+        <Text
+          style={[
+            appearance === 'emerald' ? styles.emeraldText : currentSize.text,
+            { color: badgeColor },
+          ]}
+        >
+          {label}
+        </Text>
       )}
     </View>
   );
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
+        style={appearance === 'emerald' ? styles.emeraldHit : undefined}
+        hitSlop={appearance === 'emerald' ? { top: 8, bottom: 8, left: 8, right: 8 } : undefined}
+      >
         {badgeContent}
         {showDescription && (
           <Text style={[currentSize.description, { color: colors.textSecondary }]}>
@@ -145,6 +162,21 @@ export default function ConfidenceBadge({
 }
 
 const styles = StyleSheet.create({
+  emeraldHit: {
+    justifyContent: 'center',
+  },
+  emeraldBadge: {
+    minHeight: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+  },
+  emeraldText: {
+    fontSize: resultPresentation.emerald.type.confidence,
+    lineHeight: resultPresentation.emerald.type.confidenceLine,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',

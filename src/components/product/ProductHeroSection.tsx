@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
   View,
   Text,
@@ -16,10 +16,10 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-g
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Colors } from '../../theme/colors';
-import { resultPresentation, resultSurfaceShadow, resultTone } from '../../theme/resultPresentation';
+import { resultEmeraldTone, resultPresentation } from '../../theme/resultPresentation';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const PHOTO = resultPresentation.photo.size;
+const PHOTO = resultPresentation.emerald.identity.photo;
 
 export interface ProductHeroSectionProps {
   colors: Colors;
@@ -38,6 +38,8 @@ export interface ProductHeroSectionProps {
   retryLabel: string;
   closeLightboxLabel: string;
   onDisplayed?: () => void;
+  /** Result-owned favourite and share controls. */
+  actions?: ReactNode;
 }
 
 function ProductImageLightbox({
@@ -135,6 +137,7 @@ export default function ProductHeroSection({
   retryLabel,
   closeLightboxLabel,
   onDisplayed,
+  actions,
 }: ProductHeroSectionProps) {
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'loaded' | 'error'>(() =>
     imageUrl?.trim() ? 'loading' : 'idle'
@@ -152,7 +155,7 @@ export default function ProductHeroSection({
     }
   }, [hasUrl, imageUrl, retryNonce]);
 
-  const tone = resultTone(darkMode);
+  const tone = resultEmeraldTone(darkMode);
 
   const openLightbox = useCallback(() => {
     if (hasUrl && loadState === 'loaded') {
@@ -166,7 +169,7 @@ export default function ProductHeroSection({
   }, []);
 
   const photo = (
-    <View style={[styles.photo, { backgroundColor: tone.stone }]}>
+    <View style={[styles.photo, { backgroundColor: darkMode ? '#243832' : '#F4F7F6' }]}>
       {!hasUrl ? (
         <TouchableOpacity
           style={styles.photoFill}
@@ -191,7 +194,7 @@ export default function ProductHeroSection({
           accessibilityHint={expandHint}
         >
           {loadState === 'loading' && (
-            <View style={[styles.skeletonOverlay, { backgroundColor: tone.stone }]}>
+            <View style={[styles.skeletonOverlay, { backgroundColor: darkMode ? '#243832' : '#F4F7F6' }]}>
               <ActivityIndicator size="small" color={colors.primary} />
             </View>
           )}
@@ -221,24 +224,24 @@ export default function ProductHeroSection({
           {
             backgroundColor: tone.card,
             borderColor: tone.line,
+            shadowColor: '#0C4A3C',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: darkMode ? 0.28 : 0.12,
+            shadowRadius: 8,
+            elevation: 2,
           },
-          resultSurfaceShadow(darkMode),
         ]}
       >
         {photo}
         <View style={styles.identityCopy}>
           <Text
             style={[styles.productName, { color: tone.ink }]}
-            numberOfLines={3}
-            ellipsizeMode="tail"
-            maxFontSizeMultiplier={1.6}
           >
             {productName}
           </Text>
           {brandText ? (
             <Text
               style={[styles.brand, { color: tone.muted }]}
-              maxFontSizeMultiplier={1.4}
             >
               {brandText}
             </Text>
@@ -250,7 +253,7 @@ export default function ProductHeroSection({
               accessibilityLabel={takePhotoLabel}
               style={styles.captureLabelHit}
             >
-              <Text style={[styles.captureImageText, { color: colors.primary }]}>{takePhotoLabel}</Text>
+              <Text style={[styles.captureImageText, { color: tone.action }]}>{takePhotoLabel}</Text>
             </TouchableOpacity>
           ) : null}
           {isUserContributed && (
@@ -270,11 +273,11 @@ export default function ProductHeroSection({
               <View style={styles.errorActions}>
                 <TouchableOpacity
                   onPress={handleRetry}
-                  style={[styles.retryBtn, { borderColor: colors.primary }]}
+                  style={[styles.retryBtn, { borderColor: tone.action }]}
                   accessibilityRole="button"
                   accessibilityLabel={retryLabel}
                 >
-                  <Text style={[styles.retryBtnText, { color: colors.primary }]}>{retryLabel}</Text>
+                  <Text style={[styles.retryBtnText, { color: tone.action }]}>{retryLabel}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={onTakePhoto}
@@ -288,6 +291,7 @@ export default function ProductHeroSection({
             </View>
           ) : null}
         </View>
+        {actions ? <View style={styles.actions}>{actions}</View> : null}
       </View>
 
       {hasUrl && imageUrl ? (
@@ -304,16 +308,26 @@ export default function ProductHeroSection({
 
 const styles = StyleSheet.create({
   heroStrip: {
-    marginHorizontal: resultPresentation.space.page,
-    marginBottom: resultPresentation.space.page,
+    marginHorizontal: resultPresentation.emerald.space.page,
+    marginBottom: 12,
   },
   identityCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    padding: 10,
-    borderRadius: resultPresentation.radius.card,
+    gap: 8,
+    padding: resultPresentation.emerald.space.photoPad,
+    minHeight: resultPresentation.emerald.identity.minHeight,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexGrow: 0,
+    flexShrink: 0,
   },
   identityCopy: {
     flex: 1,
@@ -373,9 +387,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   productName: {
-    fontSize: resultPresentation.type.title,
+    fontSize: resultPresentation.emerald.identity.name,
     fontWeight: '700',
-    lineHeight: 24,
+    lineHeight: resultPresentation.emerald.identity.nameLine,
   },
   userContributedBadge: {
     flexDirection: 'row',
@@ -393,7 +407,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   brand: {
-    fontSize: resultPresentation.type.meta,
+    fontSize: resultPresentation.emerald.identity.brand,
+    lineHeight: resultPresentation.emerald.identity.brandLine,
     marginTop: 2,
   },
   lightboxRoot: {

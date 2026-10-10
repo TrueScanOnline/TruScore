@@ -76,6 +76,98 @@ export const resultPresentation = {
     neutral: 64,
     stroke: 8,
   },
+  /**
+   * A · Emerald Perspectives appearance.
+   * Visual approval does not close corrective-package acceptance.
+   * These values do not choose a score, a publication state, or a contribution action.
+   */
+  emerald: {
+    /** Luminous emerald. Deep accent stays a small wallpaper mark, not the page colour. */
+    wallpaperBase: '#10957E',
+    wallpaper: {
+      light: '#27B899',
+      main: '#10957E',
+      deep: '#087565',
+    },
+    card: { light: '#FFFFFF', dark: '#182E29' },
+    ink: { light: '#101C36', dark: '#F0F7F4' },
+    muted: { light: '#536477', dark: '#BECEC7' },
+    line: { light: '#E1ECE8', dark: '#36574B' },
+    action: { light: '#087B68', dark: '#8ED8C4' },
+    question: { light: '#59616B', dark: '#BECEC7' },
+    medallion: ['#FFFFFF', '#EDF0F2'] as const,
+    teaser: ['#FFFFFF', '#F0FAF6'] as const,
+    teaserBorder: { light: '#C9E7DF', dark: '#36574B' },
+    chevronCircle: { light: '#D7F6EC', dark: '#1E4A40' },
+    radius: { card: 20, tile: 22, photo: 12, teaser: 18 },
+    space: { page: 16, card: 12, pad: 12, scrollTop: 8, photoPad: 10 },
+    identity: { minHeight: 96, photo: 72, name: 16, nameLine: 21, brand: 13, brandLine: 18 },
+    score: { title: 20, titleLine: 26, reserve: 12 },
+    /** Roles at font scale 1.0. System text scaling still applies. */
+    type: {
+      pillarName: 13,
+      pillarNameLine: 17,
+      pillarValue: 20,
+      pillarValueLine: 24,
+      pillarIcon: 26,
+      score: 40,
+      scoreLine: 44,
+      denominator: 12,
+      denominatorLine: 15,
+      band: 17,
+      bandLine: 21,
+      confidence: 14,
+      confidenceLine: 18,
+    },
+    /** Share of the pillar grid, not the padded card. Ordinary phones stay near 38%. */
+    medallionGridRatio: 0.38,
+    /** Exposed height of the three backing sheets above the white card. */
+    backingPeek: 28,
+    innerFace: 108,
+    arcRadius: 62,
+    arcStroke: 5,
+    tileHeight: 118,
+    gridHeight: 244,
+    tileGap: 8,
+    fold: 30,
+    /** Transparent wallpaper curves. They sit on the gradient and do not form a solid block. */
+    curve: { shadow: 0.12, lower: 0.12 },
+    foldShade: '#163F32',
+    foldLight: ['#E2F0E9', '#FFFFFF'] as const,
+    foldDark: ['#80958D', '#C3D6CE', '#476157'] as const,
+    tileEdge: { light: '#FFFFFF', dark: '#59766A' },
+    /** Mint, pale aqua, pale blue. Each sheet is drawn separately. */
+    frameStack: ['#B7F3DC', '#C5F2F6', '#D7EAFF'] as const,
+    frameWash: '#FFFFFF',
+    discNeutral: { light: '#59616B', dark: '#D4DDD9' },
+    discIconOnDark: '#DAEEE4',
+    pillars: {
+      Body: {
+        glyph: 'apple' as const,
+        icon: '#EC514F',
+        light: ['#FFE4DE', '#FFC2BA', '#FF8F88'] as const,
+        dark: ['#4D3034', '#42292E', '#35242A'] as const,
+      },
+      Planet: {
+        glyph: 'leaf' as const,
+        icon: '#008B76',
+        light: ['#E7FFF5', '#B7F3DC', '#62D6B0'] as const,
+        dark: ['#255244', '#1F4238', '#19332D'] as const,
+      },
+      Ethics: {
+        glyph: 'message-text' as const,
+        icon: '#9451E9',
+        light: ['#F7ECFF', '#E2C8FF', '#C084F6'] as const,
+        dark: ['#473756', '#382C47', '#2C2539'] as const,
+      },
+      Open: {
+        glyph: 'eye' as const,
+        icon: '#087BF0',
+        light: ['#E7F7FF', '#C4EBFF', '#78CCF6'] as const,
+        dark: ['#2C4B60', '#233C50', '#1B3043'] as const,
+      },
+    },
+  },
   pillars: {
     Body: {
       glyph: 'apple',
@@ -127,6 +219,38 @@ export function resultTone(darkMode: boolean) {
     muted: resultPresentation.muted[mode],
     line: resultPresentation.line[mode],
     stone: resultPresentation.stoneSoft[mode],
+  };
+}
+
+/** Emerald Result surfaces. Pillar identity stays separate from score-band colour. */
+export function resultEmeraldTone(darkMode: boolean) {
+  const mode = darkMode ? 'dark' : 'light';
+  const emerald = resultPresentation.emerald;
+  return {
+    card: emerald.card[mode],
+    ink: emerald.ink[mode],
+    muted: emerald.muted[mode],
+    line: emerald.line[mode],
+    action: emerald.action[mode],
+    question: emerald.question[mode],
+    teaserBorder: emerald.teaserBorder[mode],
+    chevronCircle: emerald.chevronCircle[mode],
+  };
+}
+
+export function resultEmeraldPillar(pillar: ResultPillarKey, darkMode: boolean) {
+  const role = resultPresentation.emerald.pillars[pillar];
+  const shades = darkMode ? role.dark : role.light;
+  const mapped = resultPillarSurface(pillar, true);
+  if (darkMode) {
+    return { glyph: role.glyph, icon: mapped.icon, text: mapped.text, tint: shades[0], gradient: shades };
+  }
+  return {
+    glyph: role.glyph,
+    icon: role.icon,
+    text: resultPresentation.emerald.ink.light,
+    tint: shades[0],
+    gradient: shades,
   };
 }
 
