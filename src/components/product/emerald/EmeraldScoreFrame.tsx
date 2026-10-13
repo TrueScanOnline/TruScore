@@ -12,46 +12,45 @@ type Props = {
   dark?: boolean;
 };
 
-const SHEETS = [
-  { rotate: '-2.2deg', top: 0, shift: 8 },
-  { rotate: '1.5deg', top: 8, shift: -5 },
-  { rotate: '-0.7deg', top: 16, shift: 3 },
-] as const;
+const TAB = 34;
+const RADIUS = 24;
 
-function BackingSheet({
-  color,
-  rotate,
-  top,
-  shift,
+function cardPath(height: number) {
+  const T = TAB;
+  const R = RADIUS;
+  const H = Math.max(height, T + R * 2);
+  return `M0 ${T + R} Q0 ${T} ${R} ${T} H60 C88 ${T} 98 2 132 1 H268 C302 2 312 ${T} 340 ${T} H${400 - R} Q400 ${T} 400 ${T + R} V${H - R} Q400 ${H} ${400 - R} ${H} H${R} Q0 ${H} 0 ${H - R} Z`;
+}
+
+function GlassSheet({
+  height,
+  fill,
+  opacity,
+  strokeOpacity,
+  inset,
+  lift,
 }: {
-  color: string;
-  rotate: string;
-  top: number;
-  shift: number;
+  height: number;
+  fill: string;
+  opacity: number;
+  strokeOpacity: number;
+  inset: number;
+  lift: number;
 }) {
   return (
     <View
       pointerEvents="none"
       accessible={false}
-      style={[styles.sheet, { top, transform: [{ rotate }], marginLeft: shift, marginRight: -shift }]}
+      style={[styles.sheet, { left: -inset, right: -inset, top: -lift }]}
     >
-      <Svg width="100%" height="100%" viewBox="0 0 340 56">
+      <Svg width="100%" height="100%" viewBox={`0 0 400 ${height}`} preserveAspectRatio="none">
         <Path
-          d="M20 38C34 18 78 8 170 6C262 8 306 18 320 38C328 48 314 54 294 54H46C26 54 12 48 20 38Z"
-          fill={resultPresentation.emerald.wallpaper.deep}
-          fillOpacity="0.14"
-          transform="translate(0 3)"
-        />
-        <Path
-          d="M18 34C32 14 76 4 170 2C264 4 308 14 322 34C330 44 316 50 296 50H44C24 50 10 44 18 34Z"
-          fill={color}
-        />
-        <Path
-          d="M40 32C72 16 120 10 170 8C228 10 276 16 300 32"
-          fill="none"
-          stroke={resultPresentation.emerald.frameWash}
-          strokeOpacity="0.85"
-          strokeWidth="1.2"
+          d={cardPath(height)}
+          fill={fill}
+          fillOpacity={opacity}
+          stroke="#FFFFFF"
+          strokeOpacity={strokeOpacity}
+          strokeWidth="1"
         />
       </Svg>
     </View>
@@ -59,24 +58,13 @@ function BackingSheet({
 }
 
 export default function EmeraldScoreFrame({ heading, infoControl, children, confidence, dark = false }: Props) {
-  const [height, setHeight] = useState(420);
+  const [height, setHeight] = useState(460);
   const ink = dark ? resultPresentation.emerald.ink.dark : resultPresentation.emerald.ink.light;
   const card = dark ? resultPresentation.emerald.card.dark : resultPresentation.emerald.card.light;
-  const stack = resultPresentation.emerald.frameStack;
-  const shoulder = Math.max(28, height - 24);
   return (
     <View style={styles.wrapper}>
-      <View pointerEvents="none" accessible={false} style={styles.layers}>
-        {SHEETS.map((sheet, index) => (
-          <BackingSheet
-            key={stack[index]}
-            color={stack[index]}
-            rotate={sheet.rotate}
-            top={sheet.top}
-            shift={sheet.shift}
-          />
-        ))}
-      </View>
+      <GlassSheet height={height} fill="#D9FFF1" opacity={0.22} strokeOpacity={0.35} inset={12} lift={14} />
+      <GlassSheet height={height} fill="#FFFFFF" opacity={0.32} strokeOpacity={0.55} inset={6} lift={8} />
       <View
         style={styles.frame}
         onLayout={(e) => {
@@ -86,10 +74,7 @@ export default function EmeraldScoreFrame({ heading, infoControl, children, conf
       >
         <View pointerEvents="none" accessible={false} style={StyleSheet.absoluteFillObject}>
           <Svg width="100%" height="100%" viewBox={`0 0 400 ${height}`} preserveAspectRatio="none">
-            <Path
-              d={`M0 28C28 24 72 6 132 2C176 0 224 0 268 2C328 6 372 24 400 28V${shoulder}C400 ${height - 8} 382 ${height} 364 ${height}H36C18 ${height} 0 ${height - 8} 0 ${shoulder}Z`}
-              fill={card}
-            />
+            <Path d={cardPath(height)} fill={card} />
           </Svg>
         </View>
         <View style={styles.header}>
@@ -104,23 +89,14 @@ export default function EmeraldScoreFrame({ heading, infoControl, children, conf
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginHorizontal: 16, marginTop: 28, marginBottom: 8 },
-  layers: {
-    position: 'absolute',
-    left: 6,
-    right: 6,
-    top: -resultPresentation.emerald.backingPeek,
-    height: 72,
-  },
+  wrapper: { marginHorizontal: 16, marginTop: 14, marginBottom: 8 },
   sheet: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 52,
+    bottom: 0,
   },
   frame: {
     paddingHorizontal: 11,
-    paddingTop: 10,
+    paddingTop: 8,
     paddingBottom: 8,
     shadowColor: '#0C4A3C',
     shadowOffset: { width: 0, height: 4 },
@@ -129,7 +105,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   header: {
-    minHeight: 40,
+    minHeight: TAB,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

@@ -19,26 +19,27 @@ The coloured sheets drawn outside the two phone frames are board decoration. The
 
 ## Current rendered screen
 
-These emulator captures are the current uncommitted-then-published build. Pixel 5, 1080×2340, density 440, font scale 1.0, light theme. They are the only “current SCR-RESULT” images.
+The captures below are the visual-correction candidate. Pixel 5, 1080×2340, density 440. The screen is still not accepted.
 
 | File | What it shows |
 | --- | --- |
-| `design/wave5/APP-emerald-craft-rated-font1.0.png` | Rated Dairy Milk, barcode 9300617064879, from the top of the scroll |
-| `design/wave5/APP-emerald-craft-mixed-nr-font1.0.png` | Coca-Cola 9300675001113, overall unrevealed, from the top of the scroll |
-| `design/wave5/APP-emerald-craft-compare.png` | Artwork and those two screens at equal width |
-| `design/wave5/APP-emerald-craft-curl.png` | Current pillar corner |
-| `design/wave5/APP-emerald-craft-ref-curl.png` | Artwork pillar corner |
-| `design/wave5/APP-emerald-craft-sheets.png` | Current backing sheets |
-| `design/wave5/APP-emerald-craft-ref-sheets.png` | Artwork backing |
-| `design/wave5/APP-emerald-craft-medallion.png` | Current score medallion |
-| `design/wave5/APP-emerald-craft-ref-medallion.png` | Artwork medallion |
+| `design/wave5/APP-emerald-correction-rated-font1.0.png` | Rated Dairy Milk, barcode 9300617064879, font scale 1.0, light, top of scroll |
+| `design/wave5/APP-emerald-correction-mixed-nr-font1.0.png` | Coca-Cola 9300675001113, overall unrevealed, font scale 1.0, light, top of scroll |
+| `design/wave5/APP-emerald-correction-rated-font1.3.png` | Dairy Milk with the medallion above the tiles |
+| `design/wave5/APP-emerald-correction-rated-dark.png` | Dairy Milk, dark mode, font scale 1.0 |
+| `design/wave5/APP-emerald-correction-compare.png` | Artwork left phone and the font-1.0 Rated screen at equal height |
+| `design/wave5/APP-emerald-correction-frame.png` | Score-card tab, glass sheets and tiles |
+| `design/wave5/APP-emerald-correction-peel.png` | Page-peel corner |
+| `design/wave5/APP-emerald-correction-medallion.png` | Medallion, socket and arc |
 
-Other PNGs in `design/wave5/` are earlier rejected captures. Do not describe them as the current screen.
+`APP-emerald-craft-*` is the previous rejected build at `6c94302`. Do not describe those files as the current screen.
+
+Geometry for this candidate is `resultPresentation.emerald`. The older numbers in `emerald-implementation-spec.md` are superseded. Two founder decisions are unchanged: the medallion still uses `colors.trust` (Poor `#FF6B6B`), and the wallpaper still uses `#27B899 / #10957E / #087565`.
 
 ## Source that draws this screen
 
 - `src/components/product/emerald/EmeraldScoreComposition.tsx` — tiles, curl, medallion, font-scale layout
-- `src/components/product/emerald/EmeraldScoreFrame.tsx` — heading, three backing sheets, white card
+- `src/components/product/emerald/EmeraldScoreFrame.tsx` — raised tab, two frosted glass sheets, white card
 - `src/components/result/EmeraldWallpaper.tsx` — wallpaper
 - `src/theme/resultPresentation.ts` — colours, type, spacing
 - `src/components/product/ProductHeroSection.tsx` — identity card and 72dp photo
@@ -50,7 +51,7 @@ At font scale 1.0 the medallion stays centred on the four tiles. At font scale 1
 
 Wallpaper tokens: light `#27B899`, main `#10957E`, deep `#087565`.
 
-The SVG pillar corner is not a match for the artwork’s pointed page peel. Do not tell Cursor to accept the current crescent as the fold.
+The pillar corner is one pass of the measured page-peel construction. If that corner is still rejected, stop editing the path and use a designer-traced vector. Do not ask for another simplified shape.
 
 ## Governance copies
 

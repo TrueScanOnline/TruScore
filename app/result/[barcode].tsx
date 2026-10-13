@@ -1728,6 +1728,7 @@ function ResultScreenContent() {
       <TouchableOpacity
         onPress={handleToggleFavorite}
         style={styles.identityAction}
+        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         accessibilityRole="button"
         accessibilityLabel={isFavorite(barcode) ? 'Remove favourite' : 'Add favourite'}
       >
@@ -1746,6 +1747,7 @@ function ResultScreenContent() {
           }
         }}
         style={styles.identityAction}
+        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         accessibilityRole="button"
         accessibilityLabel="Share"
       >
@@ -2930,14 +2932,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   identityActions: {
+    width: 72,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     flexGrow: 0,
     flexShrink: 0,
   },
   identityAction: {
-    width: 44,
-    height: 44,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },

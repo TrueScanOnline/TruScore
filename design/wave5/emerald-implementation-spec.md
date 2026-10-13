@@ -1,5 +1,7 @@
 # A · Emerald Perspectives — Result implementation specification
 
+> Superseded for geometry and wallpaper numbers by `Rveel_Wave5_Emerald_Visual_Correction_Instruction_6c94302.md` (11 Oct 2026). The live values are `resultPresentation.emerald`. Do not treat the table below as the current spec. Wallpaper depth and the medallion band shade remain founder decisions and are not changed by that instruction.
+
 Founder-approved appearance for SCR-RESULT. Source artwork: `CONCEPT-A-Emerald-Perspectives.png`. This file records the implementation specification. It is not another concept board.
 
 Baseline: `f1899c39ab58608a8552ec2d3db58f6ac0b5cb0b` on `wave5/score-experience-20261008`.
