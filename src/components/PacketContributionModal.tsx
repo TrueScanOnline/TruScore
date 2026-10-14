@@ -12,8 +12,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../theme';
+import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../theme/resultPresentation';
 import CountryPicker from './CountryPicker';
 import { originCountrySlots, placeFromCountrySlots, governedOriginCountryNames } from '../contribution/originCountrySelection';
 import {
@@ -241,7 +243,8 @@ export default function PacketContributionModal({
   onSharedEvidenceAdmitted?: (snapshot: SharedEvidenceSnapshot | null, complete: boolean) => void | Promise<void>;
   onSharedEvidenceFailed?: () => void;
 }) {
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const insets = useSafeAreaInsets();
   const [session, setSession] = useState<PacketContributionSession | null>(null);
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [surfaceJourneyId, setSurfaceJourneyId] = useState<string | null>(null);
@@ -266,6 +269,26 @@ export default function PacketContributionModal({
   const [includedContexts, setIncludedContexts] = useState<ContributionEntryContext[]>([entryContext]);
   const [proposalSupport, setProposalSupport] = useState<Partial<Record<ContributionEntryContext, SupportCoverage>>>({});
   const [activeContext, setActiveContext] = useState<ContributionEntryContext>(entryContext);
+  const packetSurface = packetInformationContext(activeContext);
+  const emerald = resultEmeraldTone(!!darkMode);
+  const ink = packetSurface ? emerald.ink : colors.text;
+  const action = packetSurface ? emerald.action : colors.primary;
+  const line = packetSurface ? emerald.line : colors.border;
+  const pageBg = packetSurface ? resultPresentation.canvas[darkMode ? 'dark' : 'light'] : colors.background;
+  const fieldBg = packetSurface ? emerald.card : colors.background;
+  const filledButton = [
+    styles.button,
+    packetSurface
+      ? {
+          backgroundColor: resultPresentation.emerald.action.light,
+          borderRadius: 22,
+          minHeight: 44,
+          alignItems: 'center' as const,
+          justifyContent: 'center' as const,
+        }
+      : null,
+  ];
+  const phaseCard = packetSurface ? [resultEmeraldCard(!!darkMode), styles.phaseCard] : null;
   const [partialNotice, setPartialNotice] = useState<string | null>(null);
   const [submissionAttention, setSubmissionAttention] = useState<{ idempotencyKey: string; interruptedAt: number }[]>([]);
   const initialIngredientsRef = useRef(initialIngredients);
@@ -949,47 +972,60 @@ export default function PacketContributionModal({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: colors.background }}
+        style={{ flex: 1, backgroundColor: pageBg }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
       <ScrollView
-        style={[styles.page, { backgroundColor: colors.background }]}
-        contentContainerStyle={[styles.content, { paddingBottom: 48 }]}
+        style={[styles.page, { backgroundColor: pageBg }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: Math.max(insets.top, 12), paddingBottom: Math.max(insets.bottom, 24) + 24 },
+        ]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         automaticallyAdjustKeyboardInsets
       >
-        <Text style={[styles.header, { color: colors.text }]}>{journey.header}</Text>
+        <View style={styles.headerRow}>
+          <Text style={[styles.header, { color: ink, flex: 1 }]}>{journey.header}</Text>
+          <TouchableOpacity
+            onPress={onClose}
+            style={[styles.closeControl, packetSurface ? { backgroundColor: emerald.chevronCircle } : null]}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          >
+            <Text style={{ color: ink, fontWeight: '700' }}>Close</Text>
+          </TouchableOpacity>
+        </View>
         {phase === 'capture' ? (
-          <View>
-            <Text style={[styles.body, { color: colors.text }]}>{journey.instruction}</Text>
+          <View style={phaseCard}>
+            <Text style={[styles.body, { color: ink }]}>{journey.instruction}</Text>
             <View style={styles.row}>
-              <TouchableOpacity onPress={captureCamera} style={styles.button} accessibilityRole="button">
+              <TouchableOpacity onPress={captureCamera} style={filledButton} accessibilityRole="button">
                 <Text style={styles.buttonText}>Camera</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={captureGallery} style={styles.button} accessibilityRole="button">
+              <TouchableOpacity onPress={captureGallery} style={filledButton} accessibilityRole="button">
                 <Text style={styles.buttonText}>Gallery</Text>
               </TouchableOpacity>
             </View>
             {targeted.filter((asset) => asset.imagePhase !== 'parked_after_interrupted_resume' && evidenceImageStatus(asset)).map((asset) => (
-              <Text key={asset.assetId} style={{ color: colors.text }}>
+              <Text key={asset.assetId} style={{ color: ink }}>
                 {evidenceImageStatus(asset)}
               </Text>
             ))}
             {needsAttention.map((asset) => (
               <View key={`attention-${asset.assetId}`}>
-                <Text style={{ color: colors.text }}>
+                <Text style={{ color: ink }}>
                   {evidenceImageStatus(asset)}
                 </Text>
-                <TouchableOpacity onPress={() => void retryPhoto(asset.assetId)} style={styles.button} accessibilityRole="button">
+                <TouchableOpacity onPress={() => void retryPhoto(asset.assetId)} style={filledButton} accessibilityRole="button">
                   <Text style={styles.buttonText}>Retry photo</Text>
                 </TouchableOpacity>
               </View>
             ))}
             {submissionAttention.map((item) => (
               <View key={item.idempotencyKey}>
-                <Text style={{ color: colors.text }}>This send needs attention.</Text>
-                <TouchableOpacity onPress={() => void retrySubmission(item.idempotencyKey)} style={styles.button} accessibilityRole="button">
+                <Text style={{ color: ink }}>This send needs attention.</Text>
+                <TouchableOpacity onPress={() => void retrySubmission(item.idempotencyKey)} style={filledButton} accessibilityRole="button">
                   <Text style={styles.buttonText}>Retry send</Text>
                 </TouchableOpacity>
               </View>
@@ -998,32 +1034,32 @@ export default function PacketContributionModal({
               <View key={preview.tempKey} style={styles.previewRow}>
                 <Image source={{ uri: preview.uri }} style={styles.thumb} />
                 <TouchableOpacity onPress={() => retake(preview)}>
-                  <Text style={{ color: colors.primary }}>Retake</Text>
+                  <Text style={{ color: action }}>Retake</Text>
                 </TouchableOpacity>
               </View>
             ))}
             {showReadPhotos ? (
-              <TouchableOpacity onPress={readPhotos} style={styles.button}>
+              <TouchableOpacity onPress={readPhotos} style={filledButton}>
                 <Text style={styles.buttonText}>Read photos</Text>
               </TouchableOpacity>
             ) : null}
             {proposals.length > 0 ? (
               <View>
                 {proposals.some((proposal) => !proposal.resolution) ? (
-                  <Text style={[styles.body, { color: colors.text }]}>Also found on this photo</Text>
+                  <Text style={[styles.body, { color: ink }]}>Also found on this photo</Text>
                 ) : null}
                 {proposals.map((proposal) =>
                   proposal.resolution?.kind === 'closer_photo' ? (
                     <View key={proposal.id}>
-                      <Text style={{ color: colors.text }}>{CLOSER_PHOTO_TITLE}</Text>
-                      <Text style={{ color: colors.text }}>{CLOSER_PHOTO_BODY}</Text>
+                      <Text style={{ color: ink }}>{CLOSER_PHOTO_TITLE}</Text>
+                      <Text style={{ color: ink }}>{CLOSER_PHOTO_BODY}</Text>
                       <TouchableOpacity onPress={captureCamera} accessibilityRole="button">
-                        <Text style={{ color: colors.primary }}>{CLOSER_PHOTO_ACTION}</Text>
+                        <Text style={{ color: action }}>{CLOSER_PHOTO_ACTION}</Text>
                       </TouchableOpacity>
                     </View>
                   ) : proposal.resolution?.kind === 'shortlist' ? (
                     <View key={proposal.id}>
-                      <Text style={{ color: colors.text }}>{PACKET_REVIEW_PROMPT}</Text>
+                      <Text style={{ color: ink }}>{PACKET_REVIEW_PROMPT}</Text>
                       {proposal.resolution.options.map((option) => (
                         <TouchableOpacity
                           key={option.displayName}
@@ -1040,22 +1076,22 @@ export default function PacketContributionModal({
                             )
                           }
                         >
-                          <Text style={{ color: colors.primary }}>{option.displayName}</Text>
+                          <Text style={{ color: action }}>{option.displayName}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
                   ) : proposal.resolution ? (
                     <View key={proposal.id}>
-                      <Text style={{ color: colors.text }}>
+                      <Text style={{ color: ink }}>
                         {proposal.resolution.kind === 'certification' ? proposal.resolution.displayName : proposal.text}
                       </Text>
-                      <Text style={{ color: colors.text }}>{PACKET_REVIEW_PROMPT}</Text>
+                      <Text style={{ color: ink }}>{PACKET_REVIEW_PROMPT}</Text>
                       <View style={styles.row}>
                         <TouchableOpacity
                           onPress={() => acceptPacketResolution(proposal.id, proposal.resolution as PacketResolution, proposal.support)}
                           accessibilityRole="button"
                         >
-                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_YES}</Text>
+                          <Text style={{ color: action }}>{PACKET_REVIEW_YES}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={() => {
@@ -1065,18 +1101,18 @@ export default function PacketContributionModal({
                           }}
                           accessibilityRole="button"
                         >
-                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_CHANGE}</Text>
+                          <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
                   ) : (
                     <View key={proposal.id} style={styles.row}>
-                      <Text style={{ color: colors.text }}>{proposal.text}</Text>
+                      <Text style={{ color: ink }}>{proposal.text}</Text>
                       <TouchableOpacity onPress={() => acceptProposal(proposal)}>
-                        <Text style={{ color: colors.primary }}>Review</Text>
+                        <Text style={{ color: action }}>Review</Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => setSkippedProposals((rows) => [...rows, proposal.id])}>
-                        <Text style={{ color: colors.primary }}>Skip</Text>
+                        <Text style={{ color: action }}>Skip</Text>
                       </TouchableOpacity>
                     </View>
                   )
@@ -1085,20 +1121,20 @@ export default function PacketContributionModal({
             ) : null}
             <TouchableOpacity
               onPress={() => setPhase('entry')}
-              style={styles.button}
+              style={filledButton}
             >
               <Text style={styles.buttonText}>{journey.manual}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
         {phase === 'entry' || phase === 'review' ? (
-          <View>
+          <View style={phaseCard}>
             {phase === 'review'
               ? displayedPreviews.map((preview) => (
                   <View key={preview.tempKey} style={styles.previewRow}>
                     <Image source={{ uri: preview.uri }} style={styles.thumb} />
                     <TouchableOpacity onPress={() => retake(preview)}>
-                      <Text style={{ color: colors.primary }}>Remove</Text>
+                      <Text style={{ color: action }}>Remove</Text>
                     </TouchableOpacity>
                   </View>
                 ))
@@ -1112,8 +1148,11 @@ export default function PacketContributionModal({
                 }
                 setPhase(phase === 'review' ? 'entry' : 'capture');
               }}
+              style={styles.closeControl}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
             >
-              <Text style={{ color: colors.primary }}>Back</Text>
+              <Text style={{ color: action, fontWeight: '700' }}>Back</Text>
             </TouchableOpacity>
             {activeContext === 'ingredients' ? (
               <View>
@@ -1122,26 +1161,26 @@ export default function PacketContributionModal({
                   onChangeText={setIngredientsText}
                   multiline
                   placeholder="Ingredients"
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                  style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                 />
                 <TouchableOpacity onPress={() => setIngredientsText('')}>
-                  <Text style={{ color: colors.primary }}>Remove</Text>
+                  <Text style={{ color: action }}>Remove</Text>
                 </TouchableOpacity>
               </View>
             ) : null}
             {activeContext === 'nutrition' ? (
               <View>
-                <Text style={{ color: colors.text }}>{NUTRITION_CONTRIBUTION_BASES[0].label}</Text>
+                <Text style={{ color: ink }}>{NUTRITION_CONTRIBUTION_BASES[0].label}</Text>
                 {NUTRITION_FIELDS.map((field) => (
                   <View key={field.attribute}>
-                    <Text style={{ color: colors.text }}>{field.packetConcept}</Text>
+                    <Text style={{ color: ink }}>{field.packetConcept}</Text>
                     <TextInput
                       value={amounts[field.attribute] || ''}
                       onChangeText={(value) => {
                         setAmounts((current) => ({ ...current, [field.attribute]: value }));
                       }}
                       keyboardType="decimal-pad"
-                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                      style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                     />
                     {field.attribute === 'sodium' ? (
                       <View style={styles.row}>
@@ -1156,7 +1195,7 @@ export default function PacketContributionModal({
                             });
                           }}
                         >
-                          <Text style={{ color: sodiumUnit === 'mg' ? colors.primary : colors.text }}>mg</Text>
+                          <Text style={{ color: sodiumUnit === 'mg' ? action : ink }}>mg</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={() => {
@@ -1169,11 +1208,11 @@ export default function PacketContributionModal({
                             });
                           }}
                         >
-                          <Text style={{ color: sodiumUnit === 'g' ? colors.primary : colors.text }}>g</Text>
+                          <Text style={{ color: sodiumUnit === 'g' ? action : ink }}>g</Text>
                         </TouchableOpacity>
                       </View>
                     ) : (
-                      <Text style={{ color: colors.textSecondary }}>{field.acceptedUnits[0]}</Text>
+                      <Text style={{ color: inkSecondary }}>{field.acceptedUnits[0]}</Text>
                     )}
                   </View>
                 ))}
@@ -1198,15 +1237,15 @@ export default function PacketContributionModal({
                   if (currentProposition && editingOrigin !== index) {
                     return (
                       <View key={`${row.evidenceId || row.claimType || 'origin'}-${index}`}>
-                        <Text style={{ color: colors.text }}>
+                        <Text style={{ color: ink }}>
                           {`${countryFlagEmoji(country)} ${originChangeLine(row.claimType!, country)}`}
                         </Text>
                         <View style={styles.row}>
                           <TouchableOpacity onPress={() => setEditingOrigin(index)} accessibilityRole="button">
-                            <Text style={{ color: colors.primary }}>{PACKET_REVIEW_CHANGE}</Text>
+                            <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
                           </TouchableOpacity>
                           <TouchableOpacity onPress={removeThisOrigin} accessibilityRole="button">
-                            <Text style={{ color: colors.primary }}>{PACKET_REVIEW_REMOVE}</Text>
+                            <Text style={{ color: action }}>{PACKET_REVIEW_REMOVE}</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -1214,19 +1253,19 @@ export default function PacketContributionModal({
                   }
                   return (
                   <View key={`${row.evidenceId || row.claimType || 'origin'}-${index}`}>
-                    <Text style={[styles.header, { color: colors.text, fontSize: 18 }]}>
+                    <Text style={[styles.header, { color: ink, fontSize: 18 }]}>
                       {origins.length > 1 ? `Origin statement ${index + 1}` : 'Origin statement'}
                     </Text>
-                    <Text style={{ color: colors.text }}>What does the pack say?</Text>
+                    <Text style={{ color: ink }}>What does the pack say?</Text>
                     <TextInput
                       value={row.wording}
                       onChangeText={(value) =>
                         setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, wording: value } : item)))
                       }
                       multiline
-                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                      style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                     />
-                    <Text style={{ color: colors.text }}>Type of origin statement</Text>
+                    <Text style={{ color: ink }}>Type of origin statement</Text>
                     <View style={styles.row}>
                       {PRODUCT_ORIGINS_CLAIM_TYPES.map((claimType) => (
                         <TouchableOpacity
@@ -1235,7 +1274,7 @@ export default function PacketContributionModal({
                             setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, claimType } : item)))
                           }
                         >
-                          <Text style={{ color: row.claimType === claimType ? colors.primary : colors.text }}>
+                          <Text style={{ color: row.claimType === claimType ? action : ink }}>
                             {ORIGIN_LABELS[claimType]}
                           </Text>
                         </TouchableOpacity>
@@ -1243,18 +1282,18 @@ export default function PacketContributionModal({
                     </View>
                     {row.claimType === 'ingredient_origin' ? (
                       <View>
-                        <Text style={{ color: colors.text }}>Ingredient named on the pack</Text>
+                        <Text style={{ color: ink }}>Ingredient named on the pack</Text>
                         <TextInput
                           value={row.ingredient}
                           onChangeText={(value) =>
                             setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, ingredient: value } : item)))
                           }
                           placeholder="Ingredient named on the pack"
-                          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                          style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                         />
                       </View>
                     ) : null}
-                    <Text style={{ color: colors.text }}>Country</Text>
+                    <Text style={{ color: ink }}>Country</Text>
                     {originCountrySlots(row.place, countryBlanks[index] ?? 0).map((slot, slotIndex, slots) => (
                       <View key={`${index}-country-${slotIndex}`}>
                         <CountryPicker
@@ -1301,7 +1340,7 @@ export default function PacketContributionModal({
                               }
                             }}
                           >
-                            <Text style={{ color: colors.primary }}>Remove country</Text>
+                            <Text style={{ color: action }}>Remove country</Text>
                           </TouchableOpacity>
                         ) : null}
                       </View>
@@ -1316,9 +1355,9 @@ export default function PacketContributionModal({
                         })
                       }
                     >
-                      <Text style={{ color: colors.primary }}>Add another country</Text>
+                      <Text style={{ color: action }}>Add another country</Text>
                     </TouchableOpacity>
-                    <Text style={{ color: colors.text }}>Percentage</Text>
+                    <Text style={{ color: ink }}>Percentage</Text>
                     <TouchableOpacity
                       onPress={() =>
                         setOrigins((rows) =>
@@ -1330,7 +1369,7 @@ export default function PacketContributionModal({
                         )
                       }
                     >
-                      <Text style={{ color: row.percentageNotStated ? colors.primary : colors.text }}>Not stated</Text>
+                      <Text style={{ color: row.percentageNotStated ? action : ink }}>Not stated</Text>
                     </TouchableOpacity>
                     {row.percentageNotStated ? null : (
                     <TextInput
@@ -1344,7 +1383,7 @@ export default function PacketContributionModal({
                       }
                       keyboardType="decimal-pad"
                       placeholder="Percentage on the pack"
-                      style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                      style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                     />
                     )}
                     {row.percentageNotStated ? null : (
@@ -1360,7 +1399,7 @@ export default function PacketContributionModal({
                             )
                           }
                         >
-                          <Text style={{ color: row.qualifier === item.value ? colors.primary : colors.text }}>{item.label}</Text>
+                          <Text style={{ color: row.qualifier === item.value ? action : ink }}>{item.label}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -1375,7 +1414,7 @@ export default function PacketContributionModal({
                           )
                         }
                       >
-                        <Text style={{ color: row.local ? colors.primary : colors.text }}>Local</Text>
+                        <Text style={{ color: row.local ? action : ink }}>Local</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() =>
@@ -1386,18 +1425,18 @@ export default function PacketContributionModal({
                           )
                         }
                       >
-                        <Text style={{ color: row.imported ? colors.primary : colors.text }}>Imported</Text>
+                        <Text style={{ color: row.imported ? action : ink }}>Imported</Text>
                       </TouchableOpacity>
                     </View>
                     {row.claimType && row.place.trim() ? (
                     <View style={styles.row}>
                       {surfaceMode === 'change' && row.intent === 'edited' ? (
                         <TouchableOpacity onPress={() => setEditingOrigin(index)} accessibilityRole="button">
-                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_CHANGE}</Text>
+                          <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
                         </TouchableOpacity>
                       ) : null}
                       <TouchableOpacity onPress={removeThisOrigin} accessibilityRole="button">
-                        <Text style={{ color: colors.primary }}>{PACKET_REVIEW_REMOVE}</Text>
+                        <Text style={{ color: action }}>{PACKET_REVIEW_REMOVE}</Text>
                       </TouchableOpacity>
                     </View>
                     ) : null}
@@ -1412,7 +1451,7 @@ export default function PacketContributionModal({
                   setCountryBlanks((counts) => [...counts, 0]);
                 }}
               >
-                <Text style={{ color: colors.primary }}>{journey.another}</Text>
+                <Text style={{ color: action }}>{journey.another}</Text>
               </TouchableOpacity>
             ) : null}
             {packetInformationContext(activeContext) ? (
@@ -1427,14 +1466,14 @@ export default function PacketContributionModal({
                             if (value.trim()) setAbsence(false);
                             setClaims((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)));
                           }}
-                          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                          style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                         />
                       ) : (
-                        <Text style={{ color: colors.text }}>{claim}</Text>
+                        <Text style={{ color: ink }}>{claim}</Text>
                       )}
                       <View style={styles.row}>
                         <TouchableOpacity onPress={() => setEditingClaim(index)} accessibilityRole="button">
-                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_CHANGE}</Text>
+                          <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={() => setClaims((rows) => {
@@ -1443,7 +1482,7 @@ export default function PacketContributionModal({
                           })}
                           accessibilityRole="button"
                         >
-                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_REMOVE}</Text>
+                          <Text style={{ color: action }}>{PACKET_REVIEW_REMOVE}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -1459,14 +1498,14 @@ export default function PacketContributionModal({
                             if (value.trim()) setAbsence(false);
                             setCerts((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)));
                           }}
-                          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                          style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                         />
                       ) : (
-                        <Text style={{ color: colors.text }}>{cert}</Text>
+                        <Text style={{ color: ink }}>{cert}</Text>
                       )}
                       <View style={styles.row}>
                         <TouchableOpacity onPress={() => setEditingCert(index)} accessibilityRole="button">
-                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_CHANGE}</Text>
+                          <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={() => setCerts((rows) => {
@@ -1475,7 +1514,7 @@ export default function PacketContributionModal({
                           })}
                           accessibilityRole="button"
                         >
-                          <Text style={{ color: colors.primary }}>{PACKET_REVIEW_REMOVE}</Text>
+                          <Text style={{ color: action }}>{PACKET_REVIEW_REMOVE}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -1488,16 +1527,16 @@ export default function PacketContributionModal({
                     setPacketQuery(value);
                   }}
                   placeholder={PACKET_MANUAL_ENTRY}
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                  style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                 />
                 {packetHits.map((hit) => (
                   <TouchableOpacity key={hit.displayName} onPress={() => addCatalogueSelection(hit)} accessibilityRole="button">
-                    <Text style={{ color: colors.primary }}>{hit.displayName}</Text>
+                    <Text style={{ color: action }}>{hit.displayName}</Text>
                   </TouchableOpacity>
                 ))}
                 {packetQuery.trim() && packetHits.length === 0 ? (
                   <TouchableOpacity onPress={() => addUnmatchedWording(packetQuery)} accessibilityRole="button">
-                    <Text style={{ color: colors.primary }}>{PACKET_UNMATCHED_ENTRY}</Text>
+                    <Text style={{ color: action }}>{PACKET_UNMATCHED_ENTRY}</Text>
                   </TouchableOpacity>
                 ) : null}
                 {packetAbsenceAvailable && targeted.length > 0 && claims.every((claim) => !claim.trim()) && certs.every((cert) => !cert.trim()) ? (
@@ -1508,21 +1547,22 @@ export default function PacketContributionModal({
                       setCerts(['']);
                     }}
                   >
-                    <Text style={{ color: absence ? colors.primary : colors.text }}>{PACKET_ABSENCE_CONSUMER_COPY}</Text>
+                    <Text style={{ color: absence ? action : ink }}>{PACKET_ABSENCE_CONSUMER_COPY}</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
             ) : null}
-            {partialNotice ? <Text style={{ color: colors.text }}>{partialNotice}</Text> : null}
-            <TouchableOpacity onPress={submit} style={styles.button} accessibilityRole="button">
+            {partialNotice ? (
+              <View style={[styles.notice, packetSurface ? { backgroundColor: emerald.chevronCircle } : null]}>
+                <Text style={{ color: ink }}>{partialNotice}</Text>
+              </View>
+            ) : null}
+            <TouchableOpacity onPress={submit} style={filledButton} accessibilityRole="button">
               <Text style={styles.buttonText}>{journey.submit}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
-        {busy ? <ActivityIndicator /> : null}
-        <TouchableOpacity onPress={onClose}>
-          <Text style={{ color: colors.primary }}>Close</Text>
-        </TouchableOpacity>
+        {busy ? <ActivityIndicator color={packetSurface ? resultPresentation.emerald.action.light : colors.primary} /> : null}
       </ScrollView>
       </KeyboardAvoidingView>
     </Modal>
@@ -1539,5 +1579,9 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontWeight: '600' },
   previewRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   thumb: { width: 72, height: 72, borderRadius: 8 },
-  input: { borderWidth: 1, borderRadius: 8, padding: 8, minHeight: 44 },
+  input: { borderWidth: 1, borderRadius: 12, padding: 12, minHeight: 48 },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
+  closeControl: { minWidth: 44, minHeight: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  phaseCard: { padding: 16, gap: 12 },
+  notice: { borderRadius: 12, padding: 12 },
 });
