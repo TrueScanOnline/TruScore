@@ -367,8 +367,21 @@ function ResultScreenContent() {
   const isPremium = subscriptionInfo.isPremium && 
     (subscriptionInfo.status === 'active' || subscriptionInfo.status === 'trial' || subscriptionInfo.status === 'grace_period');
   
-  // Tab bar height (60px + safe area bottom)
+  // The tab bar is in the navigator layout, above which this scene already ends.
+  // Reserving tabBarHeight again left a green band. Keep a small clearance only.
   const tabBarHeight = 60 + insets.bottom;
+  const scrollPaddingBottom = 16;
+  const spacingLogged = useRef(false);
+  useEffect(() => {
+    if (!__DEV__ || spacingLogged.current) return;
+    spacingLogged.current = true;
+    console.log('[result-scroll]', JSON.stringify({
+      tabBarHeight,
+      insetBottom: insets.bottom,
+      paddingBottom: scrollPaddingBottom,
+      safeAreaEdges: 'top',
+    }));
+  }, [insets.bottom, scrollPaddingBottom, tabBarHeight]);
 
   const hasAlertsMasterEnabled =
     alertsPreferences.geopoliticalEnabled ||
@@ -1757,7 +1770,7 @@ function ResultScreenContent() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: resultPresentation.emerald.wallpaperBase }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: resultPresentation.emerald.wallpaperBase }]} edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor={resultPresentation.emerald.wallpaper.light} />
       <EmeraldWallpaper />
       <ScrollView
@@ -1765,7 +1778,7 @@ function ResultScreenContent() {
         style={[styles.scrollView, { backgroundColor: 'transparent' }]}
         contentContainerStyle={{
           paddingTop: resultPresentation.emerald.space.scrollTop,
-          paddingBottom: tabBarHeight + resultPresentation.space.scrollClearance,
+          paddingBottom: scrollPaddingBottom,
         }}
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
@@ -2380,7 +2393,7 @@ function ResultScreenContent() {
 
         <ProductDisclaimerCard />
 
-        {/* Bottom spacing — keeps the Disclaimer fully above the tab bar */}
+        {/* Small clearance so the Disclaimer is not flush with the tab bar. */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
@@ -3555,7 +3568,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   bottomSpacer: {
-    height: 32,
+    height: 8,
   },
   insightsHeader: {
     flexDirection: 'row',

@@ -209,6 +209,17 @@ The founders have selected **A · Emerald Perspectives** (`C:\Users\leigh\Deskto
 
 The large sheets outside the phone frames are presentation-board decoration. Only the wallpaper and layers inside the phone are candidates for the app. Governed contracts and approved copy remain authoritative over the artwork. Emerald styling is held until a code-grounded visual specification is ready. The source inspected for that handoff is `f1899c39ab58608a8552ec2d3db58f6ac0b5cb0b` on `wave5/score-experience-20261008`. No Emerald styling was applied while preparing that source.
 
+### Founder visual acceptance — SCR-RESULT — 15 October 2026
+
+The founders accept the currently rendered Emerald Result as the visual reference for SCR-RESULT. The accepted evidence is the Android emulator, Pixel 5, light theme, ordinary text:
+
+- Rated: `design/wave5/APP-emerald-layout-rated-font1.0.png`. Entry History. Cadbury Dairy Milk, barcode 9300617064879. Published output shown as captured; those numbers are not hard-coded targets.
+- Mixed NR: `design/wave5/APP-emerald-layout-mixed-nr-font1.0.png`. Entry History. Coca-Cola Classic, barcode 9300675001113. Overall unrevealed, with independently published pillar values retained.
+
+The same checkpoint also captured enlarged text (`APP-emerald-layout-rated-font1.3.png`) and the end of the scroll (`APP-emerald-layout-rated-font1.3-end.png`).
+
+This acceptance covers the rendered identity, wallpaper, CARD-SCORE and the findings treatment on that screen. It is the reference for later surfaces. It does not finish CARD-NUTRITION, CARD-INGREDIENTS, CARD-ORIGINS, CARD-PACKET or the overlays. It does not close corrective-package acceptance and it does not record BC.
+
 Start from the shopper's question: what did Rveel find and what does it mean? Explore distinct ways to make that answer clear. A score-led view, a finding-led view and a pillar-led view are useful possibilities, not a compulsory list. The lead decides how many alternatives are useful and avoids producing variants merely to satisfy a count.
 
 Compare alternatives using the same representative governed product states. Include all-Rated, one pillar NR, Checking, Rated with an unresolved lane, Limited Confidence, sparse findings and long product names. Assess clarity, contribution effort, navigation, accessibility, Rveel character and share suitability. Weighting can support discussion, but no weighted score can authorize misleading information.
@@ -361,5 +372,7 @@ Code reference: https://github.com/TrueScanOnline/TruScore/tree/99102768b61bd6e5
 Experience references: W3C WCAG 2.2 at https://www.w3.org/TR/WCAG22/ and Nielsen Norman Group progressive disclosure guidance at https://www.nngroup.com/articles/progressive-disclosure/. Consulted during v1.0 preparation on 8 October 2026. They inform practice; project-specific numerical targets remain provisional. The supplied five screenshots remain visual inspiration only.
 
 10 October 2026: section 11 records the founder selection of A · Emerald Perspectives as the visual direction. Appearance only; corrective-package acceptance remains open; the direction is not recorded as implemented.
+
+15 October 2026: section 11 records founder visual acceptance of the rendered SCR-RESULT. Corrective-package acceptance and BC remain open.
 
 Future revisions should change this master only when a material operating decision or scope boundary changes. Routine GREEN findings and fixes belong in the current work record. Keep a dated one-line explanation for each substantive amendment; do not create a new documentation workstream around every increment.

@@ -22,36 +22,33 @@ function cardPath(height: number) {
   return `M0 ${T + R} Q0 ${T} ${R} ${T} H60 C88 ${T} 98 2 132 1 H268 C302 2 312 ${T} 340 ${T} H${400 - R} Q400 ${T} 400 ${T + R} V${H - R} Q400 ${H} ${400 - R} ${H} H${R} Q0 ${H} 0 ${H - R} Z`;
 }
 
+const SHEETS = [
+  { lift: 20, inset: 14, shift: -8, fill: '#FFFFFF', opacity: 0.22 },
+  { lift: 13, inset: 8, shift: 6, fill: '#D9FFF1', opacity: 0.28 },
+  { lift: 7, inset: 4, shift: -3, fill: '#FFFFFF', opacity: 0.42 },
+] as const;
+
 function GlassSheet({
-  height,
   fill,
   opacity,
-  strokeOpacity,
   inset,
   lift,
+  shift,
 }: {
-  height: number;
   fill: string;
   opacity: number;
-  strokeOpacity: number;
   inset: number;
   lift: number;
+  shift: number;
 }) {
   return (
     <View
       pointerEvents="none"
       accessible={false}
-      style={[styles.sheet, { left: -inset, right: -inset, top: -lift }]}
+      style={[styles.sheet, { left: -inset + shift, right: -inset - shift, top: -lift, height: 72 }]}
     >
-      <Svg width="100%" height="100%" viewBox={`0 0 400 ${height}`} preserveAspectRatio="none">
-        <Path
-          d={cardPath(height)}
-          fill={fill}
-          fillOpacity={opacity}
-          stroke="#FFFFFF"
-          strokeOpacity={strokeOpacity}
-          strokeWidth="1"
-        />
+      <Svg width="100%" height="100%" viewBox="0 0 400 78" preserveAspectRatio="xMidYMin slice">
+        <Path d={cardPath(220)} fill={fill} fillOpacity={opacity} stroke="#FFFFFF" strokeOpacity="0.35" strokeWidth="1" />
       </Svg>
     </View>
   );
@@ -63,8 +60,9 @@ export default function EmeraldScoreFrame({ heading, infoControl, children, conf
   const card = dark ? resultPresentation.emerald.card.dark : resultPresentation.emerald.card.light;
   return (
     <View style={styles.wrapper}>
-      <GlassSheet height={height} fill="#D9FFF1" opacity={0.22} strokeOpacity={0.35} inset={12} lift={14} />
-      <GlassSheet height={height} fill="#FFFFFF" opacity={0.32} strokeOpacity={0.55} inset={6} lift={8} />
+      {SHEETS.map((sheet) => (
+        <GlassSheet key={`${sheet.lift}-${sheet.shift}`} {...sheet} />
+      ))}
       <View
         style={styles.frame}
         onLayout={(e) => {
@@ -92,7 +90,14 @@ const styles = StyleSheet.create({
   wrapper: { marginHorizontal: 16, marginTop: 14, marginBottom: 8 },
   sheet: {
     position: 'absolute',
-    bottom: 0,
+    overflow: 'hidden',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    shadowColor: '#0C4A3C',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 1,
   },
   frame: {
     paddingHorizontal: 11,

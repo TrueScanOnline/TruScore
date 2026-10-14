@@ -2,7 +2,7 @@
  * Wave 5 Emerald visual correction — pure presentation.
  * Values, labels and actions are passed from the current governed helpers.
  */
-import React, { useId, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, PixelRatio } from 'react-native';
 import Svg, {
   Defs,
@@ -206,10 +206,34 @@ function Disc({ kind, value, colour, label, diameter, dark }: {
         </Svg>
       </View>
       {rated ? (
-        <View style={styles.discCopy} accessible accessibilityLabel={`${value}/100. ${label || ''}`}>
-          <Text style={[styles.score, { color: colour }]}>{value}</Text>
-          <Text style={[styles.denominator, { color: colour }]}>/100</Text>
-          <Text style={[styles.band, { color: colour }]}>{label}</Text>
+        <View
+          style={[styles.discCopy, { width: diameter * 0.62, height: diameter * 0.62 }]}
+          accessible
+          accessibilityLabel={`${value}/100. ${label || ''}`}
+        >
+          <Text
+            style={[styles.score, { color: colour, fontSize: Math.min(32, Math.round(diameter * 0.28)), lineHeight: Math.min(36, Math.round(diameter * 0.3)) }]}
+            maxFontSizeMultiplier={1.15}
+            numberOfLines={1}
+          >
+            {value}
+          </Text>
+          <Text
+            style={[styles.denominator, { color: colour, fontSize: Math.min(13, Math.round(diameter * 0.11)), lineHeight: Math.min(16, Math.round(diameter * 0.13)) }]}
+            maxFontSizeMultiplier={1.15}
+            numberOfLines={1}
+          >
+            /100
+          </Text>
+          <Text
+            style={[styles.band, { color: colour, fontSize: Math.min(15, Math.round(diameter * 0.13)), lineHeight: Math.min(18, Math.round(diameter * 0.15)) }]}
+            maxFontSizeMultiplier={1.15}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
+            {label}
+          </Text>
         </View>
       ) : kind === 'checking' ? (
         <Text style={[styles.checking, { color: neutral }]}>—</Text>
@@ -251,6 +275,35 @@ export default function EmeraldScoreComposition({
   const muted = dark ? resultPresentation.emerald.muted.dark : resultPresentation.emerald.muted.light;
   const card = dark ? resultPresentation.emerald.card.dark : resultPresentation.emerald.card.light;
   const disc = <Disc kind={kind} value={publishedScore} colour={scoreColour} label={scoreLabel} diameter={discSize} dark={dark} />;
+  const branch = reflow ? 'stacked' : 'overlay';
+
+  useEffect(() => {
+    if (!__DEV__ || measured <= 0) return;
+    const socketRadius = discSize / 2 + 4;
+    const nameLine = resultPresentation.emerald.type.pillarNameLine;
+    const valueLine = resultPresentation.emerald.type.pillarValueLine;
+    const textCenterY = tileHeight - 12 - (nameLine + valueLine) / 2;
+    const dy = textCenterY - gridHeight / 2;
+    let facingInset = 12;
+    if (!reflow && Math.abs(dy) < socketRadius) {
+      const reach = Math.sqrt(socketRadius * socketRadius - dy * dy);
+      const edge = measured / 2 + reach;
+      const overlap = edge - (tileWidth + gap);
+      facingInset = Math.max(12, Math.round(overlap + 16));
+    }
+    console.log('[emerald-layout]', JSON.stringify({
+      windowWidth,
+      fontScale: Math.round(fontScale * 1000) / 1000,
+      gridWidth: Math.round(measured),
+      branch,
+      tileWidth,
+      tileHeight,
+      discSize,
+      contentBox: 'bottom',
+      contentInset: facingInset,
+      contentWidth: tileWidth - 12 - facingInset,
+    }));
+  }, [branch, discSize, fontScale, gap, gridHeight, measured, reflow, tileHeight, tileWidth, windowWidth]);
 
   return (
     <View
@@ -270,20 +323,24 @@ export default function EmeraldScoreComposition({
           const right = index % 2 === 1;
           const role = emeraldVisual[pillar.key];
           const tileTop = index >= 2 ? tileHeight + gap : 0;
-          const socketRadius = discSize / 2 + 8;
+          const socketRadius = discSize / 2 + 4;
           const clearanceAt = (centerY: number) => {
+            if (reflow) return 12;
             const dy = centerY - gridHeight / 2;
-            if (Math.abs(dy) >= socketRadius) return 16;
+            if (Math.abs(dy) >= socketRadius) return 12;
             const reach = Math.sqrt(socketRadius * socketRadius - dy * dy);
             const edge = measured / 2 + (right ? reach : -reach);
-            const tileEdge = right ? tileWidth + gap : tileWidth;
-            const overlap = right ? edge - (tileWidth + gap) : tileEdge - edge;
-            return Math.max(16, overlap + 8);
+            const overlap = right ? edge - (tileWidth + gap) : tileWidth - edge;
+            return Math.max(12, Math.round(overlap + 16));
           };
-          const iconInset = reflow ? 16 : clearanceAt(tileTop + 14 + resultPresentation.emerald.type.pillarIcon / 2);
-          const textInset = reflow ? 16 : clearanceAt(tileTop + tileHeight - 14 - 23);
-          const besideRoom = tileWidth - 16 - textInset;
-          const chevronBeside = !right && besideRoom >= 14 + chevron + 72;
+          const nameLine = resultPresentation.emerald.type.pillarNameLine;
+          const valueLine = resultPresentation.emerald.type.pillarValueLine;
+          const textCenterY = tileTop + tileHeight - 12 - (nameLine + valueLine) / 2;
+          const iconCenterY = tileTop + 12 + resultPresentation.emerald.type.pillarIcon / 2;
+          const textLead = right ? clearanceAt(textCenterY) : 12;
+          const textTrail = right ? 10 : clearanceAt(textCenterY);
+          const iconLead = right ? clearanceAt(iconCenterY) : 12;
+          const iconTrail = right ? 12 : clearanceAt(iconCenterY);
           const tileStyle = [
             styles.tile,
             { width: tileWidth },
@@ -307,30 +364,26 @@ export default function EmeraldScoreComposition({
                   height={tileHeight}
                 />
               </View>
-              <View style={styles.tileCopy}>
-                <View style={{ paddingLeft: right ? iconInset : 16, paddingRight: right ? 16 : iconInset }}>
+              <View style={[styles.tileCopy, { paddingLeft: textLead, paddingRight: textTrail }]}>
+                <View style={{ marginLeft: iconLead - textLead, marginRight: Math.max(0, iconTrail - textTrail) }}>
                   <MaterialCommunityIcons
                     name={role.glyph}
                     size={resultPresentation.emerald.type.pillarIcon}
                     color={dark ? resultPresentation.emerald.discIconOnDark : role.icon}
                   />
                 </View>
-                <View
-                  style={[
-                    styles.copyBlock,
-                    { paddingLeft: right ? textInset : 16, paddingRight: right ? 14 : 16 },
-                  ]}
-                >
-                  <View style={styles.copyText}>
-                    <Text style={[styles.label, { color: ink }]}>{pillar.label}</Text>
-                    <Text style={[styles.value, { color: ink }]}>{pillar.valueText}</Text>
-                    {pillar.onPress && !right && !chevronBeside ? (
+                <View style={styles.copyBlock}>
+                  <Text style={[styles.label, { color: ink }]} numberOfLines={1}>
+                    {pillar.label}
+                  </Text>
+                  <View style={styles.valueRow}>
+                    <Text style={[styles.value, { color: ink }]} numberOfLines={1}>
+                      {pillar.valueText}
+                    </Text>
+                    {pillar.onPress ? (
                       <Ionicons name="chevron-forward" size={chevron} color={ink} />
                     ) : null}
                   </View>
-                  {pillar.onPress && (right || chevronBeside) ? (
-                    <Ionicons name="chevron-forward" size={chevron} color={ink} style={styles.chevronBeside} />
-                  ) : null}
                 </View>
               </View>
             </>
@@ -398,21 +451,21 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'transparent',
   },
-  tileCopy: { flex: 1, paddingTop: 14, paddingBottom: 14 },
-  copyBlock: {
-    marginTop: 'auto',
+  tileCopy: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, paddingTop: 12, paddingBottom: 12 },
+  copyBlock: { marginTop: 'auto' },
+  valueRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 6,
   },
-  copyText: { flexShrink: 1 },
-  chevronBeside: { marginLeft: 14 },
   label: {
     fontSize: resultPresentation.emerald.type.pillarName,
     lineHeight: resultPresentation.emerald.type.pillarNameLine,
     fontWeight: '700',
   },
   value: {
+    flexShrink: 0,
     fontSize: resultPresentation.emerald.type.pillarValue,
     lineHeight: resultPresentation.emerald.type.pillarValueLine,
     fontWeight: '500',

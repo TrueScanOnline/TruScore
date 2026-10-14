@@ -1,15 +1,13 @@
 # Wave 5 Emerald — what is on this branch
 
-Read this before the older screenshots. The rendered Result is rejected. Visual acceptance has not been recorded.
+The rendered SCR-RESULT is the founder-accepted visual reference. Corrective-package acceptance and BC are still open. Passing tests are not that acceptance.
 
 ## Git
 
 - Repository: https://github.com/TrueScanOnline/TruScore
 - Branch: `wave5/score-experience-20261008`
-- Parent commit before this handoff: `f1899c39ab58608a8552ec2d3db58f6ac0b5cb0b`
-- This commit publishes the previously uncommitted Emerald Result presentation so it can be reviewed from GitHub.
-- Do not treat a passing test as visual acceptance.
-- Corrective-package acceptance and BC stay separate from this screen.
+- Accepted SCR-RESULT evidence is the layout captures below.
+- Do not treat a passing test as corrective-package acceptance or as BC.
 
 ## Approved artwork
 
@@ -17,29 +15,26 @@ Read this before the older screenshots. The rendered Result is rejected. Visual 
 
 The coloured sheets drawn outside the two phone frames are board decoration. They are not part of the app. The right-hand phone’s all-dash pillars are illustrative. A live mixed NR result must keep independently published pillar values.
 
-## Current rendered screen
+## Accepted rendered screen
 
-The captures below are the visual-correction candidate. Pixel 5, 1080×2340, density 440. The screen is still not accepted.
+Pixel 5 emulator, 1080×2340, density 440, light theme. These captures are the accepted SCR-RESULT reference.
 
 | File | What it shows |
 | --- | --- |
-| `design/wave5/APP-emerald-correction-rated-font1.0.png` | Rated Dairy Milk, barcode 9300617064879, font scale 1.0, light, top of scroll |
-| `design/wave5/APP-emerald-correction-mixed-nr-font1.0.png` | Coca-Cola 9300675001113, overall unrevealed, font scale 1.0, light, top of scroll |
-| `design/wave5/APP-emerald-correction-rated-font1.3.png` | Dairy Milk with the medallion above the tiles |
-| `design/wave5/APP-emerald-correction-rated-dark.png` | Dairy Milk, dark mode, font scale 1.0 |
-| `design/wave5/APP-emerald-correction-compare.png` | Artwork left phone and the font-1.0 Rated screen at equal height |
-| `design/wave5/APP-emerald-correction-frame.png` | Score-card tab, glass sheets and tiles |
-| `design/wave5/APP-emerald-correction-peel.png` | Page-peel corner |
-| `design/wave5/APP-emerald-correction-medallion.png` | Medallion, socket and arc |
+| `design/wave5/APP-emerald-layout-rated-font1.0.png` | SCR-RESULT / CARD-SCORE / entry History / Rated / Android / light / standard text. Dairy Milk 9300617064879 |
+| `design/wave5/APP-emerald-layout-mixed-nr-font1.0.png` | SCR-RESULT / CARD-SCORE / entry History / Overall NR / Android / light / standard text. Coca-Cola 9300675001113 |
+| `design/wave5/APP-emerald-layout-rated-font1.3.png` | Same Rated product, enlarged text, medallion stacked above the tiles |
+| `design/wave5/APP-emerald-layout-rated-font1.3-end.png` | End of the scroll; Disclaimer clears the tab bar |
+| `design/wave5/APP-emerald-layout-compare.png` | Artwork left phone and the ordinary-text Rated screen at equal width |
 
-`APP-emerald-craft-*` is the previous rejected build at `6c94302`. Do not describe those files as the current screen.
+`APP-emerald-correction-*` is the previous candidate. `APP-emerald-craft-*` is the earlier rejected build. Do not describe those files as the accepted screen.
 
-Geometry for this candidate is `resultPresentation.emerald`. The older numbers in `emerald-implementation-spec.md` are superseded. Two founder decisions are unchanged: the medallion still uses `colors.trust` (Poor `#FF6B6B`), and the wallpaper still uses `#27B899 / #10957E / #087565`.
+Geometry lives in `resultPresentation.emerald`. The medallion uses `colors.trust`. The wallpaper uses `#27B899 / #10957E / #087565`. Pillar identity colours stay separate from score-band colours.
 
 ## Source that draws this screen
 
 - `src/components/product/emerald/EmeraldScoreComposition.tsx` — tiles, curl, medallion, font-scale layout
-- `src/components/product/emerald/EmeraldScoreFrame.tsx` — raised tab, two frosted glass sheets, white card
+- `src/components/product/emerald/EmeraldScoreFrame.tsx` — raised tab and top glass sheets
 - `src/components/result/EmeraldWallpaper.tsx` — wallpaper
 - `src/theme/resultPresentation.ts` — colours, type, spacing
 - `src/components/product/ProductHeroSection.tsx` — identity card and 72dp photo
@@ -47,15 +42,9 @@ Geometry for this candidate is `resultPresentation.emerald`. The older numbers i
 
 `src/components/result/EmeraldScoreBacking.tsx` is not mounted.
 
-At font scale 1.0 the medallion stays centred on the four tiles. At font scale 1.3 or above it moves above the tiles. That rule is intentional.
-
-Wallpaper tokens: light `#27B899`, main `#10957E`, deep `#087565`.
-
-The pillar corner is one pass of the measured page-peel construction. If that corner is still rejected, stop editing the path and use a designer-traced vector. Do not ask for another simplified shape.
+At font scale 1.0 the medallion stays centred on the four tiles. At font scale 1.3 or above it moves above the tiles.
 
 ## Governance copies
-
-These copies are for review on GitHub. The Desktop originals remain the founder’s copies.
 
 - `design/wave5/plan/Rveel_Wave5_Master_Plan_v1_1.md`
 - `design/wave5/plan/Rveel_Wave_5_Architectural_Doctrine_and_Protected_Invariants_v0_3.md`
