@@ -6,7 +6,7 @@ The rendered SCR-RESULT is the founder-accepted visual reference. Corrective-pac
 
 - Repository: https://github.com/TrueScanOnline/TruScore
 - Branch: `wave5/score-experience-20261008`
-- Accepted SCR-RESULT evidence is the layout captures below.
+- Accepted SCR-RESULT checkpoint: `d5a7955b60bf64fbd455d332ae640780279127e1`
 - Do not treat a passing test as corrective-package acceptance or as BC.
 
 ## Approved artwork
