@@ -208,7 +208,7 @@ export default function ProductDataLimitationsCard({
   openRequestKey = 0,
 }: Props) {
   const { t } = useTranslation();
-  const { colors, darkMode } = useTheme();
+  const { darkMode } = useTheme();
   const tone = resultEmeraldTone(!!darkMode);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -291,7 +291,7 @@ export default function ProductDataLimitationsCard({
         onClose={close}
         title={t('result.legalDataLimitationsModalTitle')}
         icon="cloud-offline-outline"
-        iconColor={colors.warning || '#ff9800'}
+        iconColor={tone.action}
       >
         {PILLAR_ROWS.map((row) => {
           const pub = getPillarPublication(publication, row.key);
@@ -336,7 +336,7 @@ export default function ProductDataLimitationsCard({
               key={row.key}
               title={row.title}
               pub={pub}
-              colors={colors}
+              colors={{ text: tone.ink, textSecondary: tone.muted, primary: tone.action }}
               showLiveCta={showLiveCta}
               bodyActions={bodyActions}
               ingredientAction={ingredientAction}
@@ -352,11 +352,11 @@ export default function ProductDataLimitationsCard({
           );
         })}
 
-        <LegalParagraph text={t('result.legalDataLimitationsModalP1')} colors={colors} />
-        <LegalParagraph text={t('result.legalDataLimitationsModalP2')} colors={colors} />
-        <LegalParagraph text={t('result.legalDataLimitationsModalP3')} colors={colors} />
-        <LegalParagraph text={t('result.legalDataLimitationsModalP4')} colors={colors} />
-        <LegalParagraph text={t('result.legalDataLimitationsModalP5')} colors={colors} />
+        <LegalParagraph text={t('result.legalDataLimitationsModalP1')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
+        <LegalParagraph text={t('result.legalDataLimitationsModalP2')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
+        <LegalParagraph text={t('result.legalDataLimitationsModalP3')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
+        <LegalParagraph text={t('result.legalDataLimitationsModalP4')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
+        <LegalParagraph text={t('result.legalDataLimitationsModalP5')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
       </InfoModal>
     </>
   );

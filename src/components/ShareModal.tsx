@@ -20,7 +20,10 @@ import * as Clipboard from 'expo-clipboard';
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
+import { resultEmeraldTone, resultPresentation } from '../theme/resultPresentation';
+import { publishedOverallVisualScore } from '../utils/truScorePresentation';
 import { getNutritionShareBurnData } from '../utils/nutritionShareCopy';
 import { buildShareUrl } from '../utils/shareUrl';
 import { ShareService } from '../features/sharing/services/ShareService';
@@ -74,7 +77,9 @@ export default function ShareModal({
   initialCustomMessage,
   publicationSettled,
 }: ShareModalProps) {
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [sharing, setSharing] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<SharePlatform | null>(null);
@@ -260,18 +265,38 @@ export default function ShareModal({
       : t('shareModal.messagePlaceholder');
 
   const productDisplayName = product.product_name || product.product_name_en || t('shareModal.productFallback');
+  const publishedScore = truScore ? publishedOverallVisualScore(truScore, { publicationSettled }) : null;
+  const ratedScoreColor =
+    publishedScore == null
+      ? undefined
+      : publishedScore >= 80
+        ? colors.trust.excellent
+        : publishedScore >= 60
+          ? colors.trust.good
+          : publishedScore >= 40
+            ? colors.trust.fair
+            : colors.trust.poor;
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
       <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={[styles.container, { backgroundColor: darkMode ? '#10241F' : '#F4FBF8' }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('shareModal.headerTitle')}</Text>
-          <TouchableOpacity onPress={handleClose} style={[styles.closeButton, { backgroundColor: colors.border }]}>
-            <Ionicons name="close" size={24} color={colors.text} />
+        <View
+          style={[
+            styles.header,
+            {
+              backgroundColor: emerald.card,
+              borderBottomColor: emerald.line,
+              paddingTop: Math.max(insets.top, 12),
+            },
+          ]}
+        >
+          <Text style={[styles.headerTitle, { color: emerald.ink }]}>{t('shareModal.headerTitle')}</Text>
+          <TouchableOpacity onPress={handleClose} style={[styles.closeButton, { backgroundColor: emerald.chevronCircle }]}>
+            <Ionicons name="close" size={24} color={emerald.ink} />
           </TouchableOpacity>
         </View>
 
@@ -279,18 +304,19 @@ export default function ShareModal({
           style={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) }}
         >
-          <View style={[styles.inputContainer, { backgroundColor: colors.card }]}>
-            <Text style={[styles.inputLabel, { color: colors.text }]}>{t('shareModal.addMessageOptional')}</Text>
+          <View style={[styles.inputContainer, { backgroundColor: emerald.card, borderColor: emerald.line, borderWidth: StyleSheet.hairlineWidth }]}>
+            <Text style={[styles.inputLabel, { color: emerald.ink }]}>{t('shareModal.addMessageOptional')}</Text>
             <View style={styles.presetRow}>
               {presetEntries.map((p) => (
                 <TouchableOpacity
                   key={p.key}
-                  style={[styles.presetChip, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                  style={[styles.presetChip, { borderColor: emerald.line, backgroundColor: emerald.chevronCircle }]}
                   onPress={() => applyPreset(p.text)}
                   disabled={sharing}
                 >
-                  <Text style={[styles.presetChipText, { color: colors.primary }]} numberOfLines={1}>
+                  <Text style={[styles.presetChipText, { color: emerald.action }]} numberOfLines={2}>
                     {p.text}
                   </Text>
                 </TouchableOpacity>
@@ -301,13 +327,13 @@ export default function ShareModal({
                 styles.textInput,
                 shareType === 'nutrition' && styles.textInputNutrition,
                 {
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                  borderColor: colors.border,
+                  backgroundColor: darkMode ? '#10241F' : '#F4FBF8',
+                  color: emerald.ink,
+                  borderColor: emerald.line,
                 },
               ]}
               placeholder={inputPlaceholder}
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={emerald.muted}
               value={customMessage}
               onChangeText={setCustomMessage}
               multiline
@@ -315,25 +341,25 @@ export default function ShareModal({
               textAlignVertical="top"
               maxLength={500}
             />
-            <Text style={[styles.charCount, { color: colors.textSecondary }]}>{customMessage.length}/500</Text>
+            <Text style={[styles.charCount, { color: emerald.muted }]}>{customMessage.length}/500</Text>
           </View>
 
-          <View style={[styles.previewContainer, { backgroundColor: colors.card }]}>
-            <Text style={[styles.previewTitle, { color: colors.text }]}>{t('shareModal.summary')}</Text>
+          <View style={[styles.previewContainer, { backgroundColor: emerald.card, borderColor: emerald.line, borderWidth: StyleSheet.hairlineWidth }]}>
+            <Text style={[styles.previewTitle, { color: emerald.ink }]}>{t('shareModal.summary')}</Text>
             <Text
-              style={[styles.previewText, { color: colors.textSecondary }]}
+              style={[styles.previewText, { color: emerald.muted }]}
               {...(shareType === 'nutrition' ? {} : { numberOfLines: 8 })}
             >
               {previewMessage}
             </Text>
-            <Text style={[styles.linkPreviewLabel, { color: colors.text }]}>{t('shareModal.linkPreviewLabel')}</Text>
-            <Text selectable style={[styles.linkPreviewUrl, { color: colors.primary }]}>
+            <Text style={[styles.linkPreviewLabel, { color: emerald.ink }]}>{t('shareModal.linkPreviewLabel')}</Text>
+            <Text selectable style={[styles.linkPreviewUrl, { color: emerald.action }]}>
               {copyLinkUrl}
             </Text>
             {baseContent.hashtags && baseContent.hashtags.length > 0 && (
               <View style={styles.hashtagsContainer}>
                 {baseContent.hashtags.slice(0, 3).map((tag, index) => (
-                  <Text key={index} style={[styles.hashtag, { color: colors.primary }]}>
+                  <Text key={index} style={[styles.hashtag, { color: emerald.action }]}>
                     #{tag}
                   </Text>
                 ))}
@@ -342,7 +368,7 @@ export default function ShareModal({
           </View>
 
           <TouchableOpacity
-            style={[styles.copyLinkButton, { backgroundColor: colors.primary }]}
+            style={[styles.copyLinkButton, { backgroundColor: resultPresentation.emerald.action.light }]}
             onPress={handleCopyLink}
             disabled={sharing}
           >
@@ -351,23 +377,23 @@ export default function ShareModal({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.shareImageButton, { borderColor: colors.primary, backgroundColor: colors.card }]}
+            style={[styles.shareImageButton, { borderColor: emerald.action, backgroundColor: emerald.card }]}
             onPress={handleShareImage}
             disabled={sharing}
           >
             {sharing ? (
-              <ActivityIndicator color={colors.primary} />
+              <ActivityIndicator color={emerald.action} />
             ) : (
               <>
-                <Ionicons name="image-outline" size={22} color={colors.primary} />
-                <Text style={[styles.shareImageButtonText, { color: colors.primary }]}>
+                <Ionicons name="image-outline" size={22} color={emerald.action} />
+                <Text style={[styles.shareImageButtonText, { color: emerald.action }]}>
                   {t('shareModal.shareImageButton')}
                 </Text>
               </>
             )}
           </TouchableOpacity>
 
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('shareModal.platformSectionTitle')}</Text>
+          <Text style={[styles.sectionTitle, { color: emerald.ink }]}>{t('shareModal.platformSectionTitle')}</Text>
           <View style={styles.platformsGrid}>
             {PLATFORM_DEFS.map((platform) => {
               const isSharing = sharing && selectedPlatform === platform.id;
@@ -376,7 +402,7 @@ export default function ShareModal({
                   key={platform.id}
                   style={[
                     styles.platformButton,
-                    { backgroundColor: colors.card, borderColor: colors.border },
+                    { backgroundColor: emerald.card, borderColor: emerald.line },
                     isSharing && { opacity: 0.6 },
                   ]}
                   onPress={() => handleShare(platform.id)}
@@ -385,11 +411,11 @@ export default function ShareModal({
                   <View style={[styles.platformIcon, { backgroundColor: platform.color + '20' }]}>
                     <Ionicons name={platform.icon as never} size={32} color={platform.color} />
                   </View>
-                  <Text style={[styles.platformName, { color: colors.text }]}>{t(platform.nameKey)}</Text>
-                  <Text style={[styles.platformDesc, { color: colors.textSecondary }]}>{t(platform.descKey)}</Text>
+                  <Text style={[styles.platformName, { color: emerald.ink }]}>{t(platform.nameKey)}</Text>
+                  <Text style={[styles.platformDesc, { color: emerald.muted }]}>{t(platform.descKey)}</Text>
                   {isSharing && (
                     <View style={styles.sharingIndicator}>
-                      <Text style={[styles.sharingText, { color: colors.primary }]}>{t('shareModal.sharing')}</Text>
+                      <Text style={[styles.sharingText, { color: emerald.action }]}>{t('shareModal.sharing')}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -397,11 +423,11 @@ export default function ShareModal({
             })}
           </View>
 
-          <View style={[styles.tipsContainer, { backgroundColor: colors.primary + '10' }]}>
-            <Ionicons name="bulb-outline" size={20} color={colors.primary} />
+          <View style={[styles.tipsContainer, { backgroundColor: emerald.chevronCircle }]}>
+            <Ionicons name="bulb-outline" size={20} color={emerald.action} />
             <View style={styles.tipsContent}>
-              <Text style={[styles.tipsTitle, { color: colors.text }]}>{t('shareModal.tipsTitle')}</Text>
-              <Text style={[styles.tipsText, { color: colors.textSecondary }]}>{t('shareModal.tipsBody')}</Text>
+              <Text style={[styles.tipsTitle, { color: emerald.ink }]}>{t('shareModal.tipsTitle')}</Text>
+              <Text style={[styles.tipsText, { color: emerald.muted }]}>{t('shareModal.tipsBody')}</Text>
             </View>
           </View>
         </ScrollView>
@@ -415,10 +441,11 @@ export default function ShareModal({
             barcode={product.barcode}
             scoreState={shareImageScoreState(truScore, { publicationSettled })}
             shareType={shareType}
-            brandColor={colors.primary}
-            surfaceColor={colors.card}
-            textColor={colors.text}
-            textSecondary={colors.textSecondary}
+            brandColor={resultPresentation.emerald.action.light}
+            scoreColor={ratedScoreColor}
+            surfaceColor={emerald.card}
+            textColor={emerald.ink}
+            textSecondary={emerald.muted}
           />
         </View>
       </KeyboardAvoidingView>
@@ -431,7 +458,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: -4000,
     top: 0,
-    opacity: 0.02,
   },
   container: {
     flex: 1,
@@ -442,7 +468,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    paddingTop: Platform.OS === 'ios' ? 50 : 12,
+    paddingTop: 12,
     borderBottomWidth: 1,
   },
   headerTitle: {
@@ -450,9 +476,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },

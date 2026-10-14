@@ -24,7 +24,9 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
+import { resultEmeraldTone } from '../theme/resultPresentation';
 import ScoreHighlightsList from './ScoreHighlightsList';
 import {
   SCORE_HIGHLIGHTS_HEADING,
@@ -102,7 +104,9 @@ export default function ScoreHighlightsLookThroughModal({
   onClose,
   onOpenInAppL3,
 }: ScoreHighlightsLookThroughModalProps) {
-  const { colors } = useTheme();
+  const { darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const insets = useSafeAreaInsets();
   const [stack, setStack] = useState<Frame[]>([]);
 
   const entryKey = requestKey(request);
@@ -182,8 +186,8 @@ export default function ScoreHighlightsLookThroughModal({
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.sheet, { backgroundColor: colors.card }]}>
-          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <View style={[styles.sheet, { backgroundColor: emerald.card, paddingBottom: Math.max(insets.bottom, 16) }]}>
+          <View style={[styles.header, { borderBottomColor: emerald.line }]}>
             <View style={styles.headerLeft}>
               {canGoBack ? (
                 <TouchableOpacity
@@ -193,28 +197,28 @@ export default function ScoreHighlightsLookThroughModal({
                   accessibilityRole="button"
                   accessibilityLabel="Back"
                 >
-                  <Ionicons name="chevron-back" size={22} color={colors.text} />
+                  <Ionicons name="chevron-back" size={22} color={emerald.ink} />
                 </TouchableOpacity>
               ) : (
                 <View style={styles.headerButton} />
               )}
               <View style={styles.headerTitles}>
-                <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>
+                <Text style={[styles.headerTitle, { color: emerald.ink }]} numberOfLines={2}>
                   {headerTitle}
                 </Text>
-                <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
+                <Text style={[styles.headerSubtitle, { color: emerald.muted }]} numberOfLines={2}>
                   {headerSubtitle}
                 </Text>
               </View>
             </View>
             <TouchableOpacity
               onPress={onClose}
-              style={[styles.headerButton, styles.closeButton, { backgroundColor: colors.surface }]}
+              style={[styles.headerButton, styles.closeButton, { backgroundColor: emerald.chevronCircle }]}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               accessibilityRole="button"
               accessibilityLabel="Close"
             >
-              <Ionicons name="close" size={22} color={colors.text} />
+              <Ionicons name="close" size={22} color={emerald.ink} />
             </TouchableOpacity>
           </View>
 
@@ -230,15 +234,16 @@ export default function ScoreHighlightsLookThroughModal({
                   stories={pillarStories}
                   onSelectStory={handleSelectStory}
                   showHeading={false}
+                  appearance="emerald"
                 />
                 {contextualPrompts.length > 0 && (
-                  <View style={[styles.contextArea, { borderTopColor: colors.border }]}>
+                  <View style={[styles.contextArea, { borderTopColor: emerald.line }]}>
                     {contextualPrompts.map((prompt) => (
                       <View key={prompt.promptKey} style={styles.contextPrompt}>
-                        <Text style={[styles.contextPromptTitle, { color: colors.text }]}>
+                        <Text style={[styles.contextPromptTitle, { color: emerald.ink }]}>
                           {prompt.l1}
                         </Text>
-                        <Text style={[styles.contextPromptBody, { color: colors.textSecondary }]}>
+                        <Text style={[styles.contextPromptBody, { color: emerald.muted }]}>
                           {prompt.l2}
                         </Text>
                       </View>
@@ -248,22 +253,22 @@ export default function ScoreHighlightsLookThroughModal({
               </>
             ) : (
               <View style={styles.detail}>
-                <Text style={[styles.detailTitle, { color: colors.text }]}>{current.story.l1}</Text>
-                <Text style={[styles.detailBody, { color: colors.textSecondary }]}>
+                <Text style={[styles.detailTitle, { color: emerald.ink }]}>{current.story.l1}</Text>
+                <Text style={[styles.detailBody, { color: emerald.muted }]}>
                   {current.story.l2}
                 </Text>
                 {l3Offered && l3Route && (
                   <TouchableOpacity
                     onPress={() => handleOpenL3(l3Route, current.story)}
-                    style={[styles.l3Button, { borderColor: colors.border }]}
+                    style={[styles.l3Button, { borderColor: emerald.action }]}
                     activeOpacity={0.7}
                     accessibilityRole="button"
                     accessibilityLabel={l3Route.label}
                   >
-                    <Text style={[styles.l3ButtonText, { color: colors.primary }]}>
+                    <Text style={[styles.l3ButtonText, { color: emerald.action }]}>
                       {l3Route.label}
                     </Text>
-                    <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                    <Ionicons name="chevron-forward" size={18} color={emerald.action} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -285,7 +290,7 @@ const styles = StyleSheet.create({
     maxHeight: '85%',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
   header: {
     flexDirection: 'row',
@@ -302,13 +307,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   headerButton: {
-    width: 34,
-    height: 34,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeButton: {
-    borderRadius: 17,
+    borderRadius: 22,
   },
   headerTitles: {
     flex: 1,

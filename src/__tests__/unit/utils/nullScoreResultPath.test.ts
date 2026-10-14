@@ -16,7 +16,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { resultPillarBreakdown } from '../../../utils/resultPillarBreakdown';
-import { getTruScoreConsumerPresentation } from '../../../utils/truScorePresentation';
+import { getTruScoreConsumerPresentation, publishedPillarValueLabel } from '../../../utils/truScorePresentation';
 import {
   resolveGenuinePillarBreakdown,
   resolveShareBreakdownForOverall,
@@ -37,6 +37,10 @@ const TRUSCORE_COMPONENT_SOURCE = fs.readFileSync(
 );
 const LOOK_THROUGH_SOURCE = fs.readFileSync(
   path.join(REPO_ROOT, 'src', 'components', 'ScoreHighlightsLookThroughModal.tsx'),
+  'utf8'
+);
+const EMERALD_COMPOSITION_SOURCE = fs.readFileSync(
+  path.join(REPO_ROOT, 'src', 'components', 'product', 'emerald', 'EmeraldScoreComposition.tsx'),
   'utf8'
 );
 
@@ -149,20 +153,15 @@ describe('Result path preserves null pillars end-to-end', () => {
 
 describe('Result surfaces never show a null pillar as 0 or 0/25', () => {
   it('the pillar bars render an em dash rather than a coerced zero', () => {
-    // TruScore.tsx is the Result pillar-bar surface; it must branch on the null before any maths.
-    const guardStart = TRUSCORE_COMPONENT_SOURCE.indexOf('if (value == null)');
-    const numericStart = TRUSCORE_COMPONENT_SOURCE.indexOf('const rowContent');
-    expect(guardStart).toBeGreaterThan(-1);
-    expect(numericStart).toBeGreaterThan(guardStart);
-
-    const nullBranch = TRUSCORE_COMPONENT_SOURCE.slice(guardStart, numericStart);
-    expect(nullBranch).toContain('>\u2014</Text>');
-    expect(nullBranch).not.toContain('/25');
-    expect(nullBranch).not.toContain('getPillarColor');
-
-    // The `/25` render and the bar width maths sit only inside the numeric branch.
-    expect(TRUSCORE_COMPONENT_SOURCE).toContain('{value}/25');
+    // The live Result reads publishedPillarValueLabel. Null stays an em dash; a genuine zero stays 0/25.
+    expect(publishedPillarValueLabel(null)).toBe('\u2014');
+    expect(publishedPillarValueLabel(0)).toBe('0/25');
+    expect(TRUSCORE_COMPONENT_SOURCE).toContain('publishedPillarValueLabel(publishedPillars[key])');
+    expect(TRUSCORE_COMPONENT_SOURCE).toContain('publishedPillarValueLabel(value)');
     expect(TRUSCORE_COMPONENT_SOURCE).not.toMatch(/breakdown\[pillar\]\s*\?\?\s*0/);
+    expect(TRUSCORE_COMPONENT_SOURCE).not.toContain('{value}/25');
+    expect(EMERALD_COMPOSITION_SOURCE).toContain('{pillar.valueText}');
+    expect(EMERALD_COMPOSITION_SOURCE).not.toMatch(/valueText\s*\?\?\s*['"]0/);
   });
 
   it('the pillar look-through header omits the score line when the pillar score is null', () => {

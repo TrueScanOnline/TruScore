@@ -16,6 +16,8 @@ export interface ShareProductStoryCardProps {
   scoreState: ShareImageScoreState;
   shareType: ShareableItem;
   brandColor: string;
+  /** Published score-band colour. Used only when the score state is not neutral. */
+  scoreColor?: string;
   surfaceColor: string;
   textColor: string;
   textSecondary: string;
@@ -30,6 +32,7 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
       scoreState,
       shareType,
       brandColor,
+      scoreColor,
       surfaceColor,
       textColor,
       textSecondary,
@@ -44,7 +47,9 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
       utmCampaign: shareType,
     });
 
-    const scoreChrome = scoreState.neutral ? RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR : brandColor;
+    const scoreChrome = scoreState.neutral
+      ? RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR
+      : scoreColor || brandColor;
 
     return (
       <View ref={ref} collapsable={false} style={[styles.root, { backgroundColor: surfaceColor }]}>
