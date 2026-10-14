@@ -1,4 +1,4 @@
-import { Platform, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, type ViewStyle } from 'react-native';
 
 /**
  * Shared Result presentation tokens.
@@ -248,6 +248,18 @@ export function resultEmeraldPillar(pillar: ResultPillarKey, darkMode: boolean) 
     text: resultPresentation.emerald.ink.light,
     tint: shades[0],
     gradient: shades,
+  };
+}
+
+/** Quiet journey card. It does not encode a score band, a pillar, or a publication state. */
+export function resultEmeraldCard(darkMode: boolean): ViewStyle {
+  const tone = resultEmeraldTone(darkMode);
+  return {
+    backgroundColor: tone.card,
+    borderColor: tone.line,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: resultPresentation.emerald.radius.card,
+    ...resultSurfaceShadow(darkMode),
   };
 }
 

@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
+import { resultEmeraldCard, resultEmeraldTone } from '../theme/resultPresentation';
 import { getSurfaceCopy } from '../s25/loadAsset';
 import { S25_ADDITIVE_COUNT_GLYPH } from '../s25/glyphs';
 
@@ -104,7 +105,8 @@ function AdditiveCountReveal({ count }: { count: number }) {
 }
 
 export default function AboutTheseAdditivesCard({ count, onPress }: AboutTheseAdditivesCardProps) {
-  const { colors } = useTheme();
+  const { darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
   if (count < 1) return null;
 
   const title = getSurfaceCopy('surface_title') || 'About these Additives';
@@ -114,24 +116,21 @@ export default function AboutTheseAdditivesCard({ count, onPress }: AboutTheseAd
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          opacity: pressed ? 0.96 : 1,
-        },
+        resultEmeraldCard(!!darkMode),
+        { opacity: pressed ? 0.96 : 1 },
       ]}
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${count} ${count === 1 ? 'additive' : 'additives'} identified`}
     >
       <View style={styles.row}>
         <View style={styles.left}>
-          <Ionicons name={S25_ADDITIVE_COUNT_GLYPH} size={28} color={colors.primary} />
+          <Ionicons name={S25_ADDITIVE_COUNT_GLYPH} size={28} color={emerald.action} />
           <View style={styles.textCol}>
-            <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+            <Text style={[styles.title, { color: emerald.ink }]}>{title}</Text>
             <AdditiveCountReveal count={count} />
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={22} color={colors.textSecondary} />
+        <Ionicons name="chevron-forward" size={22} color={emerald.muted} />
       </View>
     </Pressable>
   );
@@ -139,8 +138,7 @@ export default function AboutTheseAdditivesCard({ count, onPress }: AboutTheseAd
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 20,
     padding: 16,
     marginHorizontal: 16,
     marginBottom: 12,

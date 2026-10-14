@@ -6,10 +6,10 @@ import { ProductNutriments } from '../types/product';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { formatWeight, formatVolume, formatServingSize } from '../utils/units';
 import { useTheme } from '../theme';
+import { resultEmeraldCard, resultEmeraldTone } from '../theme/resultPresentation';
 import { getNutrientValue100g, toFiniteNumber, resolveKcalPer100g } from '../utils/nutritionPer100g';
 import {
   assessGovernedNutrients,
-  hasGovernedHighNutrient,
   type GovernedNutrientAssessment,
   type GovernedNutrientKey,
   type GovernedNutrientLevel,
@@ -80,7 +80,9 @@ const NutritionTable = React.memo(function NutritionTable({
 }: NutritionTableProps) {
   const { t } = useTranslation();
   const { units } = useSettingsStore();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const journeyCard = resultEmeraldCard(!!darkMode);
   const [burnModalVisible, setBurnModalVisible] = useState(false);
   const [internalDetailsVisible, setInternalDetailsVisible] = useState(false);
   const [detailsFocus, setDetailsFocus] = useState<NutritionDetailsFocusTarget | null>(
@@ -165,11 +167,11 @@ const NutritionTable = React.memo(function NutritionTable({
 
   if (!nutriments) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#16a085' }]}>
+      <View style={[styles.container, journeyCard]}>
         <View style={styles.titleContainer}>
           <View style={styles.titleLeft}>
-            <Ionicons name="nutrition" size={24} color={colors.primary} />
-            <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{cardTitle}</Text>
+            <Ionicons name="nutrition" size={24} color={emerald.action} />
+            <Text style={[styles.title, { color: emerald.ink, marginLeft: 8 }]}>{cardTitle}</Text>
           </View>
           <View style={styles.headerButtons}>
             {onEdit && (
@@ -183,7 +185,7 @@ const NutritionTable = React.memo(function NutritionTable({
                   'Contribute or correct nutrition information'
                 )}
               >
-                <Ionicons name="create-outline" size={20} color={colors.primary} />
+                <Ionicons name="create-outline" size={20} color={emerald.action} />
               </TouchableOpacity>
             )}
             {onShare && (
@@ -192,7 +194,7 @@ const NutritionTable = React.memo(function NutritionTable({
                 style={styles.shareButton}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="share-outline" size={20} color={colors.primary} />
+                <Ionicons name="share-outline" size={20} color={emerald.action} />
               </TouchableOpacity>
             )}
           </View>
@@ -204,15 +206,17 @@ const NutritionTable = React.memo(function NutritionTable({
     );
   }
 
+  // Nutrient-level role. These hues stay separate from score-band colours.
+  // Dark surfaces use a lighter step of the same hue so the label stays readable.
   const getLevelColor = (level?: GovernedNutrientLevel | string) => {
-    if (level === 'low') return '#16a085';
+    if (level === 'low') return darkMode ? '#2EBEA0' : '#16a085';
     if (level === 'moderate') return '#ffd93d';
     if (level === 'high') return '#ff6b6b';
-    return '#666';
+    return darkMode ? '#C5D0CB' : '#666';
   };
 
   const getLevelLabelColor = (level?: GovernedNutrientLevel | string) => {
-    if (level === 'moderate') return '#b8860b';
+    if (level === 'moderate' && !darkMode) return '#b8860b';
     return getLevelColor(level);
   };
 
@@ -286,8 +290,6 @@ const NutritionTable = React.memo(function NutritionTable({
     },
   ];
 
-  const borderColor = hasGovernedHighNutrient(assessment) ? '#ff6b6b' : '#16a085';
-
   const perServeForRow = (row: RowDef): number | undefined => {
     if (!showPerServe || !assessment.serving.usable) return undefined;
     if (row.governedKey) {
@@ -314,7 +316,7 @@ const NutritionTable = React.memo(function NutritionTable({
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.card, borderWidth: 2, borderColor }]}>
+    <View style={[styles.container, journeyCard]}>
       <View style={styles.titleContainer}>
         <Pressable
           onPress={() => openDetails(null)}
@@ -322,8 +324,8 @@ const NutritionTable = React.memo(function NutritionTable({
           accessibilityRole="button"
           accessibilityLabel={t('nutrition.openDetailsA11y', 'Open nutrition details')}
         >
-          <Ionicons name="nutrition" size={24} color={colors.primary} />
-          <Text style={[styles.title, { color: colors.text, marginLeft: 8 }]}>{cardTitle}</Text>
+          <Ionicons name="nutrition" size={24} color={emerald.action} />
+          <Text style={[styles.title, { color: emerald.ink, marginLeft: 8 }]}>{cardTitle}</Text>
         </Pressable>
         <View style={styles.headerButtons}>
           {onEdit && (
@@ -337,7 +339,7 @@ const NutritionTable = React.memo(function NutritionTable({
                 'Contribute or correct nutrition information'
               )}
             >
-              <Ionicons name="create-outline" size={20} color={colors.primary} />
+              <Ionicons name="create-outline" size={20} color={emerald.action} />
             </TouchableOpacity>
           )}
           {onShare && (
@@ -346,7 +348,7 @@ const NutritionTable = React.memo(function NutritionTable({
               style={styles.shareButton}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name="share-outline" size={20} color={colors.primary} />
+              <Ionicons name="share-outline" size={20} color={emerald.action} />
             </TouchableOpacity>
           )}
         </View>
@@ -472,7 +474,7 @@ const NutritionTable = React.memo(function NutritionTable({
           })}
         >
           <View style={styles.burnStripHeader}>
-            <Ionicons name="flame" size={20} color={colors.primary} accessibilityIgnoresInvertColors />
+            <Ionicons name="flame" size={20} color={emerald.action} accessibilityIgnoresInvertColors />
             <Text style={[styles.burnStripTitle, { color: colors.text }]}>{t('nutrition.burnStripTitle')}</Text>
           </View>
           <Text style={[styles.burnStripSubtitle, { color: colors.textSecondary }]}>
@@ -505,8 +507,8 @@ const NutritionTable = React.memo(function NutritionTable({
             accessibilityRole="button"
             accessibilityLabel={t('nutrition.burnLearnMore')}
           >
-            <Text style={[styles.learnMoreText, { color: colors.primary }]}>{t('nutrition.burnLearnMore')}</Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+            <Text style={[styles.learnMoreText, { color: emerald.action }]}>{t('nutrition.burnLearnMore')}</Text>
+            <Ionicons name="chevron-forward" size={18} color={emerald.action} />
           </TouchableOpacity>
         </View>
       )}

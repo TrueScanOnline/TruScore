@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BannerAlertsData, BannerSignalClass } from '../types/bannerAlerts';
 import { consumerSignalCategoryLabel } from '../signals/signalRenderMapping';
 import { useTheme } from '../theme';
+import { resultEmeraldCard, resultEmeraldTone } from '../theme/resultPresentation';
 
 interface BannerAlertsCardProps {
   alertsData: BannerAlertsData;
@@ -23,7 +24,8 @@ function categoryIcon(signalClass: BannerSignalClass | undefined): keyof typeof 
 }
 
 export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) {
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
   const dyk = colors.didYouKnow;
   const alerts = alertsData.alerts.filter((alert) => alert.signalClass !== 'C');
 
@@ -35,15 +37,12 @@ export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) 
     <View
       style={[
         styles.container,
-        {
-          backgroundColor: dyk.card,
-          borderColor: dyk.border,
-        },
+        resultEmeraldCard(!!darkMode),
       ]}
       accessibilityLabel="did-you-know-module"
     >
       <View style={styles.header}>
-        <Text style={[styles.headerText, { color: dyk.charcoal }]}>Did You Know?</Text>
+        <Text style={[styles.headerText, { color: emerald.ink }]}>Did You Know?</Text>
       </View>
 
       <ScrollView style={styles.alertsList} showsVerticalScrollIndicator={false} nestedScrollEnabled>
@@ -114,9 +113,8 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
-    borderWidth: 1,
     maxHeight: 300,
   },
   header: {

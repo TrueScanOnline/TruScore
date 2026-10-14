@@ -8,11 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
-import { resultPresentation } from '../../theme/resultPresentation';
+import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../../theme/resultPresentation';
 
 export default function ProductDisclaimerCard() {
   const { t } = useTranslation();
   const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
   const [modalVisible, setModalVisible] = useState(false);
 
   const open = useCallback(() => setModalVisible(true), []);
@@ -23,10 +24,7 @@ export default function ProductDisclaimerCard() {
       <TouchableOpacity
         style={[
           styles.card,
-          {
-            backgroundColor: darkMode ? resultPresentation.disclaimer.dark : resultPresentation.disclaimer.light,
-            borderColor: colors.border,
-          },
+          resultEmeraldCard(!!darkMode),
         ]}
         onPress={open}
         activeOpacity={0.75}
@@ -36,18 +34,18 @@ export default function ProductDisclaimerCard() {
         <Ionicons
           name="information-circle-outline"
           size={20}
-          color={colors.primary}
+          color={emerald.action}
           style={styles.cardIcon}
         />
         <View style={styles.cardTextWrap}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>
+          <Text style={[styles.cardTitle, { color: emerald.ink }]}>
             {t('result.legalDisclaimerTeaserTitle')}
           </Text>
-          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+          <Text style={[styles.cardSubtitle, { color: emerald.muted }]}>
             {t('result.legalDisclaimerTeaserBody')}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+        <Ionicons name="chevron-forward" size={20} color={emerald.muted} />
       </TouchableOpacity>
 
       <InfoModal
@@ -90,8 +88,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: resultPresentation.radius.chip,
-    borderWidth: 1,
+    borderRadius: resultPresentation.emerald.radius.card,
     minHeight: resultPresentation.tap.min,
     gap: 10,
   },

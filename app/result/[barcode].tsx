@@ -104,7 +104,7 @@ import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
 import { useTheme } from '../../src/theme';
-import { resultEmeraldTone, resultPresentation } from '../../src/theme/resultPresentation';
+import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../../src/theme/resultPresentation';
 import EmeraldWallpaper from '../../src/components/result/EmeraldWallpaper';
 import EmeraldScoreFrame from '../../src/components/product/emerald/EmeraldScoreFrame';
 import * as Linking from 'expo-linking';
@@ -213,7 +213,8 @@ function ResultIngredientsSection({
   onOpenProcessingLevel: () => void;
 }) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
   const sectionStyle = [
     styles.ingredientsSection,
     { borderTopColor: colors.border },
@@ -245,7 +246,7 @@ function ResultIngredientsSection({
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
-              <Ionicons name="flask" size={24} color={colors.primary} />
+              <Ionicons name="flask" size={24} color={emerald.action} />
             </View>
             <View style={styles.cardHeaderRight}>
               <TouchableOpacity
@@ -253,7 +254,7 @@ function ResultIngredientsSection({
                 style={styles.shareButton}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="share-outline" size={20} color={colors.primary} />
+                <Ionicons name="share-outline" size={20} color={emerald.action} />
               </TouchableOpacity>
             </View>
           </View>
@@ -267,8 +268,8 @@ function ResultIngredientsSection({
               onPress={onOpenProcessingLevel}
               activeOpacity={0.7}
             >
-              <Text style={[styles.novaLabel, { color: colors.text }]}>{t('result.processingLevel')}:</Text>
-              <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+              <Text style={[styles.novaLabel, { color: emerald.ink }]}>{t('result.processingLevel')}:</Text>
+              <Ionicons name="information-circle-outline" size={20} color={emerald.action} />
             </TouchableOpacity>
             <View style={styles.novaContent}>
               <Text style={[styles.novaValue, { color: novaColor }]}>
@@ -279,7 +280,7 @@ function ResultIngredientsSection({
                 style={styles.shareButton}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="share-outline" size={20} color={colors.primary} />
+                <Ionicons name="share-outline" size={20} color={emerald.action} />
               </TouchableOpacity>
             </View>
           </View>
@@ -288,12 +289,12 @@ function ResultIngredientsSection({
           <TouchableOpacity
             onPress={onAddIngredients}
             activeOpacity={0.7}
-            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+            style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
             accessibilityRole="button"
             accessibilityLabel="Add ingredients"
           >
-            <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-            <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Add ingredients</Text>
+            <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
+            <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>Add ingredients</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -306,7 +307,7 @@ function ResultIngredientsSection({
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
-              <Ionicons name="flask" size={24} color={colors.primary} />
+              <Ionicons name="flask" size={24} color={emerald.action} />
             </View>
             <View style={styles.cardHeaderRight}>
               <TouchableOpacity
@@ -314,7 +315,7 @@ function ResultIngredientsSection({
                 style={styles.shareButton}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="share-outline" size={20} color={colors.primary} />
+                <Ionicons name="share-outline" size={20} color={emerald.action} />
               </TouchableOpacity>
             </View>
           </View>
@@ -327,12 +328,12 @@ function ResultIngredientsSection({
           <TouchableOpacity
             onPress={onAddIngredients}
             activeOpacity={0.7}
-            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+            style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
             accessibilityRole="button"
             accessibilityLabel="Add ingredients"
           >
-            <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-            <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Add ingredients</Text>
+            <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
+            <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>Add ingredients</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -1924,21 +1925,19 @@ function ResultScreenContent() {
         ) : (
           <>
           {/* Insufficient Data Card */}
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <View style={[styles.card, resultEmeraldCard(!!darkMode)]}>
             <View style={styles.cardHeader}>
-              {/* Top line: Icons */}
               <View style={styles.cardHeaderTop}>
                 <View style={styles.cardHeaderLeft}>
-                  <Ionicons name="information-circle-outline" size={24} color={colors.warning || '#ff9800'} />
+                  <Ionicons name="information-circle-outline" size={24} color={emerald.action} />
                 </View>
                 <View style={styles.cardHeaderRight} />
               </View>
-              {/* Second line: Heading */}
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
+              <Text style={[styles.cardTitle, { color: emerald.ink }]}>
                 {t('result.insufficientData')}
               </Text>
             </View>
-            <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
+            <Text style={[styles.insufficientDataText, { color: emerald.muted }]}>
               {t('result.insufficientDataMessage')}
             </Text>
           </View>
@@ -1957,14 +1956,7 @@ function ResultScreenContent() {
         {/* User alerts — only when user enabled alert categories and there is insight content */}
         {productPageAlertsInsights && (
             <View
-              style={[
-                styles.card,
-                {
-                  backgroundColor: colors.card,
-                  borderWidth: 2,
-                  borderColor: '#ff6b6b',
-                },
-              ]}
+              style={[styles.card, resultEmeraldCard(!!darkMode)]}
             >
               <View style={[styles.insightsHeader, { borderBottomColor: colors.border }]}>
                 <TouchableOpacity
@@ -1972,9 +1964,9 @@ function ResultScreenContent() {
                   onPress={() => setInsightsExpanded(!insightsExpanded)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="heart-outline" size={20} color="#ff6b6b" />
+                  <Ionicons name="heart-outline" size={20} color={emerald.action} />
                   <Text
-                    style={[styles.insightsHeaderTitle, { color: colors.text }]}
+                    style={[styles.insightsHeaderTitle, { color: emerald.ink }]}
                     numberOfLines={2}
                   >
                     {t('result.alertsPreference')}
@@ -1989,7 +1981,7 @@ function ResultScreenContent() {
                     style={styles.shareButton}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
-                    <Ionicons name="share-outline" size={20} color={colors.primary} />
+                    <Ionicons name="share-outline" size={20} color={emerald.action} />
                   </TouchableOpacity>
                   <Ionicons
                     name={insightsExpanded ? 'chevron-up' : 'chevron-down'}
@@ -2069,12 +2061,12 @@ function ResultScreenContent() {
                 {contributionActions.addNutrition ? (
                   <TouchableOpacity
                     onPress={() => openContribution('nutrition', 'add')}
-                    style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+                    style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
                     accessibilityRole="button"
                     accessibilityLabel="Add nutrition"
                   >
-                    <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-                    <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Add nutrition</Text>
+                    <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
+                    <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>Add nutrition</Text>
                   </TouchableOpacity>
                 ) : null}
               </>
@@ -2092,11 +2084,11 @@ function ResultScreenContent() {
             productOriginsOffsetYRef.current = e.nativeEvent.layout.y;
           }}
         >
-        <View style={[styles.card, { backgroundColor: colors.card, borderWidth: 2, borderColor: '#16a085' }]}>
+        <View style={[styles.card, resultEmeraldCard(!!darkMode)]}>
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
-              <Ionicons name="earth" size={24} color={colors.text} />
-              <Text style={[styles.cardTitle, { color: colors.text, marginLeft: 8 }]}>
+              <Ionicons name="earth" size={24} color={emerald.action} />
+              <Text style={[styles.cardTitle, { color: emerald.ink, marginLeft: 8 }]}>
                 {t('result.productOrigins', 'Product Origins')}
               </Text>
             </View>
@@ -2108,7 +2100,7 @@ function ResultScreenContent() {
                   accessibilityLabel="Change or add product origins"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Ionicons name="create-outline" size={20} color={colors.primary} />
+                  <Ionicons name="create-outline" size={20} color={emerald.action} />
                 </TouchableOpacity>
               ) : null}
               {originsCard.offCountry || originsCard.facts.length > 0 ? (
@@ -2119,13 +2111,13 @@ function ResultScreenContent() {
                   accessibilityRole="button"
                   accessibilityLabel="Share product origins"
                 >
-                  <Ionicons name="share-outline" size={20} color={colors.primary} />
+                  <Ionicons name="share-outline" size={20} color={emerald.action} />
                 </TouchableOpacity>
               ) : null}
             </View>
           </View>
           <TouchableOpacity onPress={() => setProductOriginsExplainerVisible(true)}>
-            <Text style={{ color: colors.primary }}>L1 / L2 / L3</Text>
+            <Text style={{ color: emerald.action }}>L1 / L2 / L3</Text>
           </TouchableOpacity>
           {originsCard.offCountry ? (
             <View style={styles.originContainer}>
@@ -2155,12 +2147,12 @@ function ResultScreenContent() {
             <TouchableOpacity
               onPress={() => openContribution('origins', 'add')}
               activeOpacity={0.7}
-              style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+              style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
               accessibilityRole="button"
               accessibilityLabel="Add product origins"
             >
-              <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-              <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>Add product origins</Text>
+              <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
+              <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>Add product origins</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -2171,10 +2163,7 @@ function ResultScreenContent() {
           style={[
             styles.card,
             styles.certificationsCardFrame,
-            {
-              backgroundColor: colors.card,
-              borderColor: '#16a085',
-            },
+            resultEmeraldCard(!!darkMode),
           ]}
           onLayout={(e) => {
             packetClaimsOffsetYRef.current = e.nativeEvent.layout.y;
@@ -2183,8 +2172,8 @@ function ResultScreenContent() {
         >
           <View style={styles.certificationsCardHeaderRow}>
             <View style={styles.certificationsCardTitleRow}>
-              <Ionicons name="shield-checkmark" size={24} color="#16a085" />
-              <Text style={[styles.cardTitle, styles.certificationsCardTitleText, { color: colors.text }]}>
+              <Ionicons name="shield-checkmark" size={24} color={emerald.action} />
+              <Text style={[styles.cardTitle, styles.certificationsCardTitleText, { color: emerald.ink }]}>
                 {PACKET_CLAIMS_CARD_TITLE}
               </Text>
             </View>
@@ -2198,12 +2187,12 @@ function ResultScreenContent() {
                 accessibilityLabel="Change or add packet information"
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="create-outline" size={20} color="#16a085" />
+                <Ionicons name="create-outline" size={20} color={emerald.action} />
               </TouchableOpacity>
             ) : null}
           </View>
           <TouchableOpacity onPress={() => setPacketClaimsExplainerVisible(true)}>
-            <Text style={{ color: colors.primary }}>L1 / L2 / L3</Text>
+            <Text style={{ color: emerald.action }}>L1 / L2 / L3</Text>
           </TouchableOpacity>
           {(() => {
             const recognisedCertificationNames = (product.certifications || []).map((cert) =>
@@ -2250,12 +2239,12 @@ function ResultScreenContent() {
           <TouchableOpacity
             onPress={() => openContribution('packetClaims', 'add')}
             activeOpacity={0.7}
-            style={[styles.certificationsUpdateButton, { borderColor: '#16a085' }]}
+            style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
             accessibilityRole="button"
             accessibilityLabel={PACKET_INFORMATION_ADD}
           >
-            <Ionicons name="add-circle-outline" size={20} color="#16a085" />
-            <Text style={[styles.certificationsUpdateButtonText, { color: '#16a085' }]}>
+            <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
+            <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>
               {PACKET_INFORMATION_ADD}
             </Text>
           </TouchableOpacity>
@@ -2326,7 +2315,7 @@ function ResultScreenContent() {
                           style={styles.shareButton}
                           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
-                          <Ionicons name="share-outline" size={20} color={colors.primary} />
+                          <Ionicons name="share-outline" size={20} color={emerald.action} />
                         </TouchableOpacity>
                         <Ionicons name="information-circle-outline" size={20} color={hasDetected ? redColor : colors.primary} />
                       </View>
@@ -2380,7 +2369,7 @@ function ResultScreenContent() {
         {/* Scan Another Product — bottom of page */}
         <View style={styles.scanAnotherFooter}>
           <TouchableOpacity
-            style={[styles.scanAnotherButton, { backgroundColor: colors.primary }]}
+            style={[styles.scanAnotherButton, { backgroundColor: resultPresentation.emerald.action.light }]}
             onPress={() => navigateToScanHome(navigation)}
             activeOpacity={0.8}
           >
