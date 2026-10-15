@@ -36,6 +36,7 @@ import {
   applySearchFilters,
 } from '../src/utils/searchFilterUtils';
 import { useTheme } from '../src/theme';
+import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../src/theme/resultPresentation';
 import { listPublishedOverallScore } from '../src/utils/listPublishedScore';
 
 type NavigationProp = CompositeNavigationProp<
@@ -46,7 +47,10 @@ type NavigationProp = CompositeNavigationProp<
 export default function SearchScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const page = resultPresentation.canvas[darkMode ? 'dark' : 'light'];
+  const filled = resultPresentation.emerald.action.light;
   const [searchQuery, setSearchQuery] = useState('');
   const [fetchedResults, setFetchedResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -218,15 +222,15 @@ export default function SearchScreen() {
   const filterBadgeVisible = filtersActive;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <View style={[styles.searchContainer, { backgroundColor: colors.surface }]}>
-          <Ionicons name="search-outline" size={24} color={colors.textSecondary} style={styles.searchIcon} />
+    <View style={[styles.container, { backgroundColor: page }]}>
+      <View style={[styles.header, { backgroundColor: page, borderBottomColor: emerald.line }]}>
+        <View style={[styles.searchContainer, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
+          <Ionicons name="search-outline" size={24} color={emerald.muted} style={styles.searchIcon} />
           <TextInput
             ref={searchInputRef}
-            style={[styles.searchInput, { color: colors.text }]}
+            style={[styles.searchInput, { color: emerald.ink }]}
             placeholder={t('search.placeholder')}
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={emerald.muted}
             value={searchQuery}
             onChangeText={(text) => setSearchQuery(text)}
             onSubmitEditing={handleSubmit}
@@ -246,12 +250,12 @@ export default function SearchScreen() {
               }}
               style={styles.clearButton}
             >
-              <Ionicons name="close-circle" size={24} color={colors.textSecondary} />
+              <Ionicons name="close-circle" size={24} color={emerald.muted} />
             </TouchableOpacity>
           )}
           <TouchableOpacity
             onPress={handleSubmit}
-            style={[styles.searchButton, { backgroundColor: colors.primary }]}
+            style={[styles.searchButton, { backgroundColor: filled }]}
             disabled={loading}
           >
             {loading ? (
@@ -280,15 +284,15 @@ export default function SearchScreen() {
         )}
 
         <TouchableOpacity
-          style={[styles.filtersButton, { backgroundColor: colors.surface }]}
+          style={[styles.filtersButton, { backgroundColor: emerald.card, borderColor: emerald.line }]}
           onPress={() => setShowFilters(true)}
           accessibilityRole="button"
           accessibilityLabel={t('search.advancedFilters')}
         >
-          <Ionicons name="options-outline" size={20} color={colors.primary} />
-          <Text style={[styles.filtersButtonText, { color: colors.primary }]}>{t('search.advancedFilters')}</Text>
+          <Ionicons name="options-outline" size={20} color={emerald.action} />
+          <Text style={[styles.filtersButtonText, { color: emerald.action }]}>{t('search.advancedFilters')}</Text>
           {filterBadgeVisible && (
-            <View style={[styles.filterBadge, { backgroundColor: colors.primary }]}>
+            <View style={[styles.filterBadge, { backgroundColor: filled }]}>
               <Text style={styles.filterBadgeText}>●</Text>
             </View>
           )}
@@ -302,13 +306,13 @@ export default function SearchScreen() {
 
         {loading && listData.length === 0 && !showFilterTeaser ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t('search.searching')}</Text>
+            <ActivityIndicator size="large" color={emerald.action} />
+            <Text style={[styles.loadingText, { color: emerald.muted }]}>{t('search.searching')}</Text>
           </View>
         ) : searchError ? (
           <View style={styles.centerContainer}>
             <Ionicons name="alert-circle-outline" size={64} color={colors.error} />
-            <Text style={[styles.errorText, { color: colors.text }]}>{searchError}</Text>
+            <Text style={[styles.errorText, { color: emerald.ink }]}>{searchError}</Text>
           </View>
         ) : listData.length > 0 ? (
           <FlatList
@@ -316,22 +320,22 @@ export default function SearchScreen() {
             keyExtractor={(item, index) => `${item.barcode}-${index}`}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[styles.resultItem, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
+                style={[styles.resultItem, resultEmeraldCard(!!darkMode)]}
                 onPress={() => handleResultPress(item.barcode)}
               >
                 <View style={styles.resultContent}>
-                  <Ionicons name="barcode-outline" size={24} color={colors.primary} style={styles.resultIcon} />
+                  <Ionicons name="barcode-outline" size={24} color={emerald.action} style={styles.resultIcon} />
                   <View style={styles.resultTextContainer}>
                     {item.product?.product_name ? (
-                      <Text style={[styles.resultProductName, { color: colors.text }]} numberOfLines={2}>
+                      <Text style={[styles.resultProductName, { color: emerald.ink }]} numberOfLines={2}>
                         {item.product.product_name}
                       </Text>
                     ) : (
-                      <Text style={[styles.resultProductName, { color: colors.textSecondary }]}>
+                      <Text style={[styles.resultProductName, { color: emerald.muted }]}>
                         {t('search.productUnknown')}
                       </Text>
                     )}
-                    <Text style={[styles.resultBarcode, { color: colors.textSecondary }]}>
+                    <Text style={[styles.resultBarcode, { color: emerald.muted }]}>
                       {t('search.barcode')}: {item.barcode}
                     </Text>
                     {(() => {
@@ -339,10 +343,10 @@ export default function SearchScreen() {
                       if (published === null) return null;
                       return (
                       <View style={styles.resultScore}>
-                        <Text style={[styles.resultScoreLabel, { color: colors.textSecondary }]}>
+                        <Text style={[styles.resultScoreLabel, { color: emerald.muted }]}>
                           {t('result.trustScore')}:
                         </Text>
-                        <Text style={[styles.resultScoreValue, { color: colors.primary }]}>
+                        <Text style={[styles.resultScoreValue, { color: emerald.action }]}>
                           {published}/100
                         </Text>
                       </View>
@@ -350,28 +354,28 @@ export default function SearchScreen() {
                     })()}
                   </View>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.border} />
+                <Ionicons name="chevron-forward" size={20} color={emerald.muted} />
               </TouchableOpacity>
             )}
             contentContainerStyle={styles.listContent}
           />
         ) : showFilterTeaser ? (
           <View style={styles.teaserListPlaceholder}>
-            <Text style={[styles.teaserListHint, { color: colors.textSecondary }]}>
+            <Text style={[styles.teaserListHint, { color: emerald.muted }]}>
               {t('search.teaser.listPlaceholder')}
             </Text>
           </View>
         ) : searchQuery.length > 0 ? (
           <View style={styles.centerContainer}>
-            <Ionicons name="search-outline" size={64} color={colors.textTertiary} />
-            <Text style={[styles.emptyText, { color: colors.text }]}>{t('search.noResults')}</Text>
-            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>{t('search.noResultsMessage')}</Text>
+            <Ionicons name="search-outline" size={64} color={emerald.muted} />
+            <Text style={[styles.emptyText, { color: emerald.ink }]}>{t('search.noResults')}</Text>
+            <Text style={[styles.emptySubtext, { color: emerald.muted }]}>{t('search.noResultsMessage')}</Text>
           </View>
         ) : (
           <View style={styles.centerContainer}>
-            <Ionicons name="search-outline" size={64} color={colors.textTertiary} />
-            <Text style={[styles.emptyText, { color: colors.text }]}>{t('search.startSearch')}</Text>
-            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>{t('search.startSearchMessage')}</Text>
+            <Ionicons name="search-outline" size={64} color={emerald.muted} />
+            <Text style={[styles.emptyText, { color: emerald.ink }]}>{t('search.startSearch')}</Text>
+            <Text style={[styles.emptySubtext, { color: emerald.muted }]}>{t('search.startSearchMessage')}</Text>
           </View>
         )}
       </View>
@@ -415,9 +419,11 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 25,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     paddingVertical: 12,
+    minHeight: 48,
     gap: 12,
   },
   searchIcon: {
@@ -432,9 +438,9 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   searchButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -497,14 +503,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    borderRadius: 12,
     marginBottom: 12,
-    borderBottomWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
   },
   resultContent: {
     flexDirection: 'row',
@@ -556,7 +555,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
     marginTop: 12,
     gap: 8,
     position: 'relative',

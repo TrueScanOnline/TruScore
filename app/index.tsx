@@ -21,6 +21,7 @@ import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
 import { isPremiumFeatureEnabled, PremiumFeature } from '../src/utils/premiumFeatures';
 import { useNetworkStatus } from '../src/hooks/useNetworkStatus';
 import { useTheme } from '../src/theme';
+import { resultEmeraldTone, resultPresentation } from '../src/theme/resultPresentation';
 import PremiumGate from '../src/components/PremiumGate';
 import type { ScanStackParamList } from '../src/navigation/tabStackParamLists';
 import { useCameraLifecycle } from '../src/hooks/useCameraLifecycle';
@@ -31,7 +32,10 @@ type NavigationProp = NativeStackNavigationProp<ScanStackParamList>;
 export default function ScanScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const page = resultPresentation.canvas[darkMode ? 'dark' : 'light'];
+  const filled = resultPresentation.emerald.action.light;
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
@@ -254,9 +258,9 @@ export default function ScanScreen() {
   // Loading state
   if (!permission) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+      <View style={[styles.container, { backgroundColor: page }]}>
+        <ActivityIndicator size="large" color={emerald.action} />
+        <Text style={[styles.loadingText, { color: emerald.muted }]}>
           {t('common.loading')}
         </Text>
       </View>
@@ -266,16 +270,16 @@ export default function ScanScreen() {
   // Permission denied state
   if (!permission.granted) {
     return (
-      <View style={[styles.permissionContainer, { backgroundColor: colors.background }]}>
-        <Ionicons name="camera-outline" size={80} color={colors.primary} />
-        <Text style={[styles.permissionTitle, { color: colors.text }]}>
+      <View style={[styles.permissionContainer, { backgroundColor: page }]}>
+        <Ionicons name="camera-outline" size={80} color={emerald.action} />
+        <Text style={[styles.permissionTitle, { color: emerald.ink }]}>
           {t('scan.permissionRequired')}
         </Text>
-        <Text style={[styles.permissionText, { color: colors.textSecondary }]}>
+        <Text style={[styles.permissionText, { color: emerald.muted }]}>
           {t('scan.permissionText')}
         </Text>
         <TouchableOpacity
-          style={[styles.permissionButton, { backgroundColor: colors.primary }]}
+          style={[styles.permissionButton, { backgroundColor: filled }]}
           onPress={requestPermission}
         >
           <Text style={styles.permissionButtonText}>{t('scan.grantPermission')}</Text>
@@ -352,15 +356,15 @@ export default function ScanScreen() {
             />
           ) : (
             <View style={[styles.camera, styles.cameraPlaceholder, { backgroundColor: '#000' }]}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={[styles.cameraPlaceholderText, { color: colors.textSecondary }]}>
+              <ActivityIndicator size="large" color={filled} />
+              <Text style={[styles.cameraPlaceholderText, { color: resultPresentation.emerald.ink.dark }]}>
                 {cameraLifecycle.state === 'error' 
                   ? (t('scan.cameraError') || 'Camera Error')
                   : (t('scan.initializingCamera') || 'Initializing camera...')}
               </Text>
               {cameraLifecycle.state === 'error' && (
                 <TouchableOpacity
-                  style={[styles.retryButton, { backgroundColor: colors.primary, marginTop: 16 }]}
+                  style={[styles.retryButton, { backgroundColor: filled, marginTop: 16 }]}
                   onPress={() => {
                     console.log('[ScanScreen] Retry camera button pressed');
                     setScanned(false);
@@ -413,8 +417,8 @@ export default function ScanScreen() {
                 style={styles.actionButton}
                 onPress={handleManualEntry}
               >
-                <Ionicons name="keypad-outline" size={24} color={colors.primary} />
-                <Text style={[styles.actionButtonText, { color: colors.primary }]}>
+                <Ionicons name="keypad-outline" size={24} color={filled} />
+                <Text style={[styles.actionButtonText, { color: filled }]}>
                   {t('scan.manualEntry')}
                 </Text>
               </TouchableOpacity>
@@ -434,21 +438,23 @@ export default function ScanScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalContainer}
         >
-          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
+          <View style={[styles.modalContent, { backgroundColor: emerald.card }]}>
+            <Text style={[styles.modalTitle, { color: emerald.ink }]}>
               {t('scan.manualEntry')}
             </Text>
-            <Text style={[styles.modalDescription, { color: colors.textSecondary }]}>
-              {t('scan.manualEntryDescription') || 'Enter barcode manually (8-14 digits)'}
+            <Text style={[styles.modalDescription, { color: emerald.muted }]}>
+              {t('scan.manualEntryDescription', {
+                defaultValue: 'Enter barcode manually (8-14 digits)',
+              })}
             </Text>
             <TextInput
               style={[styles.modalInput, { 
-                backgroundColor: colors.surface, 
-                color: colors.text,
-                borderColor: colors.border 
+                backgroundColor: page, 
+                color: emerald.ink,
+                borderColor: emerald.line 
               }]}
-              placeholder={t('scan.barcodePlaceholder') || 'Enter barcode'}
-              placeholderTextColor={colors.textSecondary}
+              placeholder={t('scan.barcodePlaceholder', { defaultValue: 'Enter barcode' })}
+              placeholderTextColor={emerald.muted}
               value={manualBarcode}
               onChangeText={setManualBarcode}
               keyboardType="number-pad"
@@ -460,18 +466,18 @@ export default function ScanScreen() {
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonCancel, { 
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border 
+                  backgroundColor: page,
+                  borderColor: emerald.line 
                 }]}
                 onPress={handleManualEntryCancel}
               >
-                <Text style={[styles.modalButtonText, { color: colors.text }]}>
+                <Text style={[styles.modalButtonText, { color: emerald.ink }]}>
                   {t('common.cancel') || 'Cancel'}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonSubmit, { 
-                  backgroundColor: colors.primary 
+                  backgroundColor: filled 
                 }]}
                 onPress={handleManualEntrySubmit}
               >
@@ -546,7 +552,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 40,
     marginVertical: 100,
     borderWidth: 2,
-    borderColor: '#16a085',
+    borderColor: resultPresentation.emerald.wallpaper.light,
     borderRadius: 20,
     position: 'relative',
   },
@@ -556,7 +562,7 @@ const styles = StyleSheet.create({
     height: 30,
     borderLeftWidth: 4,
     borderTopWidth: 4,
-    borderColor: '#4dd09f',
+    borderColor: resultPresentation.emerald.action.dark,
     top: -2,
     left: -2,
   },
@@ -615,7 +621,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 25,
+    borderRadius: 22,
+    minHeight: 44,
     gap: 8,
   },
   actionButtonText: {
@@ -642,7 +649,8 @@ const styles = StyleSheet.create({
   permissionButton: {
     paddingHorizontal: 32,
     paddingVertical: 14,
-    borderRadius: 25,
+    borderRadius: 22,
+    minHeight: 44,
   },
   permissionButtonText: {
     color: '#fff',
@@ -656,7 +664,8 @@ const styles = StyleSheet.create({
   retryButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 25,
+    borderRadius: 22,
+    minHeight: 44,
   },
   retryButtonText: {
     color: '#fff',
@@ -696,6 +705,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     padding: 16,
+    minHeight: 48,
     fontSize: 18,
     textAlign: 'center',
     marginBottom: 20,
@@ -709,7 +719,8 @@ const styles = StyleSheet.create({
   modalButton: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 22,
+    minHeight: 44,
     alignItems: 'center',
   },
   modalButtonCancel: {

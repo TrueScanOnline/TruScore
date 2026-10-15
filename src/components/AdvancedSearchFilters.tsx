@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
+import { resultEmeraldTone, resultPresentation } from '../theme/resultPresentation';
 import {
   SearchFilters,
   DEFAULT_SEARCH_FILTERS,
@@ -43,7 +44,9 @@ export default function AdvancedSearchFilters({
   onRequestUpgrade,
 }: AdvancedSearchFiltersProps) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const page = resultPresentation.canvas[darkMode ? 'dark' : 'light'];
 
   const updateFilter = <K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => {
     onFiltersChange({
@@ -67,12 +70,12 @@ export default function AdvancedSearchFilters({
   const active = hasActiveSearchFilters(filters);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+    <View style={[styles.container, { backgroundColor: page }]}>
+      <View style={[styles.header, { backgroundColor: emerald.card, borderBottomColor: emerald.line }]}>
         <View style={styles.headerTextBlock}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('search.advancedFilters')}</Text>
+          <Text style={[styles.headerTitle, { color: emerald.ink }]}>{t('search.advancedFilters')}</Text>
           {!canUseAdvancedSearch && (
-            <Text style={[styles.headerHint, { color: colors.textSecondary }]}>{t('search.teaser.modalHint')}</Text>
+            <Text style={[styles.headerHint, { color: emerald.muted }]}>{t('search.teaser.modalHint')}</Text>
           )}
         </View>
         <TouchableOpacity
@@ -81,7 +84,7 @@ export default function AdvancedSearchFilters({
           accessibilityRole="button"
           accessibilityLabel={t('common.close')}
         >
-          <Ionicons name="close" size={24} color={colors.text} />
+          <Ionicons name="close" size={24} color={emerald.ink} />
         </TouchableOpacity>
       </View>
 
@@ -92,43 +95,43 @@ export default function AdvancedSearchFilters({
             onPress={onRequestUpgrade}
             accessibilityRole="button"
           >
-            <Ionicons name="star" size={20} color={colors.primary} />
+            <Ionicons name="star" size={20} color={emerald.action} />
             <Text style={[styles.unlockBannerText, { color: colors.primary }]}>{t('search.teaser.unlockBanner')}</Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+            <Ionicons name="chevron-forward" size={18} color={emerald.action} />
           </TouchableOpacity>
         )}
 
         {/* TruScore */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('result.trustScore')}</Text>
+        <View style={[styles.section, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
+          <Text style={[styles.sectionTitle, { color: emerald.ink }]}>{t('result.trustScore')}</Text>
           <View style={styles.rangeContainer}>
             <View style={styles.trustInputCol}>
-              <Text style={[styles.rangeLabel, { color: colors.textSecondary }]}>{t('search.min')}</Text>
+              <Text style={[styles.rangeLabel, { color: emerald.muted }]}>{t('search.min')}</Text>
               <TextInput
                 style={[
                   styles.trustInput,
-                  { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface },
+                  { color: emerald.ink, borderColor: emerald.line, backgroundColor: page },
                 ]}
                 keyboardType="number-pad"
                 maxLength={3}
                 placeholder="—"
-                placeholderTextColor={colors.textTertiary}
+                placeholderTextColor={emerald.muted}
                 value={filters.trustScoreMin != null ? String(filters.trustScoreMin) : ''}
                 onChangeText={(txt) => updateFilter('trustScoreMin', parseTrustInput(txt))}
               />
             </View>
-            <Text style={[styles.rangeSeparator, { color: colors.textSecondary }]}>–</Text>
+            <Text style={[styles.rangeSeparator, { color: emerald.muted }]}>–</Text>
             <View style={styles.trustInputCol}>
-              <Text style={[styles.rangeLabel, { color: colors.textSecondary }]}>{t('search.max')}</Text>
+              <Text style={[styles.rangeLabel, { color: emerald.muted }]}>{t('search.max')}</Text>
               <TextInput
                 style={[
                   styles.trustInput,
-                  { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface },
+                  { color: emerald.ink, borderColor: emerald.line, backgroundColor: page },
                 ]}
                 keyboardType="number-pad"
                 maxLength={3}
                 placeholder="—"
-                placeholderTextColor={colors.textTertiary}
+                placeholderTextColor={emerald.muted}
                 value={filters.trustScoreMax != null ? String(filters.trustScoreMax) : ''}
                 onChangeText={(txt) => updateFilter('trustScoreMax', parseTrustInput(txt))}
               />
@@ -137,8 +140,8 @@ export default function AdvancedSearchFilters({
         </View>
 
         {/* Nutri-Score */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('search.nutriscoreTitle')}</Text>
+        <View style={[styles.section, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
+          <Text style={[styles.sectionTitle, { color: emerald.ink }]}>{t('search.nutriscoreTitle')}</Text>
           <View style={styles.gradeContainer}>
             {(['a', 'b', 'c', 'd', 'e'] as const).map((grade) => (
               <TouchableOpacity
@@ -147,8 +150,8 @@ export default function AdvancedSearchFilters({
                   styles.gradeButton,
                   {
                     backgroundColor:
-                      filters.nutriscoreGrade === grade ? colors.primary : colors.surface,
-                    borderColor: filters.nutriscoreGrade === grade ? colors.primary : colors.border,
+                      filters.nutriscoreGrade === grade ? colors.primary : page,
+                    borderColor: filters.nutriscoreGrade === grade ? colors.primary : emerald.line,
                   },
                 ]}
                 onPress={() =>
@@ -159,7 +162,7 @@ export default function AdvancedSearchFilters({
                   style={[
                     styles.gradeText,
                     {
-                      color: filters.nutriscoreGrade === grade ? '#fff' : colors.text,
+                      color: filters.nutriscoreGrade === grade ? '#fff' : emerald.ink,
                       fontWeight: filters.nutriscoreGrade === grade ? 'bold' : 'normal',
                     },
                   ]}
@@ -172,8 +175,8 @@ export default function AdvancedSearchFilters({
         </View>
 
         {/* Eco-Score */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ecoscore.title')}</Text>
+        <View style={[styles.section, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
+          <Text style={[styles.sectionTitle, { color: emerald.ink }]}>{t('ecoscore.title')}</Text>
           <View style={styles.gradeContainer}>
             {(['a', 'b', 'c', 'd', 'e'] as const).map((grade) => (
               <TouchableOpacity
@@ -182,8 +185,8 @@ export default function AdvancedSearchFilters({
                   styles.gradeButton,
                   {
                     backgroundColor:
-                      filters.ecoscoreGrade === grade ? colors.primary : colors.surface,
-                    borderColor: filters.ecoscoreGrade === grade ? colors.primary : colors.border,
+                      filters.ecoscoreGrade === grade ? colors.primary : page,
+                    borderColor: filters.ecoscoreGrade === grade ? colors.primary : emerald.line,
                   },
                 ]}
                 onPress={() =>
@@ -194,7 +197,7 @@ export default function AdvancedSearchFilters({
                   style={[
                     styles.gradeText,
                     {
-                      color: filters.ecoscoreGrade === grade ? '#fff' : colors.text,
+                      color: filters.ecoscoreGrade === grade ? '#fff' : emerald.ink,
                       fontWeight: filters.ecoscoreGrade === grade ? 'bold' : 'normal',
                     },
                   ]}
@@ -207,18 +210,18 @@ export default function AdvancedSearchFilters({
         </View>
 
         {/* Country tag (OFF-style e.g. en:nz) */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('search.countryFilter')}</Text>
-          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
+        <View style={[styles.section, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
+          <Text style={[styles.sectionTitle, { color: emerald.ink }]}>{t('search.countryFilter')}</Text>
+          <Text style={[styles.sectionDescription, { color: emerald.muted }]}>
             {t('search.countryFilterHint')}
           </Text>
           <TextInput
             style={[
               styles.countryInput,
-              { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface },
+              { color: emerald.ink, borderColor: emerald.line, backgroundColor: page },
             ]}
             placeholder={t('search.countryPlaceholder')}
-            placeholderTextColor={colors.textTertiary}
+            placeholderTextColor={emerald.muted}
             autoCapitalize="none"
             value={filters.country || ''}
             onChangeText={(txt) => updateFilter('country', txt.trim() === '' ? null : txt.trim())}
@@ -226,8 +229,8 @@ export default function AdvancedSearchFilters({
         </View>
 
         {/* Quick diet */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('search.quickFilters')}</Text>
+        <View style={[styles.section, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
+          <Text style={[styles.sectionTitle, { color: emerald.ink }]}>{t('search.quickFilters')}</Text>
           {(
             [
               ['leaf', 'vegan', filters.vegan, () => updateFilter('vegan', !filters.vegan)] as const,
@@ -249,17 +252,17 @@ export default function AdvancedSearchFilters({
               ] as const,
             ] as const
           ).map(([icon, labelKey, value, onToggle]) => (
-            <View key={labelKey} style={[styles.switchRow, { borderBottomColor: colors.border + '33' }]}>
+            <View key={labelKey} style={[styles.switchRow, { borderBottomColor: emerald.line + '33' }]}>
               <View style={styles.switchContent}>
-                <Ionicons name={icon as any} size={20} color={colors.primary} />
-                <Text style={[styles.switchLabel, { color: colors.text }]}>
+                <Ionicons name={icon as any} size={20} color={emerald.action} />
+                <Text style={[styles.switchLabel, { color: emerald.ink }]}>
                   {t(`search.filterLabels.${labelKey}`)}
                 </Text>
               </View>
               <Switch
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={colors.card}
-                ios_backgroundColor={colors.border}
+                trackColor={{ false: emerald.line, true: emerald.action }}
+                thumbColor={emerald.card}
+                ios_backgroundColor={emerald.line}
                 value={value}
                 onValueChange={onToggle}
                 accessibilityLabel={t(`search.filterLabels.${labelKey}`)}
@@ -269,34 +272,34 @@ export default function AdvancedSearchFilters({
         </View>
 
         {/* My products */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('search.myProductsSection')}</Text>
-          <View style={[styles.switchRow, { borderBottomColor: colors.border + '33' }]}>
+        <View style={[styles.section, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
+          <Text style={[styles.sectionTitle, { color: emerald.ink }]}>{t('search.myProductsSection')}</Text>
+          <View style={[styles.switchRow, { borderBottomColor: emerald.line + '33' }]}>
             <View style={styles.switchContent}>
-              <Ionicons name="time-outline" size={20} color={colors.primary} />
-              <Text style={[styles.switchLabel, { color: colors.text }]}>
+              <Ionicons name="time-outline" size={20} color={emerald.action} />
+              <Text style={[styles.switchLabel, { color: emerald.ink }]}>
                 {t('search.filterLabels.previouslyScannedOnly')}
               </Text>
             </View>
             <Switch
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.card}
-              ios_backgroundColor={colors.border}
+              trackColor={{ false: emerald.line, true: emerald.action }}
+              thumbColor={emerald.card}
+              ios_backgroundColor={emerald.line}
               value={filters.previouslyScannedOnly}
               onValueChange={(v) => updateFilter('previouslyScannedOnly', v)}
             />
           </View>
           <View style={styles.switchRow}>
             <View style={styles.switchContent}>
-              <Ionicons name="heart-outline" size={20} color={colors.primary} />
-              <Text style={[styles.switchLabel, { color: colors.text }]}>
+              <Ionicons name="heart-outline" size={20} color={emerald.action} />
+              <Text style={[styles.switchLabel, { color: emerald.ink }]}>
                 {t('search.filterLabels.favoritesOnly')}
               </Text>
             </View>
             <Switch
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.card}
-              ios_backgroundColor={colors.border}
+              trackColor={{ false: emerald.line, true: emerald.action }}
+              thumbColor={emerald.card}
+              ios_backgroundColor={emerald.line}
               value={filters.favoritesOnly}
               onValueChange={(v) => updateFilter('favoritesOnly', v)}
             />
@@ -304,9 +307,9 @@ export default function AdvancedSearchFilters({
         </View>
 
         {/* NOVA */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('result.processingLevel')}</Text>
-          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
+        <View style={[styles.section, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
+          <Text style={[styles.sectionTitle, { color: emerald.ink }]}>{t('result.processingLevel')}</Text>
+          <Text style={[styles.sectionDescription, { color: emerald.muted }]}>
             {t('search.novaFilterDescription')}
           </Text>
           <View style={styles.novaContainer}>
@@ -317,9 +320,9 @@ export default function AdvancedSearchFilters({
                   styles.novaButton,
                   {
                     backgroundColor:
-                      filters.novaMax !== null && filters.novaMax >= level ? colors.primary : colors.surface,
+                      filters.novaMax !== null && filters.novaMax >= level ? colors.primary : page,
                     borderColor:
-                      filters.novaMax !== null && filters.novaMax >= level ? colors.primary : colors.border,
+                      filters.novaMax !== null && filters.novaMax >= level ? colors.primary : emerald.line,
                   },
                 ]}
                 onPress={() => updateFilter('novaMax', filters.novaMax === level ? null : level)}
@@ -328,7 +331,7 @@ export default function AdvancedSearchFilters({
                   style={[
                     styles.novaText,
                     {
-                      color: filters.novaMax !== null && filters.novaMax >= level ? '#fff' : colors.text,
+                      color: filters.novaMax !== null && filters.novaMax >= level ? '#fff' : emerald.ink,
                       fontWeight: filters.novaMax !== null && filters.novaMax >= level ? 'bold' : 'normal',
                     },
                   ]}
@@ -340,7 +343,7 @@ export default function AdvancedSearchFilters({
                     styles.novaLabel,
                     {
                       color:
-                        filters.novaMax !== null && filters.novaMax >= level ? '#fff' : colors.textSecondary,
+                        filters.novaMax !== null && filters.novaMax >= level ? '#fff' : emerald.muted,
                     },
                   ]}
                 >
@@ -352,8 +355,8 @@ export default function AdvancedSearchFilters({
         </View>
 
         {/* Certifications */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('result.certifications')}</Text>
+        <View style={[styles.section, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
+          <Text style={[styles.sectionTitle, { color: emerald.ink }]}>{t('result.certifications')}</Text>
           <View style={styles.certContainer}>
             {['organic', 'fair-trade', 'rainforest-alliance', 'b-corp', 'non-gmo'].map((cert) => (
               <TouchableOpacity
@@ -361,8 +364,8 @@ export default function AdvancedSearchFilters({
                 style={[
                   styles.certButton,
                   {
-                    backgroundColor: filters.certification?.includes(cert) ? colors.primary : colors.surface,
-                    borderColor: filters.certification?.includes(cert) ? colors.primary : colors.border,
+                    backgroundColor: filters.certification?.includes(cert) ? colors.primary : page,
+                    borderColor: filters.certification?.includes(cert) ? colors.primary : emerald.line,
                   },
                 ]}
                 onPress={() => toggleCertification(cert)}
@@ -371,7 +374,7 @@ export default function AdvancedSearchFilters({
                   style={[
                     styles.certText,
                     {
-                      color: filters.certification?.includes(cert) ? '#fff' : colors.text,
+                      color: filters.certification?.includes(cert) ? '#fff' : emerald.ink,
                     },
                   ]}
                 >
@@ -384,12 +387,12 @@ export default function AdvancedSearchFilters({
 
         {active && (
           <TouchableOpacity
-            style={[styles.resetButton, { backgroundColor: colors.surface }]}
+            style={[styles.resetButton, { backgroundColor: page }]}
             onPress={resetFilters}
             accessibilityRole="button"
           >
-            <Ionicons name="refresh-outline" size={20} color={colors.textSecondary} />
-            <Text style={[styles.resetButtonText, { color: colors.textSecondary }]}>
+            <Ionicons name="refresh-outline" size={20} color={emerald.muted} />
+            <Text style={[styles.resetButtonText, { color: emerald.muted }]}>
               {t('search.resetFilters')}
             </Text>
           </TouchableOpacity>
@@ -455,14 +458,10 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   section: {
-    borderRadius: 12,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
   },
   sectionTitle: {
     fontSize: 16,
