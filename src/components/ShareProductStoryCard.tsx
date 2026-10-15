@@ -1,4 +1,4 @@
-import React, { forwardRef, type Ref } from 'react';
+import React, { forwardRef, useEffect, type Ref } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { buildShareUrl } from '../utils/shareUrl';
@@ -21,6 +21,8 @@ export interface ShareProductStoryCardProps {
   surfaceColor: string;
   textColor: string;
   textSecondary: string;
+  /** Fires when the product image has painted, failed, or was never supplied. */
+  onImageSettled?: () => void;
 }
 
 export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps>(
@@ -36,6 +38,7 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
       surfaceColor,
       textColor,
       textSecondary,
+      onImageSettled,
     },
     ref: Ref<View>
   ) => {
@@ -51,6 +54,10 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
       ? RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR
       : scoreColor || brandColor;
 
+    useEffect(() => {
+      if (!imageUrl) onImageSettled?.();
+    }, [imageUrl, onImageSettled]);
+
     return (
       <View ref={ref} collapsable={false} style={[styles.root, { backgroundColor: surfaceColor }]}>
         <View style={[styles.headerBand, { backgroundColor: brandColor }]}>
@@ -58,7 +65,13 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
         </View>
         <View style={styles.imageWrap}>
           {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.image} contentFit="contain" />
+            <Image
+              source={{ uri: imageUrl }}
+              style={styles.image}
+              contentFit="contain"
+              onLoad={() => onImageSettled?.()}
+              onError={() => onImageSettled?.()}
+            />
           ) : (
             <Text style={[styles.placeholder, { color: textSecondary }]}>📦</Text>
           )}

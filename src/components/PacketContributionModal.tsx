@@ -243,7 +243,7 @@ export default function PacketContributionModal({
   onSharedEvidenceAdmitted?: (snapshot: SharedEvidenceSnapshot | null, complete: boolean) => void | Promise<void>;
   onSharedEvidenceFailed?: () => void;
 }) {
-  const { colors, darkMode } = useTheme();
+  const { darkMode } = useTheme();
   const insets = useSafeAreaInsets();
   const [session, setSession] = useState<PacketContributionSession | null>(null);
   const [previews, setPreviews] = useState<Preview[]>([]);
@@ -269,26 +269,24 @@ export default function PacketContributionModal({
   const [includedContexts, setIncludedContexts] = useState<ContributionEntryContext[]>([entryContext]);
   const [proposalSupport, setProposalSupport] = useState<Partial<Record<ContributionEntryContext, SupportCoverage>>>({});
   const [activeContext, setActiveContext] = useState<ContributionEntryContext>(entryContext);
-  const packetSurface = packetInformationContext(activeContext);
   const emerald = resultEmeraldTone(!!darkMode);
-  const ink = packetSurface ? emerald.ink : colors.text;
-  const action = packetSurface ? emerald.action : colors.primary;
-  const line = packetSurface ? emerald.line : colors.border;
-  const pageBg = packetSurface ? resultPresentation.canvas[darkMode ? 'dark' : 'light'] : colors.background;
-  const fieldBg = packetSurface ? emerald.card : colors.background;
+  const ink = emerald.ink;
+  const muted = emerald.muted;
+  const action = emerald.action;
+  const line = emerald.line;
+  const pageBg = resultPresentation.canvas[darkMode ? 'dark' : 'light'];
+  const fieldBg = emerald.card;
   const filledButton = [
     styles.button,
-    packetSurface
-      ? {
-          backgroundColor: resultPresentation.emerald.action.light,
-          borderRadius: 22,
-          minHeight: 44,
-          alignItems: 'center' as const,
-          justifyContent: 'center' as const,
-        }
-      : null,
+    {
+      backgroundColor: resultPresentation.emerald.action.light,
+      borderRadius: 22,
+      minHeight: 44,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+    },
   ];
-  const phaseCard = packetSurface ? [resultEmeraldCard(!!darkMode), styles.phaseCard] : null;
+  const phaseCard = [resultEmeraldCard(!!darkMode), styles.phaseCard];
   const [partialNotice, setPartialNotice] = useState<string | null>(null);
   const [submissionAttention, setSubmissionAttention] = useState<{ idempotencyKey: string; interruptedAt: number }[]>([]);
   const initialIngredientsRef = useRef(initialIngredients);
@@ -989,7 +987,7 @@ export default function PacketContributionModal({
           <Text style={[styles.header, { color: ink, flex: 1 }]}>{journey.header}</Text>
           <TouchableOpacity
             onPress={onClose}
-            style={[styles.closeControl, packetSurface ? { backgroundColor: emerald.chevronCircle } : null]}
+            style={[styles.closeControl, { backgroundColor: emerald.chevronCircle }]}
             accessibilityRole="button"
             accessibilityLabel="Close"
           >
@@ -1212,7 +1210,7 @@ export default function PacketContributionModal({
                         </TouchableOpacity>
                       </View>
                     ) : (
-                      <Text style={{ color: inkSecondary }}>{field.acceptedUnits[0]}</Text>
+                      <Text style={{ color: muted }}>{field.acceptedUnits[0]}</Text>
                     )}
                   </View>
                 ))}
@@ -1297,6 +1295,7 @@ export default function PacketContributionModal({
                     {originCountrySlots(row.place, countryBlanks[index] ?? 0).map((slot, slotIndex, slots) => (
                       <View key={`${index}-country-${slotIndex}`}>
                         <CountryPicker
+                          appearance="emerald"
                           selectedCountry={slot}
                           onSelect={(country) => {
                             const blanks = countryBlanks[index] ?? 0;
@@ -1553,7 +1552,7 @@ export default function PacketContributionModal({
               </View>
             ) : null}
             {partialNotice ? (
-              <View style={[styles.notice, packetSurface ? { backgroundColor: emerald.chevronCircle } : null]}>
+              <View style={[styles.notice, { backgroundColor: emerald.chevronCircle }]}>
                 <Text style={{ color: ink }}>{partialNotice}</Text>
               </View>
             ) : null}
@@ -1562,7 +1561,7 @@ export default function PacketContributionModal({
             </TouchableOpacity>
           </View>
         ) : null}
-        {busy ? <ActivityIndicator color={packetSurface ? resultPresentation.emerald.action.light : colors.primary} /> : null}
+        {busy ? <ActivityIndicator color={resultPresentation.emerald.action.light} /> : null}
       </ScrollView>
       </KeyboardAvoidingView>
     </Modal>

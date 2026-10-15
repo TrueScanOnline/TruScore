@@ -9,22 +9,38 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COUNTRIES, Country } from '../utils/countries';
 import { useTheme } from '../theme';
+import { resultEmeraldTone, resultPresentation } from '../theme/resultPresentation';
 
 interface CountryPickerProps {
   selectedCountry: Country | null;
   onSelect: (country: Country) => void;
   placeholder?: string;
+  /** Opt-in. Manual product entry keeps the default theme. */
+  appearance?: 'default' | 'emerald';
 }
 
 export default function CountryPicker({
   selectedCountry,
   onSelect,
   placeholder = 'Select country',
+  appearance = 'default',
 }: CountryPickerProps) {
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const insets = useSafeAreaInsets();
+  const emeraldMode = appearance === 'emerald';
+  const emerald = resultEmeraldTone(!!darkMode);
+  const ink = emeraldMode ? emerald.ink : colors.text;
+  const muted = emeraldMode ? emerald.muted : colors.textSecondary;
+  const line = emeraldMode ? emerald.line : colors.border;
+  const fieldBg = emeraldMode ? emerald.card : colors.background;
+  const sheetBg = emeraldMode ? emerald.card : colors.card;
+  const pageBg = emeraldMode ? resultPresentation.canvas[darkMode ? 'dark' : 'light'] : colors.background;
+  const action = emeraldMode ? emerald.action : colors.primary;
+  const selectedBg = emeraldMode ? emerald.chevronCircle : colors.primary + '20';
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -57,9 +73,10 @@ export default function CountryPicker({
       <TouchableOpacity
         style={[
           styles.pickerButton,
+          emeraldMode ? { borderRadius: 12, minHeight: 48 } : null,
           {
-            borderColor: colors.border,
-            backgroundColor: colors.background,
+            borderColor: line,
+            backgroundColor: fieldBg,
           },
         ]}
         onPress={() => {
@@ -71,19 +88,19 @@ export default function CountryPicker({
         {selectedCountry ? (
           <View style={styles.selectedCountry}>
             <Text style={styles.flag}>{selectedCountry.flag}</Text>
-            <Text style={[styles.countryName, { color: colors.text }]}>
+            <Text style={[styles.countryName, { color: ink }]}>
               {selectedCountry.name}
             </Text>
           </View>
         ) : (
-          <Text style={[styles.placeholder, { color: colors.textSecondary }]}>
+          <Text style={[styles.placeholder, { color: muted }]}>
             {placeholder}
           </Text>
         )}
         <Ionicons
           name="chevron-down-outline"
           size={20}
-          color={colors.textSecondary}
+          color={muted}
         />
       </TouchableOpacity>
 
@@ -101,16 +118,41 @@ export default function CountryPicker({
             activeOpacity={1}
             onPress={handleClose}
           />
-          <View 
-            style={[styles.modalContent, { backgroundColor: colors.card }]}
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: sheetBg },
+              emeraldMode
+                ? {
+                    paddingTop: Math.max(insets.top, 12),
+                    paddingBottom: Math.max(insets.bottom, 20),
+                  }
+                : null,
+            ]}
           >
             {/* Header */}
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>
+            <View style={[styles.modalHeader, emeraldMode ? { borderBottomColor: line } : null]}>
+              <Text style={[styles.modalTitle, { color: ink }]}>
                 Select Country
               </Text>
-              <TouchableOpacity onPress={handleClose}>
-                <Ionicons name="close" size={24} color={colors.text} />
+              <TouchableOpacity
+                onPress={handleClose}
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+                style={
+                  emeraldMode
+                    ? {
+                        minWidth: 44,
+                        minHeight: 44,
+                        borderRadius: 22,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: emerald.chevronCircle,
+                      }
+                    : undefined
+                }
+              >
+                <Ionicons name="close" size={24} color={ink} />
               </TouchableOpacity>
             </View>
 
@@ -118,18 +160,22 @@ export default function CountryPicker({
             <View
               style={[
                 styles.searchContainer,
-                { backgroundColor: colors.background, borderColor: colors.border },
+                {
+                  backgroundColor: emeraldMode ? pageBg : colors.background,
+                  borderColor: line,
+                  borderRadius: emeraldMode ? 12 : 8,
+                },
               ]}
             >
               <Ionicons
                 name="search-outline"
                 size={20}
-                color={colors.textSecondary}
+                color={muted}
               />
               <TextInput
-                style={[styles.searchInput, { color: colors.text }]}
+                style={[styles.searchInput, { color: ink }]}
                 placeholder="Search country..."
-                placeholderTextColor={colors.textSecondary}
+                placeholderTextColor={muted}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoCapitalize="none"
@@ -140,7 +186,7 @@ export default function CountryPicker({
                   <Ionicons
                     name="close-circle"
                     size={20}
-                    color={colors.textSecondary}
+                    color={muted}
                   />
                 </TouchableOpacity>
               )}
@@ -154,9 +200,9 @@ export default function CountryPicker({
                 <TouchableOpacity
                   style={[
                     styles.countryItem,
-                    { borderBottomColor: colors.border },
+                    { borderBottomColor: line },
                     selectedCountry?.code === item.code && {
-                      backgroundColor: colors.primary + '20',
+                      backgroundColor: selectedBg,
                     },
                   ]}
                   onPress={() => {
@@ -166,14 +212,14 @@ export default function CountryPicker({
                   activeOpacity={0.7}
                 >
                   <Text style={styles.flag}>{item.flag}</Text>
-                  <Text style={[styles.countryItemName, { color: colors.text }]}>
+                  <Text style={[styles.countryItemName, { color: ink }]}>
                     {item.name}
                   </Text>
                   {selectedCountry?.code === item.code && (
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color={colors.primary}
+                      color={action}
                     />
                   )}
                 </TouchableOpacity>
@@ -192,7 +238,7 @@ export default function CountryPicker({
               })}
               ListEmptyComponent={
                 <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text style={[styles.countryItemName, { color: colors.textSecondary }]}>
+                  <Text style={[styles.countryItemName, { color: muted }]}>
                     No countries found
                   </Text>
                 </View>

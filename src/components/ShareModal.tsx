@@ -85,6 +85,27 @@ export default function ShareModal({
   const [selectedPlatform, setSelectedPlatform] = useState<SharePlatform | null>(null);
   const [customMessage, setCustomMessage] = useState('');
   const storyCardRef = useRef<View>(null);
+  const imageSettleRef = useRef<{ url: string; promise: Promise<void>; resolve: () => void } | null>(null);
+  const shareVisibleRef = useRef(false);
+  const imageKey = product.image_url || '';
+  const openingShare = visible && !shareVisibleRef.current;
+  shareVisibleRef.current = visible;
+  if (openingShare || imageSettleRef.current?.url !== imageKey) {
+    let resolve!: () => void;
+    const promise = new Promise<void>((settle) => {
+      resolve = settle;
+    });
+    imageSettleRef.current = { url: imageKey, promise, resolve };
+    if (!imageKey) resolve();
+  }
+  const markImageSettled = () => {
+    imageSettleRef.current?.resolve();
+  };
+  const waitForShareImage = () =>
+    Promise.race([
+      imageSettleRef.current?.promise ?? Promise.resolve(),
+      new Promise<void>((resolve) => setTimeout(resolve, 4000)),
+    ]);
 
   const copyLinkUrl = useMemo(
     () =>
@@ -171,6 +192,7 @@ export default function ShareModal({
         Toast.show({ type: 'error', text1: t('shareModal.shareImageFailed') });
         return;
       }
+      await waitForShareImage();
       const uri = await captureRef(ref, { format: 'png', quality: 0.95 });
       await Sharing.shareAsync(uri, {
         mimeType: 'image/png',
@@ -446,6 +468,7 @@ export default function ShareModal({
             surfaceColor={emerald.card}
             textColor={emerald.ink}
             textSecondary={emerald.muted}
+            onImageSettled={markImageSettled}
           />
         </View>
       </KeyboardAvoidingView>
