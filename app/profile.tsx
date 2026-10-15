@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from './_layout';
 import { useSettingsStore } from '../src/store/useSettingsStore';
 import { useTheme } from '../src/theme';
+import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../src/theme/resultPresentation';
 import { useFavoritesStore } from '../src/store/useFavoritesStore';
 import { useScanStore } from '../src/store/useScanStore';
 import { useSubscriptionStore } from '../src/store/useSubscriptionStore';
@@ -46,6 +47,9 @@ export default function ProfileScreen() {
     setAnalyticsEnabled,
     setHasCompletedOnboarding,
   } = useSettingsStore();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const page = resultPresentation.canvas[darkMode ? 'dark' : 'light'];
+  const filled = resultPresentation.emerald.action.light;
   const { favorites, clearFavorites } = useFavoritesStore();
   const { recentScans, clearHistory } = useScanStore();
   const { subscriptionInfo, checkSubscriptionStatus } = useSubscriptionStore();
@@ -154,7 +158,7 @@ export default function ProfileScreen() {
 
   const SettingSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: colors.textTertiary }]}>{title}</Text>
+      <Text style={[styles.sectionTitle, { color: emerald.muted }]}>{title}</Text>
       {children}
     </View>
   );
@@ -165,37 +169,44 @@ export default function ProfileScreen() {
     value,
     onPress,
     rightComponent,
+    destructive = false,
   }: {
     icon: string;
     label: string;
     value?: string;
     onPress?: () => void;
     rightComponent?: React.ReactNode;
+    destructive?: boolean;
   }) => (
     <TouchableOpacity
-      style={[styles.settingRow, { backgroundColor: colors.card }]}
+      style={[styles.settingRow, resultEmeraldCard(!!darkMode)]}
       onPress={onPress}
       disabled={!onPress}
       activeOpacity={onPress ? 0.7 : 1}
     >
       <View style={styles.settingRowLeft}>
-        <Ionicons name={icon as any} size={24} color={colors.primary} style={styles.settingIcon} />
+        <Ionicons
+          name={icon as any}
+          size={24}
+          color={destructive ? colors.error : emerald.action}
+          style={styles.settingIcon}
+        />
         <View style={styles.settingRowInfo}>
-          <Text style={[styles.settingLabel, { color: colors.text }]}>{label}</Text>
-          {value && <Text style={[styles.settingValue, { color: colors.textSecondary }]}>{value}</Text>}
+          <Text style={[styles.settingLabel, { color: destructive ? colors.error : emerald.ink }]}>{label}</Text>
+          {value && <Text style={[styles.settingValue, { color: emerald.muted }]}>{value}</Text>}
         </View>
       </View>
-      {rightComponent || (onPress && <Ionicons name="chevron-forward" size={20} color={colors.border} />)}
+      {rightComponent || (onPress && <Ionicons name="chevron-forward" size={20} color={emerald.muted} />)}
     </TouchableOpacity>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: page }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.text }]}>{t('profile.title')}</Text>
+      <View style={[styles.header, { backgroundColor: page, borderBottomColor: emerald.line }]}>
+        <Text style={[styles.title, { color: emerald.ink }]}>{t('profile.title')}</Text>
         {isPremium && (
-          <View style={[styles.premiumBadge, { backgroundColor: colors.primary }]}>
+          <View style={[styles.premiumBadge, { backgroundColor: filled }]}>
             <Ionicons name="star" size={16} color="#fff" />
             <Text style={styles.premiumBadgeText}>{t('profile.premium')}</Text>
           </View>
@@ -261,7 +272,7 @@ export default function ProfileScreen() {
               <Switch
                 value={darkMode}
                 onValueChange={setDarkMode}
-                trackColor={{ false: colors.border, true: colors.primary }}
+                trackColor={{ false: emerald.line, true: emerald.action }}
                 thumbColor="#fff"
               />
             }
@@ -293,7 +304,7 @@ export default function ProfileScreen() {
               <Switch
                 value={analyticsEnabled}
                 onValueChange={setAnalyticsEnabled}
-                trackColor={{ false: colors.border, true: colors.primary }}
+                trackColor={{ false: emerald.line, true: emerald.action }}
                 thumbColor="#fff"
               />
             }
@@ -324,16 +335,19 @@ export default function ProfileScreen() {
             icon="trash-outline"
             label={t('settings.clearHistory')}
             onPress={handleClearHistory}
+            destructive
           />
           <SettingRow
             icon="heart-outline"
             label={t('favorites.clearAll')}
             onPress={handleClearFavorites}
+            destructive
           />
           <SettingRow
             icon="refresh-outline"
             label={t('settings.clearCache')}
             onPress={handleClearCache}
+            destructive
           />
         </SettingSection>
 
@@ -369,8 +383,8 @@ export default function ProfileScreen() {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: colors.textSecondary }]}>{t('settings.footer')}</Text>
-          <Text style={[styles.footerSubtext, { color: colors.textTertiary }]}>{t('settings.footerSubtext')}</Text>
+          <Text style={[styles.footerText, { color: emerald.muted }]}>{t('settings.footer')}</Text>
+          <Text style={[styles.footerSubtext, { color: emerald.muted }]}>{t('settings.footerSubtext')}</Text>
         </View>
       </ScrollView>
     </View>
@@ -391,7 +405,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   premiumBadge: {
@@ -427,14 +441,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: 12,
     padding: 16,
     marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    minHeight: 44,
   },
   settingRowLeft: {
     flexDirection: 'row',

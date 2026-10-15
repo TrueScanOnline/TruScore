@@ -5,9 +5,10 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useTheme } from '../theme';
+import { resultEmeraldTone, resultPresentation } from '../theme/resultPresentation';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { isMvpAlertsTabEnabled } from '../config/mvpRuntimeGates';
 import type {
@@ -144,7 +145,9 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function AppTabs() {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const page = resultPresentation.canvas[darkMode ? 'dark' : 'light'];
   const insets = useSafeAreaInsets();
 
   // Configure system navigation bar on Android to work with app tabs
@@ -157,7 +160,7 @@ export default function AppTabs() {
         // Fallback: Configure navigation bar to be non-overlapping
         NavigationBar.setBehaviorAsync('overlay-swipe').catch(() => {
           // If that fails, configure navigation bar background to match app
-          NavigationBar.setBackgroundColorAsync(colors.card).catch(() => {
+          NavigationBar.setBackgroundColorAsync(page).catch(() => {
             // Silent fallback - continue with safe area insets
           });
         });
@@ -172,7 +175,7 @@ export default function AppTabs() {
         });
       }
     };
-  }, [colors.card]);
+  }, [page]);
 
   // Calculate tab bar height with safe area padding
   const tabBarHeight = 60 + insets.bottom;
@@ -210,21 +213,20 @@ export default function AppTabs() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarActiveTintColor: emerald.action,
+        tabBarInactiveTintColor: emerald.muted,
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
+          backgroundColor: page,
+          borderTopColor: emerald.line,
+          borderTopWidth: StyleSheet.hairlineWidth,
           paddingTop: 8,
           paddingBottom: tabBarPaddingBottom,
           height: tabBarHeight,
-          // Add elevation for Android to ensure tab bar stays above content
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarItemStyle: {
+          minHeight: 44,
         },
         headerShown: false,
         lazy: false, // Pre-load all tabs immediately for instant switching
