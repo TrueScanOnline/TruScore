@@ -125,7 +125,7 @@ export default function ConfidenceBadge({
             { color: badgeColor },
           ]}
         >
-          {label}
+          {appearance === 'emerald' ? `${label} >` : label}
         </Text>
       )}
     </View>

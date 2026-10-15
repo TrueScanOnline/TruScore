@@ -78,7 +78,7 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
           {showImage ? (
             <Image
               key={imageKey}
-              source={{ uri: imageUrl }}
+              source={{ uri: imageUrl ?? undefined }}
               style={styles.image}
               contentFit="contain"
               onDisplay={() => onImageSettled?.(settleToken, imageUrl || '')}

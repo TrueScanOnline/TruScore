@@ -28,6 +28,8 @@ interface TruScoreProps {
   size?: 'small' | 'medium' | 'large';
   /** When provided, pillar tiles open the existing pillar look-through. */
   onPillarPress?: (pillar: TruScorePillar) => void;
+  /** Result-only. The overall score, including the unrevealed question mark, opens the data-limitations card. */
+  onScorePress?: () => void;
   /** First-paint barrier: until settled, all scores remain unrevealed (§12). */
   publicationSettled?: boolean;
   /** Result-only composition. Other hosts keep the previous row. */
@@ -109,10 +111,12 @@ function ScoreRing({
 function EmeraldLayout({
   truScore,
   onPillarPress,
+  onScorePress,
   publicationSettled,
 }: {
   truScore: TruScoreResult;
   onPillarPress?: (pillar: TruScorePillar) => void;
+  onScorePress?: () => void;
   publicationSettled: boolean;
 }) {
   const { t } = useTranslation();
@@ -149,6 +153,7 @@ function EmeraldLayout({
       scoreLabel={scoreLabel}
       title={scored ? undefined : presentation.title}
       explanation={scored ? undefined : presentation.explanation}
+      onScorePress={onScorePress}
       dark={!!darkMode}
       pillars={(['Body', 'Planet', 'Ethics', 'Open'] as const).map((key) => {
         const label = consumerPillarLabel(key);
@@ -169,6 +174,7 @@ const TruScore = React.memo(function TruScore({
   truScore,
   size = 'medium',
   onPillarPress,
+  onScorePress,
   publicationSettled = true,
   layout = 'legacy',
 }: TruScoreProps) {
@@ -183,6 +189,7 @@ const TruScore = React.memo(function TruScore({
       <EmeraldLayout
         truScore={truScore}
         onPillarPress={onPillarPress}
+        onScorePress={onScorePress}
         publicationSettled={publicationSettled}
       />
     );

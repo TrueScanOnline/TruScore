@@ -15,7 +15,9 @@ describe('Nutrition Table Wave 3 presentation contracts', () => {
   it('result path uses NutritionTable without whole-card edit Pressable', () => {
     const src = read('app/result/[barcode].tsx');
     expect(src).toContain('<NutritionTable');
-    expect(src).toContain('openContribution(\'nutrition\')');
+    // Live nutrition contribution carries the journey. The one-argument form was already absent at B0.
+    expect(src).toContain('openContribution(\'nutrition\', \'add\')');
+    expect(src).toContain('openContribution(\'nutrition\', \'change\', true)');
     expect(src).not.toContain('onEdit={handleEditProduct}');
     // Whole-card contribution Pressable around NutritionTable removed
     expect(src).not.toMatch(/Pressable[\s\S]{0,200}onPress=\{handleEditProduct\}[\s\S]{0,400}<NutritionTable/);
@@ -45,10 +47,10 @@ describe('Nutrition Table Wave 3 presentation contracts', () => {
     expect(src).not.toContain('Contribute');
   });
 
-  it('consumer copy uses Moderate not Med in en locale', () => {
+  it('consumer level badge reads Mid', () => {
     const en = JSON.parse(read('src/i18n/locales/en.json'));
-    expect(en.nutrition.levelBadgeModerate).toBe('Moderate');
-    expect(en.nutrition.levelBadgeMed).toBe('Moderate');
+    expect(en.nutrition.levelBadgeModerate).toBe('Mid');
+    expect(en.nutrition.levelBadgeMed).toBe('Mid');
     expect(en.nutrition.sodium).toBe('Sodium');
   });
 });

@@ -2,8 +2,8 @@
  * Wave 5 Emerald visual correction — pure presentation.
  * Values, labels and actions are passed from the current governed helpers.
  */
-import React, { useEffect, useId, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, PixelRatio } from 'react-native';
+import React, { useId, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable, useWindowDimensions, PixelRatio } from 'react-native';
 import Svg, {
   Defs,
   LinearGradient,
@@ -16,6 +16,7 @@ import Svg, {
   G,
 } from 'react-native-svg';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { resultPresentation } from '../../../theme/resultPresentation';
 
 export type EmeraldPillarKey = 'Body' | 'Planet' | 'Ethics' | 'Open';
@@ -35,6 +36,8 @@ type Props = {
   title?: string;
   explanation?: string;
   pillars: EmeraldPillar[];
+  /** Opens the same data-limitations card as Incomplete product data. */
+  onScorePress?: () => void;
   dark?: boolean;
 };
 
@@ -131,25 +134,31 @@ function TileArt({
   );
 }
 
-function Disc({ kind, value, colour, label, diameter, dark }: {
+function Disc({ kind, value, colour, label, title, diameter, dark, onPress }: {
   kind: Props['kind'];
   value?: number;
   colour: string;
   label?: string;
+  title?: string;
   diameter: number;
   dark: boolean;
+  onPress?: () => void;
 }) {
+  const { t } = useTranslation();
   const prefix = useId().replace(/:/g, '');
   const radius = resultPresentation.emerald.arcRadius;
   const stroke = resultPresentation.emerald.arcStroke;
   const circumference = 2 * Math.PI * radius;
   const rated = kind === 'scored' && typeof value === 'number' && Number.isFinite(value);
   const neutral = dark ? resultPresentation.emerald.discNeutral.dark : resultPresentation.emerald.discNeutral.light;
+  const scoreLabel = rated ? `${value}/100. ${label || ''}`.trim() : title || '';
   return (
-    <View
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={onPress ? `${scoreLabel}. ${t('result.legalDataLimitationsTeaserA11y')}` : scoreLabel}
       style={[styles.disc, { width: diameter, height: diameter, borderRadius: diameter / 2 }]}
-      pointerEvents="auto"
-      onStartShouldSetResponder={() => true}
     >
       <View pointerEvents="none" accessible={false} style={StyleSheet.absoluteFillObject}>
         <Svg width="100%" height="100%" viewBox="0 0 144 144">
@@ -208,8 +217,8 @@ function Disc({ kind, value, colour, label, diameter, dark }: {
       {rated ? (
         <View
           style={[styles.discCopy, { width: diameter * 0.62, height: diameter * 0.62 }]}
-          accessible
-          accessibilityLabel={`${value}/100. ${label || ''}`}
+          accessible={!onPress}
+          accessibilityLabel={onPress ? undefined : `${value}/100. ${label || ''}`}
         >
           <Text
             style={[styles.score, { color: colour, fontSize: Math.min(32, Math.round(diameter * 0.28)), lineHeight: Math.min(36, Math.round(diameter * 0.3)) }]}
@@ -238,7 +247,7 @@ function Disc({ kind, value, colour, label, diameter, dark }: {
       ) : kind === 'checking' ? (
         <Text style={[styles.checking, { color: neutral }]}>—</Text>
       ) : null}
-    </View>
+    </Pressable>
   );
 }
 
@@ -250,6 +259,7 @@ export default function EmeraldScoreComposition({
   title,
   explanation,
   pillars,
+  onScorePress,
   dark = false,
 }: Props) {
   const { width: windowWidth, fontScale: windowFontScale } = useWindowDimensions();
@@ -274,37 +284,18 @@ export default function EmeraldScoreComposition({
   const ink = dark ? resultPresentation.emerald.ink.dark : resultPresentation.emerald.ink.light;
   const muted = dark ? resultPresentation.emerald.muted.dark : resultPresentation.emerald.muted.light;
   const card = dark ? resultPresentation.emerald.card.dark : resultPresentation.emerald.card.light;
-  const disc = <Disc kind={kind} value={publishedScore} colour={scoreColour} label={scoreLabel} diameter={discSize} dark={dark} />;
-  const branch = reflow ? 'stacked' : 'overlay';
-
-  useEffect(() => {
-    if (!__DEV__ || measured <= 0) return;
-    const socketRadius = discSize / 2 + 4;
-    const nameLine = resultPresentation.emerald.type.pillarNameLine;
-    const valueLine = resultPresentation.emerald.type.pillarValueLine;
-    const textCenterY = tileHeight - 12 - (nameLine + valueLine) / 2;
-    const dy = textCenterY - gridHeight / 2;
-    let facingInset = 12;
-    if (!reflow && Math.abs(dy) < socketRadius) {
-      const reach = Math.sqrt(socketRadius * socketRadius - dy * dy);
-      const edge = measured / 2 + reach;
-      const overlap = edge - (tileWidth + gap);
-      facingInset = Math.max(12, Math.round(overlap + 16));
-    }
-    console.log('[emerald-layout]', JSON.stringify({
-      windowWidth,
-      fontScale: Math.round(fontScale * 1000) / 1000,
-      gridWidth: Math.round(measured),
-      branch,
-      tileWidth,
-      tileHeight,
-      discSize,
-      contentBox: 'bottom',
-      contentInset: facingInset,
-      contentWidth: tileWidth - 12 - facingInset,
-    }));
-  }, [branch, discSize, fontScale, gap, gridHeight, measured, reflow, tileHeight, tileWidth, windowWidth]);
-
+  const disc = (
+    <Disc
+      kind={kind}
+      value={publishedScore}
+      colour={scoreColour}
+      label={scoreLabel}
+      title={title}
+      diameter={discSize}
+      dark={dark}
+      onPress={onScorePress}
+    />
+  );
   return (
     <View
       onLayout={(e) => {

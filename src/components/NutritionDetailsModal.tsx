@@ -117,7 +117,7 @@ export default function NutritionDetailsModal({
 
   const levelLabel = (level: string) => {
     if (level === 'low') return t('nutrition.levelBadgeLow', 'Low');
-    if (level === 'moderate') return t('nutrition.levelBadgeModerate', 'Moderate');
+    if (level === 'moderate') return t('nutrition.levelBadgeModerate', 'Mid');
     if (level === 'high') return t('nutrition.levelBadgeHigh', 'High');
     return '—';
   };

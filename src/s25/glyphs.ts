@@ -22,7 +22,7 @@ const GLYPH_MAP: Record<string, IoniconName> = {
 };
 
 /** Result card additive-count glyph — neutral, same family as source/preparation icons. */
-export const S25_ADDITIVE_COUNT_GLYPH: IoniconName = 'beaker-outline';
+export const S25_ADDITIVE_COUNT_GLYPH: IoniconName = 'eyedrop-outline';
 
 export function glyphForSourceProfile(glyphKey: string): IoniconName {
   return GLYPH_MAP[glyphKey] ?? 'ellipse-outline';

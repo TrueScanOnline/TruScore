@@ -30,7 +30,7 @@ import { useScanStore } from '../../src/store/useScanStore';
 import { useFavoritesStore } from '../../src/store/useFavoritesStore';
 import { useSubscriptionStore } from '../../src/store/useSubscriptionStore';
 import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
-import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import TruScore from '../../src/components/TruScore';
 import ConfidenceBadge from '../../src/components/ConfidenceBadge';
 import CountryFlag from '../../src/components/CountryFlag';
@@ -263,24 +263,30 @@ function ResultIngredientsSection({
         <Text style={[styles.ingredientsText, { color: colors.text }]}>{filled}</Text>
         {novaGroup ? (
           <View style={[styles.novaContainer, { borderTopColor: colors.border }]}>
-            <TouchableOpacity
-              style={styles.novaHeader}
-              onPress={onOpenProcessingLevel}
-              activeOpacity={0.7}
-            >
+            <View style={styles.novaHeader}>
               <Text style={[styles.novaLabel, { color: emerald.ink }]}>{t('result.processingLevel')}:</Text>
-              <Ionicons name="information-circle-outline" size={20} color={emerald.action} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onShareProcessing}
+                style={styles.shareButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel="Share processing level"
+              >
+                <Ionicons name="share-outline" size={20} color={emerald.action} />
+              </TouchableOpacity>
+            </View>
             <View style={styles.novaContent}>
               <Text style={[styles.novaValue, { color: novaColor }]}>
                 NOVA {novaGroup} ({t(`nova.${novaGroup}`)})
               </Text>
               <TouchableOpacity
-                onPress={onShareProcessing}
+                onPress={onOpenProcessingLevel}
                 style={styles.shareButton}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel={t('result.processingLevel')}
               >
-                <Ionicons name="share-outline" size={20} color={emerald.action} />
+                <Ionicons name="information-circle-outline" size={20} color={emerald.action} />
               </TouchableOpacity>
             </View>
           </View>
@@ -356,7 +362,6 @@ function ResultScreenContent() {
   const scoreDiagnosticsEnabled = useSettingsStore((s) => s.scoreDiagnosticsEnabled);
   const showScoreDiagnostics = shouldShowScoreDiagnosticsEntry(scoreDiagnosticsEnabled);
   const { isOffline } = useNetworkStatus();
-  const insets = useSafeAreaInsets();
   const alertsPreferences = useAlertsStore();
   const scanIdRef = useRef<string>(generateScanId());
   const lastBarcodeForScan = useRef<string | null>(null);
@@ -370,19 +375,7 @@ function ResultScreenContent() {
   
   // The tab bar is in the navigator layout, above which this scene already ends.
   // Reserving tabBarHeight again left a green band. Keep a small clearance only.
-  const tabBarHeight = 60 + insets.bottom;
   const scrollPaddingBottom = 16;
-  const spacingLogged = useRef(false);
-  useEffect(() => {
-    if (!__DEV__ || spacingLogged.current) return;
-    spacingLogged.current = true;
-    console.log('[result-scroll]', JSON.stringify({
-      tabBarHeight,
-      insetBottom: insets.bottom,
-      paddingBottom: scrollPaddingBottom,
-      safeAreaEdges: 'top',
-    }));
-  }, [insets.bottom, scrollPaddingBottom, tabBarHeight]);
 
   const hasAlertsMasterEnabled =
     alertsPreferences.geopoliticalEnabled ||
@@ -1846,7 +1839,7 @@ function ResultScreenContent() {
           </View>
         )}
 
-        {/* TruScore Card - v1.4. W3-S27 only via info glyph; Confidence badge opens W3-S26. */}
+        {/* TruScore Card. The score and info control open the same data-limitations card. */}
         {truScore ? (
           <>
           <EmeraldScoreFrame
@@ -1854,13 +1847,11 @@ function ResultScreenContent() {
             dark={!!darkMode}
             infoControl={
               <TouchableOpacity
-                onPress={() => {
-                  setTruScoreModalVisible(true);
-                }}
+                onPress={() => setS26OpenRequestKey((k) => k + 1)}
                 style={styles.infoButton}
                 hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
                 accessibilityRole="button"
-                accessibilityLabel="Understanding Rveel Score"
+                accessibilityLabel={t('result.legalDataLimitationsTeaserA11y')}
               >
                 <Ionicons name="information-circle-outline" size={22} color={emerald.action} />
               </TouchableOpacity>
@@ -1883,6 +1874,7 @@ function ResultScreenContent() {
             size="medium"
             layout="emerald"
             onPillarPress={scoreHighlights ? openScoreHighlightsPillar : undefined}
+            onScorePress={() => setS26OpenRequestKey((k) => k + 1)}
             publicationSettled={publicationSettled}
           />
 
@@ -2780,6 +2772,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
     gap: 8,
     alignSelf: 'stretch',
   },

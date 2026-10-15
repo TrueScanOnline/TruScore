@@ -45,7 +45,12 @@ export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) 
         <Text style={[styles.headerText, { color: emerald.ink }]}>Did You Know?</Text>
       </View>
 
-      <ScrollView style={styles.alertsList} showsVerticalScrollIndicator={false} nestedScrollEnabled>
+      <ScrollView
+        style={styles.alertsList}
+        nestedScrollEnabled
+        showsVerticalScrollIndicator
+        persistentScrollbar
+      >
         {alerts.map((alert, index) => {
           const category = consumerSignalCategoryLabel(alert.signalClass);
           const AlertContainer = alert.actionUrl ? TouchableOpacity : View;

@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { S25_ADDITIVE_COUNT_GLYPH } from '../s25/glyphs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   COLOUR_ADDITIVE_IDS,
@@ -387,7 +388,7 @@ export default function AboutTheseAdditivesModal({
             ) : (
               <View style={styles.headerBtnSpacer} />
             )}
-            <Ionicons name="beaker-outline" size={22} color={colors.primary} />
+            <Ionicons name={S25_ADDITIVE_COUNT_GLYPH} size={22} color={colors.primary} />
             <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={2}>
               {title}
             </Text>

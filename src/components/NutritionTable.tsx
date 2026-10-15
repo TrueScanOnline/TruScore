@@ -171,7 +171,7 @@ const NutritionTable = React.memo(function NutritionTable({
         <View style={styles.titleContainer}>
           <View style={styles.titleLeft}>
             <Ionicons name="nutrition" size={24} color={emerald.action} />
-            <Text style={[styles.title, { color: emerald.ink, marginLeft: 8 }]}>{cardTitle}</Text>
+            <Text style={[styles.title, { color: emerald.ink, marginLeft: 8, flexShrink: 1 }]} numberOfLines={2}>{cardTitle}</Text>
           </View>
           <View style={styles.headerButtons}>
             {onEdit && (
@@ -246,7 +246,7 @@ const NutritionTable = React.memo(function NutritionTable({
 
   const levelBadgeLabel = (level: 'low' | 'moderate' | 'high') => {
     if (level === 'low') return t('nutrition.levelBadgeLow', 'Low');
-    if (level === 'moderate') return t('nutrition.levelBadgeModerate', 'Moderate');
+    if (level === 'moderate') return t('nutrition.levelBadgeModerate', 'Mid');
     return t('nutrition.levelBadgeHigh', 'High');
   };
 
@@ -325,7 +325,7 @@ const NutritionTable = React.memo(function NutritionTable({
           accessibilityLabel={t('nutrition.openDetailsA11y', 'Open nutrition details')}
         >
           <Ionicons name="nutrition" size={24} color={emerald.action} />
-          <Text style={[styles.title, { color: emerald.ink, marginLeft: 8 }]}>{cardTitle}</Text>
+          <Text style={[styles.title, { color: emerald.ink, marginLeft: 8, flexShrink: 1 }]} numberOfLines={2}>{cardTitle}</Text>
         </Pressable>
         <View style={styles.headerButtons}>
           {onEdit && (
@@ -557,12 +557,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   titleLeft: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 8,
   },
   headerButtons: {
     flexDirection: 'row',
-    gap: 8,
+    flexShrink: 0,
+    gap: 4,
     alignItems: 'center',
   },
   editButton: {

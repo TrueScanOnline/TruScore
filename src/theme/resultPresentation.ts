@@ -101,7 +101,7 @@ export const resultPresentation = {
     chevronCircle: { light: '#D7F6EC', dark: '#1E4A40' },
     radius: { card: 20, tile: 22, photo: 12, teaser: 18 },
     space: { page: 16, card: 12, pad: 12, scrollTop: 8, photoPad: 10 },
-    identity: { minHeight: 92, photo: 72, name: 16, nameLine: 21, brand: 13, brandLine: 18 },
+    identity: { minHeight: 164, photo: 144, name: 32, nameLine: 42, brand: 13, brandLine: 18 },
     score: { title: 20, titleLine: 26, reserve: 12 },
     /** Roles at font scale 1.0. System text scaling still applies. */
     type: {

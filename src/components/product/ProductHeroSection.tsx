@@ -232,7 +232,10 @@ export default function ProductHeroSection({
           },
         ]}
       >
-        {photo}
+        <View style={styles.photoRow}>
+          {photo}
+          {actions ? <View style={styles.actions}>{actions}</View> : null}
+        </View>
         <View style={styles.identityCopy}>
           <Text
             style={[styles.productName, { color: tone.ink }]}
@@ -291,7 +294,6 @@ export default function ProductHeroSection({
             </View>
           ) : null}
         </View>
-        {actions ? <View style={styles.actions}>{actions}</View> : null}
       </View>
 
       {hasUrl && imageUrl ? (
@@ -312,9 +314,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   identityCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
     padding: resultPresentation.emerald.space.photoPad,
     minHeight: resultPresentation.emerald.identity.minHeight,
     borderTopLeftRadius: 18,
@@ -323,6 +322,12 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 28,
     borderWidth: StyleSheet.hairlineWidth,
   },
+  photoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -330,9 +335,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   identityCopy: {
-    flex: 1,
+    marginTop: 8,
     minWidth: 0,
-    justifyContent: 'center',
   },
   photo: {
     width: PHOTO,
