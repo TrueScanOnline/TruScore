@@ -11,207 +11,170 @@ Corrective-package acceptance and BC remain **open**. Certifications and Packagi
 | Role | Full SHA |
 | --- | --- |
 | Baseline B0 | `99102768b61bd6e518bb889e3ab6f01dfc3e1268` |
-| **Original review checkpoint (preserve)** | `a7e8cf476911b656f67f62622fbfc77d466049b8` |
+| Original review checkpoint (preserve) | `a7e8cf476911b656f67f62622fbfc77d466049b8` |
 | Phone UAT + type-diagnostic replacement | `c6bb681b05dcd3473224d7117980d33950ebbe6c` |
-| Docs for that replacement | `7f6c576ea825771a5e81a4fb9bcbf46165674993` |
-| **Final tested candidate (regression closure)** | `51c6c77d8bbac5aa0eece830524203a35d8e457d` |
-| This consolidated handoff (docs) | _(remote tip after this docs commit)_ |
-| Return branch | `preserve/pre-wave5-9910276-20261008` = B0 |
+| Prior regression-closure candidate | `51c6c77d8bbac5aa0eece830524203a35d8e457d` |
+| Prior consolidated docs tip | `ff9d627b8370c30b644709ed53d6e1f40e812a96` |
+| **Final tested source (this freeze)** | `6236a36dfce6005f3540c2caec469a8bdc151537` |
+| This handoff (docs tip) | _(filled after this docs commit)_ |
+| Return branch | `preserve/pre-wave5-9910276-20261008` = B0 (unchanged) |
 
 Repository: https://github.com/TrueScanOnline/TruScore  
 Branch: `wave5/score-experience-20261008`
 
-**Pushed confirmation (verified with `git fetch`):** `a7e8cf4`, `c6bb681`, and `7f6c576` are on `origin/wave5/score-experience-20261008`. The final tested and docs SHAs above are filled after the commits in this consolidated pass; remote HEAD is the documentation tip.
+Prior candidate → tested source:  
+https://github.com/TrueScanOnline/TruScore/compare/51c6c77d8bbac5aa0eece830524203a35d8e457d...6236a36dfce6005f3540c2caec469a8bdc151537
 
-Focused comparison (phone UAT replacement vs original checkpoint):  
-https://github.com/TrueScanOnline/TruScore/compare/a7e8cf476911b656f67f62622fbfc77d466049b8...c6bb681b05dcd3473224d7117980d33950ebbe6c
+B0 → tested source:  
+https://github.com/TrueScanOnline/TruScore/compare/99102768b61bd6e518bb889e3ab6f01dfc3e1268...6236a36dfce6005f3540c2caec469a8bdc151537
 
-Final tested candidate vs original checkpoint:  
-https://github.com/TrueScanOnline/TruScore/compare/a7e8cf476911b656f67f62622fbfc77d466049b8...51c6c77d8bbac5aa0eece830524203a35d8e457d
-
-B0 → final tested candidate:  
-https://github.com/TrueScanOnline/TruScore/compare/99102768b61bd6e518bb889e3ab6f01dfc3e1268...51c6c77d8bbac5aa0eece830524203a35d8e457d
-
-Reviewers who want only tested code: check out `51c6c77d8bbac5aa0eece830524203a35d8e457d` (includes `c6bb681` plus §10.2 oracle, §10.4 allowlist cleanup, and R-2/R-4/R-9/R-10 evidence).
+Reviewers who want only tested application code: check out `6236a36dfce6005f3540c2caec469a8bdc151537`.
 
 ---
 
-## 2. Behavioural significance of the follow-up fixes
+## 2. Summary of founder’s latest changes (after `51c6c77`)
 
-The follow-up is **not** type-only. Classification and behavioural evidence:
+All classified **GREEN** presentation / Result consumption wiring. No governed score math, publication, or authority admission changes.
 
-### Snapshot null guard — GREEN (fail-closed Result reassessment)
+### Live app (integrated; not concept-only)
 
-- **Change:** `onSharedEvidenceAdmitted` returns when `!snapshot` before reading `generatedAt` or calling `calculateTrustScore`.
-- **Control:** Result contribution acknowledgement / reassessment latch.
-- **Before:** a null snapshot would throw when reading `snapshot.generatedAt`, leaving reassessment undefined.
-- **After:** marks `result_applied: none` and returns. No score recalculation without an authoritative snapshot.
-- **Evidence:** type of `onSharedEvidenceAdmitted?: (snapshot: SharedEvidenceSnapshot | null, …)` in `PacketContributionModal`; guard in `app/result/[barcode].tsx`.
+| Area | Change |
+| --- | --- |
+| Hero identity | Heading above photo; favourites/share top-right of card |
+| Score medallion | Visible `/100` removed; number + rating band only |
+| Score info (`i`) | Opens **Understanding Rveel Score** (`TruScoreInfoModal` / S27). Score disc and Confidence still open Data Limitations (S26) |
+| Nutrition / Feel the Burn | Thin green border; heading size aligned with other cards |
+| Ingredients | Edit pencil identical to Nutrition (same change chooser); title inline with flask icon |
+| Did You Know | External-link icon inline at end of article title; size 20 emerald; module heading + bulb icon aligned |
+| About these Additives | Modal entries: light grey fill, thicker green border, amber headings; Result card heading size aligned |
+| Card headings | Shared pattern: icon 24 beside title, fontSize 20 bold across Result section cards |
 
-### Preview `assetId` — GREEN (evidence-image projection contract)
+### §10.4 allowlist (test gate only)
 
-- **Change:** Preview carries `assetId` (same value as `tempKey` / `accepted.assetId`) so it satisfies `EvidenceSurfaceImage`.
-- **Control:** which contribution photos are visible on the open surface (`visibleEvidenceImages`).
-- **Behaviour:** capture already set `tempKey: accepted.assetId`. Filtering still uses `journeyId` / `entryContext`. Retake still keys on `tempKey`. Session asset matching still uses `preview.tempKey === asset.assetId`.
-- **Evidence:** contribution closure / Wave 4A image-asset tests remain green; projection contract in `src/evidenceImage/projection.ts`.
+Result orchestration forbidden-token hits on `app/result/[barcode].tsx` reduced **4 → 3** after removing the TruScoreInfoModal mount gate on `trust_score_breakdown`. Allowlist updated to match. Not a consumer score-colour read change.
 
-### Support narrowing (`derivedAssetId`) — GREEN (provenance for region crops)
+### Screenshots committed for review
 
-- **Change:** bind `const support = unit.support` before resolving region derived assets.
-- **Control:** evidence fact provenance (`derivedAssetId`, region box) for `coverage: 'region'`.
-- **Behaviour:** same runtime values; TypeScript can see `derivedAssetId` only on the region member. Whole-image coverage still omits `derivedAssetId`.
-- **Evidence:** `wave4aSharedAuthority` region / crop cases pass.
+Under `design/wave5/`: `APP-emerald-*.png`, `app-result-*.png`, `signature-*.png`, `rveel-signature.html`.
 
-### Removed nutrient `unknown` branch — GREEN (dead path after v0.2)
+**Deliberately excluded (untracked):** `design/wave5/metro-phone-qr.png`, `design/wave5/metro-qr.png` (local Metro QR artefacts).
 
-- **Change:** remove `productClass === 'unknown' → servingUsableForClass = false`.
-- **Control:** large-portion / per-serve usability in `assessGovernedNutrients`.
-- **Behaviour:** `simulateV02FoodDrinkClass` returns only `'food' | 'drink'`. The unknown branch was unreachable. Food/drink unit mismatch handling is unchanged.
-- **Evidence:** nutrition / rateability suites that exercise Food/Drink classification remain green.
+### Docs-only between `51c6c77` and this freeze
 
-### `packet_claims` community-verification union — GREEN type alignment with live Wave 4A behaviour (AMBER note on policy shape)
-
-- **Change:** `getCommunityVerificationPolicy` / `getCommunityVerificationThresholds` and `buildEvidenceId` accept `packet_claims`. Packet claims continue to use the **certifications** threshold shape (two disputes → `review_required`, no automatic withdrawal). Documented that `packetClaims` policy has no own dispute slice yet.
-- **Control:** confirm / dispute / evidence-id identity for packet claims.
-- **Behaviour:** matches prior JavaScript runtime (non-origins domains already fell through to certifications thresholds). Lifecycle early-return for `packet_claims` was **attempted and reverted** because it broke Wave 4A disputes.
-- **Evidence:** `wave4aSharedAuthority` — “rejects self-confirmation and marks review_required after two disputes without withdrawing” **passes**. Contribution closure and integration closure pass.
-- **Open for review:** whether packet claims should eventually own an explicit dispute slice instead of inheriting certifications thresholds (question below). Not a silent behaviour change in this follow-up.
-
-### Phone UAT designation — GREEN (configuration)
-
-- **Change:** `WAVE5_PHONE_UAT_EAS_PROFILES`, agreement assert, preflight extension. Legacy flag profiles named but not deleted.
-- **Behaviour:** no consumer runtime change; rejects phone UAT profiles whose backend and authority disagree.
+`ff9d627` — prior consolidated handoff (no app code).
 
 ---
 
-## 3. Regression evidence
+## 3. Changed screens, components and governed boundaries
 
-### Compact suite map (§10.3)
+**Screens / surfaces:** Result (`app/result/[barcode].tsx`) and Result-owned cards/modals listed above.
 
-| Suite | Status at `51c6c77` | Notes |
-| --- | --- | --- |
-| **R-1** Pillar scores | Pass (body/planet/ethics/open + golden/phase6 earlier) | |
-| **R-2** Ledger | **Pass** — `expectPillarLedgerReconciles` in body/planet/ethics/open pillar suites | |
-| **R-3** NR/Rated/Checking | Pass — `wave3Rateability.fixtures`, `wave3UatNarrowCorrection`, `resultPublicationLoadGuard` | |
-| **R-4** Confidence | **Pass** — `sourceQuality.test.ts` + rateability confidence fixtures | |
-| **R-5** Overall publication | **Covered** by rateability O-01…O-04 and engine wiring (`publicationSettled=false` → checking) | Not omitted |
-| **R-6** Prevailing / withdrawal | **Covered** by `wave4aSharedAuthority` (supersede, withdraw, no-resurrection, UAT/production env) | Not omitted |
-| **R-7** Contribution opportunity | Pass — consumer journeys / contribution closure / integration | |
-| **R-8** Admission | Pass — Wave 4A shared authority (25) | |
-| **R-9** Entity / chaining | **Pass** — `chainingArchitectureBoundary`, `resolveSharedIdentityContext`, workstream A scaffold | |
-| **R-10** Signals | **Pass** — `signalRenderMapping`, `scanResultPresentation`, `na022`, Asset v0.2/v0.3, result isolation, Wave 3 chaining integration | |
-| **R-11** Share | Pass — NA-018 + C-1 share framing | |
-| **R-12 / R-13** | **Excluded** | Certifications / Packaging pending |
+**Components:** `ProductHeroSection`, `EmeraldScoreComposition`, `NutritionTable`, `BannerAlertsCard`, `AboutTheseAdditivesCard`, `AboutTheseAdditivesModal`, `ProductDataLimitationsCard` (heading size only).
 
-Latest closed batch: **22 suites / 340 tests** including new §10.2 oracle and updated §10.4 gate. `tsc --noEmit` exit **0**. Preflight Asset + phone UAT agreement: **pass**.
+**Governed boundaries preserved:**
 
-### §10.2 governed-outcome oracle
-
-New file: `src/__tests__/unit/wave5/governedOutcomeOracle.section10_2.test.ts`.
-
-- Deterministic fixtures via `calculateTruScore` / publication / share / contribution actions.
-- **B0-invariant** section: checking latch, Body NR/Rated shapes, Overall NR when any pillar NR.
-- **Approved C-1–C-4** section: Checking/NR never paint or share an overall number; Highlights use published pillar scores only; contribution invitations stay false until settled.
-- Does **not** regenerate a golden blob to force a pass; assertions name the approved corrective outcomes explicitly.
-
-### §10.4 guard — remaining limitations (precise)
-
-Still a **partial** gate. After this follow-up:
-
-**Still covered:** forbidden-token counts (minus named §8 dormant TruScoreCards), score-adjacent `??0`/`||0` on one line, direct `app/` bodyShadow / `features/product` strings, MVP gates, Palm Oil flag, H-13 file presence.
-
-**Allowed hits retained (justified):**
-
-| File | Count | Why kept |
-| --- | --- | --- |
-| `app/result/[barcode].tsx` | 4 | Orchestration: `trust_score_breakdown` when assembling consumer `TruScoreResult`; `ecoscore_grade` as one presence check among many. Not score-band colour. |
-| `TrustScoreInfoModal.tsx` | 1 | Methodology prose mentioning `ecoscore_grade`. Not a consumer colour read. |
-
-**Removed from ALLOWED_HITS (obsolete for live presentation):**
-
-- `src/features/product/components/TruScoreCard.tsx`
-- `src/features/product/cards/TruScoreCard/TruScoreCard.tsx`
-
-Doctrine §8 lists the legacy product feature tree as unreachable. Those paths are now `DORMANT_FORBIDDEN_EXCLUSIONS` (still must exist; must not re-enter the live allowlist).
-
-**Still not covered by §10.4:**
-
-- Full §5.1 forbidden-import allowlist across presentation.
-- Transitive dormant reachability (e.g. ShareModal → ShareContentBuilder ecoscore branch).
-- Score defaults via intermediate variables / other lines; `src/utils` / `src/lib` (e.g. shareAnalytics `truScore || 0`).
-- H-13 assertion content (presence only).
-- `.breakdown.` used for display; S28 as a separate exclusion.
+- UI still consumes publication / contribution actions via existing Result contracts (§5).
+- Score disc / Confidence → S26; info glyph → S27 (founder override of the earlier “both open S26” note in `ff9d627`).
+- Contribution add/change routes unchanged; Ingredients pencil reuses the existing Nutrition change chooser.
+- No reactivation of dormant §8 surfaces; Certifications / Packaging still excluded.
+- Shared Emerald theme tokens retained (`resultPresentation` / `resultEmeraldTone`).
 
 ---
 
-## 4. Configuration evidence (phone UAT)
+## 4. Effective testing-profile configuration
 
-**Designated profiles only:** `uat-dynamic-signals-ios`, `uat-dynamic-signals-android`.
+**Designated phone-testing profiles (confirmed):** `uat-dynamic-signals-ios`, `uat-dynamic-signals-android`.
 
 | | iOS UAT | Android UAT |
 | --- | --- | --- |
-| Profile | `uat-dynamic-signals-ios` | `uat-dynamic-signals-android` |
-| Distribution | store (TestFlight path) | internal APK |
+| Profile | `uat-dynamic-signals-ios` (extends `preview`) | `uat-dynamic-signals-android` (extends `preview-apk`) |
+| App version | `10.0.0` | `10.0.0` |
+| Bundle / package | `com.truescan.foodscanner` | `com.truescan.foodscanner` |
+| Distribution | store (TestFlight-compatible) | internal APK |
 | Backend | `https://truscoreapi-uat.vercel.app` | same |
 | Authority env | `uat` | `uat` |
-| Live authority GET | `{"success":true,"authorityEnv":"uat"}` | same host |
+| Live authority GET | HTTP 200, `authorityEnv: uat` | same host |
 | Asset / recall / skeleton | 1 / 1 / 0 | 1 / 1 / 0 |
 | Score diagnostics | 1 | 1 |
 | Store release | 0 | 0 |
 | Build identity in profile | iOS buildNumber **60** | Android versionCode **34** |
-| Package / bundle | `com.truescan.foodscanner` | same |
-| Updates | disabled; no runtimeVersion; no channel; no update URL | same |
+| Updates | `app.config.js` `updates.enabled: false`; no runtimeVersion / channel / update URL | same |
+| Standalone | Release native builds; no Metro required | APK standalone |
 
-**Build-number suitability:** last founder contribution release markers on this branch used iOS **59** / Android **33** (`da8a474`). Profile values **60** / **34** are the next increments in-repo. Whether those numbers are free in App Store Connect / Play Console is **unverified** (account evidence unavailable). Do not treat in-repo next-number as store confirmation.
+**app.config.js fallbacks (not phone UAT overrides):** versionCode **13**, buildNumber **26** when EAS env unset.
 
-**Legacy (not phone-testing):** `uat-ios-flag-off` / `uat-ios-flag-on` (recall path 0, production backend).  
-**Production profiles:** not repurposed. Production `https://truscoreapi.vercel.app/api/evidence-authority` remains **NOT_FOUND** — recorded as a **production-release** issue. It does **not** block correctly configured UAT phone testing.
+**Metro / Expo Go (NZ local) ≠ EAS:** `.env.development` sets `EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV=uat`; local `.env` sets production `EXPO_PUBLIC_BACKEND_URL`. Production `…/api/evidence-authority` remains **404**. Packet Claims submit on Expo Go with that pairing remains fail-closed (recorded earlier). Phone UAT EAS profiles agree on UAT backend + authority.
 
----
+**Production profiles:** unchanged. Not repurposed for Wave 5 phone UAT.
 
-## 5. Founder authorisation (destination + Mid)
-
-Recorded founder instructions in the Wave 5 working session (editorial passes after `d0b0166`):
-
-1. **Score / info → Data limitations:** “RVEEL SCORE card = make the 'score' and/or the '? question mark' button to be a link to be same as the INCOMPLETE PRODUCT DATA card.”  
-   Prior behaviour at `d0b0166`: info glyph opened W3-S27 (`TruScoreInfoModal` via `setTruScoreModalVisible(true)`). Incomplete product data already used `setS26OpenRequestKey`.  
-   Current: score `onScorePress` and info glyph both use `setS26OpenRequestKey`.
-
-2. **LEVEL “Mid”:** “change the LEVEL displayed as an orange colour Moderate to read as Mid” (colour/location/size unchanged). Confidence “Moderate confidence” unchanged.  
-   Implemented in `en.json` `levelBadgeMed` / `levelBadgeModerate` and NutritionTable / NutritionDetailsModal English fallbacks.
-
-Restoration is not recommended unless founders reverse those instructions.
+**Build-number availability vs App Store Connect / Play Console:** in-repo next increments only; store/console free-number check **unverified**.
 
 ---
 
-## 6. Remaining material issues
+## 5. Commands executed and results (against `6236a36`)
 
-1. Corrective-package **acceptance** and **BC** still open (C-1–C-4 tests pass; founders have not closed the package).
-2. §10.4 remains partial (limitations above). Orchestration allowlist entries in Result and TrustScoreInfoModal prose remain.
-3. Production evidence-authority route missing (production-release blocker, not UAT phone blocker).
-4. `development` EAS profile still expects `uat` authority against the production backend default (not a phone-testing profile).
-5. Result acknowledgement after admitted evidence still unverified (no evidence submitted).
-6. Packet claims still inherit certifications community-verification thresholds — confirm or schedule an explicit dispute slice.
-7. Certifications / Packaging suites excluded.
-8. Build creation pending review authorisation. ASC/Play free build numbers unverified.
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` (`tsc --noEmit`) | exit **0** |
+| `npm run preflight:mvp-release-asset` | OK — 7 MVP Asset profiles; 2 phone UAT profiles agree |
+| `governedOutcomeOracle.section10_2.test.ts` | Pass |
+| `consumptionGuards.section10_4.test.ts` | Pass (allowlist 3) |
+| `wave4a5ResultSurface.contract.test.ts` | Pass |
+| `nutritionTablePresentation.contract.test.ts` | Pass |
+| `mvpReleaseDynamicSignalsAsset.test.ts` | Pass |
+| null-score path + integrity | Pass |
+| contribution consumer / closure / integration | Pass |
+| `wave4aSharedAuthority` | Pass (25) |
+| NA-018 share authority | Pass |
+| `correctivePackage.c1c4` | Pass |
+| rateability fixtures + UAT narrow + sourceQuality | Pass |
+| scanResultPresentation + na022 | Pass |
+| body/planet/ethics/open pillars | Pass |
+| chainingArchitectureBoundary + resolveSharedIdentityContext | Pass |
+
+**Limitations:** no device/UI screenshot automation of the latest editorial pixels in CI; no live contribution admission UAT on this freeze; Certifications/Packaging suites excluded; ASC/Play build-number free check not run; no EAS build started.
 
 ---
 
-## 7. Evidence required for corrective acceptance / BC
+## 6. Remaining defects, unverified behaviour and exclusions
 
-Per Master Plan §3 / §15 and doctrine §14:
-
-- Founder consolidated review that accepts each C-1–C-4 required outcome independently.
-- Record the accepted package full SHA as **BC** (presentation comparison checkpoint), keeping intended corrective differences from B0.
-- Do **not** treat `d5a7955` (SCR-RESULT visual only), `a7e8cf4`, `c6bb681`, or this docs tip as BC.
-- Pending certification and packaging suites must not be reported as passed when recording BC.
+1. Corrective-package **acceptance** and **BC** still open.
+2. §10.4 remains a **partial** gate (orchestration allowlist 3 + TrustScoreInfoModal prose 1; dormant exclusions; no full §5.1 import allowlist).
+3. Production evidence-authority route missing (production-release issue; not a correctly configured UAT phone blocker).
+4. `development` EAS profile still pairs `authorityEnv=uat` with production backend default when URL unset (not a phone-testing profile).
+5. Expo Go Metro backend/authority mismatch can block Packet Claims submit (local env; not EAS UAT).
+6. Result acknowledgement after admitted evidence still unverified end-to-end.
+7. Packet claims still inherit certifications community-verification thresholds.
+8. Certifications / Packaging excluded.
+9. Build creation pending separate founder authorisation after independent review.
 
 ---
 
-## 8. Questions for independent review
+## 7. Corrective-package acceptance and BC status
 
-1. Accept `c6bb681` as the tested replacement for the original `a7e8cf4` checkpoint while keeping `a7e8cf4` in history?
-2. Confirm iOS 60 / Android 34 once ASC/Play availability is verified.
-3. Confirm packet_claims → certifications threshold shape, or require an explicit dispute slice before BC?
-4. Confirm Result orchestration allowlist (4) and TrustScoreInfoModal prose (1) may remain until a later AMBER cleanup?
-5. Authorise UAT native builds only after this review — still no build from this handoff.
+**Open.** C-1–C-4 automated outcomes pass on the tested source. Founders have not closed the package or recorded BC.
+
+Do **not** treat `d5a7955` (SCR-RESULT visual), `a7e8cf4`, `c6bb681`, `51c6c77`, `6236a36`, or this docs tip as BC.
+
+---
+
+## 8. Certifications / Packaging status
+
+**Excluded** from Wave 5 acceptance claims (R-12 / R-13). Do not report those suites as passed when recording BC.
+
+---
+
+## 9. Questions for independent assessment
+
+1. Accept `6236a36` as the freeze replacing prior tested candidate `51c6c77` while keeping earlier checkpoints in history?
+2. Confirm score **info (`i`) → S27** while disc/Confidence remain on S26 matches founder intent for production UAT?
+3. Confirm iOS buildNumber **60** / Android versionCode **34** once ASC/Play availability is verified?
+4. Confirm packet_claims → certifications threshold shape, or require an explicit dispute slice before BC?
+5. Confirm Result orchestration allowlist (3) and TrustScoreInfoModal prose (1) may remain until a later AMBER cleanup?
+6. Authorise UAT native builds only after this review — still no build from this handoff.
+
+---
+
+## 10. Actions not taken
+
+No EAS builds, store submissions, TestFlight uploads, OTA publishes, backend deployments, or release merges were started from this freeze.
