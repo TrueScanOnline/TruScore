@@ -124,7 +124,7 @@ export default function AboutTheseAdditivesCard({ count, onPress }: AboutTheseAd
     >
       <View style={styles.row}>
         <View style={styles.left}>
-          <Ionicons name={S25_ADDITIVE_COUNT_GLYPH} size={28} color={emerald.action} />
+          <Ionicons name={S25_ADDITIVE_COUNT_GLYPH} size={24} color={emerald.action} />
           <View style={styles.textCol}>
             <Text style={[styles.title, { color: emerald.ink }]}>{title}</Text>
             <AdditiveCountReveal count={count} />
@@ -159,8 +159,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   countBlock: {
     flexDirection: 'row',

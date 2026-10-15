@@ -42,6 +42,7 @@ export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) 
       accessibilityLabel="did-you-know-module"
     >
       <View style={styles.header}>
+        <Ionicons name="bulb-outline" size={24} color={emerald.action} />
         <Text style={[styles.headerText, { color: emerald.ink }]}>Did You Know?</Text>
       </View>
 
@@ -93,17 +94,15 @@ export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) 
                     <Text style={[styles.categoryBadgeText, { color: dyk.charcoal }]}>{category}</Text>
                   </View>
                 ) : null}
-                <View style={styles.alertTitleRow}>
-                  <Text style={[styles.alertTitle, { color: dyk.charcoal }]}>{alert.title}</Text>
+                <Text style={[styles.alertTitle, { color: dyk.charcoal }]}>
+                  {alert.title}
                   {alert.actionUrl ? (
-                    <Ionicons
-                      name="open-outline"
-                      size={16}
-                      color={dyk.charcoal}
-                      style={styles.externalLinkIcon}
-                    />
+                    <>
+                      {'\u00A0'}
+                      <Ionicons name="open-outline" size={20} color={emerald.action} />
+                    </>
                   ) : null}
-                </View>
+                </Text>
                 <Text style={[styles.alertMessage, { color: colors.text }]}>{alert.message}</Text>
               </View>
             </AlertContainer>
@@ -125,11 +124,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     marginBottom: 12,
   },
   headerText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
+    flexShrink: 1,
   },
   alertsList: {
     maxHeight: 250,
@@ -140,14 +141,6 @@ const styles = StyleSheet.create({
   },
   alertItemWithMargin: {
     marginBottom: 16,
-  },
-  alertTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  externalLinkIcon: {
-    marginLeft: 8,
   },
   alertContent: {
     flex: 1,

@@ -200,6 +200,7 @@ function ResultIngredientsSection({
   novaGroup,
   showAddIngredients,
   onAddIngredients,
+  onEdit,
   onShareIngredients,
   onShareProcessing,
   onOpenProcessingLevel,
@@ -209,6 +210,8 @@ function ResultIngredientsSection({
   novaGroup?: number | null;
   showAddIngredients: boolean;
   onAddIngredients: () => void;
+  /** Same create-outline control as Nutrition — opens the existing change chooser. */
+  onEdit?: () => void;
   onShareIngredients: () => void;
   onShareProcessing: () => void;
   onOpenProcessingLevel: () => void;
@@ -248,8 +251,23 @@ function ResultIngredientsSection({
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
               <Ionicons name="flask" size={24} color={emerald.action} />
+              <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.ingredients')}</Text>
             </View>
             <View style={styles.cardHeaderRight}>
+              {onEdit ? (
+                <TouchableOpacity
+                  onPress={onEdit}
+                  style={styles.shareButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(
+                    'nutrition.contributeA11y',
+                    'Contribute or correct nutrition information'
+                  )}
+                >
+                  <Ionicons name="create-outline" size={20} color={emerald.action} />
+                </TouchableOpacity>
+              ) : null}
               <TouchableOpacity
                 onPress={onShareIngredients}
                 style={styles.shareButton}
@@ -259,7 +277,6 @@ function ResultIngredientsSection({
               </TouchableOpacity>
             </View>
           </View>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
         </View>
         <Text style={[styles.ingredientsText, { color: colors.text }]}>{filled}</Text>
         {novaGroup ? (
@@ -315,8 +332,23 @@ function ResultIngredientsSection({
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
               <Ionicons name="flask" size={24} color={emerald.action} />
+              <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.ingredients')}</Text>
             </View>
             <View style={styles.cardHeaderRight}>
+              {onEdit ? (
+                <TouchableOpacity
+                  onPress={onEdit}
+                  style={styles.shareButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(
+                    'nutrition.contributeA11y',
+                    'Contribute or correct nutrition information'
+                  )}
+                >
+                  <Ionicons name="create-outline" size={20} color={emerald.action} />
+                </TouchableOpacity>
+              ) : null}
               <TouchableOpacity
                 onPress={onShareIngredients}
                 style={styles.shareButton}
@@ -326,7 +358,6 @@ function ResultIngredientsSection({
               </TouchableOpacity>
             </View>
           </View>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>{t('result.ingredients')}</Text>
         </View>
         <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
           {t('result.ingredientsEmpty', 'No ingredients on file.')}
@@ -1840,7 +1871,7 @@ function ResultScreenContent() {
           </View>
         )}
 
-        {/* TruScore Card. The score and info control open the same data-limitations card. */}
+        {/* TruScore Card. Info opens How this is scored (S27); score disc / Confidence open data-limitations (S26). */}
         {truScore ? (
           <>
           <EmeraldScoreFrame
@@ -1848,11 +1879,11 @@ function ResultScreenContent() {
             dark={!!darkMode}
             infoControl={
               <TouchableOpacity
-                onPress={() => setS26OpenRequestKey((k) => k + 1)}
+                onPress={() => setTruScoreModalVisible(true)}
                 style={styles.infoButton}
                 hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
                 accessibilityRole="button"
-                accessibilityLabel={t('result.legalDataLimitationsTeaserA11y')}
+                accessibilityLabel={t('infoModal.trustScore.title', 'Understanding Rveel Score')}
               >
                 <Ionicons name="information-circle-outline" size={22} color={emerald.action} />
               </TouchableOpacity>
@@ -1923,12 +1954,12 @@ function ResultScreenContent() {
               <View style={styles.cardHeaderTop}>
                 <View style={styles.cardHeaderLeft}>
                   <Ionicons name="information-circle-outline" size={24} color={emerald.action} />
+                  <Text style={[styles.cardTitle, { color: emerald.ink }]}>
+                    {t('result.insufficientData')}
+                  </Text>
                 </View>
                 <View style={styles.cardHeaderRight} />
               </View>
-              <Text style={[styles.cardTitle, { color: emerald.ink }]}>
-                {t('result.insufficientData')}
-              </Text>
             </View>
             <Text style={[styles.insufficientDataText, { color: emerald.muted }]}>
               {t('result.insufficientDataMessage')}
@@ -1957,7 +1988,7 @@ function ResultScreenContent() {
                   onPress={() => setInsightsExpanded(!insightsExpanded)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="heart-outline" size={20} color={emerald.action} />
+                  <Ionicons name="heart-outline" size={24} color={emerald.action} />
                   <Text
                     style={[styles.insightsHeaderTitle, { color: emerald.ink }]}
                     numberOfLines={2}
@@ -2047,6 +2078,11 @@ function ResultScreenContent() {
                   novaGroup={product.nova_group}
                   showAddIngredients={contributionActions.addIngredients}
                   onAddIngredients={() => openContribution('ingredients', 'add')}
+                  onEdit={
+                    contributionActions.updateNutrition || contributionActions.updateIngredients
+                      ? () => setContributionChoice('nutrition')
+                      : undefined
+                  }
                   onShareIngredients={() => handleShare('ingredients')}
                   onShareProcessing={() => handleShare('processing')}
                   onOpenProcessingLevel={() => setProcessingLevelModalVisible(true)}
@@ -2081,7 +2117,7 @@ function ResultScreenContent() {
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
               <Ionicons name="earth" size={24} color={emerald.action} />
-              <Text style={[styles.cardTitle, { color: emerald.ink, marginLeft: 8 }]}>
+              <Text style={[styles.cardTitle, { color: emerald.ink }]}>
                 {t('result.productOrigins', 'Product Origins')}
               </Text>
             </View>
@@ -2290,10 +2326,10 @@ function ResultScreenContent() {
                 >
                   <TouchableOpacity onPress={openAllergensModal} activeOpacity={0.7}>
                   <View style={styles.cardHeader}>
-                    {/* Top line: Icons */}
                     <View style={styles.cardHeaderTop}>
                       <View style={styles.cardHeaderLeft}>
                         <Ionicons name="warning" size={24} color={hasDetected ? redColor : colors.primary} />
+                        <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.allergensAdditives')}</Text>
                       </View>
                       <View style={styles.cardHeaderRight}>
                         <TouchableOpacity
@@ -2313,8 +2349,6 @@ function ResultScreenContent() {
                         <Ionicons name="information-circle-outline" size={20} color={hasDetected ? redColor : colors.primary} />
                       </View>
                     </View>
-                    {/* Second line: Heading */}
-                    <Text style={[styles.cardTitle, { color: colors.text, marginTop: 8 }]}>{t('result.allergensAdditives')}</Text>
                   </View>
                 {product.allergens_tags && product.allergens_tags.length > 0 && (
                   <View style={[styles.warningSection, { backgroundColor: colors.error + '20' }]}>
@@ -2380,17 +2414,14 @@ function ResultScreenContent() {
       </ScrollView>
 
 
-      {/* TruScore Info Modal - Only show if we have data */}
-      {product &&
-        hasCoreTruthAuthority(product) &&
-        product.trust_score !== null &&
-        product.trust_score_breakdown && (
+      {/* How this is scored (S27) — opened from the Rveel Score info control */}
+      {product ? (
         <TruScoreInfoModal
           visible={truScoreModalVisible}
           onClose={() => setTruScoreModalVisible(false)}
           product={product}
         />
-      )}
+      ) : null}
 
       {/* S28 — route/modal guard: only when entitled + toggle On */}
       <TruScoreAnalysisModal
@@ -2959,7 +2990,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginTop: 8,
+    flexShrink: 1,
   },
   infoButton: {
     width: 40,
@@ -3574,7 +3605,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   insightsHeaderTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     flexShrink: 1,
   },

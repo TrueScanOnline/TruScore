@@ -465,7 +465,7 @@ const NutritionTable = React.memo(function NutritionTable({
 
       {showBurnStrip && burnMinutes && (
         <View
-          style={[styles.burnStrip, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          style={[styles.burnStrip, { backgroundColor: colors.surface, borderColor: emerald.action }]}
           accessibilityRole="summary"
           accessibilityLabel={t('nutrition.burnStripA11y', {
             walk: burnMinutes.walking,
@@ -474,8 +474,8 @@ const NutritionTable = React.memo(function NutritionTable({
           })}
         >
           <View style={styles.burnStripHeader}>
-            <Ionicons name="flame" size={20} color={emerald.action} accessibilityIgnoresInvertColors />
-            <Text style={[styles.burnStripTitle, { color: colors.text }]}>{t('nutrition.burnStripTitle')}</Text>
+            <Ionicons name="flame" size={24} color={emerald.action} accessibilityIgnoresInvertColors />
+            <Text style={[styles.burnStripTitle, { color: emerald.ink }]}>{t('nutrition.burnStripTitle')}</Text>
           </View>
           <Text style={[styles.burnStripSubtitle, { color: colors.textSecondary }]}>
             {t('nutrition.burnStripSubtitle')}
@@ -736,8 +736,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   burnStripTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: 'bold',
+    flexShrink: 1,
   },
   burnStripSubtitle: {
     fontSize: 13,

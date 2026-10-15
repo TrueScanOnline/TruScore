@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardTextWrap: { flex: 1 },
-  cardTitle: { fontSize: 15, lineHeight: 20, fontWeight: '700', marginBottom: 2 },
+  cardTitle: { fontSize: 20, lineHeight: 26, fontWeight: 'bold', marginBottom: 2 },
   cardSubtitle: { fontSize: 13, lineHeight: 18 },
   pillarBlock: { marginBottom: 16 },
   pillarTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },

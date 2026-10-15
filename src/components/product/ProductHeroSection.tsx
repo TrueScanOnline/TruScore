@@ -232,68 +232,68 @@ export default function ProductHeroSection({
           },
         ]}
       >
-        <View style={styles.photoRow}>
-          {photo}
+        <View style={styles.topRow}>
+          <View style={styles.identityCopy}>
+            <Text
+              style={[styles.productName, { color: tone.ink }]}
+            >
+              {productName}
+            </Text>
+            {brandText ? (
+              <Text
+                style={[styles.brand, { color: tone.muted }]}
+              >
+                {brandText}
+              </Text>
+            ) : null}
+            {!hasUrl ? (
+              <TouchableOpacity
+                onPress={onTakePhoto}
+                accessibilityRole="button"
+                accessibilityLabel={takePhotoLabel}
+                style={styles.captureLabelHit}
+              >
+                <Text style={[styles.captureImageText, { color: tone.action }]}>{takePhotoLabel}</Text>
+              </TouchableOpacity>
+            ) : null}
+            {isUserContributed && (
+              <View
+                style={[
+                  styles.userContributedBadge,
+                  { backgroundColor: colors.primary + '20', borderColor: colors.primary },
+                ]}
+              >
+                <Ionicons name={resultPresentation.icons.contributed} size={14} color={colors.primary} />
+                <Text style={[styles.userContributedText, { color: colors.primary }]}>{userContributedLabel}</Text>
+              </View>
+            )}
+            {hasUrl && loadState === 'error' ? (
+              <View>
+                <Text style={[styles.errorText, { color: tone.muted }]}>{loadErrorLabel}</Text>
+                <View style={styles.errorActions}>
+                  <TouchableOpacity
+                    onPress={handleRetry}
+                    style={[styles.retryBtn, { borderColor: tone.action }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={retryLabel}
+                  >
+                    <Text style={[styles.retryBtnText, { color: tone.action }]}>{retryLabel}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={onTakePhoto}
+                    style={[styles.retryBtn, { borderColor: tone.line }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={takePhotoLabel}
+                  >
+                    <Text style={[styles.retryBtnText, { color: tone.ink }]}>{takePhotoLabel}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : null}
+          </View>
           {actions ? <View style={styles.actions}>{actions}</View> : null}
         </View>
-        <View style={styles.identityCopy}>
-          <Text
-            style={[styles.productName, { color: tone.ink }]}
-          >
-            {productName}
-          </Text>
-          {brandText ? (
-            <Text
-              style={[styles.brand, { color: tone.muted }]}
-            >
-              {brandText}
-            </Text>
-          ) : null}
-          {!hasUrl ? (
-            <TouchableOpacity
-              onPress={onTakePhoto}
-              accessibilityRole="button"
-              accessibilityLabel={takePhotoLabel}
-              style={styles.captureLabelHit}
-            >
-              <Text style={[styles.captureImageText, { color: tone.action }]}>{takePhotoLabel}</Text>
-            </TouchableOpacity>
-          ) : null}
-          {isUserContributed && (
-            <View
-              style={[
-                styles.userContributedBadge,
-                { backgroundColor: colors.primary + '20', borderColor: colors.primary },
-              ]}
-            >
-              <Ionicons name={resultPresentation.icons.contributed} size={14} color={colors.primary} />
-              <Text style={[styles.userContributedText, { color: colors.primary }]}>{userContributedLabel}</Text>
-            </View>
-          )}
-          {hasUrl && loadState === 'error' ? (
-            <View>
-              <Text style={[styles.errorText, { color: tone.muted }]}>{loadErrorLabel}</Text>
-              <View style={styles.errorActions}>
-                <TouchableOpacity
-                  onPress={handleRetry}
-                  style={[styles.retryBtn, { borderColor: tone.action }]}
-                  accessibilityRole="button"
-                  accessibilityLabel={retryLabel}
-                >
-                  <Text style={[styles.retryBtnText, { color: tone.action }]}>{retryLabel}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={onTakePhoto}
-                  style={[styles.retryBtn, { borderColor: tone.line }]}
-                  accessibilityRole="button"
-                  accessibilityLabel={takePhotoLabel}
-                >
-                  <Text style={[styles.retryBtnText, { color: tone.ink }]}>{takePhotoLabel}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : null}
-        </View>
+        <View style={styles.photoRow}>{photo}</View>
       </View>
 
       {hasUrl && imageUrl ? (
@@ -322,11 +322,16 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 28,
     borderWidth: StyleSheet.hairlineWidth,
   },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 8,
+  },
   photoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
   },
   actions: {
     flexDirection: 'row',
@@ -335,7 +340,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   identityCopy: {
-    marginTop: 8,
+    flex: 1,
     minWidth: 0,
   },
   photo: {

@@ -36,7 +36,7 @@ type Props = {
   title?: string;
   explanation?: string;
   pillars: EmeraldPillar[];
-  /** Opens the same data-limitations card as Incomplete product data. */
+  /** Result score disc press. Caller owns destination (data-limitations vs how-scored). */
   onScorePress?: () => void;
   dark?: boolean;
 };
@@ -151,7 +151,7 @@ function Disc({ kind, value, colour, label, title, diameter, dark, onPress }: {
   const circumference = 2 * Math.PI * radius;
   const rated = kind === 'scored' && typeof value === 'number' && Number.isFinite(value);
   const neutral = dark ? resultPresentation.emerald.discNeutral.dark : resultPresentation.emerald.discNeutral.light;
-  const scoreLabel = rated ? `${value}/100. ${label || ''}`.trim() : title || '';
+  const scoreLabel = rated ? `${value}. ${label || ''}`.trim() : title || '';
   return (
     <Pressable
       onPress={onPress}
@@ -218,21 +218,14 @@ function Disc({ kind, value, colour, label, title, diameter, dark, onPress }: {
         <View
           style={[styles.discCopy, { width: diameter * 0.62, height: diameter * 0.62 }]}
           accessible={!onPress}
-          accessibilityLabel={onPress ? undefined : `${value}/100. ${label || ''}`}
+          accessibilityLabel={onPress ? undefined : scoreLabel}
         >
           <Text
-            style={[styles.score, { color: colour, fontSize: Math.min(32, Math.round(diameter * 0.28)), lineHeight: Math.min(36, Math.round(diameter * 0.3)) }]}
+            style={[styles.score, { color: colour, fontSize: Math.min(36, Math.round(diameter * 0.32)), lineHeight: Math.min(40, Math.round(diameter * 0.34)) }]}
             maxFontSizeMultiplier={1.15}
             numberOfLines={1}
           >
             {value}
-          </Text>
-          <Text
-            style={[styles.denominator, { color: colour, fontSize: Math.min(13, Math.round(diameter * 0.11)), lineHeight: Math.min(16, Math.round(diameter * 0.13)) }]}
-            maxFontSizeMultiplier={1.15}
-            numberOfLines={1}
-          >
-            /100
           </Text>
           <Text
             style={[styles.band, { color: colour, fontSize: Math.min(15, Math.round(diameter * 0.13)), lineHeight: Math.min(18, Math.round(diameter * 0.15)) }]}
@@ -476,11 +469,6 @@ const styles = StyleSheet.create({
     fontSize: resultPresentation.emerald.type.score,
     lineHeight: resultPresentation.emerald.type.scoreLine,
     fontWeight: '800',
-  },
-  denominator: {
-    fontSize: resultPresentation.emerald.type.denominator,
-    lineHeight: resultPresentation.emerald.type.denominatorLine,
-    fontWeight: '700',
   },
   band: {
     fontSize: resultPresentation.emerald.type.band,

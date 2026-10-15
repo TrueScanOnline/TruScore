@@ -16,9 +16,11 @@
  *   review of their assertions.
  *
  * Justified ALLOWED_HITS remaining after C-1–C-4 code:
- * - app/result/[barcode].tsx (4): orchestration still reads trust_score_breakdown
+ * - app/result/[barcode].tsx (3): orchestration still reads trust_score_breakdown
  *   when building the consumer TruScoreResult, and ecoscore_grade as one of several
- *   “has any real data” presence checks. Not score-band colour.
+ *   “has any real data” presence checks. Not score-band colour. The prior fourth hit
+ *   (modal mount gating on trust_score_breakdown) was removed when the score info
+ *   control opened Understanding Rveel Score without that gate.
  * - TrustScoreInfoModal.tsx (1): methodology prose mentioning ecoscore_grade.
  *   Not a consumer score colour read.
  *
@@ -72,7 +74,7 @@ const FORBIDDEN = [
  * §8 dormant TruScoreCard paths are listed in DORMANT_FORBIDDEN_EXCLUSIONS instead.
  */
 const ALLOWED_HITS: Record<string, number> = {
-  'app/result/[barcode].tsx': 4,
+  'app/result/[barcode].tsx': 3,
   'src/components/TrustScoreInfoModal.tsx': 1,
 };
 
@@ -212,7 +214,7 @@ describe('partial doctrine §10.4 consumption guards', () => {
       const source = fs.readFileSync(path.join(ROOT, file), 'utf8');
       expect(source.includes('?? 0') || source.includes('|| 0')).toBe(true);
       expect(hits.some((hit) => hit.file === file)).toBe(false);
-      expect(ALLOWED_HITS[file]).toBe(file === 'app/result/[barcode].tsx' ? 4 : undefined);
+      expect(ALLOWED_HITS[file]).toBe(file === 'app/result/[barcode].tsx' ? 3 : undefined);
     }
   });
 

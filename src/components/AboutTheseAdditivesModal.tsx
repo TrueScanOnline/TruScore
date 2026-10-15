@@ -38,6 +38,10 @@ import {
 } from '../s25';
 import { glyphForSourceProfile } from '../s25/glyphs';
 import { useTheme } from '../theme';
+import { resultEmeraldTone } from '../theme/resultPresentation';
+
+/** Amber heading for each additive entry — distinct from score-band colours. */
+const ADDITIVE_HEADING = '#E8913A';
 
 export type AboutTheseAdditivesCaller = 'result' | 'body' | 'open';
 
@@ -289,7 +293,8 @@ export default function AboutTheseAdditivesModal({
   ingredientsText,
   focusAdditiveIds = [],
 }: AboutTheseAdditivesModalProps) {
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const items = useMemo(
@@ -434,7 +439,13 @@ export default function AboutTheseAdditivesModal({
             return (
               <View
                 key={key}
-                style={[styles.entry, { borderColor: colors.border }]}
+                style={[
+                  styles.entry,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: emerald.action,
+                  },
+                ]}
                 onLayout={(e: LayoutChangeEvent) => {
                   yByKey.current[key] = e.nativeEvent.layout.y;
                 }}
@@ -446,7 +457,7 @@ export default function AboutTheseAdditivesModal({
                   accessibilityState={{ expanded: isOpen }}
                 >
                   <View style={styles.entryHeaderText}>
-                    <Text style={[styles.entryTitle, { color: colors.text }]}>
+                    <Text style={[styles.entryTitle, { color: ADDITIVE_HEADING }]}>
                       {item.colourGroupIds && item.colourGroupIds.length > 1
                         ? 'Colour additives'
                         : item.entry.entry_title}
@@ -550,10 +561,10 @@ const styles = StyleSheet.create({
   },
   entry: {
     marginTop: 10,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
   },
   entryHeader: {
     flexDirection: 'row',
@@ -565,7 +576,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   entryTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
   },
   tileSummary: {
