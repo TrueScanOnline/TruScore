@@ -2,10 +2,9 @@
  * Partial doctrine §10.4 gate. This file is not a complete §10.4 implementation.
  *
  * Covered:
- * - Forbidden-token counts in src/components, src/features and app (tests excluded).
- *   The known-hit allowlist is unchanged. A new file or a higher count fails.
- *   Hits inside app/result/[barcode].tsx stay the existing orchestration allowlist
- *   entry. They are not reclassified here as a new live presentation read.
+ * - Forbidden-token counts in src/components, src/features and app (tests excluded),
+ *   after removing named §8 dormant presentation files from the count.
+ * - Remaining live/orchestration hits must match ALLOWED_HITS exactly.
  * - Score-adjacent `?? 0` / `|| 0` on one line, where the operand immediately
  *   before the operator is `.score`, truScore, publishedScore, internalScore,
  *   or trust_score. Live presentation hits must be empty.
@@ -16,15 +15,25 @@
  * - Named H-13 source-text test files are still present. Presence is not a
  *   review of their assertions.
  *
+ * Justified ALLOWED_HITS remaining after C-1–C-4 code:
+ * - app/result/[barcode].tsx (4): orchestration still reads trust_score_breakdown
+ *   when building the consumer TruScoreResult, and ecoscore_grade as one of several
+ *   “has any real data” presence checks. Not score-band colour.
+ * - TrustScoreInfoModal.tsx (1): methodology prose mentioning ecoscore_grade.
+ *   Not a consumer score colour read.
+ *
+ * Removed from ALLOWED_HITS (obsolete for live presentation):
+ * - features/product/** TruScoreCard paths. Doctrine §8 lists the legacy product
+ *   feature tree as unreachable. Those files are excluded from the forbidden
+ *   count rather than kept on the corrective allowlist.
+ *
  * Exclusions, stated so they are not mistaken for coverage:
  * - Dormant score defaults are recorded and are not live Result reads:
  *   EcoScore.tsx (unreachable §8 display) and ShareContentBuilder.buildEcoScoreContent
  *   (dormant ecoscore share branch; no live caller).
  * - Unrelated `?? 0` / `|| 0` defaults are not banned: photo dimensions, origin
  *   blank counts, nutrient kcal, generatedAt, and fetch-trace length.
- * - Comments are stripped before the score-default scan. Prose that does not
- *   use the operand pattern is not a hit. TrustScoreInfoModal's Eco-Score
- *   sentence is prose, not a score read.
+ * - Comments are stripped before the score-default scan.
  * - Score defaults reached through an intermediate variable, a default
  *   parameter, or another line are not detected.
  * - src/utils and src/lib are outside the scan. shareAnalytics `truScore || 0`
@@ -39,8 +48,7 @@
  * - Retired source-text controls. This gate does not retire an H-13 assertion
  *   and does not name a behavioural replacement. Deleting the assertion text
  *   while leaving the file in place would still pass.
- * - `.breakdown.` used for display, S28 diagnostics as a separate exclusion,
- *   and removal of the known-hit allowlist after C-1 to C-3.
+ * - `.breakdown.` used for display, and S28 diagnostics as a separate exclusion.
  */
 
 import fs from 'fs';
@@ -59,13 +67,20 @@ const FORBIDDEN = [
   'ecoscore_grade',
 ];
 
-/** File → allowed hit count across FORBIDDEN. Do not add a file without founder approval. */
+/**
+ * Live/orchestration exceptions only. Do not add a file without founder approval.
+ * §8 dormant TruScoreCard paths are listed in DORMANT_FORBIDDEN_EXCLUSIONS instead.
+ */
 const ALLOWED_HITS: Record<string, number> = {
   'app/result/[barcode].tsx': 4,
   'src/components/TrustScoreInfoModal.tsx': 1,
-  'src/features/product/components/TruScoreCard.tsx': 2,
-  'src/features/product/cards/TruScoreCard/TruScoreCard.tsx': 2,
 };
+
+/** Doctrine §8 unreachable legacy product cards — not live Result presentation. */
+const DORMANT_FORBIDDEN_EXCLUSIONS = new Set([
+  'src/features/product/components/TruScoreCard.tsx',
+  'src/features/product/cards/TruScoreCard/TruScoreCard.tsx',
+]);
 
 const SCORE_DEFAULT =
   /(?:\.score|\btruScore\b|\btruscore\b|\bpublishedScore\b|\binternalScore\b|\btrust_score\b)\s*(?:\?\?|\|\|)\s*0\b/;
@@ -161,6 +176,7 @@ describe('partial doctrine §10.4 consumption guards', () => {
     const seen = new Set<string>();
     for (const file of presentationFiles()) {
       const key = rel(file);
+      if (DORMANT_FORBIDDEN_EXCLUSIONS.has(key)) continue;
       const count = hitCount(fs.readFileSync(file, 'utf8'));
       if (count === 0) continue;
       seen.add(key);
@@ -174,9 +190,11 @@ describe('partial doctrine §10.4 consumption guards', () => {
     expect(Object.keys(ALLOWED_HITS)).toEqual([
       'app/result/[barcode].tsx',
       'src/components/TrustScoreInfoModal.tsx',
-      'src/features/product/components/TruScoreCard.tsx',
-      'src/features/product/cards/TruScoreCard/TruScoreCard.tsx',
     ]);
+    for (const key of DORMANT_FORBIDDEN_EXCLUSIONS) {
+      expect(fs.existsSync(path.join(ROOT, key))).toBe(true);
+      expect(ALLOWED_HITS[key]).toBeUndefined();
+    }
   });
 
   it('fails a new live score-adjacent ?? 0 or || 0 and keeps dormant defaults out of that failure', () => {
