@@ -18,13 +18,17 @@ import type { TabParamList } from '../src/navigation/AppTabs';
 import type { HistoryStackParamList } from '../src/navigation/tabStackParamLists';
 import { useScanStore, ScanHistoryItem } from '../src/store/useScanStore';
 import { useTheme } from '../src/theme';
+import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../src/theme/resultPresentation';
 
 type NavigationProp = NativeStackNavigationProp<HistoryStackParamList>;
 
 export default function HistoryScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const page = resultPresentation.canvas[darkMode ? 'dark' : 'light'];
+  const filled = resultPresentation.emerald.action.light;
   const { recentScans, clearHistory } = useScanStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'recent' | 'name'>('recent');
@@ -90,40 +94,40 @@ export default function HistoryScreen() {
 
   const renderScanItem = ({ item }: { item: ScanHistoryItem }) => (
     <TouchableOpacity
-      style={[styles.scanItem, { backgroundColor: colors.card }]}
+      style={[styles.scanItem, resultEmeraldCard(!!darkMode)]}
       onPress={() => navigation.navigate('Result', { barcode: item.barcode })}
     >
       <View style={styles.scanItemLeft}>
-        <View style={[styles.barcodeIconContainer, { backgroundColor: colors.surface }]}>
-          <Ionicons name="barcode-outline" size={24} color={colors.primary} />
+        <View style={[styles.barcodeIconContainer, { backgroundColor: emerald.chevronCircle }]}>
+          <Ionicons name="barcode-outline" size={24} color={emerald.action} />
         </View>
         <View style={styles.scanItemInfo}>
           {item.productName ? (
-            <Text style={[styles.productName, { color: colors.text }]} numberOfLines={1}>
+            <Text style={[styles.productName, { color: emerald.ink }]} numberOfLines={2}>
               {item.productName}
             </Text>
           ) : (
-            <Text style={[styles.productNamePlaceholder, { color: colors.textTertiary }]} numberOfLines={1}>
+            <Text style={[styles.productNamePlaceholder, { color: emerald.muted }]} numberOfLines={1}>
               {t('common.loading')}
             </Text>
           )}
-          <Text style={[styles.barcode, { color: colors.primary }]}>{item.barcode}</Text>
-          <Text style={[styles.timestamp, { color: colors.textTertiary }]}>{formatDate(item.timestamp)}</Text>
+          <Text style={[styles.barcode, { color: emerald.muted }]}>{item.barcode}</Text>
+          <Text style={[styles.timestamp, { color: emerald.muted }]}>{formatDate(item.timestamp)}</Text>
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={colors.border} />
+      <Ionicons name="chevron-forward" size={20} color={emerald.muted} />
     </TouchableOpacity>
   );
 
   const renderEmptyState = () => (
       <View style={styles.emptyState}>
-        <Ionicons name="time-outline" size={64} color={colors.textTertiary} />
-        <Text style={[styles.emptyTitle, { color: colors.text }]}>{t('history.empty')}</Text>
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+        <Ionicons name="time-outline" size={64} color={emerald.muted} />
+        <Text style={[styles.emptyTitle, { color: emerald.ink }]}>{t('history.empty')}</Text>
+        <Text style={[styles.emptyText, { color: emerald.muted }]}>
           {t('history.emptyMessage')}
         </Text>
         <TouchableOpacity
-          style={[styles.scanButton, { backgroundColor: colors.primary }]}
+          style={[styles.scanButton, { backgroundColor: filled }]}
           onPress={() => {
             const tabNav = navigation.getParent() as BottomTabNavigationProp<TabParamList>;
             tabNav.navigate('Scan', { screen: 'ScanHome' });
@@ -136,10 +140,10 @@ export default function HistoryScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: page }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.text }]}>{t('history.title')}</Text>
+      <View style={[styles.header, { backgroundColor: page, borderBottomColor: emerald.line }]}>
+        <Text style={[styles.title, { color: emerald.ink }]}>{t('history.title')}</Text>
         {recentScans.length > 0 && (
           <TouchableOpacity onPress={handleClearHistory} style={styles.clearButton}>
             <Ionicons name="trash-outline" size={20} color={colors.error} />
@@ -150,19 +154,19 @@ export default function HistoryScreen() {
 
       {/* Search and Filter */}
       {recentScans.length > 0 && (
-        <View style={[styles.searchContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-          <View style={[styles.searchInputContainer, { backgroundColor: colors.surface }]}>
-            <Ionicons name="search-outline" size={20} color={colors.textTertiary} style={styles.searchIcon} />
+        <View style={[styles.searchContainer, { backgroundColor: page, borderBottomColor: emerald.line }]}>
+          <View style={[styles.searchInputContainer, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
+            <Ionicons name="search-outline" size={20} color={emerald.muted} style={styles.searchIcon} />
             <TextInput
-              style={[styles.searchInput, { color: colors.text }]}
+              style={[styles.searchInput, { color: emerald.ink }]}
               placeholder={t('history.searchPlaceholder')}
-              placeholderTextColor={colors.textTertiary}
+              placeholderTextColor={emerald.muted}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={20} color={colors.textTertiary} />
+                <Ionicons name="close-circle" size={20} color={emerald.muted} />
               </TouchableOpacity>
             )}
           </View>
@@ -171,19 +175,19 @@ export default function HistoryScreen() {
             <TouchableOpacity
               style={[
                 styles.sortButton,
-                { backgroundColor: sortBy === 'recent' ? colors.primary : colors.surface },
+                { backgroundColor: sortBy === 'recent' ? filled : emerald.card, borderColor: sortBy === 'recent' ? filled : emerald.line },
               ]}
               onPress={() => setSortBy('recent')}
             >
               <Ionicons
                 name="time-outline"
                 size={16}
-                color={sortBy === 'recent' ? '#fff' : colors.textSecondary}
+                color={sortBy === 'recent' ? '#fff' : emerald.muted}
               />
               <Text
                 style={[
                   styles.sortButtonText,
-                  { color: sortBy === 'recent' ? '#fff' : colors.textSecondary },
+                  { color: sortBy === 'recent' ? '#fff' : emerald.muted },
                 ]}
               >
                 {t('history.recent')}
@@ -192,19 +196,19 @@ export default function HistoryScreen() {
             <TouchableOpacity
               style={[
                 styles.sortButton,
-                { backgroundColor: sortBy === 'name' ? colors.primary : colors.surface },
+                { backgroundColor: sortBy === 'name' ? filled : emerald.card, borderColor: sortBy === 'name' ? filled : emerald.line },
               ]}
               onPress={() => setSortBy('name')}
             >
               <Ionicons
                 name="text-outline"
                 size={16}
-                color={sortBy === 'name' ? '#fff' : colors.textSecondary}
+                color={sortBy === 'name' ? '#fff' : emerald.muted}
               />
               <Text
                 style={[
                   styles.sortButtonText,
-                  { color: sortBy === 'name' ? '#fff' : colors.textSecondary },
+                  { color: sortBy === 'name' ? '#fff' : emerald.muted },
                 ]}
               >
                 {t('history.name')}
@@ -225,11 +229,11 @@ export default function HistoryScreen() {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.noResults}>
-              <Ionicons name="search-outline" size={48} color={colors.textTertiary} />
-              <Text style={[styles.noResultsText, { color: colors.text }]}>
+              <Ionicons name="search-outline" size={48} color={emerald.muted} />
+              <Text style={[styles.noResultsText, { color: emerald.ink }]}>
                 {t('history.noResults')}
               </Text>
-              <Text style={[styles.noResultsSubtext, { color: colors.textSecondary }]}>
+              <Text style={[styles.noResultsSubtext, { color: emerald.muted }]}>
                 {t('history.noResultsSubtext')}
               </Text>
             </View>
@@ -239,8 +243,8 @@ export default function HistoryScreen() {
 
       {/* Stats Footer */}
       {recentScans.length > 0 && (
-        <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-          <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+        <View style={[styles.footer, { backgroundColor: page, borderTopColor: emerald.line }]}>
+          <Text style={[styles.footerText, { color: emerald.muted }]}>
             {t('history.stats', { count: filteredAndSortedScans.length, total: recentScans.length })}
           </Text>
         </View>
@@ -262,7 +266,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   clearButton: {
@@ -282,8 +286,10 @@ const styles = StyleSheet.create({
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
+    minHeight: 48,
     marginBottom: 12,
   },
   searchIcon: {
@@ -303,7 +309,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 44,
     gap: 6,
   },
   sortButtonActive: {},
@@ -319,14 +327,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
   },
   scanItemLeft: {
     flexDirection: 'row',
@@ -385,7 +387,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 25,
+    borderRadius: 22,
+    minHeight: 44,
     gap: 8,
   },
   scanButtonText: {

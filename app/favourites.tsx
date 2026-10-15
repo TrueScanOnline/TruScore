@@ -18,6 +18,7 @@ import type { FavouritesStackParamList } from '../src/navigation/tabStackParamLi
 import { useFavoritesStore } from '../src/store/useFavoritesStore';
 import { fetchProduct } from '../src/services/productService';
 import { useTheme } from '../src/theme';
+import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../src/theme/resultPresentation';
 import { listPublishedOverallScore } from '../src/utils/listPublishedScore';
 
 type NavigationProp = NativeStackNavigationProp<FavouritesStackParamList>;
@@ -25,7 +26,10 @@ type NavigationProp = NativeStackNavigationProp<FavouritesStackParamList>;
 export default function FavouritesScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
+  const page = resultPresentation.canvas[darkMode ? 'dark' : 'light'];
+  const filled = resultPresentation.emerald.action.light;
   const { favorites, removeFavorite, initializeStore, clearFavorites } = useFavoritesStore();
   const [loading, setLoading] = useState(true);
 
@@ -90,10 +94,10 @@ export default function FavouritesScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: page }]}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          <ActivityIndicator size="large" color={emerald.action} />
+          <Text style={[styles.loadingText, { color: emerald.muted }]}>
             {t('common.loading')}
           </Text>
         </View>
@@ -102,10 +106,10 @@ export default function FavouritesScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: page }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.text }]}>{t('favorites.title')}</Text>
+      <View style={[styles.header, { backgroundColor: page, borderBottomColor: emerald.line }]}>
+        <Text style={[styles.title, { color: emerald.ink }]}>{t('favorites.title')}</Text>
         {favorites.length > 0 && (
           <TouchableOpacity onPress={handleClearAll} style={styles.clearAllButton}>
             <Text style={[styles.clearAllText, { color: colors.error }]}>
@@ -118,13 +122,13 @@ export default function FavouritesScreen() {
       {/* Favorites List */}
       {favorites.length === 0 ? (
         <View style={styles.centerContainer}>
-          <Ionicons name="heart-outline" size={80} color={colors.textTertiary} />
-          <Text style={[styles.emptyText, { color: colors.text }]}>{t('favorites.empty')}</Text>
-          <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
+          <Ionicons name="heart-outline" size={80} color={emerald.muted} />
+          <Text style={[styles.emptyText, { color: emerald.ink }]}>{t('favorites.empty')}</Text>
+          <Text style={[styles.emptySubtext, { color: emerald.muted }]}>
             {t('favorites.emptyMessage')}
           </Text>
           <TouchableOpacity
-            style={[styles.startButton, { backgroundColor: colors.primary }]}
+            style={[styles.startButton, { backgroundColor: filled }]}
             onPress={() => {
               const tabNav = navigation.getParent() as BottomTabNavigationProp<TabParamList>;
               tabNav.navigate('Scan', { screen: 'ScanHome' });
@@ -140,18 +144,18 @@ export default function FavouritesScreen() {
           keyExtractor={(item) => item.barcode}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.favoriteItem, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
+              style={[styles.favoriteItem, resultEmeraldCard(!!darkMode)]}
               onPress={() => handleItemPress(item.barcode)}
             >
               <View style={styles.favoriteContent}>
-                <View style={[styles.favoriteIcon, { backgroundColor: colors.primary + '20' }]}>
-                  <Ionicons name="heart" size={24} color={colors.primary} />
+                <View style={[styles.favoriteIcon, { backgroundColor: emerald.chevronCircle }]}>
+                  <Ionicons name="heart" size={24} color={emerald.action} />
                 </View>
                 <View style={styles.favoriteTextContainer}>
-                  <Text style={[styles.favoriteProductName, { color: colors.text }]} numberOfLines={2}>
+                  <Text style={[styles.favoriteProductName, { color: emerald.ink }]} numberOfLines={2}>
                     {item.product?.product_name || item.barcode}
                   </Text>
-                  <Text style={[styles.favoriteBarcode, { color: colors.textSecondary }]}>
+                  <Text style={[styles.favoriteBarcode, { color: emerald.muted }]}>
                     {t('search.barcode')}: {item.barcode}
                   </Text>
                   {(() => {
@@ -159,10 +163,10 @@ export default function FavouritesScreen() {
                     if (published === null) return null;
                     return (
                     <View style={styles.favoriteScore}>
-                      <Text style={[styles.favoriteScoreLabel, { color: colors.textSecondary }]}>
+                      <Text style={[styles.favoriteScoreLabel, { color: emerald.muted }]}>
                         {t('result.trustScore')}: 
                       </Text>
-                      <Text style={[styles.favoriteScoreValue, { color: colors.primary }]}>
+                      <Text style={[styles.favoriteScoreValue, { color: emerald.action }]}>
                         {published}/100
                       </Text>
                     </View>
@@ -200,7 +204,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   clearAllButton: {
@@ -240,7 +244,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 25,
+    borderRadius: 22,
+    minHeight: 44,
     gap: 8,
   },
   startButtonText: {
@@ -256,14 +261,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    borderRadius: 12,
     marginBottom: 12,
-    borderBottomWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
   },
   favoriteContent: {
     flexDirection: 'row',
