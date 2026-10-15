@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, type Ref } from 'react';
+import React, { forwardRef, useEffect, useState, type Ref } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { buildShareUrl } from '../utils/shareUrl';
@@ -21,8 +21,12 @@ export interface ShareProductStoryCardProps {
   surfaceColor: string;
   textColor: string;
   textSecondary: string;
-  /** Fires when the product image has painted, failed, or was never supplied. */
-  onImageSettled?: () => void;
+  /** Identifies this open. A late callback from an older open must not settle a newer one. */
+  settleToken: number;
+  /** After a load failure or the capture timeout, show the missing-image mark. */
+  forcePlaceholder?: boolean;
+  /** Fires once the image has rendered, or the parcel mark is on screen. */
+  onImageSettled?: (token: number, url: string) => void;
 }
 
 export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps>(
@@ -38,6 +42,8 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
       surfaceColor,
       textColor,
       textSecondary,
+      settleToken,
+      forcePlaceholder = false,
       onImageSettled,
     },
     ref: Ref<View>
@@ -54,9 +60,14 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
       ? RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR
       : scoreColor || brandColor;
 
+    const imageKey = `${settleToken}:${imageUrl || ''}`;
+    const [failedKey, setFailedKey] = useState<string | null>(null);
+    const failed = failedKey === imageKey;
+    const showImage = Boolean(imageUrl) && !failed && !forcePlaceholder;
     useEffect(() => {
-      if (!imageUrl) onImageSettled?.();
-    }, [imageUrl, onImageSettled]);
+      if (showImage) return;
+      onImageSettled?.(settleToken, imageUrl || '');
+    }, [showImage, settleToken, imageUrl, onImageSettled]);
 
     return (
       <View ref={ref} collapsable={false} style={[styles.root, { backgroundColor: surfaceColor }]}>
@@ -64,13 +75,14 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
           <Text style={styles.headerText}>Rveel</Text>
         </View>
         <View style={styles.imageWrap}>
-          {imageUrl ? (
+          {showImage ? (
             <Image
+              key={imageKey}
               source={{ uri: imageUrl }}
               style={styles.image}
               contentFit="contain"
-              onLoad={() => onImageSettled?.()}
-              onError={() => onImageSettled?.()}
+              onDisplay={() => onImageSettled?.(settleToken, imageUrl || '')}
+              onError={() => setFailedKey(imageKey)}
             />
           ) : (
             <Text style={[styles.placeholder, { color: textSecondary }]}>📦</Text>

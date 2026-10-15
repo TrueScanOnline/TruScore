@@ -189,6 +189,10 @@ describe('packet photo launch recovery', () => {
     expect(asset.imagePhase).toBe('failed_retryable');
     expect(asset.interruptedResume).toBeUndefined();
     expect(asset.resumeInProgress).toBeUndefined();
+    expect(asset.privateKey).toBe('packet/ses_photo/original/src_photo');
+    await retryParkedEvidenceImage('ses_photo', 'src_photo');
+    expect(manipulateAsync).toHaveBeenCalledTimes(1);
+    expect(mockSessions[0].sourceAssets[0].privateKey).toBe('packet/ses_photo/original/src_photo');
   });
 
   test('prepared dimensions do not replace the original lineage dimensions', async () => {

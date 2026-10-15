@@ -34,6 +34,15 @@ import { TruScoreResult } from '../lib/truscoreEngine';
 import { shareImageScoreState } from '../utils/shareScoreSemantics';
 import { logger } from '../utils/logger';
 import { ShareProductStoryCard } from './ShareProductStoryCard';
+import { armShareImageGate, releaseShareImageGate, waitForShareImageGate, type ShareImageGate } from './shareImageCaptureGate';
+
+const SHARE_IMAGE_TIMEOUT_MS = 4000;
+
+function nextPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -85,27 +94,32 @@ export default function ShareModal({
   const [selectedPlatform, setSelectedPlatform] = useState<SharePlatform | null>(null);
   const [customMessage, setCustomMessage] = useState('');
   const storyCardRef = useRef<View>(null);
-  const imageSettleRef = useRef<{ url: string; promise: Promise<void>; resolve: () => void } | null>(null);
+  const imageSettleRef = useRef<ShareImageGate | null>(null);
   const shareVisibleRef = useRef(false);
+  const shareTokenRef = useRef(0);
+  const [fallbackToken, setFallbackToken] = useState<number | null>(null);
   const imageKey = product.image_url || '';
   const openingShare = visible && !shareVisibleRef.current;
   shareVisibleRef.current = visible;
-  if (openingShare || imageSettleRef.current?.url !== imageKey) {
-    let resolve!: () => void;
-    const promise = new Promise<void>((settle) => {
-      resolve = settle;
-    });
-    imageSettleRef.current = { url: imageKey, promise, resolve };
-    if (!imageKey) resolve();
+  if (!imageSettleRef.current || openingShare || imageSettleRef.current.url !== imageKey) {
+    shareTokenRef.current += 1;
+    imageSettleRef.current = armShareImageGate(imageKey, shareTokenRef.current);
   }
-  const markImageSettled = () => {
-    imageSettleRef.current?.resolve();
+  const settleToken = imageSettleRef.current.token;
+  const imageFallback = fallbackToken === settleToken;
+  const markImageSettled = (token: number, url: string) => {
+    releaseShareImageGate(imageSettleRef.current, token, url);
   };
-  const waitForShareImage = () =>
-    Promise.race([
-      imageSettleRef.current?.promise ?? Promise.resolve(),
-      new Promise<void>((resolve) => setTimeout(resolve, 4000)),
-    ]);
+  const waitForShareImage = async () => {
+    const gate = imageSettleRef.current;
+    if (!gate) return;
+    const outcome = await waitForShareImageGate(gate, SHARE_IMAGE_TIMEOUT_MS);
+    if (outcome === 'timeout' && imageSettleRef.current === gate && !gate.settled) {
+      setFallbackToken(gate.token);
+      await gate.promise;
+    }
+    await nextPaint();
+  };
 
   const copyLinkUrl = useMemo(
     () =>
@@ -459,7 +473,7 @@ export default function ShareModal({
           <ShareProductStoryCard
             ref={storyCardRef}
             productName={productDisplayName}
-            imageUrl={product.image_url}
+            imageUrl={imageKey || null}
             barcode={product.barcode}
             scoreState={shareImageScoreState(truScore, { publicationSettled })}
             shareType={shareType}
@@ -468,6 +482,8 @@ export default function ShareModal({
             surfaceColor={emerald.card}
             textColor={emerald.ink}
             textSecondary={emerald.muted}
+            settleToken={settleToken}
+            forcePlaceholder={imageFallback}
             onImageSettled={markImageSettled}
           />
         </View>

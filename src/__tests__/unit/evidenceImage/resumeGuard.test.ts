@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { classifyInterruptedResume, currentResumeLaunchId } from '../../../evidenceImage/resumeGuard';
 import { retryParkedEvidenceSubmission, retryUnsentEvidenceSubmissions } from '../../../evidenceAuthority/device';
@@ -123,6 +125,32 @@ describe('submission resume guard', () => {
     expect(saved).toHaveLength(1);
   });
 
+  test('a second manual retry keeps the same outbox row and does not send again', async () => {
+    memory.set(
+      OUTBOX_KEY,
+      JSON.stringify([
+        {
+          idempotencyKey: 'batch-1',
+          sessionId: 'ses_missing',
+          barcode: '0000000000000',
+          unitRefs: [{ unitId: 'unit-1', revision: 'rev' }],
+          status: 'unsent',
+          createdAt: 1,
+          interruptedResume: { step: 'submission', attempt: 2, interruptedAt: 9 },
+        },
+      ])
+    );
+    await retryParkedEvidenceSubmission('batch-1');
+    const writes = (AsyncStorage.setItem as jest.Mock).mock.calls.length;
+    await retryParkedEvidenceSubmission('batch-1');
+    const saved = JSON.parse(memory.get(OUTBOX_KEY) || '[]');
+    expect(saved).toHaveLength(1);
+    expect(saved[0].idempotencyKey).toBe('batch-1');
+    expect(saved[0].unitRefs).toEqual([{ unitId: 'unit-1', revision: 'rev' }]);
+    expect((AsyncStorage.setItem as jest.Mock).mock.calls.length).toBe(writes);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
   test('two overlapping retries in one launch do not park the item', async () => {
     let releaseSession: () => void = () => undefined;
     const sessionGate = new Promise<void>((resolve) => {
@@ -172,5 +200,17 @@ describe('submission resume guard', () => {
     expect(saved[0].resumeInProgress).toBeUndefined();
     expect(saved[0].unitRefs).toHaveLength(1);
     expect(saved).toHaveLength(1);
+  });
+});
+
+describe('contribution retry controls', () => {
+  test('retry photo and retry send keep the entered fields', () => {
+    const modal = fs.readFileSync(path.join(__dirname, '../../../components/PacketContributionModal.tsx'), 'utf8');
+    const body = modal.slice(modal.indexOf('const retryPhoto'), modal.indexOf('const journey = JOURNEY'));
+    expect(body).toContain('retryParkedEvidenceImage(session.sessionId, assetId)');
+    expect(body).toContain('retryParkedEvidenceSubmission(idempotencyKey)');
+    for (const setter of ['setIngredientsText', 'setAmounts', 'setOrigins', 'setClaims', 'setCerts', 'setPacketQuery']) {
+      expect(body).not.toContain(setter);
+    }
   });
 });
