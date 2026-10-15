@@ -16,7 +16,7 @@ Corrective-package acceptance and BC remain **open**. Certifications and Packagi
 | Prior regression-closure candidate | `51c6c77d8bbac5aa0eece830524203a35d8e457d` |
 | Prior consolidated docs tip | `ff9d627b8370c30b644709ed53d6e1f40e812a96` |
 | **Final tested source (this freeze)** | `6236a36dfce6005f3540c2caec469a8bdc151537` |
-| This handoff (docs tip) | _(filled after this docs commit)_ |
+| This handoff (docs tip) | `92ef4530aa60cabfaed2fd51888b388f05f811bb` |
 | Return branch | `preserve/pre-wave5-9910276-20261008` = B0 (unchanged) |
 
 Repository: https://github.com/TrueScanOnline/TruScore  
