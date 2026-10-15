@@ -204,6 +204,12 @@ export interface Product {
   rveelGovernedOrigins?: import('../origins/governedFacts').GovernedOriginFact[];
   /** Admitted packet wording shown on the Packet Claims card. Not a set label. */
   rveelGovernedPacketClaims?: import('../claims/packetClaimReceiver').GovernedPacketClaimFact[];
+  /**
+   * Wave 3 Cross-Pillar Rateability / Confidence / NR publication snapshot.
+   * Consumer UI must reveal publishedScore/confidence only; internalScore is diagnostic.
+   * Optional on Product so contribution helpers that already read publication lanes type-check.
+   */
+  _publication?: import('../lib/rateability').CrossPillarPublicationSnapshot;
   ingredients_text_en?: string;
   ingredients?: Ingredient[];
   ingredients_analysis?: {
@@ -388,11 +394,6 @@ export interface ProductWithTrustScore extends Product {
   };
   /** Full TruScore analysis (pillar breakdown + data source trace). Set when score is calculated. */
   _truscore_analysis?: import('./truscoreAnalysis').TruScoreAnalysis;
-  /**
-   * Wave 3 Cross-Pillar Rateability / Confidence / NR publication snapshot.
-   * Consumer UI must reveal publishedScore/confidence only; internalScore is diagnostic.
-   */
-  _publication?: import('../lib/rateability').CrossPillarPublicationSnapshot;
   /**
    * True once the ordinary initial assessment cycle has settled (merge success/failure
    * or USER_CONTRIBUTED_MERGE_RACE_MS). Latched for the scan cycle — late same-cycle

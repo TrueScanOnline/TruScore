@@ -97,6 +97,7 @@ import {
   type ScoreHighlightPillar,
   type ScoreHighlightStory,
 } from '../../src/lib/scoreHighlights';
+import type { TruScoreResult } from '../../src/lib/truscoreEngine';
 import type { ScoreHighlightL3InAppTarget } from '../../src/lib/scoreHighlights/l3/targets';
 import { planInAppL3HostPresentation } from '../../src/lib/scoreHighlights/l3/hostPresentation';
 import { mapBodyLedgerIdToCanonical, mergeRenderedAdditives } from '../../src/s25';
@@ -2532,7 +2533,7 @@ function ResultScreenContent() {
         onClose={() => setPacketContributionVisible(false)}
         onSharedEvidenceAdmitted={async (snapshot, complete) => {
           const trace = currentModalTrace();
-          if (!product) {
+          if (!product || !snapshot) {
             trace?.mark('result_applied', 'none');
             return;
           }

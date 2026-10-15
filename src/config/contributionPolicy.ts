@@ -117,13 +117,21 @@ export function getDomainPolicy(domain: ContributionDomain) {
   return CONTRIBUTION_POLICY.certifications;
 }
 
-export function getCommunityVerificationPolicy(domain: 'origins' | 'certifications') {
+/**
+ * Community-verification policy for domains that accept confirm/dispute.
+ * packet_claims uses the certifications threshold shape. Wave 4A authority
+ * requires two disputes → review_required without withdrawal for packet claims.
+ * packetClaims policy itself does not yet define a dispute slice.
+ */
+export function getCommunityVerificationPolicy(
+  domain: 'origins' | 'certifications' | 'packet_claims'
+) {
   return domain === 'origins' ? CONTRIBUTION_POLICY.origins : CONTRIBUTION_POLICY.certifications;
 }
 
 /** Threshold slice shared by client lifecycle and Vercel contribution-evidence. */
 export function getCommunityVerificationThresholds(
-  domain: 'origins' | 'certifications'
+  domain: 'origins' | 'certifications' | 'packet_claims'
 ): CommunityVerificationThresholds {
   const policy = getCommunityVerificationPolicy(domain);
   return {

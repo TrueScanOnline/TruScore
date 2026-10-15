@@ -194,14 +194,13 @@ export function assessGovernedNutrients(input: AssessGovernedNutrientsInput): Go
   // Unit must match product class for large-portion / per-serve from per-100
   let servingUsableForClass = serving.usable;
   if (serving.usable) {
+    // v0.2 Food/Drink determinant is binary. An unknown class cannot reach this path.
     if (productClass === 'food' && serving.unit !== 'g') {
       servingUsableForClass = false;
       limitations.push('serving_unit_mismatch');
     } else if (productClass === 'drink' && serving.unit !== 'ml') {
       servingUsableForClass = false;
       limitations.push('serving_unit_mismatch');
-    } else if (productClass === 'unknown') {
-      servingUsableForClass = false;
     }
   }
 

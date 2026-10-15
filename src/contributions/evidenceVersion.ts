@@ -23,7 +23,10 @@ export function canonicalizeVariantKey(
 
 export function buildEvidenceId(params: {
   barcode: string;
-  domain: Extract<ContributionDomain, 'origins' | 'certifications' | 'ingredients_nutrition'>;
+  domain: Extract<
+    ContributionDomain,
+    'origins' | 'certifications' | 'ingredients_nutrition' | 'packet_claims'
+  >;
   claimKey: string;
   evidenceVersion: number;
   /** When present, participates in durable identity so variants cannot collide with base. */

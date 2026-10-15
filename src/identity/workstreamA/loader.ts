@@ -48,7 +48,7 @@ export function loadWorkstreamAPackFromCsv(
   options: WorkstreamAPackLoadOptions = {}
 ): WorkstreamAPackLoadResult {
   const { inputRoot, outputRoot } = resolvePackDirectories(packRoot, options);
-  const rowsByFile: Partial<Record<WorkstreamAFileName, CsvRecord[]>> = {};
+  const rowsByFile: Partial<Record<WorkstreamAFileName | RetiredWorkstreamAFileName, CsvRecord[]>> = {};
   const missingRequiredFiles: WorkstreamAFileName[] = [];
   const missingOptionalFiles: WorkstreamAFileName[] = [];
 

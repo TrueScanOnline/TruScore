@@ -23,6 +23,24 @@ export const MVP_RELEASE_EAS_PROFILES = [
 
 export type MvpReleaseEasProfile = (typeof MVP_RELEASE_EAS_PROFILES)[number];
 
+/**
+ * Intended phone-testing builds for Wave 5 UAT.
+ * Backend URL and evidence-authority environment must both resolve to UAT.
+ * Do not repurpose production / preview / production-apk profiles for this role.
+ */
+export const WAVE5_PHONE_UAT_EAS_PROFILES = [
+  'uat-dynamic-signals-ios',
+  'uat-dynamic-signals-android',
+] as const;
+
+export type Wave5PhoneUatEasProfile = (typeof WAVE5_PHONE_UAT_EAS_PROFILES)[number];
+
+/** Legacy flag-comparison profiles. Not phone-testing targets for Wave 5. */
+export const WAVE5_LEGACY_EAS_PROFILES = ['uat-ios-flag-off', 'uat-ios-flag-on'] as const;
+
+export const WAVE5_UAT_BACKEND_HOST = 'https://truscoreapi-uat.vercel.app';
+export const WAVE5_UAT_AUTHORITY_ENV = 'uat';
+
 type EasProfile = {
   extends?: string;
   env?: Record<string, string>;
@@ -119,4 +137,49 @@ export function assertDynamicSignalsAssetForReleaseRuntime(
         'Refusing to start with Signals producer=none.'
     );
   }
+}
+
+export type PhoneUatProfileAssertFailure = {
+  profile: string;
+  reason: string;
+};
+
+/**
+ * Phone-testing UAT profiles must point the backend and the authority env at UAT together.
+ * Production hosts and production authorityEnv fail this check.
+ */
+export function assertWave5PhoneUatProfilesAgree(
+  eas: EasBuildConfig,
+  profiles: readonly string[] = WAVE5_PHONE_UAT_EAS_PROFILES
+): { ok: boolean; failures: PhoneUatProfileAssertFailure[]; checkedProfiles: string[] } {
+  const failures: PhoneUatProfileAssertFailure[] = [];
+  const checkedProfiles: string[] = [];
+
+  for (const profile of profiles) {
+    checkedProfiles.push(profile);
+    try {
+      const env = resolveEasProfileEnv(eas, profile);
+      const backend = env.EXPO_PUBLIC_BACKEND_URL;
+      const authority = env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
+      if (backend !== WAVE5_UAT_BACKEND_HOST) {
+        failures.push({
+          profile,
+          reason: `EXPO_PUBLIC_BACKEND_URL must be ${WAVE5_UAT_BACKEND_HOST} (got ${backend ?? 'unset'})`,
+        });
+      }
+      if (authority !== WAVE5_UAT_AUTHORITY_ENV) {
+        failures.push({
+          profile,
+          reason: `EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV must be ${WAVE5_UAT_AUTHORITY_ENV} (got ${authority ?? 'unset'})`,
+        });
+      }
+    } catch (e) {
+      failures.push({
+        profile,
+        reason: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  return { ok: failures.length === 0, failures, checkedProfiles };
 }

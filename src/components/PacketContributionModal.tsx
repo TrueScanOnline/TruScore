@@ -90,6 +90,8 @@ import {
 import { recordUnresolvedObservation } from '../certifications/unresolvedMarkCandidates';
 
 type Preview = {
+  /** Same value as the session source asset id. Required by EvidenceSurfaceImage. */
+  assetId: string;
   tempKey: string;
   uri: string;
   source: 'camera' | 'gallery';
@@ -479,6 +481,7 @@ export default function PacketContributionModal({
     setPreviews((current) => [
       ...current,
       {
+        assetId: accepted.assetId,
         tempKey: accepted.assetId,
         uri: accepted.fileUri,
         source,

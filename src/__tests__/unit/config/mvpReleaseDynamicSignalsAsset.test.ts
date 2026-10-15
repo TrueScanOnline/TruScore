@@ -1,8 +1,13 @@
 import {
   assertDynamicSignalsAssetForReleaseRuntime,
   assertMvpReleaseProfilesHaveDynamicSignalsAsset,
+  assertWave5PhoneUatProfilesAgree,
   MVP_RELEASE_EAS_PROFILES,
   resolveEasProfileEnv,
+  WAVE5_LEGACY_EAS_PROFILES,
+  WAVE5_PHONE_UAT_EAS_PROFILES,
+  WAVE5_UAT_AUTHORITY_ENV,
+  WAVE5_UAT_BACKEND_HOST,
 } from '../../../config/mvpReleaseDynamicSignalsAsset';
 import easJson from '../../../../eas.json';
 
@@ -81,5 +86,29 @@ describe('mvpReleaseDynamicSignalsAsset (R-01 / S-01)', () => {
     expect(() =>
       assertDynamicSignalsAssetForReleaseRuntime('1', { isDev: false })
     ).not.toThrow();
+  });
+
+  it('phone-testing UAT profiles keep backend and authority on UAT together', () => {
+    const result = assertWave5PhoneUatProfilesAgree(easJson as any);
+    expect(result.ok).toBe(true);
+    expect(result.failures).toEqual([]);
+    expect(result.checkedProfiles).toEqual([...WAVE5_PHONE_UAT_EAS_PROFILES]);
+    for (const profile of WAVE5_PHONE_UAT_EAS_PROFILES) {
+      const env = resolveEasProfileEnv(easJson as any, profile);
+      expect(env.EXPO_PUBLIC_BACKEND_URL).toBe(WAVE5_UAT_BACKEND_HOST);
+      expect(env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV).toBe(WAVE5_UAT_AUTHORITY_ENV);
+      expect(env.EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET).toBe('1');
+      expect(env.EXPO_PUBLIC_SCORE_DIAGNOSTICS).toBe('1');
+      expect(env.EXPO_PUBLIC_STORE_RELEASE).toBe('0');
+    }
+  });
+
+  it('legacy flag profiles are not phone-testing targets', () => {
+    expect(WAVE5_LEGACY_EAS_PROFILES).toEqual(['uat-ios-flag-off', 'uat-ios-flag-on']);
+    for (const profile of WAVE5_LEGACY_EAS_PROFILES) {
+      expect((WAVE5_PHONE_UAT_EAS_PROFILES as readonly string[]).includes(profile)).toBe(false);
+      const env = resolveEasProfileEnv(easJson as any, profile);
+      expect(env.EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH).toBe('0');
+    }
   });
 });

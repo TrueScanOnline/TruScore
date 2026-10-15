@@ -199,9 +199,10 @@ function provenanceFor(
   unit: PacketEvidenceUnit,
   finalizedAssetIds: ReadonlyMap<string, string>
 ): Pick<EvidenceFactInput, 'finalizedAssetId' | 'companionFinalizedAssetIds' | 'derivedAssetId' | 'region' | 'machineRunId' | 'unitId'> {
+  const support = unit.support;
   const derived =
-    unit.support.coverage === 'region'
-      ? session.derivedAssets.find((asset) => asset.derivedAssetId === unit.support.derivedAssetId)
+    support.coverage === 'region'
+      ? session.derivedAssets.find((asset) => asset.derivedAssetId === support.derivedAssetId)
       : undefined;
   const region = derived?.transform.kind === 'region' ? derived.transform : undefined;
   const companions = (unit.companionSourceAssetIds || [])
@@ -210,9 +211,9 @@ function provenanceFor(
   return {
     unitId: unit.unitId,
     machineRunId: unit.extractionRunId || undefined,
-    finalizedAssetId: finalizedAssetIds.get(unit.support.sourceAssetId),
+    finalizedAssetId: finalizedAssetIds.get(support.sourceAssetId),
     ...(companions.length > 0 ? { companionFinalizedAssetIds: companions } : {}),
-    derivedAssetId: unit.support.coverage === 'region' ? unit.support.derivedAssetId : undefined,
+    derivedAssetId: support.coverage === 'region' ? support.derivedAssetId : undefined,
     region: region ? { x: region.x, y: region.y, width: region.width, height: region.height } : undefined,
   };
 }
