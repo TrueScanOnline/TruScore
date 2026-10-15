@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { armShareImageGate, releaseShareImageGate, waitForShareImageGate } from '../../../components/shareImageCaptureGate';
 
 describe('share image capture gate', () => {
@@ -22,5 +24,18 @@ describe('share image capture gate', () => {
     await expect(waitForShareImageGate(gate, 15)).resolves.toBe('timeout');
     expect(gate.settled).toBe(false);
     expect(releaseShareImageGate(gate, gate.token, gate.url)).toBe(true);
+  });
+});
+
+describe('share story card props', () => {
+  test('name, image, barcode and score come from the open product together', () => {
+    const source = fs.readFileSync(path.join(__dirname, '../../../components/ShareModal.tsx'), 'utf8');
+    expect(source).toContain("const imageKey = product.image_url || ''");
+    expect(source).toContain('productName={productDisplayName}');
+    expect(source).toContain('imageUrl={imageKey || null}');
+    expect(source).toContain('barcode={product.barcode}');
+    expect(source).toContain('scoreState={shareImageScoreState(truScore, { publicationSettled })}');
+    expect(source).not.toContain('SHARE_PRODUCT_EXPORT');
+    expect(source).not.toContain('SHARE_CAPTURE_AUDIT');
   });
 });
