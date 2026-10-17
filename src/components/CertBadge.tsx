@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Certification } from '../types/product';
+import { closedPrelaunchImage } from '../certifications/artwork/closedPrelaunchImage';
 import { displayCertificationName, resolvePacketObservation } from '../certifications/resolveCertification';
 import { resolveCertificationArtwork } from '../certifications/certificationArtwork';
 
@@ -23,6 +24,13 @@ export default function CertBadge({ certification, onPress }: CertBadgeProps) {
     surface: 'product_result',
     associationAdmitted: !!productionId,
   });
+  const closed =
+    emblem.render === 'mark'
+      ? null
+      : closedPrelaunchImage({
+          surface: 'product_result',
+          productionId: productionId || certification.id,
+        });
   const Component = onPress ? TouchableOpacity : View;
 
   return (
@@ -32,7 +40,9 @@ export default function CertBadge({ certification, onPress }: CertBadgeProps) {
       activeOpacity={onPress ? 0.7 : 1}
     >
       {emblem.render === 'mark' ? (
-        <Image source={{ uri: emblem.assetRef }} accessibilityLabel={emblem.accessibleName} style={styles.mark} />
+        <Image source={{ uri: emblem.assetRef }} accessibilityLabel={emblem.accessibleName} style={styles.mark} resizeMode="contain" />
+      ) : closed ? (
+        <Image source={closed.moduleId} accessibilityLabel={closed.accessibleName} style={styles.mark} resizeMode="contain" />
       ) : null}
       <Text style={styles.name} numberOfLines={2}>
         {displayCertificationName(certification)}

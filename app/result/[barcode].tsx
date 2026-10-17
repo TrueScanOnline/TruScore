@@ -35,6 +35,7 @@ import TruScore from '../../src/components/TruScore';
 import ConfidenceBadge from '../../src/components/ConfidenceBadge';
 import CountryFlag from '../../src/components/CountryFlag';
 import CertBadge from '../../src/components/CertBadge';
+import CertificationMark from '../../src/components/CertificationMark';
 import UniversalPricingCard from '../../src/components/UniversalPricingCard';
 import NutritionTable from '../../src/components/NutritionTable';
 import type { NutritionDetailsFocusTarget } from '../../src/components/NutritionDetailsModal';
@@ -2254,9 +2255,10 @@ function ResultScreenContent() {
                   </View>
                 ) : null}
                 {visibleCertifications.map((name) => (
-                  <Text key={name} style={{ color: colors.text }}>
-                    {name}
-                  </Text>
+                  <View key={name} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <CertificationMark name={name} surface="product_result" associationAdmitted imageOnly />
+                    <Text style={{ color: colors.text }}>{name}</Text>
+                  </View>
                 ))}
               </>
             );

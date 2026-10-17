@@ -28,6 +28,7 @@ module.exports = {
     '^expo-constants$': '<rootDir>/src/__tests__/__mocks__/expo-constants.ts',
     // Native-only capture module: mocked so share services can be tested on their live path
     '^react-native-view-shot$': '<rootDir>/src/__tests__/__mocks__/react-native-view-shot.ts',
+    '\\.(png|jpg|jpeg|webp)$': '<rootDir>/src/__tests__/__mocks__/imageAsset.ts',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],

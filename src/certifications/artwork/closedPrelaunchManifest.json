@@ -1,0 +1,815 @@
+{
+  "policy": "closed_prelaunch_visual_uat",
+  "rightsGrant": false,
+  "publicAllowlist": [],
+  "marks": [
+    {
+      "researchId": "ra.sustainable",
+      "consumerName": "Rainforest Alliance",
+      "productionId": "cert.rainforest_alliance",
+      "assetId": "rveel.artwork.ra.sas.current",
+      "variantId": "ra.sas.current",
+      "file": "ra.sustainable.png",
+      "sha256": "4cfb72f6aa9f9359f49e71cf013f4d1f3c9f32048fedea53a7d3991cc5f8a7d4",
+      "alt": "Rainforest Alliance Certified, current People & Nature seal",
+      "sample": false,
+      "rightsRoute": "owner_approval_required",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "ra.regenerative",
+      "consumerName": "Rainforest Alliance Certified Regenerative",
+      "productionId": "ra.regenerative",
+      "assetId": "rveel.artwork.ra.regenerative.policy.example",
+      "variantId": "ra.regenerative.policy.example",
+      "file": "ra.regenerative.png",
+      "sha256": "fc045a0cc1a2a126794e4023782fb884bd1903cf1294643b12e9b12434838e6b",
+      "alt": "Rainforest Alliance Regenerative Agriculture seal with QR code, owner policy example",
+      "sample": false,
+      "rightsRoute": "owner_approval_required",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "asc.seafood",
+      "consumerName": "ASC",
+      "productionId": "cert.asc",
+      "assetId": "rveel.artwork.asc.new2026.landscape",
+      "variantId": "asc.new2026.landscape",
+      "file": "asc.seafood.png",
+      "sha256": "ef857c4c75aa8b889fd1c518f41ed63b142b131d26838f453b72fd4cc1f6b22c",
+      "alt": "ASC Certified 2026 landscape label",
+      "sample": false,
+      "rightsRoute": "owner_approval_required",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "biogro.organic",
+      "consumerName": "BioGro certified organic",
+      "productionId": "biogro.organic",
+      "assetId": "rveel.artwork.biogro.standard",
+      "variantId": "biogro.standard",
+      "file": "biogro.organic.png",
+      "sha256": "4cbe7435b06092d5ffac4d5555c34e5ae8d3aa60686cb9310e58657431796162",
+      "alt": "BioGro certified organic mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "asurequality.organic",
+      "consumerName": "AsureQuality certified organic",
+      "productionId": "asurequality.organic",
+      "assetId": "rveel.artwork.asurequality.organic.example",
+      "variantId": "asurequality.organic.example",
+      "file": "asurequality.organic.png",
+      "sha256": "93a3a7e6229647f53ec6fee3427be6d74d9764f0d16a98ded5b6e6e9e82d6770",
+      "alt": "AsureQuality Organic Certified example, sample New Zealand certificate number",
+      "sample": true,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example"
+      ]
+    },
+    {
+      "researchId": "ofc.organic",
+      "consumerName": "Organic Food Chain certified organic",
+      "productionId": "ofc.organic",
+      "assetId": "rveel.artwork.ofc.standard",
+      "variantId": "ofc.standard",
+      "file": "ofc.organic.png",
+      "sha256": "1473a850ce14a2cb1484561cf2a16dfcb664dc4d3e0a7e51a5d8a3e9b63e1bdd",
+      "alt": "Organic Food Chain certified organic mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "demeter.au",
+      "consumerName": "Demeter biodynamic — Australia",
+      "productionId": "demeter.au",
+      "assetId": "rveel.artwork.demeter.au.standard",
+      "variantId": "demeter.au.standard",
+      "file": "demeter.au.png",
+      "sha256": "1130600971620e2d2bd6de315f1424c7c5496aca3ffb484ae4249a3569de9495",
+      "alt": "Demeter biodynamic — Australia mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "vegan.au",
+      "consumerName": "Vegan Australia Certified",
+      "productionId": "vegan.au",
+      "assetId": "rveel.artwork.vegan.au.certification",
+      "variantId": "vegan.au.certification",
+      "file": "vegan.au.png",
+      "sha256": "0b3954cabf4948e6dfeee8802a920b7d6e3854d549031e10957aec78409c1407",
+      "alt": "Vegan Australia Certified mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "vegan.society",
+      "consumerName": "The Vegan Society Vegan Trademark",
+      "productionId": "vegan.society",
+      "assetId": "rveel.artwork.vegan.society.standard",
+      "variantId": "vegan.society.standard",
+      "file": "vegan.society.png",
+      "sha256": "19000abefd6406701f93f5065035407a2b2cb306d3875acd31c8bd386fc43072",
+      "alt": "The Vegan Society Vegan Trademark mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "coeliac.nz",
+      "consumerName": "Coeliac New Zealand Crossed Grain",
+      "productionId": "coeliac.nz",
+      "assetId": "rveel.artwork.coeliac.nz.crossedgrain",
+      "variantId": "coeliac.nz.crossedgrain",
+      "file": "coeliac.nz.png",
+      "sha256": "d6be924d9298e0dc053406ed63e2adea4b9d83a2e0b7642c7a2fe8c91e413d26",
+      "alt": "Coeliac New Zealand Crossed Grain certification mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "coeliac.au",
+      "consumerName": "Coeliac Australia Endorsement",
+      "productionId": "cert.coeliac_australia",
+      "assetId": "rveel.artwork.coeliac.au.endorsed",
+      "variantId": "coeliac.au.endorsed",
+      "file": "coeliac.au.png",
+      "sha256": "d20f504924613717c2962aa1693015933cbcdfd1d6aec8e13a2457b0c5337572",
+      "alt": "Coeliac Australia endorsed mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "bcorp.company",
+      "consumerName": "Certified B Corporation",
+      "productionId": "bcorp.company",
+      "assetId": "rveel.artwork.bcorp.certified",
+      "variantId": "bcorp.certified",
+      "file": "bcorp.company.png",
+      "sha256": "fbfe4ca63eb577247f4bf637c031577f0a34184bc76cf2e689311d682da54fb3",
+      "alt": "Certified B Corporation mark; company certification, not product certification",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example"
+      ]
+    },
+    {
+      "researchId": "fsc.100",
+      "consumerName": "FSC 100%",
+      "productionId": "fsc.100",
+      "assetId": "rveel.artwork.fsc.100.example",
+      "variantId": "fsc.100.example",
+      "file": "fsc.100.png",
+      "sha256": "f6aa93b629cdbba4cd58b06430e5d48a68ea44f1d2336e839ea59253e0f90648",
+      "alt": "FSC 100% mark",
+      "sample": true,
+      "rightsRoute": "licence_route_available",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example"
+      ]
+    },
+    {
+      "researchId": "fsc.mix",
+      "consumerName": "FSC Mix",
+      "productionId": "cert.fsc_mix",
+      "assetId": "rveel.artwork.fsc.mix.example",
+      "variantId": "fsc.mix.example",
+      "file": "fsc.mix.png",
+      "sha256": "91e3492b4dbc2bf2265c3929858d3e022746f9cb722ee0577eb84c6968bec190",
+      "alt": "FSC Mix mark",
+      "sample": true,
+      "rightsRoute": "licence_route_available",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example"
+      ]
+    },
+    {
+      "researchId": "fsc.recycled",
+      "consumerName": "FSC Recycled",
+      "productionId": "fsc.recycled",
+      "assetId": "rveel.artwork.fsc.recycled.example",
+      "variantId": "fsc.recycled.example",
+      "file": "fsc.recycled.png",
+      "sha256": "61864c4da5c550fe0d4ca8728e8267343852ac45aa56b48b58d52ac1c6e0bf21",
+      "alt": "FSC Recycled mark",
+      "sample": true,
+      "rightsRoute": "licence_route_available",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example"
+      ]
+    },
+    {
+      "researchId": "rspo.mb",
+      "consumerName": "RSPO — Mass Balance",
+      "productionId": "rspo.mb",
+      "assetId": "rveel.artwork.rspo.mb.label",
+      "variantId": "rspo.mb.label",
+      "file": "rspo.mb.png",
+      "sha256": "0afaf5803e036bfc0f88e694ca92277084f3bfedad59767d12529daa4352dc0d",
+      "alt": "RSPO Mixed palm oil label for the Mass Balance model",
+      "sample": false,
+      "rightsRoute": "owner_approval_required",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "fairtrade.fsi",
+      "consumerName": "Fairtrade sourced ingredient",
+      "productionId": "fairtrade.fsi",
+      "assetId": "rveel.artwork.fairtrade.fsi.cocoa_arrow",
+      "variantId": "fairtrade.fsi.cocoa_arrow",
+      "file": "fairtrade.fsi.png",
+      "sha256": "53c0d551a4064afdb4859ea08b93064afbf14c6439bfca572fa7ead2b4c7dfc2",
+      "alt": "FAIRTRADE Sourced Ingredient COCOA mark with arrow",
+      "sample": false,
+      "rightsRoute": "owner_approval_required",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "legacy.utz",
+      "consumerName": "UTZ Certified",
+      "productionId": "cert.utz",
+      "assetId": "rveel.artwork.utz.legacy",
+      "variantId": "utz.legacy",
+      "file": "legacy.utz.png",
+      "sha256": "94804d02e194dc405e59ace87468d0aa3c40863d2f4e19680e3f492a8ec3d49a",
+      "alt": "UTZ Certified (legacy) mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "4c.coffee",
+      "consumerName": "4C certified coffee",
+      "productionId": "4c.coffee",
+      "assetId": "rveel.artwork.4c.current",
+      "variantId": "4c.current",
+      "file": "4c.coffee.png",
+      "sha256": "b011a0e4fa8173edac42e8dd03b9cb2ab8d57b08b61cfd52773c759ae0cd843a",
+      "alt": "4C certified coffee mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "fairforlife.fairtrade",
+      "consumerName": "Fair for Life",
+      "productionId": "fairforlife.fairtrade",
+      "assetId": "rveel.artwork.fairforlife.current",
+      "variantId": "fairforlife.current",
+      "file": "fairforlife.fairtrade.png",
+      "sha256": "34d0661240a2e69f64b5c9f59db543663ed0741dc947b5a4979b6f8c502877d9",
+      "alt": "Fair for Life mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "bap.aquaculture",
+      "consumerName": "Best Aquaculture Practices (BAP)",
+      "productionId": "bap.aquaculture",
+      "assetId": "rveel.artwork.bap.legacy",
+      "variantId": "bap.legacy",
+      "file": "bap.aquaculture.png",
+      "sha256": "67ab7a56d2fbd2eb3ab4841c176ce40bb2911a9acc47a92cdc3c540276bf0a4b",
+      "alt": "Best Aquaculture Practices (BAP) mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "ggn.responsible_farming",
+      "consumerName": "GGN label",
+      "productionId": "ggn.responsible_farming",
+      "assetId": "rveel.artwork.ggn.full",
+      "variantId": "ggn.full",
+      "file": "ggn.responsible_farming.png",
+      "sha256": "781332a133bcce2b2769c49c2646af17c95ae270d44318ba653947ef490de1c0",
+      "alt": "GGN label mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "frepa.free_range",
+      "consumerName": "FREPA accredited free range",
+      "productionId": "frepa.free_range",
+      "assetId": "rveel.artwork.frepa.accredited",
+      "variantId": "frepa.accredited",
+      "file": "frepa.free_range.png",
+      "sha256": "139d74d68115f0bc3ee8de5550d8f30de14930e98cf92cdf4cb05c4e3de9ba3f",
+      "alt": "FREPA Free Range Accredited mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "spca.nz",
+      "consumerName": "SPCA Certified (New Zealand)",
+      "productionId": "spca.nz",
+      "assetId": "rveel.artwork.spca.certified",
+      "variantId": "spca.certified",
+      "file": "spca.nz.png",
+      "sha256": "6dd3101f5bae1034a2490d8b29a2d1eb206a55f991e4363594b3dcb12bd702c2",
+      "alt": "SPCA Certified (New Zealand) mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "jas.organic",
+      "consumerName": "Organic JAS",
+      "productionId": "jas.organic",
+      "assetId": "rveel.artwork.jas.standard",
+      "variantId": "jas.standard",
+      "file": "jas.organic.png",
+      "sha256": "124b3561c585dd5bb5b7fa45ecdcf671d69bcd9cd71e68fd0c9f8f97654b1ef6",
+      "alt": "Organic JAS mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "canada.organic",
+      "consumerName": "Canada Organic",
+      "productionId": "canada.organic",
+      "assetId": "rveel.artwork.canada.bilingual",
+      "variantId": "canada.bilingual",
+      "file": "canada.organic.png",
+      "sha256": "5f0633ba811354aa81ca4064f17456c20e4dacf1c592763b3f55dd23ff65f78a",
+      "alt": "Canada Organic mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "vlabel.vegan",
+      "consumerName": "V-Label Vegan",
+      "productionId": "vlabel.vegan",
+      "assetId": "rveel.artwork.vlabel.vegan",
+      "variantId": "vlabel.vegan",
+      "file": "vlabel.vegan.png",
+      "sha256": "d6fb5240b3e4dd45eecd71402a87c20289c6d55e4ec7380625e124d566d2d303",
+      "alt": "V-Label Vegan mark",
+      "sample": false,
+      "rightsRoute": "published_media_route_scope_unconfirmed",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "vlabel.vegetarian",
+      "consumerName": "V-Label Vegetarian",
+      "productionId": "vlabel.vegetarian",
+      "assetId": "rveel.artwork.vlabel.vegetarian",
+      "variantId": "vlabel.vegetarian",
+      "file": "vlabel.vegetarian.png",
+      "sha256": "d83433210f4442ce066592055e691aa9c8f1a036878db2dd3d90c3f63f4789fb",
+      "alt": "V-Label Vegetarian mark",
+      "sample": false,
+      "rightsRoute": "published_media_route_scope_unconfirmed",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "veganaction.certified",
+      "consumerName": "Certified Vegan (Vegan Action)",
+      "productionId": "veganaction.certified",
+      "assetId": "rveel.artwork.veganaction.standard",
+      "variantId": "veganaction.standard",
+      "file": "veganaction.certified.png",
+      "sha256": "bbfadd73b48b880d57b9cafd77160247d31d559cf5bf94bffc7df5a6abaa60d3",
+      "alt": "Certified Vegan (Vegan Action) mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "monash.lowfodmap",
+      "consumerName": "Monash University Low FODMAP Certified",
+      "productionId": "cert.monash_low_fodmap",
+      "assetId": "rveel.artwork.monash.standard",
+      "variantId": "monash.standard",
+      "file": "monash.lowfodmap.png",
+      "sha256": "5976a2e71411fcc6a195ca72ee25a3c8c73fcb96f16100230a499386751f6a1d",
+      "alt": "Monash University Low FODMAP Certified mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "fodmapfriendly.lowfodmap",
+      "consumerName": "FODMAP Friendly",
+      "productionId": "cert.fodmap_friendly",
+      "assetId": "rveel.artwork.fodmapfriendly.current",
+      "variantId": "fodmapfriendly.current",
+      "file": "fodmapfriendly.lowfodmap.png",
+      "sha256": "9706628cdc29fba458ab6bec36ac0df1e90cf9f287c44fd5e96233aa524cc19b",
+      "alt": "FODMAP Friendly Certified mark",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "pefc.certified",
+      "consumerName": "PEFC Certified",
+      "productionId": "pefc.certified",
+      "assetId": "rveel.artwork.pefc.certified.example",
+      "variantId": "pefc.certified.example",
+      "file": "pefc.certified.png",
+      "sha256": "0763949c983ebe2e13cb512d21efe81af70f75c3f8207349d44696c2ddb6f70d",
+      "alt": "PEFC Certified label example with placeholder licence number",
+      "sample": true,
+      "rightsRoute": "licence_route_available",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example"
+      ]
+    },
+    {
+      "researchId": "pefc.recycled",
+      "consumerName": "PEFC Recycled",
+      "productionId": "pefc.recycled",
+      "assetId": "rveel.artwork.pefc.recycled.example",
+      "variantId": "pefc.recycled.example",
+      "file": "pefc.recycled.png",
+      "sha256": "f994b48bb6cb77c6abb2dcda51e46aae53e7fb3377dc09ef12094bb62025293a",
+      "alt": "PEFC Recycled label example with placeholder licence number",
+      "sample": true,
+      "rightsRoute": "licence_route_available",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example"
+      ]
+    },
+    {
+      "researchId": "aba.home_compostable",
+      "consumerName": "ABA Home Compostable",
+      "productionId": "aba.home_compostable",
+      "assetId": "rveel.artwork.aba.home",
+      "variantId": "aba.home",
+      "file": "aba.home_compostable.png",
+      "sha256": "b409799359b42b0f5363c8e4619600fdb59b8d22a84934b1c72031f91f92aeb6",
+      "alt": "ABA Home Compostable mark, AS 5810, sample licence ABAX 9999",
+      "sample": true,
+      "rightsRoute": "owner_approval_required",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example"
+      ]
+    },
+    {
+      "researchId": "aba.commercial_compostable",
+      "consumerName": "ABA Seedling — Commercial Compostable",
+      "productionId": "aba.commercial_compostable",
+      "assetId": "rveel.artwork.aba.Seedling-Logo-green-728x1030-1",
+      "variantId": "aba.Seedling-Logo-green-728x1030-1",
+      "file": "aba.commercial_compostable.png",
+      "sha256": "d8d68fa726ed46743d5b864a8a6fd5bc60ea711f4829f4bfb21dfad23e359ecb",
+      "alt": "ABA Seedling commercial-compostable mark, AS 4736, sample licence ABAX 9999",
+      "sample": true,
+      "rightsRoute": "owner_approval_required",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example"
+      ]
+    },
+    {
+      "researchId": "halal.iccv",
+      "consumerName": "Halal certified — ICCV",
+      "productionId": "halal.iccv",
+      "assetId": "rveel.artwork.iccv.certification",
+      "variantId": "iccv.certification",
+      "file": "halal.iccv.png",
+      "sha256": "3aded45e01170b6a7616c8c17c3cb66ec66215a8a2f3a7667b1887926b0eb647",
+      "alt": "ICCV halal certification emblem",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "halal.sichma",
+      "consumerName": "Halal certified — SICHMA",
+      "productionId": "halal.sichma",
+      "assetId": "rveel.artwork.sichma.rules.x24",
+      "variantId": "sichma.rules.x24",
+      "file": "halal.sichma.png",
+      "sha256": "5cc808e3ad0d642f2cec17ec09d2e4b82575a1db47019e2e580f7a04e20caa4e",
+      "alt": "Halal certified — SICHMA mark",
+      "sample": false,
+      "rightsRoute": "owner_approval_required",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "halal.fianz",
+      "consumerName": "Halal certified — FIANZ",
+      "productionId": "halal.fianz",
+      "assetId": "rveel.artwork.fianz.certification",
+      "variantId": "fianz.certification",
+      "file": "halal.fianz.png",
+      "sha256": "315606c3d6692079b3c655424b950a880d801cf9f4c226fc5e01d1f486d5a0c1",
+      "alt": "FIANZ Certified halal certification emblem",
+      "sample": false,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example",
+        "contribution_review",
+        "product_result"
+      ]
+    },
+    {
+      "researchId": "kosher.ok",
+      "consumerName": "OK Kosher",
+      "productionId": "kosher.ok",
+      "assetId": "rveel.artwork.ok.circlek.reference",
+      "variantId": "ok.circlek.reference",
+      "file": "kosher.ok.png",
+      "sha256": "d18e254883c2b19d8932c7bb1666b967b0f4d64e516f9121721e7b47daefecd1",
+      "alt": "OK Kosher circle-K symbol from an owner publication",
+      "sample": true,
+      "rightsRoute": "permission_unknown",
+      "writtenPermission": false,
+      "surfaces": [
+        "recognition_example"
+      ]
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "msc.seafood",
+      "reason": "Multiple packet marks and no single display file."
+    },
+    {
+      "id": "aco.organic",
+      "reason": "Multiple sample files. None are shown."
+    },
+    {
+      "id": "aco.conversion",
+      "reason": "Multiple sample files. None are shown."
+    },
+    {
+      "id": "biogro.conversion",
+      "reason": "No packaged raster mark."
+    },
+    {
+      "id": "asurequality.organic",
+      "reason": "Only a sample or watermarked file. Review and Results use the name."
+    },
+    {
+      "id": "sxc.organic",
+      "reason": "No packaged raster mark."
+    },
+    {
+      "id": "usda.organic",
+      "reason": "Multiple display files. No variant was chosen."
+    },
+    {
+      "id": "eu.organic",
+      "reason": "Multiple packet marks and no single display file."
+    },
+    {
+      "id": "soilassociation.organic",
+      "reason": "Multiple packet marks and no single display file."
+    },
+    {
+      "id": "bcorp.company",
+      "reason": "Only a sample or watermarked file. Review and Results use the name."
+    },
+    {
+      "id": "fsc.100",
+      "reason": "Only a sample or watermarked file. Review and Results use the name."
+    },
+    {
+      "id": "fsc.mix",
+      "reason": "Only a sample or watermarked file. Review and Results use the name."
+    },
+    {
+      "id": "fsc.recycled",
+      "reason": "Only a sample or watermarked file. Review and Results use the name."
+    },
+    {
+      "id": "fairtrade.product",
+      "reason": "Multiple packet marks and no single display file."
+    },
+    {
+      "id": "bonsucro.sugarcane",
+      "reason": "No packaged raster mark."
+    },
+    {
+      "id": "fairwild.ingredients",
+      "reason": "Multiple packet marks and no single display file."
+    },
+    {
+      "id": "gfco.glutenfree",
+      "reason": "Multiple packet marks and no single display file."
+    },
+    {
+      "id": "pefc.certified",
+      "reason": "Only a sample or watermarked file. Review and Results use the name."
+    },
+    {
+      "id": "pefc.recycled",
+      "reason": "Only a sample or watermarked file. Review and Results use the name."
+    },
+    {
+      "id": "aba.home_compostable",
+      "reason": "Only a sample or watermarked file. Review and Results use the name."
+    },
+    {
+      "id": "aba.commercial_compostable",
+      "reason": "Only a sample or watermarked file. Review and Results use the name."
+    },
+    {
+      "id": "climateactive.carbonneutral",
+      "reason": "No packaged raster mark."
+    },
+    {
+      "id": "toitu.netcarbonzero",
+      "reason": "Multiple display files. No variant was chosen."
+    },
+    {
+      "id": "halal.hca",
+      "reason": "No packaged raster mark."
+    },
+    {
+      "id": "halal.australia",
+      "reason": "No packaged raster mark."
+    },
+    {
+      "id": "halal.nzidt",
+      "reason": "No packaged raster mark."
+    },
+    {
+      "id": "kosher.australia",
+      "reason": "No packaged raster mark."
+    },
+    {
+      "id": "kosher.ka",
+      "reason": "No packaged raster mark."
+    },
+    {
+      "id": "kosher.ou",
+      "reason": "No packaged raster mark."
+    },
+    {
+      "id": "kosher.ok",
+      "reason": "Only a sample or watermarked file. Review and Results use the name."
+    },
+    {
+      "id": "kosher.stark",
+      "reason": "No packaged raster mark."
+    }
+  ]
+}

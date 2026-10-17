@@ -1719,7 +1719,15 @@ export default function PacketContributionModal({
                       accessibilityLabel={`Add ${hit.consumerName}`}
                       style={[styles.suggestionRow, styles.suggestionChoice, { borderColor: line, backgroundColor: fieldBg }]}
                     >
-                      <Text style={{ color: action, fontWeight: '700' }}>{hit.consumerName}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <CertificationMark
+                          name={hit.consumerName}
+                          productionId={hit.productionId || undefined}
+                          surface="recognition_example"
+                          imageOnly
+                        />
+                        <Text style={{ color: action, fontWeight: '700' }}>{hit.consumerName}</Text>
+                      </View>
                       {hit.qualifier ? <Text style={{ color: muted }}>{hit.qualifier}</Text> : null}
                     </Pressable>
                   ) : (
