@@ -340,24 +340,10 @@ export class PostgresAuthorityStore implements AuthorityStore {
         return found.rows.map(versionFrom);
       },
       async updateGovernance(versionId, governance) {
+        // Content stays immutable. Withdrawal is the governance state, and the snapshot omits it.
         await client.query(
           `UPDATE evidence_versions
-           SET governance_state = $2,
-               content_json = CASE
-                 WHEN $2 IN ('withdrawn', 'suppressed') THEN
-                   jsonb_set(
-                     jsonb_set(
-                       jsonb_set(content_json, '{state}', '"withdrawn"'::jsonb, true),
-                       '{scoringEligible}',
-                       'false'::jsonb,
-                       true
-                     ),
-                     '{canonicalPromoted}',
-                     'false'::jsonb,
-                     true
-                   )
-                 ELSE content_json
-               END
+           SET governance_state = $2
            WHERE version_id = $1`,
           [versionId, governance]
         );

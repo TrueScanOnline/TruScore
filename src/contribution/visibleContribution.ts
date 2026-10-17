@@ -30,6 +30,7 @@ export type VisibleContributionInput = {
   initialClaims?: string[];
   certifications: string[];
   initialCertifications?: string[];
+  certificationIdByStatement?: Record<string, string>;
   pendingPacketWording?: string;
   catalogueName?: string;
   absence?: boolean;
@@ -146,6 +147,7 @@ export function prepareVisibleContribution(input: VisibleContributionInput): Vis
           claims: packet.claims,
           initialCertifications: input.initialCertifications,
           certifications: packet.certifications,
+          certificationIdByStatement: input.certificationIdByStatement,
         }
       : {}),
   });

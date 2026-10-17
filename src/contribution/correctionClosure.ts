@@ -77,6 +77,18 @@ function nutritionFact(prefill: NutritionSourcePrefill | undefined): EvidenceFac
   };
 }
 
+function certificationFact(wording: string, ids?: Record<string, string>): EvidenceFactInput | null {
+  const name = wording.trim();
+  if (!name) return null;
+  const certificationId = ids?.[name];
+  return {
+    domain: 'certifications',
+    exactWording: name,
+    claimValue: name,
+    ...(certificationId ? { certificationId } : {}),
+  };
+}
+
 export function ceasedPrevailingSubjectKeys(baseline: EvidenceFactInput[], represented: EvidenceFactInput[]): string[] {
   const kept = new Set(keysOf(represented));
   return keysOf(baseline).filter((key) => !kept.has(key));
@@ -93,6 +105,8 @@ export function correctionClosureFacts(input: {
   claims?: string[];
   initialCertifications?: string[];
   certifications?: string[];
+  /** Production identity for a displayed certification name, so cessation addresses the admitted subject. */
+  certificationIdByStatement?: Record<string, string>;
 }): { baseline: EvidenceFactInput[]; represented: EvidenceFactInput[] } {
   const baseline: EvidenceFactInput[] = [];
   const represented: EvidenceFactInput[] = [];
@@ -125,12 +139,12 @@ export function correctionClosureFacts(input: {
     if (wording) represented.push({ domain: 'packet_claims', exactWording: wording, claimValue: wording });
   }
   for (const cert of input.initialCertifications || []) {
-    const wording = cert.trim();
-    if (wording) baseline.push({ domain: 'certifications', exactWording: wording, claimValue: wording });
+    const fact = certificationFact(cert, input.certificationIdByStatement);
+    if (fact) baseline.push(fact);
   }
   for (const cert of input.certifications || []) {
-    const wording = cert.trim();
-    if (wording) represented.push({ domain: 'certifications', exactWording: wording, claimValue: wording });
+    const fact = certificationFact(cert, input.certificationIdByStatement);
+    if (fact) represented.push(fact);
   }
   return { baseline, represented };
 }

@@ -7,10 +7,14 @@ import {
 } from '../../../certifications/discoveryCatalogue';
 import {
   addPendingObservation,
+  certificationIdsForNames,
   certificationStatementForSelection,
   choosePacketSuggestion,
+  governedIdentityForDisplayedName,
   pendingContributionLists,
+  pendingFromCurrentObservations,
   replacePendingLiteral,
+  replacePendingObservation,
 } from '../../../certifications/pendingPacketObservation';
 import { consumerCertificationLine } from '../../../certifications/resolveCertification';
 import { governedCertificationLabels } from '../../../contributions/certificationLane';
@@ -294,6 +298,37 @@ describe('packet claims manual discovery input', () => {
     };
     expect(searchDiscoveryCatalogue('Fairtrade', [retired])).toEqual([]);
     expect(governedCertificationLabels('Fairtrade')).toEqual(['en:fair-trade']);
+  });
+
+  it('reopens a governed certification with suggestions and replaces or removes that one observation', () => {
+    const current = pendingFromCurrentObservations([], ['Vegan Australia Certified', 'V-Label Vegan']);
+    expect(current.map((row) => row.productionCertificationId).sort()).toEqual(['vegan.au', 'vlabel.vegan']);
+    expect(certificationIdsForNames(['Vegan Australia Certified', 'V-Label Vegan'])).toEqual({
+      'Vegan Australia Certified': 'vegan.au',
+      'V-Label Vegan': 'vlabel.vegan',
+    });
+    const vegan = current.find((row) => row.productionCertificationId === 'vegan.au');
+    const asWording = replacePendingObservation(current, vegan!.localId, { literalWording: 'Vegan Australia', source: 'manual' });
+    expect(asWording.rows.some((row) => row.productionCertificationId === 'vegan.au')).toBe(false);
+    expect(asWording.rows.some((row) => row.literalWording === 'Vegan Australia' && !row.productionCertificationId)).toBe(true);
+    expect(asWording.rows.some((row) => row.productionCertificationId === 'vlabel.vegan')).toBe(true);
+    const hit = searchDiscoveryCatalogue('Veg').find((row) => row.consumerName === 'Vegan Australia Certified');
+    const restored = replacePendingObservation(asWording.rows, asWording.rows.find((row) => row.literalWording === 'Vegan Australia')!.localId, {
+      literalWording: hit!.consumerName,
+      source: 'manual',
+      productionCertificationId: hit!.productionId || undefined,
+      canonicalName: hit!.consumerName,
+    });
+    expect(restored.rows.filter((row) => row.productionCertificationId === 'vegan.au')).toHaveLength(1);
+    const removed = replacePendingObservation(
+      restored.rows,
+      restored.rows.find((row) => row.productionCertificationId === 'vlabel.vegan')!.localId,
+      { literalWording: 'Source of Fibre', source: 'manual' }
+    );
+    const lists = pendingContributionLists(removed.rows);
+    expect(lists.certifications).toEqual(['Vegan Australia Certified']);
+    expect(lists.claims).toEqual(['Source of Fibre']);
+    expect(governedIdentityForDisplayedName('Vegan Australia')).toBeNull();
   });
 
   it('renders text unless artwork permission, asset, surface and association all pass', () => {

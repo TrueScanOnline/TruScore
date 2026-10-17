@@ -4,7 +4,7 @@
  */
 
 import { displayNameForCertification, resolvePacketObservation } from './resolveCertification';
-import { normalizeDiscoveryQuery, type DiscoverySuggestion } from './discoveryCatalogue';
+import { discoveryEntries, normalizeDiscoveryQuery, type DiscoverySuggestion } from './discoveryCatalogue';
 
 export const PACKET_INPUT_INSTRUCTION = 'Add claims or certification marks shown on the pack.';
 export const PACKET_WORDING_FIELD = 'Type what you see on the pack';
@@ -44,6 +44,73 @@ export function addPendingObservation(
   };
   if (rows.some((row) => samePendingObservation(row, observation))) return { rows, added: false };
   return { rows: [...rows, observation], added: true };
+}
+
+/** Exact governed name only. A shorter search fragment is not an identity. */
+export function governedIdentityForDisplayedName(name: string): { productionId: string; consumerName: string } | null {
+  const key = normalizeDiscoveryQuery(name);
+  if (!key) return null;
+  const matches = discoveryEntries().filter(
+    (entry) => entry.selectable && entry.productionId && normalizeDiscoveryQuery(entry.consumerName) === key
+  );
+  if (matches.length === 1 && matches[0].productionId) {
+    return { productionId: matches[0].productionId, consumerName: matches[0].consumerName };
+  }
+  const resolved = resolvePacketObservation({ observedWording: name });
+  if (resolved.kind === 'certification') {
+    return { productionId: resolved.certificationId, consumerName: resolved.displayName };
+  }
+  return null;
+}
+
+export function certificationIdsForNames(names: string[]): Record<string, string> {
+  const ids: Record<string, string> = {};
+  for (const name of names) {
+    const identity = governedIdentityForDisplayedName(name);
+    if (!identity) continue;
+    ids[identity.consumerName] = identity.productionId;
+    const shown = name.trim();
+    if (shown && shown !== identity.consumerName) ids[shown] = identity.productionId;
+  }
+  return ids;
+}
+
+/** Current Result observations, with a governed identity when the displayed name is that certification. */
+export function pendingFromCurrentObservations(claims: string[], certifications: string[]): PendingPacketObservation[] {
+  let rows: PendingPacketObservation[] = [];
+  for (const claim of claims) {
+    const wording = claim.trim();
+    if (!wording) continue;
+    rows = addPendingObservation(rows, { literalWording: wording, source: 'manual' }).rows;
+  }
+  for (const cert of certifications) {
+    const shown = cert.trim();
+    if (!shown) continue;
+    const identity = governedIdentityForDisplayedName(shown);
+    rows = addPendingObservation(
+      rows,
+      identity
+        ? {
+            literalWording: identity.consumerName,
+            source: 'manual',
+            productionCertificationId: identity.productionId,
+            canonicalName: identity.consumerName,
+          }
+        : { literalWording: shown, source: 'manual' }
+    ).rows;
+  }
+  return rows;
+}
+
+/** Change replaces one observation. The rest of the list stays. */
+export function replacePendingObservation(
+  rows: PendingPacketObservation[],
+  localId: string,
+  next: Omit<PendingPacketObservation, 'localId'>
+): { rows: PendingPacketObservation[]; replaced: boolean } {
+  if (!rows.some((row) => row.localId === localId)) return { rows, replaced: false };
+  const remaining = rows.filter((row) => row.localId !== localId);
+  return { rows: addPendingObservation(remaining, next).rows, replaced: true };
 }
 
 export function replacePendingLiteral(rows: PendingPacketObservation[], localId: string, literalWording: string): PendingPacketObservation[] {

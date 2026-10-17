@@ -18,7 +18,14 @@ import { stampCoreTruthAuthority } from '../../../config/coreTruthProductCacheAu
 import { sha256Hex } from '../../../packetContribution/sha256';
 import type { Product } from '../../../types/product';
 import { calculateTrustScore } from '../../../utils/trustScore';
-import { resultContributionActions } from '../../../contribution/resultContributionActions';
+import { admittedPacketContributionRepresented, resultContributionActions } from '../../../contribution/resultContributionActions';
+import { prepareVisibleContribution } from '../../../contribution/visibleContribution';
+import {
+  certificationIdsForNames,
+  pendingContributionLists,
+  pendingFromCurrentObservations,
+  replacePendingObservation,
+} from '../../../certifications/pendingPacketObservation';
 import {
   bodyDataLimitationActions,
   projectGovernedCertificationNames,
@@ -508,5 +515,102 @@ describe('contribution correction closure', () => {
     expect(restoredRows.some((row) => row.adjustmentId === 'ethics-v37-cert-organic')).toBe(false);
     expect(restored.rveelGovernedCertifications).toBeUndefined();
     expect((restored.rveelGovernedPacketClaims || []).map((row) => row.exactWording)).toContain('Organic');
+  });
+
+  it('replaces and removes non-scoring certifications on the current Result without changing the score', async () => {
+    const service = authority();
+    const contributor = await service.issueCredential();
+    const vegan = {
+      domain: 'certifications' as const,
+      claimValue: 'Vegan Australia Certified',
+      exactWording: 'Vegan Australia Certified',
+      certificationId: 'vegan.au',
+    };
+    const label = {
+      domain: 'certifications' as const,
+      claimValue: 'V-Label Vegan',
+      exactWording: 'V-Label Vegan',
+      certificationId: 'vlabel.vegan',
+    };
+    const first = await send(service, contributor.contributorId, [vegan, label], 'both-vegan');
+    const shown = await calculateTrustScore(food(), { authoritativeSnapshot: first.snapshot });
+    expect(shown.rveelGovernedCertifications).toEqual(['Vegan Australia Certified', 'V-Label Vegan']);
+    expect(shown.trust_score).toBe((await calculateTrustScore(food())).trust_score);
+    const ids = certificationIdsForNames(shown.rveelGovernedCertifications || []);
+    const opened = pendingFromCurrentObservations([], shown.rveelGovernedCertifications || []);
+    const veganRow = opened.find((row) => row.productionCertificationId === 'vegan.au');
+    const asWording = replacePendingObservation(opened, veganRow!.localId, { literalWording: 'Vegan Australia', source: 'manual' });
+    const wordingLists = pendingContributionLists(asWording.rows);
+    const wordingDecision = prepareVisibleContribution({
+      contexts: ['packetClaims'],
+      ingredientsText: '',
+      nutrition: { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' },
+      nutritionBaseline: { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' },
+      origins: [],
+      claims: wordingLists.claims,
+      initialClaims: [],
+      certifications: wordingLists.certifications,
+      initialCertifications: shown.rveelGovernedCertifications,
+      certificationIdByStatement: { ...ids, ...wordingLists.productionByStatement },
+    });
+    expect(wordingDecision.status).toBe('ready');
+    if (wordingDecision.status !== 'ready') return;
+    expect(wordingDecision.claims).toEqual(['Vegan Australia']);
+    expect(wordingDecision.certifications).toEqual([]);
+    expect(wordingDecision.ceasedSubjectKeys).toEqual(['certifications|scheme:vegan.au']);
+    const claim = { domain: 'packet_claims' as const, exactWording: 'Vegan Australia', claimValue: 'Vegan Australia' };
+    const changed = await send(service, contributor.contributorId, [claim], 'to-wording', wordingDecision.ceasedSubjectKeys);
+    const afterWording = await calculateTrustScore(food(), { authoritativeSnapshot: changed.snapshot });
+    expect(afterWording.rveelGovernedCertifications).toEqual(['V-Label Vegan']);
+    expect((afterWording.rveelGovernedPacketClaims || []).map((row) => row.exactWording)).toEqual(['Vegan Australia']);
+    const withoutLabel = prepareVisibleContribution({
+      contexts: ['packetClaims'],
+      ingredientsText: '',
+      nutrition: { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' },
+      nutritionBaseline: { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' },
+      origins: [],
+      claims: ['Vegan Australia'],
+      initialClaims: ['Vegan Australia'],
+      certifications: [''],
+      initialCertifications: afterWording.rveelGovernedCertifications,
+      certificationIdByStatement: certificationIdsForNames(afterWording.rveelGovernedCertifications || []),
+    });
+    expect(withoutLabel.status).toBe('ready');
+    if (withoutLabel.status !== 'ready') return;
+    expect(withoutLabel.ceasedSubjectKeys).toEqual(['certifications|scheme:vlabel.vegan']);
+    const removed = await send(service, contributor.contributorId, [], 'remove-label', withoutLabel.ceasedSubjectKeys);
+    const afterRemoval = await calculateTrustScore(food(), { authoritativeSnapshot: removed.snapshot });
+    expect(afterRemoval.rveelGovernedCertifications).toBeUndefined();
+    expect((afterRemoval.rveelGovernedPacketClaims || []).map((row) => row.exactWording)).toEqual(['Vegan Australia']);
+    const reloaded = await service.snapshot(BARCODE);
+    const reloadedProduct = await calculateTrustScore(food(), { authoritativeSnapshot: reloaded });
+    expect(reloadedProduct.rveelGovernedCertifications).toBeUndefined();
+    expect((reloadedProduct.rveelGovernedPacketClaims || []).map((row) => row.exactWording)).toEqual(['Vegan Australia']);
+    const unchanged = prepareVisibleContribution({
+      contexts: ['packetClaims'],
+      ingredientsText: '',
+      nutrition: { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' },
+      nutritionBaseline: { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' },
+      origins: [],
+      claims: ['Vegan Australia'],
+      initialClaims: ['Vegan Australia'],
+      certifications: [''],
+      initialCertifications: [],
+    });
+    expect(unchanged.status).toBe('unchanged');
+    const back = await send(service, contributor.contributorId, [vegan], 'back-to-cert', keys([claim]));
+    const certifiedAgain = await calculateTrustScore(food(), { authoritativeSnapshot: back.snapshot });
+    expect(certifiedAgain.rveelGovernedCertifications).toEqual(['Vegan Australia Certified']);
+    expect(certifiedAgain.rveelGovernedPacketClaims).toBeUndefined();
+    expect(certifiedAgain.trust_score).toBe(shown.trust_score);
+    expect(admittedPacketContributionRepresented(certifiedAgain)).toBe(true);
+    const cleared = await send(service, contributor.contributorId, [], 'remove-last', keys([vegan]));
+    const empty = await calculateTrustScore(food(), { authoritativeSnapshot: cleared.snapshot });
+    expect(empty.rveelGovernedCertifications).toBeUndefined();
+    expect(empty.rveelGovernedPacketClaims).toBeUndefined();
+    expect(admittedPacketContributionRepresented(empty)).toBe(false);
+    const history = await service.history(BARCODE);
+    expect(history.some((row) => row.subjectKey === 'certifications|scheme:vegan.au' && row.governance === 'withdrawn')).toBe(true);
+    expect(history.some((row) => row.content.exactWording === 'Vegan Australia Certified')).toBe(true);
   });
 });

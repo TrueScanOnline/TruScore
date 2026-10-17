@@ -120,6 +120,8 @@ describe('Wave 4A shared evidence authority', () => {
     expect(pg).toContain('FOR UPDATE');
     expect(pg).not.toContain('EVIDENCE_AUTHORITY_SCHEMA_SQL');
     expect(pg).toContain('assertSchemaReady');
+    expect(pg).toContain('SET governance_state = $2');
+    expect(pg).not.toContain('jsonb_set');
     const script = fs.readFileSync(
       path.join(process.cwd(), 'backend/vercel/scripts/apply-evidence-authority-schema.cjs'),
       'utf8'

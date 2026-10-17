@@ -91,15 +91,34 @@ import {
   PACKET_INPUT_INSTRUCTION,
   PACKET_WORDING_FIELD,
   addPendingObservation,
+  certificationIdsForNames,
   certificationStatementForSelection,
   choosePacketSuggestion,
   pendingContributionLists,
+  governedIdentityForDisplayedName,
+  pendingFromCurrentObservations,
   removePendingObservation,
-  replacePendingLiteral,
+  replacePendingObservation,
   type PendingPacketObservation,
 } from '../certifications/pendingPacketObservation';
 import { recordUnresolvedObservation } from '../certifications/unresolvedMarkCandidates';
 import CertificationMark from './CertificationMark';
+
+function mergeCurrentWordings(initial: string[] | undefined, current: string[]): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  const push = (value: string) => {
+    const text = value.trim();
+    if (!text) return;
+    const key = text.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(text);
+  };
+  for (const row of initial || []) push(row);
+  for (const row of current) push(row);
+  return out.length > 0 ? out : [''];
+}
 
 type Preview = {
   /** Same value as the session source asset id. Required by EvidenceSurfaceImage. */
@@ -391,32 +410,28 @@ export default function PacketContributionModal({
         if (pendingTouchedRef.current) {
           await upsertSession({ ...opened, pendingObservations: pendingRef.current });
         } else {
-        const restored = (opened.pendingObservations || []).filter((row) => row.literalWording.trim() || row.canonicalName);
+        const restored = (opened.pendingObservations || [])
+          .filter((row) => row.literalWording.trim() || row.canonicalName)
+          .map((row) => {
+            if (row.productionCertificationId) return row;
+            const identity = governedIdentityForDisplayedName(row.canonicalName || row.literalWording);
+            if (!identity) return row;
+            return {
+              ...row,
+              literalWording: identity.consumerName,
+              canonicalName: identity.consumerName,
+              productionCertificationId: identity.productionId,
+            };
+          });
         if (restored.length > 0) {
           pendingRef.current = restored;
           setPending(restored);
         }
         else if (surfaceModeRef.current === 'change') {
-          let rows: PendingPacketObservation[] = [];
-          for (const claim of initialClaimsRef.current || []) {
-            if (!packetRowVisible('change', claim, [])) continue;
-            rows = addPendingObservation(rows, { literalWording: claim, source: 'manual' }).rows;
-          }
-          for (const cert of initialCertificationsRef.current || []) {
-            if (!packetRowVisible('change', cert, [])) continue;
-            const resolved = resolvePacketObservation({ observedWording: cert });
-            rows = addPendingObservation(
-              rows,
-              resolved.kind === 'certification'
-                ? {
-                    literalWording: cert,
-                    source: 'manual',
-                    productionCertificationId: resolved.certificationId,
-                    canonicalName: resolved.displayName,
-                  }
-                : { literalWording: cert, source: 'manual' }
-            ).rows;
-          }
+          const rows = pendingFromCurrentObservations(
+            (initialClaimsRef.current || []).filter((claim) => packetRowVisible('change', claim, [])),
+            (initialCertificationsRef.current || []).filter((cert) => packetRowVisible('change', cert, []))
+          );
           pendingRef.current = rows;
           setPending(rows);
         }
@@ -704,11 +719,26 @@ export default function PacketContributionModal({
     setAcceptedProposals((rows) => (rows.includes(proposalId) ? rows : [...rows, proposalId]));
   };
 
+  const applyReplacement = (localId: string, next: Omit<PendingPacketObservation, 'localId'>) => {
+    const replaced = replacePendingObservation(pending, localId, next);
+    if (!replaced.replaced) return;
+    setEditingPendingId(null);
+    setPacketQuery('');
+    setAbsence(false);
+    setPartialNotice(null);
+    void rememberPending(replaced.rows);
+  };
+
   const addLiteralWording = (
     wording: string,
     source: PendingPacketObservation['source'] = 'manual',
     proposalId?: string
   ) => {
+    if (editingPendingId && source === 'manual') {
+      if (!wording.trim()) return;
+      applyReplacement(editingPendingId, { literalWording: wording, source: 'manual' });
+      return;
+    }
     const next = addPendingObservation(pending, { literalWording: wording, source });
     if (!next.added) {
       setPartialNotice('That’s already in the list.');
@@ -747,6 +777,15 @@ export default function PacketContributionModal({
   };
 
   const chooseSuggestion = (hit: DiscoverySuggestion) => {
+    if (editingPendingId && hit.selectable && hit.productionId && hit.consumerName.trim()) {
+      applyReplacement(editingPendingId, {
+        literalWording: hit.consumerName.trim(),
+        source: 'manual',
+        productionCertificationId: hit.productionId,
+        canonicalName: hit.consumerName.trim(),
+      });
+      return;
+    }
     const next = choosePacketSuggestion(pending, hit, packetQuery);
     setPacketQuery(next.fieldText);
     if (!next.added) {
@@ -790,6 +829,21 @@ export default function PacketContributionModal({
       const observations: { unitId: string; label: string; kind: 'ingredients' | 'nutrition' | 'origin' | 'claim' | 'cert' | 'absence'; index: number }[] = [];
       const contexts = includedContexts;
       const packetDraft = packetInformationContext(entryContext) ? pendingContributionLists(pending) : null;
+      const keepCurrent = surfaceModeRef.current === 'add';
+      const representedClaims = packetDraft
+        ? keepCurrent
+          ? mergeCurrentWordings(initialClaimsRef.current, packetDraft.claims)
+          : packetDraft.claims
+        : claims.map((row) => textField(row));
+      const representedCerts = packetDraft
+        ? keepCurrent
+          ? mergeCurrentWordings(initialCertificationsRef.current, packetDraft.certifications)
+          : packetDraft.certifications
+        : certs.map((row) => textField(row));
+      const certificationIdByStatement = {
+        ...certificationIdsForNames(initialCertificationsRef.current || []),
+        ...(packetDraft?.productionByStatement || {}),
+      };
       const originRowsNow = origins.map((row) => safeOrigin(row));
       const openedOriginsNow = openedOriginsRef.current.map((row) => safeOrigin(row));
       const removedOriginKeys = ceasedOriginsRemovedFromForm(openedOriginsNow, originRowsNow);
@@ -811,10 +865,11 @@ export default function PacketContributionModal({
           ) as typeof amounts,
         },
         origins: originRowsNow,
-        claims: packetDraft ? packetDraft.claims.map((row) => textField(row)) : claims.map((row) => textField(row)),
+        claims: representedClaims.map((row) => textField(row)),
         initialClaims: (initialClaimsRef.current || []).map((row) => textField(row)),
-        certifications: packetDraft ? packetDraft.certifications.map((row) => textField(row)) : certs.map((row) => textField(row)),
+        certifications: representedCerts.map((row) => textField(row)),
         initialCertifications: (initialCertificationsRef.current || []).map((row) => textField(row)),
+        certificationIdByStatement,
         pendingPacketWording: packetDraft ? '' : textField(packetQuery),
         catalogueName: undefined,
         absence,
@@ -1660,17 +1715,7 @@ export default function PacketContributionModal({
                 ))}
                 {pending.map((row) => (
                   <View key={row.localId}>
-                    {editingPendingId === row.localId ? (
-                      <TextInput
-                        value={row.literalWording}
-                        onChangeText={(value) => {
-                          if (value.trim()) setAbsence(false);
-                          void rememberPending(replacePendingLiteral(pending, row.localId, value));
-                        }}
-                        style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
-                        accessibilityLabel="Edit packet wording"
-                      />
-                    ) : row.productionCertificationId ? (
+                    {row.productionCertificationId ? (
                       <View>
                         <CertificationMark
                           name={row.canonicalName || row.literalWording}
@@ -1683,7 +1728,15 @@ export default function PacketContributionModal({
                       <Text style={{ color: ink }}>{row.literalWording}</Text>
                     )}
                     <View style={styles.row}>
-                      <TouchableOpacity onPress={() => setEditingPendingId(row.localId)} accessibilityRole="button" accessibilityLabel={PACKET_REVIEW_CHANGE}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setEditingPendingId(row.localId);
+                          setPacketQuery('');
+                          packetInputRef.current?.focus();
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${PACKET_REVIEW_CHANGE} ${row.canonicalName || row.literalWording}`}
+                      >
                         <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -1696,6 +1749,11 @@ export default function PacketContributionModal({
                     </View>
                   </View>
                 ))}
+                {editingPendingId ? (
+                  <Text style={{ color: ink }}>
+                    Changing {pending.find((row) => row.localId === editingPendingId)?.canonicalName || pending.find((row) => row.localId === editingPendingId)?.literalWording}
+                  </Text>
+                ) : null}
                 <TextInput
                   ref={packetInputRef}
                   value={packetQuery}
