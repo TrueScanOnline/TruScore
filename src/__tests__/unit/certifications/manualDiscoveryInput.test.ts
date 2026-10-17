@@ -20,11 +20,12 @@ import type { Product } from '../../../types/product';
 describe('packet claims manual discovery input', () => {
   const validation = discoveryCatalogueValidation();
 
-  it('loads catalogue 1.0.2 with ten scoring identities and five non-scoring vegan identities', () => {
+  it('loads catalogue 1.0.3 with ten scoring identities and recognised non-scoring identities', () => {
     expect(validation.ok).toBe(true);
-    expect(validation.assetVersion).toBe('1.0.2');
+    expect(validation.assetVersion).toBe('1.0.3');
+    expect(validation.entryCount).toBe(82);
     expect(validation.selectableExistingCount).toBe(10);
-    expect(validation.selectableNonscoringCount).toBe(5);
+    expect(validation.selectableNonscoringCount).toBe(50);
     expect(validation.errors).toEqual([]);
   });
 
@@ -39,8 +40,10 @@ describe('packet claims manual discovery input', () => {
 
   it('shows organic discovery and still allows the typed wording without selecting ACO', () => {
     const hits = searchDiscoveryCatalogue('organic');
-    expect(hits.some((hit) => hit.productionId === 'cert.aco_organic' && hit.selectable)).toBe(true);
-    expect(hits.some((hit) => hit.selectable === false)).toBe(true);
+    expect(hits.some((hit) => hit.productionId === 'cert.aco_organic' && hit.selectable && hit.scoringEligible)).toBe(true);
+    expect(hits.some((hit) => hit.productionId === 'usda.organic' && hit.selectable && hit.scoringEligible === false)).toBe(true);
+    expect(searchDiscoveryCatalogue('RSPCA').find((hit) => hit.entryId === 'rspca.au')?.selectable).toBe(false);
+    expect(searchDiscoveryCatalogue('NASAA').some((hit) => hit.entryId === 'nasaa.organic')).toBe(false);
     const lists = pendingContributionLists([], 'organic');
     expect(lists.claims).toEqual(['organic']);
     expect(lists.certifications).toEqual(['']);
@@ -141,8 +144,8 @@ describe('packet claims manual discovery input', () => {
     const fsc = searchDiscoveryCatalogue('FSC Mix').find((hit) => hit.productionId === 'cert.fsc_mix');
     expect(utz?.productionId).toBe('cert.utz');
     expect(utz?.consumerName).toBe('UTZ Certified');
-    expect(regenerative.some((hit) => hit.selectable)).toBe(false);
-    expect(regenerative.some((hit) => hit.consumerName.includes('Regenerative'))).toBe(true);
+    expect(regenerative.find((hit) => hit.entryId === 'ra.regenerative')?.selectable).toBe(true);
+    expect(regenerative.find((hit) => hit.entryId === 'ra.regenerative')?.scoringEligible).toBe(false);
     expect(fodmap.filter((hit) => hit.selectable).map((hit) => hit.productionId).sort()).toEqual([
       'cert.fodmap_friendly',
       'cert.monash_low_fodmap',

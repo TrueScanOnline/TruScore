@@ -1,16 +1,16 @@
 /**
  * Versioned packet-certification discovery asset.
- * Search can surface wording. Only a deliberate tap on a selectable_existing
- * row may name an existing production certification. Scoring is unchanged.
+ * Search can surface wording. A deliberate tap on a selectable row names that
+ * governed certification. Only selectable_existing rows have a scoring route.
  */
 
 import { displayNameForCertification } from './resolveCertification';
 import asset from './governed/packet_certification_manual_discovery_v1_0_1.json';
-import selectionUpdate from './governed/packet_certification_selection_v1_0_2.json';
+import selectionRegister from './governed/packet_certification_selection_v1_0_3.json';
 
 export const DISCOVERY_ASSET_ID = 'rveel.packet_certification_manual_discovery';
 export const DISCOVERY_BASE_VERSION = '1.0.1';
-export const DISCOVERY_ASSET_VERSION = '1.0.2';
+export const DISCOVERY_ASSET_VERSION = '1.0.3';
 
 export type DiscoveryTreatment =
   | 'selectable_existing'
@@ -282,52 +282,92 @@ function aliasCollisions(entries: DiscoveryEntry[]): DiscoveryValidation['aliasC
     .map(([term, ids]) => ({ term, entryIds: [...ids].sort() }));
 }
 
-type SelectionAmendment = {
+type SelectionRegisterRow = {
   id?: unknown;
   runtime_treatment?: unknown;
   selectable?: unknown;
   scoring_eligible?: unknown;
   existing_production_id?: unknown;
+  reason?: unknown;
 };
 
-/** Applies the versioned selection update onto 1.0.1. Historical evidence is not rewritten. */
-export function applySelectionUpdate(
+function invalidRegister(
+  loaded: { entries: DiscoveryEntry[]; validation: DiscoveryValidation },
+  version: string,
+  errors: string[]
+): { entries: DiscoveryEntry[]; validation: DiscoveryValidation } {
+  return {
+    entries: [],
+    validation: {
+      ...loaded.validation,
+      ok: false,
+      assetVersion: version,
+      entryCount: 0,
+      selectableExistingCount: 0,
+      selectableNonscoringCount: 0,
+      errors: [...loaded.validation.errors, ...errors],
+      aliasCollisions: [],
+    },
+  };
+}
+
+/** Applies the versioned selection register onto 1.0.1. Historical evidence is not rewritten. */
+export function applySelectionRegister(
   loaded: { entries: DiscoveryEntry[]; validation: DiscoveryValidation },
   update: unknown
 ): { entries: DiscoveryEntry[]; validation: DiscoveryValidation } {
   const record = update && typeof update === 'object' ? (update as Record<string, unknown>) : null;
   const version = text(record?.asset_version);
   const base = text(record?.base_asset_version);
-  const amendments = Array.isArray(record?.amendments) ? (record?.amendments as SelectionAmendment[]) : null;
-  if (!record || text(record.asset_id) !== DISCOVERY_ASSET_ID || version !== DISCOVERY_ASSET_VERSION || base !== DISCOVERY_BASE_VERSION || !amendments) {
-    return {
-      entries: [],
-      validation: {
-        ...loaded.validation,
-        ok: false,
-        assetVersion: version,
-        entryCount: 0,
-        selectableExistingCount: 0,
-        selectableNonscoringCount: 0,
-        errors: [...loaded.validation.errors, 'selection_update_invalid'],
-        aliasCollisions: [],
-      },
-    };
+  const rows = Array.isArray(record?.register) ? (record.register as SelectionRegisterRow[]) : null;
+  if (!record || text(record.asset_id) !== DISCOVERY_ASSET_ID || version !== DISCOVERY_ASSET_VERSION || base !== DISCOVERY_BASE_VERSION || !rows) {
+    return invalidRegister(loaded, version, ['selection_register_invalid']);
   }
   if (!loaded.validation.ok) return loaded;
   const byId = new Map(loaded.entries.map((entry) => [entry.id, entry]));
+  const seen = new Set<string>();
   const errors: string[] = [];
-  for (const amendment of amendments) {
-    const id = text(amendment.id);
+  for (const row of rows) {
+    const id = text(row.id);
     const current = byId.get(id);
-    const treatment = amendment.runtime_treatment;
-    const productionId = text(amendment.existing_production_id);
-    if (!current || treatment !== 'selectable_nonscoring' || amendment.selectable !== true || amendment.scoring_eligible !== false || !productionId) {
-      errors.push(`selection_amendment_rejected:${id || 'missing_id'}`);
+    const treatment = row.runtime_treatment;
+    const productionId = text(row.existing_production_id);
+    const reason = text(row.reason);
+    if (!current || seen.has(id) || !reason) {
+      errors.push(`selection_register_rejected:${id || 'missing_id'}`);
       continue;
     }
-    if (knownProductionId(productionId) || current.treatment === 'excluded_research_hold') {
-      errors.push(`selection_amendment_rejected:${id}`);
+    seen.add(id);
+    if (treatment === 'selectable_existing') {
+      if (
+        current.treatment !== 'selectable_existing' ||
+        row.selectable !== true ||
+        row.scoring_eligible !== true ||
+        !productionId ||
+        productionId !== current.productionId
+      ) {
+        errors.push(`selection_register_rejected:${id}`);
+      }
+      continue;
+    }
+    if (treatment === 'excluded_research_hold') {
+      if (current.treatment !== 'excluded_research_hold' || row.selectable !== false || row.scoring_eligible !== false || productionId) {
+        errors.push(`selection_register_rejected:${id}`);
+      }
+      continue;
+    }
+    if (treatment === 'discoverable_unapproved') {
+      if (current.treatment !== 'discoverable_unapproved' || row.selectable !== false || row.scoring_eligible !== false || productionId) {
+        errors.push(`selection_register_rejected:${id}`);
+      }
+      continue;
+    }
+    if (treatment !== 'selectable_nonscoring' || current.treatment !== 'discoverable_unapproved' || row.selectable !== true || row.scoring_eligible !== false) {
+      errors.push(`selection_register_rejected:${id}`);
+      continue;
+    }
+    if (!productionId || productionId !== id || knownProductionId(productionId)) {
+      errors.push(`selection_register_rejected:${id}`);
       continue;
     }
     byId.set(id, {
@@ -338,18 +378,8 @@ export function applySelectionUpdate(
       productionId,
     });
   }
-  if (errors.length > 0) {
-    return {
-      entries: [],
-      validation: {
-        ...loaded.validation,
-        ok: false,
-        errors: [...loaded.validation.errors, ...errors],
-        entryCount: 0,
-        selectableNonscoringCount: 0,
-      },
-    };
-  }
+  if (seen.size !== byId.size) errors.push('selection_register_incomplete');
+  if (errors.length > 0) return invalidRegister(loaded, version, errors);
   const entries = [...byId.values()];
   return {
     entries,
@@ -365,7 +395,7 @@ export function applySelectionUpdate(
   };
 }
 
-const LOADED = applySelectionUpdate(loadDiscoveryCatalogue(asset), selectionUpdate);
+const LOADED = applySelectionRegister(loadDiscoveryCatalogue(asset), selectionRegister);
 
 export function discoveryCatalogueValidation(): DiscoveryValidation {
   return LOADED.validation;

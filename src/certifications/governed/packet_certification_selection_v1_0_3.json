@@ -1,0 +1,665 @@
+{
+  "asset_id": "rveel.packet_certification_manual_discovery",
+  "asset_version": "1.0.3",
+  "base_asset_version": "1.0.1",
+  "prior_asset_version": "1.0.2",
+  "purpose": "Complete selection and scoring treatment. Does not assign points and does not rewrite historical evidence.",
+  "register": [
+    {
+      "id": "ra.sustainable",
+      "runtime_treatment": "selectable_existing",
+      "selectable": true,
+      "scoring_eligible": true,
+      "existing_production_id": "cert.rainforest_alliance",
+      "reason": "Existing production scoring route retained."
+    },
+    {
+      "id": "ra.regenerative",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "ra.regenerative",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "msc.seafood",
+      "runtime_treatment": "selectable_existing",
+      "selectable": true,
+      "scoring_eligible": true,
+      "existing_production_id": "cert.msc",
+      "reason": "Existing production scoring route retained."
+    },
+    {
+      "id": "asc.seafood",
+      "runtime_treatment": "selectable_existing",
+      "selectable": true,
+      "scoring_eligible": true,
+      "existing_production_id": "cert.asc",
+      "reason": "Existing production scoring route retained."
+    },
+    {
+      "id": "aco.organic",
+      "runtime_treatment": "selectable_existing",
+      "selectable": true,
+      "scoring_eligible": true,
+      "existing_production_id": "cert.aco_organic",
+      "reason": "Existing production scoring route retained."
+    },
+    {
+      "id": "aco.conversion",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "aco.conversion",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "biogro.organic",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "biogro.organic",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "biogro.conversion",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "biogro.conversion",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "asurequality.organic",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "asurequality.organic",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "ofc.organic",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "ofc.organic",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "sxc.organic",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "sxc.organic",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "demeter.au",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "demeter.au",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "nasaa.organic",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "DAFF withdrawal is export-specific. Current domestic status is not established."
+    },
+    {
+      "id": "usda.organic",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "usda.organic",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "eu.organic",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "eu.organic",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "soilassociation.organic",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "soilassociation.organic",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "vegan.au",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "vegan.au",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "vegan.society",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "vegan.society",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "coeliac.nz",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "coeliac.nz",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "coeliac.au",
+      "runtime_treatment": "selectable_existing",
+      "selectable": true,
+      "scoring_eligible": true,
+      "existing_production_id": "cert.coeliac_australia",
+      "reason": "Existing production scoring route retained."
+    },
+    {
+      "id": "rspca.au",
+      "runtime_treatment": "discoverable_unapproved",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Certified and Approved are combined in one row. Research requires species, production system and historical marks to be separated before selection."
+    },
+    {
+      "id": "nongmo.project",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Research has not confirmed that verification programmes belong in this catalogue."
+    },
+    {
+      "id": "bcorp.company",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "bcorp.company",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "fsc.100",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "fsc.100",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "fsc.mix",
+      "runtime_treatment": "selectable_existing",
+      "selectable": true,
+      "scoring_eligible": true,
+      "existing_production_id": "cert.fsc_mix",
+      "reason": "Existing production scoring route retained."
+    },
+    {
+      "id": "fsc.recycled",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "fsc.recycled",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "rspo.ip",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "The shared RSPO mark does not establish Identity Preserved."
+    },
+    {
+      "id": "rspo.sg",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "The shared RSPO mark does not establish Segregated."
+    },
+    {
+      "id": "rspo.mb",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "rspo.mb",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "fairtrade.product",
+      "runtime_treatment": "selectable_existing",
+      "selectable": true,
+      "scoring_eligible": true,
+      "existing_production_id": "cert.fairtrade",
+      "reason": "Existing production scoring route retained."
+    },
+    {
+      "id": "fairtrade.fsi",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "fairtrade.fsi",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "legacy.utz",
+      "runtime_treatment": "selectable_existing",
+      "selectable": true,
+      "scoring_eligible": true,
+      "existing_production_id": "cert.utz",
+      "reason": "Existing production scoring route retained."
+    },
+    {
+      "id": "bonsucro.sugarcane",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "bonsucro.sugarcane",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "4c.coffee",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "4c.coffee",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "fairforlife.fairtrade",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "fairforlife.fairtrade",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "forlife.system",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Scope and shelf evidence do not establish a selectable product identity."
+    },
+    {
+      "id": "fairwild.ingredients",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "fairwild.ingredients",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "bap.aquaculture",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "bap.aquaculture",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "ggn.responsible_farming",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "ggn.responsible_farming",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "frepa.free_range",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "frepa.free_range",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "spca.nz",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "spca.nz",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "hfac.certified_humane",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Shelf evidence is not established."
+    },
+    {
+      "id": "aawcs.processing",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Scope and shelf evidence do not establish a selectable product identity."
+    },
+    {
+      "id": "jas.organic",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "jas.organic",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "canada.organic",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "canada.organic",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "krav.organic",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Shelf evidence is not established."
+    },
+    {
+      "id": "naturland.organic",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Current mark and shelf evidence are not established."
+    },
+    {
+      "id": "naturland.fair",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Shelf evidence is not established."
+    },
+    {
+      "id": "demeter.international",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Relationship to the current standard and shelf evidence are not established."
+    },
+    {
+      "id": "vlabel.vegan",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "vlabel.vegan",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "vlabel.vegetarian",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "vlabel.vegetarian",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "veganaction.certified",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "veganaction.certified",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "gfco.glutenfree",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "gfco.glutenfree",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "monash.lowfodmap",
+      "runtime_treatment": "selectable_existing",
+      "selectable": true,
+      "scoring_eligible": true,
+      "existing_production_id": "cert.monash_low_fodmap",
+      "reason": "Existing production scoring route retained."
+    },
+    {
+      "id": "fodmapfriendly.lowfodmap",
+      "runtime_treatment": "selectable_existing",
+      "selectable": true,
+      "scoring_eligible": true,
+      "existing_production_id": "cert.fodmap_friendly",
+      "reason": "Existing production scoring route retained."
+    },
+    {
+      "id": "pefc.certified",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "pefc.certified",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "pefc.recycled",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "pefc.recycled",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "aba.home_compostable",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "aba.home_compostable",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "aba.commercial_compostable",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "aba.commercial_compostable",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "climateactive.carbonneutral",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "climateactive.carbonneutral",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "toitu.netcarbonzero",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "toitu.netcarbonzero",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "toitu.carbonreduce",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Legacy naming is not confirmed as the same identity as Net Carbon Zero."
+    },
+    {
+      "id": "halal.iccv",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "halal.iccv",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "halal.sichma",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "halal.sichma",
+      "reason": "Recognised named certification. No scoring route."
+    },
+    {
+      "id": "halal.hca",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "halal.hca",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "halal.australia",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "halal.australia",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "halal.afic",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Current mark and shelf evidence are not established."
+    },
+    {
+      "id": "halal.fianz",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "halal.fianz",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "halal.nzidt",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "halal.nzidt",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "halal.malaysia",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Issuing body and AU/NZ packet mark are not established."
+    },
+    {
+      "id": "halal.indonesia",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "BPJPH and legacy MUI are not confirmed as one identity."
+    },
+    {
+      "id": "halal.muis",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Product versus whole-plant scope and shelf evidence are not established."
+    },
+    {
+      "id": "kosher.australia",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "kosher.australia",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "kosher.ka",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "kosher.ka",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "kosher.ou",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "kosher.ou",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "kosher.ok",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "kosher.ok",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "kosher.stark",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "kosher.stark",
+      "reason": "Recognised named certification. Shelf occurrence was unconfirmed and does not block collection. No scoring route."
+    },
+    {
+      "id": "kosher.klbd",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Current mark evidence is dated 2016 and is not confirmed."
+    },
+    {
+      "id": "brcgs.foodsafety",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Site certification. A certified supplier does not establish the retail product."
+    },
+    {
+      "id": "sqf.foodsafety",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Site certification. Packet occurrence is not established."
+    },
+    {
+      "id": "fssc.22000",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Scheme rules prohibit presenting this logo as on-pack product certification."
+    },
+    {
+      "id": "ifs.food",
+      "runtime_treatment": "excluded_research_hold",
+      "selectable": false,
+      "scoring_eligible": false,
+      "existing_production_id": null,
+      "reason": "Site certification. Packet suitability is not established."
+    }
+  ]
+}
