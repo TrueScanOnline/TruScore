@@ -236,7 +236,10 @@ export async function handoffReviewedUnits(params: {
       ...(unit.domain === 'certifications'
         ? (() => {
             const labelsTags = governedCertificationLabels(unit.statement || '');
-            return labelsTags ? { labelsTags } : {};
+            return {
+              ...(labelsTags ? { labelsTags } : {}),
+              ...(unit.packetLiteral?.trim() ? { exactWording: unit.packetLiteral.trim() } : {}),
+            };
           })()
         : {}),
     });

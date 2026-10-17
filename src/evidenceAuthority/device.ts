@@ -128,6 +128,56 @@ function sameRefs(left: UnitRef[], right: UnitRef[]): boolean {
   return left.every((ref) => wanted.has(key(ref)));
 }
 
+export type TransmissionReadiness = 'ready' | 'pending_image' | 'blocked';
+
+/** A stale or unfinalisable unit must not decide the fate of a unit that can be sent now. */
+export function transmissionReadiness(
+  session: PacketContributionSession,
+  unit: PacketEvidenceUnit,
+  cohort: PacketEvidenceUnit[]
+): TransmissionReadiness {
+  const sourceId = unit.support?.sourceAssetId || '';
+  const source = (session.sourceAssets || []).find((asset) => asset.assetId === sourceId);
+  if (source?.imagePhase === 'available' && source.remoteAssetId) return 'ready';
+  if (source && (source.imagePhase || (source.privateKey || '').startsWith('packet/'))) return 'pending_image';
+  const related = cohort.filter((item) => (item.support?.sourceAssetId || '') === sourceId);
+  const manualText =
+    related.length === 1 &&
+    related[0].origin === 'manual' &&
+    related[0].packetAbsenceAffirmation !== true &&
+    sourceId.startsWith('manual-text:');
+  return manualText ? 'ready' : 'blocked';
+}
+
+/** A failed attempt leaves the reviewed unit in the session. A retry must send that unit, not a second copy. */
+export function reusableReviewedUnit(
+  units: PacketEvidenceUnit[],
+  acknowledged: ReadonlySet<string>,
+  domain: PacketEvidenceUnit['domain'],
+  statement: string
+): PacketEvidenceUnit | undefined {
+  const text = statement.trim();
+  if (!text) return undefined;
+  return units.find(
+    (unit) =>
+      unit.status === 'reviewed' &&
+      unit.domain === domain &&
+      (unit.statement || '').trim() === text &&
+      unit.packetAbsenceAffirmation !== true &&
+      !acknowledged.has(`${unit.unitId}:${unitRevision(unit)}`)
+  );
+}
+
+export async function acknowledgedUnitRevisions(): Promise<Set<string>> {
+  const items = await readOutbox();
+  return new Set(
+    items
+      .filter((item) => item.status === 'acknowledged')
+      .flatMap((item) => item.unitRefs || [])
+      .map((ref) => `${ref.unitId}:${ref.revision}`)
+  );
+}
+
 export function unitRevision(unit: PacketEvidenceUnit): string {
   return sha256Hex(
     new TextEncoder().encode(
@@ -280,14 +330,17 @@ function factsFromUnit(
     ];
   }
   if (unit.domain === 'certifications' && unit.statement.trim()) {
-    const labelsTags = governedCertificationLabels(unit.statement);
+    const identity = unit.statement.trim();
+    const literal = unit.packetLiteral?.trim() || identity;
+    const labelsTags = governedCertificationLabels(identity);
     return [
       {
         ...provenance,
         domain: 'certifications',
-        claimValue: unit.statement,
-        exactWording: unit.statement,
+        claimValue: identity,
+        exactWording: literal,
         ...(labelsTags ? { labelsTags } : {}),
+        ...(unit.productionCertificationId ? { certificationId: unit.productionCertificationId } : {}),
         ...(unit.certificationScope ? { certificationScope: unit.certificationScope } : {}),
         ...(unit.certificationScopeSubject ? { certificationScopeSubject: unit.certificationScopeSubject } : {}),
         variantKey: session.variantKey,
@@ -528,9 +581,15 @@ async function transmitSession(
     (unit) => unit.status === 'reviewed' && !acknowledged.has(`${unit.unitId}:${unitRevision(unit)}`)
   );
   if (pendingUnits.length === 0) return none;
-  trace.setDomains(pendingUnits.map((unit) => unit.domain));
+  const sendable = pendingUnits.filter((unit) => transmissionReadiness(session, unit, pendingUnits) === 'ready');
+  const waitingOnImage = pendingUnits.some((unit) => transmissionReadiness(session, unit, pendingUnits) === 'pending_image');
+  if (sendable.length === 0) {
+    trace.mark('finalisation_end', waitingOnImage ? 'pending_source' : 'failed');
+    return waitingOnImage ? { ...none, pendingOutbox: true, pendingImage: true } : { ...none, pendingOutbox: true };
+  }
+  trace.setDomains(sendable.map((unit) => unit.domain));
   if (!(await targetAuthorityAccepted(trace))) return none;
-  const unitRefs = pendingUnits.map((unit) => ({ unitId: unit.unitId, revision: unitRevision(unit) }));
+  const unitRefs = sendable.map((unit) => ({ unitId: unit.unitId, revision: unitRevision(unit) }));
   let item = items.find((row) => row.sessionId === sessionId && row.status === 'unsent' && sameRefs(row.unitRefs || [], unitRefs));
   if (!item) {
     item = {
@@ -551,7 +610,7 @@ async function transmitSession(
   }
   const sourceIds = [
     ...new Set(
-      pendingUnits.flatMap((unit) => [unit.support.sourceAssetId, ...(unit.companionSourceAssetIds || [])])
+      sendable.flatMap((unit) => [unit.support.sourceAssetId, ...(unit.companionSourceAssetIds || [])])
     ),
   ];
   const finalized = new Map<string, string>();
@@ -568,7 +627,7 @@ async function transmitSession(
         trace.mark('finalisation_end', 'pending_source');
         return { ...none, pendingOutbox: true, pendingImage: true };
       }
-      const related = pendingUnits.filter((unit) => unit.support.sourceAssetId === sourceId);
+      const related = sendable.filter((unit) => unit.support.sourceAssetId === sourceId);
       const manualOnly =
         related.length === 1 &&
         related[0].origin === 'manual' &&
@@ -581,7 +640,7 @@ async function transmitSession(
       finalized.set(sourceId, await finalizeManualTextAsset(token, session, related[0], trace));
     }
     trace.mark('finalisation_end', 'ok');
-    const facts = evidenceFactsForUnits(session, pendingUnits, finalized);
+    const facts = evidenceFactsForUnits(session, sendable, finalized);
     if (facts.length === 0 || facts.some((fact) => !fact.finalizedAssetId)) {
       return { ...none, pendingOutbox: true };
     }

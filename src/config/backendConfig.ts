@@ -13,7 +13,11 @@ export function getBackendUrl(): string {
   // 1. Environment variable (EXPO_PUBLIC_BACKEND_URL from .env)
   // 2. Default fallback (deployed backend URL)
   // ✅ Using truscoreapi.vercel.app - verified working with database (no authentication required)
-  let backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://truscoreapi.vercel.app';
+  let backendUrl =
+    process.env.EXPO_PUBLIC_BACKEND_URL ||
+    (process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV === 'uat'
+      ? 'https://truscoreapi-uat.vercel.app'
+      : 'https://truscoreapi.vercel.app');
   
   // CRITICAL: Reject known preview deployment URLs (they require authentication)
   // Known production URLs (verified working - no authentication):

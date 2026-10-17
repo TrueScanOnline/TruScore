@@ -53,6 +53,8 @@ export async function addManualEvidenceUnit(params: {
   packetAbsenceAffirmation?: boolean;
   certificationScope?: string;
   certificationScopeSubject?: string;
+  packetLiteral?: string;
+  productionCertificationId?: string;
 }): Promise<PacketEvidenceUnit> {
   const session = await getSession(params.sessionId);
   if (!session) throw new Error('packet_session_missing');
@@ -74,6 +76,8 @@ export async function addManualEvidenceUnit(params: {
     packetAbsenceAffirmation: params.packetAbsenceAffirmation === true,
     ...(params.certificationScope ? { certificationScope: params.certificationScope } : {}),
     ...(params.certificationScopeSubject ? { certificationScopeSubject: params.certificationScopeSubject } : {}),
+    ...(params.packetLiteral?.trim() ? { packetLiteral: params.packetLiteral.trim() } : {}),
+    ...(params.productionCertificationId ? { productionCertificationId: params.productionCertificationId } : {}),
     support: params.support,
     origin: 'manual',
     extractionRunId: null,

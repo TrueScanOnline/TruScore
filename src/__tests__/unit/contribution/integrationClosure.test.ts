@@ -22,11 +22,7 @@ import type { OpenPillarResult } from '../../../lib/truscoreEngine/pillars/openP
 import type { Product } from '../../../types/product';
 import type { CrossPillarPublicationSnapshot } from '../../../lib/rateability/types';
 import { unitRevision } from '../../../evidenceAuthority/device';
-import {
-  PACKET_MANUAL_ENTRY,
-  PACKET_REVIEW_PROMPT,
-  PACKET_UNMATCHED_ENTRY,
-} from '../../../certifications/resolveCertification';
+import { PACKET_REVIEW_PROMPT } from '../../../certifications/resolveCertification';
 import type { PacketEvidenceUnit } from '../../../packetContribution/types';
 import { assessNOVAGroup1 } from '../../../utils/novaAssessment';
 
@@ -266,11 +262,10 @@ describe('functional-to-consumer integration closure', () => {
     expect(result).not.toContain('Lane A');
     expect(result).not.toContain('Lane B');
     expect(PACKET_REVIEW_PROMPT).toBe('Is this on the pack?');
-    expect(PACKET_MANUAL_ENTRY).toBe('Enter what\u2019s on the pack');
-    expect(PACKET_UNMATCHED_ENTRY).toBe('Can\u2019t find it? Add what\u2019s on the pack');
     expect(modal).toContain('PACKET_REVIEW_PROMPT');
-    expect(modal).toContain('PACKET_MANUAL_ENTRY');
-    expect(modal).toContain('PACKET_UNMATCHED_ENTRY');
+    expect(modal).toContain('PACKET_WORDING_FIELD');
+    expect(modal).toContain('PACKET_ADD_WORDING');
+    expect(modal).toContain('PACKET_INPUT_INSTRUCTION');
     expect(modal).not.toContain('Claim on the pack');
     expect(modal).not.toContain('Certification shown on the pack');
     expect(modal).toContain('retainedAfterPartialAdmission');

@@ -188,6 +188,10 @@ export type PacketEvidenceUnit = {
   /** Established scope copied onto the governed fact. Unresolved scope is omitted. */
   certificationScope?: string;
   certificationScopeSubject?: string;
+  /** Pack wording kept beside a selected production identity. Identity still uses statement. */
+  packetLiteral?: string;
+  /** Existing production certification id from a deliberate catalogue selection. */
+  productionCertificationId?: string;
   /** Set only after a governed submit (not admission). */
   governedEvidenceId?: string;
   submittedAt?: number;
@@ -205,6 +209,8 @@ export type PacketContributionSession = {
   derivedAssets: PacketDerivedAsset[];
   extractionRuns: ExtractionRun[];
   units: PacketEvidenceUnit[];
+  /** Unsent packet wording and selected marks. Restored when the journey reopens. */
+  pendingObservations?: import('../certifications/pendingPacketObservation').PendingPacketObservation[];
 };
 
 export type StagedCapture = {

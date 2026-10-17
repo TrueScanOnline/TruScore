@@ -75,12 +75,23 @@ function traceFor(asset: PacketSourceAsset, recovering: boolean): ContributionTr
   return trace;
 }
 
+export function evidenceFileUri(privateKey: string): string {
+  return `${FileSystem.documentDirectory}rveel-packet-evidence/${privateKey}`;
+}
+
+export async function readableEvidenceFileUri(privateKey: string): Promise<string | null> {
+  const uri = evidenceFileUri(privateKey);
+  const info = await FileSystem.getInfoAsync(uri);
+  return info.exists ? uri : null;
+}
+
 export function evidenceImageStatus(asset: {
   imagePhase?: EvidenceImagePhase;
   lastPutStatus?: number | null;
 }): string {
   const phase = asset.imagePhase;
-  if (phase === 'local_accepted' || phase === 'preparing' || phase === 'prepared' || phase === 'uploading' || phase === 'failed_retryable') {
+  if (phase === 'failed_retryable') return 'This photo could not be sent. You can retry.';
+  if (phase === 'local_accepted' || phase === 'preparing' || phase === 'prepared' || phase === 'uploading') {
     return 'Preparing photo…';
   }
   if (phase === 'parked_after_interrupted_resume') return 'This photo needs attention.';

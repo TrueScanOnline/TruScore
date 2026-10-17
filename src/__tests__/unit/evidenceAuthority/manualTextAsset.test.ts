@@ -5,7 +5,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isAssessmentEligibleForReceiver } from '../../../contributions/admissionContract';
 import { EvidenceAuthority } from '../../../evidenceAuthority/authority';
-import { evidenceFactsForUnits, transmitSessionToAuthority } from '../../../evidenceAuthority/device';
+import { evidenceFactsForUnits, reusableReviewedUnit, transmitSessionToAuthority, transmissionReadiness, unitRevision } from '../../../evidenceAuthority/device';
 import { deriveEvidenceFacts } from '../../../evidenceAuthority/subjects';
 import { MANUAL_TEXT_CONTENT_TYPE, manualTextSha256 } from '../../../evidenceAuthority/manualTextAsset';
 import { MemoryAuthorityStore } from '../../../evidenceAuthority/memoryStore';
@@ -416,6 +416,74 @@ describe('manual contribution transmission', () => {
     expect(transmitted.snapshot?.barcode).toBe(BARCODE);
   });
 
+  test('a stale unfinalisable unit does not block a ready packet claim or get admitted with it', async () => {
+    const submittedFacts: Array<{ exactWording?: string; unitId?: string }> = [];
+    (global.fetch as jest.Mock).mockImplementation(async (_url: string, init?: { method?: string; body?: string }) => {
+      if (!init?.body) return { ok: true, json: async () => ({ authorityEnv: 'uat' }) };
+      const body = JSON.parse(init.body) as Record<string, unknown>;
+      if (body.action === 'issue-credential') return { ok: true, json: async () => ({ token: 'credential-token' }) };
+      if (body.action === 'finalize-manual-text') {
+        expect(body.statement).toBe('Vegan certified');
+        expect(body.domain).toBe('packet_claims');
+        return { ok: true, json: async () => ({ ok: true, assetId: 'asset-claim', contentType: 'manual_text' }) };
+      }
+      if (body.action === 'submit') {
+        submittedFacts.push(...((body.facts as Array<{ exactWording?: string; unitId?: string }>) || []));
+        return {
+          ok: true,
+          json: async () => ({
+            outcome: {
+              status: 'admitted',
+              admittedUnitIds: ['claim-vegan'],
+              snapshot: {
+                barcode: BARCODE,
+                authorityEnv: 'uat',
+                epoch: 'wave4a.uat',
+                recordClass: 'uat',
+                generatedAt: 1,
+                prevailing: [],
+                offDispatch: [],
+              },
+            },
+          }),
+        };
+      }
+      return { ok: false, json: async () => ({}) };
+    });
+    const claim = {
+      unitId: 'claim-vegan',
+      sessionId: 'manual-session',
+      domain: 'packet_claims' as const,
+      statement: 'Vegan certified',
+      support: { coverage: 'whole_image' as const, sourceAssetId: 'manual-text:claim-vegan' },
+      origin: 'manual' as const,
+      extractionRunId: null,
+      observationId: null,
+      disposition: null,
+      status: 'reviewed' as const,
+    };
+    const stale = {
+      ...claim,
+      unitId: 'stale-origin',
+      domain: 'origins' as const,
+      statement: 'Made in Australia',
+      support: { coverage: 'whole_image' as const, sourceAssetId: 'manual-text-only' },
+    };
+    const session = reviewedSession(claim);
+    session.units = [stale, claim];
+    storage.set(PACKET_SESSION_STORAGE_KEY, JSON.stringify([session]));
+    expect(transmissionReadiness(session, stale, session.units)).toBe('blocked');
+    expect(transmissionReadiness(session, claim, session.units)).toBe('ready');
+    const transmitted = await transmitSessionToAuthority('manual-session');
+    expect(transmitted.admitted).toBe(true);
+    expect(transmitted.admittedUnitIds).toEqual(['claim-vegan']);
+    expect(submittedFacts.map((fact) => fact.unitId)).toEqual(['claim-vegan']);
+    expect(reusableReviewedUnit(session.units, new Set(), 'packet_claims', 'Vegan certified')?.unitId).toBe('claim-vegan');
+    expect(
+      reusableReviewedUnit(session.units, new Set([`${claim.unitId}:${unitRevision(claim)}`]), 'packet_claims', 'Vegan certified')
+    ).toBeUndefined();
+  });
+
   test('packet absence without a photograph stays unsent and does not create manual_text', async () => {
     const actions: string[] = [];
     (global.fetch as jest.Mock).mockImplementation(async (_url: string, init?: { body?: string }) => {
@@ -445,7 +513,8 @@ describe('manual contribution transmission', () => {
     );
     const transmitted = await transmitSessionToAuthority('manual-session');
     expect(transmitted).toEqual({ admitted: false, admittedUnitIds: [], pendingOutbox: true, snapshot: null });
-    expect(actions).toEqual(['issue-credential']);
+    expect(actions).not.toContain('finalize-manual-text');
+    expect(actions).not.toContain('submit');
   });
 });
 

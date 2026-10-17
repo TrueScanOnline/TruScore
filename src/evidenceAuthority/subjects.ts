@@ -157,10 +157,15 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
       continue;
     }
     if (input.domain === 'certifications') {
-      const wording = (input.exactWording || input.claimValue || '').trim();
-      if (!wording) continue;
-      const governed = governedCertificationLabels(wording) || [];
-      const version = certificationVersion(input, wording);
+      const observed = (input.exactWording || input.claimValue || '').trim();
+      const identityText = (input.claimValue || observed).trim();
+      if (!observed) continue;
+      const governed =
+        (identityText ? governedCertificationLabels(identityText) : undefined) ||
+        governedCertificationLabels(observed) ||
+        [];
+      const version = certificationVersion(input, identityText || observed);
+      const wording = observed;
       if (governed.length > 0) {
         for (const tag of governed) {
           const scheme = normalizeClaimKey(tag);

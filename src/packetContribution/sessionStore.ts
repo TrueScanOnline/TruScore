@@ -20,6 +20,7 @@ function normalizeSession(row: PacketContributionSession): PacketContributionSes
     derivedAssets: asArray(row.derivedAssets),
     extractionRuns: asArray(row.extractionRuns),
     units: asArray(row.units),
+    pendingObservations: asArray(row.pendingObservations),
   };
 }
 
@@ -111,6 +112,7 @@ export async function openSessionForProduct(params: {
     derivedAssets: [],
     extractionRuns: [],
     units: [],
+    pendingObservations: [],
   };
   await upsertSession(created);
   return created;

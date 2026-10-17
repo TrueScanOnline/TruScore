@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Certification } from '../types/product';
-import { consumerEmblemPermittedForTag, displayCertificationName } from '../certifications/resolveCertification';
-import { CERT_BADGE_ICONS } from '../constants/certDisplay';
+import { displayCertificationName, resolvePacketObservation } from '../certifications/resolveCertification';
+import { resolveCertificationArtwork } from '../certifications/certificationArtwork';
 
 export { displayCertificationName };
 
@@ -15,8 +14,15 @@ interface CertBadgeProps {
 export { CERT_BADGE_ICONS } from '../constants/certDisplay';
 
 export default function CertBadge({ certification, onPress }: CertBadgeProps) {
-  const icon = CERT_BADGE_ICONS[certification.tag] || 'star-outline';
-  const showEmblem = consumerEmblemPermittedForTag(certification.tag || '');
+  const name = displayCertificationName(certification);
+  const resolved = resolvePacketObservation({ observedWording: certification.tag || name });
+  const productionId = resolved.kind === 'certification' ? resolved.certificationId : undefined;
+  const emblem = resolveCertificationArtwork({
+    accessibleName: name,
+    productionId,
+    surface: 'product_result',
+    associationAdmitted: !!productionId,
+  });
   const Component = onPress ? TouchableOpacity : View;
 
   return (
@@ -25,7 +31,9 @@ export default function CertBadge({ certification, onPress }: CertBadgeProps) {
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
     >
-      {showEmblem ? <Ionicons name={icon as any} size={20} color="#16a085" /> : null}
+      {emblem.render === 'mark' ? (
+        <Image source={{ uri: emblem.assetRef }} accessibilityLabel={emblem.accessibleName} style={styles.mark} />
+      ) : null}
       <Text style={styles.name} numberOfLines={2}>
         {displayCertificationName(certification)}
       </Text>
@@ -45,6 +53,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
   },
+  mark: { width: 20, height: 20 },
   name: {
     fontSize: 12,
     fontWeight: '600',

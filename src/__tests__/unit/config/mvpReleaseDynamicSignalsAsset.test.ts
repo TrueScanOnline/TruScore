@@ -1,3 +1,6 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import { getBackendUrl } from '../../../config/backendConfig';
 import {
   assertDynamicSignalsAssetForReleaseRuntime,
   assertMvpReleaseProfilesHaveDynamicSignalsAsset,
@@ -101,6 +104,23 @@ describe('mvpReleaseDynamicSignalsAsset (R-01 / S-01)', () => {
       expect(env.EXPO_PUBLIC_SCORE_DIAGNOSTICS).toBe('1');
       expect(env.EXPO_PUBLIC_STORE_RELEASE).toBe('0');
     }
+  });
+
+  it('points a UAT Expo Go client at the UAT authority host', () => {
+    const development = fs.readFileSync(path.join(__dirname, '../../../../.env.development'), 'utf8');
+    expect(development).toContain('EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV=uat');
+    expect(development).toContain(`EXPO_PUBLIC_BACKEND_URL=${WAVE5_UAT_BACKEND_HOST}`);
+    const previousUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+    const previousEnv = process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
+    delete process.env.EXPO_PUBLIC_BACKEND_URL;
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+    expect(getBackendUrl()).toBe(WAVE5_UAT_BACKEND_HOST);
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'production';
+    expect(getBackendUrl()).toBe('https://truscoreapi.vercel.app');
+    if (previousUrl === undefined) delete process.env.EXPO_PUBLIC_BACKEND_URL;
+    else process.env.EXPO_PUBLIC_BACKEND_URL = previousUrl;
+    if (previousEnv === undefined) delete process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
+    else process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = previousEnv;
   });
 
   it('legacy flag profiles are not phone-testing targets', () => {

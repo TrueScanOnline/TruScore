@@ -30,8 +30,8 @@ import {
   type ExtractionProducer,
   type PacketContributionSession,
 } from '../packetContribution';
-import { listSubmissionResumeAttention, retryParkedEvidenceSubmission, transmitPrevailingClosure, transmitSessionToAuthority } from '../evidenceAuthority/device';
-import { acceptLocalCapture, evidenceImageStatus, resumeEvidenceImages, retryParkedEvidenceImage } from '../evidenceImage/pipeline';
+import { acknowledgedUnitRevisions, listSubmissionResumeAttention, retryParkedEvidenceSubmission, reusableReviewedUnit, transmitPrevailingClosure, transmitSessionToAuthority } from '../evidenceAuthority/device';
+import { acceptLocalCapture, evidenceImageStatus, readableEvidenceFileUri, resumeEvidenceImages, retryParkedEvidenceImage } from '../evidenceImage/pipeline';
 import { visibleEvidenceImages } from '../evidenceImage/projection';
 import { beginModalTrace, finishModalTrace } from '../evidenceAuthority/contributionTrace';
 import {
@@ -76,18 +76,28 @@ import {
   CLOSER_PHOTO_BODY,
   CLOSER_PHOTO_TITLE,
   isSameCurrentProposition,
-  PACKET_MANUAL_ENTRY,
   PACKET_REVIEW_CHANGE,
   PACKET_REVIEW_PROMPT,
   PACKET_REVIEW_REMOVE,
   PACKET_REVIEW_YES,
-  PACKET_UNMATCHED_ENTRY,
   resolvePacketObservation,
-  searchPacketInformation,
   type PacketResolution,
-  type PacketSearchHit,
 } from '../certifications/resolveCertification';
+import { searchDiscoveryCatalogue } from '../certifications/discoveryCatalogue';
+import {
+  PACKET_ADD_ANOTHER,
+  PACKET_ADD_WORDING,
+  PACKET_INPUT_INSTRUCTION,
+  PACKET_WORDING_FIELD,
+  addPendingObservation,
+  certificationStatementForSelection,
+  pendingContributionLists,
+  removePendingObservation,
+  replacePendingLiteral,
+  type PendingPacketObservation,
+} from '../certifications/pendingPacketObservation';
 import { recordUnresolvedObservation } from '../certifications/unresolvedMarkCandidates';
+import CertificationMark from './CertificationMark';
 
 type Preview = {
   /** Same value as the session source asset id. Required by EvidenceSurfaceImage. */
@@ -175,15 +185,15 @@ const JOURNEY: Record<
   },
   packetClaims: {
     header: 'Packet information',
-    instruction: 'Photograph what\u2019s on the pack, or choose a photo you already took.',
-    manual: PACKET_MANUAL_ENTRY,
+    instruction: PACKET_INPUT_INSTRUCTION,
+    manual: PACKET_WORDING_FIELD,
     review: 'Packet information',
     submit: 'Submit packet information',
   },
   certifications: {
     header: 'Packet information',
-    instruction: 'Photograph what\u2019s on the pack, or choose a photo you already took.',
-    manual: PACKET_MANUAL_ENTRY,
+    instruction: PACKET_INPUT_INSTRUCTION,
+    manual: PACKET_WORDING_FIELD,
     review: 'Packet information',
     submit: 'Submit packet information',
   },
@@ -261,9 +271,13 @@ export default function PacketContributionModal({
   const [claims, setClaims] = useState<string[]>(['']);
   const [certs, setCerts] = useState<string[]>(['']);
   const [packetQuery, setPacketQuery] = useState('');
+  const [pending, setPending] = useState<PendingPacketObservation[]>([]);
+  const pendingRef = useRef<PendingPacketObservation[]>([]);
+  const pendingTouchedRef = useRef(false);
+  const [editingPendingId, setEditingPendingId] = useState<string | null>(null);
+  const [permissionNotice, setPermissionNotice] = useState<string | null>(null);
+  const packetInputRef = useRef<TextInput>(null);
   const [acceptedProposals, setAcceptedProposals] = useState<string[]>([]);
-  const [editingClaim, setEditingClaim] = useState<number | null>(null);
-  const [editingCert, setEditingCert] = useState<number | null>(null);
   const [editingOrigin, setEditingOrigin] = useState<number | null>(null);
   const [certScopes, setCertScopes] = useState<Record<string, { certificationScope?: string; certificationScopeSubject?: string }>>({});
   const [absence, setAbsence] = useState(false);
@@ -319,7 +333,7 @@ export default function PacketContributionModal({
     let cancelled = false;
     setPreviews([]);
     setSurfaceJourneyId(`journey_${barcode}_${entryContext}_${Date.now()}`);
-    setPhase(openOnFormRef.current ? 'entry' : 'capture');
+    setPhase(packetInformationContext(entryContext) || openOnFormRef.current ? 'entry' : 'capture');
     setActiveContext(entryContext);
     setIncludedContexts(packetInformationContext(entryContext) ? ['packetClaims', 'certifications'] : [entryContext]);
     setIngredientsText(initialIngredientsRef.current || '');
@@ -354,9 +368,12 @@ export default function PacketContributionModal({
     setClaims(claimRows.length > 0 ? claimRows : ['']);
     setCerts(certRows.length > 0 ? certRows : ['']);
     setPacketQuery('');
+    pendingRef.current = [];
+    pendingTouchedRef.current = false;
+    setPending([]);
+    setEditingPendingId(null);
+    setPermissionNotice(null);
     setAcceptedProposals([]);
-    setEditingClaim(null);
-    setEditingCert(null);
     setEditingOrigin(null);
     setCertScopes({});
     setAbsence(false);
@@ -366,7 +383,58 @@ export default function PacketContributionModal({
     (async () => {
       await activateDevicePrivateByteStore();
       const opened = await openSessionForProduct({ barcode, variantKey });
-      if (!cancelled) setSession(opened);
+      if (cancelled) return;
+      setSession(opened);
+      if (packetInformationContext(entryContext)) {
+        if (pendingTouchedRef.current) {
+          await upsertSession({ ...opened, pendingObservations: pendingRef.current });
+        } else {
+        const restored = (opened.pendingObservations || []).filter((row) => row.literalWording.trim() || row.canonicalName);
+        if (restored.length > 0) {
+          pendingRef.current = restored;
+          setPending(restored);
+        }
+        else if (surfaceModeRef.current === 'change') {
+          let rows: PendingPacketObservation[] = [];
+          for (const claim of initialClaimsRef.current || []) {
+            if (!packetRowVisible('change', claim, [])) continue;
+            rows = addPendingObservation(rows, { literalWording: claim, source: 'manual' }).rows;
+          }
+          for (const cert of initialCertificationsRef.current || []) {
+            if (!packetRowVisible('change', cert, [])) continue;
+            const resolved = resolvePacketObservation({ observedWording: cert });
+            rows = addPendingObservation(
+              rows,
+              resolved.kind === 'certification'
+                ? {
+                    literalWording: cert,
+                    source: 'manual',
+                    productionCertificationId: resolved.certificationId,
+                    canonicalName: resolved.displayName,
+                  }
+                : { literalWording: cert, source: 'manual' }
+            ).rows;
+          }
+          pendingRef.current = rows;
+          setPending(rows);
+        }
+        }
+        const photos: Preview[] = [];
+        for (const asset of opened.sourceAssets || []) {
+          const uri = await readableEvidenceFileUri(asset.privateKey);
+          if (!uri || cancelled) continue;
+          photos.push({
+            assetId: asset.assetId,
+            tempKey: asset.assetId,
+            uri,
+            source: asset.source,
+            bytes: new Uint8Array(),
+            journeyId: `journey_${barcode}_${entryContext}_restored`,
+            entryContext: 'packetInformation',
+          });
+        }
+        if (!cancelled && photos.length > 0) setPreviews(photos);
+      }
     })().catch(() => {
       if (!cancelled) setSession(null);
     });
@@ -409,7 +477,7 @@ export default function PacketContributionModal({
     [session, displayedPreviews]
   );
   const showReadPhotos = producer.kind !== 'abstaining' && targeted.length > 0;
-  const packetHits = useMemo(() => searchPacketInformation(packetQuery), [packetQuery]);
+  const packetSuggestions = useMemo(() => searchDiscoveryCatalogue(packetQuery), [packetQuery]);
   const proposals = useMemo(() => {
     if (producer.kind === 'abstaining' || !session) return [];
     const currentWordings = [...(initialClaimsRef.current || []), ...(initialCertificationsRef.current || [])];
@@ -495,7 +563,11 @@ export default function PacketContributionModal({
   const captureCamera = async () => {
     if (!session) return;
     const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) return;
+    if (!permission.granted) {
+      setPermissionNotice('Camera access is off. You can type the wording from the pack, or allow camera access in your phone settings.');
+      return;
+    }
+    setPermissionNotice(null);
     const shot = await ImagePicker.launchCameraAsync({ quality: 1, exif: false });
     if (shot.canceled || !shot.assets[0]) return;
     const asset = shot.assets[0];
@@ -510,7 +582,11 @@ export default function PacketContributionModal({
   const captureGallery = async () => {
     if (!session) return;
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
+    if (!permission.granted) {
+      setPermissionNotice('Photo library access is off. You can type the wording from the pack, or allow photo access in your phone settings.');
+      return;
+    }
+    setPermissionNotice(null);
     const picked = await ImagePicker.launchImageLibraryAsync({
       quality: 1,
       allowsMultipleSelection: true,
@@ -611,24 +687,61 @@ export default function PacketContributionModal({
     });
   };
 
-  const addCatalogueSelection = (hit: PacketSearchHit) => {
-    setAbsence(false);
-    setCerts((rows) => {
-      const filled = rows.map((row) => row.trim()).filter((row) => row.length > 0);
-      return filled.includes(hit.displayName) ? filled : [...filled, hit.displayName];
-    });
-    setPacketQuery('');
+  const rememberPending = async (rows: PendingPacketObservation[]) => {
+    pendingRef.current = rows;
+    pendingTouchedRef.current = true;
+    setPending(rows);
+    if (!session) return;
+    const latest = await getSession(session.sessionId);
+    if (!latest) return;
+    await upsertSession({ ...latest, pendingObservations: rows });
   };
 
-  const addUnmatchedWording = (text: string) => {
-    const wording = text.trim();
-    if (!wording) return;
+  const noteProposalAccepted = (proposalId?: string) => {
+    if (!proposalId) return;
+    setAcceptedProposals((rows) => (rows.includes(proposalId) ? rows : [...rows, proposalId]));
+  };
+
+  const addLiteralWording = (
+    wording: string,
+    source: PendingPacketObservation['source'] = 'manual',
+    proposalId?: string
+  ) => {
+    const next = addPendingObservation(pending, { literalWording: wording, source });
+    if (!next.added) {
+      setPartialNotice('That’s already in the list.');
+      return;
+    }
+    noteProposalAccepted(proposalId);
     setAbsence(false);
-    setClaims((rows) => {
-      const filled = rows.map((row) => row.trim()).filter((row) => row.length > 0);
-      return filled.includes(wording) ? filled : [...filled, wording];
-    });
     setPacketQuery('');
+    setPartialNotice(null);
+    void rememberPending(next.rows);
+  };
+
+  const addSelectedCertification = (
+    productionId: string,
+    canonicalName: string,
+    literal: string,
+    source: PendingPacketObservation['source'] = 'manual',
+    proposalId?: string
+  ) => {
+    if (!productionId) return;
+    const next = addPendingObservation(pending, {
+      literalWording: literal.trim() || canonicalName,
+      source,
+      productionCertificationId: productionId,
+      canonicalName,
+    });
+    if (!next.added) {
+      setPartialNotice('That’s already in the list.');
+      return;
+    }
+    noteProposalAccepted(proposalId);
+    setAbsence(false);
+    setPacketQuery('');
+    setPartialNotice(null);
+    void rememberPending(next.rows);
   };
 
   const supportFor = (context?: ContributionEntryContext) => {
@@ -662,9 +775,7 @@ export default function PacketContributionModal({
       const created: string[] = [];
       const observations: { unitId: string; label: string; kind: 'ingredients' | 'nutrition' | 'origin' | 'claim' | 'cert' | 'absence'; index: number }[] = [];
       const contexts = includedContexts;
-      const exactCatalogue = packetHits.find(
-        (hit) => textField(hit.displayName).trim().toLowerCase() === textField(packetQuery).trim().toLowerCase()
-      );
+      const packetDraft = packetInformationContext(entryContext) ? pendingContributionLists(pending, packetQuery) : null;
       const originRowsNow = origins.map((row) => safeOrigin(row));
       const openedOriginsNow = openedOriginsRef.current.map((row) => safeOrigin(row));
       const removedOriginKeys = ceasedOriginsRemovedFromForm(openedOriginsNow, originRowsNow);
@@ -686,12 +797,12 @@ export default function PacketContributionModal({
           ) as typeof amounts,
         },
         origins: originRowsNow,
-        claims: claims.map((row) => textField(row)),
+        claims: packetDraft ? packetDraft.claims.map((row) => textField(row)) : claims.map((row) => textField(row)),
         initialClaims: (initialClaimsRef.current || []).map((row) => textField(row)),
-        certifications: certs.map((row) => textField(row)),
+        certifications: packetDraft ? packetDraft.certifications.map((row) => textField(row)) : certs.map((row) => textField(row)),
         initialCertifications: (initialCertificationsRef.current || []).map((row) => textField(row)),
-        pendingPacketWording: textField(packetQuery),
-        catalogueName: exactCatalogue?.displayName,
+        pendingPacketWording: packetDraft ? '' : textField(packetQuery),
+        catalogueName: undefined,
         absence,
         hasPhotoForAbsence: targeted.length > 0,
       });
@@ -795,7 +906,17 @@ export default function PacketContributionModal({
         created.push(unit.unitId);
         observations.push({ unitId: unit.unitId, label: PACKET_ABSENCE_CONSUMER_COPY, kind: 'absence', index: 0 });
       }
+      const openSession = await getSession(session.sessionId);
+      const acknowledged = await acknowledgedUnitRevisions();
+      const reuseReviewed = (domain: 'packet_claims' | 'certifications', statement: string) =>
+        openSession ? reusableReviewedUnit(openSession.units, acknowledged, domain, statement) : undefined;
       for (const text of decision.claims) {
+        const existing = reuseReviewed('packet_claims', text);
+        if (existing) {
+          created.push(existing.unitId);
+          observations.push({ unitId: existing.unitId, label: text, kind: 'claim', index: 0 });
+          continue;
+        }
         recordUnresolvedObservation(text);
         const unit = await addManualEvidenceUnit({
           sessionId: session.sessionId,
@@ -808,11 +929,21 @@ export default function PacketContributionModal({
       }
       for (const text of decision.certifications) {
         const scope = certScopes[text];
+        const literal = packetDraft?.literalsByStatement[text];
+        const productionId = packetDraft?.productionByStatement[text];
+        const existing = reuseReviewed('certifications', text);
+        if (existing) {
+          created.push(existing.unitId);
+          observations.push({ unitId: existing.unitId, label: text, kind: 'cert', index: 0 });
+          continue;
+        }
         const unit = await addManualEvidenceUnit({
           sessionId: session.sessionId,
           domain: 'certifications',
           statement: text,
           support: supportFor('certifications'),
+          ...(literal && literal !== text ? { packetLiteral: literal } : {}),
+          ...(productionId ? { productionCertificationId: productionId } : {}),
           ...(scope?.certificationScope ? { certificationScope: scope.certificationScope } : {}),
           ...(scope?.certificationScopeSubject ? { certificationScopeSubject: scope.certificationScopeSubject } : {}),
         });
@@ -890,6 +1021,10 @@ export default function PacketContributionModal({
       const retained = retainedAfterPartialAdmission(observations, transmitted.admittedUnitIds);
       await onSharedEvidenceAdmitted?.(transmitted.snapshot, retained.complete);
       if (retained.complete) {
+        if (session) {
+          const latest = await getSession(session.sessionId);
+          if (latest) await upsertSession({ ...latest, pendingObservations: [] });
+        }
         trace.mark('modal_close');
         onClose();
         return;
@@ -912,6 +1047,19 @@ export default function PacketContributionModal({
       const admittedClaims = new Set(retained.admitted.filter((row) => row.kind === 'claim').map((row) => row.index));
       const admittedCerts = new Set(retained.admitted.filter((row) => row.kind === 'cert').map((row) => row.index));
       const admittedOrigins = new Set(retained.admitted.filter((row) => row.kind === 'origin').map((row) => row.index));
+      if (packetInformationContext(entryContext)) {
+        const admittedClaimLabels = new Set(retained.admitted.filter((row) => row.kind === 'claim').map((row) => row.label));
+        const admittedCertLabels = new Set(retained.admitted.filter((row) => row.kind === 'cert').map((row) => row.label));
+        const remaining = pending.filter((row) => {
+          if (row.productionCertificationId) {
+            const statement = certificationStatementForSelection(row.productionCertificationId, row.literalWording);
+            return !admittedCertLabels.has(statement);
+          }
+          return !admittedClaimLabels.has(row.literalWording.trim());
+        });
+        void rememberPending(remaining);
+        if (admittedClaimLabels.has(packetQuery.trim())) setPacketQuery('');
+      }
       if (admittedClaims.size > 0) setClaims((rows) => rows.map((row, index) => (admittedClaims.has(index) ? '' : row)));
       if (admittedCerts.size > 0) setCerts((rows) => rows.map((row, index) => (admittedCerts.has(index) ? '' : row)));
       if (admittedOrigins.size > 0) {
@@ -983,7 +1131,8 @@ export default function PacketContributionModal({
           { paddingTop: Math.max(insets.top, 12), paddingBottom: Math.max(insets.bottom, 24) + 24 },
         ]}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
+        keyboardDismissMode="none"
+        nestedScrollEnabled
         automaticallyAdjustKeyboardInsets
       >
         <View style={styles.headerRow}>
@@ -1458,96 +1607,175 @@ export default function PacketContributionModal({
             ) : null}
             {packetInformationContext(activeContext) ? (
               <View>
-                {claims.map((claim, index) =>
-                  packetRowVisible(surfaceMode, claim, initialClaimsRef.current || []) ? (
-                    <View key={`claim-${index}`}>
-                      {editingClaim === index ? (
-                        <TextInput
-                          value={claim}
-                          onChangeText={(value) => {
-                            if (value.trim()) setAbsence(false);
-                            setClaims((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)));
-                          }}
-                          style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
+                <Text style={[styles.body, { color: ink }]}>{PACKET_INPUT_INSTRUCTION}</Text>
+                <View style={styles.row}>
+                  <TouchableOpacity onPress={captureCamera} style={filledButton} accessibilityRole="button" accessibilityLabel="Camera">
+                    <Text style={styles.buttonText}>Camera</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={captureGallery} style={filledButton} accessibilityRole="button" accessibilityLabel="Gallery">
+                    <Text style={styles.buttonText}>Gallery</Text>
+                  </TouchableOpacity>
+                </View>
+                {permissionNotice ? <Text style={{ color: ink }}>{permissionNotice}</Text> : null}
+                {targeted.filter((asset) => asset.imagePhase !== 'parked_after_interrupted_resume' && evidenceImageStatus(asset)).map((asset) => (
+                  <Text key={asset.assetId} style={{ color: ink }}>{evidenceImageStatus(asset)}</Text>
+                ))}
+                {needsAttention.map((asset) => (
+                  <View key={`packet-attention-${asset.assetId}`}>
+                    <Text style={{ color: ink }}>{evidenceImageStatus(asset)}</Text>
+                    <TouchableOpacity onPress={() => void retryPhoto(asset.assetId)} style={filledButton} accessibilityRole="button">
+                      <Text style={styles.buttonText}>Retry photo</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                {submissionAttention.map((item) => (
+                  <View key={item.idempotencyKey}>
+                    <Text style={{ color: ink }}>This send needs attention.</Text>
+                    <TouchableOpacity onPress={() => void retrySubmission(item.idempotencyKey)} style={filledButton} accessibilityRole="button">
+                      <Text style={styles.buttonText}>Retry send</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                {displayedPreviews.map((preview) => (
+                  <View key={preview.tempKey} style={styles.previewRow}>
+                    <Image source={{ uri: preview.uri }} style={styles.thumb} accessibilityLabel="Packet photo" />
+                    <TouchableOpacity onPress={() => retake(preview)} accessibilityRole="button" accessibilityLabel="Remove photo">
+                      <Text style={{ color: action }}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                {pending.map((row) => (
+                  <View key={row.localId}>
+                    {editingPendingId === row.localId ? (
+                      <TextInput
+                        value={row.literalWording}
+                        onChangeText={(value) => {
+                          if (value.trim()) setAbsence(false);
+                          void rememberPending(replacePendingLiteral(pending, row.localId, value));
+                        }}
+                        style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
+                        accessibilityLabel="Edit packet wording"
+                      />
+                    ) : row.productionCertificationId ? (
+                      <View>
+                        <CertificationMark
+                          name={row.canonicalName || row.literalWording}
+                          productionId={row.productionCertificationId}
+                          surface="contribution_review"
+                          color={ink}
                         />
-                      ) : (
-                        <Text style={{ color: ink }}>{claim}</Text>
-                      )}
-                      <View style={styles.row}>
-                        <TouchableOpacity onPress={() => setEditingClaim(index)} accessibilityRole="button">
-                          <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => setClaims((rows) => {
-                            const remaining = rows.filter((_, itemIndex) => itemIndex !== index);
-                            return remaining.length > 0 ? remaining : [''];
-                          })}
-                          accessibilityRole="button"
-                        >
-                          <Text style={{ color: action }}>{PACKET_REVIEW_REMOVE}</Text>
-                        </TouchableOpacity>
+                        {row.literalWording && row.canonicalName && row.literalWording.trim().toLowerCase() !== row.canonicalName.trim().toLowerCase() ? (
+                          <Text style={{ color: muted }}>As on pack: {row.literalWording}</Text>
+                        ) : null}
                       </View>
+                    ) : (
+                      <Text style={{ color: ink }}>{row.literalWording}</Text>
+                    )}
+                    <View style={styles.row}>
+                      <TouchableOpacity onPress={() => setEditingPendingId(row.localId)} accessibilityRole="button" accessibilityLabel={PACKET_REVIEW_CHANGE}>
+                        <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => void rememberPending(removePendingObservation(pending, row.localId))}
+                        accessibilityRole="button"
+                        accessibilityLabel={PACKET_REVIEW_REMOVE}
+                      >
+                        <Text style={{ color: action }}>{PACKET_REVIEW_REMOVE}</Text>
+                      </TouchableOpacity>
                     </View>
-                  ) : null
-                )}
-                {certs.map((cert, index) =>
-                  packetRowVisible(surfaceMode, cert, initialCertificationsRef.current || []) ? (
-                    <View key={`cert-${index}`}>
-                      {editingCert === index ? (
-                        <TextInput
-                          value={cert}
-                          onChangeText={(value) => {
-                            if (value.trim()) setAbsence(false);
-                            setCerts((rows) => rows.map((item, itemIndex) => (itemIndex === index ? value : item)));
-                          }}
-                          style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
-                        />
-                      ) : (
-                        <Text style={{ color: ink }}>{cert}</Text>
-                      )}
-                      <View style={styles.row}>
-                        <TouchableOpacity onPress={() => setEditingCert(index)} accessibilityRole="button">
-                          <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => setCerts((rows) => {
-                            const remaining = rows.filter((_, itemIndex) => itemIndex !== index);
-                            return remaining.length > 0 ? remaining : [''];
-                          })}
-                          accessibilityRole="button"
-                        >
-                          <Text style={{ color: action }}>{PACKET_REVIEW_REMOVE}</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  ) : null
-                )}
+                  </View>
+                ))}
                 <TextInput
+                  ref={packetInputRef}
                   value={packetQuery}
                   onChangeText={(value) => {
                     if (value.trim()) setAbsence(false);
                     setPacketQuery(value);
                   }}
-                  placeholder={PACKET_MANUAL_ENTRY}
+                  placeholder={PACKET_WORDING_FIELD}
+                  accessibilityLabel={PACKET_WORDING_FIELD}
                   style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                 />
-                {packetHits.map((hit) => (
-                  <TouchableOpacity key={hit.displayName} onPress={() => addCatalogueSelection(hit)} accessibilityRole="button">
-                    <Text style={{ color: action }}>{hit.displayName}</Text>
-                  </TouchableOpacity>
-                ))}
-                {packetQuery.trim() && packetHits.length === 0 ? (
-                  <TouchableOpacity onPress={() => addUnmatchedWording(packetQuery)} accessibilityRole="button">
-                    <Text style={{ color: action }}>{PACKET_UNMATCHED_ENTRY}</Text>
+                {packetSuggestions.map((hit) =>
+                  hit.selectable && hit.productionId ? (
+                    <TouchableOpacity
+                      key={hit.entryId}
+                      onPress={() => addSelectedCertification(hit.productionId as string, hit.consumerName, packetQuery)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Add ${hit.consumerName}`}
+                      style={styles.suggestionRow}
+                    >
+                      <Text style={{ color: action, fontWeight: '700' }}>{hit.consumerName}</Text>
+                      {hit.qualifier ? <Text style={{ color: muted }}>{hit.qualifier}</Text> : null}
+                    </TouchableOpacity>
+                  ) : (
+                    <View key={hit.entryId} style={styles.suggestionRow} accessibilityRole="text" accessibilityLabel={hit.consumerName}>
+                      <Text style={{ color: ink }}>{hit.consumerName}</Text>
+                      {hit.qualifier ? <Text style={{ color: muted }}>{hit.qualifier}</Text> : null}
+                    </View>
+                  )
+                )}
+                {packetQuery.trim() ? (
+                  <TouchableOpacity
+                    onPress={() => addLiteralWording(packetQuery)}
+                    accessibilityRole="button"
+                    accessibilityLabel={PACKET_ADD_WORDING}
+                    style={styles.suggestionRow}
+                  >
+                    <Text style={{ color: action, fontWeight: '700' }}>{PACKET_ADD_WORDING}</Text>
                   </TouchableOpacity>
                 ) : null}
-                {packetAbsenceAvailable && targeted.length > 0 && claims.every((claim) => !claim.trim()) && certs.every((cert) => !cert.trim()) ? (
+                {pending.length > 0 ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setPacketQuery('');
+                      packetInputRef.current?.focus();
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={PACKET_ADD_ANOTHER}
+                  >
+                    <Text style={{ color: action }}>{PACKET_ADD_ANOTHER}</Text>
+                  </TouchableOpacity>
+                ) : null}
+                {proposals.map((proposal) =>
+                  proposal.resolution?.kind === 'certification' ? (
+                    <TouchableOpacity
+                      key={proposal.id}
+                      onPress={() =>
+                        addSelectedCertification(
+                          proposal.resolution && proposal.resolution.kind === 'certification' ? proposal.resolution.certificationId : '',
+                          proposal.resolution && proposal.resolution.kind === 'certification' ? proposal.resolution.displayName : proposal.text,
+                          proposal.text,
+                          'machine_proposal',
+                          proposal.id
+                        )
+                      }
+                      accessibilityRole="button"
+                    >
+                      <Text style={{ color: ink }}>{PACKET_REVIEW_PROMPT}</Text>
+                      <Text style={{ color: action }}>{PACKET_REVIEW_YES} {proposal.resolution.displayName}</Text>
+                    </TouchableOpacity>
+                  ) : proposal.resolution?.kind === 'wording' ? (
+                    <TouchableOpacity key={proposal.id} onPress={() => addLiteralWording(proposal.text, 'machine_proposal', proposal.id)} accessibilityRole="button">
+                      <Text style={{ color: action }}>{PACKET_REVIEW_YES} {proposal.text}</Text>
+                    </TouchableOpacity>
+                  ) : proposal.resolution?.kind === 'closer_photo' ? (
+                    <View key={proposal.id}>
+                      <Text style={{ color: ink }}>{CLOSER_PHOTO_TITLE}</Text>
+                      <Text style={{ color: ink }}>{CLOSER_PHOTO_BODY}</Text>
+                      <TouchableOpacity onPress={captureCamera} accessibilityRole="button">
+                        <Text style={{ color: action }}>{CLOSER_PHOTO_ACTION}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : null
+                )}
+                {packetAbsenceAvailable && targeted.length > 0 && pending.length === 0 && !packetQuery.trim() ? (
                   <TouchableOpacity
                     onPress={() => {
                       setAbsence(true);
-                      setClaims(['']);
-                      setCerts(['']);
+                      void rememberPending([]);
                     }}
+                    accessibilityRole="button"
                   >
                     <Text style={{ color: absence ? action : ink }}>{PACKET_ABSENCE_CONSUMER_COPY}</Text>
                   </TouchableOpacity>
@@ -1586,4 +1814,5 @@ const styles = StyleSheet.create({
   closeControl: { minWidth: 44, minHeight: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
   phaseCard: { padding: 16, gap: 12 },
   notice: { borderRadius: 12, padding: 12 },
+  suggestionRow: { minHeight: 44, justifyContent: 'center' },
 });
