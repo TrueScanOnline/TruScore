@@ -38,6 +38,15 @@ export type ResultContributionActions = {
   packetInformationAction: AssessedContributionAction | null;
 };
 
+/** Current Result already shows an admitted packet contribution. */
+export function admittedPacketContributionRepresented(product: Product): boolean {
+  return (
+    (product.rveelGovernedPacketClaims || []).length > 0 ||
+    (product.rveelGovernedCertifications || []).length > 0 ||
+    product.rveelPacketAbsenceEstablished === true
+  );
+}
+
 export function resultContributionActions(product: Product): ResultContributionActions {
   const publication = product._publication;
   const certifications = Array.isArray(product.certifications) ? product.certifications : [];

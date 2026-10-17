@@ -131,6 +131,7 @@ import {
   CONTRIBUTION_NOTICE_SAVED,
   PACKET_ABSENCE_PRODUCT_STATE,
   PACKET_INFORMATION_ADD,
+  admittedPacketContributionRepresented,
   resultContributionActions,
   type ContributionEntryContext,
 } from '../../src/contribution/resultContributionActions';
@@ -2237,36 +2238,46 @@ function ResultScreenContent() {
               product.rveelGovernedCertifications || [],
               recognisedCertificationNames
             );
+            const recognisedMarks = product.certifications || [];
+            const hasCertifications = recognisedMarks.length > 0 || visibleCertifications.length > 0;
+            const hasClaims = visibleClaims.length > 0;
+            const showGroupHeadings = hasCertifications && hasClaims;
             return (
               <>
+                {showGroupHeadings ? (
+                  <Text style={[styles.packetGroupHeading, { color: colors.text }]}>Certifications</Text>
+                ) : null}
+                {recognisedMarks.length > 0 ? (
+                  <View style={styles.certificationsContainer}>
+                    {recognisedMarks.map((cert) => (
+                      <CertBadge key={cert.id} certification={cert} />
+                    ))}
+                  </View>
+                ) : null}
+                {visibleCertifications.map((name) => (
+                  <View key={name} style={styles.packetObservationRow}>
+                    <CertificationMark name={name} surface="product_result" associationAdmitted imageOnly />
+                    <Text style={[styles.packetObservationText, { color: colors.text }]}>{name}</Text>
+                  </View>
+                ))}
+                {showGroupHeadings ? (
+                  <Text style={[styles.packetGroupHeading, { color: colors.text }]}>Other packet claims</Text>
+                ) : null}
                 {visibleClaims.map((claim) => (
-                  <Text key={claim.evidenceId} style={{ color: colors.text }}>
+                  <Text key={claim.evidenceId} style={[styles.packetObservationText, { color: colors.text }]}>
                     {claim.exactWording}
                   </Text>
                 ))}
                 {product._publication?.claims.confidenceReasonCode === 'claims_primary_contribution_limited' ? (
                   <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
                 ) : null}
-                {product.certifications && product.certifications.length > 0 ? (
-                  <View style={styles.certificationsContainer}>
-                    {product.certifications.map((cert) => (
-                      <CertBadge key={cert.id} certification={cert} />
-                    ))}
-                  </View>
-                ) : null}
-                {visibleCertifications.map((name) => (
-                  <View key={name} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <CertificationMark name={name} surface="product_result" associationAdmitted imageOnly />
-                    <Text style={{ color: colors.text }}>{name}</Text>
-                  </View>
-                ))}
               </>
             );
           })()}
           {product.rveelPacketAbsenceEstablished ? (
             <Text style={{ color: colors.text }}>{PACKET_ABSENCE_PRODUCT_STATE}</Text>
           ) : null}
-          {contributionActions.packetInformationAction === 'add' ? (
+          {contributionActions.packetInformationAction === 'add' && !admittedPacketContributionRepresented(product) ? (
           <TouchableOpacity
             onPress={() => openContribution('packetClaims', 'add')}
             activeOpacity={0.7}
@@ -3492,6 +3503,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: 12,
+  },
+  packetGroupHeading: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 12,
+  },
+  packetObservationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 10,
+  },
+  packetObservationText: {
+    flex: 1,
+    flexShrink: 1,
+    fontSize: 16,
+    lineHeight: 22,
   },
   certificationsUpdateButton: {
     flexDirection: 'row',

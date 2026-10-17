@@ -10,7 +10,7 @@ import {
   projectAdmittedIngredientsDisplay,
   retainedAfterPartialAdmission,
 } from '../../../contribution/governedDisplayProjection';
-import { resultContributionActions } from '../../../contribution/resultContributionActions';
+import { admittedPacketContributionRepresented, resultContributionActions } from '../../../contribution/resultContributionActions';
 import { bodyDataLimitationActions } from '../../../contribution/governedDisplayProjection';
 import {
   buildManualTextDocument,
@@ -317,6 +317,19 @@ describe('functional-to-consumer integration closure', () => {
     });
     expect(contributed.certificationsAction).toBe('update');
     expect(contributed.packetInformationAction).toBe('add');
+    expect(admittedPacketContributionRepresented(base)).toBe(false);
+    expect(admittedPacketContributionRepresented({
+      ...base,
+      rveelGovernedCertifications: ['Community standard'],
+    })).toBe(true);
+    const result = fs.readFileSync(path.join(REPO, 'app/result/[barcode].tsx'), 'utf8');
+    const limitations = fs.readFileSync(path.join(REPO, 'src/components/productLegal/ProductDataLimitationsCard.tsx'), 'utf8');
+    const modal = fs.readFileSync(path.join(REPO, 'src/components/PacketContributionModal.tsx'), 'utf8');
+    expect(result).toContain("packetInformationAction === 'add' && !admittedPacketContributionRepresented(product)");
+    expect(result).toContain('Certifications');
+    expect(result).toContain('Other packet claims');
+    expect(limitations).toContain('admittedPacketContributionRepresented(product)');
+    expect(modal).not.toContain('As on pack');
   });
 
   it('changes the unit revision when origins countries, percentage, qualifier, or qualification change', () => {

@@ -461,7 +461,9 @@ export function consumerCertificationLine(input: {
   certificationScopeSubject?: string;
 }): string {
   const governedName = input.certificationId ? displayNameForCertification(input.certificationId) : undefined;
-  const base = (governedName || input.exactWording || input.claimValue || '').trim();
+  const identity = (input.claimValue || '').trim();
+  const identityIsTag = /^[a-z]{2}:/i.test(identity);
+  const base = (governedName || (!identityIsTag ? identity : '') || input.exactWording || identity).trim();
   if (input.certificationScope === 'ingredient_component' && input.certificationScopeSubject?.trim()) {
     const subject = input.certificationScopeSubject.trim();
     const pretty = subject.charAt(0).toUpperCase() + subject.slice(1);

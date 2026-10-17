@@ -789,7 +789,7 @@ export default function PacketContributionModal({
       const created: string[] = [];
       const observations: { unitId: string; label: string; kind: 'ingredients' | 'nutrition' | 'origin' | 'claim' | 'cert' | 'absence'; index: number }[] = [];
       const contexts = includedContexts;
-      const packetDraft = packetInformationContext(entryContext) ? pendingContributionLists(pending, packetQuery) : null;
+      const packetDraft = packetInformationContext(entryContext) ? pendingContributionLists(pending) : null;
       const originRowsNow = origins.map((row) => safeOrigin(row));
       const openedOriginsNow = openedOriginsRef.current.map((row) => safeOrigin(row));
       const removedOriginKeys = ceasedOriginsRemovedFromForm(openedOriginsNow, originRowsNow);
@@ -1678,9 +1678,6 @@ export default function PacketContributionModal({
                           surface="contribution_review"
                           color={ink}
                         />
-                        {row.literalWording && row.canonicalName && row.literalWording.trim().toLowerCase() !== row.canonicalName.trim().toLowerCase() ? (
-                          <Text style={{ color: muted }}>As on pack: {row.literalWording}</Text>
-                        ) : null}
                       </View>
                     ) : (
                       <Text style={{ color: ink }}>{row.literalWording}</Text>

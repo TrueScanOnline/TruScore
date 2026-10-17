@@ -44,7 +44,7 @@ export default function CertBadge({ certification, onPress }: CertBadgeProps) {
       ) : closed ? (
         <Image source={closed.moduleId} accessibilityLabel={closed.accessibleName} style={styles.mark} resizeMode="contain" />
       ) : null}
-      <Text style={styles.name} numberOfLines={2}>
+      <Text style={styles.name}>
         {displayCertificationName(certification)}
       </Text>
     </Component>
@@ -59,13 +59,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
-    gap: 6,
+    gap: 8,
     marginRight: 8,
     marginBottom: 8,
   },
-  mark: { width: 20, height: 20 },
+  mark: { width: 32, height: 32 },
   name: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: '600',
     color: '#1a1a1a',
     flexShrink: 1,

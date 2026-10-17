@@ -14,7 +14,7 @@ import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
 import { resultEmeraldTone, resultPresentation } from '../../theme/resultPresentation';
 import { Product, ProductWithTrustScore } from '../../types/product';
-import { PACKET_INFORMATION_ADD } from '../../contribution/resultContributionActions';
+import { admittedPacketContributionRepresented, PACKET_INFORMATION_ADD } from '../../contribution/resultContributionActions';
 import {
   bodyDataLimitationActions,
   transparencyShowsSeparateAddIngredients,
@@ -316,7 +316,8 @@ export default function ProductDataLimitationsCard({
               ? opp.routeKey
               : null;
           let showLiveCta = false;
-          if (liveKey && action && !seenLiveRoutes.has(liveKey)) {
+          const packetAlreadyRepresented = liveKey === 'packet_claims' && admittedPacketContributionRepresented(product);
+          if (liveKey && action && !packetAlreadyRepresented && !seenLiveRoutes.has(liveKey)) {
             seenLiveRoutes.add(liveKey);
             showLiveCta = true;
           }

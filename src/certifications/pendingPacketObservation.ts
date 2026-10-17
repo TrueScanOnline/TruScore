@@ -86,23 +86,23 @@ function wordingAlreadyPending(rows: PendingPacketObservation[], wording: string
 }
 
 /**
- * A tapped suggestion becomes the text in the field.
- * A selectable production identity is stored with that row. Other catalogue wording stays wording.
+ * A tapped selectable certification is one governed observation.
+ * The typed search is not packet wording and the field is cleared for the next entry.
  */
 export function choosePacketSuggestion(
   rows: PendingPacketObservation[],
   hit: Pick<DiscoverySuggestion, 'consumerName' | 'selectable' | 'productionId'>,
-  typed: string
+  _typed: string
 ): { rows: PendingPacketObservation[]; added: boolean; fieldText: string } {
-  const fieldText = hit.consumerName.trim();
-  if (!fieldText) return { rows, added: false, fieldText: typed };
-  const governed = hit.selectable === true && !!hit.productionId;
+  const name = hit.consumerName.trim();
+  if (!name || hit.selectable !== true || !hit.productionId) return { rows, added: false, fieldText: '' };
   const next = addPendingObservation(rows, {
-    literalWording: governed ? typed.trim() || fieldText : fieldText,
+    literalWording: name,
     source: 'manual',
-    ...(governed ? { productionCertificationId: hit.productionId || undefined, canonicalName: fieldText } : {}),
+    productionCertificationId: hit.productionId,
+    canonicalName: name,
   });
-  return { rows: next.rows, added: next.added, fieldText };
+  return { rows: next.rows, added: next.added, fieldText: '' };
 }
 
 export function pendingContributionLists(
@@ -123,7 +123,14 @@ export function pendingContributionLists(
       const statement = certificationStatementForSelection(row.productionCertificationId, row.literalWording, row.canonicalName);
       if (!statement || certifications.some((item) => item.toLowerCase() === statement.toLowerCase())) continue;
       certifications.push(statement);
-      literalsByStatement[statement] = row.literalWording.trim() || statement;
+      const observed = row.literalWording.trim();
+      const resolved = resolvePacketObservation({ observedWording: observed });
+      const observedIsThisCertification =
+        resolved.kind === 'certification' && resolved.certificationId === row.productionCertificationId;
+      literalsByStatement[statement] =
+        observed && (observed.toLowerCase() === statement.toLowerCase() || observedIsThisCertification)
+          ? observed
+          : statement;
       productionByStatement[statement] = row.productionCertificationId;
       continue;
     }

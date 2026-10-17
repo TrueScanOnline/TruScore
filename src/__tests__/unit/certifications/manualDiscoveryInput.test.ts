@@ -12,6 +12,7 @@ import {
   pendingContributionLists,
   replacePendingLiteral,
 } from '../../../certifications/pendingPacketObservation';
+import { consumerCertificationLine } from '../../../certifications/resolveCertification';
 import { governedCertificationLabels } from '../../../contributions/certificationLane';
 import { deriveEvidenceFacts } from '../../../evidenceAuthority/subjects';
 import { evaluateEthicsCertifications } from '../../../services/ethicsCertificationsService';
@@ -50,20 +51,23 @@ describe('packet claims manual discovery input', () => {
     expect(governedCertificationLabels('organic')).toBeUndefined();
   });
 
-  it('selects Vegan Australia Certified as a non-scoring identity and keeps the typed wording', () => {
+  it('selects Vegan Australia Certified as a non-scoring identity without keeping the search term', () => {
     const hit = searchDiscoveryCatalogue('vegan').find((row) => row.consumerName === 'Vegan Australia Certified');
     expect(hit?.selectable).toBe(true);
     expect(hit?.scoringEligible).toBe(false);
     expect(hit?.productionId).toBe('vegan.au');
-    const chosen = choosePacketSuggestion([], hit!, 'vegan');
-    expect(chosen.fieldText).toBe('Vegan Australia Certified');
+    const chosen = choosePacketSuggestion([], hit!, 'Veg');
+    expect(chosen.fieldText).toBe('');
+    expect(chosen.rows).toHaveLength(1);
     expect(chosen.rows[0]?.productionCertificationId).toBe('vegan.au');
-    expect(chosen.rows[0]?.literalWording).toBe('vegan');
+    expect(chosen.rows[0]?.canonicalName).toBe('Vegan Australia Certified');
+    expect(chosen.rows[0]?.literalWording).toBe('Vegan Australia Certified');
     const lists = pendingContributionLists(chosen.rows, chosen.fieldText);
     expect(lists.certifications).toEqual(['Vegan Australia Certified']);
     expect(lists.claims).toEqual(['']);
     expect(lists.productionByStatement['Vegan Australia Certified']).toBe('vegan.au');
-    expect(lists.literalsByStatement['Vegan Australia Certified']).toBe('vegan');
+    expect(lists.literalsByStatement['Vegan Australia Certified']).toBe('Vegan Australia Certified');
+    expect(Object.values(lists.literalsByStatement)).not.toContain('Veg');
     expect(governedCertificationLabels('Vegan Australia Certified')).toBeUndefined();
     const derived = deriveEvidenceFacts([
       {
@@ -87,10 +91,46 @@ describe('packet claims manual discovery input', () => {
     expect(scored.eligibleSchemes).toEqual([]);
   });
 
-  it('puts a tapped governed mark into the field and keeps that production identity', () => {
+  it('keeps a selected certification as one canonical observation and a typed claim verbatim', () => {
+    const hit = searchDiscoveryCatalogue('Veg').find((row) => row.consumerName === 'Certified Vegan (Vegan Action)');
+    const chosen = choosePacketSuggestion([], hit!, 'Veg');
+    expect(chosen.rows).toHaveLength(1);
+    expect(chosen.rows[0]?.canonicalName).toBe('Certified Vegan (Vegan Action)');
+    expect(chosen.rows[0]?.literalWording).toBe('Certified Vegan (Vegan Action)');
+    expect(chosen.fieldText).toBe('');
+    const claim = addPendingObservation(chosen.rows, { literalWording: 'Vegan certified', source: 'manual' });
+    const lists = pendingContributionLists(claim.rows);
+    expect(lists.certifications).toEqual(['Certified Vegan (Vegan Action)']);
+    expect(lists.claims).toEqual(['Vegan certified']);
+    expect(lists.literalsByStatement['Certified Vegan (Vegan Action)']).toBe('Certified Vegan (Vegan Action)');
+    const recovered = pendingContributionLists(
+      addPendingObservation([], {
+        literalWording: 'Veg',
+        source: 'manual',
+        productionCertificationId: 'veganaction.certified',
+        canonicalName: 'Certified Vegan (Vegan Action)',
+      }).rows
+    );
+    expect(recovered.certifications).toEqual(['Certified Vegan (Vegan Action)']);
+    expect(recovered.claims).toEqual(['']);
+    expect(recovered.literalsByStatement['Certified Vegan (Vegan Action)']).toBe('Certified Vegan (Vegan Action)');
+    expect(consumerCertificationLine({
+      certificationId: 'veganaction.certified',
+      claimValue: 'Certified Vegan (Vegan Action)',
+      exactWording: 'Veg',
+    })).toBe('Certified Vegan (Vegan Action)');
+    expect(consumerCertificationLine({
+      certificationId: 'cert.fairtrade',
+      claimValue: 'en:fair-trade',
+      exactWording: 'Fair',
+    })).toBe('Fairtrade');
+  });
+
+  it('adds a tapped governed mark and clears the search field', () => {
     const hit = searchDiscoveryCatalogue('Fairtrade').find((row) => row.productionId === 'cert.fairtrade');
     const chosen = choosePacketSuggestion([], hit!, 'fair');
-    expect(chosen.fieldText).toBe('Fairtrade');
+    expect(chosen.fieldText).toBe('');
+    expect(chosen.rows[0]?.literalWording).toBe('Fairtrade');
     expect(chosen.rows[0]?.productionCertificationId).toBe('cert.fairtrade');
     const lists = pendingContributionLists(chosen.rows, chosen.fieldText);
     expect(lists.certifications).toEqual(['Fairtrade']);
@@ -159,7 +199,7 @@ describe('packet claims manual discovery input', () => {
     expect(regenerativeWording.claims).toEqual(['Rainforest Alliance Certified Regenerative']);
   });
 
-  it('retains unrecognised wording as a claim and keeps a selected alias literal beside the production identity', () => {
+  it('submits a selected certification by its governed name and keeps unrecognised wording as a claim', () => {
     const lists = pendingContributionLists(
       addPendingObservation([], {
         literalWording: 'fair trade',
@@ -169,7 +209,7 @@ describe('packet claims manual discovery input', () => {
       }).rows
     );
     expect(lists.certifications).toEqual(['Fairtrade']);
-    expect(lists.literalsByStatement.Fairtrade).toBe('fair trade');
+    expect(lists.literalsByStatement.Fairtrade).toBe('Fairtrade');
     const derived = deriveEvidenceFacts([
       {
         domain: 'certifications',
