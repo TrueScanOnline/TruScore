@@ -193,7 +193,7 @@ export function deriveEvidenceFacts(inputs: EvidenceFactInput[]): FactDerivation
           domain: 'certifications',
           subjectKey: `certifications|scheme:${scheme}`,
           claimKey: scheme,
-          claimValue: wording,
+          claimValue: identityText || wording,
           exactWording: wording,
           variantKey: input.variantKey,
           ...version,

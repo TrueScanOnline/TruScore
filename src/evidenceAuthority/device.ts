@@ -475,6 +475,12 @@ async function finalizeManualTextAsset(
     ingredientSubject: unit.ingredientSubject,
     labelsTags: labels,
     packetAbsence: unit.packetAbsenceAffirmation === true,
+    ...(unit.domain === 'certifications' && unit.productionCertificationId
+      ? { certificationId: unit.productionCertificationId }
+      : {}),
+    ...(unit.domain === 'certifications' && unit.packetLiteral?.trim()
+      ? { observedWording: unit.packetLiteral.trim() }
+      : {}),
   };
   const response = await postAuthority(token, {
     action: 'finalize-manual-text',
@@ -498,6 +504,8 @@ async function finalizeManualTextAsset(
     ingredientSubject: draft.ingredientSubject,
     labelsTags: draft.labelsTags,
     packetAbsence: draft.packetAbsence,
+    certificationId: draft.certificationId,
+    observedWording: draft.observedWording,
   }, trace, 'finalize_manual_text');
   if (!response.ok) throw new Error('manual_text_not_finalized');
   const body = (await response.json()) as { assetId?: string };

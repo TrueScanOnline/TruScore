@@ -8,19 +8,23 @@ import {
 import {
   addPendingObservation,
   certificationStatementForSelection,
+  choosePacketSuggestion,
   pendingContributionLists,
   replacePendingLiteral,
 } from '../../../certifications/pendingPacketObservation';
 import { governedCertificationLabels } from '../../../contributions/certificationLane';
 import { deriveEvidenceFacts } from '../../../evidenceAuthority/subjects';
+import { evaluateEthicsCertifications } from '../../../services/ethicsCertificationsService';
+import type { Product } from '../../../types/product';
 
 describe('packet claims manual discovery input', () => {
   const validation = discoveryCatalogueValidation();
 
-  it('loads catalogue 1.0.1 with the ten existing production identities', () => {
+  it('loads catalogue 1.0.2 with ten scoring identities and five non-scoring vegan identities', () => {
     expect(validation.ok).toBe(true);
-    expect(validation.assetVersion).toBe('1.0.1');
+    expect(validation.assetVersion).toBe('1.0.2');
     expect(validation.selectableExistingCount).toBe(10);
+    expect(validation.selectableNonscoringCount).toBe(5);
     expect(validation.errors).toEqual([]);
   });
 
@@ -43,11 +47,65 @@ describe('packet claims manual discovery input', () => {
     expect(governedCertificationLabels('organic')).toBeUndefined();
   });
 
-  it('returns every Veg match, including both V-Label rows, and does not make them selectable', () => {
+  it('selects Vegan Australia Certified as a non-scoring identity and keeps the typed wording', () => {
+    const hit = searchDiscoveryCatalogue('vegan').find((row) => row.consumerName === 'Vegan Australia Certified');
+    expect(hit?.selectable).toBe(true);
+    expect(hit?.scoringEligible).toBe(false);
+    expect(hit?.productionId).toBe('vegan.au');
+    const chosen = choosePacketSuggestion([], hit!, 'vegan');
+    expect(chosen.fieldText).toBe('Vegan Australia Certified');
+    expect(chosen.rows[0]?.productionCertificationId).toBe('vegan.au');
+    expect(chosen.rows[0]?.literalWording).toBe('vegan');
+    const lists = pendingContributionLists(chosen.rows, chosen.fieldText);
+    expect(lists.certifications).toEqual(['Vegan Australia Certified']);
+    expect(lists.claims).toEqual(['']);
+    expect(lists.productionByStatement['Vegan Australia Certified']).toBe('vegan.au');
+    expect(lists.literalsByStatement['Vegan Australia Certified']).toBe('vegan');
+    expect(governedCertificationLabels('Vegan Australia Certified')).toBeUndefined();
+    const derived = deriveEvidenceFacts([
+      {
+        domain: 'certifications',
+        claimValue: 'Vegan Australia Certified',
+        exactWording: 'vegan',
+        certificationId: 'vegan.au',
+      },
+    ]);
+    expect(derived.facts[0]?.certificationId).toBe('vegan.au');
+    expect(derived.facts[0]?.claimValue).toBe('Vegan Australia Certified');
+    expect(derived.facts[0]?.exactWording).toBe('vegan');
+    expect(derived.facts[0]?.labelsTags).toBeUndefined();
+    expect(derived.facts[0]?.subjectKey).toBe('certifications|scheme:vegan.au');
+    const scored = evaluateEthicsCertifications({
+      barcode: '1',
+      product_name: 'Plain oats',
+      certifications: [{ name: 'Vegan Australia Certified' }],
+    } as Product);
+    expect(scored.adjustment).toBe(0);
+    expect(scored.eligibleSchemes).toEqual([]);
+  });
+
+  it('puts a tapped governed mark into the field and keeps that production identity', () => {
+    const hit = searchDiscoveryCatalogue('Fairtrade').find((row) => row.productionId === 'cert.fairtrade');
+    const chosen = choosePacketSuggestion([], hit!, 'fair');
+    expect(chosen.fieldText).toBe('Fairtrade');
+    expect(chosen.rows[0]?.productionCertificationId).toBe('cert.fairtrade');
+    const lists = pendingContributionLists(chosen.rows, chosen.fieldText);
+    expect(lists.certifications).toEqual(['Fairtrade']);
+    expect(lists.claims).toEqual(['']);
+  });
+
+  it('returns every Veg match and makes the five named vegan identities selectable without scoring', () => {
     const hits = searchDiscoveryCatalogue('Veg');
     expect(hits.length).toBeGreaterThanOrEqual(5);
     expect(hits.map((hit) => hit.consumerName)).toEqual(expect.arrayContaining(['V-Label Vegan', 'V-Label Vegetarian']));
-    expect(hits.every((hit) => hit.selectable === false && hit.productionId == null)).toBe(true);
+    expect(hits.filter((hit) => hit.selectable).map((hit) => hit.consumerName).sort()).toEqual([
+      'Certified Vegan (Vegan Action)',
+      'The Vegan Society Vegan Trademark',
+      'V-Label Vegan',
+      'V-Label Vegetarian',
+      'Vegan Australia Certified',
+    ]);
+    expect(hits.filter((hit) => hit.selectable).every((hit) => hit.scoringEligible === false)).toBe(true);
     expect(searchDiscoveryCatalogue('cert').length).toBeGreaterThan(5);
   });
 

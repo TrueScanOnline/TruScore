@@ -4,7 +4,7 @@
  */
 
 import { displayNameForCertification, resolvePacketObservation } from './resolveCertification';
-import { normalizeDiscoveryQuery } from './discoveryCatalogue';
+import { normalizeDiscoveryQuery, type DiscoverySuggestion } from './discoveryCatalogue';
 
 export const PACKET_INPUT_INSTRUCTION = 'Add claims or certification marks shown on the pack.';
 export const PACKET_WORDING_FIELD = 'Type what you see on the pack';
@@ -68,11 +68,41 @@ export function removePendingObservation(rows: PendingPacketObservation[], local
 }
 
 /** Wording the existing certification receiver already knows how to identify. */
-export function certificationStatementForSelection(productionId: string, literal: string): string {
-  const display = displayNameForCertification(productionId) || '';
+export function certificationStatementForSelection(productionId: string, literal: string, canonicalName?: string): string {
+  const display = displayNameForCertification(productionId) || (canonicalName || '').trim();
   const fromLiteral = resolvePacketObservation({ observedWording: literal });
   if (fromLiteral.kind === 'certification' && fromLiteral.certificationId === productionId) return literal.trim();
   return display || literal.trim();
+}
+
+function wordingAlreadyPending(rows: PendingPacketObservation[], wording: string): boolean {
+  const key = normalizeDiscoveryQuery(wording);
+  if (!key) return false;
+  return rows.some(
+    (row) =>
+      normalizeDiscoveryQuery(row.literalWording) === key ||
+      normalizeDiscoveryQuery(row.canonicalName || '') === key
+  );
+}
+
+/**
+ * A tapped suggestion becomes the text in the field.
+ * A selectable production identity is stored with that row. Other catalogue wording stays wording.
+ */
+export function choosePacketSuggestion(
+  rows: PendingPacketObservation[],
+  hit: Pick<DiscoverySuggestion, 'consumerName' | 'selectable' | 'productionId'>,
+  typed: string
+): { rows: PendingPacketObservation[]; added: boolean; fieldText: string } {
+  const fieldText = hit.consumerName.trim();
+  if (!fieldText) return { rows, added: false, fieldText: typed };
+  const governed = hit.selectable === true && !!hit.productionId;
+  const next = addPendingObservation(rows, {
+    literalWording: governed ? typed.trim() || fieldText : fieldText,
+    source: 'manual',
+    ...(governed ? { productionCertificationId: hit.productionId || undefined, canonicalName: fieldText } : {}),
+  });
+  return { rows: next.rows, added: next.added, fieldText };
 }
 
 export function pendingContributionLists(
@@ -83,12 +113,14 @@ export function pendingContributionLists(
   const certifications: string[] = [];
   const literalsByStatement: Record<string, string> = {};
   const productionByStatement: Record<string, string> = {};
-  const pending = uncommittedWording.trim()
-    ? addPendingObservation(rows, { literalWording: uncommittedWording.trim(), source: 'manual' }).rows
-    : rows;
+  const extra = uncommittedWording.trim();
+  const pending =
+    extra && !wordingAlreadyPending(rows, extra)
+      ? addPendingObservation(rows, { literalWording: extra, source: 'manual' }).rows
+      : rows;
   for (const row of pending) {
     if (row.productionCertificationId) {
-      const statement = certificationStatementForSelection(row.productionCertificationId, row.literalWording);
+      const statement = certificationStatementForSelection(row.productionCertificationId, row.literalWording, row.canonicalName);
       if (!statement || certifications.some((item) => item.toLowerCase() === statement.toLowerCase())) continue;
       certifications.push(statement);
       literalsByStatement[statement] = row.literalWording.trim() || statement;

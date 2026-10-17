@@ -845,6 +845,44 @@ describe('manual_text fact integrity', () => {
       'en:fair-trade',
     ]);
   });
+
+  test('admits Vegan Australia Certified as a non-scoring identity and keeps the pack wording', async () => {
+    const authority = service();
+    const { contributorId } = await authority.issueCredential();
+    const finalized = await authority.finalizeManualTextAsset({
+      contributorId,
+      barcode: BARCODE,
+      sessionId: 'sess-vegan',
+      unitId: 'unit-vegan',
+      domain: 'certifications',
+      statement: 'Vegan Australia Certified',
+      certificationId: 'vegan.au',
+      observedWording: 'vegan',
+    });
+    expect(finalized.ok).toBe(true);
+    if (!finalized.ok) return;
+    const admitted = await authority.submit(contributorId, {
+      idempotencyKey: 'vegan-au',
+      barcode: BARCODE,
+      facts: [
+        {
+          domain: 'certifications',
+          claimValue: 'Vegan Australia Certified',
+          exactWording: 'vegan',
+          certificationId: 'vegan.au',
+          finalizedAssetId: finalized.assetId,
+          unitId: 'unit-vegan',
+        },
+      ],
+    });
+    expect(admitted.status).toBe('admitted');
+    const evidence = admitted.snapshot?.prevailing[0]?.evidence;
+    expect(evidence?.certificationId).toBe('vegan.au');
+    expect(evidence?.claimValue).toBe('Vegan Australia Certified');
+    expect(evidence?.exactWording).toBe('vegan');
+    expect(evidence?.labelsTags).toBeUndefined();
+    expect(isAssessmentEligibleForReceiver(evidence!, 'ethics_certifications')).toBe(false);
+  });
 });
 
 describe('kept photographs', () => {

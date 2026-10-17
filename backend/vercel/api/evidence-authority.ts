@@ -289,6 +289,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         percentageNotStated: body.percentageNotStated === true,
         ingredientSubject: typeof body.ingredientSubject === 'string' ? body.ingredientSubject : undefined,
         labelsTags: Array.isArray(body.labelsTags) ? body.labelsTags.filter((tag) => typeof tag === 'string') : undefined,
+        certificationId: typeof body.certificationId === 'string' ? body.certificationId : undefined,
+        observedWording: typeof body.observedWording === 'string' ? body.observedWording : undefined,
         packetAbsence: false,
       });
       return res.status(result.ok ? 200 : 409).json(result);

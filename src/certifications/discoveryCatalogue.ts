@@ -6,11 +6,17 @@
 
 import { displayNameForCertification } from './resolveCertification';
 import asset from './governed/packet_certification_manual_discovery_v1_0_1.json';
+import selectionUpdate from './governed/packet_certification_selection_v1_0_2.json';
 
 export const DISCOVERY_ASSET_ID = 'rveel.packet_certification_manual_discovery';
-export const DISCOVERY_ASSET_VERSION = '1.0.1';
+export const DISCOVERY_BASE_VERSION = '1.0.1';
+export const DISCOVERY_ASSET_VERSION = '1.0.2';
 
-export type DiscoveryTreatment = 'selectable_existing' | 'discoverable_unapproved' | 'excluded_research_hold';
+export type DiscoveryTreatment =
+  | 'selectable_existing'
+  | 'selectable_nonscoring'
+  | 'discoverable_unapproved'
+  | 'excluded_research_hold';
 
 export type DiscoveryTermRole = 'canonical_display' | 'identity_establishing' | 'discovery_only';
 
@@ -38,6 +44,8 @@ export type DiscoveryEntry = {
   treatment: DiscoveryTreatment;
   searchVisible: boolean;
   selectable: boolean;
+  /** True only for identities already connected to an approved scoring rule. */
+  scoringEligible: boolean;
   productionId: string | null;
   terms: Array<{ text: string; role: DiscoveryTermRole }>;
   artwork: DiscoveryArtwork;
@@ -47,8 +55,9 @@ export type DiscoverySuggestion = {
   entryId: string;
   consumerName: string;
   qualifier: string | null;
-  treatment: 'selectable_existing' | 'discoverable_unapproved';
+  treatment: 'selectable_existing' | 'selectable_nonscoring' | 'discoverable_unapproved';
   selectable: boolean;
+  scoringEligible: boolean;
   productionId: string | null;
 };
 
@@ -58,6 +67,7 @@ export type DiscoveryValidation = {
   assetVersion: string;
   entryCount: number;
   selectableExistingCount: number;
+  selectableNonscoringCount: number;
   errors: string[];
   /** Exact normalised terms shared by more than one visible entry. Search lists every entry. */
   aliasCollisions: Array<{ term: string; entryIds: string[] }>;
@@ -81,6 +91,7 @@ type RawEntry = {
 
 const TREATMENTS = new Set<DiscoveryTreatment>([
   'selectable_existing',
+  'selectable_nonscoring',
   'discoverable_unapproved',
   'excluded_research_hold',
 ]);
@@ -150,6 +161,7 @@ export function loadDiscoveryCatalogue(raw: unknown): { entries: DiscoveryEntry[
         assetVersion,
         entryCount: 0,
         selectableExistingCount: 0,
+        selectableNonscoringCount: 0,
         errors,
         aliasCollisions: [],
       },
@@ -175,13 +187,26 @@ export function loadDiscoveryCatalogue(raw: unknown): { entries: DiscoveryEntry[
     const productionId = text(row.existing_production_id) || null;
     let selectable = row.selectable === true;
     const searchVisible = row.search_visible === true;
+    let scoringEligible = false;
     if (treatment === 'selectable_existing') {
+      scoringEligible = true;
       if (!productionId || !knownProductionId(productionId) || !selectable) {
         errors.push(`selectable_without_production_identity:${id}`);
         continue;
       }
+    } else if (treatment === 'selectable_nonscoring') {
+      scoringEligible = false;
+      if (!productionId || !selectable) {
+        errors.push(`nonscoring_without_identity:${id}`);
+        continue;
+      }
+      if (knownProductionId(productionId)) {
+        errors.push(`nonscoring_uses_scoring_identity:${id}`);
+        continue;
+      }
     } else {
       selectable = false;
+      scoringEligible = false;
     }
     const terms: DiscoveryEntry['terms'] = [];
     if (Array.isArray(row.terms)) {
@@ -202,7 +227,8 @@ export function loadDiscoveryCatalogue(raw: unknown): { entries: DiscoveryEntry[
       treatment: treatment as DiscoveryTreatment,
       searchVisible,
       selectable,
-      productionId: treatment === 'selectable_existing' ? productionId : null,
+      scoringEligible,
+      productionId: treatment === 'selectable_existing' || treatment === 'selectable_nonscoring' ? productionId : null,
       terms,
       artwork: artworkOf(row.artwork),
     });
@@ -217,6 +243,7 @@ export function loadDiscoveryCatalogue(raw: unknown): { entries: DiscoveryEntry[
         assetVersion,
         entryCount: 0,
         selectableExistingCount: 0,
+        selectableNonscoringCount: 0,
         errors,
         aliasCollisions: [],
       },
@@ -231,6 +258,7 @@ export function loadDiscoveryCatalogue(raw: unknown): { entries: DiscoveryEntry[
       assetVersion,
       entryCount: entries.length,
       selectableExistingCount: entries.filter((entry) => entry.treatment === 'selectable_existing').length,
+      selectableNonscoringCount: entries.filter((entry) => entry.treatment === 'selectable_nonscoring').length,
       errors,
       aliasCollisions: aliasCollisions(entries),
     },
@@ -254,7 +282,90 @@ function aliasCollisions(entries: DiscoveryEntry[]): DiscoveryValidation['aliasC
     .map(([term, ids]) => ({ term, entryIds: [...ids].sort() }));
 }
 
-const LOADED = loadDiscoveryCatalogue(asset);
+type SelectionAmendment = {
+  id?: unknown;
+  runtime_treatment?: unknown;
+  selectable?: unknown;
+  scoring_eligible?: unknown;
+  existing_production_id?: unknown;
+};
+
+/** Applies the versioned selection update onto 1.0.1. Historical evidence is not rewritten. */
+export function applySelectionUpdate(
+  loaded: { entries: DiscoveryEntry[]; validation: DiscoveryValidation },
+  update: unknown
+): { entries: DiscoveryEntry[]; validation: DiscoveryValidation } {
+  const record = update && typeof update === 'object' ? (update as Record<string, unknown>) : null;
+  const version = text(record?.asset_version);
+  const base = text(record?.base_asset_version);
+  const amendments = Array.isArray(record?.amendments) ? (record?.amendments as SelectionAmendment[]) : null;
+  if (!record || text(record.asset_id) !== DISCOVERY_ASSET_ID || version !== DISCOVERY_ASSET_VERSION || base !== DISCOVERY_BASE_VERSION || !amendments) {
+    return {
+      entries: [],
+      validation: {
+        ...loaded.validation,
+        ok: false,
+        assetVersion: version,
+        entryCount: 0,
+        selectableExistingCount: 0,
+        selectableNonscoringCount: 0,
+        errors: [...loaded.validation.errors, 'selection_update_invalid'],
+        aliasCollisions: [],
+      },
+    };
+  }
+  if (!loaded.validation.ok) return loaded;
+  const byId = new Map(loaded.entries.map((entry) => [entry.id, entry]));
+  const errors: string[] = [];
+  for (const amendment of amendments) {
+    const id = text(amendment.id);
+    const current = byId.get(id);
+    const treatment = amendment.runtime_treatment;
+    const productionId = text(amendment.existing_production_id);
+    if (!current || treatment !== 'selectable_nonscoring' || amendment.selectable !== true || amendment.scoring_eligible !== false || !productionId) {
+      errors.push(`selection_amendment_rejected:${id || 'missing_id'}`);
+      continue;
+    }
+    if (knownProductionId(productionId) || current.treatment === 'excluded_research_hold') {
+      errors.push(`selection_amendment_rejected:${id}`);
+      continue;
+    }
+    byId.set(id, {
+      ...current,
+      treatment: 'selectable_nonscoring',
+      selectable: true,
+      scoringEligible: false,
+      productionId,
+    });
+  }
+  if (errors.length > 0) {
+    return {
+      entries: [],
+      validation: {
+        ...loaded.validation,
+        ok: false,
+        errors: [...loaded.validation.errors, ...errors],
+        entryCount: 0,
+        selectableNonscoringCount: 0,
+      },
+    };
+  }
+  const entries = [...byId.values()];
+  return {
+    entries,
+    validation: {
+      ...loaded.validation,
+      ok: true,
+      assetVersion: version,
+      entryCount: entries.length,
+      selectableExistingCount: entries.filter((entry) => entry.treatment === 'selectable_existing').length,
+      selectableNonscoringCount: entries.filter((entry) => entry.treatment === 'selectable_nonscoring').length,
+      aliasCollisions: aliasCollisions(entries),
+    },
+  };
+}
+
+const LOADED = applySelectionUpdate(loadDiscoveryCatalogue(asset), selectionUpdate);
 
 export function discoveryCatalogueValidation(): DiscoveryValidation {
   return LOADED.validation;
@@ -314,18 +425,26 @@ export function searchDiscoveryCatalogue(query: string, entries: DiscoveryEntry[
         qualifier: readableQualifier(entry),
         treatment: 'discoverable_unapproved',
         selectable: false,
+        scoringEligible: false,
         productionId: null,
         rank: best,
       });
       continue;
     }
-    if (!entry.selectable || !entry.productionId) continue;
+    if (
+      (entry.treatment !== 'selectable_existing' && entry.treatment !== 'selectable_nonscoring') ||
+      !entry.selectable ||
+      !entry.productionId
+    ) {
+      continue;
+    }
     ranked.push({
       entryId: entry.id,
       consumerName: entry.consumerName,
       qualifier: readableQualifier(entry),
-      treatment: 'selectable_existing',
+      treatment: entry.treatment,
       selectable: true,
+      scoringEligible: entry.scoringEligible,
       productionId: entry.productionId,
       rank: best,
     });
@@ -342,6 +461,7 @@ export function searchDiscoveryCatalogue(query: string, entries: DiscoveryEntry[
       qualifier: row.qualifier,
       treatment: row.treatment,
       selectable: row.selectable,
+      scoringEligible: row.scoringEligible,
       productionId: row.productionId,
     });
   }

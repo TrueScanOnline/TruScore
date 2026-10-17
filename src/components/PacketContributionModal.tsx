@@ -5,6 +5,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -83,7 +84,7 @@ import {
   resolvePacketObservation,
   type PacketResolution,
 } from '../certifications/resolveCertification';
-import { searchDiscoveryCatalogue } from '../certifications/discoveryCatalogue';
+import { searchDiscoveryCatalogue, type DiscoverySuggestion } from '../certifications/discoveryCatalogue';
 import {
   PACKET_ADD_ANOTHER,
   PACKET_ADD_WORDING,
@@ -91,6 +92,7 @@ import {
   PACKET_WORDING_FIELD,
   addPendingObservation,
   certificationStatementForSelection,
+  choosePacketSuggestion,
   pendingContributionLists,
   removePendingObservation,
   replacePendingLiteral,
@@ -744,6 +746,18 @@ export default function PacketContributionModal({
     void rememberPending(next.rows);
   };
 
+  const chooseSuggestion = (hit: DiscoverySuggestion) => {
+    const next = choosePacketSuggestion(pending, hit, packetQuery);
+    setPacketQuery(next.fieldText);
+    if (!next.added) {
+      setPartialNotice('That’s already in the list.');
+      return;
+    }
+    setAbsence(false);
+    setPartialNotice(null);
+    void rememberPending(next.rows);
+  };
+
   const supportFor = (context?: ContributionEntryContext) => {
     if (context && proposalSupport[context]) return proposalSupport[context];
     const asset = targeted[0];
@@ -1052,7 +1066,7 @@ export default function PacketContributionModal({
         const admittedCertLabels = new Set(retained.admitted.filter((row) => row.kind === 'cert').map((row) => row.label));
         const remaining = pending.filter((row) => {
           if (row.productionCertificationId) {
-            const statement = certificationStatementForSelection(row.productionCertificationId, row.literalWording);
+            const statement = certificationStatementForSelection(row.productionCertificationId, row.literalWording, row.canonicalName);
             return !admittedCertLabels.has(statement);
           }
           return !admittedClaimLabels.has(row.literalWording.trim());
@@ -1130,7 +1144,7 @@ export default function PacketContributionModal({
           styles.content,
           { paddingTop: Math.max(insets.top, 12), paddingBottom: Math.max(insets.bottom, 24) + 24 },
         ]}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="always"
         keyboardDismissMode="none"
         nestedScrollEnabled
         automaticallyAdjustKeyboardInsets
@@ -1698,19 +1712,19 @@ export default function PacketContributionModal({
                 />
                 {packetSuggestions.map((hit) =>
                   hit.selectable && hit.productionId ? (
-                    <TouchableOpacity
+                    <Pressable
                       key={hit.entryId}
-                      onPress={() => addSelectedCertification(hit.productionId as string, hit.consumerName, packetQuery)}
+                      onPress={() => chooseSuggestion(hit)}
                       accessibilityRole="button"
                       accessibilityLabel={`Add ${hit.consumerName}`}
-                      style={styles.suggestionRow}
+                      style={[styles.suggestionRow, styles.suggestionChoice, { borderColor: line, backgroundColor: fieldBg }]}
                     >
                       <Text style={{ color: action, fontWeight: '700' }}>{hit.consumerName}</Text>
                       {hit.qualifier ? <Text style={{ color: muted }}>{hit.qualifier}</Text> : null}
-                    </TouchableOpacity>
+                    </Pressable>
                   ) : (
-                    <View key={hit.entryId} style={styles.suggestionRow} accessibilityRole="text" accessibilityLabel={hit.consumerName}>
-                      <Text style={{ color: ink }}>{hit.consumerName}</Text>
+                    <View key={hit.entryId} style={styles.suggestionRow} accessibilityRole="text">
+                      <Text style={{ color: muted }}>{hit.consumerName}</Text>
                       {hit.qualifier ? <Text style={{ color: muted }}>{hit.qualifier}</Text> : null}
                     </View>
                   )
@@ -1815,4 +1829,5 @@ const styles = StyleSheet.create({
   phaseCard: { padding: 16, gap: 12 },
   notice: { borderRadius: 12, padding: 12 },
   suggestionRow: { minHeight: 44, justifyContent: 'center' },
+  suggestionChoice: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12 },
 });

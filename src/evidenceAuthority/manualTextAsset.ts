@@ -36,6 +36,8 @@ export type ManualTextDraft = {
   ingredientSubject?: string;
   labelsTags?: string[];
   packetAbsence?: boolean;
+  certificationId?: string;
+  observedWording?: string;
 };
 
 export type ManualTextDocument = {
@@ -137,6 +139,14 @@ export function buildManualTextDocument(draft: ManualTextDraft): ManualTextDocum
     ...(originQualifications.length > 0 ? { originQualifications: originQualifications.join('|') } : {}),
     ...(ingredientSubject ? { ingredientSubject } : {}),
     ...(labels.length > 0 ? { labelsTags: labels.join('|') } : {}),
+    ...(draft.domain === 'certifications' && draft.certificationId?.trim()
+      ? { certificationId: draft.certificationId.trim() }
+      : {}),
+    ...(draft.domain === 'certifications' &&
+    draft.observedWording?.trim() &&
+    draft.observedWording.trim() !== statement
+      ? { observedWording: draft.observedWording.trim() }
+      : {}),
   });
 
   return {
@@ -303,8 +313,9 @@ function inputFromDocument(document: ManualTextDocument): EvidenceFactInput {
   return {
     ...shared,
     domain: 'certifications',
-    exactWording: document.statement,
+    exactWording: document.structured.observedWording || document.statement,
     claimValue: document.statement,
+    ...(document.structured.certificationId ? { certificationId: document.structured.certificationId } : {}),
   };
 }
 

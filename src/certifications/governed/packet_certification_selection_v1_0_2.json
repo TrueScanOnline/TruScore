@@ -1,0 +1,48 @@
+{
+  "asset_id": "rveel.packet_certification_manual_discovery",
+  "asset_version": "1.0.2",
+  "base_asset_version": "1.0.1",
+  "purpose": "Selection and scoring treatment. Does not assign points and does not rewrite historical evidence.",
+  "amendments": [
+    {
+      "id": "vegan.au",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "vegan.au",
+      "identity_note": "Recognised for collection. No ethics or claims score."
+    },
+    {
+      "id": "vegan.society",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "vegan.society",
+      "identity_note": "Recognised for collection. No ethics or claims score."
+    },
+    {
+      "id": "vlabel.vegan",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "vlabel.vegan",
+      "identity_note": "Recognised for collection. No ethics or claims score."
+    },
+    {
+      "id": "vlabel.vegetarian",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "vlabel.vegetarian",
+      "identity_note": "Recognised for collection. No ethics or claims score."
+    },
+    {
+      "id": "veganaction.certified",
+      "runtime_treatment": "selectable_nonscoring",
+      "selectable": true,
+      "scoring_eligible": false,
+      "existing_production_id": "veganaction.certified",
+      "identity_note": "Recognised for collection. No ethics or claims score."
+    }
+  ]
+}
