@@ -478,6 +478,7 @@ function ResultScreenContent() {
   const [contributedHeroUrl, setContributedHeroUrl] = useState<string | null>(null);
   const heroDisplayStartedRef = useRef<number | null>(null);
   const [productOriginsExplainerVisible, setProductOriginsExplainerVisible] = useState(false);
+  const [originLimitedConfidenceVisible, setOriginLimitedConfidenceVisible] = useState(false);
   const [packetClaimsExplainerVisible, setPacketClaimsExplainerVisible] = useState(false);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [packetContributionVisible, setPacketContributionVisible] = useState(false);
@@ -2213,14 +2214,23 @@ function ResultScreenContent() {
                   </View>
                 ) : null}
                 {!showEmptyState && product._publication?.transparency.confidence === 'limited' ? (
-                  <View style={[styles.originConfidence, { backgroundColor: '#ffa50022' }]}>
-                    <Text style={[styles.originConfidenceText, { color: '#ffa500' }]}>Limited confidence</Text>
-                  </View>
+                  <TouchableOpacity
+                    onPress={() => setOriginLimitedConfidenceVisible(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Limited confidence"
+                    style={[styles.originConfidence, { backgroundColor: '#ffa50022' }]}
+                  >
+                    <Text style={[styles.originConfidenceText, { color: '#ffa500' }]}>Limited confidence &gt;</Text>
+                  </TouchableOpacity>
                 ) : null}
               </>
             );
           })()}
-          {contributionActions.originsAction === 'add' || contributionActions.originsAction === 'complete' ? (
+          {productOriginsCardShowsEmptyState({
+            offCountry: originsCard.offCountry,
+            consumerLineCount: projectOriginConsumerLines(originsCard.facts).length,
+          }) &&
+          (contributionActions.originsAction === 'add' || contributionActions.originsAction === 'complete') ? (
             <TouchableOpacity
               onPress={() => openContribution('origins', 'add')}
               activeOpacity={0.7}
@@ -2707,6 +2717,37 @@ function ResultScreenContent() {
             </Text>
             <TouchableOpacity
               onPress={() => setPacketClaimsExplainerVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              style={[styles.packetClaimsInfoCloseButton, { borderColor: emerald.action }]}
+            >
+              <Text style={[styles.packetClaimsInfoClose, { color: emerald.action }]}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={originLimitedConfidenceVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setOriginLimitedConfidenceVisible(false)}
+      >
+        <View style={styles.packetClaimsInfoBackdrop}>
+          <Pressable
+            style={styles.packetClaimsInfoScrim}
+            onPress={() => setOriginLimitedConfidenceVisible(false)}
+            accessibilityLabel="Close limited confidence information"
+          />
+          <View style={[styles.packetClaimsInfoCard, { backgroundColor: colors.card }]} accessibilityViewIsModal>
+            <Text style={[styles.cardTitle, { color: emerald.ink }]}>Limited confidence</Text>
+            <Text style={[styles.packetClaimsInfoBody, { color: colors.text }]}>
+              {product?._publication?.transparency.s26?.explanation?.trim() ||
+                'A published explanation for this confidence is not available yet.'}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setOriginLimitedConfidenceVisible(false)}
               accessibilityRole="button"
               accessibilityLabel="Close"
               style={[styles.packetClaimsInfoCloseButton, { borderColor: emerald.action }]}
@@ -3418,20 +3459,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   originSupportRow: {
+    width: '100%',
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
+    alignItems: 'center',
     gap: 8,
   },
   originSupportChip: {
+    maxWidth: '100%',
     borderRadius: 999,
     paddingVertical: 4,
     paddingHorizontal: 10,
+    alignItems: 'center',
   },
   originSupportText: {
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '600',
+    textAlign: 'center',
   },
   originPackWording: {
     fontSize: 16,

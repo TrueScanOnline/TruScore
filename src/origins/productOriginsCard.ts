@@ -56,16 +56,13 @@ function percentagePhrase(fact: GovernedOriginFact): string | null {
   return `${qualifier}${fact.percentage}%`;
 }
 
-function provenanceSupport(facts: GovernedOriginFact[]): string[] {
-  const local = facts.some(factIsLocal);
-  const imported = facts.some(factIsImported);
+function provenanceSupport(fact: GovernedOriginFact, ingredientCountryNamed: boolean): string[] {
+  const local = factIsLocal(fact);
+  const imported = factIsImported(fact);
   const lines: string[] = [];
   if (local && imported) lines.push('Local & Imported ingredients');
   else if (local) lines.push('Local ingredients');
   else if (imported) lines.push('Imported ingredients');
-  const ingredientCountryNamed = facts.some(
-    (fact) => fact.claimType === 'ingredient_origin' && fact.countries.length > 0
-  );
   if (imported && !ingredientCountryNamed) lines.push('Imported ingredient origins not specified');
   return lines;
 }
@@ -76,25 +73,22 @@ function provenanceSupport(facts: GovernedOriginFact[]): string[] {
  * unless they have a consumer sentence, and an unstated percentage is withheld.
  */
 export function projectOriginConsumerLines(facts: GovernedOriginFact[]): OriginConsumerLine[] {
-  const shared = provenanceSupport(facts);
-  let sharedPlaced = false;
+  const ingredientCountryNamed = facts.some(
+    (fact) => fact.claimType === 'ingredient_origin' && fact.countries.length > 0
+  );
   const lines: OriginConsumerLine[] = [];
   for (const fact of facts) {
     const percentage = percentagePhrase(fact);
-    fact.countries.forEach((country, countryIndex) => {
-      const supporting: string[] = [];
-      if (countryIndex === 0 && percentage) supporting.push(percentage);
-      if (!sharedPlaced) {
-        supporting.push(...shared);
-        sharedPlaced = true;
-      }
+    const provenance = provenanceSupport(fact, ingredientCountryNamed);
+    const packWording = (fact.exactWording || '').trim();
+    fact.countries.forEach((country) => {
       lines.push({
         key: `${fact.evidenceId}:${fact.claimType}:${country}`,
         primary: `${countryFlagEmoji(country)} ${originFactLabel(fact.claimType)} ${country}`,
-        supporting,
+        supporting: [...(percentage ? [percentage] : []), ...provenance],
         country,
         statement: originFactLabel(fact.claimType),
-        packWording: countryIndex === 0 ? (fact.exactWording || '').trim() : '',
+        packWording,
       });
     });
   }

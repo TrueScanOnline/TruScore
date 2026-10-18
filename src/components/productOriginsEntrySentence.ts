@@ -40,7 +40,7 @@ function countryList(countries: string[]): string {
 export function productOriginsEntrySentence(input: ProductOriginsEntrySentenceInput): string {
   const phrase = input.claimType ? STATEMENT[input.claimType] : '';
   const country = countryList(input.countries);
-  const head = phrase ? `This product was ${phrase} ${country || '…'}` : 'This product was …';
+  const head = phrase ? `This product is ${phrase} ${country || '…'}` : 'This product is …';
   const percent = input.percentage.trim();
   const showPercent = !input.percentageNotStated && percent.length > 0;
   const qualifier = showPercent && input.qualifier ? `${QUALIFIER[input.qualifier]} ` : '';

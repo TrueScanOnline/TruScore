@@ -81,6 +81,30 @@ describe('Product Origins Result presentation', () => {
     expect(same.facts[0]?.exactWording).toBe('Made in Australia');
   });
 
+  test('each origin entry keeps its own ingredient choice, including a second country', () => {
+    const lines = projectOriginConsumerLines([
+      {
+        ...packedIn('Serbia'),
+        countries: ['Serbia', 'Fiji'],
+        originQualifications: ['imported'],
+        percentage: 40,
+        percentageQualifier: 'at_least',
+      },
+      {
+        ...madeIn('Australia'),
+        originQualifications: ['local'],
+      },
+    ]);
+    expect(lines.map((line) => line.country)).toEqual(['Serbia', 'Fiji', 'Australia']);
+    expect(lines[0]?.supporting).toEqual([
+      'at least 40%',
+      'Imported ingredients',
+      'Imported ingredient origins not specified',
+    ]);
+    expect(lines[1]?.supporting).toEqual(lines[0]?.supporting);
+    expect(lines[2]?.supporting).toEqual(['Local ingredients']);
+  });
+
   test('drops conflicting OFF manufacturing country and keeps a compatible distinct fact', () => {
     const conflict = productOriginsCardPresentation(
       product({

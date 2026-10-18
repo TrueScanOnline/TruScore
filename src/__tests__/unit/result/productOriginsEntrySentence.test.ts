@@ -15,13 +15,13 @@ describe('product origins entry sentence', () => {
 
   it('reads one percentage with the selected statement, country, and source', () => {
     expect(productOriginsEntrySentence(base)).toBe(
-      'This product was made in Australia with at least 30% local ingredients.'
+      'This product is made in Australia with at least 30% local ingredients.'
     );
     expect(productOriginsEntrySentence({ ...base, local: true, imported: true })).toBe(
-      'This product was made in Australia with at least 30% local and imported ingredients.'
+      'This product is made in Australia with at least 30% local and imported ingredients.'
     );
     expect(productOriginsEntrySentence({ ...base, claimType: 'produced_in', local: false, imported: false })).toBe(
-      'This product was a product of Australia with at least 30%.'
+      'This product is a product of Australia with at least 30%.'
     );
     expect(
       productOriginsEntrySentence({
@@ -31,9 +31,9 @@ describe('product origins entry sentence', () => {
         percentage: '',
         local: false,
       })
-    ).toBe('This product was …');
-    expect(quotedOriginEntry('This product was packed in Australia with 54% local ingredients.')).toBe(
-      '"This product was packed in Australia with 54% local ingredients"'
+    ).toBe('This product is …');
+    expect(quotedOriginEntry('This product is packed in Australia with 54% local ingredients.')).toBe(
+      '"This product is packed in Australia with 54% local ingredients"'
     );
   });
 
