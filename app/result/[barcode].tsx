@@ -40,7 +40,11 @@ import UniversalPricingCard from '../../src/components/UniversalPricingCard';
 import NutritionTable from '../../src/components/NutritionTable';
 import type { NutritionDetailsFocusTarget } from '../../src/components/NutritionDetailsModal';
 import { Image as ExpoImage } from 'expo-image';
-import { PRODUCT_ORIGINS_EXPLAINER_HOOK } from '../../src/origins/governedFacts';
+import {
+  PRODUCT_ORIGINS_EMPTY_STATE,
+  PRODUCT_ORIGINS_MORE_INFORMATION,
+  productOriginsCardShowsEmptyState,
+} from '../../src/components/productOriginsCardCopy';
 import { PACKET_CLAIMS_CARD_TITLE } from '../../src/claims/packetClaimReceiver';
 import {
   PACKET_CLAIMS_EMPTY_STATE,
@@ -2125,7 +2129,7 @@ function ResultScreenContent() {
                 {t('result.productOrigins', 'Product Origins')}
               </Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.cardHeaderRight}>
               {contributionActions.originsAction === 'update' || originsCard.facts.length > 0 || originsCard.offCountry ? (
                 <TouchableOpacity
                   onPress={() => setContributionChoice('origins')}
@@ -2147,26 +2151,47 @@ function ResultScreenContent() {
                   <Ionicons name="share-outline" size={20} color={emerald.action} />
                 </TouchableOpacity>
               ) : null}
+              <TouchableOpacity
+                onPress={() => setProductOriginsExplainerVisible(true)}
+                accessibilityRole="button"
+                accessibilityLabel="More information about product origins"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="information-circle-outline" size={22} color={emerald.action} />
+              </TouchableOpacity>
             </View>
           </View>
-          <TouchableOpacity onPress={() => setProductOriginsExplainerVisible(true)}>
-            <Text style={{ color: emerald.action }}>L1 / L2 / L3</Text>
-          </TouchableOpacity>
-          {originsCard.offCountry ? (
-            <View style={styles.originContainer}>
-              <CountryFlag country={originsCard.offCountry} />
-            </View>
-          ) : null}
-          {projectOriginConsumerLines(originsCard.facts).map((line) => (
-            <View key={line.key}>
-              <Text style={{ color: colors.text }}>{line.primary}</Text>
-              {line.supporting.map((item) => (
-                <Text key={`${line.key}:${item}`} style={{ color: colors.text }}>
-                  {item}
-                </Text>
-              ))}
-            </View>
-          ))}
+          {(() => {
+            const originLines = projectOriginConsumerLines(originsCard.facts);
+            const showEmptyState = productOriginsCardShowsEmptyState({
+              offCountry: originsCard.offCountry,
+              consumerLineCount: originLines.length,
+            });
+            return (
+              <>
+                {showEmptyState ? (
+                  <Text style={[styles.packetClaimsEmptyText, { color: colors.text }]}>
+                    {PRODUCT_ORIGINS_EMPTY_STATE}
+                  </Text>
+                ) : null}
+                {originsCard.offCountry ? (
+                  <View style={styles.originContainer}>
+                    <CountryFlag country={originsCard.offCountry} />
+                  </View>
+                ) : null}
+                {originLines.map((line) => (
+                  <View key={line.key}>
+                    <Text style={{ color: colors.text }}>{line.primary}</Text>
+                    {line.supporting.map((item) => (
+                      <Text key={`${line.key}:${item}`} style={{ color: colors.text }}>
+                        {item}
+                      </Text>
+                    ))}
+                  </View>
+                ))}
+              </>
+            );
+          })()}
           {product._publication?.transparency.confidence === 'high' ? (
             <Text style={{ color: colors.textSecondary }}>High confidence</Text>
           ) : null}
@@ -2673,17 +2698,35 @@ function ResultScreenContent() {
         </View>
       </Modal>
 
-      <Modal visible={productOriginsExplainerVisible} animationType="slide" onRequestClose={() => setProductOriginsExplainerVisible(false)}>
-        <View style={{ flex: 1, padding: 24, backgroundColor: colors.background }}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>Product Origins</Text>
-          {PRODUCT_ORIGINS_EXPLAINER_HOOK.levels.map((level) => (
-            <Text key={level} style={{ color: colors.text, marginTop: 12 }}>
-              {level}: editorial deferred
+      <Modal
+        visible={productOriginsExplainerVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setProductOriginsExplainerVisible(false)}
+      >
+        <View style={styles.packetClaimsInfoBackdrop}>
+          <Pressable
+            style={styles.packetClaimsInfoScrim}
+            onPress={() => setProductOriginsExplainerVisible(false)}
+            accessibilityLabel="Close product origins information"
+          />
+          <View style={[styles.packetClaimsInfoCard, { backgroundColor: colors.card }]} accessibilityViewIsModal>
+            <Text style={[styles.cardTitle, { color: emerald.ink }]}>
+              {t('result.productOrigins', 'Product Origins')}
             </Text>
-          ))}
-          <TouchableOpacity onPress={() => setProductOriginsExplainerVisible(false)}>
-            <Text style={{ color: colors.primary, marginTop: 24 }}>Close</Text>
-          </TouchableOpacity>
+            <Text style={[styles.packetClaimsInfoBody, { color: colors.text }]}>
+              {PRODUCT_ORIGINS_MORE_INFORMATION}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setProductOriginsExplainerVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              style={[styles.packetClaimsInfoCloseButton, { borderColor: emerald.action }]}
+            >
+              <Text style={[styles.packetClaimsInfoClose, { color: emerald.action }]}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
 
