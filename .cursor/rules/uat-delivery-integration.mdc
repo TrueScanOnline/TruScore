@@ -1,0 +1,30 @@
+---
+description: Standing delivery and UAT integration — protect plumbing, commit SHAs, device visual QA, one integrated build
+alwaysApply: true
+---
+
+# Rveel standing development and UAT integration
+
+NZ and Cursor may identify, fix, and visually verify routine consumer UI defects (Certifications, Packaging & Recycling, Hero, Score, Signals) without repeated founder approval. Founder approval is required for new product behaviour or governance changes.
+
+Wave 5 change control and the AU TestFlight / NZ Expo Go rules still apply. This rule does not weaken them.
+
+## 1. Protect the plumbing
+
+UI corrections must not change governed scoring, Signals logic, Evidence Authority, data rules, or approved product functionality. If a visual fix needs those, stop and escalate (AMBER/RED). Do not solve it inside the UI.
+
+## 2. Preserve completed work
+
+Finish each accepted change with its own commit and a traceable SHA. Do not amend, overwrite, drop, or rewrite previously accepted enhancements. When integrating, bring those commits forward; do not reimplement them from memory.
+
+## 3. Verify what consumers see
+
+Before reporting a UI fix complete, run the affected journey on an Android emulator or device, inspect the actual screens, and correct visible defects. Automated tests alone are not completion. Name any platform not visually checked (typically iOS TestFlight).
+
+## 4. Integrate all workstreams
+
+Keep one list at `docs/uat/UAT_INTEGRATION_SHA_LIST.md`: each intended change, its SHA, and whether it is in the integration branch. Before a UAT build, confirm every listed SHA is present and the combined Certifications, Packaging & Recycling, and other approved UI work is not missing or broken.
+
+## 5. Release one tested build
+
+Each UAT release names one integrated SHA, includes the relevant regression checks, and has device-level visual QA on that SHA. Do not point testers at a mix of uncommitted or unlisted work.
