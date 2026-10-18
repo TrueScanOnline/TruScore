@@ -2124,7 +2124,9 @@ function ResultScreenContent() {
         <View style={[styles.card, resultEmeraldCard(!!darkMode)]}>
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
-              <Ionicons name="earth" size={24} color={emerald.action} />
+              <View style={[styles.originMark, { backgroundColor: emerald.chevronCircle }]}>
+                <Ionicons name="earth" size={20} color={emerald.action} />
+              </View>
               <Text style={[styles.cardTitle, { color: emerald.ink }]}>
                 {t('result.productOrigins', 'Product Origins')}
               </Text>
@@ -2170,36 +2172,49 @@ function ResultScreenContent() {
             return (
               <>
                 {showEmptyState ? (
-                  <Text style={[styles.packetClaimsEmptyText, { color: colors.text }]}>
-                    {PRODUCT_ORIGINS_EMPTY_STATE}
-                  </Text>
+                  <View style={[styles.originEmpty, { backgroundColor: emerald.chevronCircle }]}>
+                    <Ionicons name="earth-outline" size={28} color={emerald.action} />
+                    <Text style={[styles.originEmptyText, { color: emerald.ink }]}>
+                      {PRODUCT_ORIGINS_EMPTY_STATE}
+                    </Text>
+                  </View>
                 ) : null}
                 {originsCard.offCountry ? (
-                  <View style={styles.originContainer}>
-                    <CountryFlag country={originsCard.offCountry} />
+                  <View style={[styles.originHero, { backgroundColor: emerald.chevronCircle }]}>
+                    <CountryFlag appearance="hero" nameColor={emerald.ink} country={originsCard.offCountry} />
                   </View>
                 ) : null}
                 {originLines.map((line) => (
-                  <View key={line.key}>
-                    <Text style={{ color: colors.text }}>{line.primary}</Text>
-                    {line.supporting.map((item) => (
-                      <Text key={`${line.key}:${item}`} style={{ color: colors.text }}>
-                        {item}
-                      </Text>
-                    ))}
+                  <View key={line.key} style={[styles.originPlace, { backgroundColor: emerald.chevronCircle }]}>
+                    <Text style={[styles.originPlacePrimary, { color: emerald.ink }]}>{line.primary}</Text>
+                    {line.supporting.length > 0 ? (
+                      <View style={styles.originSupportRow}>
+                        {line.supporting.map((item) => (
+                          <View key={`${line.key}:${item}`} style={[styles.originSupportChip, { backgroundColor: emerald.card }]}>
+                            <Text style={[styles.originSupportText, { color: emerald.muted }]}>{item}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    ) : null}
                   </View>
                 ))}
               </>
             );
           })()}
           {product._publication?.transparency.confidence === 'high' ? (
-            <Text style={{ color: colors.textSecondary }}>High confidence</Text>
+            <View style={[styles.originConfidence, { backgroundColor: emerald.chevronCircle }]}>
+              <Text style={[styles.originConfidenceText, { color: emerald.action }]}>High confidence</Text>
+            </View>
           ) : null}
           {product._publication?.transparency.confidence === 'moderate' ? (
-            <Text style={{ color: colors.textSecondary }}>Moderate confidence</Text>
+            <View style={[styles.originConfidence, { backgroundColor: emerald.chevronCircle }]}>
+              <Text style={[styles.originConfidenceText, { color: emerald.action }]}>Moderate confidence</Text>
+            </View>
           ) : null}
           {product._publication?.transparency.confidence === 'limited' ? (
-            <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
+            <View style={[styles.originConfidence, { backgroundColor: emerald.chevronCircle }]}>
+              <Text style={[styles.originConfidenceText, { color: emerald.action }]}>Limited confidence</Text>
+            </View>
           ) : null}
           {contributionActions.originsAction === 'add' || contributionActions.originsAction === 'complete' ? (
             <TouchableOpacity
@@ -3367,6 +3382,72 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     lineHeight: 20,
+  },
+  originMark: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  originHero: {
+    marginTop: 14,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  originPlace: {
+    marginTop: 10,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    gap: 8,
+  },
+  originPlacePrimary: {
+    fontSize: 17,
+    lineHeight: 24,
+    fontWeight: '600',
+  },
+  originSupportRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  originSupportChip: {
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  originSupportText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
+  },
+  originEmpty: {
+    marginTop: 14,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    gap: 10,
+  },
+  originEmptyText: {
+    fontSize: 16,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  originConfidence: {
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  originConfidenceText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
   },
   originContainer: {
     marginTop: 12,

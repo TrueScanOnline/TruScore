@@ -7,6 +7,9 @@ import { countryFlagEmoji } from '../utils/countryFlagEmoji';
 interface CountryFlagProps {
   country: string;
   showFlag?: boolean;
+  /** Larger flag and name for the Product Origins place panel. */
+  appearance?: 'default' | 'hero';
+  nameColor?: string;
 }
 
 function formatCountryName(country: string): string {
@@ -20,7 +23,7 @@ function formatCountryName(country: string): string {
     .join(' ');
 }
 
-export default function CountryFlag({ country, showFlag = true }: CountryFlagProps) {
+export default function CountryFlag({ country, showFlag = true, appearance = 'default', nameColor }: CountryFlagProps) {
   const displayCountry = country ? sanitizeCountryForDisplay(country) : '';
 
   if (!displayCountry) {
@@ -35,10 +38,13 @@ export default function CountryFlag({ country, showFlag = true }: CountryFlagPro
   const flag = countryFlagEmoji(displayCountry);
   const formattedName = formatCountryName(displayCountry);
 
+  const hero = appearance === 'hero';
   return (
     <View style={styles.container}>
-      {showFlag && <Text style={styles.flag}>{flag}</Text>}
-      <Text style={styles.countryName}>{formattedName}</Text>
+      {showFlag && <Text style={hero ? styles.heroFlag : styles.flag}>{flag}</Text>}
+      <Text style={[hero ? styles.heroName : styles.countryName, nameColor ? { color: nameColor } : null]}>
+        {formattedName}
+      </Text>
     </View>
   );
 }
@@ -55,6 +61,16 @@ const styles = StyleSheet.create({
   countryName: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#1a1a1a',
+  },
+  heroFlag: {
+    fontSize: 40,
+    lineHeight: 48,
+  },
+  heroName: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '700',
     color: '#1a1a1a',
   },
 });
