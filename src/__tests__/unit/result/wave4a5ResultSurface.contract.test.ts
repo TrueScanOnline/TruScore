@@ -83,7 +83,8 @@ describe('Wave 4A.5 Result surface', () => {
     expect(additives).toContain('if (count < 1) return null');
     expect(result).toContain('count={s25Merged.renderedAdditiveIds.length}');
     expect(result).toContain('{PACKET_CLAIMS_CARD_TITLE}');
-    expect(result).toContain('PACKET_CLAIMS_EXPLAINER_HOOK');
+    expect(result).toContain('PACKET_CLAIMS_MORE_INFORMATION');
+    expect(result).toContain('PACKET_CLAIMS_EMPTY_STATE');
     expect(result).toContain('rveelGovernedPacketClaims');
     expect(result).toContain('productOriginsCardPresentation');
     expect(read('src/origins/productOriginsCard.ts')).toContain('rveelGovernedOrigins');

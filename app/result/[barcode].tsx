@@ -41,10 +41,12 @@ import NutritionTable from '../../src/components/NutritionTable';
 import type { NutritionDetailsFocusTarget } from '../../src/components/NutritionDetailsModal';
 import { Image as ExpoImage } from 'expo-image';
 import { PRODUCT_ORIGINS_EXPLAINER_HOOK } from '../../src/origins/governedFacts';
+import { PACKET_CLAIMS_CARD_TITLE } from '../../src/claims/packetClaimReceiver';
 import {
-  PACKET_CLAIMS_CARD_TITLE,
-  PACKET_CLAIMS_EXPLAINER_HOOK,
-} from '../../src/claims/packetClaimReceiver';
+  PACKET_CLAIMS_EMPTY_STATE,
+  PACKET_CLAIMS_MORE_INFORMATION,
+  packetClaimsCardShowsEmptyState,
+} from '../../src/components/packetClaimsCardCopy';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
 import { BannerAlertsData } from '../../src/types/bannerAlerts';
@@ -2208,23 +2210,30 @@ function ResultScreenContent() {
                 {PACKET_CLAIMS_CARD_TITLE}
               </Text>
             </View>
-            {contributionActions.packetInformationAction === 'update' ||
-            (product.rveelGovernedPacketClaims || []).length > 0 ||
-            (product.rveelGovernedCertifications || []).length > 0 ||
-            (product.certifications || []).length > 0 ? (
+            <View style={styles.cardHeaderRight}>
+              {contributionActions.packetInformationAction === 'update' ||
+              (product.rveelGovernedPacketClaims || []).length > 0 ||
+              (product.rveelGovernedCertifications || []).length > 0 ||
+              (product.certifications || []).length > 0 ? (
+                <TouchableOpacity
+                  onPress={() => setContributionChoice('packet')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Change or add packet information"
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="create-outline" size={20} color={emerald.action} />
+                </TouchableOpacity>
+              ) : null}
               <TouchableOpacity
-                onPress={() => setContributionChoice('packet')}
+                onPress={() => setPacketClaimsExplainerVisible(true)}
                 accessibilityRole="button"
-                accessibilityLabel="Change or add packet information"
+                accessibilityLabel="More information about packet claims"
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="create-outline" size={20} color={emerald.action} />
+                <Ionicons name="information-circle-outline" size={22} color={emerald.action} />
               </TouchableOpacity>
-            ) : null}
+            </View>
           </View>
-          <TouchableOpacity onPress={() => setPacketClaimsExplainerVisible(true)}>
-            <Text style={{ color: emerald.action }}>L1 / L2 / L3</Text>
-          </TouchableOpacity>
           {(() => {
             const recognisedCertificationNames = (product.certifications || []).map((cert) =>
               displayCertificationName(cert)
@@ -2242,8 +2251,19 @@ function ResultScreenContent() {
             const hasCertifications = recognisedMarks.length > 0 || visibleCertifications.length > 0;
             const hasClaims = visibleClaims.length > 0;
             const showGroupHeadings = hasCertifications && hasClaims;
+            const showEmptyState = packetClaimsCardShowsEmptyState({
+              recognisedMarkCount: recognisedMarks.length,
+              certificationLineCount: visibleCertifications.length,
+              claimLineCount: visibleClaims.length,
+              absenceEstablished: product.rveelPacketAbsenceEstablished === true,
+            });
             return (
               <>
+                {showEmptyState ? (
+                  <Text style={[styles.packetClaimsEmptyText, { color: colors.text }]}>
+                    {PACKET_CLAIMS_EMPTY_STATE}
+                  </Text>
+                ) : null}
                 {showGroupHeadings ? (
                   <Text style={[styles.packetGroupHeading, { color: colors.text }]}>Certifications</Text>
                 ) : null}
@@ -2623,19 +2643,33 @@ function ResultScreenContent() {
         barcode={barcode}
       />
 
-      <Modal visible={packetClaimsExplainerVisible} animationType="slide" onRequestClose={() => setPacketClaimsExplainerVisible(false)}>
-        <View style={{ flex: 1, padding: 24, backgroundColor: colors.background }}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>{PACKET_CLAIMS_CARD_TITLE}</Text>
-          {PACKET_CLAIMS_EXPLAINER_HOOK.levels.map((level) => (
-            <Text key={level} style={{ color: colors.text, marginTop: 12 }}>
-              {level}
-              {'\n'}
-              {PACKET_CLAIMS_EXPLAINER_HOOK.content}
+      <Modal
+        visible={packetClaimsExplainerVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setPacketClaimsExplainerVisible(false)}
+      >
+        <View style={styles.packetClaimsInfoBackdrop}>
+          <Pressable
+            style={styles.packetClaimsInfoScrim}
+            onPress={() => setPacketClaimsExplainerVisible(false)}
+            accessibilityLabel="Close packet claims information"
+          />
+          <View style={[styles.packetClaimsInfoCard, { backgroundColor: colors.card }]} accessibilityViewIsModal>
+            <Text style={[styles.cardTitle, { color: emerald.ink }]}>{PACKET_CLAIMS_CARD_TITLE}</Text>
+            <Text style={[styles.packetClaimsInfoBody, { color: colors.text }]}>
+              {PACKET_CLAIMS_MORE_INFORMATION}
             </Text>
-          ))}
-          <TouchableOpacity onPress={() => setPacketClaimsExplainerVisible(false)}>
-            <Text style={{ color: colors.primary, marginTop: 24 }}>Close</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setPacketClaimsExplainerVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              style={[styles.packetClaimsInfoCloseButton, { borderColor: emerald.action }]}
+            >
+              <Text style={[styles.packetClaimsInfoClose, { color: emerald.action }]}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
 
@@ -3520,6 +3554,42 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 16,
     lineHeight: 22,
+  },
+  packetClaimsEmptyText: {
+    marginTop: 12,
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  packetClaimsInfoBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  packetClaimsInfoScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
+  packetClaimsInfoCard: {
+    borderRadius: 16,
+    padding: 24,
+    elevation: 8,
+  },
+  packetClaimsInfoBody: {
+    marginTop: 12,
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  packetClaimsInfoCloseButton: {
+    marginTop: 20,
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1.5,
+  },
+  packetClaimsInfoClose: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   certificationsUpdateButton: {
     flexDirection: 'row',

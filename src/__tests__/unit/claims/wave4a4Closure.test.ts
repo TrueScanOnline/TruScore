@@ -316,8 +316,9 @@ describe('Wave 4A.4 Claims publication closure', () => {
     });
     const screen = fs.readFileSync(path.join(__dirname, '../../../../app/result/[barcode].tsx'), 'utf8');
     expect(screen).toContain('{PACKET_CLAIMS_CARD_TITLE}');
-    expect(screen).toContain('PACKET_CLAIMS_EXPLAINER_HOOK.levels.map');
-    expect(screen).toContain('PACKET_CLAIMS_EXPLAINER_HOOK.content');
+    expect(screen).toContain('PACKET_CLAIMS_MORE_INFORMATION');
+    expect(screen).toContain('accessibilityLabel="More information about packet claims"');
+    expect(screen).not.toContain('PACKET_CLAIMS_EXPLAINER_HOOK');
   });
 
   it('submits a reviewed absence affirmation and does not treat capture or extraction silence as assessment', async () => {
