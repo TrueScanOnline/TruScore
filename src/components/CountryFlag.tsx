@@ -41,8 +41,17 @@ export default function CountryFlag({ country, showFlag = true, appearance = 'de
   const hero = appearance === 'hero';
   return (
     <View style={[styles.container, hero ? styles.heroRow : null]}>
-      {showFlag && <Text style={hero ? styles.heroFlag : styles.flag}>{flag}</Text>}
-      <Text style={[hero ? styles.heroName : styles.countryName, nameColor ? { color: nameColor } : null]}>
+      {showFlag ? (
+        <Text style={hero ? styles.heroFlag : styles.flag} numberOfLines={1}>
+          {flag}
+        </Text>
+      ) : null}
+      <Text
+        style={[hero ? styles.heroName : styles.countryName, nameColor ? { color: nameColor } : null]}
+        numberOfLines={hero ? 1 : undefined}
+        adjustsFontSizeToFit={hero}
+        minimumFontScale={hero ? 0.65 : undefined}
+      >
         {formattedName}
       </Text>
     </View>
@@ -64,16 +73,21 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
   },
   heroRow: {
-    gap: 16,
+    alignSelf: 'stretch',
+    width: '100%',
+    maxWidth: '100%',
+    flexWrap: 'nowrap',
     justifyContent: 'center',
+    gap: 10,
   },
   heroFlag: {
-    fontSize: 80,
-    lineHeight: 96,
+    fontSize: 32,
+    lineHeight: 40,
   },
   heroName: {
-    fontSize: 44,
-    lineHeight: 52,
+    flexShrink: 1,
+    fontSize: 22,
+    lineHeight: 28,
     fontWeight: '700',
     color: '#1a1a1a',
   },

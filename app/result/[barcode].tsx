@@ -3394,17 +3394,19 @@ const styles = StyleSheet.create({
   originHero: {
     marginTop: 14,
     borderRadius: 16,
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     alignItems: 'center',
+    overflow: 'hidden',
   },
   originPlace: {
     marginTop: 10,
     borderRadius: 16,
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 14,
     gap: 8,
     alignItems: 'center',
+    overflow: 'hidden',
   },
   originStatementCaption: {
     fontSize: 15,
