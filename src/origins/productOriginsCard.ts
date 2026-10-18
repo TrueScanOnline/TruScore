@@ -28,6 +28,9 @@ export type OriginConsumerLine = {
   key: string;
   primary: string;
   supporting: string[];
+  /** Country name for the flag lockup. The primary sentence stays unchanged. */
+  country: string;
+  statement: string;
 };
 
 function factIsLocal(fact: GovernedOriginFact): boolean {
@@ -87,6 +90,8 @@ export function projectOriginConsumerLines(facts: GovernedOriginFact[]): OriginC
         key: `${fact.evidenceId}:${fact.claimType}:${country}`,
         primary: `${countryFlagEmoji(country)} ${originFactLabel(fact.claimType)} ${country}`,
         supporting,
+        country,
+        statement: originFactLabel(fact.claimType),
       });
     });
   }

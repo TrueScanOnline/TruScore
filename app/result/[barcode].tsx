@@ -2186,7 +2186,8 @@ function ResultScreenContent() {
                 ) : null}
                 {originLines.map((line) => (
                   <View key={line.key} style={[styles.originPlace, { backgroundColor: emerald.chevronCircle }]}>
-                    <Text style={[styles.originPlacePrimary, { color: emerald.ink }]}>{line.primary}</Text>
+                    <Text style={[styles.originStatementCaption, { color: emerald.muted }]}>{line.statement}</Text>
+                    <CountryFlag appearance="hero" nameColor={emerald.ink} country={line.country} />
                     {line.supporting.length > 0 ? (
                       <View style={styles.originSupportRow}>
                         {line.supporting.map((item) => (
@@ -2198,24 +2199,24 @@ function ResultScreenContent() {
                     ) : null}
                   </View>
                 ))}
+                {!showEmptyState && product._publication?.transparency.confidence === 'high' ? (
+                  <View style={[styles.originConfidence, { backgroundColor: '#16a08522' }]}>
+                    <Text style={[styles.originConfidenceText, { color: '#16a085' }]}>High confidence</Text>
+                  </View>
+                ) : null}
+                {!showEmptyState && product._publication?.transparency.confidence === 'moderate' ? (
+                  <View style={[styles.originConfidence, { backgroundColor: '#ffd93d22' }]}>
+                    <Text style={[styles.originConfidenceText, { color: '#b8860b' }]}>Moderate confidence</Text>
+                  </View>
+                ) : null}
+                {!showEmptyState && product._publication?.transparency.confidence === 'limited' ? (
+                  <View style={[styles.originConfidence, { backgroundColor: '#ffa50022' }]}>
+                    <Text style={[styles.originConfidenceText, { color: '#ffa500' }]}>Limited confidence</Text>
+                  </View>
+                ) : null}
               </>
             );
           })()}
-          {product._publication?.transparency.confidence === 'high' ? (
-            <View style={[styles.originConfidence, { backgroundColor: emerald.chevronCircle }]}>
-              <Text style={[styles.originConfidenceText, { color: emerald.action }]}>High confidence</Text>
-            </View>
-          ) : null}
-          {product._publication?.transparency.confidence === 'moderate' ? (
-            <View style={[styles.originConfidence, { backgroundColor: emerald.chevronCircle }]}>
-              <Text style={[styles.originConfidenceText, { color: emerald.action }]}>Moderate confidence</Text>
-            </View>
-          ) : null}
-          {product._publication?.transparency.confidence === 'limited' ? (
-            <View style={[styles.originConfidence, { backgroundColor: emerald.chevronCircle }]}>
-              <Text style={[styles.originConfidenceText, { color: emerald.action }]}>Limited confidence</Text>
-            </View>
-          ) : null}
           {contributionActions.originsAction === 'add' || contributionActions.originsAction === 'complete' ? (
             <TouchableOpacity
               onPress={() => openContribution('origins', 'add')}
@@ -3400,18 +3401,21 @@ const styles = StyleSheet.create({
   originPlace: {
     marginTop: 10,
     borderRadius: 16,
-    paddingVertical: 14,
+    paddingVertical: 18,
     paddingHorizontal: 14,
     gap: 8,
+    alignItems: 'center',
   },
-  originPlacePrimary: {
-    fontSize: 17,
-    lineHeight: 24,
+  originStatementCaption: {
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: '600',
+    textAlign: 'center',
   },
   originSupportRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: 8,
   },
   originSupportChip: {
@@ -3438,7 +3442,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   originConfidence: {
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     marginTop: 12,
     borderRadius: 999,
     paddingVertical: 4,

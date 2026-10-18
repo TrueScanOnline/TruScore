@@ -40,7 +40,7 @@ export default function CountryFlag({ country, showFlag = true, appearance = 'de
 
   const hero = appearance === 'hero';
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, hero ? styles.heroRow : null]}>
       {showFlag && <Text style={hero ? styles.heroFlag : styles.flag}>{flag}</Text>}
       <Text style={[hero ? styles.heroName : styles.countryName, nameColor ? { color: nameColor } : null]}>
         {formattedName}
@@ -63,13 +63,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1a1a1a',
   },
+  heroRow: {
+    gap: 16,
+    justifyContent: 'center',
+  },
   heroFlag: {
-    fontSize: 40,
-    lineHeight: 48,
+    fontSize: 80,
+    lineHeight: 96,
   },
   heroName: {
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 44,
+    lineHeight: 52,
     fontWeight: '700',
     color: '#1a1a1a',
   },

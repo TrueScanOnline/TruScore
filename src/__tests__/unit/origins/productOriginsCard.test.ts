@@ -73,6 +73,8 @@ describe('Product Origins Result presentation', () => {
         key: 'made-Australia:made_in:Australia',
         primary: '🇦🇺 Made in Australia',
         supporting: ['at least 99%'],
+        country: 'Australia',
+        statement: 'Made in',
       },
     ]);
     expect(same.facts[0]?.exactWording).toBe('Made in Australia');

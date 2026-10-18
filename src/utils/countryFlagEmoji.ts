@@ -1,53 +1,23 @@
-/** Flag glyph for a country name. Unknown countries use a globe. */
-const COUNTRY_FLAGS: Record<string, string> = {
-  USA: '🇺🇸',
-  'UNITED STATES': '🇺🇸',
-  CANADA: '🇨🇦',
-  MEXICO: '🇲🇽',
-  UK: '🇬🇧',
-  'UNITED KINGDOM': '🇬🇧',
-  FRANCE: '🇫🇷',
-  GERMANY: '🇩🇪',
-  ITALY: '🇮🇹',
-  SPAIN: '🇪🇸',
-  NETHERLANDS: '🇳🇱',
-  BELGIUM: '🇧🇪',
-  SWITZERLAND: '🇨🇭',
-  AUSTRIA: '🇦🇹',
-  DENMARK: '🇩🇰',
-  SWEDEN: '🇸🇪',
-  NORWAY: '🇳🇴',
-  FINLAND: '🇫🇮',
-  POLAND: '🇵🇱',
-  PORTUGAL: '🇵🇹',
-  GREECE: '🇬🇷',
-  TURKEY: '🇹🇷',
-  RUSSIA: '🇷🇺',
-  CHINA: '🇨🇳',
-  JAPAN: '🇯🇵',
-  'SOUTH KOREA': '🇰🇷',
-  KOREA: '🇰🇷',
-  INDIA: '🇮🇳',
-  THAILAND: '🇹🇭',
-  VIETNAM: '🇻🇳',
-  INDONESIA: '🇮🇩',
-  PHILIPPINES: '🇵🇭',
-  MALAYSIA: '🇲🇾',
-  SINGAPORE: '🇸🇬',
-  AUSTRALIA: '🇦🇺',
-  SERBIA: '🇷🇸',
-  FIJI: '🇫🇯',
-  'NEW ZEALAND': '🇳🇿',
-  BRAZIL: '🇧🇷',
-  ARGENTINA: '🇦🇷',
-  CHILE: '🇨🇱',
-  'SOUTH AFRICA': '🇿🇦',
-  EGYPT: '🇪🇬',
-  ISRAEL: '🇮🇱',
-  MOROCCO: '🇲🇦',
-  TUNISIA: '🇹🇳',
+/**
+ * Flag glyph for a country name.
+ * The country list is the source. A few common aliases stay readable.
+ * Unknown countries use a globe.
+ */
+import { COUNTRIES } from './countries';
+
+const FLAGS: Record<string, string> = {};
+for (const country of COUNTRIES) {
+  FLAGS[country.name.toUpperCase()] = country.flag;
+}
+
+const ALIASES: Record<string, string> = {
+  USA: 'UNITED STATES',
+  UK: 'UNITED KINGDOM',
+  KOREA: 'SOUTH KOREA',
 };
 
 export function countryFlagEmoji(country: string): string {
-  return COUNTRY_FLAGS[country.trim().toUpperCase()] || '🌍';
+  const key = country.trim().toUpperCase();
+  if (!key) return '🌍';
+  return FLAGS[ALIASES[key] || key] || '🌍';
 }
