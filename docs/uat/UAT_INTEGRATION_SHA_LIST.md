@@ -1,0 +1,7 @@
+# UAT integration list
+
+Living list of intended changes for the next UAT build. Each row is one accepted commit. The integration branch is `wave5/score-experience-20261008`.
+
+| Change | SHA | On integration branch |
+| --- | --- | --- |
+| Packet Claims: empty-state sentence, and the information icon opens the packet-claims explanation | `d9189fa9415054af267cc456a0c2ebdfdc29d7b5` | yes |
