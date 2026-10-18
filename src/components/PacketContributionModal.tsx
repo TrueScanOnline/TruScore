@@ -17,7 +17,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../theme';
 import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../theme/resultPresentation';
+import { Ionicons } from '@expo/vector-icons';
 import CountryPicker from './CountryPicker';
+import { productOriginsEntrySentence } from './productOriginsEntrySentence';
 import { originCountrySlots, placeFromCountrySlots, governedOriginCountryNames } from '../contribution/originCountrySelection';
 import {
   activateDevicePrivateByteStore,
@@ -40,7 +42,7 @@ import {
   type NutritionAttribute,
   type NutritionBasis,
 } from '../ingredientsNutrition/nutritionSchema';
-import { PRODUCT_ORIGINS_CLAIM_TYPES, type ProductOriginsClaimType } from '../origins/governedFacts';
+import { type ProductOriginsClaimType } from '../origins/governedFacts';
 import type { OriginPercentageQualifier } from '../config/contributionPolicy';
 import { capturedOriginQualifications } from '../contributions/originStructured';
 import {
@@ -164,12 +166,15 @@ const QUALIFIER_LABELS: { value: OriginPercentageQualifier; label: string }[] = 
 ];
 
 const ORIGIN_LABELS: Record<ProductOriginsClaimType, string> = {
-  produced_in: 'Product of',
   grown_in: 'Grown in',
+  produced_in: 'Product of',
   made_in: 'Made in',
   packed_in: 'Packed in',
   ingredient_origin: 'Ingredient from',
 };
+
+/** New entries offer these four. An existing ingredient origin stays selectable on that row. */
+const ORIGIN_ENTRY_CLAIM_TYPES: ProductOriginsClaimType[] = ['grown_in', 'produced_in', 'made_in', 'packed_in'];
 
 const JOURNEY: Record<
   ContributionEntryContext,
@@ -1470,35 +1475,46 @@ export default function PacketContributionModal({
                       </View>
                     );
                   }
+                  const statementTypes: ProductOriginsClaimType[] =
+                    row.claimType === 'ingredient_origin'
+                      ? [...ORIGIN_ENTRY_CLAIM_TYPES, 'ingredient_origin']
+                      : ORIGIN_ENTRY_CLAIM_TYPES;
+                  const entrySentence = productOriginsEntrySentence({
+                    claimType: row.claimType,
+                    countries: governedOriginCountryNames(row.place),
+                    percentage: row.percentage,
+                    percentageNotStated: row.percentageNotStated === true,
+                    qualifier: row.qualifier,
+                    local: row.local === true,
+                    imported: row.imported === true,
+                  });
                   return (
-                  <View key={`${row.evidenceId || row.claimType || 'origin'}-${index}`}>
+                  <View key={`${row.evidenceId || row.claimType || 'origin'}-${index}`} style={styles.originStatement}>
                     <Text style={[styles.header, { color: ink, fontSize: 18 }]}>
                       {origins.length > 1 ? `Origin statement ${index + 1}` : 'Origin statement'}
                     </Text>
-                    <Text style={{ color: ink }}>What does the pack say?</Text>
-                    <TextInput
-                      value={row.wording}
-                      onChangeText={(value) =>
-                        setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, wording: value } : item)))
-                      }
-                      multiline
-                      style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
-                    />
-                    <Text style={{ color: ink }}>Type of origin statement</Text>
-                    <View style={styles.row}>
-                      {PRODUCT_ORIGINS_CLAIM_TYPES.map((claimType) => (
+                    {statementTypes.map((claimType) => {
+                      const selected = row.claimType === claimType;
+                      return (
                         <TouchableOpacity
                           key={claimType}
                           onPress={() =>
                             setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, claimType } : item)))
                           }
+                          accessibilityRole="radio"
+                          accessibilityState={{ selected }}
+                          accessibilityLabel={ORIGIN_LABELS[claimType]}
+                          style={styles.originChoice}
                         >
-                          <Text style={{ color: row.claimType === claimType ? action : ink }}>
-                            {ORIGIN_LABELS[claimType]}
-                          </Text>
+                          <Ionicons
+                            name={selected ? 'radio-button-on' : 'radio-button-off'}
+                            size={22}
+                            color={selected ? action : ink}
+                          />
+                          <Text style={{ color: ink }}>{ORIGIN_LABELS[claimType]}</Text>
                         </TouchableOpacity>
-                      ))}
-                    </View>
+                      );
+                    })}
                     {row.claimType === 'ingredient_origin' ? (
                       <View>
                         <Text style={{ color: ink }}>Ingredient named on the pack</Text>
@@ -1581,15 +1597,24 @@ export default function PacketContributionModal({
                     <TouchableOpacity
                       onPress={() =>
                         setOrigins((rows) =>
-                          rows.map((item, itemIndex) =>
-                            itemIndex === index
-                              ? { ...item, percentageNotStated: true, percentage: '', qualifier: undefined }
-                              : item
-                          )
+                          rows.map((item, itemIndex) => {
+                            if (itemIndex !== index) return item;
+                            return item.percentageNotStated
+                              ? { ...item, percentageNotStated: false }
+                              : { ...item, percentageNotStated: true, percentage: '', qualifier: undefined };
+                          })
                         )
                       }
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: row.percentageNotStated === true }}
+                      style={styles.originChoice}
                     >
-                      <Text style={{ color: row.percentageNotStated ? action : ink }}>Not stated</Text>
+                      <Ionicons
+                        name={row.percentageNotStated ? 'checkbox' : 'square-outline'}
+                        size={22}
+                        color={row.percentageNotStated ? action : ink}
+                      />
+                      <Text style={{ color: ink }}>Not stated</Text>
                     </TouchableOpacity>
                     {row.percentageNotStated ? null : (
                     <TextInput
@@ -1607,47 +1632,83 @@ export default function PacketContributionModal({
                     />
                     )}
                     {row.percentageNotStated ? null : (
-                    <View style={styles.row}>
-                      {QUALIFIER_LABELS.map((item) => (
-                        <TouchableOpacity
-                          key={item.value}
-                          onPress={() =>
-                            setOrigins((rows) =>
-                              rows.map((entry, itemIndex) =>
-                                itemIndex === index ? { ...entry, qualifier: item.value } : entry
+                    <View>
+                      {QUALIFIER_LABELS.map((item) => {
+                        const selected = row.qualifier === item.value;
+                        return (
+                          <TouchableOpacity
+                            key={item.value}
+                            onPress={() =>
+                              setOrigins((rows) =>
+                                rows.map((entry, itemIndex) =>
+                                  itemIndex === index ? { ...entry, qualifier: item.value } : entry
+                                )
                               )
-                            )
-                          }
-                        >
-                          <Text style={{ color: row.qualifier === item.value ? action : ink }}>{item.label}</Text>
-                        </TouchableOpacity>
-                      ))}
+                            }
+                            accessibilityRole="radio"
+                            accessibilityState={{ selected }}
+                            style={styles.originChoice}
+                          >
+                            <Ionicons
+                              name={selected ? 'radio-button-on' : 'radio-button-off'}
+                              size={22}
+                              color={selected ? action : ink}
+                            />
+                            <Text style={{ color: ink }}>{item.label}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
                     </View>
                     )}
-                    <View style={styles.row}>
-                      <TouchableOpacity
-                        onPress={() =>
-                          setOrigins((rows) =>
-                            rows.map((entry, itemIndex) =>
-                              itemIndex === index ? { ...entry, local: !entry.local } : entry
-                            )
+                    <TouchableOpacity
+                      onPress={() =>
+                        setOrigins((rows) =>
+                          rows.map((entry, itemIndex) =>
+                            itemIndex === index ? { ...entry, local: !entry.local } : entry
                           )
-                        }
-                      >
-                        <Text style={{ color: row.local ? action : ink }}>Local</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() =>
-                          setOrigins((rows) =>
-                            rows.map((entry, itemIndex) =>
-                              itemIndex === index ? { ...entry, imported: !entry.imported } : entry
-                            )
+                        )
+                      }
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: row.local === true }}
+                      style={styles.originChoice}
+                    >
+                      <Ionicons
+                        name={row.local ? 'checkbox' : 'square-outline'}
+                        size={22}
+                        color={row.local ? action : ink}
+                      />
+                      <Text style={{ color: ink }}>Local ingredients</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setOrigins((rows) =>
+                          rows.map((entry, itemIndex) =>
+                            itemIndex === index ? { ...entry, imported: !entry.imported } : entry
                           )
-                        }
-                      >
-                        <Text style={{ color: row.imported ? action : ink }}>Imported</Text>
-                      </TouchableOpacity>
-                    </View>
+                        )
+                      }
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: row.imported === true }}
+                      style={styles.originChoice}
+                    >
+                      <Ionicons
+                        name={row.imported ? 'checkbox' : 'square-outline'}
+                        size={22}
+                        color={row.imported ? action : ink}
+                      />
+                      <Text style={{ color: ink }}>Imported ingredients</Text>
+                    </TouchableOpacity>
+                    <Text style={[styles.originSentence, { color: ink }]}>{entrySentence}</Text>
+                    <Text style={{ color: ink }}>What does the pack say?</Text>
+                    <TextInput
+                      value={row.wording}
+                      onChangeText={(value) =>
+                        setOrigins((rows) => rows.map((item, itemIndex) => (itemIndex === index ? { ...item, wording: value } : item)))
+                      }
+                      multiline
+                      placeholder="Optional wording from the pack"
+                      style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
+                    />
                     {row.claimType && row.place.trim() ? (
                     <View style={styles.row}>
                       {surfaceMode === 'change' && row.intent === 'edited' ? (
@@ -1893,4 +1954,7 @@ const styles = StyleSheet.create({
   notice: { borderRadius: 12, padding: 12 },
   suggestionRow: { minHeight: 44, justifyContent: 'center' },
   suggestionChoice: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12 },
+  originStatement: { gap: 8 },
+  originChoice: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 },
+  originSentence: { fontSize: 16, lineHeight: 22 },
 });
