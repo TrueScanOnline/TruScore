@@ -31,6 +31,8 @@ export type OriginConsumerLine = {
   /** Country name for the flag lockup. The primary sentence stays unchanged. */
   country: string;
   statement: string;
+  /** Free text the contributor typed from the pack. Empty when they left that box blank. */
+  packWording: string;
 };
 
 function factIsLocal(fact: GovernedOriginFact): boolean {
@@ -92,6 +94,7 @@ export function projectOriginConsumerLines(facts: GovernedOriginFact[]): OriginC
         supporting,
         country,
         statement: originFactLabel(fact.claimType),
+        packWording: countryIndex === 0 ? (fact.exactWording || '').trim() : '',
       });
     });
   }

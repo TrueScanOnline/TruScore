@@ -75,6 +75,7 @@ describe('Product Origins Result presentation', () => {
         supporting: ['at least 99%'],
         country: 'Australia',
         statement: 'Made in',
+        packWording: 'Made in Australia from at least 99% Australian ingredients',
       },
     ]);
     expect(same.facts[0]?.exactWording).toBe('Made in Australia');

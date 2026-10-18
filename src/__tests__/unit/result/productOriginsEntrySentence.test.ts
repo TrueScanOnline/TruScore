@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { productOriginsEntrySentence } from '../../../components/productOriginsEntrySentence';
+import { productOriginsEntrySentence, quotedOriginEntry } from '../../../components/productOriginsEntrySentence';
 
 describe('product origins entry sentence', () => {
   const base = {
@@ -32,6 +32,9 @@ describe('product origins entry sentence', () => {
         local: false,
       })
     ).toBe('This product was …');
+    expect(quotedOriginEntry('This product was packed in Australia with 54% local ingredients.')).toBe(
+      '"This product was packed in Australia with 54% local ingredients"'
+    );
   });
 
   it('places the statement choices before the country, percentage, and pack wording', () => {
@@ -42,7 +45,7 @@ describe('product origins entry sentence', () => {
     const statement = modal.indexOf('statementTypes.map');
     const country = modal.indexOf('>Country<');
     const percentage = modal.indexOf('>Percentage<');
-    const wording = modal.indexOf('What does the pack say?');
+    const wording = modal.indexOf('What else does the pack say?');
     expect(statement).toBeGreaterThan(-1);
     expect(statement).toBeLessThan(country);
     expect(country).toBeLessThan(percentage);

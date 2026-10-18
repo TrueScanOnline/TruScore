@@ -19,7 +19,7 @@ import { useTheme } from '../theme';
 import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../theme/resultPresentation';
 import { Ionicons } from '@expo/vector-icons';
 import CountryPicker from './CountryPicker';
-import { productOriginsEntrySentence } from './productOriginsEntrySentence';
+import { productOriginsEntrySentence, quotedOriginEntry } from './productOriginsEntrySentence';
 import { originCountrySlots, placeFromCountrySlots, governedOriginCountryNames } from '../contribution/originCountrySelection';
 import {
   activateDevicePrivateByteStore,
@@ -1528,7 +1528,7 @@ export default function PacketContributionModal({
                         />
                       </View>
                     ) : null}
-                    <Text style={{ color: ink }}>Country</Text>
+                    <Text style={[styles.header, { color: ink, fontSize: 18 }]}>Country</Text>
                     {originCountrySlots(row.place, countryBlanks[index] ?? 0).map((slot, slotIndex, slots) => (
                       <View key={`${index}-country-${slotIndex}`}>
                         <CountryPicker
@@ -1698,8 +1698,8 @@ export default function PacketContributionModal({
                       />
                       <Text style={{ color: ink }}>Imported ingredients</Text>
                     </TouchableOpacity>
-                    <Text style={[styles.originSentence, { color: ink }]}>{entrySentence}</Text>
-                    <Text style={{ color: ink }}>What does the pack say?</Text>
+                    <Text style={styles.originSentence}>{quotedOriginEntry(entrySentence)}</Text>
+                    <Text style={{ color: ink }}>What else does the pack say?</Text>
                     <TextInput
                       value={row.wording}
                       onChangeText={(value) =>
@@ -1956,5 +1956,5 @@ const styles = StyleSheet.create({
   suggestionChoice: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12 },
   originStatement: { gap: 8 },
   originChoice: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 },
-  originSentence: { fontSize: 16, lineHeight: 22 },
+  originSentence: { fontSize: 17, lineHeight: 24, fontStyle: 'italic', color: '#c0392b' },
 });

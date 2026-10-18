@@ -2197,6 +2197,9 @@ function ResultScreenContent() {
                         ))}
                       </View>
                     ) : null}
+                    {line.packWording ? (
+                      <Text style={[styles.originPackWording, { color: emerald.ink }]}>{`"${line.packWording}"`}</Text>
+                    ) : null}
                   </View>
                 ))}
                 {!showEmptyState && product._publication?.transparency.confidence === 'high' ? (
@@ -3429,6 +3432,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '600',
+  },
+  originPackWording: {
+    fontSize: 16,
+    lineHeight: 22,
+    textAlign: 'center',
   },
   originEmpty: {
     marginTop: 14,

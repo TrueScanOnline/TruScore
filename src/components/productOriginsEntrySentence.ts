@@ -58,3 +58,9 @@ export function productOriginsEntrySentence(input: ProductOriginsEntrySentenceIn
   if (source) return `${head} with ${source}.`;
   return head.endsWith('…') ? head : `${head}.`;
 }
+
+/** The live reading, inside speech marks, without a trailing full stop. */
+export function quotedOriginEntry(sentence: string): string {
+  const body = sentence.endsWith('.') ? sentence.slice(0, -1) : sentence;
+  return `"${body}"`;
+}
