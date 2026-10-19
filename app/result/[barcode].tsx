@@ -148,6 +148,7 @@ import {
   nutritionPrefillFromSource,
   originDraftsFromGovernedFacts,
 } from '../../src/contribution/governedDisplayProjection';
+import { packetInformationJourneySeed } from '../../src/contribution/consumerSurface';
 import { subscribeEvidenceAdmission } from '../../src/evidenceAuthority/device';
 import { currentModalTrace } from '../../src/evidenceAuthority/contributionTrace';
 import {
@@ -1437,6 +1438,25 @@ function ResultScreenContent() {
     });
   };
 
+  const packetInformationSeed = useMemo(() => {
+    const recognisedCertificationNames = (product?.certifications || []).map((cert) => displayCertificationName(cert));
+    const governedCertifications = product?.rveelGovernedCertifications || [];
+    const visibleCertifications = ordinaryLinesBesideRecognisedCertifications(
+      governedCertifications,
+      recognisedCertificationNames
+    );
+    const recognisedMarks = packetClaimsRecognisedMarks({
+      marks: product?.certifications || [],
+      labelHierarchy: product?.labels_hierarchy,
+      governedCertificationNames: visibleCertifications,
+    });
+    return packetInformationJourneySeed({
+      claimWordings: (product?.rveelGovernedPacketClaims || []).map((claim) => claim.exactWording),
+      certificationNames: governedCertifications,
+      recognisedCertificationNames: recognisedMarks.map((cert) => displayCertificationName(cert)),
+    });
+  }, [product]);
+
   // OPTIMIZED: Progressive loading - show product as soon as available
   // Only show full loading spinner if we don't have any product data yet
   if (loading && !product && !progressiveProduct) {
@@ -2651,12 +2671,10 @@ function ResultScreenContent() {
         )}
         initialOriginContext={originDraftsFromGovernedFacts(product?.rveelGovernedOrigins)}
         knownOffOrigin={originsCard.offCountry}
-        initialClaims={(product?.rveelGovernedPacketClaims || []).map((claim) => claim.exactWording)}
-        initialCertifications={product?.rveelGovernedCertifications || []}
+        initialClaims={packetInformationSeed.claims}
+        initialCertifications={packetInformationSeed.certifications}
         packetAbsenceAvailable={
-          (product?.rveelGovernedPacketClaims || []).length === 0 &&
-          (product?.rveelGovernedCertifications || []).length === 0 &&
-          (product?.certifications || []).length === 0
+          packetInformationSeed.claims.length === 0 && packetInformationSeed.certifications.length === 0
         }
         openOnForm={
           contributionFormFirst ||
@@ -2670,8 +2688,8 @@ function ResultScreenContent() {
                     (product?.rveelGovernedOrigins || []).length > 0 ||
                     !!originsCard.offCountry
                   : contributionActions.packetInformationAction === 'update' ||
-                    (product?.rveelGovernedPacketClaims || []).length > 0 ||
-                    (product?.rveelGovernedCertifications || []).length > 0))
+                    packetInformationSeed.claims.length > 0 ||
+                    packetInformationSeed.certifications.length > 0))
         }
         onClose={() => setPacketContributionVisible(false)}
         onSharedEvidenceAdmitted={async (snapshot, complete) => {

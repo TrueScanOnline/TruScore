@@ -41,12 +41,28 @@ export function resultPacketInformationLines(input: {
   certificationNames: string[];
   recognisedCertificationNames: string[];
 }): string[] {
+  const seed = packetInformationJourneySeed(input);
+  return [...seed.certifications, ...seed.claims];
+}
+
+/**
+ * What Change packet information opens.
+ * Recognised marks on the card are certifications the consumer can change or remove.
+ * Add does not copy these into a new row.
+ */
+export function packetInformationJourneySeed(input: {
+  claimWordings: string[];
+  certificationNames: string[];
+  recognisedCertificationNames: string[];
+}): { claims: string[]; certifications: string[] } {
   const recognised = input.recognisedCertificationNames.map((name) => name.trim()).filter((name) => name.length > 0);
-  return [
-    ...ordinaryLinesBesideRecognisedCertifications(input.claimWordings, recognised),
-    ...recognised,
-    ...ordinaryLinesBesideRecognisedCertifications(input.certificationNames, recognised),
-  ];
+  return {
+    claims: ordinaryLinesBesideRecognisedCertifications(input.claimWordings, recognised),
+    certifications: [
+      ...recognised,
+      ...ordinaryLinesBesideRecognisedCertifications(input.certificationNames, recognised),
+    ],
+  };
 }
 
 /** A packet row is editable only when it has wording. Add hides propositions Rveel already holds. */

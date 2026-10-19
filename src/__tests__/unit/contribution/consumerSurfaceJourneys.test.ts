@@ -17,6 +17,7 @@ import {
   originRemovalClosesWithoutReplacement,
   originRowsForJourney,
   packetRowVisible,
+  packetInformationJourneySeed,
   resultPacketInformationLines,
 } from '../../../contribution/consumerSurface';
 import { prepareVisibleContribution } from '../../../contribution/visibleContribution';
@@ -212,6 +213,26 @@ describe('consumer surface journeys', () => {
     expect(PACKET_REVIEW_YES).toBe('Yes');
     expect(PACKET_REVIEW_CHANGE).toBe('Change');
     expect(PACKET_REVIEW_REMOVE).toBe('Remove');
+  });
+
+  it('opens a recognised card mark in Change packet information', () => {
+    expect(
+      packetInformationJourneySeed({
+        claimWordings: ['High in protein'],
+        certificationNames: [],
+        recognisedCertificationNames: ['Rainforest Alliance'],
+      })
+    ).toEqual({
+      claims: ['High in protein'],
+      certifications: ['Rainforest Alliance'],
+    });
+    expect(
+      packetInformationJourneySeed({
+        claimWordings: ['Rainforest Alliance'],
+        certificationNames: ['Rainforest Alliance'],
+        recognisedCertificationNames: ['Rainforest Alliance'],
+      }).certifications
+    ).toEqual(['Rainforest Alliance']);
   });
 
   it('shows current packet propositions for Change and a clean Add without an empty Remove row', () => {
