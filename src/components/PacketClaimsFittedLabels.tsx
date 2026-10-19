@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import {
   PACKET_CLAIM_LABEL_MAX_FONT_SIZE,
@@ -33,45 +33,32 @@ export default function PacketClaimsFittedLabels({
 }) {
   const labels = rows.filter((row): row is PacketClaimLabelRow => row.kind === 'label');
   const [contentWidth, setContentWidth] = useState(0);
-  const [textWidths, setTextWidths] = useState<number[] | null>(null);
   const [reserved, setReserved] = useState<Record<string, number>>({});
-  const [tighten, setTighten] = useState(1);
-  const labelKey = labels.map((row) => row.key).join('\n');
+  const labelKey = labels.map((row) => `${row.key}:${row.text}`).join('\n');
 
   useEffect(() => {
-    setTextWidths(null);
     setReserved({});
-    setTighten(1);
   }, [labelKey]);
 
-  const fitted =
-    textWidths && contentWidth > 0
+  const fontSize =
+    contentWidth > 0
       ? packetClaimLabelFontSize({
           contentWidth,
-          lines: labels.map((row, index) => ({
-            textWidthAtMax: textWidths[index] || 0,
+          lines: labels.map((row) => ({
+            letterCount: row.text.length,
             reservedWidth: reserved[row.key] ?? (row.mark ? 50 : 0),
           })),
         })
       : PACKET_CLAIM_LABEL_MAX_FONT_SIZE;
-  const fontSize = Math.min(
-    PACKET_CLAIM_LABEL_MAX_FONT_SIZE,
-    Math.max(8, Math.round(fitted * tighten * 10) / 10)
-  );
 
   return (
-    <View style={styles.block} onLayout={(event) => setContentWidth(event.nativeEvent.layout.width)}>
-      <ClaimTextMeasurer
-        texts={labels.map((row) => row.text)}
-        fontSize={PACKET_CLAIM_LABEL_MAX_FONT_SIZE}
-        onWidths={(next) =>
-          setTextWidths((current) =>
-            current && current.length === next.length && current.every((value, index) => value === next[index])
-              ? current
-              : next
-          )
-        }
-      />
+    <View
+      style={styles.block}
+      onLayout={(event) => {
+        const width = event.nativeEvent.layout.width;
+        setContentWidth((current) => (current === width ? current : width));
+      }}
+    >
       {rows.map((row) =>
         row.kind === 'heading' ? (
           <Text key={row.key} style={[styles.heading, { color: row.color }]}>
@@ -93,14 +80,7 @@ export default function PacketClaimsFittedLabels({
             ) : null}
             <Text
               numberOfLines={1}
-              ellipsizeMode="tail"
-              onTextLayout={(event) => {
-                const visible = event.nativeEvent.lines.map((line) => line.text).join('');
-                const clipped = visible.includes('…') || visible.includes('...');
-                if (clipped) {
-                  setTighten((value) => (value <= 0.45 ? value : Math.round(value * 0.9 * 100) / 100));
-                }
-              }}
+              ellipsizeMode="clip"
               style={[
                 styles.label,
                 {
@@ -115,43 +95,6 @@ export default function PacketClaimsFittedLabels({
           </View>
         )
       )}
-    </View>
-  );
-}
-
-function ClaimTextMeasurer({
-  texts,
-  fontSize,
-  onWidths,
-}: {
-  texts: string[];
-  fontSize: number;
-  onWidths: (widths: number[]) => void;
-}) {
-  const widths = useRef<number[]>([]);
-  const signature = texts.join('\n');
-
-  useEffect(() => {
-    widths.current = new Array(texts.length).fill(0);
-  }, [signature, texts.length]);
-
-  return (
-    <View style={styles.measurer} pointerEvents="none" accessible={false}>
-      {texts.map((text, index) => (
-        <Text
-          key={`${signature}:${index}`}
-          style={[styles.measureText, { fontSize, lineHeight: packetClaimLabelLineHeight(fontSize) }]}
-          onTextLayout={(event) => {
-            const lineWidth = event.nativeEvent.lines.reduce((sum, line) => sum + line.width, 0);
-            widths.current[index] = lineWidth;
-            if (widths.current.length !== texts.length) return;
-            if (widths.current.some((value, lineIndex) => value <= 0 && texts[lineIndex].length > 0)) return;
-            onWidths(widths.current.slice());
-          }}
-        >
-          {text}
-        </Text>
-      ))}
     </View>
   );
 }
@@ -186,17 +129,6 @@ const styles = StyleSheet.create({
   heading: {
     alignSelf: 'stretch',
     fontSize: 15,
-    fontWeight: '700',
-    textAlign: 'left',
-  },
-  measurer: {
-    position: 'absolute',
-    opacity: 0,
-    left: 0,
-    top: 0,
-    width: 4000,
-  },
-  measureText: {
     fontWeight: '700',
     textAlign: 'left',
   },
