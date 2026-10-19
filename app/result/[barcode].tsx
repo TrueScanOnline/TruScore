@@ -2317,6 +2317,7 @@ function ResultScreenContent() {
               claimLineCount: visibleClaims.length,
               absenceEstablished: product.rveelPacketAbsenceEstablished === true,
             });
+            const showClaimsPanel = recognisedMarks.length > 0 || visibleCertifications.length > 0 || visibleClaims.length > 0;
             return (
               <>
                 {showEmptyState ? (
@@ -2324,30 +2325,40 @@ function ResultScreenContent() {
                     {PACKET_CLAIMS_EMPTY_STATE}
                   </Text>
                 ) : null}
-                {showGroupHeadings ? (
-                  <Text style={[styles.packetGroupHeading, { color: colors.text }]}>Certifications</Text>
-                ) : null}
-                {recognisedMarks.length > 0 ? (
-                  <View style={styles.certificationsContainer}>
-                    {recognisedMarks.map((cert) => (
-                      <CertBadge key={cert.id} certification={cert} />
+                {showClaimsPanel ? (
+                  <View style={[styles.packetClaimsPanel, { backgroundColor: emerald.chevronCircle }]}>
+                    {showGroupHeadings ? (
+                      <Text style={[styles.packetGroupHeading, { color: emerald.muted }]}>Certifications</Text>
+                    ) : null}
+                    {recognisedMarks.length > 0 ? (
+                      <View style={styles.certificationsContainer}>
+                        {recognisedMarks.map((cert) => (
+                          <CertBadge key={cert.id} certification={cert} appearance="panel" nameColor={emerald.ink} />
+                        ))}
+                      </View>
+                    ) : null}
+                    {visibleCertifications.map((name) => (
+                      <View key={name} style={styles.packetObservationRow}>
+                        <CertificationMark
+                          name={name}
+                          surface="product_result"
+                          associationAdmitted
+                          imageOnly
+                          markSize={40}
+                        />
+                        <Text style={[styles.packetObservationText, { color: emerald.ink }]}>{name}</Text>
+                      </View>
+                    ))}
+                    {showGroupHeadings ? (
+                      <Text style={[styles.packetGroupHeading, { color: emerald.muted }]}>Other packet claims</Text>
+                    ) : null}
+                    {visibleClaims.map((claim) => (
+                      <Text key={claim.evidenceId} style={[styles.packetObservationText, { color: emerald.ink }]}>
+                        {claim.exactWording}
+                      </Text>
                     ))}
                   </View>
                 ) : null}
-                {visibleCertifications.map((name) => (
-                  <View key={name} style={styles.packetObservationRow}>
-                    <CertificationMark name={name} surface="product_result" associationAdmitted imageOnly />
-                    <Text style={[styles.packetObservationText, { color: colors.text }]}>{name}</Text>
-                  </View>
-                ))}
-                {showGroupHeadings ? (
-                  <Text style={[styles.packetGroupHeading, { color: colors.text }]}>Other packet claims</Text>
-                ) : null}
-                {visibleClaims.map((claim) => (
-                  <Text key={claim.evidenceId} style={[styles.packetObservationText, { color: colors.text }]}>
-                    {claim.exactWording}
-                  </Text>
-                ))}
                 {product._publication?.claims.confidenceReasonCode === 'claims_primary_contribution_limited' ? (
                   <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
                 ) : null}
@@ -3722,27 +3733,42 @@ const styles = StyleSheet.create({
   certificationsCardTitleText: {
     flexShrink: 1,
   },
-  certificationsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  packetClaimsPanel: {
     marginTop: 12,
+    width: '100%',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    gap: 12,
+    alignItems: 'flex-start',
+    overflow: 'hidden',
+  },
+  certificationsContainer: {
+    alignSelf: 'stretch',
+    maxWidth: '100%',
+    gap: 12,
+    alignItems: 'flex-start',
   },
   packetGroupHeading: {
+    alignSelf: 'stretch',
     fontSize: 15,
     fontWeight: '700',
-    marginTop: 12,
+    textAlign: 'left',
   },
   packetObservationRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'stretch',
+    maxWidth: '100%',
     gap: 10,
-    marginTop: 10,
   },
   packetObservationText: {
     flex: 1,
     flexShrink: 1,
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '700',
+    textAlign: 'left',
   },
   packetClaimsEmptyText: {
     marginTop: 12,

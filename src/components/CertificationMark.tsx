@@ -13,6 +13,7 @@ export default function CertificationMark({
   associationAdmitted,
   color,
   imageOnly = false,
+  markSize = 32,
 }: {
   name: string;
   productionId?: string;
@@ -20,6 +21,7 @@ export default function CertificationMark({
   associationAdmitted?: boolean;
   color?: string;
   imageOnly?: boolean;
+  markSize?: number;
 }) {
   const decision = resolveCertificationArtwork({
     accessibleName: name,
@@ -38,9 +40,9 @@ export default function CertificationMark({
         });
   const image =
     decision.render === 'mark' ? (
-      <Image source={{ uri: decision.assetRef }} accessibilityLabel={decision.accessibleName} style={{ width: 32, height: 32 }} resizeMode="contain" />
+      <Image source={{ uri: decision.assetRef }} accessibilityLabel={decision.accessibleName} style={{ width: markSize, height: markSize, flexShrink: 0 }} resizeMode="contain" />
     ) : closed ? (
-      <Image source={closed.moduleId} accessibilityLabel={closed.accessibleName} style={{ width: 32, height: 32 }} resizeMode="contain" />
+      <Image source={closed.moduleId} accessibilityLabel={closed.accessibleName} style={{ width: markSize, height: markSize, flexShrink: 0 }} resizeMode="contain" />
     ) : null;
   if (imageOnly) return image;
   return (
