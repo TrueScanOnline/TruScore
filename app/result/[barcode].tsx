@@ -51,6 +51,7 @@ import {
   PACKET_CLAIMS_EMPTY_STATE,
   PACKET_CLAIMS_MORE_INFORMATION,
   packetClaimsCardShowsEmptyState,
+  packetClaimsRecognisedMarks,
 } from '../../src/components/packetClaimsCardCopy';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
@@ -2302,7 +2303,11 @@ function ResultScreenContent() {
               product.rveelGovernedCertifications || [],
               recognisedCertificationNames
             );
-            const recognisedMarks = product.certifications || [];
+            const recognisedMarks = packetClaimsRecognisedMarks({
+              marks: product.certifications || [],
+              labelHierarchy: product.labels_hierarchy,
+              governedCertificationNames: visibleCertifications,
+            });
             const hasCertifications = recognisedMarks.length > 0 || visibleCertifications.length > 0;
             const hasClaims = visibleClaims.length > 0;
             const showGroupHeadings = hasCertifications && hasClaims;

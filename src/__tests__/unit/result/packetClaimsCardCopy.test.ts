@@ -2,6 +2,7 @@ import {
   PACKET_CLAIMS_EMPTY_STATE,
   PACKET_CLAIMS_MORE_INFORMATION,
   packetClaimsCardShowsEmptyState,
+  packetClaimsRecognisedMarks,
 } from '../../../components/packetClaimsCardCopy';
 
 describe('packet claims card consumer copy', () => {
@@ -50,5 +51,31 @@ describe('packet claims card consumer copy', () => {
         absenceEstablished: true,
       })
     ).toBe(false);
+  });
+
+  it('drops a removed packet certification badge when the product source does not list it', () => {
+    const biodynamic = { id: 'en:biodynamic', tag: 'en:biodynamic', name: 'Biodynamic' };
+    const fairtrade = { id: 'en:fair-trade', tag: 'en:fair-trade', name: 'Fairtrade' };
+    expect(
+      packetClaimsRecognisedMarks({
+        marks: [biodynamic, fairtrade],
+        labelHierarchy: [],
+        governedCertificationNames: [],
+      }).map((mark) => mark.name)
+    ).toEqual(['Fairtrade']);
+    expect(
+      packetClaimsRecognisedMarks({
+        marks: [biodynamic],
+        labelHierarchy: ['en:biodynamic'],
+        governedCertificationNames: [],
+      })
+    ).toEqual([biodynamic]);
+    expect(
+      packetClaimsRecognisedMarks({
+        marks: [biodynamic],
+        labelHierarchy: [],
+        governedCertificationNames: ['Demeter biodynamic — Australia'],
+      })
+    ).toEqual([biodynamic]);
   });
 });
