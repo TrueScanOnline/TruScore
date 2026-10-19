@@ -18,3 +18,4 @@ Living list of intended changes for the next UAT build. Each row is one accepted
 | Packet Claims: every claim label stays on one line at the same size, and does not grow past the current card text | `30b8378e71ca62e242a3b0e23f13faf572f07df7` | yes |
 | Packet Claims: label size follows the longest claim so the full wording fits on one line | `5e5e9305a27be4f2a3f110773ba0494431a65052` | yes |
 | Packet Claims: a claim shown on the card is listed in Change packet information for change or remove | `71feca22beb829131fa444174e6778fca847e8af` | yes |
+| Packet Claims: removing a source claim is stored so the card and the next scan stay the same | `efab64bedb7b17b14ba4c9a338617208a9705b01` | yes |
