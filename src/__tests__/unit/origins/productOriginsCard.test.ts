@@ -137,6 +137,8 @@ describe('Product Origins Result presentation', () => {
     expect(result).toContain('productOriginsCardPresentation');
     expect(result).toContain('CountryFlag');
     expect(result).toContain('Limited confidence');
+    expect(result).toContain('PRODUCT_ORIGINS_LIMITED_CONFIDENCE');
+    expect(result).not.toContain('transparency.s26?.explanation');
     expect(fs.existsSync(path.join(__dirname, '../../../components/ManufacturingCountryModal.tsx'))).toBe(false);
     expect(fs.existsSync(path.join(__dirname, '../../../features/product/cards/ProductCards.tsx'))).toBe(false);
     expect(fs.existsSync(path.join(__dirname, '../../../features/product/cards/CountryCard/CountryCard.tsx'))).toBe(false);

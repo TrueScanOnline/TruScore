@@ -6,6 +6,9 @@
 export const PRODUCT_ORIGINS_EMPTY_STATE =
   'This product does not currently have any product origins that we can find. If there are any stated on the packet, you can add them now.';
 
+export const PRODUCT_ORIGINS_LIMITED_CONFIDENCE =
+  'We have not been able to verify the Product Origins as entered by the community, therefore we have labeled it "Limited confidence".';
+
 export const PRODUCT_ORIGINS_MORE_INFORMATION =
   'Product origins are claims or statements made by the manufacturer that are usually printed on the packaging to show where their product is made, or where the ingredients are sourced. If there are details stated on the packaging then please enter them for everyone to see.';
 

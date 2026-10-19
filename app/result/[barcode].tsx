@@ -42,6 +42,7 @@ import type { NutritionDetailsFocusTarget } from '../../src/components/Nutrition
 import { Image as ExpoImage } from 'expo-image';
 import {
   PRODUCT_ORIGINS_EMPTY_STATE,
+  PRODUCT_ORIGINS_LIMITED_CONFIDENCE,
   PRODUCT_ORIGINS_MORE_INFORMATION,
   productOriginsCardShowsEmptyState,
 } from '../../src/components/productOriginsCardCopy';
@@ -2743,8 +2744,7 @@ function ResultScreenContent() {
           <View style={[styles.packetClaimsInfoCard, { backgroundColor: colors.card }]} accessibilityViewIsModal>
             <Text style={[styles.cardTitle, { color: emerald.ink }]}>Limited confidence</Text>
             <Text style={[styles.packetClaimsInfoBody, { color: colors.text }]}>
-              {product?._publication?.transparency.s26?.explanation?.trim() ||
-                'A published explanation for this confidence is not available yet.'}
+              {PRODUCT_ORIGINS_LIMITED_CONFIDENCE}
             </Text>
             <TouchableOpacity
               onPress={() => setOriginLimitedConfidenceVisible(false)}
