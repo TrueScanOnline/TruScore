@@ -13,3 +13,4 @@ Living list of intended changes for the next UAT build. Each row is one accepted
 | Product Origins entry: Country heading matches Origin statement, the live sentence is quoted, and pack wording shows on the card | `169a7b72fba7025af10833d0555c3fca04b0fd0b` | yes |
 | Product Origins card: each entry keeps its ingredient choice, Add is hidden once a country is shown, and Limited confidence opens its explanation | `a1a2d5b198dea93993323f4c1972c7cd45bae067` | yes |
 | Product Origins limited confidence popup: community verification sentence | `6a68b3b77e7415d330435d06e9e9e7f4b0a35959` | yes |
+| Packet Claims: a removed certification badge no longer stays on the card, so the empty sentence can show | `c7ba7000812c68613385ab8f5161235f349f6134` | yes |
