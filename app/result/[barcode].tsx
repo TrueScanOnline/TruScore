@@ -35,6 +35,7 @@ import TruScore from '../../src/components/TruScore';
 import ConfidenceBadge from '../../src/components/ConfidenceBadge';
 import CountryFlag from '../../src/components/CountryFlag';
 import CertBadge from '../../src/components/CertBadge';
+import PacketClaimsFittedLabels from '../../src/components/PacketClaimsFittedLabels';
 import CertificationMark from '../../src/components/CertificationMark';
 import UniversalPricingCard from '../../src/components/UniversalPricingCard';
 import NutritionTable from '../../src/components/NutritionTable';
@@ -2327,36 +2328,43 @@ function ResultScreenContent() {
                 ) : null}
                 {showClaimsPanel ? (
                   <View style={[styles.packetClaimsPanel, { backgroundColor: emerald.chevronCircle }]}>
-                    {showGroupHeadings ? (
-                      <Text style={[styles.packetGroupHeading, { color: emerald.muted }]}>Certifications</Text>
-                    ) : null}
-                    {recognisedMarks.length > 0 ? (
-                      <View style={styles.certificationsContainer}>
-                        {recognisedMarks.map((cert) => (
-                          <CertBadge key={cert.id} certification={cert} appearance="panel" nameColor={emerald.ink} />
-                        ))}
-                      </View>
-                    ) : null}
-                    {visibleCertifications.map((name) => (
-                      <View key={name} style={styles.packetObservationRow}>
-                        <CertificationMark
-                          name={name}
-                          surface="product_result"
-                          associationAdmitted
-                          imageOnly
-                          markSize={40}
-                        />
-                        <Text style={[styles.packetObservationText, { color: emerald.ink }]}>{name}</Text>
-                      </View>
-                    ))}
-                    {showGroupHeadings ? (
-                      <Text style={[styles.packetGroupHeading, { color: emerald.muted }]}>Other packet claims</Text>
-                    ) : null}
-                    {visibleClaims.map((claim) => (
-                      <Text key={claim.evidenceId} style={[styles.packetObservationText, { color: emerald.ink }]}>
-                        {claim.exactWording}
-                      </Text>
-                    ))}
+                    <PacketClaimsFittedLabels
+                      color={emerald.ink}
+                      rows={[
+                        ...(showGroupHeadings
+                          ? [{ key: 'certifications-heading', kind: 'heading' as const, text: 'Certifications', color: emerald.muted }]
+                          : []),
+                        ...recognisedMarks.map((cert) => ({
+                          key: cert.id,
+                          kind: 'label' as const,
+                          text: displayCertificationName(cert),
+                          mark: <CertBadge certification={cert} appearance="panel" showName={false} />,
+                        })),
+                        ...visibleCertifications.map((name) => ({
+                          key: `certification:${name}`,
+                          kind: 'label' as const,
+                          text: name,
+                          mark: (
+                            <CertificationMark
+                              name={name}
+                              surface="product_result"
+                              associationAdmitted
+                              imageOnly
+                              markSize={40}
+                            />
+                          ),
+                        })),
+                        ...(showGroupHeadings
+                          ? [{ key: 'claims-heading', kind: 'heading' as const, text: 'Other packet claims', color: emerald.muted }]
+                          : []),
+                        ...visibleClaims.map((claim) => ({
+                          key: claim.evidenceId,
+                          kind: 'label' as const,
+                          text: claim.exactWording,
+                          mark: null,
+                        })),
+                      ]}
+                    />
                   </View>
                 ) : null}
                 {product._publication?.claims.confidenceReasonCode === 'claims_primary_contribution_limited' ? (
@@ -3742,33 +3750,6 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: 'flex-start',
     overflow: 'hidden',
-  },
-  certificationsContainer: {
-    alignSelf: 'stretch',
-    maxWidth: '100%',
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  packetGroupHeading: {
-    alignSelf: 'stretch',
-    fontSize: 15,
-    fontWeight: '700',
-    textAlign: 'left',
-  },
-  packetObservationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    maxWidth: '100%',
-    gap: 10,
-  },
-  packetObservationText: {
-    flex: 1,
-    flexShrink: 1,
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: '700',
-    textAlign: 'left',
   },
   packetClaimsEmptyText: {
     marginTop: 12,

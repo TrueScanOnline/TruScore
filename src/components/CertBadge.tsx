@@ -13,11 +13,19 @@ interface CertBadgeProps {
   /** Result card: sit in the claims panel, without the small grey chip. */
   appearance?: 'chip' | 'panel';
   nameColor?: string;
+  /** Result card measures the name itself so every claim can share one size. */
+  showName?: boolean;
 }
 
 export { CERT_BADGE_ICONS } from '../constants/certDisplay';
 
-export default function CertBadge({ certification, onPress, appearance = 'chip', nameColor }: CertBadgeProps) {
+export default function CertBadge({
+  certification,
+  onPress,
+  appearance = 'chip',
+  nameColor,
+  showName = true,
+}: CertBadgeProps) {
   const name = displayCertificationName(certification);
   const resolved = resolvePacketObservation({ observedWording: certification.tag || name });
   const productionId = resolved.kind === 'certification' ? resolved.certificationId : undefined;
@@ -36,10 +44,13 @@ export default function CertBadge({ certification, onPress, appearance = 'chip',
         });
   const Component = onPress ? TouchableOpacity : View;
   const panel = appearance === 'panel';
+  const hasImage = emblem.render === 'mark' || !!closed;
+  if (!showName && !hasImage) return null;
+  const markOnly = panel && !showName;
 
   return (
     <Component
-      style={[styles.container, panel ? styles.panel : null]}
+      style={[styles.container, panel ? styles.panel : null, markOnly ? styles.markOnly : null]}
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
     >
@@ -58,9 +69,11 @@ export default function CertBadge({ certification, onPress, appearance = 'chip',
           resizeMode="contain"
         />
       ) : null}
-      <Text style={[styles.name, panel ? styles.panelName : null, nameColor ? { color: nameColor } : null]}>
-        {displayCertificationName(certification)}
-      </Text>
+      {showName ? (
+        <Text style={[styles.name, panel ? styles.panelName : null, nameColor ? { color: nameColor } : null]}>
+          {displayCertificationName(certification)}
+        </Text>
+      ) : null}
     </Component>
   );
 }
@@ -94,6 +107,12 @@ const styles = StyleSheet.create({
     marginRight: 0,
     marginBottom: 0,
     gap: 10,
+  },
+  markOnly: {
+    alignSelf: 'flex-start',
+    flexGrow: 0,
+    flexShrink: 0,
+    gap: 0,
   },
   panelMark: { width: 40, height: 40, flexShrink: 0 },
   panelName: {
