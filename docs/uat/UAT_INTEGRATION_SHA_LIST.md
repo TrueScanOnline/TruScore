@@ -16,3 +16,4 @@ Living list of intended changes for the next UAT build. Each row is one accepted
 | Packet Claims: a removed certification badge no longer stays on the card, so the empty sentence can show | `c7ba7000812c68613385ab8f5161235f349f6134` | yes |
 | Packet Claims: displayed claims sit left in the light green panel, at the Product Origins country size | `1802b01816eb804ed3363b833542d4af22340d8e` | yes |
 | Packet Claims: every claim label stays on one line at the same size, and does not grow past the current card text | `30b8378e71ca62e242a3b0e23f13faf572f07df7` | yes |
+| Packet Claims: label size follows the longest claim so the full wording fits on one line | `5e5e9305a27be4f2a3f110773ba0494431a65052` | yes |
