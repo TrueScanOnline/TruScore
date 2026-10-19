@@ -9,7 +9,7 @@ import {
   disputeEvidence,
 } from '../contributions/lifecycle';
 import { CURRENT_PRODUCTION_CONTRIBUTION_EPOCH } from '../contributions/productionEpoch';
-import type { ContributionDisputeReason } from '../config/contributionPolicy';
+import { CONTRIBUTION_DOMAINS, type ContributionDisputeReason, type ContributionDomain } from '../config/contributionPolicy';
 import { registerIngredientsNutritionBodyReceiver } from '../ingredientsNutrition/bodyReceiver';
 import {
   offNutrientWriteKey,
@@ -172,6 +172,9 @@ export class EvidenceAuthority {
         if (keys.length === 0) return;
         const wanted = new Set(keys);
         const versions = await tx.versionsForBarcode(input.barcode);
+        const admittedKeys = new Set(
+          versions.filter((version) => version.admissionStatus === 'admitted').map((version) => version.subjectKey)
+        );
         for (const version of versions) {
           if (!wanted.has(version.subjectKey)) continue;
           if (version.admissionStatus !== 'admitted' || version.admissionSeq == null) continue;
@@ -185,6 +188,15 @@ export class EvidenceAuthority {
             actorId: ADMITTED_BY,
             detail: { reason: 'correction_ceased_prevailing' },
             createdAt: this.now(),
+          });
+        }
+        for (const key of wanted) {
+          if (admittedKeys.has(key)) continue;
+          await this.recordWithdrawnAbsence(tx, {
+            barcode: input.barcode,
+            contributorId,
+            submissionKey: input.idempotencyKey,
+            subjectKey: key,
           });
         }
       };
@@ -706,6 +718,79 @@ export class EvidenceAuthority {
     }
   }
 
+  /**
+   * A removed packet line that was never admitted still has to be remembered.
+   * The version is admitted and immediately withdrawn, so it is not a prevailing claim.
+   */
+  private async recordWithdrawnAbsence(
+    tx: AuthorityTx,
+    input: { barcode: string; contributorId: string; submissionKey: string; subjectKey: string }
+  ): Promise<void> {
+    const domain = input.subjectKey.split('|')[0] as ContributionDomain;
+    if (!CONTRIBUTION_DOMAINS.includes(domain)) return;
+    const subject = await tx.ensureSubject({
+      subjectId: `subject_${randomBytes(6).toString('hex')}`,
+      barcode: input.barcode,
+      domain,
+      subjectKey: input.subjectKey,
+      createdAt: this.now(),
+    });
+    const versionNo = await tx.nextVersionNo(subject.subjectId);
+    const payload = `withdrawn:${input.subjectKey}`;
+    const bytes = new TextEncoder().encode(payload);
+    const assetId = `asset_${randomBytes(6).toString('hex')}`;
+    await tx.putAsset({
+      assetId,
+      sha256: sha256Hex(bytes),
+      bytes,
+      contentType: 'text/plain',
+      contributorId: input.contributorId,
+      barcode: input.barcode,
+    });
+    const content = createPendingEvidence({
+      evidenceId: `ceased_${randomBytes(4).toString('hex')}`,
+      barcode: input.barcode,
+      domain,
+      evidenceVersion: versionNo,
+      claimKey: input.subjectKey,
+      claimValue: input.subjectKey,
+      submitterId: input.contributorId,
+      createdAt: this.now(),
+    });
+    content.state = 'withdrawn';
+    content.admissionStatus = 'admitted';
+    content.scoringEligible = false;
+    const versionId = `ver_${randomBytes(6).toString('hex')}`;
+    const admissionSeq = await tx.nextAdmissionSeq();
+    await tx.insertVersion({
+      versionId,
+      subjectId: subject.subjectId,
+      subjectKey: input.subjectKey,
+      barcode: input.barcode,
+      domain,
+      versionNo,
+      submissionKey: input.submissionKey,
+      contributorId: input.contributorId,
+      content,
+      sourceAssetId: assetId,
+      regionId: null,
+      admissionStatus: 'admitted',
+      admissionSeq,
+      governance: 'withdrawn',
+      authorityEpoch: this.epoch,
+      authorityRecordClass: this.recordClass,
+      createdAt: this.now(),
+    });
+    await tx.appendEvent({
+      eventId: `evt_${randomBytes(4).toString('hex')}`,
+      versionId,
+      kind: 'withdrawn',
+      actorId: ADMITTED_BY,
+      detail: { reason: 'correction_ceased_absent_subject' },
+      createdAt: this.now(),
+    });
+  }
+
   private async snapshotFrom(
     tx: AuthorityTx,
     barcode: string
@@ -718,9 +803,13 @@ export class EvidenceAuthority {
       if (!current || (current.admissionSeq ?? 0) < version.admissionSeq) latestAdmitted.set(version.subjectKey, version);
     }
     const prevailing = new Map<string, VersionRecord>();
+    const withdrawnSubjectKeys: string[] = [];
     for (const [subjectKey, version] of latestAdmitted) {
       // Withdrawing or suppressing the latest version does not reinstate an older one.
-      if (version.governance === 'withdrawn' || version.governance === 'suppressed') continue;
+      if (version.governance === 'withdrawn' || version.governance === 'suppressed') {
+        withdrawnSubjectKeys.push(subjectKey);
+        continue;
+      }
       prevailing.set(subjectKey, version);
     }
     const dispatches = await tx.dispatchesForBarcode(barcode);
@@ -730,6 +819,7 @@ export class EvidenceAuthority {
       epoch: this.epoch,
       recordClass: this.recordClass,
       generatedAt: this.now(),
+      withdrawnSubjectKeys: withdrawnSubjectKeys.sort(),
       prevailing: [...prevailing.values()]
         .sort((a, b) => (a.admissionSeq ?? 0) - (b.admissionSeq ?? 0))
         .map((version) => ({

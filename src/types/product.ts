@@ -205,6 +205,11 @@ export interface Product {
   /** Admitted packet wording shown on the Packet Claims card. Not a set label. */
   rveelGovernedPacketClaims?: import('../claims/packetClaimReceiver').GovernedPacketClaimFact[];
   /**
+   * Subject keys a contributor removed. The Packet Claims card hides a matching
+   * source label. Not a scoring input.
+   */
+  rveelWithdrawnPacketSubjectKeys?: string[];
+  /**
    * Wave 3 Cross-Pillar Rateability / Confidence / NR publication snapshot.
    * Consumer UI must reveal publishedScore/confidence only; internalScore is diagnostic.
    * Optional on Product so contribution helpers that already read publication lanes type-check.

@@ -7,6 +7,7 @@ import type { AuthorityEnv, SharedEvidenceSnapshot } from './types';
 export type AssessmentLoad = {
   evidence: ContributionEvidence[];
   offDispatchStatus: string | null;
+  withdrawnSubjectKeys: string[];
   source: 'remote' | 'cache' | 'none';
 };
 
@@ -125,7 +126,7 @@ export async function loadAuthoritativeAssessment(
     timeoutMs?: number;
   }
 ): Promise<AssessmentLoad> {
-  if (!barcode) return { evidence: [], offDispatchStatus: null, source: 'none' };
+  if (!barcode) return { evidence: [], offDispatchStatus: null, withdrawnSubjectKeys: [], source: 'none' };
   const now = deps?.now ?? Date.now;
   const maxAgeMs = deps?.maxAgeMs ?? SNAPSHOT_CACHE_MAX_AGE_MS;
   const fetchSnapshot = deps?.fetchSnapshot ?? ((value: string) => defaultFetchSnapshot(value, deps?.timeoutMs));
@@ -136,6 +137,7 @@ export async function loadAuthoritativeAssessment(
       return {
         evidence: projectSnapshotForAssessment(remote),
         offDispatchStatus: remote.offDispatch[0]?.status ?? null,
+        withdrawnSubjectKeys: remote.withdrawnSubjectKeys ?? [],
         source: 'remote',
       };
     }
@@ -144,20 +146,22 @@ export async function loadAuthoritativeAssessment(
       return {
         evidence: projectSnapshotForAssessment(remembered),
         offDispatchStatus: remembered.offDispatch[0]?.status ?? null,
+        withdrawnSubjectKeys: remembered.withdrawnSubjectKeys ?? [],
         source: 'cache',
       };
     }
-    return { evidence: [], offDispatchStatus: null, source: 'none' };
+    return { evidence: [], offDispatchStatus: null, withdrawnSubjectKeys: [], source: 'none' };
   } catch {
     const cached = await readCache(barcode, now(), maxAgeMs);
     if (cached) {
       return {
         evidence: projectSnapshotForAssessment(cached),
         offDispatchStatus: cached.offDispatch[0]?.status ?? null,
+        withdrawnSubjectKeys: cached.withdrawnSubjectKeys ?? [],
         source: 'cache',
       };
     }
-    return { evidence: [], offDispatchStatus: null, source: 'none' };
+    return { evidence: [], offDispatchStatus: null, withdrawnSubjectKeys: [], source: 'none' };
   }
 }
 

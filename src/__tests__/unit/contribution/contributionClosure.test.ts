@@ -18,6 +18,10 @@ import { stampCoreTruthAuthority } from '../../../config/coreTruthProductCacheAu
 import { sha256Hex } from '../../../packetContribution/sha256';
 import type { Product } from '../../../types/product';
 import { calculateTrustScore } from '../../../utils/trustScore';
+import {
+  displayedPacketSubjectKey,
+  packetClaimsRecognisedMarks,
+} from '../../../components/packetClaimsCardCopy';
 import { admittedPacketContributionRepresented, resultContributionActions } from '../../../contribution/resultContributionActions';
 import { prepareVisibleContribution } from '../../../contribution/visibleContribution';
 import {
@@ -612,5 +616,111 @@ describe('contribution correction closure', () => {
     const history = await service.history(BARCODE);
     expect(history.some((row) => row.subjectKey === 'certifications|scheme:vegan.au' && row.governance === 'withdrawn')).toBe(true);
     expect(history.some((row) => row.content.exactWording === 'Vegan Australia Certified')).toBe(true);
+  });
+
+  it('stores removal of a source packet mark that was never admitted, and a later scan still hides it', async () => {
+    const service = authority();
+    const contributor = await service.issueCredential();
+    const mark = { id: 'en:rainforest-alliance', name: 'Rainforest Alliance', tag: 'en:rainforest-alliance' };
+    const opened = prepareVisibleContribution({
+      contexts: ['packetClaims'],
+      ingredientsText: '',
+      nutrition: { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' },
+      nutritionBaseline: { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' },
+      origins: [],
+      claims: [],
+      initialClaims: [],
+      certifications: [''],
+      initialCertifications: ['Rainforest Alliance'],
+    });
+    expect(opened.status).toBe('ready');
+    if (opened.status !== 'ready') return;
+    expect(opened.ceasedSubjectKeys).toEqual([displayedPacketSubjectKey('certification', 'Rainforest Alliance')]);
+    const removed = await send(service, contributor.contributorId, [], 'remove-rainforest', opened.ceasedSubjectKeys);
+    expect(removed.status).toBe('admitted');
+    expect(removed.snapshot?.withdrawnSubjectKeys).toEqual(opened.ceasedSubjectKeys);
+    expect(removed.snapshot?.prevailing).toEqual([]);
+    const source = food({
+      certifications: [mark],
+      labels_tags: ['en:rainforest-alliance'],
+      labels_hierarchy: ['en:rainforest-alliance'],
+    });
+    const before = await calculateTrustScore(source);
+    const scored = await calculateTrustScore(source, { authoritativeSnapshot: removed.snapshot });
+    expect(scored.trust_score).toBe(before.trust_score);
+    expect(scored.rveelWithdrawnPacketSubjectKeys).toEqual(opened.ceasedSubjectKeys);
+    expect(scored.rveelGovernedCertifications).toBeUndefined();
+    expect(
+      packetClaimsRecognisedMarks({
+        marks: scored.certifications || [],
+        labelHierarchy: scored.labels_hierarchy,
+        governedCertificationNames: scored.rveelGovernedCertifications || [],
+        withdrawnSubjectKeys: scored.rveelWithdrawnPacketSubjectKeys,
+      })
+    ).toEqual([]);
+    const reloaded = await calculateTrustScore(source, { authoritativeSnapshot: await service.snapshot(BARCODE) });
+    expect(reloaded.rveelWithdrawnPacketSubjectKeys).toEqual(opened.ceasedSubjectKeys);
+    const added = await send(
+      service,
+      contributor.contributorId,
+      [{ domain: 'packet_claims', exactWording: 'High in protein', claimValue: 'High in protein' }],
+      'add-protein'
+    );
+    const withClaim = await calculateTrustScore(source, { authoritativeSnapshot: added.snapshot });
+    expect((withClaim.rveelGovernedPacketClaims || []).map((row) => row.exactWording)).toEqual(['High in protein']);
+    expect(withClaim.rveelWithdrawnPacketSubjectKeys).toEqual(opened.ceasedSubjectKeys);
+    const restored = await send(
+      service,
+      contributor.contributorId,
+      [{ domain: 'certifications', exactWording: 'Rainforest Alliance', claimValue: 'Rainforest Alliance' }],
+      'restore-rainforest'
+    );
+    const shownAgain = await calculateTrustScore(source, { authoritativeSnapshot: restored.snapshot });
+    expect(shownAgain.rveelWithdrawnPacketSubjectKeys || []).not.toContain(opened.ceasedSubjectKeys[0]);
+    expect(shownAgain.rveelGovernedCertifications).toContain('Rainforest Alliance');
+  });
+
+  it('replaces a source packet mark in one submission and the reloaded snapshot keeps that replacement', async () => {
+    const service = authority();
+    const contributor = await service.issueCredential();
+    const mark = { id: 'en:rainforest-alliance', name: 'Rainforest Alliance', tag: 'en:rainforest-alliance' };
+    const edited = prepareVisibleContribution({
+      contexts: ['packetClaims'],
+      ingredientsText: '',
+      nutrition: { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' },
+      nutritionBaseline: { basis: 'per_100g', amounts: {}, sodiumUnit: 'mg' },
+      origins: [],
+      claims: ['High in protein'],
+      initialClaims: [],
+      certifications: [''],
+      initialCertifications: ['Rainforest Alliance'],
+    });
+    expect(edited.status).toBe('ready');
+    if (edited.status !== 'ready') return;
+    const sent = await send(
+      service,
+      contributor.contributorId,
+      [{ domain: 'packet_claims', exactWording: 'High in protein', claimValue: 'High in protein' }],
+      'edit-rainforest',
+      edited.ceasedSubjectKeys
+    );
+    const source = food({
+      certifications: [mark],
+      labels_tags: ['en:rainforest-alliance'],
+      labels_hierarchy: ['en:rainforest-alliance'],
+    });
+    const next = await calculateTrustScore(source, { authoritativeSnapshot: sent.snapshot });
+    expect((next.rveelGovernedPacketClaims || []).map((row) => row.exactWording)).toEqual(['High in protein']);
+    expect(
+      packetClaimsRecognisedMarks({
+        marks: next.certifications || [],
+        labelHierarchy: next.labels_hierarchy,
+        governedCertificationNames: next.rveelGovernedCertifications || [],
+        withdrawnSubjectKeys: next.rveelWithdrawnPacketSubjectKeys,
+      })
+    ).toEqual([]);
+    const reloaded = await service.snapshot(BARCODE);
+    expect(reloaded.withdrawnSubjectKeys).toEqual(edited.ceasedSubjectKeys);
+    expect(reloaded.prevailing.map((row) => row.evidence.exactWording)).toEqual(['High in protein']);
   });
 });

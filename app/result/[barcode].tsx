@@ -53,6 +53,7 @@ import {
   PACKET_CLAIMS_MORE_INFORMATION,
   packetClaimsCardShowsEmptyState,
   packetClaimsRecognisedMarks,
+  packetLineWithdrawn,
 } from '../../src/components/packetClaimsCardCopy';
 import { useAlertsStore } from '../../src/store/useAlertsStore';
 import BannerAlertsCard from '../../src/components/BannerAlertsCard';
@@ -1445,14 +1446,20 @@ function ResultScreenContent() {
       governedCertifications,
       recognisedCertificationNames
     );
+    const withdrawnSubjectKeys = product?.rveelWithdrawnPacketSubjectKeys;
     const recognisedMarks = packetClaimsRecognisedMarks({
       marks: product?.certifications || [],
       labelHierarchy: product?.labels_hierarchy,
       governedCertificationNames: visibleCertifications,
+      withdrawnSubjectKeys,
     });
     return packetInformationJourneySeed({
-      claimWordings: (product?.rveelGovernedPacketClaims || []).map((claim) => claim.exactWording),
-      certificationNames: governedCertifications,
+      claimWordings: (product?.rveelGovernedPacketClaims || [])
+        .map((claim) => claim.exactWording)
+        .filter((wording) => !packetLineWithdrawn('claim', wording, withdrawnSubjectKeys)),
+      certificationNames: governedCertifications.filter(
+        (name) => !packetLineWithdrawn('certification', name, withdrawnSubjectKeys)
+      ),
       recognisedCertificationNames: recognisedMarks.map((cert) => displayCertificationName(cert)),
     });
   }, [product]);
@@ -2315,19 +2322,22 @@ function ResultScreenContent() {
             const recognisedCertificationNames = (product.certifications || []).map((cert) =>
               displayCertificationName(cert)
             );
+            const withdrawnSubjectKeys = product.rveelWithdrawnPacketSubjectKeys;
             const visibleClaims = (product.rveelGovernedPacketClaims || []).filter(
               (claim) =>
+                !packetLineWithdrawn('claim', claim.exactWording, withdrawnSubjectKeys) &&
                 ordinaryLinesBesideRecognisedCertifications([claim.exactWording], recognisedCertificationNames)
                   .length > 0
             );
             const visibleCertifications = ordinaryLinesBesideRecognisedCertifications(
               product.rveelGovernedCertifications || [],
               recognisedCertificationNames
-            );
+            ).filter((name) => !packetLineWithdrawn('certification', name, withdrawnSubjectKeys));
             const recognisedMarks = packetClaimsRecognisedMarks({
               marks: product.certifications || [],
               labelHierarchy: product.labels_hierarchy,
               governedCertificationNames: visibleCertifications,
+              withdrawnSubjectKeys,
             });
             const hasCertifications = recognisedMarks.length > 0 || visibleCertifications.length > 0;
             const hasClaims = visibleClaims.length > 0;

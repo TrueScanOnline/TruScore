@@ -71,6 +71,12 @@ export type SharedEvidenceSnapshot = {
   epoch: string;
   recordClass: AuthorityRecordClass;
   generatedAt: number;
+  /**
+   * Latest admitted subject keys whose current governance is withdrawn or suppressed.
+   * These are not prevailing claims. The Packet Claims card uses them so a removed
+   * source label stays removed for the next scan.
+   */
+  withdrawnSubjectKeys?: string[];
   prevailing: Array<{
     subjectKey: string;
     versionId: string;

@@ -3,6 +3,8 @@
  * This does not select, admit, or score claims.
  */
 
+import { displayCertificationName } from '../certifications/resolveCertification';
+import { deriveEvidenceFacts } from '../evidenceAuthority/subjects';
 import {
   ETHICS_ORGANIC_TAG_ALLOWLIST,
   recognisedOrganicCertificationTag,
@@ -18,14 +20,38 @@ function organicFamilyTag(tag: string | undefined): boolean {
   return ETHICS_ORGANIC_TAG_ALLOWLIST.has((tag || '').trim().toLowerCase());
 }
 
+/** Same subject a Change-packet removal sends to the evidence authority. */
+export function displayedPacketSubjectKey(kind: 'claim' | 'certification', text: string): string | null {
+  const wording = text.trim();
+  if (!wording) return null;
+  const derived = deriveEvidenceFacts([
+    kind === 'claim'
+      ? { domain: 'packet_claims', exactWording: wording, claimValue: wording }
+      : { domain: 'certifications', exactWording: wording, claimValue: wording },
+  ]);
+  return derived.facts[0]?.subjectKey ?? null;
+}
+
+export function packetLineWithdrawn(
+  kind: 'claim' | 'certification',
+  text: string,
+  withdrawnSubjectKeys: readonly string[] | undefined
+): boolean {
+  if (!withdrawnSubjectKeys || withdrawnSubjectKeys.length === 0) return false;
+  const key = displayedPacketSubjectKey(kind, text);
+  return key != null && withdrawnSubjectKeys.includes(key);
+}
+
 /**
  * A badge copied on from a packet certification stays only while that certification
  * is still current, or while the product source already lists the same label.
+ * A withdrawn subject stays hidden even when the source label is still present.
  */
-export function packetClaimsRecognisedMarks<T extends { tag?: string }>(input: {
+export function packetClaimsRecognisedMarks<T extends { tag?: string; name?: string }>(input: {
   marks: T[];
   labelHierarchy: string[] | undefined;
   governedCertificationNames: string[];
+  withdrawnSubjectKeys?: readonly string[];
 }): T[] {
   const hierarchy = new Set((input.labelHierarchy || []).map((tag) => tag.trim().toLowerCase()));
   const currentTags = new Set(
@@ -34,6 +60,7 @@ export function packetClaimsRecognisedMarks<T extends { tag?: string }>(input: {
       .filter((tag): tag is string => !!tag)
   );
   return input.marks.filter((mark) => {
+    if (packetLineWithdrawn('certification', displayCertificationName(mark), input.withdrawnSubjectKeys)) return false;
     const tag = (mark.tag || '').trim().toLowerCase();
     if (!organicFamilyTag(tag)) return true;
     if (hierarchy.has(tag)) return true;

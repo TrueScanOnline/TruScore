@@ -104,6 +104,9 @@ export async function calculateTrustScore(
   const offDispatchStatus = provided
     ? (provided.offDispatch[0]?.status ?? null)
     : (assessment?.offDispatchStatus ?? null);
+  const withdrawnSubjectKeys = provided
+    ? (provided.withdrawnSubjectKeys ?? [])
+    : (assessment?.withdrawnSubjectKeys ?? []);
   const localEvidence = storedEvidence.filter(
     (row) => row.domain === 'ingredients_nutrition' || row.domain === 'certifications'
   );
@@ -154,6 +157,7 @@ export async function calculateTrustScore(
   if (truScoreResult.scoringUnavailable || truScoreResult.truscore == null) {
     return {
       ...effectiveProduct,
+      rveelWithdrawnPacketSubjectKeys: withdrawnSubjectKeys.length > 0 ? withdrawnSubjectKeys : undefined,
       trust_score: null,
       trust_score_breakdown: null,
       _truscore_metadata: {
@@ -226,6 +230,7 @@ export async function calculateTrustScore(
     rveelPacketAbsenceEstablished: packetAbsenceEstablished || undefined,
     rveelGovernedOrigins: governedOrigins.length > 0 ? governedOrigins : undefined,
     rveelGovernedPacketClaims: governedPacketClaims.length > 0 ? governedPacketClaims : undefined,
+    rveelWithdrawnPacketSubjectKeys: withdrawnSubjectKeys.length > 0 ? withdrawnSubjectKeys : undefined,
     trust_score: truScore,
     trust_score_breakdown: breakdown,
     // Add v1.3 metadata for UI transparency warnings

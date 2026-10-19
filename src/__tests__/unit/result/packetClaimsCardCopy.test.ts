@@ -1,8 +1,10 @@
 import {
   PACKET_CLAIMS_EMPTY_STATE,
   PACKET_CLAIMS_MORE_INFORMATION,
+  displayedPacketSubjectKey,
   packetClaimsCardShowsEmptyState,
   packetClaimsRecognisedMarks,
+  packetLineWithdrawn,
 } from '../../../components/packetClaimsCardCopy';
 
 describe('packet claims card consumer copy', () => {
@@ -77,5 +79,27 @@ describe('packet claims card consumer copy', () => {
         governedCertificationNames: ['Demeter biodynamic — Australia'],
       })
     ).toEqual([biodynamic]);
+  });
+
+  it('hides a source mark after that subject has been withdrawn', () => {
+    const rainforest = { id: 'en:rainforest-alliance', name: 'Rainforest Alliance', tag: 'en:rainforest-alliance' };
+    const key = displayedPacketSubjectKey('certification', 'Rainforest Alliance');
+    expect(key).toBeTruthy();
+    expect(packetLineWithdrawn('certification', 'Rainforest Alliance', key ? [key] : [])).toBe(true);
+    expect(
+      packetClaimsRecognisedMarks({
+        marks: [rainforest],
+        labelHierarchy: ['en:rainforest-alliance'],
+        governedCertificationNames: [],
+        withdrawnSubjectKeys: key ? [key] : [],
+      })
+    ).toEqual([]);
+    expect(
+      packetClaimsRecognisedMarks({
+        marks: [rainforest],
+        labelHierarchy: ['en:rainforest-alliance'],
+        governedCertificationNames: [],
+      }).map((mark) => mark.name)
+    ).toEqual(['Rainforest Alliance']);
   });
 });
