@@ -20,9 +20,7 @@ export class WhatsAppShare {
       // We need to include the URL in the message text for WhatsApp to show link preview
       // Format it cleanly so it doesn't look like a raw URL
       let whatsappMessage = content.message;
-      if (content.url) {
-        // Add URL at the end with clean formatting for link preview
-        // WhatsApp will automatically create a link preview card from the URL
+      if (content.url && !whatsappMessage.includes(content.url)) {
         whatsappMessage += `\n\n${content.url}`;
       }
       

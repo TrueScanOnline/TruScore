@@ -4,6 +4,21 @@ No EAS build, store submit, TestFlight upload, OTA publish, backend deploy, or r
 
 Corrective-package acceptance and BC remain **open**. Certifications and Packaging remain **excluded**. The product-hero redesign below does not close either.
 
+## Latest — founder UAT integration
+
+Tag: `wave5-founder-uat-20261021` on branch `wave5/score-experience-20261008`.
+
+Resolve the integration SHA with `git rev-parse wave5-founder-uat-20261021`. That commit contains the product hero, the share card the receiver gets, and the founder build numbers below. Corrective-package acceptance and BC remain **open**.
+
+| Platform | Profile | Build identity |
+| --- | --- | --- |
+| iOS | `uat-dynamic-signals-ios` | `RVEEL_IOS_BUILD_NUMBER` **62** (was 61) |
+| Android | `uat-dynamic-signals-android` | `RVEEL_ANDROID_VERSION_CODE` **36** (was 35) |
+
+iOS distribution is store, for TestFlight, app `6755704230`. Android distribution is the internal APK. Android does not go to TestFlight.
+
+No OTA update and no backend deploy are part of this tag.
+
 ## Latest — product hero
 
 | Role | Full SHA |

@@ -22,7 +22,7 @@ import { captureRef } from 'react-native-view-shot';
 import Toast from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
-import { resultEmeraldTone, resultPresentation } from '../theme/resultPresentation';
+import { resultEmeraldTone, resultPresentation, type ResultPillarKey } from '../theme/resultPresentation';
 import { publishedOverallVisualScore } from '../utils/truScorePresentation';
 import { getNutritionShareBurnData } from '../utils/nutritionShareCopy';
 import { buildShareUrl } from '../utils/shareUrl';
@@ -31,9 +31,13 @@ import { ShareContentBuilder } from '../features/sharing/services/ShareContentBu
 import { ShareOptions, SharePlatform } from '../features/sharing/types';
 import { ProductWithTrustScore } from '../types/product';
 import { TruScoreResult } from '../lib/truscoreEngine';
-import { shareImageScoreState } from '../utils/shareScoreSemantics';
+import { resolveShareBreakdownForOverall, resolveShareOverallScore, shareImageScoreState } from '../utils/shareScoreSemantics';
+import { consumerPillarLabel } from '../lib/scoreHighlights';
 import { logger } from '../utils/logger';
 import { ShareProductStoryCard } from './ShareProductStoryCard';
+import { sharePathSummary } from './sharePathSummary';
+import { highlightShareRows, nutritionShareRows, originShareRows } from './shareCardRows';
+import { shareStoryHeading } from './shareStoryHeading';
 import { armShareImageGate, releaseShareImageGate, waitForShareImageGate, type ShareImageGate } from './shareImageCaptureGate';
 
 const SHARE_IMAGE_TIMEOUT_MS = 4000;
@@ -51,7 +55,9 @@ interface ShareModalProps {
   onClose: () => void;
   product: ProductWithTrustScore;
   truScore?: TruScoreResult | null;
-  shareType?: 'truScore' | 'recall' | 'countryOfManufacture' | 'negativeTruScore' | 'productInfo' | 'insights' | 'palmOil' | 'nutrition' | 'ingredients' | 'processing' | 'allergens' | 'ecoscore';
+  shareType?: 'truScore' | 'recall' | 'countryOfManufacture' | 'negativeTruScore' | 'productInfo' | 'insights' | 'palmOil' | 'nutrition' | 'ingredients' | 'processing' | 'allergens' | 'ecoscore' | 'highlights';
+  /** Lines currently shown on the What we found card, with the pillar each line belongs to. */
+  highlightEntries?: Array<{ pillar: ResultPillarKey; text: string }>;
   country?: string;
   initialCustomMessage?: string;
   /** Result checking latch. False keeps the image and the text share unpublished. */
@@ -65,15 +71,15 @@ const PLATFORM_DEFS: {
   nameKey: string;
   descKey: string;
 }[] = [
-  { id: 'native', icon: 'share-outline', color: '#16a085', nameKey: 'shareModal.platformSheetName', descKey: 'shareModal.platformSheetDesc' },
   { id: 'whatsapp', icon: 'logo-whatsapp', color: '#25D366', nameKey: 'shareModal.platformWhatsappName', descKey: 'shareModal.platformWhatsappDesc' },
   { id: 'sms', icon: 'chatbubble-outline', color: '#34C759', nameKey: 'shareModal.platformSmsName', descKey: 'shareModal.platformSmsDesc' },
-  { id: 'moreApps', icon: 'apps-outline', color: '#5f6c7b', nameKey: 'shareModal.platformMoreAppsName', descKey: 'shareModal.platformMoreAppsDesc' },
   { id: 'facebook', icon: 'logo-facebook', color: '#1877F2', nameKey: 'shareModal.platformFacebookName', descKey: 'shareModal.platformFacebookDesc' },
   { id: 'twitter', icon: 'logo-twitter', color: '#1DA1F2', nameKey: 'shareModal.platformTwitterName', descKey: 'shareModal.platformTwitterDesc' },
   { id: 'instagram', icon: 'logo-instagram', color: '#E4405F', nameKey: 'shareModal.platformInstagramName', descKey: 'shareModal.platformInstagramDesc' },
   { id: 'snapchat', icon: 'logo-snapchat', color: '#FFFC00', nameKey: 'shareModal.platformSnapchatName', descKey: 'shareModal.platformSnapchatDesc' },
   { id: 'tiktok', icon: 'musical-notes-outline', color: '#000000', nameKey: 'shareModal.platformTiktokName', descKey: 'shareModal.platformTiktokDesc' },
+  { id: 'native', icon: 'share-outline', color: '#16a085', nameKey: 'shareModal.platformSheetName', descKey: 'shareModal.platformSheetDesc' },
+  { id: 'moreApps', icon: 'apps-outline', color: '#5f6c7b', nameKey: 'shareModal.platformMoreAppsName', descKey: 'shareModal.platformMoreAppsDesc' },
 ];
 
 export default function ShareModal({
@@ -82,6 +88,7 @@ export default function ShareModal({
   product,
   truScore,
   shareType = 'truScore',
+  highlightEntries,
   country,
   initialCustomMessage,
   publicationSettled,
@@ -138,16 +145,6 @@ export default function ShareModal({
     [shareType, product.nutriments, product.barcode]
   );
 
-  const defaultNutritionMessage = useMemo(() => {
-    if (shareType !== 'nutrition' || !nutritionBurnData?.burn) return '';
-    const { burn } = nutritionBurnData;
-    return t('shareModal.nutritionDefaultMessage', {
-      walk: burn.walking,
-      run: burn.running,
-      cycle: burn.cycling,
-    });
-  }, [shareType, nutritionBurnData, t]);
-
   const presetEntries = useMemo(
     () => [
       { key: 'p1', text: t('shareModal.presetRecommend') },
@@ -160,17 +157,8 @@ export default function ShareModal({
 
   useEffect(() => {
     if (!visible) return;
-    const external = (initialCustomMessage ?? '').trim();
-    if (external) {
-      setCustomMessage(initialCustomMessage ?? '');
-      return;
-    }
-    if (shareType === 'nutrition' && defaultNutritionMessage) {
-      setCustomMessage(defaultNutritionMessage);
-    } else {
-      setCustomMessage('');
-    }
-  }, [visible, initialCustomMessage, shareType, defaultNutritionMessage]);
+    setCustomMessage((initialCustomMessage ?? '').trim());
+  }, [visible, initialCustomMessage]);
 
   const applyPreset = (snippet: string) => {
     setCustomMessage((prev) => {
@@ -229,12 +217,29 @@ export default function ShareModal({
       setSharing(true);
       setSelectedPlatform(platform);
 
+      let storyImageUri: string | undefined;
+      const ref = storyCardRef.current;
+      if (ref) {
+        try {
+          await waitForShareImage();
+          storyImageUri = await captureRef(ref, { format: 'png', quality: 0.95 });
+        } catch (captureError) {
+          logger.warn('Share card image was not captured', captureError);
+        }
+      }
+
       const shareOptions: ShareOptions = {
         product,
         truScore: truScore ?? undefined,
         item: shareType,
         platform,
         customMessage: customMessage.trim() || undefined,
+        storyImageUri,
+        receiver: {
+          productName: productDisplayName,
+          section: storyHeading,
+          summary: pathSummary,
+        },
         country: country || undefined,
         publicationSettled,
       };
@@ -288,13 +293,6 @@ export default function ShareModal({
     platform: 'native',
   });
 
-  const previewMessage =
-    shareType === 'nutrition'
-      ? baseContent.message
-      : customMessage.trim()
-        ? `${customMessage.trim()}\n\n${baseContent.message}`
-        : baseContent.message;
-
   const inputPlaceholder =
     shareType === 'nutrition' && nutritionBurnData && !nutritionBurnData.burn
       ? t('shareModal.nutritionPlaceholderNoBurn')
@@ -312,6 +310,74 @@ export default function ShareModal({
           : publishedScore >= 40
             ? colors.trust.fair
             : colors.trust.poor;
+  const storyHeading = shareStoryHeading(shareType);
+  const storyNote = customMessage.trim();
+  const storyPillars = useMemo(() => {
+    const overall = resolveShareOverallScore(truScore, { publicationSettled });
+    const breakdown = resolveShareBreakdownForOverall(overall, truScore, { publicationSettled });
+    if (!breakdown) return null;
+    const paint = resultPresentation.emerald.pillars;
+    return (['Body', 'Planet', 'Ethics', 'Open'] as const).map((key) => {
+      const role = paint[key];
+      return {
+        label: consumerPillarLabel(key),
+        value: `${breakdown[key]}/25`,
+        glyph: role.glyph,
+        iconColor: darkMode ? resultPresentation.emerald.discIconOnDark : role.icon,
+        tileColor: darkMode ? role.dark[1] : role.light[1],
+      };
+    });
+  }, [truScore, publicationSettled, darkMode]);
+  const pathSummary = useMemo(() => {
+    const scoreState = shareImageScoreState(truScore, { publicationSettled });
+    return sharePathSummary({
+      shareType,
+      product,
+      country,
+      scoreCaption: scoreState.caption,
+      scoreValue: scoreState.neutral ? null : scoreState.valueText,
+      pillars: storyPillars,
+      insightLines: (truScore?.insights || []).map((item) => item.reason),
+      highlightLines: (highlightEntries || []).map((entry) => entry.text),
+    });
+  }, [shareType, product, country, truScore, publicationSettled, storyPillars, highlightEntries]);
+  const detailRows = useMemo(() => {
+    if (shareType === 'highlights') return highlightShareRows(highlightEntries || [], !!darkMode);
+    if (shareType === 'nutrition') return nutritionShareRows(product, !!darkMode);
+    if (shareType === 'countryOfManufacture') return originShareRows(product, country);
+    return null;
+  }, [shareType, product, country, darkMode, highlightEntries]);
+  const storyDetails = useMemo(() => {
+    if (shareType === 'truScore' || shareType === 'negativeTruScore' || shareType === 'productInfo') return [];
+    return pathSummary
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .slice(0, 12)
+      .map((line) => (line.length > 180 ? `${line.slice(0, 177)}…` : line));
+  }, [shareType, pathSummary]);
+  const storyCardProps = {
+    productName: productDisplayName,
+    imageUrl: imageKey || null,
+    barcode: product.barcode,
+    scoreState: shareImageScoreState(truScore, { publicationSettled }),
+    shareType,
+    brandColor: resultPresentation.emerald.action.light,
+    scoreColor: ratedScoreColor,
+    surfaceColor: emerald.card,
+    textColor: emerald.ink,
+    textSecondary: emerald.muted,
+    panelColor: emerald.chevronCircle,
+    contextTitle: storyHeading,
+    note: storyNote,
+    details: detailRows ? [] : storyDetails,
+    detailRows,
+    linkLabel: `truescan.app/barcode/${product.barcode}`,
+    pillars: storyPillars,
+    settleToken,
+    forcePlaceholder: imageFallback,
+    onImageSettled: markImageSettled,
+  };
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
@@ -342,6 +408,11 @@ export default function ShareModal({
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) }}
         >
+          <Text style={[styles.cardPreviewTitle, { color: emerald.ink }]}>{t('shareModal.cardPreviewTitle')}</Text>
+          <View style={styles.cardPreviewFrame}>
+            <ShareProductStoryCard {...storyCardProps} />
+          </View>
+
           <View style={[styles.inputContainer, { backgroundColor: emerald.card, borderColor: emerald.line, borderWidth: StyleSheet.hairlineWidth }]}>
             <Text style={[styles.inputLabel, { color: emerald.ink }]}>{t('shareModal.addMessageOptional')}</Text>
             <View style={styles.presetRow}>
@@ -382,11 +453,8 @@ export default function ShareModal({
 
           <View style={[styles.previewContainer, { backgroundColor: emerald.card, borderColor: emerald.line, borderWidth: StyleSheet.hairlineWidth }]}>
             <Text style={[styles.previewTitle, { color: emerald.ink }]}>{t('shareModal.summary')}</Text>
-            <Text
-              style={[styles.previewText, { color: emerald.muted }]}
-              {...(shareType === 'nutrition' ? {} : { numberOfLines: 8 })}
-            >
-              {previewMessage}
+            <Text style={[styles.previewText, { color: emerald.ink }]}>
+              {pathSummary}
             </Text>
             <Text style={[styles.linkPreviewLabel, { color: emerald.ink }]}>{t('shareModal.linkPreviewLabel')}</Text>
             <Text selectable style={[styles.linkPreviewUrl, { color: emerald.action }]}>
@@ -482,6 +550,13 @@ export default function ShareModal({
             surfaceColor={emerald.card}
             textColor={emerald.ink}
             textSecondary={emerald.muted}
+            panelColor={emerald.chevronCircle}
+            contextTitle={storyHeading}
+            note={storyNote}
+            details={detailRows ? [] : storyDetails}
+            detailRows={detailRows}
+            linkLabel={`truescan.app/barcode/${product.barcode}`}
+            pillars={storyPillars}
             settleToken={settleToken}
             forcePlaceholder={imageFallback}
             onImageSettled={markImageSettled}
@@ -524,6 +599,15 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
+  },
+  cardPreviewTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  cardPreviewFrame: {
+    alignItems: 'center',
+    marginBottom: 16,
   },
   presetRow: {
     flexDirection: 'row',

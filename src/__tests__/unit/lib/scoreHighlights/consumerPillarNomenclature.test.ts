@@ -169,6 +169,7 @@ const SHARE_ITEMS = [
   'processing',
   'allergens',
   'ecoscore',
+  'highlights',
 ] as const;
 
 describe('canonical consumer pillar labels', () => {

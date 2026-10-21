@@ -507,6 +507,7 @@ function ResultScreenContent() {
     | 'processing'
     | 'allergens'
     | 'ecoscore'
+    | 'highlights'
   >('truScore');
   const [shareInitialMessage, setShareInitialMessage] = useState('');
   /** Progressive Signals — attached after primary product/TruScore is ready. */
@@ -1402,8 +1403,9 @@ function ResultScreenContent() {
       | 'nutrition'
       | 'ingredients'
       | 'processing'
-      | 'allergens'
-      | 'ecoscore'
+    | 'allergens'
+    | 'ecoscore'
+    | 'highlights'
   ) => {
     if (!product) return;
 
@@ -1993,6 +1995,7 @@ function ResultScreenContent() {
                 stories={scoreHighlights.promoted}
                 onSelectStory={openScoreHighlightStory}
                 appearance="emerald"
+                onShare={() => handleShare('highlights')}
               />
             </View>
           )}
@@ -2880,6 +2883,10 @@ function ResultScreenContent() {
           truScore={truScore || undefined}
           publicationSettled={publicationSettled}
           shareType={shareType}
+          highlightEntries={(scoreHighlights?.promoted ?? []).map((story) => ({
+            pillar: story.pillar,
+            text: story.l1,
+          }))}
           country={shareType === 'countryOfManufacture' ? shareManufacturingCountryLabel : undefined}
           initialCustomMessage={shareInitialMessage}
         />

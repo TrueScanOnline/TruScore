@@ -30,7 +30,7 @@ export class TikTokShare {
       }
 
       // Fallback to native share
-      const combinedMessage = content.url 
+      const combinedMessage = content.url && !content.message.includes(content.url)
         ? `${content.message}\n\n${content.url}`
         : content.message;
       const result = await Share.share({

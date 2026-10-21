@@ -2,6 +2,7 @@
 // Handles sharing across multiple platforms
 
 import { Share } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { ShareContent, ShareOptions, ShareResult } from '../types';
 import { ShareContentBuilder } from './ShareContentBuilder';
 import { logger } from '../../../utils/logger';
@@ -15,6 +16,8 @@ import { SnapchatShare } from '../platforms/snapchat';
 import { TikTokShare } from '../platforms/tiktok';
 import { WhatsAppShare } from '../platforms/whatsapp';
 import { SMSShare } from '../platforms/sms';
+import { shareStoryCardImage } from '../platforms/shareCardImage';
+import { buildReceiverCaption } from '../receiverCaption';
 
 export class ShareService {
   /**
@@ -27,7 +30,38 @@ export class ShareService {
       const content = ShareContentBuilder.buildContent(options);
       const optimizedContent = ShareContentBuilder.optimizeForPlatform(content, platform);
 
-      if (options.customMessage && options.customMessage.trim()) {
+      if (options.receiver) {
+        const captionInput = {
+          note: options.customMessage,
+          productName: options.receiver.productName,
+          section: options.receiver.section,
+          summary: options.receiver.summary,
+          url: optimizedContent.url,
+        };
+        const imageCaption = buildReceiverCaption({ ...captionInput, includeSummary: false });
+        // Expo Go can attach the captured card as a real picture. Text message uses that
+        // same picture. A words-only message is only the fallback when capture failed.
+        if (options.storyImageUri) {
+          if (optimizedContent.url) {
+            try {
+              await Clipboard.setStringAsync(optimizedContent.url);
+            } catch (copyError) {
+              logger.warn('Could not copy the share link', copyError);
+            }
+          }
+          const sentCard = await shareStoryCardImage({
+            imageUri: options.storyImageUri,
+            caption: imageCaption,
+            platform,
+          });
+          if (sentCard) {
+            const sent = { success: true, platform } satisfies ShareResult;
+            this.recordShare(options, sent, platform);
+            return sent;
+          }
+        }
+        optimizedContent.message = buildReceiverCaption({ ...captionInput, includeSummary: true });
+      } else if (options.customMessage && options.customMessage.trim()) {
         optimizedContent.message = `${options.customMessage.trim()}\n\n${optimizedContent.message}`;
       }
 
@@ -74,27 +108,7 @@ export class ShareService {
           break;
       }
 
-      if (options.product) {
-        const trackedPlatform = result.platform || platform;
-        shareAnalytics.trackShare({
-          timestamp: Date.now(),
-          platform: trackedPlatform,
-          itemType: options.item || 'productInfo',
-          productBarcode: options.product.barcode,
-          // Published score only. NR, Checking, and a missing publication record nothing.
-          truScore: publishedShareAnalyticsScore(options.truScore, {
-            publicationSettled: options.publicationSettled,
-          }),
-          success: result.success,
-        });
-        void reportShareEventToBackend({
-          barcode: options.product.barcode,
-          platform: trackedPlatform,
-          itemType: options.item || 'productInfo',
-          success: result.success,
-        });
-      }
-
+      this.recordShare(options, result, platform);
       return result;
     } catch (error) {
       logger.error('Error sharing:', error);
@@ -106,14 +120,39 @@ export class ShareService {
     }
   }
 
+  private static recordShare(options: ShareOptions, result: ShareResult, platform: ShareResult['platform']) {
+    if (!options.product) return;
+    const trackedPlatform = result.platform || platform;
+    shareAnalytics.trackShare({
+      timestamp: Date.now(),
+      platform: trackedPlatform,
+      itemType: options.item || 'productInfo',
+      productBarcode: options.product.barcode,
+      // Published score only. NR, Checking, and a missing publication record nothing.
+      truScore: publishedShareAnalyticsScore(options.truScore, {
+        publicationSettled: options.publicationSettled,
+      }),
+      success: result.success,
+    });
+    void reportShareEventToBackend({
+      barcode: options.product.barcode,
+      platform: trackedPlatform,
+      itemType: options.item || 'productInfo',
+      success: result.success,
+    });
+  }
+
   /**
    * Share using native share sheet (fallback)
    */
   private static async shareNative(content: ShareContent, _options?: ShareOptions): Promise<ShareResult> {
     try {
-      const appCTA = content.url
-        ? `\n\n🔍 See full details → ${content.url}\n📱 Free app - opens instantly if installed`
-        : `\n\n📱 Get Rveel free - scan any product`;
+      const alreadyLinked = Boolean(content.url && content.message.includes(content.url));
+      const appCTA = alreadyLinked
+        ? ''
+        : content.url
+          ? `\n\n🔍 See full details → ${content.url}\n📱 Free app - opens instantly if installed`
+          : `\n\n📱 Get Rveel free - scan any product`;
 
       const combinedMessage = `${content.message}${appCTA}`;
 

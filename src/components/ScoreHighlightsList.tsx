@@ -32,6 +32,8 @@ interface ScoreHighlightsListProps {
   showHeading?: boolean;
   /** Result card treatment. Look-through overlays keep the default rows. */
   appearance?: 'emerald' | 'default';
+  /** Opens the same share sheet as the other Result cards. */
+  onShare?: () => void;
 }
 
 export default function ScoreHighlightsList({
@@ -39,6 +41,7 @@ export default function ScoreHighlightsList({
   onSelectStory,
   showHeading = true,
   appearance = 'default',
+  onShare,
 }: ScoreHighlightsListProps) {
   const { colors, darkMode } = useTheme();
   const emerald = appearance === 'emerald';
@@ -51,9 +54,22 @@ export default function ScoreHighlightsList({
   return (
     <View style={styles.container}>
       {showHeading && (
-        <Text style={[emerald ? styles.emeraldHeading : styles.heading, { color: emerald ? tone.ink : colors.text }]}>
-          {SCORE_HIGHLIGHTS_HEADING}
-        </Text>
+        <View style={styles.headingRow}>
+          <Text style={[emerald ? styles.emeraldHeading : styles.heading, styles.headingText, { color: emerald ? tone.ink : colors.text }]}>
+            {SCORE_HIGHLIGHTS_HEADING}
+          </Text>
+          {onShare ? (
+            <TouchableOpacity
+              onPress={onShare}
+              style={styles.shareButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel={`Share ${SCORE_HIGHLIGHTS_HEADING}`}
+            >
+              <Ionicons name="share-outline" size={20} color={emerald ? tone.action : colors.primary} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
       )}
 
       {stories.map((story, index) => {
@@ -91,6 +107,19 @@ export default function ScoreHighlightsList({
 const styles = StyleSheet.create({
   container: {
     gap: 0,
+  },
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  headingText: {
+    flex: 1,
+    flexShrink: 1,
+  },
+  shareButton: {
+    marginLeft: 8,
   },
   heading: {
     fontSize: 16,

@@ -78,6 +78,9 @@ export class ShareContentBuilder {
       
       case 'ecoscore':
         return this.buildEcoScoreContent(product, universalLink, productName, platform);
+
+      case 'highlights':
+        return this.buildHighlightsContent(product, universalLink, productName);
       
       case 'productInfo':
       default:
@@ -512,6 +515,25 @@ export class ShareContentBuilder {
     };
   }
 
+  private static buildHighlightsContent(
+    product: ShareOptions['product'],
+    universalLink: string,
+    productName: string
+  ): ShareContent {
+    const title = `What we found: ${productName}`;
+    const message =
+      `${productName}\n\nWhat we found\n\n` +
+      `Open in ${appName}\n\n` +
+      `#RveelScore #WhatWeFound #ProductScan`;
+    return {
+      title,
+      message,
+      url: universalLink,
+      imageUrl: product.image_url,
+      hashtags: ['RveelScore', 'WhatWeFound', 'ProductScan'],
+    };
+  }
+
   /**
    * Optimize content for specific platform with viral hooks
    */
@@ -567,11 +589,7 @@ export class ShareContentBuilder {
         };
       
       case 'whatsapp':
-        // WhatsApp: Personal, conversational, trust-building
-        return {
-          ...content,
-          message: content.message + '\n\n💬 Thought you\'d find this interesting!',
-        };
+        return content;
       
       default:
         return content;

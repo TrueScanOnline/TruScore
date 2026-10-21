@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { armShareImageGate, releaseShareImageGate, waitForShareImageGate } from '../../../components/shareImageCaptureGate';
+import { shareStoryHeading } from '../../../components/shareStoryHeading';
 
 describe('share image capture gate', () => {
   test('a missing URL is ready immediately', async () => {
@@ -37,5 +38,14 @@ describe('share story card props', () => {
     expect(source).toContain('scoreState={shareImageScoreState(truScore, { publicationSettled })}');
     expect(source).not.toContain('SHARE_PRODUCT_EXPORT');
     expect(source).not.toContain('SHARE_CAPTURE_AUDIT');
+  });
+
+  test('the shared card names the section the sender chose', () => {
+    expect(shareStoryHeading('truScore')).toBe('Rveel Score');
+    expect(shareStoryHeading('nutrition')).toBe('Nutrition');
+    expect(shareStoryHeading('ingredients')).toBe('Ingredients');
+    expect(shareStoryHeading('countryOfManufacture')).toBe('Product origins');
+    expect(shareStoryHeading('allergens')).toBe('Allergens & additives');
+    expect(shareStoryHeading('highlights')).toBe('What we found');
   });
 });

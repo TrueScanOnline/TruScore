@@ -9,7 +9,10 @@ export class FacebookShare {
   static async share(content: ShareContent): Promise<ShareResult> {
     try {
       const u = encodeURIComponent(content.url || '');
-      const quote = encodeURIComponent((content.message || '').substring(0, 600));
+      const quoteSource = content.url
+        ? (content.message || '').split(content.url).join('').replace(/\n{3,}/g, '\n\n').trim()
+        : content.message || '';
+      const quote = encodeURIComponent(quoteSource.substring(0, 600));
       const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${quote}`;
 
       try {

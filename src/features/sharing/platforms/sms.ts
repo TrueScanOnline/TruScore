@@ -19,8 +19,8 @@ export class SMSShare {
       // Include URL in message for SMS (SMS doesn't support link previews)
       // Format it cleanly
       let smsMessage = content.message;
-      if (content.url) {
-        smsMessage += `\n\n📱 Open in Rveel:\n${content.url}`;
+      if (content.url && !smsMessage.includes(content.url)) {
+        smsMessage += `\n\nOpen in Rveel\n${content.url}`;
       }
       
       // Encode the message for URL
