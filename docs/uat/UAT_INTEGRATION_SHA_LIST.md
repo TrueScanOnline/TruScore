@@ -19,3 +19,4 @@ Living list of intended changes for the next UAT build. Each row is one accepted
 | Packet Claims: label size follows the longest claim so the full wording fits on one line | `5e5e9305a27be4f2a3f110773ba0494431a65052` | yes |
 | Packet Claims: a claim shown on the card is listed in Change packet information for change or remove | `71feca22beb829131fa444174e6778fca847e8af` | yes |
 | Packet Claims: removing a source claim is stored so the card and the next scan stay the same | `efab64bedb7b17b14ba4c9a338617208a9705b01` | yes |
+| Product hero: photo beside the name on the mint card, with the curled corner | `e3012ee36ab76c9ae461f30a1be328b749bdd68f` | yes |

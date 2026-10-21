@@ -2,7 +2,34 @@
 
 No EAS build, store submit, TestFlight upload, OTA publish, backend deploy, or release merge is authorised by this note.
 
-Corrective-package acceptance and BC remain **open**. Certifications and Packaging remain **excluded**.
+Corrective-package acceptance and BC remain **open**. Certifications and Packaging remain **excluded**. The product-hero redesign below does not close either.
+
+## Latest — product hero
+
+| Role | Full SHA |
+| --- | --- |
+| Parent | `1a97625847a19e5f0fa3e2676ebfb5eadaa350b5` |
+| **Tested source (product hero)** | `e3012ee36ab76c9ae461f30a1be328b749bdd68f` |
+
+Repository: https://github.com/TrueScanOnline/TruScore  
+Branch: `wave5/score-experience-20261008`
+
+Focused comparison:  
+https://github.com/TrueScanOnline/TruScore/compare/1a97625847a19e5f0fa3e2676ebfb5eadaa350b5...e3012ee36ab76c9ae461f30a1be328b749bdd68f
+
+Classification: **GREEN** presentation. Favourite, share, photo enlargement, capture, retry, and the contributed-photo badge keep their existing handlers. Mint does not encode a score or a confidence state. No governed outcome changes.
+
+The documentation tip that records this section follows `e3012ee36ab76c9ae461f30a1be328b749bdd68f` directly.
+
+Screenshots:
+
+- Before: `design/wave5/APP-emerald-hero-before.png`
+- After, Coca-Cola Classic on the Pixel 5: `design/wave5/APP-emerald-hero-after.png`
+- After, hero crop: `design/wave5/APP-emerald-hero-after-crop.png`
+
+Checked on the Pixel 5 emulator, light mode, default text: horizontal photo and name, circular favourite and share, lightbox, favourite toggle, and the share sheet. A three-line name grows the card. Dark mode stays legible. System text at 1.3 stacks the photo above the name. iOS was not checked. Missing photo, image error, a user-contributed badge, a landscape source, and a product with no brand were not on this device pass.
+
+`npm run typecheck` passed on this source. Hero arrangement, Result surface contract, doctrine §10.2, and §10.4 consumption guards passed. No build, submission, OTA update, or deployment was started.
 
 ---
 
