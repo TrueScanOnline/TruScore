@@ -116,7 +116,7 @@ import { generateInsights } from '../../src/lib/alertsInsights';
 import { generateBarcodeShareUrl, generateBarcodeDeepLink } from '../../src/utils/linking';
 import { isWebSearchFallback } from '../../src/services/webSearchFallback';
 import { useTheme } from '../../src/theme';
-import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../../src/theme/resultPresentation';
+import { resultEmeraldCard, resultEmeraldTone, resultHeroFace, resultPresentation } from '../../src/theme/resultPresentation';
 import EmeraldWallpaper from '../../src/components/result/EmeraldWallpaper';
 import EmeraldScoreFrame from '../../src/components/product/emerald/EmeraldScoreFrame';
 import * as Linking from 'expo-linking';
@@ -1805,15 +1805,21 @@ function ResultScreenContent() {
     <View style={styles.identityActions}>
       <TouchableOpacity
         onPress={handleToggleFavorite}
-        style={styles.identityAction}
+        style={[
+          styles.identityAction,
+          {
+            backgroundColor: resultHeroFace(!!darkMode).controlFill,
+            borderColor: resultHeroFace(!!darkMode).controlLine,
+          },
+        ]}
         hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         accessibilityRole="button"
         accessibilityLabel={isFavorite(barcode) ? 'Remove favourite' : 'Add favourite'}
       >
         <Ionicons
           name={isFavorite(barcode) ? 'heart' : 'heart-outline'}
-          size={22}
-          color={isFavorite(barcode) ? '#ff6b6b' : emerald.action}
+          size={resultPresentation.emerald.hero.control.icon}
+          color={isFavorite(barcode) ? '#ff6b6b' : resultHeroFace(!!darkMode).action}
         />
       </TouchableOpacity>
       <TouchableOpacity
@@ -1824,12 +1830,18 @@ function ResultScreenContent() {
             handleShare('productInfo');
           }
         }}
-        style={styles.identityAction}
+        style={[
+          styles.identityAction,
+          {
+            backgroundColor: resultHeroFace(!!darkMode).controlFill,
+            borderColor: resultHeroFace(!!darkMode).controlLine,
+          },
+        ]}
         hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         accessibilityRole="button"
         accessibilityLabel="Share"
       >
-        <Ionicons name="share-outline" size={22} color={emerald.action} />
+        <Ionicons name="share-outline" size={resultPresentation.emerald.hero.control.icon} color={resultHeroFace(!!darkMode).action} />
       </TouchableOpacity>
     </View>
   );
@@ -3162,16 +3174,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   identityActions: {
-    width: 72,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: resultPresentation.emerald.hero.control.gap,
     flexGrow: 0,
     flexShrink: 0,
   },
   identityAction: {
-    width: 32,
-    height: 32,
+    width: resultPresentation.emerald.hero.control.size,
+    height: resultPresentation.emerald.hero.control.size,
+    borderRadius: resultPresentation.emerald.hero.control.size / 2,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },

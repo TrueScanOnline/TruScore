@@ -102,6 +102,48 @@ export const resultPresentation = {
     radius: { card: 20, tile: 22, photo: 12, teaser: 18 },
     space: { page: 16, card: 12, pad: 12, scrollTop: 8, photoPad: 10 },
     identity: { minHeight: 164, photo: 144, name: 32, nameLine: 42, brand: 13, brandLine: 18 },
+    /**
+     * Product hero only. Mint is a surface, not a score or confidence colour.
+     * Other cards keep their own tokens.
+     */
+    hero: {
+      radius: 22,
+      pad: 14,
+      gap: 15,
+      below: 12,
+      fold: 23,
+      textMin: 150,
+      stackFontScale: 1.3,
+      photo: { width: 144, height: 170, radius: 14, inset: 4, minWidth: 112 },
+      type: { brand: 11, brandLine: 14, brandTracking: 1.4, name: 28, nameLine: 32, nameGap: 10, actionGap: 14 },
+      control: { size: 44, gap: 7, icon: 23 },
+      light: {
+        gradient: ['#F7FCFA', '#DDF3EC'] as const,
+        border: '#E1ECE8',
+        photo: '#F4F8F6',
+        name: '#101C36',
+        action: '#087B68',
+        accent: '#BFE6D9',
+        foldBack: '#B7DDD0',
+        foldFace: ['#F7FCFA', '#D7EFE6'] as const,
+        controlFill: 'rgba(223,243,236,0.78)',
+        controlLine: '#BFE7DD',
+        shadow: 'rgba(12,50,39,0.16)',
+      },
+      dark: {
+        gradient: ['#243F39', '#152824'] as const,
+        border: '#36574B',
+        photo: '#1A3330',
+        name: '#F0F7F4',
+        action: '#8ED8C4',
+        accent: '#1E4A40',
+        foldBack: '#0E2E28',
+        foldFace: ['#2C4A43', '#1A3330'] as const,
+        controlFill: 'rgba(30,74,64,0.72)',
+        controlLine: '#3D6B5E',
+        shadow: 'rgba(0,0,0,0.35)',
+      },
+    },
     score: { title: 20, titleLine: 26, reserve: 12 },
     /** Roles at font scale 1.0. System text scaling still applies. */
     type: {
@@ -233,6 +275,11 @@ export function resultEmeraldTone(darkMode: boolean) {
     teaserBorder: emerald.teaserBorder[mode],
     chevronCircle: emerald.chevronCircle[mode],
   };
+}
+
+/** Hero surface colours. They do not encode a score, a band, or a confidence state. */
+export function resultHeroFace(darkMode: boolean) {
+  return darkMode ? resultPresentation.emerald.hero.dark : resultPresentation.emerald.hero.light;
 }
 
 export function resultEmeraldPillar(pillar: ResultPillarKey, darkMode: boolean) {
