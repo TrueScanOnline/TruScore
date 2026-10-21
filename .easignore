@@ -83,6 +83,10 @@ build/
 !src/s25/assets/ingestion_manifest.json
 # Claims machine register (required for TruScore Claims matching)
 !src/lib/truscoreEngine/claims/machineRegister/packetClaimMachineRegister.v1.json
+# Packet certification discovery and closed-prelaunch artwork (required for the app bundle)
+!src/certifications/governed/packet_certification_manual_discovery_v1_0_1.json
+!src/certifications/governed/packet_certification_selection_v1_0_3.json
+!src/certifications/artwork/closedPrelaunchManifest.json
 # Explicitly exclude large data JSON files
 barcode_*.json
 data/*.json

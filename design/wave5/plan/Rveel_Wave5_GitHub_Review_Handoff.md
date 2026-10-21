@@ -6,9 +6,9 @@ Corrective-package acceptance and BC remain **open**. Certifications and Packagi
 
 ## Latest — founder UAT integration
 
-Tag: `wave5-founder-uat-20261021` on branch `wave5/score-experience-20261008`.
+Feature integration tag: `wave5-founder-uat-20261021`. Device-number tag: `wave5-founder-device-20261021`. Buildable tip tag: `wave5-founder-builds-20261021`, on branch `wave5/score-experience-20261008`.
 
-Resolve the integration SHA with `git rev-parse wave5-founder-uat-20261021`. That commit contains the product hero, the share card the receiver gets, and the founder build numbers below. Corrective-package acceptance and BC remain **open**.
+Resolve the buildable SHA with `git rev-parse wave5-founder-builds-20261021`. That commit contains the product hero, the share card the receiver gets, Android `versionCode` 36, and the certification JSON files the EAS archive must keep. The first iOS and Android uploads failed in the JavaScript bundle because `.easignore` dropped those JSON files. Corrective-package acceptance and BC remain **open**.
 
 | Platform | Profile | Build identity |
 | --- | --- | --- |
