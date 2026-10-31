@@ -261,27 +261,33 @@ export default function ProductDataLimitationsCard({
           colors={darkMode ? [tone.card, tone.card] : [...resultPresentation.emerald.teaser]}
           style={[styles.card, { borderColor: tone.teaserBorder }]}
         >
-          <View style={[styles.iconPlate, { backgroundColor: resultPresentation.emerald.chevronCircle.light }]}>
-            <Svg width={28} height={28} viewBox="0 0 28 28" accessible={false}>
-              <Rect x={8} y={1} width={17} height={20} rx={3.5} fill="#FFFFFF" />
-              <Rect x={8} y={1} width={17} height={20} rx={3.5} fill={tone.action} opacity={0.55} />
-              <Rect x={2} y={6} width={18} height={21} rx={3.5} fill={tone.action} />
-              <Path d="M14 6H20V12L14 6Z" fill="#FFFFFF" opacity={0.85} />
-              <Rect x={5} y={12} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
-              <Rect x={5} y={16} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
-              <Rect x={5} y={20} width={8} height={1.8} rx={0.9} fill="#FFFFFF" />
-            </Svg>
-          </View>
-          <View style={styles.cardTextWrap}>
-            <Text style={[styles.cardTitle, { color: darkMode ? tone.ink : resultPresentation.emerald.ink.light }]}>
-              {t('result.legalDataLimitationsTeaserTitle')}
-            </Text>
-            <Text style={[styles.cardSubtitle, { color: darkMode ? tone.muted : resultPresentation.emerald.muted.light }]}>
-              {t('result.legalDataLimitationsTeaserBody')}
-            </Text>
-          </View>
-          <View style={[styles.chevronCircle, { backgroundColor: tone.chevronCircle }]}>
-            <Ionicons name="chevron-forward" size={18} color={tone.action} />
+          <View style={styles.titleRow}>
+            <View style={[styles.iconPlate, { backgroundColor: resultPresentation.emerald.chevronCircle.light }]}>
+              <Svg width={24} height={24} viewBox="0 0 28 28" accessible={false}>
+                <Rect x={8} y={1} width={17} height={20} rx={3.5} fill="#FFFFFF" />
+                <Rect x={8} y={1} width={17} height={20} rx={3.5} fill={tone.action} opacity={0.55} />
+                <Rect x={2} y={6} width={18} height={21} rx={3.5} fill={tone.action} />
+                <Path d="M14 6H20V12L14 6Z" fill="#FFFFFF" opacity={0.85} />
+                <Rect x={5} y={12} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
+                <Rect x={5} y={16} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
+                <Rect x={5} y={20} width={8} height={1.8} rx={0.9} fill="#FFFFFF" />
+              </Svg>
+            </View>
+            <View style={styles.cardTextWrap}>
+              <View style={styles.headingLine}>
+                <Text
+                  style={[styles.cardTitle, { color: darkMode ? tone.ink : resultPresentation.emerald.ink.light }]}
+                >
+                  {t('result.legalDataLimitationsTeaserTitle')}
+                </Text>
+                <View style={[styles.chevronCircle, { backgroundColor: tone.chevronCircle }]}>
+                  <Ionicons name="chevron-forward" size={18} color={tone.action} />
+                </View>
+              </View>
+              <Text style={[styles.cardSubtitle, { color: darkMode ? tone.muted : resultPresentation.emerald.muted.light }]}>
+                {t('result.legalDataLimitationsTeaserBody')}
+              </Text>
+            </View>
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -369,30 +375,41 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
     borderWidth: 1,
     borderRadius: resultPresentation.emerald.radius.teaser,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    gap: 10,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
   },
   iconPlate: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 26,
+    height: 26,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  cardTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  headingLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 26,
+    gap: 8,
   },
   chevronCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardTextWrap: { flex: 1 },
-  cardTitle: { fontSize: 20, lineHeight: 26, fontWeight: 'bold', marginBottom: 2 },
+  cardTitle: { flex: 1, fontSize: 20, lineHeight: 26, fontWeight: 'bold', includeFontPadding: false },
   cardSubtitle: { fontSize: 13, lineHeight: 18 },
   pillarBlock: { marginBottom: 16 },
   pillarTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },

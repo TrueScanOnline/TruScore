@@ -18,6 +18,7 @@ import Svg, {
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { resultPresentation } from '../../../theme/resultPresentation';
+import { DOG_EAR_FOLD, dogEarCut } from './dogEar';
 
 export type EmeraldPillarKey = 'Body' | 'Planet' | 'Ethics' | 'Open';
 export type EmeraldPillar = {
@@ -47,17 +48,10 @@ function num(value: number) {
   return (Math.round(value * 10) / 10).toString();
 }
 
-function flapPath(width: number, height: number) {
-  const ax = 0.549 * width;
-  return [
-    `M${num(ax)} 0`,
-    `C${num(0.8 * width)} ${num(0.13 * height)} ${num(0.92 * width)} ${num(0.362 * height)} ${num(width)} ${num(0.58 * height)}`,
-    `C${num(0.88 * width)} ${num(0.42 * height)} ${num(0.72 * width)} ${num(0.319 * height)} ${num(0.594 * width)} ${num(0.188 * height)}`,
-    `C${num(0.537 * width)} ${num(0.13 * height)} ${num(0.503 * width)} ${num(0.058 * height)} ${num(ax)} 0`,
-    'Z',
-  ].join(' ');
-}
-
+/**
+ * Top-right peel shared with the product hero (see dogEar.ts).
+ * Locked original: design/wave5/preserve/Original-dogs-ear-*
+ */
 function TileArt({
   pillar,
   dark,
@@ -76,16 +70,18 @@ function TileArt({
   const shades = dark ? role.dark : role.light;
   const W = Math.max(width, 1);
   const H = Math.max(height, 1);
-  const ax = 0.549 * W;
-  const underlay = `M${num(ax)} 0 H${num(W - 22)} A22 22 0 0 1 ${num(W)} 22 V${num(0.58 * H)} C${num(0.92 * W)} ${num(0.362 * H)} ${num(0.8 * W)} ${num(0.13 * H)} ${num(ax)} 0 Z`;
-  const flap = flapPath(W, H);
-  const foldLine = `M${num(ax)} 0 C${num(0.8 * W)} ${num(0.13 * H)} ${num(0.92 * W)} ${num(0.362 * H)} ${num(W)} ${num(0.58 * H)}`;
+  const radius = art.radius.tile;
+  const fold = Math.max(art.fold, DOG_EAR_FOLD);
+  const { cutX, face, flap, cast, crease } = dogEarCut(W, H, radius, fold);
   const flapLight = dark ? art.foldDark[1] : '#FFFFFF';
   return (
     <Svg width="100%" height="100%" viewBox={`0 0 ${num(W)} ${num(H)}`}>
       <Defs>
         <ClipPath id={`${prefix}-clip`}>
-          <Rect x="0" y="0" width={W} height={H} rx="22" />
+          <Rect x="0" y="0" width={W} height={H} rx={radius} />
+        </ClipPath>
+        <ClipPath id={`${prefix}-face`}>
+          <Path d={face} />
         </ClipPath>
         <LinearGradient id={`${prefix}-tile`} x1="0%" y1="0%" x2="100%" y2="100%">
           <Stop offset="0" stopColor={shades[0]} />
@@ -98,38 +94,37 @@ function TileArt({
           <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
         </RadialGradient>
         <LinearGradient id={`${prefix}-under`} x1="100%" y1="0%" x2="55%" y2="45%">
-          <Stop offset="0" stopColor={role.icon} stopOpacity="1" />
-          <Stop offset="1" stopColor={role.icon} stopOpacity="0.78" />
+          <Stop offset="0" stopColor={shades[2]} />
+          <Stop offset="0.55" stopColor={role.icon} stopOpacity="0.62" />
+          <Stop offset="1" stopColor={shades[1]} />
         </LinearGradient>
-        <LinearGradient id={`${prefix}-shadow`} x1="80%" y1="20%" x2="50%" y2="60%">
-          <Stop offset="0" stopColor="#0C3227" stopOpacity="0.18" />
+        <LinearGradient id={`${prefix}-shadow`} x1="80%" y1="10%" x2="40%" y2="70%">
+          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.82 : 0.7} />
+          <Stop offset="0.4" stopColor="#041510" stopOpacity={dark ? 0.55 : 0.48} />
           <Stop offset="1" stopColor="#0C3227" stopOpacity="0" />
         </LinearGradient>
-        <LinearGradient id={`${prefix}-flap`} x1="80%" y1="20%" x2="55%" y2="50%">
+        <LinearGradient id={`${prefix}-flap`} x1="0%" y1="0%" x2="80%" y2="100%">
           <Stop offset="0" stopColor={flapLight} />
-          <Stop offset="0.55" stopColor={flapLight} />
+          <Stop offset="0.35" stopColor={flapLight} />
+          <Stop offset="0.78" stopColor={shades[0]} />
           <Stop offset="1" stopColor={shades[1]} />
         </LinearGradient>
       </Defs>
       <G clipPath={`url(#${prefix}-clip)`}>
-        <Rect x="0" y="0" width={W} height={H} rx="22" fill={`url(#${prefix}-tile)`} />
-        <Rect x="0" y="0" width={W} height={H} rx="22" fill={`url(#${prefix}-wash)`} />
-        <Path d={underlay} fill={`url(#${prefix}-under)`} />
-        <Path d={flap} fill={`url(#${prefix}-shadow)`} transform="translate(-4 5)" />
-        <Path d={flap} fill={`url(#${prefix}-flap)`} />
-        <Path d={foldLine} fill="none" stroke="#FFFFFF" strokeWidth="1.5" strokeOpacity="0.9" />
-        <Rect
-          x="1"
-          y="1"
-          width={Math.max(W - 2, 0)}
-          height={Math.max(H - 2, 0)}
-          rx="21"
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-          strokeOpacity="0.7"
-        />
+        <Rect x="0" y="0" width={W} height={H} rx={radius} fill={`url(#${prefix}-under)`} />
+        <Path d={face} fill={`url(#${prefix}-tile)`} />
+        <Rect x="0" y="0" width={W} height={H} fill={`url(#${prefix}-wash)`} clipPath={`url(#${prefix}-face)`} />
+        <Path d={face} fill="none" stroke="#FFFFFF" strokeWidth="2" strokeOpacity="0.7" />
       </G>
+      {/* Shadows sit outside the tile clip so the peel casts real depth. */}
+      <Path d={cast} fill="#000000" opacity={0.55} transform={`translate(${num(cutX)} 0)`} />
+      <Path d={flap} fill="#000000" opacity={0.32} transform={`translate(${num(cutX - 8)} 16)`} />
+      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.7} transform={`translate(${num(cutX - 6)} 11)`} />
+      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.9} transform={`translate(${num(cutX - 3)} 6)`} />
+      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={1} transform={`translate(${num(cutX - 1.5)} 3)`} />
+      <Path d={flap} fill={`url(#${prefix}-flap)`} transform={`translate(${num(cutX)} 0)`} />
+      <Path d={crease} fill="none" stroke="#041510" strokeWidth="2.4" strokeOpacity="0.35" />
+      <Path d={crease} fill="none" stroke="#FFFFFF" strokeWidth="1.4" strokeOpacity="0.9" />
     </Svg>
   );
 }
@@ -327,11 +322,10 @@ export default function EmeraldScoreComposition({
           const iconTrail = right ? 12 : clearanceAt(iconCenterY);
           const tileStyle = [
             styles.tile,
-            { width: tileWidth },
+            { width: tileWidth, height: tileHeight, overflow: 'hidden' as const },
             reflow
-              ? { minHeight: tileHeight }
+              ? null
               : {
-                  height: tileHeight,
                   position: 'absolute' as const,
                   left: right ? tileWidth + gap : 0,
                   top: index >= 2 ? tileHeight + gap : 0,
@@ -419,9 +413,11 @@ export default function EmeraldScoreComposition({
         )}
       </View>
       {kind !== 'scored' && (
-        <View style={styles.explanation}>
-          <Text style={[styles.statusTitle, { color: ink }]}>{title}</Text>
-          <Text style={[styles.statusBody, { color: muted }]}>{explanation}</Text>
+        <View style={styles.explanationSlot}>
+          <View style={styles.explanation}>
+            <Text style={[styles.statusTitle, { color: ink }]}>{title}</Text>
+            <Text style={[styles.statusBody, { color: muted }]}>{explanation}</Text>
+          </View>
         </View>
       )}
     </View>
@@ -478,7 +474,15 @@ const styles = StyleSheet.create({
   },
   checking: { fontSize: 34, lineHeight: 42 },
   reflowDisc: { alignItems: 'center', marginBottom: 12 },
-  explanation: { marginTop: 12 },
-  statusTitle: { fontSize: 20, lineHeight: 26, fontWeight: '700' },
-  statusBody: { fontSize: 15, lineHeight: 21, marginTop: 6 },
+  /** Slightly more space above than below so the block sits mid-card, not top-heavy. */
+  explanationSlot: {
+    paddingHorizontal: 4,
+    paddingTop: 40,
+    paddingBottom: 24,
+  },
+  explanation: {
+    alignItems: 'center',
+  },
+  statusTitle: { fontSize: 20, lineHeight: 26, fontWeight: '700', textAlign: 'center' },
+  statusBody: { fontSize: 15, lineHeight: 21, marginTop: 6, textAlign: 'center' },
 });

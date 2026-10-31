@@ -26,6 +26,7 @@ import PremiumGate from '../src/components/PremiumGate';
 import type { ScanStackParamList } from '../src/navigation/tabStackParamLists';
 import { useCameraLifecycle } from '../src/hooks/useCameraLifecycle';
 import { powershellLogger } from '../src/utils/powershellLogger';
+import { RveelLockup } from '../src/components/brand/RveelLockup';
 
 type NavigationProp = NativeStackNavigationProp<ScanStackParamList>;
 
@@ -381,7 +382,7 @@ export default function ScanScreen() {
           <View style={styles.overlay}>
             {/* Top Bar */}
             <View style={styles.topBar}>
-              <Text style={styles.appTitle}>Rveel</Text>
+              <RveelLockup tone="light" height={30} />
               {isOffline && (
                 <View style={[styles.offlineIndicator, { backgroundColor: canUseOfflineMode ? '#ffa500' : '#ff6b6b' }]}>
                   <Ionicons 
@@ -527,12 +528,6 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 20,
     paddingBottom: 20,
-  },
-  appTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    letterSpacing: 1,
   },
   offlineIndicator: {
     flexDirection: 'row',

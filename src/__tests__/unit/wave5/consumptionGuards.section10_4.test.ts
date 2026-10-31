@@ -23,6 +23,8 @@
  *   control opened Understanding Rveel Score without that gate.
  * - TrustScoreInfoModal.tsx (1): methodology prose mentioning ecoscore_grade.
  *   Not a consumer score colour read.
+ * - sharePathSummary.ts (1): share-sheet Summary copy for the Eco-Score path reads
+ *   product.ecoscore_grade already shown on that card. Not a score-band colour read.
  *
  * Removed from ALLOWED_HITS (obsolete for live presentation):
  * - features/product/** TruScoreCard paths. Doctrine §8 lists the legacy product
@@ -76,6 +78,7 @@ const FORBIDDEN = [
 const ALLOWED_HITS: Record<string, number> = {
   'app/result/[barcode].tsx': 3,
   'src/components/TrustScoreInfoModal.tsx': 1,
+  'src/components/sharePathSummary.ts': 1,
 };
 
 /** Doctrine §8 unreachable legacy product cards — not live Result presentation. */
@@ -192,6 +195,7 @@ describe('partial doctrine §10.4 consumption guards', () => {
     expect(Object.keys(ALLOWED_HITS)).toEqual([
       'app/result/[barcode].tsx',
       'src/components/TrustScoreInfoModal.tsx',
+      'src/components/sharePathSummary.ts',
     ]);
     for (const key of DORMANT_FORBIDDEN_EXCLUSIONS) {
       expect(fs.existsSync(path.join(ROOT, key))).toBe(true);

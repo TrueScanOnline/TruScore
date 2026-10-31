@@ -134,7 +134,7 @@ describe('C-1 published-state visuals and share framing', () => {
     });
     expect(content.message).not.toContain(RVEEL_SCORE_UNAVAILABLE_TITLE);
     expect(content.message).not.toMatch(/22\/100/);
-    expect(content.message).toContain('Overall unrevealed');
+    expect(content.message).toContain('UnRevealed?');
     expect(unpublishedShareCopy(checking).title).toBe('Seeing what we can find…');
     expect(unpublishedShareCopy(checking).title).not.toBe(RVEEL_SCORE_UNAVAILABLE_TITLE);
   });
@@ -232,7 +232,7 @@ describe('C-1 image share keeps NR, Checking, and failure distinct', () => {
       })
     );
 
-    expect(nr).toMatchObject({ kind: 'nr', valueText: null, caption: 'Overall unrevealed', neutral: true });
+    expect(nr).toMatchObject({ kind: 'nr', valueText: null, caption: 'UnRevealed?', neutral: true });
     expect(checking).toMatchObject({
       kind: 'checking',
       valueText: null,

@@ -8,6 +8,7 @@ import { RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR } from '../utils/truScorePresenta
 import CountryFlag from './CountryFlag';
 import type { ShareCardRow } from './shareCardRows';
 import { shareStoryHeading } from './shareStoryHeading';
+import { RveelLockup } from './brand/RveelLockup';
 
 const CARD_W = 360;
 
@@ -98,7 +99,7 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
     return (
       <View ref={ref} collapsable={false} style={[styles.root, { backgroundColor: surfaceColor }]}>
         <View style={[styles.headerBand, { backgroundColor: brandColor }]}>
-          <Text style={styles.headerText}>Rveel</Text>
+          <RveelLockup tone="light" height={24} />
           <Text style={styles.contextText}>{contextTitle || shareStoryHeading(shareType)}</Text>
         </View>
         <View style={[styles.imageWrap, { backgroundColor: panelColor }]}>
@@ -231,11 +232,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  headerText: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '800',
   },
   contextText: {
     color: '#fff',

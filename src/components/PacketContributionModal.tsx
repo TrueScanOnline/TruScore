@@ -1393,53 +1393,63 @@ export default function PacketContributionModal({
               </View>
             ) : null}
             {activeContext === 'nutrition' ? (
-              <View>
-                <Text style={{ color: ink }}>{NUTRITION_CONTRIBUTION_BASES[0].label}</Text>
-                {NUTRITION_FIELDS.map((field) => (
-                  <View key={field.attribute}>
-                    <Text style={{ color: ink }}>{field.packetConcept}</Text>
+              <View style={styles.nutritionList}>
+                <Text style={styles.nutritionBasis}>{NUTRITION_CONTRIBUTION_BASES[0].label}</Text>
+                {NUTRITION_FIELDS.map((field) => {
+                  const unit = field.attribute === 'sodium' ? sodiumUnit : field.acceptedUnits[0];
+                  return (
+                  <View key={field.attribute} style={styles.nutritionField}>
+                    <View style={styles.nutritionHeading}>
+                      <Text style={[styles.nutritionHeadingText, { color: ink }]}>
+                        {field.packetConcept} ({unit})
+                      </Text>
+                      {field.attribute === 'sodium' ? (
+                        <View style={styles.row}>
+                          <TouchableOpacity
+                            onPress={() => {
+                              setSodiumUnit('mg');
+                              setAmounts((current) => {
+                                if (sodiumUnit !== 'g') return current;
+                                const grams = Number(current.sodium);
+                                if (!Number.isFinite(grams)) return current;
+                                return { ...current, sodium: String(grams * 1000) };
+                              });
+                            }}
+                            accessibilityRole="button"
+                            accessibilityLabel="Sodium in mg"
+                          >
+                            <Text style={{ color: sodiumUnit === 'mg' ? action : muted, fontWeight: '700' }}>mg</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => {
+                              setSodiumUnit('g');
+                              setAmounts((current) => {
+                                if (sodiumUnit !== 'mg') return current;
+                                const milligrams = Number(current.sodium);
+                                if (!Number.isFinite(milligrams)) return current;
+                                return { ...current, sodium: String(milligrams / 1000) };
+                              });
+                            }}
+                            accessibilityRole="button"
+                            accessibilityLabel="Sodium in g"
+                          >
+                            <Text style={{ color: sodiumUnit === 'g' ? action : muted, fontWeight: '700' }}>g</Text>
+                          </TouchableOpacity>
+                        </View>
+                      ) : null}
+                    </View>
                     <TextInput
                       value={amounts[field.attribute] || ''}
                       onChangeText={(value) => {
                         setAmounts((current) => ({ ...current, [field.attribute]: value }));
                       }}
                       keyboardType="decimal-pad"
+                      accessibilityLabel={`${field.packetConcept} (${unit})`}
                       style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                     />
-                    {field.attribute === 'sodium' ? (
-                      <View style={styles.row}>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setSodiumUnit('mg');
-                            setAmounts((current) => {
-                              if (sodiumUnit !== 'g') return current;
-                              const grams = Number(current.sodium);
-                              if (!Number.isFinite(grams)) return current;
-                              return { ...current, sodium: String(grams * 1000) };
-                            });
-                          }}
-                        >
-                          <Text style={{ color: sodiumUnit === 'mg' ? action : ink }}>mg</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setSodiumUnit('g');
-                            setAmounts((current) => {
-                              if (sodiumUnit !== 'mg') return current;
-                              const milligrams = Number(current.sodium);
-                              if (!Number.isFinite(milligrams)) return current;
-                              return { ...current, sodium: String(milligrams / 1000) };
-                            });
-                          }}
-                        >
-                          <Text style={{ color: sodiumUnit === 'g' ? action : ink }}>g</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <Text style={{ color: muted }}>{field.acceptedUnits[0]}</Text>
-                    )}
                   </View>
-                ))}
+                  );
+                })}
               </View>
             ) : null}
             {activeContext === 'origins'
@@ -1460,16 +1470,29 @@ export default function PacketContributionModal({
                   };
                   if (currentProposition && editingOrigin !== index) {
                     return (
-                      <View key={`${row.evidenceId || row.claimType || 'origin'}-${index}`}>
-                        <Text style={{ color: ink }}>
-                          {`${countryFlagEmoji(country)} ${originChangeLine(row.claimType!, country)}`}
-                        </Text>
+                      <View key={`${row.evidenceId || row.claimType || 'origin'}-${index}`} style={styles.originSummary}>
+                        <View style={styles.originLockup}>
+                          <Text style={styles.originFlag}>{countryFlagEmoji(country)}</Text>
+                          <Text style={[styles.originLockupText, { color: ink }]}>
+                            {originChangeLine(row.claimType!, country)}
+                          </Text>
+                        </View>
                         <View style={styles.row}>
-                          <TouchableOpacity onPress={() => setEditingOrigin(index)} accessibilityRole="button">
-                            <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
+                          <TouchableOpacity
+                            onPress={() => setEditingOrigin(index)}
+                            accessibilityRole="button"
+                            accessibilityLabel={PACKET_REVIEW_CHANGE}
+                            style={[filledButton, styles.originAction]}
+                          >
+                            <Text style={styles.buttonText}>{PACKET_REVIEW_CHANGE}</Text>
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={removeThisOrigin} accessibilityRole="button">
-                            <Text style={{ color: action }}>{PACKET_REVIEW_REMOVE}</Text>
+                          <TouchableOpacity
+                            onPress={removeThisOrigin}
+                            accessibilityRole="button"
+                            accessibilityLabel={PACKET_REVIEW_REMOVE}
+                            style={[filledButton, styles.originAction]}
+                          >
+                            <Text style={styles.buttonText}>{PACKET_REVIEW_REMOVE}</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -1712,12 +1735,22 @@ export default function PacketContributionModal({
                     {row.claimType && row.place.trim() ? (
                     <View style={styles.row}>
                       {surfaceMode === 'change' && row.intent === 'edited' ? (
-                        <TouchableOpacity onPress={() => setEditingOrigin(index)} accessibilityRole="button">
-                          <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
+                        <TouchableOpacity
+                          onPress={() => setEditingOrigin(index)}
+                          accessibilityRole="button"
+                          accessibilityLabel={PACKET_REVIEW_CHANGE}
+                          style={[filledButton, styles.originAction]}
+                        >
+                          <Text style={styles.buttonText}>{PACKET_REVIEW_CHANGE}</Text>
                         </TouchableOpacity>
                       ) : null}
-                      <TouchableOpacity onPress={removeThisOrigin} accessibilityRole="button">
-                        <Text style={{ color: action }}>{PACKET_REVIEW_REMOVE}</Text>
+                      <TouchableOpacity
+                        onPress={removeThisOrigin}
+                        accessibilityRole="button"
+                        accessibilityLabel={PACKET_REVIEW_REMOVE}
+                        style={[filledButton, styles.originAction]}
+                      >
+                        <Text style={styles.buttonText}>{PACKET_REVIEW_REMOVE}</Text>
                       </TouchableOpacity>
                     </View>
                     ) : null}
@@ -1774,20 +1807,19 @@ export default function PacketContributionModal({
                     </TouchableOpacity>
                   </View>
                 ))}
-                {pending.map((row) => (
-                  <View key={row.localId}>
+                {pending.map((row) => {
+                  const claimLabel = row.canonicalName || row.literalWording;
+                  return (
+                  <View key={row.localId} style={[styles.claimCard, { borderColor: line, backgroundColor: fieldBg }]}>
                     {row.productionCertificationId ? (
-                      <View>
-                        <CertificationMark
-                          name={row.canonicalName || row.literalWording}
-                          productionId={row.productionCertificationId}
-                          surface="contribution_review"
-                          color={ink}
-                        />
-                      </View>
-                    ) : (
-                      <Text style={{ color: ink }}>{row.literalWording}</Text>
-                    )}
+                      <CertificationMark
+                        name={claimLabel}
+                        productionId={row.productionCertificationId}
+                        surface="contribution_review"
+                        color={ink}
+                      />
+                    ) : null}
+                    <Text style={[styles.claimLabel, { color: ink }]}>{claimLabel}</Text>
                     <View style={styles.row}>
                       <TouchableOpacity
                         onPress={() => {
@@ -1796,22 +1828,25 @@ export default function PacketContributionModal({
                           packetInputRef.current?.focus();
                         }}
                         accessibilityRole="button"
-                        accessibilityLabel={`${PACKET_REVIEW_CHANGE} ${row.canonicalName || row.literalWording}`}
+                        accessibilityLabel={`${PACKET_REVIEW_CHANGE} ${claimLabel}`}
+                        style={[styles.claimAction, { borderColor: action }]}
                       >
-                        <Text style={{ color: action }}>{PACKET_REVIEW_CHANGE}</Text>
+                        <Text style={[styles.claimActionText, { color: action }]}>{PACKET_REVIEW_CHANGE}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => void rememberPending(removePendingObservation(pending, row.localId))}
                         accessibilityRole="button"
                         accessibilityLabel={PACKET_REVIEW_REMOVE}
+                        style={[styles.claimAction, { borderColor: action }]}
                       >
-                        <Text style={{ color: action }}>{PACKET_REVIEW_REMOVE}</Text>
+                        <Text style={[styles.claimActionText, { color: action }]}>{PACKET_REVIEW_REMOVE}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
-                ))}
+                  );
+                })}
                 {editingPendingId ? (
-                  <Text style={{ color: ink }}>
+                  <Text style={[styles.claimLabel, { color: ink }]}>
                     Changing {pending.find((row) => row.localId === editingPendingId)?.canonicalName || pending.find((row) => row.localId === editingPendingId)?.literalWording}
                   </Text>
                 ) : null}
@@ -1871,8 +1906,9 @@ export default function PacketContributionModal({
                     }}
                     accessibilityRole="button"
                     accessibilityLabel={PACKET_ADD_ANOTHER}
+                    style={filledButton}
                   >
-                    <Text style={{ color: action }}>{PACKET_ADD_ANOTHER}</Text>
+                    <Text style={styles.buttonText}>{PACKET_ADD_ANOTHER}</Text>
                   </TouchableOpacity>
                 ) : null}
                 {proposals.map((proposal) =>
@@ -1955,6 +1991,28 @@ const styles = StyleSheet.create({
   suggestionRow: { minHeight: 44, justifyContent: 'center' },
   suggestionChoice: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12 },
   originStatement: { gap: 8 },
+  originSummary: { gap: 14 },
+  originLockup: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  originFlag: { fontSize: 42, lineHeight: 50 },
+  originLockupText: { flex: 1, fontSize: 22, lineHeight: 28, fontWeight: '700' },
+  originAction: { flexGrow: 1, flexBasis: 0 },
   originChoice: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 },
   originSentence: { fontSize: 17, lineHeight: 24, fontStyle: 'italic', color: '#c0392b' },
+  claimCard: { borderWidth: 1, borderRadius: 16, padding: 14, gap: 12 },
+  claimLabel: { fontSize: 20, lineHeight: 26, fontWeight: '700' },
+  claimAction: {
+    flexGrow: 1,
+    minHeight: 44,
+    borderWidth: 1.5,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  claimActionText: { fontSize: 16, fontWeight: '700' },
+  nutritionList: { gap: 18 },
+  nutritionBasis: { color: '#C0392B', fontSize: 20, lineHeight: 26, fontWeight: '700' },
+  nutritionField: { gap: 6 },
+  nutritionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  nutritionHeadingText: { fontSize: 16, lineHeight: 22, fontWeight: '700', flexShrink: 1 },
 });

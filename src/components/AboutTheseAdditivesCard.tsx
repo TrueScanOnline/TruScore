@@ -98,7 +98,7 @@ function AdditiveCountReveal({ count }: { count: number }) {
       accessibilityRole="text"
       accessibilityLabel={`${count} ${count === 1 ? 'additive' : 'additives'} identified`}
     >
-      <Text style={[styles.countNumber, { color: colors.text }]}>{display}</Text>
+      <Text style={[styles.countNumber, { color: '#ff6b6b' }]}>{display}</Text>
       <Text style={[styles.countUnit, { color: colors.textSecondary }]}>{unit}</Text>
     </View>
   );
@@ -117,20 +117,26 @@ export default function AboutTheseAdditivesCard({ count, onPress }: AboutTheseAd
       style={({ pressed }) => [
         styles.card,
         resultEmeraldCard(!!darkMode),
-        { opacity: pressed ? 0.96 : 1 },
+        {
+          backgroundColor: darkMode ? '#373232' : '#FFEBEC',
+          borderColor: darkMode ? '#6A4545' : '#F3C6C6',
+          opacity: pressed ? 0.96 : 1,
+        },
       ]}
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${count} ${count === 1 ? 'additive' : 'additives'} identified`}
     >
-      <View style={styles.row}>
-        <View style={styles.left}>
-          <Ionicons name={S25_ADDITIVE_COUNT_GLYPH} size={24} color={emerald.action} />
-          <View style={styles.textCol}>
+      <View style={styles.stack}>
+        <View style={styles.row}>
+          <View style={styles.left}>
+            <Ionicons name={S25_ADDITIVE_COUNT_GLYPH} size={24} color={emerald.action} />
             <Text style={[styles.title, { color: emerald.ink }]}>{title}</Text>
-            <AdditiveCountReveal count={count} />
           </View>
+          <Ionicons name="chevron-forward" size={22} color={emerald.muted} />
         </View>
-        <Ionicons name="chevron-forward" size={22} color={emerald.muted} />
+        <View style={styles.countLine}>
+          <AdditiveCountReveal count={count} />
+        </View>
       </View>
     </Pressable>
   );
@@ -154,9 +160,11 @@ const styles = StyleSheet.create({
     gap: 14,
     flex: 1,
   },
-  textCol: {
-    flex: 1,
+  stack: {
     gap: 6,
+  },
+  countLine: {
+    marginLeft: 38,
   },
   title: {
     fontSize: 20,

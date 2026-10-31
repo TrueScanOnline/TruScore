@@ -136,8 +136,9 @@ export function getTruScoreConsumerPresentation(
   if (pub.overall.publicationStatus === 'nr') {
     return {
       kind: 'nr',
-      title: 'Overall unrevealed',
-      explanation: pub.overall.s26?.explanation ?? 'Overall result not yet revealable.',
+      title: 'UnRevealed?',
+      explanation:
+        'We could not find enough information in each category to Rveel a score. Please help us out by adding the information in each category by tapping on the category cards above.',
       showScoreCircle: false,
       showScoreLabel: false,
       showNumericScore: false,

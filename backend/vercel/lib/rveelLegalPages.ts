@@ -3,26 +3,29 @@
  * Replace body copy with counsel-approved text before store submission if required.
  */
 
-const baseStyles = `
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5;max-width:42rem;margin:2rem auto;padding:0 1rem;color:#111}
-  h1{font-size:1.35rem;margin-bottom:0.5rem}
-  p{margin:0.75rem 0}
-  .muted{color:#555;font-size:0.9rem}
-`;
-
 function shell(title: string, body: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="theme-color" content="#eef6f4"/>
 <title>${title}</title>
-<style>${baseStyles}</style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+<link rel="stylesheet" href="/rveel.css"/>
 </head>
 <body>
-<h1>${title}</h1>
+<a class="skip" href="#content">Skip to content</a>
+<div class="wash" aria-hidden="true"></div>
+<header class="top">
+  <a class="mark" href="/"><img src="/logo.svg" alt="Rveel"></a>
+  <nav class="nav" aria-label="Primary"><a href="/#score">The score</a><a class="pill" href="/#get">Get the app</a></nav>
+</header>
+<main class="wrap section legal" id="content">
+<h1 style="font-size:40px">${title.replace('Rveel — ', '')}</h1>
 ${body}
-<p class="muted">This page is served from the same infrastructure as the Rveel app. The public product name is <strong>Rveel</strong>.</p>
+</main>
+<footer class="site-footer"><span>Rveel</span><nav aria-label="Legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav></footer>
 </body>
 </html>`;
 }

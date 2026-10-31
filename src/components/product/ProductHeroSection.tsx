@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, type ReactNode } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Dimensions,
   PixelRatio,
+  Platform,
   StatusBar,
   useWindowDimensions,
 } from 'react-native';
@@ -21,45 +22,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Colors } from '../../theme/colors';
 import { resultEmeraldTone, resultHeroFace, resultPresentation } from '../../theme/resultPresentation';
 import { heroArrangement } from './heroArrangement';
+import { DOG_EAR_FOLD, dogEarCut } from './emerald/dogEar';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO = resultPresentation.emerald.hero;
 
 function n(value: number) {
   return (Math.round(value * 10) / 10).toString();
-}
-
-function mainSurface(width: number, height: number, radius: number, fold: number) {
-  const cutX = Math.max(radius, width - fold);
-  const cutY = Math.min(height - radius, fold);
-  return [
-    `M${n(radius)} 0`,
-    `H${n(cutX)}`,
-    `L${n(width)} ${n(cutY)}`,
-    `V${n(height - radius)}`,
-    `A${n(radius)} ${n(radius)} 0 0 1 ${n(width - radius)} ${n(height)}`,
-    `H${n(radius)}`,
-    `A${n(radius)} ${n(radius)} 0 0 1 0 ${n(height - radius)}`,
-    `V${n(radius)}`,
-    `A${n(radius)} ${n(radius)} 0 0 1 ${n(radius)} 0`,
-    'Z',
-  ].join(' ');
-}
-
-/** Pale underside between the crease and the curled return. Local to the top-right F square. */
-function flapPath(fold: number) {
-  const x1 = 0.28 * fold;
-  const y1 = 0.9 * fold;
-  const x2 = 0.02 * fold;
-  const y2 = 1.02 * fold;
-  return [
-    'M0 0',
-    `L${n(fold)} ${n(fold)}`,
-    `C${n(0.55 * fold)} ${n(0.98 * fold)} ${n(0.36 * fold)} ${n(0.94 * fold)} ${n(x1)} ${n(y1)}`,
-    `C${n(0.16 * fold)} ${n(0.86 * fold)} ${n(0.08 * fold)} ${n(y2)} ${n(x2)} ${n(y2)}`,
-    `C${n(0.01 * fold)} ${n(0.62 * fold)} 0 ${n(0.22 * fold)} 0 0`,
-    'Z',
-  ].join(' ');
 }
 
 function accentBand(width: number, height: number) {
@@ -71,14 +40,21 @@ function accentBand(width: number, height: number) {
   ].join(' ');
 }
 
+function longestWord(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .reduce((best, part) => (part.length > best.length ? part : best), '');
+}
+
+/** Card face + cut corner underlay only — peel is drawn above content so it can sit over the name. */
 function HeroSurface({ width, height, dark }: { width: number; height: number; dark: boolean }) {
   const face = resultHeroFace(dark);
   const prefix = dark ? 'hero-d' : 'hero-l';
-  const fold = HERO.fold;
+  const fold = Math.max(HERO.fold, DOG_EAR_FOLD);
   const radius = HERO.radius;
   if (width < 8 || height < 8) return null;
-  const surface = mainSurface(width, height, radius, fold);
-  const flap = flapPath(fold);
+  const { face: surface } = dogEarCut(width, height, radius, fold);
   return (
     <Svg width={width} height={height} pointerEvents="none">
       <Defs>
@@ -97,10 +73,6 @@ function HeroSurface({ width, height, dark }: { width: number; height: number; d
           <Stop offset="0.55" stopColor={face.accent} stopOpacity={dark ? 0.16 : 0.1} />
           <Stop offset="1" stopColor={face.accent} stopOpacity="0" />
         </RadialGradient>
-        <LinearGradient id={`${prefix}-fold`} x1="0%" y1="0%" x2="80%" y2="100%">
-          <Stop offset="0" stopColor={face.foldFace[0]} />
-          <Stop offset="1" stopColor={face.foldFace[1]} />
-        </LinearGradient>
       </Defs>
       <Rect x="0" y="0" width={width} height={height} rx={radius} fill={face.foldBack} clipPath={`url(#${prefix}-card)`} />
       <Path d={surface} fill={`url(#${prefix}-mint)`} />
@@ -113,8 +85,39 @@ function HeroSurface({ width, height, dark }: { width: number; height: number; d
         clipPath={`url(#${prefix}-face)`}
       />
       <Path d={accentBand(width, height)} fill={face.accent} opacity={dark ? 0.28 : 0.22} clipPath={`url(#${prefix}-face)`} />
-      <Path d={flap} fill={face.shadow} transform={`translate(${n(width - fold - 1)} 3)`} />
-      <Path d={flap} fill={`url(#${prefix}-fold)`} transform={`translate(${n(width - fold)} 0)`} />
+    </Svg>
+  );
+}
+
+/** Dog-ear peel drawn above brand/name so text never paints over the fold. */
+function HeroDogEarPeel({ width, height, dark }: { width: number; height: number; dark: boolean }) {
+  const face = resultHeroFace(dark);
+  const prefix = dark ? 'hero-peel-d' : 'hero-peel-l';
+  const fold = Math.max(HERO.fold, DOG_EAR_FOLD);
+  const radius = HERO.radius;
+  if (width < 8 || height < 8) return null;
+  const { cutX, flap, cast, crease } = dogEarCut(width, height, radius, fold);
+  return (
+    <Svg width={width} height={height} pointerEvents="none">
+      <Defs>
+        <LinearGradient id={`${prefix}-fold`} x1="0%" y1="0%" x2="80%" y2="100%">
+          <Stop offset="0" stopColor={face.foldFace[0]} />
+          <Stop offset="1" stopColor={face.foldFace[1]} />
+        </LinearGradient>
+        <LinearGradient id={`${prefix}-shadow`} x1="80%" y1="10%" x2="40%" y2="70%">
+          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.82 : 0.7} />
+          <Stop offset="0.4" stopColor="#041510" stopOpacity={dark ? 0.55 : 0.48} />
+          <Stop offset="1" stopColor="#0C3227" stopOpacity="0" />
+        </LinearGradient>
+      </Defs>
+      <Path d={cast} fill="#000000" opacity={0.55} transform={`translate(${n(cutX)} 0)`} />
+      <Path d={flap} fill="#000000" opacity={0.32} transform={`translate(${n(cutX - 8)} 16)`} />
+      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.7} transform={`translate(${n(cutX - 6)} 11)`} />
+      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.9} transform={`translate(${n(cutX - 3)} 6)`} />
+      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={1} transform={`translate(${n(cutX - 1.5)} 3)`} />
+      <Path d={flap} fill={`url(#${prefix}-fold)`} transform={`translate(${n(cutX)} 0)`} />
+      <Path d={crease} fill="none" stroke="#041510" strokeWidth="2.4" strokeOpacity="0.35" />
+      <Path d={crease} fill="none" stroke="#FFFFFF" strokeWidth="1.4" strokeOpacity="0.9" />
     </Svg>
   );
 }
@@ -341,6 +344,43 @@ export default function ProductHeroSection({
     </View>
   );
 
+  /** Same proud rim as EmeraldScoreFrame. */
+  const rim = darkMode ? '#8ADCC7' : '#074F42';
+  const fold = Math.max(HERO.fold, DOG_EAR_FOLD);
+  // Peel draws above copy, so text may tuck slightly under the ear. Keep a light
+  // inset so glyphs don't start under the crease; do not reserve the full fold.
+  const foldClearance = Math.round(fold * 0.28);
+  const nameProbe = useMemo(() => longestWord(productName), [productName]);
+  const [copyWidth, setCopyWidth] = useState(0);
+  const [nameSize, setNameSize] = useState<number>(HERO.type.name);
+  const nameMin = Math.round(HERO.type.name * 0.5);
+  const nameContentWidth = Math.max(0, copyWidth - foldClearance);
+
+  useEffect(() => {
+    setNameSize(HERO.type.name);
+  }, [productName, copyWidth, laid.textW]);
+
+  const nameLineHeight = Math.round(nameSize * (HERO.type.nameLine / HERO.type.name));
+
+  const shrinkNameIfWordSplit = useCallback(
+    (lines: readonly { text: string }[]) => {
+      if (!lines || lines.length < 2 || nameSize <= nameMin) return;
+      for (let i = 0; i < lines.length - 1; i++) {
+        const end = lines[i]?.text ?? '';
+        const next = lines[i + 1]?.text ?? '';
+        if (!end || !next) continue;
+        const endCh = end[end.length - 1];
+        const nextCh = next[0];
+        // Letter/digit into letter/digit across a line = a single word was split.
+        if (/[0-9A-Za-zÀ-ÿ]/.test(endCh) && /[0-9A-Za-zÀ-ÿ]/.test(nextCh)) {
+          setNameSize((size) => Math.max(nameMin, size - 1));
+          return;
+        }
+      }
+    },
+    [nameMin, nameSize]
+  );
+
   return (
     <View
       style={styles.heroStrip}
@@ -359,7 +399,7 @@ export default function ProductHeroSection({
         ]}
       >
         <View
-          style={[styles.surface, { borderColor: face.border }]}
+          style={[styles.surface, { borderColor: rim }]}
           onLayout={(event) => {
             const { width, height } = event.nativeEvent.layout;
             if (width > 0 && height > 0 && (Math.abs(width - surface.w) > 0.5 || Math.abs(height - surface.h) > 0.5)) {
@@ -377,13 +417,56 @@ export default function ProductHeroSection({
           </View>
           <View style={[styles.body, laid.stack ? styles.bodyStack : styles.bodyRow]}>
             {photo}
-            <View style={[styles.copy, { flexGrow: laid.stack ? 0 : 1 }]}>
+            <View
+              style={[
+                styles.copy,
+                {
+                  flexGrow: laid.stack ? 0 : 1,
+                  // Keep brand/name clear of the top-right fold; peel may still sit above slightly.
+                  paddingRight: foldClearance,
+                },
+              ]}
+              onLayout={(event) => {
+                const next = event.nativeEvent.layout.width;
+                if (next > 0 && Math.abs(next - copyWidth) > 0.5) setCopyWidth(next);
+              }}
+            >
+              {nameProbe ? (
+                <Text
+                  pointerEvents="none"
+                  accessible={false}
+                  importantForAccessibility="no-hide-descendants"
+                  style={[styles.nameProbe, { fontSize: nameSize, fontWeight: '700' }]}
+                  onLayout={(event) => {
+                    const avail = nameContentWidth || Math.max(0, laid.textW - foldClearance);
+                    if (event.nativeEvent.layout.width > avail + 0.5 && nameSize > nameMin) {
+                      setNameSize((size) => Math.max(nameMin, size - 1));
+                    }
+                  }}
+                >
+                  {nameProbe}
+                </Text>
+              ) : null}
               {brandText ? (
-                <Text style={[styles.brand, { color: face.action }]} numberOfLines={1}>
+                <Text style={[styles.brand, { color: face.action }]} numberOfLines={1} ellipsizeMode="tail">
                   {brandText}
                 </Text>
               ) : null}
-              <Text style={[styles.productName, { color: face.name, marginTop: brandText ? HERO.type.nameGap : 0 }]}>
+              <Text
+                style={[
+                  styles.productName,
+                  {
+                    color: face.name,
+                    marginTop: brandText ? HERO.type.nameGap : 0,
+                    fontSize: nameSize,
+                    lineHeight: nameLineHeight,
+                  },
+                ]}
+                {...(Platform.OS === 'android'
+                  ? { textBreakStrategy: 'simple' as const, android_hyphenationFrequency: 'none' as const }
+                  : {})}
+                onTextLayout={(event) => shrinkNameIfWordSplit(event.nativeEvent.lines)}
+              >
                 {productName}
               </Text>
               {actions ? <View style={styles.actions}>{actions}</View> : null}
@@ -433,6 +516,14 @@ export default function ProductHeroSection({
               ) : null}
             </View>
           </View>
+          <View
+            pointerEvents="none"
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            style={styles.peelOverlay}
+          >
+            <HeroDogEarPeel width={surface.w} height={surface.h} dark={darkMode} />
+          </View>
         </View>
       </View>
 
@@ -462,7 +553,7 @@ const styles = StyleSheet.create({
   },
   surface: {
     borderRadius: HERO.radius,
-    borderWidth: 1,
+    borderWidth: 4,
     overflow: 'hidden',
     padding: HERO.pad,
   },
@@ -481,6 +572,17 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     justifyContent: 'center',
+  },
+  nameProbe: {
+    position: 'absolute',
+    opacity: 0,
+    left: 0,
+    top: 0,
+    fontWeight: '700',
+  },
+  peelOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 2,
   },
   photo: {
     overflow: 'hidden',

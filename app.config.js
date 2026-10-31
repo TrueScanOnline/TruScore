@@ -30,13 +30,13 @@ module.exports = {
     splash: {
       image: './assets/splash.png',
       resizeMode: 'contain',
-      backgroundColor: '#16a085', // Rveel brand color
+      backgroundColor: '#0E8A74',
     },
     assetBundlePatterns: ['**/*'],
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#16a085',
+        backgroundColor: '#0E8A74',
       },
       package: 'com.truescan.foodscanner',
       versionCode: Number(process.env.RVEEL_ANDROID_VERSION_CODE || 13), // UAT profiles may override via EAS env

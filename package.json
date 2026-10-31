@@ -10,6 +10,8 @@
     }
   },
   "scripts": {
+    "serve:site": "node scripts/serve-rveel-site.mjs",
+    "build:share-landing": "npx esbuild backend/vercel/lib/shareLandingHtml.ts --bundle --platform=node --format=esm --outfile=backend/vercel/lib/shareLandingHtml.bundle.mjs --packages=external",
     "verify-backend": "ts-node --project scripts/tsconfig.json scripts/verify-backend-config.ts",
     "verify-off": "ts-node --project scripts/tsconfig.json scripts/verify-off-submission.ts",
     "check-vercel-env": "powershell -ExecutionPolicy Bypass -File scripts/check-vercel-env.ps1",

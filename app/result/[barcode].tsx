@@ -253,11 +253,13 @@ function ResultIngredientsSection({
 
   if (filled) {
     const novaColor =
-      novaGroup === 1 || novaGroup === 2
+      novaGroup === 1
         ? '#16a085'
-        : novaGroup === 3
-          ? '#ff9500'
-          : '#ff6b6b';
+        : novaGroup === 2
+          ? '#4dd09f'
+          : novaGroup === 3
+            ? '#ffa500'
+            : '#ff6b6b';
     return (
       <View style={sectionStyle}>
         <View style={styles.cardHeader}>
@@ -295,30 +297,43 @@ function ResultIngredientsSection({
         {novaGroup ? (
           <View style={[styles.novaContainer, { borderTopColor: colors.border }]}>
             <View style={styles.novaHeader}>
-              <Text style={[styles.novaLabel, { color: emerald.ink }]}>{t('result.processingLevel')}:</Text>
-              <TouchableOpacity
-                onPress={onShareProcessing}
-                style={styles.shareButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                accessibilityRole="button"
-                accessibilityLabel="Share processing level"
-              >
-                <Ionicons name="share-outline" size={20} color={emerald.action} />
-              </TouchableOpacity>
+              <View style={styles.cardHeaderLeft}>
+                <Ionicons name="restaurant" size={24} color={emerald.action} />
+                <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.processingLevel')}</Text>
+              </View>
+              <View style={styles.cardHeaderRight}>
+                <TouchableOpacity
+                  onPress={onShareProcessing}
+                  style={styles.shareButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Share processing level"
+                >
+                  <Ionicons name="share-outline" size={20} color={emerald.action} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={onOpenProcessingLevel}
+                  style={styles.shareButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('result.processingLevel')}
+                >
+                  <Ionicons name="information-circle-outline" size={20} color={emerald.action} />
+                </TouchableOpacity>
+              </View>
             </View>
             <View style={styles.novaContent}>
-              <Text style={[styles.novaValue, { color: novaColor }]}>
-                NOVA {novaGroup} ({t(`nova.${novaGroup}`)})
-              </Text>
-              <TouchableOpacity
-                onPress={onOpenProcessingLevel}
-                style={styles.shareButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                accessibilityRole="button"
-                accessibilityLabel={t('result.processingLevel')}
-              >
-                <Ionicons name="information-circle-outline" size={20} color={emerald.action} />
-              </TouchableOpacity>
+              <View style={[styles.novaMark, { backgroundColor: novaColor + '22' }]}>
+                <Ionicons
+                  name={novaGroup === 1 ? 'leaf' : novaGroup === 2 ? 'create' : novaGroup === 3 ? 'build' : 'warning'}
+                  size={26}
+                  color={novaColor}
+                />
+                <View style={[styles.novaBadge, { backgroundColor: novaColor }]}>
+                  <Text style={styles.novaBadgeText}>NOVA {novaGroup}</Text>
+                </View>
+                <Text style={[styles.novaValue, { color: emerald.ink }]}>{t(`nova.${novaGroup}`)}</Text>
+              </View>
             </View>
           </View>
         ) : null}
@@ -375,6 +390,49 @@ function ResultIngredientsSection({
         <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
           {t('result.ingredientsEmpty', 'No ingredients on file.')}
         </Text>
+        {novaGroup ? (
+          <View style={[styles.novaContainer, { borderTopColor: colors.border }]}>
+            <View style={styles.novaHeader}>
+              <View style={styles.cardHeaderLeft}>
+                <Ionicons name="restaurant" size={24} color={emerald.action} />
+                <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.processingLevel')}</Text>
+              </View>
+              <View style={styles.cardHeaderRight}>
+                <TouchableOpacity
+                  onPress={onShareProcessing}
+                  style={styles.shareButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Share processing level"
+                >
+                  <Ionicons name="share-outline" size={20} color={emerald.action} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={onOpenProcessingLevel}
+                  style={styles.shareButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('result.processingLevel')}
+                >
+                  <Ionicons name="information-circle-outline" size={20} color={emerald.action} />
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.novaContent}>
+              <View style={[styles.novaMark, { backgroundColor: (novaGroup === 4 ? '#ff6b6b' : novaGroup === 3 ? '#ffa500' : novaGroup === 2 ? '#4dd09f' : '#16a085') + '22' }]}>
+                <Ionicons
+                  name={novaGroup === 1 ? 'leaf' : novaGroup === 2 ? 'create' : novaGroup === 3 ? 'build' : 'warning'}
+                  size={26}
+                  color={novaGroup === 4 ? '#ff6b6b' : novaGroup === 3 ? '#ffa500' : novaGroup === 2 ? '#4dd09f' : '#16a085'}
+                />
+                <View style={[styles.novaBadge, { backgroundColor: novaGroup === 4 ? '#ff6b6b' : novaGroup === 3 ? '#ffa500' : novaGroup === 2 ? '#4dd09f' : '#16a085' }]}>
+                  <Text style={styles.novaBadgeText}>NOVA {novaGroup}</Text>
+                </View>
+                <Text style={[styles.novaValue, { color: emerald.ink }]}>{t(`nova.${novaGroup}`)}</Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
         {showAddIngredients ? (
           <TouchableOpacity
             onPress={onAddIngredients}
@@ -1700,6 +1758,50 @@ function ResultScreenContent() {
   const isWebSearchProduct = isWebSearchFallback(product);
 
   const contributionActions = resultContributionActions(product);
+  const nutritionContributionLabel = contributionActions.updateNutrition ? 'Change nutrition' : 'Add nutrition';
+  const ingredientsContributionLabel = contributionActions.updateIngredients ? 'Change ingredients' : 'Add ingredients';
+  const originsContributionLabel =
+    contributionActions.originsAction === 'update' ? 'Change product origins' : 'Add product origins';
+  const packetContributionLabel =
+    contributionActions.packetInformationAction === 'update' ? 'Change packet information' : 'Add packet information';
+  const openPillarContribution = (
+    destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims'
+  ) => {
+    setScoreHighlightsRequest(null);
+    if (destination === 'nutrition') {
+      openContribution('nutrition', contributionActions.updateNutrition ? 'change' : 'add', true);
+      return;
+    }
+    if (destination === 'ingredients') {
+      openContribution('ingredients', contributionActions.updateIngredients ? 'change' : 'add', true);
+      return;
+    }
+    if (destination === 'origins') {
+      openContribution('origins', contributionActions.originsAction === 'update' ? 'change' : 'add', true);
+      return;
+    }
+    openContribution(
+      'packetClaims',
+      contributionActions.packetInformationAction === 'update' ? 'change' : 'add',
+      true
+    );
+  };
+  const pillarContributionLinks =
+    scoreHighlightsRequest?.mode === 'pillar'
+      ? scoreHighlightsRequest.pillar === 'Body'
+        ? [
+            { key: 'nutrition', label: nutritionContributionLabel, destination: 'nutrition' as const },
+            { key: 'ingredients', label: ingredientsContributionLabel, destination: 'ingredients' as const },
+          ]
+        : scoreHighlightsRequest.pillar === 'Planet'
+          ? [{ key: 'ingredients', label: ingredientsContributionLabel, destination: 'ingredients' as const }]
+          : scoreHighlightsRequest.pillar === 'Ethics'
+            ? [{ key: 'packet', label: packetContributionLabel, destination: 'packetClaims' as const }]
+            : [
+                { key: 'ingredients', label: ingredientsContributionLabel, destination: 'ingredients' as const },
+                { key: 'origins', label: originsContributionLabel, destination: 'origins' as const },
+              ]
+      : [];
 
   const shareManufacturingCountryLabel = (() => {
     const raw = originsCard.offCountry || originsCard.facts.flatMap((fact) => fact.countries)[0];
@@ -1931,15 +2033,28 @@ function ResultScreenContent() {
             heading={productIdentity.publicScoreName}
             dark={!!darkMode}
             infoControl={
-              <TouchableOpacity
-                onPress={() => setTruScoreModalVisible(true)}
-                style={styles.infoButton}
-                hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-                accessibilityRole="button"
-                accessibilityLabel={t('infoModal.trustScore.title', 'Understanding Rveel Score')}
-              >
-                <Ionicons name="information-circle-outline" size={22} color={emerald.action} />
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity
+                  onPress={() => setTruScoreModalVisible(true)}
+                  style={styles.infoButton}
+                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('infoModal.trustScore.title', 'Understanding Rveel Score')}
+                >
+                  <Ionicons name="information-circle-outline" size={22} color={emerald.action} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() =>
+                    handleShare(resolveScoreCardShareType(truScore, { publicationSettled }))
+                  }
+                  style={styles.infoButton}
+                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.share', 'Share')}
+                >
+                  <Ionicons name="share-outline" size={22} color={emerald.action} />
+                </TouchableOpacity>
+              </>
             }
             confidence={
               product && product._publication ? (
@@ -2367,9 +2482,12 @@ function ResultScreenContent() {
             return (
               <>
                 {showEmptyState ? (
-                  <Text style={[styles.packetClaimsEmptyText, { color: colors.text }]}>
-                    {PACKET_CLAIMS_EMPTY_STATE}
-                  </Text>
+                  <View style={[styles.originEmpty, { backgroundColor: emerald.chevronCircle }]}>
+                    <Ionicons name="shield-checkmark-outline" size={28} color={emerald.action} />
+                    <Text style={[styles.originEmptyText, { color: emerald.ink }]}>
+                      {PACKET_CLAIMS_EMPTY_STATE}
+                    </Text>
+                  </View>
                 ) : null}
                 {showClaimsPanel ? (
                   <View style={[styles.packetClaimsPanel, { backgroundColor: emerald.chevronCircle }]}>
@@ -2599,6 +2717,13 @@ function ResultScreenContent() {
         publication={truScore?.publication}
         firedAdjustments={scoreHighlightsLedger ?? undefined}
         onClose={() => setScoreHighlightsRequest(null)}
+        contributionLinks={pillarContributionLinks}
+        contributionNote={
+          scoreHighlightsRequest?.mode === 'pillar' && scoreHighlightsRequest.pillar === 'Planet'
+            ? 'We are not yet accepting packaging or recycling contributions. Ingredient information can still be added.'
+            : undefined
+        }
+        onOpenContribution={openPillarContribution}
         onOpenInAppL3={openInAppScoreHighlightL3}
       />
 
@@ -3877,7 +4002,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   novaValue: {
-    fontSize: 14,
+    fontSize: 18,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  novaMark: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    flexWrap: 'wrap',
+    borderRadius: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  novaBadge: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  novaBadgeText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
   },
   warningSection: {
     flexDirection: 'row',

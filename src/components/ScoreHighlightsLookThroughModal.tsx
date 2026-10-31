@@ -74,6 +74,20 @@ interface ScoreHighlightsLookThroughModalProps {
   userContributionRouteLive?: boolean;
   onClose: () => void;
   /**
+   * Existing contribution journeys for the open pillar. The host opens the current
+   * contribution form; this modal does not score.
+   */
+  contributionLinks?: ReadonlyArray<{
+    key: string;
+    label: string;
+    destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims';
+  }>;
+  /** Shown with the Planet links. Packaging contributions stay closed. */
+  contributionNote?: string;
+  onOpenContribution?: (
+    destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims'
+  ) => void;
+  /**
    * Host handler for governed in-app L3 destinations. External sources are opened here.
    * When omitted, in-app L3 affordances are not offered.
    */
@@ -102,6 +116,9 @@ export default function ScoreHighlightsLookThroughModal({
   firedAdjustments,
   userContributionRouteLive = false,
   onClose,
+  contributionLinks = [],
+  contributionNote,
+  onOpenContribution,
   onOpenInAppL3,
 }: ScoreHighlightsLookThroughModalProps) {
   const { darkMode } = useTheme();
@@ -250,6 +267,26 @@ export default function ScoreHighlightsLookThroughModal({
                     ))}
                   </View>
                 )}
+                {contributionLinks.length > 0 ? (
+                  <View style={[styles.contributeBox, { borderTopColor: emerald.line }]}>
+                    {contributionNote ? (
+                      <Text style={[styles.contextPromptBody, { color: emerald.muted }]}>{contributionNote}</Text>
+                    ) : (
+                      <Text style={[styles.contextPromptTitle, { color: emerald.ink }]}>Add information from the pack</Text>
+                    )}
+                    {contributionLinks.map((link) => (
+                      <TouchableOpacity
+                        key={link.key}
+                        onPress={() => onOpenContribution?.(link.destination)}
+                        style={[styles.contributeButton, { backgroundColor: emerald.action }]}
+                        accessibilityRole="button"
+                        accessibilityLabel={link.label}
+                      >
+                        <Text style={styles.contributeButtonText}>{link.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ) : null}
               </>
             ) : (
               <View style={styles.detail}>
@@ -375,5 +412,23 @@ const styles = StyleSheet.create({
   l3ButtonText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  contributeBox: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 10,
+  },
+  contributeButton: {
+    minHeight: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  contributeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
