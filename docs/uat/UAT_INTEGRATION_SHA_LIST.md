@@ -22,3 +22,5 @@ Living list of intended changes for the next UAT build. Each row is one accepted
 | Product hero: photo beside the name on the mint card, with the curled corner | `e3012ee36ab76c9ae461f30a1be328b749bdd68f` | yes |
 | Share card plus founder UAT builds: iOS 62, Android 36. Resolve with `git rev-parse wave5-founder-uat-20261021` | `wave5-founder-uat-20261021` | yes |
 | Buildable founder tip: certification JSON kept in the EAS archive. Resolve with `git rev-parse wave5-founder-builds-20261021` | `wave5-founder-builds-20261021` | yes |
+| Wave 5 UI complete for founder phone UAT. Resolve with `git rev-parse wave5-ui-complete-20261101` | `3add88c0389275b9de156787fa203a405ebd8cbe` | yes |
+| Founder phone builds after Wave 5 UI: iOS 63, Android 37. Resolve with `git rev-parse wave5-founder-builds-20261101` | `wave5-founder-builds-20261101` | yes |

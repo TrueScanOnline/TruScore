@@ -39,7 +39,7 @@ module.exports = {
         backgroundColor: '#0E8A74',
       },
       package: 'com.truescan.foodscanner',
-      versionCode: Number(process.env.RVEEL_ANDROID_VERSION_CODE || 13), // UAT profiles may override via EAS env
+      versionCode: Number(process.env.RVEEL_ANDROID_VERSION_CODE || 37), // UAT profiles may override via EAS env
       permissions: [
         'CAMERA',
         'ACCESS_FINE_LOCATION',
@@ -81,7 +81,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.truescan.foodscanner',
-      buildNumber: process.env.RVEEL_IOS_BUILD_NUMBER || '26',
+      buildNumber: process.env.RVEEL_IOS_BUILD_NUMBER || '63',
       associatedDomains: ['applinks:truescan.app'],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
