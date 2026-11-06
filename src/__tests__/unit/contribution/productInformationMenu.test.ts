@@ -3,7 +3,10 @@
  */
 
 import type { Product } from '../../../types/product';
+import { originRowsForJourney } from '../../../contribution/consumerSurface';
 import { productInformationMenu } from '../../../contribution/productInformationMenu';
+import { resultContributionActions } from '../../../contribution/resultContributionActions';
+import { voluntaryContributionOffer } from '../../../contribution/voluntaryContributionOffer';
 
 const EMPTY_NUTRITION = { basis: 'per_100g' as const, amounts: {}, sodiumUnit: 'mg' as const };
 
@@ -14,6 +17,7 @@ function opportunity(routeKey: string) {
 function product(input: {
   settled?: boolean;
   omitPublication?: boolean;
+  omitPlanet?: boolean;
   overall?: 'checking' | 'nr' | 'rated';
   bodyStatus?: 'checking' | 'nr' | 'rated';
   planetStatus?: 'checking' | 'nr' | 'rated';
@@ -51,12 +55,14 @@ function product(input: {
         assessmentLanes: { nutrition, processing },
         s26: input.bodyOpportunity === null ? { explanation: 'Body note' } : input.bodyOpportunity ? { explanation: 'Body note', contributionOpportunity: input.bodyOpportunity } : nutrition === 'resolved' && processing === 'resolved' ? { explanation: 'Body assessed' } : { explanation: 'Body note', contributionOpportunity: opportunity('ingredients_nutrition') },
       },
-      planet: {
-        publicationStatus: input.planetStatus ?? 'rated',
-        publishedScore: 12,
-        assessmentLanes: { broad_environment: 'resolved', packaging_fallback: 'resolved' },
-        s26: { explanation: 'Planet note', contributionOpportunity: { material: false, routeStatus: 'none', domain: null } },
-      },
+      planet: input.omitPlanet
+        ? undefined
+        : {
+            publicationStatus: input.planetStatus ?? 'rated',
+            publishedScore: 12,
+            assessmentLanes: { broad_environment: 'resolved', packaging_fallback: 'resolved' },
+            s26: { explanation: 'Planet note', contributionOpportunity: { material: false, routeStatus: 'none', domain: null } },
+          },
       claims: {
         publicationStatus: input.claimsStatus ?? 'rated',
         publishedScore: 12,
@@ -174,11 +180,31 @@ describe('product information menu', () => {
     expect(labels).toContain('Add packet information');
     expect(labels).toContain('Change packet information');
     expect(current.certifications).toEqual([{ id: 'Fairtrade', name: 'Fairtrade' }]);
-    expect(productInformationMenu(current, open).find((row) => row.key === 'add-packet')?.formFirst).toBe(true);
+    expect(resultContributionActions(current).packetInformationAction).toBe('add');
+    expect(voluntaryContributionOffer(current, open).some((row) => row.key === 'add-packet' && row.journey === 'add')).toBe(true);
+    expect(productInformationMenu(current, open).find((row) => row.key === 'add-packet')).toMatchObject({
+      journey: 'add',
+      formFirst: true,
+      label: 'Add packet information',
+    });
   });
 
   it('offers nothing for Checking, a closed latch, or a missing publication', () => {
     expect(productInformationMenu(product({ overall: 'checking', bodyStatus: 'checking' }), open)).toEqual([]);
+    expect(productInformationMenu(product({ overall: 'checking', bodyStatus: 'rated', nutrition: 'unassessed' }), open)).toEqual([]);
+    expect(productInformationMenu(product({
+      planetStatus: 'checking',
+      bodyStatus: 'nr',
+      overall: 'nr',
+      nutrition: 'unassessed',
+    }), open)).toEqual([]);
+    expect(productInformationMenu(product({ omitPlanet: true, nutrition: 'unassessed', bodyStatus: 'nr', overall: 'nr' }), open)).toEqual([]);
+    const invalidPlanet = product({ nutrition: 'unassessed', bodyStatus: 'nr', overall: 'nr' });
+    (invalidPlanet._publication as { planet: { publicationStatus: string } }).planet.publicationStatus = 'pending';
+    expect(productInformationMenu(invalidPlanet, open)).toEqual([]);
+    const missingLanes = product({ nutrition: 'unassessed', bodyStatus: 'nr', overall: 'nr' });
+    delete (missingLanes._publication as { body: { assessmentLanes?: unknown } }).body.assessmentLanes;
+    expect(productInformationMenu(missingLanes, open)).toEqual([]);
     expect(productInformationMenu(product({ settled: false }), open)).toEqual([]);
     expect(productInformationMenu(product({ omitPublication: true }), open)).toEqual([]);
     expect(productInformationMenu(product(), { publicationSettled: false })).toEqual([]);
@@ -191,6 +217,53 @@ describe('product information menu', () => {
     const atTap = productInformationMenu(product({ nutrition: 'unassessed', bodyStatus: 'checking', overall: 'checking' }), open);
     expect(atTap.some((row) => row.key === 'add-nutrition')).toBe(false);
     expect(atTap).toEqual([]);
+    expect(productInformationMenu(product({
+      nutrition: 'unassessed',
+      bodyStatus: 'nr',
+      overall: 'nr',
+      planetStatus: 'checking',
+    }), open)).toEqual([]);
+  });
+
+  it('keeps the origins Add journey when an unresolved lane also has an OFF country', () => {
+    const current = product({
+      overall: 'nr',
+      transparencyStatus: 'nr',
+      origins: 'unassessed',
+      offCountry: 'New Zealand',
+    });
+    expect(resultContributionActions(current).originsAction).toBe('add');
+    expect(voluntaryContributionOffer(current, open).some((row) => row.key === 'add-origins' && row.journey === 'add')).toBe(true);
+    expect(productInformationMenu(current, open).find((row) => row.key === 'add-origins')).toMatchObject({
+      journey: 'add',
+      formFirst: true,
+      label: 'Add product origins',
+    });
+    expect(originRowsForJourney('add', [], 'New Zealand')[0]?.place).toBe('New Zealand');
+    const governed = [{
+      evidenceId: 'origin-1',
+      subjectKey: 'made_in',
+      claimType: 'made_in' as const,
+      countries: ['Chile'],
+      confidence: 'limited' as const,
+    }];
+    const withFact = product({ overall: 'nr', transparencyStatus: 'nr', origins: 'unassessed' });
+    (withFact as Product & { rveelGovernedOrigins: typeof governed }).rveelGovernedOrigins = governed;
+    expect(productInformationMenu(withFact, open).find((row) => row.key === 'add-origins')).toMatchObject({
+      journey: 'add',
+      formFirst: true,
+    });
+    expect(originRowsForJourney('add', [{
+      claimType: 'made_in',
+      wording: '',
+      place: 'Chile',
+      ingredient: '',
+      percentage: '',
+      intent: 'edited',
+    }], '')).toEqual([
+      expect.objectContaining({ claimType: null, place: '' }),
+    ]);
+    expect(withFact.rveelGovernedOrigins).toEqual(governed);
   });
 
   it('does not open an assessment Add from an unresolved lane that has no live opportunity', () => {

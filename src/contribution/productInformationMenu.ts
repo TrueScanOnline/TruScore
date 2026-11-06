@@ -82,9 +82,19 @@ export function productInformationMenu(
   product: Product | null | undefined,
   options?: { publicationSettled?: boolean }
 ): ProductInformationAction[] {
+  // Same fail-closed gate as voluntaryContributionOffer. One Checking or missing pillar supplies nothing.
   if (options?.publicationSettled !== true) return [];
   const publication = product?._publication;
   if (!publication || publication.settled !== true) return [];
+  const overall = publication.overall?.publicationStatus;
+  if (overall !== 'rated' && overall !== 'nr') return [];
+  const pillarStatuses = [
+    publication.body?.publicationStatus,
+    publication.planet?.publicationStatus,
+    publication.claims?.publicationStatus,
+    publication.transparency?.publicationStatus,
+  ];
+  if (!pillarStatuses.every((status) => status === 'rated' || status === 'nr')) return [];
   if (
     !publication.body?.assessmentLanes ||
     !publication.claims?.assessmentLanes ||
