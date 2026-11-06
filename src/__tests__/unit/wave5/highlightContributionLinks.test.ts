@@ -260,6 +260,135 @@ describe('Score Highlights contribution invitations', () => {
     expect(highlightContributionTap(shown, 'Body', 'ingredients', settled)).toBeNull();
   });
 
+  it('withholds origins Add and complete unless the Transparency opportunity is live', () => {
+    const ordinary = {
+      ingredient: 'unassessed' as const,
+      origins: 'unassessed' as const,
+      transparencyStatus: 'nr' as const,
+      overallStatus: 'nr' as const,
+    };
+    const nonLive = highlightContributionOffer(
+      product({
+        ...ordinary,
+        transparencyOpportunity: { material: true, domain: 'origins', routeStatus: 'none' },
+      }),
+      'Open',
+      settled
+    );
+    const missing = highlightContributionOffer(
+      product({ ...ordinary, transparencyOpportunity: null }),
+      'Open',
+      settled
+    );
+    expect(nonLive.links.map((link) => link.destination)).not.toContain('origins');
+    expect(missing.links.map((link) => link.destination)).not.toContain('origins');
+
+    const addOrigins = highlightContributionOffer(
+      product({ ...ordinary, transparencyOpportunity: live('origins', 'origins') }),
+      'Open',
+      settled
+    );
+    const completeOrigins = highlightContributionOffer(
+      product({
+        ingredient: 'resolved',
+        origins: 'unassessed',
+        transparencyStatus: 'rated',
+        transparencyOpportunity: live('origins', 'origins'),
+      }),
+      'Open',
+      settled
+    );
+    expect(addOrigins.links.map((link) => ({ label: link.label, kind: link.kind, journey: link.journey }))).toEqual([
+      { label: 'Add ingredients', kind: 'add', journey: 'add' },
+      { label: 'Add product origins', kind: 'add', journey: 'add' },
+    ]);
+    expect(completeOrigins.links).toContainEqual(
+      expect.objectContaining({ label: 'Add product origins', kind: 'complete', journey: 'add' })
+    );
+  });
+
+  it('fails closed when the selected pillar is Checking even if Overall is Rated', () => {
+    const body = highlightContributionOffer(
+      product({
+        bodyStatus: 'checking',
+        overallStatus: 'rated',
+        nutrition: 'unassessed',
+        bodyOpportunity: live('ingredients_nutrition', 'ingredients_nutrition'),
+      }),
+      'Body',
+      settled
+    );
+    const claims = highlightContributionOffer(
+      product({
+        claimsStatus: 'checking',
+        overallStatus: 'rated',
+        packet: 'unassessed_or_incomplete',
+        claimsOpportunity: live('packet_claims', 'packet_claims'),
+      }),
+      'Ethics',
+      settled
+    );
+    const transparency = highlightContributionOffer(
+      product({
+        transparencyStatus: 'checking',
+        overallStatus: 'rated',
+        ingredient: 'unassessed',
+        origins: 'unassessed',
+        transparencyOpportunity: live('origins', 'origins'),
+      }),
+      'Open',
+      settled
+    );
+    expect(body.links).toEqual([]);
+    expect(claims.links).toEqual([]);
+    expect(transparency.links).toEqual([]);
+
+    const nr = highlightContributionOffer(
+      product({
+        ingredient: 'unassessed',
+        origins: 'unassessed',
+        transparencyStatus: 'nr',
+        overallStatus: 'nr',
+        transparencyOpportunity: live('origins', 'origins'),
+      }),
+      'Open',
+      settled
+    );
+    expect(nr.links.map((link) => link.label)).toEqual(['Add ingredients', 'Add product origins']);
+  });
+
+  it('requires an explicit true Result latch for the offer and the tap', () => {
+    const ready = product({
+      nutrition: 'unassessed',
+      bodyOpportunity: live('ingredients_nutrition', 'ingredients_nutrition'),
+    });
+    expect(highlightContributionOffer(ready, 'Body').links).toEqual([]);
+    expect(highlightContributionOffer(ready, 'Body', { highlight: HIGHLIGHT }).links).toEqual([]);
+    expect(highlightContributionOffer(ready, 'Body', { publicationSettled: false }).links).toEqual([]);
+    expect(highlightContributionTap(ready, 'Body', 'nutrition')).toBeNull();
+    expect(highlightContributionTap(ready, 'Body', 'nutrition', {})).toBeNull();
+    expect(highlightContributionTap(ready, 'Body', 'nutrition', { publicationSettled: false })).toBeNull();
+
+    const opened = highlightContributionOffer(ready, 'Body', { publicationSettled: true });
+    expect(opened.links.map((link) => link.label)).toEqual(['Add nutrition']);
+    expect(highlightContributionTap(ready, 'Body', 'nutrition', { publicationSettled: true })?.label).toBe(
+      'Add nutrition'
+    );
+  });
+
+  it('keeps voluntary Change when resolved evidence has no live opportunity', () => {
+    const transparency = highlightContributionOffer(
+      product({ transparencyOpportunity: null }),
+      'Open',
+      settled
+    );
+    expect(transparency.links.map((link) => ({ label: link.label, kind: link.kind }))).toEqual([
+      { label: 'Change ingredients', kind: 'change' },
+      { label: 'Change product origins', kind: 'change' },
+    ]);
+    expect(transparency.heading).toBeNull();
+  });
+
   it('does not change eligibility when the published score is a genuine zero', () => {
     const lanes = {
       nutrition: 'unassessed' as const,

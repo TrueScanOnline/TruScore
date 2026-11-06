@@ -16,7 +16,7 @@ import {
   resultContributionActions,
   type ContributionEntryContext,
 } from '../../contribution/resultContributionActions';
-import type { ContributionOpportunity } from '../rateability/types';
+import type { ContributionOpportunity, CrossPillarPublicationSnapshot } from '../rateability/types';
 import type { Product } from '../../types/product';
 import type { ScoreHighlightPillar } from './types';
 
@@ -46,7 +46,10 @@ export type HighlightContributionOffer = {
 };
 
 export type HighlightContributionOptions = {
-  /** Result publication latch. Closed latch is Checking: no links. */
+  /**
+   * Result publication latch. Links and taps require `true`.
+   * An omitted latch is not permission.
+   */
   publicationSettled?: boolean;
   /** Accepted and ignored. A Highlight must not create an invitation. */
   highlight?: unknown;
@@ -56,6 +59,16 @@ const EMPTY: HighlightContributionOffer = { links: [], heading: null };
 
 function liveOpportunity(opportunity: ContributionOpportunity | undefined): boolean {
   return opportunity?.material === true && opportunity.routeStatus === 'live';
+}
+
+function selectedPillarStatus(
+  publication: CrossPillarPublicationSnapshot,
+  pillar: ScoreHighlightPillar
+): string | undefined {
+  if (pillar === 'Body') return publication.body?.publicationStatus;
+  if (pillar === 'Planet') return publication.planet?.publicationStatus;
+  if (pillar === 'Ethics') return publication.claims?.publicationStatus;
+  return publication.transparency?.publicationStatus;
 }
 
 function offer(links: HighlightContributionLink[]): HighlightContributionOffer {
@@ -73,10 +86,11 @@ export function highlightContributionOffer(
   options?: HighlightContributionOptions
 ): HighlightContributionOffer {
   void options?.highlight;
-  if (options?.publicationSettled === false) return EMPTY;
+  if (options?.publicationSettled !== true) return EMPTY;
   const publication = product?._publication;
   if (!publication || publication.settled !== true) return EMPTY;
   if (publication.overall?.publicationStatus === 'checking') return EMPTY;
+  if (selectedPillarStatus(publication, pillar) === 'checking') return EMPTY;
   if (
     !publication.body?.assessmentLanes ||
     !publication.claims?.assessmentLanes ||
@@ -176,7 +190,11 @@ export function highlightContributionOffer(
     });
   }
 
-  if (originsUnresolved && (actions.originsAction === 'add' || actions.originsAction === 'complete')) {
+  if (
+    originsUnresolved &&
+    transparencyLive &&
+    (actions.originsAction === 'add' || actions.originsAction === 'complete')
+  ) {
     links.push({
       key: 'origins',
       label: ADD_PRODUCT_ORIGINS,
