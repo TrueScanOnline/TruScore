@@ -76,7 +76,6 @@ export interface LandingPresentation {
 export function buildLandingPresentation(args: {
   ctx?: string;
   productNamePlain: string;
-  trustScore: number | null | undefined;
   defaultHeadline: string;
   defaultMetaDescription: string;
   scoreHook: string;
@@ -97,9 +96,9 @@ export function buildLandingPresentation(args: {
       return {
         pageHeadlinePlain: `Nutrition snapshot: ${pn}`,
         documentTitlePlain: `${pn} · Nutrition · Rveel`,
-        metaDescriptionPlain: `Nutrition and Rveel Score for ${pn}. Tap to open in the Rveel app.`,
+        metaDescriptionPlain: `Nutrition facts for ${pn}. Open it in Rveel for the full reading.`,
         heroTaglinePlain: scoreHook,
-        heroViralPlain: 'See full nutrition facts and Rveel Score in the app.',
+        heroViralPlain: 'Open it in Rveel for the full reading.',
       };
     case 'allergens':
       return {
@@ -111,11 +110,11 @@ export function buildLandingPresentation(args: {
       };
     case 'ecoscore':
       return {
-        pageHeadlinePlain: `Environmental score: ${pn}`,
+        pageHeadlinePlain: `Environmental context: ${pn}`,
         documentTitlePlain: `${pn} · Eco · Rveel`,
-        metaDescriptionPlain: `Environmental impact and Rveel Score for ${pn}. Open in Rveel.`,
+        metaDescriptionPlain: `Environmental context for ${pn}. Open it in Rveel for the full reading.`,
         heroTaglinePlain: scoreHook,
-        heroViralPlain: 'See Eco-Score-style context and full breakdown in the app.',
+        heroViralPlain: 'Open it in Rveel for the full reading.',
       };
     case 'countryOfManufacture':
       return {
@@ -158,19 +157,12 @@ export function buildLandingPresentation(args: {
         heroViralPlain: 'See processing and nutrition context in the app.',
       };
     case 'negativeTruScore':
-      return {
-        pageHeadlinePlain: `Low Rveel Score: ${pn}`,
-        documentTitlePlain: `${pn} · Rveel Score`,
-        metaDescriptionPlain: `This product has a low Rveel Score. See why in the free Rveel app.`,
-        heroTaglinePlain: scoreHook,
-        heroViralPlain: scoreViral,
-      };
     case 'truScore':
     case 'productInfo':
     default:
       return {
         pageHeadlinePlain: defaultHeadline,
-        documentTitlePlain: `${pn} · Rveel Score`,
+        documentTitlePlain: `${pn} · Rveel`,
         metaDescriptionPlain: defaultMetaDescription,
         heroTaglinePlain: scoreHook,
         heroViralPlain: scoreViral,

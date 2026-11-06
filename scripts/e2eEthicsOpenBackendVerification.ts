@@ -277,7 +277,9 @@ async function httpCheck(label: string, url: string, test: (res: Response) => bo
     }
   );
 
-  let previewHasBreakdown = false;
+  // Retired expectation: numeric breakdown.body/planet/ethics/open, and rejection of a legacy `care` pillar.
+  // Protective replacement: the public route has no settled/Rated snapshot, so both score fields are JSON null.
+  let previewScoreWithheld = false;
   let previewLegacyCare = false;
   try {
     const r = await fetch(productPreviewUrl(cacheBust), {
@@ -286,25 +288,20 @@ async function httpCheck(label: string, url: string, test: (res: Response) => bo
     });
     if (r.ok) {
       const j = (await r.json()) as Record<string, unknown>;
-      const b = j.trust_score_breakdown as Record<string, unknown> | undefined;
-      if (b && typeof b === 'object') {
-        previewLegacyCare = 'care' in b && !('ethics' in b);
-        previewHasBreakdown =
-          typeof b.body === 'number' &&
-          typeof b.ethics === 'number' &&
-          typeof b.open === 'number' &&
-          typeof b.planet === 'number';
-      }
+      const b = j.trust_score_breakdown;
+      previewLegacyCare =
+        b != null && typeof b === 'object' && 'care' in b && !('ethics' in (b as object));
+      previewScoreWithheld = j.trust_score === null && j.trust_score_breakdown === null;
     }
   } catch {
     /* handled below */
   }
   ok(
-    'product-preview uses shared pillars (breakdown.ethics, not legacy care)',
-    previewHasBreakdown && !previewLegacyCare,
+    'product-preview withholds Overall and pillar scores (null, not a legacy care breakdown)',
+    previewScoreWithheld && !previewLegacyCare,
     previewLegacyCare
       ? 'Redeploy backend/vercel — production still returns trust_score_breakdown.care + old heuristics'
-      : undefined
+      : 'Public contract: trust_score and trust_score_breakdown are JSON null until a server-verifiable Rated publication exists. This smoke fails against a deployment that still returns pillar arithmetic.'
   );
 
   await httpCheck(

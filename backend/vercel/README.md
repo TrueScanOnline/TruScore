@@ -41,7 +41,7 @@ const BACKEND_URL = 'https://your-actual-vercel-url.vercel.app';
 ## 📊 API Endpoint
 
 - `/api/nz-prices?barcode={barcode}` - Fetches prices from all NZ stores
-- `/api/product-preview?barcode={barcode}` - Open Food Facts redirect preview; **TruScore uses the same pillar modules as the mobile app** (`src/lib/truscoreEngine/pillars`). Deploy from a Git repo whose root contains both `backend/vercel` and `src`. Optional: set `TRUESCAN_DEFAULT_COUNTRY_CODE` for country-specific packaging rules (see `ENV_TEMPLATE.md`).
+- `/api/product-preview?barcode={barcode}` - Open Food Facts redirect preview. Identity, photograph and non-score catalogue fields are returned. `trust_score` and `trust_score_breakdown` are always JSON null: this route does not run pillar scoring and has no settled/Rated publication snapshot. Deploy from a Git repo whose root contains both `backend/vercel` and `src`.
 
 **Example Response:**
 ```json

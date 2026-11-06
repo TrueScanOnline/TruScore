@@ -3,15 +3,9 @@
 
 ---
 
-## OPTIONAL — Product preview / shared pillars (Node)
+## Product preview
 
-When `/api/product-preview` runs the same TruScore pillar code as the app, there is no Expo device locale. Packaging recyclability and country-specific additive rules use `getUserCountryCode()`; on Vercel that resolves from:
-
-```
-TRUESCAN_DEFAULT_COUNTRY_CODE=NZ
-```
-
-Use an ISO 3166-1 alpha-2 code (e.g. `AU`, `GB`, `US`). Omit to fall back to neutral/global behaviour where the code supports it.
+`/api/product-preview` does not run TruScore pillar code. `trust_score` and `trust_score_breakdown` are always JSON null until a server-verifiable settled/Rated publication snapshot exists. `TRUESCAN_DEFAULT_COUNTRY_CODE` is not read by this route.
 
 ---
 

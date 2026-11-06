@@ -59,9 +59,9 @@ function buildLandingPresentation(args) {
       return {
         pageHeadlinePlain: `Nutrition snapshot: ${pn}`,
         documentTitlePlain: `${pn} \xB7 Nutrition \xB7 Rveel`,
-        metaDescriptionPlain: `Nutrition and Rveel Score for ${pn}. Tap to open in the Rveel app.`,
+        metaDescriptionPlain: `Nutrition facts for ${pn}. Open it in Rveel for the full reading.`,
         heroTaglinePlain: scoreHook,
-        heroViralPlain: "See full nutrition facts and Rveel Score in the app."
+        heroViralPlain: "Open it in Rveel for the full reading."
       };
     case "allergens":
       return {
@@ -73,11 +73,11 @@ function buildLandingPresentation(args) {
       };
     case "ecoscore":
       return {
-        pageHeadlinePlain: `Environmental score: ${pn}`,
+        pageHeadlinePlain: `Environmental context: ${pn}`,
         documentTitlePlain: `${pn} \xB7 Eco \xB7 Rveel`,
-        metaDescriptionPlain: `Environmental impact and Rveel Score for ${pn}. Open in Rveel.`,
+        metaDescriptionPlain: `Environmental context for ${pn}. Open it in Rveel for the full reading.`,
         heroTaglinePlain: scoreHook,
-        heroViralPlain: "See Eco-Score-style context and full breakdown in the app."
+        heroViralPlain: "Open it in Rveel for the full reading."
       };
     case "countryOfManufacture":
       return {
@@ -120,19 +120,12 @@ function buildLandingPresentation(args) {
         heroViralPlain: "See processing and nutrition context in the app."
       };
     case "negativeTruScore":
-      return {
-        pageHeadlinePlain: `Low Rveel Score: ${pn}`,
-        documentTitlePlain: `${pn} \xB7 Rveel Score`,
-        metaDescriptionPlain: `This product has a low Rveel Score. See why in the free Rveel app.`,
-        heroTaglinePlain: scoreHook,
-        heroViralPlain: scoreViral
-      };
     case "truScore":
     case "productInfo":
     default:
       return {
         pageHeadlinePlain: defaultHeadline,
-        documentTitlePlain: `${pn} \xB7 Rveel Score`,
+        documentTitlePlain: `${pn} \xB7 Rveel`,
         metaDescriptionPlain: defaultMetaDescription,
         heroTaglinePlain: scoreHook,
         heroViralPlain: scoreViral
@@ -141,22 +134,8 @@ function buildLandingPresentation(args) {
 }
 
 // backend/vercel/lib/shareLandingHtml.ts
-function pillarText(value) {
-  const n = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(n) ? `${Math.round(n)}/25` : "\u2014";
-}
-function scoreBand(trustScore) {
-  if (trustScore >= 80) {
-    return { color: "#16a085", label: "Excellent" };
-  }
-  if (trustScore >= 60) {
-    return { color: "#1f9d78", label: "Good" };
-  }
-  if (trustScore >= 40) {
-    return { color: "#b8860b", label: "Fair" };
-  }
-  return { color: "#e45757", label: "Poor" };
-}
+var SHARED_PRODUCT_HEADLINE = "Someone shared this product with you";
+var SHARED_PRODUCT_READING = "Open it in Rveel for the full reading.";
 function renderShareLandingHtml(input) {
   const { barcode, query, productData } = input;
   const APP_STORE_ID = input.appStoreId || "";
@@ -182,8 +161,6 @@ function renderShareLandingHtml(input) {
   const canonicalPageUrl = `${origin}/barcode/${barcode}${canonicalQs ? `?${canonicalQs}` : ""}`;
   const productNamePlain = productData?.product_name || productData?.product_name_en || "Shared product";
   const productImageAbsolute = absoluteImageUrl(productData?.image_url || "");
-  const trustScore = productData?.trust_score;
-  const trustScoreBreakdown = productData?.trust_score_breakdown;
   const brands = productData?.brands;
   const categories = productData?.categories;
   const productNameHtml = escapeHtmlText(productNamePlain);
@@ -192,35 +169,15 @@ function renderShareLandingHtml(input) {
   const firstBrandHtml = firstBrandPlain ? escapeHtmlText(firstBrandPlain) : "";
   const firstCategoryHtml = firstCategoryPlain ? escapeHtmlText(firstCategoryPlain) : "";
   const barcodeHtml = escapeHtmlText(barcode);
-  const hasScore = typeof trustScore === "number" && Number.isFinite(trustScore);
-  const band = hasScore ? scoreBand(trustScore) : null;
-  const scoreInfo = !hasScore ? {
-    color: "#8a8a8a",
-    label: "",
-    hook: "Someone shared this product with you",
-    viralMessage: "Open it in Rveel for the full reading."
-  } : {
-    color: band.color,
-    label: band.label,
-    hook: band.label === "Excellent" ? `${productNamePlain} scored excellent` : band.label === "Poor" ? `Low Rveel Score: ${productNamePlain}` : `Rveel Score for ${productNamePlain}`,
-    viralMessage: band.label === "Excellent" || band.label === "Good" ? "Open Rveel for the full reading." : "See the four pillars in the app."
-  };
-  const ringCircumference = 2 * Math.PI * 40;
-  const ringOffset = hasScore ? ringCircumference * (1 - Math.max(0, Math.min(100, trustScore)) / 100) : ringCircumference;
-  const bodyText = pillarText(trustScoreBreakdown?.body);
-  const planetText = pillarText(trustScoreBreakdown?.planet);
-  const claimsText = pillarText(trustScoreBreakdown?.ethics ?? trustScoreBreakdown?.care);
-  const openText = pillarText(trustScoreBreakdown?.open);
-  const defaultHeadline = scoreInfo.hook;
-  const defaultMetaDescription = hasScore ? `${scoreInfo.viralMessage} Rveel Score ${trustScore}/100. Open Rveel for the full reading.` : `${productNamePlain} was shared from Rveel. Open the app for the full reading.`;
+  const defaultHeadline = SHARED_PRODUCT_HEADLINE;
+  const defaultMetaDescription = `${SHARED_PRODUCT_HEADLINE}. ${SHARED_PRODUCT_READING}`;
   const landing = buildLandingPresentation({
     ctx: ctxParam,
     productNamePlain,
-    trustScore,
     defaultHeadline,
     defaultMetaDescription,
-    scoreHook: scoreInfo.hook,
-    scoreViral: scoreInfo.viralMessage
+    scoreHook: SHARED_PRODUCT_HEADLINE,
+    scoreViral: SHARED_PRODUCT_READING
   });
   const pageHeadlineHtml = escapeHtmlText(landing.pageHeadlinePlain);
   const documentTitleHtml = escapeHtmlText(landing.documentTitlePlain);
@@ -234,25 +191,6 @@ function renderShareLandingHtml(input) {
   const imageMeta = productImageAbsolute ? `<meta property="og:image" content="${escapeHtmlAttr(productImageAbsolute)}">` : "";
   const imageTwitter = productImageAbsolute ? `<meta name="twitter:image" content="${escapeHtmlAttr(productImageAbsolute)}">` : "";
   const photoHtml = productImageAbsolute ? `<img src="${escapeHtmlAttr(productImageAbsolute)}" alt="${escapeHtmlAttr(productNamePlain)}" onerror="this.outerHTML='<span aria-hidden=\\'true\\'>\u25A3</span>'">` : '<span aria-hidden="true">\u25A3</span>';
-  const scoreBlockFixed = hasScore ? `<div class="ring-row">
-        <div class="ring" style="color:${scoreInfo.color}">
-          <svg viewBox="0 0 96 96" aria-hidden="true">
-            <circle class="track" cx="48" cy="48" r="40" stroke-width="8"></circle>
-            <circle cx="48" cy="48" r="40" stroke="${scoreInfo.color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${ringCircumference} ${ringCircumference}" stroke-dashoffset="${ringOffset}" transform="rotate(-90 48 48)"></circle>
-          </svg>
-          <b style="color:${scoreInfo.color}">${trustScore}<small>/100</small></b>
-        </div>
-        <div class="band" style="color:${scoreInfo.color}">${escapeHtmlText(scoreInfo.label)}</div>
-      </div>
-      <div class="pillars">
-        <div class="p-body"><span>Body</span><strong>${bodyText}</strong></div>
-        <div class="p-planet"><span>Planet</span><strong>${planetText}</strong></div>
-        <div class="p-claims"><span>Claims</span><strong>${claimsText}</strong></div>
-        <div class="p-open"><span>Transparency</span><strong>${openText}</strong></div>
-      </div>` : `<div class="unavailable">
-        <h2>Rveel Score unavailable</h2>
-        <p>We could not show a score for this product on the web. Open Rveel to see the packet. If a score is not ready, the app shows no number.</p>
-      </div>`;
   const storeButtons = [
     appStoreLink ? `<a class="btn btn-soft btn-block" href="${escapeHtmlAttr(appStoreLink)}">Download on the App Store</a>` : "",
     `<a class="btn btn-soft btn-block" href="${escapeHtmlAttr(playStoreLink)}">Get it on Google Play</a>`
@@ -309,10 +247,6 @@ function renderShareLandingHtml(input) {
         <h2 class="product-title">${productNameHtml}</h2>
         <p class="meta">${firstCategoryHtml ? `${firstCategoryHtml} \xB7 ` : ""}Barcode ${barcodeHtml}</p>
       </div>
-    </article>
-    <article class="reading">
-      ${hasScore ? "<h2>Rveel Score</h2>" : ""}
-      ${scoreBlockFixed}
     </article>
     <p class="context">${heroTaglineHtml}. ${heroViralHtml}</p>
     <div class="cta-stack">

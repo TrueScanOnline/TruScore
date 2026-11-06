@@ -1,14 +1,11 @@
-// Product preview API for redirect page — TruScore from shared pillar engine (same as app).
+// Public product preview. Identity and catalogue fields only.
+// trust_score and trust_score_breakdown are always JSON null: this route has no
+// server-verifiable settled/Rated publication snapshot, so internal pillar arithmetic is not exposed.
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { offJsonProductToTruescan } from '../lib/offToTruescanProduct';
+import { toPublicProductPreview } from '../lib/publicPreviewContract';
 import { offProductApiUrl } from '../truescan-src/services/offReadTarget';
-/** Resolved via `truescan-src/` (synced from repo root `src/` before deploy — see syncTruescanSrc.cjs). */
-import { calculateBodyPillar } from '../truescan-src/lib/truscoreEngine/pillars/bodyPillar';
-import { calculatePlanetPillar } from '../truescan-src/lib/truscoreEngine/pillars/planetPillar';
-import { calculateEthicsPillar } from '../truescan-src/lib/truscoreEngine/pillars/ethicsPillar';
-import { calculateOpenPillar } from '../truescan-src/lib/truscoreEngine/pillars/openPillar';
 /** Rewritten from /api/share-event (same serverless function on Hobby). */
 function handleShareEventRoute(req: VercelRequest, res: VercelResponse): void | VercelResponse {
   if (req.method === 'OPTIONS') {
@@ -56,14 +53,11 @@ interface ProductPreview {
   product_name_en?: string;
   brands?: string;
   image_url?: string;
-  trust_score?: number | null;
-  trust_score_breakdown?: {
-    body: number;
-    planet: number;
-    ethics: number;
-    open: number;
-  };
-  nutriments?: any;
+  /** Always null on this public route. See publicPreviewContract.ts. */
+  trust_score: null;
+  /** Always null on this public route. See publicPreviewContract.ts. */
+  trust_score_breakdown: null;
+  nutriments?: unknown;
   ingredients_text?: string;
   nova_group?: number;
   ecoscore_grade?: string;
@@ -97,24 +91,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (offData.status === 1 && offData.product) {
         const offProduct = offData.product;
 
-        let trustScore: number | null = null;
-        let trustScoreBreakdown: ProductPreview['trust_score_breakdown'];
+        const novaGroup =
+          typeof offProduct.nova_group === 'number'
+            ? offProduct.nova_group
+            : typeof offProduct.nova_group === 'string'
+              ? parseInt(offProduct.nova_group, 10)
+              : undefined;
 
-        try {
-          // S-04: Planet v19 does not require legacy CSV databases; skip vestigial init.
-          const truescanProduct = offJsonProductToTruescan(barcode, offProduct);
-          const body = calculateBodyPillar(truescanProduct).score;
-          const planet = calculatePlanetPillar(truescanProduct).score;
-          const ethics = calculateEthicsPillar(truescanProduct).score;
-          const open = calculateOpenPillar(truescanProduct).score;
-
-          trustScore = Math.max(0, Math.min(100, Math.round(body + planet + ethics + open)));
-          trustScoreBreakdown = { body, planet, ethics, open };
-        } catch (e) {
-          console.error('[product-preview] Pillar calculation failed:', e);
-        }
-
-        const preview: ProductPreview = {
+        const preview: ProductPreview = toPublicProductPreview({
           barcode,
           product_name:
             typeof offProduct.product_name === 'string'
@@ -130,21 +114,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             (typeof offProduct.image_front_url === 'string' && offProduct.image_front_url) ||
             (typeof offProduct.image_front_small_url === 'string' && offProduct.image_front_small_url) ||
             undefined,
-          trust_score: trustScore,
-          trust_score_breakdown: trustScoreBreakdown,
           nutriments: offProduct.nutriments,
           ingredients_text:
             typeof offProduct.ingredients_text === 'string' ? offProduct.ingredients_text : undefined,
-          nova_group:
-            typeof offProduct.nova_group === 'number'
-              ? offProduct.nova_group
-              : typeof offProduct.nova_group === 'string'
-                ? parseInt(offProduct.nova_group, 10)
-                : undefined,
+          nova_group: typeof novaGroup === 'number' && Number.isFinite(novaGroup) ? novaGroup : undefined,
           ecoscore_grade:
             typeof offProduct.ecoscore_grade === 'string' ? offProduct.ecoscore_grade : undefined,
           categories: typeof offProduct.categories === 'string' ? offProduct.categories : undefined,
-        };
+        });
 
         res.setHeader('Cache-Control', 'public, max-age=3600');
         return res.status(200).json(preview);
@@ -160,13 +137,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
       if (upcData.items && upcData.items.length > 0) {
         const item = upcData.items[0];
-        const preview: ProductPreview = {
+        const preview: ProductPreview = toPublicProductPreview({
           barcode,
           product_name: item.title,
           brands: item.brand,
           image_url: item.images && item.images.length > 0 ? item.images[0] : undefined,
-          trust_score: null,
-        };
+        });
 
         res.setHeader('Cache-Control', 'public, max-age=3600');
         return res.status(200).json(preview);

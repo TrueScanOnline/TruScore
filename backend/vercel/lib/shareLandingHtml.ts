@@ -1,5 +1,7 @@
 /**
- * Share-card web destination HTML. Presentation only — scores come from product-preview.
+ * Share-card web destination HTML.
+ * Numeric trust_score and trust_score_breakdown on the payload are not publication
+ * authority and are never rendered. A URL ctx value is not publication authority either.
  */
 
 import {
@@ -35,23 +37,8 @@ export type ShareLandingInput = {
   origin?: string;
 };
 
-function pillarText(value: unknown): string {
-  const n = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(n) ? `${Math.round(n)}/25` : '—';
-}
-
-function scoreBand(trustScore: number) {
-  if (trustScore >= 80) {
-    return { color: '#16a085', label: 'Excellent' as const };
-  }
-  if (trustScore >= 60) {
-    return { color: '#1f9d78', label: 'Good' as const };
-  }
-  if (trustScore >= 40) {
-    return { color: '#b8860b', label: 'Fair' as const };
-  }
-  return { color: '#e45757', label: 'Poor' as const };
-}
+const SHARED_PRODUCT_HEADLINE = 'Someone shared this product with you';
+const SHARED_PRODUCT_READING = 'Open it in Rveel for the full reading.';
 
 export function renderShareLandingHtml(input: ShareLandingInput): string {
   const { barcode, query, productData } = input;
@@ -81,8 +68,6 @@ export function renderShareLandingHtml(input: ShareLandingInput): string {
   const productNamePlain =
     productData?.product_name || productData?.product_name_en || 'Shared product';
   const productImageAbsolute = absoluteImageUrl(productData?.image_url || '');
-  const trustScore = productData?.trust_score;
-  const trustScoreBreakdown = productData?.trust_score_breakdown;
   const brands = productData?.brands;
   const categories = productData?.categories;
 
@@ -93,53 +78,16 @@ export function renderShareLandingHtml(input: ShareLandingInput): string {
   const firstCategoryHtml = firstCategoryPlain ? escapeHtmlText(firstCategoryPlain) : '';
   const barcodeHtml = escapeHtmlText(barcode);
 
-  const hasScore = typeof trustScore === 'number' && Number.isFinite(trustScore);
-  const band = hasScore ? scoreBand(trustScore as number) : null;
-  const scoreInfo = !hasScore
-    ? {
-        color: '#8a8a8a',
-        label: '',
-        hook: 'Someone shared this product with you',
-        viralMessage: 'Open it in Rveel for the full reading.',
-      }
-    : {
-        color: band!.color,
-        label: band!.label,
-        hook:
-          band!.label === 'Excellent'
-            ? `${productNamePlain} scored excellent`
-            : band!.label === 'Poor'
-              ? `Low Rveel Score: ${productNamePlain}`
-              : `Rveel Score for ${productNamePlain}`,
-        viralMessage:
-          band!.label === 'Excellent' || band!.label === 'Good'
-            ? 'Open Rveel for the full reading.'
-            : 'See the four pillars in the app.',
-      };
-
-  const ringCircumference = 2 * Math.PI * 40;
-  const ringOffset = hasScore
-    ? ringCircumference * (1 - Math.max(0, Math.min(100, trustScore as number)) / 100)
-    : ringCircumference;
-
-  const bodyText = pillarText(trustScoreBreakdown?.body);
-  const planetText = pillarText(trustScoreBreakdown?.planet);
-  const claimsText = pillarText(trustScoreBreakdown?.ethics ?? trustScoreBreakdown?.care);
-  const openText = pillarText(trustScoreBreakdown?.open);
-
-  const defaultHeadline = scoreInfo.hook;
-  const defaultMetaDescription = hasScore
-    ? `${scoreInfo.viralMessage} Rveel Score ${trustScore}/100. Open Rveel for the full reading.`
-    : `${productNamePlain} was shared from Rveel. Open the app for the full reading.`;
+  const defaultHeadline = SHARED_PRODUCT_HEADLINE;
+  const defaultMetaDescription = `${SHARED_PRODUCT_HEADLINE}. ${SHARED_PRODUCT_READING}`;
 
   const landing = buildLandingPresentation({
     ctx: ctxParam,
     productNamePlain,
-    trustScore,
     defaultHeadline,
     defaultMetaDescription,
-    scoreHook: scoreInfo.hook,
-    scoreViral: scoreInfo.viralMessage,
+    scoreHook: SHARED_PRODUCT_HEADLINE,
+    scoreViral: SHARED_PRODUCT_READING,
   });
 
   const pageHeadlineHtml = escapeHtmlText(landing.pageHeadlinePlain);
@@ -163,28 +111,6 @@ export function renderShareLandingHtml(input: ShareLandingInput): string {
   const photoHtml = productImageAbsolute
     ? `<img src="${escapeHtmlAttr(productImageAbsolute)}" alt="${escapeHtmlAttr(productNamePlain)}" onerror="this.outerHTML='<span aria-hidden=\\'true\\'>▣</span>'">`
     : '<span aria-hidden="true">▣</span>';
-
-  const scoreBlockFixed = hasScore
-    ? `<div class="ring-row">
-        <div class="ring" style="color:${scoreInfo.color}">
-          <svg viewBox="0 0 96 96" aria-hidden="true">
-            <circle class="track" cx="48" cy="48" r="40" stroke-width="8"></circle>
-            <circle cx="48" cy="48" r="40" stroke="${scoreInfo.color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${ringCircumference} ${ringCircumference}" stroke-dashoffset="${ringOffset}" transform="rotate(-90 48 48)"></circle>
-          </svg>
-          <b style="color:${scoreInfo.color}">${trustScore}<small>/100</small></b>
-        </div>
-        <div class="band" style="color:${scoreInfo.color}">${escapeHtmlText(scoreInfo.label)}</div>
-      </div>
-      <div class="pillars">
-        <div class="p-body"><span>Body</span><strong>${bodyText}</strong></div>
-        <div class="p-planet"><span>Planet</span><strong>${planetText}</strong></div>
-        <div class="p-claims"><span>Claims</span><strong>${claimsText}</strong></div>
-        <div class="p-open"><span>Transparency</span><strong>${openText}</strong></div>
-      </div>`
-    : `<div class="unavailable">
-        <h2>Rveel Score unavailable</h2>
-        <p>We could not show a score for this product on the web. Open Rveel to see the packet. If a score is not ready, the app shows no number.</p>
-      </div>`;
 
   const storeButtons = [
     appStoreLink
@@ -245,10 +171,6 @@ export function renderShareLandingHtml(input: ShareLandingInput): string {
         <h2 class="product-title">${productNameHtml}</h2>
         <p class="meta">${firstCategoryHtml ? `${firstCategoryHtml} · ` : ''}Barcode ${barcodeHtml}</p>
       </div>
-    </article>
-    <article class="reading">
-      ${hasScore ? '<h2>Rveel Score</h2>' : ''}
-      ${scoreBlockFixed}
     </article>
     <p class="context">${heroTaglineHtml}. ${heroViralHtml}</p>
     <div class="cta-stack">
