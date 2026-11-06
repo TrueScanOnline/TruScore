@@ -20,6 +20,10 @@ function product(input: {
   settled?: boolean;
   omitPublication?: boolean;
   overall?: 'checking' | 'nr' | 'rated';
+  bodyStatus?: 'checking' | 'nr' | 'rated' | 'pending';
+  planetStatus?: 'checking' | 'nr' | 'rated';
+  claimsStatus?: 'checking' | 'nr' | 'rated';
+  omitPillar?: 'body' | 'planet' | 'claims' | 'transparency';
   nutrition?: 'resolved' | 'unassessed';
   processing?: 'resolved' | 'unassessed';
   ingredient?: 'resolved' | 'unassessed';
@@ -34,45 +38,51 @@ function product(input: {
   if (input.omitPublication) {
     return { barcode: '9300000000001', trust_score: 80 } as Product;
   }
+  const publication = {
+    settled: input.settled !== false,
+    body: {
+      publicationStatus: input.bodyStatus ?? 'rated',
+      publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
+      assessmentLanes: {
+        nutrition: input.nutrition ?? 'resolved',
+        processing: input.processing ?? 'resolved',
+      },
+    },
+    planet: {
+      publicationStatus: input.planetStatus ?? 'rated',
+      publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
+      assessmentLanes: { broad_environment: 'resolved', packaging_fallback: 'resolved' },
+    },
+    claims: {
+      publicationStatus: input.claimsStatus ?? 'rated',
+      publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
+      assessmentLanes: { packet: input.packet ?? 'assessed', benchmark: 'assessed' },
+    },
+    transparency: {
+      publicationStatus: input.transparencyStatus ?? 'rated',
+      publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
+      assessmentLanes: {
+        ingredient_clarity: input.ingredient ?? 'resolved',
+        origins: input.origins ?? 'resolved',
+      },
+    },
+    overall: {
+      publicationStatus: input.overall ?? 'rated',
+      publishedScore: input.publishedScore === undefined ? 48 : input.publishedScore,
+    },
+  };
+  if (input.omitPillar) {
+    delete (publication as { body?: unknown; planet?: unknown; claims?: unknown; transparency?: unknown })[
+      input.omitPillar
+    ];
+  }
   return {
     barcode: '9300000000001',
     trust_score: input.publishedScore === 0 ? 0 : 61,
     manufacturing_places: input.offCountry,
     certifications: (input.certifications || []).map((name) => ({ id: name, name })),
     rveelGovernedPacketClaims: (input.governedClaims || []).map((wording) => ({ exactWording: wording })),
-    _publication: {
-      settled: input.settled !== false,
-      body: {
-        publicationStatus: 'rated',
-        publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
-        assessmentLanes: {
-          nutrition: input.nutrition ?? 'resolved',
-          processing: input.processing ?? 'resolved',
-        },
-      },
-      planet: {
-        publicationStatus: 'rated',
-        publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
-        assessmentLanes: { broad_environment: 'resolved', packaging_fallback: 'resolved' },
-      },
-      claims: {
-        publicationStatus: 'rated',
-        publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
-        assessmentLanes: { packet: input.packet ?? 'assessed', benchmark: 'assessed' },
-      },
-      transparency: {
-        publicationStatus: input.transparencyStatus ?? 'rated',
-        publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
-        assessmentLanes: {
-          ingredient_clarity: input.ingredient ?? 'resolved',
-          origins: input.origins ?? 'resolved',
-        },
-      },
-      overall: {
-        publicationStatus: input.overall ?? 'rated',
-        publishedScore: input.publishedScore === undefined ? 48 : input.publishedScore,
-      },
-    },
+    _publication: publication,
   } as Product;
 }
 
@@ -214,6 +224,39 @@ describe('voluntary contribution offer', () => {
       pendingPacketWording: 'ACO Certified Organic',
     });
     expect(unchanged.status).toBe('unchanged');
+  });
+
+  it('fails closed when any pillar is Checking, missing, or not a terminal status', () => {
+    const six = [
+      'Change nutrition',
+      'Change ingredients',
+      'Add product origins',
+      'Change product origins',
+      'Add packet information',
+      'Change packet information',
+    ];
+    expect(voluntaryContributionOffer(product({ overall: 'rated', bodyStatus: 'checking' }), open)).toEqual([]);
+    expect(voluntaryContributionOffer(product({ overall: 'rated', planetStatus: 'checking' }), open)).toEqual([]);
+    expect(voluntaryContributionOffer(product({ overall: 'rated', claimsStatus: 'checking' }), open)).toEqual([]);
+    expect(voluntaryContributionOffer(product({ overall: 'rated', transparencyStatus: 'checking' }), open)).toEqual([]);
+    expect(voluntaryContributionOffer(product({ overall: 'nr', omitPillar: 'planet' }), open)).toEqual([]);
+    expect(voluntaryContributionOffer(product({ overall: 'rated', bodyStatus: 'pending' }), open)).toEqual([]);
+
+    const settledNr = voluntaryContributionOffer(
+      product({ overall: 'nr', bodyStatus: 'nr', publishedScore: null }),
+      open
+    ).map((row) => row.label);
+    expect(settledNr).toEqual(six);
+    expect(voluntaryContributionOffer(product(), open).map((row) => row.label)).toEqual(six);
+    expect(voluntaryContributionOffer(product({ publishedScore: 0 }), open).map((row) => row.label)).toEqual(six);
+  });
+
+  it('does not open a previously shown action after a pillar becomes Checking', () => {
+    const shown = product();
+    expect(voluntaryContributionOffer(shown, open).some((row) => row.key === 'change-nutrition')).toBe(true);
+    const atTap = voluntaryContributionOffer(product({ bodyStatus: 'checking' }), open);
+    expect(atTap.some((row) => row.key === 'change-nutrition')).toBe(false);
+    expect(atTap).toEqual([]);
   });
 
   it('places the neutral action on Result and rechecks the latch before a pencil tap', () => {

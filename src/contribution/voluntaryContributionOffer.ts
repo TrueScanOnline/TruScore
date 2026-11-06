@@ -38,7 +38,8 @@ export type VoluntaryContributionAction = {
 
 /**
  * Settled Rated or NR, with the Result latch open.
- * Checking, a missing snapshot, and a closed latch supply nothing.
+ * Every pillar status must be Rated or NR.
+ * Checking, a missing pillar, and a closed latch supply nothing.
  */
 export function voluntaryContributionOffer(
   product: Product | null | undefined,
@@ -49,6 +50,13 @@ export function voluntaryContributionOffer(
   if (!publication || publication.settled !== true) return [];
   const overall = publication.overall?.publicationStatus;
   if (overall !== 'rated' && overall !== 'nr') return [];
+  const pillarStatuses = [
+    publication.body?.publicationStatus,
+    publication.planet?.publicationStatus,
+    publication.claims?.publicationStatus,
+    publication.transparency?.publicationStatus,
+  ];
+  if (!pillarStatuses.every((status) => status === 'rated' || status === 'nr')) return [];
   if (
     !publication.body?.assessmentLanes ||
     !publication.claims?.assessmentLanes ||
