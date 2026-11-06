@@ -108,6 +108,10 @@ import {
   type ScoreHighlightPillar,
   type ScoreHighlightStory,
 } from '../../src/lib/scoreHighlights';
+import {
+  highlightContributionOffer,
+  highlightContributionTap,
+} from '../../src/lib/scoreHighlights/highlightContributionLinks';
 import type { TruScoreResult } from '../../src/lib/truscoreEngine';
 import type { ScoreHighlightL3InAppTarget } from '../../src/lib/scoreHighlights/l3/targets';
 import { planInAppL3HostPresentation } from '../../src/lib/scoreHighlights/l3/hostPresentation';
@@ -1758,50 +1762,24 @@ function ResultScreenContent() {
   const isWebSearchProduct = isWebSearchFallback(product);
 
   const contributionActions = resultContributionActions(product);
-  const nutritionContributionLabel = contributionActions.updateNutrition ? 'Change nutrition' : 'Add nutrition';
-  const ingredientsContributionLabel = contributionActions.updateIngredients ? 'Change ingredients' : 'Add ingredients';
-  const originsContributionLabel =
-    contributionActions.originsAction === 'update' ? 'Change product origins' : 'Add product origins';
-  const packetContributionLabel =
-    contributionActions.packetInformationAction === 'update' ? 'Change packet information' : 'Add packet information';
+  const highlightOffer =
+    scoreHighlightsRequest?.mode === 'pillar'
+      ? highlightContributionOffer(product, scoreHighlightsRequest.pillar, {
+          publicationSettled,
+          highlight: scoreHighlights,
+        })
+      : { links: [], heading: null };
   const openPillarContribution = (
     destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims'
   ) => {
+    if (scoreHighlightsRequest?.mode !== 'pillar') return;
+    const link = highlightContributionTap(product, scoreHighlightsRequest.pillar, destination, {
+      publicationSettled,
+    });
+    if (!link) return;
     setScoreHighlightsRequest(null);
-    if (destination === 'nutrition') {
-      openContribution('nutrition', contributionActions.updateNutrition ? 'change' : 'add', true);
-      return;
-    }
-    if (destination === 'ingredients') {
-      openContribution('ingredients', contributionActions.updateIngredients ? 'change' : 'add', true);
-      return;
-    }
-    if (destination === 'origins') {
-      openContribution('origins', contributionActions.originsAction === 'update' ? 'change' : 'add', true);
-      return;
-    }
-    openContribution(
-      'packetClaims',
-      contributionActions.packetInformationAction === 'update' ? 'change' : 'add',
-      true
-    );
+    openContribution(destination, link.journey, true);
   };
-  const pillarContributionLinks =
-    scoreHighlightsRequest?.mode === 'pillar'
-      ? scoreHighlightsRequest.pillar === 'Body'
-        ? [
-            { key: 'nutrition', label: nutritionContributionLabel, destination: 'nutrition' as const },
-            { key: 'ingredients', label: ingredientsContributionLabel, destination: 'ingredients' as const },
-          ]
-        : scoreHighlightsRequest.pillar === 'Planet'
-          ? [{ key: 'ingredients', label: ingredientsContributionLabel, destination: 'ingredients' as const }]
-          : scoreHighlightsRequest.pillar === 'Ethics'
-            ? [{ key: 'packet', label: packetContributionLabel, destination: 'packetClaims' as const }]
-            : [
-                { key: 'ingredients', label: ingredientsContributionLabel, destination: 'ingredients' as const },
-                { key: 'origins', label: originsContributionLabel, destination: 'origins' as const },
-              ]
-      : [];
 
   const shareManufacturingCountryLabel = (() => {
     const raw = originsCard.offCountry || originsCard.facts.flatMap((fact) => fact.countries)[0];
@@ -2717,12 +2695,8 @@ function ResultScreenContent() {
         publication={truScore?.publication}
         firedAdjustments={scoreHighlightsLedger ?? undefined}
         onClose={() => setScoreHighlightsRequest(null)}
-        contributionLinks={pillarContributionLinks}
-        contributionNote={
-          scoreHighlightsRequest?.mode === 'pillar' && scoreHighlightsRequest.pillar === 'Planet'
-            ? 'We are not yet accepting packaging or recycling contributions. Ingredient information can still be added.'
-            : undefined
-        }
+        contributionLinks={highlightOffer.links}
+        contributionHeading={highlightOffer.heading}
         onOpenContribution={openPillarContribution}
         onOpenInAppL3={openInAppScoreHighlightL3}
       />

@@ -82,8 +82,11 @@ interface ScoreHighlightsLookThroughModalProps {
     label: string;
     destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims';
   }>;
-  /** Shown with the Planet links. Packaging contributions stay closed. */
-  contributionNote?: string;
+  /**
+   * Shown only when the links include an assessment-driven Add or complete action.
+   * Change-only sets pass null so the sheet does not say information is missing.
+   */
+  contributionHeading?: string | null;
   onOpenContribution?: (
     destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims'
   ) => void;
@@ -117,7 +120,7 @@ export default function ScoreHighlightsLookThroughModal({
   userContributionRouteLive = false,
   onClose,
   contributionLinks = [],
-  contributionNote,
+  contributionHeading = null,
   onOpenContribution,
   onOpenInAppL3,
 }: ScoreHighlightsLookThroughModalProps) {
@@ -269,11 +272,9 @@ export default function ScoreHighlightsLookThroughModal({
                 )}
                 {contributionLinks.length > 0 ? (
                   <View style={[styles.contributeBox, { borderTopColor: emerald.line }]}>
-                    {contributionNote ? (
-                      <Text style={[styles.contextPromptBody, { color: emerald.muted }]}>{contributionNote}</Text>
-                    ) : (
-                      <Text style={[styles.contextPromptTitle, { color: emerald.ink }]}>Add information from the pack</Text>
-                    )}
+                    {contributionHeading ? (
+                      <Text style={[styles.contextPromptTitle, { color: emerald.ink }]}>{contributionHeading}</Text>
+                    ) : null}
                     {contributionLinks.map((link) => (
                       <TouchableOpacity
                         key={link.key}
