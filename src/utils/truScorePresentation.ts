@@ -6,6 +6,8 @@
 import type { TruScoreResult } from '../lib/truscoreEngine';
 import type { CrossPillarPublicationSnapshot } from '../lib/rateability';
 import { publishedScoreDisplay } from '../lib/rateability';
+import { consumerPillarLabel } from '../lib/scoreHighlights/consumerPillarLabels';
+import type { ScoreHighlightPillar } from '../lib/scoreHighlights/types';
 
 export const RVEEL_SCORE_UNAVAILABLE_TITLE = 'Rveel Score unavailable';
 export const RVEEL_SCORE_UNAVAILABLE_EXPLANATION =
@@ -60,6 +62,44 @@ export type TruScoreConsumerPresentation =
 
 function isGenuinePublishedScore(value: unknown): value is number {
   return typeof value === 'number' && !Number.isNaN(value);
+}
+
+const NR_PILLARS: ReadonlyArray<{
+  field: 'body' | 'planet' | 'claims' | 'transparency';
+  pillar: ScoreHighlightPillar;
+}> = [
+  { field: 'body', pillar: 'Body' },
+  { field: 'planet', pillar: 'Planet' },
+  { field: 'claims', pillar: 'Ethics' },
+  { field: 'transparency', pillar: 'Open' },
+];
+
+const NR_OVERALL_FALLBACK = "The overall Rveel Score isn't ready to reveal yet.";
+
+function nrPillarList(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? '';
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+/**
+ * Names the NR pillars when every pillar status is Rated or NR and at least one is NR.
+ * Any other Overall NR snapshot stays neutral.
+ */
+function nrExplanation(publication: CrossPillarPublicationSnapshot): string {
+  const reliable = NR_PILLARS.every((entry) => {
+    const status = publication[entry.field]?.publicationStatus;
+    return status === 'rated' || status === 'nr';
+  });
+  const names = NR_PILLARS.flatMap((entry) =>
+    publication[entry.field]?.publicationStatus === 'nr' ? [consumerPillarLabel(entry.pillar)] : []
+  );
+  if (!reliable || names.length === 0) return NR_OVERALL_FALLBACK;
+  const verb = names.length === 1 ? "isn't" : "aren't";
+  return (
+    'To reveal the overall Rveel Score, all four pillars need a rating. ' +
+    `${nrPillarList(names)} ${verb} rated yet. Any available pillar scores are shown above.`
+  );
 }
 
 function unavailablePresentation(): TruScoreConsumerPresentation {
@@ -137,8 +177,7 @@ export function getTruScoreConsumerPresentation(
     return {
       kind: 'nr',
       title: 'UnRevealed?',
-      explanation:
-        'We could not find enough information in each category to Rveel a score. Please help us out by adding the information in each category by tapping on the category cards above.',
+      explanation: nrExplanation(pub),
       showScoreCircle: false,
       showScoreLabel: false,
       showNumericScore: false,
