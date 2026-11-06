@@ -57,7 +57,18 @@ type Props = {
    * Overall explanation is included in the modal pillar rows.
    */
   openRequestKey?: number;
+  /**
+   * Presentation only. Result decides eligibility and rechecks it in onPress.
+   * Absent means this card does not show a voluntary action.
+   */
+  voluntaryContribution?: {
+    label: string;
+    supportingSentence: string;
+    onPress: () => void;
+  } | null;
 };
+
+const PRODUCT_INFORMATION_HEADING = 'Product information';
 
 type PillarKey = 'body' | 'planet' | 'claims' | 'transparency' | 'overall';
 
@@ -206,6 +217,7 @@ export default function ProductDataLimitationsCard({
   suppressLiveRoutes = [],
   publicationSettled = true,
   openRequestKey = 0,
+  voluntaryContribution = null,
 }: Props) {
   const { t } = useTranslation();
   const { darkMode } = useTheme();
@@ -231,9 +243,9 @@ export default function ProductDataLimitationsCard({
     });
   }, [publication, publicationSettled]);
 
-  if (!product || !publicationSettled || !publication || !actionable) {
-    return null;
-  }
+  const showLimitations = Boolean(product && publicationSettled && publication && actionable);
+  const showVoluntary = voluntaryContribution != null;
+  if (!showLimitations && !showVoluntary) return null;
 
   const resolveAction = (routeKey?: string, prefill?: ContributionOpportunity['prefill']) => {
     if (routeKey && suppressLiveRoutes.includes(routeKey)) return undefined;
@@ -248,51 +260,70 @@ export default function ProductDataLimitationsCard({
   // Deduplicate identical live CTAs (same routeKey) within this modal — show once.
   const seenLiveRoutes = new Set<string>();
 
+  const ink = darkMode ? tone.ink : resultPresentation.emerald.ink.light;
+  const muted = darkMode ? tone.muted : resultPresentation.emerald.muted.light;
+
   return (
     <>
-      <TouchableOpacity
-        onPress={open}
-        activeOpacity={0.75}
-        accessibilityRole="button"
-        accessibilityLabel={t('result.legalDataLimitationsTeaserA11y')}
-        style={styles.cardHit}
-      >
+      <View style={styles.cardHit}>
         <LinearGradient
           colors={darkMode ? [tone.card, tone.card] : [...resultPresentation.emerald.teaser]}
           style={[styles.card, { borderColor: tone.teaserBorder }]}
         >
-          <View style={styles.titleRow}>
-            <View style={[styles.iconPlate, { backgroundColor: resultPresentation.emerald.chevronCircle.light }]}>
-              <Svg width={24} height={24} viewBox="0 0 28 28" accessible={false}>
-                <Rect x={8} y={1} width={17} height={20} rx={3.5} fill="#FFFFFF" />
-                <Rect x={8} y={1} width={17} height={20} rx={3.5} fill={tone.action} opacity={0.55} />
-                <Rect x={2} y={6} width={18} height={21} rx={3.5} fill={tone.action} />
-                <Path d="M14 6H20V12L14 6Z" fill="#FFFFFF" opacity={0.85} />
-                <Rect x={5} y={12} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
-                <Rect x={5} y={16} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
-                <Rect x={5} y={20} width={8} height={1.8} rx={0.9} fill="#FFFFFF" />
-              </Svg>
+          {showLimitations ? (
+            <TouchableOpacity
+              onPress={open}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={t('result.legalDataLimitationsTeaserA11y')}
+              testID="product-data-limitations-teaser"
+              style={styles.section}
+            >
+              <TeaserHeading
+                title={t('result.legalDataLimitationsTeaserTitle')}
+                body={t('result.legalDataLimitationsTeaserBody')}
+                showChevron
+                ink={ink}
+                muted={muted}
+                action={tone.action}
+                chevronCircle={tone.chevronCircle}
+              />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.section} accessibilityRole="header">
+              <TeaserHeading
+                title={PRODUCT_INFORMATION_HEADING}
+                showChevron={false}
+                ink={ink}
+                muted={muted}
+                action={tone.action}
+                chevronCircle={tone.chevronCircle}
+              />
             </View>
-            <View style={styles.cardTextWrap}>
+          )}
+          {showVoluntary ? <View style={[styles.divider, { backgroundColor: tone.line }]} /> : null}
+          {showVoluntary && voluntaryContribution ? (
+            <TouchableOpacity
+              onPress={voluntaryContribution.onPress}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={`${voluntaryContribution.label}. ${voluntaryContribution.supportingSentence}`}
+              testID="improve-product-information"
+              style={styles.contribution}
+            >
               <View style={styles.headingLine}>
-                <Text
-                  style={[styles.cardTitle, { color: darkMode ? tone.ink : resultPresentation.emerald.ink.light }]}
-                >
-                  {t('result.legalDataLimitationsTeaserTitle')}
-                </Text>
-                <View style={[styles.chevronCircle, { backgroundColor: tone.chevronCircle }]}>
-                  <Ionicons name="chevron-forward" size={18} color={tone.action} />
-                </View>
+                <Text style={[styles.contributionLabel, { color: tone.action }]}>{voluntaryContribution.label}</Text>
+                <Ionicons name="chevron-forward" size={18} color={tone.action} />
               </View>
-              <Text style={[styles.cardSubtitle, { color: darkMode ? tone.muted : resultPresentation.emerald.muted.light }]}>
-                {t('result.legalDataLimitationsTeaserBody')}
+              <Text style={[styles.contributionSentence, { color: muted }]}>
+                {voluntaryContribution.supportingSentence}
               </Text>
-            </View>
-          </View>
+            </TouchableOpacity>
+          ) : null}
         </LinearGradient>
-      </TouchableOpacity>
+      </View>
 
-      <InfoModal
+      {showLimitations && publication && product ? <InfoModal
         visible={modalVisible}
         onClose={close}
         title={t('result.legalDataLimitationsModalTitle')}
@@ -364,8 +395,53 @@ export default function ProductDataLimitationsCard({
         <LegalParagraph text={t('result.legalDataLimitationsModalP3')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
         <LegalParagraph text={t('result.legalDataLimitationsModalP4')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
         <LegalParagraph text={t('result.legalDataLimitationsModalP5')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
-      </InfoModal>
+      </InfoModal> : null}
     </>
+  );
+}
+
+function TeaserHeading({
+  title,
+  body,
+  showChevron,
+  ink,
+  muted,
+  action,
+  chevronCircle,
+}: {
+  title: string;
+  body?: string;
+  showChevron: boolean;
+  ink: string;
+  muted: string;
+  action: string;
+  chevronCircle: string;
+}) {
+  return (
+    <View style={styles.titleRow}>
+      <View style={[styles.iconPlate, { backgroundColor: resultPresentation.emerald.chevronCircle.light }]}>
+        <Svg width={24} height={24} viewBox="0 0 28 28" accessible={false}>
+          <Rect x={8} y={1} width={17} height={20} rx={3.5} fill="#FFFFFF" />
+          <Rect x={8} y={1} width={17} height={20} rx={3.5} fill={action} opacity={0.55} />
+          <Rect x={2} y={6} width={18} height={21} rx={3.5} fill={action} />
+          <Path d="M14 6H20V12L14 6Z" fill="#FFFFFF" opacity={0.85} />
+          <Rect x={5} y={12} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
+          <Rect x={5} y={16} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
+          <Rect x={5} y={20} width={8} height={1.8} rx={0.9} fill="#FFFFFF" />
+        </Svg>
+      </View>
+      <View style={styles.cardTextWrap}>
+        <View style={styles.headingLine}>
+          <Text style={[styles.cardTitle, { color: ink }]}>{title}</Text>
+          {showChevron ? (
+            <View style={[styles.chevronCircle, { backgroundColor: chevronCircle }]}>
+              <Ionicons name="chevron-forward" size={18} color={action} />
+            </View>
+          ) : null}
+        </View>
+        {body ? <Text style={[styles.cardSubtitle, { color: muted }]}>{body}</Text> : null}
+      </View>
+    </View>
   );
 }
 
@@ -377,8 +453,32 @@ const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
     borderRadius: resultPresentation.emerald.radius.teaser,
+    overflow: 'hidden',
+  },
+  section: {
     paddingVertical: 10,
     paddingHorizontal: 12,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: 12,
+  },
+  contribution: {
+    paddingTop: 10,
+    paddingBottom: 12,
+    paddingHorizontal: 12,
+    minHeight: 44,
+  },
+  contributionLabel: {
+    flex: 1,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '600',
+  },
+  contributionSentence: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 2,
   },
   titleRow: {
     flexDirection: 'row',

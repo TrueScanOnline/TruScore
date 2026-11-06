@@ -270,5 +270,18 @@ describe('voluntary contribution offer', () => {
     expect(source).toContain('freshVoluntaryOffer');
     expect(source).toContain('publicationSettledRef.current');
     expect(source).not.toContain('userContributionRouteLive');
+    const frameEnd = source.indexOf('</EmeraldScoreFrame>');
+    const cardAt = source.indexOf('<ProductDataLimitationsCard', frameEnd);
+    expect(source.slice(frameEnd, cardAt)).not.toContain('IMPROVE_PRODUCT_INFORMATION');
+    expect(source.slice(frameEnd, cardAt)).not.toContain('TouchableOpacity');
+    const offeredCard = source.slice(cardAt, source.indexOf('/>', cardAt));
+    expect(offeredCard).toContain('voluntaryContribution={');
+    expect(offeredCard).toContain('label: IMPROVE_PRODUCT_INFORMATION');
+    expect(offeredCard).toContain('supportingSentence: IMPROVE_PRODUCT_INFORMATION_SUBTITLE');
+    expect(offeredCard).toContain('if (freshVoluntaryOffer().length === 0) return;');
+    expect(offeredCard).toContain("setContributionChoice('voluntary')");
+    const secondAt = source.indexOf('<ProductDataLimitationsCard', source.indexOf('/>', cardAt));
+    const insufficientCard = source.slice(secondAt, source.indexOf('/>', secondAt));
+    expect(insufficientCard).not.toContain('voluntaryContribution');
   });
 });

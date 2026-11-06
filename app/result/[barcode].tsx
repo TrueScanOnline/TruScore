@@ -2090,27 +2090,6 @@ function ResultScreenContent() {
           )}
           </EmeraldScoreFrame>
 
-          {voluntaryOffer.length > 0 ? (
-            <View style={styles.improveInformation}>
-              <TouchableOpacity
-                onPress={() => {
-                  if (freshVoluntaryOffer().length === 0) return;
-                  setContributionChoice('voluntary');
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={IMPROVE_PRODUCT_INFORMATION}
-                style={styles.improveInformationButton}
-              >
-                <Text style={[styles.improveInformationLabel, { color: emerald.action }]}>
-                  {IMPROVE_PRODUCT_INFORMATION}
-                </Text>
-              </TouchableOpacity>
-              <Text style={[styles.improveInformationSubtitle, { color: emerald.muted }]}>
-                {IMPROVE_PRODUCT_INFORMATION_SUBTITLE}
-              </Text>
-            </View>
-          ) : null}
-
           <ProductDataLimitationsCard
             product={product}
             onOpenIngredients={() => openContribution('ingredients', 'add')}
@@ -2119,6 +2098,18 @@ function ResultScreenContent() {
             onOpenPacketClaims={() => openContribution('packetClaims', 'add')}
             publicationSettled={publicationSettled}
             openRequestKey={s26OpenRequestKey}
+            voluntaryContribution={
+              voluntaryOffer.length > 0
+                ? {
+                    label: IMPROVE_PRODUCT_INFORMATION,
+                    supportingSentence: IMPROVE_PRODUCT_INFORMATION_SUBTITLE,
+                    onPress: () => {
+                      if (freshVoluntaryOffer().length === 0) return;
+                      setContributionChoice('voluntary');
+                    },
+                  }
+                : null
+            }
           />
 
           {/* W3-S12 "What we found" — governed promoted stories from the fired ledger */}
@@ -4048,24 +4039,6 @@ const styles = StyleSheet.create({
   packetClaimsInfoClose: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  improveInformation: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    gap: 4,
-  },
-  improveInformationButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: 4,
-  },
-  improveInformationLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    lineHeight: 22,
-  },
-  improveInformationSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
   },
   certificationsUpdateButton: {
     flexDirection: 'row',
