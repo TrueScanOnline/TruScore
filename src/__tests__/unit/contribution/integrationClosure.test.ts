@@ -293,18 +293,17 @@ describe('functional-to-consumer integration closure', () => {
       { label: 'Add ingredients', destination: 'ingredients' },
     ]);
     expect(bodyDataLimitationActions(laneProduct('resolved', 'resolved', 'resolved'))).toEqual([]);
+    const menu = fs.readFileSync(path.join(REPO, 'src/contribution/productInformationMenu.ts'), 'utf8');
     const card = fs.readFileSync(path.join(REPO, 'src/components/productLegal/ProductDataLimitationsCard.tsx'), 'utf8');
-    expect(card).toContain('bodyDataLimitationActions(product)');
-    expect(card).toContain("action.destination === 'nutrition'");
-    expect(card).toContain('onOpenNutrition?.()');
-    expect(card).toContain('onOpenIngredients()');
-    expect(card).toContain("action.destination === 'ingredients'");
-    expect(card).toContain('add-circle-outline');
-    expect(card).not.toContain("action.destination !== 'ingredients'");
-    expect(card).toContain('transparencyShowsSeparateAddIngredients');
-    expect(card).toContain("routeKey === 'origins'");
-    expect(card).toContain("routeKey === 'packet_claims'");
-    expect(card).toContain("row.key === 'body' ? undefined : resolveAction");
+    expect(menu).toContain('bodyDataLimitationActions(product as Product)');
+    expect(menu).toContain("action.destination === 'ingredients'");
+    expect(menu).toContain('transparencyShowsSeparateAddIngredients');
+    expect(menu).toContain("'origins'");
+    expect(menu).toContain("'packet_claims'");
+    expect(card).toContain('ADD_OR_CORRECT_INFORMATION');
+    expect(card).toContain('ABOUT_THIS_INFORMATION');
+    expect(card).not.toContain('bodyDataLimitationActions');
+    expect(card).not.toContain('Incomplete product data');
   });
 
   it('does not let a non-scoring certification turn an unresolved packet invitation into Update', () => {
@@ -323,12 +322,13 @@ describe('functional-to-consumer integration closure', () => {
       rveelGovernedCertifications: ['Community standard'],
     })).toBe(true);
     const result = fs.readFileSync(path.join(REPO, 'app/result/[barcode].tsx'), 'utf8');
-    const limitations = fs.readFileSync(path.join(REPO, 'src/components/productLegal/ProductDataLimitationsCard.tsx'), 'utf8');
+    const menuSource = fs.readFileSync(path.join(REPO, 'src/contribution/productInformationMenu.ts'), 'utf8');
     const modal = fs.readFileSync(path.join(REPO, 'src/components/PacketContributionModal.tsx'), 'utf8');
-    expect(result).toContain("packetInformationAction === 'add' && !admittedPacketContributionRepresented(product)");
+    expect(menuSource).toContain("actions.packetInformationAction === 'add'");
+    expect(menuSource).toContain('!admittedPacketContributionRepresented(product as Product)');
     expect(result).toContain('Certifications');
     expect(result).toContain('Other packet claims');
-    expect(limitations).toContain('admittedPacketContributionRepresented(product)');
+    expect(result).toContain("row.key === 'add-packet' && !row.formFirst");
     expect(modal).not.toContain('As on pack');
   });
 

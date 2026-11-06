@@ -1,26 +1,24 @@
 /**
- * W3-S26 componentised Data Limitations — Body / Planet / Claims / Transparency / Overall,
- * retaining the pre-existing Result legal paragraphs P1–P5.
- * Provisional S26 copy retains “(Awaiting founder approval)” prefix (§11).
- * Minimal UAT placement; final surface consolidation deferred to Wave 5.
+ * Product information card.
+ * One primary contribution action and one secondary explanation link.
+ * Eligibility stays in productInformationMenu. This card does not score or admit.
  */
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Rect } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
 import { resultEmeraldTone, resultPresentation } from '../../theme/resultPresentation';
 import { Product, ProductWithTrustScore } from '../../types/product';
-import { admittedPacketContributionRepresented, PACKET_INFORMATION_ADD } from '../../contribution/resultContributionActions';
 import {
-  bodyDataLimitationActions,
-  transparencyShowsSeparateAddIngredients,
-} from '../../contribution/governedDisplayProjection';
+  ABOUT_THIS_INFORMATION,
+  ADD_OR_CORRECT_INFORMATION,
+  PRODUCT_INFORMATION_HEADING,
+  PRODUCT_INFORMATION_SUPPORT,
+} from '../../contribution/productInformationMenu';
 import type {
-  ContributionOpportunity,
   CrossPillarPublicationSnapshot,
   PillarPublicationResult,
   S26Explanation,
@@ -29,46 +27,18 @@ import { consumerPillarLabel } from '../../lib/scoreHighlights';
 
 type Props = {
   product: Product | ProductWithTrustScore | null | undefined;
-  /** Opens the ingredients journey. */
-  onOpenIngredients?: () => void;
-  /** Opens the nutrition journey. */
-  onOpenNutrition?: () => void;
-  /**
-   * Route keys already shown on the originating Result card.
-   * Those actions are not repeated here.
-   */
-  suppressLiveRoutes?: string[];
-  /**
-   * Opens Product Origins contribution when live.
-   * Prefill carries structured origins_tags candidate + conflicting free text only when
-   * freeTextContradiction === true.
-   */
-  onOpenOrigins?: (prefill?: {
-    structuredOriginCountry?: string;
-    conflictingFreeTextOrigins?: string;
-    originsTags?: string[];
-  }) => void;
-  /** Opens the live Packet Claims contribution journey. */
-  onOpenPacketClaims?: () => void;
-  /** When false, suppress S26 (assessment cycle still checking). */
+  /** When false, the Result latch is closed and this card stays hidden. */
   publicationSettled?: boolean;
   /**
-   * Parent bump (e.g. Confidence badge) opens the S26 modal without using the teaser.
-   * Overall explanation is included in the modal pillar rows.
+   * Parent bump (score or Confidence) opens the existing explanation.
+   * It does not open the contribution menu.
    */
   openRequestKey?: number;
-  /**
-   * Presentation only. Result decides eligibility and rechecks it in onPress.
-   * Absent means this card does not show a voluntary action.
-   */
-  voluntaryContribution?: {
-    label: string;
-    supportingSentence: string;
-    onPress: () => void;
-  } | null;
+  /** Result has already selected at least one supported action. */
+  hasContributionActions?: boolean;
+  /** Opens the one contribution menu. Result rechecks eligibility in this handler. */
+  onAddOrCorrect?: () => void;
 };
-
-const PRODUCT_INFORMATION_HEADING = 'Product information';
 
 type PillarKey = 'body' | 'planet' | 'claims' | 'transparency' | 'overall';
 
@@ -87,68 +57,22 @@ function getPillarPublication(
   return snap[key];
 }
 
-function ManualEditActionRow({
-  onPress,
-  label,
-  accessibilityLabel,
-  primaryColor,
-}: {
-  onPress: () => void;
-  label: string;
-  accessibilityLabel: string;
-  primaryColor: string;
-}) {
-  return (
-    <TouchableOpacity
-      style={[styles.editLinkRow, { borderColor: primaryColor, backgroundColor: primaryColor + '12' }]}
-      onPress={onPress}
-      activeOpacity={0.75}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-    >
-      <Ionicons name="add-circle-outline" size={22} color={primaryColor} />
-      <Text style={[styles.editLinkText, { color: primaryColor }]}>{label}</Text>
-      <Ionicons name="chevron-forward" size={20} color={primaryColor} />
-    </TouchableOpacity>
-  );
-}
-
-function LegalParagraph({
-  text,
-  colors,
-}: {
-  text: string;
-  colors: { text: string; textSecondary: string };
-}) {
-  return <Text style={[styles.modalParagraph, { color: colors.textSecondary }]}>{text}</Text>;
-}
-
-function S26PillarBlock({
+function ExplanationBlock({
   title,
   pub,
-  colors,
-  onLiveAction,
-  showLiveCta,
-  bodyActions,
-  ingredientAction,
+  ink,
+  muted,
 }: {
   title: string;
   pub: PillarPublicationResult;
-  colors: { text: string; textSecondary: string; primary: string };
-  onLiveAction?: () => void;
-  /** Deduped: only the first identical live CTA in the modal renders. */
-  showLiveCta: boolean;
-  bodyActions?: Array<{ label: string; onPress: () => void }>;
-  /** Ingredient Clarity invitation. Shown once, including while Origins is also unresolved. */
-  ingredientAction?: { onPress: () => void };
+  ink: string;
+  muted: string;
 }) {
   const s26: S26Explanation | null = pub.s26;
   if (!s26) return null;
-  const opp = s26.contributionOpportunity;
-
   return (
     <View style={styles.pillarBlock}>
-      <Text style={[styles.pillarTitle, { color: colors.text }]}>
+      <Text style={[styles.pillarTitle, { color: ink }]}>
         {title}
         {pub.publicationStatus === 'rated' && pub.confidence
           ? ` · ${pub.confidence.charAt(0).toUpperCase()}${pub.confidence.slice(1)}`
@@ -156,112 +80,50 @@ function S26PillarBlock({
             ? ' · Unrevealed'
             : ''}
       </Text>
-      <Text style={[styles.pillarBody, { color: colors.textSecondary }]}>
+      <Text style={[styles.pillarBody, { color: muted }]}>
         {s26.explanation.replace(/^\(Awaiting founder approval\)\s*/, '')}
       </Text>
-      {opp?.prefill?.structuredOriginCountry ? (
-        <Text style={[styles.futureNote, { color: colors.textSecondary }]}>
-          Suggested origin for validation: {opp.prefill.structuredOriginCountry}
-          {opp.prefill.conflictingFreeTextOrigins
-            ? ` (conflicts with “${opp.prefill.conflictingFreeTextOrigins}”)`
+      {s26.contributionOpportunity?.prefill?.structuredOriginCountry ? (
+        <Text style={[styles.futureNote, { color: muted }]}>
+          Suggested origin for validation: {s26.contributionOpportunity.prefill.structuredOriginCountry}
+          {s26.contributionOpportunity.prefill.conflictingFreeTextOrigins
+            ? ` (conflicts with “${s26.contributionOpportunity.prefill.conflictingFreeTextOrigins}”)`
             : ''}
         </Text>
       ) : null}
-      {showLiveCta && onLiveAction ? (
-        <ManualEditActionRow
-          onPress={onLiveAction}
-          label={
-            opp?.routeKey === 'origins'
-              ? 'Add product origins'
-              : opp?.routeKey === 'packet_claims'
-                ? PACKET_INFORMATION_ADD
-                : 'Add ingredients'
-          }
-          accessibilityLabel={
-            opp?.routeKey === 'origins'
-              ? 'Add product origins'
-              : opp?.routeKey === 'packet_claims'
-                ? PACKET_INFORMATION_ADD
-                : 'Add ingredients'
-          }
-          primaryColor={colors.primary}
-        />
-      ) : null}
-      {ingredientAction ? (
-        <ManualEditActionRow
-          onPress={ingredientAction.onPress}
-          label="Add ingredients"
-          accessibilityLabel="Add ingredients"
-          primaryColor={colors.primary}
-        />
-      ) : null}
-      {(bodyActions || []).map((action) => (
-        <ManualEditActionRow
-          key={action.label}
-          onPress={action.onPress}
-          label={action.label}
-          accessibilityLabel={action.label}
-          primaryColor={colors.primary}
-        />
-      ))}
     </View>
   );
 }
 
 export default function ProductDataLimitationsCard({
   product,
-  onOpenIngredients,
-  onOpenNutrition,
-  onOpenOrigins,
-  onOpenPacketClaims,
-  suppressLiveRoutes = [],
   publicationSettled = true,
   openRequestKey = 0,
-  voluntaryContribution = null,
+  hasContributionActions = false,
+  onAddOrCorrect,
 }: Props) {
   const { t } = useTranslation();
   const { darkMode } = useTheme();
   const tone = resultEmeraldTone(!!darkMode);
   const [modalVisible, setModalVisible] = useState(false);
-
-  const open = useCallback(() => setModalVisible(true), []);
-  const close = useCallback(() => setModalVisible(false), []);
+  const openExplanation = useCallback(() => setModalVisible(true), []);
+  const closeExplanation = useCallback(() => setModalVisible(false), []);
 
   useEffect(() => {
-    if (openRequestKey > 0) {
-      setModalVisible(true);
-    }
+    if (openRequestKey > 0) setModalVisible(true);
   }, [openRequestKey]);
 
   const publication = (product as ProductWithTrustScore | null | undefined)?._publication;
+  const hasExplanation = useMemo(() => {
+    if (!product || !publicationSettled || !publication) return false;
+    return PILLAR_ROWS.some((row) => !!getPillarPublication(publication, row.key).s26);
+  }, [product, publication, publicationSettled]);
 
-  const actionable = useMemo(() => {
-    if (!publication || !publicationSettled) return false;
-    return PILLAR_ROWS.some((row) => {
-      const s26 = getPillarPublication(publication, row.key).s26;
-      return !!s26;
-    });
-  }, [publication, publicationSettled]);
-
-  const showLimitations = Boolean(product && publicationSettled && publication && actionable);
-  const showVoluntary = voluntaryContribution != null;
-  if (!showLimitations && !showVoluntary) return null;
-
-  const resolveAction = (routeKey?: string, prefill?: ContributionOpportunity['prefill']) => {
-    if (routeKey && suppressLiveRoutes.includes(routeKey)) return undefined;
-    if (routeKey === 'origins') {
-      return onOpenOrigins ? () => onOpenOrigins(prefill) : undefined;
-    }
-    if (routeKey === 'ingredients_nutrition') return onOpenIngredients ?? onOpenNutrition;
-    if (routeKey === 'packet_claims') return onOpenPacketClaims;
-    return undefined;
-  };
-
-  // Deduplicate identical live CTAs (same routeKey) within this modal — show once.
-  const seenLiveRoutes = new Set<string>();
+  if (!hasExplanation && !hasContributionActions) return null;
 
   const ink = darkMode ? tone.ink : resultPresentation.emerald.ink.light;
   const muted = darkMode ? tone.muted : resultPresentation.emerald.muted.light;
+  const actionInk = darkMode ? resultPresentation.emerald.ink.light : '#FFFFFF';
 
   return (
     <>
@@ -270,178 +132,70 @@ export default function ProductDataLimitationsCard({
           colors={darkMode ? [tone.card, tone.card] : [...resultPresentation.emerald.teaser]}
           style={[styles.card, { borderColor: tone.teaserBorder }]}
         >
-          {showLimitations ? (
+          <Text style={[styles.heading, { color: ink }]}>
+            {t('result.productInformationHeading', PRODUCT_INFORMATION_HEADING)}
+          </Text>
+          <Text style={[styles.support, { color: muted }]}>
+            {t('result.productInformationSupport', PRODUCT_INFORMATION_SUPPORT)}
+          </Text>
+          {hasContributionActions && onAddOrCorrect ? (
             <TouchableOpacity
-              onPress={open}
-              activeOpacity={0.75}
+              onPress={onAddOrCorrect}
+              activeOpacity={0.85}
               accessibilityRole="button"
-              accessibilityLabel={t('result.legalDataLimitationsTeaserA11y')}
-              testID="product-data-limitations-teaser"
-              style={styles.section}
+              accessibilityLabel={ADD_OR_CORRECT_INFORMATION}
+              testID="add-or-correct-information"
+              style={[styles.primaryButton, { backgroundColor: tone.action }]}
             >
-              <TeaserHeading
-                title={t('result.legalDataLimitationsTeaserTitle')}
-                body={t('result.legalDataLimitationsTeaserBody')}
-                showChevron
-                ink={ink}
-                muted={muted}
-                action={tone.action}
-                chevronCircle={tone.chevronCircle}
-              />
+              <Ionicons name="create-outline" size={20} color={actionInk} />
+              <Text style={[styles.primaryLabel, { color: actionInk }]}>{ADD_OR_CORRECT_INFORMATION}</Text>
             </TouchableOpacity>
-          ) : (
-            <View style={styles.section} accessibilityRole="header">
-              <TeaserHeading
-                title={PRODUCT_INFORMATION_HEADING}
-                showChevron={false}
-                ink={ink}
-                muted={muted}
-                action={tone.action}
-                chevronCircle={tone.chevronCircle}
-              />
-            </View>
-          )}
-          {showVoluntary ? <View style={[styles.divider, { backgroundColor: tone.line }]} /> : null}
-          {showVoluntary && voluntaryContribution ? (
+          ) : null}
+          {hasExplanation ? (
             <TouchableOpacity
-              onPress={voluntaryContribution.onPress}
+              onPress={openExplanation}
               activeOpacity={0.75}
               accessibilityRole="button"
-              accessibilityLabel={`${voluntaryContribution.label}. ${voluntaryContribution.supportingSentence}`}
-              testID="improve-product-information"
-              style={styles.contribution}
+              accessibilityLabel={ABOUT_THIS_INFORMATION}
+              testID="about-this-information"
+              style={styles.secondaryHit}
             >
-              <View style={styles.headingLine}>
-                <Text style={[styles.contributionLabel, { color: tone.action }]}>{voluntaryContribution.label}</Text>
-                <Ionicons name="chevron-forward" size={18} color={tone.action} />
-              </View>
-              <Text style={[styles.contributionSentence, { color: muted }]}>
-                {voluntaryContribution.supportingSentence}
-              </Text>
+              <Ionicons name="information-circle-outline" size={20} color={tone.action} />
+              <Text style={[styles.secondaryLabel, { color: tone.action }]}>{ABOUT_THIS_INFORMATION}</Text>
             </TouchableOpacity>
           ) : null}
         </LinearGradient>
       </View>
 
-      {showLimitations && publication && product ? <InfoModal
-        visible={modalVisible}
-        onClose={close}
-        title={t('result.legalDataLimitationsModalTitle')}
-        icon="cloud-offline-outline"
-        iconColor={tone.action}
-      >
-        {PILLAR_ROWS.map((row) => {
-          const pub = getPillarPublication(publication, row.key);
-          if (!pub.s26) return null;
-          const routeKey = pub.s26.contributionOpportunity?.routeKey;
-          const prefill = pub.s26.contributionOpportunity?.prefill;
-          const opp = pub.s26.contributionOpportunity;
-          const bodyActions =
-            row.key === 'body'
-              ? bodyDataLimitationActions(product).map((action) => ({
-                    label: action.label,
-                    onPress: () => {
-                      close();
-                      if (action.destination === 'nutrition') onOpenNutrition?.();
-                      if (action.destination === 'ingredients') onOpenIngredients?.();
-                    },
-                  }))
-              : [];
-          const action = row.key === 'body' ? undefined : resolveAction(routeKey, prefill);
-          const liveKey =
-            opp?.material === true && opp.routeStatus === 'live' && opp.routeKey
-              ? opp.routeKey
-              : null;
-          let showLiveCta = false;
-          const packetAlreadyRepresented = liveKey === 'packet_claims' && admittedPacketContributionRepresented(product);
-          if (liveKey && action && !packetAlreadyRepresented && !seenLiveRoutes.has(liveKey)) {
-            seenLiveRoutes.add(liveKey);
-            showLiveCta = true;
-          }
-          const ingredientAction =
-            row.key === 'transparency' &&
-            transparencyShowsSeparateAddIngredients(product) &&
-            onOpenIngredients
-              ? {
-                  onPress: () => {
-                    close();
-                    onOpenIngredients();
-                  },
-                }
-              : undefined;
-          return (
-            <S26PillarBlock
-              key={row.key}
-              title={row.title}
-              pub={pub}
-              colors={{ text: tone.ink, textSecondary: tone.muted, primary: tone.action }}
-              showLiveCta={showLiveCta}
-              bodyActions={bodyActions}
-              ingredientAction={ingredientAction}
-              onLiveAction={
-                showLiveCta && action
-                  ? () => {
-                      close();
-                      action();
-                    }
-                  : undefined
-              }
-            />
-          );
-        })}
-
-        <LegalParagraph text={t('result.legalDataLimitationsModalP1')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
-        <LegalParagraph text={t('result.legalDataLimitationsModalP2')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
-        <LegalParagraph text={t('result.legalDataLimitationsModalP3')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
-        <LegalParagraph text={t('result.legalDataLimitationsModalP4')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
-        <LegalParagraph text={t('result.legalDataLimitationsModalP5')} colors={{ text: tone.ink, textSecondary: tone.muted }} />
-      </InfoModal> : null}
+      {hasExplanation && publication ? (
+        <InfoModal
+          visible={modalVisible}
+          onClose={closeExplanation}
+          title={t('result.legalDataLimitationsModalTitle')}
+          icon="cloud-offline-outline"
+          iconColor={tone.action}
+        >
+          {PILLAR_ROWS.map((row) => {
+            const pub = getPillarPublication(publication, row.key);
+            if (!pub.s26) return null;
+            return (
+              <ExplanationBlock
+                key={row.key}
+                title={row.title}
+                pub={pub}
+                ink={tone.ink}
+                muted={tone.muted}
+              />
+            );
+          })}
+          <Text style={[styles.modalParagraph, { color: tone.muted }]}>{t('result.legalDataLimitationsModalP1')}</Text>
+          <Text style={[styles.modalParagraph, { color: tone.muted }]}>{t('result.legalDataLimitationsModalP2')}</Text>
+          <Text style={[styles.modalParagraph, { color: tone.muted }]}>{t('result.legalDataLimitationsModalP3')}</Text>
+          <Text style={[styles.modalParagraph, { color: tone.muted }]}>{t('result.legalDataLimitationsModalP4')}</Text>
+          <Text style={[styles.modalParagraph, { color: tone.muted }]}>{t('result.legalDataLimitationsModalP5')}</Text>
+        </InfoModal>
+      ) : null}
     </>
-  );
-}
-
-function TeaserHeading({
-  title,
-  body,
-  showChevron,
-  ink,
-  muted,
-  action,
-  chevronCircle,
-}: {
-  title: string;
-  body?: string;
-  showChevron: boolean;
-  ink: string;
-  muted: string;
-  action: string;
-  chevronCircle: string;
-}) {
-  return (
-    <View style={styles.titleRow}>
-      <View style={[styles.iconPlate, { backgroundColor: resultPresentation.emerald.chevronCircle.light }]}>
-        <Svg width={24} height={24} viewBox="0 0 28 28" accessible={false}>
-          <Rect x={8} y={1} width={17} height={20} rx={3.5} fill="#FFFFFF" />
-          <Rect x={8} y={1} width={17} height={20} rx={3.5} fill={action} opacity={0.55} />
-          <Rect x={2} y={6} width={18} height={21} rx={3.5} fill={action} />
-          <Path d="M14 6H20V12L14 6Z" fill="#FFFFFF" opacity={0.85} />
-          <Rect x={5} y={12} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
-          <Rect x={5} y={16} width={12} height={1.8} rx={0.9} fill="#FFFFFF" />
-          <Rect x={5} y={20} width={8} height={1.8} rx={0.9} fill="#FFFFFF" />
-        </Svg>
-      </View>
-      <View style={styles.cardTextWrap}>
-        <View style={styles.headingLine}>
-          <Text style={[styles.cardTitle, { color: ink }]}>{title}</Text>
-          {showChevron ? (
-            <View style={[styles.chevronCircle, { backgroundColor: chevronCircle }]}>
-              <Ionicons name="chevron-forward" size={18} color={action} />
-            </View>
-          ) : null}
-        </View>
-        {body ? <Text style={[styles.cardSubtitle, { color: muted }]}>{body}</Text> : null}
-      </View>
-    </View>
   );
 }
 
@@ -453,64 +207,51 @@ const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
     borderRadius: resultPresentation.emerald.radius.teaser,
-    overflow: 'hidden',
-  },
-  section: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: 12,
-  },
-  contribution: {
-    paddingTop: 10,
+    paddingHorizontal: 16,
+    paddingTop: 14,
     paddingBottom: 12,
-    paddingHorizontal: 12,
-    minHeight: 44,
+    gap: 8,
   },
-  contributionLabel: {
-    flex: 1,
+  heading: {
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: '700',
+  },
+  support: {
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  primaryButton: {
+    minHeight: 44,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  primaryLabel: {
     fontSize: 16,
     lineHeight: 22,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  secondaryHit: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+  },
+  secondaryLabel: {
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: '600',
+    flexShrink: 1,
   },
-  contributionSentence: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 2,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  iconPlate: {
-    width: 26,
-    height: 26,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardTextWrap: {
-    flex: 1,
-    gap: 2,
-  },
-  headingLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 26,
-    gap: 8,
-  },
-  chevronCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardTitle: { flex: 1, fontSize: 20, lineHeight: 26, fontWeight: 'bold', includeFontPadding: false },
-  cardSubtitle: { fontSize: 13, lineHeight: 18 },
   pillarBlock: { marginBottom: 16 },
   pillarTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
   pillarBody: { fontSize: 13, lineHeight: 19 },
@@ -520,15 +261,4 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginBottom: 12,
   },
-  editLinkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginTop: 10,
-    gap: 8,
-  },
-  editLinkText: { flex: 1, fontSize: 14, fontWeight: '600' },
 });

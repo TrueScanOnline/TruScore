@@ -9,10 +9,12 @@ import type { Product } from '../../../types/product';
 import { originRowsForJourney } from '../../../contribution/consumerSurface';
 import { prepareVisibleContribution } from '../../../contribution/visibleContribution';
 import {
-  IMPROVE_PRODUCT_INFORMATION,
-  IMPROVE_PRODUCT_INFORMATION_SUBTITLE,
-  voluntaryContributionOffer,
-} from '../../../contribution/voluntaryContributionOffer';
+  ADD_OR_CORRECT_INFORMATION,
+  ABOUT_THIS_INFORMATION,
+  PRODUCT_INFORMATION_HEADING,
+  PRODUCT_INFORMATION_SUPPORT,
+} from '../../../contribution/productInformationMenu';
+import { voluntaryContributionOffer } from '../../../contribution/voluntaryContributionOffer';
 
 const EMPTY_NUTRITION = { basis: 'per_100g' as const, amounts: {}, sodiumUnit: 'mg' as const };
 
@@ -261,27 +263,25 @@ describe('voluntary contribution offer', () => {
 
   it('places the neutral action on Result and rechecks the latch before a pencil tap', () => {
     const source = fs.readFileSync(path.join(__dirname, '../../../../app/result/[barcode].tsx'), 'utf8');
-    expect(IMPROVE_PRODUCT_INFORMATION).toBe('Improve product information');
-    expect(IMPROVE_PRODUCT_INFORMATION_SUBTITLE).toBe(
-      'Have more details from the pack? Add information or correct what is shown. This may or may not change the score.'
+    expect(PRODUCT_INFORMATION_HEADING).toBe('Product information');
+    expect(PRODUCT_INFORMATION_SUPPORT).toBe(
+      'Explore what Rveel knows about this product and help keep its information accurate.'
     );
-    expect(source).toContain('IMPROVE_PRODUCT_INFORMATION');
-    expect(source).toContain('IMPROVE_PRODUCT_INFORMATION_SUBTITLE');
-    expect(source).toContain('freshVoluntaryOffer');
+    expect(ADD_OR_CORRECT_INFORMATION).toBe('Add or correct information');
+    expect(ABOUT_THIS_INFORMATION).toBe('About this information');
+    expect(source).toContain('freshProductInformationMenu');
     expect(source).toContain('publicationSettledRef.current');
     expect(source).not.toContain('userContributionRouteLive');
+    expect(source).not.toContain('Incomplete product data');
     const frameEnd = source.indexOf('</EmeraldScoreFrame>');
     const cardAt = source.indexOf('<ProductDataLimitationsCard', frameEnd);
-    expect(source.slice(frameEnd, cardAt)).not.toContain('IMPROVE_PRODUCT_INFORMATION');
     expect(source.slice(frameEnd, cardAt)).not.toContain('TouchableOpacity');
     const offeredCard = source.slice(cardAt, source.indexOf('/>', cardAt));
-    expect(offeredCard).toContain('voluntaryContribution={');
-    expect(offeredCard).toContain('label: IMPROVE_PRODUCT_INFORMATION');
-    expect(offeredCard).toContain('supportingSentence: IMPROVE_PRODUCT_INFORMATION_SUBTITLE');
-    expect(offeredCard).toContain('if (freshVoluntaryOffer().length === 0) return;');
-    expect(offeredCard).toContain("setContributionChoice('voluntary')");
+    expect(offeredCard).toContain('hasContributionActions={informationMenu.length > 0}');
+    expect(offeredCard).toContain('if (freshProductInformationMenu().length === 0) return;');
+    expect(offeredCard).toContain("setContributionChoice('productInformation')");
     const secondAt = source.indexOf('<ProductDataLimitationsCard', source.indexOf('/>', cardAt));
     const insufficientCard = source.slice(secondAt, source.indexOf('/>', secondAt));
-    expect(insufficientCard).not.toContain('voluntaryContribution');
+    expect(insufficientCard).toContain('onAddOrCorrect');
   });
 });

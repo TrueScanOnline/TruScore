@@ -145,7 +145,6 @@ import {
   CONTRIBUTION_NOTICE_SAVED,
   PACKET_ABSENCE_PRODUCT_STATE,
   PACKET_INFORMATION_ADD,
-  admittedPacketContributionRepresented,
   resultContributionActions,
   type ContributionEntryContext,
 } from '../../src/contribution/resultContributionActions';
@@ -155,10 +154,10 @@ import {
 } from '../../src/contribution/governedDisplayProjection';
 import { packetInformationJourneySeed } from '../../src/contribution/consumerSurface';
 import {
-  IMPROVE_PRODUCT_INFORMATION,
-  IMPROVE_PRODUCT_INFORMATION_SUBTITLE,
-  voluntaryContributionOffer,
-} from '../../src/contribution/voluntaryContributionOffer';
+  productInformationMenu,
+  productInformationMenuSections,
+} from '../../src/contribution/productInformationMenu';
+import { voluntaryContributionOffer } from '../../src/contribution/voluntaryContributionOffer';
 import { subscribeEvidenceAdmission } from '../../src/evidenceAuthority/device';
 import { currentModalTrace } from '../../src/evidenceAuthority/contributionTrace';
 import {
@@ -557,7 +556,9 @@ function ResultScreenContent() {
   const [contributionEntry, setContributionEntry] = useState<ContributionEntryContext>('ingredients');
   const [contributionJourney, setContributionJourney] = useState<'add' | 'change'>('add');
   const [contributionFormFirst, setContributionFormFirst] = useState(false);
-  const [contributionChoice, setContributionChoice] = useState<null | 'nutrition' | 'packet' | 'origins' | 'voluntary'>(null);
+  const [contributionChoice, setContributionChoice] = useState<
+    null | 'nutrition' | 'packet' | 'origins' | 'productInformation'
+  >(null);
   const [contributionNotice, setContributionNotice] = useState<string | null>(null);
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
   const [editMode, setEditMode] = useState(false);
@@ -1768,6 +1769,20 @@ function ResultScreenContent() {
 
   const contributionActions = resultContributionActions(product);
   const voluntaryOffer = voluntaryContributionOffer(product, { publicationSettled });
+  const informationMenu = productInformationMenu(product, { publicationSettled });
+  const freshProductInformationMenu = () => {
+    const current = productRef.current;
+    if (!current?.barcode || typeof barcode !== 'string') return [];
+    if (getPrimaryBarcode(current.barcode) !== getPrimaryBarcode(barcode)) return [];
+    if (publicationSettledRef.current !== true) return [];
+    if (
+      !settledForBarcodeRef.current ||
+      getPrimaryBarcode(settledForBarcodeRef.current) !== getPrimaryBarcode(barcode)
+    ) {
+      return [];
+    }
+    return productInformationMenu(current, { publicationSettled: true });
+  };
   const freshVoluntaryOffer = () => {
     const current = productRef.current;
     if (!current?.barcode || typeof barcode !== 'string') return [];
@@ -2092,24 +2107,13 @@ function ResultScreenContent() {
 
           <ProductDataLimitationsCard
             product={product}
-            onOpenIngredients={() => openContribution('ingredients', 'add')}
-            onOpenNutrition={() => openContribution('nutrition', 'add')}
-            onOpenOrigins={() => openContribution('origins', 'add')}
-            onOpenPacketClaims={() => openContribution('packetClaims', 'add')}
             publicationSettled={publicationSettled}
             openRequestKey={s26OpenRequestKey}
-            voluntaryContribution={
-              voluntaryOffer.length > 0
-                ? {
-                    label: IMPROVE_PRODUCT_INFORMATION,
-                    supportingSentence: IMPROVE_PRODUCT_INFORMATION_SUBTITLE,
-                    onPress: () => {
-                      if (freshVoluntaryOffer().length === 0) return;
-                      setContributionChoice('voluntary');
-                    },
-                  }
-                : null
-            }
+            hasContributionActions={informationMenu.length > 0}
+            onAddOrCorrect={() => {
+              if (freshProductInformationMenu().length === 0) return;
+              setContributionChoice('productInformation');
+            }}
           />
 
           {/* W3-S12 "What we found" — governed promoted stories from the fired ledger */}
@@ -2145,12 +2149,13 @@ function ResultScreenContent() {
           </View>
           <ProductDataLimitationsCard
             product={product}
-            onOpenIngredients={() => openContribution('ingredients', 'add')}
-            onOpenNutrition={() => openContribution('nutrition', 'add')}
-            onOpenOrigins={() => openContribution('origins', 'add')}
-            onOpenPacketClaims={() => openContribution('packetClaims', 'add')}
             publicationSettled={publicationSettled}
             openRequestKey={s26OpenRequestKey}
+            hasContributionActions={informationMenu.length > 0}
+            onAddOrCorrect={() => {
+              if (freshProductInformationMenu().length === 0) return;
+              setContributionChoice('productInformation');
+            }}
           />
           </>
         )}
@@ -2263,8 +2268,13 @@ function ResultScreenContent() {
                   barcode={barcode}
                   ingredientsText={product.rveelGovernedIngredientsText || product.ingredients_text}
                   novaGroup={product.nova_group}
-                  showAddIngredients={contributionActions.addIngredients}
-                  onAddIngredients={() => openContribution('ingredients', 'add')}
+                  showAddIngredients={informationMenu.some((row) => row.key === 'add-ingredients' && !row.formFirst)}
+                  onAddIngredients={() => {
+                    if (!freshProductInformationMenu().some((row) => row.key === 'add-ingredients' && !row.formFirst)) {
+                      return;
+                    }
+                    openContribution('ingredients', 'add');
+                  }}
                   onEdit={
                     voluntaryOffer.some((row) => row.destination === 'nutrition' || row.destination === 'ingredients')
                       ? () => {
@@ -2283,9 +2293,14 @@ function ResultScreenContent() {
                   onShareProcessing={() => handleShare('processing')}
                   onOpenProcessingLevel={() => setProcessingLevelModalVisible(true)}
                 />
-                {contributionActions.addNutrition ? (
+                {informationMenu.some((row) => row.key === 'add-nutrition' && !row.formFirst) ? (
                   <TouchableOpacity
-                    onPress={() => openContribution('nutrition', 'add')}
+                    onPress={() => {
+                      if (!freshProductInformationMenu().some((row) => row.key === 'add-nutrition' && !row.formFirst)) {
+                        return;
+                      }
+                      openContribution('nutrition', 'add');
+                    }}
                     style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
                     accessibilityRole="button"
                     accessibilityLabel="Add nutrition"
@@ -2420,9 +2435,12 @@ function ResultScreenContent() {
             offCountry: originsCard.offCountry,
             consumerLineCount: projectOriginConsumerLines(originsCard.facts).length,
           }) &&
-          (contributionActions.originsAction === 'add' || contributionActions.originsAction === 'complete') ? (
+          informationMenu.some((row) => row.key === 'add-origins' && !row.formFirst) ? (
             <TouchableOpacity
-              onPress={() => openContribution('origins', 'add')}
+              onPress={() => {
+                if (!freshProductInformationMenu().some((row) => row.key === 'add-origins' && !row.formFirst)) return;
+                openContribution('origins', 'add');
+              }}
               activeOpacity={0.7}
               style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
               accessibilityRole="button"
@@ -2569,9 +2587,12 @@ function ResultScreenContent() {
           {product.rveelPacketAbsenceEstablished ? (
             <Text style={{ color: colors.text }}>{PACKET_ABSENCE_PRODUCT_STATE}</Text>
           ) : null}
-          {contributionActions.packetInformationAction === 'add' && !admittedPacketContributionRepresented(product) ? (
+          {informationMenu.some((row) => row.key === 'add-packet' && !row.formFirst) ? (
           <TouchableOpacity
-            onPress={() => openContribution('packetClaims', 'add')}
+            onPress={() => {
+              if (!freshProductInformationMenu().some((row) => row.key === 'add-packet' && !row.formFirst)) return;
+              openContribution('packetClaims', 'add');
+            }}
             activeOpacity={0.7}
             style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
             accessibilityRole="button"
@@ -2795,28 +2816,41 @@ function ResultScreenContent() {
         animationType="fade"
         onRequestClose={() => setContributionChoice(null)}
       >
-        <TouchableOpacity
-          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' }}
-          activeOpacity={1}
-          onPress={() => setContributionChoice(null)}
-        >
+        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <TouchableOpacity
+            style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' }}
+            activeOpacity={1}
+            onPress={() => setContributionChoice(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          />
           <View style={{ backgroundColor: colors.card, padding: 20, gap: 16 }}>
-            {contributionChoice === 'voluntary'
-              ? voluntaryOffer.map((action) => (
-                  <TouchableOpacity
-                    key={action.key}
-                    onPress={() => {
-                      if (!freshVoluntaryOffer().some((row) => row.key === action.key)) {
-                        setContributionChoice(null);
-                        return;
-                      }
-                      openContribution(action.destination, action.journey, true);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={action.label}
-                  >
-                    <Text style={{ color: colors.text, fontSize: 18 }}>{action.label}</Text>
-                  </TouchableOpacity>
+            {contributionChoice === 'productInformation'
+              ? productInformationMenuSections(informationMenu).map((section) => (
+                  <View key={section.category} style={{ gap: 8 }}>
+                    <Text style={{ color: colors.textSecondary, fontSize: 13, fontWeight: '700' }}>
+                      {section.categoryLabel}
+                    </Text>
+                    {section.actions.map((action) => (
+                      <TouchableOpacity
+                        key={action.key}
+                        onPress={() => {
+                          const current = freshProductInformationMenu();
+                          const row = current.find((item) => item.key === action.key);
+                          if (!row) {
+                            setContributionChoice(null);
+                            return;
+                          }
+                          openContribution(row.destination, row.journey, row.formFirst);
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={action.label}
+                        style={{ minHeight: 44, justifyContent: 'center' }}
+                      >
+                        <Text style={{ color: colors.text, fontSize: 18 }}>{action.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 ))
               : null}
             {contributionChoice === 'nutrition' && contributionActions.updateNutrition ? (
@@ -2886,7 +2920,7 @@ function ResultScreenContent() {
               </>
             ) : null}
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
       <PacketContributionModal
