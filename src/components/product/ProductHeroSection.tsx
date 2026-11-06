@@ -100,24 +100,28 @@ function HeroDogEarPeel({ width, height, dark }: { width: number; height: number
   return (
     <Svg width={width} height={height} pointerEvents="none">
       <Defs>
-        <LinearGradient id={`${prefix}-fold`} x1="0%" y1="0%" x2="80%" y2="100%">
+        <LinearGradient id={`${prefix}-fold`} x1="8%" y1="0%" x2="88%" y2="100%">
           <Stop offset="0" stopColor={face.foldFace[0]} />
+          <Stop offset="0.28" stopColor={face.foldFace[0]} />
+          <Stop offset="0.72" stopColor={face.foldFace[1]} />
           <Stop offset="1" stopColor={face.foldFace[1]} />
         </LinearGradient>
         <LinearGradient id={`${prefix}-shadow`} x1="80%" y1="10%" x2="40%" y2="70%">
-          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.82 : 0.7} />
-          <Stop offset="0.4" stopColor="#041510" stopOpacity={dark ? 0.55 : 0.48} />
+          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.5 : 0.38} />
+          <Stop offset="0.45" stopColor="#041510" stopOpacity={dark ? 0.3 : 0.24} />
           <Stop offset="1" stopColor="#0C3227" stopOpacity="0" />
         </LinearGradient>
+        <LinearGradient id={`${prefix}-crease`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.55" />
+          <Stop offset="0.55" stopColor="#041510" stopOpacity="0.22" />
+          <Stop offset="1" stopColor="#041510" stopOpacity="0.08" />
+        </LinearGradient>
       </Defs>
-      <Path d={cast} fill="#000000" opacity={0.55} transform={`translate(${n(cutX)} 0)`} />
-      <Path d={flap} fill="#000000" opacity={0.32} transform={`translate(${n(cutX - 8)} 16)`} />
-      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.7} transform={`translate(${n(cutX - 6)} 11)`} />
-      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.9} transform={`translate(${n(cutX - 3)} 6)`} />
-      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={1} transform={`translate(${n(cutX - 1.5)} 3)`} />
+      <Path d={cast} fill="#000000" opacity={0.28} transform={`translate(${n(cutX)} 0)`} />
+      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.55} transform={`translate(${n(cutX - 1.2)} 2.4)`} />
       <Path d={flap} fill={`url(#${prefix}-fold)`} transform={`translate(${n(cutX)} 0)`} />
-      <Path d={crease} fill="none" stroke="#041510" strokeWidth="2.4" strokeOpacity="0.35" />
-      <Path d={crease} fill="none" stroke="#FFFFFF" strokeWidth="1.4" strokeOpacity="0.9" />
+      <Path d={crease} fill="none" stroke={`url(#${prefix}-crease)`} strokeWidth="2.2" />
+      <Path d={crease} fill="none" stroke="#FFFFFF" strokeWidth="1.1" strokeOpacity="0.75" />
     </Svg>
   );
 }

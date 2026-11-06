@@ -1616,7 +1616,7 @@ export default function PacketContributionModal({
                     >
                       <Text style={{ color: action }}>Add another country</Text>
                     </TouchableOpacity>
-                    <Text style={{ color: ink }}>Percentage</Text>
+                    <Text style={[styles.header, { color: ink, fontSize: 18 }]}>Percentage of ingredients</Text>
                     <TouchableOpacity
                       onPress={() =>
                         setOrigins((rows) =>
@@ -1640,49 +1640,64 @@ export default function PacketContributionModal({
                       <Text style={{ color: ink }}>Not stated</Text>
                     </TouchableOpacity>
                     {row.percentageNotStated ? null : (
-                    <TextInput
-                      value={row.percentage}
-                      onChangeText={(value) =>
-                        setOrigins((rows) =>
-                          rows.map((item, itemIndex) =>
-                            itemIndex === index ? { ...item, percentage: value, percentageNotStated: false } : item
-                          )
-                        )
-                      }
-                      keyboardType="decimal-pad"
-                      placeholder="Percentage on the pack"
-                      style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
-                    />
-                    )}
-                    {row.percentageNotStated ? null : (
-                    <View>
-                      {QUALIFIER_LABELS.map((item) => {
-                        const selected = row.qualifier === item.value;
-                        return (
-                          <TouchableOpacity
-                            key={item.value}
-                            onPress={() =>
-                              setOrigins((rows) =>
-                                rows.map((entry, itemIndex) =>
-                                  itemIndex === index ? { ...entry, qualifier: item.value } : entry
+                      <View style={styles.originPercentRow}>
+                        <View style={styles.originPercentColumn}>
+                          <Text style={{ color: ink, fontWeight: '600' }}>Qualifier</Text>
+                          {QUALIFIER_LABELS.map((item) => {
+                            const selected = row.qualifier === item.value;
+                            return (
+                              <TouchableOpacity
+                                key={item.value}
+                                onPress={() =>
+                                  setOrigins((rows) =>
+                                    rows.map((entry, itemIndex) =>
+                                      itemIndex === index ? { ...entry, qualifier: item.value } : entry
+                                    )
+                                  )
+                                }
+                                accessibilityRole="radio"
+                                accessibilityState={{ selected }}
+                                style={styles.originChoice}
+                              >
+                                <Ionicons
+                                  name={selected ? 'radio-button-on' : 'radio-button-off'}
+                                  size={22}
+                                  color={selected ? action : ink}
+                                />
+                                <Text style={{ color: ink }}>{item.label}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                        <View style={styles.originPercentColumn}>
+                          <Text style={{ color: ink, fontWeight: '600' }}>Percentage</Text>
+                          <View style={styles.originPercentInputRow}>
+                            <TextInput
+                              value={row.percentage}
+                              onChangeText={(value) =>
+                                setOrigins((rows) =>
+                                  rows.map((item, itemIndex) =>
+                                    itemIndex === index
+                                      ? { ...item, percentage: value, percentageNotStated: false }
+                                      : item
+                                  )
                                 )
-                              )
-                            }
-                            accessibilityRole="radio"
-                            accessibilityState={{ selected }}
-                            style={styles.originChoice}
-                          >
-                            <Ionicons
-                              name={selected ? 'radio-button-on' : 'radio-button-off'}
-                              size={22}
-                              color={selected ? action : ink}
+                              }
+                              keyboardType="decimal-pad"
+                              placeholder="e.g. 96"
+                              accessibilityLabel="Percentage"
+                              style={[
+                                styles.input,
+                                styles.originPercentInput,
+                                { color: ink, borderColor: line, backgroundColor: fieldBg },
+                              ]}
                             />
-                            <Text style={{ color: ink }}>{item.label}</Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
+                            <Text style={{ color: ink, fontSize: 18, fontWeight: '700' }}>%</Text>
+                          </View>
+                        </View>
+                      </View>
                     )}
+                    <Text style={[styles.header, { color: ink, fontSize: 18 }]}>Ingredient origin</Text>
                     <TouchableOpacity
                       onPress={() =>
                         setOrigins((rows) =>
@@ -1721,7 +1736,15 @@ export default function PacketContributionModal({
                       />
                       <Text style={{ color: ink }}>Imported ingredients</Text>
                     </TouchableOpacity>
-                    <Text style={styles.originSentence}>{quotedOriginEntry(entrySentence)}</Text>
+                    <View
+                      style={[
+                        styles.originPreviewCard,
+                        { borderColor: line, backgroundColor: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(16,28,54,0.03)' },
+                      ]}
+                    >
+                      <Text style={[styles.header, { color: ink, fontSize: 16 }]}>Your product statement</Text>
+                      <Text style={[styles.originSentence, { color: ink }]}>{quotedOriginEntry(entrySentence)}</Text>
+                    </View>
                     <Text style={{ color: ink }}>What else does the pack say?</Text>
                     <TextInput
                       value={row.wording}
@@ -1997,6 +2020,11 @@ const styles = StyleSheet.create({
   originLockupText: { flex: 1, fontSize: 22, lineHeight: 28, fontWeight: '700' },
   originAction: { flexGrow: 1, flexBasis: 0 },
   originChoice: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 },
+  originPercentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  originPercentColumn: { flexGrow: 1, flexBasis: 140, gap: 8, minWidth: 140 },
+  originPercentInputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  originPercentInput: { flex: 1, minWidth: 96 },
+  originPreviewCard: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, padding: 12, gap: 8 },
   originSentence: { fontSize: 17, lineHeight: 24, fontStyle: 'italic', color: '#c0392b' },
   claimCard: { borderWidth: 1, borderRadius: 16, padding: 14, gap: 12 },
   claimLabel: { fontSize: 20, lineHeight: 26, fontWeight: '700' },

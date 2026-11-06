@@ -278,7 +278,10 @@ describe('functional-to-consumer integration closure', () => {
     expect(modal).not.toContain('Already known');
     expect(modal).toContain("intent: 'edited'");
     expect(modal).not.toContain('Lane A');
-    expect(result).toContain('rveelPacketNutritionStatus');
+    expect(result).not.toContain('rveelPacketNutritionStatus');
+    expect(fs.readFileSync(path.join(REPO, 'src/utils/trustScore.ts'), 'utf8')).toContain(
+      'rveelPacketNutritionStatus: nutritionStatus'
+    );
     expect(result).toContain('authoritativeSnapshot');
     expect(result).toContain('subscribeEvidenceAdmission');
   });

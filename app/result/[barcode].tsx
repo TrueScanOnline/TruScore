@@ -2275,9 +2275,6 @@ function ResultScreenContent() {
             title={t('result.nutritionAndIngredients', 'Nutrition & Ingredients')}
             afterBurn={
               <>
-                {product.rveelPacketNutritionStatus ? (
-                  <Text style={{ color: colors.text, marginBottom: 8 }}>{product.rveelPacketNutritionStatus}</Text>
-                ) : null}
                 <ResultIngredientsSection
                   barcode={barcode}
                   ingredientsText={product.rveelGovernedIngredientsText || product.ingredients_text}

@@ -5,7 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { dogEarCut, dogEarFlap, dogEarFlapPillar } from '../../../components/product/emerald/dogEar';
+import { dogEarCut, dogEarFlap } from '../../../components/product/emerald/dogEar';
 import {
   CLAIMS_LIMITED_CONFIDENCE_BODY,
   CLAIMS_LIMITED_CONFIDENCE_TITLE,
@@ -76,19 +76,17 @@ describe('W5-UI-09 founder Result refinements', () => {
     expect(result).toMatch(/if \(!row\)[\s\S]*setContributionChoice\(null\)/);
   });
 
-  it('uses rounded pillar dog-ear geometry without changing the Hero path', () => {
+  it('uses one rounded dog-ear geometry on Hero and Score pillars', () => {
     const heroCut = dogEarCut(320, 180, 22, 46);
-    const pillarCut = dogEarCut(160, 138, 22, 46, 'pillar');
-    expect(heroCut.flap).toBe(dogEarFlap(46));
-    expect(pillarCut.flap).toBe(dogEarFlapPillar(46, 22));
-    expect(pillarCut.flap).not.toBe(heroCut.flap);
-    expect(pillarCut.face).not.toBe(heroCut.face);
+    const pillarCut = dogEarCut(160, 138, 22, 46);
+    expect(heroCut.flap).toBe(dogEarFlap(46, 22));
+    expect(pillarCut.flap).toBe(dogEarFlap(46, 22));
+    expect(heroCut.crease).toContain('C');
     expect(pillarCut.crease).toContain('C');
-    expect(heroCut.crease).not.toContain('C');
-    expect(composition).toContain("dogEarCut(W, H, radius, fold, 'pillar')");
+    expect(composition).toContain('dogEarCut(W, H, radius, fold)');
+    expect(composition).not.toContain("'pillar'");
     expect(composition).toContain("overflow: 'visible'");
     expect(hero).toContain('dogEarCut(width, height, radius, fold)');
-    expect(hero).not.toContain("'pillar'");
   });
 
   it('changes only the Result Highlights heading', () => {

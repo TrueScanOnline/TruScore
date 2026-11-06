@@ -147,7 +147,8 @@ export default function EmeraldScoreFrame({ heading, infoControl, children, conf
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginHorizontal: 10, marginTop: 36, marginBottom: 10, overflow: 'visible' },
+  // Nominal Hero→Score separation ~9pt after decorative shiftY (−30): was ~18pt at marginTop 36.
+  wrapper: { marginHorizontal: 10, marginTop: 27, marginBottom: 10, overflow: 'visible' },
   backing: {
     position: 'absolute',
     left: 0,

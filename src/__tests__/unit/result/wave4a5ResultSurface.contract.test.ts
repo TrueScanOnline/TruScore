@@ -30,7 +30,8 @@ describe('Wave 4A.5 Result surface', () => {
   it('uses the consolidated consumer title Nutrition & Ingredients', () => {
     expect(en.result.nutritionAndIngredients).toBe('Nutrition & Ingredients');
     expect(result).toContain("t('result.nutritionAndIngredients', 'Nutrition & Ingredients')");
-    expect(result).toContain('rveelPacketNutritionStatus');
+    // OFF dispatch status stays internal; Result no longer renders rveelPacketNutritionStatus.
+    expect(result).not.toContain('rveelPacketNutritionStatus');
   });
 
   it('renders Nutrition, then Feel the Burn, then Ingredients when Burn is eligible', () => {
@@ -128,12 +129,12 @@ describe('Wave 4A.5 Result surface', () => {
     expect(result).toContain('<BannerAlertsCard');
     expect(result).toContain('<TruScore');
     expect(result).toContain('<ConfidenceBadge');
-    expect(result).toContain('What we found');
+    expect(result).toContain('heading={RESULT_SCORE_HIGHLIGHTS_HEADING}');
     expect(result).toContain('Insufficient Data Card');
     expect(result).toContain('<ProductDataLimitationsCard');
     const scoreAt = result.indexOf('<TruScore');
     const limitationsAt = result.indexOf('<ProductDataLimitationsCard');
-    const foundAt = result.indexOf('What we found');
+    const foundAt = result.indexOf('heading={RESULT_SCORE_HIGHLIGHTS_HEADING}');
     expect(limitationsAt).toBeGreaterThan(scoreAt);
     expect(foundAt).toBeGreaterThan(limitationsAt);
     expect(result).toContain('result.scanAnother');

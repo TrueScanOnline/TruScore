@@ -72,8 +72,8 @@ function TileArt({
   const H = Math.max(height, 1);
   const radius = art.radius.tile;
   const fold = Math.max(art.fold, DOG_EAR_FOLD);
-  // Pillar surface only — Hero keeps the founder-approved dogEarCut default.
-  const { cutX, face, flap, cast, crease } = dogEarCut(W, H, radius, fold, 'pillar');
+  // Shared rounded peel with the Product Hero (dogEar.ts).
+  const { cutX, face, flap, cast, crease } = dogEarCut(W, H, radius, fold);
   const flapLight = dark ? art.foldDark[1] : '#FFFFFF';
   return (
     <Svg width="100%" height="100%" viewBox={`0 0 ${num(W)} ${num(H)}`}>
@@ -100,8 +100,8 @@ function TileArt({
           <Stop offset="1" stopColor={shades[1]} />
         </LinearGradient>
         <LinearGradient id={`${prefix}-shadow`} x1="80%" y1="10%" x2="40%" y2="70%">
-          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.55 : 0.42} />
-          <Stop offset="0.45" stopColor="#041510" stopOpacity={dark ? 0.32 : 0.26} />
+          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.5 : 0.38} />
+          <Stop offset="0.45" stopColor="#041510" stopOpacity={dark ? 0.3 : 0.24} />
           <Stop offset="1" stopColor="#0C3227" stopOpacity="0" />
         </LinearGradient>
         <LinearGradient id={`${prefix}-flap`} x1="8%" y1="0%" x2="88%" y2="100%">
@@ -121,7 +121,6 @@ function TileArt({
         <Path d={face} fill={`url(#${prefix}-tile)`} />
         <Rect x="0" y="0" width={W} height={H} fill={`url(#${prefix}-wash)`} clipPath={`url(#${prefix}-face)`} />
         <Path d={face} fill="none" stroke="#FFFFFF" strokeWidth="2" strokeOpacity="0.7" />
-        {/* Lifted peel stays inside the rounded clip so Android/iOS show the fold. */}
         <Path d={cast} fill="#000000" opacity={0.28} transform={`translate(${num(cutX)} 0)`} />
         <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.55} transform={`translate(${num(cutX - 1.2)} 2.4)`} />
         <Path d={flap} fill={`url(#${prefix}-flap)`} transform={`translate(${num(cutX)} 0)`} />
