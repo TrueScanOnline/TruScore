@@ -1,0 +1,231 @@
+/**
+ * Voluntary contribution access stays on the settled card-pencil journeys.
+ * Checking and a closed Result latch do not open those pencils.
+ */
+
+import fs from 'fs';
+import path from 'path';
+import type { Product } from '../../../types/product';
+import { originRowsForJourney } from '../../../contribution/consumerSurface';
+import { prepareVisibleContribution } from '../../../contribution/visibleContribution';
+import {
+  IMPROVE_PRODUCT_INFORMATION,
+  IMPROVE_PRODUCT_INFORMATION_SUBTITLE,
+  voluntaryContributionOffer,
+} from '../../../contribution/voluntaryContributionOffer';
+
+const EMPTY_NUTRITION = { basis: 'per_100g' as const, amounts: {}, sodiumUnit: 'mg' as const };
+
+function product(input: {
+  settled?: boolean;
+  omitPublication?: boolean;
+  overall?: 'checking' | 'nr' | 'rated';
+  nutrition?: 'resolved' | 'unassessed';
+  processing?: 'resolved' | 'unassessed';
+  ingredient?: 'resolved' | 'unassessed';
+  origins?: 'resolved' | 'unassessed';
+  packet?: 'assessed' | 'unassessed_or_incomplete';
+  transparencyStatus?: 'rated' | 'nr' | 'checking';
+  publishedScore?: number | null;
+  offCountry?: string;
+  certifications?: string[];
+  governedClaims?: string[];
+} = {}): Product {
+  if (input.omitPublication) {
+    return { barcode: '9300000000001', trust_score: 80 } as Product;
+  }
+  return {
+    barcode: '9300000000001',
+    trust_score: input.publishedScore === 0 ? 0 : 61,
+    manufacturing_places: input.offCountry,
+    certifications: (input.certifications || []).map((name) => ({ id: name, name })),
+    rveelGovernedPacketClaims: (input.governedClaims || []).map((wording) => ({ exactWording: wording })),
+    _publication: {
+      settled: input.settled !== false,
+      body: {
+        publicationStatus: 'rated',
+        publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
+        assessmentLanes: {
+          nutrition: input.nutrition ?? 'resolved',
+          processing: input.processing ?? 'resolved',
+        },
+      },
+      planet: {
+        publicationStatus: 'rated',
+        publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
+        assessmentLanes: { broad_environment: 'resolved', packaging_fallback: 'resolved' },
+      },
+      claims: {
+        publicationStatus: 'rated',
+        publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
+        assessmentLanes: { packet: input.packet ?? 'assessed', benchmark: 'assessed' },
+      },
+      transparency: {
+        publicationStatus: input.transparencyStatus ?? 'rated',
+        publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
+        assessmentLanes: {
+          ingredient_clarity: input.ingredient ?? 'resolved',
+          origins: input.origins ?? 'resolved',
+        },
+      },
+      overall: {
+        publicationStatus: input.overall ?? 'rated',
+        publishedScore: input.publishedScore === undefined ? 48 : input.publishedScore,
+      },
+    },
+  } as Product;
+}
+
+const open = { publicationSettled: true as const };
+
+describe('voluntary contribution offer', () => {
+  it('lists Change and the independent origin and packet Add rows when every pillar is Rated', () => {
+    const labels = voluntaryContributionOffer(product(), open).map((row) => row.label);
+    expect(labels).toEqual([
+      'Change nutrition',
+      'Change ingredients',
+      'Add product origins',
+      'Change product origins',
+      'Add packet information',
+      'Change packet information',
+    ]);
+    expect(labels.join(' ')).not.toMatch(/Planet|NOVA|processing|packaging|Eco-Score|benchmark|additive/i);
+  });
+
+  it('offers Change nutrition when processing is unresolved and does not invent a processing Add', () => {
+    const offer = voluntaryContributionOffer(
+      product({
+        nutrition: 'resolved',
+        processing: 'unassessed',
+        ingredient: 'unassessed',
+        origins: 'unassessed',
+        packet: 'unassessed_or_incomplete',
+        transparencyStatus: 'nr',
+        overall: 'nr',
+      }),
+      open
+    );
+    expect(offer.map((row) => row.label)).toEqual(['Change nutrition']);
+    expect(offer.map((row) => row.label).join(' ')).not.toMatch(/processing|NOVA|Planet/);
+  });
+
+  it('keeps Add and Change packet when a certification already exists', () => {
+    const offer = voluntaryContributionOffer(
+      product({ packet: 'assessed', certifications: ['Fairtrade'] }),
+      open
+    );
+    expect(offer.filter((row) => row.destination === 'packetClaims').map((row) => row.journey)).toEqual([
+      'add',
+      'change',
+    ]);
+    const added = prepareVisibleContribution({
+      contexts: ['packetClaims', 'certifications'],
+      ingredientsText: '',
+      nutrition: EMPTY_NUTRITION,
+      nutritionBaseline: EMPTY_NUTRITION,
+      origins: [],
+      claims: [],
+      initialClaims: [],
+      certifications: ['Fairtrade', 'Organic'],
+      initialCertifications: ['Fairtrade'],
+    });
+    expect(added.status).toBe('ready');
+    if (added.status === 'ready') {
+      expect(added.certifications).toContain('Organic');
+      expect(added.ceasedSubjectKeys).toEqual([]);
+    }
+  });
+
+  it('starts Add origins blank and opens the current proposition on Change', () => {
+    const chile = {
+      claimType: 'produced_in' as const,
+      wording: '',
+      place: 'Chile',
+      ingredient: '',
+      percentage: '',
+      intent: 'edited' as const,
+    };
+    const offer = voluntaryContributionOffer(product({ origins: 'resolved' }), open);
+    expect(offer.filter((row) => row.destination === 'origins').map((row) => row.journey)).toEqual([
+      'add',
+      'change',
+    ]);
+    expect(originRowsForJourney('add', [chile], 'Chile')).toEqual([
+      { claimType: null, wording: '', place: '', ingredient: '', percentage: '', intent: 'new' },
+    ]);
+    expect(originRowsForJourney('change', [chile], 'Chile')[0]?.place).toBe('Chile');
+  });
+
+  it('keeps voluntary rows for settled NR and a genuine published zero', () => {
+    const nr = voluntaryContributionOffer(product({ overall: 'nr', publishedScore: null }), open).map(
+      (row) => row.label
+    );
+    const zero = voluntaryContributionOffer(product({ publishedScore: 0 }), open).map((row) => row.label);
+    const rated = voluntaryContributionOffer(product({ publishedScore: 48 }), open).map((row) => row.label);
+    expect(nr).toEqual(rated);
+    expect(zero).toEqual(rated);
+    expect(nr.length).toBeGreaterThan(0);
+  });
+
+  it('offers nothing for Checking, a missing or unsettled snapshot, or a closed latch', () => {
+    const withEvidence = {
+      offCountry: 'Australia',
+      certifications: ['Fairtrade'],
+      governedClaims: ['High fibre'],
+    };
+    expect(voluntaryContributionOffer(product({ ...withEvidence, overall: 'checking', settled: true }), open)).toEqual(
+      []
+    );
+    expect(voluntaryContributionOffer(product({ ...withEvidence, settled: false }), open)).toEqual([]);
+    expect(voluntaryContributionOffer(product({ omitPublication: true }), open)).toEqual([]);
+    expect(voluntaryContributionOffer(product(withEvidence), { publicationSettled: false })).toEqual([]);
+    expect(voluntaryContributionOffer(product(withEvidence))).toEqual([]);
+  });
+
+  it('drops a row when the latch closes between the menu and the tap', () => {
+    const shown = product();
+    expect(voluntaryContributionOffer(shown, open).some((row) => row.key === 'change-nutrition')).toBe(true);
+    const atTap = voluntaryContributionOffer(shown, { publicationSettled: false });
+    expect(atTap.some((row) => row.key === 'change-nutrition')).toBe(false);
+    expect(atTap).toEqual([]);
+  });
+
+  it('does not read a Highlight ledger or an internal score', () => {
+    const bare = product();
+    delete (bare as { pillarDetails?: unknown }).pillarDetails;
+    delete (bare as { _truscore_analysis?: unknown })._truscore_analysis;
+    (bare as { trust_score?: number }).trust_score = 4;
+    expect(voluntaryContributionOffer(bare, open).map((row) => row.label)).toEqual(
+      voluntaryContributionOffer(product({ publishedScore: 18 }), open).map((row) => row.label)
+    );
+  });
+
+  it('does not turn an unchanged or local-only statement into a score input', () => {
+    expect(voluntaryContributionOffer(product({ omitPublication: true }), open)).toEqual([]);
+    const unchanged = prepareVisibleContribution({
+      contexts: ['packetClaims'],
+      ingredientsText: '',
+      nutrition: EMPTY_NUTRITION,
+      nutritionBaseline: EMPTY_NUTRITION,
+      origins: [],
+      claims: [],
+      certifications: ['ACO Certified Organic'],
+      initialCertifications: ['ACO Certified Organic'],
+      pendingPacketWording: 'ACO Certified Organic',
+    });
+    expect(unchanged.status).toBe('unchanged');
+  });
+
+  it('places the neutral action on Result and rechecks the latch before a pencil tap', () => {
+    const source = fs.readFileSync(path.join(__dirname, '../../../../app/result/[barcode].tsx'), 'utf8');
+    expect(IMPROVE_PRODUCT_INFORMATION).toBe('Improve product information');
+    expect(IMPROVE_PRODUCT_INFORMATION_SUBTITLE).toBe(
+      'Have more details from the pack? Add information or correct what is shown. This may or may not change the score.'
+    );
+    expect(source).toContain('IMPROVE_PRODUCT_INFORMATION');
+    expect(source).toContain('IMPROVE_PRODUCT_INFORMATION_SUBTITLE');
+    expect(source).toContain('freshVoluntaryOffer');
+    expect(source).toContain('publicationSettledRef.current');
+    expect(source).not.toContain('userContributionRouteLive');
+  });
+});

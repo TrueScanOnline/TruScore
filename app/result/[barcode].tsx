@@ -154,6 +154,11 @@ import {
   originDraftsFromGovernedFacts,
 } from '../../src/contribution/governedDisplayProjection';
 import { packetInformationJourneySeed } from '../../src/contribution/consumerSurface';
+import {
+  IMPROVE_PRODUCT_INFORMATION,
+  IMPROVE_PRODUCT_INFORMATION_SUBTITLE,
+  voluntaryContributionOffer,
+} from '../../src/contribution/voluntaryContributionOffer';
 import { subscribeEvidenceAdmission } from '../../src/evidenceAuthority/device';
 import { currentModalTrace } from '../../src/evidenceAuthority/contributionTrace';
 import {
@@ -552,7 +557,7 @@ function ResultScreenContent() {
   const [contributionEntry, setContributionEntry] = useState<ContributionEntryContext>('ingredients');
   const [contributionJourney, setContributionJourney] = useState<'add' | 'change'>('add');
   const [contributionFormFirst, setContributionFormFirst] = useState(false);
-  const [contributionChoice, setContributionChoice] = useState<null | 'nutrition' | 'packet' | 'origins'>(null);
+  const [contributionChoice, setContributionChoice] = useState<null | 'nutrition' | 'packet' | 'origins' | 'voluntary'>(null);
   const [contributionNotice, setContributionNotice] = useState<string | null>(null);
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
   const [editMode, setEditMode] = useState(false);
@@ -1762,6 +1767,20 @@ function ResultScreenContent() {
   const isWebSearchProduct = isWebSearchFallback(product);
 
   const contributionActions = resultContributionActions(product);
+  const voluntaryOffer = voluntaryContributionOffer(product, { publicationSettled });
+  const freshVoluntaryOffer = () => {
+    const current = productRef.current;
+    if (!current?.barcode || typeof barcode !== 'string') return [];
+    if (getPrimaryBarcode(current.barcode) !== getPrimaryBarcode(barcode)) return [];
+    if (publicationSettledRef.current !== true) return [];
+    if (
+      !settledForBarcodeRef.current ||
+      getPrimaryBarcode(settledForBarcodeRef.current) !== getPrimaryBarcode(barcode)
+    ) {
+      return [];
+    }
+    return voluntaryContributionOffer(current, { publicationSettled: true });
+  };
   const highlightOffer =
     scoreHighlightsRequest?.mode === 'pillar'
       ? highlightContributionOffer(product, scoreHighlightsRequest.pillar, {
@@ -2071,6 +2090,27 @@ function ResultScreenContent() {
           )}
           </EmeraldScoreFrame>
 
+          {voluntaryOffer.length > 0 ? (
+            <View style={styles.improveInformation}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (freshVoluntaryOffer().length === 0) return;
+                  setContributionChoice('voluntary');
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={IMPROVE_PRODUCT_INFORMATION}
+                style={styles.improveInformationButton}
+              >
+                <Text style={[styles.improveInformationLabel, { color: emerald.action }]}>
+                  {IMPROVE_PRODUCT_INFORMATION}
+                </Text>
+              </TouchableOpacity>
+              <Text style={[styles.improveInformationSubtitle, { color: emerald.muted }]}>
+                {IMPROVE_PRODUCT_INFORMATION_SUBTITLE}
+              </Text>
+            </View>
+          ) : null}
+
           <ProductDataLimitationsCard
             product={product}
             onOpenIngredients={() => openContribution('ingredients', 'add')}
@@ -2194,8 +2234,17 @@ function ResultScreenContent() {
             nutritionDataPreparedPer={product.nutrition_data_prepared_per}
             onShare={() => handleShare('nutrition')}
             onEdit={
-              contributionActions.updateNutrition || contributionActions.updateIngredients
-                ? () => setContributionChoice('nutrition')
+              voluntaryOffer.some((row) => row.destination === 'nutrition' || row.destination === 'ingredients')
+                ? () => {
+                    if (
+                      !freshVoluntaryOffer().some(
+                        (row) => row.destination === 'nutrition' || row.destination === 'ingredients'
+                      )
+                    ) {
+                      return;
+                    }
+                    setContributionChoice('nutrition');
+                  }
                 : undefined
             }
             shareContext={{
@@ -2226,8 +2275,17 @@ function ResultScreenContent() {
                   showAddIngredients={contributionActions.addIngredients}
                   onAddIngredients={() => openContribution('ingredients', 'add')}
                   onEdit={
-                    contributionActions.updateNutrition || contributionActions.updateIngredients
-                      ? () => setContributionChoice('nutrition')
+                    voluntaryOffer.some((row) => row.destination === 'nutrition' || row.destination === 'ingredients')
+                      ? () => {
+                          if (
+                            !freshVoluntaryOffer().some(
+                              (row) => row.destination === 'nutrition' || row.destination === 'ingredients'
+                            )
+                          ) {
+                            return;
+                          }
+                          setContributionChoice('nutrition');
+                        }
                       : undefined
                   }
                   onShareIngredients={() => handleShare('ingredients')}
@@ -2271,9 +2329,12 @@ function ResultScreenContent() {
               </Text>
             </View>
             <View style={styles.cardHeaderRight}>
-              {contributionActions.originsAction === 'update' || originsCard.facts.length > 0 || originsCard.offCountry ? (
+              {voluntaryOffer.some((row) => row.destination === 'origins') ? (
                 <TouchableOpacity
-                  onPress={() => setContributionChoice('origins')}
+                  onPress={() => {
+                    if (!freshVoluntaryOffer().some((row) => row.destination === 'origins')) return;
+                    setContributionChoice('origins');
+                  }}
                   accessibilityRole="button"
                   accessibilityLabel="Change or add product origins"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -2403,12 +2464,12 @@ function ResultScreenContent() {
               </Text>
             </View>
             <View style={styles.cardHeaderRight}>
-              {contributionActions.packetInformationAction === 'update' ||
-              (product.rveelGovernedPacketClaims || []).length > 0 ||
-              (product.rveelGovernedCertifications || []).length > 0 ||
-              (product.certifications || []).length > 0 ? (
+              {voluntaryOffer.some((row) => row.destination === 'packetClaims') ? (
                 <TouchableOpacity
-                  onPress={() => setContributionChoice('packet')}
+                  onPress={() => {
+                    if (!freshVoluntaryOffer().some((row) => row.destination === 'packetClaims')) return;
+                    setContributionChoice('packet');
+                  }}
                   accessibilityRole="button"
                   accessibilityLabel="Change or add packet information"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -2749,32 +2810,86 @@ function ResultScreenContent() {
           onPress={() => setContributionChoice(null)}
         >
           <View style={{ backgroundColor: colors.card, padding: 20, gap: 16 }}>
+            {contributionChoice === 'voluntary'
+              ? voluntaryOffer.map((action) => (
+                  <TouchableOpacity
+                    key={action.key}
+                    onPress={() => {
+                      if (!freshVoluntaryOffer().some((row) => row.key === action.key)) {
+                        setContributionChoice(null);
+                        return;
+                      }
+                      openContribution(action.destination, action.journey, true);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={action.label}
+                  >
+                    <Text style={{ color: colors.text, fontSize: 18 }}>{action.label}</Text>
+                  </TouchableOpacity>
+                ))
+              : null}
             {contributionChoice === 'nutrition' && contributionActions.updateNutrition ? (
-              <TouchableOpacity onPress={() => openContribution('nutrition', 'change', true)} accessibilityRole="button">
+              <TouchableOpacity
+                onPress={() => {
+                  if (!freshVoluntaryOffer().some((row) => row.key === 'change-nutrition')) return;
+                  openContribution('nutrition', 'change', true);
+                }}
+                accessibilityRole="button"
+              >
                 <Text style={{ color: colors.text, fontSize: 18 }}>Change nutrition</Text>
               </TouchableOpacity>
             ) : null}
             {contributionChoice === 'nutrition' && contributionActions.updateIngredients ? (
-              <TouchableOpacity onPress={() => openContribution('ingredients', 'change', true)} accessibilityRole="button">
+              <TouchableOpacity
+                onPress={() => {
+                  if (!freshVoluntaryOffer().some((row) => row.key === 'change-ingredients')) return;
+                  openContribution('ingredients', 'change', true);
+                }}
+                accessibilityRole="button"
+              >
                 <Text style={{ color: colors.text, fontSize: 18 }}>Change ingredients</Text>
               </TouchableOpacity>
             ) : null}
             {contributionChoice === 'packet' ? (
               <>
-                <TouchableOpacity onPress={() => openContribution('packetClaims', 'change', true)} accessibilityRole="button">
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!freshVoluntaryOffer().some((row) => row.key === 'change-packet')) return;
+                    openContribution('packetClaims', 'change', true);
+                  }}
+                  accessibilityRole="button"
+                >
                   <Text style={{ color: colors.text, fontSize: 18 }}>Change packet information</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => openContribution('packetClaims', 'add', true)} accessibilityRole="button">
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!freshVoluntaryOffer().some((row) => row.key === 'add-packet')) return;
+                    openContribution('packetClaims', 'add', true);
+                  }}
+                  accessibilityRole="button"
+                >
                   <Text style={{ color: colors.text, fontSize: 18 }}>Add packet information</Text>
                 </TouchableOpacity>
               </>
             ) : null}
             {contributionChoice === 'origins' ? (
               <>
-                <TouchableOpacity onPress={() => openContribution('origins', 'change', true)} accessibilityRole="button">
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!freshVoluntaryOffer().some((row) => row.key === 'change-origins')) return;
+                    openContribution('origins', 'change', true);
+                  }}
+                  accessibilityRole="button"
+                >
                   <Text style={{ color: colors.text, fontSize: 18 }}>Change product origins</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => openContribution('origins', 'add', true)} accessibilityRole="button">
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!freshVoluntaryOffer().some((row) => row.key === 'add-origins')) return;
+                    openContribution('origins', 'add', true);
+                  }}
+                  accessibilityRole="button"
+                >
                   <Text style={{ color: colors.text, fontSize: 18 }}>Add product origins</Text>
                 </TouchableOpacity>
               </>
@@ -3933,6 +4048,24 @@ const styles = StyleSheet.create({
   packetClaimsInfoClose: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  improveInformation: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    gap: 4,
+  },
+  improveInformationButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+  },
+  improveInformationLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 22,
+  },
+  improveInformationSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
   },
   certificationsUpdateButton: {
     flexDirection: 'row',
