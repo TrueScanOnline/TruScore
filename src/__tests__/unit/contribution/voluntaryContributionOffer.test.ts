@@ -263,9 +263,9 @@ describe('voluntary contribution offer', () => {
 
   it('places the neutral action on Result and rechecks the latch before a pencil tap', () => {
     const source = fs.readFileSync(path.join(__dirname, '../../../../app/result/[barcode].tsx'), 'utf8');
-    expect(PRODUCT_INFORMATION_HEADING).toBe('Product information');
+    expect(PRODUCT_INFORMATION_HEADING).toBe('Information missing?');
     expect(PRODUCT_INFORMATION_SUPPORT).toBe(
-      'Explore what Rveel knows about this product and help keep its information accurate.'
+      'If you think any of the information about this product displayed is incorrect or missing then please help us out and make any necessary additions.'
     );
     expect(ADD_OR_CORRECT_INFORMATION).toBe('Add or correct information');
     expect(ABOUT_THIS_INFORMATION).toBe('About this information');

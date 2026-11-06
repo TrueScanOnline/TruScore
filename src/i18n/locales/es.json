@@ -139,6 +139,8 @@
     "legalDataLimitationsTeaserTitle": "¿Datos del producto incompletos?",
     "legalDataLimitationsTeaserBody": "Puede faltar información de este producto. Pulse aquí para más información ...",
     "legalDataLimitationsTeaserA11y": "Acerca de esta información",
+    "productInformationHeading": "¿Falta información?",
+    "productInformationSupport": "Si cree que alguna información mostrada sobre este producto es incorrecta o está incompleta, ayúdenos y realice las adiciones necesarias.",
     "legalDataLimitationsModalEditLink": "Editar o añadir información del producto",
     "legalDataLimitationsModalEditLinkA11y": "Abrir edición manual para añadir o corregir datos del producto",
     "legalDataLimitationsModalTitle": "Limitaciones de los datos",

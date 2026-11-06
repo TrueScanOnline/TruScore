@@ -47,6 +47,10 @@ import {
   PRODUCT_ORIGINS_MORE_INFORMATION,
   productOriginsCardShowsEmptyState,
 } from '../../src/components/productOriginsCardCopy';
+import {
+  CLAIMS_LIMITED_CONFIDENCE_BODY,
+  CLAIMS_LIMITED_CONFIDENCE_TITLE,
+} from '../../src/components/claimsLimitedConfidenceCopy';
 import { PACKET_CLAIMS_CARD_TITLE } from '../../src/claims/packetClaimReceiver';
 import {
   PACKET_CLAIMS_EMPTY_STATE,
@@ -154,9 +158,13 @@ import {
 } from '../../src/contribution/governedDisplayProjection';
 import { packetInformationJourneySeed } from '../../src/contribution/consumerSurface';
 import {
+  ADD_OR_CORRECT_INFORMATION,
+  PRODUCT_INFORMATION_MENU_INSTRUCTION,
   productInformationMenu,
   productInformationMenuSections,
+  type ProductInformationCategory,
 } from '../../src/contribution/productInformationMenu';
+import { RESULT_SCORE_HIGHLIGHTS_HEADING } from '../../src/lib/scoreHighlights';
 import { voluntaryContributionOffer } from '../../src/contribution/voluntaryContributionOffer';
 import { subscribeEvidenceAdmission } from '../../src/evidenceAuthority/device';
 import { currentModalTrace } from '../../src/evidenceAuthority/contributionTrace';
@@ -550,7 +558,10 @@ function ResultScreenContent() {
   const heroDisplayStartedRef = useRef<number | null>(null);
   const [productOriginsExplainerVisible, setProductOriginsExplainerVisible] = useState(false);
   const [originLimitedConfidenceVisible, setOriginLimitedConfidenceVisible] = useState(false);
+  const [claimsLimitedConfidenceVisible, setClaimsLimitedConfidenceVisible] = useState(false);
   const [packetClaimsExplainerVisible, setPacketClaimsExplainerVisible] = useState(false);
+  const [productInformationExpandedCategory, setProductInformationExpandedCategory] =
+    useState<ProductInformationCategory | null>(null);
   const [manualProductModalVisible, setManualProductModalVisible] = useState(false);
   const [packetContributionVisible, setPacketContributionVisible] = useState(false);
   const [contributionEntry, setContributionEntry] = useState<ContributionEntryContext>('ingredients');
@@ -2112,17 +2123,19 @@ function ResultScreenContent() {
             hasContributionActions={informationMenu.length > 0}
             onAddOrCorrect={() => {
               if (freshProductInformationMenu().length === 0) return;
+              setProductInformationExpandedCategory(null);
               setContributionChoice('productInformation');
             }}
           />
 
-          {/* W3-S12 "What we found" — governed promoted stories from the fired ledger */}
+          {/* Result card heading is "What we noticed:"; share/look-through keep SCORE_HIGHLIGHTS_HEADING. */}
           {scoreHighlights && scoreHighlights.promoted.length > 0 && (
             <View style={[styles.card, styles.emeraldFindings, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
               <ScoreHighlightsList
                 stories={scoreHighlights.promoted}
                 onSelectStory={openScoreHighlightStory}
                 appearance="emerald"
+                heading={RESULT_SCORE_HIGHLIGHTS_HEADING}
                 onShare={() => handleShare('highlights')}
               />
             </View>
@@ -2154,6 +2167,7 @@ function ResultScreenContent() {
             hasContributionActions={informationMenu.length > 0}
             onAddOrCorrect={() => {
               if (freshProductInformationMenu().length === 0) return;
+              setProductInformationExpandedCategory(null);
               setContributionChoice('productInformation');
             }}
           />
@@ -2579,7 +2593,14 @@ function ResultScreenContent() {
                   </View>
                 ) : null}
                 {product._publication?.claims.confidenceReasonCode === 'claims_primary_contribution_limited' ? (
-                  <Text style={{ color: colors.textSecondary }}>Limited confidence</Text>
+                  <TouchableOpacity
+                    onPress={() => setClaimsLimitedConfidenceVisible(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Limited confidence"
+                    style={[styles.originConfidence, { backgroundColor: '#ffa50022' }]}
+                  >
+                    <Text style={[styles.originConfidenceText, { color: '#ffa500' }]}>Limited confidence &gt;</Text>
+                  </TouchableOpacity>
                 ) : null}
               </>
             );
@@ -2814,45 +2835,160 @@ function ResultScreenContent() {
         visible={contributionChoice != null}
         transparent
         animationType="fade"
-        onRequestClose={() => setContributionChoice(null)}
+        onRequestClose={() => {
+          setProductInformationExpandedCategory(null);
+          setContributionChoice(null);
+        }}
       >
         <View style={{ flex: 1, justifyContent: 'flex-end' }}>
           <TouchableOpacity
             style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' }}
             activeOpacity={1}
-            onPress={() => setContributionChoice(null)}
+            onPress={() => {
+              setProductInformationExpandedCategory(null);
+              setContributionChoice(null);
+            }}
             accessibilityRole="button"
             accessibilityLabel="Close"
           />
-          <View style={{ backgroundColor: colors.card, padding: 20, gap: 16 }}>
-            {contributionChoice === 'productInformation'
-              ? productInformationMenuSections(informationMenu).map((section) => (
-                  <View key={section.category} style={{ gap: 8 }}>
-                    <Text style={{ color: colors.textSecondary, fontSize: 13, fontWeight: '700' }}>
-                      {section.categoryLabel}
-                    </Text>
-                    {section.actions.map((action) => (
-                      <TouchableOpacity
-                        key={action.key}
-                        onPress={() => {
-                          const current = freshProductInformationMenu();
-                          const row = current.find((item) => item.key === action.key);
-                          if (!row) {
-                            setContributionChoice(null);
-                            return;
-                          }
-                          openContribution(row.destination, row.journey, row.formFirst);
-                        }}
-                        accessibilityRole="button"
-                        accessibilityLabel={action.label}
-                        style={{ minHeight: 44, justifyContent: 'center' }}
-                      >
-                        <Text style={{ color: colors.text, fontSize: 18 }}>{action.label}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                ))
-              : null}
+          <View style={{ backgroundColor: colors.card, padding: 20, gap: 14, maxHeight: '78%' }}>
+            {contributionChoice === 'productInformation' ? (
+              <>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                  <Text style={{ color: emerald.ink, fontSize: 20, fontWeight: '700', flex: 1 }}>
+                    {ADD_OR_CORRECT_INFORMATION}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setProductInformationExpandedCategory(null);
+                      setContributionChoice(null);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Close"
+                    style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Ionicons name="close" size={24} color={emerald.ink} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={{ color: colors.textSecondary, fontSize: 15, lineHeight: 21 }}>
+                  {PRODUCT_INFORMATION_MENU_INSTRUCTION}
+                </Text>
+                <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 10, paddingBottom: 8 }}>
+                  {productInformationExpandedCategory
+                    ? (() => {
+                        const section = productInformationMenuSections(informationMenu).find(
+                          (item) => item.category === productInformationExpandedCategory
+                        );
+                        if (!section) return null;
+                        return (
+                          <View style={{ gap: 10 }}>
+                            <TouchableOpacity
+                              onPress={() => setProductInformationExpandedCategory(null)}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Back to categories from ${section.categoryLabel}`}
+                              style={{
+                                minHeight: 44,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 8,
+                                paddingHorizontal: 4,
+                              }}
+                            >
+                              <Ionicons name="chevron-back" size={20} color={emerald.action} />
+                              <Text style={{ color: emerald.action, fontSize: 16, fontWeight: '700' }}>
+                                {section.categoryLabel}
+                              </Text>
+                            </TouchableOpacity>
+                            {section.actions.map((action) => (
+                              <TouchableOpacity
+                                key={action.key}
+                                onPress={() => {
+                                  const current = freshProductInformationMenu();
+                                  const row = current.find((item) => item.key === action.key);
+                                  if (!row) {
+                                    setProductInformationExpandedCategory(null);
+                                    setContributionChoice(null);
+                                    return;
+                                  }
+                                  openContribution(row.destination, row.journey, row.formFirst);
+                                }}
+                                accessibilityRole="button"
+                                accessibilityLabel={action.label}
+                                style={{
+                                  minHeight: 52,
+                                  borderRadius: 14,
+                                  borderWidth: StyleSheet.hairlineWidth,
+                                  borderColor: emerald.line,
+                                  backgroundColor: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(16,28,54,0.03)',
+                                  paddingHorizontal: 14,
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  gap: 12,
+                                }}
+                              >
+                                <Text style={{ color: emerald.ink, fontSize: 17, fontWeight: '600', flex: 1 }}>
+                                  {action.label}
+                                </Text>
+                                <Ionicons name="chevron-forward" size={20} color={emerald.action} />
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        );
+                      })()
+                    : productInformationMenuSections(informationMenu).map((section) => {
+                        const categoryIcon =
+                          section.category === 'nutrition'
+                            ? 'nutrition-outline'
+                            : section.category === 'ingredients'
+                              ? 'list-outline'
+                              : section.category === 'origins'
+                                ? 'globe-outline'
+                                : 'ribbon-outline';
+                        return (
+                          <TouchableOpacity
+                            key={section.category}
+                            onPress={() => {
+                              const current = freshProductInformationMenu();
+                              const live = productInformationMenuSections(current).find(
+                                (item) => item.category === section.category
+                              );
+                              if (!live || live.actions.length === 0) {
+                                setContributionChoice(null);
+                                return;
+                              }
+                              if (live.actions.length === 1) {
+                                const row = live.actions[0];
+                                openContribution(row.destination, row.journey, row.formFirst);
+                                return;
+                              }
+                              setProductInformationExpandedCategory(section.category);
+                            }}
+                            accessibilityRole="button"
+                            accessibilityLabel={section.categoryLabel}
+                            style={{
+                              minHeight: 56,
+                              borderRadius: 14,
+                              borderWidth: StyleSheet.hairlineWidth,
+                              borderColor: emerald.line,
+                              backgroundColor: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(16,28,54,0.03)',
+                              paddingHorizontal: 14,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 12,
+                            }}
+                          >
+                            <Ionicons name={categoryIcon} size={22} color={emerald.action} />
+                            <Text style={{ color: emerald.ink, fontSize: 17, fontWeight: '700', flex: 1 }}>
+                              {section.categoryLabel}
+                            </Text>
+                            <Ionicons name="chevron-forward" size={20} color={emerald.action} />
+                          </TouchableOpacity>
+                        );
+                      })}
+                </ScrollView>
+              </>
+            ) : null}
             {contributionChoice === 'nutrition' && contributionActions.updateNutrition ? (
               <TouchableOpacity
                 onPress={() => {
@@ -3054,6 +3190,36 @@ function ResultScreenContent() {
             </Text>
             <TouchableOpacity
               onPress={() => setOriginLimitedConfidenceVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              style={[styles.packetClaimsInfoCloseButton, { borderColor: emerald.action }]}
+            >
+              <Text style={[styles.packetClaimsInfoClose, { color: emerald.action }]}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={claimsLimitedConfidenceVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setClaimsLimitedConfidenceVisible(false)}
+      >
+        <View style={styles.packetClaimsInfoBackdrop}>
+          <Pressable
+            style={styles.packetClaimsInfoScrim}
+            onPress={() => setClaimsLimitedConfidenceVisible(false)}
+            accessibilityLabel="Close limited confidence information"
+          />
+          <View style={[styles.packetClaimsInfoCard, { backgroundColor: colors.card }]} accessibilityViewIsModal>
+            <Text style={[styles.cardTitle, { color: emerald.ink }]}>{CLAIMS_LIMITED_CONFIDENCE_TITLE}</Text>
+            <Text style={[styles.packetClaimsInfoBody, { color: colors.text }]}>
+              {CLAIMS_LIMITED_CONFIDENCE_BODY}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setClaimsLimitedConfidenceVisible(false)}
               accessibilityRole="button"
               accessibilityLabel="Close"
               style={[styles.packetClaimsInfoCloseButton, { borderColor: emerald.action }]}

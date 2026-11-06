@@ -25,11 +25,12 @@ import {
 } from './resultContributionActions';
 import { voluntaryContributionOffer, type VoluntaryContributionDestination } from './voluntaryContributionOffer';
 
-export const PRODUCT_INFORMATION_HEADING = 'Product information';
+export const PRODUCT_INFORMATION_HEADING = 'Information missing?';
 export const PRODUCT_INFORMATION_SUPPORT =
-  'Explore what Rveel knows about this product and help keep its information accurate.';
+  'If you think any of the information about this product displayed is incorrect or missing then please help us out and make any necessary additions.';
 export const ADD_OR_CORRECT_INFORMATION = 'Add or correct information';
 export const ABOUT_THIS_INFORMATION = 'About this information';
+export const PRODUCT_INFORMATION_MENU_INSTRUCTION = 'Choose the information you would like to update.';
 
 export const CATEGORY_NUTRITION = 'Nutrition information';
 export const CATEGORY_INGREDIENTS = 'Ingredients';

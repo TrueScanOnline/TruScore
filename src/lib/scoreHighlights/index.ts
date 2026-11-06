@@ -53,3 +53,5 @@ export {
 
 /** Locked consumer heading for both overall S12 and the S12a pillar look-through. */
 export const SCORE_HIGHLIGHTS_HEADING = 'What we found';
+/** Result card heading only. Share metadata and look-through keep SCORE_HIGHLIGHTS_HEADING. */
+export const RESULT_SCORE_HIGHLIGHTS_HEADING = 'What we noticed:';

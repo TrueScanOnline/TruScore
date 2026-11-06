@@ -72,7 +72,8 @@ function TileArt({
   const H = Math.max(height, 1);
   const radius = art.radius.tile;
   const fold = Math.max(art.fold, DOG_EAR_FOLD);
-  const { cutX, face, flap, cast, crease } = dogEarCut(W, H, radius, fold);
+  // Pillar surface only — Hero keeps the founder-approved dogEarCut default.
+  const { cutX, face, flap, cast, crease } = dogEarCut(W, H, radius, fold, 'pillar');
   const flapLight = dark ? art.foldDark[1] : '#FFFFFF';
   return (
     <Svg width="100%" height="100%" viewBox={`0 0 ${num(W)} ${num(H)}`}>
@@ -99,15 +100,20 @@ function TileArt({
           <Stop offset="1" stopColor={shades[1]} />
         </LinearGradient>
         <LinearGradient id={`${prefix}-shadow`} x1="80%" y1="10%" x2="40%" y2="70%">
-          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.82 : 0.7} />
-          <Stop offset="0.4" stopColor="#041510" stopOpacity={dark ? 0.55 : 0.48} />
+          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.55 : 0.42} />
+          <Stop offset="0.45" stopColor="#041510" stopOpacity={dark ? 0.32 : 0.26} />
           <Stop offset="1" stopColor="#0C3227" stopOpacity="0" />
         </LinearGradient>
-        <LinearGradient id={`${prefix}-flap`} x1="0%" y1="0%" x2="80%" y2="100%">
+        <LinearGradient id={`${prefix}-flap`} x1="8%" y1="0%" x2="88%" y2="100%">
           <Stop offset="0" stopColor={flapLight} />
-          <Stop offset="0.35" stopColor={flapLight} />
-          <Stop offset="0.78" stopColor={shades[0]} />
+          <Stop offset="0.28" stopColor={flapLight} />
+          <Stop offset="0.72" stopColor={shades[0]} />
           <Stop offset="1" stopColor={shades[1]} />
+        </LinearGradient>
+        <LinearGradient id={`${prefix}-crease`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.55" />
+          <Stop offset="0.55" stopColor="#041510" stopOpacity="0.22" />
+          <Stop offset="1" stopColor="#041510" stopOpacity="0.08" />
         </LinearGradient>
       </Defs>
       <G clipPath={`url(#${prefix}-clip)`}>
@@ -115,16 +121,13 @@ function TileArt({
         <Path d={face} fill={`url(#${prefix}-tile)`} />
         <Rect x="0" y="0" width={W} height={H} fill={`url(#${prefix}-wash)`} clipPath={`url(#${prefix}-face)`} />
         <Path d={face} fill="none" stroke="#FFFFFF" strokeWidth="2" strokeOpacity="0.7" />
+        {/* Lifted peel stays inside the rounded clip so Android/iOS show the fold. */}
+        <Path d={cast} fill="#000000" opacity={0.28} transform={`translate(${num(cutX)} 0)`} />
+        <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.55} transform={`translate(${num(cutX - 1.2)} 2.4)`} />
+        <Path d={flap} fill={`url(#${prefix}-flap)`} transform={`translate(${num(cutX)} 0)`} />
+        <Path d={crease} fill="none" stroke={`url(#${prefix}-crease)`} strokeWidth="2.2" />
+        <Path d={crease} fill="none" stroke="#FFFFFF" strokeWidth="1.1" strokeOpacity="0.75" />
       </G>
-      {/* Shadows sit outside the tile clip so the peel casts real depth. */}
-      <Path d={cast} fill="#000000" opacity={0.55} transform={`translate(${num(cutX)} 0)`} />
-      <Path d={flap} fill="#000000" opacity={0.32} transform={`translate(${num(cutX - 8)} 16)`} />
-      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.7} transform={`translate(${num(cutX - 6)} 11)`} />
-      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.9} transform={`translate(${num(cutX - 3)} 6)`} />
-      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={1} transform={`translate(${num(cutX - 1.5)} 3)`} />
-      <Path d={flap} fill={`url(#${prefix}-flap)`} transform={`translate(${num(cutX)} 0)`} />
-      <Path d={crease} fill="none" stroke="#041510" strokeWidth="2.4" strokeOpacity="0.35" />
-      <Path d={crease} fill="none" stroke="#FFFFFF" strokeWidth="1.4" strokeOpacity="0.9" />
     </Svg>
   );
 }
@@ -322,7 +325,7 @@ export default function EmeraldScoreComposition({
           const iconTrail = right ? 12 : clearanceAt(iconCenterY);
           const tileStyle = [
             styles.tile,
-            { width: tileWidth, height: tileHeight, overflow: 'hidden' as const },
+            { width: tileWidth, height: tileHeight },
             reflow
               ? null
               : {
@@ -428,7 +431,8 @@ const styles = StyleSheet.create({
   grid: { position: 'relative' },
   tile: {
     borderRadius: 22,
-    overflow: 'hidden',
+    // Visible so a restrained pillar peel is not clipped; face art still clips itself.
+    overflow: 'visible',
     backgroundColor: 'transparent',
   },
   tileCopy: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, paddingTop: 12, paddingBottom: 12 },

@@ -30,6 +30,8 @@ interface ScoreHighlightsListProps {
   onSelectStory: (story: ScoreHighlightStory) => void;
   /** Omit the locked heading when the host already renders it (e.g. a sheet header). */
   showHeading?: boolean;
+  /** Result card may override the shared constant without changing share or look-through copy. */
+  heading?: string;
   /** Result card treatment. Look-through overlays keep the default rows. */
   appearance?: 'emerald' | 'default';
   /** Opens the same share sheet as the other Result cards. */
@@ -40,6 +42,7 @@ export default function ScoreHighlightsList({
   stories,
   onSelectStory,
   showHeading = true,
+  heading = SCORE_HIGHLIGHTS_HEADING,
   appearance = 'default',
   onShare,
 }: ScoreHighlightsListProps) {
@@ -56,7 +59,7 @@ export default function ScoreHighlightsList({
       {showHeading && (
         <View style={styles.headingRow}>
           <Text style={[emerald ? styles.emeraldHeading : styles.heading, styles.headingText, { color: emerald ? tone.ink : colors.text }]}>
-            {SCORE_HIGHLIGHTS_HEADING}
+            {heading}
           </Text>
           {onShare ? (
             <TouchableOpacity
@@ -64,7 +67,7 @@ export default function ScoreHighlightsList({
               style={styles.shareButton}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               accessibilityRole="button"
-              accessibilityLabel={`Share ${SCORE_HIGHLIGHTS_HEADING}`}
+              accessibilityLabel={`Share ${heading}`}
             >
               <Ionicons name="share-outline" size={20} color={emerald ? tone.action : colors.primary} />
             </TouchableOpacity>

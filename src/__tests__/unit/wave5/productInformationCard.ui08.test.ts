@@ -16,8 +16,10 @@ describe('product information card', () => {
   const result = fs.readFileSync(RESULT, 'utf8');
 
   it('uses one card, one primary action, and one explanation link', () => {
-    expect(menu).toContain("export const PRODUCT_INFORMATION_HEADING = 'Product information'");
-    expect(menu).toContain('Explore what Rveel knows about this product and help keep its information accurate.');
+    expect(menu).toContain("export const PRODUCT_INFORMATION_HEADING = 'Information missing?'");
+    expect(menu).toContain(
+      'If you think any of the information about this product displayed is incorrect or missing then please help us out and make any necessary additions.'
+    );
     expect(menu).toContain("export const ADD_OR_CORRECT_INFORMATION = 'Add or correct information'");
     expect(menu).toContain("export const ABOUT_THIS_INFORMATION = 'About this information'");
     expect(card).toContain('PRODUCT_INFORMATION_HEADING');
