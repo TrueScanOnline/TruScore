@@ -176,7 +176,6 @@ import type { SharedEvidenceSnapshot } from '../../src/evidenceAuthority/types';
 import CommunityAgreementBar from '../../src/components/communityAgreement/CommunityAgreementBar';
 import {
   agreementSurfaceGate,
-  COMMUNITY_ADDED_CAPTION,
   type CommunityAgreementGroup,
 } from '../../src/communityAgreement';
 import { calculateTrustScore } from '../../src/utils/trustScore';
@@ -240,7 +239,6 @@ function ResultIngredientsSection({
   onShareIngredients,
   onShareProcessing,
   onOpenProcessingLevel,
-  communityAdded = false,
 }: {
   barcode: string;
   ingredientsText?: string | null;
@@ -252,8 +250,6 @@ function ResultIngredientsSection({
   onShareIngredients: () => void;
   onShareProcessing: () => void;
   onOpenProcessingLevel: () => void;
-  /** WP09-R3: shown ingredients text is the admitted community contribution. */
-  communityAdded?: boolean;
 }) {
   const { t } = useTranslation();
   const { colors, darkMode } = useTheme();
@@ -293,14 +289,6 @@ function ResultIngredientsSection({
             <View style={styles.cardHeaderLeft}>
               <Ionicons name="flask" size={24} color={emerald.action} />
               <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.ingredients')}</Text>
-              {communityAdded ? (
-                <Text
-                  style={{ color: emerald.muted, fontSize: 11, fontWeight: '600', marginLeft: 8 }}
-                  accessibilityLabel={COMMUNITY_ADDED_CAPTION}
-                >
-                  {COMMUNITY_ADDED_CAPTION}
-                </Text>
-              ) : null}
             </View>
             <View style={styles.cardHeaderRight}>
               {onEdit ? (
@@ -2355,7 +2343,6 @@ function ResultScreenContent() {
                 <ResultIngredientsSection
                   barcode={barcode}
                   ingredientsText={product.rveelGovernedIngredientsText || product.ingredients_text}
-                  communityAdded={!!product.rveelGovernedIngredientsText}
                   novaGroup={product.nova_group}
                   showAddIngredients={informationMenu.some((row) => row.key === 'add-ingredients' && !row.formFirst)}
                   onAddIngredients={() => {
@@ -2491,8 +2478,6 @@ function ResultScreenContent() {
                   <View key={line.key} style={[styles.originPlace, { backgroundColor: emerald.chevronCircle }]}>
                     <Text style={[styles.originStatementCaption, { color: emerald.muted }]}>
                       {line.statement}
-                      {' · '}
-                      {COMMUNITY_ADDED_CAPTION}
                     </Text>
                     <CountryFlag appearance="hero" nameColor={emerald.ink} country={line.country} />
                     {line.supporting.length > 0 ? (
@@ -2663,7 +2648,7 @@ function ResultScreenContent() {
                         ...visibleCertifications.map((name) => ({
                           key: `certification:${name}`,
                           kind: 'label' as const,
-                          text: `${name} · ${COMMUNITY_ADDED_CAPTION}`,
+                          text: name,
                           mark: (
                             <CertificationMark
                               name={name}
@@ -2680,7 +2665,7 @@ function ResultScreenContent() {
                         ...visibleClaims.map((claim) => ({
                           key: claim.evidenceId,
                           kind: 'label' as const,
-                          text: `${claim.exactWording} · ${COMMUNITY_ADDED_CAPTION}`,
+                          text: claim.exactWording,
                           mark: null,
                         })),
                       ]}
@@ -2701,11 +2686,7 @@ function ResultScreenContent() {
             );
           })()}
           {product.rveelPacketAbsenceEstablished ? (
-            <Text style={{ color: colors.text }}>
-              {PACKET_ABSENCE_PRODUCT_STATE}
-              {' · '}
-              {COMMUNITY_ADDED_CAPTION}
-            </Text>
+            <Text style={{ color: colors.text }}>{PACKET_ABSENCE_PRODUCT_STATE}</Text>
           ) : null}
           <CommunityAgreementBar
             group="packet_information"

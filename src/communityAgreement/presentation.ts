@@ -13,10 +13,7 @@ import { packetLineWithdrawn } from '../components/packetClaimsCardCopy';
 import type { SharedEvidenceSnapshot } from '../evidenceAuthority/types';
 import type { Product } from '../types/product';
 import type { AgreementSubjectVersion, CommunityAgreementGroup } from './types';
-import {
-  nutritionOffKeyConsumerLabel,
-  representedCommunityNutritionKeys,
-} from './communityMarkers';
+import { representedCommunityNutritionKeys } from './communityMarkers';
 import { nutritionOffKeyForSubjectKey } from './targets';
 
 function setsEqual(a: Set<string>, b: Set<string>): boolean {
@@ -175,22 +172,14 @@ export function presentationMatchesAgreementTargets(
   return false;
 }
 
-/** Short consumer hint listing which community details the prompt covers. */
+/**
+ * W5-UI-11: no longer rendered on Result cards.
+ * Scope / presentation-match eligibility remains in presentationMatches* above.
+ * Kept as a stable no-op export so callers and tests do not reintroduce card copy.
+ */
 export function communityAgreementScopeHint(
-  group: CommunityAgreementGroup,
-  product: Product | null | undefined
+  _group: CommunityAgreementGroup,
+  _product: Product | null | undefined
 ): string {
-  if (group === 'nutrition') {
-    const represented = [
-      ...representedCommunityNutritionKeys(product?.nutriments, product?.rveelGovernedNutrimentKeys),
-    ];
-    if (represented.length === 0) return 'Only nutrient rows marked Community-added';
-    const labels = [...new Set(represented.map(nutritionOffKeyConsumerLabel))];
-    return `Only nutrient rows marked Community-added: ${labels.join(', ')}`;
-  }
-  if (group === 'ingredients') return 'The ingredients list marked Community-added';
-  if (group === 'origins') {
-    return 'Origin statements marked Community-added (not the OFF country hero)';
-  }
-  return 'Packet lines marked Community-added (not OFF-only badges)';
+  return '';
 }

@@ -158,16 +158,16 @@ describe('WP-09 Nutrition display provenance (NutritionTable selection rules)', 
     expect(localAgreementEligibility('nutrition', product, snap).eligible).toBe(true);
   });
 
-  it('scope hint uses consumer-facing nutrient names', () => {
+  it('consumer nutrient labels remain available; card scope hint is blank (W5-UI-11)', () => {
     expect(nutritionOffKeyConsumerLabel('sugars_100g')).toBe('Sugars');
     expect(nutritionOffKeyConsumerLabel('energy-kj_100g')).toBe('Energy');
-    const hint = communityAgreementScopeHint('nutrition', {
-      barcode: '1',
-      nutriments: { sugars_100g: 1 },
-      rveelGovernedNutrimentKeys: ['sugars_100g'],
-    } as Product);
-    expect(hint).toContain('Sugars');
-    expect(hint).not.toContain('sugars_100g');
+    expect(
+      communityAgreementScopeHint('nutrition', {
+        barcode: '1',
+        nutriments: { sugars_100g: 1 },
+        rveelGovernedNutrimentKeys: ['sugars_100g'],
+      } as Product)
+    ).toBe('');
   });
 });
 

@@ -1,6 +1,7 @@
 /**
  * Emerald Community Agreement control. Display-only; not Confidence.
  * WP09-R1: entire surface requires settlement + Change eligibility.
+ * W5-UI-11: compact question + Agree/Correct only (no Community-added card copy).
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -21,7 +22,6 @@ import {
   localAgreementEligibility,
   submitCommunityAgreement,
 } from '../../communityAgreement/client';
-import { communityAgreementScopeHint } from '../../communityAgreement/presentation';
 import type { CommunityAgreementGroup } from '../../communityAgreement/types';
 import type { SharedEvidenceSnapshot } from '../../evidenceAuthority/types';
 import type { Product } from '../../types/product';
@@ -143,7 +143,6 @@ export default function CommunityAgreementBar({
   if (!visible || remoteCount == null) return null;
 
   const countLabel = remoteCount === 1 ? '1 agree' : `${remoteCount} agree`;
-  const scope = communityAgreementScopeHint(group, product);
 
   return (
     <View
@@ -156,11 +155,9 @@ export default function CommunityAgreementBar({
       ]}
       accessibilityRole="summary"
     >
-      <Text style={[styles.kicker, { color: emerald.muted }]}>Community agreements</Text>
       <Text style={[styles.question, { color: emerald.ink }, compact && styles.questionCompact]}>
-        Does this community-added information look correct?
+        Does this look correct?
       </Text>
-      <Text style={[styles.scope, { color: emerald.muted }]}>{scope}</Text>
       <View style={[styles.row, compact && styles.rowStack]}>
         <Pressable
           onPress={onAgree}
@@ -193,10 +190,7 @@ export default function CommunityAgreementBar({
             </>
           )}
         </Pressable>
-        <Text
-          style={[styles.count, { color: emerald.ink }]}
-          accessibilityLabel={`${countLabel}. Community agreements`}
-        >
+        <Text style={[styles.count, { color: emerald.ink }]} accessibilityLabel={countLabel}>
           {countLabel}
         </Text>
         <Pressable
@@ -232,25 +226,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  kicker: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-    marginBottom: 4,
-  },
   question: {
     fontSize: 15,
     fontWeight: '600',
     lineHeight: 20,
+    marginBottom: 10,
   },
   questionCompact: {
     fontSize: 14,
     lineHeight: 19,
-  },
-  scope: {
-    fontSize: 12,
-    marginTop: 4,
-    marginBottom: 10,
   },
   row: {
     flexDirection: 'row',

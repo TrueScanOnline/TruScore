@@ -258,29 +258,34 @@ describe('WP09-R3 community markers', () => {
     ).toBe(false);
   });
 
-  it('scope hint names community-added rows and caption is not Confidence', () => {
+  it('internal caption constant is not a Confidence label; card scope hint is blank (W5-UI-11)', () => {
     expect(COMMUNITY_ADDED_CAPTION).toBe('Community-added');
     expect(COMMUNITY_ADDED_CAPTION.toLowerCase()).not.toContain('confidence');
-    const hint = communityAgreementScopeHint('nutrition', {
-      barcode: '1',
-      nutriments: { sugars_100g: 1 },
-      rveelGovernedNutrimentKeys: ['sugars_100g'],
-    } as Product);
-    expect(hint).toContain('Sugars');
-    expect(hint.toLowerCase()).not.toContain('confidence');
+    expect(
+      communityAgreementScopeHint('nutrition', {
+        barcode: '1',
+        nutriments: { sugars_100g: 1 },
+        rveelGovernedNutrimentKeys: ['sugars_100g'],
+      } as Product)
+    ).toBe('');
   });
 
-  it('NutritionTable and Result wire Community-added captions', () => {
+  it('NutritionTable and Result keep agreement wiring without Community-added card captions', () => {
     const nutrition = fs.readFileSync(
       path.join(__dirname, '../../../components/NutritionTable.tsx'),
       'utf8'
     );
     const result = fs.readFileSync(path.join(__dirname, '../../../../app/result/[barcode].tsx'), 'utf8');
-    expect(nutrition).toContain('COMMUNITY_ADDED_CAPTION');
+    const bar = fs.readFileSync(
+      path.join(__dirname, '../../../components/communityAgreement/CommunityAgreementBar.tsx'),
+      'utf8'
+    );
     expect(nutrition).toContain('communityNutrimentKeys');
-    expect(result).toContain('communityAdded={!!product.rveelGovernedIngredientsText}');
-    expect(result).toContain('COMMUNITY_ADDED_CAPTION');
+    expect(nutrition).not.toContain('COMMUNITY_ADDED_CAPTION');
+    expect(result).not.toContain('COMMUNITY_ADDED_CAPTION');
     expect(result).toContain('agreementSurfaceGate');
+    expect(bar).toContain('Does this look correct?');
+    expect(bar).not.toContain('Community agreements');
   });
 });
 
