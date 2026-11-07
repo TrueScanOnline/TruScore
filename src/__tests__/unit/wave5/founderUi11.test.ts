@@ -46,7 +46,7 @@ describe('W5-UI-11 Community Agreement presentation', () => {
     expect(bar).toContain('agreementControlsVisible');
     expect(bar).toContain('fetchCommunityAgreement');
     expect(bar).toContain('submitCommunityAgreement');
-    expect(bar).toContain('countLabel');
+    expect(bar).toContain('remoteCount');
     expect(result).toContain('agreementSurfaceGate');
     expect(result).toContain('CommunityAgreementBar');
     expect(result).toContain('surfaceEnabled={agreementSurfaceEnabled');

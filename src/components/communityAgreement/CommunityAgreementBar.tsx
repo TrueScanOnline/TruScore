@@ -2,6 +2,7 @@
  * Emerald Community Agreement control. Display-only; not Confidence.
  * WP09-R1: entire surface requires settlement + Change eligibility.
  * W5-UI-11: compact question + Agree/Correct only (no Community-added card copy).
+ * W5-UI-12: count inside Agree; Correct information gains a trailing chevron.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -22,6 +23,7 @@ import {
   localAgreementEligibility,
   submitCommunityAgreement,
 } from '../../communityAgreement/client';
+import { agreementCountOrange } from '../../communityAgreement/agreementCountOrange';
 import type { CommunityAgreementGroup } from '../../communityAgreement/types';
 import type { SharedEvidenceSnapshot } from '../../evidenceAuthority/types';
 import type { Product } from '../../types/product';
@@ -142,7 +144,12 @@ export default function CommunityAgreementBar({
 
   if (!visible || remoteCount == null) return null;
 
-  const countLabel = remoteCount === 1 ? '1 agree' : `${remoteCount} agree`;
+  const inkOnAgree = hasAgreed ? emerald.card : emerald.action;
+  const countColor = agreementCountOrange(darkMode, hasAgreed);
+  const agreeA11y =
+    hasAgreed
+      ? `You already agreed. ${remoteCount} agree`
+      : `Agree. ${remoteCount} agree`;
 
   return (
     <View
@@ -163,7 +170,7 @@ export default function CommunityAgreementBar({
           onPress={onAgree}
           disabled={busy || hasAgreed}
           accessibilityRole="button"
-          accessibilityLabel={hasAgreed ? 'You already agreed' : 'Agree'}
+          accessibilityLabel={agreeA11y}
           accessibilityState={{ disabled: busy || hasAgreed, selected: hasAgreed }}
           style={[
             styles.btn,
@@ -176,23 +183,27 @@ export default function CommunityAgreementBar({
           ]}
         >
           {busy ? (
-            <ActivityIndicator color={hasAgreed ? emerald.card : emerald.action} />
+            <ActivityIndicator color={inkOnAgree} />
           ) : (
             <>
               <Ionicons
                 name={hasAgreed ? 'thumbs-up' : 'thumbs-up-outline'}
                 size={18}
-                color={hasAgreed ? emerald.card : emerald.action}
+                color={inkOnAgree}
               />
-              <Text style={[styles.btnText, { color: hasAgreed ? emerald.card : emerald.action }]}>
+              <Text
+                style={[styles.countInBtn, { color: countColor }, compact && styles.countInBtnCompact]}
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+              >
+                {String(remoteCount)}
+              </Text>
+              <Text style={[styles.btnText, { color: inkOnAgree }, compact && styles.btnTextCompact]}>
                 Agree
               </Text>
             </>
           )}
         </Pressable>
-        <Text style={[styles.count, { color: emerald.ink }]} accessibilityLabel={countLabel}>
-          {countLabel}
-        </Text>
         <Pressable
           onPress={() => {
             if (onRevalidateSurface() !== true) return;
@@ -210,7 +221,10 @@ export default function CommunityAgreementBar({
           ]}
         >
           <Ionicons name="thumbs-down-outline" size={18} color={emerald.action} />
-          <Text style={[styles.btnText, { color: emerald.action }]}>Correct information</Text>
+          <Text style={[styles.btnText, { color: emerald.action }, compact && styles.btnTextCompact]}>
+            Correct information
+          </Text>
+          <Ionicons name="chevron-forward" size={18} color={emerald.action} />
         </Pressable>
       </View>
       {error ? <Text style={[styles.error, { color: emerald.question }]}>{error}</Text> : null}
@@ -259,10 +273,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  count: {
+  btnTextCompact: {
+    fontSize: 13,
+  },
+  countInBtn: {
+    fontSize: 15,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+    minWidth: 12,
+    textAlign: 'center',
+  },
+  countInBtnCompact: {
     fontSize: 14,
-    fontWeight: '600',
-    minWidth: 64,
   },
   error: {
     marginTop: 8,
