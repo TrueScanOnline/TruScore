@@ -1,9 +1,11 @@
 /**
  * Postgres persistence for WP-09 Community Agreements.
  * Separate from evidence_responses / Evidence Authority writes.
- * WP09-R2: durable rate-limit buckets shared across serverless instances.
+ * WP09-R2: durable fixed-minute rate-limit buckets shared across serverless instances.
+ * Client edge addresses are hashed before storage; expired windows are purged.
  */
 
+import { createHash } from 'crypto';
 import type {
   AgreementAbuseGuard,
   CommunityAgreementRecord,
@@ -20,14 +22,31 @@ type PoolLike = Queryable & {
   connect: () => Promise<Queryable & { release: () => void }>;
 };
 
-const WINDOW_MS = 60_000;
+/** Fixed calendar-minute window length (not a rolling window). */
+export const COMMUNITY_AGREEMENT_RATE_WINDOW_MS = 60_000;
+
+/**
+ * Retain closed windows briefly for debugging, then delete.
+ * Cleanup removes buckets whose window_start_ms is older than now - retention.
+ */
+export const COMMUNITY_AGREEMENT_RATE_BUCKET_RETENTION_MS = 10 * 60_000;
 
 export const COMMUNITY_AGREEMENT_RATE_LIMITS = {
   perCredentialPerMinute: 30,
-  /** Platform X-Forwarded-For / X-Real-IP from the Vercel edge — not a client body field. */
+  /** Hashed platform edge address — not a raw IP and not a client body field. */
   perClientKeyPerMinute: 60,
   perBarcodePerMinute: 120,
 } as const;
+
+/** Server-controlled one-way token for the edge client dimension. */
+export function hashAgreementClientKey(raw: string): string {
+  const material = `rveel-ca-client-v1|${raw || 'unknown'}`;
+  return createHash('sha256').update(material).digest('hex').slice(0, 32);
+}
+
+export function agreementRateWindowStartMs(now: number): number {
+  return Math.floor(now / COMMUNITY_AGREEMENT_RATE_WINDOW_MS) * COMMUNITY_AGREEMENT_RATE_WINDOW_MS;
+}
 
 export class PostgresCommunityAgreementStore implements CommunityAgreementStore {
   private schemaReady = false;
@@ -126,12 +145,29 @@ export class PostgresCommunityAgreementStore implements CommunityAgreementStore 
     }
   }
 
+  /** Deletes rate-limit rows older than the retention horizon. */
+  async purgeExpiredRateBuckets(
+    now: number,
+    retentionMs = COMMUNITY_AGREEMENT_RATE_BUCKET_RETENTION_MS
+  ): Promise<number> {
+    await this.assertSchemaReady();
+    const cutoff = now - retentionMs;
+    const result = await this.pool.query(
+      `DELETE FROM community_agreement_rate_buckets
+       WHERE window_start_ms < $1
+       RETURNING bucket_key`,
+      [cutoff]
+    );
+    return result.rows.length;
+  }
+
   /**
-   * Atomic per-window counter. Returns false when the limit is exceeded.
+   * Atomic fixed-minute window counter. Returns false when the limit is exceeded.
+   * Opportunistically purges expired buckets after each consume.
    */
   async consumeRateBucket(bucketBase: string, limit: number, now: number): Promise<boolean> {
     await this.assertSchemaReady();
-    const windowStart = Math.floor(now / WINDOW_MS) * WINDOW_MS;
+    const windowStart = agreementRateWindowStartMs(now);
     const bucketKey = `${bucketBase}|${windowStart}`;
     const result = await this.pool.query(
       `INSERT INTO community_agreement_rate_buckets (bucket_key, window_start_ms, hit_count, updated_at)
@@ -143,6 +179,12 @@ export class PostgresCommunityAgreementStore implements CommunityAgreementStore 
       [bucketKey, windowStart]
     );
     const hits = Number(result.rows[0]?.hit_count || 0);
+    // Best-effort hygiene; failures must not block the agreement path.
+    try {
+      await this.purgeExpiredRateBuckets(now);
+    } catch {
+      // ignore cleanup errors
+    }
     return hits <= limit;
   }
 }
@@ -159,8 +201,9 @@ export function createPostgresAgreementAbuseGuard(
         now
       );
       if (!credOk) return { ok: false, reason: 'rate_limited' };
+      const clientToken = hashAgreementClientKey(clientKey || 'unknown');
       const clientOk = await store.consumeRateBucket(
-        `client|${authorityEnv}|${clientKey || 'unknown'}`,
+        `client|${authorityEnv}|${clientToken}`,
         limits.perClientKeyPerMinute,
         now
       );

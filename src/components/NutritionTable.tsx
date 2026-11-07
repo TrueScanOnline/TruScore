@@ -406,7 +406,7 @@ const NutritionTable = React.memo(function NutritionTable({
               governed && governed.level !== 'unavailable' ? governed.level : undefined;
             const levelColor = getLevelColor(level);
             const levelLabelColor = getLevelLabelColor(level);
-            const communityRow = nutritionRowIsCommunity(row.key, communityNutrimentKeys);
+            const communityRow = nutritionRowIsCommunity(row.key, nutriments, communityNutrimentKeys);
 
             return (
               <View key={row.key} style={[styles.tableRow, { borderBottomColor: colors.border }]}>

@@ -241,10 +241,21 @@ describe('WP09-R2 memory guard is labelled test/local only', () => {
 });
 
 describe('WP09-R3 community markers', () => {
-  it('marks only community nutrition rows', () => {
-    expect(nutritionRowIsCommunity('sugars', ['sugars_100g', 'fat_100g'])).toBe(true);
-    expect(nutritionRowIsCommunity('proteins', ['sugars_100g'])).toBe(false);
-    expect(nutritionRowIsCommunity('energy-kcal', ['energy-kj_100g'])).toBe(true);
+  it('marks only community nutrition rows that drive the displayed value', () => {
+    expect(
+      nutritionRowIsCommunity('sugars', { sugars_100g: 1, fat_100g: 2 }, ['sugars_100g', 'fat_100g'])
+    ).toBe(true);
+    expect(nutritionRowIsCommunity('proteins', { sugars_100g: 1 }, ['sugars_100g'])).toBe(false);
+    expect(
+      nutritionRowIsCommunity('energy-kcal', { 'energy-kj_100g': 1674 }, ['energy-kj_100g'])
+    ).toBe(true);
+    expect(
+      nutritionRowIsCommunity(
+        'energy-kcal',
+        { 'energy-kcal_100g': 400, 'energy-kj_100g': 1674 },
+        ['energy-kj_100g']
+      )
+    ).toBe(false);
   });
 
   it('scope hint names community-added rows and caption is not Confidence', () => {
@@ -252,9 +263,10 @@ describe('WP09-R3 community markers', () => {
     expect(COMMUNITY_ADDED_CAPTION.toLowerCase()).not.toContain('confidence');
     const hint = communityAgreementScopeHint('nutrition', {
       barcode: '1',
+      nutriments: { sugars_100g: 1 },
       rveelGovernedNutrimentKeys: ['sugars_100g'],
     } as Product);
-    expect(hint).toContain('sugars');
+    expect(hint).toContain('Sugars');
     expect(hint.toLowerCase()).not.toContain('confidence');
   });
 

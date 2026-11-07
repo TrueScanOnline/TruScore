@@ -196,8 +196,9 @@ describe('WP-09 presentation match', () => {
       nutriments: { sugars_100g: 12, fat_100g: 9 },
     } as Product;
     const mismatched = {
-      ...matched,
+      barcode: '9300675028732',
       rveelGovernedNutrimentKeys: ['sugars_100g', 'fat_100g'],
+      nutriments: { sugars_100g: 12, fat_100g: 9 },
     } as Product;
     expect(presentationMatchesAgreementTargets('nutrition', matched, snap, pairs)).toBe(true);
     expect(presentationMatchesAgreementTargets('nutrition', mismatched, snap, pairs)).toBe(false);

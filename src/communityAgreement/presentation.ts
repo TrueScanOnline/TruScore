@@ -13,7 +13,11 @@ import { packetLineWithdrawn } from '../components/packetClaimsCardCopy';
 import type { SharedEvidenceSnapshot } from '../evidenceAuthority/types';
 import type { Product } from '../types/product';
 import type { AgreementSubjectVersion, CommunityAgreementGroup } from './types';
-import { isDisplayableNutritionOffKey, nutritionOffKeyForSubjectKey } from './targets';
+import {
+  nutritionOffKeyConsumerLabel,
+  representedCommunityNutritionKeys,
+} from './communityMarkers';
+import { nutritionOffKeyForSubjectKey } from './targets';
 
 function setsEqual(a: Set<string>, b: Set<string>): boolean {
   if (a.size !== b.size) return false;
@@ -64,11 +68,12 @@ function presentationMatchesNutrition(
     if (!key) return false;
     expectedKeys.add(key);
   }
-  const productKeys = new Set(
-    (product.rveelGovernedNutrimentKeys || []).filter(isDisplayableNutritionOffKey)
+  // Only keys that actually drive NutritionTable-displayed values count as represented.
+  const represented = representedCommunityNutritionKeys(
+    product.nutriments,
+    product.rveelGovernedNutrimentKeys
   );
-  if (!setsEqual(expectedKeys, productKeys)) return false;
-  // Ensure each target row still carries nutriment content matching the key.
+  if (!setsEqual(expectedKeys, represented)) return false;
   for (const pair of pairs) {
     const row = prevailingByVersion(snapshot, pair.versionId);
     if (!row?.evidence?.ingredientsNutrition?.nutriments?.length) return false;
@@ -176,10 +181,12 @@ export function communityAgreementScopeHint(
   product: Product | null | undefined
 ): string {
   if (group === 'nutrition') {
-    const keys = (product?.rveelGovernedNutrimentKeys || []).filter(isDisplayableNutritionOffKey);
-    if (keys.length === 0) return 'Only rows marked Community-added';
-    const labels = keys.map((key) => key.replace(/_100g$/, '')).join(', ');
-    return `Only rows marked Community-added: ${labels}`;
+    const represented = [
+      ...representedCommunityNutritionKeys(product?.nutriments, product?.rveelGovernedNutrimentKeys),
+    ];
+    if (represented.length === 0) return 'Only nutrient rows marked Community-added';
+    const labels = [...new Set(represented.map(nutritionOffKeyConsumerLabel))];
+    return `Only nutrient rows marked Community-added: ${labels.join(', ')}`;
   }
   if (group === 'ingredients') return 'The ingredients list marked Community-added';
   if (group === 'origins') {
