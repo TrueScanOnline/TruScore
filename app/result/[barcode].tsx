@@ -175,7 +175,8 @@ import {
 import type { SharedEvidenceSnapshot } from '../../src/evidenceAuthority/types';
 import CommunityAgreementBar from '../../src/components/communityAgreement/CommunityAgreementBar';
 import {
-  eligibleAgreementChangeJourney,
+  agreementSurfaceGate,
+  COMMUNITY_ADDED_CAPTION,
   type CommunityAgreementGroup,
 } from '../../src/communityAgreement';
 import { calculateTrustScore } from '../../src/utils/trustScore';
@@ -239,6 +240,7 @@ function ResultIngredientsSection({
   onShareIngredients,
   onShareProcessing,
   onOpenProcessingLevel,
+  communityAdded = false,
 }: {
   barcode: string;
   ingredientsText?: string | null;
@@ -250,6 +252,8 @@ function ResultIngredientsSection({
   onShareIngredients: () => void;
   onShareProcessing: () => void;
   onOpenProcessingLevel: () => void;
+  /** WP09-R3: shown ingredients text is the admitted community contribution. */
+  communityAdded?: boolean;
 }) {
   const { t } = useTranslation();
   const { colors, darkMode } = useTheme();
@@ -289,6 +293,14 @@ function ResultIngredientsSection({
             <View style={styles.cardHeaderLeft}>
               <Ionicons name="flask" size={24} color={emerald.action} />
               <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.ingredients')}</Text>
+              {communityAdded ? (
+                <Text
+                  style={{ color: emerald.muted, fontSize: 11, fontWeight: '600', marginLeft: 8 }}
+                  accessibilityLabel={COMMUNITY_ADDED_CAPTION}
+                >
+                  {COMMUNITY_ADDED_CAPTION}
+                </Text>
+              ) : null}
             </View>
             <View style={styles.cardHeaderRight}>
               {onEdit ? (
@@ -1531,21 +1543,31 @@ function ResultScreenContent() {
     product?.rveelPacketAbsenceEstablished,
   ]);
 
+  const revalidateAgreementSurface = (group: CommunityAgreementGroup): boolean => {
+    if (!barcode) return false;
+    return agreementSurfaceGate(group, productRef.current, {
+      publicationSettled: publicationSettledRef.current === true,
+      settledBarcode: settledForBarcodeRef.current,
+      currentBarcode: barcode,
+    }).ok;
+  };
+
   const openAgreementChange = (group: CommunityAgreementGroup) => {
-    if (!barcode) return;
-    if (publicationSettledRef.current !== true) return;
-    if (
-      !settledForBarcodeRef.current ||
-      getPrimaryBarcode(settledForBarcodeRef.current) !== getPrimaryBarcode(barcode)
-    ) {
-      return;
-    }
-    const current = productRef.current;
-    if (!current?.barcode || getPrimaryBarcode(current.barcode) !== getPrimaryBarcode(barcode)) return;
-    const gate = eligibleAgreementChangeJourney(group, current, { publicationSettled: true });
+    const gate = agreementSurfaceGate(group, productRef.current, {
+      publicationSettled: publicationSettledRef.current === true,
+      settledBarcode: settledForBarcodeRef.current,
+      currentBarcode: barcode,
+    });
     if (!gate.ok) return;
     openContribution(gate.destination, 'change', true);
   };
+
+  const agreementSurfaceEnabled = (group: CommunityAgreementGroup): boolean =>
+    agreementSurfaceGate(group, product, {
+      publicationSettled,
+      settledBarcode: settledForBarcodeRef.current,
+      currentBarcode: typeof barcode === 'string' ? barcode : null,
+    }).ok;
 
   const showContributionNotice = (message: string) => {
     setContributionNotice(message);
@@ -2277,6 +2299,7 @@ function ResultScreenContent() {
           <View onLayout={(e) => { nutritionCardOffsetYRef.current = e.nativeEvent.layout.y; }} />
           <NutritionTable
             nutriments={product.nutriments}
+            communityNutrimentKeys={product.rveelGovernedNutrimentKeys}
             categoriesTags={product.categories_tags}
             servingSize={product.serving_size}
             productName={product.product_name || product.product_name_en}
@@ -2325,14 +2348,14 @@ function ResultScreenContent() {
                   group="nutrition"
                   product={product}
                   snapshot={agreementSnapshot}
-                  correctEnabled={eligibleAgreementChangeJourney('nutrition', product, {
-                    publicationSettled,
-                  }).ok}
+                  surfaceEnabled={agreementSurfaceEnabled('nutrition')}
+                  onRevalidateSurface={() => revalidateAgreementSurface('nutrition')}
                   onCorrect={() => openAgreementChange('nutrition')}
                 />
                 <ResultIngredientsSection
                   barcode={barcode}
                   ingredientsText={product.rveelGovernedIngredientsText || product.ingredients_text}
+                  communityAdded={!!product.rveelGovernedIngredientsText}
                   novaGroup={product.nova_group}
                   showAddIngredients={informationMenu.some((row) => row.key === 'add-ingredients' && !row.formFirst)}
                   onAddIngredients={() => {
@@ -2363,9 +2386,8 @@ function ResultScreenContent() {
                   group="ingredients"
                   product={product}
                   snapshot={agreementSnapshot}
-                  correctEnabled={eligibleAgreementChangeJourney('ingredients', product, {
-                    publicationSettled,
-                  }).ok}
+                  surfaceEnabled={agreementSurfaceEnabled('ingredients')}
+                  onRevalidateSurface={() => revalidateAgreementSurface('ingredients')}
                   onCorrect={() => openAgreementChange('ingredients')}
                 />
                 {informationMenu.some((row) => row.key === 'add-nutrition' && !row.formFirst) ? (
@@ -2467,7 +2489,11 @@ function ResultScreenContent() {
                 ) : null}
                 {originLines.map((line) => (
                   <View key={line.key} style={[styles.originPlace, { backgroundColor: emerald.chevronCircle }]}>
-                    <Text style={[styles.originStatementCaption, { color: emerald.muted }]}>{line.statement}</Text>
+                    <Text style={[styles.originStatementCaption, { color: emerald.muted }]}>
+                      {line.statement}
+                      {' · '}
+                      {COMMUNITY_ADDED_CAPTION}
+                    </Text>
                     <CountryFlag appearance="hero" nameColor={emerald.ink} country={line.country} />
                     {line.supporting.length > 0 ? (
                       <View style={styles.originSupportRow}>
@@ -2529,9 +2555,8 @@ function ResultScreenContent() {
             group="origins"
             product={product}
             snapshot={agreementSnapshot}
-            correctEnabled={eligibleAgreementChangeJourney('origins', product, {
-              publicationSettled,
-            }).ok}
+            surfaceEnabled={agreementSurfaceEnabled('origins')}
+            onRevalidateSurface={() => revalidateAgreementSurface('origins')}
             onCorrect={() => openAgreementChange('origins')}
           />
         </View>
@@ -2638,7 +2663,7 @@ function ResultScreenContent() {
                         ...visibleCertifications.map((name) => ({
                           key: `certification:${name}`,
                           kind: 'label' as const,
-                          text: name,
+                          text: `${name} · ${COMMUNITY_ADDED_CAPTION}`,
                           mark: (
                             <CertificationMark
                               name={name}
@@ -2655,7 +2680,7 @@ function ResultScreenContent() {
                         ...visibleClaims.map((claim) => ({
                           key: claim.evidenceId,
                           kind: 'label' as const,
-                          text: claim.exactWording,
+                          text: `${claim.exactWording} · ${COMMUNITY_ADDED_CAPTION}`,
                           mark: null,
                         })),
                       ]}
@@ -2676,15 +2701,18 @@ function ResultScreenContent() {
             );
           })()}
           {product.rveelPacketAbsenceEstablished ? (
-            <Text style={{ color: colors.text }}>{PACKET_ABSENCE_PRODUCT_STATE}</Text>
+            <Text style={{ color: colors.text }}>
+              {PACKET_ABSENCE_PRODUCT_STATE}
+              {' · '}
+              {COMMUNITY_ADDED_CAPTION}
+            </Text>
           ) : null}
           <CommunityAgreementBar
             group="packet_information"
             product={product}
             snapshot={agreementSnapshot}
-            correctEnabled={eligibleAgreementChangeJourney('packet_information', product, {
-              publicationSettled,
-            }).ok}
+            surfaceEnabled={agreementSurfaceEnabled('packet_information')}
+            onRevalidateSurface={() => revalidateAgreementSurface('packet_information')}
             onCorrect={() => openAgreementChange('packet_information')}
           />
           {informationMenu.some((row) => row.key === 'add-packet' && !row.formFirst) ? (

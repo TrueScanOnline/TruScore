@@ -1,5 +1,6 @@
 /**
  * Emerald Community Agreement control. Display-only; not Confidence.
+ * WP09-R1: entire surface requires settlement + Change eligibility.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -29,16 +30,20 @@ type Props = {
   group: CommunityAgreementGroup;
   product: Product | null | undefined;
   snapshot: SharedEvidenceSnapshot | null | undefined;
+  /** Settlement + Change gate for the whole component (Agree and Correct). */
+  surfaceEnabled: boolean;
+  /** Re-check the gate immediately before Agree / Correct. */
+  onRevalidateSurface: () => boolean;
   onCorrect: () => void;
-  correctEnabled: boolean;
 };
 
 export default function CommunityAgreementBar({
   group,
   product,
   snapshot,
+  surfaceEnabled,
+  onRevalidateSurface,
   onCorrect,
-  correctEnabled,
 }: Props) {
   const { darkMode } = useTheme();
   const emerald = resultEmeraldTone(darkMode);
@@ -56,7 +61,7 @@ export default function CommunityAgreementBar({
   const barcode = product?.barcode;
 
   useEffect(() => {
-    if (!barcode || !local.eligible) {
+    if (!barcode || !local.eligible || surfaceEnabled !== true) {
       setRemoteEligible(false);
       setRemoteCount(null);
       return;
@@ -82,20 +87,29 @@ export default function CommunityAgreementBar({
     return () => {
       cancelled = true;
     };
-  }, [barcode, group, local.eligible, local.revisionId]);
+  }, [barcode, group, local.eligible, local.revisionId, surfaceEnabled]);
 
-  const visible = agreementControlsVisible(local, {
-    authorityEnv: snapshot?.authorityEnv || 'uat',
-    barcode: barcode || '',
-    variantKey: '',
-    cardGroup: group,
-    revisionId: remoteRevisionId,
-    count: remoteCount ?? 0,
-    eligible: remoteEligible,
-  });
+  const visible = agreementControlsVisible(
+    local,
+    {
+      authorityEnv: snapshot?.authorityEnv || 'uat',
+      barcode: barcode || '',
+      variantKey: '',
+      cardGroup: group,
+      revisionId: remoteRevisionId,
+      count: remoteCount ?? 0,
+      eligible: remoteEligible,
+    },
+    surfaceEnabled === true
+  );
 
   const onAgree = useCallback(async () => {
     if (!barcode || !local.eligible || busy || hasAgreed) return;
+    if (onRevalidateSurface() !== true) {
+      setError('This product is still updating. Try again when the score has settled.');
+      setRemoteEligible(false);
+      return;
+    }
     setBusy(true);
     setError(null);
     const outcome = await submitCommunityAgreement({
@@ -124,12 +138,11 @@ export default function CommunityAgreementBar({
     setRemoteCount(outcome.body.count);
     setRemoteRevisionId(outcome.body.revisionId);
     setHasAgreed(true);
-  }, [barcode, busy, group, hasAgreed, local.eligible, local.revisionId]);
+  }, [barcode, busy, group, hasAgreed, local.eligible, local.revisionId, onRevalidateSurface]);
 
   if (!visible || remoteCount == null) return null;
 
-  const countLabel =
-    remoteCount === 1 ? '1 agree' : `${remoteCount} agree`;
+  const countLabel = remoteCount === 1 ? '1 agree' : `${remoteCount} agree`;
   const scope = communityAgreementScopeHint(group, product);
 
   return (
@@ -174,12 +187,7 @@ export default function CommunityAgreementBar({
                 size={18}
                 color={hasAgreed ? emerald.card : emerald.action}
               />
-              <Text
-                style={[
-                  styles.btnText,
-                  { color: hasAgreed ? emerald.card : emerald.action },
-                ]}
-              >
+              <Text style={[styles.btnText, { color: hasAgreed ? emerald.card : emerald.action }]}>
                 Agree
               </Text>
             </>
@@ -193,36 +201,22 @@ export default function CommunityAgreementBar({
         </Text>
         <Pressable
           onPress={() => {
-            if (!correctEnabled) return;
+            if (onRevalidateSurface() !== true) return;
             onCorrect();
           }}
-          disabled={!correctEnabled}
           accessibilityRole="button"
           accessibilityLabel="Correct information"
-          accessibilityState={{ disabled: !correctEnabled }}
           style={[
             styles.btn,
             {
-              borderColor: correctEnabled ? emerald.action : emerald.line,
-              opacity: correctEnabled ? 1 : 0.45,
+              borderColor: emerald.action,
               minHeight: 44,
               minWidth: 44,
             },
           ]}
         >
-          <Ionicons
-            name="thumbs-down-outline"
-            size={18}
-            color={correctEnabled ? emerald.action : emerald.muted}
-          />
-          <Text
-            style={[
-              styles.btnText,
-              { color: correctEnabled ? emerald.action : emerald.muted },
-            ]}
-          >
-            Correct information
-          </Text>
+          <Ionicons name="thumbs-down-outline" size={18} color={emerald.action} />
+          <Text style={[styles.btnText, { color: emerald.action }]}>Correct information</Text>
         </Pressable>
       </View>
       {error ? <Text style={[styles.error, { color: emerald.question }]}>{error}</Text> : null}

@@ -18,6 +18,10 @@ export function agreementGroupToChangeDestination(
   return group;
 }
 
+/**
+ * True when voluntaryContributionOffer exposes Change for this group.
+ * Also requires settled publication and Rated/NR overall + pillars (via that offer).
+ */
 export function eligibleAgreementChangeJourney(
   group: CommunityAgreementGroup,
   product: Product | null | undefined,

@@ -64,8 +64,10 @@ export function localAgreementEligibility(
 
 export function agreementControlsVisible(
   local: LocalAgreementEligibility,
-  remote: CommunityAgreementGetResponse | null
+  remote: CommunityAgreementGetResponse | null,
+  surfaceEnabled = true
 ): boolean {
+  if (surfaceEnabled !== true) return false;
   if (!local.eligible || !remote?.eligible) return false;
   if (!remote.revisionId || remote.revisionId !== local.revisionId) return false;
   return true;

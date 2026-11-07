@@ -19,3 +19,12 @@ CREATE TABLE IF NOT EXISTS community_agreements (
 
 CREATE INDEX IF NOT EXISTS community_agreements_revision_idx
   ON community_agreements (authority_env, barcode, variant_key, card_group, revision_id);
+
+-- Durable WP09-R2 rate-limit buckets (shared across serverless instances).
+-- Bucket key format: {dim}|{authority_env}|{id}|{window_start_ms}
+CREATE TABLE IF NOT EXISTS community_agreement_rate_buckets (
+  bucket_key TEXT PRIMARY KEY,
+  window_start_ms BIGINT NOT NULL,
+  hit_count INTEGER NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

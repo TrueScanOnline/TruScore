@@ -177,13 +177,13 @@ export function communityAgreementScopeHint(
 ): string {
   if (group === 'nutrition') {
     const keys = (product?.rveelGovernedNutrimentKeys || []).filter(isDisplayableNutritionOffKey);
-    if (keys.length === 0) return 'Community-added nutrition values';
-    return `Community-added nutrition values (${keys.length})`;
+    if (keys.length === 0) return 'Only rows marked Community-added';
+    const labels = keys.map((key) => key.replace(/_100g$/, '')).join(', ');
+    return `Only rows marked Community-added: ${labels}`;
   }
-  if (group === 'ingredients') return 'Community-added ingredients list';
+  if (group === 'ingredients') return 'The ingredients list marked Community-added';
   if (group === 'origins') {
-    const n = product?.rveelGovernedOrigins?.length || 0;
-    return n === 1 ? 'Community-added origin statement' : 'Community-added origin statements';
+    return 'Origin statements marked Community-added (not the OFF country hero)';
   }
-  return 'Community-added packet claims and certifications';
+  return 'Packet lines marked Community-added (not OFF-only badges)';
 }

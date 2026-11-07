@@ -3,17 +3,19 @@
  *
  * Display-only Community Agreements sidecar. Reads prevailing Evidence Authority
  * snapshots for revision identity. Never writes evidence_responses or confirms/disputes.
+ *
+ * WP09-R2: production rate limits use durable Postgres buckets (not process memory).
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { randomBytes } from 'crypto';
 import { EvidenceAuthority } from '../truescan-src/evidenceAuthority/authority';
 import { PostgresAuthorityStore } from '../lib/evidenceAuthorityPg';
-import { PostgresCommunityAgreementStore } from '../lib/communityAgreementPg';
 import {
-  CommunityAgreementService,
-  createMemoryAgreementAbuseGuard,
-} from '../truescan-src/communityAgreement/service';
+  createPostgresAgreementAbuseGuard,
+  PostgresCommunityAgreementStore,
+} from '../lib/communityAgreementPg';
+import { CommunityAgreementService } from '../truescan-src/communityAgreement/service';
 
 function handleCORS(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,6 +31,7 @@ function bearer(req: VercelRequest): string | null {
   return null;
 }
 
+/** Prefer Vercel/platform edge headers — never trust a client body IP field. */
 function clientKey(req: VercelRequest): string {
   const forwarded = req.headers['x-forwarded-for'];
   if (typeof forwarded === 'string' && forwarded.trim()) {
@@ -41,8 +44,10 @@ function clientKey(req: VercelRequest): string {
 }
 
 let authorityPromise: Promise<EvidenceAuthority> | null = null;
-let agreementPromise: Promise<CommunityAgreementService> | null = null;
-const abuse = createMemoryAgreementAbuseGuard();
+let agreementPromise: Promise<{
+  service: CommunityAgreementService;
+  ea: EvidenceAuthority;
+}> | null = null;
 
 async function authority(): Promise<EvidenceAuthority> {
   if (!authorityPromise) {
@@ -65,7 +70,10 @@ async function authority(): Promise<EvidenceAuthority> {
   return authorityPromise;
 }
 
-async function agreements(): Promise<CommunityAgreementService> {
+async function agreements(): Promise<{
+  service: CommunityAgreementService;
+  ea: EvidenceAuthority;
+}> {
   if (!agreementPromise) {
     agreementPromise = (async () => {
       const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -77,12 +85,16 @@ async function agreements(): Promise<CommunityAgreementService> {
         max: 5,
       });
       const env = process.env.RVEEL_EVIDENCE_AUTHORITY_ENV === 'production' ? 'production' : 'uat';
-      return new CommunityAgreementService({
+      const ea = await authority();
+      const store = new PostgresCommunityAgreementStore(pool);
+      const service = new CommunityAgreementService({
         authorityEnv: env,
-        store: new PostgresCommunityAgreementStore(pool),
-        abuse,
+        store,
+        abuse: createPostgresAgreementAbuseGuard(store),
         newId: () => `agr_${randomBytes(6).toString('hex')}`,
+        revalidateSnapshot: (barcode) => ea.snapshot(barcode),
       });
+      return { service, ea };
     })();
   }
   return agreementPromise;
@@ -93,8 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    const service = await agreements();
-    const ea = await authority();
+    const { service, ea } = await agreements();
 
     if (req.method === 'GET') {
       const barcode = typeof req.query.barcode === 'string' ? req.query.barcode : '';

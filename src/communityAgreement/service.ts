@@ -54,7 +54,7 @@ export type AgreementAbuseGuard = {
     barcode: string;
     clientKey: string;
     now: number;
-  }): AgreementRateLimitDecision;
+  }): AgreementRateLimitDecision | Promise<AgreementRateLimitDecision>;
 };
 
 export type CommunityAgreementServiceDeps = {
@@ -63,10 +63,19 @@ export type CommunityAgreementServiceDeps = {
   abuse?: AgreementAbuseGuard;
   now?: () => number;
   newId?: () => string;
+  /**
+   * Optional second snapshot read immediately before insert.
+   * Narrows the race with Evidence Authority admission; not one atomic TX.
+   */
+  revalidateSnapshot?: (barcode: string) => Promise<SharedEvidenceSnapshot | null>;
 };
 
 const BARCODE_RE = /^\d{8,14}$/;
 
+/**
+ * Process-local Map only — for unit tests and explicitly labelled local development.
+ * Production API must use the durable Postgres bucket guard instead.
+ */
 export function createMemoryAgreementAbuseGuard(limits?: {
   perCredentialPerMinute?: number;
   perClientKeyPerMinute?: number;
@@ -309,7 +318,7 @@ export class CommunityAgreementService {
 
     const now = (this.deps.now || Date.now)();
     if (this.deps.abuse) {
-      const limited = this.deps.abuse.check({
+      const limited = await this.deps.abuse.check({
         authorityEnv: this.env(),
         contributorId: input.contributorId,
         barcode: input.barcode,
@@ -317,6 +326,26 @@ export class CommunityAgreementService {
         now,
       });
       if (!limited.ok) return { ok: false, status: 429, reason: limited.reason };
+    }
+
+    // Narrow the admission race: re-read prevailing evidence before insert.
+    // Still not atomic with Evidence Authority admission — see WP09 concurrency note.
+    if (this.deps.revalidateSnapshot) {
+      const fresh = await this.deps.revalidateSnapshot(input.barcode);
+      if (!fresh || fresh.barcode !== input.barcode || fresh.authorityEnv !== this.env()) {
+        return { ok: false, status: 409, reason: 'stale_revision' };
+      }
+      const freshPairs = selectAgreementTargets(input.cardGroup, fresh);
+      const freshRevision = buildAgreementRevision({
+        authorityEnv: this.env(),
+        barcode: input.barcode,
+        variantKey: variant.variantKey,
+        cardGroup: input.cardGroup,
+        pairs: freshPairs,
+      });
+      if (freshRevision.revisionId !== revision.revisionId) {
+        return { ok: false, status: 409, reason: 'stale_revision' };
+      }
     }
 
     const outcome = await this.deps.store.insert({

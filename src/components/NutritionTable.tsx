@@ -17,6 +17,10 @@ import {
 import { computeBurnMinutesFromKcal } from '../utils/nutritionBurnTime';
 import NutritionBurnInfoModal from './NutritionBurnInfoModal';
 import NutritionDetailsModal, { type NutritionDetailsFocusTarget } from './NutritionDetailsModal';
+import {
+  COMMUNITY_ADDED_CAPTION,
+  nutritionRowIsCommunity,
+} from '../communityAgreement/communityMarkers';
 
 export interface NutritionTableShareContext {
   productName: string;
@@ -25,6 +29,8 @@ export interface NutritionTableShareContext {
 
 interface NutritionTableProps {
   nutriments?: ProductNutriments;
+  /** Admitted community nutrient OFF keys (e.g. sugars_100g). Marks rows for WP-09. */
+  communityNutrimentKeys?: string[];
   /** Ignored for ratings — retained for call-site compatibility. Raw OFF levels are not authority. */
   nutrientLevels?: unknown;
   categoriesTags?: string[];
@@ -56,6 +62,7 @@ interface NutritionTableProps {
 
 const NutritionTable = React.memo(function NutritionTable({
   nutriments,
+  communityNutrimentKeys,
   categoriesTags,
   servingSize,
   productName,
@@ -399,6 +406,7 @@ const NutritionTable = React.memo(function NutritionTable({
               governed && governed.level !== 'unavailable' ? governed.level : undefined;
             const levelColor = getLevelColor(level);
             const levelLabelColor = getLevelLabelColor(level);
+            const communityRow = nutritionRowIsCommunity(row.key, communityNutrimentKeys);
 
             return (
               <View key={row.key} style={[styles.tableRow, { borderBottomColor: colors.border }]}>
@@ -410,6 +418,14 @@ const NutritionTable = React.memo(function NutritionTable({
                   >
                     {row.label}
                   </Text>
+                  {communityRow ? (
+                    <Text
+                      style={{ color: emerald.muted, fontSize: 10, fontWeight: '600', marginTop: 2 }}
+                      accessibilityLabel={`${row.label}: ${COMMUNITY_ADDED_CAPTION}`}
+                    >
+                      {COMMUNITY_ADDED_CAPTION}
+                    </Text>
+                  ) : null}
                 </View>
                 <View style={showPerServe ? styles.valueCellCompact : styles.valueCell}>
                   <Text
