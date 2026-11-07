@@ -1,5 +1,5 @@
-/** Stable dark-green fill for Agree across cards and themes. */
-export const AGREEMENT_AGREE_BUTTON_FILL = '#087B68';
-
-/** White ink for icon, count, and “People Agree” on the filled Agree button. */
-export const AGREEMENT_AGREE_BUTTON_INK = '#FFFFFF';
+/**
+ * W5-UI-13 — brand emerald for the minimal Agree thumbs-up / count.
+ * Light-mode preferred accent; dark mode uses theme `emerald.action`.
+ */
+export const AGREEMENT_ACCENT = '#087B68';

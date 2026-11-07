@@ -1,14 +1,15 @@
 /**
  * Emerald Community Agreement control. Display-only; not Confidence.
  * WP09-R1: entire surface requires settlement + Change eligibility.
- * W5-UI-11: compact question + Agree/Correct only (no Community-added card copy).
- * W5-UI-12: count inside Agree; Correct information gains a trailing chevron.
- * Follow-up: filled dark-green Agree with “[👍] [white n] People Agree”.
+ * W5-UI-11: no Community-added card copy.
+ * W5-UI-13: minimal integrated confirmation bar (question + thumbs ± count).
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
+  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -17,17 +18,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
-import { resultEmeraldTone } from '../../theme/resultPresentation';
+import { resultEmeraldTone, resultPresentation } from '../../theme/resultPresentation';
 import {
   agreementControlsVisible,
   fetchCommunityAgreement,
   localAgreementEligibility,
   submitCommunityAgreement,
 } from '../../communityAgreement/client';
-import {
-  AGREEMENT_AGREE_BUTTON_FILL,
-  AGREEMENT_AGREE_BUTTON_INK,
-} from '../../communityAgreement/agreementAgreeButtonStyle';
+import { AGREEMENT_ACCENT } from '../../communityAgreement/agreementAgreeButtonStyle';
 import type { CommunityAgreementGroup } from '../../communityAgreement/types';
 import type { SharedEvidenceSnapshot } from '../../evidenceAuthority/types';
 import type { Product } from '../../types/product';
@@ -43,6 +41,35 @@ type Props = {
   onCorrect: () => void;
 };
 
+function agreementCountPhrase(count: number): string {
+  return count === 1 ? '1 person agrees' : `${count} people agree`;
+}
+
+function agreeAccessibilityLabel(hasAgreed: boolean, count: number): string {
+  const phrase = agreementCountPhrase(count);
+  return hasAgreed ? `You already agreed. ${phrase}` : `Agree with this information. ${phrase}`;
+}
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled?.().then((v) => {
+      if (mounted) setReduced(Boolean(v));
+    });
+    const sub = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (v: boolean) => {
+      setReduced(Boolean(v));
+    });
+    return () => {
+      mounted = false;
+      // RN typings vary across versions
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (sub as any)?.remove?.();
+    };
+  }, []);
+  return reduced;
+}
+
 export default function CommunityAgreementBar({
   group,
   product,
@@ -54,7 +81,9 @@ export default function CommunityAgreementBar({
   const { darkMode } = useTheme();
   const emerald = resultEmeraldTone(darkMode);
   const { fontScale } = useWindowDimensions();
-  const compact = fontScale > 1.15;
+  const stackControls = fontScale > 1.15;
+  const reducedMotion = usePrefersReducedMotion();
+  const agreeScale = useRef(new Animated.Value(1)).current;
 
   const local = localAgreementEligibility(group, product, snapshot);
   const [remoteCount, setRemoteCount] = useState<number | null>(null);
@@ -65,6 +94,7 @@ export default function CommunityAgreementBar({
   const [error, setError] = useState<string | null>(null);
 
   const barcode = product?.barcode;
+  const agreeAccent = darkMode ? emerald.action : AGREEMENT_ACCENT;
 
   useEffect(() => {
     if (!barcode || !local.eligible || surfaceEnabled !== true) {
@@ -94,6 +124,26 @@ export default function CommunityAgreementBar({
       cancelled = true;
     };
   }, [barcode, group, local.eligible, local.revisionId, surfaceEnabled]);
+
+  const playAgreeConfirmation = useCallback(() => {
+    if (reducedMotion) {
+      agreeScale.setValue(1);
+      return;
+    }
+    agreeScale.setValue(1);
+    Animated.sequence([
+      Animated.timing(agreeScale, {
+        toValue: 1.12,
+        duration: 90,
+        useNativeDriver: true,
+      }),
+      Animated.timing(agreeScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [agreeScale, reducedMotion]);
 
   const visible = agreementControlsVisible(
     local,
@@ -144,159 +194,165 @@ export default function CommunityAgreementBar({
     setRemoteCount(outcome.body.count);
     setRemoteRevisionId(outcome.body.revisionId);
     setHasAgreed(true);
-  }, [barcode, busy, group, hasAgreed, local.eligible, local.revisionId, onRevalidateSurface]);
+    playAgreeConfirmation();
+  }, [
+    barcode,
+    busy,
+    group,
+    hasAgreed,
+    local.eligible,
+    local.revisionId,
+    onRevalidateSurface,
+    playAgreeConfirmation,
+  ]);
 
   if (!visible || remoteCount == null) return null;
 
-  const agreeA11y = hasAgreed
-    ? `You already agreed. ${remoteCount} people agree`
-    : `${remoteCount} people agree`;
+  const agreeA11y = agreeAccessibilityLabel(hasAgreed, remoteCount);
 
   return (
-    <View
-      style={[
-        styles.wrap,
-        {
-          backgroundColor: emerald.chevronCircle,
-          borderColor: emerald.line,
-        },
-      ]}
-      accessibilityRole="summary"
-    >
-      <Text style={[styles.question, { color: emerald.ink }, compact && styles.questionCompact]}>
-        Does this look correct?
-      </Text>
-      <View style={[styles.row, compact && styles.rowStack]}>
-        <Pressable
-          onPress={onAgree}
-          disabled={busy || hasAgreed}
-          accessibilityRole="button"
-          accessibilityLabel={agreeA11y}
-          accessibilityState={{ disabled: busy || hasAgreed, selected: hasAgreed }}
-          style={[
-            styles.btn,
-            {
-              borderColor: AGREEMENT_AGREE_BUTTON_FILL,
-              backgroundColor: AGREEMENT_AGREE_BUTTON_FILL,
-              minHeight: 44,
-              minWidth: 44,
-              opacity: busy || hasAgreed ? 0.92 : 1,
-            },
-          ]}
+    <View style={styles.wrap} accessibilityRole="summary">
+      <View style={[styles.divider, { backgroundColor: emerald.line }]} />
+      <View style={[styles.row, stackControls && styles.rowStack]}>
+        <Text
+          style={[styles.question, { color: emerald.ink }, stackControls && styles.questionCompact]}
+          numberOfLines={stackControls ? 3 : 2}
         >
-          {busy ? (
-            <ActivityIndicator color={AGREEMENT_AGREE_BUTTON_INK} />
-          ) : (
-            <>
-              <Ionicons
-                name={hasAgreed ? 'thumbs-up' : 'thumbs-up-outline'}
-                size={18}
-                color={AGREEMENT_AGREE_BUTTON_INK}
-              />
-              <Text
-                style={[
-                  styles.countInBtn,
-                  { color: AGREEMENT_AGREE_BUTTON_INK },
-                  compact && styles.countInBtnCompact,
-                ]}
-                accessibilityElementsHidden
-                importantForAccessibility="no"
+          Does this look right?
+        </Text>
+        <View style={styles.controls}>
+          <Pressable
+            onPress={onAgree}
+            disabled={busy || hasAgreed}
+            accessibilityRole="button"
+            accessibilityLabel={agreeA11y}
+            accessibilityState={{ disabled: busy || hasAgreed, selected: hasAgreed }}
+            hitSlop={4}
+            style={styles.agreeHit}
+          >
+            {busy ? (
+              <ActivityIndicator color={agreeAccent} />
+            ) : (
+              <Animated.View
+                style={[styles.agreeCluster, { transform: [{ scale: agreeScale }] }]}
               >
-                {String(remoteCount)}
-              </Text>
-              <Text
-                style={[
-                  styles.btnText,
-                  { color: AGREEMENT_AGREE_BUTTON_INK },
-                  compact && styles.btnTextCompact,
-                ]}
-              >
-                People Agree
-              </Text>
-            </>
-          )}
-        </Pressable>
-        <Pressable
-          onPress={() => {
-            if (onRevalidateSurface() !== true) return;
-            onCorrect();
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Correct information"
-          style={[
-            styles.btn,
-            {
-              borderColor: emerald.action,
-              minHeight: 44,
-              minWidth: 44,
-            },
-          ]}
-        >
-          <Ionicons name="thumbs-down-outline" size={18} color={emerald.action} />
-          <Text style={[styles.btnText, { color: emerald.action }, compact && styles.btnTextCompact]}>
-            Correct information
-          </Text>
-          <Ionicons name="chevron-forward" size={18} color={emerald.action} />
-        </Pressable>
+                <Ionicons
+                  name={hasAgreed ? 'thumbs-up' : 'thumbs-up-outline'}
+                  size={20}
+                  color={agreeAccent}
+                />
+                <Text
+                  style={[
+                    styles.countText,
+                    { color: agreeAccent },
+                    stackControls && styles.countTextCompact,
+                  ]}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                >
+                  {String(remoteCount)}
+                </Text>
+              </Animated.View>
+            )}
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              if (onRevalidateSurface() !== true) return;
+              onCorrect();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Correct information"
+            accessibilityHint="Opens the existing information correction process."
+            hitSlop={4}
+            style={[
+              styles.correctHit,
+              {
+                borderColor: emerald.line,
+                backgroundColor: darkMode
+                  ? resultPresentation.stoneSoft.dark
+                  : resultPresentation.stoneSoft.light,
+              },
+            ]}
+          >
+            <Ionicons name="thumbs-down-outline" size={20} color={emerald.question} />
+          </Pressable>
+        </View>
       </View>
       {error ? <Text style={[styles.error, { color: emerald.question }]}>{error}</Text> : null}
     </View>
   );
 }
 
+const TAP = resultPresentation.tap.min;
+
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
+    marginTop: 10,
+    paddingTop: 0,
+    paddingBottom: 2,
   },
-  question: {
-    fontSize: 15,
-    fontWeight: '600',
-    lineHeight: 20,
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    width: '100%',
     marginBottom: 10,
-  },
-  questionCompact: {
-    fontSize: 14,
-    lineHeight: 19,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     gap: 10,
   },
   rowStack: {
     flexDirection: 'column',
     alignItems: 'stretch',
   },
-  btn: {
+  question: {
+    flexShrink: 1,
+    flexGrow: 1,
+    fontSize: 13.5,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  questionCompact: {
+    fontSize: 13,
+    lineHeight: 17,
+    marginBottom: 2,
+  },
+  controls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexShrink: 0,
+  },
+  agreeHit: {
+    minWidth: TAP,
+    minHeight: TAP,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  agreeCluster: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
   },
-  btnText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  btnTextCompact: {
-    fontSize: 13,
-  },
-  countInBtn: {
+  countText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
-    minWidth: 12,
-    textAlign: 'center',
+    minWidth: 10,
+    textAlign: 'left',
   },
-  countInBtnCompact: {
+  countTextCompact: {
     fontSize: 14,
+  },
+  correctHit: {
+    minWidth: TAP,
+    minHeight: TAP,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   error: {
     marginTop: 8,

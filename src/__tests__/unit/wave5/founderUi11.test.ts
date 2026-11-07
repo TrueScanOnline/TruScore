@@ -34,12 +34,13 @@ describe('W5-UI-11 Community Agreement presentation', () => {
   });
 
   it('5–7. Agreement bar shows only the simplified question', () => {
-    expect(bar).toContain('Does this look correct?');
+    // W5-UI-13 supersedes W5-UI-11/12 question and button chrome.
+    expect(bar).toContain('Does this look right?');
     expect(bar).not.toContain('Community agreements');
     expect(bar).not.toContain('community-added');
     expect(bar).not.toContain('communityAgreementScopeHint');
-    expect(bar).toContain('Agree');
-    expect(bar).toContain('Correct information');
+    expect(bar).toContain('Agree with this information.');
+    expect(bar).toContain('accessibilityLabel="Correct information"');
   });
 
   it('8–9. Eligibility wiring and counter presentation remain', () => {

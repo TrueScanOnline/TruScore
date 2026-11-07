@@ -284,7 +284,7 @@ describe('WP09-R3 community markers', () => {
     expect(nutrition).not.toContain('COMMUNITY_ADDED_CAPTION');
     expect(result).not.toContain('COMMUNITY_ADDED_CAPTION');
     expect(result).toContain('agreementSurfaceGate');
-    expect(bar).toContain('Does this look correct?');
+    expect(bar).toContain('Does this look right?');
     expect(bar).not.toContain('Community agreements');
   });
 });

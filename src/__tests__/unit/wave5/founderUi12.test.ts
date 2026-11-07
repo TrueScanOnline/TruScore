@@ -1,13 +1,10 @@
 /**
- * W5-UI-12 — Agree count inside button; Correct information chevron.
- * Follow-up: filled dark-green Agree with “[n] People Agree” in white.
+ * W5-UI-12 history — superseded by W5-UI-13 minimal confirmation bar.
+ * Retains behavioural wiring assertions; presentation expectations updated.
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import {
-  AGREEMENT_AGREE_BUTTON_FILL,
-  AGREEMENT_AGREE_BUTTON_INK,
-} from '../../../communityAgreement/agreementAgreeButtonStyle';
+import { AGREEMENT_ACCENT } from '../../../communityAgreement/agreementAgreeButtonStyle';
 
 const barPath = path.join(
   __dirname,
@@ -15,19 +12,18 @@ const barPath = path.join(
 );
 const resultPath = path.join(__dirname, '../../../../app/result/[barcode].tsx');
 
-describe('W5-UI-12 Community Agreement button refinements', () => {
+describe('W5-UI-12 → W5-UI-13 Community Agreement presentation continuity', () => {
   const bar = fs.readFileSync(barPath, 'utf8');
   const result = fs.readFileSync(resultPath, 'utf8');
 
-  it('1–4. agreement count renders inside People Agree from remoteCount; no external counter', () => {
+  it('1–4. agreement count remains beside thumbs-up from remoteCount; no external counter', () => {
     expect(bar).toContain('String(remoteCount)');
-    expect(bar).toContain('styles.countInBtn');
-    expect(bar).toContain('People Agree');
-    expect(bar).toContain('AGREEMENT_AGREE_BUTTON_FILL');
-    expect(bar).toContain('AGREEMENT_AGREE_BUTTON_INK');
+    expect(bar).toContain('styles.agreeCluster');
+    expect(bar).toContain('AGREEMENT_ACCENT');
+    expect(bar).not.toContain('People Agree');
     expect(bar).not.toMatch(/styles\.count\b/);
     expect(bar).not.toContain('countLabel');
-    expect(bar).toMatch(/thumbs-up[\s\S]*remoteCount[\s\S]*People Agree/);
+    expect(bar).toMatch(/thumbs-up[\s\S]*remoteCount/);
   });
 
   it('5–7. successful Agree still updates from server body; selected state keeps count', () => {
@@ -35,15 +31,15 @@ describe('W5-UI-12 Community Agreement button refinements', () => {
     expect(bar).toContain('setHasAgreed(true)');
     expect(bar).toContain('disabled={busy || hasAgreed}');
     expect(bar).toContain('You already agreed');
-    expect(bar).toContain('${remoteCount} people agree');
+    expect(bar).toContain('people agree');
   });
 
-  it('8–9. Correct information shows trailing chevron and unchanged journey wiring', () => {
-    expect(bar).toContain('Correct information');
-    expect(bar).toContain('chevron-forward');
+  it('8–9. Correct information journey wiring unchanged (icon-only control)', () => {
+    expect(bar).toContain('accessibilityLabel="Correct information"');
     expect(bar).toContain('thumbs-down-outline');
     expect(bar).toContain('onCorrect()');
     expect(bar).toContain('onRevalidateSurface() !== true');
+    expect(bar).not.toContain('chevron-forward');
     expect(result).toContain('onCorrect={() => openAgreementChange(');
   });
 
@@ -53,9 +49,7 @@ describe('W5-UI-12 Community Agreement button refinements', () => {
     expect(result).toContain('surfaceEnabled={agreementSurfaceEnabled');
   });
 
-  it('11. Agree fill is dark green; icon, count, and People Agree use white ink', () => {
-    expect(AGREEMENT_AGREE_BUTTON_FILL).toBe('#087B68');
-    expect(AGREEMENT_AGREE_BUTTON_INK).toBe('#FFFFFF');
-    expect(bar).toMatch(/countInBtn[\s\S]*AGREEMENT_AGREE_BUTTON_INK/);
+  it('11. brand emerald accent remains #087B68 for light Agree ink', () => {
+    expect(AGREEMENT_ACCENT).toBe('#087B68');
   });
 });
