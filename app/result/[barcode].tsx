@@ -172,6 +172,12 @@ import {
   authoritativeStateSupersedes,
   rememberedAuthoritativeSnapshot,
 } from '../../src/evidenceAuthority/assessment';
+import type { SharedEvidenceSnapshot } from '../../src/evidenceAuthority/types';
+import CommunityAgreementBar from '../../src/components/communityAgreement/CommunityAgreementBar';
+import {
+  eligibleAgreementChangeJourney,
+  type CommunityAgreementGroup,
+} from '../../src/communityAgreement';
 import { calculateTrustScore } from '../../src/utils/trustScore';
 import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
 import { ManualProductData } from '../../src/types/manualProduct';
@@ -605,6 +611,7 @@ function ResultScreenContent() {
   }>(null);
   const productResultReadyLoggedRef = useRef<string | null>(null);
   const appliedSnapshotAtRef = useRef(0);
+  const [agreementSnapshot, setAgreementSnapshot] = useState<SharedEvidenceSnapshot | null>(null);
   const [isUserContributed, setIsUserContributed] = useState(false);
   const [insightsExpanded, setInsightsExpanded] = useState(true);
 
@@ -626,6 +633,7 @@ function ResultScreenContent() {
     settledForBarcodeRef.current = null;
     publicationSettledRef.current = false;
     appliedSnapshotAtRef.current = 0;
+    setAgreementSnapshot(null);
     setPublicationSettled(false);
   }, [barcode]);
 
@@ -645,6 +653,7 @@ function ResultScreenContent() {
           return;
         }
         appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
+        setAgreementSnapshot(snapshot);
         setProduct(next);
         currentModalTrace()?.mark('reassessment_listener_end', 'ok');
       });
@@ -1501,6 +1510,43 @@ function ResultScreenContent() {
     setPacketContributionVisible(true);
   };
 
+  const refreshAgreementSnapshot = useCallback(async () => {
+    if (!barcode) {
+      setAgreementSnapshot(null);
+      return;
+    }
+    const remembered = await rememberedAuthoritativeSnapshot(barcode);
+    setAgreementSnapshot(remembered);
+  }, [barcode]);
+
+  useEffect(() => {
+    void refreshAgreementSnapshot();
+  }, [
+    refreshAgreementSnapshot,
+    product?.rveelGovernedIngredientsText,
+    product?.rveelGovernedNutrimentKeys,
+    product?.rveelGovernedOrigins,
+    product?.rveelGovernedPacketClaims,
+    product?.rveelGovernedCertifications,
+    product?.rveelPacketAbsenceEstablished,
+  ]);
+
+  const openAgreementChange = (group: CommunityAgreementGroup) => {
+    if (!barcode) return;
+    if (publicationSettledRef.current !== true) return;
+    if (
+      !settledForBarcodeRef.current ||
+      getPrimaryBarcode(settledForBarcodeRef.current) !== getPrimaryBarcode(barcode)
+    ) {
+      return;
+    }
+    const current = productRef.current;
+    if (!current?.barcode || getPrimaryBarcode(current.barcode) !== getPrimaryBarcode(barcode)) return;
+    const gate = eligibleAgreementChangeJourney(group, current, { publicationSettled: true });
+    if (!gate.ok) return;
+    openContribution(gate.destination, 'change', true);
+  };
+
   const showContributionNotice = (message: string) => {
     setContributionNotice(message);
     setTimeout(() => setContributionNotice(null), 4000);
@@ -2275,6 +2321,15 @@ function ResultScreenContent() {
             title={t('result.nutritionAndIngredients', 'Nutrition & Ingredients')}
             afterBurn={
               <>
+                <CommunityAgreementBar
+                  group="nutrition"
+                  product={product}
+                  snapshot={agreementSnapshot}
+                  correctEnabled={eligibleAgreementChangeJourney('nutrition', product, {
+                    publicationSettled,
+                  }).ok}
+                  onCorrect={() => openAgreementChange('nutrition')}
+                />
                 <ResultIngredientsSection
                   barcode={barcode}
                   ingredientsText={product.rveelGovernedIngredientsText || product.ingredients_text}
@@ -2303,6 +2358,15 @@ function ResultScreenContent() {
                   onShareIngredients={() => handleShare('ingredients')}
                   onShareProcessing={() => handleShare('processing')}
                   onOpenProcessingLevel={() => setProcessingLevelModalVisible(true)}
+                />
+                <CommunityAgreementBar
+                  group="ingredients"
+                  product={product}
+                  snapshot={agreementSnapshot}
+                  correctEnabled={eligibleAgreementChangeJourney('ingredients', product, {
+                    publicationSettled,
+                  }).ok}
+                  onCorrect={() => openAgreementChange('ingredients')}
                 />
                 {informationMenu.some((row) => row.key === 'add-nutrition' && !row.formFirst) ? (
                   <TouchableOpacity
@@ -2461,6 +2525,15 @@ function ResultScreenContent() {
               <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>Add product origins</Text>
             </TouchableOpacity>
           ) : null}
+          <CommunityAgreementBar
+            group="origins"
+            product={product}
+            snapshot={agreementSnapshot}
+            correctEnabled={eligibleAgreementChangeJourney('origins', product, {
+              publicationSettled,
+            }).ok}
+            onCorrect={() => openAgreementChange('origins')}
+          />
         </View>
         </View>
 
@@ -2605,6 +2678,15 @@ function ResultScreenContent() {
           {product.rveelPacketAbsenceEstablished ? (
             <Text style={{ color: colors.text }}>{PACKET_ABSENCE_PRODUCT_STATE}</Text>
           ) : null}
+          <CommunityAgreementBar
+            group="packet_information"
+            product={product}
+            snapshot={agreementSnapshot}
+            correctEnabled={eligibleAgreementChangeJourney('packet_information', product, {
+              publicationSettled,
+            }).ok}
+            onCorrect={() => openAgreementChange('packet_information')}
+          />
           {informationMenu.some((row) => row.key === 'add-packet' && !row.formFirst) ? (
           <TouchableOpacity
             onPress={() => {
@@ -3104,6 +3186,7 @@ function ResultScreenContent() {
             return;
           }
           appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
+          setAgreementSnapshot(snapshot);
           if (next._assessmentCycleSettled === true) {
             publicationSettledRef.current = true;
             setPublicationSettled(true);

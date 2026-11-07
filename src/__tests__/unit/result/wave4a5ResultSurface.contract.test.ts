@@ -44,9 +44,13 @@ describe('Wave 4A.5 Result surface', () => {
     expect(ingredientsAt).toBeGreaterThan(burnAt);
     expect(nutrition).toContain('const showBurnStrip = burnMinutes !== null && kcalPer100g !== undefined');
     expect(result.indexOf('<ResultIngredientsSection')).toBeGreaterThan(result.indexOf('<NutritionTable'));
-    expect(result.indexOf('/>', result.indexOf('afterBurn={'))).toBeGreaterThan(
-      result.indexOf('<ResultIngredientsSection')
-    );
+    const afterBurnAt = result.indexOf('afterBurn={');
+    const nutritionAgreementAt = result.indexOf('group="nutrition"', afterBurnAt);
+    const ingredientsSectionAt = result.indexOf('<ResultIngredientsSection', afterBurnAt);
+    const ingredientsAgreementAt = result.indexOf('group="ingredients"', afterBurnAt);
+    expect(nutritionAgreementAt).toBeGreaterThan(afterBurnAt);
+    expect(ingredientsSectionAt).toBeGreaterThan(nutritionAgreementAt);
+    expect(ingredientsAgreementAt).toBeGreaterThan(ingredientsSectionAt);
   });
 
   it('keeps Ingredients when Feel the Burn is absent, and keeps empty and populated states', () => {
