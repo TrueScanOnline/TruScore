@@ -3,6 +3,7 @@
  * WP09-R1: entire surface requires settlement + Change eligibility.
  * W5-UI-11: compact question + Agree/Correct only (no Community-added card copy).
  * W5-UI-12: count inside Agree; Correct information gains a trailing chevron.
+ * Follow-up: filled dark-green Agree with “[👍] [white n] People Agree”.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -23,7 +24,10 @@ import {
   localAgreementEligibility,
   submitCommunityAgreement,
 } from '../../communityAgreement/client';
-import { agreementCountOrange } from '../../communityAgreement/agreementCountOrange';
+import {
+  AGREEMENT_AGREE_BUTTON_FILL,
+  AGREEMENT_AGREE_BUTTON_INK,
+} from '../../communityAgreement/agreementAgreeButtonStyle';
 import type { CommunityAgreementGroup } from '../../communityAgreement/types';
 import type { SharedEvidenceSnapshot } from '../../evidenceAuthority/types';
 import type { Product } from '../../types/product';
@@ -144,12 +148,9 @@ export default function CommunityAgreementBar({
 
   if (!visible || remoteCount == null) return null;
 
-  const inkOnAgree = hasAgreed ? emerald.card : emerald.action;
-  const countColor = agreementCountOrange(darkMode, hasAgreed);
-  const agreeA11y =
-    hasAgreed
-      ? `You already agreed. ${remoteCount} agree`
-      : `Agree. ${remoteCount} agree`;
+  const agreeA11y = hasAgreed
+    ? `You already agreed. ${remoteCount} people agree`
+    : `${remoteCount} people agree`;
 
   return (
     <View
@@ -175,31 +176,42 @@ export default function CommunityAgreementBar({
           style={[
             styles.btn,
             {
-              borderColor: emerald.action,
-              backgroundColor: hasAgreed ? emerald.action : 'transparent',
+              borderColor: AGREEMENT_AGREE_BUTTON_FILL,
+              backgroundColor: AGREEMENT_AGREE_BUTTON_FILL,
               minHeight: 44,
               minWidth: 44,
+              opacity: busy || hasAgreed ? 0.92 : 1,
             },
           ]}
         >
           {busy ? (
-            <ActivityIndicator color={inkOnAgree} />
+            <ActivityIndicator color={AGREEMENT_AGREE_BUTTON_INK} />
           ) : (
             <>
               <Ionicons
                 name={hasAgreed ? 'thumbs-up' : 'thumbs-up-outline'}
                 size={18}
-                color={inkOnAgree}
+                color={AGREEMENT_AGREE_BUTTON_INK}
               />
               <Text
-                style={[styles.countInBtn, { color: countColor }, compact && styles.countInBtnCompact]}
+                style={[
+                  styles.countInBtn,
+                  { color: AGREEMENT_AGREE_BUTTON_INK },
+                  compact && styles.countInBtnCompact,
+                ]}
                 accessibilityElementsHidden
                 importantForAccessibility="no"
               >
                 {String(remoteCount)}
               </Text>
-              <Text style={[styles.btnText, { color: inkOnAgree }, compact && styles.btnTextCompact]}>
-                Agree
+              <Text
+                style={[
+                  styles.btnText,
+                  { color: AGREEMENT_AGREE_BUTTON_INK },
+                  compact && styles.btnTextCompact,
+                ]}
+              >
+                People Agree
               </Text>
             </>
           )}
