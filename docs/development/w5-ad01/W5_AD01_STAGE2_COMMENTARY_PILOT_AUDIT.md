@@ -301,3 +301,112 @@ Confirmed unchanged in Stage 2B:
 - Evidence enablement, counts, labels, URLs on all four pilot rows
 - All non-editorial fields on all catalogue rows
 - All 311 non-pilot catalogue records vs approved baseline
+
+---
+
+# Stage 3A — Controlled copy polish (2026-11-08)
+
+## Checkpoint
+
+| Item | Value |
+|------|-------|
+| Starting branch (preserved) | `experiment/w5-ad01-additives-copy-20261108` @ `15f33c927219a8926592e94b6aaf4840f571a213` |
+| Stage 3A branch | `experiment/w5-ad01-copy-polish-20261108` |
+| Stage 3A starting SHA | `15f33c927219a8926592e94b6aaf4840f571a213` |
+| Pre-polish recovery tag | `w5-ad01-pre-copy-polish-20261108` → `15f33c927219a8926592e94b6aaf4840f571a213` |
+| Original pre-Additives tag | `w5-ad01-pre-additives-20261108` → `855f45bca3873629811c30542a01ef7f7af617ff` (unchanged) |
+
+## Fields modified (exact)
+
+| additive_id | Fields |
+|-------------|--------|
+| e120 | `expanded_summary`, `evidence_copy` (`tile_summary`, facts, `source_preparation_copy`, evidence URLs unchanged) |
+| e170 | `expanded_summary` only |
+| e471 | `expanded_summary`, `fact_3_copy` (`evidence_copy` and manufacturing copy unchanged) |
+| e211 | `expanded_summary`, `evidence_copy` (paragraph break `\n\n` between ADI and benzene blocks; source links unchanged) |
+
+## Old vs new text
+
+### e120
+
+**expanded_summary**
+- Old: Cochineal colouring starts with dried female cochineal insects. Their red pigment, carminic acid, is extracted and purified. It can also be made into carmine, a related metal-complexed colour preparation. Depending on local labelling rules, you may see cochineal extract, carmine or colour (120) on an ingredient list.
+- New: This red colouring has an unusual origin: female cochineal insects. Their pigment, carminic acid, is extracted from the dried insects and purified. It can also be prepared as carmine. Depending on local labelling rules, ingredient lists may say cochineal extract, carmine or colour (120).
+- Claim check: Same origin/extraction/carmine/jurisdiction labelling claims; metal-complex detail remains in unchanged `source_preparation_copy`.
+
+**evidence_copy**
+- Old: …In the United States, carmine and cochineal extract must be named on food labels. Although they are not among the nine major food allergens… people with a confirmed carmine allergy should check ingredient lists… In countries where additives may be identified numerically…
+- New: …US food labels must name carmine or cochineal extract. Although carmine is not among the nine major food allergens… someone with a confirmed carmine allergy should still check for these names. Where additive numbers are used, code 120…
+- Claim check: Same residual-protein / allergy / US naming / non-major-allergen / code-120 distinction. Support unchanged: FDA Color Q&A + FDA food-allergies / FASTER-Act framing already recorded in Stage 2B audit. Residual-protein and nine-major-allergen claims remain outside the single Color Q&A URL (known Stage 2D gap; not expanded here).
+
+### e170
+
+**expanded_summary**
+- Old: Calcium carbonate is a white mineral used in some foods as a colouring, acidity regulator or firming agent. It's also a major component of chalk and limestone. Food-grade calcium carbonate comes from ground limestone or controlled precipitation and must meet food-additive purity specifications. It isn't simply untreated quarry material.
+- New: Yes, it's the mineral found in chalk and limestone. In foods, calcium carbonate (170) may provide white colour, regulate acidity or help firm a product. Food-grade calcium carbonate must meet purity specifications — it isn't simply untreated quarry material.
+- Claim check: Manufacturing route remains only in `source_preparation_copy` (avoids duplication). Purity / not untreated quarry retained.
+
+### e471
+
+**expanded_summary**
+- Old: Mono- and diglycerides are substances related to ordinary dietary fats…
+- New: Think of E471 as a mixing helper. It contains glycerol joined to one or two fatty acids, compared with three in typical dietary fats…
+- Claim check: Same chemistry / emulsifier / variable plant-or-animal source; no product-level source determination.
+
+**fact_3_copy**
+- Old: The number 471 cannot establish whether the fatty acids came from plants or animals. Product-specific sourcing information or trustworthy certification is needed if that distinction matters to you.
+- New: If plant or animal origin matters to you, look for product-specific sourcing information or trustworthy certification. The number 471 alone cannot confirm it.
+- Claim check: Same consumer action; EFSA evidence_copy unchanged.
+
+### e211
+
+**expanded_summary**
+- Old: Sodium benzoate (211) is the sodium salt of benzoic acid. It is often used to help preserve…
+- New: Sodium benzoate (211) helps preserve acidic foods and drinks… It is the sodium salt of benzoic acid, and its effectiveness depends on the product's acidity and formulation.
+- Claim check: Same preservative role / organism classes / acidity-formulation qualification.
+
+**evidence_copy**
+- Old: Single dense paragraph (total-diet study wording; ADI explanation before average exposures; “very small amounts”; “outcome depends”).
+- New: Two paragraphs (ADI block then benzene block). “Australian diet study” (same 2005 ATDS URL); average exposures before ADI-margin sentence; “small amounts”; “Formation depends…”.
+- Claim check: Same FSANZ ATDS + FDA benzene monitoring qualifications; ADI exceedance ≠ demonstrated harm retained; dual source URLs unchanged. RN `BodyText` is plain `<Text>` and renders `\n` without a new parser.
+
+## Factual / architectural integrity
+
+- Only the four pilot IDs changed; only permitted editorial fields.
+- Evidence enablement, counts, labels, URLs unchanged on all four.
+- Other 311 catalogue rows and all protected fields identical to absolute baseline `855f45b…` except the authorised pilot editorial deltas.
+- No architecture, detection, scoring, navigation, or sibling-asset changes.
+
+## Regression outcomes
+
+| Check | Result |
+|-------|--------|
+| `npx tsc --noEmit` | PASS |
+| `npx jest src/__tests__/unit/s25 --runInBand` | PASS (27) |
+| `bodyPillar.test.ts` | PASS (55) |
+| `bodyAdditiveScoring.test.ts` | PASS (14) |
+| `scanResultPresentation.test.ts` | PASS (3) |
+| `git diff --check` | PASS |
+| Programmatic field-diff vs `15f33c9` | Only listed editorial fields |
+
+## Device testing findings
+
+Recorded under `docs/uat/w5-ad01-stage3a-20261108/` (untracked). Genuine product routes only (no ManualProductEntry fixture). Android Expo Go / emulator.
+
+| Route | ID | Tile | Expanded / source / facts / evidence | Notes |
+|-------|----|------|--------------------------------------|-------|
+| Favourites `9300617304043` | e120 | Pilot tile retained | Stage 3A expanded + evidence (“unusual origin”, “US food labels”, code 120) | Readable; scroll required for full evidence |
+| Favourites `9300617304043` | e471 | Pilot tile retained (“E471 helps…”) | Stage 3A expanded (“mixing helper” / “glycerol joined”) + unchanged manufacturing + EFSA evidence + revised fact_3 | Confirmed after on-screen tap |
+| Indomie `0089686170924` | e211 | Pilot tile retained | Stage 3A expanded + dual-paragraph evidence (ADI then benzene) | Paragraph break visible; links intact |
+| Harvest `9351585000826` | e170 | Pilot tile retained | Stage 3A expanded (“Yes, it's the mineral…”) without repeating full manufacturing block; source_preparation retained | No evidence block (unchanged) |
+
+Visual QA: improved readability vs Stage 2B; no clipping of mid-sections; no awkward blank lines beyond intended e211 paragraph break; no missing governed sections; navigation/close/expand intact. iOS TestFlight not checked.
+
+## Rollback
+
+```text
+git checkout experiment/w5-ad01-copy-polish-20261108
+git reset --hard w5-ad01-pre-copy-polish-20261108
+```
+
+Or return to Stage 2B pilot branch tip `15f33c9` / tag `w5-ad01-pre-copy-polish-20261108`. Original pre-Additives recovery remains `w5-ad01-pre-additives-20261108` → `855f45b…`.
