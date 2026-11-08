@@ -59,6 +59,15 @@ describe('W5-UI-13 minimal Community Confirmation Bar', () => {
     expect(result).toContain('group="origins"');
     expect(result).toContain('group="packet_information"');
     expect(result.match(/CommunityAgreementBar/g)?.length ?? 0).toBeGreaterThanOrEqual(4);
+    // Ingredients confirmation is slotted before Processing Level, not under NOVA.
+    const mountAt = result.indexOf('<ResultIngredientsSection');
+    const slotPropAt = result.indexOf('confirmationSlot={', mountAt);
+    expect(slotPropAt).toBeGreaterThan(mountAt);
+    expect(result.indexOf('group="ingredients"', slotPropAt)).toBeGreaterThan(slotPropAt);
+    const sectionFnAt = result.indexOf('function ResultIngredientsSection');
+    expect(result.indexOf('{confirmationSlot}', sectionFnAt)).toBeLessThan(
+      result.indexOf('styles.novaContainer', sectionFnAt)
+    );
   });
 
   it('9. already-agreed selected state and server-confirmed count path preserved', () => {

@@ -239,6 +239,8 @@ function ResultIngredientsSection({
   onShareIngredients,
   onShareProcessing,
   onOpenProcessingLevel,
+  /** WP-09 ingredients confirmation — between Ingredients and Processing Level (not under NOVA). */
+  confirmationSlot,
 }: {
   barcode: string;
   ingredientsText?: string | null;
@@ -250,6 +252,7 @@ function ResultIngredientsSection({
   onShareIngredients: () => void;
   onShareProcessing: () => void;
   onOpenProcessingLevel: () => void;
+  confirmationSlot?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const { colors, darkMode } = useTheme();
@@ -316,6 +319,7 @@ function ResultIngredientsSection({
           </View>
         </View>
         <Text style={[styles.ingredientsText, { color: colors.text }]}>{filled}</Text>
+        {confirmationSlot}
         {novaGroup ? (
           <View style={[styles.novaContainer, { borderTopColor: colors.border }]}>
             <View style={styles.novaHeader}>
@@ -412,6 +416,7 @@ function ResultIngredientsSection({
         <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
           {t('result.ingredientsEmpty', 'No ingredients on file.')}
         </Text>
+        {confirmationSlot}
         {novaGroup ? (
           <View style={[styles.novaContainer, { borderTopColor: colors.border }]}>
             <View style={styles.novaHeader}>
@@ -2368,14 +2373,16 @@ function ResultScreenContent() {
                   onShareIngredients={() => handleShare('ingredients')}
                   onShareProcessing={() => handleShare('processing')}
                   onOpenProcessingLevel={() => setProcessingLevelModalVisible(true)}
-                />
-                <CommunityAgreementBar
-                  group="ingredients"
-                  product={product}
-                  snapshot={agreementSnapshot}
-                  surfaceEnabled={agreementSurfaceEnabled('ingredients')}
-                  onRevalidateSurface={() => revalidateAgreementSurface('ingredients')}
-                  onCorrect={() => openAgreementChange('ingredients')}
+                  confirmationSlot={
+                    <CommunityAgreementBar
+                      group="ingredients"
+                      product={product}
+                      snapshot={agreementSnapshot}
+                      surfaceEnabled={agreementSurfaceEnabled('ingredients')}
+                      onRevalidateSurface={() => revalidateAgreementSurface('ingredients')}
+                      onCorrect={() => openAgreementChange('ingredients')}
+                    />
+                  }
                 />
                 {informationMenu.some((row) => row.key === 'add-nutrition' && !row.formFirst) ? (
                   <TouchableOpacity

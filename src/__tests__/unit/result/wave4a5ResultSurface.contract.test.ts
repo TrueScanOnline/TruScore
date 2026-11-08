@@ -51,6 +51,17 @@ describe('Wave 4A.5 Result surface', () => {
     expect(nutritionAgreementAt).toBeGreaterThan(afterBurnAt);
     expect(ingredientsSectionAt).toBeGreaterThan(nutritionAgreementAt);
     expect(ingredientsAgreementAt).toBeGreaterThan(ingredientsSectionAt);
+    // Ingredients confirmation is passed into the section and rendered before Processing Level / NOVA.
+    const confirmationSlotPropAt = result.indexOf('confirmationSlot={', ingredientsSectionAt);
+    expect(confirmationSlotPropAt).toBeGreaterThan(ingredientsSectionAt);
+    expect(result.indexOf('group="ingredients"', confirmationSlotPropAt)).toBeGreaterThan(
+      confirmationSlotPropAt
+    );
+    const sectionFnAt = result.indexOf('function ResultIngredientsSection');
+    const slotRenderAt = result.indexOf('{confirmationSlot}', sectionFnAt);
+    const novaRenderAt = result.indexOf('styles.novaContainer', sectionFnAt);
+    expect(slotRenderAt).toBeGreaterThan(sectionFnAt);
+    expect(novaRenderAt).toBeGreaterThan(slotRenderAt);
   });
 
   it('keeps Ingredients when Feel the Burn is absent, and keeps empty and populated states', () => {
