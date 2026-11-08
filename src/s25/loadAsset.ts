@@ -22,6 +22,12 @@ export const S25_SOURCE_PROFILES: readonly S25SourceProfile[] =
 export const S25_SURFACE_COPY: S25SurfaceCopy = surfaceCopyJson as S25SurfaceCopy;
 export const S25_INGESTION_MANIFEST = ingestionManifestJson as {
   asset_version: string;
+  generated_at?: string;
+  source_format?: 'xlsx' | 'tsv_dir' | string;
+  source_path?: string;
+  source_sha256?: string;
+  generator?: string;
+  tsv_dir?: string;
   counts: {
     catalogue_rows: number;
     standard_rows: number;
@@ -29,6 +35,9 @@ export const S25_INGESTION_MANIFEST = ingestionManifestJson as {
     evidence_enabled: number;
     evidence_dual_source: number;
     unique_additive_ids: number;
+    classes?: number;
+    source_profiles?: number;
+    surface_copy_keys?: number;
   };
 };
 

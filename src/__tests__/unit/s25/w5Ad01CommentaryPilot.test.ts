@@ -169,13 +169,10 @@ describe('W5-AD-01 Stage 2 commentary pilot integrity', () => {
     }
   });
 
-  it('does not alter sibling S25 asset files on disk vs baseline', () => {
-    const siblings = [
-      'classes_25.json',
-      'source_profiles.json',
-      'surface_copy.json',
-      'ingestion_manifest.json',
-    ];
+  it('does not alter sibling S25 data assets on disk vs baseline', () => {
+    // Data sheets remain baseline-identical. ingestion_manifest.json may carry
+    // accurate v0.8 provenance after governed regeneration (asserted separately).
+    const siblings = ['classes_25.json', 'source_profiles.json', 'surface_copy.json'];
     const assetsDir = path.join(__dirname, '../../../s25/assets');
     const normalize = (text: string) => text.replace(/\r\n/g, '\n');
     for (const name of siblings) {
@@ -185,5 +182,34 @@ describe('W5-AD-01 Stage 2 commentary pilot integrity', () => {
       // Compare semantic JSON identity; tolerate CRLF/LF checkout differences only.
       expect(JSON.parse(normalize(working))).toEqual(JSON.parse(normalize(base)));
     }
+  });
+
+  it('records accurate v0.8 ingestion provenance without claiming v0.7', () => {
+    const assetsDir = path.join(__dirname, '../../../s25/assets');
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(assetsDir, 'ingestion_manifest.json'), 'utf8')
+    ) as {
+      asset_version: string;
+      source_format: string;
+      source_sha256?: string;
+      source_path?: string;
+      generator?: string;
+      counts: Record<string, number>;
+    };
+    expect(manifest.asset_version).toBe('v0.8-W5AD01-editorial');
+    expect(manifest.asset_version).not.toBe('v0.7');
+    expect(manifest.source_format).toBe('xlsx');
+    expect(manifest.source_sha256).toBe(
+      '88cec7188385ec364f67ddc5742f45555f649defac430a5e80f7479902214fa2'
+    );
+    expect(manifest.source_path).toContain(
+      'Rveel_S25_Broader_Additive_Catalogue_MVP_Implementation_Asset_W5AD01_editorial_v0_8.xlsx'
+    );
+    expect(manifest.generator).toMatch(/generate-s25-asset-runtime\.(ts|js)$/);
+    expect(manifest.counts.catalogue_rows).toBe(315);
+    expect(manifest.counts.standard_rows).toBe(309);
+    expect(manifest.counts.body6_rows).toBe(6);
+    expect(manifest.counts.evidence_enabled).toBe(33);
+    expect(manifest.counts.evidence_dual_source).toBe(7);
   });
 });
