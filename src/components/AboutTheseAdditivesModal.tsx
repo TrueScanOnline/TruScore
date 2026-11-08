@@ -36,6 +36,10 @@ import {
   type S25MergedDetection,
   type S25RenderListItem,
 } from '../s25';
+import {
+  applyDiscoveryPresentationOrder,
+  DISCOVERY_ORDER_INTRO_NOTE,
+} from '../s25/discoveryPresentationOrder';
 import { glyphForSourceProfile } from '../s25/glyphs';
 import { useTheme } from '../theme';
 import { resultEmeraldTone } from '../theme/resultPresentation';
@@ -298,7 +302,7 @@ export default function AboutTheseAdditivesModal({
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const items = useMemo(
-    () => buildRenderList(merged, ingredientsText),
+    () => applyDiscoveryPresentationOrder(buildRenderList(merged, ingredientsText)),
     [merged, ingredientsText]
   );
 
@@ -331,20 +335,38 @@ export default function AboutTheseAdditivesModal({
 
   const [expanded, setExpanded] = useState<Set<string>>(initialExpanded);
   const yByKey = useRef<Record<string, number>>({});
+  const pendingFocusKeyRef = useRef<string | null>(null);
+
+  const scrollToFocusKey = (focusKey: string, animated: boolean) => {
+    const y = yByKey.current[focusKey];
+    if (y == null) return false;
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, y - 8),
+      animated,
+    });
+    return true;
+  };
 
   useEffect(() => {
-    if (visible) {
-      setExpanded(new Set(initialExpanded));
-      requestAnimationFrame(() => {
-        const focusKey = [...initialExpanded][0];
-        if (focusKey && yByKey.current[focusKey] != null) {
-          scrollRef.current?.scrollTo({
-            y: Math.max(0, yByKey.current[focusKey]! - 8),
-            animated: true,
-          });
-        }
-      });
+    if (!visible) {
+      pendingFocusKeyRef.current = null;
+      return;
     }
+    setExpanded(new Set(initialExpanded));
+    const focusKey = [...initialExpanded][0] ?? null;
+    pendingFocusKeyRef.current = focusKey;
+    if (!focusKey) return;
+
+    // Layout may complete after the first frame once discovery order moves cards.
+    let frames = 0;
+    let raf = 0;
+    const tryScroll = () => {
+      frames += 1;
+      if (scrollToFocusKey(focusKey, true) || frames >= 12) return;
+      raf = requestAnimationFrame(tryScroll);
+    };
+    raf = requestAnimationFrame(tryScroll);
+    return () => cancelAnimationFrame(raf);
   }, [visible, initialExpanded]);
 
   if (!visible || merged.renderedAdditiveIds.length === 0) return null;
@@ -426,6 +448,7 @@ export default function AboutTheseAdditivesModal({
           </View>
 
           {intro ? <BodyText>{intro}</BodyText> : null}
+          <BodyText>{DISCOVERY_ORDER_INTRO_NOTE}</BodyText>
 
           {items.map((item) => {
             const key = entryFocusKey(item);
@@ -448,6 +471,10 @@ export default function AboutTheseAdditivesModal({
                 ]}
                 onLayout={(e: LayoutChangeEvent) => {
                   yByKey.current[key] = e.nativeEvent.layout.y;
+                  if (pendingFocusKeyRef.current === key) {
+                    scrollToFocusKey(key, true);
+                    pendingFocusKeyRef.current = null;
+                  }
                 }}
               >
                 <TouchableOpacity
