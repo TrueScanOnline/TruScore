@@ -46,6 +46,18 @@ function sequenceForItem(item: S25RenderListItem): number | null {
 }
 
 /**
+ * Show the modal-local discovery intro only when promotion actually moved
+ * something forward among multiple cards. Reuses the sorter's sequence rules
+ * (including colour-group min-member promotion).
+ */
+export function shouldShowDiscoveryOrderIntro(
+  items: readonly S25RenderListItem[]
+): boolean {
+  if (items.length < 2) return false;
+  return items.some((item) => sequenceForItem(item) != null);
+}
+
+/**
  * Returns a new array: ranked (Tier 1/2 sequenced) first, then the remaining
  * cards in their original relative order. Input is not mutated.
  */

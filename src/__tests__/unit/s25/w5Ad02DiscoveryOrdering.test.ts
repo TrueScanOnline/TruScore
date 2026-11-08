@@ -9,9 +9,11 @@ import {
   applyDiscoveryPresentationOrder,
   DISCOVERY_DISPLAY_SEQUENCE,
   DISCOVERY_ORDER_INTRO_NOTE,
+  shouldShowDiscoveryOrderIntro,
 } from '../../../s25/discoveryPresentationOrder';
 import {
   buildRenderList,
+  getSurfaceCopy,
   mergeRenderedAdditives,
   type S25RenderListItem,
 } from '../../../s25';
@@ -212,6 +214,7 @@ describe('W5-AD-02 discovery presentation order', () => {
       'utf8'
     );
     expect(modalSrc).toContain('DISCOVERY_ORDER_INTRO_NOTE');
+    expect(modalSrc).toContain('shouldShowDiscoveryOrderIntro');
     expect(modalSrc).toContain('applyDiscoveryPresentationOrder');
     expect(modalSrc).toMatch(/getSurfaceCopy\(\s*['"]surface_intro['"]\s*\)/);
     // Governed surface asset must remain the completeness caveat source.
@@ -223,6 +226,7 @@ describe('W5-AD-02 discovery presentation order', () => {
     ) as { surface_intro: string };
     expect(surface.surface_intro).toMatch(/may not be a complete list/i);
     expect(surface.surface_intro).not.toContain('safety ranking');
+    expect(getSurfaceCopy('surface_intro')).toBe(surface.surface_intro);
   });
 
   it('does not mutate the input array reference contents order in place', () => {
@@ -238,5 +242,99 @@ describe('W5-AD-02 discovery presentation order', () => {
     expect(idsOf(baseline)).toEqual(beforeIds);
     expect(ordered).not.toBe(baseline);
     expect(idsOf(ordered)).toEqual(['e471', 'e223']);
+  });
+
+  describe('discovery intro visibility (Stage 2C)', () => {
+    it('A: omits discovery sentence when zero additives are promoted', () => {
+      const ingredients = 'Gelling agent (440), colour (163), raising agent (500)';
+      const merged = mergeRenderedAdditives({
+        firedBodyLedgerIds: [],
+        ingredientsText: ingredients,
+        additivesTags: ['en:e440', 'en:e163', 'en:e500'],
+      });
+      const items = applyDiscoveryPresentationOrder(buildRenderList(merged, ingredients));
+      expect(items.length).toBeGreaterThanOrEqual(2);
+      expect(items.every((i) => DISCOVERY_DISPLAY_SEQUENCE[i.additiveId] == null)).toBe(true);
+      expect(shouldShowDiscoveryOrderIntro(items)).toBe(false);
+    });
+
+    it('B: omits discovery sentence for a single unranked additive', () => {
+      const ingredients = 'Gelling agent (440)';
+      const merged = mergeRenderedAdditives({
+        firedBodyLedgerIds: [],
+        ingredientsText: ingredients,
+        additivesTags: ['en:e440'],
+      });
+      const items = applyDiscoveryPresentationOrder(buildRenderList(merged, ingredients));
+      expect(items).toHaveLength(1);
+      expect(DISCOVERY_DISPLAY_SEQUENCE[items[0].additiveId]).toBeUndefined();
+      expect(shouldShowDiscoveryOrderIntro(items)).toBe(false);
+    });
+
+    it('C: omits discovery sentence for a single promoted additive', () => {
+      const ingredients = 'Emulsifier (471)';
+      const merged = mergeRenderedAdditives({
+        firedBodyLedgerIds: [],
+        ingredientsText: ingredients,
+        additivesTags: ['en:e471'],
+      });
+      const items = applyDiscoveryPresentationOrder(buildRenderList(merged, ingredients));
+      expect(items).toHaveLength(1);
+      expect(DISCOVERY_DISPLAY_SEQUENCE[items[0].additiveId]).toBe(2);
+      expect(shouldShowDiscoveryOrderIntro(items)).toBe(false);
+    });
+
+    it('D: shows discovery sentence when multiple cards include a promotion', () => {
+      const ingredients = 'Emulsifier (471), preservative (223), colour (160c)';
+      const merged = mergeRenderedAdditives({
+        firedBodyLedgerIds: [],
+        ingredientsText: ingredients,
+        additivesTags: ['en:e471', 'en:e223', 'en:e160c'],
+      });
+      const items = applyDiscoveryPresentationOrder(buildRenderList(merged, ingredients));
+      expect(items.length).toBeGreaterThanOrEqual(2);
+      expect(items.some((i) => DISCOVERY_DISPLAY_SEQUENCE[i.additiveId] != null)).toBe(true);
+      expect(shouldShowDiscoveryOrderIntro(items)).toBe(true);
+    });
+
+    it('E: governed surface_intro remains the completeness caveat', () => {
+      const intro = getSurfaceCopy('surface_intro');
+      expect(intro).toMatch(/may not be a complete list/i);
+      expect(intro).not.toContain('notable discoveries');
+      expect(intro).not.toContain('safety ranking');
+    });
+
+    it('F: discovery ordering remains unchanged for Favourites promotion set', () => {
+      const merged = mergeRenderedAdditives({
+        firedBodyLedgerIds: [],
+        ingredientsText: FAVOURITES_INGREDIENTS,
+        additivesTags: FAVOURITES_TAGS,
+      });
+      const baseline = buildRenderList(merged, FAVOURITES_INGREDIENTS);
+      const ordered = applyDiscoveryPresentationOrder(baseline);
+      expect(idsOf(ordered).slice(0, PROMOTED.length)).toEqual([...PROMOTED]);
+      expect(shouldShowDiscoveryOrderIntro(ordered)).toBe(true);
+    });
+
+    it('G: colour-group promotion is evaluated with the same sequence rules', () => {
+      const ingredients = 'Emulsifier (322), colour (100)';
+      const merged = mergeRenderedAdditives({
+        firedBodyLedgerIds: [],
+        ingredientsText: ingredients,
+        additivesTags: ['en:e322', 'en:e100'],
+      });
+      const baseline = buildRenderList(merged, ingredients);
+      const lecithin = baseline.find((i) => i.additiveId === 'e322');
+      const other = baseline.find((i) => i.additiveId === 'e100');
+      expect(lecithin && other).toBeTruthy();
+      const syntheticColourGroup: S25RenderListItem = {
+        ...other!,
+        colourGroupIds: ['e160c', 'e120', 'e150c'],
+      };
+      const items = applyDiscoveryPresentationOrder([lecithin!, syntheticColourGroup]);
+      expect(items).toHaveLength(2);
+      expect(shouldShowDiscoveryOrderIntro(items)).toBe(true);
+      expect(shouldShowDiscoveryOrderIntro([syntheticColourGroup])).toBe(false);
+    });
   });
 });

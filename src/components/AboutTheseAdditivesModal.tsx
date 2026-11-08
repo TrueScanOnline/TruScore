@@ -39,6 +39,7 @@ import {
 import {
   applyDiscoveryPresentationOrder,
   DISCOVERY_ORDER_INTRO_NOTE,
+  shouldShowDiscoveryOrderIntro,
 } from '../s25/discoveryPresentationOrder';
 import { glyphForSourceProfile } from '../s25/glyphs';
 import { useTheme } from '../theme';
@@ -448,7 +449,9 @@ export default function AboutTheseAdditivesModal({
           </View>
 
           {intro ? <BodyText>{intro}</BodyText> : null}
-          <BodyText>{DISCOVERY_ORDER_INTRO_NOTE}</BodyText>
+          {shouldShowDiscoveryOrderIntro(items) ? (
+            <BodyText>{DISCOVERY_ORDER_INTRO_NOTE}</BodyText>
+          ) : null}
 
           {items.map((item) => {
             const key = entryFocusKey(item);
