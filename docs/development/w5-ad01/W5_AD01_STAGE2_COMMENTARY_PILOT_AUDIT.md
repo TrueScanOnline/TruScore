@@ -101,7 +101,7 @@ Access date for all web-verified sources: **2026-11-08**.
 | Dietary-choice relevance (vegan/vegetarian/religious/personal) | Original fact_2; insect origin is animal-derived |
 | Residual insect protein / uncommon allergy / FDA naming requirement / not a universal major allergen | Original evidence_copy; FDA Color Additives Q&A / FDA Food Allergies page noting cochineal extract and carmine must be declared |
 
-FDA: https://www.fda.gov/food/color-additives-information-consumers/color-additives-questions-and-answers-consumers  
+FDA: https://www.fda.gov/food/color-additives-information-consumers/color-additives-questions-and-answers-consumers
 FDA allergies note: https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/food-allergies
 
 ### e170
@@ -112,8 +112,8 @@ FDA allergies note: https://www.fda.gov/food/nutrition-food-labeling-and-critica
 | Food roles (colour, acidity regulator, firming, calcium processing) | Original expanded_summary |
 | Food-grade purified mineral or precipitated — not raw quarry chalk | Original source_preparation_copy + EU 231/2012 / FDA identity (ground limestone or precipitation; food specs) |
 
-EU specs (E 170): https://www.legislation.gov.uk/eur/2012/231/annex/division/42/adopted  
-FDA 21 CFR 73.70: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-A/part-73/subpart-A/section-73.70  
+EU specs (E 170): https://www.legislation.gov.uk/eur/2012/231/annex/division/42/adopted
+FDA 21 CFR 73.70: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-A/part-73/subpart-A/section-73.70
 JECFA monograph: https://www.fao.org/fileadmin/user_upload/jecfa_additives/docs/Monograph1/Additive-075.pdf
 
 ### e471
@@ -134,7 +134,7 @@ EFSA: https://www.efsa.europa.eu/en/efsajournal/pub/5045 (DOI 10.2903/j.efsa.201
 | ATDS high-consumer child exceedance vs average below half ADI | Original evidence_copy; FSANZ Australian Total Diet Study archive link already in catalogue |
 | Benzoate + vitamin C → trace benzene with heat/light; FDA monitoring / reformulation / recipe dependence | Original evidence_copy; FDA benzene Q&A |
 
-FDA benzene Q&A: https://www.fda.gov/food/environmental-contaminants-food/questions-and-answers-occurrence-benzene-soft-drinks-and-other-beverages  
+FDA benzene Q&A: https://www.fda.gov/food/environmental-contaminants-food/questions-and-answers-occurrence-benzene-soft-drinks-and-other-beverages
 FSANZ ATDS hub (existing catalogue URL): https://www.foodstandards.gov.au/science-data/monitoring-safety/australian-total-diet-study
 
 ## Material claims not safely strengthened / unresolved uncertainty
@@ -180,5 +180,5 @@ Recovery tag `w5-ad01-pre-additives-20261108` remains the founder-approved check
 
 ## Verification artefacts
 
-Focused regression: `src/__tests__/unit/s25/w5Ad01CommentaryPilot.test.ts`  
+Focused regression: `src/__tests__/unit/s25/w5Ad01CommentaryPilot.test.ts`
 Programmatic baseline comparison uses `git show 855f45b:src/s25/assets/catalogue_315.json`.
