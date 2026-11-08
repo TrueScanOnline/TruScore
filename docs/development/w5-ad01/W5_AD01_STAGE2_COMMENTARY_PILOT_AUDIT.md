@@ -182,3 +182,122 @@ Recovery tag `w5-ad01-pre-additives-20261108` remains the founder-approved check
 
 Focused regression: `src/__tests__/unit/s25/w5Ad01CommentaryPilot.test.ts`
 Programmatic baseline comparison uses `git show 855f45b:src/s25/assets/catalogue_315.json`.
+
+---
+
+# Stage 2B — Founder-approved commentary refinement
+
+**Status:** Local experimental refinement only. Not authorised for production, UAT release, merge, or push.
+
+| Item | Value |
+|------|--------|
+| Stage 2B starting commit | `a98f71ce67f280277ff294b5529bb90e138a4bfa` |
+| Approved baseline (unchanged) | `855f45bca3873629811c30542a01ef7f7af617ff` |
+| Recovery tag | `w5-ad01-pre-additives-20261108` (still peels to approved baseline) |
+| Branch | `experiment/w5-ad01-additives-copy-20261108` |
+| Source-authority exception | Unchanged — interim `catalogue_315.json` only; original XLSX/TSV still unrecovered; `ingestion_manifest.json` untouched |
+
+Historical Stage 2 / Stage 2A records above are preserved. This section records the founder-approved Stage 2B replacements only.
+
+## Fields changed in Stage 2B
+
+| additive_id | Fields updated |
+|-------------|----------------|
+| e120 | `tile_summary`, `expanded_summary`, `evidence_copy` (`source_preparation_copy` retained) |
+| e170 | `tile_summary`, `expanded_summary`, `source_preparation_copy` |
+| e471 | `tile_summary`, `expanded_summary`, `fact_3_copy` (`evidence_copy` retained) |
+| e211 | `tile_summary`, `expanded_summary`, `fact_1_copy`, `fact_2_copy`, `evidence_copy` |
+
+## Exact replacements
+
+### e120
+
+**tile_summary**
+Previous (Stage 2): A vivid red-to-pink colour made from cochineal insects — the pigment behind carmine and carminic acid.
+Stage 2B: This red food colouring comes from insects — female cochineal insects, to be precise.
+Reason: Memorable insect-origin hook without over-claiming.
+
+**expanded_summary**
+Stage 2B: Cochineal colouring starts with dried female cochineal insects. Their red pigment, carminic acid, is extracted and purified. It can also be made into carmine, a related metal-complexed colour preparation. Depending on local labelling rules, you may see cochineal extract, carmine or colour (120) on an ingredient list.
+Reason: Accurate preparation path; labelling framed as jurisdiction-dependent (does not assert AU/NZ naming rules identical to US).
+
+**evidence_copy**
+Stage 2B: Commercial carmine can contain residual insect proteins, and allergic reactions have been reported. In the United States, carmine and cochineal extract must be named on food labels. Although they are not among the nine major food allergens defined under US law, people with a confirmed carmine allergy should check ingredient lists for these names. In countries where additives may be identified numerically, code 120 is another identifier to look for.
+Reason: Corrects US-specific naming vs major-allergen distinction; avoids implying AU/NZ “Contains” allergen rules for carmine.
+Support: FDA Color Additives Q&A (carmine/cochineal extract must be named); FDA FASTER Act / FALCPA (nine major allergens; carmine not included); access date 2026-11-08.
+
+**source_preparation_copy:** retained (consistent with revised expanded summary).
+Evidence metadata/URLs: unchanged.
+
+### e170
+
+**tile_summary**
+Stage 2B: That white mineral found in chalk and limestone? It's calcium carbonate — also used in foods for colour and texture.
+Reason: Engaging hook; chalk/limestone familiarity without equating food additive to untreated chalk.
+
+**expanded_summary**
+Stage 2B: Calcium carbonate is a white mineral used in some foods as a colouring, acidity regulator or firming agent. It's also a major component of chalk and limestone. Food-grade calcium carbonate comes from ground limestone or controlled precipitation and must meet food-additive purity specifications. It isn't simply untreated quarry material.
+Reason: Food-grade qualification; avoids claiming an extra purification step beyond specifications.
+
+**source_preparation_copy**
+Stage 2B: Food-grade calcium carbonate is produced from ground limestone or by controlled precipitation. Material sold for food use must meet the applicable purity specifications.
+Support: EU Reg. 231/2012 E 170 identity (ground limestone or precipitation); FDA 21 CFR 73.70; JECFA calcium carbonate monograph. Access date 2026-11-08.
+
+### e471
+
+**tile_summary**
+Stage 2B: E471 helps fat and water mix in foods. But its fatty acids may come from plants or animals — and the number alone won't tell you which.
+Reason: Function + variable-origin consumer relevance in one hook.
+
+**expanded_summary**
+Stage 2B: Mono- and diglycerides are substances related to ordinary dietary fats. They contain one or two fatty acids attached to glycerol, rather than the three found in typical dietary fats. Food manufacturers use them as emulsifiers to help control texture and mixing. Their fatty acids can come from vegetable oils or animal fats, so the ingredient code alone cannot establish the source in a particular product.
+Reason: Chemistry + emulsifier role + no product-level source inference.
+
+**fact_3_copy**
+Stage 2B: The number 471 cannot establish whether the fatty acids came from plants or animals. Product-specific sourcing information or trustworthy certification is needed if that distinction matters to you.
+Reason: Clear consumer action without inventing a product source.
+
+**evidence_copy:** retained from Stage 2 (EFSA 2017;5045: hydrolysis very likely; no numerical ADI needed; no genotox/cancer/repro concern at assessed uses; ~0.8–3.5% mean dietary-fat contribution). Does not claim universal safety under all circumstances.
+
+### e211
+
+**tile_summary**
+Stage 2B: This preservative helps acidic foods and drinks last longer by slowing the growth of yeasts, moulds and some bacteria.
+Reason: Function-first; organism classes match FDA beverage Q&A wording for benzoate salts.
+
+**expanded_summary**
+Stage 2B: Sodium benzoate (211) is the sodium salt of benzoic acid. It is often used to help preserve acidic foods and drinks, such as some soft drinks, fruit drinks and sauces, by slowing the growth of yeasts, moulds and certain bacteria. Its effectiveness depends on the product's acidity and formulation.
+Reason: Examples + formulation/acidity qualification.
+
+**fact_1_copy**
+Stage 2B: A sodium salt in the benzoate family, commonly used as a food preservative.
+
+**fact_2_copy**
+Stage 2B: Works especially well in acidic foods and drinks; the formulation also matters.
+Reason: Softens prior “most effective” absolute framing.
+
+**evidence_copy**
+Stage 2B: An Australian total-diet study published in 2005 estimated that some high-consuming young children could exceed the acceptable daily intake (ADI) for benzoates, with drinks a major contributor. The ADI is a conservative lifetime reference level with a substantial safety margin, not a threshold where harm has been demonstrated. Average estimated exposures were less than half the ADI. In some beverages containing benzoates and vitamin C, very small amounts of benzene can form, especially with heat or light. FDA monitoring found that most tested beverages contained no detectable benzene or less than 5 parts per billion; some higher findings led manufacturers to reformulate. The outcome depends on the beverage's formulation and storage, not on E211 alone.
+Reason: Corrects prior “safety limit” wording; keeps 2005 date explicit; ADI exceedance ≠ demonstrated harm; benzene conditional on formulation.
+Support: FSANZ additive-control ADI explanation (lifetime amount without adverse effect; uncertainty/safety factor); FDA benzene Q&A (benzoate + ascorbic acid; heat/light; almost all samples none or <5 ppb; reformulation). Existing catalogue URLs unchanged. Access date 2026-11-08.
+
+## Unresolved qualifications
+
+| Topic | Disposition |
+|-------|-------------|
+| AU/NZ carmine allergen “Contains” declaration | Not asserted; US naming rule scoped to United States; numeric code 120 noted separately |
+| Product-specific e471 plant/animal origin | Explicitly not established from code alone |
+| ADI exceedance as injury | Explicitly rejected in e211 evidence_copy |
+| Benzene in every benzoate product | Explicitly rejected |
+
+## Protected architecture / data confirmation
+
+Confirmed unchanged in Stage 2B:
+
+- Modal/card/navigation components
+- S25 detection/merge/scoring modules
+- `classes_25.json`, `source_profiles.json`, `surface_copy.json`, `ingestion_manifest.json`
+- Body-6 rows and `bodyAdditivesL3Content.ts`
+- Evidence enablement, counts, labels, URLs on all four pilot rows
+- All non-editorial fields on all catalogue rows
+- All 311 non-pilot catalogue records vs approved baseline
