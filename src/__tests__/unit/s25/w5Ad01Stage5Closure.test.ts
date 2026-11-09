@@ -35,16 +35,30 @@ const EDITORIAL = new Set([
   'fact_3_copy',
 ]);
 
-const RUNTIME_MAP_FROZEN = {
+/** Authorised W5-AD-02 CORE-22 map (local implementation). */
+const RUNTIME_MAP_AUTHORISED_CORE22 = {
   e120: 1,
-  e471: 2,
-  e476: 3,
-  e150c: 4,
-  e330: 5,
-  e322: 6,
-  e422: 7,
-  e575: 8,
-  e223: 9,
+  e905b: 2,
+  e904: 3,
+  e901: 4,
+  e542: 5,
+  e1105: 6,
+  e1101: 7,
+  e957: 8,
+  e476: 9,
+  e445: 10,
+  e1522: 11,
+  e355: 12,
+  e943a: 13,
+  e944: 14,
+  e955: 15,
+  e123: 16,
+  e141: 17,
+  e415: 18,
+  e150c: 19,
+  e330: 20,
+  e334: 21,
+  e300: 22,
 } as const;
 
 function sha256File(p: string): string {
@@ -120,8 +134,8 @@ describe('W5-AD-01 Stage 5 closure (v0.11 lineage preserved)', () => {
     expect(sha256File(V11_XLSX)).toBe(V11_SHA);
   });
 
-  it('does not alter W5-AD-02 runtime discovery map', () => {
-    expect(DISCOVERY_DISPLAY_SEQUENCE).toEqual(RUNTIME_MAP_FROZEN);
+  it('pins the authorised W5-AD-02 CORE-22 discovery map', () => {
+    expect(DISCOVERY_DISPLAY_SEQUENCE).toEqual(RUNTIME_MAP_AUTHORISED_CORE22);
   });
 
   it('records Stage 5 SRR dispositions and AD-02 Favourites verified IDs', () => {

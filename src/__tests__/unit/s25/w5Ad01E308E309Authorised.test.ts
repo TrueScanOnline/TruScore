@@ -28,16 +28,30 @@ const E308_SP =
 const E309_SP =
   'The Australia New Zealand Food Standards Code lists additive 309 as synthetic delta-tocopherol, distinct from mixed tocopherols concentrate (307b). The additive number does not establish a particular supplier\'s starting materials or exact manufacturing process.';
 
-const RUNTIME_MAP_FROZEN = {
+/** Authorised W5-AD-02 CORE-22 map (local implementation). */
+const RUNTIME_MAP_AUTHORISED_CORE22 = {
   e120: 1,
-  e471: 2,
-  e476: 3,
-  e150c: 4,
-  e330: 5,
-  e322: 6,
-  e422: 7,
-  e575: 8,
-  e223: 9,
+  e905b: 2,
+  e904: 3,
+  e901: 4,
+  e542: 5,
+  e1105: 6,
+  e1101: 7,
+  e957: 8,
+  e476: 9,
+  e445: 10,
+  e1522: 11,
+  e355: 12,
+  e943a: 13,
+  e944: 14,
+  e955: 15,
+  e123: 16,
+  e141: 17,
+  e415: 18,
+  e150c: 19,
+  e330: 20,
+  e334: 21,
+  e300: 22,
 } as const;
 
 function sha256File(p: string): string {
@@ -125,7 +139,8 @@ describe('W5-AD-01 E308/E309 authorised source correction (v0.12)', () => {
     expect(generated).toEqual(S25_CATALOGUE);
   });
 
-  it('does not alter W5-AD-02 runtime discovery map', () => {
-    expect(DISCOVERY_DISPLAY_SEQUENCE).toEqual(RUNTIME_MAP_FROZEN);
+  it('pins the authorised W5-AD-02 CORE-22 discovery map', () => {
+    expect(DISCOVERY_DISPLAY_SEQUENCE).toEqual(RUNTIME_MAP_AUTHORISED_CORE22);
   });
 });
+

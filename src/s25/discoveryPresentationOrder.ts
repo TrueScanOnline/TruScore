@@ -16,19 +16,33 @@ export const DISCOVERY_ORDER_INTRO_NOTE =
   'Some notable discoveries appear first. This order is not a safety ranking.';
 
 /**
- * Favourites UAT hypothesis — Tier 1 / Tier 2 promotion only.
+ * Approved CORE-22 discovery promotion map (W5-AD-02).
  * Lower number = earlier in the modal. Unlisted ids stay unranked.
+ * Presentation-only — not a health, toxicity, or safety ranking.
  */
 export const DISCOVERY_DISPLAY_SEQUENCE: Readonly<Record<string, number>> = {
   e120: 1,
-  e471: 2,
-  e476: 3,
-  e150c: 4,
-  e330: 5,
-  e322: 6,
-  e422: 7,
-  e575: 8,
-  e223: 9,
+  e905b: 2,
+  e904: 3,
+  e901: 4,
+  e542: 5,
+  e1105: 6,
+  e1101: 7,
+  e957: 8,
+  e476: 9,
+  e445: 10,
+  e1522: 11,
+  e355: 12,
+  e943a: 13,
+  e944: 14,
+  e955: 15,
+  e123: 16,
+  e141: 17,
+  e415: 18,
+  e150c: 19,
+  e330: 20,
+  e334: 21,
+  e300: 22,
 };
 
 function sequenceForItem(item: S25RenderListItem): number | null {
