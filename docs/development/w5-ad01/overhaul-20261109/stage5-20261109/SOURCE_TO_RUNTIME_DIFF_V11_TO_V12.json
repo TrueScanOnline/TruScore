@@ -1,0 +1,57 @@
+{
+  "from": "v0.11",
+  "to": "v0.12",
+  "changed": [
+    {
+      "additive_id": "e308",
+      "fields": {
+        "source_preparation_profile": {
+          "before": "PLANT_EXTRACT",
+          "after": "CHEMICAL_SYNTHESIS"
+        },
+        "source_preparation_copy": {
+          "before": "Commercial food-grade material is commonly isolated and purified from vegetable-oil fractions rich in tocopherols.",
+          "after": "The Australia New Zealand Food Standards Code lists additive 308 as synthetic gamma-tocopherol, distinct from mixed tocopherols concentrate (307b). The additive number does not establish a particular supplier's starting materials or exact manufacturing process."
+        }
+      }
+    },
+    {
+      "additive_id": "e309",
+      "fields": {
+        "tile_summary": {
+          "before": "Delta-tocopherol is one of the naturally occurring tocopherols in the vitamin E family. ",
+          "after": "Synthetic delta-tocopherol is a manufactured form of one of the tocopherols in the vitamin E family."
+        },
+        "expanded_summary": {
+          "before": "Delta-tocopherol is one of the naturally occurring tocopherols in the vitamin E family. It is fat-soluble and can help slow oxidation.",
+          "after": "Synthetic delta-tocopherol is a manufactured form of one of the tocopherols in the vitamin E family. In the Australia New Zealand Food Standards Code it is listed as synthetic delta-tocopherol (309), distinct from mixed tocopherols concentrate (307b). It is fat-soluble and is used as an antioxidant in fat-containing foods."
+        },
+        "source_preparation_profile": {
+          "before": "PLANT_EXTRACT",
+          "after": "CHEMICAL_SYNTHESIS"
+        },
+        "source_preparation_copy": {
+          "before": "Commercial food-grade material is commonly isolated and purified from vegetable-oil fractions rich in tocopherols.",
+          "after": "The Australia New Zealand Food Standards Code lists additive 309 as synthetic delta-tocopherol, distinct from mixed tocopherols concentrate (307b). The additive number does not establish a particular supplier's starting materials or exact manufacturing process."
+        },
+        "fact_1_label": {
+          "before": "Natural occurrence",
+          "after": "Listing"
+        },
+        "fact_1_copy": {
+          "before": "Found naturally in vegetable oils and other plant foods.",
+          "after": "FSANZ Schedule 15 lists 309 as synthetic delta-tocopherol, separate from mixed tocopherols concentrate (307b)."
+        },
+        "fact_3_label": {
+          "before": "",
+          "after": "Decode note"
+        },
+        "fact_3_copy": {
+          "before": "",
+          "after": "The additive number alone does not mean the ingredient was extracted as a mixed natural tocopherol concentrate."
+        }
+      }
+    }
+  ],
+  "unauthorised": []
+}

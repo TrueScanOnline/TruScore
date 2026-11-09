@@ -1,0 +1,2278 @@
+{
+  "cohort": 5,
+  "count": 51,
+  "entries": [
+    {
+      "additive_id": "e120",
+      "source_preparation_profile": "ANIMAL_DERIVED",
+      "notable_source_detail": "Made from dried female cochineal insects; carmine is the metal-complex/colour-lake form of the same pigment.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Existing tile leads with the insect origin; expanded names carminic acid, carmine and label names; fact_2 carries vegan/vegetarian/religious relevance without health framing.",
+      "candidate1": {
+        "tile_summary": "This red food colouring comes from insects — female cochineal insects, to be precise.",
+        "expanded_summary": "This red colouring has an unusual origin: female cochineal insects. Their pigment, carminic acid, is extracted from the dried insects and purified. It can also be prepared as carmine. Depending on local labelling rules, ingredient lists may say cochineal extract, carmine or colour (120).",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged \"to be precise\" (slightly chatty), lead fact, and any health-risk drift: allergy content sits only in evidence_copy, not in editorial fields. No lost facts in any rewrite I tried; no genuine improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 5,
+        "wow": 5,
+        "tile": 5,
+        "expanded": 5,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "This red food colouring comes from insects — female cochineal insects, to be precise.",
+        "expanded_summary": "This red colouring has an unusual origin: female cochineal insects. Their pigment, carminic acid, is extracted from the dried insects and purified. It can also be prepared as carmine. Depending on local labelling rules, ingredient lists may say cochineal extract, carmine or colour (120).",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T1_UNUSUAL_ORIGIN",
+      "discovery_rationale": "Insect-derived red colour is the clearest verified unusual-origin reveal in the cohort and is already led by the tile.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original already leads with the verified insect origin, explains cochineal vs carmine vs label names, and keeps choice relevance neutral. No material gain from rewording."
+    },
+    {
+      "additive_id": "e133",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Manufactured by chemical synthesis and purified to a defined mixture of colouring substances; often blended with other colours.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "No verified WOW beyond synthetic origin and blending role. Petroleum origin is NOT supported by the entry (CHEMICAL_SYNTHESIS is not PETROLEUM_REFINED) so it is not claimed.",
+      "candidate1": {
+        "tile_summary": "Brilliant Blue FCF is a synthetic blue colour used for bright, stable blue shades and for colour blending.",
+        "expanded_summary": "Brilliant Blue FCF is a synthetic blue colour used for bright, stable blue shades and for colour blending.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Checked whether expanded (identical to tile) could carry more; any addition would duplicate fact_1 or source_preparation_copy or infer product-specific colour contribution. No genuine improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 2,
+        "tile": 3,
+        "expanded": 2,
+        "tone": 5,
+        "concision": 5
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Brilliant Blue FCF is a synthetic blue colour used for bright, stable blue shades and for colour blending.",
+        "expanded_summary": "Brilliant Blue FCF is a synthetic blue colour used for bright, stable blue shades and for colour blending.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T5_FUNCTIONAL_BASELINE",
+      "discovery_rationale": "Accurate functional colour entry with low discovery value.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate, neutral and concise. Tile equals expanded (minor weakness) but extra text would only duplicate verified fields."
+    },
+    {
+      "additive_id": "e150b",
+      "source_preparation_profile": "CONTROLLED_PROCESS",
+      "notable_source_detail": "Caustic sulphite caramel: made by heating carbohydrates with sulphite compounds but no ammonium compounds; a colour ingredient, not kitchen caramel.",
+      "source_support": [
+        "expanded_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Candidate 1 foregrounds the sulphite-process route in the tile as the discovery.",
+      "candidate1": {
+        "tile_summary": "Caramel II is a brown colouring made by heating sugars with sulphite compounds, not the kitchen caramel made by browning sugar.",
+        "expanded_summary": "Caramel II is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates. It is a colour ingredient, not simply the caramel made when sugar is browned in a kitchen.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenge: leading the tile with sulphite risks implying sulphite is present in the finished colour or relevant to sulphite sensitivity; no verified evidence supports that. Real defect is fact_1 jargon (\"Caustic sulphite caramel\"). C2 keeps the tile (trailing space trimmed) and rewrites fact_1 to explain the process in plain words. source_preparation_copy has awkward grammar but is not edited per rubric.",
+      "candidate2": {
+        "tile_summary": "Caramel II is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates.",
+        "expanded_summary": "Caramel II is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates. It is a colour ingredient, not simply the caramel made when sugar is browned in a kitchen.",
+        "fact_changes": {
+          "fact_1_label": "Process type",
+          "fact_1_copy": "Made by heating carbohydrates with sulphite compounds but no ammonium compounds, the type called caustic sulphite caramel."
+        }
+      },
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate2",
+      "final": {
+        "tile_summary": "Caramel II is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates.",
+        "expanded_summary": "Caramel II is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates. It is a colour ingredient, not simply the caramel made when sugar is browned in a kitchen.",
+        "fact_1_label": "Process type",
+        "fact_1_copy": "Made by heating carbohydrates with sulphite compounds but no ammonium compounds, the type called caustic sulphite caramel.",
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T2_ROUTE_REVEAL",
+      "discovery_rationale": "Route reveal: the colour is a manufactured process product, not kitchen caramel, and class II uses sulphite compounds in its process.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C2 explains the jargon fact in plain words and avoids implying sulphite in the final food. C1 rejected for sulphite-implication risk."
+    },
+    {
+      "additive_id": "e160a",
+      "source_preparation_profile": "VARIABLE",
+      "notable_source_detail": "Carotene preparations may be extracted from plant material or algae, or manufactured as defined carotene compounds; beta-carotene gives carrots their orange colour.",
+      "source_support": [
+        "fact_1",
+        "source_preparation_copy",
+        "expanded_summary"
+      ],
+      "pass1_notes": "Candidate 1 leads with the carrot connection as a simple hook.",
+      "candidate1": {
+        "tile_summary": "Carotene is the orange pigment of carrots, extracted from plants for use as a food colour.",
+        "expanded_summary": "Carotenes are yellow-orange pigments from the carotenoid family. They occur naturally in many plants; commercial food colours can be extracted from plant sources or produced as defined carotene preparations.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenge: VARIABLE profile; C1 states a single plant extraction route and would invent a product-specific origin. Source_preparation_copy lists plant material, algae or manufacture. C2 keeps the carrot hook but surfaces the variable route and states in expanded that the code alone does not identify one source.",
+      "candidate2": {
+        "tile_summary": "Carotenes are yellow-orange pigments, like those in carrots, that food colours can take from plants or algae or make as defined compounds.",
+        "expanded_summary": "Carotenes are yellow-orange pigments from the carotenoid family and occur naturally in many plants. For food colouring, carotene preparations may be extracted from plant material or algae, or manufactured as defined carotene compounds, so the additive code alone does not identify one source or route.",
+        "fact_changes": {}
+      },
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate2",
+      "final": {
+        "tile_summary": "Carotenes are yellow-orange pigments, like those in carrots, that food colours can take from plants or algae or make as defined compounds.",
+        "expanded_summary": "Carotenes are yellow-orange pigments from the carotenoid family and occur naturally in many plants. For food colouring, carotene preparations may be extracted from plant material or algae, or manufactured as defined carotene compounds, so the additive code alone does not identify one source or route.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T2_ROUTE_REVEAL",
+      "discovery_rationale": "Variable-route reveal (plants, algae or manufactured) with a familiar carrot anchor; stays fail-closed on product-specific origin.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C2 adds the verified route variability and an explicit no-single-origin statement. C1 rejected as a single-route overclaim."
+    },
+    {
+      "additive_id": "e161a",
+      "source_preparation_profile": "VARIABLE",
+      "notable_source_detail": "Yellow xanthophyll carotenoid in the same natural pigment family as beta-carotene and lutein; source and route depend on the approved specification.",
+      "source_support": [
+        "expanded_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original tile is jargon-heavy (\"carotenoid-family pigment\"); simpler family anchor through beta-carotene and lutein, already named in expanded.",
+      "candidate1": {
+        "tile_summary": "Flavoxanthin is a yellow pigment from the same natural family as beta-carotene and lutein.",
+        "expanded_summary": "Flavoxanthin is a carotenoid-family pigment associated with yellow colouring, in the same broad natural pigment family as beta-carotene and lutein. Which natural source or manufacturing route a commercial preparation uses depends on its approved specification, so the additive number alone does not show it.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for invented origin: C1 states no specific source and only restates the VARIABLE point from source_preparation_copy. No lost facts. No further candidate.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Flavoxanthin is a yellow pigment from the same natural family as beta-carotene and lutein.",
+        "expanded_summary": "Flavoxanthin is a carotenoid-family pigment associated with yellow colouring, in the same broad natural pigment family as beta-carotene and lutein. Which natural source or manufacturing route a commercial preparation uses depends on its approved specification, so the additive number alone does not show it.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Plain-language family anchor plus explicit variable-route note; modest discovery value.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 replaces jargon with a familiar anchor and states route variability without inventing an origin."
+    },
+    {
+      "additive_id": "e162",
+      "source_preparation_profile": "PLANT_EXTRACT",
+      "notable_source_detail": "Red beetroot extract based on betalain pigments; betanin is the main red-violet pigment.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original tile uses \"betalain pigments\" jargon; plain version leads with beetroot and betanin.",
+      "candidate1": {
+        "tile_summary": "Beet red is a red to purple-red colour extracted from beetroot; its main pigment is betanin.",
+        "expanded_summary": "Beet red is a colour preparation based on betalain pigments from red beet. Betanin is the principal red-violet pigment.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for overclaim (\"natural\" avoided), lost facts (betalain family stays in expanded) and invented detail. None found.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Beet red is a red to purple-red colour extracted from beetroot; its main pigment is betanin.",
+        "expanded_summary": "Beet red is a colour preparation based on betalain pigments from red beet. Betanin is the principal red-violet pigment.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Familiar-vegetable source anchor in plain language.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 is clearer and entirely supported; expanded retained."
+    },
+    {
+      "additive_id": "e174",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "notable_source_detail": "The metal silver itself, processed into very thin leaf, flakes or powder as a decorative colour where permitted.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original tile (\"Elemental silver\") is jargon and expanded is identical to tile. Surprise: the additive is the metal itself.",
+      "candidate1": {
+        "tile_summary": "This is silver itself, the metal, used in very thin leaf or flakes as a decorative metallic colour where permitted.",
+        "expanded_summary": "This additive is silver itself, the metal. Refined silver is processed into very thin leaf, flakes or powder and used mainly to give foods a decorative metallic silver appearance, where permitted.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for health-risk implication (none added), invented usage claims (none) and lost facts (decorative role and elemental identity retained).",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "This is silver itself, the metal, used in very thin leaf or flakes as a decorative metallic colour where permitted.",
+        "expanded_summary": "This additive is silver itself, the metal. Refined silver is processed into very thin leaf, flakes or powder and used mainly to give foods a decorative metallic silver appearance, where permitted.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Surprising but verified: the additive is the metal, not a pigment compound.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 swaps jargon for plain words and gives expanded real content from verified fields."
+    },
+    {
+      "additive_id": "e203",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Calcium salt of sorbic acid made by reacting sorbic acid with a calcium source; used to inhibit moulds and yeasts.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Accurate, plain functional description. No in-entry verified surprise; I did not add outside lore about sorbic acid origin.",
+      "candidate1": {
+        "tile_summary": "Calcium sorbate is the calcium salt of sorbic acid.",
+        "expanded_summary": "Calcium sorbate is the calcium salt of sorbic acid. It is used in food mainly for preservation rather than for flavour.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged jargon (\"calcium salt of sorbic acid\") but fact_1 and expanded explain family and purpose clearly. No genuine improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 2,
+        "tile": 3,
+        "expanded": 3,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Calcium sorbate is the calcium salt of sorbic acid.",
+        "expanded_summary": "Calcium sorbate is the calcium salt of sorbic acid. It is used in food mainly for preservation rather than for flavour.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T5_FUNCTIONAL_BASELINE",
+      "discovery_rationale": "Preservative-family baseline; accurate and low discovery.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original is accurate and clear; no material gain."
+    },
+    {
+      "additive_id": "e218",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Methyl ester of p-hydroxybenzoic acid made by esterifying with methanol; paraben-family antimicrobial preservative.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original tile is a chemical name string; plain version leads with role and family.",
+      "candidate1": {
+        "tile_summary": "Methylparaben is a paraben-family preservative, used where permitted to limit microbial growth.",
+        "expanded_summary": "Methylparaben is the methyl ester of p-hydroxybenzoic acid. It is used in food mainly for antimicrobial preservation rather than for flavour.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for health implication: none added, and paraben controversy is not referenced. \"Mould\" avoided because only antimicrobial is verified. No further candidate.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 2,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Methylparaben is a paraben-family preservative, used where permitted to limit microbial growth.",
+        "expanded_summary": "Methylparaben is the methyl ester of p-hydroxybenzoic acid. It is used in food mainly for antimicrobial preservation rather than for flavour.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T5_FUNCTIONAL_BASELINE",
+      "discovery_rationale": "Functional baseline; clarity gain only.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 removes chemical-name-only tile and leads with verified role."
+    },
+    {
+      "additive_id": "e225",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "notable_source_detail": "Potassium salt in the sulphite family, chemically related to sulphur dioxide; made by neutralising sulphur dioxide with a potassium alkali.",
+      "source_support": [
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Candidate 1 reaches for the T3 sulphite-sensitivity cue as the lead.",
+      "candidate1": {
+        "tile_summary": "Potassium sulphite is a sulphite preservative, relevant to people who avoid sulphites.",
+        "expanded_summary": "Potassium sulphite is a potassium salt in the sulphite preservative family. Sulphites matter to people who react to them.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenge: no verified source for sulphite sensitivity is attached to this entry (evidence_enabled=false), so C1 asserts an unverified consumer claim and drifts toward health framing. Original tile/expanded are also circular (\"potassium sulphite salt in the sulphite family\"). C2 removes circularity using only verified text.",
+      "candidate2": {
+        "tile_summary": "Potassium sulphite is a salt in the sulphite family, used for preservation and antioxidant effects.",
+        "expanded_summary": "Potassium sulphite is a potassium salt in the sulphite preservative family, chemically related to sulphur dioxide and other sulphites. It is used for preservation and as an antioxidant.",
+        "fact_changes": {}
+      },
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate2",
+      "final": {
+        "tile_summary": "Potassium sulphite is a salt in the sulphite family, used for preservation and antioxidant effects.",
+        "expanded_summary": "Potassium sulphite is a potassium salt in the sulphite preservative family, chemically related to sulphur dioxide and other sulphites. It is used for preservation and as an antioxidant.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "SOURCE REVIEW REQUIRED",
+      "discovery_priority": "T3_CHOICE_RELEVANCE",
+      "discovery_rationale": "Sulphite-family cue is a likely T3 choice-relevance opportunity, but it cannot be surfaced without a verified source.",
+      "unresolved_factual_issue": "Sulphite sensitivity/avoidance cue withheld: no verified source in entry (evidence_enabled=false). Needs a sourced evidence entry before any sensitivity wording is added.",
+      "selection_reason": "C2 removes circular wording and is fully source-supported. C1 rejected as unverified consumer-relevance claim. Safe wording applied; sensitivity cue pending source review."
+    },
+    {
+      "additive_id": "e251",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "notable_source_detail": "Inorganic nitrate salt used in meat curing; nitrate can be converted to nitrite under some curing conditions.",
+      "source_support": [
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original tile (\"inorganic nitrate salt\") is classification only; the use-led version leads with curing.",
+      "candidate1": {
+        "tile_summary": "Sodium nitrate is a nitrate salt used mainly in meat curing, where nitrate-nitrite chemistry helps control microbes and develop cured colour and flavour.",
+        "expanded_summary": "Sodium nitrate is an inorganic nitrate salt. In foods it is associated mainly with curing and preservation, particularly in meat processing.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for health-risk implication (none; nitrosamine or cancer content absent), overclaim (uses \"mainly\", matches expanded) and lost facts (fact_2 retained).",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Sodium nitrate is a nitrate salt used mainly in meat curing, where nitrate-nitrite chemistry helps control microbes and develop cured colour and flavour.",
+        "expanded_summary": "Sodium nitrate is an inorganic nitrate salt. In foods it is associated mainly with curing and preservation, particularly in meat processing.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Use-led hook explaining where the additive appears.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 gives the verified purpose in the tile; expanded and facts unchanged."
+    },
+    {
+      "additive_id": "e264",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Ammonium salt of acetic acid, the acid found in vinegar.",
+      "source_support": [
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original expanded sentence (\"provides acetate chemistry without adding acetic acid in exactly the same form\") is confusing; fact_1 vinegar link is the best hook.",
+      "candidate1": {
+        "tile_summary": "Ammonium acetate is a salt of acetic acid, the acid found in vinegar.",
+        "expanded_summary": "Ammonium acetate is the ammonium salt of acetic acid, the acid found in vinegar. As a salt, it supplies acetate in a form that can help regulate acidity, preserve or influence flavour, depending on the food.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for contradicting source_preparation_copy (which notes diacetate forms contain associated acetic acid): C1 avoids saying it contains no acetic acid. No health claim, no lost facts.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Ammonium acetate is a salt of acetic acid, the acid found in vinegar.",
+        "expanded_summary": "Ammonium acetate is the ammonium salt of acetic acid, the acid found in vinegar. As a salt, it supplies acetate in a form that can help regulate acidity, preserve or influence flavour, depending on the food.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Vinegar-acid family anchor.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 removes a confusing sentence and leads with the vinegar anchor."
+    },
+    {
+      "additive_id": "e290",
+      "source_preparation_profile": "FOOD_GAS",
+      "notable_source_detail": "Same gas produced by yeast fermentation and exhaled in breath; food grade is recovered and purified from fermentation, ammonia manufacture or other gas streams.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile already leads with the familiar-identity reveal (yeast, breath). Route breadth (fermentation / ammonia manufacture) is already surfaced in source_preparation_copy.",
+      "candidate1": {
+        "tile_summary": "Carbon dioxide is the same gas produced by yeast fermentation and exhaled in breath.",
+        "expanded_summary": "Carbon dioxide is the same gas produced by yeast fermentation and exhaled in breath. In food it is used for carbonation, packaging atmospheres and processing.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged whether to repeat route breadth in expanded; it would duplicate source_preparation_copy. No overclaim or health implication found.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 5,
+        "wow": 3,
+        "tile": 5,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Carbon dioxide is the same gas produced by yeast fermentation and exhaled in breath.",
+        "expanded_summary": "Carbon dioxide is the same gas produced by yeast fermentation and exhaled in breath. In food it is used for carbonation, packaging atmospheres and processing.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Strong everyday-recognition educational hook; route reveal is carried by source_preparation_copy.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original is already excellent and verified."
+    },
+    {
+      "additive_id": "e303",
+      "source_preparation_profile": "FERMENTATION",
+      "notable_source_detail": "Salt of ascorbic acid (vitamin C); the ascorbic acid is usually produced from glucose by industrial fermentation/chemical processing.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile leads with the vitamin C connection. Fermentation-plus-chemical route sits in source_preparation_copy.",
+      "candidate1": {
+        "tile_summary": "Potassium ascorbate is the potassium salt of ascorbic acid — vitamin C.",
+        "expanded_summary": "Potassium ascorbate is the potassium salt of ascorbic acid — vitamin C. It provides ascorbate antioxidant chemistry in a salt form.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged \"ascorbate antioxidant chemistry\" (mildly jargony) but alternatives risked implying vitamin-C nutrition value or a clean fermentation-only route. No genuine improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 3,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Potassium ascorbate is the potassium salt of ascorbic acid — vitamin C.",
+        "expanded_summary": "Potassium ascorbate is the potassium salt of ascorbic acid — vitamin C. It provides ascorbate antioxidant chemistry in a salt form.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T2_ROUTE_REVEAL",
+      "discovery_rationale": "Mild route reveal (glucose via fermentation to a vitamin C salt) already carried by source_preparation_copy.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate and appropriately restrained; no material gain."
+    },
+    {
+      "additive_id": "e309",
+      "source_preparation_profile": "PLANT_EXTRACT",
+      "notable_source_detail": "Tocopherol of the vitamin E family, commonly isolated from vegetable-oil fractions; fat-soluble antioxidant.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile leads with vitamin E family connection; plant-oil source in fact_1/source_preparation_copy.",
+      "candidate1": {
+        "tile_summary": "Delta-tocopherol is one of the naturally occurring tocopherols in the vitamin E family.",
+        "expanded_summary": "Delta-tocopherol is one of the naturally occurring tocopherols in the vitamin E family. It is fat-soluble and can help slow oxidation.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged \"naturally occurring\" in tile against isolation/purification in source_preparation_copy: statement is about the tocopherol class and is not an overclaim. No genuine improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 5,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 3,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Delta-tocopherol is one of the naturally occurring tocopherols in the vitamin E family.",
+        "expanded_summary": "Delta-tocopherol is one of the naturally occurring tocopherols in the vitamin E family. It is fat-soluble and can help slow oxidation.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Solid educational plant-source and vitamin-family story.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate and clear."
+    },
+    {
+      "additive_id": "e319",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Synthetic phenolic antioxidant made by controlled organic synthesis; protects fats and oils from oxidation.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Functional baseline. Exposure-model discussion is evidence_copy only (not edited). No petroleum claim: not supported in entry.",
+      "candidate1": {
+        "tile_summary": "tert-Butylhydroquinone (TBHQ) is a synthetic phenolic antioxidant particularly effective in fats and oils.",
+        "expanded_summary": "tert-Butylhydroquinone (TBHQ) is a synthetic phenolic antioxidant particularly effective in fats and oils. It is used in small amounts to slow oxidative rancidity and protect flavour or shelf life in fat-containing foods.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged \"phenolic\" jargon, but it is secondary to the clear role statement. Any added framing risks health implication from synthesis; rejected.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 2,
+        "tile": 3,
+        "expanded": 3,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "tert-Butylhydroquinone (TBHQ) is a synthetic phenolic antioxidant particularly effective in fats and oils.",
+        "expanded_summary": "tert-Butylhydroquinone (TBHQ) is a synthetic phenolic antioxidant particularly effective in fats and oils. It is used in small amounts to slow oxidative rancidity and protect flavour or shelf life in fat-containing foods.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T5_FUNCTIONAL_BASELINE",
+      "discovery_rationale": "Accurate functional antioxidant entry.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original already neutral and accurate; no material gain."
+    },
+    {
+      "additive_id": "e327",
+      "source_preparation_profile": "FERMENTATION",
+      "notable_source_detail": "Salt of lactic acid, which is commonly made by fermentation of sugars; less acidic salt form.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile and fact_1 link to the lactic acid of fermented foods; fermentation route is in source_preparation_copy.",
+      "candidate1": {
+        "tile_summary": "Calcium lactate is the calcium salt of lactic acid.",
+        "expanded_summary": "Calcium lactate is the calcium salt of lactic acid. It keeps the familiar lactic-acid chemistry but in a less acidic salt form.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged whether \"commonly produced by fermentation\" belongs in expanded; it is already in source_preparation_copy. No overclaim.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 3,
+        "expanded": 3,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Calcium lactate is the calcium salt of lactic acid.",
+        "expanded_summary": "Calcium lactate is the calcium salt of lactic acid. It keeps the familiar lactic-acid chemistry but in a less acidic salt form.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Educational lactic-acid family link.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate and clear."
+    },
+    {
+      "additive_id": "e333",
+      "source_preparation_profile": "FERMENTATION",
+      "notable_source_detail": "Calcium salt of citric acid, itself made by fermentation; citrus-acid family.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Citric acid link (citrus) already in fact_1; fermentation-produced citric acid in source_preparation_copy.",
+      "candidate1": {
+        "tile_summary": "Calcium citrate is a calcium salt of citric acid.",
+        "expanded_summary": "Calcium citrate is a calcium salt of citric acid. It is used when food technologists want citrate chemistry with less direct acidity than citric acid itself.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged lead fact and lost-fact risk; no improvement found.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 3,
+        "expanded": 3,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Calcium citrate is a calcium salt of citric acid.",
+        "expanded_summary": "Calcium citrate is a calcium salt of citric acid. It is used when food technologists want citrate chemistry with less direct acidity than citric acid itself.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Educational family link.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate and clear."
+    },
+    {
+      "additive_id": "e339",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "notable_source_detail": "Family of sodium salts of phosphoric acid; Schedule 8 groups mono-, di- and tribasic forms under one number.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile/expanded already explain the multi-form grouping. Kidney/phosphorus context is evidence_copy only (not edited).",
+      "candidate1": {
+        "tile_summary": "Sodium phosphates are a family of sodium salts of phosphoric acid.",
+        "expanded_summary": "Sodium phosphates are a family of sodium salts of phosphoric acid. Schedule 8 groups several mono-, di- or tribasic forms under the same additive number.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged \"Schedule 8\" jargon in expanded; left as-is because it explains why several forms share a number and a rewrite risks changing meaning. No genuine improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 2,
+        "tile": 3,
+        "expanded": 3,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Sodium phosphates are a family of sodium salts of phosphoric acid.",
+        "expanded_summary": "Sodium phosphates are a family of sodium salts of phosphoric acid. Schedule 8 groups several mono-, di- or tribasic forms under the same additive number.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T5_FUNCTIONAL_BASELINE",
+      "discovery_rationale": "Functional baseline; the several-forms explanation is useful but modest.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate; no material gain."
+    },
+    {
+      "additive_id": "e350",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Sodium salt of malic acid, the tart acid associated with apples and many other fruits.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Apple/fruit-acid link is the one accessible hook and already leads the tile.",
+      "candidate1": {
+        "tile_summary": "Sodium malate / sodium hydrogen malate is a sodium salt of malic acid, the tart fruit acid associated with apples and many other fruits.",
+        "expanded_summary": "Sodium malate / sodium hydrogen malate is a sodium salt of malic acid, the tart fruit acid associated with apples and many other fruits.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Tile equals expanded (minor weakness). Added text would duplicate fact_2 and source_preparation_copy. Did not claim fermentation or other route (not supported; profile is CHEMICAL_SYNTHESIS). No genuine improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 3,
+        "expanded": 2,
+        "tone": 5,
+        "concision": 5
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Sodium malate / sodium hydrogen malate is a sodium salt of malic acid, the tart fruit acid associated with apples and many other fruits.",
+        "expanded_summary": "Sodium malate / sodium hydrogen malate is a sodium salt of malic acid, the tart fruit acid associated with apples and many other fruits.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Educational fruit-acid hook.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate and neutral."
+    },
+    {
+      "additive_id": "e357",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Potassium salt of adipic acid, a manufactured acid; made by neutralising adipic acid with a potassium base.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Candidate 1 tries to lead with petrochemical origin of adipic acid.",
+      "candidate1": {
+        "tile_summary": "Potassium adipate is a salt of adipic acid, an acid commonly made from petrochemical feedstocks.",
+        "expanded_summary": "Potassium adipate is a potassium salt of adipic acid, an acid commonly made from petrochemical feedstocks. It is used mainly for acidity control.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenge: entry has no substance-specific petroleum support and profile is CHEMICAL_SYNTHESIS (not PETROLEUM_REFINED); a petroleum claim needs a substance-specific source. C1 rejected. Remaining defect: \"dicarboxylic\" jargon in tile. C2 fixes jargon only.",
+      "candidate2": {
+        "tile_summary": "Potassium adipate is a potassium salt of adipic acid, a manufactured acid.",
+        "expanded_summary": "Potassium adipate is a potassium salt of adipic acid, a manufactured acid with two acid groups (a dicarboxylic acid). It is used mainly for acidity control or related processing functions.",
+        "fact_changes": {}
+      },
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 2,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate2",
+      "final": {
+        "tile_summary": "Potassium adipate is a potassium salt of adipic acid, a manufactured acid.",
+        "expanded_summary": "Potassium adipate is a potassium salt of adipic acid, a manufactured acid with two acid groups (a dicarboxylic acid). It is used mainly for acidity control or related processing functions.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "SOURCE REVIEW REQUIRED",
+      "discovery_priority": "T5_FUNCTIONAL_BASELINE",
+      "discovery_rationale": "Possible T1 petrochemical origin is not verified in this entry; only a jargon fix is supported.",
+      "unresolved_factual_issue": "Possible petrochemical origin of commercial adipic acid is not stated or sourced in the entry; withheld. Needs substance-specific source review before any petroleum wording.",
+      "selection_reason": "C2 removes jargon with zero new claims. C1 rejected for unsupported petroleum claim. Safe wording applied; any T1 upgrade pending source review."
+    },
+    {
+      "additive_id": "e368",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Ammonium salt of fumaric acid, a dicarboxylic food acid.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original tile uses \"strong dicarboxylic food acid\": jargon and \"strong\" can read as a hazard cue.",
+      "candidate1": {
+        "tile_summary": "Ammonium fumarate is the ammonium salt of fumaric acid, a food acid.",
+        "expanded_summary": "Ammonium fumarate is the ammonium salt of fumaric acid, a food acid with two acid groups (a dicarboxylic acid). In food it is used mainly for acidity control, buffering or related processing effects.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged: dropping \"strong\" removes an unverified descriptor but loses no sourced fact. No health implication; no invented origin.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 2,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Ammonium fumarate is the ammonium salt of fumaric acid, a food acid.",
+        "expanded_summary": "Ammonium fumarate is the ammonium salt of fumaric acid, a food acid with two acid groups (a dicarboxylic acid). In food it is used mainly for acidity control, buffering or related processing effects.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T5_FUNCTIONAL_BASELINE",
+      "discovery_rationale": "Functional baseline; wording clarity.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 removes jargon and an ambiguous descriptor; uses verified role from fact_2."
+    },
+    {
+      "additive_id": "e401",
+      "source_preparation_profile": "PLANT_EXTRACT",
+      "notable_source_detail": "Sodium salt of alginic acid, a structural polysaccharide of brown seaweed.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Brown-seaweed origin already leads the tile.",
+      "candidate1": {
+        "tile_summary": "Sodium alginate is the sodium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed.",
+        "expanded_summary": "Sodium alginate is the sodium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Tile equals expanded (minor weakness); added text would duplicate fact_2/source_preparation_copy. No overclaim.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 2,
+        "tone": 5,
+        "concision": 5
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Sodium alginate is the sodium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed.",
+        "expanded_summary": "Sodium alginate is the sodium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Seaweed-derived gelling agent: educational.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate; no material gain."
+    },
+    {
+      "additive_id": "e407",
+      "source_preparation_profile": "PLANT_EXTRACT",
+      "notable_source_detail": "Family of carbohydrates extracted from red seaweed; kappa, iota and lambda types differ in sulphation and texture.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "fact_3",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original tile \"sulphated carbohydrates\" is jargon and lacks purpose; plain version states source and purpose.",
+      "candidate1": {
+        "tile_summary": "Carrageenan is a family of carbohydrates extracted from red seaweed and used to thicken, stabilise or gel foods.",
+        "expanded_summary": "Carrageenan is a family of sulphated carbohydrates extracted from red seaweed. Different carrageenan types form different textures and interact strongly with proteins such as those in milk.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged against evidence_copy (poligeenan distinction): not touched. \"Sulphated\" is retained in expanded and explained by fact_3. No health framing.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Carrageenan is a family of carbohydrates extracted from red seaweed and used to thicken, stabilise or gel foods.",
+        "expanded_summary": "Carrageenan is a family of sulphated carbohydrates extracted from red seaweed. Different carrageenan types form different textures and interact strongly with proteins such as those in milk.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Seaweed source with purpose, in plain language.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 is clearer; expanded, facts and evidence unchanged."
+    },
+    {
+      "additive_id": "e414",
+      "source_preparation_profile": "PLANT_EXTRACT",
+      "notable_source_detail": "Soluble gum collected from the exudate of Acacia/Senegalia (acacia-family) trees.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile and expanded are near-identical; the surprising verified detail is that the gum exudes from trees.",
+      "candidate1": {
+        "tile_summary": "Acacia, or gum arabic, is a soluble gum that exudes from acacia-family trees and is collected for food use.",
+        "expanded_summary": "Acacia / gum arabic is a soluble gum collected from Acacia/Senegalia tree exudates. It is a plant-derived hydrocolloid used to manage texture and water in foods.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for overclaim (\"sap\" avoided, since only exudate is stated) and lost facts (genus names stay in expanded).",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Acacia, or gum arabic, is a soluble gum that exudes from acacia-family trees and is collected for food use.",
+        "expanded_summary": "Acacia / gum arabic is a soluble gum collected from Acacia/Senegalia tree exudates. It is a plant-derived hydrocolloid used to manage texture and water in foods.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Tree-exudate origin.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 gives a plain-language origin reveal; expanded unchanged."
+    },
+    {
+      "additive_id": "e421",
+      "source_preparation_profile": "VARIABLE",
+      "notable_source_detail": "Occurs naturally in some mushrooms and seaweeds, but commercial mannitol can be made by hydrogenating sugars or by fermentation.",
+      "source_support": [
+        "fact_1",
+        "source_preparation_copy",
+        "expanded_summary"
+      ],
+      "pass1_notes": "VARIABLE entry with a clear route reveal: natural occurrence versus manufactured route.",
+      "candidate1": {
+        "tile_summary": "Mannitol is a sugar alcohol found naturally in some mushrooms and seaweeds, but commercial mannitol can also be made by hydrogenating sugars or by fermentation.",
+        "expanded_summary": "Mannitol is a sugar alcohol found naturally in some plants, mushrooms and seaweeds. Food-grade mannitol provides sweetness with a cooling sensation and can also act as a bulking agent. Commercial mannitol can be made by hydrogenating sugars or by fermentation, so the additive code alone does not show which route a product used.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for invented origin: C1 asserts no product-specific route, and keeps both routes. \"Commercial\" does not imply natural extraction. No health framing.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Mannitol is a sugar alcohol found naturally in some mushrooms and seaweeds, but commercial mannitol can also be made by hydrogenating sugars or by fermentation.",
+        "expanded_summary": "Mannitol is a sugar alcohol found naturally in some plants, mushrooms and seaweeds. Food-grade mannitol provides sweetness with a cooling sensation and can also act as a bulking agent. Commercial mannitol can be made by hydrogenating sugars or by fermentation, so the additive code alone does not show which route a product used.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T2_ROUTE_REVEAL",
+      "discovery_rationale": "Natural-occurrence versus manufacturing-route reveal; fail-closed on product route.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 surfaces variable routes in the tile and adds an explicit no-single-route statement to expanded."
+    },
+    {
+      "additive_id": "e436",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Emulsifier built from sorbitol-derived material, polyoxyethylene chains and stearic acid; fatty-acid feedstock may be plant or animal fat (fact_2).",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original tile is a long ingredient-chemistry string; lead with function and short make-up.",
+      "candidate1": {
+        "tile_summary": "Polysorbate 65 is an emulsifier that helps oil and water stay mixed, made from sorbitol-derived material, polyoxyethylene chains and stearic acid.",
+        "expanded_summary": "Polysorbate 65 is an emulsifier made from sorbitol-derived material, polyoxyethylene chains and mostly stearic acid in a tristearate form. Its molecular design gives it both water-friendly and fat-friendly parts.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged whether to surface animal-fat possibility in tile: kept in fact_2 (hedged \"may\") to avoid asserting product-specific origin. No lost facts, no health-risk implication from synthesis, no petroleum claim.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Polysorbate 65 is an emulsifier that helps oil and water stay mixed, made from sorbitol-derived material, polyoxyethylene chains and stearic acid.",
+        "expanded_summary": "Polysorbate 65 is an emulsifier made from sorbitol-derived material, polyoxyethylene chains and mostly stearic acid in a tristearate form. Its molecular design gives it both water-friendly and fat-friendly parts.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T3_CHOICE_RELEVANCE",
+      "discovery_rationale": "Plant-or-animal fatty-acid possibility is surfaced hedged in fact_2.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 leads with role; fact_2 choice relevance retained."
+    },
+    {
+      "additive_id": "e451",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "notable_source_detail": "Chain of three phosphate units; the number covers several sodium and/or potassium forms.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile uses \"Schedule 8\" and \"condensed phosphate salts\" jargon, and is long.",
+      "candidate1": {
+        "tile_summary": "Tripolyphosphates are phosphate salts in which three phosphate units are linked in a chain; this additive number covers several sodium and potassium forms.",
+        "expanded_summary": "Tripolyphosphates are phosphate salts in which phosphate units are linked together, and this additive number covers several sodium and/or potassium forms. Compared with simple phosphates, their chain structure gives different water-binding, buffering and texture effects.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged against evidence_copy (kidney/phosphorus): no overlap or health framing in C1. No lost facts.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 2,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Tripolyphosphates are phosphate salts in which three phosphate units are linked in a chain; this additive number covers several sodium and potassium forms.",
+        "expanded_summary": "Tripolyphosphates are phosphate salts in which phosphate units are linked together, and this additive number covers several sodium and/or potassium forms. Compared with simple phosphates, their chain structure gives different water-binding, buffering and texture effects.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T5_FUNCTIONAL_BASELINE",
+      "discovery_rationale": "Functional baseline; clarity gain.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 removes regulatory jargon and condenses the tile."
+    },
+    {
+      "additive_id": "e463",
+      "source_preparation_profile": "MODIFIED_NATURAL",
+      "notable_source_detail": "Plant cellulose chemically modified with hydroxypropyl groups, turning an insoluble fibre into a thickener/film former.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Expanded already tells the modified-natural transform story (insoluble plant fibre to useful thickener).",
+      "candidate1": {
+        "tile_summary": "Hydroxypropyl cellulose is a chemically modified form of plant cellulose.",
+        "expanded_summary": "Hydroxypropyl cellulose is a chemically modified form of plant cellulose. Introducing hydroxypropyl groups changes cellulose from an insoluble plant fibre into a material with useful thickening, film-forming or stabilising behaviour.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged tile for lacking purpose; expanded delivers it. Alternatives were marginal and risked duplicating expanded. No genuine improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 3,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Hydroxypropyl cellulose is a chemically modified form of plant cellulose.",
+        "expanded_summary": "Hydroxypropyl cellulose is a chemically modified form of plant cellulose. Introducing hydroxypropyl groups changes cellulose from an insoluble plant fibre into a material with useful thickening, film-forming or stabilising behaviour.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T2_ROUTE_REVEAL",
+      "discovery_rationale": "Clear modified-natural transform reveal in the expanded text.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate and informative."
+    },
+    {
+      "additive_id": "e472a",
+      "source_preparation_profile": "MODIFIED_NATURAL",
+      "notable_source_detail": "Mono- and diglyceride-type emulsifiers carrying acetic acid-derived groups; fatty-acid sources can be plant or animal.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Plant-or-animal fatty-acid source appears only in source_preparation_copy; fact_3 is empty and can surface this choice cue. Tile also jargon-heavy.",
+      "candidate1": {
+        "tile_summary": "Acetic and fatty acid esters of glycerol are emulsifiers made by attaching acetic acid (the acid in vinegar) groups to fat-type molecules called mono- and diglycerides.",
+        "expanded_summary": "Acetic and fatty acid esters of glycerol are emulsifiers made by adding acetic acid-derived groups to mono- and diglyceride-type fat molecules. The modification changes how the molecules interact with dough, fat and water.",
+        "fact_changes": {
+          "fact_3_label": "Fatty-acid source",
+          "fact_3_copy": "The fatty acids used can come from plants or animals; the additive code alone does not say which."
+        }
+      },
+      "pass2_notes": "Challenged for invented origin: fact_3 hedges with \"can\" and states the code does not identify the source (fail closed). No health framing; no lost facts.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Acetic and fatty acid esters of glycerol are emulsifiers made by attaching acetic acid (the acid in vinegar) groups to fat-type molecules called mono- and diglycerides.",
+        "expanded_summary": "Acetic and fatty acid esters of glycerol are emulsifiers made by adding acetic acid-derived groups to mono- and diglyceride-type fat molecules. The modification changes how the molecules interact with dough, fat and water.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": "Fatty-acid source",
+        "fact_3_copy": "The fatty acids used can come from plants or animals; the additive code alone does not say which."
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T3_CHOICE_RELEVANCE",
+      "discovery_rationale": "Dietary-choice relevance (plant or animal fatty acids) from source_preparation_copy, surfaced hedged.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 surfaces a verified choice cue as fact_3 without asserting an origin and simplifies the tile."
+    },
+    {
+      "additive_id": "e475",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Polymerised glycerol esterified with food fatty acids; fatty-acid sources can be plant or animal.",
+      "source_support": [
+        "source_preparation_copy",
+        "fact_1",
+        "fact_2"
+      ],
+      "pass1_notes": "Tile is fine; the plant-or-animal fatty-acid possibility is only in source_preparation_copy and fact_3 is empty.",
+      "candidate1": {
+        "tile_summary": "Polyglycerol esters of fatty acids are emulsifiers built from short chains of glycerol joined to fatty acids.",
+        "expanded_summary": "Polyglycerol esters of fatty acids are emulsifiers built from short chains of glycerol joined to fatty acids. Their exact composition is a controlled mixture rather than one single molecule.",
+        "fact_changes": {
+          "fact_3_label": "Fatty-acid source",
+          "fact_3_copy": "The fatty acids used can come from plants or animals; the additive code alone does not say which."
+        }
+      },
+      "pass2_notes": "Challenged for invented origin: hedged, fail-closed. No health framing; no lost facts; tile and expanded unchanged.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Polyglycerol esters of fatty acids are emulsifiers built from short chains of glycerol joined to fatty acids.",
+        "expanded_summary": "Polyglycerol esters of fatty acids are emulsifiers built from short chains of glycerol joined to fatty acids. Their exact composition is a controlled mixture rather than one single molecule.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": "Fatty-acid source",
+        "fact_3_copy": "The fatty acids used can come from plants or animals; the additive code alone does not say which."
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T3_CHOICE_RELEVANCE",
+      "discovery_rationale": "Dietary-choice relevance from source_preparation_copy, surfaced hedged.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 adds a verified, hedged choice-relevance fact in the empty fact_3 slot."
+    },
+    {
+      "additive_id": "e491",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Emulsifier built from sorbitan and stearic acid; fatty-acid feedstock may be plant or animal fat (hedged in fact_2).",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "fact_2 already surfaces possible plant-or-animal fatty-acid source without asserting a product-specific origin.",
+      "candidate1": {
+        "tile_summary": "Sorbitan monostearate is an emulsifier made from sorbitol-derived sorbitan and stearic acid.",
+        "expanded_summary": "Sorbitan monostearate is an emulsifier made from sorbitol-derived sorbitan and stearic acid. The molecule carries one stearic-acid group, which tunes how it behaves in fats and emulsions.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged whether to lead with animal-fat possibility; that would overclaim product origin. Fail-closed hedge (\"may\") in fact_2 is correct. No improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 3,
+        "expanded": 3,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Sorbitan monostearate is an emulsifier made from sorbitol-derived sorbitan and stearic acid.",
+        "expanded_summary": "Sorbitan monostearate is an emulsifier made from sorbitol-derived sorbitan and stearic acid. The molecule carries one stearic-acid group, which tunes how it behaves in fats and emulsions.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T3_CHOICE_RELEVANCE",
+      "discovery_rationale": "Dietary-choice relevance from verified source_preparation_copy, hedged.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original already correctly hedged."
+    },
+    {
+      "additive_id": "e507",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "notable_source_detail": "Strong inorganic acid that is also present in stomach (gastric) acid.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Gastric-acid link is an accessible, accurate hook already leading the tile.",
+      "candidate1": {
+        "tile_summary": "Hydrochloric acid is a strong inorganic acid also present in gastric acid.",
+        "expanded_summary": "Hydrochloric acid is a strong inorganic acid also present in gastric acid.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged \"strong\" as a possible hazard cue; it is a chemical descriptor, and food role is stated in fact_1. No improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 3,
+        "tone": 5,
+        "concision": 5
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Hydrochloric acid is a strong inorganic acid also present in gastric acid.",
+        "expanded_summary": "Hydrochloric acid is a strong inorganic acid also present in gastric acid.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Educational everyday-recognition hook.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate and concise."
+    },
+    {
+      "additive_id": "e514",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "notable_source_detail": "Mineral salt either obtained from natural deposits or made as a purified industrial salt.",
+      "source_support": [
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original tile is circular (\"inorganic sodium sulphate salt\") and expanded is identical.",
+      "candidate1": {
+        "tile_summary": "Sodium sulphate is a mineral salt used in specified foods as a carrier or processing aid.",
+        "expanded_summary": "Sodium sulphate is an inorganic salt that can be obtained from natural mineral deposits or made as a purified industrial salt. In specified food uses it acts as a carrier, processing aid or standardising material.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for overclaim: stays within fact_1 and source_preparation_copy; no sulphate/sulphite comparison asserted (not in entry). No lost facts.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 2,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Sodium sulphate is a mineral salt used in specified foods as a carrier or processing aid.",
+        "expanded_summary": "Sodium sulphate is an inorganic salt that can be obtained from natural mineral deposits or made as a purified industrial salt. In specified food uses it acts as a carrier, processing aid or standardising material.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T5_FUNCTIONAL_BASELINE",
+      "discovery_rationale": "Functional baseline; removes circular wording.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 gives real content in tile and expanded from verified fields."
+    },
+    {
+      "additive_id": "e525",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "notable_source_detail": "Caustic potash; strongly alkaline compound used for pH adjustment and in some cocoa/food treatments.",
+      "source_support": [
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile \"inorganic alkaline material\" is vague; the cocoa-treatment use from expanded is more informative.",
+      "candidate1": {
+        "tile_summary": "Potassium hydroxide, or caustic potash, is a strongly alkaline compound used to adjust pH and in some cocoa and food processing.",
+        "expanded_summary": "Potassium hydroxide, also known as caustic potash, is an inorganic alkaline material. It is strongly alkaline and is used for pH adjustment, processing and some cocoa/food treatments.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for hazard implication: wording matches expanded and fact_2 (\"food use is controlled\"), which stays. No lost facts.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Potassium hydroxide, or caustic potash, is a strongly alkaline compound used to adjust pH and in some cocoa and food processing.",
+        "expanded_summary": "Potassium hydroxide, also known as caustic potash, is an inorganic alkaline material. It is strongly alkaline and is used for pH adjustment, processing and some cocoa/food treatments.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Concrete use hook (cocoa) in the tile.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 swaps vague classification for verified uses; expanded and facts unchanged."
+    },
+    {
+      "additive_id": "e541",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "notable_source_detail": "Mineral phosphate salt (not metallic aluminium); some forms are acid components in baking powders.",
+      "source_support": [
+        "expanded_summary",
+        "fact_1",
+        "fact_2"
+      ],
+      "pass1_notes": "Original tile is classification only; baking-powder role from fact_1 is the accessible hook.",
+      "candidate1": {
+        "tile_summary": "Sodium aluminium phosphate is a mineral phosphate salt; some forms are the acid ingredient in baking powders.",
+        "expanded_summary": "Sodium aluminium phosphate is a family of inorganic phosphate salts containing sodium and aluminium. Different acidic or basic forms are used for leavening and other processing effects.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for health implication: none, and fact_2 (\"not metallic aluminium\") retained. \"Some forms\" hedge matches fact_1.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Sodium aluminium phosphate is a mineral phosphate salt; some forms are the acid ingredient in baking powders.",
+        "expanded_summary": "Sodium aluminium phosphate is a family of inorganic phosphate salts containing sodium and aluminium. Different acidic or basic forms are used for leavening and other processing effects.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Baking-powder role as an accessible hook.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 leads with the verified role and keeps the hedge."
+    },
+    {
+      "additive_id": "e555",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "notable_source_detail": "Mica-like mineral silicate used as carrier or pearlescent substrate; obtained from purified mineral mica or made to specification.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Original tile (\"mica-like potassium aluminosilicate\") is jargon, and expanded is identical.",
+      "candidate1": {
+        "tile_summary": "Potassium aluminium silicate is a mica-type mineral silicate used as a carrier or pearlescent base in specified applications.",
+        "expanded_summary": "Potassium aluminium silicate is a mineral silicate related to mica. In specified applications it is used as a carrier or as a pearlescent base, a mineral substrate that gives a pearly sheen.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for invented application: kept to \"specified applications\", with no food names. No health framing.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Potassium aluminium silicate is a mica-type mineral silicate used as a carrier or pearlescent base in specified applications.",
+        "expanded_summary": "Potassium aluminium silicate is a mineral silicate related to mica. In specified applications it is used as a carrier or as a pearlescent base, a mineral substrate that gives a pearly sheen.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Mineral (mica-type) origin with plain-language role.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 explains \"pearlescent\" and drops jargon, using verified facts only."
+    },
+    {
+      "additive_id": "e575",
+      "source_preparation_profile": "FERMENTATION",
+      "notable_source_detail": "Cyclic form of gluconic acid made from glucose that slowly turns acidic in water; glucose commonly oxidised by microbial fermentation.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile already leads with the gradual-acidification behaviour, the most interesting verified detail.",
+      "candidate1": {
+        "tile_summary": "Glucono delta-lactone (575) gradually turns into an acid in water, allowing acidity to develop over time.",
+        "expanded_summary": "Glucono delta-lactone (575) is a cyclic form of gluconic acid made from glucose. In water, it gradually converts to gluconic acid, allowing acidity to develop over time. This makes it useful for controlled acidification and certain food-setting processes.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "No jargon, overclaim or lost facts found.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 5,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Glucono delta-lactone (575) gradually turns into an acid in water, allowing acidity to develop over time.",
+        "expanded_summary": "Glucono delta-lactone (575) is a cyclic form of gluconic acid made from glucose. In water, it gradually converts to gluconic acid, allowing acidity to develop over time. This makes it useful for controlled acidification and certain food-setting processes.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Behavioural reveal; educational.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original already excellent."
+    },
+    {
+      "additive_id": "e586",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Synthetic compound used in a narrow range of foods, particularly to prevent enzymatic browning in some seafood products.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Seafood anti-browning use from fact_1 is the most concrete hook but is absent from the tile.",
+      "candidate1": {
+        "tile_summary": "4-Hexylresorcinol is a synthetic compound used in a narrow range of foods, particularly some seafood products, to help prevent browning.",
+        "expanded_summary": "4-Hexylresorcinol is a synthetic phenolic compound used in a narrow range of foods for antioxidant and anti-browning effects.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for health framing from \"synthetic\" (none) and for overclaim (\"narrow range\" and \"particularly some\" retained). \"Phenolic\" remains in expanded.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "4-Hexylresorcinol is a synthetic compound used in a narrow range of foods, particularly some seafood products, to help prevent browning.",
+        "expanded_summary": "4-Hexylresorcinol is a synthetic phenolic compound used in a narrow range of foods for antioxidant and anti-browning effects.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Concrete use hook (seafood browning).",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 moves the verified seafood use into the tile."
+    },
+    {
+      "additive_id": "e625",
+      "source_preparation_profile": "FERMENTATION",
+      "notable_source_detail": "Magnesium salt of glutamic acid; glutamate occurs naturally in tomatoes, mushrooms, seaweed and aged cheeses and is the same ion once dissolved.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_3",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "fact_1 and fact_3 already carry the natural-glutamate connection in a neutral way.",
+      "candidate1": {
+        "tile_summary": "Magnesium glutamate is the magnesium salt of glutamic acid, the amino acid associated with umami taste.",
+        "expanded_summary": "Magnesium glutamate is the magnesium salt of glutamic acid, the amino acid associated with umami taste. It belongs to the same glutamate flavour-enhancer family as MSG.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for health-halo or MSG-risk drift: none present. No improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Magnesium glutamate is the magnesium salt of glutamic acid, the amino acid associated with umami taste.",
+        "expanded_summary": "Magnesium glutamate is the magnesium salt of glutamic acid, the amino acid associated with umami taste. It belongs to the same glutamate flavour-enhancer family as MSG.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Educational natural-occurrence story.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate and balanced."
+    },
+    {
+      "additive_id": "e640",
+      "source_preparation_profile": "VARIABLE",
+      "notable_source_detail": "Commercial glycine is produced by chemical synthesis or fermentation; the code alone does not show the route.",
+      "source_support": [
+        "expanded_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "VARIABLE entry: tile and facts are fine, but the route variability appears only in source_preparation_copy.",
+      "candidate1": {
+        "tile_summary": "Glycine is the smallest amino acid and is a normal building block of proteins in foods and the human body.",
+        "expanded_summary": "Glycine is the smallest amino acid and is a normal building block of proteins in foods and the human body. As an additive it can contribute mild sweetness, buffering or processing effects. Commercial glycine can be made by chemical synthesis or by fermentation, so the additive code alone does not show which route a product used.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for invented origin: C1 names both routes and no product-specific route. Tile retained because it is already a strong hook.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Glycine is the smallest amino acid and is a normal building block of proteins in foods and the human body.",
+        "expanded_summary": "Glycine is the smallest amino acid and is a normal building block of proteins in foods and the human body. As an additive it can contribute mild sweetness, buffering or processing effects. Commercial glycine can be made by chemical synthesis or by fermentation, so the additive code alone does not show which route a product used.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T2_ROUTE_REVEAL",
+      "discovery_rationale": "Variable production route (synthesis or fermentation) surfaced in expanded.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 keeps the strong tile and makes route variability explicit in expanded without inventing an origin."
+    },
+    {
+      "additive_id": "e905b",
+      "source_preparation_profile": "PETROLEUM_REFINED",
+      "notable_source_detail": "Highly refined semi-solid hydrocarbon mixture derived from petroleum; purified to tighter specifications than crude products.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Substance is petroleum jelly by name, and the entry text is substance-specific; tile leads with petroleum origin.",
+      "candidate1": {
+        "tile_summary": "Petrolatum, or petroleum jelly, is a highly refined semi-solid mixture of hydrocarbons derived from petroleum.",
+        "expanded_summary": "Petrolatum, or petroleum jelly, is a highly refined semi-solid mixture of hydrocarbons derived from petroleum. Food-grade material is purified to much tighter specifications than crude petroleum products.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged lead fact against \"origin is not crude material in final food\": expanded already says food-grade material is purified. No health-risk drift. No improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 5,
+        "wow": 5,
+        "tile": 5,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Petrolatum, or petroleum jelly, is a highly refined semi-solid mixture of hydrocarbons derived from petroleum.",
+        "expanded_summary": "Petrolatum, or petroleum jelly, is a highly refined semi-solid mixture of hydrocarbons derived from petroleum. Food-grade material is purified to much tighter specifications than crude petroleum products.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T1_UNUSUAL_ORIGIN",
+      "discovery_rationale": "Petroleum-derived food additive is a verified unusual-origin reveal.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original is factual, substance-specific and appropriately framed."
+    },
+    {
+      "additive_id": "e943b",
+      "source_preparation_profile": "FOOD_GAS",
+      "notable_source_detail": "Branched isomer of butane, a hydrocarbon gas; separated or made from hydrocarbon processing streams; used as a propellant.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Candidate 1 tries to lead with a petroleum-derived origin.",
+      "candidate1": {
+        "tile_summary": "Isobutane is a petroleum-derived gas used as a propellant in specified food applications.",
+        "expanded_summary": "Isobutane is a branched isomer of butane, a petroleum-derived gas. It is used as a propellant.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenge: source_preparation_copy says \"hydrocarbon processing streams\" and the profile is FOOD_GAS, not PETROLEUM_REFINED. Petroleum needs substance-specific support; C1 rejected. Original \"branched isomer of butane\" is jargon. C2 uses only \"hydrocarbon gas\" and the propellant role.",
+      "candidate2": {
+        "tile_summary": "Isobutane is a hydrocarbon gas used as a propellant in specified food applications.",
+        "expanded_summary": "Isobutane is a branched form of butane, a hydrocarbon gas. It is used as a propellant, valued for its gas and pressure properties rather than as a conventional solid or liquid ingredient.",
+        "fact_changes": {}
+      },
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate2",
+      "final": {
+        "tile_summary": "Isobutane is a hydrocarbon gas used as a propellant in specified food applications.",
+        "expanded_summary": "Isobutane is a branched form of butane, a hydrocarbon gas. It is used as a propellant, valued for its gas and pressure properties rather than as a conventional solid or liquid ingredient.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "SOURCE REVIEW REQUIRED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Role-based clarity only; a possible petroleum/natural-gas origin (T1) is not verified in the entry.",
+      "unresolved_factual_issue": "Petroleum or natural-gas origin of isobutane not stated beyond \"hydrocarbon processing streams\"; withheld pending substance-specific source.",
+      "selection_reason": "C2 replaces jargon with plain \"hydrocarbon gas\" and keeps all verified facts. C1 rejected as an unsupported petroleum claim. Safe wording applied."
+    },
+    {
+      "additive_id": "e954",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "One of the oldest synthetic high-intensity sweeteners, in use since the late 19th century and several hundred times sweeter than sucrose.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_3",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile and fact_3 already carry the history hook.",
+      "candidate1": {
+        "tile_summary": "Saccharin is one of the oldest high-intensity synthetic sweeteners.",
+        "expanded_summary": "Saccharin is one of the oldest high-intensity synthetic sweeteners. It is much sweeter than sugar and is used in very small amounts.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged synthesis framing for health implication: none. No improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Saccharin is one of the oldest high-intensity synthetic sweeteners.",
+        "expanded_summary": "Saccharin is one of the oldest high-intensity synthetic sweeteners. It is much sweeter than sugar and is used in very small amounts.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Historical educational hook.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate and engaging."
+    },
+    {
+      "additive_id": "e962",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Crystalline compound combining aspartame and acesulphame; fact_3 notes it contains aspartame-derived material.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "fact_3",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Candidate 1 adds a phenylalanine/PKU decode cue to the tile.",
+      "candidate1": {
+        "tile_summary": "Aspartame-acesulphame salt combines two sweeteners, and contains aspartame-derived material relevant to people avoiding phenylalanine.",
+        "expanded_summary": "Aspartame-acesulphame salt is a crystalline compound containing aspartame and acesulphame. Because it contains aspartame-derived material, it is relevant to people who need to avoid phenylalanine.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenge: no verified source in the entry supports phenylalanine/PKU relevance (evidence_enabled=false); adding it is a new consumer-health claim. C1 rejected. Existing text is accurate and already carries the decode note in fact_3. No C2 needed.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 3,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Aspartame-acesulphame salt is a crystalline compound containing the two sweeteners aspartame and acesulphame in a fixed salt-like combination.",
+        "expanded_summary": "Aspartame-acesulphame salt is a crystalline compound containing the two sweeteners aspartame and acesulphame in a fixed salt-like combination.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "SOURCE REVIEW REQUIRED",
+      "discovery_priority": "T3_CHOICE_RELEVANCE",
+      "discovery_rationale": "The decode note (contains aspartame-derived material) is a verified choice-relevance cue; a phenylalanine/PKU reading would need a source.",
+      "unresolved_factual_issue": "Phenylalanine/PKU relevance cue withheld: no verified source attached. Needs a sourced evidence entry before surfacing.",
+      "selection_reason": "Original is accurate and already carries fact_3. C1 rejected as unverified health-adjacent claim. Existing text retained; PKU cue pending source review."
+    },
+    {
+      "additive_id": "e1001",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Choline in stable salt forms; choline is used by the body for cell membranes and acetylcholine; the entry can cover more than one salt.",
+      "source_support": [
+        "tile_summary",
+        "fact_1",
+        "fact_3",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile phrase \"essential nutrient-like compound\" is muddled and sounds like a nutrition claim.",
+      "candidate1": {
+        "tile_summary": "Choline salts are stabilised forms of choline, a compound the body uses to make cell membranes and the neurotransmitter acetylcholine.",
+        "expanded_summary": "Choline salts are forms of choline, which the body uses to build cell membranes and make the neurotransmitter acetylcholine. Different salt forms are used to make choline stable and practical in formulations.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for health halo: C1 removes \"essential nutrient-like\" and implies no benefit. Lost fact: \"essential\" is dropped because it is not verified in this entry. fact_1 and fact_3 retained.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Choline salts are stabilised forms of choline, a compound the body uses to make cell membranes and the neurotransmitter acetylcholine.",
+        "expanded_summary": "Choline salts are forms of choline, which the body uses to build cell membranes and make the neurotransmitter acetylcholine. Different salt forms are used to make choline stable and practical in formulations.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Biological-role anchor, free of nutrition-claim wording.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 removes ambiguous nutrition-claim wording and keeps verified biological role."
+    },
+    {
+      "additive_id": "e1200",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Branched glucose polymer, only partly digested in the small intestine, made by heating glucose with sorbitol and an acid catalyst.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_3",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "fact_3 already explains why it behaves differently from sugar; evidence_copy covers the laxative statement.",
+      "candidate1": {
+        "tile_summary": "Polydextrose is a highly branched glucose polymer used as a low-sweetness bulking ingredient and soluble fibre-like material.",
+        "expanded_summary": "Polydextrose is a highly branched glucose polymer used as a low-sweetness bulking ingredient and soluble fibre-like material. It is designed to replace some of the bulk normally provided by sugar or fat.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged tone for health implication: laxative content is confined to evidence_copy and is already balanced. No improvement.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 3
+      },
+      "selected": "original",
+      "final": {
+        "tile_summary": "Polydextrose is a highly branched glucose polymer used as a low-sweetness bulking ingredient and soluble fibre-like material.",
+        "expanded_summary": "Polydextrose is a highly branched glucose polymer used as a low-sweetness bulking ingredient and soluble fibre-like material. It is designed to replace some of the bulk normally provided by sugar or fat.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "ACCEPT EXISTING",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Educational glucose-polymer story.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "Original accurate and rich; no material gain."
+    },
+    {
+      "additive_id": "e1404",
+      "source_preparation_profile": "MODIFIED_NATURAL",
+      "notable_source_detail": "Plant starch deliberately oxidised, adding carbonyl/carboxyl groups and shortening chains; the additive number identifies the modification, not the crop.",
+      "source_support": [
+        "expanded_summary",
+        "fact_1",
+        "fact_3",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile is chemistry jargon (\"carbonyl/carboxyl groups\"); behaviour-led version is clearer.",
+      "candidate1": {
+        "tile_summary": "Oxidised starch is food starch that has been deliberately oxidised to change how it behaves when heated, frozen or stored.",
+        "expanded_summary": "Oxidised starch is plant starch deliberately oxidised to introduce carbonyl and carboxyl groups and shorten the starch chains. The starting material is ordinary food starch, but the modification makes it perform more reliably during heating, freezing, mixing or storage.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for invented crop origin: none, and fact_3 (source can vary) retained. No lost facts.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Oxidised starch is food starch that has been deliberately oxidised to change how it behaves when heated, frozen or stored.",
+        "expanded_summary": "Oxidised starch is plant starch deliberately oxidised to introduce carbonyl and carboxyl groups and shorten the starch chains. The starting material is ordinary food starch, but the modification makes it perform more reliably during heating, freezing, mixing or storage.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T2_ROUTE_REVEAL",
+      "discovery_rationale": "Modified-natural transform: ordinary starch changed deliberately to behave differently.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 moves jargon out of the tile and keeps the detail in expanded."
+    },
+    {
+      "additive_id": "e1420",
+      "source_preparation_profile": "MODIFIED_NATURAL",
+      "notable_source_detail": "Plant starch acetylated, so it carries acetyl groups; the additive number identifies the modification, not the crop.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_3",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile \"starch carrying acetyl groups\" is jargon; behaviour-led version is clearer.",
+      "candidate1": {
+        "tile_summary": "Starch acetate is food starch deliberately modified with small acetyl groups so it holds up better when heated, frozen or stored.",
+        "expanded_summary": "Starch acetate is starch carrying acetyl groups. The starting material is ordinary food starch, but it is deliberately modified by acetylation so it performs more reliably during heating, freezing, mixing or storage.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for invented crop origin: none; fact_3 retained. No lost facts.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 4,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Starch acetate is food starch deliberately modified with small acetyl groups so it holds up better when heated, frozen or stored.",
+        "expanded_summary": "Starch acetate is starch carrying acetyl groups. The starting material is ordinary food starch, but it is deliberately modified by acetylation so it performs more reliably during heating, freezing, mixing or storage.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T2_ROUTE_REVEAL",
+      "discovery_rationale": "Modified-natural transform story.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 leads with behaviour and keeps technical detail in expanded."
+    },
+    {
+      "additive_id": "e1505",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "notable_source_detail": "Triester of citric acid and ethanol; solvent, carrier and plasticiser in specialised applications.",
+      "source_support": [
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile \"triethyl ester of citric acid\" is jargon; fact_1 gives a plain make-up.",
+      "candidate1": {
+        "tile_summary": "Triethyl citrate is made from citric acid and ethanol and used as a solvent, carrier or plasticiser in specialised food applications.",
+        "expanded_summary": "Triethyl citrate is the triethyl ester of citric acid. It is a clear, mildly oily liquid used as a solvent, carrier and plasticising ingredient in specialised food applications.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for health or odd-implication: \"made from\" describes manufacture, not final content. No lost facts.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Triethyl citrate is made from citric acid and ethanol and used as a solvent, carrier or plasticiser in specialised food applications.",
+        "expanded_summary": "Triethyl citrate is the triethyl ester of citric acid. It is a clear, mildly oily liquid used as a solvent, carrier and plasticising ingredient in specialised food applications.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Plain-language make-up and role.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 is clearer and supported by fact_1, fact_2 and source_preparation_copy."
+    },
+    {
+      "additive_id": "e999(ii)",
+      "source_preparation_profile": "PLANT_EXTRACT",
+      "notable_source_detail": "Saponin-rich extract of the bark or wood of Quillaja saponaria, the South American soapbark tree.",
+      "source_support": [
+        "tile_summary",
+        "expanded_summary",
+        "fact_1",
+        "fact_2",
+        "fact_3",
+        "source_preparation_copy"
+      ],
+      "pass1_notes": "Tile is long; the soapbark tree is the memorable verified detail and purpose is foam/emulsion.",
+      "candidate1": {
+        "tile_summary": "Quillaia extract type 2 is a purified extract from the bark or wood of the South American soapbark tree, whose saponins help foam and stabilise emulsions.",
+        "expanded_summary": "Quillaia extract type 2 is a more highly purified saponin-rich extract made from the bark or wood of the soapbark tree, Quillaja saponaria. Its key components are saponins — plant molecules that can stabilise foam and emulsions.",
+        "fact_changes": {}
+      },
+      "pass2_notes": "Challenged for lost facts: Latin name and saponin detail stay in expanded. No health or overclaim issues.",
+      "candidate2": null,
+      "pass3_rubric": {
+        "accuracy": "pass",
+        "clarity": 4,
+        "wow": 3,
+        "tile": 4,
+        "expanded": 4,
+        "tone": 5,
+        "concision": 4
+      },
+      "selected": "candidate1",
+      "final": {
+        "tile_summary": "Quillaia extract type 2 is a purified extract from the bark or wood of the South American soapbark tree, whose saponins help foam and stabilise emulsions.",
+        "expanded_summary": "Quillaia extract type 2 is a more highly purified saponin-rich extract made from the bark or wood of the soapbark tree, Quillaja saponaria. Its key components are saponins — plant molecules that can stabilise foam and emulsions.",
+        "fact_1_label": null,
+        "fact_1_copy": null,
+        "fact_2_label": null,
+        "fact_2_copy": null,
+        "fact_3_label": null,
+        "fact_3_copy": null
+      },
+      "status": "EDITORIALLY IMPROVED",
+      "discovery_priority": "T4_EDUCATIONAL",
+      "discovery_rationale": "Soapbark tree origin with function.",
+      "unresolved_factual_issue": null,
+      "selection_reason": "C1 is shorter and more memorable; expanded and facts unchanged."
+    }
+  ]
+}

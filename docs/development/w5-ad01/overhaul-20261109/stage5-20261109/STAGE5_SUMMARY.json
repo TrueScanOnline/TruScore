@@ -1,0 +1,80 @@
+{
+  "generated_at_utc": "2026-11-09T08:20:17.698449+00:00",
+  "baseline": "v0.10-W5AD01-editorial",
+  "baseline_workbook_sha256": "5a8e8fb5be0b4a70832fa8e0d6c46bc42e281ddba3ab29bc06b5c1e8e9dc25b6",
+  "successor": "v0.11-W5AD01-editorial",
+  "successor_workbook_path": "C:\\TrueScan-FoodScanner\\docs\\development\\w5-ad01\\Rveel_S25_Broader_Additive_Catalogue_MVP_Implementation_Asset_W5AD01_editorial_v0_11.xlsx",
+  "successor_workbook_sha256": "e155d47e71078a62d0866d1fe5819dac937bcd5877dbc0e4fc67cae10afa9eb5",
+  "ids_patched": [
+    "e133",
+    "e143",
+    "e172",
+    "e221",
+    "e225",
+    "e307b",
+    "e308",
+    "e335",
+    "e336",
+    "e337",
+    "e350",
+    "e351",
+    "e352",
+    "e354",
+    "e381",
+    "e401",
+    "e402",
+    "e404",
+    "e409",
+    "e444",
+    "e507",
+    "e510",
+    "e518",
+    "e519",
+    "e551",
+    "e941",
+    "e942",
+    "e946",
+    "e962"
+  ],
+  "ids_patched_count": 29,
+  "dup24": {
+    "count": 24,
+    "improve": 24,
+    "keep": 0
+  },
+  "srr14": {
+    "RESOLVED": 9,
+    "RETAIN FAIL-CLOSED": 5,
+    "FOUNDER DECISION": 0,
+    "modified_ids": [
+      "e221",
+      "e225",
+      "e308",
+      "e381",
+      "e946",
+      "e962"
+    ]
+  },
+  "founder_approvals_required_before_implementation": [
+    {
+      "additive_id": "e308",
+      "field": "source_preparation_profile",
+      "from": "PLANT_EXTRACT",
+      "to": "CHEMICAL_SYNTHESIS",
+      "reason": "FSANZ Schedule 15 lists 308 as Synthetic gamma-tocopherol; editorial copy corrected but governed profile not changed."
+    }
+  ],
+  "ad02_removed": [],
+  "favourites_verified_ids": [
+    "e120",
+    "e471",
+    "e476",
+    "e150c",
+    "e330",
+    "e322",
+    "e422",
+    "e575",
+    "e223"
+  ],
+  "runtime_discovery_map_altered": false
+}

@@ -1,0 +1,11 @@
+{
+  "tsc": "PASS (exit 0)",
+  "jest_unit_s25": "68 passed / 68 total",
+  "body6_unchanged_vs_v10": true,
+  "evidence_unchanged_vs_v10": true,
+  "source_preparation_unchanged_vs_v10": true,
+  "w5_ad02_runtime_map_unchanged": true,
+  "remaining_tile_expanded_duplicates": 0,
+  "v10_workbook_sha_preserved": "5a8e8fb5be0b4a70832fa8e0d6c46bc42e281ddba3ab29bc06b5c1e8e9dc25b6",
+  "v11_workbook_sha": "e155d47e71078a62d0866d1fe5819dac937bcd5877dbc0e4fc67cae10afa9eb5"
+}

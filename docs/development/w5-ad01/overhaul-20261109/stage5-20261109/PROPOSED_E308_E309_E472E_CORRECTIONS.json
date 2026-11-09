@@ -1,0 +1,94 @@
+{
+  "status": "PROPOSAL_ONLY_NOT_APPLIED",
+  "governed_source_fields_modified": false,
+  "e308": {
+    "decision_requested": "FOUNDER_APPROVAL_REQUIRED",
+    "current": {
+      "source_preparation_profile": "PLANT_EXTRACT",
+      "source_preparation_copy": "Commercial food-grade material is commonly isolated and purified from vegetable-oil fractions rich in tocopherols.",
+      "tile_summary": "Synthetic gamma-tocopherol is a manufactured form of one of the tocopherols in the vitamin E family.",
+      "editorial_already_stage5_aligned": true
+    },
+    "proposed": {
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "source_preparation_copy": "Manufactured by chemical synthesis as a defined gamma-tocopherol preparation and purified to food-additive specifications.",
+      "tile_summary": "KEEP_STAGE5",
+      "expanded_summary": "KEEP_STAGE5",
+      "fact_1_label": "KEEP_STAGE5",
+      "fact_1_copy": "KEEP_STAGE5",
+      "fact_2_label": "KEEP_STAGE5",
+      "fact_2_copy": "KEEP_STAGE5",
+      "fact_3_label": "KEEP_STAGE5",
+      "fact_3_copy": "KEEP_STAGE5"
+    },
+    "authorities": [
+      {
+        "id": "FSANZ_S15",
+        "establishes": "308 = Synthetic gamma-tocopherol"
+      },
+      {
+        "id": "FSANZ_S8",
+        "establishes": "Labelling name γ-Tocopherol (does not override S15 synthetic permission identity)"
+      },
+      {
+        "id": "CODEX_INS",
+        "establishes": "Tocopherol, gamma-, synthetic"
+      }
+    ]
+  },
+  "e309": {
+    "decision_requested": "FOUNDER_APPROVAL_REQUIRED",
+    "current": {
+      "source_preparation_profile": "PLANT_EXTRACT",
+      "source_preparation_copy": "Commercial food-grade material is commonly isolated and purified from vegetable-oil fractions rich in tocopherols.",
+      "tile_summary": "Delta-tocopherol is one of the naturally occurring tocopherols in the vitamin E family. ",
+      "expanded_summary": "Delta-tocopherol is one of the naturally occurring tocopherols in the vitamin E family. It is fat-soluble and can help slow oxidation.",
+      "fact_1_label": "Natural occurrence",
+      "fact_1_copy": "Found naturally in vegetable oils and other plant foods.",
+      "fact_2_label": "Food role",
+      "fact_2_copy": "Used as an antioxidant in fat-containing foods.",
+      "fact_3_label": "",
+      "fact_3_copy": ""
+    },
+    "proposed": {
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "source_preparation_copy": "Manufactured by chemical synthesis as a defined delta-tocopherol preparation and purified to food-additive specifications.",
+      "tile_summary": "Synthetic delta-tocopherol is a manufactured form of one of the tocopherols in the vitamin E family.",
+      "expanded_summary": "Synthetic delta-tocopherol is a manufactured form of one of the tocopherols in the vitamin E family. In the Australia New Zealand Food Standards Code it is listed as synthetic delta-tocopherol (309), distinct from mixed tocopherols concentrate (307b). It is fat-soluble and is used as an antioxidant in fat-containing foods.",
+      "fact_1_label": "Listing",
+      "fact_1_copy": "FSANZ Schedule 15 lists 309 as synthetic delta-tocopherol, separate from mixed tocopherols concentrate (307b).",
+      "fact_2_label": "Food role",
+      "fact_2_copy": "Used as an antioxidant in fat-containing foods.",
+      "fact_3_label": "Decode note",
+      "fact_3_copy": "The additive number alone does not mean the ingredient was extracted as a mixed natural tocopherol concentrate."
+    },
+    "authorities": [
+      {
+        "id": "FSANZ_S15",
+        "establishes": "309 = Synthetic delta-tocopherol"
+      },
+      {
+        "id": "FSANZ_S8",
+        "establishes": "Labelling name δ-Tocopherol"
+      },
+      {
+        "id": "CODEX_INS",
+        "establishes": "Tocopherol, delta-, synthetic"
+      }
+    ],
+    "distinction": "Naturally occurring delta-tocopherol in oils ≠ Schedule 15 commercial additive identity 309 (synthetic delta-tocopherol). Mixed natural homologues belong under 307b."
+  },
+  "e472e": {
+    "decision_requested": "NO_GOVERNED_CHANGE",
+    "disposition": "RESOLVED_GENERIC_HEDGE_RETAIN_FAIL_CLOSED",
+    "primary_source": {
+      "id": "JECFA_Additive_149",
+      "quote": "fatty acids of food fats",
+      "url": "https://www.fao.org/fileadmin/user_upload/jecfa_additives/docs/Monograph1/Additive-149.pdf",
+      "establishes": "Feedstock is food-fat fatty acids; not pinned to plant-only or animal-only; supports generic plant/animal indeterminacy hedge"
+    },
+    "current_source_preparation_copy_clause": "fatty-acid sources can be plant or animal",
+    "product_specific_origin_claim": "UNSUPPORTED_KEEP_FAIL_CLOSED",
+    "proposed_field_changes": []
+  }
+}

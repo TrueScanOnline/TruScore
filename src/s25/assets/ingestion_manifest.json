@@ -1,8 +1,8 @@
 {
-  "asset_version": "v0.8-W5AD01-editorial",
-  "generated_at": "2026-11-08T20:29:13.857Z",
+  "asset_version": "v0.12-W5AD01-editorial",
+  "generated_at": "2026-11-09T18:18:36.674Z",
   "source_format": "xlsx",
-  "source_path": "docs/development/w5-ad01/Rveel_S25_Broader_Additive_Catalogue_MVP_Implementation_Asset_W5AD01_editorial_v0_8.xlsx",
+  "source_path": "docs/development/w5-ad01/Rveel_S25_Broader_Additive_Catalogue_MVP_Implementation_Asset_W5AD01_editorial_v0_12.xlsx",
   "generator": "scripts/generate-s25-asset-runtime.js",
   "counts": {
     "catalogue_rows": 315,
@@ -15,5 +15,5 @@
     "source_profiles": 11,
     "surface_copy_keys": 7
   },
-  "source_sha256": "88cec7188385ec364f67ddc5742f45555f649defac430a5e80f7479902214fa2"
+  "source_sha256": "a70f860fd9a9c4f17deedf506d9e3d4106760973ee03b5c935a1648e72ece638"
 }

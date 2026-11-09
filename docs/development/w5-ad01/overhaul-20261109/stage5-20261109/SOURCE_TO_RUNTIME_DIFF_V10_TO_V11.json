@@ -1,0 +1,321 @@
+{
+  "from": "v0.10-W5AD01-editorial",
+  "to": "v0.11-W5AD01-editorial",
+  "changed_ids": 29,
+  "field_mutations": 42,
+  "changes": [
+    {
+      "additive_id": "e133",
+      "fields": {
+        "expanded_summary": {
+          "before": "Brilliant Blue FCF is a synthetic blue colour used for bright, stable blue shades and for colour blending.",
+          "after": "Brilliant Blue FCF is a synthetic blue colour used for bright, stable blue shades and for colour blending. It is manufactured by chemical synthesis and purified to a defined mixture of colouring substances, and is often blended with other colours."
+        }
+      }
+    },
+    {
+      "additive_id": "e143",
+      "fields": {
+        "expanded_summary": {
+          "before": "Fast Green FCF is a synthetic green food colour made to deliver a strong, consistent green shade.",
+          "after": "Fast Green FCF is a synthetic green food colour made to deliver a strong, consistent green shade. It is manufactured by chemical synthesis and purified to food-additive specifications for adding or restoring green colour."
+        }
+      }
+    },
+    {
+      "additive_id": "e172",
+      "fields": {
+        "expanded_summary": {
+          "before": "Mineral-like iron oxide pigments that range from yellow and red to black depending on the oxide form.",
+          "after": "Mineral-like iron oxide pigments that range from yellow and red to black depending on the oxide form. These inorganic iron-oxygen compounds are produced from purified mineral material or by controlled manufacture of defined iron oxides."
+        }
+      }
+    },
+    {
+      "additive_id": "e221",
+      "fields": {
+        "fact_3_label": {
+          "before": "",
+          "after": "Label cue"
+        },
+        "expanded_summary": {
+          "before": "Sodium sulphite is a sulphite salt used to preserve foods and control browning. In food it can release sulphur dioxide-related preserving species.",
+          "after": "Sodium sulphite is a sulphite salt used to preserve foods and control browning. In food it can release sulphur dioxide-related preserving species. In Australia and New Zealand, added sulphites at 10 mg/kg or more must be declared, which helps people who need to avoid sulphites."
+        },
+        "fact_3_copy": {
+          "before": "",
+          "after": "Added sulphites at 10 mg/kg or more must be declared on packaged foods in Australia and New Zealand."
+        }
+      }
+    },
+    {
+      "additive_id": "e225",
+      "fields": {
+        "fact_3_label": {
+          "before": "",
+          "after": "Label cue"
+        },
+        "expanded_summary": {
+          "before": "Potassium sulphite is a potassium salt in the sulphite preservative family, chemically related to sulphur dioxide and other sulphites. It is used for preservation and as an antioxidant.",
+          "after": "Potassium sulphite is a potassium salt in the sulphite preservative family, chemically related to sulphur dioxide and other sulphites. It is used for preservation and as an antioxidant. In Australia and New Zealand, added sulphites at 10 mg/kg or more must be declared, which helps people who need to avoid sulphites."
+        },
+        "fact_3_copy": {
+          "before": "",
+          "after": "Added sulphites at 10 mg/kg or more must be declared on packaged foods in Australia and New Zealand."
+        }
+      }
+    },
+    {
+      "additive_id": "e307b",
+      "fields": {
+        "expanded_summary": {
+          "before": "Mixed tocopherols concentrate is a vitamin-E-rich antioxidant mixture containing several naturally occurring tocopherols, commonly recovered from vegetable-oil processing streams.",
+          "after": "Mixed tocopherols concentrate is a vitamin-E-rich antioxidant mixture containing several naturally occurring tocopherols, commonly recovered from vegetable-oil processing streams. It typically contains a mixture of alpha-, beta-, gamma- and delta-tocopherols and is used to slow oxidation in fats and oils."
+        }
+      }
+    },
+    {
+      "additive_id": "e308",
+      "fields": {
+        "tile_summary": {
+          "before": "Gamma-tocopherol is one of the naturally occurring tocopherols in the vitamin E family. ",
+          "after": "Synthetic gamma-tocopherol is a manufactured form of one of the tocopherols in the vitamin E family."
+        },
+        "fact_3_label": {
+          "before": "",
+          "after": "Decode note"
+        },
+        "fact_1_copy": {
+          "before": "Found naturally in vegetable oils and other plant foods.",
+          "after": "FSANZ Schedule 15 lists 308 as synthetic gamma-tocopherol, separate from mixed tocopherols concentrate (307b)."
+        },
+        "expanded_summary": {
+          "before": "Gamma-tocopherol is one of the naturally occurring tocopherols in the vitamin E family. It is fat-soluble and can help slow oxidation.",
+          "after": "Synthetic gamma-tocopherol is a manufactured form of one of the tocopherols in the vitamin E family. In the Australia New Zealand Food Standards Code it is listed as synthetic gamma-tocopherol (308), distinct from mixed tocopherols concentrate (307b). It is fat-soluble and is used as an antioxidant in fat-containing foods."
+        },
+        "fact_1_label": {
+          "before": "Natural occurrence",
+          "after": "Listing"
+        },
+        "fact_3_copy": {
+          "before": "",
+          "after": "The additive number alone does not mean the ingredient was extracted as a mixed natural tocopherol concentrate."
+        }
+      }
+    },
+    {
+      "additive_id": "e335",
+      "fields": {
+        "expanded_summary": {
+          "before": "Sodium tartrate is a sodium salt of tartaric acid, the fruit acid closely associated with grapes and wine.",
+          "after": "Sodium tartrate is a sodium salt of tartaric acid, the fruit acid closely associated with grapes and wine. It is produced by neutralising purified tartaric acid or recovering and refining tartrate salts from food-processing streams, and is used for acidity control, buffering, stabilisation or raising-agent chemistry depending on the salt."
+        }
+      }
+    },
+    {
+      "additive_id": "e336",
+      "fields": {
+        "expanded_summary": {
+          "before": "Potassium tartrate / potassium acid tartrate is a potassium salt of tartaric acid, the fruit acid closely associated with grapes and wine.",
+          "after": "Potassium tartrate / potassium acid tartrate is a potassium salt of tartaric acid, the fruit acid closely associated with grapes and wine. It is produced by neutralising purified tartaric acid or recovering and refining tartrate salts from food-processing streams, and is used for acidity control, buffering, stabilisation or raising-agent chemistry depending on the salt."
+        }
+      }
+    },
+    {
+      "additive_id": "e337",
+      "fields": {
+        "expanded_summary": {
+          "before": "Potassium sodium tartrate is a potassium and sodium salt of tartaric acid, the fruit acid closely associated with grapes and wine.",
+          "after": "Potassium sodium tartrate is a potassium and sodium salt of tartaric acid, the fruit acid closely associated with grapes and wine. It is produced by neutralising purified tartaric acid or recovering and refining tartrate salts from food-processing streams, and is used for acidity control, buffering, stabilisation or raising-agent chemistry depending on the salt."
+        }
+      }
+    },
+    {
+      "additive_id": "e350",
+      "fields": {
+        "expanded_summary": {
+          "before": "Sodium malate / sodium hydrogen malate is a sodium salt of malic acid, the tart fruit acid associated with apples and many other fruits.",
+          "after": "Sodium malate / sodium hydrogen malate is a sodium salt of malic acid, the tart fruit acid associated with apples and many other fruits. It is made by neutralising purified malic acid with a sodium-containing base and is used mainly for acidity control, buffering or mineral delivery depending on the salt."
+        }
+      }
+    },
+    {
+      "additive_id": "e351",
+      "fields": {
+        "expanded_summary": {
+          "before": "Potassium malate is a potassium salt of malic acid, the tart fruit acid associated with apples and many other fruits.",
+          "after": "Potassium malate is a potassium salt of malic acid, the tart fruit acid associated with apples and many other fruits. It is made by neutralising purified malic acid with a potassium-containing base and is used mainly for acidity control, buffering or mineral delivery depending on the salt."
+        }
+      }
+    },
+    {
+      "additive_id": "e352",
+      "fields": {
+        "expanded_summary": {
+          "before": "Calcium malate is a calcium salt of malic acid, the tart fruit acid associated with apples and many other fruits.",
+          "after": "Calcium malate is a calcium salt of malic acid, the tart fruit acid associated with apples and many other fruits. It is made by neutralising purified malic acid with a calcium-containing base and is used mainly for acidity control, buffering or mineral delivery depending on the salt."
+        }
+      }
+    },
+    {
+      "additive_id": "e354",
+      "fields": {
+        "expanded_summary": {
+          "before": "Calcium tartrate is a calcium salt of tartaric acid, the fruit acid closely associated with grapes and wine.",
+          "after": "Calcium tartrate is a calcium salt of tartaric acid, the fruit acid closely associated with grapes and wine. It is produced by neutralising purified tartaric acid or recovering and refining tartrate salts from food-processing streams, and is used for acidity control, buffering, stabilisation or raising-agent chemistry depending on the salt."
+        }
+      }
+    },
+    {
+      "additive_id": "e381",
+      "fields": {
+        "expanded_summary": {
+          "before": "Ferric ammonium citrate is an iron-containing citrate complex rather than a single simple salt. It combines iron with citrate and ammonium in a water-compatible form.",
+          "after": "Ferric ammonium citrate is an iron-containing citrate complex rather than a single simple salt. It combines iron with citrate and ammonium in a water-compatible form. JECFA describes functional uses as a nutrient/dietary supplement and, for the green salt, as an anticaking agent for sodium chloride."
+        },
+        "fact_2_copy": {
+          "before": "Used where iron and citrate chemistry provides the desired technological effect.",
+          "after": "Used as an iron nutrient/dietary supplement and, in some forms, as an anticaking agent for salt."
+        }
+      }
+    },
+    {
+      "additive_id": "e401",
+      "fields": {
+        "expanded_summary": {
+          "before": "Sodium alginate is the sodium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed.",
+          "after": "Sodium alginate is the sodium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed. Alginate is a structural polysaccharide in brown algae; after extraction and purification it is used to thicken, stabilise or form gels depending on the form and food."
+        }
+      }
+    },
+    {
+      "additive_id": "e402",
+      "fields": {
+        "expanded_summary": {
+          "before": "Potassium alginate is the potassium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed.",
+          "after": "Potassium alginate is the potassium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed. Alginate is a structural polysaccharide in brown algae; after extraction and purification it is used to thicken, stabilise or form gels depending on the form and food."
+        }
+      }
+    },
+    {
+      "additive_id": "e404",
+      "fields": {
+        "expanded_summary": {
+          "before": "Calcium alginate is the calcium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed.",
+          "after": "Calcium alginate is the calcium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed. Alginate is a structural polysaccharide in brown algae; after extraction and purification it is used to thicken, stabilise or form gels depending on the form and food."
+        }
+      }
+    },
+    {
+      "additive_id": "e409",
+      "fields": {
+        "expanded_summary": {
+          "before": "Arabinogalactan, also called larch gum, is a highly branched soluble plant carbohydrate obtained mainly from larch wood.",
+          "after": "Arabinogalactan, also called larch gum, is a highly branched soluble plant carbohydrate obtained mainly from larch wood. It is extracted with water then purified, concentrated and dried, and used for stabilising, bulking or fibre-like technological functions depending on the product."
+        }
+      }
+    },
+    {
+      "additive_id": "e444",
+      "fields": {
+        "expanded_summary": {
+          "before": "Sucrose acetate isobutyrate (SAIB) is a dense, oil-soluble sucrose ester used mainly to keep flavour oils evenly suspended in drinks.",
+          "after": "Sucrose acetate isobutyrate (SAIB) is a dense, oil-soluble sucrose ester used mainly to keep flavour oils evenly suspended in drinks. It is manufactured by esterifying sucrose with acetic and isobutyric acid derivatives; its density helps stop citrus and other flavour oils floating to the top of a drink."
+        }
+      }
+    },
+    {
+      "additive_id": "e507",
+      "fields": {
+        "expanded_summary": {
+          "before": "Hydrochloric acid is a strong inorganic acid also present in gastric acid.",
+          "after": "Hydrochloric acid is a strong inorganic acid also present in gastric acid. Food-grade material is manufactured by dissolving highly purified hydrogen chloride gas in water and is used mainly to adjust acidity or pH during food processing."
+        }
+      }
+    },
+    {
+      "additive_id": "e510",
+      "fields": {
+        "expanded_summary": {
+          "before": "Ammonium chloride is an inorganic ammonium salt with a distinctly salty, slightly sharp taste.",
+          "after": "Ammonium chloride is an inorganic ammonium salt with a distinctly salty, slightly sharp taste. It is produced industrially from ammonia and hydrochloric acid or recovered from related chemical processes, and is used for acidity control, dough/yeast processing or characteristic flavour in some foods."
+        }
+      }
+    },
+    {
+      "additive_id": "e518",
+      "fields": {
+        "expanded_summary": {
+          "before": "Magnesium sulphate is the mineral salt also known as Epsom salt.",
+          "after": "Magnesium sulphate is the mineral salt also known as Epsom salt. It is obtained from mineral/brine sources or manufactured and crystallised to food-grade purity, and is used as a mineral salt, firming/coagulating aid or processing ingredient."
+        }
+      }
+    },
+    {
+      "additive_id": "e519",
+      "fields": {
+        "expanded_summary": {
+          "before": "Cupric sulphate is a copper sulphate salt.",
+          "after": "Cupric sulphate is a copper sulphate salt. It is manufactured from copper-containing raw materials and sulphuric acid, then highly purified, and is used only in specific technological applications where copper chemistry is required."
+        }
+      }
+    },
+    {
+      "additive_id": "e551",
+      "fields": {
+        "expanded_summary": {
+          "before": "Amorphous silicon dioxide is a finely divided form of silica.",
+          "after": "Amorphous silicon dioxide is a finely divided form of silica. It is produced from purified silica/silicate starting materials by precipitation, gel formation or thermal processes, and is used mainly as an anticaking agent and carrier because its porous particles absorb moisture and keep powders free-flowing."
+        }
+      }
+    },
+    {
+      "additive_id": "e941",
+      "fields": {
+        "expanded_summary": {
+          "before": "Nitrogen is an inert gas that makes up about 78% of Earth's atmosphere.",
+          "after": "Nitrogen is an inert gas that makes up about 78% of Earth's atmosphere. It is separated and purified from air, then compressed or liquefied, and is used to displace oxygen, protect food from oxidation, create packaging atmospheres or provide pressure."
+        }
+      }
+    },
+    {
+      "additive_id": "e942",
+      "fields": {
+        "expanded_summary": {
+          "before": "Nitrous oxide is a gas composed of nitrogen and oxygen, best known in food for pressurising and aerating whipped cream.",
+          "after": "Nitrous oxide is a gas composed of nitrogen and oxygen, best known in food for pressurising and aerating whipped cream. It is produced industrially from controlled decomposition of ammonium nitrate and highly purified; it dissolves well in fat, which makes it useful for creating stable whipped-cream foams as well as acting as a propellant."
+        }
+      }
+    },
+    {
+      "additive_id": "e946",
+      "fields": {
+        "fact_1_copy": {
+          "before": "Used as a specialised propellant or packaging gas in limited applications.",
+          "after": "Used as a specialised propellant or aerating agent in foamed or sprayed food applications."
+        },
+        "expanded_summary": {
+          "before": "Octafluorocyclobutane is a manufactured gas whose molecules contain only carbon and fluorine. Its name describes a ring of four carbon atoms (cyclobutane) with eight fluorine atoms attached.",
+          "after": "Octafluorocyclobutane is a manufactured gas whose molecules contain only carbon and fluorine. Its name describes a ring of four carbon atoms (cyclobutane) with eight fluorine atoms attached. Authoritative food-additive specifications describe it as a propellant and aerating agent for foamed or sprayed foods."
+        }
+      }
+    },
+    {
+      "additive_id": "e962",
+      "fields": {
+        "fact_3_label": {
+          "before": "Decode note",
+          "after": "Label cue"
+        },
+        "expanded_summary": {
+          "before": "Aspartame-acesulphame salt is a crystalline compound containing the two sweeteners aspartame and acesulphame in a fixed salt-like combination.",
+          "after": "Aspartame-acesulphame salt is a crystalline compound containing the two sweeteners aspartame and acesulphame in a fixed salt-like combination. It provides a blended sweetness profile without adding the two sweeteners separately. Because it contains aspartame-derived material, foods that contain it require a phenylalanine advisory statement under the Australia New Zealand Food Standards Code."
+        },
+        "fact_3_copy": {
+          "before": "The ingredient contains aspartame-derived material as well as acesulphame.",
+          "after": "Foods that contain aspartame-acesulphame salt require an advisory statement that the food contains phenylalanine."
+        }
+      }
+    }
+  ]
+}

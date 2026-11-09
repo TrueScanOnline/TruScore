@@ -22,6 +22,23 @@ import {
 
 const BASELINE_SHA = '855f45bca3873629811c30542a01ef7f7af617ff';
 const PILOT_IDS = ['e120', 'e170', 'e471', 'e211'] as const;
+/** Stage 4C Batch A — additional authorised STANDARD editorial IDs. */
+const STAGE4C_BATCH_A_IDS = [
+  'e476',
+  'e150c',
+  'e330',
+  'e322',
+  'e422',
+  'e575',
+  'e223',
+] as const;
+const AUTHORISED_EDITORIAL_IDS = [...PILOT_IDS, ...STAGE4C_BATCH_A_IDS] as const;
+const V10_SOURCE_SHA256 =
+  '5a8e8fb5be0b4a70832fa8e0d6c46bc42e281ddba3ab29bc06b5c1e8e9dc25b6';
+const V11_SOURCE_SHA256 =
+  'e155d47e71078a62d0866d1fe5819dac937bcd5877dbc0e4fc67cae10afa9eb5';
+const V12_SOURCE_SHA256 =
+  'a70f860fd9a9c4f17deedf506d9e3d4106760973ee03b5c935a1648e72ece638';
 
 const EDITORIAL_FIELDS = [
   'tile_summary',
@@ -83,7 +100,7 @@ describe('W5-AD-01 Stage 2 commentary pilot integrity', () => {
     }
   });
 
-  it('changes editorial fields only on the four pilot records', () => {
+  it('restricts editorial drift vs 855f45b baseline to STANDARD rows only', () => {
     const changedIds = new Set<string>();
     for (const entry of S25_CATALOGUE) {
       const base = baselineById.get(entry.additive_id);
@@ -91,22 +108,36 @@ describe('W5-AD-01 Stage 2 commentary pilot integrity', () => {
       for (const field of EDITORIAL_FIELDS) {
         if (entry[field] !== base![field]) {
           changedIds.add(entry.additive_id);
+          expect(entry.body6_existing).toBe(false);
+          expect(entry.presentation_treatment).toBe('STANDARD');
         }
       }
     }
-    expect([...changedIds].sort()).toEqual([...PILOT_IDS].sort());
-  });
-
-  it('leaves all protected fields unchanged on every record', () => {
-    for (const entry of S25_CATALOGUE) {
-      const base = baselineById.get(entry.additive_id)!;
-      expect(protectedSnapshot(entry)).toEqual(protectedSnapshot(base));
+    // Catalogue-wide overhaul + pilots + Batch A — far more than the original four.
+    expect(changedIds.size).toBeGreaterThan(AUTHORISED_EDITORIAL_IDS.length);
+    for (const id of PILOT_IDS) {
+      expect(changedIds.has(id)).toBe(true);
     }
   });
 
-  it('leaves the other 311 records value-identical to baseline', () => {
+  it('leaves all protected fields unchanged on every record', () => {
+    // e308/e309 source_preparation_profile may differ after founder-authorised v0.12 correction.
+    const authorisedProfileIds = new Set(['e308', 'e309']);
     for (const entry of S25_CATALOGUE) {
-      if ((PILOT_IDS as readonly string[]).includes(entry.additive_id)) continue;
+      const base = baselineById.get(entry.additive_id)!;
+      const working = protectedSnapshot(entry);
+      const expected = protectedSnapshot(base);
+      if (authorisedProfileIds.has(entry.additive_id)) {
+        delete working.source_preparation_profile;
+        delete expected.source_preparation_profile;
+      }
+      expect(working).toEqual(expected);
+    }
+  });
+
+  it('leaves BODY6 records value-identical to baseline', () => {
+    for (const entry of S25_CATALOGUE) {
+      if (!entry.body6_existing) continue;
       const base = baselineById.get(entry.additive_id)!;
       expect(entry).toEqual(base);
     }
@@ -171,7 +202,7 @@ describe('W5-AD-01 Stage 2 commentary pilot integrity', () => {
 
   it('does not alter sibling S25 data assets on disk vs baseline', () => {
     // Data sheets remain baseline-identical. ingestion_manifest.json may carry
-    // accurate v0.8 provenance after governed regeneration (asserted separately).
+    // accurate v0.10 provenance after governed regeneration (asserted separately).
     const siblings = ['classes_25.json', 'source_profiles.json', 'surface_copy.json'];
     const assetsDir = path.join(__dirname, '../../../s25/assets');
     const normalize = (text: string) => text.replace(/\r\n/g, '\n');
@@ -184,7 +215,7 @@ describe('W5-AD-01 Stage 2 commentary pilot integrity', () => {
     }
   });
 
-  it('records accurate v0.8 ingestion provenance without claiming v0.7', () => {
+  it('records accurate v0.12 ingestion provenance without claiming v0.7', () => {
     const assetsDir = path.join(__dirname, '../../../s25/assets');
     const manifest = JSON.parse(
       fs.readFileSync(path.join(assetsDir, 'ingestion_manifest.json'), 'utf8')
@@ -196,14 +227,14 @@ describe('W5-AD-01 Stage 2 commentary pilot integrity', () => {
       generator?: string;
       counts: Record<string, number>;
     };
-    expect(manifest.asset_version).toBe('v0.8-W5AD01-editorial');
+    expect(manifest.asset_version).toBe('v0.12-W5AD01-editorial');
     expect(manifest.asset_version).not.toBe('v0.7');
     expect(manifest.source_format).toBe('xlsx');
-    expect(manifest.source_sha256).toBe(
-      '88cec7188385ec364f67ddc5742f45555f649defac430a5e80f7479902214fa2'
-    );
-    expect(manifest.source_path).toContain(
-      'Rveel_S25_Broader_Additive_Catalogue_MVP_Implementation_Asset_W5AD01_editorial_v0_8.xlsx'
+    expect(manifest.source_sha256).toBe(V12_SOURCE_SHA256);
+    expect(manifest.source_sha256).not.toBe(V10_SOURCE_SHA256);
+    expect(manifest.source_sha256).not.toBe(V11_SOURCE_SHA256);
+    expect(manifest.source_path?.replace(/\\/g, '/')).toContain(
+      'Rveel_S25_Broader_Additive_Catalogue_MVP_Implementation_Asset_W5AD01_editorial_v0_12.xlsx'
     );
     expect(manifest.generator).toMatch(/generate-s25-asset-runtime\.(ts|js)$/);
     expect(manifest.counts.catalogue_rows).toBe(315);

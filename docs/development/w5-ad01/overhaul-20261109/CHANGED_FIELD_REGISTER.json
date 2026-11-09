@@ -1,0 +1,2245 @@
+{
+  "count": 320,
+  "changes": [
+    {
+      "additive_id": "e100",
+      "field": "tile_summary",
+      "before": "A yellow-orange colouring based on curcuminoids from turmeric. ",
+      "after": "A yellow-orange colour concentrated from the pigments in turmeric.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e100",
+      "field": "expanded_summary",
+      "before": "A yellow-orange colouring based on curcuminoids from turmeric. It is a concentrated colour preparation rather than simply ground turmeric spice.",
+      "after": "A yellow-orange colour concentrated from the pigments in turmeric, best known as curcumin. It is a refined colour preparation rather than simply ground turmeric spice.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e123",
+      "field": "tile_summary",
+      "before": "Amaranth is a synthetic food colour designed to give a strong, consistent red to reddish-purple shade. ",
+      "after": "Amaranth is a synthetic red food colour; despite the name, it is not extracted from the amaranth plant.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e123",
+      "field": "expanded_summary",
+      "before": "Amaranth is a synthetic food colour designed to give a strong, consistent red to reddish-purple shade. It is a manufactured dye rather than a colour extracted from a food or plant.",
+      "after": "Amaranth is a synthetic red food colour; despite the name, it is not extracted from the amaranth plant. It is a manufactured dye designed to give a strong, consistent red to reddish-purple shade.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e127",
+      "field": "tile_summary",
+      "before": "Erythrosine is a bright pink-red synthetic dye in the xanthene family. ",
+      "after": "Erythrosine is a bright pink-red synthetic dye in the xanthene family.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e127",
+      "field": "fact_2_copy",
+      "before": "It is an iodinated colour compound, not a source of dietary iodine in the ordinary nutritional sense.",
+      "after": "Iodine atoms are built into the dye molecule itself.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e132",
+      "field": "tile_summary",
+      "before": "Indigotine, also called indigo carmine, is a blue synthetic food colour related in structure to indigo dye.",
+      "after": "Indigotine, also called indigo carmine, is a manufactured blue food colour related in structure to indigo dye, but it is not the traditional plant-extracted dye.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e132",
+      "field": "expanded_summary",
+      "before": "Indigotine, also called indigo carmine, is a blue synthetic food colour related in structure to indigo dye.",
+      "after": "Indigotine, also called indigo carmine, is a manufactured blue food colour related in structure to indigo dye, but it is not the traditional plant-extracted dye. It is a water-soluble colour salt.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e141",
+      "field": "tile_summary",
+      "before": "Copper chlorophyll and chlorophyllin complexes are greener, more stable derivatives of plant chlorophyll. ",
+      "after": "Copper chlorophyll and chlorophyllin are plant chlorophyll with copper in place of the central magnesium, giving a more stable green.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e141",
+      "field": "expanded_summary",
+      "before": "Copper chlorophyll and chlorophyllin complexes are greener, more stable derivatives of plant chlorophyll. Copper is introduced into the pigment structure to improve colour stability.",
+      "after": "Copper chlorophyll and chlorophyllin are plant chlorophyll with copper in place of the central magnesium, giving a more stable green. Chlorophyllin forms are modified further so they dissolve in water.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e142",
+      "field": "expanded_summary",
+      "before": "Green S is a synthetic green food colour made to deliver a strong, consistent green shade.",
+      "after": "Green S is a synthetic green food colour made to deliver a strong, consistent green shade. It is a manufactured dye rather than a colour extracted from a food or plant.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e150a",
+      "field": "tile_summary",
+      "before": "Caramel I is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates. ",
+      "after": "Caramel I is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates, which is different from kitchen caramel.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e150a",
+      "field": "fact_1_label",
+      "before": "Process type",
+      "after": "Which caramel",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e150a",
+      "field": "fact_1_copy",
+      "before": "Plain caramel.",
+      "after": "The plain type, made without ammonium or sulphite compounds.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e150b",
+      "field": "tile_summary",
+      "before": "Caramel II is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates. ",
+      "after": "Caramel II is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e150b",
+      "field": "fact_1_copy",
+      "before": "Caustic sulphite caramel.",
+      "after": "Made by heating carbohydrates with sulphite compounds but no ammonium compounds, the type called caustic sulphite caramel.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e150d",
+      "field": "tile_summary",
+      "before": "Caramel IV is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates. ",
+      "after": "Caramel IV is a brown colour made by heating sugars with ammonium and sulphite compounds.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e150d",
+      "field": "expanded_summary",
+      "before": "Caramel IV is a brown colouring made by controlled heat treatment of sugars or other food-grade carbohydrates. It is a colour ingredient, not simply the caramel made when sugar is browned in a kitchen.",
+      "after": "Caramel IV is a brown colour made by heating sugars or other food-grade carbohydrates with ammonium and sulphite compounds. It is a colour ingredient, not simply the caramel made when sugar is browned in a kitchen.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e150d",
+      "field": "fact_1_copy",
+      "before": "Ammonia-sulphite caramel.",
+      "after": "Known as ammonia-sulphite caramel because both ammonium and sulphite compounds are used in the heating step.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e151",
+      "field": "tile_summary",
+      "before": "Brilliant Black BN is a synthetic food colour designed to give a strong, consistent black to violet-black shade. ",
+      "after": "Brilliant Black BN (also listed as Brilliant Black PN) is a synthetic food colour designed to give a strong, consistent black to violet-black shade.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e151",
+      "field": "expanded_summary",
+      "before": "Brilliant Black BN is a synthetic food colour designed to give a strong, consistent black to violet-black shade. It is a manufactured dye rather than a colour extracted from a food or plant.",
+      "after": "Brilliant Black BN (also listed as Brilliant Black PN) is a synthetic food colour designed to give a strong, consistent black to violet-black shade. It is a manufactured dye rather than a colour extracted from a food or plant.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e160a",
+      "field": "tile_summary",
+      "before": "Carotenes are yellow-orange pigments from the carotenoid family. ",
+      "after": "Carotenes are yellow-orange pigments, like those in carrots, that food colours can take from plants or algae or make as defined compounds.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e160a",
+      "field": "expanded_summary",
+      "before": "Carotenes are yellow-orange pigments from the carotenoid family. They occur naturally in many plants; commercial food colours can be extracted from plant sources or produced as defined carotene preparations.",
+      "after": "Carotenes are yellow-orange pigments from the carotenoid family and occur naturally in many plants. For food colouring, carotene preparations may be extracted from plant material or algae, or manufactured as defined carotene compounds, so the additive code alone does not identify one source or route.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e160d",
+      "field": "tile_summary",
+      "before": "Lycopene is the red carotenoid pigment best known from tomatoes. ",
+      "after": "Lycopene is the red pigment best known from tomatoes — but the additive can be made by more than one route, so tomato is not guaranteed.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e160f",
+      "field": "tile_summary",
+      "before": "A yellow-orange carotenoid-type colour related to naturally occurring carotenoids.",
+      "after": "A yellow-orange carotenoid-type colour related to naturally occurring carotenoids, but the food-grade version is made by chemical synthesis.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e160f",
+      "field": "expanded_summary",
+      "before": "beta-apo-8′-Carotenoic acid ester is a carotenoid-type yellow-orange colour structurally related to naturally occurring carotenoids, but food-grade material is manufactured as a defined colour ingredient.",
+      "after": "This beta-apo-8′-carotenoic acid ester is a yellow-orange colour in the same broad family as natural carotenoids. The food-grade material is manufactured by chemical synthesis as a defined colour ingredient, rather than extracted from a plant.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161a",
+      "field": "tile_summary",
+      "before": "Flavoxanthin is a carotenoid-family pigment associated with yellow colouring. ",
+      "after": "Flavoxanthin is a yellow pigment from the same natural family as beta-carotene and lutein.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161a",
+      "field": "expanded_summary",
+      "before": "Flavoxanthin is a carotenoid-family pigment associated with yellow colouring. It belongs to the same broad natural pigment family as beta-carotene and lutein.",
+      "after": "Flavoxanthin is a carotenoid-family pigment associated with yellow colouring, in the same broad natural pigment family as beta-carotene and lutein. Which natural source or manufacturing route a commercial preparation uses depends on its approved specification, so the additive number alone does not show it.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161b",
+      "field": "tile_summary",
+      "before": "Lutein is a carotenoid-family pigment associated with yellow colouring. ",
+      "after": "Lutein is a yellow carotenoid pigment, commonly extracted from plant material such as marigold flowers.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161b",
+      "field": "expanded_summary",
+      "before": "Lutein is a carotenoid-family pigment associated with yellow colouring. It belongs to the same broad natural pigment family as beta-carotene and lutein.",
+      "after": "Lutein is a carotenoid-family pigment associated with yellow colouring. It belongs to the same broad natural pigment family as beta-carotene.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161c",
+      "field": "tile_summary",
+      "before": "Kryptoxanthin is a carotenoid-family pigment associated with yellow-orange colouring. ",
+      "after": "Kryptoxanthin is a carotenoid-family pigment associated with yellow-orange colouring.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161c",
+      "field": "fact_1_copy",
+      "before": "A xanthophyll carotenoid.",
+      "after": "A xanthophyll carotenoid: a pigment from the oxygen-containing branch of the carotenoid family.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161d",
+      "field": "fact_1_copy",
+      "before": "A xanthophyll carotenoid.",
+      "after": "A xanthophyll — a carotenoid pigment that contains oxygen.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161e",
+      "field": "tile_summary",
+      "before": "Violoxanthin is a carotenoid-family pigment associated with yellow colouring. ",
+      "after": "Violoxanthin is a carotenoid-family pigment associated with yellow colouring.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161e",
+      "field": "fact_1_copy",
+      "before": "A xanthophyll carotenoid.",
+      "after": "A xanthophyll, the oxygen-containing branch of the carotenoid family.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161f",
+      "field": "tile_summary",
+      "before": "Rhodoxanthin is a carotenoid-family pigment associated with red colouring. ",
+      "after": "Rhodoxanthin is a carotenoid-family pigment associated with red colouring.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161f",
+      "field": "expanded_summary",
+      "before": "Rhodoxanthin is a carotenoid-family pigment associated with red colouring. It belongs to the same broad natural pigment family as beta-carotene and lutein.",
+      "after": "Rhodoxanthin is a carotenoid-family pigment associated with red colouring. It belongs to the same broad natural pigment family as beta-carotene and lutein, but the additive code alone does not say which source or manufacturing route a particular product uses.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e161f",
+      "field": "fact_1_copy",
+      "before": "A xanthophyll carotenoid.",
+      "after": "A xanthophyll, which is an oxygen-containing carotenoid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e162",
+      "field": "tile_summary",
+      "before": "Beet red is a colour preparation based on betalain pigments from red beet. ",
+      "after": "Beet red is a red to purple-red colour extracted from beetroot; its main pigment is betanin.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e173",
+      "field": "tile_summary",
+      "before": "Metallic aluminium used for a silver-grey decorative effect where permitted.",
+      "after": "Aluminium is a metal used in fine flakes or powder to give a silver-grey decorative effect where permitted.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e173",
+      "field": "expanded_summary",
+      "before": "Metallic aluminium used for a silver-grey decorative effect where permitted.",
+      "after": "Aluminium used as an additive is refined aluminium metal processed into food-grade flakes or powder. It is used for a silver-grey decorative or metallic appearance where permitted.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e174",
+      "field": "tile_summary",
+      "before": "Elemental silver used as a metallic decorative colour where permitted.",
+      "after": "This is silver itself, the metal, used in very thin leaf or flakes as a decorative metallic colour where permitted.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e174",
+      "field": "expanded_summary",
+      "before": "Elemental silver used as a metallic decorative colour where permitted.",
+      "after": "This additive is silver itself, the metal. Refined silver is processed into very thin leaf, flakes or powder and used mainly to give foods a decorative metallic silver appearance, where permitted.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e175",
+      "field": "tile_summary",
+      "before": "Elemental gold used as a decorative metallic colour where permitted.",
+      "after": "Gold is used in food as a purely decorative metallic colour, as leaf, flakes or powder, where permitted.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e175",
+      "field": "expanded_summary",
+      "before": "Elemental gold used as a decorative metallic colour where permitted.",
+      "after": "Elemental gold is used where permitted to give food a decorative metallic finish. It is prepared as highly purified leaf, flakes or powder and is used for appearance rather than flavour or preservation.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e181",
+      "field": "tile_summary",
+      "before": "Tannins are a broad family of plant polyphenols with astringent properties. ",
+      "after": "Tannins are plant compounds known for the dry, puckering feel they give some foods and drinks.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e181",
+      "field": "expanded_summary",
+      "before": "Tannins are a broad family of plant polyphenols with astringent properties. Tannic acid is a more defined tannin-rich material historically obtained from plant galls and other tannin-rich sources.",
+      "after": "Tannins are plant compounds known for the dry, puckering feel they give some foods and drinks. Tannic acid is a more defined tannin-rich material historically obtained from plant galls and other tannin-rich sources.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e200",
+      "field": "tile_summary",
+      "before": "Sorbic acid is the parent acid in the sorbate preservative family. ",
+      "after": "Sorbic acid was first identified in rowan berries — but the sorbic acid used in food is generally made by chemical synthesis.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e200",
+      "field": "expanded_summary",
+      "before": "Sorbic acid is the parent acid in the sorbate preservative family. It is used in food mainly for preservation rather than for flavour.",
+      "after": "Sorbic acid is the parent acid in the sorbate preservative family. It was first identified in rowan berries, but food-grade material is generally manufactured. It is used in food mainly for preservation rather than for flavour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e202",
+      "field": "tile_summary",
+      "before": "Potassium sorbate is the potassium salt of sorbic acid. ",
+      "after": "Potassium sorbate is the potassium salt of sorbic acid, used mainly to hold back moulds and yeasts.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e202",
+      "field": "expanded_summary",
+      "before": "Potassium sorbate is the potassium salt of sorbic acid. It is used in food mainly for preservation rather than for flavour.",
+      "after": "Potassium sorbate is the potassium salt of sorbic acid. It is used in food mainly for preservation rather than for flavour, and is made by neutralising sorbic acid with a potassium source to give a water-soluble salt.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e210",
+      "field": "tile_summary",
+      "before": "Benzoic acid is the parent acid in the benzoate preservative family. ",
+      "after": "Benzoic acid occurs naturally in small amounts in some fruits, but food-grade benzoic acid is generally made by chemical synthesis.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e210",
+      "field": "expanded_summary",
+      "before": "Benzoic acid is the parent acid in the benzoate preservative family. It is used in food mainly for preservation rather than for flavour.",
+      "after": "Benzoic acid is the parent acid of the benzoate preservative family and is used in food mainly for preservation rather than flavour. Commercial food-grade benzoic acid is generally manufactured by chemical oxidation of aromatic starting materials and then purified.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e216",
+      "field": "tile_summary",
+      "before": "Propylparaben is the propyl ester of p-hydroxybenzoic acid. ",
+      "after": "Propylparaben is the propyl ester of p-hydroxybenzoic acid, used for antimicrobial preservation where permitted.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e216",
+      "field": "expanded_summary",
+      "before": "Propylparaben is the propyl ester of p-hydroxybenzoic acid. It is used in food mainly for preservation rather than for flavour.",
+      "after": "Propylparaben is the propyl ester of p-hydroxybenzoic acid. It is used in food mainly for preservation rather than for flavour, and is made by esterifying p-hydroxybenzoic acid with propyl alcohol.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e218",
+      "field": "tile_summary",
+      "before": "Methylparaben is the methyl ester of p-hydroxybenzoic acid. ",
+      "after": "Methylparaben is a paraben-family preservative, used where permitted to limit microbial growth.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e218",
+      "field": "expanded_summary",
+      "before": "Methylparaben is the methyl ester of p-hydroxybenzoic acid. It is used in food mainly for preservation rather than for flavour.",
+      "after": "Methylparaben is the methyl ester of p-hydroxybenzoic acid. It is used in food mainly for antimicrobial preservation rather than for flavour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e220",
+      "field": "expanded_summary",
+      "before": "Sulphur dioxide is the gaseous parent compound of the sulphite preservative family.",
+      "after": "Sulphur dioxide is the gaseous parent compound of the sulphite preservative family. In Australia and New Zealand, added sulphites at 10 milligrams per kilogram or more must be declared so sulphite-sensitive consumers can identify them.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e221",
+      "field": "tile_summary",
+      "before": "Sodium sulphite is a sodium sulphite salt that can release sulphur dioxide-related preserving species in food.",
+      "after": "Sodium sulphite is a sulphite salt used to preserve foods and control browning.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e221",
+      "field": "expanded_summary",
+      "before": "Sodium sulphite is a sodium sulphite salt that can release sulphur dioxide-related preserving species in food.",
+      "after": "Sodium sulphite is a sulphite salt used to preserve foods and control browning. In food it can release sulphur dioxide-related preserving species.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e222",
+      "field": "tile_summary",
+      "before": "Sodium bisulphite is a sodium bisulphite form used as part of the sulphite preservative family.",
+      "after": "Sodium bisulphite is a sulphite preservative, made by absorbing sulphur dioxide into a sodium alkali solution.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e222",
+      "field": "expanded_summary",
+      "before": "Sodium bisulphite is a sodium bisulphite form used as part of the sulphite preservative family.",
+      "after": "Sodium bisulphite belongs to the sulphite family of preservatives. It is made by absorbing sulphur dioxide into a sodium alkali solution under controlled conditions, and is used for preservation and antioxidant effects.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e224",
+      "field": "tile_summary",
+      "before": "Potassium metabisulphite is the potassium counterpart of sodium metabisulphite and a solid source of sulphur dioxide-related preservative species.",
+      "after": "Potassium metabisulphite is a sulphite preservative: a solid salt that acts as a source of sulphur dioxide-related preservative species.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e224",
+      "field": "expanded_summary",
+      "before": "Potassium metabisulphite is the potassium counterpart of sodium metabisulphite and a solid source of sulphur dioxide-related preservative species.",
+      "after": "Potassium metabisulphite is a solid salt in the sulphite preservative family. It acts as a source of sulphur dioxide-related preservative species and is made by reacting sulphur dioxide with a potassium alkali and crystallising the salt.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e225",
+      "field": "tile_summary",
+      "before": "Potassium sulphite is a potassium sulphite salt in the sulphite preservative family.",
+      "after": "Potassium sulphite is a salt in the sulphite family, used for preservation and antioxidant effects.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e225",
+      "field": "expanded_summary",
+      "before": "Potassium sulphite is a potassium sulphite salt in the sulphite preservative family.",
+      "after": "Potassium sulphite is a potassium salt in the sulphite preservative family, chemically related to sulphur dioxide and other sulphites. It is used for preservation and as an antioxidant.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e228",
+      "field": "tile_summary",
+      "before": "Potassium bisulphite is a potassium bisulphite form in the sulphite preservative family.",
+      "after": "Potassium bisulphite is a sulphite-family preservative and antioxidant, made by reacting sulphur dioxide with a potassium alkali.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e228",
+      "field": "expanded_summary",
+      "before": "Potassium bisulphite is a potassium bisulphite form in the sulphite preservative family.",
+      "after": "Potassium bisulphite is a potassium salt in the sulphite preservative family, used for preservation and antioxidant effects. In food it can generate sulphur dioxide-related forms, which is why it sits with the other sulphites.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e234",
+      "field": "tile_summary",
+      "before": "Nisin is an antimicrobial peptide produced by certain strains of Lactococcus lactis, a bacterium associated with dairy fermentation. ",
+      "after": "Nisin is a small protein-like preservative produced by fermentation with Lactococcus lactis, a bacterium associated with dairy.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e234",
+      "field": "expanded_summary",
+      "before": "Nisin is an antimicrobial peptide produced by certain strains of Lactococcus lactis, a bacterium associated with dairy fermentation. It is used to inhibit particular spoilage and food-poisoning bacteria.",
+      "after": "Nisin is a small protein-like preservative produced by fermentation with certain strains of Lactococcus lactis, a bacterium associated with dairy fermentation. It is used to inhibit particular spoilage and food-poisoning bacteria.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e234",
+      "field": "fact_1_copy",
+      "before": "A small protein-like peptide, not a conventional synthetic preservative molecule.",
+      "after": "A peptide, a short chain of amino acids, rather than a conventional synthetic preservative molecule.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e249",
+      "field": "tile_summary",
+      "before": "Potassium nitrite is an inorganic nitrite salt. ",
+      "after": "Potassium nitrite is an inorganic nitrite salt associated mainly with curing and preservation, particularly in meat processing.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e249",
+      "field": "expanded_summary",
+      "before": "Potassium nitrite is an inorganic nitrite salt. In foods it is associated mainly with curing and preservation, particularly in meat processing.",
+      "after": "Potassium nitrite is an inorganic nitrite salt made industrially as a purified compound from mineral or chemical starting materials. Nitrite chemistry is associated mainly with curing and preservation, particularly in meat processing.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e251",
+      "field": "tile_summary",
+      "before": "Sodium nitrate is an inorganic nitrate salt. ",
+      "after": "Sodium nitrate is a nitrate salt used mainly in meat curing, where nitrate-nitrite chemistry helps control microbes and develop cured colour and flavour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e252",
+      "field": "tile_summary",
+      "before": "Potassium nitrate is an inorganic nitrate salt. ",
+      "after": "Potassium nitrate is a nitrate salt used mainly in meat curing, helping control microbes and develop cured colour and flavour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e252",
+      "field": "expanded_summary",
+      "before": "Potassium nitrate is an inorganic nitrate salt. In foods it is associated mainly with curing and preservation, particularly in meat processing.",
+      "after": "Potassium nitrate is an inorganic nitrate salt associated mainly with curing and preservation in meat processing. Under some curing conditions nitrate can be converted to nitrite, which is part of the chemistry behind cured-meat colour and flavour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e260",
+      "field": "tile_summary",
+      "before": "Acetic acid is the acid responsible for vinegar's characteristic sourness and sharp smell. ",
+      "after": "Acetic acid is the acid responsible for vinegar's characteristic sourness and sharp smell.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e260",
+      "field": "fact_1_copy",
+      "before": "Vinegar is a dilute food solution of acetic acid made by fermentation.",
+      "after": "Acetic acid is what makes vinegar sour. Vinegar is a dilute, fermentation-made solution of it; this additive is the purified acid itself.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e261",
+      "field": "tile_summary",
+      "before": "Potassium acetate or potassium diacetate is an acetate salt derived from acetic acid. ",
+      "after": "Potassium acetate (or diacetate) is a potassium salt of acetic acid — the acid that makes vinegar sour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e261",
+      "field": "expanded_summary",
+      "before": "Potassium acetate or potassium diacetate is an acetate salt derived from acetic acid. It provides acetate chemistry without adding acetic acid in exactly the same form.",
+      "after": "Potassium acetate or potassium diacetate is an acetate salt of acetic acid. Diacetate forms also carry some extra acetic acid with the salt.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e262",
+      "field": "tile_summary",
+      "before": "Sodium acetate or sodium diacetate is an acetate salt derived from acetic acid. ",
+      "after": "Sodium acetate or sodium diacetate is an acetate salt derived from acetic acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e262",
+      "field": "expanded_summary",
+      "before": "Sodium acetate or sodium diacetate is an acetate salt derived from acetic acid. It provides acetate chemistry without adding acetic acid in exactly the same form.",
+      "after": "Sodium acetate or sodium diacetate is an acetate salt derived from acetic acid. The diacetate form also carries associated acetic acid; plain sodium acetate does not.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e263",
+      "field": "tile_summary",
+      "before": "Calcium acetate is an acetate salt derived from acetic acid. ",
+      "after": "Calcium acetate is the calcium salt of acetic acid, the acid found in vinegar.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e263",
+      "field": "expanded_summary",
+      "before": "Calcium acetate is an acetate salt derived from acetic acid. It provides acetate chemistry without adding acetic acid in exactly the same form.",
+      "after": "Calcium acetate is the calcium salt of acetic acid, the acid found in vinegar, so it carries acetate in a different form from vinegar itself. Depending on the salt and food, it can regulate acidity, preserve or influence flavour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e264",
+      "field": "tile_summary",
+      "before": "Ammonium acetate is an acetate salt derived from acetic acid. ",
+      "after": "Ammonium acetate is a salt of acetic acid, the acid found in vinegar.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e264",
+      "field": "expanded_summary",
+      "before": "Ammonium acetate is an acetate salt derived from acetic acid. It provides acetate chemistry without adding acetic acid in exactly the same form.",
+      "after": "Ammonium acetate is the ammonium salt of acetic acid, the acid found in vinegar. As a salt, it supplies acetate in a form that can help regulate acidity, preserve or influence flavour, depending on the food.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e280",
+      "field": "tile_summary",
+      "before": "Propionic acid is a short-chain organic acid that also occurs naturally in some fermented foods. ",
+      "after": "Propionic acid is a short-chain organic acid that also occurs naturally in some fermented foods.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e280",
+      "field": "fact_1_copy",
+      "before": "Propionic-acid bacteria produce it in foods such as Swiss-style cheese.",
+      "after": "Propionic-acid bacteria make it naturally in foods such as Swiss-style cheese; that natural occurrence is separate from how the additive is manufactured.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e281",
+      "field": "tile_summary",
+      "before": "Sodium propionate is the sodium salt of propionic acid. ",
+      "after": "Sodium propionate is the sodium salt of propionic acid, used mainly to hold back mould — notably in bread and other bakery products.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e281",
+      "field": "fact_2_label",
+      "before": "Family",
+      "after": "How it works",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e281",
+      "field": "fact_2_copy",
+      "before": "Releases propionate, the active acid-related preserving species, under food conditions.",
+      "after": "In food it provides propionate, the propionic-acid-related form that does the preserving.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e282",
+      "field": "tile_summary",
+      "before": "Calcium propionate is the calcium salt of propionic acid. ",
+      "after": "Calcium propionate is the calcium salt of propionic acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e282",
+      "field": "fact_2_label",
+      "before": "Family",
+      "after": "How it works",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e282",
+      "field": "fact_2_copy",
+      "before": "Releases propionate, the active acid-related preserving species, under food conditions.",
+      "after": "Dissolves in food to provide propionate, the part linked to its mould-inhibiting action.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e283",
+      "field": "tile_summary",
+      "before": "Potassium propionate is the potassium salt of propionic acid. ",
+      "after": "Potassium propionate is the potassium salt of propionic acid, used mainly to inhibit moulds, commonly in bread and other bakery products.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e283",
+      "field": "expanded_summary",
+      "before": "Potassium propionate is the potassium salt of propionic acid. It is used mainly as a mould-inhibiting preservative.",
+      "after": "Potassium propionate is the potassium salt of propionic acid. It is used mainly as a mould-inhibiting preservative and is commonly associated with preservation of bread and other bakery products.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e296",
+      "field": "tile_summary",
+      "before": "Malic acid is a tart organic acid naturally present in apples and many other fruits. ",
+      "after": "Malic acid gives apples much of their tartness, but food-grade malic acid is commonly made by chemical synthesis from maleic or fumaric acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e296",
+      "field": "expanded_summary",
+      "before": "Malic acid is a tart organic acid naturally present in apples and many other fruits. Food-grade malic acid is used to add acidity and a lingering sour taste.",
+      "after": "Malic acid is a tart organic acid naturally present in apples and many other fruits. Food-grade malic acid, used to add acidity and a lingering sour taste, is commonly manufactured from maleic or fumaric acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e300",
+      "field": "tile_summary",
+      "before": "Ascorbic acid is vitamin C. ",
+      "after": "Ascorbic acid is vitamin C — and the food-grade version is commonly made from glucose using fermentation plus chemical steps.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e307",
+      "field": "tile_summary",
+      "before": "Alpha-tocopherol is a form of vitamin E and a lipid-soluble antioxidant. ",
+      "after": "Alpha-tocopherol is a form of vitamin E, used as a fat-soluble antioxidant.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e307",
+      "field": "expanded_summary",
+      "before": "Alpha-tocopherol is a form of vitamin E and a lipid-soluble antioxidant. It can be used to help protect fats and oils from oxidation.",
+      "after": "Alpha-tocopherol is a form of vitamin E, used as a fat-soluble antioxidant. It can help protect fats and oils from oxidation.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e307c",
+      "field": "tile_summary",
+      "before": "dl-Alpha-tocopherol is a synthetic form of alpha-tocopherol, the vitamin-E molecule. ",
+      "after": "dl-Alpha-tocopherol is a synthetic form of alpha-tocopherol, the vitamin-E molecule.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e307c",
+      "field": "expanded_summary",
+      "before": "dl-Alpha-tocopherol is a synthetic form of alpha-tocopherol, the vitamin-E molecule. It is a mixture of stereoisomers rather than the single natural stereoisomer found in foods.",
+      "after": "dl-Alpha-tocopherol is a synthetic form of alpha-tocopherol, the vitamin-E molecule. It is a mixture of several differently shaped versions of the molecule (stereoisomers), whereas the natural form found in foods is a single one.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e312",
+      "field": "tile_summary",
+      "before": "Dodecyl gallate is an ester of gallic acid designed to work as an antioxidant in fats and oils. ",
+      "after": "Dodecyl gallate is an antioxidant for fats and oils, made by attaching a fat-friendly chain to gallic acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e312",
+      "field": "expanded_summary",
+      "before": "Dodecyl gallate is an ester of gallic acid designed to work as an antioxidant in fats and oils. The dodecyl group makes the molecule more compatible with fatty ingredients than gallic acid itself.",
+      "after": "Dodecyl gallate is gallic acid with a dodecyl (fat-friendly) chain attached — a combination called an ester. The chain makes the molecule more compatible with fatty ingredients than gallic acid itself, so it is designed to work as an antioxidant in fats and oils.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e320",
+      "field": "tile_summary",
+      "before": "Butylated hydroxyanisole (BHA) is a synthetic mixture of phenolic antioxidant compounds. ",
+      "after": "BHA is a synthetic antioxidant, a mixture of related compounds, used in small amounts to slow rancidity in fats and oils.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e321",
+      "field": "tile_summary",
+      "before": "Butylated hydroxytoluene (BHT) is a synthetic phenolic antioxidant. ",
+      "after": "Butylated hydroxytoluene (BHT) is a synthetic antioxidant used to slow rancidity in fats and oils.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e321",
+      "field": "expanded_summary",
+      "before": "Butylated hydroxytoluene (BHT) is a synthetic phenolic antioxidant. It is used in small amounts to slow oxidative rancidity and protect flavour or shelf life in fat-containing foods.",
+      "after": "Butylated hydroxytoluene (BHT) is a synthetic antioxidant used to slow rancidity in fats and oils. It is used in small amounts to protect flavour and shelf life in fat-containing foods.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e332",
+      "field": "tile_summary",
+      "before": "Potassium citrate / potassium dihydrogen citrate is a potassium salt of citric acid. ",
+      "after": "Potassium citrate is a potassium salt of citric acid, the acid associated with citrus fruit.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e332",
+      "field": "expanded_summary",
+      "before": "Potassium citrate / potassium dihydrogen citrate is a potassium salt of citric acid. It is used when food technologists want citrate chemistry with less direct acidity than citric acid itself.",
+      "after": "Potassium citrate, including potassium dihydrogen citrate, is a potassium salt of citric acid. Although citric acid is associated with citrus fruit, the citric acid used to make this salt is produced by fermentation. It is used when food technologists want citrate chemistry with less direct acidity than citric acid itself.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e334",
+      "field": "tile_summary",
+      "before": "Tartaric acid is a naturally occurring fruit acid strongly associated with grapes and wine. ",
+      "after": "Tartaric acid is the fruit acid in grapes, and food-grade tartaric acid is often recovered from wine-making by-products.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e334",
+      "field": "expanded_summary",
+      "before": "Tartaric acid is a naturally occurring fruit acid strongly associated with grapes and wine. Commercial food-grade tartaric acid is often recovered from wine-making by-products.",
+      "after": "Tartaric acid is a naturally occurring fruit acid strongly associated with grapes and wine. Commercial food-grade tartaric acid is often recovered from wine-making by-products, although synthetic routes also exist.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e338",
+      "field": "tile_summary",
+      "before": "Phosphoric acid is an inorganic acid based on phosphorus. ",
+      "after": "Phosphoric acid is an inorganic acid based on phosphorus, used to acidify foods and drinks and control pH.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e343",
+      "field": "tile_summary",
+      "before": "Magnesium phosphates are a family of magnesium salts of phosphoric acid. ",
+      "after": "Magnesium phosphates are a family of magnesium salts of phosphoric acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e343",
+      "field": "expanded_summary",
+      "before": "Magnesium phosphates are a family of magnesium salts of phosphoric acid. Schedule 8 groups several mono-, di- or tribasic forms under the same additive number.",
+      "after": "Magnesium phosphates are a family of magnesium salts of phosphoric acid. One additive number covers several forms that differ in how fully the acid has been neutralised.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e349",
+      "field": "tile_summary",
+      "before": "Ammonium malate is a ammonium salt of malic acid, the tart fruit acid associated with apples and many other fruits.",
+      "after": "Ammonium malate is an ammonium salt of malic acid, the tart fruit acid associated with apples and many other fruits.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e349",
+      "field": "expanded_summary",
+      "before": "Ammonium malate is a ammonium salt of malic acid, the tart fruit acid associated with apples and many other fruits.",
+      "after": "Ammonium malate is an ammonium salt of malic acid, the tart fruit acid associated with apples and many other fruits. It is used mainly to control acidity or buffer pH.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e349",
+      "field": "fact_2_copy",
+      "before": "Used mainly for acidity control, buffering or mineral delivery depending on the salt.",
+      "after": "Used mainly for acidity control or buffering.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e353",
+      "field": "tile_summary",
+      "before": "Metatartaric acid is a polymerised or condensed form of tartaric acid used mainly for stabilisation rather than for adding straightforward sourness.",
+      "after": "Metatartaric acid is tartaric acid — the grape fruit acid — heated until its molecules link up, used mainly to help stop tartrate crystals forming in wine.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e353",
+      "field": "expanded_summary",
+      "before": "Metatartaric acid is a polymerised or condensed form of tartaric acid used mainly for stabilisation rather than for adding straightforward sourness.",
+      "after": "Metatartaric acid is made by heating tartaric acid, the fruit acid associated with grapes, so some molecules condense into larger structures. It is used mainly for stabilisation — particularly to help control tartrate crystal formation in wine — rather than for adding straightforward sourness.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e355",
+      "field": "tile_summary",
+      "before": "Adipic acid is a dicarboxylic organic acid. ",
+      "after": "Adipic acid is a manufactured food acid made by chemical oxidation of petrochemical-derived starting chemicals.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e355",
+      "field": "expanded_summary",
+      "before": "Adipic acid is a dicarboxylic organic acid. It is a manufactured acidulant with a clean, lingering sourness rather than a fruit extract.",
+      "after": "Adipic acid is a dicarboxylic organic acid made by chemical oxidation of petrochemical-derived intermediates, then purified to food-grade specifications. It is a manufactured acidulant rather than a fruit extract.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e357",
+      "field": "tile_summary",
+      "before": "Potassium adipate is a potassium salt of adipic acid, a manufactured dicarboxylic acid.",
+      "after": "Potassium adipate is a potassium salt of adipic acid, a manufactured acid.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e357",
+      "field": "expanded_summary",
+      "before": "Potassium adipate is a potassium salt of adipic acid, a manufactured dicarboxylic acid.",
+      "after": "Potassium adipate is a potassium salt of adipic acid, a manufactured acid with two acid groups (a dicarboxylic acid). It is used mainly for acidity control or related processing functions.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e359",
+      "field": "tile_summary",
+      "before": "Ammonium adipates is a ammonium salt of adipic acid, a manufactured dicarboxylic acid.",
+      "after": "Ammonium adipates are ammonium salts of adipic acid, a manufactured acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e359",
+      "field": "expanded_summary",
+      "before": "Ammonium adipates is a ammonium salt of adipic acid, a manufactured dicarboxylic acid.",
+      "after": "Ammonium adipates are ammonium salts of adipic acid, a manufactured acid. In food they are used mainly for acidity control or related processing functions.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e363",
+      "field": "tile_summary",
+      "before": "Succinic acid is a small organic acid that occurs naturally in living cells as part of energy metabolism. ",
+      "after": "Succinic acid occurs naturally in living cells; food-grade material can be made chemically or by fermentation.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e363",
+      "field": "expanded_summary",
+      "before": "Succinic acid is a small organic acid that occurs naturally in living cells as part of energy metabolism. Food-grade succinic acid is used for acidity and flavour effects.",
+      "after": "Succinic acid occurs naturally in living cells as part of energy metabolism. Food-grade material can be made chemically or by fermentation, so the additive code alone does not show which route was used. It is used for acidity and flavour effects.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e365",
+      "field": "tile_summary",
+      "before": "Sodium fumarate is the sodium salt of fumaric acid, a strong dicarboxylic food acid.",
+      "after": "Sodium fumarate is the sodium salt of fumaric acid, an organic food acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e365",
+      "field": "expanded_summary",
+      "before": "Sodium fumarate is the sodium salt of fumaric acid, a strong dicarboxylic food acid.",
+      "after": "Sodium fumarate is the sodium salt of fumaric acid, an organic food acid. It is used mainly for acidity control, buffering or related processing effects.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e366",
+      "field": "tile_summary",
+      "before": "Potassium fumarate is the potassium salt of fumaric acid, a strong dicarboxylic food acid.",
+      "after": "Potassium fumarate is the potassium salt of fumaric acid, a food acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e366",
+      "field": "expanded_summary",
+      "before": "Potassium fumarate is the potassium salt of fumaric acid, a strong dicarboxylic food acid.",
+      "after": "Potassium fumarate is the potassium salt of fumaric acid, a food acid with two acidic groups per molecule. It is used mainly to control acidity and buffer pH.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e367",
+      "field": "tile_summary",
+      "before": "Calcium fumarate is the calcium salt of fumaric acid, a strong dicarboxylic food acid.",
+      "after": "Calcium fumarate is the calcium salt of fumaric acid, a food acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e367",
+      "field": "expanded_summary",
+      "before": "Calcium fumarate is the calcium salt of fumaric acid, a strong dicarboxylic food acid.",
+      "after": "Calcium fumarate is the calcium salt of fumaric acid, a food acid. It is made by neutralising purified fumaric acid with a calcium base and is used mainly for acidity control, buffering or related processing effects.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e368",
+      "field": "tile_summary",
+      "before": "Ammonium fumarate is the ammonium salt of fumaric acid, a strong dicarboxylic food acid.",
+      "after": "Ammonium fumarate is the ammonium salt of fumaric acid, a food acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e368",
+      "field": "expanded_summary",
+      "before": "Ammonium fumarate is the ammonium salt of fumaric acid, a strong dicarboxylic food acid.",
+      "after": "Ammonium fumarate is the ammonium salt of fumaric acid, a food acid with two acid groups (a dicarboxylic acid). In food it is used mainly for acidity control, buffering or related processing effects.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e381",
+      "field": "tile_summary",
+      "before": "Ferric ammonium citrate is an iron-containing citrate complex rather than a single simple salt. ",
+      "after": "Ferric ammonium citrate is an iron-containing citrate complex rather than a single simple salt.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e381",
+      "field": "fact_1_copy",
+      "before": "It is a coordination mixture/complex, not simply iron metal or plain citric acid.",
+      "after": "A complex of iron with citrate and ammonium, not simply iron metal or plain citric acid.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e400",
+      "field": "tile_summary",
+      "before": "Alginic acid is the acidic polysaccharide form of alginate, part of a family of gel-forming carbohydrates obtained from brown seaweed.",
+      "after": "Alginic acid is a gel-forming carbohydrate extracted from brown seaweed.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e400",
+      "field": "expanded_summary",
+      "before": "Alginic acid is the acidic polysaccharide form of alginate, part of a family of gel-forming carbohydrates obtained from brown seaweed.",
+      "after": "Alginic acid is the acid form of alginate, a structural carbohydrate in brown seaweed. It is used to thicken, stabilise or form gels, depending on the form and food.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e403",
+      "field": "expanded_summary",
+      "before": "Ammonium alginate is the ammonium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed.",
+      "after": "Ammonium alginate is the ammonium salt of alginic acid, part of a family of gel-forming carbohydrates obtained from brown seaweed. Alginates can set into gels when they meet calcium.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e407",
+      "field": "tile_summary",
+      "before": "Carrageenan is a family of sulphated carbohydrates extracted from red seaweed. ",
+      "after": "Carrageenan is a family of carbohydrates extracted from red seaweed and used to thicken, stabilise or gel foods.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e410",
+      "field": "tile_summary",
+      "before": "Locust bean gum / carob bean gum is the ground and purified galactomannan from carob seeds. ",
+      "after": "Locust bean gum (carob bean gum) is a thickener made from the seeds of the carob tree.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e410",
+      "field": "expanded_summary",
+      "before": "Locust bean gum / carob bean gum is the ground and purified galactomannan from carob seeds. It is a plant-derived hydrocolloid used to manage texture and water in foods.",
+      "after": "Locust bean gum, also called carob bean gum, is a plant-derived gum made from carob seeds — a long-chain carbohydrate (a galactomannan). It is used to manage texture and water in foods.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e410",
+      "field": "fact_1_copy",
+      "before": "A high-molecular-weight carbohydrate rather than a simple sugar.",
+      "after": "A long-chain carbohydrate rather than a simple sugar.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e412",
+      "field": "tile_summary",
+      "before": "Guar gum is a galactomannan extracted from the endosperm of guar seeds. ",
+      "after": "Guar gum is a plant thickener extracted from the seeds of the guar plant.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e412",
+      "field": "expanded_summary",
+      "before": "Guar gum is a galactomannan extracted from the endosperm of guar seeds. It is a plant-derived hydrocolloid used to manage texture and water in foods.",
+      "after": "Guar gum is a galactomannan, a long-chain plant carbohydrate, extracted from the endosperm of guar seeds. It is a hydrocolloid, meaning it binds and thickens water, which is why it is used to manage texture and water in foods.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e414",
+      "field": "tile_summary",
+      "before": "Acacia / gum arabic is a soluble gum collected from Acacia/Senegalia tree exudates. ",
+      "after": "Acacia, or gum arabic, is a soluble gum that exudes from acacia-family trees and is collected for food use.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e415",
+      "field": "tile_summary",
+      "before": "Xanthan gum is a high-molecular-weight carbohydrate made by bacteria during fermentation. ",
+      "after": "Xanthan gum is made by bacteria: they ferment sugars to produce a carbohydrate that thickens liquids strongly at low levels.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e415",
+      "field": "expanded_summary",
+      "before": "Xanthan gum is a high-molecular-weight carbohydrate made by bacteria during fermentation. It can thicken liquids strongly at low concentrations and remains effective across a wide range of acidity and temperature.",
+      "after": "Xanthan gum is a carbohydrate made by Xanthomonas bacteria fermenting sugars, then purified, dried and milled. It can thicken liquids strongly at low concentrations and remains effective across a wide range of acidity and temperature.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e416",
+      "field": "tile_summary",
+      "before": "Karaya gum is a gum exuded from Sterculia trees. ",
+      "after": "Karaya gum is a gum exuded from Sterculia trees.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e416",
+      "field": "expanded_summary",
+      "before": "Karaya gum is a gum exuded from Sterculia trees. It is a plant-derived hydrocolloid used to manage texture and water in foods.",
+      "after": "Karaya gum is a gum exuded from Sterculia trees. It is a plant-derived thickener and stabiliser used to manage texture and water in foods.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e417",
+      "field": "tile_summary",
+      "before": "Tara gum is a galactomannan obtained from tara seeds. ",
+      "after": "Tara gum is a thickener made from the seeds of the tara tree.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e417",
+      "field": "expanded_summary",
+      "before": "Tara gum is a galactomannan obtained from tara seeds. It is a plant-derived hydrocolloid used to manage texture and water in foods.",
+      "after": "Tara gum is a plant-derived gum made from tara seeds — a long-chain carbohydrate (a galactomannan). It is used to manage texture and water in foods.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e417",
+      "field": "fact_1_copy",
+      "before": "A high-molecular-weight carbohydrate rather than a simple sugar.",
+      "after": "A long-chain carbohydrate rather than a simple sugar.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e421",
+      "field": "tile_summary",
+      "before": "Mannitol is a sugar alcohol found naturally in some plants, mushrooms and seaweeds. ",
+      "after": "Mannitol is a sugar alcohol found naturally in some mushrooms and seaweeds, but commercial mannitol can also be made by hydrogenating sugars or by fermentation.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e421",
+      "field": "expanded_summary",
+      "before": "Mannitol is a sugar alcohol found naturally in some plants, mushrooms and seaweeds. Food-grade mannitol provides sweetness with a cooling sensation and can also act as a bulking agent.",
+      "after": "Mannitol is a sugar alcohol found naturally in some plants, mushrooms and seaweeds. Food-grade mannitol provides sweetness with a cooling sensation and can also act as a bulking agent. Commercial mannitol can be made by hydrogenating sugars or by fermentation, so the additive code alone does not show which route a product used.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e431",
+      "field": "tile_summary",
+      "before": "Polyoxyethylene (40) stearate is an emulsifier made by combining stearic-acid chemistry with a polyoxyethylene chain. ",
+      "after": "Polyoxyethylene (40) stearate is a manufactured emulsifier built from stearic acid, a fatty acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e431",
+      "field": "expanded_summary",
+      "before": "Polyoxyethylene (40) stearate is an emulsifier made by combining stearic-acid chemistry with a polyoxyethylene chain. It is purpose-built to help oil- and water-based ingredients mix.",
+      "after": "Polyoxyethylene (40) stearate is a manufactured emulsifier built from stearic acid, a fatty acid. A polyoxyethylene chain is attached to it so that oil- and water-based ingredients mix more easily.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e436",
+      "field": "tile_summary",
+      "before": "Polysorbate 65 is an emulsifier made from sorbitol-derived material, polyoxyethylene chains and mostly stearic acid in a tristearate form. ",
+      "after": "Polysorbate 65 is an emulsifier that helps oil and water stay mixed, made from sorbitol-derived material, polyoxyethylene chains and stearic acid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e440",
+      "field": "tile_summary",
+      "before": "Pectin is a plant carbohydrate that helps bind the cell walls of fruits and vegetables. ",
+      "after": "Pectin is the plant carbohydrate that helps jams and fruit preserves set; commercial pectin is commonly extracted from citrus peel or apple pomace.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e442",
+      "field": "tile_summary",
+      "before": "Ammonium salts of phosphatidic acid are emulsifiers based on phospholipid-like molecules related to the components of lecithin.",
+      "after": "Ammonium salts of phosphatidic acid are emulsifiers used especially in confectionery.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e442",
+      "field": "expanded_summary",
+      "before": "Ammonium salts of phosphatidic acid are emulsifiers based on phospholipid-like molecules related to the components of lecithin.",
+      "after": "Ammonium salts of phosphatidic acid are emulsifiers used especially in confectionery. They are based on phospholipid-like molecules related to the components of lecithin.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e445",
+      "field": "expanded_summary",
+      "before": "Glycerol esters of wood rosins are emulsifier/weighting ingredients made from rosin acids found in pine-tree resin, then chemically linked to glycerol.",
+      "after": "Glycerol esters of wood rosins are emulsifier/weighting ingredients made from rosin acids found in pine-tree resin, then chemically linked to glycerol. The reaction with glycerol makes heavier, more stable esters, which is what lets them act as \"weighting\" agents in drinks.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e450",
+      "field": "tile_summary",
+      "before": "Pyrophosphates are condensed phosphate salts in which phosphate units are linked together; this Schedule 8 number covers several sodium and/or potassium forms. ",
+      "after": "Pyrophosphates are phosphate salts in which two phosphate units are linked together; this code covers several sodium and potassium forms.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e450",
+      "field": "expanded_summary",
+      "before": "Pyrophosphates are condensed phosphate salts in which phosphate units are linked together; this Schedule 8 number covers several sodium and/or potassium forms. Compared with simple phosphates, their chain structure gives different water-binding, buffering and texture effects.",
+      "after": "Pyrophosphates are phosphate salts in which two phosphate units are linked together; this code covers several sodium and potassium forms. Compared with simple phosphates, their linked structure gives different water-binding, buffering and texture effects.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e451",
+      "field": "tile_summary",
+      "before": "Tripolyphosphates are condensed phosphate salts in which phosphate units are linked together; this Schedule 8 number covers several sodium and/or potassium forms. ",
+      "after": "Tripolyphosphates are phosphate salts in which three phosphate units are linked in a chain; this additive number covers several sodium and potassium forms.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e451",
+      "field": "expanded_summary",
+      "before": "Tripolyphosphates are condensed phosphate salts in which phosphate units are linked together; this Schedule 8 number covers several sodium and/or potassium forms. Compared with simple phosphates, their chain structure gives different water-binding, buffering and texture effects.",
+      "after": "Tripolyphosphates are phosphate salts in which phosphate units are linked together, and this additive number covers several sodium and/or potassium forms. Compared with simple phosphates, their chain structure gives different water-binding, buffering and texture effects.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e456",
+      "field": "tile_summary",
+      "before": "Potassium polyaspartate is a negatively charged polymer built from aspartic-acid units. ",
+      "after": "Potassium polyaspartate is a manufactured polymer built from aspartic acid, an amino acid, used mainly to help stop crystals forming in wine.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e456",
+      "field": "expanded_summary",
+      "before": "Potassium polyaspartate is a negatively charged polymer built from aspartic-acid units. It is used mainly to help prevent potassium bitartrate crystals forming in wine.",
+      "after": "Potassium polyaspartate is a manufactured polymer built from aspartic-acid units. It is used mainly as a stabiliser to help prevent potassium bitartrate (tartrate) crystals forming in wine.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e466",
+      "field": "expanded_summary",
+      "before": "Sodium carboxymethylcellulose is a chemically modified form of plant cellulose. Introducing carboxymethyl groups, then conversion to the sodium salt changes cellulose from an insoluble plant fibre into a material with useful thickening, film-forming or stabilising behaviour.",
+      "after": "Sodium carboxymethylcellulose is a chemically modified form of plant cellulose. Attaching carboxymethyl groups and converting the result to the sodium salt turns cellulose from an insoluble plant fibre into a material with useful thickening, film-forming or stabilising behaviour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e470",
+      "field": "tile_summary",
+      "before": "Fatty acid salts are soap-like salts made from food fatty acids and metals such as sodium, potassium, calcium or magnesium. ",
+      "after": "Fatty acid salts are soap-like salts made from food fatty acids and metals such as sodium, potassium, calcium or magnesium.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e470",
+      "field": "expanded_summary",
+      "before": "Fatty acid salts are soap-like salts made from food fatty acids and metals such as sodium, potassium, calcium or magnesium. The same broad fatty-acid building blocks occur naturally in fats and oils.",
+      "after": "Fatty acid salts are soap-like salts made from food fatty acids and metals such as sodium, potassium, calcium or magnesium. The code also covers aluminium and ammonium salts. The same broad fatty-acid building blocks occur naturally in fats and oils.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472a",
+      "field": "tile_summary",
+      "before": "Acetic and fatty acid esters of glycerol are emulsifiers made by adding acetic acid-derived groups to mono- and diglyceride-type fat molecules. ",
+      "after": "Acetic and fatty acid esters of glycerol are emulsifiers made by attaching acetic acid (the acid in vinegar) groups to fat-type molecules called mono- and diglycerides.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472a",
+      "field": "fact_3_label",
+      "before": "",
+      "after": "Fatty-acid source",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472a",
+      "field": "fact_3_copy",
+      "before": "",
+      "after": "The fatty acids used can come from plants or animals; the additive code alone does not say which.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472b",
+      "field": "fact_3_label",
+      "before": "",
+      "after": "Source can vary",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472b",
+      "field": "fact_3_copy",
+      "before": "",
+      "after": "The fatty acids can come from plant or animal sources, so the additive number alone does not show which was used.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472c",
+      "field": "tile_summary",
+      "before": "Citric and fatty acid esters of glycerol are emulsifiers made by adding citric acid-derived groups to mono- and diglyceride-type fat molecules. ",
+      "after": "Citric and fatty acid esters of glycerol are emulsifiers made by adding citric acid to fat building blocks (glycerol and fatty acids).",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472c",
+      "field": "expanded_summary",
+      "before": "Citric and fatty acid esters of glycerol are emulsifiers made by adding citric acid-derived groups to mono- and diglyceride-type fat molecules. The modification changes how the molecules interact with dough, fat and water.",
+      "after": "Citric and fatty acid esters of glycerol are emulsifiers made by adding citric acid to fat building blocks (glycerol and fatty acids). The modification changes how the molecules interact with dough, fat and water.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472c",
+      "field": "fact_3_label",
+      "before": "",
+      "after": "Source can vary",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472c",
+      "field": "fact_3_copy",
+      "before": "",
+      "after": "The fatty acids can come from plant or animal sources, so the additive number alone does not show which.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472f",
+      "field": "tile_summary",
+      "before": "Mixed tartaric, acetic and fatty acid esters of glycerol are emulsifiers made by adding tartaric and acetic acids-derived groups to mono- and diglyceride-type fat molecules. ",
+      "after": "Mixed tartaric, acetic and fatty acid esters of glycerol are emulsifiers made by attaching tartaric-acid- and acetic-acid-derived groups to mono- and diglyceride-type fat molecules.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472f",
+      "field": "expanded_summary",
+      "before": "Mixed tartaric, acetic and fatty acid esters of glycerol are emulsifiers made by adding tartaric and acetic acids-derived groups to mono- and diglyceride-type fat molecules. The modification changes how the molecules interact with dough, fat and water.",
+      "after": "Mixed tartaric, acetic and fatty acid esters of glycerol are emulsifiers made by attaching tartaric-acid- and acetic-acid-derived groups to mono- and diglyceride-type fat molecules. The modification changes how the molecules interact with dough, fat and water.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472f",
+      "field": "fact_3_label",
+      "before": "",
+      "after": "Source can vary",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e472f",
+      "field": "fact_3_copy",
+      "before": "",
+      "after": "The fatty acids can come from plant or animal fats; the additive number does not say which.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e475",
+      "field": "tile_summary",
+      "before": "Polyglycerol esters of fatty acids are emulsifiers built from short chains of glycerol joined to fatty acids. ",
+      "after": "Polyglycerol esters of fatty acids are emulsifiers built from short chains of glycerol joined to fatty acids.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e475",
+      "field": "fact_3_label",
+      "before": "",
+      "after": "Fatty-acid source",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e475",
+      "field": "fact_3_copy",
+      "before": "",
+      "after": "The fatty acids used can come from plants or animals; the additive code alone does not say which.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e481",
+      "field": "tile_summary",
+      "before": "Sodium lactylates are emulsifiers made from lactic acid and fatty acids in a sodium salt form. ",
+      "after": "Sodium lactylates are emulsifiers made from lactic acid and fatty acids in a sodium salt form.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e481",
+      "field": "fact_3_label",
+      "before": "",
+      "after": "Source can vary",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e481",
+      "field": "fact_3_copy",
+      "before": "",
+      "after": "The additive number does not say which fatty acids were used or where they came from.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e482",
+      "field": "tile_summary",
+      "before": "Calcium lactylates are emulsifiers made from lactic acid and fatty acids in a calcium salt form. ",
+      "after": "Calcium lactylates are emulsifiers made from lactic acid and fatty acids in a calcium salt form.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e482",
+      "field": "expanded_summary",
+      "before": "Calcium lactylates are emulsifiers made from lactic acid and fatty acids in a calcium salt form. Schedule 8 covers several lactylate variants under the one code.",
+      "after": "Calcium lactylates are emulsifiers made from lactic acid and fatty acids in a calcium salt form. This code covers several lactylate variants.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e492",
+      "field": "fact_2_label",
+      "before": "Source detail",
+      "after": "Source can vary",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e492",
+      "field": "fact_2_copy",
+      "before": "The final ingredient is manufactured even though its fatty-acid feedstock may originate from edible fats or oils.",
+      "after": "The final ingredient is manufactured, but its fatty-acid starting material can come from plant or animal fats; the additive number alone does not show which.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e500",
+      "field": "tile_summary",
+      "before": "Sodium bicarbonate / sodium carbonate are inorganic carbonate salts. ",
+      "after": "Sodium bicarbonate is ordinary baking soda; this entry also covers the more alkaline sodium carbonate.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e500",
+      "field": "expanded_summary",
+      "before": "Sodium bicarbonate / sodium carbonate are inorganic carbonate salts. Sodium bicarbonate is ordinary baking soda; sodium carbonate is the more alkaline related salt.",
+      "after": "Sodium bicarbonate is ordinary baking soda, and this entry also covers sodium carbonate, a more alkaline related salt. Both are inorganic carbonate salts.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e503",
+      "field": "tile_summary",
+      "before": "Ammonium carbonate / ammonium hydrogen carbonate are inorganic carbonate salts. ",
+      "after": "Ammonium carbonate / ammonium hydrogen carbonate are carbonate salts that give off gas when heated, which is why they have long been used to raise low-moisture baked goods.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e504",
+      "field": "tile_summary",
+      "before": "Magnesium carbonate are inorganic carbonate salts. ",
+      "after": "Magnesium carbonates are inorganic mineral salts used for raising, acidity control, anticaking or processing roles.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e504",
+      "field": "expanded_summary",
+      "before": "Magnesium carbonate are inorganic carbonate salts. Magnesium carbonate is a white mineral salt that can absorb moisture and provide magnesium/alkalinity.",
+      "after": "Magnesium carbonates are white inorganic mineral salts that provide magnesium and alkalinity and can absorb moisture. The role depends on the form and food.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e508",
+      "field": "tile_summary",
+      "before": "Potassium chloride is a simple mineral salt of potassium and chloride.",
+      "after": "Potassium chloride is a mineral salt that can give saltiness and is often used where sodium chloride is being partly replaced.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e508",
+      "field": "expanded_summary",
+      "before": "Potassium chloride is a simple mineral salt of potassium and chloride.",
+      "after": "Potassium chloride is a simple mineral salt of potassium and chloride. It can contribute saltiness and potassium, and is produced from purified potash or other mineral salt sources.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e509",
+      "field": "tile_summary",
+      "before": "Calcium chloride is a highly soluble calcium salt.",
+      "after": "Calcium chloride is a highly soluble calcium salt used to firm foods and help set gels.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e509",
+      "field": "expanded_summary",
+      "before": "Calcium chloride is a highly soluble calcium salt.",
+      "after": "Calcium chloride is a highly soluble calcium salt used to firm foods and help set gels. Its calcium helps link pectin and alginate chains into a gel.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e511",
+      "field": "tile_summary",
+      "before": "Magnesium chloride is a soluble magnesium salt also found in seawater and natural brines.",
+      "after": "Magnesium chloride is a soluble magnesium salt also found in seawater and natural brines, and it is a traditional coagulant in some tofu production.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e511",
+      "field": "expanded_summary",
+      "before": "Magnesium chloride is a soluble magnesium salt also found in seawater and natural brines.",
+      "after": "Magnesium chloride is a soluble magnesium salt also found in seawater and natural brines. In some traditional tofu production it is the coagulant that firms soy milk into curd.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e512",
+      "field": "tile_summary",
+      "before": "Stannous chloride is a tin(II) chloride salt.",
+      "after": "Stannous chloride is a tin(II) chloride salt used for specialised antioxidant or colour-preserving roles in limited applications.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e512",
+      "field": "expanded_summary",
+      "before": "Stannous chloride is a tin(II) chloride salt.",
+      "after": "Stannous chloride is the chloride salt of tin in its tin(II) form. It is a manufactured salt with specialised, limited uses as an antioxidant or colour-preserving ingredient.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e514",
+      "field": "tile_summary",
+      "before": "Sodium sulphate is an inorganic sodium sulphate salt.",
+      "after": "Sodium sulphate is a mineral salt used in specified foods as a carrier or processing aid.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e514",
+      "field": "expanded_summary",
+      "before": "Sodium sulphate is an inorganic sodium sulphate salt.",
+      "after": "Sodium sulphate is an inorganic salt that can be obtained from natural mineral deposits or made as a purified industrial salt. In specified food uses it acts as a carrier, processing aid or standardising material.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e515",
+      "field": "tile_summary",
+      "before": "Potassium sulphate is an inorganic potassium sulphate salt.",
+      "after": "Potassium sulphate is a mineral salt of potassium, obtained from potash minerals or made by chemical conversion and purification.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e516",
+      "field": "tile_summary",
+      "before": "Calcium sulphate is the mineral salt that forms gypsum.",
+      "after": "Calcium sulphate is the mineral salt that forms gypsum, and in tofu it can act as the coagulant.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e516",
+      "field": "expanded_summary",
+      "before": "Calcium sulphate is the mineral salt that forms gypsum.",
+      "after": "Calcium sulphate is the mineral salt that forms gypsum, and in tofu it can act as the coagulant. It also has other food roles, including firming and acting as a calcium source.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e524",
+      "field": "tile_summary",
+      "before": "Sodium hydroxide, also known as caustic soda, is an inorganic alkaline material. ",
+      "after": "Sodium hydroxide, also known as caustic soda, is a strongly alkaline compound used in tightly controlled processing steps.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e524",
+      "field": "expanded_summary",
+      "before": "Sodium hydroxide, also known as caustic soda, is an inorganic alkaline material. It is strongly alkaline and is used in tightly controlled processing steps such as pH adjustment, peeling or surface treatment; the finished food does not contain it as an active caustic solution.",
+      "after": "Sodium hydroxide, also known as caustic soda, is a strongly alkaline inorganic compound. It is used only in tightly controlled processing steps such as pH adjustment, peeling or surface treatment.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e524",
+      "field": "fact_1_copy",
+      "before": "A strongly or moderately basic sodium-containing compound used for processing rather than flavour.",
+      "after": "A strongly alkaline sodium compound used for processing rather than flavour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e525",
+      "field": "tile_summary",
+      "before": "Potassium hydroxide, also known as caustic potash, is an inorganic alkaline material. ",
+      "after": "Potassium hydroxide, or caustic potash, is a strongly alkaline compound used to adjust pH and in some cocoa and food processing.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e526",
+      "field": "tile_summary",
+      "before": "Calcium hydroxide, also known as slaked lime, is an inorganic alkaline material. ",
+      "after": "Calcium hydroxide, also called slaked lime, is an alkaline material used in food processing for firming and pH control.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e526",
+      "field": "expanded_summary",
+      "before": "Calcium hydroxide, also known as slaked lime, is an inorganic alkaline material. It is alkaline and is used for firming, pH control, nixtamalisation and other processing steps.",
+      "after": "Calcium hydroxide, also known as slaked lime, is an inorganic alkaline material used for firming, pH control, nixtamalisation and other processing steps.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e526",
+      "field": "fact_2_label",
+      "before": "Worth knowing",
+      "after": "How it is made",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e526",
+      "field": "fact_2_copy",
+      "before": "Its technical name can sound severe because concentrated material is reactive; food use is controlled and application-specific.",
+      "after": "Limestone is heated to make calcium oxide, then water is added to produce calcium hydroxide.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e529",
+      "field": "tile_summary",
+      "before": "Calcium oxide, also known as quicklime, is an inorganic alkaline material. ",
+      "after": "Calcium oxide is quicklime, made by heating limestone.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e529",
+      "field": "expanded_summary",
+      "before": "Calcium oxide, also known as quicklime, is an inorganic alkaline material. It reacts with water to form calcium hydroxide and can be used for pH control and processing.",
+      "after": "Calcium oxide is quicklime, made by heating limestone. It is an alkaline mineral compound that reacts with water to form calcium hydroxide and can be used for pH control and processing.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e529",
+      "field": "fact_1_copy",
+      "before": "A strongly or moderately basic calcium-containing compound used for processing rather than flavour.",
+      "after": "Its job is processing rather than flavour: it raises alkalinity (pH) in the food or process.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e530",
+      "field": "fact_1_copy",
+      "before": "A strongly or moderately basic magnesium-containing compound used for processing rather than flavour.",
+      "after": "A basic (alkaline) magnesium compound used for processing rather than flavour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e530",
+      "field": "fact_2_label",
+      "before": "Worth knowing",
+      "after": "In food",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e530",
+      "field": "fact_2_copy",
+      "before": "Its technical name can sound severe because concentrated material is reactive; food use is controlled and application-specific.",
+      "after": "Used in specific, controlled roles such as adjusting pH or preventing caking.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e541",
+      "field": "tile_summary",
+      "before": "Sodium aluminium phosphate is a family of inorganic phosphate salts containing sodium and aluminium. ",
+      "after": "Sodium aluminium phosphate is a mineral phosphate salt; some forms are the acid ingredient in baking powders.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e552",
+      "field": "tile_summary",
+      "before": "Calcium silicate is an inorganic calcium-silicate powder.",
+      "after": "Calcium silicate is an inorganic powder made from calcium and silica, used mainly to stop powders clumping.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e552",
+      "field": "expanded_summary",
+      "before": "Calcium silicate is an inorganic calcium-silicate powder.",
+      "after": "Calcium silicate is an inorganic powder made by reacting calcium and silica sources under controlled conditions. In food it works mainly as an anticaking agent and carrier.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e553",
+      "field": "tile_summary",
+      "before": "Magnesium silicate / talc is magnesium-silicate minerals or manufactured magnesium silicate.",
+      "after": "Magnesium silicate covers purified talc mineral and manufactured magnesium silicate.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e553",
+      "field": "expanded_summary",
+      "before": "Magnesium silicate / talc is magnesium-silicate minerals or manufactured magnesium silicate.",
+      "after": "Magnesium silicate covers purified talc mineral and manufactured magnesium silicate. Talc is purified from the mineral; the manufactured form is made by precipitation.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e554",
+      "field": "tile_summary",
+      "before": "Sodium aluminosilicate is a porous inorganic aluminosilicate.",
+      "after": "Sodium aluminosilicate is a porous inorganic powder used mainly as an anticaking agent in dry powders.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e554",
+      "field": "expanded_summary",
+      "before": "Sodium aluminosilicate is a porous inorganic aluminosilicate.",
+      "after": "Sodium aluminosilicate is a porous inorganic aluminosilicate made by precipitation from sodium, aluminium and silicate solutions. It is used mainly to keep dry powders from caking.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e555",
+      "field": "tile_summary",
+      "before": "Potassium aluminium silicate is a mica-like potassium aluminosilicate.",
+      "after": "Potassium aluminium silicate is a mica-type mineral silicate used as a carrier or pearlescent base in specified applications.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e555",
+      "field": "expanded_summary",
+      "before": "Potassium aluminium silicate is a mica-like potassium aluminosilicate.",
+      "after": "Potassium aluminium silicate is a mineral silicate related to mica. In specified applications it is used as a carrier or as a pearlescent base, a mineral substrate that gives a pearly sheen.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e556",
+      "field": "tile_summary",
+      "before": "Calcium aluminium silicate is an inorganic calcium aluminosilicate.",
+      "after": "Calcium aluminium silicate is an inorganic compound of calcium, aluminium and silica, used mainly to stop powders caking or to carry other ingredients.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e558",
+      "field": "tile_summary",
+      "before": "Bentonite is a swelling clay dominated by montmorillonite minerals.",
+      "after": "Bentonite is a natural clay that can bind proteins and suspended particles during food processing.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e558",
+      "field": "expanded_summary",
+      "before": "Bentonite is a swelling clay dominated by montmorillonite minerals.",
+      "after": "Bentonite is a natural swelling clay dominated by montmorillonite minerals. It can bind proteins and suspended particles during food processing.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e559",
+      "field": "tile_summary",
+      "before": "Aluminium silicate is an inorganic clay/silicate material.",
+      "after": "Aluminium silicate is an inorganic clay/silicate material, used in food mainly to stop powders clumping.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e559",
+      "field": "expanded_summary",
+      "before": "Aluminium silicate is an inorganic clay/silicate material.",
+      "after": "Aluminium silicate is an inorganic clay/silicate material. It can be obtained from mineral sources or produced as a purified precipitated silicate, and is used as an anticaking or processing material.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e560",
+      "field": "tile_summary",
+      "before": "Potassium silicate is a soluble alkaline potassium silicate.",
+      "after": "Potassium silicate is a soluble, alkaline salt made by reacting silica with a potassium alkali.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e560",
+      "field": "expanded_summary",
+      "before": "Potassium silicate is a soluble alkaline potassium silicate.",
+      "after": "Potassium silicate is a soluble, alkaline salt made by reacting silica with potassium carbonate or potassium hydroxide at high temperature or in solution.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e570",
+      "field": "tile_summary",
+      "before": "Stearic acid and related food fatty acids are long-chain fatty-acid molecules — the same basic components that make up ordinary dietary fats and oils.",
+      "after": "Stearic acid and related food fatty acids are the same kind of building blocks found in ordinary fats and oils, and the additive number alone does not show whether they came from plant or animal sources.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e570",
+      "field": "expanded_summary",
+      "before": "Stearic acid and related food fatty acids are long-chain fatty-acid molecules — the same basic components that make up ordinary dietary fats and oils.",
+      "after": "Stearic acid and related food fatty acids are long-chain fatty-acid molecules, the same basic components that make up ordinary dietary fats and oils. They are obtained by splitting and purifying plant or animal fats and oils, and some can be made from other industrial starting materials, so the additive number does not reveal the source of a particular product.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e578",
+      "field": "fact_2_copy",
+      "before": "Depending on the mineral, used for mineral delivery, acidity control, sequestration, colour stabilisation or processing.",
+      "after": "Depending on the food, used to supply calcium, control acidity, bind minerals, stabilise colour or aid processing.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e579",
+      "field": "tile_summary",
+      "before": "Ferrous gluconate is the iron salt of gluconic acid, an acid made by oxidising glucose. ",
+      "after": "Ferrous gluconate is the iron salt of gluconic acid, an acid made by oxidising glucose.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e579",
+      "field": "fact_2_copy",
+      "before": "Depending on the mineral, used for mineral delivery, acidity control, sequestration, colour stabilisation or processing.",
+      "after": "Used as an iron source and for colour stabilisation or processing effects, depending on the food.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e580",
+      "field": "tile_summary",
+      "before": "Magnesium gluconate is the magnesium salt of gluconic acid, an acid made by oxidising glucose. ",
+      "after": "Magnesium gluconate is the magnesium salt of gluconic acid, an acid made by oxidising glucose.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e580",
+      "field": "fact_2_copy",
+      "before": "Depending on the mineral, used for mineral delivery, acidity control, sequestration, colour stabilisation or processing.",
+      "after": "Used for magnesium delivery, acidity control, sequestration, colour stabilisation or processing, depending on the food.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e586",
+      "field": "tile_summary",
+      "before": "4-Hexylresorcinol is a synthetic phenolic compound used in a narrow range of foods for antioxidant and anti-browning effects.",
+      "after": "4-Hexylresorcinol is a synthetic compound used in a narrow range of foods, particularly some seafood products, to help prevent browning.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e621",
+      "field": "tile_summary",
+      "before": "Monosodium L-glutamate / MSG is the sodium salt of glutamic acid, the amino acid associated with umami taste. ",
+      "after": "MSG (monosodium glutamate) is the sodium salt of glutamic acid, the amino acid behind umami taste, commonly made by fermenting sugars or starch-derived sugars.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e621",
+      "field": "expanded_summary",
+      "before": "Monosodium L-glutamate / MSG is the sodium salt of glutamic acid, the amino acid associated with umami taste. MSG is the best-known glutamate flavour enhancer.",
+      "after": "MSG (monosodium glutamate) is the sodium salt of glutamic acid, the amino acid behind umami taste, commonly made by fermenting sugars or starch-derived sugars. MSG is the best-known glutamate flavour enhancer.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e631",
+      "field": "tile_summary",
+      "before": "Disodium 5′-inosinate is the disodium salt of a inosine nucleotide. ",
+      "after": "Disodium 5′-inosinate is the disodium salt of an inosine nucleotide that boosts savoury umami taste.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e631",
+      "field": "expanded_summary",
+      "before": "Disodium 5′-inosinate is the disodium salt of a inosine nucleotide. These nucleotide flavour enhancers strongly boost savoury taste, especially when used together with glutamate.",
+      "after": "Disodium 5′-inosinate is the disodium salt of an inosine nucleotide. Nucleotide flavour enhancers strongly boost savoury taste, especially when used with glutamate.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e640",
+      "field": "tile_summary",
+      "before": "Glycine is the smallest amino acid and is a normal building block of proteins in foods and the human body. ",
+      "after": "Glycine is the smallest amino acid and is a normal building block of proteins in foods and the human body.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e640",
+      "field": "expanded_summary",
+      "before": "Glycine is the smallest amino acid and is a normal building block of proteins in foods and the human body. As an additive it can contribute mild sweetness, buffering or processing effects.",
+      "after": "Glycine is the smallest amino acid and is a normal building block of proteins in foods and the human body. As an additive it can contribute mild sweetness, buffering or processing effects. Commercial glycine can be made by chemical synthesis or by fermentation, so the additive code alone does not show which route a product used.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e914",
+      "field": "tile_summary",
+      "before": "Oxidised polyethylene is a modified polyethylene wax. ",
+      "after": "Oxidised polyethylene is a synthetic polymer wax, not a natural wax like beeswax or carnauba, used as a glazing or coating agent.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e943a",
+      "field": "tile_summary",
+      "before": "Butane is a small hydrocarbon gas.",
+      "after": "Butane is a small hydrocarbon gas used as a food propellant, purified from natural-gas and petroleum-refining streams.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e943a",
+      "field": "expanded_summary",
+      "before": "Butane is a small hydrocarbon gas.",
+      "after": "Butane is a small hydrocarbon gas separated and purified from natural-gas and petroleum-refining streams. It is used as a propellant in specified food applications and evaporates readily after dispensing.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e943b",
+      "field": "tile_summary",
+      "before": "Isobutane is a branched isomer of butane.",
+      "after": "Isobutane is a hydrocarbon gas used as a propellant in specified food applications.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e943b",
+      "field": "expanded_summary",
+      "before": "Isobutane is a branched isomer of butane.",
+      "after": "Isobutane is a branched form of butane, a hydrocarbon gas. It is used as a propellant, valued for its gas and pressure properties rather than as a conventional solid or liquid ingredient.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e944",
+      "field": "tile_summary",
+      "before": "Propane is a small hydrocarbon gas widely used as a fuel but also purified for specialised food-propellant use.",
+      "after": "Propane is best known as a fuel, but a purified form is also used as a propellant for certain foods.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e944",
+      "field": "expanded_summary",
+      "before": "Propane is a small hydrocarbon gas widely used as a fuel but also purified for specialised food-propellant use.",
+      "after": "Propane is a small hydrocarbon gas best known as a fuel. For food use it is separated from natural-gas and petroleum-refining streams and purified for specialised propellant use.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e946",
+      "field": "tile_summary",
+      "before": "Octafluorocyclobutane is a fully fluorinated cyclic gas.",
+      "after": "Octafluorocyclobutane is a manufactured gas whose molecules contain only carbon and fluorine.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e946",
+      "field": "expanded_summary",
+      "before": "Octafluorocyclobutane is a fully fluorinated cyclic gas.",
+      "after": "Octafluorocyclobutane is a manufactured gas whose molecules contain only carbon and fluorine. Its name describes a ring of four carbon atoms (cyclobutane) with eight fluorine atoms attached.",
+      "status": "SOURCE REVIEW REQUIRED"
+    },
+    {
+      "additive_id": "e950",
+      "field": "tile_summary",
+      "before": "Acesulphame potassium (acesulfame K) is a high-intensity synthetic sweetener. ",
+      "after": "Acesulphame potassium (acesulfame K) is a synthetic sweetener roughly 200 times sweeter than sugar.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e950",
+      "field": "expanded_summary",
+      "before": "Acesulphame potassium (acesulfame K) is a high-intensity synthetic sweetener. Its molecule contains a cyclic sulphamate structure and provides sweetness with very little mass compared with sugar.",
+      "after": "Acesulphame potassium (acesulfame K) is a high-intensity synthetic sweetener, roughly 200 times sweeter than sucrose depending on the food. Because it is so intensely sweet, only a very small amount is needed compared with sugar.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e952",
+      "field": "tile_summary",
+      "before": "Cyclamates are high-intensity sweeteners based on cyclamic acid; Schedule 8 includes the parent acid and its sodium and calcium salts.",
+      "after": "Cyclamates are intense sweeteners, roughly 30–50 times sweeter than sugar, made from cyclamic acid and its sodium or calcium salts.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e952",
+      "field": "expanded_summary",
+      "before": "Cyclamates are high-intensity sweeteners based on cyclamic acid; Schedule 8 includes the parent acid and its sodium and calcium salts.",
+      "after": "Cyclamates are high-intensity sweeteners based on cyclamic acid. One additive number covers the acid and its sodium and calcium salts.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e955",
+      "field": "tile_summary",
+      "before": "Sucralose is a high-intensity sweetener made by selectively replacing three hydroxyl groups on a sucrose molecule with chlorine atoms. ",
+      "after": "Sucralose starts as ordinary table sugar: three parts of the sucrose molecule are swapped for chlorine atoms to make an intense sweetener.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e955",
+      "field": "expanded_summary",
+      "before": "Sucralose is a high-intensity sweetener made by selectively replacing three hydroxyl groups on a sucrose molecule with chlorine atoms. The result is intensely sweet but metabolised very differently from ordinary sugar.",
+      "after": "Sucralose is made from sucrose through a controlled multi-step chlorination process that replaces three hydroxyl groups with chlorine atoms. The result is intensely sweet, so very small amounts are needed.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e961",
+      "field": "tile_summary",
+      "before": "Neotame is a very high-intensity synthetic sweetener structurally related to aspartame but modified so it is far sweeter and behaves differently in the body.",
+      "after": "Neotame is a very high-intensity synthetic sweetener, made by chemically modifying aspartame-related components.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e961",
+      "field": "expanded_summary",
+      "before": "Neotame is a very high-intensity synthetic sweetener structurally related to aspartame but modified so it is far sweeter and behaves differently in the body.",
+      "after": "Neotame is a very high-intensity synthetic sweetener, made by chemically modifying aspartame-related amino-acid components and then purifying the result. It is several thousand times sweeter than sucrose, so it is used at extremely low levels.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e967",
+      "field": "tile_summary",
+      "before": "Xylitol is a five-carbon sugar alcohol that occurs naturally in small amounts in fruits and vegetables. ",
+      "after": "Xylitol is a sugar alcohol known for the cooling effect it gives sugar-free gum — and it can be made from plant fibre such as wood or corn cobs, or by fermentation.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e969",
+      "field": "tile_summary",
+      "before": "Advantame is an ultra-high-intensity synthetic sweetener structurally related to aspartame. ",
+      "after": "Advantame is an ultra-high-intensity synthetic sweetener structurally related to aspartame.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e969",
+      "field": "expanded_summary",
+      "before": "Advantame is an ultra-high-intensity synthetic sweetener structurally related to aspartame. A chemical modification dramatically increases its sweetness potency.",
+      "after": "Advantame is an ultra-high-intensity synthetic sweetener structurally related to aspartame. It is made by reacting aspartame-related material with a vanillin-derived intermediate, and the chemical modification dramatically increases its sweetness potency.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1001",
+      "field": "tile_summary",
+      "before": "Choline salts are forms of choline, an essential nutrient-like compound used by the body to make cell membranes and the neurotransmitter acetylcholine. ",
+      "after": "Choline salts are stabilised forms of choline, a compound the body uses to make cell membranes and the neurotransmitter acetylcholine.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1001",
+      "field": "expanded_summary",
+      "before": "Choline salts are forms of choline, an essential nutrient-like compound used by the body to make cell membranes and the neurotransmitter acetylcholine. Different salt forms are used to make choline stable and practical in formulations.",
+      "after": "Choline salts are forms of choline, which the body uses to build cell membranes and make the neurotransmitter acetylcholine. Different salt forms are used to make choline stable and practical in formulations.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1101",
+      "field": "tile_summary",
+      "before": "Proteases such as papain, bromelain and ficin are protein-cutting enzymes. ",
+      "after": "Protein-cutting enzymes such as papain (papaya), bromelain (pineapple) and ficin (fig latex).",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1101",
+      "field": "expanded_summary",
+      "before": "Proteases such as papain, bromelain and ficin are protein-cutting enzymes. These named examples come from papaya, pineapple and fig-family plants respectively.",
+      "after": "Proteases are protein-cutting enzymes. The named examples come from papaya, pineapple and fig-family plants respectively, though other protease preparations can be made by microbial fermentation.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1105",
+      "field": "tile_summary",
+      "before": "Lysozyme is an antimicrobial enzyme that attacks a structural component of many bacterial cell walls. ",
+      "after": "Lysozyme is an antimicrobial enzyme that attacks a structural part of many bacterial cell walls, and commercial food lysozyme is traditionally isolated from hen egg white.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1105",
+      "field": "expanded_summary",
+      "before": "Lysozyme is an antimicrobial enzyme that attacks a structural component of many bacterial cell walls. Commercial food lysozyme is traditionally isolated from hen egg white.",
+      "after": "Lysozyme is an antimicrobial enzyme that attacks a structural component of many bacterial cell walls. Commercial food lysozyme is traditionally isolated from hen egg white, then purified and standardised as an enzyme preparation.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1400",
+      "field": "tile_summary",
+      "before": "Dextrin / roasted starch is starch that has been dry-heated so some long starch chains break and rearrange. ",
+      "after": "Dextrin / roasted starch is ordinary food starch changed by dry heat, which breaks and rearranges some of its long chains.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1400",
+      "field": "expanded_summary",
+      "before": "Dextrin / roasted starch is starch that has been dry-heated so some long starch chains break and rearrange. The starting material is ordinary food starch, but it is deliberately modified so it performs more reliably during heating, freezing, mixing or storage.",
+      "after": "Dextrin / roasted starch is ordinary food starch changed by dry heat, sometimes with a little acid, without adding a new major chemical group. This makes it perform more reliably during heating, freezing, mixing or storage.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1401",
+      "field": "fact_2_copy",
+      "before": "Native starch can break down, thin out or retrograde under processing; modification tunes stability, viscosity, emulsification or freeze-thaw behaviour.",
+      "after": "Unmodified starch can break down, thin out or change texture during processing or storage; modification tunes stability, viscosity, emulsification or freeze-thaw behaviour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1403",
+      "field": "tile_summary",
+      "before": "Bleached starch is starch treated with permitted oxidising/bleaching agents mainly to improve colour and remove impurities. ",
+      "after": "Bleached starch is starch treated with permitted oxidising/bleaching agents, mainly to improve colour and remove impurities.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1403",
+      "field": "expanded_summary",
+      "before": "Bleached starch is starch treated with permitted oxidising/bleaching agents mainly to improve colour and remove impurities. The starting material is ordinary food starch, but it is deliberately modified so it performs more reliably during heating, freezing, mixing or storage.",
+      "after": "Bleached starch is starch treated with permitted oxidising/bleaching agents, mainly to improve colour and remove impurities. The starting material is ordinary food starch; this treatment is aimed mainly at colour and impurity removal.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1403",
+      "field": "fact_2_label",
+      "before": "Why modify starch",
+      "after": "Why treat starch",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1403",
+      "field": "fact_2_copy",
+      "before": "Native starch can break down, thin out or retrograde under processing; modification tunes stability, viscosity, emulsification or freeze-thaw behaviour.",
+      "after": "Starch treatments are chosen for a purpose. For bleached starch that is mainly colour and purity; other modified starches tune stability, viscosity, emulsification or freeze-thaw behaviour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1404",
+      "field": "tile_summary",
+      "before": "Oxidised starch is starch deliberately oxidised to introduce carbonyl/carboxyl groups and reduce chain length. ",
+      "after": "Oxidised starch is food starch that has been deliberately oxidised to change how it behaves when heated, frozen or stored.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1404",
+      "field": "expanded_summary",
+      "before": "Oxidised starch is starch deliberately oxidised to introduce carbonyl/carboxyl groups and reduce chain length. The starting material is ordinary food starch, but it is deliberately modified so it performs more reliably during heating, freezing, mixing or storage.",
+      "after": "Oxidised starch is plant starch deliberately oxidised to introduce carbonyl and carboxyl groups and shorten the starch chains. The starting material is ordinary food starch, but the modification makes it perform more reliably during heating, freezing, mixing or storage.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1405",
+      "field": "tile_summary",
+      "before": "Enzyme-treated starches is starch whose molecular size or branching has been changed with starch-active enzymes. ",
+      "after": "Enzyme-treated starches are ordinary food starches whose molecular size or branching has been changed using starch-active enzymes.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1405",
+      "field": "expanded_summary",
+      "before": "Enzyme-treated starches is starch whose molecular size or branching has been changed with starch-active enzymes. The starting material is ordinary food starch, but it is deliberately modified so it performs more reliably during heating, freezing, mixing or storage.",
+      "after": "Enzyme-treated starches are starches whose molecular size or branching has been changed with starch-active enzymes. They are deliberately modified so they perform more reliably during heating, freezing, mixing or storage.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1410",
+      "field": "tile_summary",
+      "before": "Monostarch phosphate is starch carrying phosphate groups on individual starch chains. ",
+      "after": "Monostarch phosphate is ordinary food starch with phosphate groups attached to its starch chains.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1410",
+      "field": "expanded_summary",
+      "before": "Monostarch phosphate is starch carrying phosphate groups on individual starch chains. The starting material is ordinary food starch, but it is deliberately modified so it performs more reliably during heating, freezing, mixing or storage.",
+      "after": "Monostarch phosphate is ordinary food starch with phosphate groups attached to its starch chains. Attaching them is a deliberate modification so the starch performs more reliably during heating, freezing, mixing or storage.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1412",
+      "field": "fact_2_copy",
+      "before": "Native starch can break down, thin out or retrograde under processing; modification tunes stability, viscosity, emulsification or freeze-thaw behaviour.",
+      "after": "Unmodified starch can break down, thin out or change texture during processing or storage; modification tunes stability, viscosity, emulsification or freeze-thaw behaviour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1414",
+      "field": "tile_summary",
+      "before": "Acetylated distarch phosphate is phosphate-cross-linked starch with added acetyl groups. ",
+      "after": "Acetylated distarch phosphate is food starch chemically modified in two ways, cross-linked with phosphate and given acetyl groups, so it holds up better in heating, freezing and storage.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1420",
+      "field": "tile_summary",
+      "before": "Starch acetate is starch carrying acetyl groups. ",
+      "after": "Starch acetate is food starch deliberately modified with small acetyl groups so it holds up better when heated, frozen or stored.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1420",
+      "field": "expanded_summary",
+      "before": "Starch acetate is starch carrying acetyl groups. The starting material is ordinary food starch, but it is deliberately modified so it performs more reliably during heating, freezing, mixing or storage.",
+      "after": "Starch acetate is starch carrying acetyl groups. The starting material is ordinary food starch, but it is deliberately modified by acetylation so it performs more reliably during heating, freezing, mixing or storage.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1422",
+      "field": "tile_summary",
+      "before": "Acetylated distarch adipate is cross-linked starch with acetyl groups and adipate bridges. ",
+      "after": "Acetylated distarch adipate is food starch that has been cross-linked and acetylated so it holds up better to heat, freezing and storage.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1440",
+      "field": "tile_summary",
+      "before": "Hydroxypropyl starch is starch carrying hydroxypropyl groups. ",
+      "after": "Hydroxypropyl starch is ordinary food starch with hydroxypropyl groups attached to its starch chains.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1440",
+      "field": "expanded_summary",
+      "before": "Hydroxypropyl starch is starch carrying hydroxypropyl groups. The starting material is ordinary food starch, but it is deliberately modified so it performs more reliably during heating, freezing, mixing or storage.",
+      "after": "Hydroxypropyl starch is ordinary food starch with hydroxypropyl groups attached to its starch chains. Attaching them is a deliberate modification so the starch performs more reliably during heating, freezing, mixing or storage.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1442",
+      "field": "tile_summary",
+      "before": "Hydroxypropyl distarch phosphate is phosphate-cross-linked starch with hydroxypropyl groups. ",
+      "after": "Hydroxypropyl distarch phosphate is starch that has been cross-linked with phosphate bridges and given hydroxypropyl groups — small chemical add-ons.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1442",
+      "field": "fact_2_copy",
+      "before": "Native starch can break down, thin out or retrograde under processing; modification tunes stability, viscosity, emulsification or freeze-thaw behaviour.",
+      "after": "Unmodified starch can break down, thin out or change texture during processing or storage; modification tunes stability, viscosity, emulsification or freeze-thaw behaviour.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1451",
+      "field": "tile_summary",
+      "before": "Acetylated oxidised starch is oxidised starch that also carries acetyl groups. ",
+      "after": "Acetylated oxidised starch is food starch chemically modified by oxidation and by adding acetyl groups, so it behaves more reliably in food processing.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1505",
+      "field": "tile_summary",
+      "before": "Triethyl citrate is the triethyl ester of citric acid. ",
+      "after": "Triethyl citrate is made from citric acid and ethanol and used as a solvent, carrier or plasticiser in specialised food applications.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1520",
+      "field": "tile_summary",
+      "before": "Propylene glycol is a small, colourless liquid that mixes readily with water and is useful for carrying flavours, colours and other ingredients. ",
+      "after": "Propylene glycol is a small, colourless liquid that mixes readily with water and is useful for carrying flavours, colours and other ingredients.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1520",
+      "field": "fact_2_label",
+      "before": "Worth distinguishing",
+      "after": "Humectant",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1520",
+      "field": "fact_2_copy",
+      "before": "It is chemically different from ethylene glycol, the toxic compound associated with automotive antifreeze.",
+      "after": "A humectant helps a food hold on to moisture rather than dry out.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1522",
+      "field": "tile_summary",
+      "before": "Calcium lignosulphonate is a water-soluble polymeric material derived from lignin, one of the structural components of wood. ",
+      "after": "Calcium lignosulphonate is a purified by-product of sulphite wood pulping, made from lignin, a structural component of wood.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e1522",
+      "field": "expanded_summary",
+      "before": "Calcium lignosulphonate is a water-soluble polymeric material derived from lignin, one of the structural components of wood. It is a refined by-product of sulphite wood pulping.",
+      "after": "Calcium lignosulphonate is a water-soluble material derived from lignin, one of the structural components of wood. It is recovered from sulphite pulping liquor and purified; it is not ground wood.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e999(i)",
+      "field": "tile_summary",
+      "before": "Quillaia extract type 1 is a less-purified saponin-rich extract made from the bark or wood of the soapbark tree, Quillaja saponaria. ",
+      "after": "Quillaia extract type 1 comes from the bark or wood of the soapbark tree, Quillaja saponaria, whose saponins help foam and stabilise emulsions.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e999(i)",
+      "field": "expanded_summary",
+      "before": "Quillaia extract type 1 is a less-purified saponin-rich extract made from the bark or wood of the soapbark tree, Quillaja saponaria. Its key components are saponins — plant molecules that can stabilise foam and emulsions.",
+      "after": "Quillaia extract type 1 is a less-purified saponin-rich extract made from the bark or wood of the soapbark tree, Quillaja saponaria. Its key components are saponins, plant molecules that can stabilise foam and emulsions.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "e999(ii)",
+      "field": "tile_summary",
+      "before": "Quillaia extract type 2 is a more highly purified saponin-rich extract made from the bark or wood of the soapbark tree, Quillaja saponaria. ",
+      "after": "Quillaia extract type 2 is a purified extract from the bark or wood of the South American soapbark tree, whose saponins help foam and stabilise emulsions.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "s8-nocode-002",
+      "field": "tile_summary",
+      "before": "Mushroom chitosan is a natural fungal cell-wall polymer sourced from Agaricus bisporus mushrooms. ",
+      "after": "Mushroom chitosan is a fungal cell-wall polymer from Agaricus bisporus, rather than from crustacean shells.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "s8-nocode-002",
+      "field": "expanded_summary",
+      "before": "Mushroom chitosan is a natural fungal cell-wall polymer sourced from Agaricus bisporus mushrooms. Unlike conventional chitosan, which is often made from crustacean shells, this specified ingredient is mushroom-derived.",
+      "after": "Mushroom chitosan is a fungal cell-wall polymer from Agaricus bisporus mushrooms. Conventional chitosan is often made from crustacean shells; this specified ingredient is mushroom-derived.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "s8-nocode-004",
+      "field": "tile_summary",
+      "before": "Sweet osmanthus ear glycolipids are natural glycolipid molecules made by the edible jelly mushroom Dacryopinax spathularia during fermentation. ",
+      "after": "Sweet osmanthus ear glycolipids are preservative molecules produced by the edible jelly mushroom Dacryopinax spathularia during fermentation.",
+      "status": "EDITORIALLY IMPROVED"
+    },
+    {
+      "additive_id": "s8-nocode-004",
+      "field": "expanded_summary",
+      "before": "Sweet osmanthus ear glycolipids are natural glycolipid molecules made by the edible jelly mushroom Dacryopinax spathularia during fermentation. They act as preservatives against yeasts and moulds in certain beverages.",
+      "after": "Sweet osmanthus ear glycolipids are glycolipid molecules made by the edible jelly mushroom Dacryopinax spathularia during fermentation. They act as preservatives against yeasts and moulds in certain beverages.",
+      "status": "EDITORIALLY IMPROVED"
+    }
+  ]
+}

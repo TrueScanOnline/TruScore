@@ -17,7 +17,14 @@ const DEFAULT_TSV_DIR =
 
 const DEFAULT_OUT_DIR = path.join(__dirname, '..', 'src', 's25', 'assets');
 
-const ALLOWED_ASSET_VERSIONS = ['v0.7', 'v0.8-W5AD01-editorial'];
+const ALLOWED_ASSET_VERSIONS = [
+  'v0.7',
+  'v0.8-W5AD01-editorial',
+  'v0.9-W5AD01-editorial',
+  'v0.10-W5AD01-editorial',
+  'v0.11-W5AD01-editorial',
+  'v0.12-W5AD01-editorial',
+];
 
 const XLSX_SHEETS = {
   catalogue: 'Catalogue_315',

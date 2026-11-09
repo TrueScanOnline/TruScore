@@ -1,0 +1,641 @@
+[
+  {
+    "additive_id": "e153",
+    "name": "Carbon blacks or Vegetable carbon",
+    "unresolved_question": "Does Schedule 8 title \"Carbon blacks or Vegetable carbon\" allow non-vegetable industrial carbon black, conflicting with plant-origin tile copy?",
+    "sources": [
+      {
+        "id": "FSANZ_S8",
+        "what": "Official Schedule 8 name is \"Carbon blacks or Vegetable carbon\" (153).",
+        "url": "https://www.legislation.gov.au/F2015L00478"
+      },
+      {
+        "id": "JECFA_153",
+        "what": "JECFA additive is \"Vegetable Carbon\"; synonyms include \"Vegetable black\" and \"Carbon black (vegetable sources)\"; produced by carbonising vegetable material.",
+        "url": "https://apps.who.int/food-additives-contaminants-jecfa-database/Home/Chemical/2323"
+      },
+      {
+        "id": "FSANZ_consumer_colour",
+        "what": "FSANZ consumer materials refer to vegetable carbon (carbon black), INS 153, as the colour assessed/discussed.",
+        "url": "https://www.foodstandards.gov.au/consumer/additives/colours-food-additives"
+      }
+    ],
+    "verified_facts": [
+      "AU Schedule 8 naming includes the synonym pair Carbon blacks / Vegetable carbon for code 153.",
+      "JECFA identity for INS 153 is vegetable carbon from vegetable sources, not furnace carbon black generally."
+    ],
+    "unsupported_possibilities": [
+      "Treating Schedule 8 'Carbon blacks' as authorising petroleum/furnace carbon black unrelated to vegetable carbonisation."
+    ],
+    "modified_in_stage5": false,
+    "fields_changed": [],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RESOLVED",
+    "classification": "C_PURELY_EDITORIAL_OR_NAMING_CLARIFIED",
+    "notes": "Existing tile/expanded correctly describe vegetable carbon. No copy change. Evidence fields untouched.",
+    "before": {
+      "tile_summary": "Vegetable carbon is an intensely black colouring made from carbon-rich plant material. ",
+      "expanded_summary": "Vegetable carbon is an intensely black colouring made from carbon-rich plant material. The material is carbonised and purified rather than used as ordinary charcoal.",
+      "fact_1_copy": "Used for black or very dark colouring.",
+      "fact_2_copy": "The carbon can originate from plant material even though the final ingredient is predominantly elemental carbon.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "CONTROLLED_PROCESS"
+    },
+    "after": {
+      "tile_summary": "Vegetable carbon is an intensely black colouring made from carbon-rich plant material. ",
+      "expanded_summary": "Vegetable carbon is an intensely black colouring made from carbon-rich plant material. The material is carbonised and purified rather than used as ordinary charcoal.",
+      "fact_1_copy": "Used for black or very dark colouring.",
+      "fact_2_copy": "The carbon can originate from plant material even though the final ingredient is predominantly elemental carbon.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "CONTROLLED_PROCESS"
+    }
+  },
+  {
+    "additive_id": "e221",
+    "name": "Sodium sulphite",
+    "unresolved_question": "Can a sulphite-sensitivity / declaration cue be added with substance-family authority?",
+    "sources": [
+      {
+        "id": "FSANZ_S9",
+        "what": "Schedule 9 requires declaration of added sulphites at 10 mg/kg or more.",
+        "url": "https://www.legislation.gov.au/F2015L00479"
+      },
+      {
+        "id": "FSANZ_sulphites",
+        "what": "FSANZ states some sulphite-sensitive people may react; labelling at ≥10 mg/kg helps avoidance.",
+        "url": "https://www.foodstandards.gov.au/consumer/additives/sulphite"
+      }
+    ],
+    "verified_facts": [
+      "221 is a sulphite salt in the preservative family.",
+      "AU/NZ mandatory sulphite declaration threshold is 10 mg/kg added sulphites."
+    ],
+    "unsupported_possibilities": [
+      "Product-specific sensitivity diagnosis or prevalence claims."
+    ],
+    "modified_in_stage5": true,
+    "fields_changed": [
+      "expanded_summary",
+      "fact_3_copy",
+      "fact_3_label"
+    ],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RESOLVED",
+    "classification": "B_SUPPORTED_EDITORIAL_CORRECTION",
+    "notes": "Added restrained label cue only; no medical overclaim.",
+    "before": {
+      "tile_summary": "Sodium sulphite is a sulphite salt used to preserve foods and control browning.",
+      "expanded_summary": "Sodium sulphite is a sulphite salt used to preserve foods and control browning. In food it can release sulphur dioxide-related preserving species.",
+      "fact_1_copy": "Part of the sulphite preservative family.",
+      "fact_2_copy": "Used for preservation, antioxidant action and browning control.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "MINERAL_INORGANIC"
+    },
+    "after": {
+      "tile_summary": "Sodium sulphite is a sulphite salt used to preserve foods and control browning.",
+      "expanded_summary": "Sodium sulphite is a sulphite salt used to preserve foods and control browning. In food it can release sulphur dioxide-related preserving species. In Australia and New Zealand, added sulphites at 10 mg/kg or more must be declared, which helps people who need to avoid sulphites.",
+      "fact_1_copy": "Part of the sulphite preservative family.",
+      "fact_2_copy": "Used for preservation, antioxidant action and browning control.",
+      "fact_3_copy": "Added sulphites at 10 mg/kg or more must be declared on packaged foods in Australia and New Zealand.",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "fact_3_label": "Label cue"
+    }
+  },
+  {
+    "additive_id": "e225",
+    "name": "Potassium sulphite",
+    "unresolved_question": "Can a sulphite-sensitivity / declaration cue be added with substance-family authority?",
+    "sources": [
+      {
+        "id": "FSANZ_S9",
+        "what": "Schedule 9 requires declaration of added sulphites at 10 mg/kg or more.",
+        "url": "https://www.legislation.gov.au/F2015L00479"
+      },
+      {
+        "id": "FSANZ_sulphites",
+        "what": "FSANZ sulphite consumer page supports sensitivity/avoidance framing tied to labelling.",
+        "url": "https://www.foodstandards.gov.au/consumer/additives/sulphite"
+      }
+    ],
+    "verified_facts": [
+      "225 is a sulphite salt.",
+      "AU/NZ mandatory sulphite declaration threshold is 10 mg/kg added sulphites."
+    ],
+    "unsupported_possibilities": [
+      "Product-specific sensitivity diagnosis."
+    ],
+    "modified_in_stage5": true,
+    "fields_changed": [
+      "expanded_summary",
+      "fact_3_copy",
+      "fact_3_label"
+    ],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RESOLVED",
+    "classification": "B_SUPPORTED_EDITORIAL_CORRECTION",
+    "notes": "",
+    "before": {
+      "tile_summary": "Potassium sulphite is a salt in the sulphite family, used for preservation and antioxidant effects.",
+      "expanded_summary": "Potassium sulphite is a potassium salt in the sulphite preservative family, chemically related to sulphur dioxide and other sulphites. It is used for preservation and as an antioxidant.",
+      "fact_1_copy": "Used for preservation and antioxidant effects.",
+      "fact_2_copy": "Chemically related to sulphur dioxide and other sulphites.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "MINERAL_INORGANIC"
+    },
+    "after": {
+      "tile_summary": "Potassium sulphite is a salt in the sulphite family, used for preservation and antioxidant effects.",
+      "expanded_summary": "Potassium sulphite is a potassium salt in the sulphite preservative family, chemically related to sulphur dioxide and other sulphites. It is used for preservation and as an antioxidant. In Australia and New Zealand, added sulphites at 10 mg/kg or more must be declared, which helps people who need to avoid sulphites.",
+      "fact_1_copy": "Used for preservation and antioxidant effects.",
+      "fact_2_copy": "Chemically related to sulphur dioxide and other sulphites.",
+      "fact_3_copy": "Added sulphites at 10 mg/kg or more must be declared on packaged foods in Australia and New Zealand.",
+      "source_preparation_profile": "MINERAL_INORGANIC",
+      "fact_3_label": "Label cue"
+    }
+  },
+  {
+    "additive_id": "e308",
+    "name": "γ-Tocopherol",
+    "unresolved_question": "Is 308 natural/plant-extracted gamma-tocopherol or synthetic gamma-tocopherol under FSANZ/JECFA?",
+    "sources": [
+      {
+        "id": "FSANZ_S15",
+        "what": "Schedule 15 lists 308 as Synthetic gamma-tocopherol (distinct from 307b Tocopherols concentrate, mixed).",
+        "url": "https://www.legislation.gov.au/Details/F2021C00607"
+      },
+      {
+        "id": "JECFA_307b",
+        "what": "JECFA mixed tocopherol concentrate is INS 307b (not 308).",
+        "url": "https://apps.who.int/food-additives-contaminants-jecfa-database/Home/Chemical/4871"
+      }
+    ],
+    "verified_facts": [
+      "FSANZ Schedule 15 identity for 308 is synthetic gamma-tocopherol.",
+      "307b is the mixed concentrate from vegetable-oil streams."
+    ],
+    "unsupported_possibilities": [
+      "Leaving PLANT_EXTRACT profile unchanged as if it were authoritative identity (profile is now inconsistent with corrected editorial copy)."
+    ],
+    "modified_in_stage5": true,
+    "fields_changed": [
+      "expanded_summary",
+      "fact_1_copy",
+      "fact_1_label",
+      "fact_2_copy",
+      "fact_2_label",
+      "fact_3_copy",
+      "fact_3_label",
+      "tile_summary"
+    ],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RESOLVED",
+    "classification": "B_SUPPORTED_EDITORIAL_CORRECTION",
+    "notes": "Editorial fields corrected to synthetic listing. FOUNDER APPROVAL REQUIRED before changing source_preparation_profile from PLANT_EXTRACT to CHEMICAL_SYNTHESIS (governed source field).",
+    "before": {
+      "tile_summary": "Gamma-tocopherol is one of the naturally occurring tocopherols in the vitamin E family. ",
+      "expanded_summary": "Gamma-tocopherol is one of the naturally occurring tocopherols in the vitamin E family. It is fat-soluble and can help slow oxidation.",
+      "fact_1_copy": "Found naturally in vegetable oils and other plant foods.",
+      "fact_2_copy": "Used as an antioxidant in fat-containing foods.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "PLANT_EXTRACT"
+    },
+    "after": {
+      "tile_summary": "Synthetic gamma-tocopherol is a manufactured form of one of the tocopherols in the vitamin E family.",
+      "expanded_summary": "Synthetic gamma-tocopherol is a manufactured form of one of the tocopherols in the vitamin E family. In the Australia New Zealand Food Standards Code it is listed as synthetic gamma-tocopherol (308), distinct from mixed tocopherols concentrate (307b). It is fat-soluble and is used as an antioxidant in fat-containing foods.",
+      "fact_1_copy": "FSANZ Schedule 15 lists 308 as synthetic gamma-tocopherol, separate from mixed tocopherols concentrate (307b).",
+      "fact_2_copy": "Used as an antioxidant in fat-containing foods.",
+      "fact_3_copy": "The additive number alone does not mean the ingredient was extracted as a mixed natural tocopherol concentrate.",
+      "source_preparation_profile": "PLANT_EXTRACT",
+      "fact_1_label": "Listing",
+      "fact_2_label": "Food role",
+      "fact_3_label": "Decode note"
+    }
+  },
+  {
+    "additive_id": "e357",
+    "name": "Potassium adipate",
+    "unresolved_question": "May commercial potassium adipate be described as petrochemical-derived?",
+    "sources": [
+      {
+        "id": "CATALOGUE_E355",
+        "what": "Sibling entry e355 (adipic acid) already states petrochemical-derived intermediates in governed source_preparation_copy.",
+        "url": "internal:catalogue_315.json#e355"
+      }
+    ],
+    "verified_facts": [
+      "Potassium adipate is a salt of adipic acid.",
+      "e355 already carries a petrochemical manufacturing statement for adipic acid."
+    ],
+    "unsupported_possibilities": [
+      "Asserting petrochemical origin on e357 without a substance-specific source_preparation statement on this entry."
+    ],
+    "modified_in_stage5": false,
+    "fields_changed": [],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RETAIN FAIL-CLOSED",
+    "classification": "A_EXISTING_LIMITATION_CARRIED_FORWARD",
+    "notes": "Do not invent petro claim on e357. Optional founder decision: align e357 SP with e355 parent-acid manufacturing note.",
+    "before": {
+      "tile_summary": "Potassium adipate is a potassium salt of adipic acid, a manufactured acid.",
+      "expanded_summary": "Potassium adipate is a potassium salt of adipic acid, a manufactured acid with two acid groups (a dicarboxylic acid). It is used mainly for acidity control or related processing functions.",
+      "fact_1_copy": "Derived from adipic acid chemistry.",
+      "fact_2_copy": "Used mainly for acidity control or related processing functions.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS"
+    },
+    "after": {
+      "tile_summary": "Potassium adipate is a potassium salt of adipic acid, a manufactured acid.",
+      "expanded_summary": "Potassium adipate is a potassium salt of adipic acid, a manufactured acid with two acid groups (a dicarboxylic acid). It is used mainly for acidity control or related processing functions.",
+      "fact_1_copy": "Derived from adipic acid chemistry.",
+      "fact_2_copy": "Used mainly for acidity control or related processing functions.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS"
+    }
+  },
+  {
+    "additive_id": "e381",
+    "name": "Ferric ammonium citrate",
+    "unresolved_question": "What concrete food function does ferric ammonium citrate have?",
+    "sources": [
+      {
+        "id": "JECFA_381",
+        "what": "Functional uses: nutrient/dietary supplement (brown salt); nutrient/dietary supplement and anticaking agent for sodium chloride (green salt).",
+        "url": "https://www.fao.org/fileadmin/user_upload/jecfa_additives/docs/Monograph1/Additive-189.pdf"
+      }
+    ],
+    "verified_facts": [
+      "JECFA functional uses include nutrient/dietary supplement and anticaking for salt."
+    ],
+    "unsupported_possibilities": [
+      "Claiming a single exclusive modern AU food use without Schedule 15 context."
+    ],
+    "modified_in_stage5": true,
+    "fields_changed": [
+      "expanded_summary",
+      "fact_2_copy",
+      "fact_2_label"
+    ],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RESOLVED",
+    "classification": "B_SUPPORTED_EDITORIAL_CORRECTION",
+    "notes": "",
+    "before": {
+      "tile_summary": "Ferric ammonium citrate is an iron-containing citrate complex rather than a single simple salt.",
+      "expanded_summary": "Ferric ammonium citrate is an iron-containing citrate complex rather than a single simple salt. It combines iron with citrate and ammonium in a water-compatible form.",
+      "fact_1_copy": "A complex of iron with citrate and ammonium, not simply iron metal or plain citric acid.",
+      "fact_2_copy": "Used where iron and citrate chemistry provides the desired technological effect.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS"
+    },
+    "after": {
+      "tile_summary": "Ferric ammonium citrate is an iron-containing citrate complex rather than a single simple salt.",
+      "expanded_summary": "Ferric ammonium citrate is an iron-containing citrate complex rather than a single simple salt. It combines iron with citrate and ammonium in a water-compatible form. JECFA describes functional uses as a nutrient/dietary supplement and, for the green salt, as an anticaking agent for sodium chloride.",
+      "fact_1_copy": "A complex of iron with citrate and ammonium, not simply iron metal or plain citric acid.",
+      "fact_2_copy": "Used as an iron nutrient/dietary supplement and, in some forms, as an anticaking agent for salt.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "fact_2_label": "Food role"
+    }
+  },
+  {
+    "additive_id": "e432",
+    "name": "Polysorbate 20 or Polyoxyethylene (20) sorbitan monolaurate",
+    "unresolved_question": "Can fatty-acid feedstock be pinned to plant vs animal for Polysorbate 20?",
+    "sources": [
+      {
+        "id": "JECFA_432",
+        "what": "Definition uses edible commercial lauric acid; does not pin botanical vs animal origin.",
+        "url": "https://www.fao.org/fileadmin/user_upload/jecfa_additives/docs/Monograph1/Additive-320.pdf"
+      },
+      {
+        "id": "USP_polysorbate20",
+        "what": "USP notes fatty acids may be of vegetable, animal, or synthetic origin.",
+        "url": "https://doi.usp.org/USPNF/USPNF_M66800_04_01.html"
+      }
+    ],
+    "verified_facts": [
+      "Origin is indeterminate from the additive code/specification alone.",
+      "Existing fact_2 hedge (plant or animal) is consistent with primary specs."
+    ],
+    "unsupported_possibilities": [
+      "Declaring vegan/plant-only or animal-only from the E-number."
+    ],
+    "modified_in_stage5": false,
+    "fields_changed": [],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RESOLVED",
+    "classification": "A_EXISTING_LIMITATION_CARRIED_FORWARD",
+    "notes": "Keep fail-closed hedge. No wording change required.",
+    "before": {
+      "tile_summary": "Polysorbate 20 is an emulsifier made from sorbitol-derived material, polyoxyethylene chains and lauric acid. ",
+      "expanded_summary": "Polysorbate 20 is an emulsifier made from sorbitol-derived material, polyoxyethylene chains and lauric acid. Its molecular design gives it both water-friendly and fat-friendly parts.",
+      "fact_1_copy": "Helps oils, fats and water stay mixed and can stabilise foams or dispersions.",
+      "fact_2_copy": "The fatty-acid feedstock may come from plant or animal fats, while the final emulsifier is chemically processed.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS"
+    },
+    "after": {
+      "tile_summary": "Polysorbate 20 is an emulsifier made from sorbitol-derived material, polyoxyethylene chains and lauric acid. ",
+      "expanded_summary": "Polysorbate 20 is an emulsifier made from sorbitol-derived material, polyoxyethylene chains and lauric acid. Its molecular design gives it both water-friendly and fat-friendly parts.",
+      "fact_1_copy": "Helps oils, fats and water stay mixed and can stabilise foams or dispersions.",
+      "fact_2_copy": "The fatty-acid feedstock may come from plant or animal fats, while the final emulsifier is chemically processed.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS"
+    }
+  },
+  {
+    "additive_id": "e472e",
+    "name": "Diacetyltartaric and fatty acid esters of glycerol",
+    "unresolved_question": "Can plant vs animal fatty-acid sources for DATEM-type 472e be asserted product-specifically?",
+    "sources": [
+      {
+        "id": "ENTRY_SP",
+        "what": "Existing source_preparation_copy already states fatty-acid sources can be plant or animal.",
+        "url": "internal:catalogue_315.json#e472e"
+      }
+    ],
+    "verified_facts": [
+      "Variable fatty-acid feedstock is already disclosed in governed SP copy."
+    ],
+    "unsupported_possibilities": [
+      "Product-specific animal/plant determination from code alone."
+    ],
+    "modified_in_stage5": false,
+    "fields_changed": [],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RESOLVED",
+    "classification": "A_EXISTING_LIMITATION_CARRIED_FORWARD",
+    "notes": "Retain existing fail-closed disclosure. No change.",
+    "before": {
+      "tile_summary": "Diacetyltartaric and fatty acid esters of glycerol are emulsifiers made by adding diacetyltartaric acid-derived groups to mono- and diglyceride-type fat molecules. ",
+      "expanded_summary": "Diacetyltartaric and fatty acid esters of glycerol are emulsifiers made by adding diacetyltartaric acid-derived groups to mono- and diglyceride-type fat molecules. The modification changes how the molecules interact with dough, fat and water.",
+      "fact_1_copy": "Built on glycerol and fatty acids, the same broad building blocks found in edible fats.",
+      "fact_2_copy": "Used as emulsifiers and texture/process aids, with some forms particularly important in bakery applications.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "MODIFIED_NATURAL"
+    },
+    "after": {
+      "tile_summary": "Diacetyltartaric and fatty acid esters of glycerol are emulsifiers made by adding diacetyltartaric acid-derived groups to mono- and diglyceride-type fat molecules. ",
+      "expanded_summary": "Diacetyltartaric and fatty acid esters of glycerol are emulsifiers made by adding diacetyltartaric acid-derived groups to mono- and diglyceride-type fat molecules. The modification changes how the molecules interact with dough, fat and water.",
+      "fact_1_copy": "Built on glycerol and fatty acids, the same broad building blocks found in edible fats.",
+      "fact_2_copy": "Used as emulsifiers and texture/process aids, with some forms particularly important in bakery applications.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "MODIFIED_NATURAL"
+    }
+  },
+  {
+    "additive_id": "e627",
+    "name": "Disodium-5′-guanylate",
+    "unresolved_question": "Which organisms/tissues supply commercial guanylate starting material?",
+    "sources": [
+      {
+        "id": "ENTRY_SP",
+        "what": "SP states microbial fermentation or enzymatic processing of biological nucleotide material — organism not named.",
+        "url": "internal:catalogue_315.json#e627"
+      }
+    ],
+    "verified_facts": [
+      "Commercial production commonly involves fermentation/enzymatic routes."
+    ],
+    "unsupported_possibilities": [
+      "Naming specific organisms or dietary tissues without a substance-specific primary source in-packet."
+    ],
+    "modified_in_stage5": false,
+    "fields_changed": [],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RETAIN FAIL-CLOSED",
+    "classification": "A_EXISTING_LIMITATION_CARRIED_FORWARD",
+    "notes": "",
+    "before": {
+      "tile_summary": "Disodium 5′-guanylate is the disodium salt of a guanosine nucleotide. ",
+      "expanded_summary": "Disodium 5′-guanylate is the disodium salt of a guanosine nucleotide. These nucleotide flavour enhancers strongly boost savoury taste, especially when used together with glutamate.",
+      "fact_1_copy": "Guanylate and inosinate can amplify umami far more strongly when combined with glutamate than when used alone.",
+      "fact_2_copy": "Related nucleotide compounds occur naturally in foods and cells.",
+      "fact_3_copy": "Used as flavour enhancers in savoury foods.",
+      "source_preparation_profile": "FERMENTATION"
+    },
+    "after": {
+      "tile_summary": "Disodium 5′-guanylate is the disodium salt of a guanosine nucleotide. ",
+      "expanded_summary": "Disodium 5′-guanylate is the disodium salt of a guanosine nucleotide. These nucleotide flavour enhancers strongly boost savoury taste, especially when used together with glutamate.",
+      "fact_1_copy": "Guanylate and inosinate can amplify umami far more strongly when combined with glutamate than when used alone.",
+      "fact_2_copy": "Related nucleotide compounds occur naturally in foods and cells.",
+      "fact_3_copy": "Used as flavour enhancers in savoury foods.",
+      "source_preparation_profile": "FERMENTATION"
+    }
+  },
+  {
+    "additive_id": "e631",
+    "name": "Disodium-5′-inosinate",
+    "unresolved_question": "Which organisms/tissues supply commercial inosinate starting material?",
+    "sources": [
+      {
+        "id": "ENTRY_SP",
+        "what": "SP states microbial fermentation or enzymatic processing of biological nucleotide material — organism not named.",
+        "url": "internal:catalogue_315.json#e631"
+      }
+    ],
+    "verified_facts": [
+      "Commercial production commonly involves fermentation/enzymatic routes."
+    ],
+    "unsupported_possibilities": [
+      "Naming meat/fish tissues or specific microbes without in-packet primary support."
+    ],
+    "modified_in_stage5": false,
+    "fields_changed": [],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RETAIN FAIL-CLOSED",
+    "classification": "A_EXISTING_LIMITATION_CARRIED_FORWARD",
+    "notes": "",
+    "before": {
+      "tile_summary": "Disodium 5′-inosinate is the disodium salt of an inosine nucleotide that boosts savoury umami taste.",
+      "expanded_summary": "Disodium 5′-inosinate is the disodium salt of an inosine nucleotide. Nucleotide flavour enhancers strongly boost savoury taste, especially when used with glutamate.",
+      "fact_1_copy": "Guanylate and inosinate can amplify umami far more strongly when combined with glutamate than when used alone.",
+      "fact_2_copy": "Related nucleotide compounds occur naturally in foods and cells.",
+      "fact_3_copy": "Used as flavour enhancers in savoury foods.",
+      "source_preparation_profile": "FERMENTATION"
+    },
+    "after": {
+      "tile_summary": "Disodium 5′-inosinate is the disodium salt of an inosine nucleotide that boosts savoury umami taste.",
+      "expanded_summary": "Disodium 5′-inosinate is the disodium salt of an inosine nucleotide. Nucleotide flavour enhancers strongly boost savoury taste, especially when used with glutamate.",
+      "fact_1_copy": "Guanylate and inosinate can amplify umami far more strongly when combined with glutamate than when used alone.",
+      "fact_2_copy": "Related nucleotide compounds occur naturally in foods and cells.",
+      "fact_3_copy": "Used as flavour enhancers in savoury foods.",
+      "source_preparation_profile": "FERMENTATION"
+    }
+  },
+  {
+    "additive_id": "e920",
+    "name": "L-cysteine monohydrochloride",
+    "unresolved_question": "Can historical animal/hair routes or modern fermentation be asserted as the product route?",
+    "sources": [
+      {
+        "id": "ENTRY_SP",
+        "what": "VARIABLE profile; SP describes modern fermentation/controlled routes and fact_3 already fail-closed.",
+        "url": "internal:catalogue_315.json#e920"
+      }
+    ],
+    "verified_facts": [
+      "Additive number does not disclose manufacturing source."
+    ],
+    "unsupported_possibilities": [
+      "Asserting hair/feather or exclusively fermented origin for a scanned product."
+    ],
+    "modified_in_stage5": false,
+    "fields_changed": [],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RETAIN FAIL-CLOSED",
+    "classification": "A_EXISTING_LIMITATION_CARRIED_FORWARD",
+    "notes": "",
+    "before": {
+      "tile_summary": "L-cysteine hydrochloride is a salt of L-cysteine, a sulphur-containing amino acid found naturally in proteins. ",
+      "expanded_summary": "L-cysteine hydrochloride is a salt of L-cysteine, a sulphur-containing amino acid found naturally in proteins. In food processing it is particularly known for changing dough properties.",
+      "fact_1_copy": "Cysteine is a normal amino-acid component of many proteins.",
+      "fact_2_copy": "Can act as a flour treatment agent by modifying disulphide bonds in dough proteins.",
+      "fact_3_copy": "The additive number does not by itself disclose the manufacturing source, so source-specific dietary concerns require product or supplier information.",
+      "source_preparation_profile": "VARIABLE"
+    },
+    "after": {
+      "tile_summary": "L-cysteine hydrochloride is a salt of L-cysteine, a sulphur-containing amino acid found naturally in proteins. ",
+      "expanded_summary": "L-cysteine hydrochloride is a salt of L-cysteine, a sulphur-containing amino acid found naturally in proteins. In food processing it is particularly known for changing dough properties.",
+      "fact_1_copy": "Cysteine is a normal amino-acid component of many proteins.",
+      "fact_2_copy": "Can act as a flour treatment agent by modifying disulphide bonds in dough proteins.",
+      "fact_3_copy": "The additive number does not by itself disclose the manufacturing source, so source-specific dietary concerns require product or supplier information.",
+      "source_preparation_profile": "VARIABLE"
+    }
+  },
+  {
+    "additive_id": "e943b",
+    "name": "Isobutane",
+    "unresolved_question": "Can petroleum or natural-gas origin of isobutane be asserted beyond hydrocarbon processing?",
+    "sources": [
+      {
+        "id": "ENTRY_SP",
+        "what": "SP: separated or manufactured from hydrocarbon processing streams and purified.",
+        "url": "internal:catalogue_315.json#e943b"
+      }
+    ],
+    "verified_facts": [
+      "Isobutane is a hydrocarbon food gas/propellant."
+    ],
+    "unsupported_possibilities": [
+      "Petroleum-specific origin claim without a substance-specific primary citation in-packet."
+    ],
+    "modified_in_stage5": false,
+    "fields_changed": [],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RETAIN FAIL-CLOSED",
+    "classification": "A_EXISTING_LIMITATION_CARRIED_FORWARD",
+    "notes": "",
+    "before": {
+      "tile_summary": "Isobutane is a hydrocarbon gas used as a propellant in specified food applications.",
+      "expanded_summary": "Isobutane is a branched form of butane, a hydrocarbon gas. It is used as a propellant, valued for its gas and pressure properties rather than as a conventional solid or liquid ingredient.",
+      "fact_1_copy": "Used as a propellant in specified food applications.",
+      "fact_2_copy": "Used for its gas/pressure properties rather than as a conventional solid or liquid ingredient.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "FOOD_GAS"
+    },
+    "after": {
+      "tile_summary": "Isobutane is a hydrocarbon gas used as a propellant in specified food applications.",
+      "expanded_summary": "Isobutane is a branched form of butane, a hydrocarbon gas. It is used as a propellant, valued for its gas and pressure properties rather than as a conventional solid or liquid ingredient.",
+      "fact_1_copy": "Used as a propellant in specified food applications.",
+      "fact_2_copy": "Used for its gas/pressure properties rather than as a conventional solid or liquid ingredient.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "FOOD_GAS"
+    }
+  },
+  {
+    "additive_id": "e946",
+    "name": "Octafluorocyclobutane",
+    "unresolved_question": "Is propellant/packaging-gas use supported for octafluorocyclobutane?",
+    "sources": [
+      {
+        "id": "US_21CFR_173.360",
+        "what": "FDA permits octafluorocyclobutane as propellant and aerating agent in foamed or sprayed food products.",
+        "url": "https://www.law.cornell.edu/cfr/text/21/173.360"
+      },
+      {
+        "id": "FSANZ_S8",
+        "what": "Schedule 8 lists Octafluorocyclobutane (946).",
+        "url": "https://www.legislation.gov.au/F2015L00478"
+      }
+    ],
+    "verified_facts": [
+      "Propellant/aerating use is supported by 21 CFR 173.360."
+    ],
+    "unsupported_possibilities": [
+      "Broad 'packaging gas' claim as if interchangeable with nitrogen-style MAP without AU-specific packaging-gas authority in-packet."
+    ],
+    "modified_in_stage5": true,
+    "fields_changed": [
+      "expanded_summary",
+      "fact_1_copy",
+      "fact_1_label"
+    ],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RESOLVED",
+    "classification": "B_SUPPORTED_EDITORIAL_CORRECTION",
+    "notes": "Corrected fact_1/expanded to propellant or aerating agent; removed unsupported packaging-gas framing.",
+    "before": {
+      "tile_summary": "Octafluorocyclobutane is a manufactured gas whose molecules contain only carbon and fluorine.",
+      "expanded_summary": "Octafluorocyclobutane is a manufactured gas whose molecules contain only carbon and fluorine. Its name describes a ring of four carbon atoms (cyclobutane) with eight fluorine atoms attached.",
+      "fact_1_copy": "Used as a specialised propellant or packaging gas in limited applications.",
+      "fact_2_copy": "Used for its gas/pressure properties rather than as a conventional solid or liquid ingredient.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "FOOD_GAS"
+    },
+    "after": {
+      "tile_summary": "Octafluorocyclobutane is a manufactured gas whose molecules contain only carbon and fluorine.",
+      "expanded_summary": "Octafluorocyclobutane is a manufactured gas whose molecules contain only carbon and fluorine. Its name describes a ring of four carbon atoms (cyclobutane) with eight fluorine atoms attached. Authoritative food-additive specifications describe it as a propellant and aerating agent for foamed or sprayed foods.",
+      "fact_1_copy": "Used as a specialised propellant or aerating agent in foamed or sprayed food applications.",
+      "fact_2_copy": "Used for its gas/pressure properties rather than as a conventional solid or liquid ingredient.",
+      "fact_3_copy": "",
+      "source_preparation_profile": "FOOD_GAS",
+      "fact_1_label": "Food role"
+    }
+  },
+  {
+    "additive_id": "e962",
+    "name": "Aspartame-acesulphame salt",
+    "unresolved_question": "Can phenylalanine/PKU relevance be stated for aspartame-acesulphame salt?",
+    "sources": [
+      {
+        "id": "FSANZ_S9_item4",
+        "what": "Mandatory advisory statement for foods containing aspartame or aspartame-acesulphame salt: the food contains phenylalanine.",
+        "url": "https://www.legislation.gov.au/F2015L00479"
+      }
+    ],
+    "verified_facts": [
+      "962 contains aspartame-derived material.",
+      "AU/NZ Code requires phenylalanine advisory for foods containing aspartame-acesulphame salt."
+    ],
+    "unsupported_possibilities": [
+      "Clinical PKU advice beyond the mandated advisory statement."
+    ],
+    "modified_in_stage5": true,
+    "fields_changed": [
+      "expanded_summary",
+      "fact_3_copy",
+      "fact_3_label"
+    ],
+    "unsupported_claim_introduced": false,
+    "recommendation": "RESOLVED",
+    "classification": "B_SUPPORTED_EDITORIAL_CORRECTION",
+    "notes": "",
+    "before": {
+      "tile_summary": "Aspartame-acesulphame salt is a crystalline compound containing the two sweeteners aspartame and acesulphame in a fixed salt-like combination.",
+      "expanded_summary": "Aspartame-acesulphame salt is a crystalline compound containing the two sweeteners aspartame and acesulphame in a fixed salt-like combination.",
+      "fact_1_copy": "Two established high-intensity sweetener components in one ingredient.",
+      "fact_2_copy": "Provides a blended sweetness profile without adding the two sweeteners separately.",
+      "fact_3_copy": "The ingredient contains aspartame-derived material as well as acesulphame.",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS"
+    },
+    "after": {
+      "tile_summary": "Aspartame-acesulphame salt is a crystalline compound containing the two sweeteners aspartame and acesulphame in a fixed salt-like combination.",
+      "expanded_summary": "Aspartame-acesulphame salt is a crystalline compound containing the two sweeteners aspartame and acesulphame in a fixed salt-like combination. It provides a blended sweetness profile without adding the two sweeteners separately. Because it contains aspartame-derived material, foods that contain it require a phenylalanine advisory statement under the Australia New Zealand Food Standards Code.",
+      "fact_1_copy": "Two established high-intensity sweetener components in one ingredient.",
+      "fact_2_copy": "Provides a blended sweetness profile without adding the two sweeteners separately.",
+      "fact_3_copy": "Foods that contain aspartame-acesulphame salt require an advisory statement that the food contains phenylalanine.",
+      "source_preparation_profile": "CHEMICAL_SYNTHESIS",
+      "fact_3_label": "Label cue"
+    }
+  }
+]

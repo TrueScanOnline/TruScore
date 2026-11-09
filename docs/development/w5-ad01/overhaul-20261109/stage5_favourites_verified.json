@@ -1,0 +1,62 @@
+{
+  "barcode": "9300617308324",
+  "product": "Cadbury Favourites",
+  "verified_rendered_additive_ids": [
+    "e120",
+    "e471",
+    "e476",
+    "e150c",
+    "e330",
+    "e322",
+    "e422",
+    "e575",
+    "e223"
+  ],
+  "details": [
+    {
+      "additive_id": "e120",
+      "text": "Cochineal or carmines or carminic acid (120)",
+      "first_seen_in": "favpack_modal0.xml"
+    },
+    {
+      "additive_id": "e471",
+      "text": "Mono- and di-glycerides of fatty acids (471)",
+      "first_seen_in": "favpack_modal0.xml"
+    },
+    {
+      "additive_id": "e476",
+      "text": "Polyglycerol esters of interesterified ricinoleic acid (476)",
+      "first_seen_in": "favpack_modal0.xml"
+    },
+    {
+      "additive_id": "e150c",
+      "text": "Caramel III (150c)",
+      "first_seen_in": "favpack_modal1.xml"
+    },
+    {
+      "additive_id": "e330",
+      "text": "Citric acid (330)",
+      "first_seen_in": "favpack_modal1.xml"
+    },
+    {
+      "additive_id": "e322",
+      "text": "Lecithin (322)",
+      "first_seen_in": "favpack_modal2.xml"
+    },
+    {
+      "additive_id": "e422",
+      "text": "Glycerin or glycerol (422)",
+      "first_seen_in": "favpack_modal2.xml"
+    },
+    {
+      "additive_id": "e575",
+      "text": "Glucono \u03b4-lactone or Glucono delta-lactone (575)",
+      "first_seen_in": "favpack_modal3.xml"
+    },
+    {
+      "additive_id": "e223",
+      "text": "Sodium metabisulphite (223)",
+      "first_seen_in": "favpack_modal4.xml"
+    }
+  ]
+}

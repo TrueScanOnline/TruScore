@@ -5,7 +5,7 @@
  *
  * Usage (XLSX — preferred for multiline editorial fields):
  *   npx ts-node --compiler-options "{\"module\":\"commonjs\"}" scripts/generate-s25-asset-runtime.ts \
- *     --xlsx <path.xlsx> --asset-version <v0.7|v0.8-W5AD01-editorial> [--out-dir <dir>]
+ *     --xlsx <path.xlsx> --asset-version <v0.7|v0.8-W5AD01-editorial|...|v0.12-W5AD01-editorial> [--out-dir <dir>]
  *
  * Usage (TSV directory — legacy Wave 3 extract; newline-in-cell unsafe):
  *   ... generate-s25-asset-runtime.ts --tsv-dir <dir> --asset-version v0.7 [--out-dir <dir>]
@@ -26,7 +26,14 @@ const DEFAULT_TSV_DIR =
 const DEFAULT_OUT_DIR = path.join(__dirname, '..', 'src', 's25', 'assets');
 
 /** Explicit allowlist — never infer version from filename alone. */
-const ALLOWED_ASSET_VERSIONS = ['v0.7', 'v0.8-W5AD01-editorial'] as const;
+const ALLOWED_ASSET_VERSIONS = [
+  'v0.7',
+  'v0.8-W5AD01-editorial',
+  'v0.9-W5AD01-editorial',
+  'v0.10-W5AD01-editorial',
+  'v0.11-W5AD01-editorial',
+  'v0.12-W5AD01-editorial',
+] as const;
 type AssetVersion = (typeof ALLOWED_ASSET_VERSIONS)[number];
 
 const XLSX_SHEETS = {
