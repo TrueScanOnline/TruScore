@@ -59,7 +59,7 @@ describe('W5-UI-09 founder Result refinements', () => {
       'If you think any of the information about this product displayed is incorrect or missing then please help us out and make any necessary additions.'
     );
     expect(ADD_OR_CORRECT_INFORMATION).toBe('Add or correct information');
-    expect(ABOUT_THIS_INFORMATION).toBe('About this information');
+    expect(ABOUT_THIS_INFORMATION).toBe('Data limitations >');
     expect(PRODUCT_INFORMATION_MENU_INSTRUCTION).toBe('Choose the information you would like to update.');
     expect(en.result.productInformationHeading).toBe(PRODUCT_INFORMATION_HEADING);
     expect(en.result.productInformationSupport).toBe(PRODUCT_INFORMATION_SUPPORT);

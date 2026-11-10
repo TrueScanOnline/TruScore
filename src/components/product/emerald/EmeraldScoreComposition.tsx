@@ -73,8 +73,16 @@ function TileArt({
   const radius = art.radius.tile;
   const fold = Math.max(art.fold, DOG_EAR_FOLD);
   // Shared rounded peel with the Product Hero (dogEar.ts).
-  const { cutX, face, flap, cast, crease } = dogEarCut(W, H, radius, fold);
+  const { cutX, cutY, face, flap, crease } = dogEarCut(W, H, radius, fold);
   const flapLight = dark ? art.foldDark[1] : '#FFFFFF';
+  // Card behind the dog-ear: darker shade of this pillar (icon accent + deepen),
+  // so the white peel clearly lifts off a darker base of the same colour family.
+  const underColour = dark ? shades[2] : role.icon;
+  // Deep enough for peel contrast, light enough to stay recognisably this pillar’s hue.
+  const underDeepen = dark ? 0.35 : 0.28;
+  // Pull flap toward the corner so a clear dark wedge stays visible under the peel.
+  const flapX = cutX + 9;
+  const flapY = -2.5;
   return (
     <Svg width="100%" height="100%" viewBox={`0 0 ${num(W)} ${num(H)}`}>
       <Defs>
@@ -84,25 +92,22 @@ function TileArt({
         <ClipPath id={`${prefix}-face`}>
           <Path d={face} />
         </ClipPath>
-        <LinearGradient id={`${prefix}-tile`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0" stopColor={shades[0]} />
-          <Stop offset="0.42" stopColor={shades[0]} />
-          <Stop offset="0.74" stopColor={shades[1]} />
-          <Stop offset="1" stopColor={shades[2]} />
+        {/* Dark at top-right (under dog-ear) → light at bottom-left. */}
+        <LinearGradient id={`${prefix}-tile`} x1="100%" y1="0%" x2="0%" y2="100%">
+          <Stop offset="0" stopColor={shades[2]} />
+          <Stop offset="0.28" stopColor={shades[2]} />
+          <Stop offset="0.62" stopColor={shades[1]} />
+          <Stop offset="1" stopColor={shades[0]} />
         </LinearGradient>
-        <RadialGradient id={`${prefix}-wash`} cx="20%" cy="15%" r="70%">
+        <RadialGradient id={`${prefix}-wash`} cx="22%" cy="82%" r="70%">
           <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.45" />
           <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
         </RadialGradient>
-        <LinearGradient id={`${prefix}-under`} x1="100%" y1="0%" x2="55%" y2="45%">
-          <Stop offset="0" stopColor={shades[2]} />
-          <Stop offset="0.55" stopColor={role.icon} stopOpacity="0.62" />
-          <Stop offset="1" stopColor={shades[1]} />
-        </LinearGradient>
-        <LinearGradient id={`${prefix}-shadow`} x1="80%" y1="10%" x2="40%" y2="70%">
-          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.5 : 0.38} />
-          <Stop offset="0.45" stopColor="#041510" stopOpacity={dark ? 0.3 : 0.24} />
-          <Stop offset="1" stopColor="#0C3227" stopOpacity="0" />
+        {/* Soft light from top-left: curl-matched flap shadow fades toward the free tip. */}
+        <LinearGradient id={`${prefix}-curlShadow`} x1="8%" y1="5%" x2="78%" y2="88%">
+          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.42 : 0.32} />
+          <Stop offset="0.4" stopColor="#000000" stopOpacity={dark ? 0.26 : 0.2} />
+          <Stop offset="1" stopColor="#000000" stopOpacity="0.03" />
         </LinearGradient>
         <LinearGradient id={`${prefix}-flap`} x1="8%" y1="0%" x2="88%" y2="100%">
           <Stop offset="0" stopColor={flapLight} />
@@ -117,13 +122,29 @@ function TileArt({
         </LinearGradient>
       </Defs>
       <G clipPath={`url(#${prefix}-clip)`}>
-        <Rect x="0" y="0" width={W} height={H} rx={radius} fill={`url(#${prefix}-under)`} />
+        {/* Full under layer — darker pillar accent shows through the cut. */}
+        <Rect x="0" y="0" width={W} height={H} rx={radius} fill={underColour} />
+        <Rect x="0" y="0" width={W} height={H} rx={radius} fill="#000000" opacity={underDeepen} />
+        {/* Reinforce a generous cut wedge so the peel clearly lifts off the darker base. */}
+        <Path
+          d={`M${num(cutX - 8)} 0 L${num(W)} 0 L${num(W)} ${num(cutY + 8)} Z`}
+          fill={underColour}
+        />
+        <Path
+          d={`M${num(cutX - 8)} 0 L${num(W)} 0 L${num(W)} ${num(cutY + 8)} Z`}
+          fill="#000000"
+          opacity={underDeepen + 0.1}
+        />
         <Path d={face} fill={`url(#${prefix}-tile)`} />
         <Rect x="0" y="0" width={W} height={H} fill={`url(#${prefix}-wash)`} clipPath={`url(#${prefix}-face)`} />
         <Path d={face} fill="none" stroke="#FFFFFF" strokeWidth="2" strokeOpacity="0.7" />
-        <Path d={cast} fill="#000000" opacity={0.28} transform={`translate(${num(cutX)} 0)`} />
-        <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.55} transform={`translate(${num(cutX - 1.2)} 2.4)`} />
-        <Path d={flap} fill={`url(#${prefix}-flap)`} transform={`translate(${num(cutX)} 0)`} />
+        {/* Curl-matched cast on the face only — slightly larger soft lift under all dog-ears. */}
+        <G clipPath={`url(#${prefix}-face)`}>
+          <Path d={flap} fill="#000000" opacity={0.1} transform={`translate(${num(flapX - 5.5)}, ${num(flapY + 7.5)})`} />
+          <Path d={flap} fill={`url(#${prefix}-curlShadow)`} opacity={0.85} transform={`translate(${num(flapX - 3.4)}, ${num(flapY + 5.0)})`} />
+          <Path d={flap} fill={`url(#${prefix}-curlShadow)`} opacity={0.55} transform={`translate(${num(flapX - 1.6)}, ${num(flapY + 2.6)})`} />
+        </G>
+        <Path d={flap} fill={`url(#${prefix}-flap)`} transform={`translate(${num(flapX)}, ${num(flapY)})`} />
         <Path d={crease} fill="none" stroke={`url(#${prefix}-crease)`} strokeWidth="2.2" />
         <Path d={crease} fill="none" stroke="#FFFFFF" strokeWidth="1.1" strokeOpacity="0.75" />
       </G>

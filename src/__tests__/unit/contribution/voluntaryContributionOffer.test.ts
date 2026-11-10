@@ -268,7 +268,7 @@ describe('voluntary contribution offer', () => {
       'If you think any of the information about this product displayed is incorrect or missing then please help us out and make any necessary additions.'
     );
     expect(ADD_OR_CORRECT_INFORMATION).toBe('Add or correct information');
-    expect(ABOUT_THIS_INFORMATION).toBe('About this information');
+    expect(ABOUT_THIS_INFORMATION).toBe('Data limitations >');
     expect(source).toContain('freshProductInformationMenu');
     expect(source).toContain('publicationSettledRef.current');
     expect(source).not.toContain('userContributionRouteLive');

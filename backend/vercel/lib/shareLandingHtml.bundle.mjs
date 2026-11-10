@@ -143,7 +143,7 @@ function renderShareLandingHtml(input) {
   const appStoreLink = appStoreReady ? `https://apps.apple.com/app/id${APP_STORE_ID}` : "";
   const playStoreLink = "https://play.google.com/store/apps/details?id=com.truescan.foodscanner";
   const deepLink = `truescan://barcode/${barcode}`;
-  const origin = (input.origin || "https://truescan.app").replace(/\/$/, "");
+  const origin = (input.origin || "https://truscoreapi.vercel.app").replace(/\/$/, "");
   const ctxParam = normalizeShareContext(query.ctx);
   const passthrough = pickQueryString(query, [
     "ctx",
@@ -162,20 +162,15 @@ function renderShareLandingHtml(input) {
   const productNamePlain = productData?.product_name || productData?.product_name_en || "Shared product";
   const productImageAbsolute = absoluteImageUrl(productData?.image_url || "");
   const brands = productData?.brands;
-  const categories = productData?.categories;
   const productNameHtml = escapeHtmlText(productNamePlain);
   const firstBrandPlain = brands ? String(brands).split(",")[0].trim() : "";
-  const firstCategoryPlain = categories ? String(categories).split(",")[0].trim() : "";
   const firstBrandHtml = firstBrandPlain ? escapeHtmlText(firstBrandPlain) : "";
-  const firstCategoryHtml = firstCategoryPlain ? escapeHtmlText(firstCategoryPlain) : "";
   const barcodeHtml = escapeHtmlText(barcode);
-  const defaultHeadline = SHARED_PRODUCT_HEADLINE;
-  const defaultMetaDescription = `${SHARED_PRODUCT_HEADLINE}. ${SHARED_PRODUCT_READING}`;
   const landing = buildLandingPresentation({
     ctx: ctxParam,
     productNamePlain,
-    defaultHeadline,
-    defaultMetaDescription,
+    defaultHeadline: SHARED_PRODUCT_HEADLINE,
+    defaultMetaDescription: `${SHARED_PRODUCT_HEADLINE}. ${SHARED_PRODUCT_READING}`,
     scoreHook: SHARED_PRODUCT_HEADLINE,
     scoreViral: SHARED_PRODUCT_READING
   });
@@ -190,9 +185,10 @@ function renderShareLandingHtml(input) {
   const appStoreMeta = appStoreReady ? `<meta property="al:ios:app_store_id" content="${escapeHtmlAttr(APP_STORE_ID)}">` : "";
   const imageMeta = productImageAbsolute ? `<meta property="og:image" content="${escapeHtmlAttr(productImageAbsolute)}">` : "";
   const imageTwitter = productImageAbsolute ? `<meta name="twitter:image" content="${escapeHtmlAttr(productImageAbsolute)}">` : "";
-  const photoHtml = productImageAbsolute ? `<img src="${escapeHtmlAttr(productImageAbsolute)}" alt="${escapeHtmlAttr(productNamePlain)}" onerror="this.outerHTML='<span aria-hidden=\\'true\\'>\u25A3</span>'">` : '<span aria-hidden="true">\u25A3</span>';
+  const photoHtml = productImageAbsolute ? `<img src="${escapeHtmlAttr(productImageAbsolute)}" alt="${escapeHtmlAttr(productNamePlain)}" onerror="this.outerHTML='<span class=\\'story-placeholder\\' aria-hidden=\\'true\\'>\u25A3</span>'">` : '<span class="story-placeholder" aria-hidden="true">\u25A3</span>';
+  const brandLine = firstBrandHtml ? `<p class="story-brand">${firstBrandHtml}</p>` : "";
   const storeButtons = [
-    appStoreLink ? `<a class="btn btn-soft btn-block" href="${escapeHtmlAttr(appStoreLink)}">Download on the App Store</a>` : "",
+    appStoreLink ? `<a class="btn btn-soft btn-block" href="${escapeHtmlAttr(appStoreLink)}">Download on the App Store</a>` : `<span class="btn btn-soft btn-block soon" aria-disabled="true">Coming to the App Store</span>`,
     `<a class="btn btn-soft btn-block" href="${escapeHtmlAttr(playStoreLink)}">Get it on Google Play</a>`
   ].join("");
   return `<!DOCTYPE html>
@@ -203,6 +199,7 @@ function renderShareLandingHtml(input) {
   <title>${documentTitleHtml}</title>
   <meta name="description" content="${metaDescriptionAttr}">
   <meta name="theme-color" content="#10957E">
+  <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/rveel.css">
   <link rel="canonical" href="${canonicalUrlAttr}">
@@ -223,48 +220,72 @@ function renderShareLandingHtml(input) {
   <meta property="al:android:app_name" content="Rveel">
   <meta property="al:android:url" content="${escapeHtmlAttr(deepLink)}">
 </head>
-<body class="sheet">
+<body class="sheet sheet-teaser">
   <a class="skip" href="#content">Skip to content</a>
-  <div class="wash sheet-wash" aria-hidden="true"></div>
-  <div class="overlay" id="loadingOverlay">
-    <div class="spinner" aria-hidden="true"></div>
-    <div>Opening Rveel\u2026</div>
-  </div>
   <header class="top">
     <a class="mark" href="/"><img src="/logo.svg" alt="Rveel"></a>
     <nav class="nav-mini" aria-label="Primary">
-      <a href="/#foods">The score</a>
-      <a class="pill" href="/#get">Get the app</a>
+      <a class="pill" href="${escapeHtmlAttr(playStoreLink)}">Get the app</a>
     </nav>
   </header>
-  <main class="sheet-main" id="content">
+  <main class="sheet-main sheet-main-compact" id="content">
     <p class="eyebrow">Shared from Rveel</p>
     <h1 class="sheet-headline">${pageHeadlineHtml}</h1>
-    <article class="product-hero">
-      <div class="photo-well">${photoHtml}</div>
-      <div>
-        ${firstBrandHtml ? `<p class="brand">${firstBrandHtml}</p>` : ""}
-        <h2 class="product-title">${productNameHtml}</h2>
-        <p class="meta">${firstCategoryHtml ? `${firstCategoryHtml} \xB7 ` : ""}Barcode ${barcodeHtml}</p>
+    <p class="context sr-reading">${heroTaglineHtml}. ${heroViralHtml}</p>
+
+    <article class="teaser-card" aria-label="Teaser for ${escapeHtmlAttr(productNamePlain)} \u2014 reading only in the app">
+      <div class="story-head">
+        <img src="/logo-light.svg" alt="Rveel" height="24">
+        <span>Shared product</span>
+      </div>
+
+      <div class="teaser-identity">
+        <div class="story-photo teaser-photo">${photoHtml}</div>
+        <div>
+          ${brandLine}
+          <h2 class="story-title">${productNameHtml}</h2>
+          <p class="story-barcode">Barcode ${barcodeHtml}</p>
+        </div>
+      </div>
+
+      <div class="teaser-veil" aria-hidden="true">
+        <div class="teaser-blur-grid">
+          <span class="tb body"></span>
+          <span class="tb planet"></span>
+          <span class="tb claims"></span>
+          <span class="tb open"></span>
+          <span class="tb-disc"></span>
+        </div>
+        <div class="teaser-frost">
+          <strong>Reading locked</strong>
+          <span>Scores and details stay in the app \u2014 this page is only a teaser.</span>
+        </div>
       </div>
     </article>
-    <p class="context">${heroTaglineHtml}. ${heroViralHtml}</p>
+
+    <p class="teaser-promise">${escapeHtmlText(SHARED_PRODUCT_READING)}</p>
+
     <div class="cta-stack">
-      <a class="btn btn-green btn-block" id="openApp" href="${escapeHtmlAttr(deepLink)}">Open in Rveel</a>
+      <a class="btn btn-green btn-block btn-glow" id="openApp" href="${escapeHtmlAttr(deepLink)}">Open this product in Rveel</a>
       ${storeButtons}
-      <a class="btn btn-soft btn-block" href="/">About Rveel</a>
     </div>
+    <p class="teaser-fine">Already have Rveel? We\u2019ll open this exact barcode. If not, grab the app and scan with confidence.</p>
   </main>
   <footer class="site-footer">
     <div>
       <span>Rveel</span>
-      <span class="sha-chip">SHA ac9a0e2</span>
+      <span class="sha-chip">teaser only</span>
     </div>
     <nav aria-label="Legal">
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
+      <a href="/">About</a>
     </nav>
   </footer>
+  <div class="overlay" id="loadingOverlay">
+    <div class="spinner" aria-hidden="true"></div>
+    <div>Opening this product in Rveel\u2026</div>
+  </div>
   <script>
     const barcode = ${JSON.stringify(barcode)};
     const deepLink = ${JSON.stringify(deepLink)};
@@ -273,6 +294,8 @@ function renderShareLandingHtml(input) {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isAndroid = /Android/.test(navigator.userAgent);
     const overlay = document.getElementById('loadingOverlay');
+    const openBtn = document.getElementById('openApp');
+    let triedAuto = false;
 
     function showOpening() {
       if (!overlay) return;
@@ -283,31 +306,45 @@ function renderShareLandingHtml(input) {
       overlay.style.display = 'none';
     }
 
-    document.getElementById('openApp').addEventListener('click', function (event) {
+    function openInApp(fromAuto) {
       if (!isIOS && !isAndroid) {
-        event.preventDefault();
-        const note = document.createElement('p');
-        note.className = 'context';
-        note.textContent = 'Rveel is a phone app. Open this page on your phone, or install it from the store links below.';
-        event.currentTarget.insertAdjacentElement('afterend', note);
+        if (!fromAuto && openBtn) {
+          const note = document.createElement('p');
+          note.className = 'meta';
+          note.textContent = 'Rveel is a phone app. Open this link on your phone to jump straight to the product, or install it below.';
+          openBtn.insertAdjacentElement('afterend', note);
+        }
         return;
       }
-      event.preventDefault();
       showOpening();
       if (isAndroid) {
         const intentUrl = 'intent://barcode/' + encodeURIComponent(barcode) + '#Intent;scheme=truescan;package=com.truescan.foodscanner;S.browser_fallback_url=' + encodeURIComponent(playStoreLink) + ';end';
         window.location.href = intentUrl;
         setTimeout(function () {
-          if (!document.hidden) window.location.href = playStoreLink;
-        }, 1800);
+          if (!document.hidden && !fromAuto) window.location.href = playStoreLink;
+          else if (!document.hidden) hideOpening();
+        }, fromAuto ? 1400 : 1800);
         return;
       }
       window.location.href = deepLink;
       setTimeout(function () {
-        if (!document.hidden && appStoreLink) window.location.href = appStoreLink;
+        if (!document.hidden && !fromAuto && appStoreLink) window.location.href = appStoreLink;
         else hideOpening();
-      }, 1800);
-    });
+      }, fromAuto ? 1400 : 1800);
+    }
+
+    if (openBtn) {
+      openBtn.addEventListener('click', function (event) {
+        event.preventDefault();
+        openInApp(false);
+      });
+    }
+
+    // Mobile: try the exact product deep link first so installed apps skip the teaser.
+    if ((isIOS || isAndroid) && !triedAuto) {
+      triedAuto = true;
+      setTimeout(function () { openInApp(true); }, 350);
+    }
 
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) hideOpening();

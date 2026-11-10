@@ -11,13 +11,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).send('Invalid barcode');
   }
 
+  const host = typeof req.headers['x-forwarded-host'] === 'string'
+    ? req.headers['x-forwarded-host']
+    : typeof req.headers.host === 'string'
+      ? req.headers.host
+      : 'truscoreapi.vercel.app';
+  const proto = typeof req.headers['x-forwarded-proto'] === 'string'
+    ? req.headers['x-forwarded-proto']
+    : 'https';
+  const origin = `${proto}://${host}`;
+
   let productData: any = null;
   try {
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.PRODUCT_PREVIEW_BASE_URL || 'https://truscoreapi.vercel.app';
+    // Prefer the same public host the receiver opened, then explicit preview base, then prod.
+    const previewBase =
+      process.env.PRODUCT_PREVIEW_BASE_URL ||
+      origin ||
+      'https://truscoreapi.vercel.app';
     const productResponse = await fetch(
-      `${baseUrl}/api/product-preview?barcode=${encodeURIComponent(barcode)}`
+      `${previewBase.replace(/\/$/, '')}/api/product-preview?barcode=${encodeURIComponent(barcode)}`
     );
     if (productResponse.ok) {
       productData = await productResponse.json();
@@ -25,16 +37,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('Error fetching product data:', error);
   }
-
-  const host = typeof req.headers['x-forwarded-host'] === 'string'
-    ? req.headers['x-forwarded-host']
-    : typeof req.headers.host === 'string'
-      ? req.headers.host
-      : 'truescan.app';
-  const proto = typeof req.headers['x-forwarded-proto'] === 'string'
-    ? req.headers['x-forwarded-proto']
-    : 'https';
-  const origin = `${proto}://${host}`;
 
   const html = renderShareLandingHtml({
     barcode,

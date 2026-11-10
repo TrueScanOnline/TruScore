@@ -70,9 +70,9 @@ describe('real-phone share handoff', () => {
     const copied = (Clipboard.setStringAsync as jest.Mock).mock.calls.map((call) => String(call[0]));
     expect(copied).toHaveLength(platforms.length);
     for (const url of copied) {
-      expect(url.startsWith('https://truescan.app/barcode/9400547009879?')).toBe(true);
+      expect(url.startsWith('https://truscoreapi.vercel.app/barcode/9400547009879?')).toBe(true);
       expect(url).toContain('ctx=processing');
-      expect(url.match(/truescan\.app/g)).toHaveLength(1);
+      expect(url.match(/truscoreapi\.vercel\.app/g)).toHaveLength(1);
     }
     expect(copied.some((url) => url.includes('src=sms'))).toBe(true);
     expect(copied.some((url) => url.includes('src=whatsapp'))).toBe(true);
@@ -87,7 +87,7 @@ describe('real-phone share handoff', () => {
     expect(opened).toContain('Tomatoes Mexican Style');
     expect(opened).toContain('Processing');
     expect(opened).toContain('Processed');
-    expect(opened).toContain('https://truescan.app/barcode/9400547009879');
-    expect(opened.match(/truescan\.app/g)).toHaveLength(1);
+    expect(opened).toContain('https://truscoreapi.vercel.app/barcode/9400547009879');
+    expect(opened.match(/truscoreapi\.vercel\.app/g)).toHaveLength(1);
   });
 });

@@ -14,7 +14,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
-import Svg, { ClipPath, Defs, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { ClipPath, Defs, G, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -54,7 +54,10 @@ function HeroSurface({ width, height, dark }: { width: number; height: number; d
   const fold = Math.max(HERO.fold, DOG_EAR_FOLD);
   const radius = HERO.radius;
   if (width < 8 || height < 8) return null;
-  const { face: surface } = dogEarCut(width, height, radius, fold);
+  const { cutX, cutY, face: surface } = dogEarCut(width, height, radius, fold);
+  // Darker shade of the hero mint family behind the dog-ear (same peel logic as score pillars).
+  const underColour = dark ? face.foldBack : face.action;
+  const underDeepen = dark ? 0.35 : 0.28;
   return (
     <Svg width={width} height={height} pointerEvents="none">
       <Defs>
@@ -74,17 +77,29 @@ function HeroSurface({ width, height, dark }: { width: number; height: number; d
           <Stop offset="1" stopColor={face.accent} stopOpacity="0" />
         </RadialGradient>
       </Defs>
-      <Rect x="0" y="0" width={width} height={height} rx={radius} fill={face.foldBack} clipPath={`url(#${prefix}-card)`} />
-      <Path d={surface} fill={`url(#${prefix}-mint)`} />
-      <Rect
-        x="0"
-        y="0"
-        width={width}
-        height={height}
-        fill={`url(#${prefix}-accent)`}
-        clipPath={`url(#${prefix}-face)`}
-      />
-      <Path d={accentBand(width, height)} fill={face.accent} opacity={dark ? 0.28 : 0.22} clipPath={`url(#${prefix}-face)`} />
+      <G clipPath={`url(#${prefix}-card)`}>
+        <Rect x="0" y="0" width={width} height={height} rx={radius} fill={underColour} />
+        <Rect x="0" y="0" width={width} height={height} rx={radius} fill="#000000" opacity={underDeepen} />
+        <Path
+          d={`M${n(cutX - 8)} 0 L${n(width)} 0 L${n(width)} ${n(cutY + 8)} Z`}
+          fill={underColour}
+        />
+        <Path
+          d={`M${n(cutX - 8)} 0 L${n(width)} 0 L${n(width)} ${n(cutY + 8)} Z`}
+          fill="#000000"
+          opacity={underDeepen + 0.1}
+        />
+        <Path d={surface} fill={`url(#${prefix}-mint)`} />
+        <Rect
+          x="0"
+          y="0"
+          width={width}
+          height={height}
+          fill={`url(#${prefix}-accent)`}
+          clipPath={`url(#${prefix}-face)`}
+        />
+        <Path d={accentBand(width, height)} fill={face.accent} opacity={dark ? 0.28 : 0.22} clipPath={`url(#${prefix}-face)`} />
+      </G>
     </Svg>
   );
 }
@@ -96,20 +111,25 @@ function HeroDogEarPeel({ width, height, dark }: { width: number; height: number
   const fold = Math.max(HERO.fold, DOG_EAR_FOLD);
   const radius = HERO.radius;
   if (width < 8 || height < 8) return null;
-  const { cutX, flap, cast, crease } = dogEarCut(width, height, radius, fold);
+  const { cutX, face: surface, flap, crease } = dogEarCut(width, height, radius, fold);
+  const flapX = cutX + 9;
+  const flapY = -2.5;
   return (
     <Svg width={width} height={height} pointerEvents="none">
       <Defs>
+        <ClipPath id={`${prefix}-face`}>
+          <Path d={surface} />
+        </ClipPath>
         <LinearGradient id={`${prefix}-fold`} x1="8%" y1="0%" x2="88%" y2="100%">
           <Stop offset="0" stopColor={face.foldFace[0]} />
           <Stop offset="0.28" stopColor={face.foldFace[0]} />
           <Stop offset="0.72" stopColor={face.foldFace[1]} />
           <Stop offset="1" stopColor={face.foldFace[1]} />
         </LinearGradient>
-        <LinearGradient id={`${prefix}-shadow`} x1="80%" y1="10%" x2="40%" y2="70%">
-          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.5 : 0.38} />
-          <Stop offset="0.45" stopColor="#041510" stopOpacity={dark ? 0.3 : 0.24} />
-          <Stop offset="1" stopColor="#0C3227" stopOpacity="0" />
+        <LinearGradient id={`${prefix}-curlShadow`} x1="8%" y1="5%" x2="78%" y2="88%">
+          <Stop offset="0" stopColor="#000000" stopOpacity={dark ? 0.42 : 0.32} />
+          <Stop offset="0.4" stopColor="#000000" stopOpacity={dark ? 0.26 : 0.2} />
+          <Stop offset="1" stopColor="#000000" stopOpacity="0.03" />
         </LinearGradient>
         <LinearGradient id={`${prefix}-crease`} x1="0%" y1="0%" x2="100%" y2="100%">
           <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.55" />
@@ -117,9 +137,13 @@ function HeroDogEarPeel({ width, height, dark }: { width: number; height: number
           <Stop offset="1" stopColor="#041510" stopOpacity="0.08" />
         </LinearGradient>
       </Defs>
-      <Path d={cast} fill="#000000" opacity={0.28} transform={`translate(${n(cutX)} 0)`} />
-      <Path d={flap} fill={`url(#${prefix}-shadow)`} opacity={0.55} transform={`translate(${n(cutX - 1.2)} 2.4)`} />
-      <Path d={flap} fill={`url(#${prefix}-fold)`} transform={`translate(${n(cutX)} 0)`} />
+      {/* Curl-matched cast on the face — slightly larger soft lift than prior hero offset. */}
+      <G clipPath={`url(#${prefix}-face)`}>
+        <Path d={flap} fill="#000000" opacity={0.1} transform={`translate(${n(flapX - 5.5)}, ${n(flapY + 7.5)})`} />
+        <Path d={flap} fill={`url(#${prefix}-curlShadow)`} opacity={0.85} transform={`translate(${n(flapX - 3.4)}, ${n(flapY + 5.0)})`} />
+        <Path d={flap} fill={`url(#${prefix}-curlShadow)`} opacity={0.55} transform={`translate(${n(flapX - 1.6)}, ${n(flapY + 2.6)})`} />
+      </G>
+      <Path d={flap} fill={`url(#${prefix}-fold)`} transform={`translate(${n(flapX)}, ${n(flapY)})`} />
       <Path d={crease} fill="none" stroke={`url(#${prefix}-crease)`} strokeWidth="2.2" />
       <Path d={crease} fill="none" stroke="#FFFFFF" strokeWidth="1.1" strokeOpacity="0.75" />
     </Svg>

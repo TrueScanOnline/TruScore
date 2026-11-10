@@ -3,271 +3,212 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Rveel — See the packet before you buy</title>
-  <meta name="description" content="Scan a barcode. Rveel opens Body, Planet, Claims, and Transparency into one reading — then a share card that opens a real page.">
-  <meta name="theme-color" content="#0E8A74">
+  <title>Rveel — Reveal what’s in the packet</title>
+  <meta name="description" content="Scan a barcode. Reveal Body, Planet, Claims, and Transparency in the app. This site is a teaser — the full reading lives in Rveel.">
+  <meta name="theme-color" content="#10957E">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/rveel.css">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://truescan.app/">
-  <meta property="og:title" content="Rveel — See the packet before you buy">
-  <meta property="og:description" content="Four equal pillars. Fail closed when a score is not ready. Share links that open a real page.">
-  <meta property="og:image" content="https://truescan.app/og.png">
-  <link rel="canonical" href="https://truescan.app/">
+  <meta property="og:url" content="https://truscoreapi.vercel.app/">
+  <meta property="og:title" content="Rveel — Reveal what’s in the packet">
+  <meta property="og:description" content="A teaser of the aisle app. The full reading opens in Rveel.">
+  <meta property="og:image" content="https://truscoreapi.vercel.app/media/app-share-dairy.png">
+  <link rel="canonical" href="https://truscoreapi.vercel.app/">
 </head>
-<body>
+<body class="reveal-site pro-site">
   <a class="skip" href="#main">Skip to content</a>
 
   <header class="nav" id="nav">
     <div class="wrap nav-inner">
       <a class="logo" href="/" aria-label="Rveel home"><img src="/logo.svg" alt="Rveel" width="150" height="34"></a>
       <nav class="menu" aria-label="Primary">
-        <a href="#integrity">Integrity</a>
-        <a href="#foods">The score</a>
-        <a href="#share">Share</a>
-        <a class="get" href="#get">Get the app</a>
+        <a href="#highlights">Highlights</a>
+        <a href="#tour">Inside the app</a>
+        <a class="get" href="https://play.google.com/store/apps/details?id=com.truescan.foodscanner">Get the app</a>
       </nav>
     </div>
   </header>
 
   <main id="main">
-    <section class="wrap hero">
+    <section class="wrap hero hero-reveal hero-pro">
       <div class="hero-copy reveal in">
         <p class="brand-line"><img src="/mark.svg" alt="" width="28" height="28"><span>Rveel</span></p>
-        <h1>See the packet.<br>Trust the <span class="script">reading</span>.</h1>
-        <p class="lede">One barcode. Four equal pillars — Body, Planet, Claims, Transparency — into a single score. When evidence is thin, Rveel shows silence, not a guess.</p>
-        <div class="stores">
-          <a class="store" href="https://play.google.com/store/apps/details?id=com.truescan.foodscanner">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M3.6 2.8l11.4 6.5-2.5 2.5L3.6 2.8zm0 18.4l8.9-8.9 2.5 2.5L3.6 21.2zM14.1 11.2l2.7-2.7 3.6 2.1c.7.4.7 1.4 0 1.8l-3.6 2.1-2.7-2.7zM12.1 13.1 3.6 21.6V2.4l8.5 10.7z"/></svg>
-            <span><small>Get it on</small><b>Google Play</b></span>
-          </a>
-          <span class="store soon" aria-disabled="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M16.4 12.2c0-2.1 1.7-3.1 1.8-3.2-1-1.4-2.5-1.6-3-1.7-1.3-.1-2.5.8-3.1.8-.7 0-1.7-.7-2.8-.7-1.4 0-2.8.9-3.5 2.2-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.1 1.1 0 1.5-.7 2.8-.7s1.6.7 2.8.7c1.2 0 1.9-1 2.6-2 .8-1.2 1.1-2.3 1.1-2.4-.1 0-2.2-.8-2.2-3.7zM14.2 5.6c.6-.7 1-1.7.9-2.6-.8 0-1.9.6-2.5 1.3-.6.6-1.1 1.6-.9 2.5 1 .1 1.9-.5 2.5-1.2z"/></svg>
-            <span><small>Coming to</small><b>App Store</b></span>
-          </span>
+        <h1>Scan. Reveal.<br><span class="script">Decide.</span></h1>
+        <p class="lede">Rveel turns a barcode into a clear reading — Body, Planet, Claims, Transparency — then lets you share the exact product card your friend opens.</p>
+
+        <div class="pillar-rail" role="tablist" aria-label="Four equal pillars">
+          <button type="button" class="pillar-chip is-on" data-pillar="body" role="tab" aria-selected="true">Body</button>
+          <button type="button" class="pillar-chip" data-pillar="planet" role="tab" aria-selected="false">Planet</button>
+          <button type="button" class="pillar-chip" data-pillar="claims" role="tab" aria-selected="false">Claims</button>
+          <button type="button" class="pillar-chip" data-pillar="open" role="tab" aria-selected="false">Transparency</button>
         </div>
+        <p class="pillar-caption" id="pillarCaption">Body — nutrition and additives that shape how the packet reads for you.</p>
+
+        <div class="cta-row">
+          <a class="btn btn-green btn-glow" id="primaryDownload" href="https://play.google.com/store/apps/details?id=com.truescan.foodscanner">
+            Download on Google Play
+            <span class="btn-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="btn btn-soft" href="/barcode/9300617064879">See a shared teaser</a>
+        </div>
+        <p class="hero-fine">Free on Android · App Store coming soon · Full reading only in the app</p>
       </div>
 
       <div class="hero-art reveal in">
-        <div class="blob-soft" aria-hidden="true"></div>
-        <div class="float-chip chip-a" aria-hidden="true"><span class="dot" style="background:#b8860b"></span> Fair · 58/100</div>
-        <div class="float-chip chip-b" aria-hidden="true"><span class="dot" style="background:#EC514F"></span> Body 12/25</div>
-        <div class="float-chip chip-c" aria-hidden="true"><span class="dot" style="background:#008B76"></span> Planet 16/25</div>
-
-        <figure class="device" aria-label="Rveel Result screen example with a de-identified sample product">
-          <div class="device-screen">
-            <div class="mock-status"><span>9:41</span><span>●●● ▮</span></div>
-            <div class="mock-scroll">
-              <div class="mock-hero">
-                <div class="ph"><img src="/media/product-oats.jpg" alt=""></div>
-                <div>
-                  <p class="brand">Sample brand</p>
-                  <p class="name">Sample product</p>
-                </div>
-                <div class="icons" aria-hidden="true"><i>♡</i><i>↗</i></div>
-              </div>
-              <div class="mock-score">
-                <h4>Rveel Score <span class="info" aria-hidden="true">i</span></h4>
-                <div class="mock-grid">
-                  <div class="mock-tile body"><span class="glyph" aria-hidden="true">🍎</span><span>Body</span><strong>12/25</strong></div>
-                  <div class="mock-tile planet"><span class="glyph" aria-hidden="true">🍃</span><span>Planet</span><strong>16/25</strong></div>
-                  <div class="mock-tile claims"><span class="glyph" aria-hidden="true">💬</span><span>Claims</span><strong>14/25</strong></div>
-                  <div class="mock-tile open"><span class="glyph" aria-hidden="true">👁</span><span>Transparency</span><strong>16/25</strong></div>
-                  <div class="mock-disc" style="color:#b8860b"><b>58</b><small>Fair</small></div>
-                </div>
-                <div class="mock-confidence" aria-hidden="true">⚠ Limited confidence</div>
-              </div>
-              <div class="mock-nav" aria-hidden="true">
-                <span>Scan</span><span>Search</span><span class="on">History</span><span>Favs</span><span>Settings</span>
-              </div>
-            </div>
-          </div>
-        </figure>
+        <div class="reveal-stage" aria-hidden="true">
+          <div class="reveal-glow"></div>
+          <div class="reveal-veil"></div>
+        </div>
+        <a class="share-card-hero" id="shareCardTilt" href="/barcode/9300617064879" aria-label="Open the shared Cadbury Dairy Milk teaser page">
+          <img
+            class="share-card-exact"
+            src="/media/app-share-dairy.png"
+            alt="Exact Rveel share card for Cadbury Dairy Milk Milk Chocolate — the card a receiver gets"
+            width="720"
+            height="1280"
+          >
+        </a>
+        <p class="hero-caption">Exact share card a receiver gets · Cadbury Dairy Milk</p>
       </div>
     </section>
 
-    <section class="band-mint" id="integrity">
-      <div class="wrap indep">
-        <h2 class="reveal">A <span class="script emerald">100% honest</span> project</h2>
-        <div class="indep-grid">
-          <article class="reveal">
-            <div class="ico ico-a" aria-hidden="true">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0E8A74" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
-            </div>
-            <h3>No brand influence</h3>
-            <p>No manufacturer can pay to change a score, a band, or what you see on screen.</p>
+    <section class="band-mint band-pro" id="highlights">
+      <div class="wrap highlights-sec">
+        <div class="tour-head reveal">
+          <p class="kicker">App highlights</p>
+          <h2>What you unlock in <span class="script emerald">Rveel</span></h2>
+          <p class="indep-lede">This website is a teaser. The live reading, Signals, and history stay in the app — where they belong.</p>
+        </div>
+
+        <div class="highlight-grid reveal">
+          <article class="hl-card">
+            <div class="hl-icon" aria-hidden="true">📷</div>
+            <h3>Scan in the aisle</h3>
+            <p>Point the teal frame at a barcode, or type the number. Instant product identity from public food data.</p>
+            <span class="hl-tag">In the app</span>
           </article>
-          <article class="reveal">
-            <div class="ico ico-b" aria-hidden="true">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#087BF0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/><path d="M5 5l14 14" opacity=".35"/></svg>
-            </div>
+          <article class="hl-card">
+            <div class="hl-icon" aria-hidden="true">◇</div>
+            <h3>Four equal pillars</h3>
+            <p>Body, Planet, Claims, Transparency — each up to 25 — revealed together on the emerald Result.</p>
+            <span class="hl-tag">In the app</span>
+          </article>
+          <article class="hl-card">
+            <div class="hl-icon" aria-hidden="true">⚡</div>
+            <h3>Live Signals</h3>
+            <p>Recall and safety context when it matters — surfaced on the Result, not buried in a PDF.</p>
+            <span class="hl-tag">In the app</span>
+          </article>
+          <article class="hl-card">
+            <div class="hl-icon" aria-hidden="true">↗</div>
+            <h3>Share that lands</h3>
+            <p>Send the exact product card. Friends open a teaser here — or jump straight into that barcode in Rveel.</p>
+            <span class="hl-tag">In the app</span>
+          </article>
+          <article class="hl-card">
+            <div class="hl-icon" aria-hidden="true">⏱</div>
+            <h3>Search, History, Favs</h3>
+            <p>Find past scans, save packets you trust, and pick up where you left the aisle.</p>
+            <span class="hl-tag">In the app</span>
+          </article>
+          <article class="hl-card">
+            <div class="hl-icon" aria-hidden="true">🛡</div>
             <h3>Fail closed</h3>
-            <p>When a score is not ready: no number, no score colour, no band. Silence over fiction.</p>
-          </article>
-          <article class="reveal">
-            <div class="ico ico-c" aria-hidden="true">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9451E9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.5"/></svg>
-            </div>
-            <h3>Public systems</h3>
-            <p>Four equal pillars draw on recognised public product data — never a paid placement.</p>
+            <p>No invented number on thin evidence. Silence beats fiction — then a clear reading when it publishes.</p>
+            <span class="hl-tag">In the app</span>
           </article>
         </div>
-        <a class="btn btn-green reveal" href="#foods">See how a score looks</a>
+
+        <div class="highlights-cta reveal">
+          <a class="btn btn-green btn-glow" href="https://play.google.com/store/apps/details?id=com.truescan.foodscanner">Unlock the full reading →</a>
+        </div>
       </div>
     </section>
 
-    <section class="wrap feature" id="foods">
-      <div class="visual reveal">
-        <div class="stage stage-phone">
-          <div class="blob blob-mint" aria-hidden="true"></div>
-          <figure class="device device-sm" aria-label="De-identified Rveel score example">
-            <div class="device-screen">
-              <div class="mock-status"><span>9:41</span><span>●●● ▮</span></div>
-              <div class="mock-scroll">
-                <div class="mock-hero">
-                  <div class="ph"><img src="/media/product-oats.jpg" alt=""></div>
-                  <div>
-                    <p class="brand">Sample brand</p>
-                    <p class="name">Sample product</p>
-                  </div>
-                  <div class="icons" aria-hidden="true"><i>♡</i><i>↗</i></div>
-                </div>
-                <div class="mock-score">
-                  <h4>Rveel Score <span class="info" aria-hidden="true">i</span></h4>
-                  <div class="mock-grid">
-                    <div class="mock-tile body"><span class="glyph" aria-hidden="true">🍎</span><span>Body</span><strong>12/25</strong></div>
-                    <div class="mock-tile planet"><span class="glyph" aria-hidden="true">🍃</span><span>Planet</span><strong>16/25</strong></div>
-                    <div class="mock-tile claims"><span class="glyph" aria-hidden="true">💬</span><span>Claims</span><strong>14/25</strong></div>
-                    <div class="mock-tile open"><span class="glyph" aria-hidden="true">👁</span><span>Transparency</span><strong>16/25</strong></div>
-                    <div class="mock-disc" style="color:#b8860b"><b>58</b><small>Fair</small></div>
-                  </div>
-                  <div class="mock-confidence" aria-hidden="true">⚠ Limited confidence</div>
-                </div>
+    <section class="wrap tour-sec" id="tour">
+      <div class="tour-head reveal">
+        <p class="kicker">Peek inside</p>
+        <h2>Three taps. One <span class="script emerald">reveal</span>.</h2>
+        <p class="indep-lede">Real app craft — with readings veiled on the web. Download to see the published numbers.</p>
+      </div>
+
+      <div class="tour" data-tour>
+        <div class="tour-tabs" role="tablist" aria-label="App journey">
+          <button type="button" class="tour-tab is-on" role="tab" aria-selected="true" data-step="0">1 · Scan</button>
+          <button type="button" class="tour-tab" role="tab" aria-selected="false" data-step="1">2 · Result</button>
+          <button type="button" class="tour-tab" role="tab" aria-selected="false" data-step="2">3 · Share</button>
+        </div>
+
+        <div class="tour-stage reveal in">
+          <figure class="tour-panel is-on" data-panel="0" role="tabpanel">
+            <div class="phone-frame">
+              <img src="/media/app-scan-editorial.png" alt="Rveel product journey cards after a scan" width="720" height="1280">
+            </div>
+            <figcaption>
+              <strong>Scan or enter a barcode</strong>
+              <span>Camera, manual entry, Search, History, Favs, Settings — aisle tools ready when you are.</span>
+            </figcaption>
+          </figure>
+          <figure class="tour-panel" data-panel="1" role="tabpanel" hidden>
+            <div class="phone-frame phone-tease">
+              <img src="/media/app-result-rated.png" alt="Rveel Result screen teaser with reading veiled" width="720" height="1280">
+              <div class="phone-frost" aria-hidden="true">
+                <strong>Reading locked</strong>
+                <span>Scores stay in the app</span>
               </div>
             </div>
+            <figcaption>
+              <strong>Emerald Result</strong>
+              <span>Mint hero, peel-corner pillars, medallion, origins, claims — published only inside Rveel.</span>
+            </figcaption>
           </figure>
-          <div class="chip score" aria-hidden="true"><span class="dot" style="background:#b8860b"></span> Fair · 58/100</div>
-          <div class="chip detail a" aria-hidden="true">Body 12/25</div>
-          <div class="chip detail b" aria-hidden="true">Planet 16/25</div>
-          <div class="chip detail c" aria-hidden="true">Claims 14/25</div>
-        </div>
-      </div>
-      <div class="copy reveal">
-        <p class="kicker">Foods</p>
-        <h2>Evaluate the quality of your <span class="script">foods</span></h2>
-        <p>Do you really know what you are buying? Rveel scans the barcode and opens Body, Planet, Claims, and Transparency — each up to 25 — into one reading you can trust when it publishes.</p>
-        <div class="actions">
-          <a class="btn btn-green" href="#get">Get Rveel</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="wrap feature flip" id="more">
-      <div class="visual reveal">
-        <div class="stage stage-phone">
-          <div class="blob blob-sky" aria-hidden="true"></div>
-          <figure class="device device-sm" aria-label="De-identified Rveel detail cards">
-            <div class="device-screen">
-              <div class="mock-status"><span>9:41</span><span>●●● ▮</span></div>
-              <div class="mock-scroll">
-                <div class="mock-lower">
-                  <strong>About these additives</strong>
-                  Sample reading — packet facts without naming a brand.
-                </div>
-                <div class="mock-lower">
-                  <strong>Product origins</strong>
-                  L1 / L2 / L3 · Limited confidence when evidence is thin.
-                </div>
-                <div class="mock-lower">
-                  <strong>Packet claims</strong>
-                  Claims stay in the same reading as Body and Planet.
-                </div>
-              </div>
+          <figure class="tour-panel" data-panel="2" role="tabpanel" hidden>
+            <div class="phone-frame">
+              <img src="/media/app-share-dairy.png" alt="Exact Rveel share card for Cadbury Dairy Milk" width="720" height="1280">
             </div>
+            <figcaption>
+              <strong>Share the exact card</strong>
+              <span>Friends open a product teaser online — or jump into that barcode if they already have Rveel.</span>
+            </figcaption>
           </figure>
-          <div class="chip detail tag-soft a" aria-hidden="true">Transparency gaps</div>
-          <div class="chip detail tag-soft b" aria-hidden="true">Claims on record</div>
-          <div class="chip detail tag-soft c" aria-hidden="true">Origin visibility</div>
         </div>
-      </div>
-      <div class="copy reveal">
-        <p class="kicker">Beyond a health glance</p>
-        <h2>Also read what the packet <span class="script">won’t say</span></h2>
-        <p>A low number is useful. Knowing which pillar pulled it down is kinder. Claims and Transparency sit in the same reading as Body and Planet — so a bright label never hides a quiet gap.</p>
-        <div class="actions">
-          <a class="btn btn-green" href="#share">See a shared card</a>
-        </div>
-      </div>
-    </section>
 
-    <section class="band-mint">
-      <div class="wrap steps-sec" id="how">
-        <div class="head reveal">
-          <h2>Three quiet <span class="script emerald">steps</span></h2>
-          <p class="sub">The same path as the app. This website never invents a score the app would refuse to show.</p>
-        </div>
-        <ol class="steps">
-          <li class="reveal"><em>01</em><h3>Point</h3><p>Hold the teal frame over a barcode, or enter the number yourself.</p></li>
-          <li class="reveal"><em>02</em><h3>Read</h3><p>See the packet, the medallion, and the four pillars on the emerald Result page.</p></li>
-          <li class="reveal"><em>03</em><h3>Share</h3><p>Send the card. The link opens here — product, reading, and a path into the app.</p></li>
-        </ol>
+        <div class="tour-progress" aria-hidden="true"><i style="--p:33%"></i></div>
       </div>
-    </section>
 
-    <section class="wrap share" id="share">
-      <div class="reveal">
-        <p class="kicker">The link on the card</p>
-        <h2>A share should <span class="script">land</span> somewhere</h2>
-        <p>Every Rveel share card carries a link like truescan.app/barcode/…. Open it and you get the product and the reading — not a dead redirect.</p>
-        <p>If the app is not installed, the page stays. Silence beats a fake score.</p>
-        <div class="actions row">
-          <a class="btn btn-green" href="#get">Get the app</a>
-          <a class="btn btn-soft" href="/metro-qr.html">Expo Go QR</a>
-        </div>
+      <div class="tour-cta reveal">
+        <a class="btn btn-green btn-glow" href="https://play.google.com/store/apps/details?id=com.truescan.foodscanner">Download Rveel on Google Play</a>
+        <a class="btn btn-soft" href="/barcode/9300617064879">Try a shared teaser</a>
       </div>
-      <div class="share-shot reveal" aria-label="Example share card — real shares show the product you scanned">
-        <div class="share-card-demo">
-          <div class="share-head">
-            <img src="/logo-light.svg" alt="Rveel">
-            <span>Rveel Score</span>
-          </div>
-          <div class="share-body">
-            <div class="share-photo"><img src="/media/product-oats.jpg" alt="" style="filter:blur(8px)"></div>
-            <h3>Sample product</h3>
-            <div class="share-score"><span>Rveel Score</span><b style="color:#b8860b">58/100</b></div>
-            <p class="share-link">https://truescan.app/barcode/…</p>
-            <p class="share-note">Marketing example only. A real share opens the exact product on this website.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="wrap impact reveal">
-      <h2>Clearer aisle decisions — without inventing a <span class="script emerald">number</span></h2>
-      <p>When evidence is thin, Rveel fails closed. When a score publishes, you see the same colours and pillars as in the app.</p>
     </section>
 
     <section class="wrap" id="get">
-      <div class="close reveal">
+      <div class="close close-pro reveal">
         <div>
           <img src="/logo-light.svg" alt="Rveel">
-          <h2>Take Rveel into the aisle.</h2>
-          <p>The app is the scan. This website is where a shared card opens — and where you come back to the product later.</p>
-          <p class="fine">Scores are informational readings of public product data. They can be incomplete.</p>
+          <h2>Ready to reveal the packet?</h2>
+          <p>Download Rveel for the full reading. This website never replaces the app — it only teases what’s waiting in the aisle.</p>
         </div>
         <div class="close-actions">
-          <a class="btn btn-green btn-block" href="https://play.google.com/store/apps/details?id=com.truescan.foodscanner">Get it on Google Play</a>
-          <a class="btn btn-white btn-block" href="#share">See a share card</a>
+          <a class="btn btn-green btn-block btn-glow" href="https://play.google.com/store/apps/details?id=com.truescan.foodscanner">Download on Google Play</a>
+          <a class="btn btn-white btn-block" href="/barcode/9300617064879">Preview a shared teaser</a>
         </div>
       </div>
     </section>
   </main>
 
+  <div class="dock" id="downloadDock" hidden>
+    <div class="dock-inner">
+      <span>Full reading · only in the app</span>
+      <a class="btn btn-green" href="https://play.google.com/store/apps/details?id=com.truescan.foodscanner">Get the app</a>
+    </div>
+  </div>
+
   <footer class="footer">
     <div>
       <a class="logo" href="/"><img src="/logo.svg" alt="Rveel" height="28"></a>
-      <span class="sha-chip" title="Integration branch tip">SHA ac9a0e2</span>
+      <span class="sha-chip" title="Marketing tip">website teaser</span>
     </div>
     <nav aria-label="Legal">
       <a href="/privacy">Privacy</a>
@@ -276,18 +217,100 @@
   </footer>
 
   <script>
+    const PLAY = 'https://play.google.com/store/apps/details?id=com.truescan.foodscanner';
     const nav = document.getElementById('nav');
-    const onScroll = () => nav.classList.toggle('stuck', scrollY > 4);
+    const dock = document.getElementById('downloadDock');
+    const onScroll = () => {
+      nav.classList.toggle('stuck', scrollY > 4);
+      if (dock) dock.hidden = scrollY < 520;
+    };
     onScroll();
     addEventListener('scroll', onScroll, { passive: true });
 
     const reveal = () => {
       document.querySelectorAll('.reveal').forEach((el) => {
-        if (el.getBoundingClientRect().top < innerHeight * 0.88) el.classList.add('in');
+        if (el.getBoundingClientRect().top < innerHeight * 0.9) el.classList.add('in');
       });
     };
     reveal();
     addEventListener('scroll', reveal, { passive: true });
+
+    document.body.classList.add('veil-ready');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => document.body.classList.add('veil-open'));
+    });
+
+    const captions = {
+      body: 'Body — nutrition and additives that shape how the packet reads for you.',
+      planet: 'Planet — environmental context from public product data, not a paid placement.',
+      claims: 'Claims — packet wording stays in the same reading as Body and Planet.',
+      open: 'Transparency — how clearly the packet discloses what is inside.'
+    };
+    const captionEl = document.getElementById('pillarCaption');
+    document.querySelectorAll('.pillar-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.pillar-chip').forEach((c) => {
+          c.classList.toggle('is-on', c === chip);
+          c.setAttribute('aria-selected', c === chip ? 'true' : 'false');
+        });
+        const key = chip.getAttribute('data-pillar');
+        if (captionEl && key && captions[key]) captionEl.textContent = captions[key];
+      });
+    });
+
+    const tour = document.querySelector('[data-tour]');
+    if (tour) {
+      const tabs = [...tour.querySelectorAll('.tour-tab')];
+      const panels = [...tour.querySelectorAll('.tour-panel')];
+      const bar = tour.querySelector('.tour-progress i');
+      let step = 0;
+      let timer;
+      const show = (next) => {
+        step = (next + panels.length) % panels.length;
+        tabs.forEach((t, i) => {
+          t.classList.toggle('is-on', i === step);
+          t.setAttribute('aria-selected', i === step ? 'true' : 'false');
+        });
+        panels.forEach((p, i) => {
+          const on = i === step;
+          p.classList.toggle('is-on', on);
+          p.hidden = !on;
+        });
+        if (bar) bar.style.setProperty('--p', ((step + 1) / panels.length) * 100 + '%');
+      };
+      const arm = () => {
+        clearInterval(timer);
+        timer = setInterval(() => show(step + 1), 5200);
+      };
+      tabs.forEach((t) => t.addEventListener('click', () => {
+        show(Number(t.getAttribute('data-step') || 0));
+        arm();
+      }));
+      show(0);
+      arm();
+      tour.addEventListener('mouseenter', () => clearInterval(timer));
+      tour.addEventListener('mouseleave', arm);
+    }
+
+    const tilt = document.getElementById('shareCardTilt');
+    if (tilt && matchMedia('(pointer:fine)').matches) {
+      tilt.addEventListener('pointermove', (e) => {
+        const r = tilt.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        tilt.style.transform = `rotateY(${x * 8}deg) rotateX(${-y * 6}deg) translateY(-4px)`;
+      });
+      tilt.addEventListener('pointerleave', () => {
+        tilt.style.transform = '';
+      });
+    }
+
+    document.querySelectorAll('a[href="' + PLAY + '"]').forEach((a) => {
+      a.addEventListener('click', () => {
+        a.classList.add('is-pressed');
+        setTimeout(() => a.classList.remove('is-pressed'), 280);
+      });
+    });
   </script>
 </body>
 </html>

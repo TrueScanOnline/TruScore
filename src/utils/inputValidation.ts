@@ -138,11 +138,16 @@ export function validateDeepLink(url: string): {
   try {
     const parsed = new URL(url);
     
-    // Check if it's a TrueScan deep link
-    // Handle both custom scheme (truescan://) and https://truescan.app
+    // Check if it's a Rveel deep / share-web link
+    // Handle custom scheme (truescan://) and known share-web HTTPS hosts
     const protocol = parsed.protocol.toLowerCase();
     const isCustomScheme = protocol === 'truescan:';
-    const isHttpsScheme = protocol === 'https:' && parsed.host === 'truescan.app';
+    const host = (parsed.host || '').toLowerCase();
+    const isHttpsScheme =
+      protocol === 'https:' &&
+      (host === 'truescan.app' ||
+        host === 'truscoreapi.vercel.app' ||
+        host === 'truscoreapi-uat.vercel.app');
     
     if (isCustomScheme || isHttpsScheme) {
       // Extract barcode from path

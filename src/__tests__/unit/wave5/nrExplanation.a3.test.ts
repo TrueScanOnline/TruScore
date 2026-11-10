@@ -114,7 +114,7 @@ describe('dynamic UnRevealed explanation', () => {
   it('names only Planet when the other three pillars are Rated', () => {
     const text = explanation(nrResult({ planet: 'nr' }));
     expect(text).toBe(
-      "To reveal the overall Rveel Score, all four pillars need a rating. Planet isn't rated yet. Any available pillar scores are shown above."
+      "To reveal the overall Rveel Score, all four cards need a rating. Planet isn't rated yet. Tap on any of the cards to add more information."
     );
     expect(text).not.toContain(OLD_UNIVERSAL_EXPLANATION);
     expect(text).not.toMatch(/each category|add the information|Ethics|Open/i);
@@ -122,13 +122,13 @@ describe('dynamic UnRevealed explanation', () => {
 
   it('names Body and Claims when those two are NR', () => {
     expect(explanation(nrResult({ body: 'nr', claims: 'nr' }))).toBe(
-      "To reveal the overall Rveel Score, all four pillars need a rating. Body and Claims aren't rated yet. Any available pillar scores are shown above."
+      "To reveal the overall Rveel Score, all four cards need a rating. Body and Claims aren't rated yet. Tap on any of the cards to add more information."
     );
   });
 
   it('names Body, Planet and Transparency when those three are NR', () => {
     expect(explanation(nrResult({ body: 'nr', planet: 'nr', transparency: 'nr' }))).toBe(
-      "To reveal the overall Rveel Score, all four pillars need a rating. Body, Planet and Transparency aren't rated yet. Any available pillar scores are shown above."
+      "To reveal the overall Rveel Score, all four cards need a rating. Body, Planet and Transparency aren't rated yet. Tap on any of the cards to add more information."
     );
   });
 
@@ -136,7 +136,7 @@ describe('dynamic UnRevealed explanation', () => {
     expect(
       explanation(nrResult({ body: 'nr', planet: 'nr', claims: 'nr', transparency: 'nr' }))
     ).toBe(
-      "To reveal the overall Rveel Score, all four pillars need a rating. Body, Planet, Claims and Transparency aren't rated yet. Any available pillar scores are shown above."
+      "To reveal the overall Rveel Score, all four cards need a rating. Body, Planet, Claims and Transparency aren't rated yet. Tap on any of the cards to add more information."
     );
   });
 
@@ -199,10 +199,11 @@ describe('dynamic UnRevealed explanation', () => {
     expect(pillars).toEqual({ Body: 0, Planet: null, Ethics: 18, Open: 14 });
   });
 
-  it('does not invent a contribution invitation when the NR opportunity is not live', () => {
+  it('keeps NR card naming and the approved UnRevealed CTA', () => {
     const text = explanation(nrResult({ body: 'nr' }));
-    expect(text).not.toMatch(/add|tap|contribut|each category/i);
     expect(text).toContain("Body isn't rated yet.");
+    expect(text).toContain('Tap on any of the cards to add more information.');
+    expect(text).not.toMatch(/each category|Any available pillar scores are shown above/i);
   });
 
   it('shares the NR explanation without a number', () => {

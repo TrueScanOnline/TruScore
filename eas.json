@@ -10,7 +10,8 @@
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
         "EXPO_PUBLIC_STORE_RELEASE": "1",
         "EXPO_PUBLIC_CLOSED_PRELAUNCH_VISUAL_UAT": "0",
-        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production"
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production",
+        "EXPO_PUBLIC_SHARE_WEB_ORIGIN": "https://truscoreapi.vercel.app"
       },
       "android": {
         "buildType": "apk"
@@ -31,7 +32,8 @@
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
         "EXPO_PUBLIC_STORE_RELEASE": "1",
         "EXPO_PUBLIC_CLOSED_PRELAUNCH_VISUAL_UAT": "0",
-        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production"
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production",
+        "EXPO_PUBLIC_SHARE_WEB_ORIGIN": "https://truscoreapi.vercel.app"
       },
       "android": {
         "buildType": "apk"
@@ -52,7 +54,8 @@
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
         "EXPO_PUBLIC_STORE_RELEASE": "0",
         "EXPO_PUBLIC_CLOSED_PRELAUNCH_VISUAL_UAT": "1",
-        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat"
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat",
+        "EXPO_PUBLIC_SHARE_WEB_ORIGIN": "https://truscoreapi-uat.vercel.app"
       },
       "android": {
         "buildType": "apk"
@@ -71,7 +74,8 @@
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
         "EXPO_PUBLIC_STORE_RELEASE": "1",
         "EXPO_PUBLIC_CLOSED_PRELAUNCH_VISUAL_UAT": "0",
-        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production"
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production",
+        "EXPO_PUBLIC_SHARE_WEB_ORIGIN": "https://truscoreapi.vercel.app"
       },
       "android": {
         "buildType": "app-bundle"
@@ -92,7 +96,8 @@
         "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
         "EXPO_PUBLIC_STORE_RELEASE": "1",
         "EXPO_PUBLIC_CLOSED_PRELAUNCH_VISUAL_UAT": "0",
-        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production"
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "production",
+        "EXPO_PUBLIC_SHARE_WEB_ORIGIN": "https://truscoreapi.vercel.app"
       },
       "android": {
         "buildType": "apk"
@@ -112,6 +117,7 @@
         "EXPO_PUBLIC_CLOSED_PRELAUNCH_VISUAL_UAT": "1",
         "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat",
         "EXPO_PUBLIC_BACKEND_URL": "https://truscoreapi-uat.vercel.app",
+        "EXPO_PUBLIC_SHARE_WEB_ORIGIN": "https://truscoreapi-uat.vercel.app",
         "RVEEL_IOS_BUILD_NUMBER": "63"
       },
       "ios": {
@@ -134,6 +140,7 @@
         "EXPO_PUBLIC_CLOSED_PRELAUNCH_VISUAL_UAT": "1",
         "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat",
         "EXPO_PUBLIC_BACKEND_URL": "https://truscoreapi-uat.vercel.app",
+        "EXPO_PUBLIC_SHARE_WEB_ORIGIN": "https://truscoreapi-uat.vercel.app",
         "RVEEL_ANDROID_VERSION_CODE": "37"
       },
       "android": {

@@ -2,6 +2,7 @@
 import * as Linking from 'expo-linking';
 import {
   buildShareUrl,
+  isShareWebHostname,
   parseShareQueryParams,
   SHARE_QUERY_CTX,
   SHARE_QUERY_REF,
@@ -9,11 +10,23 @@ import {
 } from './shareUrl';
 import { isMvpAlertsTabEnabled } from '../config/mvpRuntimeGates';
 
-export { buildShareUrl, parseShareQueryParams, SHARE_QUERY_CTX, SHARE_QUERY_REF, SHARE_QUERY_SRC };
+export {
+  buildShareUrl,
+  isShareWebHostname,
+  parseShareQueryParams,
+  SHARE_QUERY_CTX,
+  SHARE_QUERY_REF,
+  SHARE_QUERY_SRC,
+};
 export type { ShareLinkSource } from './shareUrl';
 
 export const linking = {
-  prefixes: ['truescan://', 'https://truescan.app'],
+  prefixes: [
+    'truescan://',
+    'https://truescan.app',
+    'https://truscoreapi.vercel.app',
+    'https://truscoreapi-uat.vercel.app',
+  ],
   config: {
     screens: {
       Onboarding: 'onboarding',
@@ -80,8 +93,8 @@ export function parseBarcodeFromUrl(url: string): string | null {
       }
     }
     
-    // Handle https://truescan.app/barcode/1234567890
-    if (parsed.scheme === 'https' && parsed.hostname === 'truescan.app') {
+    // Handle https://{share-web-host}/barcode/1234567890 (truescan.app or Vercel interim hosts)
+    if (parsed.scheme === 'https' && parsed.hostname && isShareWebHostname(parsed.hostname)) {
       const pathParts = parsed.path?.split('/').filter(Boolean) || [];
       if (pathParts[0] === 'barcode' && pathParts[1]) {
         const barcode = pathParts[1].split('?')[0];

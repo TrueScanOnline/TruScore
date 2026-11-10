@@ -223,6 +223,10 @@ module.exports = {
       // Used for manual-products, share-event telemetry, etc.
       EXPO_PUBLIC_BACKEND_URL:
         process.env.EXPO_PUBLIC_BACKEND_URL || 'https://truscoreapi.vercel.app',
+      // Public share-card /barcode landing host (no trailing slash).
+      // Interim: Vercel while truescan.app TLS/DNS is unusable for external testers.
+      EXPO_PUBLIC_SHARE_WEB_ORIGIN:
+        process.env.EXPO_PUBLIC_SHARE_WEB_ORIGIN || 'https://truscoreapi.vercel.app',
     },
   },
 };

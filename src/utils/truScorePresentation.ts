@@ -97,8 +97,8 @@ function nrExplanation(publication: CrossPillarPublicationSnapshot): string {
   if (!reliable || names.length === 0) return NR_OVERALL_FALLBACK;
   const verb = names.length === 1 ? "isn't" : "aren't";
   return (
-    'To reveal the overall Rveel Score, all four pillars need a rating. ' +
-    `${nrPillarList(names)} ${verb} rated yet. Any available pillar scores are shown above.`
+    'To reveal the overall Rveel Score, all four cards need a rating. ' +
+    `${nrPillarList(names)} ${verb} rated yet. Tap on any of the cards to add more information.`
   );
 }
 

@@ -32,8 +32,11 @@ describe('W5-UI-10 founder Result refinements', () => {
     expect(composition).toContain('dogEarCut(W, H, radius, fold)');
     expect(composition).not.toContain("'pillar'");
     expect(hero).toContain('dogEarCut(width, height, radius, fold)');
-    expect(hero).toContain('cutX - 1.2');
-    expect(composition).toContain('cutX - 1.2');
+    // Hero + pillars share curl-matched flap silhouette soft lift (same peel system).
+    expect(hero).toContain('curlShadow');
+    expect(composition).toContain('curlShadow');
+    expect(hero).toMatch(/d=\{flap\}[^>]*curlShadow/);
+    expect(composition).toMatch(/d=\{flap\}[^>]*curlShadow/);
     expect(hero).toContain('-crease');
     expect(composition).toContain('-crease');
   });

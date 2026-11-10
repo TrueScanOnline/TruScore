@@ -21,7 +21,7 @@ describe('product information card', () => {
       'If you think any of the information about this product displayed is incorrect or missing then please help us out and make any necessary additions.'
     );
     expect(menu).toContain("export const ADD_OR_CORRECT_INFORMATION = 'Add or correct information'");
-    expect(menu).toContain("export const ABOUT_THIS_INFORMATION = 'About this information'");
+    expect(menu).toContain("export const ABOUT_THIS_INFORMATION = 'Data limitations >'");
     expect(card).toContain('PRODUCT_INFORMATION_HEADING');
     expect(card).toContain('ADD_OR_CORRECT_INFORMATION');
     expect(card).toContain('ABOUT_THIS_INFORMATION');

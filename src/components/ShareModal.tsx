@@ -25,7 +25,7 @@ import { useTheme } from '../theme';
 import { resultEmeraldTone, resultPresentation, type ResultPillarKey } from '../theme/resultPresentation';
 import { publishedOverallVisualScore } from '../utils/truScorePresentation';
 import { getNutritionShareBurnData } from '../utils/nutritionShareCopy';
-import { buildShareUrl } from '../utils/shareUrl';
+import { buildShareUrl, formatShareLinkLabel } from '../utils/shareUrl';
 import { ShareService } from '../features/sharing/services/ShareService';
 import { ShareContentBuilder } from '../features/sharing/services/ShareContentBuilder';
 import { ShareOptions, SharePlatform, ShareableItem } from '../features/sharing/types';
@@ -403,7 +403,7 @@ export default function ShareModal({
     note: storyNote,
     details: detailRows ? [] : storyDetails,
     detailRows,
-    linkLabel: `truescan.app/barcode/${product.barcode}`,
+    linkLabel: formatShareLinkLabel(product.barcode),
     pillars: isAdditivesContext ? null : storyPillars,
     settleToken,
     forcePlaceholder: imageFallback,
