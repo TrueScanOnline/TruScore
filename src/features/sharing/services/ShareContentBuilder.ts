@@ -14,6 +14,7 @@ import {
   unpublishedShareCopy,
 } from '../../../utils/shareScoreSemantics';
 import { consumerPillarLabel } from '../../../lib/scoreHighlights';
+import { buildAdditivesShareMessage } from '../additivesShareContent';
 
 const scoreName = productIdentity.publicScoreName;
 const appName = productIdentity.displayName;
@@ -81,11 +82,46 @@ export class ShareContentBuilder {
 
       case 'highlights':
         return this.buildHighlightsContent(product, universalLink, productName);
+
+      case 'additives':
+      case 'additive':
+        return this.buildAdditivesContent(options, universalLink, productName);
       
       case 'productInfo':
       default:
         return this.buildProductInfoContent(product, truScore, universalLink, productName, platform, gate);
     }
+  }
+
+  private static buildAdditivesContent(
+    options: ShareOptions,
+    universalLink: string,
+    productName: string
+  ): ShareContent {
+    const payload = options.additiveShare;
+    if (!payload || payload.additiveCount < 0) {
+      const title = `🧪 About these Additives — ${productName}`;
+      const message =
+        `${productName}\n\n` +
+        `No recognised additives are available to share for this product right now.\n\n` +
+        `🔍 Open in ${appName}\n${universalLink}\n\n` +
+        `#${appName} #FoodAdditives #FoodTransparency #ProductScan`;
+      return {
+        title,
+        message,
+        url: universalLink,
+        imageUrl: options.product.image_url,
+        hashtags: [appName, 'FoodAdditives', 'FoodTransparency', 'ProductScan'],
+      };
+    }
+    const built = buildAdditivesShareMessage({ payload, universalLink });
+    return {
+      title: built.title,
+      message: built.message,
+      url: universalLink,
+      imageUrl: options.product.image_url,
+      hashtags: built.hashtags,
+    };
   }
 
   private static buildTruScoreContent(

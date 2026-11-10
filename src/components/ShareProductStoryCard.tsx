@@ -5,6 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ShareableItem } from '../features/sharing/types';
 import type { ShareImageScoreState } from '../utils/shareScoreSemantics';
 import { RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR } from '../utils/truScorePresentation';
+import type { AdditiveSharePayload } from '../features/sharing/additivesShareContent';
+import { omittedListLabel } from '../features/sharing/additivesShareContent';
 import CountryFlag from './CountryFlag';
 import type { ShareCardRow } from './shareCardRows';
 import { shareStoryHeading } from './shareStoryHeading';
@@ -52,6 +54,13 @@ export interface ShareProductStoryCardProps {
   forcePlaceholder?: boolean;
   /** Fires once the image has rendered, or the parcel mark is on screen. */
   onImageSettled?: (token: number, url: string) => void;
+  /**
+   * W5-ADD-SHARE-01B — additives / additive share composition.
+   * When set, score chrome and pillars are omitted (presentation only).
+   */
+  additiveShare?: AdditiveSharePayload | null;
+  /** Border/line token for additive card edges. */
+  lineColor?: string;
 }
 
 export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps>(
@@ -77,9 +86,13 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
       settleToken,
       forcePlaceholder = false,
       onImageSettled,
+      additiveShare = null,
+      lineColor = '#E1ECE8',
     },
     ref: Ref<View>
   ) => {
+    const isAdditivesShare =
+      Boolean(additiveShare) && (shareType === 'additives' || shareType === 'additive');
     const scoreChrome = scoreState.neutral
       ? RVEEL_SCORE_UNAVAILABLE_NEUTRAL_COLOR
       : scoreColor || brandColor;
@@ -90,11 +103,138 @@ export const ShareProductStoryCard = forwardRef<View, ShareProductStoryCardProps
     const trimmedNote = (note || '').trim();
     const detailLines = (details || []).map((line) => line.trim()).filter((line) => line.length > 0);
     const markedRows = detailRows && detailRows.length > 0 ? detailRows : null;
-    const pillarLines = scoreState.neutral ? [] : pillars || [];
+    const pillarLines = scoreState.neutral || isAdditivesShare ? [] : pillars || [];
+
     useEffect(() => {
       if (showImage) return;
       onImageSettled?.(settleToken, imageUrl || '');
     }, [showImage, settleToken, imageUrl, onImageSettled]);
+
+    if (isAdditivesShare && additiveShare) {
+      const countLabel =
+        additiveShare.additiveCount === 1
+          ? '1 additive identified'
+          : `${additiveShare.additiveCount} additives identified`;
+      const featured = additiveShare.mode === 'detail';
+
+      return (
+        <View ref={ref} collapsable={false} style={[styles.root, { backgroundColor: surfaceColor }]}>
+          <View style={[styles.headerBand, { backgroundColor: brandColor }]}>
+            <RveelLockup tone="light" height={24} />
+            <Text style={styles.contextText}>{contextTitle || shareStoryHeading(shareType)}</Text>
+          </View>
+
+          <View style={styles.addHeader}>
+            <View style={[styles.addThumbWrap, { backgroundColor: panelColor, borderColor: lineColor }]}>
+              {showImage ? (
+                <Image
+                  key={imageKey}
+                  source={{ uri: imageUrl ?? undefined }}
+                  style={styles.addThumb}
+                  contentFit="contain"
+                  onDisplay={() => onImageSettled?.(settleToken, imageUrl || '')}
+                  onError={() => setFailedKey(imageKey)}
+                />
+              ) : (
+                <Text style={[styles.addThumbPlaceholder, { color: textSecondary }]}>📦</Text>
+              )}
+            </View>
+            <View style={styles.addHeaderCopy}>
+              <Text style={[styles.addProductName, { color: textColor }]} numberOfLines={3}>
+                {productName}
+              </Text>
+              <Text style={[styles.addCount, { color: textSecondary }]}>{countLabel}</Text>
+            </View>
+          </View>
+
+          <View style={styles.addList}>
+            {additiveShare.highlights.length === 0 ? (
+              <View style={[styles.addCard, { backgroundColor: panelColor, borderColor: lineColor }]}>
+                <Text style={[styles.addDiscovery, { color: textSecondary }]}>
+                  No recognised additives are available to share for this product right now.
+                </Text>
+              </View>
+            ) : (
+              additiveShare.highlights.map((h) => (
+                <View
+                  key={h.additiveId}
+                  style={[
+                    styles.addCard,
+                    featured && styles.addCardFeatured,
+                    { backgroundColor: panelColor, borderColor: lineColor },
+                  ]}
+                >
+                  <View style={styles.addCardTop}>
+                    <View style={[styles.addCodeBadge, { backgroundColor: surfaceColor, borderColor: brandColor }]}>
+                      <Text style={[styles.addCodeText, { color: brandColor }]}>{h.codeLabel}</Text>
+                    </View>
+                    <View style={styles.addNameBlock}>
+                      <Text
+                        style={[styles.addDisplayName, featured && styles.addDisplayNameFeatured, { color: textColor }]}
+                        numberOfLines={featured ? 3 : 2}
+                      >
+                        {h.displayName}
+                      </Text>
+                      {h.formalTitle ? (
+                        <Text style={[styles.addFormal, { color: textSecondary }]} numberOfLines={2}>
+                          {h.formalTitle}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+                  {h.discovery ? (
+                    <Text
+                      style={[styles.addDiscovery, featured && styles.addDiscoveryFeatured, { color: textColor }]}
+                    >
+                      {h.discovery}
+                    </Text>
+                  ) : null}
+                  {h.sourceLabel ? (
+                    <Text style={[styles.addSource, { color: textSecondary }]}>
+                      {`Commonly sourced / prepared: ${h.sourceLabel}`}
+                    </Text>
+                  ) : null}
+                  {h.qualifications.map((q) => (
+                    <Text key={q} style={[styles.addQual, { color: textSecondary }]}>
+                      {q}
+                    </Text>
+                  ))}
+                </View>
+              ))
+            )}
+          </View>
+
+          {additiveShare.mode === 'overview' &&
+          !additiveShare.listComplete &&
+          additiveShare.omittedCount > 0 ? (
+            <Text style={[styles.addOmitted, { color: textSecondary }]}>
+              {omittedListLabel(additiveShare.omittedCount)}
+            </Text>
+          ) : null}
+          {additiveShare.mode === 'detail' && additiveShare.additiveCount > 1 ? (
+            <Text style={[styles.addOmitted, { color: textSecondary }]}>
+              {`One of ${additiveShare.additiveCount} additives identified on this product.`}
+            </Text>
+          ) : null}
+
+          {trimmedNote ? (
+            <View style={[styles.noteBox, { backgroundColor: panelColor }]}>
+              <Text style={[styles.noteText, { color: textColor }]} numberOfLines={4}>
+                {`“${trimmedNote}”`}
+              </Text>
+            </View>
+          ) : null}
+
+          <Text style={[styles.addDisclaimer, { color: textSecondary }]}>{additiveShare.disclaimer}</Text>
+          <View style={[styles.linkBand, { backgroundColor: panelColor }]}>
+            <Text style={[styles.footerOpen, { color: brandColor }]}>Explore this product in Rveel</Text>
+            {linkLabel ? (
+              <Text style={[styles.linkLine, { color: textColor }]}>{linkLabel}</Text>
+            ) : null}
+          </View>
+        </View>
+      );
+    }
 
     return (
       <View ref={ref} collapsable={false} style={[styles.root, { backgroundColor: surfaceColor }]}>
@@ -389,5 +529,130 @@ const styles = StyleSheet.create({
   linkLine: {
     fontSize: 13,
     fontWeight: '700',
+  },
+  /* —— Additives share composition (W5-ADD-SHARE-01B) —— */
+  addHeader: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  addThumbWrap: {
+    width: 72,
+    height: 88,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  addThumb: {
+    width: '100%',
+    height: '100%',
+  },
+  addThumbPlaceholder: {
+    fontSize: 28,
+  },
+  addHeaderCopy: {
+    flex: 1,
+    paddingTop: 2,
+  },
+  addProductName: {
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 24,
+  },
+  addCount: {
+    marginTop: 8,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  addList: {
+    marginHorizontal: 16,
+    marginTop: 14,
+    gap: 10,
+  },
+  addCard: {
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  addCardFeatured: {
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+  },
+  addCardTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  addCodeBadge: {
+    minWidth: 44,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addCodeText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  addNameBlock: {
+    flex: 1,
+    gap: 2,
+  },
+  addDisplayName: {
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 21,
+  },
+  addDisplayNameFeatured: {
+    fontSize: 20,
+    lineHeight: 26,
+  },
+  addFormal: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
+  },
+  addDiscovery: {
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  addDiscoveryFeatured: {
+    fontSize: 16,
+    lineHeight: 23,
+    fontWeight: '600',
+  },
+  addSource: {
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 17,
+  },
+  addQual: {
+    fontSize: 11,
+    fontWeight: '500',
+    lineHeight: 15,
+    fontStyle: 'italic',
+  },
+  addOmitted: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  addDisclaimer: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    fontSize: 11,
+    fontWeight: '600',
+    lineHeight: 15,
   },
 });

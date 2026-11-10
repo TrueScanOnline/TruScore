@@ -16,7 +16,11 @@ export type ShareableItem =
   | 'processing'
   | 'allergens'
   | 'ecoscore'
-  | 'highlights';
+  | 'highlights'
+  /** S25 About these Additives — product overview (W5-ADD-SHARE-01). */
+  | 'additives'
+  /** S25 About these Additives — one expanded discovery (W5-ADD-SHARE-01). */
+  | 'additive';
 
 export type SharePlatform = 
   | 'facebook'
@@ -54,6 +58,11 @@ export interface ShareOptions {
   country?: string; // Optional country data for countryOfManufacture sharing
   /** Result checking latch. False withholds every published number on this share. */
   publicationSettled?: boolean;
+  /**
+   * W5-ADD-SHARE-01 — additive overview/detail payload built from the currently
+   * rendered S25 list. Required when item is `additives` or `additive`.
+   */
+  additiveShare?: import('./additivesShareContent').AdditiveSharePayload;
 }
 
 export interface ShareResult {

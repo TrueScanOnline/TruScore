@@ -6,6 +6,8 @@
 
 import type { Product } from '../types/product';
 import { nutritionShareText, originShareText } from './shareCardRows';
+import type { AdditiveSharePayload } from '../features/sharing/additivesShareContent';
+import { additivesShareText } from '../features/sharing/additivesShareContent';
 
 export type ShareSummaryPillar = { label: string; value: string };
 
@@ -26,8 +28,14 @@ export function sharePathSummary(input: {
   insightLines?: string[];
   /** Lines already visible on the What we found card, in display order. */
   highlightLines?: string[];
+  /** W5-ADD-SHARE-01 — currently rendered additives share payload. */
+  additiveShare?: AdditiveSharePayload | null;
 }): string {
   const { shareType, product } = input;
+  if (shareType === 'additives' || shareType === 'additive') {
+    if (input.additiveShare) return additivesShareText(input.additiveShare);
+    return 'No recognised additives are available to share.';
+  }
   if (shareType === 'nutrition') return nutritionShareText(product);
   if (shareType === 'countryOfManufacture') return originShareText(product, input.country);
   if (shareType === 'ingredients') {

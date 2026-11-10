@@ -23,6 +23,10 @@ export function shareStoryHeading(shareType: string): string {
       return 'Insights';
     case 'highlights':
       return SCORE_HIGHLIGHTS_HEADING;
+    case 'additives':
+      return 'Additive discoveries';
+    case 'additive':
+      return 'Additive discovery';
     case 'productInfo':
       return 'Product';
     default:

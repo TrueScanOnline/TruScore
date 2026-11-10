@@ -102,6 +102,14 @@ import ScoreHighlightsLookThroughModal, {
 import AboutTheseAdditivesModal, {
   type AboutTheseAdditivesCaller,
 } from '../../src/components/AboutTheseAdditivesModal';
+import type { AdditiveSharePayload } from '../../src/features/sharing/additivesShareContent';
+import {
+  buildAdditiveDetailSharePayload,
+  buildAdditivesOverviewSharePayload,
+} from '../../src/features/sharing/additivesShareContent';
+import { shouldShowDiscoveryOrderIntro } from '../../src/s25/discoveryPresentationOrder';
+import type { ShareableItem } from '../../src/features/sharing/types';
+import type { S25RenderListItem } from '../../src/s25/types';
 import ScoreHighlightsGovernedL3Modal, {
   type ScoreHighlightsGovernedL3Request,
 } from '../../src/components/ScoreHighlightsGovernedL3Modal';
@@ -585,21 +593,9 @@ function ResultScreenContent() {
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
   const [editMode, setEditMode] = useState(false);
   const [shareModalVisible, setShareModalVisible] = useState(false);
-  const [shareType, setShareType] = useState<
-    | 'truScore'
-    | 'countryOfManufacture'
-    | 'negativeTruScore'
-    | 'productInfo'
-    | 'insights'
-    | 'palmOil'
-    | 'nutrition'
-    | 'ingredients'
-    | 'processing'
-    | 'allergens'
-    | 'ecoscore'
-    | 'highlights'
-  >('truScore');
+  const [shareType, setShareType] = useState<ShareableItem>('truScore');
   const [shareInitialMessage, setShareInitialMessage] = useState('');
+  const [additiveShare, setAdditiveShare] = useState<AdditiveSharePayload | null>(null);
   /** Progressive Signals — attached after primary product/TruScore is ready. */
   const [dynamicSignalRecords, setDynamicSignalRecords] = useState<DynamicSignalPublicationRecord[]>([]);
   const [signalsReadyOutcome, setSignalsReadyOutcome] = useState<SignalsReadyOutcome | null>(null);
@@ -640,6 +636,10 @@ function ResultScreenContent() {
     appliedSnapshotAtRef.current = 0;
     setAgreementSnapshot(null);
     setPublicationSettled(false);
+    // W5-ADD-SHARE-01 — drop stale additives share payload / open sheet on barcode change.
+    setAdditiveShare(null);
+    setShareModalVisible(false);
+    setShareInitialMessage('');
   }, [barcode]);
 
   useEffect(() => {
@@ -1485,25 +1485,46 @@ function ResultScreenContent() {
   };
 
   // Handle sharing for specific card types
-  const handleShare = (
-    cardType:
-      | 'truScore'
-      | 'countryOfManufacture'
-      | 'negativeTruScore'
-      | 'productInfo'
-      | 'insights'
-      | 'palmOil'
-      | 'nutrition'
-      | 'ingredients'
-      | 'processing'
-    | 'allergens'
-    | 'ecoscore'
-    | 'highlights'
-  ) => {
+  const handleShare = (cardType: ShareableItem) => {
     if (!product) return;
 
     setShareInitialMessage('');
+    setAdditiveShare(null);
     setShareType(cardType);
+    setShareModalVisible(true);
+  };
+
+  const productShareName = () =>
+    product?.product_name || product?.product_name_en || 'this product';
+
+  const handleShareAdditivesOverview = (items: readonly S25RenderListItem[]) => {
+    if (!product) return;
+    setAdditiveShare(
+      buildAdditivesOverviewSharePayload({
+        productName: productShareName(),
+        items,
+        showDiscoveryOrderNote: shouldShowDiscoveryOrderIntro([...items]),
+      })
+    );
+    setShareInitialMessage('');
+    setShareType('additives');
+    setShareModalVisible(true);
+  };
+
+  const handleShareAdditiveDetail = (
+    item: S25RenderListItem,
+    items: readonly S25RenderListItem[]
+  ) => {
+    if (!product) return;
+    setAdditiveShare(
+      buildAdditiveDetailSharePayload({
+        productName: productShareName(),
+        item,
+        totalAdditiveCount: items.length,
+      })
+    );
+    setShareInitialMessage('');
+    setShareType('additive');
     setShareModalVisible(true);
   };
 
@@ -2898,6 +2919,8 @@ function ResultScreenContent() {
         merged={s25Merged}
         ingredientsText={product?.ingredients_text ?? null}
         focusAdditiveIds={aboutAdditivesSession.focusAdditiveIds}
+        onShareOverview={handleShareAdditivesOverview}
+        onShareAdditive={handleShareAdditiveDetail}
       />
 
       <ScoreHighlightsGovernedL3Modal
@@ -3379,6 +3402,7 @@ function ResultScreenContent() {
           onClose={() => {
             setShareModalVisible(false);
             setShareInitialMessage('');
+            setAdditiveShare(null);
           }}
           product={product}
           truScore={truScore || undefined}
@@ -3390,6 +3414,7 @@ function ResultScreenContent() {
           }))}
           country={shareType === 'countryOfManufacture' ? shareManufacturingCountryLabel : undefined}
           initialCustomMessage={shareInitialMessage}
+          additiveShare={additiveShare}
         />
       )}
     </SafeAreaView>

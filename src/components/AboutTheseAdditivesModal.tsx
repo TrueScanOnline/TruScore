@@ -60,6 +60,10 @@ export interface AboutTheseAdditivesModalProps {
   ingredientsText?: string | null;
   /** Canonical additive IDs (and/or colour members) to expand + scroll to. */
   focusAdditiveIds?: readonly string[];
+  /** Share the current About these Additives overview via the established ShareModal. */
+  onShareOverview?: (items: readonly S25RenderListItem[]) => void;
+  /** Share one expanded additive discovery via the established ShareModal. */
+  onShareAdditive?: (item: S25RenderListItem, items: readonly S25RenderListItem[]) => void;
 }
 
 function SectionHeading({ children }: { children: string }) {
@@ -297,6 +301,8 @@ export default function AboutTheseAdditivesModal({
   merged,
   ingredientsText,
   focusAdditiveIds = [],
+  onShareOverview,
+  onShareAdditive,
 }: AboutTheseAdditivesModalProps) {
   const { colors, darkMode } = useTheme();
   const emerald = resultEmeraldTone(!!darkMode);
@@ -421,15 +427,28 @@ export default function AboutTheseAdditivesModal({
               {title}
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={onClose}
-            style={[styles.headerBtn, { backgroundColor: colors.surface }]}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-          >
-            <Ionicons name="close" size={24} color={colors.text} />
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            {onShareOverview && items.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => onShareOverview(items)}
+                style={[styles.headerBtn, { backgroundColor: colors.surface }]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel="Share additives overview"
+              >
+                <Ionicons name="share-outline" size={22} color={emerald.action} />
+              </TouchableOpacity>
+            ) : null}
+            <TouchableOpacity
+              onPress={onClose}
+              style={[styles.headerBtn, { backgroundColor: colors.surface }]}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+            >
+              <Ionicons name="close" size={24} color={colors.text} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView
@@ -515,11 +534,26 @@ export default function AboutTheseAdditivesModal({
                 </TouchableOpacity>
 
                 {isOpen ? (
-                  item.isBody6 ? (
-                    <Body6Expanded item={item} colourLedgerIds={colourLedgerIds} />
-                  ) : (
-                    <StandardExpanded item={item} />
-                  )
+                  <>
+                    {item.isBody6 ? (
+                      <Body6Expanded item={item} colourLedgerIds={colourLedgerIds} />
+                    ) : (
+                      <StandardExpanded item={item} />
+                    )}
+                    {onShareAdditive ? (
+                      <TouchableOpacity
+                        onPress={() => onShareAdditive(item, items)}
+                        style={[styles.shareDiscoveryBtn, { borderColor: emerald.action }]}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Share discovery about ${item.entry.entry_title || item.additiveId}`}
+                      >
+                        <Ionicons name="share-outline" size={18} color={emerald.action} />
+                        <Text style={[styles.shareDiscoveryLabel, { color: emerald.action }]}>
+                          Share this discovery
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </>
                 ) : null}
               </View>
             );
@@ -563,6 +597,27 @@ const styles = StyleSheet.create({
   },
   headerBtnSpacer: {
     width: 36,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  shareDiscoveryBtn: {
+    marginTop: 12,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    minHeight: 44,
+  },
+  shareDiscoveryLabel: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   content: {
     flex: 1,
