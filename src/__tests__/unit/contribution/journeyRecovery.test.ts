@@ -61,7 +61,7 @@ function published(partial: {
 
 describe('consumer contribution journey recovery', () => {
   it('uses the specified confirmation strings', () => {
-    expect(CONTRIBUTION_NOTICE_ADDED).toBe('Thanks - your contribution has been added.');
+    expect(CONTRIBUTION_NOTICE_ADDED).toBe('Your contribution has been added.');
     expect(CONTRIBUTION_NOTICE_SAVED).toBe(
       'We couldn’t submit this yet. Your contribution has been saved on this device so you can try again.'
     );

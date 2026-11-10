@@ -12,7 +12,7 @@ export type ContributionEntryContext =
   | 'packetClaims'
   | 'certifications';
 
-export const CONTRIBUTION_NOTICE_ADDED = 'Thanks - your contribution has been added.';
+export const CONTRIBUTION_NOTICE_ADDED = 'Your contribution has been added.';
 export const CONTRIBUTION_NOTICE_SAVED =
   'We couldn’t submit this yet. Your contribution has been saved on this device so you can try again.';
 export const PACKET_INFORMATION_ADD = 'Add packet information';

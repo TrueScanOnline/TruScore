@@ -18,6 +18,7 @@ import SettingsScreen from './settings';
 import OnboardingScreen from './onboarding';
 import SubscriptionScreen from './subscription';
 import MethodologyScreen from './methodology';
+import ContributionCelebrationPreviewScreen from './contribution-celebration-preview';
 import AppTabs from '../src/navigation/AppTabs';
 import {
   isMvpLegacyPlanetCsvDatabasesEnabled,
@@ -44,6 +45,8 @@ export type RootStackParamList = {
   DeveloperSettings: undefined;
   Subscription: undefined;
   Methodology: undefined;
+  /** W5-CD-01 local presentation preview (dev / UAT inspection only). */
+  ContributionCelebrationPreview: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -339,6 +342,16 @@ function RootLayout() {
                     title: 'Rveel methodology',
                   }}
                 />
+                {__DEV__ ? (
+                  <Stack.Screen
+                    name="ContributionCelebrationPreview"
+                    component={ContributionCelebrationPreviewScreen}
+                    options={{
+                      presentation: 'modal',
+                      headerShown: false,
+                    }}
+                  />
+                ) : null}
               </Stack.Navigator>
             </ErrorBoundary>
             <StatusBar style={isDarkMode ? 'light' : 'dark'} />

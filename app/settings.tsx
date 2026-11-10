@@ -310,6 +310,13 @@ export default function SettingsScreen() {
             label={t('settings.fsanzDatabaseImport') || 'FSANZ Database Import'}
             onPress={() => setFsanzImportModalVisible(true)}
           />
+          {__DEV__ ? (
+            <SettingRow
+              icon="sparkles-outline"
+              label="W5-CD-01 Celebration Preview"
+              onPress={() => navigation.navigate('ContributionCelebrationPreview')}
+            />
+          ) : null}
         </SettingSection>
 
         {/* About */}

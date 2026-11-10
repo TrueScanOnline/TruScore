@@ -194,6 +194,14 @@ import { crashReporter } from '../../src/utils/crashReporter';
 import { getPrimaryBarcode } from '../../src/utils/barcodeNormalization';
 import { shouldPreserveSettledResultOnLoadMiss } from '../../src/utils/resultPublicationLoadGuard';
 import ShareModal from '../../src/components/ShareModal';
+import {
+  ContributionCelebrationOverlay,
+  ContributionCelebrationGate,
+  admissionSubmissionKey,
+  agreementSubmissionKey,
+  celebrationVariantForAdmission,
+  type ContributionCelebrationVariant,
+} from '../../src/contributionDelight';
 import ProductHeroSection from '../../src/components/product/ProductHeroSection';
 import ProductDisclaimerCard from '../../src/components/productLegal/ProductDisclaimerCard';
 import ProductDataLimitationsCard from '../../src/components/productLegal/ProductDataLimitationsCard';
@@ -590,6 +598,9 @@ function ResultScreenContent() {
     null | 'nutrition' | 'packet' | 'origins' | 'productInformation'
   >(null);
   const [contributionNotice, setContributionNotice] = useState<string | null>(null);
+  const [celebrationVisible, setCelebrationVisible] = useState(false);
+  const [celebrationVariant, setCelebrationVariant] = useState<ContributionCelebrationVariant | null>(null);
+  const celebrationGateRef = useRef(new ContributionCelebrationGate());
   const [editProductData, setEditProductData] = useState<Product | null>(null); // Product data for edit mode
   const [editMode, setEditMode] = useState(false);
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -1588,6 +1599,35 @@ function ResultScreenContent() {
     setTimeout(() => setContributionNotice(null), 4000);
   };
 
+  /** W5-CD-01 presentation layer — never decides admission or agreement outcomes. */
+  const presentContributionCelebration = (
+    submissionKey: string,
+    variant: ContributionCelebrationVariant
+  ) => {
+    // Avoid stacking rapid Community Agreement toasts while another celebration is open.
+    if (celebrationVisible && variant === 'agreement_compact') return;
+    const allowed = celebrationGateRef.current.admit({ submissionKey, variant });
+    if (!allowed) return;
+    setCelebrationVariant(allowed);
+    setCelebrationVisible(true);
+  };
+
+  const dismissContributionCelebration = () => {
+    setCelebrationVisible(false);
+    setCelebrationVariant(null);
+  };
+
+  const handleAgreementRecorded = (detail: {
+    barcode: string;
+    group: CommunityAgreementGroup;
+    revisionId: string;
+  }) => {
+    presentContributionCelebration(
+      agreementSubmissionKey(detail),
+      'agreement_compact'
+    );
+  };
+
   const handleContribute = () => {
     // Open Open Food Facts with barcode pre-filled for adding/editing product
     const offUrl = `https://world.openfoodfacts.org/cgi/product.pl?type=edit&code=${barcode}`;
@@ -2365,6 +2405,7 @@ function ResultScreenContent() {
                   surfaceEnabled={agreementSurfaceEnabled('nutrition')}
                   onRevalidateSurface={() => revalidateAgreementSurface('nutrition')}
                   onCorrect={() => openAgreementChange('nutrition')}
+                  onAgreementRecorded={handleAgreementRecorded}
                 />
                 <ResultIngredientsSection
                   barcode={barcode}
@@ -2402,6 +2443,7 @@ function ResultScreenContent() {
                       surfaceEnabled={agreementSurfaceEnabled('ingredients')}
                       onRevalidateSurface={() => revalidateAgreementSurface('ingredients')}
                       onCorrect={() => openAgreementChange('ingredients')}
+                      onAgreementRecorded={handleAgreementRecorded}
                     />
                   }
                 />
@@ -2571,6 +2613,7 @@ function ResultScreenContent() {
             surfaceEnabled={agreementSurfaceEnabled('origins')}
             onRevalidateSurface={() => revalidateAgreementSurface('origins')}
             onCorrect={() => openAgreementChange('origins')}
+            onAgreementRecorded={handleAgreementRecorded}
           />
         </View>
         </View>
@@ -2723,6 +2766,7 @@ function ResultScreenContent() {
             surfaceEnabled={agreementSurfaceEnabled('packet_information')}
             onRevalidateSurface={() => revalidateAgreementSurface('packet_information')}
             onCorrect={() => openAgreementChange('packet_information')}
+            onAgreementRecorded={handleAgreementRecorded}
           />
           {informationMenu.some((row) => row.key === 'add-packet' && !row.formFirst) ? (
           <TouchableOpacity
@@ -3235,6 +3279,20 @@ function ResultScreenContent() {
           trace?.mark('result_applied', 'ok');
           if (complete) {
             showContributionNotice(CONTRIBUTION_NOTICE_ADDED);
+            const variant = celebrationVariantForAdmission({
+              complete: true,
+              journey: contributionJourney,
+            });
+            if (variant) {
+              presentContributionCelebration(
+                admissionSubmissionKey({
+                  barcode: typeof barcode === 'string' ? barcode : String(barcode ?? ''),
+                  snapshotGeneratedAt: snapshot.generatedAt,
+                  journey: contributionJourney,
+                }),
+                variant
+              );
+            }
             const offset =
               contributionEntry === 'origins'
                 ? productOriginsOffsetYRef.current
@@ -3417,6 +3475,13 @@ function ResultScreenContent() {
           additiveShare={additiveShare}
         />
       )}
+
+      {/* W5-CD-01 presentation-only contribution celebration */}
+      <ContributionCelebrationOverlay
+        visible={celebrationVisible}
+        variant={celebrationVariant}
+        onDismiss={dismissContributionCelebration}
+      />
     </SafeAreaView>
   );
 }

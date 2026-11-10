@@ -71,6 +71,10 @@ export const linking = {
         },
       },
       DeveloperSettings: 'developer-settings',
+      // W5-CD-01 presentation preview — development / UAT only (never ship deep link in release).
+      ...(__DEV__
+        ? { ContributionCelebrationPreview: 'contribution-celebration-preview' }
+        : {}),
     },
   },
 };

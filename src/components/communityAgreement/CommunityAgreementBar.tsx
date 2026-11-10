@@ -39,6 +39,11 @@ type Props = {
   /** Re-check the gate immediately before Agree / Correct. */
   onRevalidateSurface: () => boolean;
   onCorrect: () => void;
+  /**
+   * Presentation-only hook after a successful server ack.
+   * W5-CD-01: parent may show a compact acknowledgement. Never decides agreement truth.
+   */
+  onAgreementRecorded?: (detail: { barcode: string; group: CommunityAgreementGroup; revisionId: string }) => void;
 };
 
 function agreementCountPhrase(count: number): string {
@@ -77,6 +82,7 @@ export default function CommunityAgreementBar({
   surfaceEnabled,
   onRevalidateSurface,
   onCorrect,
+  onAgreementRecorded,
 }: Props) {
   const { darkMode } = useTheme();
   const emerald = resultEmeraldTone(darkMode);
@@ -195,6 +201,11 @@ export default function CommunityAgreementBar({
     setRemoteRevisionId(outcome.body.revisionId);
     setHasAgreed(true);
     playAgreeConfirmation();
+    onAgreementRecorded?.({
+      barcode,
+      group,
+      revisionId: outcome.body.revisionId || local.revisionId,
+    });
   }, [
     barcode,
     busy,
@@ -202,6 +213,7 @@ export default function CommunityAgreementBar({
     hasAgreed,
     local.eligible,
     local.revisionId,
+    onAgreementRecorded,
     onRevalidateSurface,
     playAgreeConfirmation,
   ]);

@@ -290,7 +290,7 @@ describe('consumer integration journeys', () => {
   });
 
   it('E2E-8 keeps admitted nutrition and origins across reload and rejects an older source load', async () => {
-    expect(CONTRIBUTION_NOTICE_ADDED).toBe('Thanks - your contribution has been added.');
+    expect(CONTRIBUTION_NOTICE_ADDED).toBe('Your contribution has been added.');
     const nutrition = await admitIngredientsNutritionEvidence(
       (
         await submitIngredientsNutritionEvidence({
