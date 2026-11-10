@@ -33,9 +33,15 @@ Founder approved the complete W5-CD-01 Contribution Celebration UX (Concept A V2
 
 ## 4. New commit SHA
 
+Feature checkpoint (annotated tag target):
+
 `3a3d91f3081058bd6a4c87c93e02ac5fda7f64e6`
 
 Message: `W5-CD-01: complete founder-approved contribution delight`
+
+Branch HEAD also includes docs SHA correction:
+
+`a64531e8676fbe8d9a173f97868bcda6b7f6e796` — `W5-CD-01: correct final acceptance report SHAs`
 
 ---
 
