@@ -1,7 +1,7 @@
 # Final Unified App Acceptance Results
 
 **Directive SHA named:** `52e2cacdd7ca214030af109036b6505cd263f159`  
-**Final integration SHA (tip):** `81ba635d077b0d01a72ff435f9d84722a9b14c51`  
+**Final integration SHA (tip):** `2416c0fd4308c074e7f1e4fa4ce02e8799ced132`  
 **Branch:** `integration/w5-unified-mvp-20261113` (tracks `origin/integration/w5-unified-mvp-20261113`)  
 **Date:** 2026-11-13
 
