@@ -58,56 +58,72 @@ function MotifSvg({
   const a = (v: number) => Math.max(0, Math.min(1, v * intensity));
 
   if (motif === 'molecular') {
-    // Subtle additive-inspired wash: pale sage/cream arcs + soft nodes (not a loud connect-the-dots diagram).
-    const stroke = darkMode ? 'rgba(180,220,210,0.14)' : 'rgba(8,123,104,0.09)';
-    const strokeSoft = darkMode ? 'rgba(180,220,210,0.08)' : 'rgba(14,138,116,0.06)';
-    const node = darkMode ? 'rgba(180,220,210,0.12)' : 'rgba(8,123,104,0.07)';
+    // Quiet formulation motif for About these Additives: cream–sage wash,
+    // soft capsule / droplet / particle accents on the right — never a loud bond graph.
+    const stroke = darkMode ? 'rgba(180,220,210,0.13)' : 'rgba(8,123,104,0.08)';
+    const strokeSoft = darkMode ? 'rgba(180,220,210,0.07)' : 'rgba(14,138,116,0.055)';
+    const fillSoft = darkMode ? 'rgba(180,220,210,0.06)' : 'rgba(8,123,104,0.045)';
+    const particle = darkMode ? 'rgba(180,220,210,0.11)' : 'rgba(8,123,104,0.065)';
     return (
       <Svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
         <Defs>
           <LinearGradient id={`${uid}-mol`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor={darkMode ? '#1A322E' : '#FBF9F3'} stopOpacity={a(0.95)} />
-            <Stop offset="45%" stopColor={darkMode ? '#1F3A35' : '#EEF6F2'} stopOpacity={a(0.7)} />
-            <Stop offset="100%" stopColor={darkMode ? '#17302C' : '#E4F0EB'} stopOpacity={a(0.5)} />
+            <Stop offset="0%" stopColor={darkMode ? '#1A322E' : '#FCFAF5'} stopOpacity={a(0.96)} />
+            <Stop offset="40%" stopColor={darkMode ? '#1E3A35' : '#F1F7F3'} stopOpacity={a(0.72)} />
+            <Stop offset="100%" stopColor={darkMode ? '#17302C' : '#E6F1EC'} stopOpacity={a(0.48)} />
           </LinearGradient>
-          <RadialGradient id={`${uid}-molGlow`} cx="78%" cy="28%" r="55%">
-            <Stop offset="0%" stopColor={darkMode ? '#2A4A44' : '#D7EBE3'} stopOpacity={a(0.35)} />
-            <Stop offset="100%" stopColor={darkMode ? '#1A322E' : '#FBF9F3'} stopOpacity={0} />
+          <RadialGradient id={`${uid}-molGlow`} cx="82%" cy="24%" r="52%">
+            <Stop offset="0%" stopColor={darkMode ? '#2A4A44' : '#D9EDE5'} stopOpacity={a(0.32)} />
+            <Stop offset="100%" stopColor={darkMode ? '#1A322E' : '#FCFAF5'} stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Rect x={0} y={0} width={w} height={h} fill={`url(#${uid}-mol)`} />
         <Rect x={0} y={0} width={w} height={h} fill={`url(#${uid}-molGlow)`} />
-        <G opacity={a(0.85)}>
+        <G opacity={a(0.88)}>
+          {/* Soft capsule suggestion (formulation) */}
+          <Ellipse
+            cx={w * 0.88}
+            cy={h * 0.3}
+            rx={Math.max(14, w * 0.055)}
+            ry={Math.max(7, h * 0.09)}
+            fill={fillSoft}
+            stroke={strokeSoft}
+            strokeWidth={0.9}
+          />
+          {/* Soft droplet / particle */}
+          <Ellipse
+            cx={w * 0.78}
+            cy={h * 0.58}
+            rx={Math.max(5, w * 0.018)}
+            ry={Math.max(7, h * 0.07)}
+            fill={fillSoft}
+            stroke={strokeSoft}
+            strokeWidth={0.8}
+          />
+          {/* Quiet curved linework — right third only */}
           <Path
-            d={`M ${w * 0.58} ${h * 0.08} C ${w * 0.72} ${h * 0.18}, ${w * 0.8} ${h * 0.12}, ${w * 0.98} ${h * 0.28}`}
+            d={`M ${w * 0.62} ${h * 0.06} C ${w * 0.74} ${h * 0.16}, ${w * 0.84} ${h * 0.1}, ${w * 0.98} ${h * 0.22}`}
             fill="none"
             stroke={stroke}
-            strokeWidth={1.1}
+            strokeWidth={1.05}
           />
           <Path
-            d={`M ${w * 0.64} ${h * 0.02} C ${w * 0.78} ${h * 0.22}, ${w * 0.9} ${h * 0.2}, ${w * 1.02} ${h * 0.4}`}
+            d={`M ${w * 0.68} ${h * 0.72} C ${w * 0.8} ${h * 0.62}, ${w * 0.9} ${h * 0.78}, ${w * 1.02} ${h * 0.7}`}
             fill="none"
             stroke={strokeSoft}
             strokeWidth={1}
           />
           <Path
-            d={`M ${w * 0.7} ${h * 0.55} C ${w * 0.82} ${h * 0.48}, ${w * 0.92} ${h * 0.62}, ${w * 1.02} ${h * 0.72}`}
-            fill="none"
-            stroke={strokeSoft}
-            strokeWidth={1}
-          />
-          <Circle cx={w * 0.78} cy={h * 0.2} r={2.1} fill={node} />
-          <Circle cx={w * 0.9} cy={h * 0.32} r={1.7} fill={node} />
-          <Circle cx={w * 0.84} cy={h * 0.62} r={1.9} fill={node} />
-          <Ellipse
-            cx={w * 0.92}
-            cy={h * 0.48}
-            rx={18}
-            ry={11}
+            d={`M ${w * 0.74} ${h * 0.42} C ${w * 0.82} ${h * 0.5}, ${w * 0.9} ${h * 0.46}, ${w * 0.98} ${h * 0.55}`}
             fill="none"
             stroke={strokeSoft}
             strokeWidth={0.9}
           />
+          {/* Sparse particles */}
+          <Circle cx={w * 0.72} cy={h * 0.22} r={1.6} fill={particle} />
+          <Circle cx={w * 0.94} cy={h * 0.48} r={1.4} fill={particle} />
+          <Circle cx={w * 0.86} cy={h * 0.76} r={1.5} fill={particle} />
+          <Circle cx={w * 0.96} cy={h * 0.18} r={1.2} fill={particle} />
         </G>
       </Svg>
     );
