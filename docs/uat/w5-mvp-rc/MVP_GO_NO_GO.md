@@ -2,7 +2,7 @@
 
 **Branch:** `integration/w5-unified-mvp-20261113`  
 **Directive baseline:** `2f690013795a2c8498e1632b13a9ec5dd2e4d4e2`  
-**MVP freeze SHA:** *(filled at tag time)*  
+**MVP freeze SHA:** `2c90e07cc50fca181c150ae7089728ecc4404a0d`  
 
 ## Gate table
 
@@ -15,7 +15,7 @@
 | Community Agreements | **DEFERRED** |
 | Privacy, evidence and data-rights readiness | **LEGAL HOLD** |
 | Signed Android release candidate | **BLOCKED** |
-| Final source SHA and tag | *(see below)* |
+| Final source SHA and tag | `2c90e07cc50fca181c150ae7089728ecc4404a0d` / tag `mvp-android-rc1-20261113` |
 | External release dependencies | Counsel OFF/ODbL-CC BY-SA clearance; Play App Signing SHA in assetlinks; production Evidence Authority env alignment; monitored support email |
 
 ## Verdict
