@@ -7,13 +7,12 @@ import { renderShareLandingHtml } from '../../../../backend/vercel/lib/shareLand
 import { ALLOWED_SHARE_CONTEXTS } from '../../../../backend/vercel/lib/shareLandingMeta';
 import { toPublicProductPreview } from '../../../../backend/vercel/lib/publicPreviewContract';
 
-const SHARED = 'Curious about this product?';
-const READING = 'Reveal more in Rveel';
-const SUPPORT = 'See how Rveel looks at';
-const UNKNOWN_AVAIL =
-  'Once Rveel is available, you can scan or search this barcode to see what information is available.';
-const UNKNOWN_HEADLINE = "We couldn't identify this product yet.";
-const REVEAL_CTA = 'Discover more in Rveel';
+/** Approved WEB-01 teaser copy (shareLandingHtml) — verified on temporary Vercel host. */
+const SHARED = 'Someone shared this product with you';
+const READING = 'Open it in Rveel for the full reading.';
+const TEASER_LOCK = 'Reading locked';
+const TEASER_PROMISE = 'Scores and details stay in the app — this page is only a teaser.';
+const OPEN_CTA = 'Open this product in Rveel';
 const SCORE_COLOURS = /#16a085|#1f9d78|#b8860b|#e45757/i;
 const BANDS = /\b(Excellent|Good|Fair|Poor)\b/;
 
@@ -67,10 +66,32 @@ function expectIdentityAndLinks(html: string) {
   expect(html).toContain('Coca-Cola Original');
   expect(html).toContain('https://images.example/cola.jpg');
   expect(html).toContain('truescan://barcode/5449000000996');
-  expect(html).toContain('Google Play — coming soon');
-  expect(html).not.toContain('https://play.google.com/store/apps/details?id=com.truescan.foodscanner');
+  expect(html).toContain('Get it on Google Play');
+  expect(html).toContain('https://play.google.com/store/apps/details?id=com.truescan.foodscanner');
   expect(html).toContain('https://apps.apple.com/app/id6755704230');
   expect(html).toContain('Barcode 5449000000996');
+}
+
+/** Presentation markers for the approved teaser veil (not legacy mystery-pillar DOM). */
+function expectApprovedTeaserPresentation(html: string) {
+  expect(html).toContain('sheet-teaser');
+  expect(html).toContain('teaser-card');
+  expect(html).toContain('teaser-veil');
+  expect(html).toContain('teaser-blur-grid');
+  expect(html).toContain('teaser-frost');
+  expect(html).toContain(TEASER_LOCK);
+  expect(html).toContain(TEASER_PROMISE);
+  expect(html).toContain(OPEN_CTA);
+  expect(html).toContain('class="tb body"');
+  expect(html).toContain('class="tb planet"');
+  expect(html).toContain('class="tb claims"');
+  expect(html).toContain('class="tb open"');
+  // Legacy mystery-score scaffolding must stay gone (fail-closed presentation).
+  expect(html).not.toContain('pillar-tile');
+  expect(html).not.toContain('pillar-mystery');
+  expect(html).not.toContain('mystery-medallion');
+  expect(html).not.toContain('sheet-gateway-v5');
+  expect(html).not.toContain('v5-aperture');
 }
 
 describe('public product-preview score contract', () => {
@@ -130,20 +151,16 @@ describe('share landing renderer ignores legacy scores and ctx', () => {
     const html = render();
     expectNoPublishedScore(html);
     expectIdentityAndLinks(html);
+    expectApprovedTeaserPresentation(html);
     expect(html).toContain(SHARED);
     expect(html).toContain(READING);
-    expect(html).toContain(SUPPORT);
-    expect(html).toContain('Body');
-    expect(html).toContain('Planet');
-    expect(html).toContain('Claims');
-    expect(html).toContain('Transparency');
     expect(html).toContain(`<title>Coca-Cola Original · Rveel</title>`);
-    expect(html).toContain(SHARED);
     expect(html).toContain('property="og:description"');
     expect(html).toContain('name="twitter:description"');
     expect(html).toContain('alt="Coca-Cola Original"');
-    expect(html).not.toContain('openInApp(true)');
-    expect(html).not.toMatch(/triedAuto/);
+    // Installed-app handoff is intentional on mobile; auto-open remains gated in-page.
+    expect(html).toContain('openInApp(true)');
+    expect(html).toMatch(/triedAuto/);
   });
 
   it('does not render a raw zero or four pillar zeros', () => {
@@ -162,15 +179,14 @@ describe('share landing renderer ignores legacy scores and ctx', () => {
     const html = render({ productData: null, query: {} });
     expectNoPublishedScore(html);
     expect(html).toContain('Shared product');
-    expect(html).toContain(UNKNOWN_HEADLINE);
-    expect(html).toContain('No completed product analysis is available on this page yet.');
-    expect(html).toContain(UNKNOWN_AVAIL);
-    expect(html).not.toContain('Download Rveel to scan');
-    expect(html).toContain('sheet-unknown');
+    expect(html).toContain(SHARED);
+    expect(html).toContain(READING);
+    expectApprovedTeaserPresentation(html);
     expect(html).toContain('truescan://barcode/5449000000996');
-    expect(html).toContain('No photo yet');
+    expect(html).toContain('Barcode 5449000000996');
     expect(html).not.toContain('ORGANIC BLUE CORN');
     expect(html).not.toContain('Curious about this product?');
+    expect(html).not.toMatch(/\d+\s*\/\s*100/);
   });
 
   it.each([...ALLOWED_SHARE_CONTEXTS])(
@@ -206,41 +222,19 @@ describe('share landing renderer ignores legacy scores and ctx', () => {
 
   it('does not embed real score digits behind frost (no hidden score DOM)', () => {
     const html = render();
+    expectNoPublishedScore(html);
+    expectApprovedTeaserPresentation(html);
     expect(html).not.toMatch(/\b2\s*\/\s*25\b/);
     expect(html).not.toMatch(/\b23\b[^<]*Poor/);
     expect(html).not.toMatch(/\b\d+\s*\/\s*25\b/);
-    expect(html).toContain('pillar-tile');
-    expect(html).toContain('pillar-veil');
-    expect(html).toContain('pillar-mystery');
-    expect(html).toContain('mystery-impression');
-    expect(html).toContain('data-mci="apple"');
-    expect(html).toContain('data-mci="leaf"');
-    expect(html).toContain('data-mci="message-text"');
-    expect(html).toContain('data-mci="eye"');
-    expect(html).toContain('sheet-gateway-v5');
-    expect(html).toContain('sheet-gateway-mystery');
-    expect(html).toContain('mystery-medallion');
-    expect(html).toContain('medallion-socket');
-    expect(html).not.toContain('pillar-veil-bars');
-    expect(html).not.toContain('medallion-lock');
-    expect(html).not.toContain('v5-aperture');
-    expect(html).not.toContain('In Rveel');
-    expect(html).toContain('pillar-name');
-    expect(html).toMatch(/>\?</);
-    expect(html).not.toMatch(/\b\d+\s*\/\s*25\b/);
     expect(html).not.toMatch(/\b(Poor|Excellent|Fair|Good)\b/);
-    expect(html).toContain('Google Play — coming soon');
-    expect(html).toContain('store-soon');
-    expect(html).not.toMatch(/data-store="android"[^>]*href=/);
-    // Fixture supplies APP_STORE_ID → live App Store link remains valid when configured
     expect(html).toContain('Download on the App Store');
-    expect(html).toContain('Already have Rveel? Open this product');
+    expect(html).toContain('Get it on Google Play');
+    expect(html).toContain('Already have Rveel? We’ll open this exact barcode');
     expect(html).toContain(SHARED);
     expect(html).toContain('Coca-Cola Original');
-    expect(html).toContain(REVEAL_CTA);
-    expect(html).toContain('does not uncover product findings or scores');
-    expect(html).toContain('App store listings are coming soon');
-    expect(html).not.toContain('Downloading Rveel does not automatically restore');
-    expect(html).not.toMatch(/triedAuto|openInApp\(true\)/);
+    expect(html).toContain(OPEN_CTA);
+    expect(html).toMatch(/triedAuto/);
+    expect(html).toContain('openInApp(true)');
   });
 });

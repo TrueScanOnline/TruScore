@@ -1,0 +1,3 @@
+﻿TEMPORARY DEBUG TRUST ONLY — not permanent production signing.
+Fingerprint matches local/emulator debug APK for App Link testing on truscoreapi.vercel.app.
+Replace with Play App Signing SHA-256 (or remove) before permanent-domain cutover.
