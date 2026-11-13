@@ -49,9 +49,19 @@ describe('mvpFeatureGates', () => {
 
   it('rejects store releases that entitle Community Agreements', () => {
     process.env.EXPO_PUBLIC_STORE_RELEASE = '1';
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '0';
     process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS = '1';
     expect(() => assertMvpFeatureGatesReleaseSafe()).toThrow(/Community Agreements/);
     process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS = '0';
+    expect(() => assertMvpFeatureGatesReleaseSafe()).not.toThrow();
+  });
+
+  it('rejects store releases that entitle guided contribution', () => {
+    process.env.EXPO_PUBLIC_STORE_RELEASE = '1';
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+    process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS = '0';
+    expect(() => assertMvpFeatureGatesReleaseSafe()).toThrow(/Guided contribution/);
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '0';
     expect(() => assertMvpFeatureGatesReleaseSafe()).not.toThrow();
   });
 });

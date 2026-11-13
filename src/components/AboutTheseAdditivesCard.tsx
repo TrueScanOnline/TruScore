@@ -128,7 +128,7 @@ export default function AboutTheseAdditivesCard({ count, onPress }: AboutTheseAd
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${count} ${count === 1 ? 'additive' : 'additives'} identified`}
     >
-      <ResultCardArt motif="molecular" darkMode={!!darkMode} intensity={0.85} borderRadius={20} />
+      <ResultCardArt motif="molecular" darkMode={!!darkMode} intensity={0.55} borderRadius={20} />
       <View style={styles.stack}>
         <View style={styles.row}>
           <View style={styles.left}>

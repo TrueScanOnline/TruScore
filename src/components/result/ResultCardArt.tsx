@@ -58,38 +58,56 @@ function MotifSvg({
   const a = (v: number) => Math.max(0, Math.min(1, v * intensity));
 
   if (motif === 'molecular') {
-    const nodes = [
-      [w * 0.72, h * 0.22],
-      [w * 0.88, h * 0.18],
-      [w * 0.82, h * 0.38],
-      [w * 0.94, h * 0.42],
-      [w * 0.76, h * 0.58],
-      [w * 0.9, h * 0.7],
-      [w * 0.68, h * 0.78],
-    ] as const;
-    const stroke = darkMode ? 'rgba(180,230,220,0.35)' : 'rgba(8,123,104,0.22)';
-    const fill = darkMode ? 'rgba(180,230,220,0.28)' : 'rgba(8,123,104,0.18)';
+    // Subtle additive-inspired wash: pale sage/cream arcs + soft nodes (not a loud connect-the-dots diagram).
+    const stroke = darkMode ? 'rgba(180,220,210,0.14)' : 'rgba(8,123,104,0.09)';
+    const strokeSoft = darkMode ? 'rgba(180,220,210,0.08)' : 'rgba(14,138,116,0.06)';
+    const node = darkMode ? 'rgba(180,220,210,0.12)' : 'rgba(8,123,104,0.07)';
     return (
       <Svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
         <Defs>
           <LinearGradient id={`${uid}-mol`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor={darkMode ? '#1A3A36' : '#FFF8F6'} stopOpacity={a(0.9)} />
-            <Stop offset="55%" stopColor={darkMode ? '#243F3A' : '#FFE8E4'} stopOpacity={a(0.55)} />
-            <Stop offset="100%" stopColor={darkMode ? '#1A3A36' : '#FFF5F2'} stopOpacity={a(0.35)} />
+            <Stop offset="0%" stopColor={darkMode ? '#1A322E' : '#FBF9F3'} stopOpacity={a(0.95)} />
+            <Stop offset="45%" stopColor={darkMode ? '#1F3A35' : '#EEF6F2'} stopOpacity={a(0.7)} />
+            <Stop offset="100%" stopColor={darkMode ? '#17302C' : '#E4F0EB'} stopOpacity={a(0.5)} />
           </LinearGradient>
+          <RadialGradient id={`${uid}-molGlow`} cx="78%" cy="28%" r="55%">
+            <Stop offset="0%" stopColor={darkMode ? '#2A4A44' : '#D7EBE3'} stopOpacity={a(0.35)} />
+            <Stop offset="100%" stopColor={darkMode ? '#1A322E' : '#FBF9F3'} stopOpacity={0} />
+          </RadialGradient>
         </Defs>
         <Rect x={0} y={0} width={w} height={h} fill={`url(#${uid}-mol)`} />
-        <G opacity={a(0.9)}>
-          <Line x1={nodes[0][0]} y1={nodes[0][1]} x2={nodes[1][0]} y2={nodes[1][1]} stroke={stroke} strokeWidth={1} />
-          <Line x1={nodes[1][0]} y1={nodes[1][1]} x2={nodes[2][0]} y2={nodes[2][1]} stroke={stroke} strokeWidth={1} />
-          <Line x1={nodes[0][0]} y1={nodes[0][1]} x2={nodes[2][0]} y2={nodes[2][1]} stroke={stroke} strokeWidth={1} />
-          <Line x1={nodes[2][0]} y1={nodes[2][1]} x2={nodes[3][0]} y2={nodes[3][1]} stroke={stroke} strokeWidth={1} />
-          <Line x1={nodes[2][0]} y1={nodes[2][1]} x2={nodes[4][0]} y2={nodes[4][1]} stroke={stroke} strokeWidth={1} />
-          <Line x1={nodes[4][0]} y1={nodes[4][1]} x2={nodes[5][0]} y2={nodes[5][1]} stroke={stroke} strokeWidth={1} />
-          <Line x1={nodes[4][0]} y1={nodes[4][1]} x2={nodes[6][0]} y2={nodes[6][1]} stroke={stroke} strokeWidth={1} />
-          {nodes.map(([x, y], i) => (
-            <Circle key={i} cx={x} cy={y} r={i % 2 === 0 ? 3.2 : 2.4} fill={fill} stroke={stroke} strokeWidth={0.8} />
-          ))}
+        <Rect x={0} y={0} width={w} height={h} fill={`url(#${uid}-molGlow)`} />
+        <G opacity={a(0.85)}>
+          <Path
+            d={`M ${w * 0.58} ${h * 0.08} C ${w * 0.72} ${h * 0.18}, ${w * 0.8} ${h * 0.12}, ${w * 0.98} ${h * 0.28}`}
+            fill="none"
+            stroke={stroke}
+            strokeWidth={1.1}
+          />
+          <Path
+            d={`M ${w * 0.64} ${h * 0.02} C ${w * 0.78} ${h * 0.22}, ${w * 0.9} ${h * 0.2}, ${w * 1.02} ${h * 0.4}`}
+            fill="none"
+            stroke={strokeSoft}
+            strokeWidth={1}
+          />
+          <Path
+            d={`M ${w * 0.7} ${h * 0.55} C ${w * 0.82} ${h * 0.48}, ${w * 0.92} ${h * 0.62}, ${w * 1.02} ${h * 0.72}`}
+            fill="none"
+            stroke={strokeSoft}
+            strokeWidth={1}
+          />
+          <Circle cx={w * 0.78} cy={h * 0.2} r={2.1} fill={node} />
+          <Circle cx={w * 0.9} cy={h * 0.32} r={1.7} fill={node} />
+          <Circle cx={w * 0.84} cy={h * 0.62} r={1.9} fill={node} />
+          <Ellipse
+            cx={w * 0.92}
+            cy={h * 0.48}
+            rx={18}
+            ry={11}
+            fill="none"
+            stroke={strokeSoft}
+            strokeWidth={0.9}
+          />
         </G>
       </Svg>
     );

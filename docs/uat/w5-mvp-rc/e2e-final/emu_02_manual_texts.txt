@@ -1,0 +1,7 @@
+false|Enter Manually||[121,918][959,1006]
+false|Enter barcode manually (8-14 digits)||[121,1028][959,1081]
+true|Enter barcode||[121,1136][959,1297]
+true||Cancel|[121,1352][526,1494]
+false|Cancel||[255,1393][391,1452]
+true||Search|[559,1352][959,1494]
+false|Search||[689,1390][828,1449]

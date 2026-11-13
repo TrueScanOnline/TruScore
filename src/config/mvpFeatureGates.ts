@@ -32,9 +32,17 @@ export function isCommunityAgreementsEnabled(): boolean {
   return process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS === '1';
 }
 
-/** Store/public builds must never ship Community Agreements entitled without founder opt-in review. */
+/**
+ * Store/public builds must never ship optional Contribution / WP09 surfaces
+ * entitled without founder opt-in review. Local Metro uses `.env.development`.
+ */
 export function assertMvpFeatureGatesReleaseSafe(): void {
   if (!isStoreReleaseRuntime()) return;
+  if (process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION === '1') {
+    throw new Error(
+      '[MVP] Guided contribution must not be entitled in a store/public release until UAT admission is founder-approved for shipping'
+    );
+  }
   if (process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS === '1') {
     throw new Error(
       '[MVP] Community Agreements must not be entitled in a store/public release until WP09 is operational and founder-approved'
