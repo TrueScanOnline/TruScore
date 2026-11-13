@@ -2,7 +2,7 @@
 
 **Branch:** `integration/w5-unified-mvp-20261113`  
 **Acceptance start SHA:** `52e2cacdd7ca214030af109036b6505cd263f159`  
-**Post-acceptance SHA:** `b3bf1ded1a45b0bd72c5ee21bd28c2b3965eee7d`  
+**Post-acceptance SHA:** `847506a935f739f2f37529b3f5fe9a5a815db964`  
 **Date:** 2026-11-13  
 **Worktree:** `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`
 
@@ -20,7 +20,7 @@
 | WEB-01A identity protection | **PASS** |
 | Governed scoring/publication regressions | **PASS** |
 | Unified Android build | **PASS** (debug x86_64 APK; temp signing retained) |
-| Final clean Git SHA | **PASS** (`b3bf1de` — acceptance fixes + evidence) |
+| Final clean Git SHA | **PASS** (`847506a` on origin) |
 
 ## 1. Git integration integrity
 
