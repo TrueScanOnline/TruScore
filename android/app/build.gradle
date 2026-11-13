@@ -33,6 +33,15 @@ react {
     //   skip the bundling of the JS bundle and the assets. By default is just 'debug'.
     //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
     // debuggableVariants = ["liteDebug", "prodDebug"]
+    // SJ-07: Metro-free standalone debug APK is opt-in only.
+    // Default: keep RN default (debug skips bundling → Metro).
+    // Standalone test: -Ptruescan.standaloneDebugEmbed=true → embed JS in debug.
+    // Release always embeds JS regardless; this flag must never be required for store builds.
+    def standaloneDebugEmbed =
+        (findProperty('truescan.standaloneDebugEmbed') ?: 'false').toString().toBoolean()
+    if (standaloneDebugEmbed) {
+        debuggableVariants = []
+    }
 
     /* Bundling */
     //   A list containing the node command and its flags. Default is just 'node'.
@@ -96,6 +105,10 @@ android {
         // Keep in sync with eas.json uat-dynamic-signals-android RVEEL_ANDROID_VERSION_CODE.
         versionCode 37
         versionName "10.0.0"
+        // SJ-07 harness isolation: never true unless -Ptruescan.standaloneDebugEmbed=true
+        def standaloneDebugEmbedFlag =
+            (findProperty('truescan.standaloneDebugEmbed') ?: 'false').toString().toBoolean()
+        buildConfigField "boolean", "STANDALONE_DEBUG_EMBED", standaloneDebugEmbedFlag ? "true" : "false"
     }
     signingConfigs {
         debug {

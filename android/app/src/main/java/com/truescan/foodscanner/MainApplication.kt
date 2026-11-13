@@ -30,7 +30,15 @@ class MainApplication : Application(), ReactApplication {
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
 
-          override fun getUseDeveloperSupport(): Boolean = BuildConfig.DEBUG
+          /**
+           * SJ-07: Metro-free standalone debug is opt-in only.
+           * - Release / production: BuildConfig.DEBUG is false → never uses Metro.
+           * - Normal debug: BuildConfig.STANDALONE_DEBUG_EMBED is false → Metro as usual.
+           * - Standalone test APK: pass -Ptruescan.standaloneDebugEmbed=true so JS is
+           *   embedded and developer support is forced off (no Metro hang).
+           */
+          override fun getUseDeveloperSupport(): Boolean =
+            BuildConfig.DEBUG && !BuildConfig.STANDALONE_DEBUG_EMBED
 
           override val isNewArchEnabled: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
           override val isHermesEnabled: Boolean = BuildConfig.IS_HERMES_ENABLED

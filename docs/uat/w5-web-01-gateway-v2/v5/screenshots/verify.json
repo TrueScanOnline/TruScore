@@ -1,0 +1,23 @@
+{
+  "v5-cadbury-390.png": true,
+  "v5-cadbury-1440.png": true,
+  "v5-unknown-390.png": true,
+  "v5-unknown-1440.png": true,
+  "v5-no-image-390.png": true,
+  "reveal": true,
+  "reducedMotion": "none",
+  "cadbury": {
+    "v5": true,
+    "mystery": true,
+    "title": "Dairy Milk Milk Chocolate",
+    "brand": "Cadbury",
+    "img": true,
+    "imgSrc": "https://images.openfoodfacts.org/images/products/930/061/706/4879/front_en.50.400.jpg",
+    "scoreDom": false,
+    "playHref": false,
+    "question": true,
+    "pillars": 4,
+    "mysteryShapes": 4,
+    "padlock": false
+  }
+}

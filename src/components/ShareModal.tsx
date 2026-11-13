@@ -13,6 +13,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   ActivityIndicator,
+  Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +30,7 @@ import { buildShareUrl, formatShareLinkLabel } from '../utils/shareUrl';
 import { ShareService } from '../features/sharing/services/ShareService';
 import { ShareContentBuilder } from '../features/sharing/services/ShareContentBuilder';
 import { ShareOptions, SharePlatform, ShareableItem } from '../features/sharing/types';
+import { buildReceiverCaption } from '../features/sharing/receiverCaption';
 import { ProductWithTrustScore } from '../types/product';
 import { TruScoreResult } from '../lib/truscoreEngine';
 import { resolveShareBreakdownForOverall, resolveShareOverallScore, shareImageScoreState } from '../utils/shareScoreSemantics';
@@ -196,6 +198,37 @@ export default function ShareModal({
     } catch (e) {
       logger.error('Copy link failed', e);
       Toast.show({ type: 'error', text1: t('shareModal.copyFailed') });
+    }
+  };
+
+  /** Explicit text+HTTPS share — does not rely on clipboard for the recipient. */
+  const handleShareProductLink = async () => {
+    try {
+      setSharing(true);
+      const caption = buildReceiverCaption({
+        note: customMessage.trim() || undefined,
+        productName: productDisplayName,
+        section: storyHeading,
+        summary: pathSummary,
+        url: copyLinkUrl,
+        includeSummary: true,
+      });
+      const result = await Share.share({
+        message: caption,
+        title: t('shareModal.shareProductLinkTitle'),
+        url: copyLinkUrl,
+      });
+      if (result.action === Share.sharedAction) {
+        Toast.show({
+          type: 'success',
+          text1: t('shareModal.shareProductLinkOpened'),
+        });
+      }
+    } catch (e) {
+      logger.error('Share product link failed', e);
+      Toast.show({ type: 'error', text1: t('shareModal.shareProductLinkFailed') });
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -506,11 +539,23 @@ export default function ShareModal({
 
           <TouchableOpacity
             style={[styles.copyLinkButton, { backgroundColor: resultPresentation.emerald.action.light }]}
+            onPress={handleShareProductLink}
+            disabled={sharing}
+            accessibilityLabel={t('shareModal.shareProductLink')}
+          >
+            <Ionicons name="share-outline" size={22} color="#fff" />
+            <Text style={styles.copyLinkButtonText}>{t('shareModal.shareProductLink')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.shareImageButton, { borderColor: emerald.action, backgroundColor: emerald.card }]}
             onPress={handleCopyLink}
             disabled={sharing}
           >
-            <Ionicons name="link-outline" size={22} color="#fff" />
-            <Text style={styles.copyLinkButtonText}>{t('shareModal.copyLink')}</Text>
+            <Ionicons name="link-outline" size={22} color={emerald.action} />
+            <Text style={[styles.shareImageButtonText, { color: emerald.action }]}>
+              {t('shareModal.copyLink')}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity

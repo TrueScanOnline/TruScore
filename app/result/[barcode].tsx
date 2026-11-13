@@ -193,6 +193,12 @@ import { getProductPageAlertsInsights } from '../../src/utils/productInfoCardVis
 import { crashReporter } from '../../src/utils/crashReporter';
 import { getPrimaryBarcode } from '../../src/utils/barcodeNormalization';
 import { shouldPreserveSettledResultOnLoadMiss } from '../../src/utils/resultPublicationLoadGuard';
+import {
+  bumpProductLoadGeneration,
+  isActiveProductLoadGeneration,
+  productBarcodesMatch,
+  shouldAcceptFetchedProductUpdate,
+} from '../../src/utils/resultProductLoadGuard';
 import ShareModal from '../../src/components/ShareModal';
 import ProductHeroSection from '../../src/components/product/ProductHeroSection';
 import ProductDisclaimerCard from '../../src/components/productLegal/ProductDisclaimerCard';
@@ -503,6 +509,8 @@ function ResultScreenContent() {
   const alertsPreferences = useAlertsStore();
   const scanIdRef = useRef<string>(generateScanId());
   const lastBarcodeForScan = useRef<string | null>(null);
+  /** SJ-06: fetch/refresh generation — stale completions must not mutate Result UI. */
+  const productLoadGenerationRef = useRef(0);
   const resultScrollRef = useRef<ScrollView>(null);
   const productOriginsOffsetYRef = useRef(0);
   const nutritionCardOffsetYRef = useRef(0);
@@ -636,6 +644,17 @@ function ResultScreenContent() {
     appliedSnapshotAtRef.current = 0;
     setAgreementSnapshot(null);
     setPublicationSettled(false);
+    // SJ-04/SJ-06: clear presentation product on cross-barcode navigation so a
+    // failed retrieval cannot leave the previous product rendered as the new request.
+    // Same-barcode settled preserve (resultPublicationLoadGuard) is unchanged.
+    // Invalidate in-flight fetch/refresh writers for the previous request.
+    productLoadGenerationRef.current = bumpProductLoadGeneration(productLoadGenerationRef.current);
+    setProduct(null);
+    setProgressiveProduct(null);
+    setTruScore(null);
+    setError(null);
+    setLoading(true);
+    setLoadingPhase('initializing');
     // W5-ADD-SHARE-01 — drop stale additives share payload / open sheet on barcode change.
     setAdditiveShare(null);
     setShareModalVisible(false);
@@ -1172,10 +1191,39 @@ function ResultScreenContent() {
       .catch(() => undefined);
   }, [heroImageUrl, barcode, catalogueUrl, interimHeroUri]);
 
-  const acceptProductUpdate = async (next: ProductWithTrustScore): Promise<boolean> => {
+  const acceptProductUpdate = async (
+    next: ProductWithTrustScore,
+    options?: { loadGeneration?: number }
+  ): Promise<boolean> => {
+    // Always reject cross-barcode product payloads (route identity).
+    if (!productBarcodesMatch(barcode, next.barcode)) {
+      return false;
+    }
+    // Fetch/refresh callers pass loadGeneration; EA admission does not.
+    if (
+      options?.loadGeneration !== undefined &&
+      !shouldAcceptFetchedProductUpdate({
+        routeBarcode: barcode,
+        productBarcode: next.barcode,
+        activeGeneration: productLoadGenerationRef.current,
+        capturedGeneration: options.loadGeneration,
+      })
+    ) {
+      return false;
+    }
     const remembered = await rememberedAuthoritativeSnapshot(barcode);
     const incomingAt = remembered?.generatedAt ?? 0;
     if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, incomingAt)) {
+      return false;
+    }
+    // Re-check after await — navigation or a newer load may have superseded this call.
+    if (
+      options?.loadGeneration !== undefined &&
+      !isActiveProductLoadGeneration(productLoadGenerationRef.current, options.loadGeneration)
+    ) {
+      return false;
+    }
+    if (!productBarcodesMatch(barcode, next.barcode)) {
       return false;
     }
     const projected = remembered
@@ -1186,6 +1234,13 @@ function ResultScreenContent() {
       if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, latest.generatedAt)) return false;
       const refreshed = await calculateTrustScore(next, { authoritativeSnapshot: latest });
       if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, latest.generatedAt)) return false;
+      if (
+        options?.loadGeneration !== undefined &&
+        !isActiveProductLoadGeneration(productLoadGenerationRef.current, options.loadGeneration)
+      ) {
+        return false;
+      }
+      if (!productBarcodesMatch(barcode, refreshed.barcode)) return false;
       appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, latest.generatedAt);
       if (publicationSettledRef.current && refreshed._assessmentCycleSettled === false) return false;
       if (refreshed._assessmentCycleSettled === true) {
@@ -1198,6 +1253,12 @@ function ResultScreenContent() {
       return true;
     }
     if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, incomingAt)) return false;
+    if (
+      options?.loadGeneration !== undefined &&
+      !isActiveProductLoadGeneration(productLoadGenerationRef.current, options.loadGeneration)
+    ) {
+      return false;
+    }
     if (remembered) appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, remembered.generatedAt);
     if (publicationSettledRef.current && projected._assessmentCycleSettled === false) {
       return false;
@@ -1213,6 +1274,11 @@ function ResultScreenContent() {
   };
 
   const loadProduct = async () => {
+    productLoadGenerationRef.current = bumpProductLoadGeneration(productLoadGenerationRef.current);
+    const loadGen = productLoadGenerationRef.current;
+    const isCurrentLoad = () =>
+      isActiveProductLoadGeneration(productLoadGenerationRef.current, loadGen);
+
     const preserveSettledPublication = shouldPreserveSettledResultOnLoadMiss({
       publicationSettled: publicationSettledRef.current,
       settledBarcode: settledForBarcodeRef.current,
@@ -1233,8 +1299,10 @@ function ResultScreenContent() {
       // Validate barcode
       if (!barcode || typeof barcode !== 'string' || !/^\d{8,14}$/.test(barcode)) {
         console.error('[ResultScreen] Invalid barcode:', barcode);
+        if (!isCurrentLoad()) return;
+        // SJ-07: empty / malformed / extra-segment links are invalid input — not a verified unknown product.
         setError('Invalid barcode format');
-        setLoadingPhase('not_found');
+        setLoadingPhase('invalid_input');
         setLoading(false);
         return;
       }
@@ -1243,6 +1311,7 @@ function ResultScreenContent() {
       try {
         const manualProduct = await getManualProduct(barcode);
         if (manualProduct) {
+          if (!isCurrentLoad()) return;
           console.log('[ResultScreen] Found manual product');
           if (scanIdRef.current) {
             logScanObs({
@@ -1252,6 +1321,7 @@ function ResultScreenContent() {
               trust_score: manualProduct.trust_score ?? null,
             });
           }
+          if (!productBarcodesMatch(barcode, manualProduct.barcode)) return;
           setProduct(manualProduct);
           setLoadingPhase('complete');
           try {
@@ -1280,6 +1350,7 @@ function ResultScreenContent() {
       // ULTRA-FAST: Progress callback for instant product display
       // Product displays immediately (< 100ms) even before TruScore is calculated
       const onProgress = (progress: { phase: string; product?: Product }) => {
+        if (!isCurrentLoad()) return;
         lastFetchPhase = progress.phase;
         setLoadingPhase(progress.phase);
         if (scanIdRef.current) {
@@ -1303,9 +1374,10 @@ function ResultScreenContent() {
           }
           
           void (async () => {
-            if (!(await acceptProductUpdate(productWithScore))) {
+            if (!(await acceptProductUpdate(productWithScore, { loadGeneration: loadGen }))) {
               return;
             }
+            if (!isCurrentLoad()) return;
             setLoading(false);
             console.log(`[ResultScreen] ⚡ INSTANT display: ${progress.phase}`, productWithScore.product_name,
               `TruScore: ${productWithScore.trust_score || 'calculating...'}`,
@@ -1365,6 +1437,8 @@ function ResultScreenContent() {
           productData = null;
         }
       }
+
+      if (!isCurrentLoad()) return;
       
       if (productData) {
         if (!hasCoreTruthAuthority(productData)) {
@@ -1386,7 +1460,8 @@ function ResultScreenContent() {
           });
         }
         // Prefer acceptProductUpdate so a late unsettled return cannot overwrite a settled refine.
-        await acceptProductUpdate(productData);
+        await acceptProductUpdate(productData, { loadGeneration: loadGen });
+        if (!isCurrentLoad()) return;
         setLoadingPhase('complete');
         // Update scan history with product name
         try {
@@ -1445,7 +1520,9 @@ function ResultScreenContent() {
         barcode,
         platform: Platform.OS,
       });
-      setError('Failed to load product data');
+      if (isCurrentLoad()) {
+        setError('Failed to load product data');
+      }
       
       // On iOS, log additional context
       if (Platform.OS === 'ios') {
@@ -1456,21 +1533,30 @@ function ResultScreenContent() {
         });
       }
     } finally {
-      setLoading(false);
+      if (isCurrentLoad()) {
+        setLoading(false);
+      }
     }
   };
 
   const handleRefresh = async () => {
+    productLoadGenerationRef.current = bumpProductLoadGeneration(productLoadGenerationRef.current);
+    const loadGen = productLoadGenerationRef.current;
+    const isCurrentLoad = () =>
+      isActiveProductLoadGeneration(productLoadGenerationRef.current, loadGen);
     setRefreshing(true);
     try {
       const productData = await refreshProduct(barcode);
+      if (!isCurrentLoad()) return;
       if (!productData || productData._assessmentCycleSettled !== true) return;
-      const accepted = await acceptProductUpdate(productData);
-      if (accepted) setLoadingPhase('complete');
+      const accepted = await acceptProductUpdate(productData, { loadGeneration: loadGen });
+      if (accepted && isCurrentLoad()) setLoadingPhase('complete');
     } catch (err) {
       console.error('Error refreshing product:', err);
     } finally {
-      setRefreshing(false);
+      if (isCurrentLoad()) {
+        setRefreshing(false);
+      }
     }
   };
 
@@ -1757,6 +1843,39 @@ function ResultScreenContent() {
                                        !!(product.product_name && product.product_name.startsWith('Product '));
       }
     }
+  }
+
+  // Invalid / missing barcode input (empty path, extra segments, non-digit token) — not a verified lookup.
+  if (loadingPhase === 'invalid_input') {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.unknownProductContainer}
+        >
+          <View style={styles.unknownProductContent}>
+            <Ionicons name="alert-circle-outline" size={80} color={colors.textTertiary} />
+            <Text style={[styles.errorTitle, { color: colors.text, marginTop: 24 }]}>
+              Invalid link
+            </Text>
+            <Text style={[styles.errorText, { color: colors.textSecondary, marginTop: 12, marginBottom: 8 }]}>
+              This product link is missing or malformed. No product was looked up.
+            </Text>
+            <Text style={[styles.barcodeText, { color: colors.textTertiary, marginBottom: 32 }]}>
+              Barcode: {typeof barcode === 'string' && barcode.length > 0 ? barcode : '(missing)'}
+            </Text>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigateToScanHome(navigation)}
+            >
+              <Text style={[styles.backButtonText, { color: colors.primary }]}>
+                {t('result.scanAnother') || 'Scan Another Product'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
   }
 
   // Show "Unknown Product" page if product not found OR has minimal/no useful data
@@ -3216,11 +3335,20 @@ function ResultScreenContent() {
             trace?.mark('result_applied', 'none');
             return;
           }
+          // Generation-agnostic EA path — still require route barcode identity.
+          if (!productBarcodesMatch(barcode, product.barcode)) {
+            trace?.mark('result_applied', 'stale');
+            return;
+          }
           trace?.mark('reassessment_begin');
           appliedSnapshotAtRef.current = Math.max(appliedSnapshotAtRef.current, snapshot.generatedAt);
           const next = await calculateTrustScore(product, { authoritativeSnapshot: snapshot });
           trace?.mark('reassessment_end', 'ok');
           if (!authoritativeStateSupersedes(appliedSnapshotAtRef.current, snapshot.generatedAt)) {
+            trace?.mark('result_applied', 'stale');
+            return;
+          }
+          if (!productBarcodesMatch(barcode, next.barcode)) {
             trace?.mark('result_applied', 'stale');
             return;
           }

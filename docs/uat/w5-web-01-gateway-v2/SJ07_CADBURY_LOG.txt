@@ -1,0 +1,30 @@
+﻿11-12 20:24:19.978 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:19.979 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:19.980 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:20.029 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:20.030 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:22.123 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:22.123 23945 23992 I ReactNativeJS:   productName:     Dairy Milk Milk Chocolate
+11-12 20:24:22.127 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:22.127 23945 23992 I ReactNativeJS:   "productName": "Dairy Milk Milk Chocolate",
+11-12 20:24:22.128 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:22.128 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:25.758 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:25.758 23945 23992 I ReactNativeJS:   productName:     Dairy Milk Milk Chocolate
+11-12 20:24:25.786 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:25.786 23945 23992 I ReactNativeJS:   "productName": "Dairy Milk Milk Chocolate",
+11-12 20:24:25.786 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:25.787 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:25.787 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:25.787 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:25.788 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:25.788 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:37.023 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:37.025 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:37.026 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:37.039 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:37.041 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:37.046 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:37.046 23945 23992 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:24:37.046 23945 23992 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:24:37.047 23945 23992 I ReactNativeJS:   barcode:     9300617064879

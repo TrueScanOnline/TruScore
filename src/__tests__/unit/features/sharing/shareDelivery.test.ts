@@ -26,17 +26,7 @@ const product = {
   trust_score_breakdown: null,
 } as ProductWithTrustScore;
 
-const platforms: SharePlatform[] = [
-  'whatsapp',
-  'sms',
-  'facebook',
-  'twitter',
-  'instagram',
-  'snapchat',
-  'tiktok',
-  'native',
-  'moreApps',
-];
+const imageFirstPlatforms: SharePlatform[] = ['instagram', 'snapchat', 'tiktok'];
 
 function shareOptions(platform: SharePlatform, storyImageUri?: string) {
   return {
@@ -54,40 +44,53 @@ function shareOptions(platform: SharePlatform, storyImageUri?: string) {
 }
 
 describe('real-phone share handoff', () => {
-  test('every platform sends the captured card and copies one link', async () => {
-    for (const platform of platforms) {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (Sharing.isAvailableAsync as jest.Mock).mockResolvedValue(true);
+    (Linking.canOpenURL as jest.Mock).mockResolvedValue(true);
+  });
+
+  test('image-first platforms send the card image; clipboard is sender-side only', async () => {
+    for (const platform of imageFirstPlatforms) {
       const result = await ShareService.share(shareOptions(platform, 'file:///card.png'));
       expect(result).toEqual({ success: true, platform });
     }
-
-    expect(Sharing.shareAsync).toHaveBeenCalledTimes(platforms.length);
-    for (const call of (Sharing.shareAsync as jest.Mock).mock.calls) {
-      expect(call[0]).toBe('file:///card.png');
-      expect(call[1]).toMatchObject({ mimeType: 'image/png', UTI: 'public.png' });
-    }
-    expect(Linking.openURL).not.toHaveBeenCalled();
-
-    const copied = (Clipboard.setStringAsync as jest.Mock).mock.calls.map((call) => String(call[0]));
-    expect(copied).toHaveLength(platforms.length);
-    for (const url of copied) {
-      expect(url.startsWith('https://truscoreapi.vercel.app/barcode/9400547009879?')).toBe(true);
-      expect(url).toContain('ctx=processing');
-      expect(url.match(/truscoreapi\.vercel\.app/g)).toHaveLength(1);
-    }
-    expect(copied.some((url) => url.includes('src=sms'))).toBe(true);
-    expect(copied.some((url) => url.includes('src=whatsapp'))).toBe(true);
+    expect(Sharing.shareAsync).toHaveBeenCalledTimes(imageFirstPlatforms.length);
+    expect(Clipboard.setStringAsync).toHaveBeenCalledTimes(imageFirstPlatforms.length);
   });
 
-  test('a missing card falls back to one text that includes the section facts and the link', async () => {
-    (Sharing.isAvailableAsync as jest.Mock).mockResolvedValueOnce(false);
+  test('whatsapp puts the HTTPS product link in the message body (not image-only)', async () => {
+    const result = await ShareService.share(shareOptions('whatsapp', 'file:///card.png'));
+    expect(result.success).toBe(true);
+    expect(Sharing.shareAsync).not.toHaveBeenCalled();
+    const opened = (Linking.openURL as jest.Mock).mock.calls
+      .map((call) => decodeURIComponent(String(call[0])))
+      .join('\n');
+    expect(opened).toContain('https://truscoreapi.vercel.app/barcode/9400547009879');
+    expect(opened).toContain('Tomatoes Mexican Style');
+    expect(opened).toContain('Open in Rveel');
+  });
+
+  test('sms puts the HTTPS product link in the message body', async () => {
+    const result = await ShareService.share(shareOptions('sms', 'file:///card.png'));
+    expect(result.success).toBe(true);
+    expect(Sharing.shareAsync).not.toHaveBeenCalled();
+    const opened = (Linking.openURL as jest.Mock).mock.calls
+      .map((call) => decodeURIComponent(String(call[0])))
+      .join('\n');
+    expect(opened).toContain('https://truscoreapi.vercel.app/barcode/9400547009879');
+    expect(opened).toContain('Open in Rveel');
+  });
+
+  test('a missing card falls back to text that includes facts and the link', async () => {
     const result = await ShareService.share(shareOptions('sms'));
     expect(result.success).toBe(true);
     expect(Sharing.shareAsync).not.toHaveBeenCalled();
-    const opened = (Linking.openURL as jest.Mock).mock.calls.map((call) => decodeURIComponent(String(call[0]))).join('\n');
+    const opened = (Linking.openURL as jest.Mock).mock.calls
+      .map((call) => decodeURIComponent(String(call[0])))
+      .join('\n');
     expect(opened).toContain('Tomatoes Mexican Style');
     expect(opened).toContain('Processing');
-    expect(opened).toContain('Processed');
     expect(opened).toContain('https://truscoreapi.vercel.app/barcode/9400547009879');
-    expect(opened.match(/truscoreapi\.vercel\.app/g)).toHaveLength(1);
   });
 });

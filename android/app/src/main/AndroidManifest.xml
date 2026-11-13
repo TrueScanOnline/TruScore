@@ -30,12 +30,20 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="truescan"/>
       </intent-filter>
-      <intent-filter android:autoVerify="true" data-generated="true">
+      <intent-filter>
         <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="truescan" android:host="barcode"/>
-        <data android:scheme="https" android:host="truescan.app" android:pathPrefix="/barcode"/>
+      </intent-filter>
+      <!-- Temporary share host only. Omit broken truescan.app from autoVerify so Android 11
+           and earlier cannot fail the whole filter when that host cannot verify. -->
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <category android:name="android.intent.category.DEFAULT"/>
+        <data android:scheme="https" android:host="truscoreapi.vercel.app" android:pathPrefix="/barcode"/>
+        <data android:scheme="https" android:host="truscoreapi-uat.vercel.app" android:pathPrefix="/barcode"/>
       </intent-filter>
     </activity>
   </application>

@@ -1,0 +1,12 @@
+{
+  "v5": true,
+  "scenes": false,
+  "aperture": false,
+  "padlock": false,
+  "scoreDom": false,
+  "playHref": false,
+  "auto": false,
+  "img": true,
+  "unknown": true,
+  "publicCss": true
+}
