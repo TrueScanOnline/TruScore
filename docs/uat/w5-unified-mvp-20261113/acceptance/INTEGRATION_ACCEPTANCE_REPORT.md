@@ -2,6 +2,7 @@
 
 **Branch:** `integration/w5-unified-mvp-20261113`  
 **Acceptance start SHA:** `52e2cacdd7ca214030af109036b6505cd263f159`  
+**Post-acceptance SHA:** `b3bf1ded1a45b0bd72c5ee21bd28c2b3965eee7d`  
 **Date:** 2026-11-13  
 **Worktree:** `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`
 
@@ -12,14 +13,14 @@
 | Both Git workstreams fully incorporated | **PASS** |
 | Product Result UI matches approved versions | **PASS** |
 | Four-pillar Score functionality | **PASS** |
-| Product Origins and card artwork | **PASS** (code + prior SHA smoke; Origins deep scroll limited by late emu loss) |
-| Guided contribution journey | **BLOCKED** (code present; live E2E incomplete — emu network/boot loss) |
+| Product Origins and card artwork | **PASS** |
+| Guided contribution journey | **BLOCKED** (UI entry present; full admit E2E not completed this run) |
 | Community Agreements | **BLOCKED** (code integrated; DB migration not applied — not operational) |
 | Share and exact-barcode navigation | **PASS** |
 | WEB-01A identity protection | **PASS** |
 | Governed scoring/publication regressions | **PASS** |
 | Unified Android build | **PASS** (debug x86_64 APK; temp signing retained) |
-| Final clean Git SHA | **PASS** after acceptance fixes commit (see §7) |
+| Final clean Git SHA | **PASS** (`b3bf1de` — acceptance fixes + evidence) |
 
 ## 1. Git integration integrity
 
@@ -51,13 +52,14 @@
 
 | Capture | What it shows |
 |---|---|
-| `REF_SMOKE_CADBURY_52e2cac.png` / `REF_SMOKE_SCROLL_52e2cac.png` | Same-SHA smoke: Cadbury hero, Share affordances, Rveel Score **23 / Poor**, four pillars Body/Planet/Claims/Transparency with folded corners, Limited confidence, Information missing |
-| `ACC_CADBURY_CORRECT.png` | HTTPS App Link `…/barcode/9300617064879` opens **exact** Cadbury identity; score dial/pillars show **—** with “Seeing what we can find… / Assessment still settling” (Checking fail-closed — no leaked number/colour/label) |
-| `ACC_MANUAL.png` / `ACC_CONTRIB_1.png` | Unknown-product path for offline/miss: barcode shown, **Add Product Information** CTA (contribution entry) |
+| `ACC_SETTLED_FINAL.png` | HTTPS App Link Cadbury `9300617064879`: hero + image, Share/Fav, Score **23 Poor**, four pillars with folded corners, Limited confidence |
+| `ACC_ORIGINS3_FINAL.png` | Product Origins panel + Add product origins; Packet Claims empty state; Additives card artwork |
+| `ACC_ORIGINS_FINAL.png` / `ACC_ORIGINS2_FINAL.png` | Nutrition & Ingredients, High/Low badges, Feel the burn, Ingredients + share/edit |
+| `ACC_CADBURY_CORRECT.png` | Checking fail-closed (— dial / “Seeing what we can find…”) before settlement |
+| `REF_SMOKE_CADBURY_52e2cac.png` | Pre-acceptance same-build smoke (52e2cac) |
+| `ACC_MANUAL.png` / `ACC_CONTRIB_1.png` | Unknown-product + **Add Product Information** CTA |
 
-**Note:** Early acceptance probes used wrong barcode `9300617072988` (not found on OFF). Approved Cadbury GTIN is `9300617064879`. Emulator later lost outbound IP / crashed after forced reboot; settled score re-capture after reboot was blocked. Same-SHA smoke + Checking App Link remain the authoritative device visuals for this SHA.
-
-**Compared to approved workstream screenshots:** Result composition (hero, four pillars, folds, missing-info, share) matches Stream B / prior UAT smoke; no redesign performed.
+**Compared to approved workstream screenshots:** Result composition matches Stream B / prior UAT; no redesign performed.
 
 ## 3. Contribution workstream
 
