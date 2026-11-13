@@ -1,0 +1,8 @@
+FINAL_SHA=81ba635d077b0d01a72ff435f9d84722a9b14c51
+APK=docs\uat\w5-unified-mvp-20261113\acceptance\final\app-debug-81ba635.apk
+APK_BYTES=86125558
+BUILT=2026-11-13T18:09:05.9132672+13:00
+REGRESSION=185/185 PASS
+BRANCH=integration/w5-unified-mvp-20261113
+ORIGIN=origin/integration/w5-unified-mvp-20261113
+CLEAN=YES
