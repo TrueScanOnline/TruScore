@@ -33,7 +33,8 @@ import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TruScore from '../../src/components/TruScore';
 import ConfidenceBadge from '../../src/components/ConfidenceBadge';
-import CountryFlag from '../../src/components/CountryFlag';
+import ProductOriginsDeclarationPanel from '../../src/components/ProductOriginsDeclarationPanel';
+import ResultCardArt from '../../src/components/result/ResultCardArt';
 import CertBadge from '../../src/components/CertBadge';
 import PacketClaimsFittedLabels from '../../src/components/PacketClaimsFittedLabels';
 import CertificationMark from '../../src/components/CertificationMark';
@@ -141,7 +142,11 @@ import { uploadProductPhoto } from '../../src/services/photoUploadService';
 import { catalogueHeroUrl, heroTimingRecord, resolveDisplayedHero } from '../../src/services/heroImage';
 import { readContributedHeroUrl, readInterimHero, rememberContributedHeroUrl, rememberInterimHero } from '../../src/services/interimHero';
 import { PalmOilCard } from '../../src/features/product/cards/PalmOilCard';
-import { productOriginsCardPresentation, projectOriginConsumerLines } from '../../src/origins/productOriginsCard';
+import {
+  originConsumerContinuationSentence,
+  productOriginsCardPresentation,
+  projectOriginConsumerLines,
+} from '../../src/origins/productOriginsCard';
 import ErrorBoundary from '../../src/components/ErrorBoundary';
 import { sanitizeText } from '../../src/utils/validation';
 import { sanitizeCountryForDisplay } from '../../src/utils/countryDisplayName';
@@ -303,41 +308,60 @@ function ResultIngredientsSection({
             : '#ff6b6b';
     return (
       <View style={sectionStyle}>
-        <View style={styles.cardHeader}>
-          <View style={styles.cardHeaderTop}>
-            <View style={styles.cardHeaderLeft}>
-              <Ionicons name="flask" size={24} color={emerald.action} />
-              <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.ingredients')}</Text>
+        <View style={styles.ingredientsArtHost}>
+          <ResultCardArt motif="ingredients" darkMode={!!darkMode} intensity={0.7} borderRadius={12} />
+          <View style={styles.cardArtContent} collapsable={false}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderTop}>
+                <View style={styles.cardHeaderLeft}>
+                  <Ionicons name="flask" size={24} color={emerald.action} />
+                  <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.ingredients')}</Text>
+                </View>
+                <View style={styles.cardHeaderRight}>
+                  {onEdit ? (
+                    <TouchableOpacity
+                      onPress={onEdit}
+                      style={styles.shareButton}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      accessibilityRole="button"
+                      accessibilityLabel={t(
+                        'nutrition.contributeA11y',
+                        'Contribute or correct nutrition information'
+                      )}
+                    >
+                      <Ionicons name="create-outline" size={20} color={emerald.action} />
+                    </TouchableOpacity>
+                  ) : null}
+                  <TouchableOpacity
+                    onPress={onShareIngredients}
+                    style={styles.shareButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="share-outline" size={20} color={emerald.action} />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-            <View style={styles.cardHeaderRight}>
-              {onEdit ? (
-                <TouchableOpacity
-                  onPress={onEdit}
-                  style={styles.shareButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  accessibilityRole="button"
-                  accessibilityLabel={t(
-                    'nutrition.contributeA11y',
-                    'Contribute or correct nutrition information'
-                  )}
-                >
-                  <Ionicons name="create-outline" size={20} color={emerald.action} />
-                </TouchableOpacity>
-              ) : null}
+            <Text style={[styles.ingredientsText, { color: colors.text }]}>{filled}</Text>
+            {confirmationSlot}
+            {showAddIngredients ? (
               <TouchableOpacity
-                onPress={onShareIngredients}
-                style={styles.shareButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={onAddIngredients}
+                activeOpacity={0.7}
+                style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
+                accessibilityRole="button"
+                accessibilityLabel="Add ingredients"
               >
-                <Ionicons name="share-outline" size={20} color={emerald.action} />
+                <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
+                <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>Add ingredients</Text>
               </TouchableOpacity>
-            </View>
+            ) : null}
           </View>
         </View>
-        <Text style={[styles.ingredientsText, { color: colors.text }]}>{filled}</Text>
-        {confirmationSlot}
         {novaGroup ? (
-          <View style={[styles.novaContainer, { borderTopColor: colors.border }]}>
+          <View style={[styles.novaContainer, styles.novaArtHost, { borderTopColor: colors.border }]}>
+            <ResultCardArt motif="processing" darkMode={!!darkMode} intensity={0.65} borderRadius={12} />
+            <View style={styles.cardArtContent}>
             <View style={styles.novaHeader}>
               <View style={styles.cardHeaderLeft}>
                 <Ionicons name="restaurant" size={24} color={emerald.action} />
@@ -377,19 +401,8 @@ function ResultIngredientsSection({
                 <Text style={[styles.novaValue, { color: emerald.ink }]}>{t(`nova.${novaGroup}`)}</Text>
               </View>
             </View>
+            </View>
           </View>
-        ) : null}
-        {showAddIngredients ? (
-          <TouchableOpacity
-            onPress={onAddIngredients}
-            activeOpacity={0.7}
-            style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
-            accessibilityRole="button"
-            accessibilityLabel="Add ingredients"
-          >
-            <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
-            <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>Add ingredients</Text>
-          </TouchableOpacity>
         ) : null}
       </View>
     );
@@ -398,43 +411,62 @@ function ResultIngredientsSection({
   if (!ingredientsText || !ingredientsText.trim()) {
     return (
       <View style={sectionStyle}>
-        <View style={styles.cardHeader}>
-          <View style={styles.cardHeaderTop}>
-            <View style={styles.cardHeaderLeft}>
-              <Ionicons name="flask" size={24} color={emerald.action} />
-              <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.ingredients')}</Text>
+        <View style={styles.ingredientsArtHost}>
+          <ResultCardArt motif="ingredients" darkMode={!!darkMode} intensity={0.55} borderRadius={12} />
+          <View style={styles.cardArtContent} collapsable={false}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderTop}>
+                <View style={styles.cardHeaderLeft}>
+                  <Ionicons name="flask" size={24} color={emerald.action} />
+                  <Text style={[styles.cardTitle, { color: emerald.ink }]}>{t('result.ingredients')}</Text>
+                </View>
+                <View style={styles.cardHeaderRight}>
+                  {onEdit ? (
+                    <TouchableOpacity
+                      onPress={onEdit}
+                      style={styles.shareButton}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      accessibilityRole="button"
+                      accessibilityLabel={t(
+                        'nutrition.contributeA11y',
+                        'Contribute or correct nutrition information'
+                      )}
+                    >
+                      <Ionicons name="create-outline" size={20} color={emerald.action} />
+                    </TouchableOpacity>
+                  ) : null}
+                  <TouchableOpacity
+                    onPress={onShareIngredients}
+                    style={styles.shareButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="share-outline" size={20} color={emerald.action} />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-            <View style={styles.cardHeaderRight}>
-              {onEdit ? (
-                <TouchableOpacity
-                  onPress={onEdit}
-                  style={styles.shareButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  accessibilityRole="button"
-                  accessibilityLabel={t(
-                    'nutrition.contributeA11y',
-                    'Contribute or correct nutrition information'
-                  )}
-                >
-                  <Ionicons name="create-outline" size={20} color={emerald.action} />
-                </TouchableOpacity>
-              ) : null}
+            <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
+              {t('result.ingredientsEmpty', 'No ingredients on file.')}
+            </Text>
+            {confirmationSlot}
+            {showAddIngredients ? (
               <TouchableOpacity
-                onPress={onShareIngredients}
-                style={styles.shareButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={onAddIngredients}
+                activeOpacity={0.7}
+                style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
+                accessibilityRole="button"
+                accessibilityLabel="Add ingredients"
               >
-                <Ionicons name="share-outline" size={20} color={emerald.action} />
+                <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
+                <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>Add ingredients</Text>
               </TouchableOpacity>
-            </View>
+            ) : null}
           </View>
         </View>
-        <Text style={[styles.insufficientDataText, { color: colors.textSecondary }]}>
-          {t('result.ingredientsEmpty', 'No ingredients on file.')}
-        </Text>
-        {confirmationSlot}
         {novaGroup ? (
-          <View style={[styles.novaContainer, { borderTopColor: colors.border }]}>
+          <View style={[styles.novaContainer, styles.novaArtHost, { borderTopColor: colors.border }]}>
+            <ResultCardArt motif="processing" darkMode={!!darkMode} intensity={0.65} borderRadius={12} />
+            <View style={styles.cardArtContent}>
             <View style={styles.novaHeader}>
               <View style={styles.cardHeaderLeft}>
                 <Ionicons name="restaurant" size={24} color={emerald.action} />
@@ -474,19 +506,8 @@ function ResultIngredientsSection({
                 <Text style={[styles.novaValue, { color: emerald.ink }]}>{t(`nova.${novaGroup}`)}</Text>
               </View>
             </View>
+            </View>
           </View>
-        ) : null}
-        {showAddIngredients ? (
-          <TouchableOpacity
-            onPress={onAddIngredients}
-            activeOpacity={0.7}
-            style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
-            accessibilityRole="button"
-            accessibilityLabel="Add ingredients"
-          >
-            <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
-            <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>Add ingredients</Text>
-          </TouchableOpacity>
         ) : null}
       </View>
     );
@@ -2252,21 +2273,32 @@ function ResultScreenContent() {
 
           {/* Result card heading is "What we noticed:"; share/look-through keep SCORE_HIGHLIGHTS_HEADING. */}
           {scoreHighlights && scoreHighlights.promoted.length > 0 && (
-            <View style={[styles.card, styles.emeraldFindings, { backgroundColor: emerald.card, borderColor: emerald.line }]}>
-              <ScoreHighlightsList
-                stories={scoreHighlights.promoted}
-                onSelectStory={openScoreHighlightStory}
-                appearance="emerald"
-                heading={RESULT_SCORE_HIGHLIGHTS_HEADING}
-                onShare={() => handleShare('highlights')}
-              />
+            <View
+              style={[
+                styles.card,
+                styles.emeraldFindings,
+                { backgroundColor: emerald.card, borderColor: emerald.line, overflow: 'hidden' },
+              ]}
+            >
+              <ResultCardArt motif="discovery" darkMode={!!darkMode} intensity={0.75} borderRadius={20} />
+              <View style={{ zIndex: 1 }}>
+                <ScoreHighlightsList
+                  stories={scoreHighlights.promoted}
+                  onSelectStory={openScoreHighlightStory}
+                  appearance="emerald"
+                  heading={RESULT_SCORE_HIGHLIGHTS_HEADING}
+                  onShare={() => handleShare('highlights')}
+                />
+              </View>
             </View>
           )}
           </>
         ) : (
           <>
           {/* Insufficient Data Card */}
-          <View style={[styles.card, resultEmeraldCard(!!darkMode)]}>
+          <View style={[styles.card, resultEmeraldCard(!!darkMode), { overflow: 'hidden' }]}>
+            <ResultCardArt motif="alertsSoft" darkMode={!!darkMode} intensity={0.65} borderRadius={20} />
+            <View style={styles.cardArtContent}>
             <View style={styles.cardHeader}>
               <View style={styles.cardHeaderTop}>
                 <View style={styles.cardHeaderLeft}>
@@ -2281,6 +2313,7 @@ function ResultScreenContent() {
             <Text style={[styles.insufficientDataText, { color: emerald.muted }]}>
               {t('result.insufficientDataMessage')}
             </Text>
+            </View>
           </View>
           <ProductDataLimitationsCard
             product={product}
@@ -2299,8 +2332,10 @@ function ResultScreenContent() {
         {/* User alerts — only when user enabled alert categories and there is insight content */}
         {productPageAlertsInsights && (
             <View
-              style={[styles.card, resultEmeraldCard(!!darkMode)]}
+              style={[styles.card, resultEmeraldCard(!!darkMode), { overflow: 'hidden' }]}
             >
+              <ResultCardArt motif="insights" darkMode={!!darkMode} intensity={0.7} borderRadius={20} />
+              <View style={styles.cardArtContent}>
               <View style={[styles.insightsHeader, { borderBottomColor: colors.border }]}>
                 <TouchableOpacity
                   style={styles.insightsHeaderLeft}
@@ -2342,6 +2377,7 @@ function ResultScreenContent() {
                   />
                 </View>
               ) : null}
+              </View>
             </View>
           )}
 
@@ -2478,7 +2514,9 @@ function ResultScreenContent() {
             productOriginsOffsetYRef.current = e.nativeEvent.layout.y;
           }}
         >
-        <View style={[styles.card, resultEmeraldCard(!!darkMode)]}>
+        <View style={[styles.card, resultEmeraldCard(!!darkMode), { overflow: 'hidden' }]}>
+          <ResultCardArt motif="discovery" darkMode={!!darkMode} intensity={0.45} borderRadius={20} />
+          <View style={styles.cardArtContent}>
           <View style={styles.cardHeaderTop}>
             <View style={styles.cardHeaderLeft}>
               <View style={[styles.originMark, { backgroundColor: emerald.chevronCircle }]}>
@@ -2540,30 +2578,27 @@ function ResultScreenContent() {
                   </View>
                 ) : null}
                 {originsCard.offCountry ? (
-                  <View style={[styles.originHero, { backgroundColor: emerald.chevronCircle }]}>
-                    <CountryFlag appearance="hero" nameColor={emerald.ink} country={originsCard.offCountry} />
-                  </View>
+                  <ProductOriginsDeclarationPanel
+                    key={`off:${originsCard.offCountry}`}
+                    country={originsCard.offCountry}
+                    continuation={null}
+                    darkMode={!!darkMode}
+                    flagAlign="center"
+                  />
                 ) : null}
-                {originLines.map((line) => (
-                  <View key={line.key} style={[styles.originPlace, { backgroundColor: emerald.chevronCircle }]}>
-                    <Text style={[styles.originStatementCaption, { color: emerald.muted }]}>
-                      {line.statement}
-                    </Text>
-                    <CountryFlag appearance="hero" nameColor={emerald.ink} country={line.country} />
-                    {line.supporting.length > 0 ? (
-                      <View style={styles.originSupportRow}>
-                        {line.supporting.map((item) => (
-                          <View key={`${line.key}:${item}`} style={[styles.originSupportChip, { backgroundColor: emerald.card }]}>
-                            <Text style={[styles.originSupportText, { color: emerald.muted }]}>{item}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    ) : null}
-                    {line.packWording ? (
-                      <Text style={[styles.originPackWording, { color: emerald.ink }]}>{`"${line.packWording}"`}</Text>
-                    ) : null}
-                  </View>
-                ))}
+                {originLines.map((line) => {
+                  const continuation = originConsumerContinuationSentence(line.supporting);
+                  return (
+                    <ProductOriginsDeclarationPanel
+                      key={line.key}
+                      statement={line.statement}
+                      country={line.country}
+                      continuation={continuation}
+                      packWording={line.packWording}
+                      darkMode={!!darkMode}
+                    />
+                  );
+                })}
                 {!showEmptyState && product._publication?.transparency.confidence === 'high' ? (
                   <View style={[styles.originConfidence, { backgroundColor: '#16a08522' }]}>
                     <Text style={[styles.originConfidenceText, { color: '#16a085' }]}>High confidence</Text>
@@ -2615,6 +2650,7 @@ function ResultScreenContent() {
             onCorrect={() => openAgreementChange('origins')}
             onAgreementRecorded={handleAgreementRecorded}
           />
+          </View>
         </View>
         </View>
 
@@ -2624,12 +2660,15 @@ function ResultScreenContent() {
             styles.card,
             styles.certificationsCardFrame,
             resultEmeraldCard(!!darkMode),
+            { overflow: 'hidden' },
           ]}
           onLayout={(e) => {
             packetClaimsOffsetYRef.current = e.nativeEvent.layout.y;
           }}
           accessibilityLabel={PACKET_CLAIMS_CARD_TITLE}
         >
+          <ResultCardArt motif="paper" darkMode={!!darkMode} intensity={0.8} borderRadius={20} />
+          <View style={styles.cardArtContent}>
           <View style={styles.certificationsCardHeaderRow}>
             <View style={styles.certificationsCardTitleRow}>
               <Ionicons name="shield-checkmark" size={24} color={emerald.action} />
@@ -2785,6 +2824,7 @@ function ResultScreenContent() {
             </Text>
           </TouchableOpacity>
           ) : null}
+          </View>
         </View>
 
         {/* Palm oil: scored in Planet/TruScore and insights; product card hidden (PalmOilCard). */}
@@ -4098,55 +4138,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  originHero: {
-    marginTop: 14,
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  originPlace: {
-    marginTop: 10,
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 14,
-    gap: 8,
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  originStatementCaption: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  originSupportRow: {
-    width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  originSupportChip: {
-    maxWidth: '100%',
-    borderRadius: 999,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-  },
-  originSupportText: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  originPackWording: {
-    fontSize: 16,
-    lineHeight: 22,
-    textAlign: 'center',
-  },
   originEmpty: {
     marginTop: 14,
     borderRadius: 16,
@@ -4364,6 +4355,10 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 16,
   },
+  cardArtContent: {
+    position: 'relative',
+    zIndex: 1,
+  },
   certificationsCardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -4451,6 +4446,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
+  },
+  novaArtHost: {
+    overflow: 'hidden',
+    borderRadius: 12,
+    paddingBottom: 4,
   },
   novaHeader: {
     flexDirection: 'row',
@@ -4602,6 +4602,10 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 12,
     borderTopWidth: 1,
+  },
+  ingredientsArtHost: {
+    overflow: 'hidden',
+    borderRadius: 12,
   },
   partialScanBanner: {
     flexDirection: 'row',

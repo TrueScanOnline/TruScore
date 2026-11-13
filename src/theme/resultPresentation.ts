@@ -147,10 +147,11 @@ export const resultPresentation = {
     score: { title: 20, titleLine: 26, reserve: 12 },
     /** Roles at font scale 1.0. System text scaling still applies. */
     type: {
-      pillarName: 14,
-      pillarNameLine: 18,
-      pillarValue: 20,
-      pillarValueLine: 24,
+      /** Caps for shared single-line fit on ordinary phones (Composition may size down together). */
+      pillarName: 22,
+      pillarNameLine: 26,
+      pillarValue: 26,
+      pillarValueLine: 30,
       pillarIcon: 34,
       chevron: 20,
       /** Fitted inside the medallion face by Disc. These are the ordinary-phone caps. */
@@ -182,7 +183,8 @@ export const resultPresentation = {
     discIconOnDark: '#DAEEE4',
     pillars: {
       Body: {
-        glyph: 'apple' as const,
+        // Person silhouette — Body is human health, not produce.
+        glyph: 'human' as const,
         icon: '#EC514F',
         light: ['#FFE4DE', '#FFC2BA', '#FF8F88'] as const,
         dark: ['#4D3034', '#42292E', '#35242A'] as const,
@@ -194,7 +196,8 @@ export const resultPresentation = {
         dark: ['#255244', '#1F4238', '#19332D'] as const,
       },
       Ethics: {
-        glyph: 'message-text' as const,
+        // Open book — Claims are stated affirmations on record, not chat.
+        glyph: 'book-open-page-variant' as const,
         icon: '#9451E9',
         light: ['#F7ECFF', '#E2C8FF', '#C084F6'] as const,
         dark: ['#473756', '#382C47', '#2C2539'] as const,
@@ -209,7 +212,7 @@ export const resultPresentation = {
   },
   pillars: {
     Body: {
-      glyph: 'apple',
+      glyph: 'human',
       tint: { light: '#fff1f1', dark: '#3d2628' },
       icon: { light: '#c45c5c', dark: '#f0b0b0' },
       text: { light: '#1c2430', dark: '#f8ecec' },
@@ -221,7 +224,7 @@ export const resultPresentation = {
       text: { light: '#1c2430', dark: '#e7f7f0' },
     },
     Ethics: {
-      glyph: 'message-outline',
+      glyph: 'book-open-page-variant',
       tint: { light: '#f3f0ff', dark: '#2c2842' },
       icon: { light: '#6e5bd6', dark: '#c9bfff' },
       text: { light: '#1c2430', dark: '#f4f1ff' },

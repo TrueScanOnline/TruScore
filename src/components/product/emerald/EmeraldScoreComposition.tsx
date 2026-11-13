@@ -49,6 +49,25 @@ function num(value: number) {
 }
 
 /**
+ * Approximate bold Latin width.
+ * Coefficient is tight so we maximise size; numberOfLines={1} still hard-stops wrap.
+ */
+function estimateBoldWidth(text: string, fontSize: number) {
+  return text.length * fontSize * 0.52;
+}
+
+/** One shared size for every pillar: as large as possible, still single-line in the tightest tile. */
+function fitSharedFontSize(texts: string[], maxWidth: number, maxSize: number, minSize: number) {
+  const usable = Math.max(0, maxWidth);
+  for (let size = maxSize; size >= minSize; size -= 0.5) {
+    if (texts.every((text) => estimateBoldWidth(text, size) <= usable)) {
+      return size;
+    }
+  }
+  return minSize;
+}
+
+/**
  * Top-right peel shared with the product hero (see dogEar.ts).
  * Locked original: design/wave5/preserve/Original-dogs-ear-*
  */
@@ -295,6 +314,46 @@ export default function EmeraldScoreComposition({
   const ink = dark ? resultPresentation.emerald.ink.dark : resultPresentation.emerald.ink.light;
   const muted = dark ? resultPresentation.emerald.muted.dark : resultPresentation.emerald.muted.light;
   const card = dark ? resultPresentation.emerald.card.dark : resultPresentation.emerald.card.light;
+  const typeBase = resultPresentation.emerald.type;
+
+  const socketRadius = discSize / 2 + 4;
+  const clearanceAt = (centerY: number, right: boolean) => {
+    if (reflow) return 12;
+    const dy = centerY - gridHeight / 2;
+    if (Math.abs(dy) >= socketRadius) return 12;
+    const reach = Math.sqrt(socketRadius * socketRadius - dy * dy);
+    const edge = measured / 2 + (right ? reach : -reach);
+    const overlap = right ? edge - (tileWidth + gap) : tileWidth - edge;
+    return Math.max(12, Math.round(overlap + 16));
+  };
+
+  // Provisional line heights for clearance geometry, then fit one shared type size for all tiles.
+  const provisionalNameLine = Math.max(typeBase.pillarNameLine, 22);
+  const provisionalValueLine = Math.max(typeBase.pillarValueLine, 26);
+  const labelWidths = pillars.map((_, index) => {
+    const right = index % 2 === 1;
+    const tileTop = index >= 2 ? tileHeight + gap : 0;
+    const textCenterY = tileTop + tileHeight - 12 - (provisionalNameLine + provisionalValueLine) / 2;
+    const textLead = right ? clearanceAt(textCenterY, right) : 12;
+    const textTrail = right ? 10 : clearanceAt(textCenterY, right);
+    return Math.max(24, tileWidth - textLead - textTrail);
+  });
+  const minLabelWidth = labelWidths.length ? Math.min(...labelWidths) : tileWidth - 24;
+  const sharedNameSize = fitSharedFontSize(
+    pillars.map((pillar) => pillar.label),
+    minLabelWidth,
+    22,
+    13
+  );
+  const sharedValueSize = fitSharedFontSize(
+    pillars.map((pillar) => pillar.valueText),
+    Math.max(24, minLabelWidth - chevron - 8),
+    26,
+    16
+  );
+  const nameLine = Math.round(sharedNameSize + 4);
+  const valueLine = Math.round(sharedValueSize + 4);
+
   const disc = (
     <Disc
       kind={kind}
@@ -325,24 +384,12 @@ export default function EmeraldScoreComposition({
           const right = index % 2 === 1;
           const role = emeraldVisual[pillar.key];
           const tileTop = index >= 2 ? tileHeight + gap : 0;
-          const socketRadius = discSize / 2 + 4;
-          const clearanceAt = (centerY: number) => {
-            if (reflow) return 12;
-            const dy = centerY - gridHeight / 2;
-            if (Math.abs(dy) >= socketRadius) return 12;
-            const reach = Math.sqrt(socketRadius * socketRadius - dy * dy);
-            const edge = measured / 2 + (right ? reach : -reach);
-            const overlap = right ? edge - (tileWidth + gap) : tileWidth - edge;
-            return Math.max(12, Math.round(overlap + 16));
-          };
-          const nameLine = resultPresentation.emerald.type.pillarNameLine;
-          const valueLine = resultPresentation.emerald.type.pillarValueLine;
           const textCenterY = tileTop + tileHeight - 12 - (nameLine + valueLine) / 2;
-          const iconCenterY = tileTop + 12 + resultPresentation.emerald.type.pillarIcon / 2;
-          const textLead = right ? clearanceAt(textCenterY) : 12;
-          const textTrail = right ? 10 : clearanceAt(textCenterY);
-          const iconLead = right ? clearanceAt(iconCenterY) : 12;
-          const iconTrail = right ? 12 : clearanceAt(iconCenterY);
+          const iconCenterY = tileTop + 12 + typeBase.pillarIcon / 2;
+          const textLead = right ? clearanceAt(textCenterY, right) : 12;
+          const textTrail = right ? 10 : clearanceAt(textCenterY, right);
+          const iconLead = right ? clearanceAt(iconCenterY, right) : 12;
+          const iconTrail = right ? 12 : clearanceAt(iconCenterY, right);
           const tileStyle = [
             styles.tile,
             { width: tileWidth, height: tileHeight },
@@ -369,16 +416,30 @@ export default function EmeraldScoreComposition({
                 <View style={{ marginLeft: iconLead - textLead, marginRight: Math.max(0, iconTrail - textTrail) }}>
                   <MaterialCommunityIcons
                     name={role.glyph}
-                    size={resultPresentation.emerald.type.pillarIcon}
+                    size={typeBase.pillarIcon}
                     color={dark ? resultPresentation.emerald.discIconOnDark : role.icon}
                   />
                 </View>
                 <View style={styles.copyBlock}>
-                  <Text style={[styles.label, { color: ink }]} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.label,
+                      { color: ink, fontSize: sharedNameSize, lineHeight: nameLine },
+                    ]}
+                    numberOfLines={1}
+                    maxFontSizeMultiplier={1.15}
+                  >
                     {pillar.label}
                   </Text>
                   <View style={styles.valueRow}>
-                    <Text style={[styles.value, { color: ink }]} numberOfLines={1}>
+                    <Text
+                      style={[
+                        styles.value,
+                        { color: ink, fontSize: sharedValueSize, lineHeight: valueLine },
+                      ]}
+                      numberOfLines={1}
+                      maxFontSizeMultiplier={1.15}
+                    >
                       {pillar.valueText}
                     </Text>
                     {pillar.onPress ? (

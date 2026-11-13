@@ -95,6 +95,72 @@ export function projectOriginConsumerLines(facts: GovernedOriginFact[]): OriginC
   return lines;
 }
 
+/**
+ * Presentation-only: split an existing continuation so a percentage phrase can be
+ * emphasised typographically without changing wording.
+ */
+export function splitOriginContinuationForEmphasis(sentence: string): {
+  prefix: string;
+  emphasis: string | null;
+  suffix: string;
+} {
+  const match = sentence.match(
+    /^(With\s+)((?:at least |exactly |more than |less than )?\d+(?:\.\d+)?)(%)(\s.*)?$/i
+  );
+  if (!match) {
+    return { prefix: sentence, emphasis: null, suffix: '' };
+  }
+  return {
+    prefix: match[1],
+    emphasis: `${match[2]}${match[3]}`,
+    suffix: match[4] ?? '',
+  };
+}
+
+/**
+ * Presentation-only: turns existing consumer supporting phrases into one readable
+ * continuation under the flag+country lockup. Does not invent percentages or sources.
+ */
+export function originConsumerContinuationSentence(supporting: string[]): string | null {
+  const items = supporting.map((item) => item.trim()).filter((item) => item.length > 0);
+  if (items.length === 0) return null;
+
+  const SOURCE_MAP: Record<string, string> = {
+    'Local & Imported ingredients': 'local and imported ingredients',
+    'Local ingredients': 'local ingredients',
+    'Imported ingredients': 'imported ingredients',
+  };
+  const UNSPECIFIED = 'Imported ingredient origins not specified';
+
+  let percentage: string | null = null;
+  let source: string | null = null;
+  const trailing: string[] = [];
+
+  for (const item of items) {
+    if (SOURCE_MAP[item]) {
+      source = SOURCE_MAP[item];
+      continue;
+    }
+    if (item === UNSPECIFIED) {
+      trailing.push(`${UNSPECIFIED}.`);
+      continue;
+    }
+    // Existing percentage phrases from percentagePhrase() — e.g. "at least 98%", "more than 79%".
+    if (percentage == null && /\d/.test(item) && item.includes('%')) {
+      percentage = item;
+      continue;
+    }
+    trailing.push(item.endsWith('.') ? item : `${item}.`);
+  }
+
+  const parts: string[] = [];
+  if (percentage && source) parts.push(`With ${percentage} ${source}.`);
+  else if (percentage) parts.push(`With ${percentage}.`);
+  else if (source) parts.push(`With ${source}.`);
+  parts.push(...trailing);
+  return parts.length > 0 ? parts.join(' ') : null;
+}
+
 type SourceOrigin = { subjectKey: string; country: string };
 
 function recognisedCountryName(value: string): string | null {

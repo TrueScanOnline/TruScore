@@ -22,7 +22,7 @@ describe('share card marks', () => {
   it('puts the Body logo colour and glyph on a What we found line', () => {
     const rows = highlightShareRows([{ pillar: 'Body', text: 'High in sugar' }], false);
     expect(rows).toEqual([
-      expect.objectContaining({ kind: 'pillar', glyph: 'apple', text: 'High in sugar', color: '#EC514F' }),
+      expect.objectContaining({ kind: 'pillar', glyph: 'human', text: 'High in sugar', color: '#EC514F' }),
     ]);
   });
 

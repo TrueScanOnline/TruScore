@@ -1,9 +1,10 @@
 /**
  * Consumer pillar nomenclature regression.
  *
- * Founder naming disposition (5 September 2026): consumers see Body, Planet, **Claims** and
+ * Founder naming disposition: consumers see Body, Planet, **Claims** and
  * **Transparency**. "Ethics" and "Open" survive only as internal pillar keys, stable adjustment
  * IDs (`ethics-v37-*`, `open-v15-*`), scoring registries and S28 score diagnostics.
+ * "Packet Claims" is a separate Result card and must not be conflated with Claims.
  *
  * This suite proves the active consumer surfaces cannot display Ethics or Open AS PILLAR NAMES,
  * while deliberately preserving:
@@ -233,7 +234,7 @@ describe('live consumer surfaces cannot render Ethics or Open as pillar names', 
     }
   });
 
-  it('the Claims-pillar banner alerts name the consumer pillar', () => {
+  it('the Claims pillar banner alerts name the consumer pillar', () => {
     const alerts = buildEthicsPillarBannerAlerts(product, {
       pillarName: 'Ethics',
       baseScore: 15,

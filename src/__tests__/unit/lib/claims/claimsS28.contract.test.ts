@@ -29,6 +29,7 @@ describe('S28 Claims diagnostic surface contracts', () => {
     expect(modal).toContain('register_row_id');
     expect(modal).toContain('Nutrient context');
     expect(modal).toContain('Fired Claims adjustments');
+    expect(modal).toContain('Claims assessment (S28)');
     expect(modal).toContain('Suppressed candidates');
     expect(modal).toContain('Benchmark checks');
     expect(modal).toContain('Diagnostics / fail-closed reasons');

@@ -18,7 +18,7 @@ export type ShareNutrientLevelLabel = 'Low' | 'Mid' | 'High';
 
 export type ShareCardRow =
   | { kind: 'text'; text: string }
-  | { kind: 'pillar'; glyph: 'apple' | 'leaf' | 'message-text' | 'eye'; color: string; text: string }
+  | { kind: 'pillar'; glyph: 'human' | 'leaf' | 'book-open-page-variant' | 'eye'; color: string; text: string }
   | { kind: 'nutrient'; text: string; level?: ShareNutrientLevelLabel; levelColor?: string }
   | { kind: 'origin'; statement: string; country: string; support: string[]; packWording: string };
 

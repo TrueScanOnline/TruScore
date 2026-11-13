@@ -1,10 +1,11 @@
 /**
  * Consumer-facing pillar names.
  *
- * Post-document founder naming disposition (5 September 2026): Ethics is presented as "Claims"
- * and Open as "Transparency". Body and Planet are unchanged. Internal pillar keys, stable
- * adjustment IDs, scoring registries, S28 diagnostics and persisted analysis all keep the
- * Ethics/Open names — this module is presentation only.
+ * Ethics is presented as "Claims" (Rveel Score pillar). That is distinct from the
+ * separate Result card titled "Packet Claims" — do not conflate the two in copy or labels.
+ * Open is presented as "Transparency". Body and Planet are unchanged.
+ * Internal pillar keys, stable adjustment IDs, scoring registries, S28 diagnostics and
+ * persisted analysis keep the Ethics/Open names — this module is presentation only.
  */
 
 import type { ScoreHighlightPillar } from './types';

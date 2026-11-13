@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
 import { resultEmeraldTone, resultPresentation } from '../../theme/resultPresentation';
+import ResultCardArt from '../result/ResultCardArt';
 import { Product, ProductWithTrustScore } from '../../types/product';
 import {
   ABOUT_THIS_INFORMATION,
@@ -130,8 +131,10 @@ export default function ProductDataLimitationsCard({
       <View style={styles.cardHit}>
         <LinearGradient
           colors={darkMode ? [tone.card, tone.card] : [...resultPresentation.emerald.teaser]}
-          style={[styles.card, { borderColor: tone.teaserBorder }]}
+          style={[styles.card, { borderColor: tone.teaserBorder, overflow: 'hidden' }]}
         >
+          <ResultCardArt motif="limitations" darkMode={!!darkMode} intensity={0.55} borderRadius={resultPresentation.emerald.radius.teaser} />
+          <View style={styles.contentAboveArt}>
           <Text style={[styles.heading, { color: ink }]}>
             {t('result.productInformationHeading', PRODUCT_INFORMATION_HEADING)}
           </Text>
@@ -164,6 +167,7 @@ export default function ProductDataLimitationsCard({
               <Text style={[styles.secondaryLabel, { color: tone.action }]}>{ABOUT_THIS_INFORMATION}</Text>
             </TouchableOpacity>
           ) : null}
+          </View>
         </LinearGradient>
       </View>
 
@@ -210,6 +214,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 12,
+    gap: 8,
+  },
+  contentAboveArt: {
+    position: 'relative',
+    zIndex: 1,
     gap: 8,
   },
   heading: {

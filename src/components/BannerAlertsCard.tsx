@@ -13,6 +13,7 @@ import { BannerAlertsData, BannerSignalClass } from '../types/bannerAlerts';
 import { consumerSignalCategoryLabel } from '../signals/signalRenderMapping';
 import { useTheme } from '../theme';
 import { resultEmeraldCard, resultEmeraldTone } from '../theme/resultPresentation';
+import ResultCardArt from './result/ResultCardArt';
 
 interface BannerAlertsCardProps {
   alertsData: BannerAlertsData;
@@ -38,9 +39,12 @@ export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) 
       style={[
         styles.container,
         resultEmeraldCard(!!darkMode),
+        styles.artHost,
       ]}
       accessibilityLabel="did-you-know-module"
     >
+      <ResultCardArt motif="alertsSoft" darkMode={!!darkMode} intensity={0.7} borderRadius={20} />
+      <View style={styles.contentAboveArt}>
       <View style={styles.header}>
         <Ionicons name="bulb-outline" size={24} color={emerald.action} />
         <Text style={[styles.headerText, { color: emerald.ink }]}>Did You Know?</Text>
@@ -109,6 +113,7 @@ export default function BannerAlertsCard({ alertsData }: BannerAlertsCardProps) 
           );
         })}
       </ScrollView>
+      </View>
     </View>
   );
 }
@@ -120,6 +125,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     maxHeight: 300,
+  },
+  artHost: {
+    overflow: 'hidden',
+  },
+  contentAboveArt: {
+    position: 'relative',
+    zIndex: 1,
   },
   header: {
     flexDirection: 'row',

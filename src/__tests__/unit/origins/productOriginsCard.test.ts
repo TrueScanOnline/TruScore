@@ -1,4 +1,9 @@
-import { productOriginsCardPresentation, projectOriginConsumerLines } from '../../../origins/productOriginsCard';
+import {
+  originConsumerContinuationSentence,
+  productOriginsCardPresentation,
+  projectOriginConsumerLines,
+  splitOriginContinuationForEmphasis,
+} from '../../../origins/productOriginsCard';
 import type { GovernedOriginFact } from '../../../origins/governedFacts';
 import type { Product } from '../../../types/product';
 import * as fs from 'fs';
@@ -127,6 +132,23 @@ describe('Product Origins Result presentation', () => {
     expect(compatible.limitedConfidence).toBe(true);
   });
 
+  test('formats existing supporting phrases as a natural continuation without inventing values', () => {
+    expect(
+      originConsumerContinuationSentence(['at least 98%', 'Local & Imported ingredients'])
+    ).toBe('With at least 98% local and imported ingredients.');
+    expect(originConsumerContinuationSentence(['more than 79%', 'Local ingredients'])).toBe(
+      'With more than 79% local ingredients.'
+    );
+    expect(
+      originConsumerContinuationSentence([
+        'at least 40%',
+        'Imported ingredients',
+        'Imported ingredient origins not specified',
+      ])
+    ).toBe('With at least 40% imported ingredients. Imported ingredient origins not specified.');
+    expect(originConsumerContinuationSentence([])).toBeNull();
+  });
+
   test('Result no longer exposes the retired contribution routes or the inert certification prompt', () => {
     const result = fs.readFileSync(path.join(__dirname, '../../../../app/result/[barcode].tsx'), 'utf8');
     expect(result).not.toContain('handleEditProduct');
@@ -135,12 +157,47 @@ describe('Product Origins Result presentation', () => {
     expect(result).not.toContain('Tap this card to add labels');
     expect(result).not.toContain('accessibilityLabel={t(\'common.edit\', \'Edit\')}');
     expect(result).toContain('productOriginsCardPresentation');
-    expect(result).toContain('CountryFlag');
+    expect(result).toContain('originConsumerContinuationSentence');
+    expect(result).toContain('ProductOriginsDeclarationPanel');
+    // OFF-only and declaration lines both use the V2 panel (no flat originHero shell).
+    expect(result).toContain('originsCard.offCountry');
+    expect(result).toContain('flagAlign="center"');
+    expect(result).not.toContain('originHero');
     expect(result).toContain('Limited confidence');
     expect(result).toContain('PRODUCT_ORIGINS_LIMITED_CONFIDENCE');
     expect(result).not.toContain('transparency.s26?.explanation');
     expect(fs.existsSync(path.join(__dirname, '../../../components/ManufacturingCountryModal.tsx'))).toBe(false);
     expect(fs.existsSync(path.join(__dirname, '../../../features/product/cards/ProductCards.tsx'))).toBe(false);
     expect(fs.existsSync(path.join(__dirname, '../../../features/product/cards/CountryCard/CountryCard.tsx'))).toBe(false);
+    const panel = fs.readFileSync(
+      path.join(__dirname, '../../../components/ProductOriginsDeclarationPanel.tsx'),
+      'utf8'
+    );
+    expect(panel).toContain('align={flagAlign}');
+    expect(panel).toContain('showRibbon');
+    expect(panel).toContain('CountryFlag');
+    expect(panel).toContain('splitOriginContinuationForEmphasis');
+    expect(fs.readFileSync(path.join(__dirname, '../../../origins/productOriginsCard.ts'), 'utf8')).toContain(
+      'export function splitOriginContinuationForEmphasis'
+    );
+  });
+});
+
+describe('Product Origins Concept V2 emphasis split', () => {
+  test('emphasises existing percentage phrase without changing wording', () => {
+    expect(
+      splitOriginContinuationForEmphasis(
+        'With more than 78% local and imported ingredients. Imported ingredient origins not specified.'
+      )
+    ).toEqual({
+      prefix: 'With ',
+      emphasis: 'more than 78%',
+      suffix: ' local and imported ingredients. Imported ingredient origins not specified.',
+    });
+    expect(splitOriginContinuationForEmphasis('With local ingredients.')).toEqual({
+      prefix: 'With local ingredients.',
+      emphasis: null,
+      suffix: '',
+    });
   });
 });

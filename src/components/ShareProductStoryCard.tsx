@@ -17,7 +17,7 @@ const CARD_W = 360;
 export interface ShareStoryPillar {
   label: string;
   value: string;
-  glyph: 'apple' | 'leaf' | 'message-text' | 'eye';
+  glyph: 'human' | 'leaf' | 'book-open-page-variant' | 'eye';
   iconColor: string;
   tileColor: string;
 }

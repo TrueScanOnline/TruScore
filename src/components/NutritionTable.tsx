@@ -7,6 +7,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { formatWeight, formatVolume, formatServingSize } from '../utils/units';
 import { useTheme } from '../theme';
 import { resultEmeraldCard, resultEmeraldTone } from '../theme/resultPresentation';
+import ResultCardArt from './result/ResultCardArt';
 import { getNutrientValue100g, toFiniteNumber, resolveKcalPer100g } from '../utils/nutritionPer100g';
 import {
   assessGovernedNutrients,
@@ -322,7 +323,10 @@ const NutritionTable = React.memo(function NutritionTable({
   };
 
   return (
-    <View style={[styles.container, journeyCard]}>
+    <View style={[styles.container, journeyCard, styles.containerArtHost]}>
+      <View style={styles.nutritionArtHost}>
+        <ResultCardArt motif="nutrition" darkMode={!!darkMode} intensity={0.65} borderRadius={20} />
+        <View style={styles.contentAboveArt} collapsable={false}>
       <View style={styles.titleContainer}>
         <Pressable
           onPress={() => openDetails(null)}
@@ -517,7 +521,10 @@ const NutritionTable = React.memo(function NutritionTable({
           </TouchableOpacity>
         </View>
       )}
+        </View>
+      </View>
 
+      {/* Keep Ingredients / Processing Level outside nutrition SVG so artwork cannot cover NOVA labels. */}
       {afterBurn}
 
       {showBurnStrip && burnMinutes && kcalPer100g !== undefined && (
@@ -554,6 +561,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  containerArtHost: {
+    overflow: 'hidden',
+  },
+  nutritionArtHost: {
+    overflow: 'hidden',
+    borderRadius: 12,
+  },
+  contentAboveArt: {
+    position: 'relative',
+    zIndex: 1,
   },
   titleContainer: {
     flexDirection: 'row',

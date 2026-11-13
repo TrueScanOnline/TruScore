@@ -18,6 +18,7 @@ import { useTheme } from '../theme';
 import { resultEmeraldCard, resultEmeraldTone } from '../theme/resultPresentation';
 import { getSurfaceCopy } from '../s25/loadAsset';
 import { S25_ADDITIVE_COUNT_GLYPH } from '../s25/glyphs';
+import ResultCardArt from './result/ResultCardArt';
 
 interface AboutTheseAdditivesCardProps {
   count: number;
@@ -121,11 +122,13 @@ export default function AboutTheseAdditivesCard({ count, onPress }: AboutTheseAd
           backgroundColor: darkMode ? '#373232' : '#FFEBEC',
           borderColor: darkMode ? '#6A4545' : '#F3C6C6',
           opacity: pressed ? 0.96 : 1,
+          overflow: 'hidden',
         },
       ]}
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${count} ${count === 1 ? 'additive' : 'additives'} identified`}
     >
+      <ResultCardArt motif="molecular" darkMode={!!darkMode} intensity={0.85} borderRadius={20} />
       <View style={styles.stack}>
         <View style={styles.row}>
           <View style={styles.left}>
@@ -162,6 +165,8 @@ const styles = StyleSheet.create({
   },
   stack: {
     gap: 6,
+    position: 'relative',
+    zIndex: 1,
   },
   countLine: {
     marginLeft: 38,

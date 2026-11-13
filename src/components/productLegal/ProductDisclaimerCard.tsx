@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import InfoModal from '../InfoModal';
 import { useTheme } from '../../theme';
 import { resultEmeraldCard, resultEmeraldTone, resultPresentation } from '../../theme/resultPresentation';
+import ResultCardArt from '../result/ResultCardArt';
 
 export default function ProductDisclaimerCard() {
   const { t } = useTranslation();
@@ -25,12 +26,15 @@ export default function ProductDisclaimerCard() {
         style={[
           styles.card,
           resultEmeraldCard(!!darkMode),
+          styles.artHost,
         ]}
         onPress={open}
         activeOpacity={0.75}
         accessibilityRole="button"
         accessibilityLabel={t('result.legalDisclaimerTeaserA11y')}
       >
+        <ResultCardArt motif="limitations" darkMode={!!darkMode} intensity={0.5} borderRadius={20} />
+        <View style={styles.contentAboveArt}>
         <Ionicons
           name="information-circle-outline"
           size={20}
@@ -46,6 +50,7 @@ export default function ProductDisclaimerCard() {
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color={emerald.muted} />
+        </View>
       </TouchableOpacity>
 
       <InfoModal
@@ -81,8 +86,6 @@ function LegalParagraph({
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginHorizontal: 16,
     marginTop: 4,
     marginBottom: 8,
@@ -90,6 +93,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: resultPresentation.emerald.radius.card,
     minHeight: resultPresentation.tap.min,
+  },
+  artHost: {
+    overflow: 'hidden',
+  },
+  contentAboveArt: {
+    position: 'relative',
+    zIndex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
   cardIcon: {

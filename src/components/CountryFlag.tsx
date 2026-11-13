@@ -9,6 +9,8 @@ interface CountryFlagProps {
   showFlag?: boolean;
   /** Larger flag and name for the Product Origins place panel. */
   appearance?: 'default' | 'hero';
+  /** Hero lockup alignment. Declarations read left-to-right; OFF hero may stay centred. */
+  align?: 'center' | 'start';
   nameColor?: string;
 }
 
@@ -23,7 +25,13 @@ function formatCountryName(country: string): string {
     .join(' ');
 }
 
-export default function CountryFlag({ country, showFlag = true, appearance = 'default', nameColor }: CountryFlagProps) {
+export default function CountryFlag({
+  country,
+  showFlag = true,
+  appearance = 'default',
+  align = 'center',
+  nameColor,
+}: CountryFlagProps) {
   const displayCountry = country ? sanitizeCountryForDisplay(country) : '';
 
   if (!displayCountry) {
@@ -40,7 +48,13 @@ export default function CountryFlag({ country, showFlag = true, appearance = 'de
 
   const hero = appearance === 'hero';
   return (
-    <View style={[styles.container, hero ? styles.heroRow : null]}>
+    <View
+      style={[
+        styles.container,
+        hero ? styles.heroRow : null,
+        hero && align === 'start' ? styles.heroRowStart : null,
+      ]}
+    >
       {showFlag ? (
         <Text style={hero ? styles.heroFlag : styles.flag} numberOfLines={1}>
           {flag}
@@ -48,9 +62,9 @@ export default function CountryFlag({ country, showFlag = true, appearance = 'de
       ) : null}
       <Text
         style={[hero ? styles.heroName : styles.countryName, nameColor ? { color: nameColor } : null]}
-        numberOfLines={hero ? 1 : undefined}
+        numberOfLines={hero ? 2 : undefined}
         adjustsFontSizeToFit={hero}
-        minimumFontScale={hero ? 0.65 : undefined}
+        minimumFontScale={hero ? 0.7 : undefined}
       >
         {formattedName}
       </Text>
@@ -80,16 +94,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
   },
+  heroRowStart: {
+    justifyContent: 'flex-start',
+  },
   heroFlag: {
-    fontSize: 32,
-    lineHeight: 40,
+    fontSize: 36,
+    lineHeight: 44,
   },
   heroName: {
     flexShrink: 1,
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    flexGrow: 1,
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+    color: '#0B1F33',
   },
 });
 

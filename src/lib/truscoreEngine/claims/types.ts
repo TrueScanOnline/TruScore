@@ -1,6 +1,6 @@
 /**
  * Wave 3 Claims Rescue — shared types (controlling specification v0.2).
- * Consumer name: Claims. Legacy Ethics IDs may remain internal.
+ * Consumer name: Claims (distinct from the Packet Claims Result card). Legacy Ethics IDs may remain internal.
  */
 
 export const CLAIMS_ASSESSMENT_SCHEMA_VERSION = 'claims-assessment-v1';

@@ -23,6 +23,7 @@ import type { Colors } from '../../theme/colors';
 import { resultEmeraldTone, resultHeroFace, resultPresentation } from '../../theme/resultPresentation';
 import { heroArrangement } from './heroArrangement';
 import { DOG_EAR_FOLD, dogEarCut } from './emerald/dogEar';
+import ResultCardArt from '../result/ResultCardArt';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO = resultPresentation.emerald.hero;
@@ -442,6 +443,7 @@ export default function ProductHeroSection({
             style={StyleSheet.absoluteFill}
           >
             <HeroSurface width={surface.w} height={surface.h} dark={darkMode} />
+            <ResultCardArt motif="heroGlow" darkMode={!!darkMode} intensity={0.55} borderRadius={HERO.radius} />
           </View>
           <View style={[styles.body, laid.stack ? styles.bodyStack : styles.bodyRow]}>
             {photo}

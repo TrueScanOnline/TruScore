@@ -495,7 +495,7 @@ function resolveEthicsCert(
         },
         {
           body:
-            'This explains the certification claim that contributed to Ethics; it does not create a broader product claim outside the scope of the MSC label.',
+            'This explains the certification claim that contributed to Claims; it does not create a broader product claim outside the scope of the MSC label.',
         },
       ],
       sources: [MSC_SOURCE],
@@ -512,7 +512,7 @@ function resolveEthicsCert(
         },
         {
           body:
-            'This explains the certification claim that contributed to Ethics; it does not create a broader product claim outside the scope of the ASC label.',
+            'This explains the certification claim that contributed to Claims; it does not create a broader product claim outside the scope of the ASC label.',
         },
       ],
       sources: [ASC_SOURCE],

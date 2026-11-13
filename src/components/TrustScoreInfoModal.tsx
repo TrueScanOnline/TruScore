@@ -364,7 +364,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
             • Certifications (OFF labels + optional MSC API): Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Organic +2 — highest eligible scheme only in MVP (no stacking); RSPO does not contribute Claims points{'\n'}
             • Organic requires a recognised certifier signal; MSC positive credit follows the MSC Data Validation API when enabled{'\n'}
             • Final Claims pillar is floored at 0 and capped at 25{'\n'}
-            • Source: Claims Pillar spec sheet + BBFAW report + KnowTheChain + Open Food Facts (+ MSC API when licensed)
+            • Source: Claims pillar spec sheet + BBFAW report + KnowTheChain + Open Food Facts (+ MSC API when licensed)
           </Text>
         </View>
 

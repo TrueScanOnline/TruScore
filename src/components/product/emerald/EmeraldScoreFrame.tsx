@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import { resultPresentation } from '../../../theme/resultPresentation';
+import ResultCardArt from '../../result/ResultCardArt';
 
 type Props = {
   heading: string;
@@ -131,6 +132,7 @@ export default function EmeraldScoreFrame({ heading, infoControl, children, conf
           </Svg>
         </View>
         <View style={styles.frameInner}>
+          <ResultCardArt motif="scoreAura" darkMode={!!dark} intensity={0.85} borderRadius={18} />
           <View style={styles.tabSpacer} accessible={false} />
           <View style={styles.header}>
             <Text style={[styles.heading, { color: ink }]} numberOfLines={1}>
@@ -138,7 +140,7 @@ export default function EmeraldScoreFrame({ heading, infoControl, children, conf
             </Text>
             {infoControl ? <View style={styles.headerActions}>{infoControl}</View> : null}
           </View>
-          {children}
+          <View style={styles.contentAboveArt}>{children}</View>
           {confidence ? <View style={styles.confidence}>{confidence}</View> : null}
         </View>
       </View>
@@ -172,15 +174,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 4,
     paddingBottom: 12,
+    overflow: 'hidden',
+    borderRadius: 20,
+  },
+  contentAboveArt: {
+    position: 'relative',
+    zIndex: 1,
   },
   tabSpacer: {
     height: TAB_CLEARANCE,
+    zIndex: 1,
   },
   header: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: 4,
     marginBottom: 2,
+    zIndex: 1,
   },
   heading: {
     fontSize: 28,
@@ -196,5 +206,5 @@ const styles = StyleSheet.create({
     gap: 14,
     marginTop: 4,
   },
-  confidence: { marginTop: 2 },
+  confidence: { marginTop: 2, zIndex: 1 },
 });
