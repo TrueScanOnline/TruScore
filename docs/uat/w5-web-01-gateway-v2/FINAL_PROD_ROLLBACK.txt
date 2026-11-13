@@ -1,0 +1,8 @@
+﻿ROLLBACK_PRODUCTION_DEPLOYMENT=https://truscoreapi-mucz6k5ld-leightons-projects-d328c774.vercel.app
+ROLLBACK_CMD=cd backend/vercel && npx vercel promote truscoreapi-mucz6k5ld-leightons-projects-d328c774.vercel.app --yes
+CURRENT_PROD_DEPLOYMENT=https://truscoreapi-lp7lxdppv-leightons-projects-d328c774.vercel.app
+CURRENT_DPL=dpl_4DCWQwHXr6SHWE7xqjDx5Zm5y3oc
+TEMP_ASSETLINKS_FINGERPRINT=FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C
+ASSETLINKS_SOURCE=public/.well-known/assetlinks.json (static; serverless assetlinks rewrites removed)
+ASSETLINKS_ROLLBACK=Remove public/.well-known/assetlinks.json and restore vercel.json assetlinks rewrites to placeholder OR replace fingerprint with Play App Signing SHA-256; then npx vercel deploy --prod --yes
+NOTE=Debug fingerprint is TEMPORARY testing only — not permanent production trust. Do not leave debug cert permanently trusted.

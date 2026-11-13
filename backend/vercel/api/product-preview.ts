@@ -1,11 +1,20 @@
 // Public product preview. Identity and catalogue fields only.
 // trust_score and trust_score_breakdown are always JSON null: this route has no
 // server-verifiable settled/Rated publication snapshot, so internal pillar arithmetic is not exposed.
+//
+// WEB-01A (AMBER, founder-approved): public-share identity accepts Open Food Facts only
+// when product.code matches the requested barcode under normalizeBarcode equivalence.
+// UPCITEMDB is not used on this public route (app lookups keep src/services/upcitemdb.ts).
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 import { toPublicProductPreview } from '../lib/publicPreviewContract';
+import {
+  extractOffProductCode,
+  publicShareCodesMatch,
+} from '../lib/publicShareIdentity';
 import { offProductApiUrl } from '../truescan-src/services/offReadTarget';
+
 /** Rewritten from /api/share-event (same serverless function on Hobby). */
 function handleShareEventRoute(req: VercelRequest, res: VercelResponse): void | VercelResponse {
   if (req.method === 'OPTIONS') {
@@ -77,81 +86,82 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const offUrl = offProductApiUrl(barcode, process.env.RVEEL_EVIDENCE_AUTHORITY_ENV, 'v2');
-    const offResponse = await fetch(offUrl, {
-      headers: {
-        'User-Agent': 'Rveel/1.0.0',
-      },
-    });
-
-    if (offResponse.ok) {
-      const offData = (await offResponse.json()) as {
-        status?: number;
-        product?: Record<string, unknown>;
-      };
-      if (offData.status === 1 && offData.product) {
-        const offProduct = offData.product;
-
-        const novaGroup =
-          typeof offProduct.nova_group === 'number'
-            ? offProduct.nova_group
-            : typeof offProduct.nova_group === 'string'
-              ? parseInt(offProduct.nova_group, 10)
-              : undefined;
-
-        const preview: ProductPreview = toPublicProductPreview({
-          barcode,
-          product_name:
-            typeof offProduct.product_name === 'string'
-              ? offProduct.product_name
-              : typeof offProduct.product_name_en === 'string'
-                ? offProduct.product_name_en
-                : undefined,
-          product_name_en:
-            typeof offProduct.product_name_en === 'string' ? offProduct.product_name_en : undefined,
-          brands: typeof offProduct.brands === 'string' ? offProduct.brands : undefined,
-          image_url:
-            (typeof offProduct.image_url === 'string' && offProduct.image_url) ||
-            (typeof offProduct.image_front_url === 'string' && offProduct.image_front_url) ||
-            (typeof offProduct.image_front_small_url === 'string' && offProduct.image_front_small_url) ||
-            undefined,
-          nutriments: offProduct.nutriments,
-          ingredients_text:
-            typeof offProduct.ingredients_text === 'string' ? offProduct.ingredients_text : undefined,
-          nova_group: typeof novaGroup === 'number' && Number.isFinite(novaGroup) ? novaGroup : undefined,
-          ecoscore_grade:
-            typeof offProduct.ecoscore_grade === 'string' ? offProduct.ecoscore_grade : undefined,
-          categories: typeof offProduct.categories === 'string' ? offProduct.categories : undefined,
-        });
-
-        res.setHeader('Cache-Control', 'public, max-age=3600');
-        return res.status(200).json(preview);
-      }
+    let offResponse: Response;
+    try {
+      offResponse = await fetch(offUrl, {
+        headers: {
+          'User-Agent': 'Rveel/1.0.0',
+        },
+      });
+    } catch (networkError) {
+      console.error('OFF product-preview network error:', networkError);
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(502).json({ error: 'Product lookup unavailable' });
     }
 
-    const upcUrl = `https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`;
-    const upcResponse = await fetch(upcUrl);
-
-    if (upcResponse.ok) {
-      const upcData = (await upcResponse.json()) as {
-        items?: Array<{ title?: string; brand?: string; images?: string[] }>;
-      };
-      if (upcData.items && upcData.items.length > 0) {
-        const item = upcData.items[0];
-        const preview: ProductPreview = toPublicProductPreview({
-          barcode,
-          product_name: item.title,
-          brands: item.brand,
-          image_url: item.images && item.images.length > 0 ? item.images[0] : undefined,
-        });
-
-        res.setHeader('Cache-Control', 'public, max-age=3600');
-        return res.status(200).json(preview);
-      }
+    if (!offResponse.ok) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(502).json({ error: 'Product lookup unavailable' });
     }
 
+    const offData = (await offResponse.json()) as {
+      status?: number;
+      code?: unknown;
+      product?: Record<string, unknown>;
+    };
+
+    if (offData.status === 1 && offData.product) {
+      const offProduct = offData.product;
+      const offCode = extractOffProductCode(offData, offProduct);
+
+      if (!publicShareCodesMatch(barcode, offCode)) {
+        // OFF returned a payload that does not match the requested code — fail closed.
+        res.setHeader('Cache-Control', 'public, max-age=120');
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      const novaGroup =
+        typeof offProduct.nova_group === 'number'
+          ? offProduct.nova_group
+          : typeof offProduct.nova_group === 'string'
+            ? parseInt(offProduct.nova_group, 10)
+            : undefined;
+
+      const preview: ProductPreview = toPublicProductPreview({
+        barcode,
+        product_name:
+          typeof offProduct.product_name === 'string'
+            ? offProduct.product_name
+            : typeof offProduct.product_name_en === 'string'
+              ? offProduct.product_name_en
+              : undefined,
+        product_name_en:
+          typeof offProduct.product_name_en === 'string' ? offProduct.product_name_en : undefined,
+        brands: typeof offProduct.brands === 'string' ? offProduct.brands : undefined,
+        image_url:
+          (typeof offProduct.image_url === 'string' && offProduct.image_url) ||
+          (typeof offProduct.image_front_url === 'string' && offProduct.image_front_url) ||
+          (typeof offProduct.image_front_small_url === 'string' && offProduct.image_front_small_url) ||
+          undefined,
+        nutriments: offProduct.nutriments,
+        ingredients_text:
+          typeof offProduct.ingredients_text === 'string' ? offProduct.ingredients_text : undefined,
+        nova_group: typeof novaGroup === 'number' && Number.isFinite(novaGroup) ? novaGroup : undefined,
+        ecoscore_grade:
+          typeof offProduct.ecoscore_grade === 'string' ? offProduct.ecoscore_grade : undefined,
+        categories: typeof offProduct.categories === 'string' ? offProduct.categories : undefined,
+      });
+
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.status(200).json(preview);
+    }
+
+    // OFF not found / invalid code — do not fall through to UPCITEMDB on this public route.
+    res.setHeader('Cache-Control', 'public, max-age=120');
     return res.status(404).json({ error: 'Product not found' });
   } catch (error) {
-    console.error('Error fetching product preview:', error);
+    console.error('Error fetching product data:', error);
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(500).json({ error: 'Failed to fetch product data' });
   }
 }

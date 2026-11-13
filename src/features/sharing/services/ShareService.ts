@@ -39,9 +39,19 @@ export class ShareService {
           url: optimizedContent.url,
         };
         const imageCaption = buildReceiverCaption({ ...captionInput, includeSummary: false });
-        // Expo Go can attach the captured card as a real picture. Text message uses that
-        // same picture. A words-only message is only the fallback when capture failed.
-        if (options.storyImageUri) {
+        // Expo Sharing can attach the card image but not a reliable caption/URL on most
+        // destinations. Clipboard alone does not deliver a clickable link to the recipient.
+        // Prefer text+HTTPS for platforms that accept message bodies; reserve image-only
+        // for image-first destinations (Instagram / Snapchat / TikTok).
+        const imageFirstPlatforms: ShareOptions['platform'][] = [
+          'instagram',
+          'snapchat',
+          'tiktok',
+        ];
+        const useImageOnly =
+          Boolean(options.storyImageUri) && imageFirstPlatforms.includes(platform);
+
+        if (useImageOnly && options.storyImageUri) {
           if (optimizedContent.url) {
             try {
               await Clipboard.setStringAsync(optimizedContent.url);

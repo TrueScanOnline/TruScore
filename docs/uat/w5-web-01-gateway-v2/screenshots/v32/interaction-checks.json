@@ -1,0 +1,14 @@
+{
+  "noAutoDeepLink": true,
+  "noScoreDom": true,
+  "hasRevealCta": true,
+  "repeatActivation": true,
+  "keyboardActivation": true,
+  "reducedMotion": {
+    "veilAnim": "none",
+    "sheenAnim": "none",
+    "ok": true
+  },
+  "unknownCopy": true,
+  "noImagePlaceholder": true
+}

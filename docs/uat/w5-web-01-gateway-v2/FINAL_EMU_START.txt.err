@@ -1,0 +1,75 @@
+I1113 12:20:27.166231    7324 opengles.cpp:307] android_startOpenglesRenderer: gpu info
+I1113 12:20:27.166833    7324 opengles.cpp:308] GPU #1
+  Make: 8086
+  Model: Intel(R) UHD Graphics
+  Device ID: 9b41
+
+I1113 12:20:27.167510    7324 HealthMonitor.cpp:275] HealthMonitor disabled.
+I1113 12:20:27.168095    7324 SharedLibrary.cpp:76] SharedLibrary::open for [opengl32.dll]: not found in map, open for the first time
+I1113 12:20:27.168486    7324 SharedLibrary.cpp:94] SharedLibrary::open for [opengl32.dll] (win32): call LoadLibrary
+I1113 12:20:27.168880    7324 SharedLibrary.cpp:116] SharedLibrary::open succeeded for [opengl32.dll]. File name: [C:\Windows\SYSTEM32\opengl32.DLL]
+I1113 12:20:27.272545    7324 SharedLibrary.cpp:76] SharedLibrary::open for [libshadertranslator.dll]: not found in map, open for the first time
+I1113 12:20:27.272740    7324 SharedLibrary.cpp:94] SharedLibrary::open for [libshadertranslator.dll] (win32): call LoadLibrary
+I1113 12:20:27.276685    7324 SharedLibrary.cpp:116] SharedLibrary::open succeeded for [libshadertranslator.dll]. File name: [C:\Users\leigh\AppData\Local\Android\Sdk\emulator\lib64\libshadertranslator.dll]
+I1113 12:20:27.364432    7324 FrameBuffer.cpp:460] Graphics Adapter Vendor Google (Intel)
+I1113 12:20:27.364640    7324 FrameBuffer.cpp:461] Graphics Adapter Android Emulator OpenGL ES Translator (Intel(R) UHD Graphics)
+I1113 12:20:27.364768    7324 FrameBuffer.cpp:462] Graphics API Version OpenGL ES 3.0 (4.5.0 - Build 31.0.101.2135)
+I1113 12:20:27.364974    7324 FrameBuffer.cpp:463] Graphics API Extensions GL_OES_EGL_sync GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint GL_OES_texture_float GL_OES_texture_float_linear GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_packed_depth_stencil GL_OES_vertex_half_float GL_OES_texture_npot GL_OES_rgb8_rgba8 GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 
+I1113 12:20:27.365106    7324 FrameBuffer.cpp:464] Graphics Device Extensions N/A
+I1113 12:20:27.409119    7324 userspace-boot-properties.cpp:760] Userspace boot properties:
+I1113 12:20:27.409383    7324 userspace-boot-properties.cpp:764]   androidboot.boot_devices=pci0000:00/0000:00:03.0 pci0000:00/0000:00:06.0
+I1113 12:20:27.409533    7324 userspace-boot-properties.cpp:764]   androidboot.dalvik.vm.heapsize=512m
+I1113 12:20:27.409657    7324 userspace-boot-properties.cpp:764]   androidboot.debug.hwui.renderer=skiagl
+I1113 12:20:27.409785    7324 userspace-boot-properties.cpp:764]   androidboot.debug.sf.nobootanimation=1
+I1113 12:20:27.409973    7324 userspace-boot-properties.cpp:764]   androidboot.hardware=ranchu
+I1113 12:20:27.410109    7324 userspace-boot-properties.cpp:764]   androidboot.hardware.gltransport=pipe
+I1113 12:20:27.410234    7324 userspace-boot-properties.cpp:764]   androidboot.logcat=*:V
+I1113 12:20:27.410450    7324 userspace-boot-properties.cpp:764]   androidboot.opengles.version=196609
+I1113 12:20:27.410661    7324 userspace-boot-properties.cpp:764]   androidboot.qemu=1
+I1113 12:20:27.410851    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.adb.pubkey=QAAAAOFHzaXfwy6KBVD3VHacdpXJz2qyD/P4fynY/DGOpgTBscvKM6roLqz3oTmirOPkEKb6hKL9F3paZD4nQOCOh1BTwE38BZN+Nr5UWOsw8rkXer6r179j4/KkGL73GdhTGlg5PyLzEYwvteJeyQiMX53Jo7IOmId3uBd6wujh5lUvlBWpL8+v242iCkSbHWAv4dJ8UqZWvGqo7A1eD1DEzZ1yUEfYHnbIheQIH/JcDz+la8e7jpEpSvKhDC2ZOA44dnP75rFZImanTpsTeU+Sg1R2sc+99osAwLVZ0/IRN50/qWEogg1f4n05AVb6Ad5ozWFZz59pK7eoUct1BkH9P3LRcdfHWApw1gMttqO3hmeviaf7lpdYYGLpuTrVQYrymCIrro8U18mELy2FLCYdQYYNJ61H1mkxaawNR0hH2qQuLeL8OpkxDUWW8FoKnX7ZsvNjo0n9bWiet+up1UKjZ3lqUvMGvgyOgzqKZpeircpW53c469SItBUDAyuGY8/mDDCUww883hJc9ce1T87F7LugNIAr/I/zlB/qOW1g14Q58sOqcFchddG2axHCtIvyvDQssGi4o5ID+5JzeygUJGVsm5cshI5kTzlF+Jjd7ZdLO042f1lQaCFlVFoxmSmZMsyLz14SQRHbUa0qgyLhmp2Ul1yiK9P3SzYKd3mUxas0hbAHwQEAAQA= @unknown
+I1113 12:20:27.411003    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.avd_name=Medium_Phone
+I1113 12:20:27.411204    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.camera_hq_edge_processing=0
+I1113 12:20:27.411323    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.camera_protocol_ver=1
+I1113 12:20:27.411507    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.cpuvulkan.version=4202496
+I1113 12:20:27.411722    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.gltransport.drawFlushInterval=800
+I1113 12:20:27.411873    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.gltransport.name=pipe
+I1113 12:20:27.411995    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.hwcodec.avcdec=2
+I1113 12:20:27.412115    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.hwcodec.hevcdec=2
+I1113 12:20:27.412232    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.hwcodec.vpxdec=2
+I1113 12:20:27.412348    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.settings.system.screen_off_timeout=2147483647
+I1113 12:20:27.412466    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.virtiowifi=1
+I1113 12:20:27.412582    7324 userspace-boot-properties.cpp:764]   androidboot.qemu.vsync=60
+I1113 12:20:27.412699    7324 userspace-boot-properties.cpp:764]   androidboot.serialno=EMULATOR35X6X11X0
+I1113 12:20:27.412821    7324 userspace-boot-properties.cpp:764]   androidboot.vbmeta.digest=b097615afe414ae2f91651131b40ccb09554a68626d6dc4334f319d713cb5538
+I1113 12:20:27.412937    7324 userspace-boot-properties.cpp:764]   androidboot.vbmeta.hash_alg=sha256
+I1113 12:20:27.413052    7324 userspace-boot-properties.cpp:764]   androidboot.vbmeta.size=6656
+I1113 12:20:27.413167    7324 userspace-boot-properties.cpp:764]   androidboot.veritymode=enforcing
+netsimd I 11-12 23:20:27.481 daemon\src\rust_main.rs:98 - netsim artifacts path: "C:\\Users\\leigh\\AppData\\Local\\Temp\\netsimd"
+netsimd I 11-12 23:20:27.482 daemon\src\rust_main.rs:101 - NetsimdArgs {
+    fd_startup_str: None,
+    no_cli_ui: true,
+    no_web_ui: true,
+    pcap: false,
+    disable_address_reuse: false,
+    hci_port: None,
+    connector_instance: None,
+    instance: None,
+    logtostderr: false,
+    dev: false,
+    forward_host_mdns: false,
+    vsock: None,
+    config: None,
+    host_dns: Some(
+        "192.168.1.1",
+    ),
+    http_proxy: None,
+    wifi_tap: None,
+    wifi: None,
+    test_beacons: false,
+    no_test_beacons: false,
+    no_shutdown: false,
+    verbose: false,
+    version: false,
+}
+I1113 12:20:28.010318   21660 FrameBuffer.cpp:2805] Setting display: 0 configuration to: 1080x2400, dpi: 420x420 
+I1113 12:20:28.028802   21660 FrameBuffer.cpp:2818] setDisplayActiveConfig 0

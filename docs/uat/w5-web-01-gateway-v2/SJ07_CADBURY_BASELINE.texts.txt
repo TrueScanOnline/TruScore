@@ -1,0 +1,8 @@
+﻿text="Thu, Nov 12"
+text="Gmail"
+text="Photos"
+text="YouTube"
+text="Phone"
+text="Messages"
+text="Chrome"
+text="Rveel"

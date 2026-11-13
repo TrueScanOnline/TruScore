@@ -1,0 +1,40 @@
+﻿11-12 20:33:40.137 24956 24991 I ReactNativeJS:             "source_evidence_id": "governed-nutrient-assessment:9300617064879:sodium"
+11-12 20:33:40.297 24956 24991 I ReactNativeJS:   OPEN PILLAR: 9300617064879
+11-12 20:33:40.309 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:40.309 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:40.310 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:40.311 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:40.311 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:40.521 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:40.521 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:40.521 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:40.563 24956 24991 I ReactNativeJS:   TRUSCORE CALCULATION: 9300617064879
+11-12 20:33:40.583 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:40.595 24956 24991 I ReactNativeJS:                 source_evidence_id:                   governed-nutrient-assessment:9300617064879:total_sugars
+11-12 20:33:40.595 24956 24991 I ReactNativeJS:                 source_evidence_id:                   governed-nutrient-assessment:9300617064879:saturated_fat
+11-12 20:33:40.595 24956 24991 I ReactNativeJS:                 source_evidence_id:                   governed-nutrient-assessment:9300617064879:sodium
+11-12 20:33:40.649 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:40.649 24956 24991 I ReactNativeJS:                 "source_evidence_id": "governed-nutrient-assessment:9300617064879:total_sugars"
+11-12 20:33:40.649 24956 24991 I ReactNativeJS:                 "source_evidence_id": "governed-nutrient-assessment:9300617064879:saturated_fat"
+11-12 20:33:40.649 24956 24991 I ReactNativeJS:                 "source_evidence_id": "governed-nutrient-assessment:9300617064879:sodium"
+11-12 20:33:40.675 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:40.676 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:40.676 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:40.676 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:40.687 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:40.692 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:40.695 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:40.698 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:40.783 24956 24991 I ReactNativeJS: [2026-11-12T07:33:40.765Z] [INFO] [TRUSCORE_ANALYSIS] TruScore 23/100 (9300617064879) {"barcode":"9300617064879","totalScore":23,"fetchTrace":["1. Cache (barcode): HIT"],"pillars":{"Body":{"final":2,"base":15,"adj":2},"Planet":{"final":8,"base":15,"adj":2},"Ethics":{"final":0,"base":15,"adj":4},"Open":{"final":13,"base":15,"adj":2}}}
+11-12 20:33:40.797 24956 24991 I ReactNativeJS: [TRUSCORE_ANALYSIS_JSON] {"barcode":"9300617064879","totalScore":23,"fetchTrace":[{"database":"Cache","queryKeyType":"barcode","order":1,"hit":true,"responseTimeMs":9585}],"pillars":{"Body":{"pillarName":"Body","baseScore":15,"finalScore":2,"adjustments":[{"description":"Nutri-Score Grade E (poor nutrition)","value":-7,"type":"negative","sourceDatabase":"Open Food Facts","queryKeyType":"product_field","adjustmentId":"body-v12-nutri-e","highlightEligible":true,"adjustmentMetadata":{"nutriscoreGrade":"E"}},{"description":"NOVA Group 4 (ultra-processed)","value":-6,"type":"negative","sourceDatabase":"Open Food Facts","queryKeyType":"product_field","adjustmentId":"body-v12-nova-4","highlightEligible":true,"adjustmentMetadata":{"novaGroup":4}}],"dataSourcesUsed":[{"database":"Open Food Facts","queryKeyType":"product_field","returnedResult":true,"order":1}]},"Planet":{"pillarName":"Planet","baseScore":15,"finalScore":8,"adjustments":[{"description":"Base score (15) — Planet_Scoring_Specification_v19","value":0,"type":"neutral","sourceDatabase":"Internal","queryKeyType":"product_field","adjustmentId":"planet-v19-base","highlightEligible":false},{"description":"Eco-Score grade E (-7) — Open Food Facts / Eco-Score","value":-7,"type":"negative","sourceDatabase":"Open Food Facts","queryKeyType":"product_field","adjustmentId":"planet-v19-environmental-e","highlightEligible":true,"adjustmentMetadata":{"environmentalGrade":"E"}}],"dataSourcesUsed":[{"database":"Internal","queryKeyType":"product_field","returnedResult":false,"order":1},{"database":"Open Food Facts","queryKeyType":"product_field","returnedResult":true,"order":2}]},"Ethics":{"pillarName":"Ethics","baseScore":15,"finalScore":0,"adjustments":[{"description":"Base score (assumes ethical until poor ratings)","value":0,"type":"neutral","sourceDatabase":"Internal","queryKeyType":"product_field","adjustmentId":"ethics-v37-base","highlightEligible":false},{"description":"BBFAW Tier 6 (animal welfare governance)","value":-6,"type":"negative","sourceDatabase":"BBFAW","queryKeyType":"brand","adjustmentId":"ethics-v37-bbfaw-tier-6","highlightEligible":true,"adjustmentMetadata":{"benchmarkYear":2025,"benchmarkCompany":"Mondelēz International","tier":6,"impactRating":"F"},"referenceUrl":"https://www.bbfaw.com/food-companies/"},{"description":"BBFAW Impact Rating F (welfare outcomes)","value":-3,"type":"negative","sourceDatabase":"BBFAW","queryKeyType":"brand","adjustmentId":"ethics-v37-bbfaw-impact-ef","highlightEligible":true,"adjustmentMetadata":{"benchmarkYear":2025,"benchmarkCompany":"Mondelēz International","tier":6,"impactRating":"F"},"referenceUrl":"https://www.bbfaw.com/food-companies/"},{"description":"KTC 2026 benchmark score 30 (labour rights in supply chains)","value":-6,"type":"negative","sourceDatabase":"KnowTheChain","queryKeyType":"brand","adjustmentId":"ethics-v37-ktc-21-30","highlightEligible":true,"adjustmentMetadata":{"benchmarkYear":2026,"benchmarkCompany":"Mondelēz International, Inc.","benchmarkScore":30},"referenceUrl":"https://www.business-humanrights.org/en/companies/"}],"dataSourcesUsed":[{"database":"Internal","queryKeyType":"product_field","returnedResult":false,"order":1},{"database":"BBFAW","queryKeyType":"brand","returnedResult":true,"order":2},{"database":"KnowTheChain","queryKeyType":"brand","returnedResult":true,"order":4}]},"Open":{"pillarName":"Open","baseScore":15,"finalScore":13,"adjustments":[{"description":"Ingredient wording clarity: one governed vague or code-dependent flag","value":-2,"type":"negative","sourceDatabase":"Open Food Facts","queryKeyType":"product_field","adjustmentId":"open-v15-ing-clarity-one","highlightEligible":true,"adjustmentMetadata":{"termPresentationClass":"coded","matchedTerms":"476","termPresentationClasses":"coded","decodedAdditiveNames":"Polyglycerol Polyricinoleate"}},{"description":"Origins: insufficient OFF ingredient-origin evidence (neutral)","value":0,"type":"neutral","sourceDatabase":"Open Food Facts","queryKeyType":"product_field","adjustmentId":"open-v15-or
+11-12 20:33:40.797 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:40.797 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:40.962 24956 24991 I ReactNativeJS: '[hero-timing]', '{"barcode":"9300617064879","phase":"displayed","ms":13775,"outcome":"visible"}'
+11-12 20:33:41.138 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:41.139 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:41.749 24956 24991 I ReactNativeJS: '[ResultScreen] ⚡ INSTANT display: product_refined', 'Dairy Milk Milk Chocolate', 'TruScore: 23', 'settled=true'
+11-12 20:33:41.756 24956 24991 I ReactNativeJS: [ResultScreen] ✅ Assessment cycle settled: merge_completed
+11-12 20:33:41.758 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:41.874 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",
+11-12 20:33:42.769 24956 24991 I ReactNativeJS:   barcode:     9300617064879
+11-12 20:33:42.775 24956 24991 I ReactNativeJS:   "barcode": "9300617064879",

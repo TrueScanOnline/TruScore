@@ -59,20 +59,35 @@ module.exports = {
         visibility: 'hidden',
         backgroundColor: '#ffffff',
       },
+      // Temporary public share host is truscoreapi.vercel.app (permanent domain deferred).
+      // Keep custom-scheme and HTTPS in separate filters so autoVerify only covers https hosts.
       intentFilters: [
         {
           action: 'VIEW',
-          autoVerify: true,
           data: [
             {
               scheme: 'truescan',
               host: 'barcode',
             },
+          ],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+        {
+          action: 'VIEW',
+          autoVerify: true,
+          data: [
             {
               scheme: 'https',
-              host: 'truescan.app',
+              host: 'truscoreapi.vercel.app',
               pathPrefix: '/barcode',
             },
+            {
+              scheme: 'https',
+              host: 'truscoreapi-uat.vercel.app',
+              pathPrefix: '/barcode',
+            },
+            // Permanent host deferred — do not autoVerify truescan.app while TLS/DNS is broken
+            // (Android ≤11 can fail the whole filter when any listed host fails verification).
           ],
           category: ['BROWSABLE', 'DEFAULT'],
         },
@@ -82,7 +97,11 @@ module.exports = {
       supportsTablet: true,
       bundleIdentifier: 'com.truescan.foodscanner',
       buildNumber: process.env.RVEEL_IOS_BUILD_NUMBER || '63',
-      associatedDomains: ['applinks:truescan.app'],
+      associatedDomains: [
+        'applinks:truscoreapi.vercel.app',
+        'applinks:truscoreapi-uat.vercel.app',
+        // applinks:truescan.app deferred until permanent domain is healthy
+      ],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSCameraUsageDescription: nativeIdentity.cameraPermission,

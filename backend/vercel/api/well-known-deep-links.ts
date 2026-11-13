@@ -32,8 +32,14 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   if (kind === 'assetlinks') {
     res.setHeader('Content-Type', 'application/json');
 
+    /**
+     * TEMPORARY testing arrangement (founder-authorised 2026-11-13):
+     * Debug APK fingerprint for local/emulator App Link verification only.
+     * NOT permanent production trust — replace with Play App Signing SHA-256 or remove.
+     * Hardcoded to avoid Windows Vercel-CLI env CR/LF contamination that broke DAL.
+     */
     const SHA256_FINGERPRINT =
-      process.env.ANDROID_SHA256_FINGERPRINT || 'SHA256_FINGERPRINT';
+      'FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C';
 
     const assetlinks = [
       {
@@ -46,7 +52,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       },
     ];
 
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json(assetlinks);
   }
 

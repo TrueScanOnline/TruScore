@@ -1,0 +1,29 @@
+{
+  "cadbury": {
+    "android": {
+      "tag": "SPAN",
+      "href": null,
+      "text": "Google Play — coming soon",
+      "color": "rgb(22, 53, 44)",
+      "bg": "rgba(255, 255, 255, 0.94)"
+    },
+    "ios": {
+      "tag": "SPAN",
+      "href": null,
+      "text": "App Store — coming soon",
+      "color": "rgb(22, 53, 44)",
+      "bg": "rgba(255, 255, 255, 0.94)"
+    },
+    "lede": "See how Rveel looks at Dairy Milk Milk Chocolate through Body, Planet, Claims and Transparency.",
+    "fine": "App store listings are coming soon. If you already have Rveel installed, use Open to jump to this barcode.",
+    "hint": "Highlights app availability below — this page does not uncover product findings or scores.",
+    "header": "App availability",
+    "scoreDom": false,
+    "playHrefPresent": false
+  },
+  "unknown": {
+    "headline": "We couldn't identify this product yet.",
+    "lede": "Barcode 0000000000000 is not identified on this page. Once Rveel is available, you can scan or search this barcode to see what information is available. Nothing here implies a completed analysis.",
+    "unrelated": false
+  }
+}

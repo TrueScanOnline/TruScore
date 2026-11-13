@@ -1,0 +1,32 @@
+﻿
+  * Task{e5df09c #418 type=standard A=10145:com.android.chrome U=0 visible=true visibleRequested=true mode=fullscreen 
+translucent=false sz=1}
+    topResumedActivity=ActivityRecord{c22c80f u0 com.android.chrome/org.chromium.chrome.browser.ChromeTabbedActivity 
+t418}
+    * Hist  #0: ActivityRecord{c22c80f u0 com.android.chrome/org.chromium.chrome.browser.ChromeTabbedActivity t418}
+      packageName=com.android.chrome processName=com.android.chrome
+      launchedFromUid=10145 launchedFromPackage=com.android.chrome launchedFromFeature=null userId=0
+      app=ProcessRecord{3ee93dd 23473:com.android.chrome/u0a145}
+      Intent { act=android.intent.action.VIEW dat=https://truscoreapi.vercel.app/barcode/9300617064879 flg=0x14002000 
+cmp=com.android.chrome/org.chromium.chrome.browser.ChromeTabbedActivity (has extras) }
+      rootOfTask=true task=Task{e5df09c #418 type=standard A=10145:com.android.chrome}
+      taskAffinity=10145:com.android.chrome
+      mActivityComponent=com.android.chrome/org.chromium.chrome.browser.ChromeTabbedActivity
+      baseDir=/data/app/~~pRDfFeqb5eSenglTGt5juQ==/com.android.chrome-9zQc6V2jHfnsLSqo5GWK0Q==/Chrome.apk
+      dataDir=/data/user/0/com.android.chrome
+      windows=[Window{421e46 u0 com.android.chrome/org.chromium.chrome.browser.ChromeTabbedActivity}, Window{33b5cf1 
+u0 Splash Screen com.android.chrome EXITING}]
+  * Task{78398c6 #437 type=standard I=com.android.chrome/com.google.android.apps.chrome.IntentDispatcher U=0 
+visible=false visibleRequested=false mode=fullscreen translucent=true sz=1}
+    mLastPausedActivity: ActivityRecord{e315708 u0 com.android.chrome/com.google.android.apps.chrome.IntentDispatcher 
+t437 f}}
+    * Hist  #0: ActivityRecord{e315708 u0 com.android.chrome/com.google.android.apps.chrome.IntentDispatcher t437 f}}
+      packageName=com.android.chrome processName=com.android.chrome
+      app=ProcessRecord{3ee93dd 23473:com.android.chrome/u0a145}
+      Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] 
+dat=https://truscoreapi.vercel.app/barcode/9300617064879 flg=0x10800000 
+cmp=com.android.chrome/com.google.android.apps.chrome.IntentDispatcher }
+      rootOfTask=true task=Task{78398c6 #437 type=standard 
+I=com.android.chrome/com.google.android.apps.chrome.IntentDispatcher}
+
+

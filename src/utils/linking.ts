@@ -1,5 +1,6 @@
-// Deep linking configuration
+﻿// Deep linking configuration
 import * as Linking from 'expo-linking';
+import { getStateFromPath as getStateFromPathDefault } from '@react-navigation/native';
 import {
   buildShareUrl,
   isShareWebHostname,
@@ -9,6 +10,7 @@ import {
   SHARE_QUERY_SRC,
 } from './shareUrl';
 import { isMvpAlertsTabEnabled } from '../config/mvpRuntimeGates';
+import { normalizeBarcodeDeepLinkPath } from './resultProductLoadGuard';
 
 export {
   buildShareUrl,
@@ -19,6 +21,59 @@ export {
   SHARE_QUERY_SRC,
 };
 export type { ShareLinkSource } from './shareUrl';
+export { normalizeBarcodeDeepLinkPath } from './resultProductLoadGuard';
+
+const linkingConfig = {
+  screens: {
+    Onboarding: 'onboarding',
+    Main: {
+      screens: {
+        Scan: {
+          screens: {
+            ScanHome: '',
+            Result: {
+              path: 'barcode/:barcode',
+              parse: {
+                // Keep raw token; Result applies the existing digit-length contract.
+                barcode: (barcode: string) => decodeURIComponent(barcode),
+              },
+            },
+          },
+        },
+        Search: {
+          screens: {
+            SearchHome: 'search',
+          },
+        },
+        History: {
+          screens: {
+            HistoryHome: 'history',
+          },
+        },
+        Favourites: {
+          screens: {
+            FavouritesHome: 'favourites',
+          },
+        },
+        ...(isMvpAlertsTabEnabled()
+          ? {
+              Alerts: {
+                screens: {
+                  AlertsHome: 'alerts',
+                },
+              },
+            }
+          : {}),
+        Settings: 'profile',
+      },
+    },
+    DeveloperSettings: 'developer-settings',
+    // W5-CD-01 presentation preview — development / UAT only (never ship deep link in release).
+    ...(__DEV__
+      ? { ContributionCelebrationPreview: 'contribution-celebration-preview' }
+      : {}),
+  },
+} as const;
 
 export const linking = {
   prefixes: [
@@ -27,55 +82,48 @@ export const linking = {
     'https://truscoreapi.vercel.app',
     'https://truscoreapi-uat.vercel.app',
   ],
-  config: {
-    screens: {
-      Onboarding: 'onboarding',
-      Main: {
-        screens: {
-          Scan: {
-            screens: {
-              ScanHome: '',
-              Result: {
-                path: 'barcode/:barcode',
-                parse: {
-                  barcode: (barcode: string) => barcode,
-                },
-              },
-            },
-          },
-          Search: {
-            screens: {
-              SearchHome: 'search',
-            },
-          },
-          History: {
-            screens: {
-              HistoryHome: 'history',
-            },
-          },
-          Favourites: {
-            screens: {
-              FavouritesHome: 'favourites',
-            },
-          },
-          ...(isMvpAlertsTabEnabled()
-            ? {
-                Alerts: {
-                  screens: {
-                    AlertsHome: 'alerts',
+  config: linkingConfig,
+  /**
+   * SJ-06/SJ-07: empty and rejected extra-segment barcode paths still navigate so
+   * Result can clear prior product UI via invalid_input (not a verified unknown product).
+   */
+  getStateFromPath(path: string, options: Parameters<typeof getStateFromPathDefault>[1]) {
+    const normalized = normalizeBarcodeDeepLinkPath(path);
+    const stripped = normalized.replace(/^\/+/, '');
+    const isEmptyBarcode =
+      stripped === 'barcode' || stripped === 'barcode/' || /^barcode\/?\?/.test(stripped);
+
+    if (isEmptyBarcode) {
+      // Explicit state — empty string is not a product substitution; Result rejects via existing /^\d{8,14}$/.
+      return {
+        routes: [
+          {
+            name: 'Main',
+            state: {
+              index: 0,
+              routes: [
+                {
+                  name: 'Scan',
+                  state: {
+                    index: 1,
+                    routes: [
+                      { name: 'ScanHome' },
+                      { name: 'Result', params: { barcode: '' } },
+                    ],
                   },
                 },
-              }
-            : {}),
-          Settings: 'profile',
-        },
-      },
-      DeveloperSettings: 'developer-settings',
-      // W5-CD-01 presentation preview — development / UAT only (never ship deep link in release).
-      ...(__DEV__
-        ? { ContributionCelebrationPreview: 'contribution-celebration-preview' }
-        : {}),
-    },
+              ],
+            },
+          },
+        ],
+        index: 0,
+      };
+    }
+
+    return getStateFromPathDefault(normalized, {
+      ...options,
+      screens: linkingConfig.screens as never,
+    });
   },
 };
 
@@ -89,11 +137,13 @@ export function parseBarcodeFromUrl(url: string): string | null {
   try {
     const parsed = Linking.parse(url);
     
-    // Handle truescan://barcode/1234567890
+    // Handle truescan://barcode/1234567890 (first path segment only — extra segments ignored)
     if (parsed.scheme === 'truescan' && parsed.hostname === 'barcode') {
-      const barcode = parsed.path?.replace(/^\//, '') || parsed.queryParams?.barcode;
-      if (barcode && /^\d{8,14}$/.test(barcode.toString())) {
-        return barcode.toString();
+      const raw = parsed.path?.replace(/^\//, '') || parsed.queryParams?.barcode;
+      const barcode =
+        typeof raw === 'string' ? raw.split('/').filter(Boolean)[0] : raw?.toString();
+      if (barcode && /^\d{8,14}$/.test(barcode)) {
+        return barcode;
       }
     }
     
@@ -129,14 +179,10 @@ export function parseBarcodeFromUrl(url: string): string | null {
  * - Open the app directly if installed (iOS Universal Links / Android App Links)
  * - Redirect to App Store/Play Store if app not installed
  * 
- * Format: https://truescan.app/barcode/{barcode}
- * This is configured as a universal link in app.config.js:
- * - iOS: associatedDomains: ['applinks:truescan.app']
- * - Android: intentFilters with autoVerify for https://truescan.app
- * 
- * NOTE: Requires a web page at https://truescan.app/barcode/{barcode} that:
- * 1. Detects if app is installed and opens it
- * 2. Redirects to App Store (iOS) or Play Store (Android) if app not installed
+ * Format: https://{share-web-host}/barcode/{barcode}
+ * Temporary public host: truscoreapi.vercel.app (permanent domain deferred).
+ * Native associations must include that host for verified App/Universal Links;
+ * custom scheme truescan://barcode/{barcode} remains the explicit Open in Rveel fallback.
  */
 export function generateUniversalLink(barcode: string): string {
   return buildShareUrl(barcode);
