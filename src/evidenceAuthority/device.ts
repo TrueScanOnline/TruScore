@@ -589,6 +589,8 @@ async function transmitSession(
     (unit) => unit.status === 'reviewed' && !acknowledged.has(`${unit.unitId}:${unitRevision(unit)}`)
   );
   if (pendingUnits.length === 0) return none;
+  // Authority env guard before readiness/outbox so unset/mismatch fail closed (no false retryable outbox).
+  if (!(await targetAuthorityAccepted(trace))) return none;
   const sendable = pendingUnits.filter((unit) => transmissionReadiness(session, unit, pendingUnits) === 'ready');
   const waitingOnImage = pendingUnits.some((unit) => transmissionReadiness(session, unit, pendingUnits) === 'pending_image');
   if (sendable.length === 0) {
@@ -596,7 +598,6 @@ async function transmitSession(
     return waitingOnImage ? { ...none, pendingOutbox: true, pendingImage: true } : { ...none, pendingOutbox: true };
   }
   trace.setDomains(sendable.map((unit) => unit.domain));
-  if (!(await targetAuthorityAccepted(trace))) return none;
   const unitRefs = sendable.map((unit) => ({ unitId: unit.unitId, revision: unitRevision(unit) }));
   let item = items.find((row) => row.sessionId === sessionId && row.status === 'unsent' && sameRefs(row.unitRefs || [], unitRefs));
   if (!item) {

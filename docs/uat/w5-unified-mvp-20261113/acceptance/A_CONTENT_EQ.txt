@@ -1,0 +1,7 @@
+﻿A_TIP=08ed964 ANCESTOR=NO (cherry-pick/rewrite; content-eq for Share/WEB-01A)
+B_TIP=c3f7577 ANCESTOR=YES
+WRONG_BRANCH_a8e77e7_ANCESTOR=NO
+SHARE_EQ_VS_A=publicShareIdentity.ts, product-preview.ts, assetlinks.json, resultProductLoadGuard.ts, AndroidManifest.xml
+INTENTIONAL_DIFF_VS_A=linking.ts (+DEV ContributionCelebrationPreview), publicWebShare.contract.test.ts (e1b0cf7 teaser alignment)
+CD_EQ_VS_B=ProductOriginsDeclarationPanel, ResultCardArt, CommunityAgreementBar, contributionDelight
+HOT_MERGE=result/[barcode].tsx + en.json auto-merged with both stream symbols

@@ -1,3 +1,4 @@
+
 CREATE TABLE IF NOT EXISTS evidence_contributors (
   contributor_id TEXT PRIMARY KEY,
   token_hash TEXT NOT NULL UNIQUE,

@@ -1,0 +1,2 @@
+db/migrations/20260928_wave4a_evidence_authority.sql text eol=lf
+src/evidenceAuthority/schemaSql.ts text eol=lf

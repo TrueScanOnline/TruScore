@@ -32,10 +32,12 @@ describe('share story card props', () => {
   test('name, image, barcode and score come from the open product together', () => {
     const source = fs.readFileSync(path.join(__dirname, '../../../components/ShareModal.tsx'), 'utf8');
     expect(source).toContain("const imageKey = product.image_url || ''");
-    expect(source).toContain('productName={productDisplayName}');
-    expect(source).toContain('imageUrl={imageKey || null}');
-    expect(source).toContain('barcode={product.barcode}');
-    expect(source).toContain('scoreState={shareImageScoreState(truScore, { publicationSettled })}');
+    // Story card is composed via storyCardProps (spread into ShareProductStoryCard).
+    expect(source).toContain('productName: productDisplayName');
+    expect(source).toContain('imageUrl: imageKey || null');
+    expect(source).toContain('barcode: product.barcode');
+    expect(source).toContain('scoreState: shareImageScoreState(truScore, { publicationSettled })');
+    expect(source).toContain('<ShareProductStoryCard {...storyCardProps}');
     expect(source).not.toContain('SHARE_PRODUCT_EXPORT');
     expect(source).not.toContain('SHARE_CAPTURE_AUDIT');
   });
