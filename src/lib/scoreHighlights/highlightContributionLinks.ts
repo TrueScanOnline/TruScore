@@ -16,6 +16,7 @@ import {
   resultContributionActions,
   type ContributionEntryContext,
 } from '../../contribution/resultContributionActions';
+import { isGuidedContributionSubmitEnabled } from '../../config/mvpFeatureGates';
 import type { ContributionOpportunity, CrossPillarPublicationSnapshot } from '../rateability/types';
 import type { Product } from '../../types/product';
 import type { ScoreHighlightPillar } from './types';
@@ -86,6 +87,8 @@ export function highlightContributionOffer(
   options?: HighlightContributionOptions
 ): HighlightContributionOffer {
   void options?.highlight;
+  // MVP: do not offer submit destinations when guided contribution is off.
+  if (!isGuidedContributionSubmitEnabled()) return EMPTY;
   if (options?.publicationSettled !== true) return EMPTY;
   const publication = product?._publication;
   if (!publication || publication.settled !== true) return EMPTY;

@@ -179,6 +179,7 @@ import {
 } from '../../src/contribution/productInformationMenu';
 import { RESULT_SCORE_HIGHLIGHTS_HEADING } from '../../src/lib/scoreHighlights';
 import { voluntaryContributionOffer } from '../../src/contribution/voluntaryContributionOffer';
+import { isGuidedContributionSubmitEnabled } from '../../src/config/mvpFeatureGates';
 import { subscribeEvidenceAdmission } from '../../src/evidenceAuthority/device';
 import { currentModalTrace } from '../../src/evidenceAuthority/contributionTrace';
 import {
@@ -1647,6 +1648,8 @@ function ResultScreenContent() {
   };
 
   const openContribution = (entry: ContributionEntryContext, journey: 'add' | 'change', formFirst = false) => {
+    // MVP: do not open guided submit when the feature gate is off.
+    if (!isGuidedContributionSubmitEnabled()) return;
     setContributionEntry(entry);
     setContributionJourney(journey);
     setContributionFormFirst(formFirst);

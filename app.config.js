@@ -18,6 +18,13 @@ if (process.env.EXPO_PUBLIC_SCORE_DIAGNOSTICS === undefined) {
 if (process.env.EXPO_PUBLIC_STORE_RELEASE === undefined) {
   process.env.EXPO_PUBLIC_STORE_RELEASE = '0';
 }
+// MVP optional surfaces — production-default OFF (explicit '1' required to enable).
+if (process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION === undefined) {
+  process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '0';
+}
+if (process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS === undefined) {
+  process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS = '0';
+}
 
 module.exports = {
   expo: {

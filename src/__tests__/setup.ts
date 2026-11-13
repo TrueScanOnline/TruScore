@@ -31,6 +31,18 @@ global.console = {
 // Set up global fetch mock
 global.fetch = jest.fn();
 
+// Unit suites that exercise contribution menus assume an entitled UAT path.
+// Production/store builds remain default-OFF via app.config.js / eas.json.
+if (process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION === undefined) {
+  process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+}
+if (process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV === undefined) {
+  process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+}
+if (process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS === undefined) {
+  process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS = '0';
+}
+
 // Reset mocks before each test
 beforeEach(() => {
   jest.clearAllMocks();

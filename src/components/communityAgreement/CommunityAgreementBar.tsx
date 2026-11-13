@@ -27,6 +27,7 @@ import {
 } from '../../communityAgreement/client';
 import { AGREEMENT_ACCENT } from '../../communityAgreement/agreementAgreeButtonStyle';
 import type { CommunityAgreementGroup } from '../../communityAgreement/types';
+import { isCommunityAgreementsEnabled } from '../../config/mvpFeatureGates';
 import type { SharedEvidenceSnapshot } from '../../evidenceAuthority/types';
 import type { Product } from '../../types/product';
 
@@ -84,6 +85,7 @@ export default function CommunityAgreementBar({
   onCorrect,
   onAgreementRecorded,
 }: Props) {
+  const featureEnabled = isCommunityAgreementsEnabled();
   const { darkMode } = useTheme();
   const emerald = resultEmeraldTone(darkMode);
   const { fontScale } = useWindowDimensions();
@@ -103,7 +105,8 @@ export default function CommunityAgreementBar({
   const agreeAccent = darkMode ? emerald.action : AGREEMENT_ACCENT;
 
   useEffect(() => {
-    if (!barcode || !local.eligible || surfaceEnabled !== true) {
+    // MVP: WP09 off — never fetch counts or credentials.
+    if (!featureEnabled || !barcode || !local.eligible || surfaceEnabled !== true) {
       setRemoteEligible(false);
       setRemoteCount(null);
       return;
@@ -129,7 +132,7 @@ export default function CommunityAgreementBar({
     return () => {
       cancelled = true;
     };
-  }, [barcode, group, local.eligible, local.revisionId, surfaceEnabled]);
+  }, [featureEnabled, barcode, group, local.eligible, local.revisionId, surfaceEnabled]);
 
   const playAgreeConfirmation = useCallback(() => {
     if (reducedMotion) {

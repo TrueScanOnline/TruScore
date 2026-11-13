@@ -5,6 +5,7 @@
  * This module does not score, publish, or admit.
  */
 
+import { isGuidedContributionSubmitEnabled } from '../config/mvpFeatureGates';
 import type { ContributionOpportunity } from '../lib/rateability/types';
 import type { Product } from '../types/product';
 import {
@@ -83,6 +84,8 @@ export function productInformationMenu(
   product: Product | null | undefined,
   options?: { publicationSettled?: boolean }
 ): ProductInformationAction[] {
+  // MVP: no submission menu when guided contribution is not entitled.
+  if (!isGuidedContributionSubmitEnabled()) return [];
   // Same fail-closed gate as voluntaryContributionOffer. One Checking or missing pillar supplies nothing.
   if (options?.publicationSettled !== true) return [];
   const publication = product?._publication;

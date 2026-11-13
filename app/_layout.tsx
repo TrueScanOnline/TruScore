@@ -29,6 +29,7 @@ import {
 import { useScanStore } from '../src/store/useScanStore';
 import { useSettingsStore } from '../src/store/useSettingsStore';
 import { assertScoreDiagnosticsReleaseSafe } from '../src/config/scoreDiagnostics';
+import { assertMvpFeatureGatesReleaseSafe } from '../src/config/mvpFeatureGates';
 import { retryUnsentEvidenceSubmissions } from '../src/evidenceAuthority/device';
 import { resumeEvidenceImages } from '../src/evidenceImage/pipeline';
 import { useFavoritesStore } from '../src/store/useFavoritesStore';
@@ -82,6 +83,7 @@ function RootLayout() {
             name: 'environmentValidation',
             task: async () => {
               assertScoreDiagnosticsReleaseSafe();
+              assertMvpFeatureGatesReleaseSafe();
               const { validateEnvironment } = await import('../src/utils/environmentValidation');
               const validation = validateEnvironment();
               if (!validation.isValid) {

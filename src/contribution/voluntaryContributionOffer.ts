@@ -4,6 +4,7 @@
  * A score, Confidence, or Highlight cannot create a row.
  */
 
+import { isGuidedContributionSubmitEnabled } from '../config/mvpFeatureGates';
 import type { Product } from '../types/product';
 import { productOriginsCardPresentation } from '../origins/productOriginsCard';
 import {
@@ -45,6 +46,8 @@ export function voluntaryContributionOffer(
   product: Product | null | undefined,
   options?: { publicationSettled?: boolean }
 ): VoluntaryContributionAction[] {
+  // MVP: hide submit destinations when guided contribution is not entitled.
+  if (!isGuidedContributionSubmitEnabled()) return [];
   if (options?.publicationSettled !== true) return [];
   const publication = product?._publication;
   if (!publication || publication.settled !== true) return [];

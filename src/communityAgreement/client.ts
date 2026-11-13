@@ -3,6 +3,7 @@
  */
 
 import { getBackendUrl } from '../config/backendConfig';
+import { isCommunityAgreementsEnabled } from '../config/mvpFeatureGates';
 import { contributorCredential } from '../evidenceAuthority/device';
 import type { SharedEvidenceSnapshot } from '../evidenceAuthority/types';
 import type { Product } from '../types/product';
@@ -79,6 +80,7 @@ export async function fetchCommunityAgreement(input: {
   withCredential?: boolean;
   signal?: AbortSignal;
 }): Promise<CommunityAgreementGetResponse | null> {
+  if (!isCommunityAgreementsEnabled()) return null;
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (input.withCredential) {
     try {
@@ -111,6 +113,9 @@ export async function submitCommunityAgreement(input: {
   expectedRevisionId: string;
   signal?: AbortSignal;
 }): Promise<AgreeOutcome> {
+  if (!isCommunityAgreementsEnabled()) {
+    return { ok: false, reason: 'feature_disabled' };
+  }
   let token: string;
   try {
     token = await contributorCredential(null);
