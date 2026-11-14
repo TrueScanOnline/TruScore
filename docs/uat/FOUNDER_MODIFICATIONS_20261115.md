@@ -13,7 +13,7 @@
 | FM-03 commit | `9b81e6ee840b902883e97940f2a079cb01e1dd6f` |
 | Evidence document commit | `3082a7096e575a799976750436635a8a33f8055a` |
 | Follow-up (fill final HEAD) | `b7351effec6def37ca4d83cec78d2fac7b176904` |
-| Final integrated HEAD | `b7351effec6def37ca4d83cec78d2fac7b176904` (will move if another docs fix lands) |
+| Final integrated HEAD | `bc845c3314af5c14389e97ea476be2929de6aaaa` |
 
 Worktree: `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`
 
