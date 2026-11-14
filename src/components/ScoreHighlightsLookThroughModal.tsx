@@ -299,7 +299,6 @@ export default function ScoreHighlightsLookThroughModal({
                         ) : null}
                         {contributionLinks.map((link) => {
                           const absence = link.kind === 'absence';
-                          const disabled = claimsAbsenceAttestationState === 'submitting';
                           return (
                             <View key={link.key}>
                               {absence ? (
@@ -308,11 +307,7 @@ export default function ScoreHighlightsLookThroughModal({
                                 </Text>
                               ) : null}
                               <TouchableOpacity
-                                onPress={() => {
-                                  if (disabled) return;
-                                  onOpenContribution?.(link.destination, link.key);
-                                }}
-                                disabled={disabled}
+                                onPress={() => onOpenContribution?.(link.destination, link.key)}
                                 style={
                                   absence
                                     ? [
@@ -324,7 +319,6 @@ export default function ScoreHighlightsLookThroughModal({
                                 }
                                 accessibilityRole="button"
                                 accessibilityLabel={link.label}
-                                accessibilityState={{ disabled }}
                               >
                                 <Text
                                   style={
