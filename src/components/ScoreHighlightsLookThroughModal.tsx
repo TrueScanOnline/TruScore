@@ -14,6 +14,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Linking,
   Modal,
@@ -39,8 +40,11 @@ import {
   type ScoreHighlightSelection,
   type ScoreHighlightStory,
 } from '../lib/scoreHighlights';
+import { CLAIMS_PACKET_ABSENCE_SUPPORTING_COPY } from '../lib/scoreHighlights/highlightContributionLinks';
 import { logger } from '../utils/logger';
 import type { CrossPillarPublicationSnapshot } from '../lib/rateability';
+
+export type ClaimsAbsenceAttestationUiState = 'idle' | 'submitting' | 'failed';
 
 /** Where the consumer entered the look-through from. */
 export type ScoreHighlightsLookThroughRequest =
@@ -92,6 +96,9 @@ interface ScoreHighlightsLookThroughModalProps {
     destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims',
     linkKey: string
   ) => void;
+  /** FM-03R: in-place submitting / failure state for photo-free Claims absence. */
+  claimsAbsenceAttestationState?: ClaimsAbsenceAttestationUiState;
+  claimsAbsenceAttestationError?: string | null;
   /**
    * Host handler for governed in-app L3 destinations. External sources are opened here.
    * When omitted, in-app L3 affordances are not offered.
@@ -124,6 +131,8 @@ export default function ScoreHighlightsLookThroughModal({
   contributionLinks = [],
   contributionHeading = null,
   onOpenContribution,
+  claimsAbsenceAttestationState = 'idle',
+  claimsAbsenceAttestationError = null,
   onOpenInAppL3,
 }: ScoreHighlightsLookThroughModalProps) {
   const { darkMode } = useTheme();
@@ -274,39 +283,69 @@ export default function ScoreHighlightsLookThroughModal({
                 )}
                 {contributionLinks.length > 0 ? (
                   <View style={[styles.contributeBox, { borderTopColor: emerald.line }]}>
-                    {contributionHeading ? (
-                      <Text style={[styles.contextPromptTitle, { color: emerald.ink }]}>{contributionHeading}</Text>
-                    ) : null}
-                    {contributionLinks.map((link) => {
-                      const absence = link.kind === 'absence';
-                      return (
-                        <TouchableOpacity
-                          key={link.key}
-                          onPress={() => onOpenContribution?.(link.destination, link.key)}
-                          style={
-                            absence
-                              ? [
-                                  styles.contributeButton,
-                                  styles.contributeButtonSecondary,
-                                  { borderColor: emerald.action, backgroundColor: 'transparent' },
-                                ]
-                              : [styles.contributeButton, { backgroundColor: emerald.action }]
-                          }
-                          accessibilityRole="button"
-                          accessibilityLabel={link.label}
-                        >
-                          <Text
-                            style={
-                              absence
-                                ? [styles.contributeButtonTextSecondary, { color: emerald.action }]
-                                : styles.contributeButtonText
-                            }
-                          >
-                            {link.label}
+                    {claimsAbsenceAttestationState === 'submitting' ? (
+                      <View style={styles.attestationProgress} accessibilityLiveRegion="polite">
+                        <ActivityIndicator color={emerald.action} />
+                        <Text style={[styles.attestationProgressText, { color: emerald.ink }]}>
+                          Submitting your confirmation…
+                        </Text>
+                      </View>
+                    ) : (
+                      <>
+                        {contributionHeading ? (
+                          <Text style={[styles.contextPromptTitle, { color: emerald.ink }]}>
+                            {contributionHeading}
                           </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
+                        ) : null}
+                        {contributionLinks.map((link) => {
+                          const absence = link.kind === 'absence';
+                          const disabled = claimsAbsenceAttestationState === 'submitting';
+                          return (
+                            <View key={link.key}>
+                              {absence ? (
+                                <Text style={[styles.absenceSupport, { color: emerald.muted }]}>
+                                  {CLAIMS_PACKET_ABSENCE_SUPPORTING_COPY}
+                                </Text>
+                              ) : null}
+                              <TouchableOpacity
+                                onPress={() => {
+                                  if (disabled) return;
+                                  onOpenContribution?.(link.destination, link.key);
+                                }}
+                                disabled={disabled}
+                                style={
+                                  absence
+                                    ? [
+                                        styles.contributeButton,
+                                        styles.contributeButtonSecondary,
+                                        { borderColor: emerald.action, backgroundColor: 'transparent' },
+                                      ]
+                                    : [styles.contributeButton, { backgroundColor: emerald.action }]
+                                }
+                                accessibilityRole="button"
+                                accessibilityLabel={link.label}
+                                accessibilityState={{ disabled }}
+                              >
+                                <Text
+                                  style={
+                                    absence
+                                      ? [styles.contributeButtonTextSecondary, { color: emerald.action }]
+                                      : styles.contributeButtonText
+                                  }
+                                >
+                                  {link.label}
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                          );
+                        })}
+                        {claimsAbsenceAttestationState === 'failed' && claimsAbsenceAttestationError ? (
+                          <Text style={[styles.absenceSupport, { color: emerald.muted }]}>
+                            {claimsAbsenceAttestationError}
+                          </Text>
+                        ) : null}
+                      </>
+                    )}
                   </View>
                 ) : null}
               </>
@@ -459,5 +498,22 @@ const styles = StyleSheet.create({
   contributeButtonTextSecondary: {
     fontSize: 16,
     fontWeight: '700',
+  },
+  absenceSupport: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  attestationProgress: {
+    minHeight: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  attestationProgressText: {
+    fontSize: 15,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

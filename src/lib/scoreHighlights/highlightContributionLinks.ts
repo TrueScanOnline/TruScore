@@ -6,7 +6,8 @@
  * FM-02: pillar look-through offers assessment-driven Add / complete only.
  * Change / Edit remains on Result cards and the Product Information menu.
  *
- * FM-03: Claims may also offer the governed packet-absence entry (not a Change action).
+ * FM-03R: Claims may offer photo-free user-attested packet absence (not a Change action;
+ * not the guided camera journey).
  */
 
 import {
@@ -28,12 +29,20 @@ export const HIGHLIGHT_ADD_INFORMATION_HEADING = 'Add information from the pack'
 /** Founder-requested Claims pillar absence entry label (exact wording). */
 export const CLAIMS_PACKET_ABSENCE_PILLAR_LABEL = 'There are no claims on the packet';
 
+/** Concise explanation under the absence action — not a second confirmation step. */
+export const CLAIMS_PACKET_ABSENCE_SUPPORTING_COPY =
+  'Confirm that this pack has no claims or certifications currently assessed by RVEEL.';
+
 const ADD_NUTRITION = 'Add nutrition';
 const ADD_INGREDIENTS = 'Add ingredients';
 
 export type HighlightContributionKind = 'add' | 'complete' | 'absence';
 
-export type HighlightContributionEntryIntent = 'packet_absence';
+/**
+ * FM-03R: direct attestation submit. The prior FM-03 `packet_absence` capture intent
+ * is retained on PacketContributionModal for possible post-MVP photo journeys only.
+ */
+export type HighlightContributionEntryIntent = 'claims_absence_attestation';
 
 export type HighlightContributionDestination = Exclude<ContributionEntryContext, 'certifications'>;
 
@@ -45,7 +54,7 @@ export type HighlightContributionLink = {
   journey: 'add';
   /** Keeps origins `complete` distinct from origins `add`. Change is never offered here. */
   kind: HighlightContributionKind;
-  /** Dedicated entry into the guided journey (absence does not auto-admit). */
+  /** Absence uses direct attestation; Add continues to open the contribution form. */
   entryIntent?: HighlightContributionEntryIntent;
 };
 
@@ -102,8 +111,9 @@ export function claimsPacketAbsenceContradicted(product: Product): boolean {
 }
 
 /**
- * FM-03 eligibility for the Claims pillar "There are no claims on the packet" action.
- * Does not admit evidence. Opening the journey still requires explicit confirmation + photo.
+ * FM-03R eligibility for the Claims pillar "There are no claims on the packet" action.
+ * Only when Claims is settled NR with no published score. Does not admit evidence.
+ * The button tap itself is the explicit declaration (photo-free attestation).
  */
 export function claimsPacketAbsencePillarEligible(
   product: Product,
@@ -113,7 +123,8 @@ export function claimsPacketAbsencePillarEligible(
   if (!isGuidedContributionSubmitEnabled()) return false;
   if (publication.settled !== true) return false;
   if (publication.overall?.publicationStatus === 'checking') return false;
-  if (publication.claims?.publicationStatus === 'checking') return false;
+  if (publication.claims?.publicationStatus !== 'nr') return false;
+  if (publication.claims.publishedScore != null) return false;
   if (!publication.claims?.assessmentLanes) return false;
   if (publication.claims.assessmentLanes.packet === 'assessed') return false;
   if (!liveOpportunity(publication.claims.s26?.contributionOpportunity)) return false;
@@ -191,7 +202,7 @@ export function highlightContributionOffer(
         kind: 'add',
       });
     }
-    // FM-03: eligible-absence action (not a Change). May sit beside Add when packet is unresolved.
+    // FM-03R: eligible-absence action (not a Change). Direct attestation; no camera.
     if (claimsPacketAbsencePillarEligible(product as Product, publication, actions)) {
       links.push({
         key: 'packet-absence',
@@ -199,7 +210,7 @@ export function highlightContributionOffer(
         destination: 'packetClaims',
         journey: 'add',
         kind: 'absence',
-        entryIntent: 'packet_absence',
+        entryIntent: 'claims_absence_attestation',
       });
     }
     return offer(links);

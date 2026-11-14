@@ -26,6 +26,13 @@ import {
   parseManualTextDocument,
   type ManualTextDraft,
 } from './manualTextAsset';
+import {
+  PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE,
+  packetAbsenceAttestationSha256,
+  packetAbsenceAttestationSubmissionMatches,
+  parsePacketAbsenceAttestationDocument,
+  type PacketAbsenceAttestationDraft,
+} from './packetAbsenceAttestationAsset';
 import type { ContributionEvidence } from '../contributions/types';
 import { deriveEvidenceFacts } from './subjects';
 import type { AuthorityStore, AuthorityTx } from './store';
@@ -295,15 +302,65 @@ export class EvidenceAuthority {
                 originStructured: canonical.originStructured,
               };
             }
+          } else if (asset.contentType === PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE) {
+            // FM-03R: dedicated photo-free user attestation. Not photograph-verified.
+            const document = parsePacketAbsenceAttestationDocument(asset.bytes);
+            const storedHash = asset.bytes ? sha256Hex(asset.bytes) : '';
+            const inputs = input.facts.filter((item) => item.finalizedAssetId === fact.finalizedAssetId);
+            const variantKey =
+              inputs.find((item) => typeof item.variantKey === 'string')?.variantKey || fact.variantKey;
+            if (
+              !document ||
+              storedHash !== asset.sha256 ||
+              !packetAbsenceAttestationSubmissionMatches({
+                document,
+                barcode: input.barcode,
+                variantKey,
+                inputs,
+              })
+            ) {
+              const outcome = empty(!document ? 'pending_source' : 'source_hash_mismatch');
+              await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
+              return outcome;
+            }
+            governedFact = {
+              ...fact,
+              region: undefined,
+              machineRunId: undefined,
+              derivedAssetId: undefined,
+            };
+          } else {
+            // Image / other finalized sources must not carry packet absence without the dedicated route.
+            const inputs = input.facts.filter((item) => item.finalizedAssetId === fact.finalizedAssetId);
+            if (
+              inputs.some((item) => item.packetAbsence === true) ||
+              fact.subjectKey === 'packet_claims|absence|scope:whole_packet'
+            ) {
+              // Photograph-backed absence remains via companion image + fact without this branch's
+              // finalizedAssetId being the sole absence source when contentType is image/jpeg —
+              // photo absence uses the image as finalizedAssetId. Allow image/jpeg only.
+              if (asset.contentType !== 'image/jpeg') {
+                const outcome = empty('pending_source');
+                await tx.putSubmission({
+                  key: input.idempotencyKey,
+                  contributorId,
+                  barcode: input.barcode,
+                  outcome,
+                });
+                return outcome;
+              }
+            }
           }
         }
-        const manualText = fact.finalizedAssetId
-          ? (await tx.getAsset(fact.finalizedAssetId))?.contentType === MANUAL_TEXT_CONTENT_TYPE
-          : false;
+        const assetForResolved = fact.finalizedAssetId ? await tx.getAsset(fact.finalizedAssetId) : null;
+        const manualText = assetForResolved?.contentType === MANUAL_TEXT_CONTENT_TYPE;
+        const userAttestation =
+          assetForResolved?.contentType === PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE;
         resolved.push({
-          fact: manualText
-            ? { ...governedFact, region: undefined, machineRunId: undefined, derivedAssetId: undefined }
-            : fact,
+          fact:
+            manualText || userAttestation
+              ? { ...governedFact, region: undefined, machineRunId: undefined, derivedAssetId: undefined }
+              : fact,
           assetId,
           manualText,
         });
@@ -311,7 +368,11 @@ export class EvidenceAuthority {
       const companionIds = [...new Set(input.facts.flatMap((item) => item.companionFinalizedAssetIds || []))];
       for (const companionId of companionIds) {
         const companion = await tx.getAsset(companionId);
-        if (!companion?.verified || companion.contentType === MANUAL_TEXT_CONTENT_TYPE) {
+        if (
+          !companion?.verified ||
+          companion.contentType === MANUAL_TEXT_CONTENT_TYPE ||
+          companion.contentType === PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE
+        ) {
           const outcome = empty('source_not_finalized');
           await tx.putSubmission({ key: input.idempotencyKey, contributorId, barcode: input.barcode, outcome });
           return outcome;
@@ -945,6 +1006,61 @@ export class EvidenceAuthority {
         barcode,
       });
       return { ok: true, assetId, sha256: canonical.sha256, contentType: MANUAL_TEXT_CONTENT_TYPE };
+    });
+  }
+
+  /**
+   * FM-03R: finalize a photo-free user attestation for whole-packet claims absence.
+   * Distinct from photograph evidence and from manual_text. Server owns the asset bytes.
+   */
+  async finalizePacketAbsenceAttestation(
+    input: PacketAbsenceAttestationDraft & { contributorId: string }
+  ): Promise<
+    | {
+        ok: true;
+        assetId: string;
+        sha256: string;
+        contentType: typeof PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE;
+      }
+    | { ok: false; reason: string }
+  > {
+    if (!input.contributorId || !input.barcode?.trim()) return { ok: false, reason: 'source_not_owned' };
+    const canonical = packetAbsenceAttestationSha256({
+      barcode: input.barcode.trim(),
+      variantKey: input.variantKey,
+    });
+    if (!canonical) return { ok: false, reason: 'attestation_incomplete' };
+    const barcode = input.barcode.trim();
+    return this.store.transaction(async (tx) => {
+      const existing = await tx.findVerifiedAssetByBinding({
+        sha256: canonical.sha256,
+        contributorId: input.contributorId,
+        barcode,
+        contentType: PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE,
+      });
+      if (existing) {
+        return {
+          ok: true,
+          assetId: existing.assetId,
+          sha256: existing.sha256,
+          contentType: PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE,
+        };
+      }
+      const assetId = `asset_${randomBytes(6).toString('hex')}`;
+      await tx.putAsset({
+        assetId,
+        sha256: canonical.sha256,
+        bytes: canonical.bytes,
+        contentType: PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE,
+        contributorId: input.contributorId,
+        barcode,
+      });
+      return {
+        ok: true,
+        assetId,
+        sha256: canonical.sha256,
+        contentType: PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE,
+      };
     });
   }
 }

@@ -16,6 +16,7 @@ import {
 import { summarizeOffWriteResponse } from '../truescan-src/evidenceAuthority/offWriteResponse';
 import type { EvidenceFactInput } from '../truescan-src/evidenceAuthority/types';
 import type { ManualTextDomain } from '../truescan-src/evidenceAuthority/manualTextAsset';
+import { PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE } from '../truescan-src/evidenceAuthority/packetAbsenceAttestationAsset';
 import { continueAfterResponse } from '../lib/continueAfterResponse';
 import {
   bindServerTrace,
@@ -294,6 +295,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         packetAbsence: false,
       });
       return res.status(result.ok ? 200 : 409).json(result);
+    }
+    if (action === 'finalize-packet-absence-attestation') {
+      serverTraceAction('finalize_packet_absence_attestation');
+      serverTraceMark('server_finalise_received');
+      const barcode = typeof body.barcode === 'string' ? body.barcode.trim() : '';
+      if (!/^\d{8,14}$/.test(barcode)) {
+        return res.status(400).json({ success: false, error: 'attestation_incomplete' });
+      }
+      const result = await service.finalizePacketAbsenceAttestation({
+        contributorId,
+        barcode,
+        variantKey: typeof body.variantKey === 'string' ? body.variantKey : undefined,
+      });
+      return res.status(result.ok ? 200 : 409).json({
+        ...result,
+        ...(result.ok ? { contentType: PACKET_ABSENCE_USER_ATTESTATION_CONTENT_TYPE } : {}),
+      });
     }
     if (action !== 'submit') return res.status(400).json({ success: false, error: 'Invalid action' });
     serverTraceAction('submit');

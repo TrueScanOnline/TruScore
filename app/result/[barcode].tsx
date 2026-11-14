@@ -180,7 +180,10 @@ import {
 import { RESULT_SCORE_HIGHLIGHTS_HEADING } from '../../src/lib/scoreHighlights';
 import { voluntaryContributionOffer } from '../../src/contribution/voluntaryContributionOffer';
 import { isGuidedContributionSubmitEnabled } from '../../src/config/mvpFeatureGates';
-import { subscribeEvidenceAdmission } from '../../src/evidenceAuthority/device';
+import {
+  subscribeEvidenceAdmission,
+  submitClaimsAbsenceAttestation,
+} from '../../src/evidenceAuthority/device';
 import { currentModalTrace } from '../../src/evidenceAuthority/contributionTrace';
 import {
   authoritativeStateSupersedes,
@@ -624,10 +627,16 @@ function ResultScreenContent() {
   const [contributionEntry, setContributionEntry] = useState<ContributionEntryContext>('ingredients');
   const [contributionJourney, setContributionJourney] = useState<'add' | 'change'>('add');
   const [contributionFormFirst, setContributionFormFirst] = useState(false);
-  /** FM-03: dedicated Claims packet-absence entry; never auto-admits. */
+  /** Guided contribution entry intent (photo absence path retained for post-MVP; FM-03R does not use it). */
   const [contributionEntryIntent, setContributionEntryIntent] = useState<'default' | 'packet_absence'>(
     'default'
   );
+  /** FM-03R: photo-free Claims absence attestation UI state. */
+  const [claimsAbsenceAttestationState, setClaimsAbsenceAttestationState] = useState<
+    'idle' | 'submitting' | 'failed'
+  >('idle');
+  const [claimsAbsenceAttestationError, setClaimsAbsenceAttestationError] = useState<string | null>(null);
+  const claimsAbsenceInFlightRef = useRef(false);
   const [contributionChoice, setContributionChoice] = useState<
     null | 'nutrition' | 'packet' | 'origins' | 'productInformation'
   >(null);
@@ -2109,8 +2118,67 @@ function ResultScreenContent() {
       linkKey,
     });
     if (!link) return;
+
+    // FM-03R: Claims absence submits a user attestation directly — no camera/form.
+    if (link.kind === 'absence' && link.entryIntent === 'claims_absence_attestation') {
+      void submitClaimsAbsenceAttestationFromPillar(product, barcode);
+      return;
+    }
+
     setScoreHighlightsRequest(null);
-    openContribution(destination, link.journey, true, link.entryIntent === 'packet_absence' ? 'packet_absence' : 'default');
+    setClaimsAbsenceAttestationState('idle');
+    setClaimsAbsenceAttestationError(null);
+    openContribution(destination, link.journey, true, 'default');
+  };
+
+  const submitClaimsAbsenceAttestationFromPillar = async (
+    liveProduct: Product,
+    liveBarcode: string
+  ) => {
+    if (claimsAbsenceInFlightRef.current) return;
+    if (getPrimaryBarcode(liveProduct.barcode) !== getPrimaryBarcode(liveBarcode)) return;
+    if (publicationSettled !== true) return;
+    const link = highlightContributionTap(liveProduct, 'Ethics', 'packetClaims', {
+      publicationSettled,
+      linkKey: 'packet-absence',
+    });
+    if (!link || link.kind !== 'absence') return;
+
+    claimsAbsenceInFlightRef.current = true;
+    setClaimsAbsenceAttestationState('submitting');
+    setClaimsAbsenceAttestationError(null);
+    try {
+      const result = await submitClaimsAbsenceAttestation({
+        barcode: getPrimaryBarcode(liveBarcode),
+        expectedBarcode: getPrimaryBarcode(liveProduct.barcode),
+      });
+      // Stale-product guard after the network round-trip.
+      const stillCurrent =
+        productRef.current &&
+        getPrimaryBarcode(productRef.current.barcode) === getPrimaryBarcode(liveBarcode) &&
+        getPrimaryBarcode(liveBarcode) === getPrimaryBarcode(barcode);
+      if (!stillCurrent) {
+        setClaimsAbsenceAttestationState('idle');
+        return;
+      }
+      if (result.status === 'admitted') {
+        setClaimsAbsenceAttestationState('idle');
+        setClaimsAbsenceAttestationError(null);
+        setScoreHighlightsRequest(null);
+        return;
+      }
+      setClaimsAbsenceAttestationState('failed');
+      setClaimsAbsenceAttestationError(
+        'Your confirmation could not be completed yet. Claims stays Not Rateable until RVEEL can admit it.'
+      );
+    } catch {
+      setClaimsAbsenceAttestationState('failed');
+      setClaimsAbsenceAttestationError(
+        'Your confirmation could not be completed yet. Claims stays Not Rateable until RVEEL can admit it.'
+      );
+    } finally {
+      claimsAbsenceInFlightRef.current = false;
+    }
   };
 
   const shareManufacturingCountryLabel = (() => {
@@ -3132,10 +3200,17 @@ function ResultScreenContent() {
         pillarScores={publishedHighlightPillarScores(truScore, { publicationSettled })}
         publication={truScore?.publication}
         firedAdjustments={scoreHighlightsLedger ?? undefined}
-        onClose={() => setScoreHighlightsRequest(null)}
+        onClose={() => {
+          if (claimsAbsenceAttestationState === 'submitting') return;
+          setScoreHighlightsRequest(null);
+          setClaimsAbsenceAttestationState('idle');
+          setClaimsAbsenceAttestationError(null);
+        }}
         contributionLinks={highlightOffer.links}
         contributionHeading={highlightOffer.heading}
         onOpenContribution={openPillarContribution}
+        claimsAbsenceAttestationState={claimsAbsenceAttestationState}
+        claimsAbsenceAttestationError={claimsAbsenceAttestationError}
         onOpenInAppL3={openInAppScoreHighlightL3}
       />
 

@@ -9,6 +9,7 @@ export type TraceRequestKind =
   | 'authority_env'
   | 'issue_credential'
   | 'finalize_manual_text'
+  | 'finalize_packet_absence_attestation'
   | 'upload_asset_chunk'
   | 'finalize_asset'
   | 'submit'

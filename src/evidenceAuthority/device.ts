@@ -14,6 +14,7 @@ import {
   type TraceRequestOutcome,
 } from './contributionTrace';
 import type { ManualTextDraft } from './manualTextAsset';
+import { claimsAbsenceAttestationIdempotencyKey } from './packetAbsenceAttestationAsset';
 import type { EvidenceFactInput, SharedEvidenceSnapshot, SubmissionOutcome } from './types';
 import { classifyInterruptedResume, resumeMarkerFor } from '../evidenceImage/resumeGuard';
 import type { EvidenceResumeMarker, InterruptedResumeRecord } from '../packetContribution/types';
@@ -383,6 +384,110 @@ async function targetAuthorityAccepted(trace: ContributionTrace | null): Promise
 
 export async function contributorCredential(trace: ContributionTrace | null): Promise<string> {
   return credentialToken(trace);
+}
+
+export type ClaimsAbsenceAttestationResult = {
+  status: 'admitted' | 'rejected' | 'pending' | 'error';
+  snapshot: SharedEvidenceSnapshot | null;
+  reason?: string;
+};
+
+/**
+ * FM-03R: submit a photo-free Claims packet-absence user attestation directly.
+ * Does not open capture, gallery, or the guided contribution form.
+ */
+export async function submitClaimsAbsenceAttestation(input: {
+  barcode: string;
+  variantKey?: string;
+  /** When set, refuse if the live product identity no longer matches. */
+  expectedBarcode?: string;
+  trace?: ContributionTrace;
+}): Promise<ClaimsAbsenceAttestationResult> {
+  const barcode = input.barcode.trim();
+  const expected = (input.expectedBarcode || barcode).trim();
+  if (!barcode || barcode !== expected) {
+    return { status: 'error', snapshot: null, reason: 'barcode_mismatch' };
+  }
+  if (!/^\d{8,14}$/.test(barcode)) {
+    return { status: 'error', snapshot: null, reason: 'barcode_invalid' };
+  }
+  const active = input.trace ?? beginRetryTrace();
+  try {
+    if (!(await targetAuthorityAccepted(active))) {
+      return { status: 'error', snapshot: null, reason: 'authority_env_rejected' };
+    }
+    const token = await credentialToken(active);
+    // Decode contributor id from credential is server-side only; idempotency uses token hash fragment.
+    const contributorKey = sha256Hex(new TextEncoder().encode(token)).slice(0, 24);
+    const finalizeResponse = await postAuthority(
+      token,
+      {
+        action: 'finalize-packet-absence-attestation',
+        barcode,
+        ...(input.variantKey ? { variantKey: input.variantKey } : {}),
+      },
+      active,
+      'finalize_packet_absence_attestation'
+    );
+    if (!finalizeResponse.ok) {
+      let reason = 'attestation_not_finalized';
+      try {
+        const body = (await finalizeResponse.json()) as { reason?: string; error?: string };
+        reason = body.reason || body.error || reason;
+      } catch {
+        /* keep default */
+      }
+      return { status: 'rejected', snapshot: null, reason };
+    }
+    const finalized = (await finalizeResponse.json()) as { assetId?: string };
+    if (!finalized.assetId) {
+      return { status: 'rejected', snapshot: null, reason: 'attestation_not_finalized' };
+    }
+    const idempotencyKey = claimsAbsenceAttestationIdempotencyKey(barcode, contributorKey);
+    const submitResponse = await postAuthority(
+      token,
+      {
+        action: 'submit',
+        idempotencyKey,
+        barcode,
+        facts: [
+          {
+            domain: 'packet_claims',
+            packetAbsence: true,
+            variantKey: input.variantKey,
+            finalizedAssetId: finalized.assetId,
+            unitId: `attestation-${contributorKey}`,
+          },
+        ],
+      },
+      active,
+      'submit'
+    );
+    if (!submitResponse.ok) {
+      return { status: 'pending', snapshot: null, reason: 'submit_http_error' };
+    }
+    const body = (await submitResponse.json()) as { outcome?: SubmissionOutcome; success?: boolean };
+    const outcome = body.outcome;
+    const snapshot = outcome?.snapshot ?? null;
+    if (outcome?.status === 'admitted' && snapshot) {
+      await rememberSnapshot(snapshot);
+      notifyEvidenceAdmission(barcode, snapshot);
+      return { status: 'admitted', snapshot };
+    }
+    if (outcome?.status === 'rejected') {
+      return { status: 'rejected', snapshot, reason: 'submission_rejected' };
+    }
+    return {
+      status: outcome?.status === 'admitted' ? 'admitted' : 'pending',
+      snapshot,
+      reason: outcome?.status,
+    };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : 'attestation_failed';
+    return { status: 'error', snapshot: null, reason };
+  } finally {
+    active.flush('claims_absence_attestation');
+  }
 }
 
 export async function postContributorAction(
