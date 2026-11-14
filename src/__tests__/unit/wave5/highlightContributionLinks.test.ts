@@ -155,13 +155,12 @@ describe('Score Highlights contribution invitations', () => {
       'Body',
       settled
     );
-    expect(offer.links.map((link) => ({ label: link.label, kind: link.kind }))).toEqual([
-      { label: 'Change nutrition', kind: 'change' },
-    ]);
+    // FM-02: resolved nutrition hides Add nutrition; Change nutrition is not offered in the pillar modal.
+    expect(offer.links).toEqual([]);
     expect(offer.heading).toBeNull();
   });
 
-  it('offers Add packet information only while the Claims opportunity is live, and Change once assessed', () => {
+  it('offers Add packet information only while the Claims opportunity is live, and nothing once assessed', () => {
     const unassessed = highlightContributionOffer(
       product({
         packet: 'unassessed_or_incomplete',
@@ -182,9 +181,8 @@ describe('Score Highlights contribution invitations', () => {
     const assessed = highlightContributionOffer(product({ packet: 'assessed' }), 'Ethics', settled);
     expect(unassessed.links.map((link) => link.label)).toEqual(['Add packet information']);
     expect(silent.links).toEqual([]);
-    expect(assessed.links.map((link) => ({ label: link.label, kind: link.kind }))).toEqual([
-      { label: 'Change packet information', kind: 'change' },
-    ]);
+    // FM-02: assessed packet lane no longer offers Change packet information in the pillar modal.
+    expect(assessed.links).toEqual([]);
     expect(assessed.heading).toBeNull();
   });
 
@@ -214,10 +212,8 @@ describe('Score Highlights contribution invitations', () => {
       'Open',
       settled
     );
-    expect(ingredientsOnly.links.map((link) => link.label)).toEqual([
-      'Add ingredients',
-      'Change product origins',
-    ]);
+    // FM-02: resolved origins hide Change product origins from the pillar modal.
+    expect(ingredientsOnly.links.map((link) => link.label)).toEqual(['Add ingredients']);
 
     const originsOnly = highlightContributionOffer(
       product({
@@ -230,23 +226,20 @@ describe('Score Highlights contribution invitations', () => {
       settled
     );
     expect(originsOnly.links.map((link) => ({ label: link.label, kind: link.kind, journey: link.journey }))).toEqual([
-      { label: 'Change ingredients', kind: 'change', journey: 'change' },
       { label: 'Add product origins', kind: 'complete', journey: 'add' },
     ]);
   });
 
-  it('keeps voluntary Change and drops assessment-driven Add when every lane is resolved', () => {
+  it('offers no pillar contribution buttons when every relevant lane is resolved', () => {
     const body = highlightContributionOffer(product(), 'Body', settled);
     const transparency = highlightContributionOffer(product(), 'Open', settled);
-    expect(body.links.map((link) => link.label)).toEqual(['Change nutrition', 'Change ingredients']);
+    // FM-02: Change actions are reserved for Result cards / Product Information menu.
+    expect(body.links).toEqual([]);
     expect(body.heading).toBeNull();
-    expect(transparency.links.map((link) => link.label)).toEqual([
-      'Change ingredients',
-      'Change product origins',
-    ]);
+    expect(transparency.links).toEqual([]);
     expect(transparency.heading).toBeNull();
-    expect(JSON.stringify(body)).not.toContain('Add information from the pack');
-    expect(JSON.stringify(transparency)).not.toContain('Add ');
+    expect(JSON.stringify(body)).not.toMatch(/Change /);
+    expect(JSON.stringify(transparency)).not.toMatch(/Change /);
   });
 
   it('drops a shown action when publication is missing or the latch closes before the tap', () => {
@@ -376,17 +369,44 @@ describe('Score Highlights contribution invitations', () => {
     );
   });
 
-  it('keeps voluntary Change when resolved evidence has no live opportunity', () => {
+  it('offers nothing when resolved Transparency evidence has no live Add opportunity', () => {
     const transparency = highlightContributionOffer(
       product({ transparencyOpportunity: null }),
       'Open',
       settled
     );
-    expect(transparency.links.map((link) => ({ label: link.label, kind: link.kind }))).toEqual([
-      { label: 'Change ingredients', kind: 'change' },
-      { label: 'Change product origins', kind: 'change' },
-    ]);
+    // FM-02: no Change fallback in the pillar look-through.
+    expect(transparency.links).toEqual([]);
     expect(transparency.heading).toBeNull();
+  });
+
+  it('never emits Change kind links from the pillar look-through offer', () => {
+    const samples = [
+      highlightContributionOffer(product(), 'Body', settled),
+      highlightContributionOffer(product({ packet: 'assessed' }), 'Ethics', settled),
+      highlightContributionOffer(product(), 'Open', settled),
+      highlightContributionOffer(
+        product({
+          nutrition: 'unassessed',
+          bodyOpportunity: live('ingredients_nutrition', 'ingredients_nutrition'),
+        }),
+        'Body',
+        settled
+      ),
+      highlightContributionOffer(
+        product({
+          packet: 'unassessed_or_incomplete',
+          claimsOpportunity: live('packet_claims', 'packet_claims'),
+        }),
+        'Ethics',
+        settled
+      ),
+    ];
+    for (const sample of samples) {
+      expect(sample.links.every((link) => link.kind === 'add' || link.kind === 'complete')).toBe(true);
+      expect(sample.links.every((link) => link.journey === 'add')).toBe(true);
+      expect(JSON.stringify(sample)).not.toMatch(/Change /);
+    }
   });
 
   it('does not change eligibility when the published score is a genuine zero', () => {

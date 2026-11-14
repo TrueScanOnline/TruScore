@@ -84,7 +84,7 @@ interface ScoreHighlightsLookThroughModalProps {
   }>;
   /**
    * Shown only when the links include an assessment-driven Add or complete action.
-   * Change-only sets pass null so the sheet does not say information is missing.
+   * FM-02: pillar look-through never receives Change links; heading is null when empty.
    */
   contributionHeading?: string | null;
   onOpenContribution?: (
