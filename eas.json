@@ -1,4 +1,7 @@
 {
+  "cli": {
+    "appVersionSource": "local"
+  },
   "build": {
     "preview": {
       "distribution": "store",
@@ -200,10 +203,66 @@
         "buildConfiguration": "Release",
         "image": "macos-sequoia-15.6-xcode-26.0"
       }
+    },
+    "uat-founders-android": {
+      "extends": "uat-dynamic-signals-android",
+      "environment": "preview",
+      "distribution": "internal",
+      "autoIncrement": false,
+      "node": "20.19.4",
+      "env": {
+        "EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET": "1",
+        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
+        "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
+        "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
+        "EXPO_PUBLIC_STORE_RELEASE": "0",
+        "EXPO_PUBLIC_CLOSED_PRELAUNCH_VISUAL_UAT": "1",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat",
+        "EXPO_PUBLIC_BACKEND_URL": "https://truscoreapi-uat.vercel.app",
+        "EXPO_PUBLIC_SHARE_WEB_ORIGIN": "https://truscoreapi.vercel.app",
+        "RVEEL_ANDROID_VERSION_CODE": "38",
+        "EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION": "1",
+        "EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS": "1"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "uat-founders-ios": {
+      "extends": "uat-dynamic-signals-ios",
+      "environment": "preview",
+      "distribution": "store",
+      "autoIncrement": false,
+      "node": "20.19.4",
+      "env": {
+        "EXPO_PUBLIC_DYNAMIC_SIGNALS_ASSET": "1",
+        "EXPO_PUBLIC_FOOD_RECALL_CORRECTED_PATH": "1",
+        "EXPO_PUBLIC_WORKSTREAMC_SKELETON_UAT": "0",
+        "EXPO_PUBLIC_SCORE_DIAGNOSTICS": "0",
+        "EXPO_PUBLIC_STORE_RELEASE": "0",
+        "EXPO_PUBLIC_CLOSED_PRELAUNCH_VISUAL_UAT": "1",
+        "EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV": "uat",
+        "EXPO_PUBLIC_BACKEND_URL": "https://truscoreapi-uat.vercel.app",
+        "EXPO_PUBLIC_SHARE_WEB_ORIGIN": "https://truscoreapi.vercel.app",
+        "RVEEL_IOS_BUILD_NUMBER": "64",
+        "EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION": "1",
+        "EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS": "1"
+      },
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release",
+        "image": "macos-sequoia-15.6-xcode-26.0"
+      }
     }
   },
   "submit": {
     "uat-dynamic-signals-ios": {
+      "extends": "preview",
+      "ios": {
+        "ascAppId": "6755704230"
+      }
+    },
+    "uat-founders-ios": {
       "extends": "preview",
       "ios": {
         "ascAppId": "6755704230"

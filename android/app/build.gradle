@@ -102,8 +102,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Note: with a checked-in android/ directory, EAS uses this native versionCode.
-        // Keep in sync with eas.json uat-dynamic-signals-android RVEEL_ANDROID_VERSION_CODE.
-        versionCode 37
+        // Keep in sync with eas.json founder/UAT Android RVEEL_ANDROID_VERSION_CODE.
+        versionCode 38
         versionName "10.0.0"
         // SJ-07 harness isolation: never true unless -Ptruescan.standaloneDebugEmbed=true
         def standaloneDebugEmbedFlag =
