@@ -24,3 +24,7 @@ Living list of intended changes for the next UAT build. Each row is one accepted
 | Buildable founder tip: certification JSON kept in the EAS archive. Resolve with `git rev-parse wave5-founder-builds-20261021` | `wave5-founder-builds-20261021` | yes |
 | Wave 5 UI complete for founder phone UAT. Resolve with `git rev-parse wave5-ui-complete-20261101` | `3add88c0389275b9de156787fa203a405ebd8cbe` | yes |
 | Founder phone builds after Wave 5 UI: iOS 63, Android 37. Resolve with `git rev-parse wave5-founder-builds-20261101` | `wave5-founder-builds-20261101` | yes |
+| FM-01 NOVA 3 preserved-food icon (branch `build/w5-founders-native-20261114`) | `f5ec00163ab2dbdbf90feacd008bad4dd3db2899` | on `build/w5-founders-native-20261114` |
+| FM-02 score-pillar Add-only for missing evidence (same branch) | `294b6fda83ccee63d90d84287b29ea599dae4220` | on `build/w5-founders-native-20261114` |
+| FM-03 Claims packet-absence pillar entry (same branch) | `9b81e6ee840b902883e97940f2a079cb01e1dd6f` | on `build/w5-founders-native-20261114` |
+| FM-01/02/03 founder evidence record `docs/uat/FOUNDER_MODIFICATIONS_20261115.md` | see HEAD after evidence commit on `build/w5-founders-native-20261114` | on `build/w5-founders-native-20261114` |
