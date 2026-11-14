@@ -81,6 +81,7 @@ interface ScoreHighlightsLookThroughModalProps {
     key: string;
     label: string;
     destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims';
+    kind?: 'add' | 'complete' | 'absence';
   }>;
   /**
    * Shown only when the links include an assessment-driven Add or complete action.
@@ -88,7 +89,8 @@ interface ScoreHighlightsLookThroughModalProps {
    */
   contributionHeading?: string | null;
   onOpenContribution?: (
-    destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims'
+    destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims',
+    linkKey: string
   ) => void;
   /**
    * Host handler for governed in-app L3 destinations. External sources are opened here.
@@ -275,17 +277,36 @@ export default function ScoreHighlightsLookThroughModal({
                     {contributionHeading ? (
                       <Text style={[styles.contextPromptTitle, { color: emerald.ink }]}>{contributionHeading}</Text>
                     ) : null}
-                    {contributionLinks.map((link) => (
-                      <TouchableOpacity
-                        key={link.key}
-                        onPress={() => onOpenContribution?.(link.destination)}
-                        style={[styles.contributeButton, { backgroundColor: emerald.action }]}
-                        accessibilityRole="button"
-                        accessibilityLabel={link.label}
-                      >
-                        <Text style={styles.contributeButtonText}>{link.label}</Text>
-                      </TouchableOpacity>
-                    ))}
+                    {contributionLinks.map((link) => {
+                      const absence = link.kind === 'absence';
+                      return (
+                        <TouchableOpacity
+                          key={link.key}
+                          onPress={() => onOpenContribution?.(link.destination, link.key)}
+                          style={
+                            absence
+                              ? [
+                                  styles.contributeButton,
+                                  styles.contributeButtonSecondary,
+                                  { borderColor: emerald.action, backgroundColor: 'transparent' },
+                                ]
+                              : [styles.contributeButton, { backgroundColor: emerald.action }]
+                          }
+                          accessibilityRole="button"
+                          accessibilityLabel={link.label}
+                        >
+                          <Text
+                            style={
+                              absence
+                                ? [styles.contributeButtonTextSecondary, { color: emerald.action }]
+                                : styles.contributeButtonText
+                            }
+                          >
+                            {link.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 ) : null}
               </>
@@ -427,8 +448,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 16,
   },
+  contributeButtonSecondary: {
+    borderWidth: 2,
+  },
   contributeButtonText: {
     color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  contributeButtonTextSecondary: {
     fontSize: 16,
     fontWeight: '700',
   },

@@ -624,6 +624,10 @@ function ResultScreenContent() {
   const [contributionEntry, setContributionEntry] = useState<ContributionEntryContext>('ingredients');
   const [contributionJourney, setContributionJourney] = useState<'add' | 'change'>('add');
   const [contributionFormFirst, setContributionFormFirst] = useState(false);
+  /** FM-03: dedicated Claims packet-absence entry; never auto-admits. */
+  const [contributionEntryIntent, setContributionEntryIntent] = useState<'default' | 'packet_absence'>(
+    'default'
+  );
   const [contributionChoice, setContributionChoice] = useState<
     null | 'nutrition' | 'packet' | 'origins' | 'productInformation'
   >(null);
@@ -1647,12 +1651,18 @@ function ResultScreenContent() {
     setShareModalVisible(true);
   };
 
-  const openContribution = (entry: ContributionEntryContext, journey: 'add' | 'change', formFirst = false) => {
+  const openContribution = (
+    entry: ContributionEntryContext,
+    journey: 'add' | 'change',
+    formFirst = false,
+    entryIntent: 'default' | 'packet_absence' = 'default'
+  ) => {
     // MVP: do not open guided submit when the feature gate is off.
     if (!isGuidedContributionSubmitEnabled()) return;
     setContributionEntry(entry);
     setContributionJourney(journey);
     setContributionFormFirst(formFirst);
+    setContributionEntryIntent(entryIntent);
     setContributionChoice(null);
     setPacketContributionVisible(true);
   };
@@ -2080,15 +2090,27 @@ function ResultScreenContent() {
         })
       : { links: [], heading: null };
   const openPillarContribution = (
-    destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims'
+    destination: 'nutrition' | 'ingredients' | 'origins' | 'packetClaims',
+    linkKey: string
   ) => {
     if (scoreHighlightsRequest?.mode !== 'pillar') return;
+    // Revalidate against the current settled product and barcode before opening.
+    if (!product || typeof barcode !== 'string') return;
+    if (getPrimaryBarcode(product.barcode) !== getPrimaryBarcode(barcode)) return;
+    if (publicationSettled !== true) return;
+    if (
+      !settledForBarcodeRef.current ||
+      getPrimaryBarcode(settledForBarcodeRef.current) !== getPrimaryBarcode(barcode)
+    ) {
+      return;
+    }
     const link = highlightContributionTap(product, scoreHighlightsRequest.pillar, destination, {
       publicationSettled,
+      linkKey,
     });
     if (!link) return;
     setScoreHighlightsRequest(null);
-    openContribution(destination, link.journey, true);
+    openContribution(destination, link.journey, true, link.entryIntent === 'packet_absence' ? 'packet_absence' : 'default');
   };
 
   const shareManufacturingCountryLabel = (() => {
@@ -3388,6 +3410,7 @@ function ResultScreenContent() {
         barcode={barcode}
         entryContext={contributionEntry}
         surfaceMode={contributionJourney}
+        entryIntent={contributionEntryIntent}
         initialIngredients={product?.rveelGovernedIngredientsText || product?.ingredients_text || ''}
         initialNutrition={nutritionPrefillFromSource(
           product?.nutriments as Record<string, unknown> | undefined,
@@ -3401,21 +3424,26 @@ function ResultScreenContent() {
           packetInformationSeed.claims.length === 0 && packetInformationSeed.certifications.length === 0
         }
         openOnForm={
-          contributionFormFirst ||
-          (contributionJourney === 'change' &&
-            (contributionEntry === 'nutrition'
-              ? contributionActions.updateNutrition
-              : contributionEntry === 'ingredients'
-                ? contributionActions.updateIngredients
-                : contributionEntry === 'origins'
-                  ? contributionActions.originsAction === 'update' ||
-                    (product?.rveelGovernedOrigins || []).length > 0 ||
-                    !!originsCard.offCountry
-                  : contributionActions.packetInformationAction === 'update' ||
-                    packetInformationSeed.claims.length > 0 ||
-                    packetInformationSeed.certifications.length > 0))
+          contributionEntryIntent === 'packet_absence'
+            ? false
+            : contributionFormFirst ||
+              (contributionJourney === 'change' &&
+                (contributionEntry === 'nutrition'
+                  ? contributionActions.updateNutrition
+                  : contributionEntry === 'ingredients'
+                    ? contributionActions.updateIngredients
+                    : contributionEntry === 'origins'
+                      ? contributionActions.originsAction === 'update' ||
+                        (product?.rveelGovernedOrigins || []).length > 0 ||
+                        !!originsCard.offCountry
+                      : contributionActions.packetInformationAction === 'update' ||
+                        packetInformationSeed.claims.length > 0 ||
+                        packetInformationSeed.certifications.length > 0))
         }
-        onClose={() => setPacketContributionVisible(false)}
+        onClose={() => {
+          setPacketContributionVisible(false);
+          setContributionEntryIntent('default');
+        }}
         onSharedEvidenceAdmitted={async (snapshot, complete) => {
           const trace = currentModalTrace();
           if (!product || !snapshot) {

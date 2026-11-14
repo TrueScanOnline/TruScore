@@ -6,6 +6,7 @@
 import type { Product } from '../../../types/product';
 import type { ContributionOpportunity } from '../../../lib/rateability/types';
 import {
+  CLAIMS_PACKET_ABSENCE_PILLAR_LABEL,
   HIGHLIGHT_ADD_INFORMATION_HEADING,
   highlightContributionOffer,
   highlightContributionTap,
@@ -160,7 +161,7 @@ describe('Score Highlights contribution invitations', () => {
     expect(offer.heading).toBeNull();
   });
 
-  it('offers Add packet information only while the Claims opportunity is live, and nothing once assessed', () => {
+  it('offers Add packet information and the no-claims action while Claims opportunity is live', () => {
     const unassessed = highlightContributionOffer(
       product({
         packet: 'unassessed_or_incomplete',
@@ -179,9 +180,16 @@ describe('Score Highlights contribution invitations', () => {
       settled
     );
     const assessed = highlightContributionOffer(product({ packet: 'assessed' }), 'Ethics', settled);
-    expect(unassessed.links.map((link) => link.label)).toEqual(['Add packet information']);
+    expect(unassessed.links.map((link) => ({ label: link.label, kind: link.kind, entryIntent: link.entryIntent }))).toEqual([
+      { label: 'Add packet information', kind: 'add', entryIntent: undefined },
+      {
+        label: CLAIMS_PACKET_ABSENCE_PILLAR_LABEL,
+        kind: 'absence',
+        entryIntent: 'packet_absence',
+      },
+    ]);
     expect(silent.links).toEqual([]);
-    // FM-02: assessed packet lane no longer offers Change packet information in the pillar modal.
+    // FM-02/FM-03: assessed packet lane offers neither Change nor absence.
     expect(assessed.links).toEqual([]);
     expect(assessed.heading).toBeNull();
   });
@@ -403,10 +411,56 @@ describe('Score Highlights contribution invitations', () => {
       ),
     ];
     for (const sample of samples) {
-      expect(sample.links.every((link) => link.kind === 'add' || link.kind === 'complete')).toBe(true);
+      expect(
+        sample.links.every((link) => link.kind === 'add' || link.kind === 'complete' || link.kind === 'absence')
+      ).toBe(true);
       expect(sample.links.every((link) => link.journey === 'add')).toBe(true);
       expect(JSON.stringify(sample)).not.toMatch(/Change /);
     }
+  });
+
+  it('FM-03 hides Claims absence when already admitted or contradicted by positive packet evidence', () => {
+    const base = {
+      packet: 'unassessed_or_incomplete' as const,
+      claimsStatus: 'nr' as const,
+      claimsOpportunity: live('packet_claims', 'packet_claims'),
+    };
+    const admitted = product(base) as Product & { rveelPacketAbsenceEstablished?: boolean };
+    admitted.rveelPacketAbsenceEstablished = true;
+    expect(highlightContributionOffer(admitted, 'Ethics', settled).links.map((l) => l.kind)).toEqual(['add']);
+
+    const withClaim = product(base) as Product & {
+      rveelGovernedPacketClaims?: Array<{ exactWording: string }>;
+    };
+    withClaim.rveelGovernedPacketClaims = [{ exactWording: 'High protein' }];
+    expect(highlightContributionOffer(withClaim, 'Ethics', settled).links.map((l) => l.kind)).toEqual(['add']);
+
+    const checking = highlightContributionOffer(
+      product({ ...base, claimsStatus: 'checking', overallStatus: 'rated' }),
+      'Ethics',
+      settled
+    );
+    expect(checking.links).toEqual([]);
+  });
+
+  it('FM-03 tap resolves absence by linkKey so Add packet is not selected by destination alone', () => {
+    const ready = product({
+      packet: 'unassessed_or_incomplete',
+      claimsStatus: 'nr',
+      claimsOpportunity: live('packet_claims', 'packet_claims'),
+    });
+    const absence = highlightContributionTap(ready, 'Ethics', 'packetClaims', {
+      ...settled,
+      linkKey: 'packet-absence',
+    });
+    const add = highlightContributionTap(ready, 'Ethics', 'packetClaims', {
+      ...settled,
+      linkKey: 'packet',
+    });
+    expect(absence?.label).toBe(CLAIMS_PACKET_ABSENCE_PILLAR_LABEL);
+    expect(absence?.entryIntent).toBe('packet_absence');
+    expect(add?.label).toBe('Add packet information');
+    expect(add?.entryIntent).toBeUndefined();
   });
 
   it('does not change eligibility when the published score is a genuine zero', () => {

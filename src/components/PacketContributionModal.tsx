@@ -250,6 +250,7 @@ export default function PacketContributionModal({
   variantKey,
   entryContext,
   surfaceMode = 'change',
+  entryIntent = 'default',
   initialIngredients,
   initialNutrition,
   initialOriginContext,
@@ -268,6 +269,11 @@ export default function PacketContributionModal({
   variantKey?: string;
   entryContext: ContributionEntryContext;
   surfaceMode?: ContributionSurfaceMode;
+  /**
+   * FM-03: `packet_absence` opens the guided packet journey toward absence confirmation.
+   * Opening alone never sets `packetAbsence` / admits evidence.
+   */
+  entryIntent?: 'default' | 'packet_absence';
   initialIngredients?: string;
   initialNutrition?: NutritionSourcePrefill;
   initialOriginContext?: OriginContributionDraft[];
@@ -349,6 +355,8 @@ export default function PacketContributionModal({
   initialCertificationsRef.current = initialCertifications;
   openOnFormRef.current = openOnForm;
   surfaceModeRef.current = surfaceMode;
+  const entryIntentRef = useRef(entryIntent);
+  entryIntentRef.current = entryIntent;
 
   useEffect(() => {
     if (!visible) {
@@ -359,7 +367,16 @@ export default function PacketContributionModal({
     let cancelled = false;
     setPreviews([]);
     setSurfaceJourneyId(`journey_${barcode}_${entryContext}_${Date.now()}`);
-    setPhase(packetInformationContext(entryContext) || openOnFormRef.current ? 'entry' : 'capture');
+    // FM-03 packet_absence: start on capture so a supporting pack photo can be taken.
+    // Opening alone must not select or admit absence.
+    const preferCaptureForAbsence = entryIntentRef.current === 'packet_absence';
+    setPhase(
+      preferCaptureForAbsence
+        ? 'capture'
+        : packetInformationContext(entryContext) || openOnFormRef.current
+          ? 'entry'
+          : 'capture'
+    );
     setActiveContext(entryContext);
     setIncludedContexts(packetInformationContext(entryContext) ? ['packetClaims', 'certifications'] : [entryContext]);
     setIngredientsText(initialIngredientsRef.current || '');
@@ -463,7 +480,7 @@ export default function PacketContributionModal({
     return () => {
       cancelled = true;
     };
-  }, [visible, barcode, variantKey, entryContext, surfaceMode]);
+  }, [visible, barcode, variantKey, entryContext, surfaceMode, entryIntent]);
 
   useEffect(() => {
     if (!visible || !session || busy) return undefined;
@@ -1223,6 +1240,15 @@ export default function PacketContributionModal({
         {phase === 'capture' ? (
           <View style={phaseCard}>
             <Text style={[styles.body, { color: ink }]}>{journey.instruction}</Text>
+            {entryIntent === 'packet_absence' ? (
+              <View style={[styles.notice, { backgroundColor: emerald.chevronCircle }]}>
+                <Text style={{ color: ink, fontWeight: '600' }}>Confirming no relevant claims or certifications</Text>
+                <Text style={{ color: muted, marginTop: 6 }}>
+                  Photograph the packet surface that would show claims or certifications. You will review and confirm
+                  the absence before anything is submitted.
+                </Text>
+              </View>
+            ) : null}
             <View style={styles.row}>
               <TouchableOpacity onPress={captureCamera} style={filledButton} accessibilityRole="button">
                 <Text style={styles.buttonText}>Camera</Text>
@@ -1794,6 +1820,16 @@ export default function PacketContributionModal({
             {packetInformationContext(activeContext) ? (
               <View>
                 <Text style={[styles.body, { color: ink }]}>{PACKET_INPUT_INSTRUCTION}</Text>
+                {entryIntent === 'packet_absence' ? (
+                  <View style={[styles.notice, { backgroundColor: emerald.chevronCircle, marginBottom: 8 }]}>
+                    <Text style={{ color: ink, fontWeight: '600' }}>No relevant claims or certifications</Text>
+                    <Text style={{ color: muted, marginTop: 6 }}>
+                      This confirmation covers relevant claims and certifications on the pack, not every marketing
+                      statement. Photograph the relevant packet surface, then select the absence confirmation below
+                      before submitting.
+                    </Text>
+                  </View>
+                ) : null}
                 <View style={styles.row}>
                   <TouchableOpacity onPress={captureCamera} style={filledButton} accessibilityRole="button" accessibilityLabel="Camera">
                     <Text style={styles.buttonText}>Camera</Text>

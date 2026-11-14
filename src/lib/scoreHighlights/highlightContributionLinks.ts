@@ -5,6 +5,8 @@
  *
  * FM-02: pillar look-through offers assessment-driven Add / complete only.
  * Change / Edit remains on Result cards and the Product Information menu.
+ *
+ * FM-03: Claims may also offer the governed packet-absence entry (not a Change action).
  */
 
 import {
@@ -14,6 +16,7 @@ import {
 import {
   resultContributionActions,
   type ContributionEntryContext,
+  type ResultContributionActions,
 } from '../../contribution/resultContributionActions';
 import { isGuidedContributionSubmitEnabled } from '../../config/mvpFeatureGates';
 import type { ContributionOpportunity, CrossPillarPublicationSnapshot } from '../rateability/types';
@@ -22,10 +25,15 @@ import type { ScoreHighlightPillar } from './types';
 
 export const HIGHLIGHT_ADD_INFORMATION_HEADING = 'Add information from the pack';
 
+/** Founder-requested Claims pillar absence entry label (exact wording). */
+export const CLAIMS_PACKET_ABSENCE_PILLAR_LABEL = 'There are no claims on the packet';
+
 const ADD_NUTRITION = 'Add nutrition';
 const ADD_INGREDIENTS = 'Add ingredients';
 
-export type HighlightContributionKind = 'add' | 'complete';
+export type HighlightContributionKind = 'add' | 'complete' | 'absence';
+
+export type HighlightContributionEntryIntent = 'packet_absence';
 
 export type HighlightContributionDestination = Exclude<ContributionEntryContext, 'certifications'>;
 
@@ -37,11 +45,13 @@ export type HighlightContributionLink = {
   journey: 'add';
   /** Keeps origins `complete` distinct from origins `add`. Change is never offered here. */
   kind: HighlightContributionKind;
+  /** Dedicated entry into the guided journey (absence does not auto-admit). */
+  entryIntent?: HighlightContributionEntryIntent;
 };
 
 export type HighlightContributionOffer = {
   links: HighlightContributionLink[];
-  /** Null when there is nothing to add, including a Change-only set. */
+  /** Null when there is nothing to add. Absence-only sets also keep the Add heading off. */
   heading: string | null;
 };
 
@@ -73,10 +83,44 @@ function selectedPillarStatus(
 
 function offer(links: HighlightContributionLink[]): HighlightContributionOffer {
   if (links.length === 0) return EMPTY;
+  const assessmentAdd = links.some((link) => link.kind === 'add' || link.kind === 'complete');
   return {
     links,
-    heading: HIGHLIGHT_ADD_INFORMATION_HEADING,
+    heading: assessmentAdd ? HIGHLIGHT_ADD_INFORMATION_HEADING : null,
   };
+}
+
+/**
+ * Positive packet claims/certifications already on the governed projection contradict absence.
+ * Does not invent qualification from unclassified OFF marketing text.
+ */
+export function claimsPacketAbsenceContradicted(product: Product): boolean {
+  if ((product.rveelGovernedPacketClaims || []).length > 0) return true;
+  if ((product.rveelGovernedCertifications || []).length > 0) return true;
+  if ((product.certifications || []).length > 0) return true;
+  return false;
+}
+
+/**
+ * FM-03 eligibility for the Claims pillar "There are no claims on the packet" action.
+ * Does not admit evidence. Opening the journey still requires explicit confirmation + photo.
+ */
+export function claimsPacketAbsencePillarEligible(
+  product: Product,
+  publication: CrossPillarPublicationSnapshot,
+  actions: ResultContributionActions
+): boolean {
+  if (!isGuidedContributionSubmitEnabled()) return false;
+  if (publication.settled !== true) return false;
+  if (publication.overall?.publicationStatus === 'checking') return false;
+  if (publication.claims?.publicationStatus === 'checking') return false;
+  if (!publication.claims?.assessmentLanes) return false;
+  if (publication.claims.assessmentLanes.packet === 'assessed') return false;
+  if (!liveOpportunity(publication.claims.s26?.contributionOpportunity)) return false;
+  if (actions.packetInformationAction !== 'add') return false;
+  if (product.rveelPacketAbsenceEstablished === true) return false;
+  if (claimsPacketAbsenceContradicted(product)) return false;
+  return true;
 }
 
 export function highlightContributionOffer(
@@ -131,6 +175,7 @@ export function highlightContributionOffer(
   if (pillar === 'Ethics') {
     const claims = publication.claims;
     const packetAssessed = claims.assessmentLanes.packet === 'assessed';
+    const links: HighlightContributionLink[] = [];
     // Claims: Add packet information only while the packet lane is unassessed with a live opportunity.
     // Never offer Change packet information from the pillar look-through.
     if (
@@ -138,17 +183,26 @@ export function highlightContributionOffer(
       liveOpportunity(claims.s26?.contributionOpportunity) &&
       actions.packetInformationAction === 'add'
     ) {
-      return offer([
-        {
-          key: 'packet',
-          label: ADD_PACKET_INFORMATION,
-          destination: 'packetClaims',
-          journey: 'add',
-          kind: 'add',
-        },
-      ]);
+      links.push({
+        key: 'packet',
+        label: ADD_PACKET_INFORMATION,
+        destination: 'packetClaims',
+        journey: 'add',
+        kind: 'add',
+      });
     }
-    return EMPTY;
+    // FM-03: eligible-absence action (not a Change). May sit beside Add when packet is unresolved.
+    if (claimsPacketAbsencePillarEligible(product as Product, publication, actions)) {
+      links.push({
+        key: 'packet-absence',
+        label: CLAIMS_PACKET_ABSENCE_PILLAR_LABEL,
+        destination: 'packetClaims',
+        journey: 'add',
+        kind: 'absence',
+        entryIntent: 'packet_absence',
+      });
+    }
+    return offer(links);
   }
 
   const transparency = publication.transparency;
@@ -191,10 +245,11 @@ export function highlightContributionTap(
   product: Product | null | undefined,
   pillar: ScoreHighlightPillar,
   destination: HighlightContributionDestination,
-  options?: HighlightContributionOptions
+  options?: HighlightContributionOptions & { linkKey?: string }
 ): HighlightContributionLink | null {
-  return (
-    highlightContributionOffer(product, pillar, options).links.find((link) => link.destination === destination) ??
-    null
-  );
+  const links = highlightContributionOffer(product, pillar, options).links;
+  if (options?.linkKey) {
+    return links.find((link) => link.key === options.linkKey) ?? null;
+  }
+  return links.find((link) => link.destination === destination) ?? null;
 }
