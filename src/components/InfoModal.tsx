@@ -25,6 +25,11 @@ interface InfoModalProps {
   title: string;
   icon?: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
+  /**
+   * Optional custom header glyph. When provided, replaces the Ionicons `icon`.
+   * Existing callers that only pass `icon` remain unchanged.
+   */
+  customIcon?: React.ReactNode;
   children: React.ReactNode;
   /** Optional scroll offset after open (focused entry). */
   scrollToY?: number;
@@ -37,6 +42,7 @@ export default function InfoModal({
   title,
   icon,
   iconColor,
+  customIcon,
   children,
   scrollToY,
 }: InfoModalProps) {
@@ -95,14 +101,16 @@ export default function InfoModal({
                   <Ionicons name="chevron-back" size={24} color={emerald.ink} />
                 </TouchableOpacity>
               ) : null}
-              {icon && (
+              {customIcon ? (
+                <View style={styles.icon}>{customIcon}</View>
+              ) : icon ? (
                 <Ionicons
                   name={icon}
                   size={24}
                   color={iconColor || colors.primary}
                   style={styles.icon}
                 />
-              )}
+              ) : null}
               <Text style={[styles.title, { color: emerald.ink }]}>{title}</Text>
             </View>
             <TouchableOpacity

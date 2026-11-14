@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import InfoModal from './InfoModal';
+import Nova3PreservedFoodIcon from './icons/Nova3PreservedFoodIcon';
 import { useTheme } from '../theme';
 
 interface ProcessingLevelModalProps {
@@ -15,7 +16,18 @@ export default function ProcessingLevelModal({ visible, onClose, novaGroup }: Pr
   const { t } = useTranslation();
   const { colors } = useTheme();
 
-  const getNovaInfo = (group: number) => {
+  type NovaInfo = {
+    color: string;
+    icon?: keyof typeof Ionicons.glyphMap;
+    customIcon?: React.ReactNode;
+    title: string;
+    description: string;
+    examples: string;
+    benefits?: string[];
+    concerns?: string[];
+  };
+
+  const getNovaInfo = (group: number): NovaInfo | null => {
     switch (group) {
       case 1:
         return {
@@ -44,8 +56,8 @@ export default function ProcessingLevelModal({ visible, onClose, novaGroup }: Pr
         };
       case 3:
         return {
-          color: '#ffa500',
-          icon: 'build',
+          color: '#FFA500',
+          customIcon: <Nova3PreservedFoodIcon size={24} color="#FFA500" />,
           title: t('nova.3'),
           description: t('infoModal.trustScore.nova3Description'),
           examples: t('infoModal.trustScore.nova3Examples'),
@@ -82,7 +94,8 @@ export default function ProcessingLevelModal({ visible, onClose, novaGroup }: Pr
       visible={visible}
       onClose={onClose}
       title={t('result.processingLevel')}
-      icon={novaInfo.icon as any}
+      icon={novaInfo.icon}
+      customIcon={novaInfo.customIcon}
       iconColor={novaInfo.color}
     >
       {/* NOVA Group Badge */}
