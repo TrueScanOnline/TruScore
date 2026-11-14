@@ -1,19 +1,21 @@
-# Founder modifications FM-01 / FM-02 / FM-03 — 15 November 2026
+# Founder modifications FM-01 / FM-02 / FM-03R — 15 November 2026
 
 ## Source control
 
 | Item | Value |
 |---|---|
 | Branch | `build/w5-founders-native-20261114` |
-| Starting SHA | `71d0f58db7bd373705324dc1b05fdd7e44337836` |
+| Independently verified starting HEAD (FM-03R revision) | `074061e41b2fabfce724f03131ecbe11768b55ed` |
+| Earlier FM-01/02/03 work started from | `71d0f58db7bd373705324dc1b05fdd7e44337836` |
 | Frozen binary-source SHA | `c113ce6ca4ec83c47423073437b2340c7c2d58d2` |
-| Freeze tag | `w5-founders-uat-source-android-38-ios-64-20261114` (unchanged) |
+| Freeze tag | `w5-founders-uat-source-android-38-ios-64-20261114` (unchanged; resolves to `add44c656bf61cfea8d14e9539772a9e3f733573` annotated tip / binary freeze `c113ce6…`) |
 | FM-01 commit | `f5ec00163ab2dbdbf90feacd008bad4dd3db2899` |
 | FM-02 commit | `294b6fda83ccee63d90d84287b29ea599dae4220` |
-| FM-03 commit | `9b81e6ee840b902883e97940f2a079cb01e1dd6f` |
-| Evidence document commit | `3082a7096e575a799976750436635a8a33f8055a` |
-| Follow-up (fill final HEAD) | `b7351effec6def37ca4d83cec78d2fac7b176904` |
-| Final integrated HEAD | `bc845c3314af5c14389e97ea476be2929de6aaaa` |
+| FM-03 commit (photo journey; superseded for Claims pillar action) | `9b81e6ee840b902883e97940f2a079cb01e1dd6f` |
+| **FM-03R implementation** | `7e1f59c461254c0b059582e616968d6830fa2a57` |
+| **FM-03R tests** | `d9c2e14852cf4de594deeb391662a35fdbc95b95` |
+| **FM-03R TS fix** | `532c1c82960cc16f18c06355713b4a371f511e86` |
+| Documentation commit | *(this commit — do not hardcode its own SHA here)* |
 
 Worktree: `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`
 
@@ -23,118 +25,154 @@ Worktree: `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`
 |---|---|---|
 | FM-01 NOVA 3 icon | **GREEN** | UI-only pictogram in `ProcessingLevelModal` / `InfoModal`. No NOVA classification, scoring, copy, or colour methodology change. |
 | FM-02 pillar Add-only | **AMBER** (founder-authorised) | Touches Score Highlights contribution solicitation (`INV-CO-1`–`CO-5`). Excludes `kind: 'change'` from pillar look-through only. Result card / Product Information Change paths preserved. |
-| FM-03 Claims absence entry | **AMBER** (founder-authorised) | Exposes existing packet-absence journey (`INV-CO-*`, `INV-EA-*`). Does **not** change `claimsRateable`, Claims Machine Register, certification eligibility, benchmark publication, or hardcode `15`. |
+| FM-03 Claims absence entry (original) | **AMBER** (founder-authorised) | Exposed photo-backed packet-absence journey. Retained in `PacketContributionModal` for post-MVP; **not** invoked by revised Claims pillar action. |
+| **FM-03R photo-free attestation** | **AMBER / controlled exception** (founder-authorised 15 Nov 2026) | Changes permitted evidence basis for **packet absence only**. New source kind `packet_absence_user_attestation_v1`. Does **not** remove photo requirements for other contribution types, change Claims Machine Register / baseline arithmetic, weaken generic admission, alter `claimsRateable`, or bypass barcode / contributor / env validation. |
 
-### Methodology conflict reported (no code change)
+### Protected invariants touched (FM-03R)
 
-Existing Claims methodology may still become Rated via substantive benchmark / certification routes even without packet evidence. Founder principle prefers packet evidence or admitted absence to reveal Claims; that broader reinterpretation of `claimsRateable` remains **out of scope** and would need separate architectural approval. FM-03 only routes the existing absence workflow.
+- Evidence Authority admission / source finalisation (`INV-EA-*`): new dedicated attestation finalize + submit path.
+- Contribution solicitation (`INV-CO-*`): Claims pillar absence no longer opens capture.
+- Claims publication / Confidence: admitted user attestation may complete packet lane; `primaryUserClaimsDependence` keeps Confidence **Limited** when this is the primary publication basis.
+- OFF write-back: packet absence still does not queue OFF dispatch (ingredients/nutrition only).
 
-### Planet contribution (future)
+### Not authorised / not changed
 
-Planet still has no authorised live contribution destination. No inert Add button was invented. A future Planet packaging / environment contribution route needs founder architectural approval.
+- Photo requirements for positive packet claims, certifications, nutrition, origins, ingredients.
+- Treating user attestation as photograph-verified or independently corroborated.
+- Claims baseline (15) arithmetic or Machine Register.
+- Other pillar publication rules.
+- Production `truscoreapi` / production database.
 
 ## FM-01 — Replace NOVA 3 wrench
 
-**Status:** Implemented
+**Status:** Implemented + **emulator visual PASS**
 
-**Replacement icon:** `Nova3PreservedFoodIcon` — SVG jar/tin with vegetable elements in `#FFA500`, via `react-native-svg`. `InfoModal` accepts optional `customIcon` while retaining Ionicons for NOVA 1/2/4.
+**Product:** Barker’s THREE BERRY jam (`9414732208565`) — OFF `nova_group: 3` confirmed.
 
-**Files:**
-- `src/components/icons/Nova3PreservedFoodIcon.tsx` (new)
-- `src/components/ProcessingLevelModal.tsx`
-- `src/components/InfoModal.tsx`
-- `src/__tests__/unit/wave5/nova3PreservedFoodIcon.test.ts` (new)
+**Emulator:** Pixel_5 / `emulator-5554` → Ingredients → Processing Level → info → orange jar/tin `#FFA500` visible in Processing Level InfoModal.
 
-**Commit:** `f5ec00163ab2dbdbf90feacd008bad4dd3db2899`
+**Screenshot:** `artifacts/FM01_NOVA3_ProcessingLevel_InfoModal.png` (local; not committed).
+
+**Commit:** `f5ec00163ab2dbdbf90feacd008bad4dd3db2899` (no corrective commit required for the modal icon).
+
+**Note:** Result card Processing Level row still uses Ionicons `build` for NOVA 3; InfoModal uses `Nova3PreservedFoodIcon`. Founder may request card alignment later — out of original FM-01 modal scope.
 
 ## FM-02 — Score pillar Add for missing evidence only
 
-**Status:** Implemented
+**Status:** Implemented + emulator regression **PASS**
 
-Pillar look-through no longer emits Change nutrition / ingredients / origins / packet information. Add actions remain gated by settled publication + live S26 opportunities + unresolved substantive lanes. Card correction `openContribution(..., 'change', ...)` paths remain in `app/result/[barcode].tsx`.
+| Check | Result |
+|---|---|
+| Body (Barker's jam, nutrition resolved) | Findings only — **no Change / Add** |
+| Transparency (Barker's jam, origins unresolved) | **Add product origins** only — **no Change** |
+| Claims Rated (Magnum / Cadbury-style) | May show **Add packet information**; **no Change**; absence hidden when Claims Rated |
+| Card correction icons | Retained (`openContribution(..., 'change', ...)`) |
 
-**Files:**
-- `src/lib/scoreHighlights/highlightContributionLinks.ts`
-- `src/components/ScoreHighlightsLookThroughModal.tsx` (comment)
-- `src/__tests__/unit/wave5/highlightContributionLinks.test.ts`
-- `src/__tests__/unit/wave5/fm02CardCorrectionPathsRemain.test.ts` (new)
+**Commit:** `294b6fda83ccee63d90d84287b29ea599dae4220` (no corrective commit).
 
-**Commit:** `294b6fda83ccee63d90d84287b29ea599dae4220`
+## FM-03 — Claims “There are no claims on the packet” (original)
 
-## FM-03 — Claims “There are no claims on the packet”
+**Status:** Superseded for the Claims pillar action by FM-03R. Commit `9b81e6e` retained. Guided `packet_absence` capture remains in `PacketContributionModal` for future post-MVP use and is **not** opened by the Claims pillar absence button.
 
-**Status:** Implemented
+## FM-03R — Photo-free user-attested Claims absence (pre-MVP)
 
-Claims pillar modal can show secondary action **There are no claims on the packet** beneath Add packet information when packet lane unassessed, opportunity live, guided contribution on, no prevailing admitted absence, and no contradicting positive packet/cert projection. Opens `PacketContributionModal` with `entryIntent: 'packet_absence'` (starts at capture; does not auto-admit). Submission continues through Evidence Authority.
+**Status:** Implemented + UAT live admission exercised on emulator
 
-**Files:**
+### Behaviour
+
+Claims NR (settled, `publishedScore` null, packet unassessed, opportunity live, no prevailing absence, no contradicting positive packet/cert) → secondary **There are no claims on the packet** → direct `submitClaimsAbsenceAttestation()` → **Submitting your confirmation…** → Evidence Authority admit → reassessment → Claims Rated when methodology permits (baseline **15/25** when no other adjustments).
+
+No camera, gallery, contribution form, claim wording, or second confirmation screen.
+
+### Evidence source
+
+| Field | Value |
+|---|---|
+| Content / source kind | `packet_absence_user_attestation_v1` |
+| Provenance | Explicit user declaration bound to contributor credential + barcode |
+| Confidence | Limited when primary contribution dependence applies (`primaryUserClaimsDependence`) |
+| OFF write-back | None for packet absence |
+
+### Commits
+
+| Piece | SHA |
+|---|---|
+| Implementation (EA + UI) | `7e1f59c` |
+| Tests | `d9c2e14` |
+| TS fix | `532c1c8` |
+
+### Files (principal)
+
+- `src/evidenceAuthority/packetAbsenceAttestationAsset.ts` (new)
+- `src/evidenceAuthority/authority.ts`
+- `src/evidenceAuthority/device.ts` (`submitClaimsAbsenceAttestation`)
+- `src/evidenceAuthority/contributionTrace.ts`
+- `backend/vercel/api/evidence-authority.ts` (`finalize-packet-absence-attestation`)
+- `backend/vercel/lib/contributionTrace.ts`
 - `src/lib/scoreHighlights/highlightContributionLinks.ts`
 - `src/components/ScoreHighlightsLookThroughModal.tsx`
-- `src/components/PacketContributionModal.tsx`
 - `app/result/[barcode].tsx`
-- `src/__tests__/unit/wave5/fm03ClaimsPacketAbsenceEntry.test.ts` (new)
+- `src/__tests__/unit/evidenceAuthority/packetAbsenceUserAttestation.test.ts`
+- `src/__tests__/unit/wave5/fm03ClaimsPacketAbsenceEntry.test.ts`
 - `src/__tests__/unit/wave5/highlightContributionLinks.test.ts`
 
-**Commit:** `9b81e6ee840b902883e97940f2a079cb01e1dd6f`
+### UAT backend deployment
+
+| Item | Value |
+|---|---|
+| Project | `truscoreapi-uat` only (not `truscoreapi` production) |
+| Deployment ID | `dpl_8XHh7PMga7N2NFQcbywexxMUwWS8` |
+| Deployment URL | `https://truscoreapi-cty0tz5t9-leightons-projects-d328c774.vercel.app` |
+| Alias | `https://truscoreapi-uat.vercel.app` → above deployment |
+| Source SHA at deploy | branch HEAD containing `7e1f59c` / `d9c2e14` / `532c1c8` (synced via `npm run sync-truescan-src`) |
+| API probe | `finalize-packet-absence-attestation` returns `contentType: packet_absence_user_attestation_v1` with bearer credential; unauthenticated → `contributor_credential_required` |
+
+### Emulator Journey C (Grandessa Mixed Berry Premium Jam `4088700300930`)
+
+| Step | Result |
+|---|---|
+| Claims pillar NR (`—`) | **Add packet information** + supporting copy + **There are no claims on the packet** |
+| Tap absence | **Submitting your confirmation…** — no camera / gallery / form |
+| Admission | Claims **15/25**; overall **56 Fair**; **Limited confidence** |
+| After admission | Absence action removed; Claims modal shows **15/25** |
+| Rescan | Same Claims **15/25** + Limited confidence restored |
+
+Screenshots (local `artifacts/`, not committed): `fm03r_grandessa_claims.png`, `fm03r_submitting.png`, `fm03r_after_submit.png`, `fm03r_rescan.png`.
 
 ## Automated tests
 
-Commands run (all passed unless noted):
-
 ```text
-npx jest src/__tests__/unit/wave5/nova3PreservedFoodIcon.test.ts
-npx jest src/__tests__/unit/wave5/highlightContributionLinks.test.ts
-npx jest src/__tests__/unit/wave5/fm02CardCorrectionPathsRemain.test.ts
+npx jest src/__tests__/unit/evidenceAuthority/packetAbsenceUserAttestation.test.ts
 npx jest src/__tests__/unit/wave5/fm03ClaimsPacketAbsenceEntry.test.ts
-npx jest src/__tests__/unit/contribution/consumerIntegrationJourneys.test.ts
-npx jest src/__tests__/unit/contribution/contributionJourneyCorrections.test.ts
-npx jest src/__tests__/unit/contribution/founderUatCorrections.test.ts
-npx jest src/__tests__/unit/claims/wave4a4Closure.test.ts
+npx jest src/__tests__/unit/wave5/highlightContributionLinks.test.ts
+npx jest src/__tests__/unit/evidenceAuthority/manualTextAsset.test.ts
 npx jest src/__tests__/unit/evidenceAuthority/wave4aSharedAuthority.test.ts
-npx jest src/__tests__/unit/lib/rateability/
-npx jest src/__tests__/unit/wave5/founderUi09.test.ts
-npx jest src/__tests__/unit/config/mvpFeatureGates.test.ts
+npx jest src/__tests__/unit/claims/
+npx jest src/__tests__/unit/wave5/fm02CardCorrectionPathsRemain.test.ts
+npx jest src/__tests__/unit/wave5
 npx tsc --noEmit
 ```
 
-Outcomes: targeted suites green (including Wave 4A shared authority absence → assessed-neutral **15/25** fixture). Typecheck: **pass** (exit 0). No pre-existing failures attributed to these commits.
+Outcomes: listed suites **PASS**. Typecheck **PASS** after `532c1c8`.
 
-## Emulator testing
+## Emulator / platforms
 
 | Item | Status |
 |---|---|
-| AVD | `Pixel_5` (`emulator-5554`) — left **OPEN** |
-| Metro | `npx expo start -c --port 8081` with `.env.development` (UAT EA, Dynamic Signals Asset, guided contribution on) — left **RUNNING** |
-| Expo Go | `host.exp.exponent` |
-| Left visible for founder | Cadbury Favourites Result → **Claims** pillar modal with **Add packet information** + **There are no claims on the packet** |
-
-### Journey outcomes (device screenshots under local `artifacts/fm_qa_*.png`, not committed)
-
-| Journey | Result |
-|---|---|
-| FM-02 Body (Cadbury Dairy Milk, nutrition resolved) | Modal shows findings only — **no Change / Add** |
-| FM-02 Body (Mi goreng, nutrition unresolved) | **Add nutrition** shown; no Change |
-| FM-02 Transparency (Cadbury Dairy Milk, origins unresolved) | **Add product origins** shown; no Change |
-| FM-02/03 Claims (Cadbury Dairy Milk / Favourites, packet unassessed) | **Add packet information** + **There are no claims on the packet** (secondary outline); no Change |
-| FM-03 absence entry | Opens Packet information capture with “Confirming no relevant claims or certifications” guidance; does **not** auto-admit |
-| FM-01 NOVA 3 pictogram | History products exercised were **NOVA 4**. Icon mapping verified by unit tests + source. Founder: open any NOVA 3 product → Ingredients → Processing Level → info → confirm jar pictogram in `#FFA500` |
-| Card correction icons | “Contribute or correct nutrition information” still present on Result nutrition card (Mi goreng) |
-
-### Android / iOS verification
-
-| Platform | Status |
-|---|---|
-| Android emulator (Expo Go) | **OPEN** with RVEEL on Claims modal — ready for founder observation |
-| iOS TestFlight | Not re-built; no new native binary. JS/TS changes are Expo Go compatible; iOS visual confirmation deferred to existing TestFlight / next entitled build |
+| AVD | `Pixel_5` / `emulator-5554` — left **OPEN** with Grandessa Result (Claims 15/25) |
+| Metro | `npx expo start -c --port 8081` — left **RUNNING** |
+| Expo Go | `host.exp.exponent` + UAT backend |
+| iOS TestFlight | Not rebuilt; JS/TS Expo Go compatible. Native/TestFlight-specific confirmation deferred |
 
 ## Known limitations
 
-1. FM-03 does not alter Claims rateability via benchmark/cert routes (reported above).
-2. Planet still has no Add destination.
-3. Full end-to-end UAT Evidence Authority absence admission on a live product should be confirmed by founder during observation (photo + confirm + admit). Automated Wave 4A fixture already proves admitted absence → assessed-neutral **15/25**.
-4. Frozen native build tag / binaries (Android 38 / iOS 64) are **not** updated; these commits are source-branch advances for Expo Go / next entitled build.
-5. Local history products used for visual QA were predominantly NOVA 4; FM-01 icon is covered by automated source contract + founder step for a NOVA 3 barcode.
+1. Expo Go + UAT EA admission was exercised successfully for Grandessa; founder should still visually accept on this open emulator session.
+2. Result card NOVA 3 mark still uses Ionicons `build`; InfoModal uses jar pictogram (verified).
+3. Planet still has no authorised Add destination.
+4. Frozen native tag / Android 38 / iOS 64 binaries **unchanged**.
+5. Failure-path UI (backend reject) was covered by automated tests; live force-fail not re-run after successful admission on Grandessa.
+6. Request **explicit founder confirmation** before declaring FM-01 / FM-02 / FM-03R accepted.
 
 ## Integration list note
 
-`docs/uat/UAT_INTEGRATION_SHA_LIST.md` historically tracks `wave5/score-experience-20261008`. This work advances `build/w5-founders-native-20261114`. Rows for FM-01–FM-03 are appended without deleting accepted historical entries.
+`docs/uat/UAT_INTEGRATION_SHA_LIST.md` historically tracks `wave5/score-experience-20261008`. This work advances `build/w5-founders-native-20261114`. Append FM-03R SHAs without deleting accepted historical entries.

@@ -27,4 +27,7 @@ Living list of intended changes for the next UAT build. Each row is one accepted
 | FM-01 NOVA 3 preserved-food icon (branch `build/w5-founders-native-20261114`) | `f5ec00163ab2dbdbf90feacd008bad4dd3db2899` | on `build/w5-founders-native-20261114` |
 | FM-02 score-pillar Add-only for missing evidence (same branch) | `294b6fda83ccee63d90d84287b29ea599dae4220` | on `build/w5-founders-native-20261114` |
 | FM-03 Claims packet-absence pillar entry (same branch) | `9b81e6ee840b902883e97940f2a079cb01e1dd6f` | on `build/w5-founders-native-20261114` |
-| FM-01/02/03 founder evidence record `docs/uat/FOUNDER_MODIFICATIONS_20261115.md` | see HEAD after evidence commit on `build/w5-founders-native-20261114` | on `build/w5-founders-native-20261114` |
+| FM-03R photo-free Claims absence attestation (implementation) | `7e1f59c461254c0b059582e616968d6830fa2a57` | on `build/w5-founders-native-20261114` |
+| FM-03R attestation tests | `d9c2e14852cf4de594deeb391662a35fdbc95b95` | on `build/w5-founders-native-20261114` |
+| FM-03R Claims absence UI typecheck fix | `532c1c82960cc16f18c06355713b4a371f511e86` | on `build/w5-founders-native-20261114` |
+| FM-01/02/03/03R founder evidence record `docs/uat/FOUNDER_MODIFICATIONS_20261115.md` | see HEAD after evidence commit on `build/w5-founders-native-20261114` | on `build/w5-founders-native-20261114` |
