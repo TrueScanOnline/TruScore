@@ -1,5 +1,7 @@
 /**
- * FM-03 — Claims pillar packet-absence entry uses existing EA journey; no parallel scoring.
+ * FM-03R — Claims pillar photo-free packet-absence attestation entry.
+ * Prior FM-03 photo journey wiring remains in PacketContributionModal but is not
+ * invoked from the Claims pillar absence action.
  */
 
 import fs from 'fs';
@@ -8,28 +10,40 @@ import { CLAIMS_PACKET_ABSENCE_PILLAR_LABEL } from '../../../lib/scoreHighlights
 
 const REPO = path.join(__dirname, '../../../..');
 
-describe('FM-03 Claims packet-absence pillar entry', () => {
+describe('FM-03R Claims packet-absence direct attestation entry', () => {
   it('uses the exact founder button wording', () => {
     expect(CLAIMS_PACKET_ABSENCE_PILLAR_LABEL).toBe('There are no claims on the packet');
   });
 
-  it('wires Result → PacketContributionModal with packet_absence entryIntent', () => {
+  it('wires Result to submitClaimsAbsenceAttestation without opening capture', () => {
     const result = fs.readFileSync(path.join(REPO, 'app/result/[barcode].tsx'), 'utf8');
-    const modal = fs.readFileSync(path.join(REPO, 'src/components/PacketContributionModal.tsx'), 'utf8');
+    const links = fs.readFileSync(
+      path.join(REPO, 'src/lib/scoreHighlights/highlightContributionLinks.ts'),
+      'utf8'
+    );
     const lookThrough = fs.readFileSync(
       path.join(REPO, 'src/components/ScoreHighlightsLookThroughModal.tsx'),
       'utf8'
     );
+    const device = fs.readFileSync(path.join(REPO, 'src/evidenceAuthority/device.ts'), 'utf8');
 
-    expect(result).toContain("setContributionEntryIntent");
-    expect(result).toContain("'packet_absence'");
-    expect(result).toContain('entryIntent={contributionEntryIntent}');
-    expect(result).toContain('link.entryIntent');
+    expect(links).toContain("entryIntent: 'claims_absence_attestation'");
+    expect(result).toContain('submitClaimsAbsenceAttestation');
+    expect(result).toContain('submitClaimsAbsenceAttestationFromPillar');
+    expect(result).toContain("link.entryIntent === 'claims_absence_attestation'");
+    expect(result).not.toContain("link.entryIntent === 'packet_absence' ? 'packet_absence'");
+    expect(device).toContain('export async function submitClaimsAbsenceAttestation');
+    expect(device).toContain("action: 'finalize-packet-absence-attestation'");
+    expect(lookThrough).toContain('Submitting your confirmation…');
+    expect(lookThrough).toContain("link.kind === 'absence'");
+    expect(lookThrough).toContain('contributeButtonSecondary');
+  });
+
+  it('retains guided packet_absence capture infrastructure without pillar invocation', () => {
+    const modal = fs.readFileSync(path.join(REPO, 'src/components/PacketContributionModal.tsx'), 'utf8');
     expect(modal).toContain("entryIntent?: 'default' | 'packet_absence'");
     expect(modal).toContain("preferCaptureForAbsence = entryIntentRef.current === 'packet_absence'");
     expect(modal).toContain('Opening alone must not select or admit absence');
-    expect(lookThrough).toContain("link.kind === 'absence'");
-    expect(lookThrough).toContain('contributeButtonSecondary');
   });
 
   it('does not hardcode Claims score 15 in the pillar entry UI path', () => {

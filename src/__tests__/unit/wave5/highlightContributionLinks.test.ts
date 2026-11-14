@@ -58,7 +58,15 @@ function product(input: {
       },
       claims: {
         publicationStatus: input.claimsStatus ?? 'rated',
-        publishedScore: input.publishedScore === undefined ? 12 : input.publishedScore,
+        // FM-03R: NR Claims must not carry a published number.
+        publishedScore:
+          input.claimsStatus === 'nr'
+            ? input.publishedScore === undefined
+              ? null
+              : input.publishedScore
+            : input.publishedScore === undefined
+              ? 12
+              : input.publishedScore,
         assessmentLanes: {
           packet: input.packet ?? 'assessed',
           benchmark: 'assessed',
@@ -185,7 +193,7 @@ describe('Score Highlights contribution invitations', () => {
       {
         label: CLAIMS_PACKET_ABSENCE_PILLAR_LABEL,
         kind: 'absence',
-        entryIntent: 'packet_absence',
+        entryIntent: 'claims_absence_attestation',
       },
     ]);
     expect(silent.links).toEqual([]);
@@ -458,9 +466,24 @@ describe('Score Highlights contribution invitations', () => {
       linkKey: 'packet',
     });
     expect(absence?.label).toBe(CLAIMS_PACKET_ABSENCE_PILLAR_LABEL);
-    expect(absence?.entryIntent).toBe('packet_absence');
+    expect(absence?.entryIntent).toBe('claims_absence_attestation');
     expect(add?.label).toBe('Add packet information');
     expect(add?.entryIntent).toBeUndefined();
+  });
+
+  it('FM-03R hides absence when Claims is Rated via benchmark while packet remains unresolved', () => {
+    const rated = highlightContributionOffer(
+      product({
+        packet: 'unassessed_or_incomplete',
+        claimsStatus: 'rated',
+        publishedScore: 18,
+        claimsOpportunity: live('packet_claims', 'packet_claims'),
+      }),
+      'Ethics',
+      settled
+    );
+    expect(rated.links.map((link) => link.kind)).toEqual(['add']);
+    expect(rated.links.some((link) => link.kind === 'absence')).toBe(false);
   });
 
   it('does not change eligibility when the published score is a genuine zero', () => {
