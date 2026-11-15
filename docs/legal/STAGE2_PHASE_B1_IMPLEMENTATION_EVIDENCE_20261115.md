@@ -130,8 +130,8 @@ Confirmed by scope of diff + Wave 5 publication/oracle/consumption regression pa
 
 | Item | Value |
 |---|---|
-| Implementation commit(s) | `e523463ea43fccd7f83b09c2acbd875d9efac075` |
-| Final pushed remote HEAD | _updated after push_ |
+| Implementation commit(s) | `e523463ea43fccd7f83b09c2acbd875d9efac075` (copy); `fd75bf2d8a0295b6bdf1c8030874f770c2d619db` (evidence SHA note) |
+| Final pushed remote HEAD | `fd75bf2d8a0295b6bdf1c8030874f770c2d619db` on `origin/build/w5-founders-native-20261114` |
 
 ---
 
