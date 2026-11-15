@@ -118,9 +118,10 @@ Device: Android emulator **Pixel_5** (`emulator-5554`) via Expo Go + Metro offli
 
 1. `108aa18` — `feat(account): Account tab stack with guest home and MVP detail screens`
 2. `09121ce` — `test(account): Stage 1 contracts and privacy clear isolation`
-3. *(this docs commit + any polish SHA recorded below after commit)*
+3. `b17e314` — `docs(uat): Account Stage 1 evidence and privacy clear label polish`
 
-> Final remote HEAD is reported after push and is not hardcoded here before push.
+**Final pushed remote HEAD:** `b17e3143717130107a4a7c5ef12ac2b7aa7ad66c`  
+(`origin/build/w5-founders-native-20261114`)
 
 ## Frozen native-build tag
 
