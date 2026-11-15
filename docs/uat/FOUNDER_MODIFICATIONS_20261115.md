@@ -57,6 +57,7 @@ InfoModal / Processing Level info uses shared `Nova3PreservedFoodIcon`.
 **Commit:** `8b2ee07670dc6470eb6483ba2e54bc0be5e746d6`
 
 ### Corrective revision (jar-and-spoon rejected → jar with lid off)
+**Commit:** `c9816ea753d773e7aff3c74885dba3e517ebbe20`  
 **Status:** Founder rejected jar-and-spoon visual (15 Nov). Alternative: simple orange preserve jar with lid off (`#FFA500`). Shared `Nova3PreservedFoodIcon` only — Result card + Processing Level info modal. No layout / scoring / FM-02 / FM-03R changes.
 
 | Change | Detail |
