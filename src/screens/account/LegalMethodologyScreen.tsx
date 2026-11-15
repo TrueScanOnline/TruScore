@@ -8,6 +8,7 @@ import AccountRow from '../../components/account/AccountRow';
 import InfoModal from '../../components/InfoModal';
 import { isLegalDestinationReady, legalDestinations } from '../../config/legalDestinations';
 import { productIdentity } from '../../config/productIdentity';
+import { openLegalDestination } from '../../utils/openLegalDestination';
 import { resultEmeraldTone } from '../../theme/resultPresentation';
 import { useTheme } from '../../theme';
 
@@ -24,14 +25,18 @@ export default function LegalMethodologyScreen() {
   const emerald = resultEmeraldTone(!!darkMode);
   const [panel, setPanel] = useState<Panel>(null);
 
-  const openExternalOrBlock = (key: 'privacy' | 'terms') => {
+  const openExternalOrBlock = async (key: 'privacy' | 'terms') => {
     const dest = legalDestinations[key];
-    if (!isLegalDestinationReady(key)) {
+    const result = await openLegalDestination(key);
+    if (result === 'blocked') {
       Alert.alert(
         key === 'privacy' ? t('settings.privacyPolicy') : t('account.termsOfUse'),
         t('account.legalUrlUnavailable', { url: dest.url })
       );
       return;
+    }
+    if (result === 'failed') {
+      Alert.alert(t('common.error'), t('account.legalOpenFailed'));
     }
   };
 
@@ -50,7 +55,9 @@ export default function LegalMethodologyScreen() {
               ? undefined
               : t('account.documentUnavailableShort')
           }
-          onPress={() => openExternalOrBlock('privacy')}
+          onPress={() => {
+            void openExternalOrBlock('privacy');
+          }}
           testID="account-legal-privacy"
         />
         <AccountRow
@@ -61,7 +68,9 @@ export default function LegalMethodologyScreen() {
               ? undefined
               : t('account.documentUnavailableShort')
           }
-          onPress={() => openExternalOrBlock('terms')}
+          onPress={() => {
+            void openExternalOrBlock('terms');
+          }}
           testID="account-legal-terms"
           isLast
         />

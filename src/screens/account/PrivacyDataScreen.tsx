@@ -8,8 +8,8 @@ import AccountRow from '../../components/account/AccountRow';
 import { useFavoritesStore } from '../../store/useFavoritesStore';
 import { useScanStore } from '../../store/useScanStore';
 import { clearCache, getCacheSize } from '../../services/cacheService';
-import { isLegalDestinationReady } from '../../config/legalDestinations';
-import { productIdentity } from '../../config/productIdentity';
+import { isLegalDestinationReady, legalDestinations } from '../../config/legalDestinations';
+import { openLegalDestination } from '../../utils/openLegalDestination';
 
 /**
  * Privacy & Data — targeted local clears only.
@@ -94,13 +94,17 @@ export default function PrivacyDataScreen() {
     );
   };
 
-  const handleHowDataUsed = () => {
-    if (!isLegalDestinationReady('privacy')) {
+  const handleHowDataUsed = async () => {
+    const result = await openLegalDestination('privacy');
+    if (result === 'blocked') {
       Alert.alert(
         t('account.howDataUsed'),
-        t('account.privacyUrlUnavailable', { url: productIdentity.privacyPolicyUrl })
+        t('account.privacyUrlUnavailable', { url: legalDestinations.privacy.url })
       );
       return;
+    }
+    if (result === 'failed') {
+      Alert.alert(t('common.error'), t('account.legalOpenFailed'));
     }
   };
 
@@ -147,7 +151,9 @@ export default function PrivacyDataScreen() {
               ? undefined
               : t('account.documentUnavailableShort')
           }
-          onPress={handleHowDataUsed}
+          onPress={() => {
+            void handleHowDataUsed();
+          }}
           testID="account-how-data-used"
           isLast
         />
