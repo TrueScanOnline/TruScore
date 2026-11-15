@@ -45,17 +45,29 @@ Worktree: `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`
 
 ## FM-01 — Replace NOVA 3 wrench
 
-**Status:** Implemented + **emulator visual PASS**
+**Status:** Implemented; **Result-card correction** applied 15 Nov 2026 (awaiting founder visual acceptance)
 
 **Product:** Barker’s THREE BERRY jam (`9414732208565`) — OFF `nova_group: 3` confirmed.
 
-**Emulator:** Pixel_5 / `emulator-5554` → Ingredients → Processing Level → info → orange jar/tin `#FFA500` visible in Processing Level InfoModal.
+### Original modal work
+**Commit:** `f5ec00163ab2dbdbf90feacd008bad4dd3db2899`  
+InfoModal / Processing Level info uses shared `Nova3PreservedFoodIcon`.
 
-**Screenshot:** `artifacts/FM01_NOVA3_ProcessingLevel_InfoModal.png` (local; not committed).
+### Corrective commit (Result card spanner → jar-and-spoon)
+**Commit:** `8b2ee07670dc6470eb6483ba2e54bc0be5e746d6`
 
-**Commit:** `f5ec00163ab2dbdbf90feacd008bad4dd3db2899` (no corrective commit required for the modal icon).
+| Change | Detail |
+|---|---|
+| Result card (both paths) | `ResultNovaMarkIcon` replaces Ionicons `build` for NOVA 3 inside `styles.novaMark` |
+| SVG | `Nova3PreservedFoodIcon` refined to preserve jar + recognisable spoon at 26px `#FFA500` |
+| Info modal | Same shared component (no layout change) |
+| NOVA 1 / 2 / 4 | Unchanged Ionicons leaf / create / warning |
 
-**Note:** Result card Processing Level row still uses Ionicons `build` for NOVA 3; InfoModal uses `Nova3PreservedFoodIcon`. Founder may request card alignment later — out of original FM-01 modal scope.
+**Local evidence (not committed):**
+- `artifacts/FM01_nova3_icon_preview.html` / `artifacts/FM01_nova3_jar_spoon_preview.webp` — 26px card mock + large detail
+- Prior InfoModal screenshot: `artifacts/FM01_NOVA3_ProcessingLevel_InfoModal.png`
+
+**Emulator note (15 Nov corrective session):** After Metro was restarted with `--clear`, Expo Go repeatedly hung on “New update available, downloading…” / “Reloading…” (host logcat showed OkHttp `ProtocolException` during bundle transfer). Metro itself bundles successfully (`Android Bundled`, HTTP 200). Founder should reconnect Expo Go to `exp://10.0.2.2:8081` on the open Pixel_5 emulator and confirm the Processing Level card on Barker’s jam.
 
 ## FM-02 — Score pillar Add for missing evidence only
 
