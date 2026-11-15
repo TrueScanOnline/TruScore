@@ -36,7 +36,9 @@ describe('Commit E — consumer methodology containment', () => {
 
   it('Methodology route redirects safely instead of activating legacy content', () => {
     expect(methodologySource).toMatch(/goBack\s*\(/);
+    expect(methodologySource).toMatch(/isDeveloperSettingsRouteEnabled/);
     expect(methodologySource).toMatch(/replace\(\s*['"]DeveloperSettings['"]\s*\)/);
+    expect(methodologySource).toMatch(/replace\(\s*['"]Main['"]\s*\)/);
     expect(methodologySource).toMatch(/return\s+<\s*View\s*\/>/);
   });
 

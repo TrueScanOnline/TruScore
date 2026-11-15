@@ -143,9 +143,22 @@ describe('Account Stage 1 contracts', () => {
     expect(legalDestinations.privacy.url).toBe(productIdentity.privacyPolicyUrl);
     expect(legalDestinations.terms.url).toBe(productIdentity.termsOfServiceUrl);
     const legal = read('src/screens/account/LegalMethodologyScreen.tsx');
-    expect(legal).toMatch(/isLegalDestinationReady/);
+    expect(legal).toMatch(/openLegalDestination/);
     expect(legal).toMatch(/account\.legalUrlUnavailable/);
     expect(legal).not.toMatch(/Linking\.openURL/);
+    const opener = read('src/utils/openLegalDestination.ts');
+    expect(opener).toMatch(/isLegalDestinationReady/);
+    expect(opener).toMatch(/Linking\.openURL/);
+  });
+
+  test('DeveloperSettings deep link is omitted on store-release runtime', () => {
+    const access = read('src/config/developerToolsAccess.ts');
+    expect(access).toMatch(/isStoreReleaseRuntime/);
+    const linking = read('src/utils/linking.ts');
+    expect(linking).toMatch(/isDeveloperSettingsRouteEnabled/);
+    expect(linking).not.toMatch(/^\s*DeveloperSettings:\s*'developer-settings',\s*$/m);
+    const layout = read('app/_layout.tsx');
+    expect(layout).toMatch(/isDeveloperSettingsRouteEnabled\(\)\s*\?/);
   });
 
   test('app version helper reads Expo config rather than hardcoded 1.0.0', () => {
@@ -155,10 +168,8 @@ describe('Account Stage 1 contracts', () => {
     expect(home).not.toMatch(/1\.0\.0/);
   });
 
-  test('DeveloperSettings remains a root modal route, not Account stack', () => {
-    const layout = read('app/_layout.tsx');
-    expect(layout).toMatch(/name=\"DeveloperSettings\"/);
+  test('DeveloperSettings remains outside Account stack', () => {
     expect(read('src/navigation/AccountStack.tsx')).not.toMatch(/DeveloperSettings/);
-    expect(read('src/utils/linking.ts')).toMatch(/DeveloperSettings:\s*'developer-settings'/);
+    expect(read('app/_layout.tsx')).toMatch(/name=\"DeveloperSettings\"/);
   });
 });
