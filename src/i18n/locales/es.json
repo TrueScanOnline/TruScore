@@ -424,7 +424,7 @@
       "goodDesc": "Calidad por encima del promedio con un rendimiento fuerte en la mayoría de las categorías. Buena elección para consumidores conscientes.",
       "fairDesc": "Calidad moderada con margen de mejora. Aceptable pero no excepcional en áreas clave.",
       "poorDesc": "Calidad por debajo del promedio. Estos productos pueden tener problemas significativos en sostenibilidad, ética, nutrición o procesamiento.",
-      "note": "Rveel Score v1.4: se calcula con los datos disponibles (Open Food Facts, Open Beauty Facts, UPCitemdb). La puntuación solo se muestra cuando hay datos suficientes. El 100 % del baremo proviene de sistemas públicos reconocidos (Nutri-Score, Eco-Score, NOVA, etiquetas OFF), sin fórmulas propietarias. Cada pilar usa conversiones directas de los sistemas oficiales (p. ej. A=25, B=20). Si faltan Nutri-Score o Eco-Score, se aplican líneas base del motor (p. ej. 15 puntos en lugar de 25)."
+      "note": "Rveel Score utiliza información de producto de Open Food Facts, sistemas de evaluación externos reconocidos y las reglas de puntuación y publicación definidas por Rveel en los pilares Cuerpo, Planeta, Claims y Transparencia. Una puntuación global numérica solo se publica cuando los cuatro pilares están Rated."
     },
     "ecoscore": {
       "title": "Entendiendo el Eco-Puntuación",

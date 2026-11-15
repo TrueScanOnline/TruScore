@@ -105,8 +105,32 @@ export default function LegalMethodologyScreen() {
         icon="analytics-outline"
         iconColor={emerald.action}
       >
+        <Text style={[styles.modalHeading, { color: colors.text }]}>
+          {t('infoModal.trustScore.howItWorks')}
+        </Text>
         <Text style={[styles.modalText, { color: colors.text }]}>
           {t('infoModal.trustScore.description')}
+        </Text>
+        <Text style={[styles.modalText, { color: colors.textSecondary }]}>
+          {t('infoModal.trustScore.howItWorksText')}
+        </Text>
+        <Text style={[styles.modalHeading, { color: colors.text }]}>
+          {t('infoModal.trustScore.whenScoreShown')}
+        </Text>
+        <Text style={[styles.modalText, { color: colors.textSecondary }]}>
+          {t('infoModal.trustScore.whenScoreShownText')}
+        </Text>
+        <Text style={[styles.modalHeading, { color: colors.text }]}>
+          {t('infoModal.trustScore.confidenceMeaning')}
+        </Text>
+        <Text style={[styles.modalText, { color: colors.textSecondary }]}>
+          {t('infoModal.trustScore.confidenceMeaningText')}
+        </Text>
+        <Text style={[styles.modalHeading, { color: colors.text }]}>
+          {t('infoModal.trustScore.methodologyLimitations')}
+        </Text>
+        <Text style={[styles.modalText, { color: colors.textSecondary }]}>
+          {t('infoModal.trustScore.methodologyLimitationsText')}
         </Text>
         <Text style={[styles.modalText, { color: colors.textSecondary }]}>
           {t('infoModal.trustScore.note')}
@@ -159,6 +183,13 @@ export default function LegalMethodologyScreen() {
 }
 
 const styles = StyleSheet.create({
+  modalHeading: {
+    fontSize: 15,
+    fontWeight: '600',
+    lineHeight: 21,
+    marginBottom: 6,
+    marginTop: 4,
+  },
   modalText: {
     fontSize: 14,
     lineHeight: 21,

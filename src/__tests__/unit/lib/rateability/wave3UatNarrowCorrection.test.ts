@@ -11,6 +11,7 @@ import { calculatePlanetPillar } from '../../../../lib/truscoreEngine/pillars/pl
 import { calculateEthicsPillar } from '../../../../lib/truscoreEngine/pillars/ethicsPillar';
 import type { Product } from '../../../../types/product';
 
+/** Former S27 unfinished marker — must not appear on consumer methodology title/description. */
 const S27_PREFIX = '[Awaiting founder edit]';
 
 function settleTransparency(product: Product) {
@@ -30,11 +31,17 @@ function settleTransparency(product: Product) {
 }
 
 describe('Wave 3 UAT narrow correction', () => {
-  describe('A — W3-S27 founder-edit prefix', () => {
-    it('uses the exact consumer prefix token', () => {
+  describe('A — W3-S27 founder-edit prefix (Phase B1 removed from consumer UX)', () => {
+    it('keeps the historical token documented but does not prefix Result methodology copy', () => {
       expect(S27_PREFIX).toBe('[Awaiting founder edit]');
-      const titled = `${S27_PREFIX} Understanding Rveel Score`;
-      expect(titled.startsWith('[Awaiting founder edit] ')).toBe(true);
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const fs = require('fs') as typeof import('fs');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const path = require('path') as typeof import('path');
+      const modalPath = path.join(__dirname, '../../../../components/TrustScoreInfoModal.tsx');
+      const modalSource = fs.readFileSync(modalPath, 'utf8');
+      expect(modalSource).not.toContain(S27_PREFIX);
+      expect(modalSource).not.toMatch(/\$\{s27Prefix\}/);
     });
   });
 

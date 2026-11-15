@@ -20,15 +20,10 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
   const emerald = resultEmeraldTone(!!darkMode);
   const pillarInk = resultPresentation.emerald.pillars;
 
-  const s27Prefix = '[Awaiting founder edit]';
-  const rawTitle = t('infoModal.trustScore.title') || 'Understanding Rveel Score';
-  const title = rawTitle.startsWith(s27Prefix) ? rawTitle : `${s27Prefix} ${rawTitle}`;
-  const rawDescription =
+  const title = t('infoModal.trustScore.title') || 'Understanding Rveel Score';
+  const description =
     t('infoModal.trustScore.description') ||
-    'Rveel Score is a comprehensive rating (0-100) based entirely on recognized public systems. Four equal pillars (25 points each): Body, Planet, Claims, and Transparency.';
-  const description = rawDescription.startsWith(s27Prefix)
-    ? rawDescription
-    : `${s27Prefix} ${rawDescription}`;
+    'Rveel Score is an assessment of food products across four equally weighted pillars: Body, Planet, Claims and Transparency. Each pillar contributes up to 25 points towards an overall score of 100.';
 
   return (
     <InfoModal
@@ -63,13 +58,13 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('infoModal.trustScore.formula') || 'Rveel Score = Body (25) + Planet (25) + Claims (25) + Transparency (25) = 0-100'}
             </Text>
             <Text style={[styles.formulaSubtext, { color: emerald.muted }]}>
-              100% based on recognized public systems (Nutri-Score, Eco-Score, NOVA, OFF labels)
+              Combines Open Food Facts product data, recognised external systems, and Rveel's governed scoring rules
             </Text>
             <View style={styles.formulaBreakdown}>
               <View style={styles.formulaRow}>
                 <View style={[styles.formulaFlag, { backgroundColor: pillarInk.Body.icon }]}>
                   <Ionicons name="shield" size={14} color="#fff" />
-                  <Text style={styles.formulaFlagText}>25</Text>
+                  <Text style={styles.formulaFlagText}>2–25</Text>
                 </View>
                 <Text style={[styles.formulaLabel, { color: emerald.muted }]}>
                   {consumerPillarLabel('Body')} - Nutri-Score + NOVA + additives
@@ -90,7 +85,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
                   <Text style={styles.formulaFlagText}>25</Text>
                 </View>
                 <Text style={[styles.formulaLabel, { color: emerald.muted }]}>
-                  {consumerPillarLabel('Ethics')} - Certifications + ethical labels
+                  {consumerPillarLabel('Ethics')} - BBFAW, KTC, highest certification, packet claims
                 </Text>
               </View>
               <View style={styles.formulaRow}>
@@ -132,7 +127,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>3</Text>
             </View>
             <Text style={[styles.stepText, { color: emerald.muted }]}>
-              {t('infoModal.trustScore.step3') || 'Calculate Claims score (0-25) using certifications, animal cruelty detection, labor violations, and recalls. Base 15, certifications up to +15, penalties for violations.'}
+              {t('infoModal.trustScore.step3') || 'Calculate Claims score (0–25) from a 15 base, then BBFAW, KnowTheChain, highest eligible certification only (Fairtrade +6, Rainforest/UTZ +6, ASC +4, MSC +4, Organic +2), and packet-claim assessment where applicable.'}
             </Text>
           </View>
           <View style={styles.stepItem}>
@@ -236,7 +231,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <View style={styles.factorTag}>
                 <Ionicons name="checkmark-circle" size={12} color="#ff6b6b" />
                 <Text style={[styles.factorTagText, { color: emerald.muted }]}>
-                  Organic requires a recognised certifier; MSC uses the official API when configured
+                  Packet-claim assessment where applicable; Organic requires a recognised certifier; MSC uses the official API when configured
                 </Text>
               </View>
               <View style={styles.factorTag}>
@@ -359,12 +354,13 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           </Text>
           <Text style={[styles.sourceText, { color: emerald.muted }]}>
             • Base score: 15 (neutral until data adjusts it){'\n'}
-            • BBFAW 2024: tier and impact rating adjustments (animal welfare governance & outcomes){'\n'}
+            • BBFAW: tier and impact rating adjustments (animal welfare governance & outcomes){'\n'}
             • KnowTheChain Food & Beverage benchmark: total benchmark score bands (labour / supply chain){'\n'}
-            • Certifications (OFF labels + optional MSC API): Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Organic +2 — highest eligible scheme only in MVP (no stacking); RSPO does not contribute Claims points{'\n'}
+            • Certifications (OFF labels + optional MSC API): Fairtrade +6, Rainforest Alliance/UTZ +6, ASC +4, MSC +4, Organic +2 — highest eligible scheme only (no stacking); RSPO does not contribute Claims points{'\n'}
+            • Packet-claim assessment where applicable under the Claims rules{'\n'}
             • Organic requires a recognised certifier signal; MSC positive credit follows the MSC Data Validation API when enabled{'\n'}
             • Final Claims pillar is floored at 0 and capped at 25{'\n'}
-            • Source: Claims pillar spec sheet + BBFAW report + KnowTheChain + Open Food Facts (+ MSC API when licensed)
+            • Source: Claims pillar rules + BBFAW + KnowTheChain + Open Food Facts (+ MSC API when licensed)
           </Text>
         </View>
 
@@ -635,18 +631,32 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
         </>
       </View>
 
-      {/* Full Transparency Note */}
+      {/* Publication, confidence, and methodology note */}
       <View style={[styles.note, { backgroundColor: emerald.chevronCircle, marginTop: 16 }]}>
         <Ionicons name="information-circle" size={20} color={emerald.action} />
         <View style={styles.noteContent}>
           <Text style={[styles.noteTitle, { color: emerald.ink }]}>
-            {t('infoModal.trustScore.transparencyTitle') || '100% Transparent Methodology'}
+            {t('infoModal.trustScore.transparencyTitle') || 'How scoring and publication work'}
           </Text>
           <Text style={[styles.noteText, { color: emerald.muted }]}>
-            {t('infoModal.trustScore.note') || 'Rveel Score v1.4 is calculated from available Open Food Facts and other product data using recognized public systems (Nutri-Score, Eco-Score, NOVA, Open Food Facts labels) across Body, Planet, Claims, and Transparency. Scores are shown when sufficient verified data is available.'}
+            {t('infoModal.trustScore.whenScoreShownText') ||
+              'Rveel publishes an overall score only when all four pillars have sufficient information to be rated and the assessment is complete. If information is still being checked, the score remains hidden. If a pillar cannot be rated because the required information is insufficient, the overall score remains UnRevealed (NR).'}
           </Text>
           <Text style={[styles.noteText, { color: emerald.muted, marginTop: 8 }]}>
-            {t('infoModal.trustScore.dataSourceNote') || 'Data Sources: Open Food Facts (world.openfoodfacts.org), UPCitemdb (api.upcitemdb.com), Barcode Spider, FDA Food Recall API (fda.gov/food/recalls). All calculations are transparent and verifiable.'}
+            {t('infoModal.trustScore.confidenceMeaningText') ||
+              "Confidence indicates the strength and completeness of the evidence supporting a published assessment, according to Rveel's defined criteria. It is not a separate product score or a statistical guarantee of accuracy."}
+          </Text>
+          <Text style={[styles.noteText, { color: emerald.muted, marginTop: 8 }]}>
+            {t('infoModal.trustScore.note') ||
+              "Rveel Score uses Open Food Facts product information together with recognised external assessment systems and Rveel's own governed scoring and publication rules. An overall numeric score is published only when all four pillars are Rated."}
+          </Text>
+          <Text style={[styles.noteText, { color: emerald.muted, marginTop: 8 }]}>
+            {t('infoModal.trustScore.dataSourceNote') ||
+              "Score inputs: Open Food Facts product information; Rveel's governed assessment rules; and relevant certification and benchmark datasets. Dynamic Signals and food-recall notices are separate from Rveel Score."}
+          </Text>
+          <Text style={[styles.noteText, { color: emerald.muted, marginTop: 8 }]}>
+            {t('infoModal.trustScore.methodologyLimitationsText') ||
+              'Rveel provides general information and comparative assessments, not medical advice or product certification. Always check the physical product packaging for ingredients, allergens and nutrition information, and consult official regulatory notices for recalls and safety warnings.'}
           </Text>
         </View>
       </View>
