@@ -135,7 +135,67 @@ Confirmed by scope of diff + Wave 5 publication/oracle/consumption regression pa
 
 ---
 
-## 9. STOP
+## 9. STOP (initial B1 package)
 
-Phase B1 implementation and testing complete for independent review.  
+Initial Phase B1 implementation and testing were complete for independent review at remote tip through `41fea08`.  
 **Do not proceed** to B2, onboarding Skip fix, authentication, or Premium under this authorisation.
+
+---
+
+## 10. Final independent-review correction (flags / bands / fallbacks)
+
+**Authorisation:** Founder/reviewer-authorised narrow consumer-copy correction after independent review.  
+**Baseline HEAD before this correction:** `41fea08c5b31af57baec24bac21f8994c4b157b6`  
+**Doctrine class:** AMBER (copy only). Scoring, Rateability, publication, Evidence Authority, Account Stage 1, legal disclaimers, onboarding: **unchanged**.
+
+### Finding addressed
+
+Reachable Result `TrustScoreInfoModal` Red Flags / Green Flags headings and descriptions still implied that carbon/water/labour/recalls and similar contextual items automatically adjust Rveel Score, and that missing data lowers scores rather than preventing publication / yielding NR. Hardcoded Body fallback still said `0-25` and included allergens as a scoring input.
+
+### Files changed in this correction
+
+| File | Change |
+|---|---|
+| `src/i18n/locales/en.json` | Reconciled `infoModal.trustScore` flags, score-band, Body/Transparency/Claims-related explanations |
+| `src/components/TrustScoreInfoModal.tsx` | Corrected hardcoded fallbacks (Body 2–25; no allergens as Body input; score-band wording) |
+| `src/__tests__/unit/config/methodologyFlagsCopy.test.ts` | New targeted regression contracts |
+| This evidence document | Appended §10 |
+
+### Copy outcomes
+
+1. Flag section no longer uses categorical “Negative Points” / “Positive Points” headings.  
+2. Recalls / Dynamic Signals explicitly **not** score deductions and remain separate from Rveel Score.  
+3. Planet copy tied to Eco-Score + packaging fallback (not independent carbon/water scoring).  
+4. Claims copy tied to BBFAW, KnowTheChain, highest-scheme certs, packet claims.  
+5. Missing evidence described as NR / Checking / incomplete Rating, not automatic numeric reduction.  
+6. Score bands describe relative outcomes under Rveel’s methodology without guaranteeing health/safety/sustainability.  
+7. Body fallbacks: floor **2–25**; allergens **not** a Body scoring input.
+
+### Automated verification (this correction)
+
+| Check | Result |
+|---|---|
+| `npx tsc --noEmit` | Pass |
+| `methodologyFlagsCopy.test.ts` | Pass (6) |
+| `methodologyVersion.test.ts` | Pass (4) |
+| Wave 5 consumptionGuards + governedOutcomeOracle | Pass |
+
+### Emulator visual QA (Result methodology modal)
+
+**Genuine device capture of the corrected Result methodology modal was not obtained in this correction session.**
+
+- Installed native package `com.truescan.foodscanner` opened onboarding and does not carry this JS copy correction.  
+- No controlled Result fixture route was used that would load the Metro-served corrected modal without changing product identity, publication, or scoring.  
+- Verification of this correction therefore rests on source review + the new Jest contracts above (not on a Result-modal screenshot).  
+- Account Legal methodology panel screenshots from the earlier B1 package remain valid for founder summary sections; they do not cover the Result flags section.
+
+### Commit / remote HEAD (this correction)
+
+| Item | Value |
+|---|---|
+| Correction commit(s) | _filled after commit_ |
+| Final pushed remote HEAD | _filled after push_ |
+
+### STOP
+
+Phase B1 final review correction complete for independent acceptance. **Do not begin Phase B2.**

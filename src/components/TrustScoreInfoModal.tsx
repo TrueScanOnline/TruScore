@@ -111,7 +111,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>1</Text>
             </View>
             <Text style={[styles.stepText, { color: emerald.muted }]}>
-              {t('infoModal.trustScore.step1') || 'Calculate Body score (0-25) using Nutri-Score, NOVA classification, additives, and allergens'}
+              {t('infoModal.trustScore.step1') || 'Calculate Body score (2–25) using Nutri-Score, NOVA classification, and food additives of concern when evidence is present. Minimum floor of 2 applies under the Body rules. Allergens are not a Body scoring input.'}
             </Text>
           </View>
           <View style={styles.stepItem}>
@@ -143,7 +143,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               <Text style={styles.stepNumberText}>5</Text>
             </View>
             <Text style={[styles.stepText, { color: emerald.muted }]}>
-              {t('infoModal.trustScore.step5') || 'Sum all four pillars: Rveel Score = Body + Planet + Claims + Transparency (0-100 total)'}
+              {t('infoModal.trustScore.step5') || 'Sum all four pillars: Rveel Score = Body + Planet + Claims + Transparency (0-100 total). An overall numeric score is published only when all four pillars are Rated.'}
             </Text>
           </View>
         </View>
@@ -388,7 +388,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
           {t('infoModal.trustScore.scoring') || 'Rveel Score ranges'}
         </Text>
         <Text style={[styles.sectionText, { color: emerald.muted, marginBottom: 16 }]}>
-          {t('infoModal.trustScore.scoringDescription') || 'Rveel Score ranges from 0-100, with each of the 4 pillars contributing 0-25 points. Higher scores indicate better overall product quality across all dimensions.'}
+          {t('infoModal.trustScore.scoringDescription') || "When published, Rveel Score ranges from 0-100, with each of the four pillars contributing up to 25 points. Higher scores indicate stronger outcomes under Rveel's assessment rules — not guarantees of health, safety, or sustainability."}
         </Text>
         
         <View style={styles.scoreItem}>
@@ -400,7 +400,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('trust.excellent') || 'Excellent'} - 80-100 points
             </Text>
             <Text style={[styles.scoreDescription, { color: emerald.muted }]}>
-              {t('infoModal.trustScore.excellentDesc') || 'Outstanding quality across all 4 pillars (Body, Planet, Claims, Transparency). These products excel in nutrition, sustainability, ethical signals, and disclosure.'}
+              {t('infoModal.trustScore.excellentDesc') || "When published, scores in this band indicate relatively strong outcomes across the four pillars under Rveel's methodology. They do not certify that a product is healthy, safe, sustainable, or ethically assured."}
             </Text>
           </View>
         </View>
@@ -414,7 +414,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('trust.good') || 'Good'} - 60-79 points
             </Text>
             <Text style={[styles.scoreDescription, { color: emerald.muted }]}>
-              {t('infoModal.trustScore.goodDesc') || 'Above-average quality with strong performance in most pillars. Good choice for conscious consumers.'}
+              {t('infoModal.trustScore.goodDesc') || "When published, scores in this band indicate relatively favourable outcomes under Rveel's methodology in most assessed pillars. They are comparative assessments, not guarantees of product quality or suitability."}
             </Text>
           </View>
         </View>
@@ -428,7 +428,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('trust.fair') || 'Fair'} - 40-59 points
             </Text>
             <Text style={[styles.scoreDescription, { color: emerald.muted }]}>
-              {t('infoModal.trustScore.fairDesc') || 'Moderate quality with room for improvement. Acceptable but not exceptional in key areas.'}
+              {t('infoModal.trustScore.fairDesc') || "When published, scores in this band indicate mixed or moderate outcomes under Rveel's methodology. They do not mean a product is unsafe or unsuitable."}
             </Text>
           </View>
         </View>
@@ -442,7 +442,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('trust.poor') || 'Poor'} - 0-39 points
             </Text>
             <Text style={[styles.scoreDescription, { color: emerald.muted }]}>
-              {t('infoModal.trustScore.poorDesc') || 'Below-average quality. These products may have significant issues in Body safety, Planet sustainability, Claims, or Transparency.'}
+              {t('infoModal.trustScore.poorDesc') || "When published, scores in this band indicate relatively weaker outcomes under Rveel's methodology. They do not by themselves prove a product is unsafe, unhealthy, or unsustainable."}
             </Text>
           </View>
         </View>
