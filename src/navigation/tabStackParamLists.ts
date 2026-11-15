@@ -1,7 +1,7 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 
-/** Each primary tab (except Settings) stacks product result on top of its home screen when relevant. */
+/** Each primary tab (except Account) stacks product result on top of its home screen when relevant. */
 export type ScanStackParamList = {
   ScanHome: undefined;
   Result: { barcode: string };
@@ -25,6 +25,19 @@ export type FavouritesStackParamList = {
 export type AlertsStackParamList = {
   AlertsHome: undefined;
   Result: { barcode: string };
+};
+
+/**
+ * Consumer Account tab stack — presentation/navigation only.
+ * Does not mount DeveloperSettings or subscription purchase flows.
+ */
+export type AccountStackParamList = {
+  AccountHome: undefined;
+  AccountProfile: undefined;
+  AccountPlan: undefined;
+  PrivacyData: undefined;
+  HelpSupport: undefined;
+  LegalMethodology: undefined;
 };
 
 /** Shared route typing for `app/result/[barcode].tsx` mounted in any tab stack. */

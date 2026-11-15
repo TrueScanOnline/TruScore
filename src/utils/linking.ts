@@ -64,7 +64,17 @@ const linkingConfig = {
               },
             }
           : {}),
-        Settings: 'profile',
+        Account: {
+          screens: {
+            // Legacy `/profile` deep link → Account Home (consumer Account tab).
+            AccountHome: 'profile',
+            AccountProfile: 'account/profile',
+            AccountPlan: 'account/plan',
+            PrivacyData: 'account/privacy',
+            HelpSupport: 'account/help',
+            LegalMethodology: 'account/legal',
+          },
+        },
       },
     },
     DeveloperSettings: 'developer-settings',

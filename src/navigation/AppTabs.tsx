@@ -17,7 +17,9 @@ import type {
   HistoryStackParamList,
   FavouritesStackParamList,
   AlertsStackParamList,
+  AccountStackParamList,
 } from './tabStackParamLists';
+import AccountStackNavigator from './AccountStack';
 
 // Import screens
 import ScanScreen from '../../app/index';
@@ -25,7 +27,6 @@ import SearchScreen from '../../app/search';
 import HistoryScreen from '../../app/history';
 import FavouritesScreen from '../../app/favourites';
 import AlertsScreen from '../../app/alerts';
-import ProfileScreen from '../../app/profile';
 import ResultScreen from '../../app/result/[barcode]';
 
 // Wrap screens with Error Boundaries
@@ -57,14 +58,6 @@ const FavouritesScreenWithBoundary = (props: any) => {
   return (
     <ErrorBoundary>
       <FavouritesScreen {...props} />
-    </ErrorBoundary>
-  );
-};
-
-const ProfileScreenWithBoundary = (props: any) => {
-  return (
-    <ErrorBoundary>
-      <ProfileScreen {...props} />
     </ErrorBoundary>
   );
 };
@@ -138,7 +131,7 @@ export type TabParamList = {
   History: NavigatorScreenParams<HistoryStackParamList>;
   Favourites: NavigatorScreenParams<FavouritesStackParamList>;
   Alerts: NavigatorScreenParams<AlertsStackParamList>;
-  Settings: undefined;
+  Account: NavigatorScreenParams<AccountStackParamList>;
 };
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -204,8 +197,8 @@ export default function AppTabs() {
             case 'Alerts':
               iconName = focused ? 'notifications' : 'notifications-outline';
               break;
-            case 'Settings':
-              iconName = focused ? 'settings' : 'settings-outline';
+            case 'Account':
+              iconName = focused ? 'person' : 'person-outline';
               break;
             default:
               iconName = 'help-circle-outline';
@@ -272,10 +265,10 @@ export default function AppTabs() {
         />
       ) : null}
       <Tab.Screen
-        name="Settings"
-        component={ProfileScreenWithBoundary}
+        name="Account"
+        component={AccountStackNavigator}
         options={{
-          tabBarLabel: t('tabs.settings'),
+          tabBarLabel: t('tabs.account'),
         }}
       />
     </Tab.Navigator>
