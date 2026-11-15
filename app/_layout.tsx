@@ -24,6 +24,7 @@ import {
   isMvpLegacyPlanetCsvDatabasesEnabled,
   isMvpSubscriptionAndPaywallEnabled,
 } from '../src/config/mvpRuntimeGates';
+import { isDeveloperSettingsRouteEnabled } from '../src/config/developerToolsAccess';
 
 // Import stores
 import { useScanStore } from '../src/store/useScanStore';
@@ -319,13 +320,15 @@ function RootLayout() {
               >
                 <Stack.Screen name="Onboarding" component={OnboardingScreen} />
                 <Stack.Screen name="Main" component={AppTabs} />
-                <Stack.Screen 
-                  name="DeveloperSettings" 
-                  component={SettingsScreen}
-                  options={{
-                    presentation: 'modal',
-                  }}
-                />
+                {isDeveloperSettingsRouteEnabled() ? (
+                  <Stack.Screen
+                    name="DeveloperSettings"
+                    component={SettingsScreen}
+                    options={{
+                      presentation: 'modal',
+                    }}
+                  />
+                ) : null}
                 {isMvpSubscriptionAndPaywallEnabled() ? (
                   <Stack.Screen
                     name="Subscription"

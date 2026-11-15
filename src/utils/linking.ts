@@ -10,6 +10,7 @@ import {
   SHARE_QUERY_SRC,
 } from './shareUrl';
 import { isMvpAlertsTabEnabled } from '../config/mvpRuntimeGates';
+import { isDeveloperSettingsRouteEnabled } from '../config/developerToolsAccess';
 import { normalizeBarcodeDeepLinkPath } from './resultProductLoadGuard';
 
 export {
@@ -77,7 +78,10 @@ const linkingConfig = {
         },
       },
     },
-    DeveloperSettings: 'developer-settings',
+    // Store releases omit developer-settings so ordinary consumer deep links cannot open it.
+    ...(isDeveloperSettingsRouteEnabled()
+      ? { DeveloperSettings: 'developer-settings' }
+      : {}),
     // W5-CD-01 presentation preview — development / UAT only (never ship deep link in release).
     ...(__DEV__
       ? { ContributionCelebrationPreview: 'contribution-celebration-preview' }
