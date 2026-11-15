@@ -20,6 +20,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import ResultNovaMarkIcon from '../../src/components/icons/ResultNovaMarkIcon';
 import { useTranslation } from 'react-i18next';
 import type { TabParamList } from '../../src/navigation/AppTabs';
 import type { ResultScreenRouteProp, ResultScreenNavigationProp } from '../../src/navigation/tabStackParamLists';
@@ -400,11 +401,7 @@ function ResultIngredientsSection({
             </View>
             <View style={styles.novaContent}>
               <View style={[styles.novaMark, { backgroundColor: novaColor + '22' }]}>
-                <Ionicons
-                  name={novaGroup === 1 ? 'leaf' : novaGroup === 2 ? 'create' : novaGroup === 3 ? 'build' : 'warning'}
-                  size={26}
-                  color={novaColor}
-                />
+                <ResultNovaMarkIcon novaGroup={novaGroup} color={novaColor} size={26} />
                 <View style={[styles.novaBadge, { backgroundColor: novaColor }]}>
                   <Text style={styles.novaBadgeText}>NOVA {novaGroup}</Text>
                 </View>
@@ -504,13 +501,49 @@ function ResultIngredientsSection({
               </View>
             </View>
             <View style={styles.novaContent}>
-              <View style={[styles.novaMark, { backgroundColor: (novaGroup === 4 ? '#ff6b6b' : novaGroup === 3 ? '#ffa500' : novaGroup === 2 ? '#4dd09f' : '#16a085') + '22' }]}>
-                <Ionicons
-                  name={novaGroup === 1 ? 'leaf' : novaGroup === 2 ? 'create' : novaGroup === 3 ? 'build' : 'warning'}
+              <View
+                style={[
+                  styles.novaMark,
+                  {
+                    backgroundColor:
+                      (novaGroup === 4
+                        ? '#ff6b6b'
+                        : novaGroup === 3
+                          ? '#ffa500'
+                          : novaGroup === 2
+                            ? '#4dd09f'
+                            : '#16a085') + '22',
+                  },
+                ]}
+              >
+                <ResultNovaMarkIcon
+                  novaGroup={novaGroup}
+                  color={
+                    novaGroup === 4
+                      ? '#ff6b6b'
+                      : novaGroup === 3
+                        ? '#ffa500'
+                        : novaGroup === 2
+                          ? '#4dd09f'
+                          : '#16a085'
+                  }
                   size={26}
-                  color={novaGroup === 4 ? '#ff6b6b' : novaGroup === 3 ? '#ffa500' : novaGroup === 2 ? '#4dd09f' : '#16a085'}
                 />
-                <View style={[styles.novaBadge, { backgroundColor: novaGroup === 4 ? '#ff6b6b' : novaGroup === 3 ? '#ffa500' : novaGroup === 2 ? '#4dd09f' : '#16a085' }]}>
+                <View
+                  style={[
+                    styles.novaBadge,
+                    {
+                      backgroundColor:
+                        novaGroup === 4
+                          ? '#ff6b6b'
+                          : novaGroup === 3
+                            ? '#ffa500'
+                            : novaGroup === 2
+                              ? '#4dd09f'
+                              : '#16a085',
+                    },
+                  ]}
+                >
                   <Text style={styles.novaBadgeText}>NOVA {novaGroup}</Text>
                 </View>
                 <Text style={[styles.novaValue, { color: emerald.ink }]}>{t(`nova.${novaGroup}`)}</Text>

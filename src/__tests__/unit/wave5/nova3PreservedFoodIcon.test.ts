@@ -1,5 +1,5 @@
 /**
- * FM-01 — NOVA 3 uses a preserved-food pictogram, not the Ionicons wrench.
+ * FM-01 — NOVA 3 uses a jar-and-spoon pictogram, not the Ionicons wrench.
  */
 
 import fs from 'fs';
@@ -7,7 +7,7 @@ import path from 'path';
 
 const REPO = path.join(__dirname, '../../../..');
 
-describe('FM-01 NOVA 3 preserved-food icon', () => {
+describe('FM-01 NOVA 3 preserved-food jar-and-spoon icon', () => {
   it('maps NOVA 3 to Nova3PreservedFoodIcon and leaves other groups on Ionicons', () => {
     const modal = fs.readFileSync(path.join(REPO, 'src/components/ProcessingLevelModal.tsx'), 'utf8');
     expect(modal).toContain("import Nova3PreservedFoodIcon from './icons/Nova3PreservedFoodIcon'");
@@ -26,11 +26,26 @@ describe('FM-01 NOVA 3 preserved-food icon', () => {
     expect(info).toContain('<Ionicons');
   });
 
-  it('preserved-food SVG uses react-native-svg and NOVA 3 orange', () => {
+  it('Product Result Processing Level uses ResultNovaMarkIcon in both paths and never maps NOVA 3 to build', () => {
+    const result = fs.readFileSync(path.join(REPO, 'app/result/[barcode].tsx'), 'utf8');
+    const helper = fs.readFileSync(path.join(REPO, 'src/components/icons/ResultNovaMarkIcon.tsx'), 'utf8');
+    expect(result).toContain("import ResultNovaMarkIcon from '../../src/components/icons/ResultNovaMarkIcon'");
+    expect(result.match(/ResultNovaMarkIcon/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+    expect(result).not.toMatch(/novaGroup === 3\s*\?\s*'build'/);
+    expect(result).not.toMatch(/\?\s*'build'\s*:/);
+    expect(helper).toContain('Nova3PreservedFoodIcon');
+    expect(helper).toContain("novaGroup === 1 ? 'leaf'");
+    expect(helper).toContain("novaGroup === 2 ? 'create'");
+    expect(helper).toContain("'warning'");
+    expect(helper).not.toContain("'build'");
+  });
+
+  it('preserved-food SVG depicts a jar with a spoon in NOVA 3 orange', () => {
     const icon = fs.readFileSync(path.join(REPO, 'src/components/icons/Nova3PreservedFoodIcon.tsx'), 'utf8');
     expect(icon).toContain("from 'react-native-svg'");
     expect(icon).toContain('#FFA500');
-    expect(icon).toContain('Preserved food');
-    expect(icon.toLowerCase()).not.toMatch(/wrench|spanner|build|fast.?food|warning/);
+    expect(icon).toContain('jar with spoon');
+    expect(icon.toLowerCase()).toMatch(/spoon/);
+    expect(icon.toLowerCase()).not.toMatch(/wrench|spanner|build|screwdriver|fast.?food/);
   });
 });
