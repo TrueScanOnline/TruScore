@@ -69,11 +69,18 @@ export const useFavoritesStore = create<FavoritesStore>((set, get) => ({
   },
 
   clearFavorites: async () => {
+    const previous = get().favorites;
     set({ favorites: [] });
     try {
       await AsyncStorage.removeItem(STORAGE_KEY);
+      const remaining = await AsyncStorage.getItem(STORAGE_KEY);
+      if (remaining != null && remaining !== '' && remaining !== '[]') {
+        throw new Error('Favourites clear did not persist');
+      }
     } catch (error) {
+      set({ favorites: previous });
       console.error('Failed to clear favorites:', error);
+      throw error instanceof Error ? error : new Error('Failed to clear favorites');
     }
   },
 

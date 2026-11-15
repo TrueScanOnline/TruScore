@@ -85,7 +85,11 @@ export default function HistoryScreen() {
           text: t('common.clear'),
           style: 'destructive',
           onPress: async () => {
-            await clearHistory();
+            try {
+              await clearHistory();
+            } catch {
+              Alert.alert(t('common.error'), t('account.clearFailed'));
+            }
           },
         },
       ]

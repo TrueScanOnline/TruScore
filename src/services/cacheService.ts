@@ -304,15 +304,35 @@ async function removeCachedProduct(barcode: string): Promise<void> {
 }
 
 /**
- * Clear all cached products
+ * Clear all cached products.
+ * Throws when durable deletion cannot be verified so callers do not show false success.
+ * Touches only the product cache key and cache directory — not credentials or other prefs.
  */
 export async function clearCache(): Promise<void> {
   try {
     await AsyncStorage.removeItem(CACHE_STORAGE_KEY);
     await FileSystem.deleteAsync(CACHE_DIR, { idempotent: true });
     await initializeCache();
+    const remaining = await AsyncStorage.getItem(CACHE_STORAGE_KEY);
+    if (remaining != null && remaining !== '' && remaining !== '{}' && remaining !== '[]') {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(remaining);
+      } catch {
+        throw new Error('Product cache clear did not persist');
+      }
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        !Array.isArray(parsed) &&
+        Object.keys(parsed as Record<string, unknown>).length > 0
+      ) {
+        throw new Error('Product cache clear did not persist');
+      }
+    }
   } catch (error) {
     logger.error('Error clearing cache', error);
+    throw error instanceof Error ? error : new Error('Failed to clear product cache');
   }
 }
 

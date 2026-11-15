@@ -12,7 +12,8 @@ interface ScanStore {
   currentBarcode: string | null;
   addScan: (scan: ScanHistoryItem) => void;
   removeLegacyProvisionalScan: (barcode: string) => void;
-  clearHistory: () => void;
+  /** Persists deletion; restores prior memory state and throws if durable clear fails. */
+  clearHistory: () => Promise<void>;
   initializeStore: () => Promise<void>;
 }
 
@@ -56,11 +57,18 @@ export const useScanStore = create<ScanStore>((set, get) => ({
   },
 
   clearHistory: async () => {
+    const previous = get().recentScans;
     set({ recentScans: [] });
     try {
       await AsyncStorage.removeItem(STORAGE_KEY);
+      const remaining = await AsyncStorage.getItem(STORAGE_KEY);
+      if (remaining != null && remaining !== '' && remaining !== '[]') {
+        throw new Error('Scan history clear did not persist');
+      }
     } catch (error) {
+      set({ recentScans: previous });
       console.error('Failed to clear scan history:', error);
+      throw error instanceof Error ? error : new Error('Failed to clear scan history');
     }
   },
 

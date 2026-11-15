@@ -81,7 +81,11 @@ export default function FavouritesScreen() {
           text: t('common.clear'),
           style: 'destructive',
           onPress: async () => {
-            await clearFavorites();
+            try {
+              await clearFavorites();
+            } catch {
+              Alert.alert(t('common.error'), t('account.clearFailed'));
+            }
           },
         },
       ]
