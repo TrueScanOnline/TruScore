@@ -64,7 +64,14 @@ describe('W5-CD-01 integration boundary', () => {
     const layout = read('app/_layout.tsx');
     expect(layout).toMatch(/\{__DEV__\s*\?\s*\([\s\S]*ContributionCelebrationPreview/);
     expect(read('app/settings.tsx')).toMatch(/\{__DEV__\s*\?\s*\([\s\S]*ContributionCelebrationPreview/);
-    expect(read('app/profile.tsx')).toMatch(/\{__DEV__\s*\?\s*\([\s\S]*ContributionCelebrationPreview/);
+    // Consumer Account must not expose Celebration Preview (DeveloperSettings only).
+    expect(read('app/profile.tsx')).not.toMatch(/ContributionCelebrationPreview/);
+    expect(read('src/screens/account/AccountHomeScreen.tsx')).not.toMatch(
+      /ContributionCelebrationPreview/
+    );
+    expect(read('src/navigation/AccountStack.tsx')).not.toMatch(/ContributionCelebrationPreview/);
+    expect(read('src/navigation/AccountStack.tsx')).not.toMatch(/name=\"DeveloperSettings\"/);
+    expect(read('src/navigation/AccountStack.tsx')).not.toMatch(/from ['\"].*settings['\"]/);
     const linking = read('src/utils/linking.ts');
     expect(linking).toContain('...(__DEV__');
     expect(linking).toContain("ContributionCelebrationPreview: 'contribution-celebration-preview'");

@@ -31,7 +31,11 @@ describe('MVP enabled UI locales', () => {
   test('settings/profile language pickers do not offer es/fr buttons', () => {
     // Lightweight source contract: MVP pickers must not call setLanguage('es'|'fr').
     const root = path.join(__dirname, '../../../../');
-    for (const rel of ['app/settings.tsx', 'app/profile.tsx']) {
+    for (const rel of [
+      'app/settings.tsx',
+      'app/profile.tsx',
+      'src/screens/account/AccountHomeScreen.tsx',
+    ]) {
       const src = fs.readFileSync(path.join(root, rel), 'utf8');
       expect(src).not.toMatch(/setLanguage\(\s*['"]es['"]\s*\)/);
       expect(src).not.toMatch(/setLanguage\(\s*['"]fr['"]\s*\)/);
