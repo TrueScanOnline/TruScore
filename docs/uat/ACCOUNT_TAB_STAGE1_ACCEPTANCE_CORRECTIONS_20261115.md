@@ -73,3 +73,21 @@ Do not invent email addresses or legal HTML.
 ## Emulator
 
 Pixel_5 left on Account Home dark mode for founder review after reload.
+
+## Founder acceptance cross-reference
+
+On 15 November 2026 the founder formally confirmed:
+
+**“Account Stage 1 — UI and navigation accepted.”**
+
+That acceptance applies to Account UI, navigation, and MVP Free/Guest presentation at  
+`8a7ba6fa790d89bc4d6ec5428f2b9d5fad1fa4ae`.
+
+It is **not** public-launch approval. Outstanding separately:
+
+1. Legal & Methodology content reconciliation  
+2. Official RVEEL support email configuration  
+3. Privacy Policy and Terms publication/verification  
+4. Remaining production-release validation  
+
+Canonical acceptance record: `docs/uat/ACCOUNT_TAB_STAGE1_20261115.md`.

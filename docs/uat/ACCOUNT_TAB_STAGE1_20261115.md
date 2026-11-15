@@ -108,20 +108,43 @@ Device: Android emulator **Pixel_5** (`emulator-5554`) via Expo Go + Metro offli
 | In-app methodology / sources / disclaimers | Available from existing approved i18n |
 | Interim Vercel legal HTML | Exists on `truscoreapi.vercel.app`, but productIdentity does not point there; not used |
 
-## Outstanding blockers
+## Founder acceptance — UI and navigation
 
-1. Publish approved privacy + terms pages at the configured `truescan.app` URLs before declaring Legal external links release-ready.
-2. Set `EXPO_PUBLIC_SUPPORT_EMAIL` for builds that should expose Contact / Report actions.
-3. Founder visual acceptance of Account Stage 1 UI.
+**Status:** Accepted by founder (15 November 2026).
+
+**Founder confirmation:** “Account Stage 1 — UI and navigation accepted.”
+
+**Accepted at remote HEAD:**  
+`8a7ba6fa790d89bc4d6ec5428f2b9d5fad1fa4ae`
+
+**Scope of acceptance:** Account UI, navigation architecture, and agreed MVP Free / Guest presentation only.
+
+**Not included in this acceptance:**
+
+- Public launch / store-release authorisation
+- Premium, payments, or authentication activation
+- Changes to scoring, publication, Evidence Authority, or related protected controls
+
+Acceptance corrections that landed at the accepted HEAD are recorded in  
+`docs/uat/ACCOUNT_TAB_STAGE1_ACCEPTANCE_CORRECTIONS_20261115.md`.
+
+## Outstanding items (separate from UI acceptance)
+
+1. **Legal & Methodology content reconciliation** — founder/counsel approval still required for Account methodology / source-licence copy (including v1.4 and “100%” phrasing, and OFF ODbL / CC BY-SA attribution completeness).
+2. **Official RVEEL support email configuration** — set valid `EXPO_PUBLIC_SUPPORT_EMAIL` so Contact / Report actions can operate.
+3. **Publication and verification of Privacy Policy and Terms** — live approved pages at `https://truescan.app/privacy` and `https://truescan.app/terms`, then mark `legalDestinations.*.ready` only after verification.
+4. **Remaining production-release validation** — store-profile / release gates, external readiness, and any further UAT beyond Account UI acceptance.
 
 ## Commit SHAs
 
 1. `108aa18` — `feat(account): Account tab stack with guest home and MVP detail screens`
 2. `09121ce` — `test(account): Stage 1 contracts and privacy clear isolation`
 3. `b17e314` — `docs(uat): Account Stage 1 evidence and privacy clear label polish`
-4. `0d4a853` — `docs(uat): stamp Account Stage 1 pushed remote HEAD`
+4. `0d4a853` / later docs stamps — Stage 1 evidence tip recording
+5. `3128429` … `8a7ba6f` — acceptance corrections (clears, legal open-when-ready, DeveloperSettings containment, tests/docs)
 
-**Final pushed remote HEAD:** reported in the Cursor Stage 1 final report after push (branch tip on `origin/build/w5-founders-native-20261114`).
+**Accepted implementation tip:** `8a7ba6fa790d89bc4d6ec5428f2b9d5fad1fa4ae`  
+**Documentation acceptance commit HEAD:** reported after push of this docs-only record.
 
 ## Frozen native-build tag
 
