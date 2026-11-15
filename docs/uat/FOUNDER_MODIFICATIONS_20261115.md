@@ -56,15 +56,18 @@ InfoModal / Processing Level info uses shared `Nova3PreservedFoodIcon`.
 ### Corrective commit (Result card spanner → jar-and-spoon)
 **Commit:** `8b2ee07670dc6470eb6483ba2e54bc0be5e746d6`
 
+### Corrective revision (jar-and-spoon rejected → jar with lid off)
+**Status:** Founder rejected jar-and-spoon visual (15 Nov). Alternative: simple orange preserve jar with lid off (`#FFA500`). Shared `Nova3PreservedFoodIcon` only — Result card + Processing Level info modal. No layout / scoring / FM-02 / FM-03R changes.
+
 | Change | Detail |
 |---|---|
 | Result card (both paths) | `ResultNovaMarkIcon` replaces Ionicons `build` for NOVA 3 inside `styles.novaMark` |
-| SVG | `Nova3PreservedFoodIcon` refined to preserve jar + recognisable spoon at 26px `#FFA500` |
+| SVG | `Nova3PreservedFoodIcon` = open preserve jar + separate tilted lid (no spoon) at 26px `#FFA500` |
 | Info modal | Same shared component (no layout change) |
 | NOVA 1 / 2 / 4 | Unchanged Ionicons leaf / create / warning |
 
 **Local evidence (not committed):**
-- `artifacts/FM01_nova3_icon_preview.html` / `artifacts/FM01_nova3_jar_spoon_preview.webp` — 26px card mock + large detail
+- `artifacts/FM01_nova3_icon_preview.html` — 26px card mock + large detail (lid-off revision)
 - Prior InfoModal screenshot: `artifacts/FM01_NOVA3_ProcessingLevel_InfoModal.png`
 
 **Emulator note (15 Nov corrective session):** After Metro was restarted with `--clear`, Expo Go repeatedly hung on “New update available, downloading…” / “Reloading…” (host logcat showed OkHttp `ProtocolException` during bundle transfer). Metro itself bundles successfully (`Android Bundled`, HTTP 200). Founder should reconnect Expo Go to `exp://10.0.2.2:8081` on the open Pixel_5 emulator and confirm the Processing Level card on Barker’s jam.

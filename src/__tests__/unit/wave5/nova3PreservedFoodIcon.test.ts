@@ -1,5 +1,5 @@
 /**
- * FM-01 — NOVA 3 uses a jar-and-spoon pictogram, not the Ionicons wrench.
+ * FM-01 — NOVA 3 uses a jar-with-lid-off pictogram, not the Ionicons wrench.
  */
 
 import fs from 'fs';
@@ -7,7 +7,7 @@ import path from 'path';
 
 const REPO = path.join(__dirname, '../../../..');
 
-describe('FM-01 NOVA 3 preserved-food jar-and-spoon icon', () => {
+describe('FM-01 NOVA 3 preserved-food jar-with-lid-off icon', () => {
   it('maps NOVA 3 to Nova3PreservedFoodIcon and leaves other groups on Ionicons', () => {
     const modal = fs.readFileSync(path.join(REPO, 'src/components/ProcessingLevelModal.tsx'), 'utf8');
     expect(modal).toContain("import Nova3PreservedFoodIcon from './icons/Nova3PreservedFoodIcon'");
@@ -40,12 +40,13 @@ describe('FM-01 NOVA 3 preserved-food jar-and-spoon icon', () => {
     expect(helper).not.toContain("'build'");
   });
 
-  it('preserved-food SVG depicts a jar with a spoon in NOVA 3 orange', () => {
+  it('preserved-food SVG depicts a jar with lid off in NOVA 3 orange', () => {
     const icon = fs.readFileSync(path.join(REPO, 'src/components/icons/Nova3PreservedFoodIcon.tsx'), 'utf8');
     expect(icon).toContain("from 'react-native-svg'");
     expect(icon).toContain('#FFA500');
-    expect(icon).toContain('jar with spoon');
-    expect(icon.toLowerCase()).toMatch(/spoon/);
-    expect(icon.toLowerCase()).not.toMatch(/wrench|spanner|build|screwdriver|fast.?food/);
+    expect(icon.toLowerCase()).toMatch(/jar with lid off|lid off/);
+    expect(icon.toLowerCase()).not.toMatch(/spoon|wrench|spanner|screwdriver|question.?mark/);
+    expect(icon).not.toMatch(/['"]build['"]/);
+    expect(icon).not.toMatch(/['"]\?['"]|>\?</); // no question-mark glyph in the pictogram
   });
 });
