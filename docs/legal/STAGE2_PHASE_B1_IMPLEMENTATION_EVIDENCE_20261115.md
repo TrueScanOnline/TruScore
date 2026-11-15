@@ -193,8 +193,8 @@ Reachable Result `TrustScoreInfoModal` Red Flags / Green Flags headings and desc
 
 | Item | Value |
 |---|---|
-| Correction commit(s) | _filled after commit_ |
-| Final pushed remote HEAD | _filled after push_ |
+| Correction commit(s) | `97fe1850acd436cbee9c2e5e90d2720bf2cfcd88` |
+| Final pushed remote HEAD | `97fe1850acd436cbee9c2e5e90d2720bf2cfcd88` on `origin/build/w5-founders-native-20261114` (docs-only SHA note may follow) |
 
 ### STOP
 
