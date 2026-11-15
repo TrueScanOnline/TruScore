@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import en from '../../../i18n/locales/en.json';
+import { WHOLE_PRODUCE_NUTRITION_BONUS } from '../../../lib/truscoreEngine/pillars/bodyPillar';
 
 type TrustScoreCopy = {
   infoModal: {
@@ -31,6 +32,7 @@ type TrustScoreCopy = {
       flagEthicsPositiveDesc: string;
       flagCertificationsDesc: string;
       flagNutritionIssuesDesc: string;
+      flagNutritionPositiveDesc: string;
       flagProcessingIssuesDesc: string;
       flagPositiveReviewsDesc: string;
       dataSourceNote: string;
@@ -140,5 +142,27 @@ describe('Result methodology flags and score-band copy contracts', () => {
     expect(flagCorpus).not.toContain('100% transparent');
     expect(flagCorpus).not.toContain('zero reputational');
     expect(flagCorpus).not.toContain('upcitemdb');
+  });
+
+  it('explains Whole Produce +7 only when no valid Nutri-Score and eligibility gate (incl. NOVA 1) passes', () => {
+    expect(WHOLE_PRODUCE_NUTRITION_BONUS).toBe(7);
+    const nutritionPositive = t.flagNutritionPositiveDesc.toLowerCase();
+    expect(nutritionPositive).toContain(`whole produce +${WHOLE_PRODUCE_NUTRITION_BONUS}`);
+    expect(nutritionPositive).toMatch(/no valid nutri-score/);
+    expect(nutritionPositive).toMatch(/eligibility gate|eligible/);
+    expect(nutritionPositive).toContain('nova 1');
+    expect(nutritionPositive).toMatch(/not themselves a scoring bonus|not a separate scoring bonus|not.*scoring bonus/);
+    expect(nutritionPositive).not.toMatch(/whole foods.*improve nutrition scores|health benefits improve/);
+  });
+
+  it('describes Excellent/Good bands as combined assessments without implying every or most pillars are strong', () => {
+    const excellent = t.excellentDesc.toLowerCase();
+    const good = t.goodDesc.toLowerCase();
+    expect(excellent).toMatch(/combined assessment/);
+    expect(good).toMatch(/combined assessment/);
+    expect(excellent).toMatch(/does not mean every pillar|not mean every pillar/);
+    expect(good).toMatch(/do not mean most or all pillars|not mean most or all pillars/);
+    expect(excellent).not.toMatch(/strong outcomes across the four pillars/);
+    expect(good).not.toMatch(/most assessed pillars/);
   });
 });

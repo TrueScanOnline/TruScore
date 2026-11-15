@@ -199,3 +199,20 @@ Reachable Result `TrustScoreInfoModal` Red Flags / Green Flags headings and desc
 ### STOP
 
 Phase B1 final review correction complete for independent acceptance. **Do not begin Phase B2.**
+
+---
+
+## 11. Final accuracy closeout (Whole Produce + score bands)
+
+**Baseline HEAD:** `dcf4b757ef5506fd3d6c496b078575d4c13a0c5d`  
+**Scope:** EN consumer copy + `methodologyFlagsCopy.test.ts` only.
+
+| Correction | Implementation |
+|---|---|
+| Whole Produce nutrition-positive flag | `flagNutritionPositiveDesc` now states governed **Whole Produce +7** applies only when **no valid Nutri-Score** exists and the **eligibility gate** passes (including **NOVA 1** and qualifying fresh-produce evidence); distinguishes from generic “whole food” / health-benefit language. Verified against `WHOLE_PRODUCE_NUTRITION_BONUS` and `evaluateWholeProduceEligibility` / Body pillar application order. |
+| Excellent / Good bands | Describe a **combined assessment** under Rveel’s methodology; explicitly avoid implying every pillar / most pillars are strong. |
+
+**Tests:** Extended `methodologyFlagsCopy.test.ts` with contracts for both items.  
+**Commit / remote HEAD:** _filled after push_
+
+**STOP.** Do not begin Phase B2.

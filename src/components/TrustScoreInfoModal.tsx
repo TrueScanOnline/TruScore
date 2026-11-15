@@ -400,7 +400,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('trust.excellent') || 'Excellent'} - 80-100 points
             </Text>
             <Text style={[styles.scoreDescription, { color: emerald.muted }]}>
-              {t('infoModal.trustScore.excellentDesc') || "When published, scores in this band indicate relatively strong outcomes across the four pillars under Rveel's methodology. They do not certify that a product is healthy, safe, sustainable, or ethically assured."}
+              {t('infoModal.trustScore.excellentDesc') || "When published, scores in this band indicate a relatively strong combined assessment under Rveel's methodology. A high overall total does not mean every pillar is equally strong, and it does not certify that a product is healthy, safe, sustainable, or ethically assured."}
             </Text>
           </View>
         </View>
@@ -414,7 +414,7 @@ export default function TruScoreInfoModal({ visible, onClose, product }: TruScor
               {t('trust.good') || 'Good'} - 60-79 points
             </Text>
             <Text style={[styles.scoreDescription, { color: emerald.muted }]}>
-              {t('infoModal.trustScore.goodDesc') || "When published, scores in this band indicate relatively favourable outcomes under Rveel's methodology in most assessed pillars. They are comparative assessments, not guarantees of product quality or suitability."}
+              {t('infoModal.trustScore.goodDesc') || "When published, scores in this band indicate a relatively favourable combined assessment under Rveel's methodology. They do not mean most or all pillars are strong, and they are not guarantees of product quality or suitability."}
             </Text>
           </View>
         </View>
