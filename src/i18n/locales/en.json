@@ -145,6 +145,7 @@
     "documentUnavailableShort": "Not published yet",
     "privacyUrlUnavailable": "The public privacy policy is not available at {{url}} yet. RVEEL does not require an account. Local scan history, favourites and cache stay on this device unless you clear them.",
     "legalUrlUnavailable": "This document is not available at {{url}} yet. It will open here once the approved public page is live.",
+    "clearFavourites": "Clear favourites",
     "clearHistorySuccess": "Scan history cleared on this device.",
     "clearFavoritesSuccess": "Favourites cleared on this device.",
     "clearCacheSuccess": "Product cache cleared on this device.",

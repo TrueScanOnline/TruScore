@@ -121,7 +121,7 @@ export default function PrivacyDataScreen() {
         />
         <AccountRow
           icon="heart-outline"
-          label={t('favorites.clearAll')}
+          label={t('account.clearFavourites')}
           value={t('favorites.count', { count: favorites.length })}
           onPress={handleClearFavorites}
           destructive
