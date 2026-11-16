@@ -10,6 +10,9 @@
     }
   },
   "scripts": {
+    "eas-build-pre-install": "node scripts/assert-public-launch-ready.cjs",
+    "legal:launch-status": "node scripts/assert-public-launch-ready.cjs --status",
+    "legal:release-preflight": "node scripts/assert-public-launch-ready.cjs --public",
     "serve:site": "node scripts/serve-rveel-site.mjs",
     "build:share-landing": "npx esbuild backend/vercel/lib/shareLandingHtml.ts --bundle --platform=node --format=esm --outfile=backend/vercel/lib/shareLandingHtml.bundle.mjs --packages=external",
     "verify-backend": "ts-node --project scripts/tsconfig.json scripts/verify-backend-config.ts",
@@ -83,9 +86,9 @@
     "ios": "npx expo run:ios",
     "web": "npx expo start --web",
     "doctor": "expo-doctor",
-    "build:apk": "npm run preflight:mvp-release-asset && eas build -p android --profile preview",
-    "build:ios": "npm run preflight:mvp-release-asset && eas build -p ios --profile preview",
-    "build:aab": "npm run preflight:mvp-release-asset && eas build -p android --profile production",
+    "build:apk": "node scripts/assert-public-launch-ready.cjs --public && npm run preflight:mvp-release-asset && eas build -p android --profile preview",
+    "build:ios": "node scripts/assert-public-launch-ready.cjs --public && npm run preflight:mvp-release-asset && eas build -p ios --profile preview",
+    "build:aab": "node scripts/assert-public-launch-ready.cjs --public && npm run preflight:mvp-release-asset && eas build -p android --profile production",
     "import-fsanz": "node scripts/importFSANZDatabase.js",
     "download-fsanz": "node scripts/downloadAndConvertFSANZ.js",
     "populate-fsanz": "node scripts/populateFSANZFromOpenFoodFacts.js",
