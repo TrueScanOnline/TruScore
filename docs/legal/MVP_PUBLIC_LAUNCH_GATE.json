@@ -230,7 +230,7 @@
         "asOf": "2026-11-16",
         "implementationState": "PARTIAL_UAT",
         "riskPriority": "High",
-        "whatExistsOrIsReported": "Cursor reports Android Expo Go scan/Result/Account and live hold/release with screenshots in untracked local artifacts. iOS/TestFlight unavailable; intentional live DB outage omitted; latest JS native build, deep link, cache and all share modes not exhaustively independently verified.",
+        "whatExistsOrIsReported": "Cursor reports Android Expo Go scan/Result/Account and live hold/release with screenshots in untracked local artifacts. iOS/TestFlight unavailable; intentional live DB outage omitted; latest JS native build, deep link, cache and all share modes not exhaustively independently verified. Subsequent Account-only engineering milestone at e5d1b340 reports Android Guest/Free Account deep-screen, units display and restart visual verification; source corrections independently reviewed 17 Nov 2026. iOS and full-app release QA still pending.",
         "whatMustHappenBeforeApproval": "Run full signed/real-device Android and iOS end-to-end matrix: ordinary Rated, NR, Checking, legal gate, account, OFF write-off, share cards, history/favourites, stale/cache holds and release, backend faults, accessibility. Archive reproducible logs/screenshots with commit, build and environment identifiers; retest after any material change.",
         "responsibleReviewers": "Mobile QA and backend QA owners",
         "isApproval": false
@@ -439,6 +439,43 @@
           "action": "Re-run full integrated release-candidate UAT, review app-store disclosures and protections, obtain explicit founder and qualified-counsel sign-off for exact SHA and protected environment; then consider release."
         }
       ]
-    }
-  }
+    },
+    "subsequentEngineeringMilestones": [
+      {
+        "date": "2026-11-17",
+        "sourceHeadReviewed": "e5d1b340c8763c65569cad4e9101741e9bd2aabd",
+        "reviewer": "GPT-6 independent GitHub source review",
+        "status": "FREE_GUEST_ACCOUNT_MVP_CODE_COMPLETE_ACCEPTED_NONBINDING",
+        "meaning": "Engineering acceptance of existing Free/Guest Account tab source and narrow acceptance corrections only. Not an independent Android/iOS device acceptance, not a legal opinion, not founder sign-off for public distribution, and not a complete app MVP release approval.",
+        "verifiedInRepository": [
+          "From baseline 183db04e7a9ed612a6bdbe4a19f7abbda8b9a903 to sourceHeadReviewed, two commits change Account privacy email, display-unit utilities/nutrition presentation, tests and Account UAT documentation; no protected scoring/EA source files in changed-file list.",
+          "src/utils/units.ts guards nonzero trace displays, uses explicitly US customary fluid ounces, converts quantity tokens while preserving surrounding serving-size text; original nutriments and governed per-100 basis are not altered by convertNutriments.",
+          "PrivacyDataScreen.tsx calls openPrivacyDataRequest.ts rather than product-dispute helper; reportPrivacyMailto.ts does not demand a GTIN or packaging photograph, and uses a configured support email only.",
+          "GitHub contains added unit-formatting, settings-persistence and privacy-mailto tests; frozen UAT native-build tag unchanged; legal gate remains BLOCKED and all fifteen requirements PENDING."
+        ],
+        "cursorReportedNotIndependentlyReexecuted": [
+          "TypeScript PASS; Account+units 46 tests PASS; Wave 5+nutrition 127 tests PASS; methodology 16 PASS; release-lock 6 PASS and expected preflight denied.",
+          "Android Expo Go Pixel 5 visual journey for Home, Profile, Plan, Privacy, Help, Legal, blocked legal links, dark mode, Units on Barker's jam GTIN 9414732208565 and US customary persistence after app restart.",
+          "Android screenshots remain under untracked artifacts/account-mvp-acceptance-20261116/, not accessible from GitHub for independent image inspection."
+        ],
+        "openConditions": [
+          "iOS TestFlight/simulator and actual cross-platform accessibility verification remain outstanding; integrated release gate item full_device_backend_share_regression stays PENDING.",
+          "Monitored support/privacy contact not yet configured; email draft is not confirmed dispatch or receipt.",
+          "Published counsel-approved Terms/Privacy, corporation/territory/insurance/licensing decisions remain unresolved.",
+          "A future enhancement can add resilience/feedback when settings persistence fails; existing useSettingsStore.saveSettings catches and logs storage errors rather than surfacing them. Not treated as a new MVP cycle by itself."
+        ],
+        "relevantEvidence": [
+          "docs/uat/ACCOUNT_TAB_MVP_COMPLETION_EVIDENCE_20261116.md",
+          "src/utils/units.ts",
+          "src/utils/reportPrivacyMailto.ts",
+          "src/utils/openPrivacyDataRequest.ts",
+          "src/__tests__/unit/utils/unitsFormatting.test.ts",
+          "src/__tests__/unit/account/privacyDataRequest.mailto.test.ts",
+          "src/__tests__/unit/account/unitsSettingsPersistence.test.ts"
+        ],
+        "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
+      }
+    ]
+  },
+  "lastEngineeringReviewSourceHead": "e5d1b340c8763c65569cad4e9101741e9bd2aabd"
 }
