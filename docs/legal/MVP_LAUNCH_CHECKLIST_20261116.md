@@ -1,5 +1,8 @@
 # MVP launch checklist — legal protection & hardening
 
+> **PERMANENT FOUNDER-MANDATED PUBLIC RELEASE BLOCKER — NO-GO.** Incorporation country, operating entity, applicable territorial legal requirements and external counsel review remain unresolved. This checklist and technical QA do NOT constitute legal clearance. See [MVP_PUBLIC_LAUNCH_BLOCKER.md](./MVP_PUBLIC_LAUNCH_BLOCKER.md) and the fail-closed [MVP_PUBLIC_LAUNCH_GATE.json](./MVP_PUBLIC_LAUNCH_GATE.json). Production/store-targeted EAS builds must pass `npm run legal:release-preflight`; closed founder UAT remains allowed. Do not mark public MVP ready until the approvals and exact release SHA are independently attested.
+
+
 **Date:** 16 November 2026  
 **Branch:** `build/w5-founders-native-20261114`  
 **Companion evidence:** `MVP_LAUNCH_HARDENING_EVIDENCE_20261116.md`
