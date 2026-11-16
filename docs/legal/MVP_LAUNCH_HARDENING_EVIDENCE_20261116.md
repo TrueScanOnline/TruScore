@@ -4,7 +4,7 @@
 **Branch:** `build/w5-founders-native-20261114`  
 **Closed UAT start HEAD:** `82688a30ecc93961b808ca8ffbd59d3eda769d56`  
 **Stabilisation implementation:** `88176e7a9af0162cb5c598b3fa50c7154f710988`  
-**Final remote SHA:** *(filled at push)*
+**Final remote SHA:** `ea6a76322a7b91a4388437e8bfe69431cb6f1741`
 
 **Doctrine note:** Administrative hold and Result orchestration remain AMBER presentation/external-control surfaces under founder authorisation. Scoring engines, Rateability, Confidence, and Evidence Authority admission rules were not modified.
 
