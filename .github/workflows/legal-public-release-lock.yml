@@ -1,0 +1,18 @@
+name: RVEEL legal public-release lock
+on:
+  push:
+    branches: [build/w5-founders-native-20261114, main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  release-lock-regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Assert public release is blocked while legal decisions are unresolved
+        run: node --test scripts/assert-public-launch-ready.test.cjs
+      - name: Show legal launch blocker status
+        run: node scripts/assert-public-launch-ready.cjs --status
