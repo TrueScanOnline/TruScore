@@ -191,6 +191,11 @@ export function renderShareLandingHtml(input: ShareLandingInput): string {
     </article>
 
     <p class="teaser-promise">${escapeHtmlText(SHARED_PRODUCT_READING)}</p>
+    ${
+      productImageAbsolute
+        ? `<p class="teaser-fine">Product photograph sourced from <a href="https://world.openfoodfacts.org/product/${escapeHtmlAttr(barcode)}">Open Food Facts</a> (CC BY-SA). Database: ODbL.</p>`
+        : ''
+    }
 
     <div class="cta-stack">
       <a class="btn btn-green btn-block btn-glow" id="openApp" href="${escapeHtmlAttr(deepLink)}">Open this product in Rveel</a>

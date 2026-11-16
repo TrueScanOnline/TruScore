@@ -137,6 +137,13 @@ import { useTheme } from '../../src/theme';
 import { resultEmeraldCard, resultEmeraldTone, resultHeroFace, resultPresentation } from '../../src/theme/resultPresentation';
 import EmeraldWallpaper from '../../src/components/result/EmeraldWallpaper';
 import EmeraldScoreFrame from '../../src/components/product/emerald/EmeraldScoreFrame';
+import PublicationHoldNotice from '../../src/components/product/PublicationHoldNotice';
+import {
+  fetchPublicationHold,
+  shouldWithholdConsumerPublication,
+  type PublicationHoldClientState,
+} from '../../src/services/publicationHold';
+import { openAssessmentReport } from '../../src/utils/openAssessmentReport';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
@@ -615,6 +622,8 @@ function ResultScreenContent() {
    */
   const [publicationSettled, setPublicationSettled] = useState(false);
   const publicationSettledRef = useRef(false);
+  /** Administrative hold — independent of Rateability / scoring engines. */
+  const [publicationHold, setPublicationHold] = useState<PublicationHoldClientState | null>(null);
   /** Barcode for which publicationSettled is latched — used to ignore late network reruns. */
   const settledForBarcodeRef = useRef<string | null>(null);
   const [progressiveProduct, setProgressiveProduct] = useState<ProductWithTrustScore | null>(null);
@@ -723,6 +732,8 @@ function ResultScreenContent() {
     appliedSnapshotAtRef.current = 0;
     setAgreementSnapshot(null);
     setPublicationSettled(false);
+    setPublicationHold(null);
+    void fetchPublicationHold(String(barcode || '')).then(setPublicationHold);
     // SJ-04/SJ-06: clear presentation product on cross-barcode navigation so a
     // failed retrieval cannot leave the previous product rendered as the new request.
     // Same-barcode settled preserve (resultPublicationLoadGuard) is unchanged.
@@ -2437,8 +2448,44 @@ function ResultScreenContent() {
           </View>
         )}
 
+        <PublicationHoldNotice hold={publicationHold} darkMode={!!darkMode} />
+
         {/* TruScore Card. Info opens How this is scored (S27); score disc / Confidence open data-limitations (S26). */}
-        {truScore ? (
+        {/* Administrative hold withholds consumer publication without changing engine outputs. */}
+        {shouldWithholdConsumerPublication(
+          publicationHold || { status: 'none', barcode: String(barcode || '') }
+        ) ? (
+          <TouchableOpacity
+            style={[styles.card, resultEmeraldCard(!!darkMode)]}
+            onPress={() =>
+              void openAssessmentReport({
+                subject: t('account.supportSubjectReport', 'RVEEL problem report'),
+                fields: {
+                  barcode: String(barcode || ''),
+                  productName: product?.product_name || product?.product_name_en,
+                  brand: product?.brands,
+                  errorType: 'administrative_hold_or_review',
+                  disputedStatement: 'Assessment withheld / under review',
+                },
+                missingMessage: t('account.supportEmailMissing'),
+                failedMessage: t('account.supportEmailFailed', {
+                  email: productIdentity.supportEmail || '',
+                }),
+              })
+            }
+            testID="result-report-assessment-hold"
+          >
+            <Text style={[styles.cardTitle, { color: emerald.ink }]}>
+              {t('result.reportIncorrectAssessment', 'Report incorrect assessment')}
+            </Text>
+            <Text style={[styles.insufficientDataText, { color: emerald.muted }]}>
+              {t(
+                'result.reportIncorrectAssessmentHint',
+                'If support email is configured, this opens a pre-filled report. No address is invented.'
+              )}
+            </Text>
+          </TouchableOpacity>
+        ) : truScore ? (
           <>
           <EmeraldScoreFrame
             heading={productIdentity.publicScoreName}
@@ -2515,6 +2562,31 @@ function ResultScreenContent() {
               setContributionChoice('productInformation');
             }}
           />
+
+          <TouchableOpacity
+            style={[styles.card, resultEmeraldCard(!!darkMode)]}
+            onPress={() =>
+              void openAssessmentReport({
+                subject: t('account.supportSubjectReport', 'RVEEL problem report'),
+                fields: {
+                  barcode: String(barcode || ''),
+                  productName: product?.product_name || product?.product_name_en,
+                  brand: product?.brands,
+                  errorType: 'assessment',
+                  disputedStatement: 'Incorrect product assessment',
+                },
+                missingMessage: t('account.supportEmailMissing'),
+                failedMessage: t('account.supportEmailFailed', {
+                  email: productIdentity.supportEmail || '',
+                }),
+              })
+            }
+            testID="result-report-assessment"
+          >
+            <Text style={[styles.cardTitle, { color: emerald.ink }]}>
+              {t('result.reportIncorrectAssessment', 'Report incorrect assessment')}
+            </Text>
+          </TouchableOpacity>
 
           {/* Result card heading is "What we noticed:"; share/look-through keep SCORE_HIGHLIGHTS_HEADING. */}
           {scoreHighlights && scoreHighlights.promoted.length > 0 && (

@@ -7,10 +7,12 @@ import { ManualProductData } from '../types/manualProduct';
 import * as FileSystem from 'expo-file-system';
 import { getBackendUrl } from '../config/backendConfig';
 import { offImageFieldAllowed } from '../evidenceAuthority/offImageDispatchGate';
+import { isOffPublicContributionEnabled } from '../config/offContributionGate';
+import { buildOffUserAgent, isOffApiContactConfigured } from '../config/offApiIdentity';
 
 const OFF_API_BASE = 'https://world.openfoodfacts.org';
 const OFF_EDIT_API = `${OFF_API_BASE}/cgi/product_jqm2.pl`;
-const USER_AGENT = 'Rveel/1.0.0 (truescan@example.com)'; // TODO: Update with actual contact email
+const USER_AGENT = buildOffUserAgent();
 
 /** Client builds do not carry an Open Food Facts password. Authenticated writes go through the server. */
 function getOFFCredentials(): { userId?: string; password?: string } {
@@ -30,6 +32,14 @@ export async function uploadPhotoToOpenFoodFacts(
   imageField: 'front' | 'ingredients' | 'nutrition' | 'packaging' | 'other' = 'front'
 ): Promise<string | null> {
   try {
+    if (!isOffPublicContributionEnabled()) {
+      logger.info('[OFF Submission] Public OFF photo contribution disabled (MVP gate)');
+      return null;
+    }
+    if (!isOffApiContactConfigured()) {
+      logger.warn('[OFF Submission] OFF contact not configured — refusing photo contribution');
+      return null;
+    }
     if (!offImageFieldAllowed(imageField)) return null;
     const imageBase64 = await FileSystem.readAsStringAsync(imagePath, {
       encoding: FileSystem.EncodingType.Base64,
@@ -67,6 +77,18 @@ export async function submitProductToOpenFoodFacts(
   data: ManualProductData
 ): Promise<{ success: boolean; message: string; productUrl?: string }> {
   try {
+    if (!isOffPublicContributionEnabled()) {
+      return {
+        success: false,
+        message: 'Open Food Facts public contribution is disabled until consent controls are approved',
+      };
+    }
+    if (!isOffApiContactConfigured()) {
+      return {
+        success: false,
+        message: 'Open Food Facts API contact is not configured — refusing public contribution',
+      };
+    }
     const credentials = getOFFCredentials();
     
     // Build product data in OFF format

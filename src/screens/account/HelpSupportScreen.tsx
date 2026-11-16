@@ -9,6 +9,7 @@ import { productIdentity } from '../../config/productIdentity';
 import { getInstalledAppVersion } from '../../utils/appVersion';
 import { resultEmeraldCard, resultEmeraldTone } from '../../theme/resultPresentation';
 import { useTheme } from '../../theme';
+import { openAssessmentReport } from '../../utils/openAssessmentReport';
 
 async function openSupportEmail(subject: string): Promise<'opened' | 'missing' | 'failed'> {
   const email = productIdentity.supportEmail.trim();
@@ -83,7 +84,14 @@ export default function HelpSupportScreen() {
           onPress={
             supportConfigured
               ? () => {
-                  void contact(t('account.supportSubjectReport'));
+                  void openAssessmentReport({
+                    subject: t('account.supportSubjectReport'),
+                    fields: {
+                      errorType: 'other',
+                    },
+                    missingMessage: t('account.supportEmailMissing'),
+                    failedMessage: t('account.supportEmailFailed', { email: supportEmail }),
+                  });
                 }
               : () => {
                   Alert.alert(t('settings.helpSupport'), t('account.supportEmailMissing'));

@@ -14,6 +14,8 @@ import {
   publicShareCodesMatch,
 } from '../lib/publicShareIdentity';
 import { offProductApiUrl } from '../truescan-src/services/offReadTarget';
+import { getPublicationHold } from '../lib/publicationHoldStore';
+import { buildServerOffUserAgent } from '../lib/offUserAgent';
 
 /** Rewritten from /api/share-event (same serverless function on Hobby). */
 function handleShareEventRoute(req: VercelRequest, res: VercelResponse): void | VercelResponse {
@@ -31,6 +33,11 @@ function handleShareEventRoute(req: VercelRequest, res: VercelResponse): void | 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // MVP privacy minimisation: outbound share-event telemetry default OFF.
+  if (process.env.SHARE_EVENT_TELEMETRY_ENABLED !== '1' && process.env.EXPO_PUBLIC_SHARE_EVENT_TELEMETRY !== '1') {
+    return res.status(204).end();
+  }
 
   const body = req.body as Record<string, unknown> | undefined;
   const barcode = typeof body?.barcode === 'string' ? body.barcode : '';
@@ -85,12 +92,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const hold = await getPublicationHold(barcode);
+    // Fail closed when hold store is inconsistent/unavailable.
+    const administrativeHold = !hold.ok || hold.record.held === true;
+
     const offUrl = offProductApiUrl(barcode, process.env.RVEEL_EVIDENCE_AUTHORITY_ENV, 'v2');
     let offResponse: Response;
     try {
       offResponse = await fetch(offUrl, {
         headers: {
-          'User-Agent': 'Rveel/1.0.0',
+          'User-Agent': buildServerOffUserAgent(),
         },
       });
     } catch (networkError) {
@@ -138,21 +149,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         product_name_en:
           typeof offProduct.product_name_en === 'string' ? offProduct.product_name_en : undefined,
         brands: typeof offProduct.brands === 'string' ? offProduct.brands : undefined,
-        image_url:
-          (typeof offProduct.image_url === 'string' && offProduct.image_url) ||
-          (typeof offProduct.image_front_url === 'string' && offProduct.image_front_url) ||
-          (typeof offProduct.image_front_small_url === 'string' && offProduct.image_front_small_url) ||
-          undefined,
-        nutriments: offProduct.nutriments,
-        ingredients_text:
-          typeof offProduct.ingredients_text === 'string' ? offProduct.ingredients_text : undefined,
-        nova_group: typeof novaGroup === 'number' && Number.isFinite(novaGroup) ? novaGroup : undefined,
-        ecoscore_grade:
-          typeof offProduct.ecoscore_grade === 'string' ? offProduct.ecoscore_grade : undefined,
-        categories: typeof offProduct.categories === 'string' ? offProduct.categories : undefined,
+        // Administrative hold: omit redistributed OFF image from public teasers.
+        image_url: administrativeHold
+          ? undefined
+          : (typeof offProduct.image_url === 'string' && offProduct.image_url) ||
+            (typeof offProduct.image_front_url === 'string' && offProduct.image_front_url) ||
+            (typeof offProduct.image_front_small_url === 'string' &&
+              offProduct.image_front_small_url) ||
+            undefined,
+        nutriments: administrativeHold ? undefined : offProduct.nutriments,
+        ingredients_text: administrativeHold
+          ? undefined
+          : typeof offProduct.ingredients_text === 'string'
+            ? offProduct.ingredients_text
+            : undefined,
+        nova_group:
+          administrativeHold || !(typeof novaGroup === 'number' && Number.isFinite(novaGroup))
+            ? undefined
+            : novaGroup,
+        ecoscore_grade: administrativeHold
+          ? undefined
+          : typeof offProduct.ecoscore_grade === 'string'
+            ? offProduct.ecoscore_grade
+            : undefined,
+        categories: administrativeHold
+          ? undefined
+          : typeof offProduct.categories === 'string'
+            ? offProduct.categories
+            : undefined,
       });
 
-      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader(
+        'Cache-Control',
+        administrativeHold ? 'no-store' : 'public, max-age=3600'
+      );
+      if (administrativeHold) {
+        return res.status(200).json({
+          ...preview,
+          publication_hold:
+            hold.ok && hold.record.held ? 'administrative_hold' : 'hold_state_unavailable',
+        });
+      }
       return res.status(200).json(preview);
     }
 

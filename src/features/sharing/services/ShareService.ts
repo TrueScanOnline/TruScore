@@ -9,6 +9,7 @@ import { logger } from '../../../utils/logger';
 import { shareAnalytics } from '../../../utils/shareAnalytics';
 import { reportShareEventToBackend } from '../../../utils/reportShareEvent';
 import { publishedShareAnalyticsScore } from '../../../utils/shareScoreSemantics';
+import { isLocalShareAnalyticsEnabled } from '../../../config/shareTelemetryGate';
 import { FacebookShare } from '../platforms/facebook';
 import { InstagramShare } from '../platforms/instagram';
 import { TwitterShare } from '../platforms/twitter';
@@ -133,17 +134,21 @@ export class ShareService {
   private static recordShare(options: ShareOptions, result: ShareResult, platform: ShareResult['platform']) {
     if (!options.product) return;
     const trackedPlatform = result.platform || platform;
-    shareAnalytics.trackShare({
-      timestamp: Date.now(),
-      platform: trackedPlatform,
-      itemType: options.item || 'productInfo',
-      productBarcode: options.product.barcode,
-      // Published score only. NR, Checking, and a missing publication record nothing.
-      truScore: publishedShareAnalyticsScore(options.truScore, {
-        publicationSettled: options.publicationSettled,
-      }),
-      success: result.success,
-    });
+    // Local share analytics are opt-in via EXPO_PUBLIC_LOCAL_SHARE_ANALYTICS (default OFF).
+    // Not governed by analyticsEnabled (that toggle is developer-only in store builds).
+    if (isLocalShareAnalyticsEnabled()) {
+      shareAnalytics.trackShare({
+        timestamp: Date.now(),
+        platform: trackedPlatform,
+        itemType: options.item || 'productInfo',
+        productBarcode: options.product.barcode,
+        // Published score only. NR, Checking, and a missing publication record nothing.
+        truScore: publishedShareAnalyticsScore(options.truScore, {
+          publicationSettled: options.publicationSettled,
+        }),
+        success: result.success,
+      });
+    }
     void reportShareEventToBackend({
       barcode: options.product.barcode,
       platform: trackedPlatform,

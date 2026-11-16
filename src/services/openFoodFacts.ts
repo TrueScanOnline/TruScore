@@ -21,12 +21,13 @@ import {
   type OffVariantAttemptOutcome,
 } from './offRetrievalOutcome';
 import { offProductReadHost } from './offReadTarget';
+import { buildOffUserAgent } from '../config/offApiIdentity';
 
 export type { OffFetchResult, OffRetrievalFailureReason } from './offRetrievalOutcome';
 
 export { ORGANIC_LABEL_TEXT_CLAIM_TAG, ORGANIC_PRODUCT_NAME_CLAIM_TAG };
 
-const USER_AGENT = 'Rveel/1.0.0';
+const USER_AGENT = buildOffUserAgent();
 
 export interface OFFResponse {
   status: number;

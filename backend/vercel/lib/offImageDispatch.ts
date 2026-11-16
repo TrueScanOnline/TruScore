@@ -1,6 +1,11 @@
 import { liveOffNetworkWriteAllowed } from '../truescan-src/evidenceAuthority/authority';
 import { offImageDispatchDecision, offImageFieldAllowed } from '../truescan-src/evidenceAuthority/offImageDispatchGate';
 import { summarizeOffWriteResponse } from '../truescan-src/evidenceAuthority/offWriteResponse';
+import {
+  buildServerOffUserAgent,
+  isOffContactConfigured,
+  isOffPublicContributionEnabledServer,
+} from './offUserAgent';
 
 const OFF_IMAGE_UPLOAD = 'https://world.openfoodfacts.org/cgi/product_image_upload.pl';
 const MAX_IMAGE_BASE64_CHARS = 12_000_000;
@@ -30,6 +35,12 @@ export async function dispatchOffImage(input: {
   if (!input.imageBase64 || input.imageBase64.length > MAX_IMAGE_BASE64_CHARS) {
     return { ok: false, status: 400, reason: 'off_image_incomplete' };
   }
+  if (!isOffPublicContributionEnabledServer(env)) {
+    return { ok: false, status: 403, reason: 'off_image_dispatch_mvp_disabled' };
+  }
+  if (!isOffContactConfigured(env)) {
+    return { ok: false, status: 409, reason: 'off_image_dispatch_contact_missing' };
+  }
   const authorityEnv = env.RVEEL_EVIDENCE_AUTHORITY_ENV === 'production' ? 'production' : 'uat';
   const user = env.OFF_LIVE_WRITE_USER_ID?.trim() || '';
   const password = env.OFF_LIVE_WRITE_PASSWORD?.trim() || '';
@@ -57,7 +68,7 @@ export async function dispatchOffImage(input: {
   const fetchImpl = input.fetchImpl || fetch;
   const response = await fetchImpl(OFF_IMAGE_UPLOAD, {
     method: 'POST',
-    headers: { 'User-Agent': 'Rveel/1.0.0 (truescan@example.com)' },
+    headers: { 'User-Agent': buildServerOffUserAgent(env) },
     body: form,
   });
   const responseText = await response.text();

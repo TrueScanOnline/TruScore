@@ -11,8 +11,13 @@ export type PlanetPackagingMarketSetting = 'auto' | 'AU' | 'NZ';
 
 interface SettingsStore {
   hasCompletedOnboarding: boolean;
-  /** ISO timestamp when user acknowledged legal disclaimers during onboarding; null if not yet accepted */
+  /** ISO timestamp when user acknowledged in-app legal disclaimers during onboarding; null if not yet accepted */
   legalDisclaimersAcceptedAt: string | null;
+  /**
+   * Published Terms/Privacy document version accepted (only when destinations are ready).
+   * Never set against unpublished drafts.
+   */
+  legalDocumentsAcceptedVersion: string | null;
   darkMode: boolean;
   /** MVP-active UI locale (English only). Persisted es/fr values are coerced to en. */
   language: MvpEnabledUiLocale;
@@ -30,6 +35,7 @@ interface SettingsStore {
   planetPackagingMarket: PlanetPackagingMarketSetting;
   setHasCompletedOnboarding: (value: boolean) => Promise<void>;
   setLegalDisclaimersAcceptedAt: (value: string | null) => Promise<void>;
+  setLegalDocumentsAcceptedVersion: (value: string | null) => Promise<void>;
   setDarkMode: (value: boolean) => Promise<void>;
   setLanguage: (value: string) => Promise<void>;
   setUnits: (value: 'metric' | 'imperial') => Promise<void>;
@@ -45,6 +51,7 @@ const FIRST_LAUNCH_KEY = '@truescan_first_launch';
 const defaultSettings = {
   hasCompletedOnboarding: false,
   legalDisclaimersAcceptedAt: null as string | null,
+  legalDocumentsAcceptedVersion: null as string | null,
   darkMode: false,
   language: 'en' as const,
   units: 'metric' as const,
@@ -57,6 +64,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   // Start with defaults - will be overridden by initializeStore if stored values exist
   hasCompletedOnboarding: false,
   legalDisclaimersAcceptedAt: null,
+  legalDocumentsAcceptedVersion: null,
   darkMode: false,
   language: 'en' as const,
   units: 'metric' as const,
@@ -73,6 +81,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   setLegalDisclaimersAcceptedAt: async (value) => {
     set({ legalDisclaimersAcceptedAt: value });
+    await saveSettings();
+  },
+
+  setLegalDocumentsAcceptedVersion: async (value) => {
+    set({ legalDocumentsAcceptedVersion: value });
     await saveSettings();
   },
 
@@ -167,6 +180,15 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
           legalDisclaimersAcceptedAt = parsed.legalDisclaimersAcceptedAt;
         }
 
+        let legalDocumentsAcceptedVersion = defaultSettings.legalDocumentsAcceptedVersion;
+        if (
+          'legalDocumentsAcceptedVersion' in parsed &&
+          (typeof parsed.legalDocumentsAcceptedVersion === 'string' ||
+            parsed.legalDocumentsAcceptedVersion === null)
+        ) {
+          legalDocumentsAcceptedVersion = parsed.legalDocumentsAcceptedVersion;
+        }
+
         let planetPackagingMarket: PlanetPackagingMarketSetting = defaultSettings.planetPackagingMarket;
         if (
           'planetPackagingMarket' in parsed &&
@@ -182,6 +204,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
           ...parsed,
           hasCompletedOnboarding, // Explicitly use our checked value
           legalDisclaimersAcceptedAt,
+          legalDocumentsAcceptedVersion,
           planetPackagingMarket,
           // MVP English-only: coerce any persisted es/fr (or other) to en.
           language: resolveMvpUiLocale(
@@ -224,6 +247,7 @@ async function saveSettings() {
       JSON.stringify({
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         legalDisclaimersAcceptedAt: state.legalDisclaimersAcceptedAt,
+        legalDocumentsAcceptedVersion: state.legalDocumentsAcceptedVersion,
         darkMode: state.darkMode,
         language: state.language,
         units: state.units,

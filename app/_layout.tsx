@@ -191,12 +191,18 @@ function RootLayout() {
         // Zustand state is immediately available after await
         const settings = useSettingsStore.getState();
         
-        // FORCE CHECK: Explicitly check if hasCompletedOnboarding is true
-        // Show onboarding ONLY if hasCompletedOnboarding is NOT explicitly true
-        const hasCompleted = settings.hasCompletedOnboarding === true;
+        // Require legal acknowledgement even if an older build skipped it.
+        // Do not invent Terms/Privacy acceptance while destinations remain unpublished.
+        const legalAck = !!settings.legalDisclaimersAcceptedAt;
+        const hasCompleted = settings.hasCompletedOnboarding === true && legalAck;
+        if (settings.hasCompletedOnboarding === true && !legalAck) {
+          // Force onboarding legal step on next paint without fabricating acceptance.
+          await useSettingsStore.getState().setHasCompletedOnboarding(false);
+        }
         
         console.log('[RootLayout] Onboarding decision:', {
           hasCompletedOnboarding: settings.hasCompletedOnboarding,
+          legalDisclaimersAcceptedAt: settings.legalDisclaimersAcceptedAt,
           willShowOnboardingFlow: !hasCompleted,
         });
         

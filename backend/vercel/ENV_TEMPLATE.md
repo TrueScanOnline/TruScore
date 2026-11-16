@@ -98,6 +98,26 @@ OFF_LIVE_WRITE_EXECUTE=1
 
 Photo uploads that are meant for Open Food Facts (`front`, `ingredients`, `nutrition`, `packaging`) use the same `OFF_LIVE_WRITE_USER_ID` and `OFF_LIVE_WRITE_PASSWORD` on `/api/off-image-dispatch`. The app sends the image bytes only. It does not send the account. Country-label photos are not dispatched.
 
+MVP launch hardening (default fail-closed):
+
+```
+# Public OFF contribution — leave unset/0 until consent controls approved
+OFF_PUBLIC_CONTRIBUTION_ENABLED=
+EXPO_PUBLIC_OFF_PUBLIC_CONTRIBUTION=
+
+# Real contact for OFF User-Agent (never invent; falls back to support email)
+OFF_API_CONTACT_EMAIL=
+EXPO_PUBLIC_SUPPORT_EMAIL=
+
+# Share-event telemetry — leave unset/0 for public MVP
+SHARE_EVENT_TELEMETRY_ENABLED=
+EXPO_PUBLIC_SHARE_EVENT_TELEMETRY=
+
+# Administrative publication holds (POST requires RVEEL_FOUNDER_ADMIN_TOKEN)
+RVEEL_FOUNDER_ADMIN_TOKEN=
+# Postgres required to persist holds (same DATABASE_URL / POSTGRES_URL family)
+```
+
 ---
 
 ## AFTER ADDING VARIABLES

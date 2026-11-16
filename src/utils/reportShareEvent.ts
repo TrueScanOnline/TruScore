@@ -1,8 +1,10 @@
 /**
- * Optional server-side share funnel (no PII). Uses same backend URL as the rest of the app.
+ * Optional server-side share funnel. Default disabled for MVP privacy minimisation.
+ * Sharing still works without this telemetry. Not controlled by analyticsEnabled.
  */
 
 import { getBackendUrl } from '../config/backendConfig';
+import { isShareEventTelemetryEnabled } from '../config/shareTelemetryGate';
 import { logger } from './logger';
 
 export async function reportShareEventToBackend(payload: {
@@ -12,6 +14,7 @@ export async function reportShareEventToBackend(payload: {
   success: boolean;
 }): Promise<void> {
   if (!payload.success) return;
+  if (!isShareEventTelemetryEnabled()) return;
 
   const base = getBackendUrl();
   if (!base?.trim() || base.includes('YOUR-VERCEL-URL')) return;

@@ -96,9 +96,13 @@ async function authority(): Promise<EvidenceAuthority> {
           const form = new URLSearchParams(fields);
           form.set('user_id', liveUser);
           form.set('password', livePassword);
+          const { buildServerOffUserAgent } = await import('../lib/offUserAgent');
           const response = await fetch(accepted, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'User-Agent': buildServerOffUserAgent(),
+            },
             body: form,
           });
           const body = await response.text();

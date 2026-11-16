@@ -56,7 +56,7 @@ Depending on how you use the app, your device may store:
 | Favourites | Barcodes, names, stored score fields, timestamps | Your saved products |
 | Product cache | Product records and cached product images | Faster repeat views; offline resilience |
 | Settings | Theme, language, units, packaging-market preference, onboarding completion, legal-acceptance timestamp **if recorded** | Operate the app |
-| Share logs (on device) | Recent share attempts (barcode, platform, success/failure, timestamp, published score where available) | Operate and diagnose sharing |
+| Share logs (on device) | Recent share attempts (barcode, platform, success/failure, timestamp, published score where available) — **only if local share analytics are explicitly enabled in the build** (default OFF for public MVP) | Optional diagnostics |
 | Inbound share attribution | Barcode and referral fields when you open a shared link | Attribute inbound shares |
 | Contribution / evidence materials (if you use contribution features) | Local evidence photos, session state, Evidence Authority contributor credential | Support optional evidence submissions |
 
@@ -68,7 +68,7 @@ Depending on how you use the app, your device may store:
 |---|---|---|
 | Product lookup | Barcode / product request | Open Food Facts and/or Rveel backends that fetch Open Food Facts data |
 | Share product link / preview | Barcode and share context; preview page may load product name, brand, image from Open Food Facts | Rveel share/preview hosts; Open Food Facts / image CDNs when images load |
-| Share event reporting | Barcode, platform, item type, timestamp (successful shares) | Rveel `/api/share-event` (server logs) |
+| Share event reporting | Barcode, platform, item type, timestamp (successful shares) — **only if share-event telemetry is explicitly enabled in the build** (default OFF for public MVP) | Rveel `/api/share-event` (server logs) |
 | Product photo upload | Barcode, image bytes, image type | Rveel upload APIs; **may also** be dispatched to Open Food Facts when that path runs |
 | Evidence Authority contribution (when enabled) | Contribution payloads (e.g. ingredients text, nutrition, certifications, origins, packet wording), image hashes/bytes, bearer contributor token | Rveel Evidence Authority API and **private** blob storage |
 
@@ -90,19 +90,20 @@ If you grant camera or photo-library permission, you can capture or select produ
 
 Whether a specific capture is kept private, shown from Open Food Facts, or contributed publicly depends on the feature path. **Explicit Open Food Facts contribution consent controls are a future product requirement** and are **not** fully implemented as a separate opt-in in the current MVP (**APPROVAL REQUIRED** before asserting compliant contribution consent in a published Policy).
 
-### 3.5 Privacy controls versus share telemetry (reconciled)
+### 3.5 Privacy controls versus share telemetry (launch hardening)
 
 **User-accessible controls in the released Account experience** currently include clearing History, Favourites and product Cache, and opening Legal / Privacy document destinations when those destinations are marked ready. There is **no** analytics or share-telemetry toggle on Account Home, Privacy & Data, or Legal & Methodology screens in the store Account navigation.
 
-An internal `analyticsEnabled` preference exists in app settings storage (default off). In store-release builds it is **not** exposed through Account; it is only reachable via a developer Settings route that store releases disable. In the current MVP source review, that preference **does not** control:
+An internal `analyticsEnabled` preference exists in app settings storage (default off). In store-release builds it is **not** exposed through Account. That preference **does not** govern share telemetry.
 
-- on-device share logs;
-- inbound share attribution; or
-- successful posts to `/api/share-event`.
+**Public MVP default (16 Nov 2026 hardening):**
 
-Until founders authorise a product change, treat share-related logging as **automatic product behaviour** described in §3.1–3.2 — not as optional analytics the consumer can switch off in Account.
+- Local share analytics persistence is **OFF** unless `EXPO_PUBLIC_LOCAL_SHARE_ANALYTICS=1`.  
+- Outbound `/api/share-event` posts are **OFF** unless `EXPO_PUBLIC_SHARE_EVENT_TELEMETRY=1` (server also defaults OFF).  
+- Functional sharing continues without those telemetry paths.  
+- Inbound share attribution may still be stored locally when a shared link is opened.
 
-Whether share telemetry is later classified as essential operational data or optional analytics is **APPROVAL REQUIRED (founder/counsel)**. This Policy does not invent that classification.
+Account clear actions still do not remove inbound share attribution keys; that residual behaviour remains documented.
 
 Error-reporting SDK code may exist in the project; production activation depends on configuration. Crash reporting is **not** confirmed active in the reviewed MVP JavaScript lifecycle. If crash reporting is enabled in a released build, that fact must be confirmed and this Policy updated before publication (**APPROVAL REQUIRED**).
 

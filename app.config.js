@@ -176,6 +176,18 @@ module.exports = {
     extra: {
       /** Public support inbox; set EXPO_PUBLIC_SUPPORT_EMAIL in EAS env / .env before store submission */
       supportEmail: process.env.EXPO_PUBLIC_SUPPORT_EMAIL || '',
+      /** Optional dedicated OFF API contact; falls back to supportEmail in app code */
+      offApiContactEmail: process.env.EXPO_PUBLIC_OFF_API_CONTACT_EMAIL || '',
+      /** Public OFF contribution — default OFF until consent controls approved */
+      offPublicContribution: process.env.EXPO_PUBLIC_OFF_PUBLIC_CONTRIBUTION === '1' ? '1' : '0',
+      /** Optional share-event telemetry — default OFF for MVP privacy minimisation */
+      shareEventTelemetry: process.env.EXPO_PUBLIC_SHARE_EVENT_TELEMETRY === '1' ? '1' : '0',
+      /** Optional local share analytics — default OFF */
+      localShareAnalytics: process.env.EXPO_PUBLIC_LOCAL_SHARE_ANALYTICS === '1' ? '1' : '0',
+      /** Non-store test entitlement only; store releases must keep destinations.ready false */
+      legalDocumentsTestReady: process.env.EXPO_PUBLIC_LEGAL_DOCUMENTS_TEST_READY === '1' ? '1' : '0',
+      /** Mirror of EXPO_PUBLIC_STORE_RELEASE for runtime gates that must not rely on babel inlining */
+      storeRelease: process.env.EXPO_PUBLIC_STORE_RELEASE === '1' ? '1' : '0',
       // EAS project ID - Required for EAS Build
       // Note: This is commented out for Expo Go development to prevent update errors
       // Uncomment when building with EAS Build for production

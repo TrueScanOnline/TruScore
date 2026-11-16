@@ -3,7 +3,13 @@ const Constants = {
   expoConfig: {
     version: '10.0.0',
     extra: {
-      supportEmail: 'support@example.test',
+      supportEmail: '',
+      offApiContactEmail: '',
+      offPublicContribution: '0',
+      shareEventTelemetry: '0',
+      localShareAnalytics: '0',
+      legalDocumentsTestReady: '0',
+      storeRelease: '0',
     },
   },
   nativeAppVersion: '10.0.0',

@@ -18,6 +18,10 @@ import { useSettingsStore } from '../src/store/useSettingsStore';
 import { useTheme } from '../src/theme';
 import { RootStackParamList } from './_layout';
 import OnboardingLegalAcceptanceStep from '../src/components/productLegal/OnboardingLegalAcceptanceStep';
+import {
+  LEGAL_DOCUMENTS_VERSION,
+  requiresPublishedLegalDocumentAcceptance,
+} from '../src/config/legalGate';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -48,7 +52,11 @@ export default function OnboardingScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { setHasCompletedOnboarding, setLegalDisclaimersAcceptedAt } = useSettingsStore();
+  const {
+    setHasCompletedOnboarding,
+    setLegalDisclaimersAcceptedAt,
+    setLegalDocumentsAcceptedVersion,
+  } = useSettingsStore();
   // Intro slides always come first; disclaimer/legal step is shown after slide 3 (unless already accepted).
   const [phase, setPhase] = useState<'legal' | 'slides'>(() => 'slides');
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -92,6 +100,13 @@ export default function OnboardingScreen() {
 
   const handleLegalContinue = async () => {
     await setLegalDisclaimersAcceptedAt(new Date().toISOString());
+    // Binding Terms/Privacy acceptance only when published destinations are ready
+    // (or segregated non-store test entitlement). Never stamp drafts as accepted.
+    if (requiresPublishedLegalDocumentAcceptance()) {
+      await setLegalDocumentsAcceptedVersion(LEGAL_DOCUMENTS_VERSION);
+    } else {
+      await setLegalDocumentsAcceptedVersion(null);
+    }
     await handleComplete();
   };
 
@@ -100,12 +115,23 @@ export default function OnboardingScreen() {
   };
 
   const handleSkip = async () => {
+    // Skip educational intro only — never bypass required legal acknowledgement.
     if (phase !== 'slides') return;
-    await handleComplete();
+    const alreadyAccepted = !!useSettingsStore.getState().legalDisclaimersAcceptedAt;
+    if (alreadyAccepted) {
+      await handleComplete();
+      return;
+    }
+    setPhase('legal');
   };
 
   const handleComplete = async () => {
     try {
+      if (!useSettingsStore.getState().legalDisclaimersAcceptedAt) {
+        console.warn('[Onboarding] Refusing complete without legal acknowledgement');
+        setPhase('legal');
+        return;
+      }
       console.log('[Onboarding] Completing onboarding, setting hasCompletedOnboarding to true');
       await setHasCompletedOnboarding(true);
       
@@ -171,8 +197,8 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* Skip remaining onboarding and go to Scan (bypasses legal step — same as before) */}
-      <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+      {/* Skip educational intro only — legal acknowledgement remains required */}
+      <TouchableOpacity style={styles.skipButton} onPress={handleSkip} testID="onboarding-skip-intro">
         <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>
           {t('onboarding.skipIntro')}
         </Text>

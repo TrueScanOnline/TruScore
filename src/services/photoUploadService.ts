@@ -7,6 +7,7 @@ import { logger } from '../utils/logger';
 import * as FileSystem from 'expo-file-system';
 import { uploadPhotoToOpenFoodFacts } from './openFoodFactsSubmission';
 import { powershellLogger } from '../utils/powershellLogger';
+import { isOffPublicContributionEnabled } from '../config/offContributionGate';
 
 // Vercel backend URL for photo uploads
 import { getBackendUrl, BackendEndpoints } from '../config/backendConfig';
@@ -31,6 +32,8 @@ function shouldSkipOpenFoodFacts(
   imageType: 'front' | 'ingredients' | 'nutrition' | 'packaging' | 'country_label',
   options?: UploadProductPhotoOptions
 ): boolean {
+  // MVP legal hardening: no automatic public OFF contribution without explicit entitlement.
+  if (!isOffPublicContributionEnabled()) return true;
   if (options?.proprietaryOnly === true) return true;
   if (options?.proprietaryOnly === false) return false;
   return imageType === 'country_label';
