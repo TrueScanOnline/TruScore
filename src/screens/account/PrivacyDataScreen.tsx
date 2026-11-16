@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Text, StyleSheet } from 'react-native';
+import { Alert, Text, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import AccountScreenShell from '../../components/account/AccountScreenShell';
 import AccountSection from '../../components/account/AccountSection';
 import AccountRow from '../../components/account/AccountRow';
+import AccountExpandable from '../../components/account/AccountExpandable';
 import { useFavoritesStore } from '../../store/useFavoritesStore';
 import { useScanStore } from '../../store/useScanStore';
 import { clearCache, getCacheSize } from '../../services/cacheService';
@@ -14,9 +15,10 @@ import { productIdentity } from '../../config/productIdentity';
 import { resultEmeraldTone } from '../../theme/resultPresentation';
 import { useTheme } from '../../theme';
 import { openPrivacyDataRequest } from '../../utils/openPrivacyDataRequest';
+import type { PrivacyDataRequestFields } from '../../utils/reportPrivacyMailto';
 
 /**
- * Privacy & Data — targeted local clears only.
+ * Privacy & Data — targeted local clears + factual disclosures.
  * Must not broad-clear AsyncStorage or touch contribution credentials.
  */
 export default function PrivacyDataScreen() {
@@ -26,7 +28,7 @@ export default function PrivacyDataScreen() {
   const emerald = resultEmeraldTone(!!darkMode);
   const { clearFavorites, favorites } = useFavoritesStore();
   const { clearHistory, recentScans } = useScanStore();
-  const [cacheSize, setCacheSize] = useState(0);
+  const [cacheSize, setCacheSize] = useState<number | null>(null);
   const supportConfigured = productIdentity.supportEmail.trim().length > 0;
 
   const refreshCacheSize = useCallback(async () => {
@@ -34,13 +36,18 @@ export default function PrivacyDataScreen() {
       const size = await getCacheSize();
       setCacheSize(size);
     } catch {
-      setCacheSize(0);
+      setCacheSize(null);
     }
   }, []);
 
   useEffect(() => {
     void refreshCacheSize();
   }, [refreshCacheSize]);
+
+  const cacheValue =
+    cacheSize === null
+      ? t('account.cacheCountUnavailable')
+      : t('settings.products', { count: cacheSize });
 
   const handleClearHistory = () => {
     Alert.alert(t('settings.clearHistory'), t('history.clearHistoryMessage'), [
@@ -79,33 +86,33 @@ export default function PrivacyDataScreen() {
   };
 
   const handleClearCache = () => {
-    Alert.alert(
-      t('settings.clearCache'),
-      t('settings.clearCacheMessage', { count: cacheSize }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.clear'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await clearCache();
-              await refreshCacheSize();
-              Alert.alert(t('common.success'), t('account.clearCacheSuccess'));
-            } catch {
-              Alert.alert(t('common.error'), t('account.clearFailed'));
-            }
-          },
+    const clearCacheMessage =
+      cacheSize === null
+        ? `${t('settings.clearCacheMessage', { count: 0 })} (${t('account.cacheCountUnavailable')})`
+        : t('settings.clearCacheMessage', { count: cacheSize });
+    Alert.alert(t('settings.clearCache'), clearCacheMessage, [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.clear'),
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await clearCache();
+            await refreshCacheSize();
+            Alert.alert(t('common.success'), t('account.clearCacheSuccess'));
+          } catch {
+            Alert.alert(t('common.error'), t('account.clearFailed'));
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
-  const handleHowDataUsed = async () => {
+  const handlePublishedPrivacy = async () => {
     const result = await openLegalDestination('privacy');
     if (result === 'blocked') {
       Alert.alert(
-        t('account.howDataUsed'),
+        t('account.publishedPrivacyPolicy'),
         t('account.privacyUrlUnavailable', { url: legalDestinations.privacy.url })
       );
       return;
@@ -115,16 +122,14 @@ export default function PrivacyDataScreen() {
     }
   };
 
-  const handleDataRequest = () => {
+  const openPrivacyRequest = (requestType: PrivacyDataRequestFields['requestType']) => {
     if (!supportConfigured) {
       Alert.alert(t('account.privacyData'), t('account.supportEmailMissing'));
       return;
     }
     void openPrivacyDataRequest({
       subject: t('account.supportSubjectDataRequest'),
-      fields: {
-        requestType: '(access / correction / deletion / other)',
-      },
+      fields: { requestType },
       missingMessage: t('account.supportEmailMissing'),
       failedMessage: t('account.supportEmailFailed', {
         email: productIdentity.supportEmail.trim(),
@@ -138,6 +143,9 @@ export default function PrivacyDataScreen() {
       onBack={() => navigation.goBack()}
       testID="account-privacy-screen"
     >
+      <Text style={[styles.sectionLabel, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
+        {t('account.dataAtAGlance')}
+      </Text>
       <Text style={[styles.intro, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
         {t('account.privacyIntro')}
       </Text>
@@ -164,7 +172,7 @@ export default function PrivacyDataScreen() {
         <AccountRow
           icon="folder-outline"
           label={t('settings.clearCache')}
-          value={t('settings.products', { count: cacheSize })}
+          value={cacheValue}
           onPress={handleClearCache}
           destructive
           accessibilityHint={t('account.a11yClearCache')}
@@ -173,31 +181,89 @@ export default function PrivacyDataScreen() {
         />
       </AccountSection>
 
-      <AccountSection title={t('settings.privacy')}>
+      <Text style={[styles.sectionLabel, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
+        {t('account.howDataUsedSection')}
+      </Text>
+      <AccountExpandable title={t('account.dataUseDevice')} testID="privacy-data-device">
+        {t('account.dataUseDeviceBody')}
+      </AccountExpandable>
+      <AccountExpandable title={t('account.dataUseNetwork')} testID="privacy-data-network">
+        {t('account.dataUseNetworkBody')}
+      </AccountExpandable>
+      <AccountExpandable title={t('account.dataUseSharing')} testID="privacy-data-sharing">
+        {t('account.dataUseSharingBody')}
+      </AccountExpandable>
+      <AccountExpandable title={t('account.dataUseEvidence')} testID="privacy-data-evidence">
+        {t('account.dataUseEvidenceBody')}
+      </AccountExpandable>
+      <AccountExpandable title={t('account.dataUseBackend')} testID="privacy-data-backend">
+        {t('account.dataUseBackendBody')}
+      </AccountExpandable>
+      <AccountExpandable title={t('account.dataUseOff')} testID="privacy-data-off">
+        {t('account.dataUseOffBody')}
+      </AccountExpandable>
+      <AccountExpandable title={t('account.dataUseTelemetry')} testID="privacy-data-telemetry">
+        {t('account.dataUseTelemetryBody')}
+      </AccountExpandable>
+
+      <AccountSection title={t('account.privacyRequestsSection')}>
+        <View style={styles.requestExplainWrap}>
+          <Text style={[styles.requestExplain, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
+            {t('account.requestDataHelp')}: {t('account.privacyRequestExplain')}
+          </Text>
+        </View>
         <AccountRow
-          icon="information-circle-outline"
-          label={t('account.howDataUsed')}
+          icon="download-outline"
+          label={t('account.privacyRequestAccess')}
+          value={supportConfigured ? undefined : t('account.supportNotConfiguredShort')}
+          onPress={() => openPrivacyRequest('access')}
+          accessibilityHint={t('account.a11yRequestDataHelp')}
+          testID="account-privacy-request-access"
+        />
+        <AccountRow
+          icon="create-outline"
+          label={t('account.privacyRequestCorrection')}
+          value={supportConfigured ? undefined : t('account.supportNotConfiguredShort')}
+          onPress={() => openPrivacyRequest('correction')}
+          testID="account-privacy-request-correction"
+        />
+        <AccountRow
+          icon="trash-outline"
+          label={t('account.privacyRequestDeletionReview')}
+          value={supportConfigured ? undefined : t('account.supportNotConfiguredShort')}
+          onPress={() => openPrivacyRequest('deletion_review')}
+          testID="account-privacy-request-deletion"
+        />
+        <AccountRow
+          icon="mail-outline"
+          label={t('account.privacyRequestComplaint')}
+          value={supportConfigured ? undefined : t('account.supportNotConfiguredShort')}
+          onPress={() => openPrivacyRequest('complaint_or_question')}
+          accessibilityHint={t('account.a11yRequestDataHelp')}
+          testID="account-data-request"
+          isLast
+        />
+      </AccountSection>
+
+      <AccountSection title={t('account.permissionsSection')}>
+        <View style={styles.requestExplainWrap}>
+          <Text style={[styles.requestExplain, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
+            {t('account.cameraPermissionNote')}
+          </Text>
+        </View>
+        <AccountRow
+          icon="shield-outline"
+          label={t('account.publishedPrivacyPolicy')}
           value={
             isLegalDestinationReady('privacy')
               ? undefined
               : t('account.documentUnavailableShort')
           }
           onPress={() => {
-            void handleHowDataUsed();
+            void handlePublishedPrivacy();
           }}
+          accessibilityHint={t('account.a11yLegalDocument')}
           testID="account-how-data-used"
-        />
-        <AccountRow
-          icon="mail-outline"
-          label={t('account.requestDataHelp')}
-          value={
-            supportConfigured
-              ? undefined
-              : t('account.supportNotConfiguredShort')
-          }
-          onPress={handleDataRequest}
-          accessibilityHint={t('account.a11yRequestDataHelp')}
-          testID="account-data-request"
           isLast
         />
       </AccountSection>
@@ -210,10 +276,28 @@ export default function PrivacyDataScreen() {
 }
 
 const styles = StyleSheet.create({
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    marginTop: 4,
+    paddingHorizontal: 4,
+  },
   intro: {
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 16,
+  },
+  requestExplainWrap: {
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 6,
+  },
+  requestExplain: {
+    fontSize: 13,
+    lineHeight: 19,
   },
   footnote: {
     fontSize: 13,

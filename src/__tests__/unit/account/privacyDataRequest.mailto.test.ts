@@ -37,6 +37,7 @@ describe('privacy data request mailto', () => {
     expect(assessment).toMatch(/Barcode \/ GTIN/);
     expect(privacy).not.toMatch(/Barcode \/ GTIN/);
     expect(privacy).toMatch(/Request type: deletion/);
+    expect(assessment).toMatch(/does not automatically change a RVEEL Score/i);
   });
 });
 

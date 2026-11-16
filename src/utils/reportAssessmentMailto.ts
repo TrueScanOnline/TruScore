@@ -26,22 +26,28 @@ export function buildAssessmentReportMailto(
   if (!email) return null;
 
   const lines = [
-    'RVEEL incorrect assessment report',
+    'RVEEL incorrect product information / assessment report',
     '',
-    `Barcode / GTIN: ${fields.barcode?.trim() || '(please fill)'}`,
-    `Product name: ${fields.productName?.trim() || '(please fill)'}`,
-    `Brand: ${fields.brand?.trim() || '(please fill)'}`,
-    `Error type: ${fields.errorType?.trim() || '(identity / nutrition / claims / certification / signal / share / other)'}`,
-    `Disputed statement / assessment: ${fields.disputedStatement?.trim() || '(please describe)'}`,
-    `Share URL (if any): ${fields.shareUrl?.trim() || '(none)'}`,
+    `Barcode / GTIN: ${fields.barcode?.trim() || '(include when available)'}`,
+    `Product name: ${fields.productName?.trim() || '(include when available)'}`,
+    `Brand: ${fields.brand?.trim() || '(include when available)'}`,
+    `Concern type: ${
+      fields.errorType?.trim() ||
+      '(barcode or identity / name or brand / ingredients or nutrition / origins / certification or benchmark / manufacturer or parent / assessment or score explanation / recall or signal / share or preview / other)'
+    }`,
+    `What appears incorrect: ${fields.disputedStatement?.trim() || '(please describe)'}`,
+    `Share or preview reference (if any): ${fields.shareUrl?.trim() || '(none)'}`,
     `Supporting notes: ${fields.notes?.trim() || '(optional)'}`,
     `Reporter contact (optional): ${fields.reporterContact?.trim() || '(optional)'}`,
+    '',
+    'Notes:',
+    '- Optional pack photographs may help verify packaging differences; do not send identity documents.',
+    '- Sending this report does not automatically change a RVEEL Score, Signal, or published statement.',
+    '- Opening this draft does not confirm that RVEEL received a case.',
     '',
     `App version: ${getInstalledAppVersion()}`,
     `Platform: ${Platform.OS}`,
     `Generated: ${new Date().toISOString()}`,
-    '',
-    'Please attach pack photos if available.',
   ];
 
   const body = lines.join('\n');

@@ -40,11 +40,12 @@ describe('Account MVP completion contracts', () => {
     const privacy = read('src/screens/account/PrivacyDataScreen.tsx');
     expect(privacy).toMatch(/privacyIntro/);
     expect(privacy).toMatch(/privacyFootnote/);
-    expect(privacy).toMatch(/requestDataHelp/);
+    expect(privacy).toMatch(/privacyRequestExplain|privacyRequestsSection/);
     expect(privacy).toMatch(/supportConfigured/);
     expect(privacy).toMatch(/productIdentity\.supportEmail/);
     expect(privacy).toMatch(/openPrivacyDataRequest/);
     expect(privacy).not.toMatch(/openAssessmentReport/);
+    expect(privacy).toMatch(/cacheCountUnavailable|cacheSize === null/);
     expect(en.account.privacyIntro).toMatch(/Open Food Facts|Evidence Authority/i);
     expect(en.account.privacyFootnote).toMatch(/Delete Account/i);
   });

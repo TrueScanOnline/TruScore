@@ -83,10 +83,10 @@
       "reviewer": null,
       "reviewedAt": null,
       "currentReview": {
-        "asOf": "2026-11-16",
+        "asOf": "2026-11-17",
         "implementationState": "PARTIAL_TECHNICAL",
         "riskPriority": "Critical",
-        "whatExistsOrIsReported": "Data-flow audit and Privacy draft exist; optional share-event and local share analytics default OFF. Local history/favourites/settings and server/network events differ. No final processor list, legal-entity mapping or privacy opinion.",
+        "whatExistsOrIsReported": "Data-flow audit and Privacy draft exist; Account Privacy screen now discloses device/network/sharing/evidence/OFF/telemetry gates in expandable panels. Optional share-event and local share analytics default OFF. Local clears do not remove EA credentials. No final processor list, legal-entity mapping or privacy opinion.",
         "whatMustHappenBeforeApproval": "Make a verified data inventory including logs, IP addresses, photo/evidence storage, contributor identifiers, devices and subprocessors. Establish applicable NZ Privacy Act/IPPs including IPP3A indirect collection and overseas disclosures, AU APP/small-business exceptions if applicable, security, access/correction and subprocessors. Minimise collection by default.",
         "responsibleReviewers": "Privacy officer candidate, counsel, backend owner",
         "isApproval": false
@@ -99,10 +99,10 @@
       "reviewer": null,
       "reviewedAt": null,
       "currentReview": {
-        "asOf": "2026-11-16",
+        "asOf": "2026-11-17",
         "implementationState": "DRAFT_ONLY",
         "riskPriority": "Critical",
-        "whatExistsOrIsReported": "Privacy Policy and Terms drafts exist; legal destinations are intentionally not ready and public URLs previously failed. Nothing binding is approved or published.",
+        "whatExistsOrIsReported": "Privacy Policy and Terms drafts exist; Account Legal keeps destinations fail-closed (ready=false). Draft/code reconciliation note recorded 2026-11-17. Nothing binding is approved or published.",
         "whatMustHappenBeforeApproval": "Insert actual contracting entity, contacts, governing law, complaint/privacy procedures and accurate verified app behaviour; obtain dual-market legal approval; publish stable URLs and independently test access, rendering, change notices and archival before activating readiness.",
         "responsibleReviewers": "Founder and qualified counsel",
         "isApproval": false
@@ -131,10 +131,10 @@
       "reviewer": null,
       "reviewedAt": null,
       "currentReview": {
-        "asOf": "2026-11-16",
+        "asOf": "2026-11-17",
         "implementationState": "NOT_OPERATIONAL",
         "riskPriority": "Critical",
-        "whatExistsOrIsReported": "Report route uses configured support email, but real continuously monitored support/legal/privacy inbox and named accountable officer are not confirmed. No invented placeholder is acceptable.",
+        "whatExistsOrIsReported": "Account Trust Help adds product-report, manufacturer-review, technical-support and privacy-request mailto templates when support email is configured; dispute procedure updated for case classes. Real continuously monitored inbox and named accountable officer remain unconfirmed. No invented placeholder is acceptable. Mailto open ≠ case creation.",
         "whatMustHappenBeforeApproval": "Provision and staff secure monitored inbox with named owner/backup; create ticket/case log, severity triage, legal hold of evidence, escalation to counsel, documented response targets and periodic drills. Verify actual reporting works from all consumer routes and jurisdictions.",
         "responsibleReviewers": "Founder operations and privacy officer",
         "isApproval": false
