@@ -83,6 +83,13 @@ async function authority(): Promise<EvidenceAuthority> {
         offCredentialsConfigured: env === 'uat' && liveCredentials,
         offExecute: execute,
         offTransport: async ({ target: offTarget, fields }) => {
+          const { buildServerOffUserAgent, isOffPublicContributionEnabledServer } = await import(
+            '../lib/offUserAgent'
+          );
+          // Public OFF writes remain fail-closed for MVP until contribution entitlement is explicit.
+          if (!isOffPublicContributionEnabledServer()) {
+            return { ok: false, status: 403, note: 'off_public_contribution_disabled' };
+          }
           const accepted = officialOffWriteTarget(offTarget);
           if (
             !execute ||
@@ -96,7 +103,6 @@ async function authority(): Promise<EvidenceAuthority> {
           const form = new URLSearchParams(fields);
           form.set('user_id', liveUser);
           form.set('password', livePassword);
-          const { buildServerOffUserAgent } = await import('../lib/offUserAgent');
           const response = await fetch(accepted, {
             method: 'POST',
             headers: {

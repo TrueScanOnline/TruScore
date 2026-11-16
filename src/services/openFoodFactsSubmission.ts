@@ -197,6 +197,18 @@ export async function submitManufacturingCountryToOpenFoodFacts(
   country: string
 ): Promise<{ success: boolean; message: string }> {
   try {
+    if (!isOffPublicContributionEnabled()) {
+      return {
+        success: false,
+        message: 'Open Food Facts public contribution is disabled until consent controls are approved',
+      };
+    }
+    if (!isOffApiContactConfigured()) {
+      return {
+        success: false,
+        message: 'Open Food Facts API contact is not configured — refusing public contribution',
+      };
+    }
     const credentials = getOFFCredentials();
     
     // Build update data

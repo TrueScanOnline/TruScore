@@ -6,11 +6,12 @@
 module.exports = {
   preset: 'react-native',
   testEnvironment: 'node',
-  roots: ['<rootDir>/src'],
+  roots: ['<rootDir>/src', '<rootDir>/backend/vercel/lib'],
   testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
   transform: {
     '^.+\\.tsx?$': 'babel-jest',
   },
+  modulePathIgnorePatterns: ['<rootDir>/backend/vercel/node_modules'],
   transformIgnorePatterns: [
     // Transform Expo modules and other ES modules
     'node_modules/(?!(expo|@expo|expo-|@react-native|react-native|@unimodules|unimodules|sentry-expo|native-base|react-clone-referenced-element|@react-native-community|react-navigation|@react-navigation|@react-native-async-storage|@react-native-community/netinfo)/)',

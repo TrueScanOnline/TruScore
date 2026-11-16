@@ -140,6 +140,8 @@ import EmeraldScoreFrame from '../../src/components/product/emerald/EmeraldScore
 import PublicationHoldNotice from '../../src/components/product/PublicationHoldNotice';
 import {
   fetchPublicationHold,
+  initialPublicationHoldState,
+  revalidatePublicationHold,
   shouldWithholdConsumerPublication,
   type PublicationHoldClientState,
 } from '../../src/services/publicationHold';
@@ -622,8 +624,11 @@ function ResultScreenContent() {
    */
   const [publicationSettled, setPublicationSettled] = useState(false);
   const publicationSettledRef = useRef(false);
-  /** Administrative hold — independent of Rateability / scoring engines. */
-  const [publicationHold, setPublicationHold] = useState<PublicationHoldClientState | null>(null);
+  /** Administrative hold — independent of Rateability / scoring engines. Pending until verified. */
+  const [publicationHold, setPublicationHold] = useState<PublicationHoldClientState>(() =>
+    initialPublicationHoldState(String(barcode || ''))
+  );
+  const publicationHoldBarcodeRef = useRef<string>(String(barcode || '').replace(/\D/g, ''));
   /** Barcode for which publicationSettled is latched — used to ignore late network reruns. */
   const settledForBarcodeRef = useRef<string | null>(null);
   const [progressiveProduct, setProgressiveProduct] = useState<ProductWithTrustScore | null>(null);
@@ -732,8 +737,13 @@ function ResultScreenContent() {
     appliedSnapshotAtRef.current = 0;
     setAgreementSnapshot(null);
     setPublicationSettled(false);
-    setPublicationHold(null);
-    void fetchPublicationHold(String(barcode || '')).then(setPublicationHold);
+    const holdBarcode = String(barcode || '').replace(/\D/g, '');
+    publicationHoldBarcodeRef.current = holdBarcode;
+    setPublicationHold(initialPublicationHoldState(holdBarcode));
+    void fetchPublicationHold(holdBarcode).then((state) => {
+      if (publicationHoldBarcodeRef.current !== holdBarcode) return;
+      setPublicationHold(state);
+    });
     // SJ-04/SJ-06: clear presentation product on cross-barcode navigation so a
     // failed retrieval cannot leave the previous product rendered as the new request.
     // Same-barcode settled preserve (resultPublicationLoadGuard) is unchanged.
@@ -1663,11 +1673,33 @@ function ResultScreenContent() {
   // Handle sharing for specific card types
   const handleShare = (cardType: ShareableItem) => {
     if (!product) return;
+    const assessmentShare =
+      cardType === 'truScore' ||
+      cardType === 'negativeTruScore' ||
+      cardType === 'highlights' ||
+      cardType === 'ecoscore';
 
-    setShareInitialMessage('');
-    setAdditiveShare(null);
-    setShareType(cardType);
-    setShareModalVisible(true);
+    const open = () => {
+      setShareInitialMessage('');
+      setAdditiveShare(null);
+      setShareType(cardType);
+      setShareModalVisible(true);
+    };
+
+    if (!assessmentShare) {
+      open();
+      return;
+    }
+
+    const holdBarcode = String(barcode || '').replace(/\D/g, '');
+    void revalidatePublicationHold(holdBarcode).then((state) => {
+      if (publicationHoldBarcodeRef.current !== holdBarcode) return;
+      setPublicationHold(state);
+      if (shouldWithholdConsumerPublication(state)) {
+        return;
+      }
+      open();
+    });
   };
 
   const productShareName = () =>
@@ -2452,9 +2484,7 @@ function ResultScreenContent() {
 
         {/* TruScore Card. Info opens How this is scored (S27); score disc / Confidence open data-limitations (S26). */}
         {/* Administrative hold withholds consumer publication without changing engine outputs. */}
-        {shouldWithholdConsumerPublication(
-          publicationHold || { status: 'none', barcode: String(barcode || '') }
-        ) ? (
+        {shouldWithholdConsumerPublication(publicationHold) ? (
           <TouchableOpacity
             style={[styles.card, resultEmeraldCard(!!darkMode)]}
             onPress={() =>
@@ -3835,20 +3865,32 @@ function ResultScreenContent() {
       {/* Share Modal */}
       {product && (
         <ShareModal
-          visible={shareModalVisible}
+          visible={
+            shareModalVisible && !shouldWithholdConsumerPublication(publicationHold)
+          }
           onClose={() => {
             setShareModalVisible(false);
             setShareInitialMessage('');
             setAdditiveShare(null);
           }}
           product={product}
-          truScore={truScore || undefined}
-          publicationSettled={publicationSettled}
+          truScore={
+            shouldWithholdConsumerPublication(publicationHold)
+              ? undefined
+              : truScore || undefined
+          }
+          publicationSettled={
+            shouldWithholdConsumerPublication(publicationHold) ? false : publicationSettled
+          }
           shareType={shareType}
-          highlightEntries={(scoreHighlights?.promoted ?? []).map((story) => ({
-            pillar: story.pillar,
-            text: story.l1,
-          }))}
+          highlightEntries={
+            shouldWithholdConsumerPublication(publicationHold)
+              ? []
+              : (scoreHighlights?.promoted ?? []).map((story) => ({
+                  pillar: story.pillar,
+                  text: story.l1,
+                }))
+          }
           country={shareType === 'countryOfManufacture' ? shareManufacturingCountryLabel : undefined}
           initialCustomMessage={shareInitialMessage}
           additiveShare={additiveShare}

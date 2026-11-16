@@ -188,6 +188,11 @@ module.exports = {
       legalDocumentsTestReady: process.env.EXPO_PUBLIC_LEGAL_DOCUMENTS_TEST_READY === '1' ? '1' : '0',
       /** Mirror of EXPO_PUBLIC_STORE_RELEASE for runtime gates that must not rely on babel inlining */
       storeRelease: process.env.EXPO_PUBLIC_STORE_RELEASE === '1' ? '1' : '0',
+      /**
+       * Closed UAT only: allow scanning when hold store is not yet configured.
+       * Store/public releases must leave this unset/0 (fail closed).
+       */
+      publicationHoldOptional: process.env.EXPO_PUBLIC_PUBLICATION_HOLD_OPTIONAL === '1' ? '1' : '0',
       // EAS project ID - Required for EAS Build
       // Note: This is commented out for Expo Go development to prevent update errors
       // Uncomment when building with EAS Build for production

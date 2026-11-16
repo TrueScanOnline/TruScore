@@ -114,9 +114,13 @@ SHARE_EVENT_TELEMETRY_ENABLED=
 EXPO_PUBLIC_SHARE_EVENT_TELEMETRY=
 
 # Administrative publication holds (POST requires RVEEL_FOUNDER_ADMIN_TOKEN)
+# Token must be at least 24 characters. Unconfigured Postgres is NEVER treated as "no hold".
 RVEEL_FOUNDER_ADMIN_TOKEN=
+PUBLICATION_HOLD_OPERATIONAL=0
+PUBLICATION_HOLD_CORS_ORIGIN=
 # Postgres required to persist holds (same DATABASE_URL / POSTGRES_URL family)
 ```
+
 
 ---
 

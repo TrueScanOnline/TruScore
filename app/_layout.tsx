@@ -193,9 +193,15 @@ function RootLayout() {
         
         // Require legal acknowledgement even if an older build skipped it.
         // Do not invent Terms/Privacy acceptance while destinations remain unpublished.
+        // When published Terms/Privacy become ready, prior disclaimer ack alone is insufficient.
+        const { hasCurrentPublishedLegalAcceptance } = await import('../src/config/legalGate');
         const legalAck = !!settings.legalDisclaimersAcceptedAt;
-        const hasCompleted = settings.hasCompletedOnboarding === true && legalAck;
-        if (settings.hasCompletedOnboarding === true && !legalAck) {
+        const publishedLegalOk = hasCurrentPublishedLegalAcceptance(
+          settings.legalDocumentsAcceptedVersion
+        );
+        const hasCompleted =
+          settings.hasCompletedOnboarding === true && legalAck && publishedLegalOk;
+        if (settings.hasCompletedOnboarding === true && (!legalAck || !publishedLegalOk)) {
           // Force onboarding legal step on next paint without fabricating acceptance.
           await useSettingsStore.getState().setHasCompletedOnboarding(false);
         }

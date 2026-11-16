@@ -22,6 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const origin = `${proto}://${host}`;
 
   let productData: any = null;
+  let heldPreview = false;
   try {
     // Prefer the same public host the receiver opened, then explicit preview base, then prod.
     const previewBase =
@@ -29,13 +30,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       origin ||
       'https://truscoreapi.vercel.app';
     const productResponse = await fetch(
-      `${previewBase.replace(/\/$/, '')}/api/product-preview?barcode=${encodeURIComponent(barcode)}`
+      `${previewBase.replace(/\/$/, '')}/api/product-preview?barcode=${encodeURIComponent(barcode)}`,
+      { headers: { 'Cache-Control': 'no-cache' } }
     );
     if (productResponse.ok) {
       productData = await productResponse.json();
+      heldPreview =
+        typeof productData?.publication_hold === 'string' &&
+        productData.publication_hold.length > 0;
+      if (heldPreview) {
+        // Do not redistribute held assessment-adjacent preview fields on the teaser.
+        productData = {
+          barcode,
+          product_name: productData.product_name,
+          product_name_en: productData.product_name_en,
+          brands: productData.brands,
+          trust_score: null,
+          trust_score_breakdown: null,
+          publication_hold: productData.publication_hold,
+        };
+      }
+    } else if (productResponse.status === 503) {
+      heldPreview = true;
+      productData = {
+        barcode,
+        trust_score: null,
+        trust_score_breakdown: null,
+        publication_hold: 'hold_state_unavailable',
+      };
     }
   } catch (error) {
     console.error('Error fetching product data:', error);
+    // Fail closed for teaser media when preview host is inconsistent.
+    heldPreview = true;
+    productData = {
+      barcode,
+      trust_score: null,
+      trust_score_breakdown: null,
+      publication_hold: 'hold_state_unavailable',
+    };
   }
 
   const html = renderShareLandingHtml({
@@ -47,6 +80,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=300');
+  res.setHeader('Cache-Control', heldPreview ? 'no-store' : 'public, max-age=60, must-revalidate');
   return res.status(200).send(html);
 }

@@ -179,10 +179,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             : undefined,
       });
 
+      // Short/no cache so a newly activated hold cannot be served from a stale CDN edge.
       res.setHeader(
         'Cache-Control',
-        administrativeHold ? 'no-store' : 'public, max-age=3600'
+        administrativeHold ? 'no-store' : 'public, max-age=60, must-revalidate'
       );
+      res.setHeader('Vary', 'Accept-Encoding');
       if (administrativeHold) {
         return res.status(200).json({
           ...preview,

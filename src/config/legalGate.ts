@@ -29,3 +29,21 @@ export function arePublishedLegalDocumentsReady(): boolean {
 export function requiresPublishedLegalDocumentAcceptance(): boolean {
   return arePublishedLegalDocumentsReady();
 }
+
+/**
+ * Prior disclaimer acknowledgement alone is never enough once published Terms/Privacy are ready.
+ * Binding acceptance must match the current LEGAL_DOCUMENTS_VERSION.
+ */
+export function hasCurrentPublishedLegalAcceptance(
+  acceptedVersion: string | null | undefined
+): boolean {
+  if (!requiresPublishedLegalDocumentAcceptance()) {
+    // Drafts unpublished — version stamp must remain unset / non-binding.
+    return true;
+  }
+  return (
+    typeof acceptedVersion === 'string' &&
+    acceptedVersion.length > 0 &&
+    acceptedVersion === LEGAL_DOCUMENTS_VERSION
+  );
+}

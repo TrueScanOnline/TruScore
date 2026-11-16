@@ -20,7 +20,7 @@ function productWith(
 }
 
 describe('listPublishedOverallScore', () => {
-  it('Rated publication → publishedScore', () => {
+  it('Rated publication without hold verification → null (list fail-closed)', () => {
     const score = listPublishedOverallScore(
       productWith({
         _publication: {
@@ -38,6 +38,29 @@ describe('listPublishedOverallScore', () => {
           },
         } as CrossPillarPublicationSnapshot,
       })
+    );
+    expect(score).toBeNull();
+  });
+
+  it('Rated publication with holdVerifiedNotWithheld → publishedScore', () => {
+    const score = listPublishedOverallScore(
+      productWith({
+        _publication: {
+          settled: true,
+          overall: {
+            publicationStatus: 'rated',
+            publishedScore: 64,
+            internalScore: 72,
+            confidence: 'limited',
+            sourceQuality: 'community_or_user',
+            s26: null,
+            confidenceReasonCode: 'x',
+            assessmentLanes: {},
+            diagnostic: {},
+          },
+        } as CrossPillarPublicationSnapshot,
+      }),
+      { holdVerifiedNotWithheld: true }
     );
     expect(score).toBe(64);
   });
