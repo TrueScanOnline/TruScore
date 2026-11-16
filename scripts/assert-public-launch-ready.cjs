@@ -71,7 +71,20 @@ function main() {
   const flags = new Set(process.argv.slice(2));
   const profile = process.env.EAS_BUILD_PROFILE || '';
   const easBuild = process.env.EAS_BUILD === 'true' || Boolean(profile);
-  const publicRelease = flags.has('--public') || flags.has('--release') || (easBuild && !CLOSED_UAT.has(profile));
+  // A named UAT profile is not sufficient if a future edit changes its runtime flags.
+  // Refuse the UAT exception unless the checked-in EAS profile explicitly preserves
+  // non-store runtime and closed prelaunch UAT semantics.
+  let verifiedClosedUat = false;
+  if (CLOSED_UAT.has(profile)) {
+    try {
+      const eas = JSON.parse(fs.readFileSync(path.join(ROOT, 'eas.json'), 'utf8'));
+      const conf = eas.build?.[profile];
+      verifiedClosedUat =
+        conf?.env?.EXPO_PUBLIC_STORE_RELEASE === '0' &&
+        conf?.env?.EXPO_PUBLIC_CLOSED_PRELAUNCH_VISUAL_UAT === '1';
+    } catch { verifiedClosedUat = false; }
+  }
+  const publicRelease = flags.has('--public') || flags.has('--release') || (easBuild && !verifiedClosedUat);
   if (flags.has('--status') && !publicRelease) {
     const errors = inspect();
     console.log(errors.length ? '[RVEEL MVP LEGAL RELEASE: BLOCKED]' : '[RVEEL MVP legal registry: check passed]');
