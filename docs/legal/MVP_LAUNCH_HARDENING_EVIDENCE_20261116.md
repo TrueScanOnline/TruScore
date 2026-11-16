@@ -1,115 +1,129 @@
 # MVP launch hardening — consolidated evidence
 
-**Date:** 16 November 2026 (final stabilisation same day)  
+**Date:** 16 November 2026 (stabilisation + closed technical UAT)  
 **Branch:** `build/w5-founders-native-20261114`  
-**Starting SHA (stabilisation):** `79df3dc04f24c5fe6816db48e19eeac13e937651`  
-**Prior hardening implementation SHA:** `5e7fcbc59a685655f7e6a7687571e9e481dc76eb`  
-**Final remote SHA:** `88176e7a9af0162cb5c598b3fa50c7154f710988`
+**Closed UAT start HEAD:** `82688a30ecc93961b808ca8ffbd59d3eda769d56`  
+**Stabilisation implementation:** `88176e7a9af0162cb5c598b3fa50c7154f710988`  
+**Final remote SHA:** *(filled at push)*
 
 **Doctrine note:** Administrative hold and Result orchestration remain AMBER presentation/external-control surfaces under founder authorisation. Scoring engines, Rateability, Confidence, and Evidence Authority admission rules were not modified.
 
 ---
 
-## 1. Stabilisation fixes (this pass)
+## 0. Permanent public release lock (verified this UAT)
+
+| Check | Result |
+|---|---|
+| `node --test scripts/assert-public-launch-ready.test.cjs` | **6/6 PASS** |
+| `npm run legal:release-preflight` | **exit 1** (public denied) |
+| All 15 `MVP_PUBLIC_LAUNCH_GATE.json` requirements | **PENDING** |
+| Closed UAT EAS profiles (`uat-founders-*`, `development`, dynamic-signals UAT) | Still exempt when `STORE_RELEASE=0` + `CLOSED_PRELAUNCH_VISUAL_UAT=1` |
+| Store/production/preview/unknown profiles | Fail closed |
+
+Public release remains **NO-GO**. See `MVP_PUBLIC_LAUNCH_BLOCKER.md`.
+
+---
+
+## 1. Stabilisation fixes (prior + UAT delta)
 
 ### 1.1 Administrative holds reliable
-- Unconfigured Postgres is **never** returned as confirmed `held:false` (`hold_store_unconfigured` → 503 / unavailable).
-- `PUBLICATION_HOLD_OPERATIONAL=1` documents production readiness; persistent DB required for mutations and confirmed reads.
+- Unconfigured Postgres is **never** returned as confirmed `held:false`.
+- `PUBLICATION_HOLD_OPERATIONAL=1` + persistent DB required for operational service.
 - Audit table `publication_hold_events` records hold/release with authoriser, reason, timestamp.
-- Admin POST: timing-safe token compare (min 24 chars), required `authorizedBy`, boolean `held`, barcode validation, non-wildcard CORS for writes.
-- Integration tests: missing DB, DB failure, activate, wrong GTIN, release, validation errors.
+- Admin POST: timing-safe token (≥24), `authorizedBy`, validation, non-wildcard write CORS.
 
 ### 1.2 Client publication gaps
-- Hold starts as **pending** (withhold) until verified.
-- Stale async responses ignored via barcode ref.
-- Score/highlights/ecoscore shares revalidate hold before opening ShareModal.
-- ShareModal suppressed / score+highlights stripped while withheld.
-- Search/Favourites list scores fail closed unless `holdVerifiedNotWithheld` (lists do not verify live → no cached score display).
+- Pending until verified; barcode race guard; share revalidate; list scores withheld without live verify.
+- **UAT defect fix:** Result mount now calls `revalidatePublicationHold` so a short held-cache cannot keep withholding after authorised release for the same GTIN.
 
 ### 1.3 Web preview / caching
-- Preview: `max-age=60, must-revalidate` when not held; `no-store` when held/unavailable.
-- `/barcode/{barcode}` strips image/nutrient fields under hold; `no-store` when held; fail-closed teaser on preview 503/network error.
+- Preview/barcode: `no-store` when held; short `max-age=60, must-revalidate` when not; held preview strips image/nutriments.
 
-### 1.4 Legal version gate
-- `hasCurrentPublishedLegalAcceptance` — disclaimer ack ≠ Terms acceptance once docs ready.
-- Root launch rechecks version; forces onboarding when published docs ready and version mismatch.
-- Drafts remain unpublished; `legalDestinations.*.ready` unchanged (`false`).
-
-### 1.5 OFF write containment
-- Gates cover product submit, photo upload, manufacturing-country OFF submit, server image dispatch, EA `offTransport`.
-- Public contribution remains disabled by default.
-- Private EA evidence processing preserved (non-OFF paths).
-
-### 1.6 Expo Go closed UAT
-- `EXPO_PUBLIC_PUBLICATION_HOLD_OPTIONAL=1` in `.env.development` only — allows scanning when hold store unconfigured on UAT.
-- Store/public builds must leave optional unset (fail closed).
+### 1.4–1.6 Legal / OFF / Expo Go
+- Unchanged: drafts unpublished; OFF public contribution gated off; `.env.development` may set `PUBLICATION_HOLD_OPTIONAL=1` for closed UAT only.
 
 ---
 
-## 2. Intentionally disabled / not done
+## 2. Closed UAT backend (`truscoreapi-uat` only)
 
-| Item | Status |
+| Item | Evidence |
 |---|---|
-| Public OFF contribution | Disabled |
-| Share-event / local share analytics | Disabled (prior pass) |
-| Privacy/Terms publication | Not published |
-| Genuine live UAT hold cycle on deployed backend | **BLOCKED** — requires backend deploy + Postgres + founder token (not invented as pass) |
-| Device/Expo Go visual re-verify of this stabilisation SHA | **BLOCKED / outstanding** — run after Metro reload; older APK does not contain this JS |
+| Project | Linked `backend/vercel/.vercel/project.json` → **`truscoreapi-uat`** (not `truscoreapi`) |
+| DB isolation | UAT vs production Neon project IDs **differ** (suffixes `…0778` vs `…1682`); hosts differ; same default DB *name* only |
+| Deploy | `dpl_Cs5uwNsncq5XutXDi7YxCTb98axv` → alias `https://truscoreapi-uat.vercel.app` |
+| Env (names only) | `RVEEL_FOUNDER_ADMIN_TOKEN`, `PUBLICATION_HOLD_OPERATIONAL=1`, `PUBLICATION_HOLD_CORS_ORIGIN` on Production+Development (Preview CLI branch prompt left incomplete; Production alias used) |
+| Secrets | Token generated locally in TEMP only; **not** logged, committed, or printed in this handoff |
+
+**No production (`truscoreapi`) deploy was performed.**
 
 ---
 
-## 3. Scoring / EA preservation
+## 3. Live hold cycle (fixture `4088700300930` Grandessa Mixed Berry Premium Jam)
 
-- No pillar/engine/rateability/admission edits.
-- Hold overlays consumer publication only.
+| Step | Result |
+|---|---|
+| 1 Unheld publication | GET `held:false`; Result showed **56 Fair** (Body 11 / Planet 14 / Claims 15 / Transparency 16); Limited confidence |
+| 2 Authorised hold | POST 200 `administrative_hold`; unauth POST **401** |
+| 3 Result withhold | Device: **ADMINISTRATIVE HOLD** / “Assessment temporarily unavailable” / distinct from NR/Checking; product identity + nutrition retained; score gauge withheld |
+| 4 Web preview withhold | `publication_hold=administrative_hold`, **no** `image_url`/`nutriments`, `Cache-Control: no-store` |
+| 5 Deep-link / barcode teaser | `/barcode/{gtin}` `no-store`; no OFF image / score-like content while held |
+| 6 Wrong GTIN | Other barcode remained `held:false` |
+| 7 DB failure ≠ no-hold | **Live intentional DB outage not performed** (shared UAT DB healthy). Covered by `publicationHoldStore.integration.test.ts` |
+| 8 Audit history | DB rows: hold + release events with `authorized_by=closed-uat-operator` and reasons |
+| 9 Authorised release | POST release; GET `held:false`; preview image restored; `Cache-Control: public, max-age=60, must-revalidate` |
+| 10 Result after release | Device: score **56 Fair** restored with **same pillar scores** (11/14/15/16) |
+| 11 Scoring / EA | Engines untouched; Claims 15/25 unchanged across hold cycle |
+
+Local screenshots (untracked `artifacts/closed-uat-20261116/`): unheld Result, held Result, Account guest Free, released Result.
 
 ---
 
-## 4. Automated verification (this machine)
+## 4. Application QA (Android Expo Go)
+
+| Area | Result |
+|---|---|
+| Legal ack / returning user | Metro: `hasCompletedOnboarding:true`, `legalDisclaimersAcceptedAt` set, `willShowOnboardingFlow:false` → Main/Scan |
+| Account | Guest / RVEEL Free; Privacy & Data present; Preferences Coming soon |
+| OFF public contribution | Remains gated (gates tests PASS); unknown-product UI may mention OFF help text without enabling write |
+| Share telemetry | Default OFF (gates tests) |
+| Rated path | 56 Fair published when not held |
+| Hold path | Assessment withheld; not NR/Checking |
+| iOS TestFlight | **BLOCKED** — no iOS test environment on this machine this session |
+
+---
+
+## 5. Automated verification
 
 | Suite | Result |
 |---|---|
-| `src/__tests__/unit/legal/*` (gates, hold store, hold client, legal version, OFF containment) | PASS |
-| `listPublishedScore.test.ts` | PASS |
-| `photoUploadFrontOff.test.ts` | PASS |
-| `accountStage1.contract.test.ts` | PASS |
-| `wave5/consumptionGuards.section10_4.test.ts` | PASS |
-| `yarn tsc --noEmit -p tsconfig.json` | PASS |
-
-### Required live hold cycle (deployed UAT)
-
-| Step | Status |
-|---|---|
-| 1 Product publishes before hold | **BLOCKED** — needs deployed `/api/publication-hold` + operational Postgres |
-| 2 Authorised hold activation | BLOCKED |
-| 3 Result/share withhold | BLOCKED (unit coverage only) |
-| 4 Web preview withhold | BLOCKED (code present; not live-exercised) |
-| 5 DB failure ≠ confirmed no hold | Covered by unit/integration fake; live BLOCKED |
-| 6 Authorised release | BLOCKED |
-| 7 Scoring outputs unchanged | Engine untouched; live compare BLOCKED |
+| Legal release-lock tests | PASS (6) |
+| Public release preflight | FAIL closed (exit 1) — expected |
+| `src/__tests__/unit/legal/*` | PASS |
+| Account Stage 1 + Wave5 §10.4 + listPublishedScore | PASS |
+| `yarn tsc --noEmit` | PASS |
 
 ---
 
-## 5. Remaining release blockers
+## 6. Remaining concrete blockers (public release)
 
-1. Deploy hold API + Postgres; set `PUBLICATION_HOLD_OPERATIONAL=1` and strong `RVEEL_FOUNDER_ADMIN_TOKEN`.
-2. Live UAT hold cycle evidence (steps above).
-3. Legal entity, monitored contacts, counsel-approved Privacy/Terms publication + readiness flip.
-4. BBFAW/KTC clearance (letters drafted, not sent/approved).
-5. Store builds must not ship `PUBLICATION_HOLD_OPTIONAL=1`.
-6. Separate public launch authorisation.
+1. Permanent legal gate: entity, NZ/AU counsel, Terms/Privacy publication, contacts, licences (BBFAW/KTC/OFF), founder+counsel sign-off, protected `RVEEL_APPROVED_RELEASE_SHA`.
+2. iOS device/TestFlight visual regression on this tip.
+3. Live intentional DB-failure exercise on UAT (optional ops drill; unit coverage exists).
+4. Organisational: no public store submission; keep store builds free of `PUBLICATION_HOLD_OPTIONAL=1`.
+5. Preview-env hold vars incomplete via CLI (Production alias verified; optional to finish Preview).
 
 ---
 
-## 6. Release go / no-go
+## 7. Release stance
 
 **NO-GO for public legal launch.**  
-**Conditional GO for closed UAT** after backend hold deploy and Expo Go visual pass on this SHA.
+**GO for continued closed technical UAT** on `truscoreapi-uat` + Expo Go with hold cycle demonstrated.
 
 ---
 
-## 7. Confirmation
+## 8. Confirmation
 
+- No production backend deployment.
 - No Premium/auth/billing activation.
 - No public Privacy/Terms publication.
 - `artifacts/` left untracked.

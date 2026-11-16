@@ -139,7 +139,6 @@ import EmeraldWallpaper from '../../src/components/result/EmeraldWallpaper';
 import EmeraldScoreFrame from '../../src/components/product/emerald/EmeraldScoreFrame';
 import PublicationHoldNotice from '../../src/components/product/PublicationHoldNotice';
 import {
-  fetchPublicationHold,
   initialPublicationHoldState,
   revalidatePublicationHold,
   shouldWithholdConsumerPublication,
@@ -740,7 +739,9 @@ function ResultScreenContent() {
     const holdBarcode = String(barcode || '').replace(/\D/g, '');
     publicationHoldBarcodeRef.current = holdBarcode;
     setPublicationHold(initialPublicationHoldState(holdBarcode));
-    void fetchPublicationHold(holdBarcode).then((state) => {
+    // Always revalidate on Result mount — a short held-cache must not keep
+    // withholding after an authorised release for the same GTIN.
+    void revalidatePublicationHold(holdBarcode).then((state) => {
       if (publicationHoldBarcodeRef.current !== holdBarcode) return;
       setPublicationHold(state);
     });

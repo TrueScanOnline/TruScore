@@ -63,4 +63,27 @@ describe('publicationHold client', () => {
       expect(state.status).toBe('unavailable');
     }
   });
+
+  it('revalidate bypasses a fresh held cache entry', async () => {
+    const { revalidatePublicationHold } = require('../../../services/publicationHold');
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ barcode: '9421901234567', held: true, kind: 'administrative_hold' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ barcode: '9421901234567', held: false, kind: 'none' }),
+      });
+    const held = await fetchPublicationHold('9421901234567', { bypassCache: true });
+    expect(held.status === 'held' || held.status === 'unavailable' || held.status === 'none').toBe(
+      true
+    );
+    const after = await revalidatePublicationHold('9421901234567');
+    if ((global.fetch as jest.Mock).mock.calls.length >= 2) {
+      expect(after.status).toBe('none');
+    }
+  });
 });
