@@ -4,8 +4,9 @@
 **Branch:** `build/w5-founders-native-20261114`  
 **Worktree:** `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`  
 **Account MVP completion tip (prior):** `183db04e7a9ed612a6bdbe4a19f7abbda8b9a903`  
-**Final acceptance-correction starting remote HEAD:** `183db04e7a9ed612a6bdbe4a19f7abbda8b9a903`  
-**Final pushed SHA:** _(filled after push of this acceptance-correction commit)_
+**Acceptance-correction starting remote HEAD:** `183db04e7a9ed612a6bdbe4a19f7abbda8b9a903`  
+**Implementation SHA:** `a9ff1c668600d4ee616e71160b2b0a12575a4fed`  
+**Final pushed SHA:** `a9ff1c668600d4ee616e71160b2b0a12575a4fed`
 
 ## Doctrine classification
 
