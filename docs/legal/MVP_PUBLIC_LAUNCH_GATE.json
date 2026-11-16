@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "publicReleaseStatus": "BLOCKED",
+  "initialMarkets": [
+    "NZ",
+    "AU"
+  ],
+  "futureMarketsPolicy": "No additional country/territory is permitted without separate documented legal/privacy review and explicit approval.",
+  "legalEntity": {
+    "registeredName": null,
+    "incorporationCountry": null,
+    "registrationIdentifier": null
+  },
+  "requirements": [
+    {
+      "id": "operating_entity_and_incorporation",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "territory_nz_counsel_review",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "territory_au_counsel_review",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "manufacturer_liability_and_misleading_claims",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "privacy_and_cross_border_processing",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "published_terms_and_privacy",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "versioned_legal_acceptance",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "monitored_support_privacy_and_disputes",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "manufacturer_dispute_and_hold_uat",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "off_database_and_image_reuse",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "off_contribution_permissions_and_api_identity",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "bbfaw_ktc_and_certification_rights",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "retention_deletion_and_breach_response",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "full_device_backend_share_regression",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    },
+    {
+      "id": "app_store_disclosures_and_public_domain",
+      "status": "PENDING",
+      "evidenceRef": null,
+      "reviewer": null,
+      "reviewedAt": null
+    }
+  ],
+  "releaseCandidateSourceRef": null,
+  "finalApproval": {
+    "founder": {
+      "status": "PENDING",
+      "name": null,
+      "approvedAt": null,
+      "evidenceRef": null
+    },
+    "qualifiedCounsel": {
+      "status": "PENDING",
+      "name": null,
+      "approvedAt": null,
+      "evidenceRef": null
+    }
+  }
+}
