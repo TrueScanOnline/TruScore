@@ -17,105 +17,240 @@
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "NOT_STARTED",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "The founder has not selected incorporation country, operating/contracting entity, registered address, control structure or registration ID. NZ and AU founders; NZ/AU initial users. No tax or legal entity approval.",
+        "whatMustHappenBeforeApproval": "Run an evidence-led jurisdiction and operating-substance analysis, including where management/servers/contracts/business decisions occur; select entity, founder IP assignment, capitalisation and corporate governance with NZ/AU tax and legal advisers. Do not assume company label shields publication or personal misconduct.",
+        "responsibleReviewers": "Founder, corporate counsel, cross-border tax advisers",
+        "isApproval": false
+      }
     },
     {
       "id": "territory_nz_counsel_review",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "NOT_STARTED",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "NZ market intended; B2 legal analysis is preliminary, not a signed NZ lawyer opinion.",
+        "whatMustHappenBeforeApproval": "NZ counsel to assess Fair Trading Act misleading/deceptive risk, defamation and other commercial torts, privacy, consumer protections, contract terms, remedies, enforcement and local service/insurance for the actual operating entity and live UI.",
+        "responsibleReviewers": "Qualified NZ commercial/media/privacy counsel",
+        "isApproval": false
+      }
     },
     {
       "id": "territory_au_counsel_review",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "NOT_STARTED",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "AU market intended; B2 legal analysis is preliminary, not a signed Australian lawyer opinion.",
+        "whatMustHappenBeforeApproval": "AU counsel to assess ACL, defamation eligibility for corporate plaintiffs and business alternatives such as injurious falsehood, consumer law, privacy/APP applicability and unfair contract terms, cross-border service and court exposure.",
+        "responsibleReviewers": "Qualified AU commercial/media/privacy counsel",
+        "isApproval": false
+      }
     },
     {
       "id": "manufacturer_liability_and_misleading_claims",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "PARTIAL_TECHNICAL",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "Independently reviewed code separates score/NR/Checking from administrative holds. Cursor's 16 Nov closed UAT evidence records 56 Fair (Body 11, Planet 14, Claims 15, Transparency 16) before and after a hold/release. Reporting mailto and case process exist but no confirmed staffed external operations or counsel-reviewed publication claims.",
+        "whatMustHappenBeforeApproval": "Build a per-publication substantiation bundle: exact GTIN/market/variant, source record and licence, source freshness, issuer/company mapping, scoring version/pillar details, confidence caveat, rendered claim, sharing snapshot and correction history. Assess actual on-screen wording, highlights, negative score shares, recalls and benchmark narratives for objectively false implication. Staff a complaints inbox and run a documented triage/review/escalation process. Do not change protected scores as a legal shortcut.",
+        "responsibleReviewers": "Product governance owner, founder risk officer, NZ/AU counsel",
+        "isApproval": false
+      }
     },
     {
       "id": "privacy_and_cross_border_processing",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "PARTIAL_TECHNICAL",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "Data-flow audit and Privacy draft exist; optional share-event and local share analytics default OFF. Local history/favourites/settings and server/network events differ. No final processor list, legal-entity mapping or privacy opinion.",
+        "whatMustHappenBeforeApproval": "Make a verified data inventory including logs, IP addresses, photo/evidence storage, contributor identifiers, devices and subprocessors. Establish applicable NZ Privacy Act/IPPs including IPP3A indirect collection and overseas disclosures, AU APP/small-business exceptions if applicable, security, access/correction and subprocessors. Minimise collection by default.",
+        "responsibleReviewers": "Privacy officer candidate, counsel, backend owner",
+        "isApproval": false
+      }
     },
     {
       "id": "published_terms_and_privacy",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "DRAFT_ONLY",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "Privacy Policy and Terms drafts exist; legal destinations are intentionally not ready and public URLs previously failed. Nothing binding is approved or published.",
+        "whatMustHappenBeforeApproval": "Insert actual contracting entity, contacts, governing law, complaint/privacy procedures and accurate verified app behaviour; obtain dual-market legal approval; publish stable URLs and independently test access, rendering, change notices and archival before activating readiness.",
+        "responsibleReviewers": "Founder and qualified counsel",
+        "isApproval": false
+      }
     },
     {
       "id": "versioned_legal_acceptance",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "PARTIAL_TECHNICAL",
+        "riskPriority": "High",
+        "whatExistsOrIsReported": "Skip-intro bypass mitigated; disclaimer acknowledgment is separate from published Terms acceptance. Version check exists in code; legal document version still denotes unpublished and ready flags false.",
+        "whatMustHappenBeforeApproval": "Once approved Terms/Privacy are public, implement/confirm precise version IDs, affirmative informed consent, dated audit evidence, returning-user reacceptance on material change, accessibility, and device end-to-end verification; do not stamp draft acceptance.",
+        "responsibleReviewers": "App owner and counsel",
+        "isApproval": false
+      }
     },
     {
       "id": "monitored_support_privacy_and_disputes",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "NOT_OPERATIONAL",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "Report route uses configured support email, but real continuously monitored support/legal/privacy inbox and named accountable officer are not confirmed. No invented placeholder is acceptable.",
+        "whatMustHappenBeforeApproval": "Provision and staff secure monitored inbox with named owner/backup; create ticket/case log, severity triage, legal hold of evidence, escalation to counsel, documented response targets and periodic drills. Verify actual reporting works from all consumer routes and jurisdictions.",
+        "responsibleReviewers": "Founder operations and privacy officer",
+        "isApproval": false
+      }
     },
     {
       "id": "manufacturer_dispute_and_hold_uat",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "PARTIAL_UAT",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "Closed UAT evidence at 3fc4180 reports isolated Neon-backed hold API, operational flag, unauthorised POST 401, hold/release audit rows, web no-store, Android Result withholding and exact 56-point restoration. Vercel UAT deployment dpl_Cs5uwNsncq5XutXDi7YxCTb98axv independently confirmed READY. Tests were executed/reported by Cursor, not independently replayed here. Live DB-failure drill not run.",
+        "whatMustHappenBeforeApproval": "Complete negative-path fault-injection/UAT, verify security review of token, CORS, audit integrity, DB isolation and production readiness, test stale clients/CDN/cached social shares, all share and score surfaces, iOS and public production-like staging. Document emergency on-call and manual release approval. Do not enable public release on UAT evidence alone.",
+        "responsibleReviewers": "Backend/security owner, founder operations",
+        "isApproval": false
+      }
     },
     {
       "id": "off_database_and_image_reuse",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "PARTIAL_TECHNICAL",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "OFF attribution added on share landing; app and previews use OFF products/images. Licence review identified ODbL database, DbCL content and CC BY-SA photographs; full commercial share-alike/attribution/derivative database analysis unresolved.",
+        "whatMustHappenBeforeApproval": "Counsel/rights specialist to map each OFF use (raw data, scores, caches, product photos, native share cards, OG teasers, exports) against ODbL/DbCL/CC BY-SA, compatibility, attribution, share-alike and packaging/trademark rights. Validate current OFF API terms and rate limits. If clearance incomplete, restrict the specific unlicensed output, not alter numerical score engines.",
+        "responsibleReviewers": "Licensing counsel and data product owner",
+        "isApproval": false
+      }
     },
     {
       "id": "off_contribution_permissions_and_api_identity",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "PARTIAL_TECHNICAL",
+        "riskPriority": "High",
+        "whatExistsOrIsReported": "Client/server automatic public OFF contribution defaults OFF; fake contact removed, but real verified API User-Agent contact not configured. Explicit rights-grant/consent UI not implemented. UAT should not send unconsented writes to OFF production.",
+        "whatMustHappenBeforeApproval": "Keep public OFF writes disabled until correct contributor image/data rights, affirmative contribution consent and separate private-EA processing are verified. Configure real app identification and official API practices. Recheck all legacy/server write routes, including any UAT credential paths. Use OFF staging for integration tests where feasible.",
+        "responsibleReviewers": "Backend owner, licensing counsel",
+        "isApproval": false
+      }
     },
     {
       "id": "bbfaw_ktc_and_certification_rights",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "UNCLEARED",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "BBFAW and KnowTheChain benchmark inputs/company-named narrative appear in Claims; request letter drafts were prepared but no written licence or adequate permission confirmation is evidenced.",
+        "whatMustHappenBeforeApproval": "Send permission requests; document rights for extraction, mapping, copies, updates, attribution, logos and commercial display. Verify entity parent mapping and source dates. If not cleared, evaluate a narrowly scoped governed output restriction or licensed substitute with explicit founder/counsel/scoring-invariant review; never silently change Claims pillar.",
+        "responsibleReviewers": "Licensing lead, Claims governance owner, counsel",
+        "isApproval": false
+      }
     },
     {
       "id": "retention_deletion_and_breach_response",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "DRAFT_ONLY",
+        "riskPriority": "High",
+        "whatExistsOrIsReported": "Privacy draft and B2 data inventory exist; local data clearing and storage controls vary; no verified complete retention schedule, production deletion workflow or serious-breach incident exercise.",
+        "whatMustHappenBeforeApproval": "Adopt data-class retention schedule and deletion request workflow, backup/log retention, evidence preservation exceptions, least-privilege security, incident escalation and legal notification matrix for NZ/AU. Test access/correction/deletion, photo erasure and breach response.",
+        "responsibleReviewers": "Privacy officer, security owner, counsel",
+        "isApproval": false
+      }
     },
     {
       "id": "full_device_backend_share_regression",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "PARTIAL_UAT",
+        "riskPriority": "High",
+        "whatExistsOrIsReported": "Cursor reports Android Expo Go scan/Result/Account and live hold/release with screenshots in untracked local artifacts. iOS/TestFlight unavailable; intentional live DB outage omitted; latest JS native build, deep link, cache and all share modes not exhaustively independently verified.",
+        "whatMustHappenBeforeApproval": "Run full signed/real-device Android and iOS end-to-end matrix: ordinary Rated, NR, Checking, legal gate, account, OFF write-off, share cards, history/favourites, stale/cache holds and release, backend faults, accessibility. Archive reproducible logs/screenshots with commit, build and environment identifiers; retest after any material change.",
+        "responsibleReviewers": "Mobile QA and backend QA owners",
+        "isApproval": false
+      }
     },
     {
       "id": "app_store_disclosures_and_public_domain",
       "status": "PENDING",
       "evidenceRef": null,
       "reviewer": null,
-      "reviewedAt": null
+      "reviewedAt": null,
+      "currentReview": {
+        "asOf": "2026-11-16",
+        "implementationState": "NOT_READY",
+        "riskPriority": "Critical",
+        "whatExistsOrIsReported": "Permanent release-lock code committed; public preflight reported failing as expected and 6/6 tests reported passing. No public store submission; website/legal domain, store listing, contact and store credential restrictions not verified. A repository guard cannot prevent manual upload of an earlier binary.",
+        "whatMustHappenBeforeApproval": "Establish protected branch/environments, EAS/App Store Connect/Play least-privilege permissions and mandatory release reviewer, approved screenshots/store privacy labels, functioning official domain/legal URLs and controlled promotion. Require exact candidate SHA plus counsel/founder attestation. Assess app availability beyond NZ/AU and geofence/territory restrictions where necessary.",
+        "responsibleReviewers": "Founder release manager, security/platform owner, counsel",
+        "isApproval": false
+      }
     }
   ],
   "releaseCandidateSourceRef": null,
@@ -131,6 +266,179 @@
       "name": null,
       "approvedAt": null,
       "evidenceRef": null
+    }
+  },
+  "currentIndependentAssessment": {
+    "assessmentId": "GPT6-LEGAL-RISK-OPINION-20261116",
+    "recordedAt": "2026-11-16",
+    "assessesSourceHead": "3fc4180b5259adee9f8dfbc894daf7f3fa4dac4c",
+    "scope": "Provisional independent engineering and legal-risk opinion to assist founders, qualified counsel and a subsequent AI agent. NOT a legal opinion, approval, insurance assessment or representation of legal compliance. Never use this field as a substitute for requirements[].status.",
+    "coreConclusion": "The MVP has materially improved engineering containment and produced substantial policy drafts, but the legal risk of inaccurate published product/company representations, third-party IP/data rights and cross-border operation remains unresolved. Legal protections are strongest when lawful corporate structure, evidence-backed claims, working corrections, proper rights and active operations reinforce each other. Disclaimers or labelling the company 'educational' do not neutralise these exposures. Public release NO-GO.",
+    "founderContext": {
+      "foundersLocations": "One founder in New Zealand and another in Australia (founder-supplied project context; verify before legal reliance).",
+      "intendedInitialUsers": [
+        "NZ",
+        "AU"
+      ],
+      "internationalExpansion": "Planned later; not approved by this gate. Scope counsel review to actual accessibility, marketing, contracting, data processing and target audiences, not simply the app-hosting country.",
+      "incorporationStatus": "Undecided; do not assert a legal entity, governing law, app-hosting jurisdiction or tax residence.",
+      "priorities": "The founders previously expressed a jurisdiction-selection weighting of legal protection 66%, tax 30%, other 4%; reconfirm before formal selection. A tax-efficient incorporation alone does not immunise cross-border publication."
+    },
+    "evidenceSeparation": {
+      "independentRepositoryVerification": [
+        "At assessed SHA the exact 15 release requirements remain PENDING, publicReleaseStatus remains BLOCKED and founder/counsel approvals absent.",
+        "Source-code review confirms a release preflight, cloud EAS build hook, published-doc flags off, administrative hold distinct from score semantics and guarded OFF/public telemetry defaults. This is not full runtime verification.",
+        "The comparison from release-lock checkpoint 82688a30 to assessed HEAD 3fc4180 changes Result hold refresh and hardening evidence/test/checklist files, not protected pillar engines."
+      ],
+      "independentlyVerifiedExternal": [
+        "Vercel API reported deployment dpl_Cs5uwNsncq5XutXDi7YxCTb98axv for truscoreapi-uat as READY; this does not independently prove linked alias routing, database isolation, a live hold cycle or release security.",
+        "Official regulator/OFF links in legalResearchPointers give external guidance, not RVEEL-specific legal clearance."
+      ],
+      "cursorReportedNotIndependentlyReexecuted": [
+        "2026-11-16 isolated UAT Neon database and founder-admin token setup; no credentials recorded in this register.",
+        "UAT fixture GTIN 4088700300930 Grandessa Mixed Berry Premium Jam: 56 Fair with pillars 11/14/15/16 before hold, temporarily withheld, then identical score after authorized release. UAT report cites audit-event rows and cache headers.",
+        "Android Expo Go Result and Account visual checks and local untracked screenshots; legal release-lock 6/6 PASS; public release preflight exits 1; targeted TypeScript/Jest PASS."
+      ],
+      "explicitlyNotEstablished": [
+        "iOS/TestFlight pass on current source, deliberate live DB outage drill, full production-like share/deep-link/CDN abuse tests, independent security pen test.",
+        "Actual registered operating entity, incorporation or governing law, foreign exposure, official contact, signed rights/licences, counsel approval, published Terms/Privacy, final retention policy.",
+        "Production backend or public store deployment of this code. Closed UAT does not establish public readiness."
+      ],
+      "sourceDocuments": [
+        "docs/legal/MVP_LAUNCH_HARDENING_EVIDENCE_20261116.md",
+        "docs/legal/MVP_LAUNCH_CHECKLIST_20261116.md",
+        "docs/legal/STAGE2_B2_LEGAL_RISK_AND_LICENSING_20261116.md",
+        "docs/legal/RVEEL_PRIVACY_POLICY_DRAFT_20261116.md",
+        "docs/legal/RVEEL_TERMS_OF_USE_DRAFT_20261116.md",
+        "docs/legal/MVP_DISPUTE_CASE_HANDLING_PROCEDURE_20261116.md",
+        "docs/legal/MVP_PUBLIC_LAUNCH_BLOCKER.md",
+        "backend/vercel/lib/publicationHoldStore.ts",
+        "src/services/publicationHold.ts",
+        "scripts/assert-public-launch-ready.cjs"
+      ]
+    },
+    "strategicRiskOpinion": [
+      {
+        "priority": 1,
+        "theme": "Product/company allegations and misleading impressions",
+        "opinion": "Most consequential preventable exposure is an identifiable false assertion, parent-company link or unsupported implication in Claims, Highlights, Signals, score-band narratives or a share card. Formal 'opinion' wording is not a complete defence where users infer factual claims.",
+        "recommendedControls": "For each displayed assertion retain a dated provenance/substantiation chain, exact barcode/variant/market, source dates, methodology and confidence limits; prove product identity and company mapping; make the overall impression fair; suppress unverified high-severity allegation rather than fabricate score changes; counsel review negative/company-specific templates.",
+        "legalReviewRequired": true
+      },
+      {
+        "priority": 2,
+        "theme": "Operational complaint/correction mechanism",
+        "opinion": "The hold code reduces risk only if staffed, secure, observable and effective across caches, deep links, social previews and multiple devices. A dormant mailto address is not an operating dispute process.",
+        "recommendedControls": "Staff monitored intake with backup, severity tiers and response targets, evidence preservation, reversible case-based administrative holds, founder/counsel escalation, audit, public correction policy and rehearsed release process. Test stale cache/social share and deliberate service faults before launch.",
+        "legalReviewRequired": true
+      },
+      {
+        "priority": 3,
+        "theme": "Third-party rights and IP",
+        "opinion": "Technical attribution alone cannot conclusively clear ODbL derivative-database obligations, CC BY-SA images, trademark/packaging rights or BBFAW/KTC benchmark reuse. OFF commercial access is conditional, not categorically barred.",
+        "recommendedControls": "Trace every sourced item from ingest to Result/Share Card/OG/social export; build permission and attribution register by source/version/use; request BBFAW/KTC written clarification; if rights absent, redesign only the specific high-risk output via an explicitly approved publication-governance change.",
+        "legalReviewRequired": true
+      },
+      {
+        "priority": 4,
+        "theme": "Actual corporate and cross-border protection",
+        "opinion": "Incorporation in a favourable country may limit some shareholder exposure, but generally does not eliminate personal misconduct exposure or legal claims in NZ/AU or other places where services are targeted. A company 'type' label (technology/publisher/education) is not immunity.",
+        "recommendedControls": "Decide incorporation and real operating substance with NZ/AU corporate, media, privacy and tax counsel; establish proper limited-liability structure where suitable, founder IP assignments, clear contracting entity and affiliate arrangements, director controls, separate accounts, adequate reserves, appropriate media/technology E&O, cyber and D&O insurance if available and effective.",
+        "legalReviewRequired": true
+      },
+      {
+        "priority": 5,
+        "theme": "Consumer-law and methodology framing",
+        "opinion": "If consumers interpret the 0-100 result as verified health/safety/environmental certification, caveats deep in Terms may not correct misleading overall presentation. Source quality and confidence are not proofs of accuracy.",
+        "recommendedControls": "Use precise implemented-method language at the point of decision, clear NR/Checking/administrative-hold differences, source freshness, avoidance of categorical safety claims, and careful packaging/allergen/recall separation. Validate negative share copy as a distinct high-exposure publication surface.",
+        "legalReviewRequired": true
+      },
+      {
+        "priority": 6,
+        "theme": "Privacy, security and consent",
+        "opinion": "The privacy regime depends on facts, flows and applicable entity/territory law; assumptions of anonymity or Australian small-business exemption are unsafe. Independent server logs and contributions can reveal personal information.",
+        "recommendedControls": "Minimise data, maintain current data-flow map and subprocessors, appoint accountable privacy officer, written retention/deletion and breach response; assess NZ IPP3A indirect collection, AU APP/small-business exception conditions; verify contributors explicitly authorise public OFF uploads separately from private EA evidence.",
+        "legalReviewRequired": true
+      },
+      {
+        "priority": 7,
+        "theme": "Release governance and cyber resilience",
+        "opinion": "Code-only launch gates provide substantial friction but cannot prevent unrestricted users submitting an older binary or manually promoting Vercel. 'Highest legal protection' requires enforced organisational controls and regular review.",
+        "recommendedControls": "Protect credentials/branches/environments and store roles; signed counsel and founder release checklist tied to exact SHA/build; prohibit marketing beyond approved territories; require independently observed end-to-end device, backend and outage tests; postlaunch monitoring, vulnerability response and prompt correction procedures.",
+        "legalReviewRequired": true
+      }
+    ],
+    "legalResearchPointers": [
+      {
+        "source": "NZ Fair Trading Act 1986 sections 9-10",
+        "url": "https://www.legislation.govt.nz/act/public/1986/121/en/latest/",
+        "observation": "Misleading or deceptive trade conduct and product representations; analyse whether and how the actual RVEEL publication is in trade."
+      },
+      {
+        "source": "ACCC false or misleading claims guidance",
+        "url": "https://www.accc.gov.au/business/advertising-and-promotions/false-or-misleading-claims",
+        "observation": "Accuracy, reasonable substantiation and fair overall impressions; counsel to map ACL application to RVEEL."
+      },
+      {
+        "source": "OAIC small-business privacy guidance",
+        "url": "https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/organisations/small-business",
+        "observation": "AU small-business Privacy Act exception is conditional, with specified exceptions."
+      },
+      {
+        "source": "NZ Privacy Commissioner IPP3A",
+        "url": "https://www.privacy.org.nz/resources-and-learning/a-z-topics/ipp3a/",
+        "observation": "IPP3A indirect personal-information collection rules effective 1 May 2026, with exceptions; relevance depends on actual flows."
+      },
+      {
+        "source": "Open Food Facts API documentation",
+        "url": "https://openfoodfacts.github.io/documentation/docs/Product-Opener/api/",
+        "observation": "OFF ODbL/DbCL/CC BY-SA, identification, API rate/use rules and staging; terms/rights counsel review remains needed."
+      }
+    ],
+    "externalAgentHandoff": {
+      "objective": "Independent incoming agent should first reconstruct current state and specific unresolved launch conditions, challenge this assessment, then prioritise risk reduction without changing protected scoring or legal flags.",
+      "mandatoryFirstSteps": [
+        "Read this JSON, MVP_PUBLIC_LAUNCH_BLOCKER.md and latest GitHub commit/branch; verify every listed evidence path exists and that code has not changed since assessesSourceHead.",
+        "Read latest MVP_LAUNCH_HARDENING_EVIDENCE_20261116.md BEFORE B2 historical plans: B2 sections describing holds/telemetry as 'proposed' are historical and superseded by later implementation/UAT.",
+        "Re-run automated release lock tests and preflight, inspect EAS/Vercel/live store controls, independently reproduce UAT evidence where feasible; distinguish tests, Cursor narrative, deployment metadata and runtime facts.",
+        "Consult current official source terms and NZ/AU counsel. Analyse corporation-specific defamation standing, injurious falsehood, ACL/FTA, false statements, copyright/database/image rights, privacy and jurisdictional reach independently.",
+        "Maintain detailed claim-to-source and company mapping evidence; design minimal targeted changes rather than changing protected scoring rules or falsely treating NR/Checking as withholding.",
+        "Produce a delta report: what changed, new evidence, unresolved launch blockers, owners, legal interpretations, residual risk, and whether any additional territories are implicated."
+      ],
+      "releaseGuardrails": [
+        "Never flip publicReleaseStatus to CLEARED or any requirement.status to APPROVED based on AI opinion, a Cursor pass, a test result, an unsigned draft, or the founder's wish to move faster.",
+        "Treat currentReview and strategicRiskOpinion as nonbinding commentary; approval demands actual evidenceRef, reviewer, reviewedAt and recorded qualified-counsel/founder acceptance.",
+        "Do not invent an entity/jurisdiction, support email, licence, SLA, privacy exemption, regulator consent or signed insurance.",
+        "Do not activate OFF public contributions or draft legal destinations to clear a test. Preserve frozen native tag and scoring/Evidence Authority protected invariants.",
+        "Do not deploy to live production, submit to public app stores, open international targeting or repurpose the UAT admin token without separate explicit authorisation.",
+        "Update this assessment after material code, source-licence, law, policy, territory or UAT change, recording date and exact reviewed SHA; keep approval history auditable."
+      ],
+      "recommendedNextActions": [
+        {
+          "order": 1,
+          "action": "Maintain closed UAT and complete iOS + intentional safe backend fault test and full mobile/share/deep-link evidence capture; confirm release guard still fails closed."
+        },
+        {
+          "order": 2,
+          "action": "Appoint actual monitored support/privacy/legal escalation and establish response playbook and evidence-case register; no placeholder mailbox."
+        },
+        {
+          "order": 3,
+          "action": "Resolve external OFF/BBFAW/KTC rights, attribution, image and commercial reuse with evidence; keep public contribution disabled."
+        },
+        {
+          "order": 4,
+          "action": "Undertake founder incorporation and management-substance analysis with independent NZ/AU lawyers and cross-border tax specialists; then select operating entity based on actual risk, not label."
+        },
+        {
+          "order": 5,
+          "action": "Obtain counsel-reviewed manufacturer-publication templates, Privacy/Terms, territory and insurance decisions; publish only when facts, contact and controls are real."
+        },
+        {
+          "order": 6,
+          "action": "Re-run full integrated release-candidate UAT, review app-store disclosures and protections, obtain explicit founder and qualified-counsel sign-off for exact SHA and protected environment; then consider release."
+        }
+      ]
     }
   }
 }
