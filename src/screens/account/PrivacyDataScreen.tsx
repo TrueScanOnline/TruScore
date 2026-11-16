@@ -13,7 +13,7 @@ import { openLegalDestination } from '../../utils/openLegalDestination';
 import { productIdentity } from '../../config/productIdentity';
 import { resultEmeraldTone } from '../../theme/resultPresentation';
 import { useTheme } from '../../theme';
-import { openAssessmentReport } from '../../utils/openAssessmentReport';
+import { openPrivacyDataRequest } from '../../utils/openPrivacyDataRequest';
 
 /**
  * Privacy & Data — targeted local clears only.
@@ -120,10 +120,10 @@ export default function PrivacyDataScreen() {
       Alert.alert(t('account.privacyData'), t('account.supportEmailMissing'));
       return;
     }
-    void openAssessmentReport({
+    void openPrivacyDataRequest({
       subject: t('account.supportSubjectDataRequest'),
       fields: {
-        errorType: 'other',
+        requestType: '(access / correction / deletion / other)',
       },
       missingMessage: t('account.supportEmailMissing'),
       failedMessage: t('account.supportEmailFailed', {

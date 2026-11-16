@@ -4,7 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ProductNutriments } from '../types/product';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { formatWeight, formatVolume, formatServingSize } from '../utils/units';
+import {
+  formatWeight,
+  formatVolume,
+  formatServingSize,
+  formatNonZeroDisplayNumber,
+} from '../utils/units';
 import { useTheme } from '../theme';
 import { resultEmeraldCard, resultEmeraldTone } from '../theme/resultPresentation';
 import ResultCardArt from './result/ResultCardArt';
@@ -235,8 +240,15 @@ const NutritionTable = React.memo(function NutritionTable({
       return formatWeight(numericValue, units);
     }
     if (unit === 'mg') {
+      // Never collapse a nonzero quantity to "0 mg" via coarse rounding.
+      if (numericValue !== 0 && Math.abs(numericValue) < 0.05) {
+        return `${formatNonZeroDisplayNumber(numericValue, { minDecimals: 1, maxDecimals: 3 })}\u00A0mg`;
+      }
       const nearest = Math.round(numericValue);
-      const n = Math.abs(numericValue - nearest) < 0.05 ? String(nearest) : numericValue.toFixed(1);
+      const n =
+        Math.abs(numericValue - nearest) < 0.05
+          ? String(nearest)
+          : formatNonZeroDisplayNumber(numericValue, { minDecimals: 1, maxDecimals: 2 });
       return `${n}\u00A0mg`;
     }
     if (unit === 'ml' || unit === 'L') {
@@ -244,11 +256,17 @@ const NutritionTable = React.memo(function NutritionTable({
       return formatVolume(mlValue, units);
     }
     if (unit === 'kcal') {
+      if (numericValue !== 0 && Math.abs(numericValue) < 0.05) {
+        return `${formatNonZeroDisplayNumber(numericValue, { minDecimals: 1, maxDecimals: 2 })}\u00A0kcal`;
+      }
       const nearest = Math.round(numericValue);
-      const n = Math.abs(numericValue - nearest) < 0.05 ? String(nearest) : numericValue.toFixed(1);
+      const n =
+        Math.abs(numericValue - nearest) < 0.05
+          ? String(nearest)
+          : formatNonZeroDisplayNumber(numericValue, { minDecimals: 1, maxDecimals: 2 });
       return `${n}\u00A0kcal`;
     }
-    return `${numericValue.toFixed(1)} ${unit}`;
+    return `${formatNonZeroDisplayNumber(numericValue, { minDecimals: 1, maxDecimals: 3 })} ${unit}`;
   };
 
   const levelBadgeLabel = (level: 'low' | 'moderate' | 'high') => {

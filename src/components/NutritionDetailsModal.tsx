@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
 import type { ProductNutriments } from '../types/product';
 import { getNutrientValue100g, resolveKcalPer100g } from '../utils/nutritionPer100g';
-import { formatWeight } from '../utils/units';
+import { formatWeight, formatNonZeroDisplayNumber } from '../utils/units';
 import { useSettingsStore } from '../store/useSettingsStore';
 import {
   UK_GOV_FOP_MTL_REFERENCE,
@@ -56,11 +56,18 @@ interface NutritionDetailsModalProps {
 }
 
 function fmtG(n: number): string {
-  return `${Number.isInteger(n) ? String(n) : n.toFixed(2)} g`;
+  // Methodology explanation text stays in grams (assessment basis); avoid 0.00 for traces.
+  return `${formatNonZeroDisplayNumber(n, { minDecimals: 0, maxDecimals: 4 })} g`;
 }
 
 function fmtMg(n: number): string {
-  return `${Number.isInteger(n) ? String(Math.round(n)) : n.toFixed(1)} mg`;
+  if (n !== 0 && Math.abs(n) < 0.05) {
+    return `${formatNonZeroDisplayNumber(n, { minDecimals: 1, maxDecimals: 3 })} mg`;
+  }
+  if (Number.isInteger(n)) return `${n} mg`;
+  const nearest = Math.round(n);
+  if (Math.abs(n - nearest) < 0.05) return `${nearest} mg`;
+  return `${formatNonZeroDisplayNumber(n, { minDecimals: 1, maxDecimals: 2 })} mg`;
 }
 
 export default function NutritionDetailsModal({

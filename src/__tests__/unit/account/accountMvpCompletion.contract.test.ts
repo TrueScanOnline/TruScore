@@ -43,6 +43,8 @@ describe('Account MVP completion contracts', () => {
     expect(privacy).toMatch(/requestDataHelp/);
     expect(privacy).toMatch(/supportConfigured/);
     expect(privacy).toMatch(/productIdentity\.supportEmail/);
+    expect(privacy).toMatch(/openPrivacyDataRequest/);
+    expect(privacy).not.toMatch(/openAssessmentReport/);
     expect(en.account.privacyIntro).toMatch(/Open Food Facts|Evidence Authority/i);
     expect(en.account.privacyFootnote).toMatch(/Delete Account/i);
   });
